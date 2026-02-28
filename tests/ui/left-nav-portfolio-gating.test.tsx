@@ -99,4 +99,10 @@ describe('LeftNav portfolio gating', () => {
 
     expect(toastSuccessMock).toHaveBeenCalledTimes(1);
   });
+
+  it('shows Beta testing marker when beta account flag is enabled', () => {
+    render(<LeftNav basePath="/app/i" isBetaTesting />);
+
+    expect(screen.getByText(/beta testing/i)).toBeInTheDocument();
+  });
 });

@@ -6,7 +6,15 @@ import * as React from 'react';
 
 type ProfileRow = Pick<
   Profile,
-  'id' | 'handle' | 'displayName' | 'avatarUrl' | 'locale' | 'persona' | 'createdAt' | 'updatedAt'
+  | 'id'
+  | 'handle'
+  | 'displayName'
+  | 'avatarUrl'
+  | 'locale'
+  | 'persona'
+  | 'isBetaTesting'
+  | 'createdAt'
+  | 'updatedAt'
 >;
 
 type OrganizationRow = Pick<
@@ -98,6 +106,7 @@ function mapProfile(row: Partial<ProfileRow> & { id: string }): ProfileRow {
     avatarUrl: row.avatarUrl ?? null,
     locale: row.locale ?? 'en',
     persona: row.persona ?? 'unknown',
+    isBetaTesting: row.isBetaTesting ?? false,
     createdAt: row.createdAt ? new Date(row.createdAt as unknown as string | number) : new Date(0),
     updatedAt: row.updatedAt ? new Date(row.updatedAt as unknown as string | number) : new Date(),
   };
@@ -168,6 +177,7 @@ async function getCurrentUserWithClient(supabase: SupabaseClient): Promise<Profi
         avatarUrl:avatar_url,
         locale,
         persona,
+        isBetaTesting:is_beta_testing,
         createdAt:created_at,
         updatedAt:updated_at
       `

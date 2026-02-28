@@ -2,10 +2,14 @@ import crypto from 'node:crypto';
 import { resolvePublicSnippetBaseUrl } from '@/lib/profile/snippet-generator';
 export {
   CANDIDATE_INVITE_EXPIRY_DAYS,
+  CANDIDATE_INVITE_FLOW_TYPE,
   CANDIDATE_INVITE_STATUS,
   CANDIDATE_PROOF_CARD_DEFAULT_FIELDS,
 } from '@/lib/candidate-invites-shared';
-export type { CandidateInviteStatus } from '@/lib/candidate-invites-shared';
+export type {
+  CandidateInviteFlowType,
+  CandidateInviteStatus,
+} from '@/lib/candidate-invites-shared';
 
 export function normalizeInviteEmail(email: string): string {
   return email.trim().toLowerCase();

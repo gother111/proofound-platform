@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { and, eq } from 'drizzle-orm';
 
 import { db } from '@/db';
-import { orgCandidateInvites, organizations } from '@/db/schema';
+import { assignments, orgCandidateInvites, organizations } from '@/db/schema';
 import {
+  CANDIDATE_INVITE_FLOW_TYPE,
   CANDIDATE_INVITE_STATUS,
   hashCandidateInviteToken,
   isInviteExpired,
@@ -27,9 +28,15 @@ export async function GET(
         orgId: orgCandidateInvites.orgId,
         inviteeEmail: orgCandidateInvites.inviteeEmail,
         status: orgCandidateInvites.status,
+        flowType: orgCandidateInvites.flowType,
+        assignmentId: orgCandidateInvites.assignmentId,
         expiresAt: orgCandidateInvites.expiresAt,
         claimedByProfileId: orgCandidateInvites.claimedByProfileId,
         claimedAt: orgCandidateInvites.claimedAt,
+        acceptedByProfileId: orgCandidateInvites.acceptedByProfileId,
+        acceptedAt: orgCandidateInvites.acceptedAt,
+        matchId: orgCandidateInvites.matchId,
+        conversationId: orgCandidateInvites.conversationId,
         proofShareToken: orgCandidateInvites.proofShareToken,
         proofSubmittedAt: orgCandidateInvites.proofSubmittedAt,
       })
@@ -72,6 +79,28 @@ export async function GET(
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
     }
 
+    let assignment: {
+      id: string;
+      role: string | null;
+      status: string;
+      createdAt: Date;
+    } | null = null;
+
+    if (invite.flowType === CANDIDATE_INVITE_FLOW_TYPE.TEST_MATCH && invite.assignmentId) {
+      const [resolvedAssignment] = await db
+        .select({
+          id: assignments.id,
+          role: assignments.role,
+          status: assignments.status,
+          createdAt: assignments.createdAt,
+        })
+        .from(assignments)
+        .where(and(eq(assignments.id, invite.assignmentId), eq(assignments.orgId, org.id)))
+        .limit(1);
+
+      assignment = resolvedAssignment ?? null;
+    }
+
     emitAnalyticsEventAsync({
       eventType: 'candidate_invite_opened',
       organizationId: org.id,
@@ -83,14 +112,21 @@ export async function GET(
       invite: {
         id: invite.id,
         status: invite.status,
+        flowType: invite.flowType,
+        assignmentId: invite.assignmentId,
         maskedEmail: maskInviteEmail(invite.inviteeEmail),
         expiresAt: invite.expiresAt,
         claimedAt: invite.claimedAt,
         claimedByProfileId: invite.claimedByProfileId,
+        acceptedAt: invite.acceptedAt,
+        acceptedByProfileId: invite.acceptedByProfileId,
+        matchId: invite.matchId,
+        conversationId: invite.conversationId,
         proofSubmittedAt: invite.proofSubmittedAt,
         proofShareToken: invite.proofShareToken,
       },
       organization: org,
+      assignment,
     });
   } catch (error) {
     console.error('Failed to fetch candidate invite:', error);

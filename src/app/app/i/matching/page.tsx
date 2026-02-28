@@ -31,6 +31,18 @@ type MatchabilityBlockedPayload = {
   topActions: Array<{ id: string; title: string; description: string; actionUrl: string }>;
 };
 
+type TestMatchItem = {
+  matchId: string;
+  assignmentId: string;
+  assignmentRole: string | null;
+  assignmentStatus: string;
+  orgId: string;
+  orgSlug: string;
+  orgDisplayName: string;
+  conversationId: string | null;
+  createdAt: string;
+};
+
 function isMatchabilityBlockedPayload(payload: unknown): payload is MatchabilityBlockedPayload {
   return Boolean(
     payload &&
@@ -65,6 +77,8 @@ export default function MatchingPage() {
   const [readinessActions, setReadinessActions] = useState<
     Array<{ id: string; title: string; description: string; actionUrl: string }>
   >([]);
+  const [testMatches, setTestMatches] = useState<TestMatchItem[]>([]);
+  const [isTestMatchesLoading, setIsTestMatchesLoading] = useState(true);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const ensureThreeActions = (
@@ -105,14 +119,18 @@ export default function MatchingPage() {
     // Create abort controller for timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+    setIsTestMatchesLoading(true);
 
     try {
       // Fetch matching profile
-      const [profileRes, readinessRes] = await Promise.all([
+      const [profileRes, readinessRes, testMatchesRes] = await Promise.all([
         fetch('/api/matching-profile', {
           signal: controller.signal,
         }),
         fetch('/api/individual/readiness', {
+          signal: controller.signal,
+        }),
+        fetch('/api/match/test', {
           signal: controller.signal,
         }),
       ]);
@@ -120,6 +138,13 @@ export default function MatchingPage() {
       if (readinessRes.ok) {
         const readinessPayload = await readinessRes.json();
         setReadinessActions(readinessPayload.topActions || []);
+      }
+
+      if (testMatchesRes.ok) {
+        const testMatchesPayload = await testMatchesRes.json().catch(() => null);
+        setTestMatches(testMatchesPayload?.items || []);
+      } else {
+        setTestMatches([]);
       }
 
       if (!profileRes.ok) {
@@ -198,6 +223,7 @@ export default function MatchingPage() {
         setBlockedState(null);
         setMatches([]);
         setFilteredMatches([]);
+        setTestMatches([]);
       } else {
         console.error('Error loading matching data:', error);
         const errorMessage =
@@ -207,6 +233,7 @@ export default function MatchingPage() {
     } finally {
       clearTimeout(timeoutId);
       setIsLoading(false);
+      setIsTestMatchesLoading(false);
     }
   };
 
@@ -277,6 +304,55 @@ export default function MatchingPage() {
     setFilteredMatches(filtered);
   }, [activeFilters, matches]);
 
+  const renderTestMatchesSection = () => {
+    if (!isTestMatchesLoading && testMatches.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="mb-6 space-y-3">
+        <h2 className="text-lg font-semibold text-[#2D3330] dark:text-[#E8DCC4]">Test matches</h2>
+        {isTestMatchesLoading ? (
+          <div className="rounded-lg border border-[#E8E6DD] bg-white px-4 py-3">
+            <p className="text-sm text-[#6B6760]">Loading test matches...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {testMatches.map((testMatch) => (
+              <div
+                key={testMatch.matchId}
+                className="rounded-lg border border-[#E8E6DD] bg-white px-4 py-3 space-y-2"
+              >
+                <p className="text-sm font-medium text-[#2D3330]">
+                  {testMatch.assignmentRole || 'Untitled assignment'}
+                </p>
+                <p className="text-xs text-[#6B6760]">Organization: {testMatch.orgDisplayName}</p>
+                <div className="flex flex-wrap gap-2">
+                  {testMatch.conversationId ? (
+                    <button
+                      className="rounded-md border border-[#E8E6DD] px-3 py-1.5 text-xs hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
+                      onClick={() =>
+                        router.push(`/app/i/messages?conversation=${testMatch.conversationId}`)
+                      }
+                    >
+                      Open messages
+                    </button>
+                  ) : null}
+                  <button
+                    className="rounded-md border border-[#E8E6DD] px-3 py-1.5 text-xs hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
+                    onClick={() => router.push('/app/i/matching')}
+                  >
+                    Open matching
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (isLoading) {
     return (
       <div className="max-w-5xl mx-auto px-4 py-6">
@@ -311,12 +387,18 @@ export default function MatchingPage() {
 
   // Show empty state if no profile
   if (!matchingProfile) {
-    return <IndividualMatchingEmpty onSetup={() => setShowSetup(true)} />;
+    return (
+      <div className="max-w-5xl mx-auto px-4 py-6">
+        {renderTestMatchesSection()}
+        <IndividualMatchingEmpty onSetup={() => setShowSetup(true)} />
+      </div>
+    );
   }
 
   // Show filled view with matches
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
+      {renderTestMatchesSection()}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-2xl font-semibold text-[#2D3330] dark:text-[#E8DCC4]">Matching</h1>

@@ -11,6 +11,14 @@ export const CANDIDATE_INVITE_STATUS = {
 export type CandidateInviteStatus =
   (typeof CANDIDATE_INVITE_STATUS)[keyof typeof CANDIDATE_INVITE_STATUS];
 
+export const CANDIDATE_INVITE_FLOW_TYPE = {
+  PROOF_CARD: 'proof_card',
+  TEST_MATCH: 'test_match',
+} as const;
+
+export type CandidateInviteFlowType =
+  (typeof CANDIDATE_INVITE_FLOW_TYPE)[keyof typeof CANDIDATE_INVITE_FLOW_TYPE];
+
 // Enforced defaults for invite-driven proof cards.
 export const CANDIDATE_PROOF_CARD_DEFAULT_FIELDS: Record<string, boolean | number> = {
   name: true,

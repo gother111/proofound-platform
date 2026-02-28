@@ -122,4 +122,60 @@ describe('POST /api/organizations/[orgId]/candidate-invites', () => {
     expect(insertValues).toHaveBeenCalledTimes(1);
     expect(sendCandidateInviteEmail).toHaveBeenCalledTimes(1);
   });
+
+  it('rejects test_match invite creation for non-beta users', async () => {
+    mockSelectWithLimit([{ role: 'owner', status: 'active' }]); // membership
+    mockSelectWithLimit([{ id: orgId, displayName: 'Acme', slug: 'acme' }]); // org
+    mockSelectWithLimit([{ isBetaTesting: false }]); // inviter profile flags
+
+    const request = new NextRequest('http://localhost/api/organizations/org/candidate-invites', {
+      method: 'POST',
+      body: JSON.stringify({
+        email: 'candidate@example.com',
+        flowType: 'test_match',
+        assignmentId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+      }),
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ orgId }) });
+    expect(response.status).toBe(403);
+  });
+
+  it('creates test_match invite when user is beta and assignment belongs to org', async () => {
+    const assignmentId = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+
+    mockSelectWithLimit([{ role: 'owner', status: 'active' }]); // membership
+    mockSelectWithLimit([{ id: orgId, displayName: 'Acme', slug: 'acme' }]); // org
+    mockSelectWithLimit([{ isBetaTesting: true }]); // inviter profile flags
+    mockSelectWithLimit([{ id: assignmentId }]); // assignment check
+    mockSelectWithWhere([]); // existing invite check
+
+    const insertValues = vi.fn().mockResolvedValue(undefined);
+    (db.insert as any).mockReturnValue({ values: insertValues });
+    (sendCandidateInviteEmail as any).mockResolvedValue(undefined);
+
+    const request = new NextRequest('http://localhost/api/organizations/org/candidate-invites', {
+      method: 'POST',
+      body: JSON.stringify({
+        email: 'candidate@example.com',
+        flowType: 'test_match',
+        assignmentId,
+      }),
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ orgId }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.flowType).toBe('test_match');
+    expect(payload.assignmentId).toBe(assignmentId);
+    expect(insertValues).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          flowType: 'test_match',
+          assignmentId,
+        }),
+      ])
+    );
+  });
 });

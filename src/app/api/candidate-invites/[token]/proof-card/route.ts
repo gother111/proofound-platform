@@ -6,6 +6,7 @@ import { db } from '@/db';
 import { orgCandidateInvites } from '@/db/schema';
 import { getRows } from '@/lib/db/rows';
 import {
+  CANDIDATE_INVITE_FLOW_TYPE,
   CANDIDATE_INVITE_STATUS,
   hashCandidateInviteToken,
   isInviteExpired,
@@ -64,6 +65,7 @@ export async function POST(
       .select({
         id: orgCandidateInvites.id,
         orgId: orgCandidateInvites.orgId,
+        flowType: orgCandidateInvites.flowType,
         status: orgCandidateInvites.status,
         expiresAt: orgCandidateInvites.expiresAt,
         claimedByProfileId: orgCandidateInvites.claimedByProfileId,
@@ -74,6 +76,13 @@ export async function POST(
 
     if (!invite || invite.status === CANDIDATE_INVITE_STATUS.REVOKED) {
       return NextResponse.json({ error: 'Invite not found' }, { status: 404 });
+    }
+
+    if (invite.flowType !== CANDIDATE_INVITE_FLOW_TYPE.PROOF_CARD) {
+      return NextResponse.json(
+        { error: 'Proof Card submission is not required for this invite.' },
+        { status: 409 }
+      );
     }
 
     if (isInviteExpired(invite.expiresAt)) {

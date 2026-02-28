@@ -3,10 +3,17 @@ import { and, desc, eq, inArray, lt } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db';
-import { orgCandidateInvites, organizationMembers, organizations, profiles } from '@/db/schema';
+import {
+  assignments,
+  orgCandidateInvites,
+  organizationMembers,
+  organizations,
+  profiles,
+} from '@/db/schema';
 import {
   buildCandidateInviteUrl,
   CANDIDATE_INVITE_EXPIRY_DAYS,
+  CANDIDATE_INVITE_FLOW_TYPE,
   CANDIDATE_INVITE_STATUS,
   generateCandidateInviteToken,
   hashCandidateInviteToken,
@@ -23,6 +30,10 @@ const createCandidateInvitesSchema = z
     email: z.string().email().optional(),
     emails: z.array(z.string().email()).optional(),
     expiryDays: z.number().int().min(1).max(30).optional(),
+    flowType: z
+      .enum([CANDIDATE_INVITE_FLOW_TYPE.PROOF_CARD, CANDIDATE_INVITE_FLOW_TYPE.TEST_MATCH])
+      .optional(),
+    assignmentId: z.string().uuid().optional(),
   })
   .superRefine((value, ctx) => {
     if (!value.email && (!value.emails || value.emails.length === 0)) {
@@ -30,6 +41,17 @@ const createCandidateInvitesSchema = z
         code: z.ZodIssueCode.custom,
         message: 'Provide at least one valid email address.',
         path: ['emails'],
+      });
+    }
+
+    if (
+      value.flowType === CANDIDATE_INVITE_FLOW_TYPE.TEST_MATCH &&
+      (!value.assignmentId || value.assignmentId.length === 0)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'assignmentId is required for test_match invites.',
+        path: ['assignmentId'],
       });
     }
   });
@@ -73,6 +95,18 @@ async function getOrganization(orgId: string) {
     .limit(1);
 
   return org ?? null;
+}
+
+async function getProfileFlags(userId: string) {
+  const [profile] = await db
+    .select({
+      isBetaTesting: profiles.isBetaTesting,
+    })
+    .from(profiles)
+    .where(eq(profiles.id, userId))
+    .limit(1);
+
+  return profile ?? null;
 }
 
 async function expireStaleInvites(orgId: string) {
@@ -132,10 +166,16 @@ export async function GET(
         id: orgCandidateInvites.id,
         inviteeEmail: orgCandidateInvites.inviteeEmail,
         status: orgCandidateInvites.status,
+        flowType: orgCandidateInvites.flowType,
+        assignmentId: orgCandidateInvites.assignmentId,
         expiresAt: orgCandidateInvites.expiresAt,
         invitedBy: orgCandidateInvites.invitedBy,
         claimedByProfileId: orgCandidateInvites.claimedByProfileId,
         claimedAt: orgCandidateInvites.claimedAt,
+        acceptedByProfileId: orgCandidateInvites.acceptedByProfileId,
+        acceptedAt: orgCandidateInvites.acceptedAt,
+        matchId: orgCandidateInvites.matchId,
+        conversationId: orgCandidateInvites.conversationId,
         proofSnippetId: orgCandidateInvites.proofSnippetId,
         proofShareToken: orgCandidateInvites.proofShareToken,
         proofSubmittedAt: orgCandidateInvites.proofSubmittedAt,
@@ -196,30 +236,87 @@ export async function POST(
       );
     }
 
+    const flowType = parsed.data.flowType ?? CANDIDATE_INVITE_FLOW_TYPE.PROOF_CARD;
+    const assignmentId =
+      flowType === CANDIDATE_INVITE_FLOW_TYPE.TEST_MATCH
+        ? (parsed.data.assignmentId ?? null)
+        : null;
+
+    if (flowType === CANDIDATE_INVITE_FLOW_TYPE.TEST_MATCH) {
+      const inviterProfile = await getProfileFlags(user.id);
+      if (!inviterProfile) {
+        return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+      }
+
+      if (!inviterProfile.isBetaTesting) {
+        return NextResponse.json({ error: 'Beta testing access is required.' }, { status: 403 });
+      }
+    }
+
+    if (flowType === CANDIDATE_INVITE_FLOW_TYPE.TEST_MATCH && assignmentId) {
+      const [assignment] = await db
+        .select({
+          id: assignments.id,
+        })
+        .from(assignments)
+        .where(and(eq(assignments.id, assignmentId), eq(assignments.orgId, orgId)))
+        .limit(1);
+
+      if (!assignment) {
+        return NextResponse.json(
+          { error: 'Assignment not found for this organization.' },
+          { status: 404 }
+        );
+      }
+    }
+
     const normalizedEmails = dedupeEmails(parsed.data);
     if (normalizedEmails.length === 0) {
       return NextResponse.json({ error: 'No valid emails provided' }, { status: 400 });
     }
 
+    const existingConditions = [
+      eq(orgCandidateInvites.orgId, orgId),
+      eq(orgCandidateInvites.flowType, flowType),
+      inArray(orgCandidateInvites.inviteeEmailNormalized, normalizedEmails),
+      inArray(orgCandidateInvites.status, [
+        CANDIDATE_INVITE_STATUS.PENDING,
+        CANDIDATE_INVITE_STATUS.CLAIMED,
+      ]),
+    ];
+    if (assignmentId) {
+      existingConditions.push(eq(orgCandidateInvites.assignmentId, assignmentId));
+    }
+
     const existing = await db
       .select({
         inviteeEmailNormalized: orgCandidateInvites.inviteeEmailNormalized,
+        assignmentId: orgCandidateInvites.assignmentId,
       })
       .from(orgCandidateInvites)
-      .where(
-        and(
-          eq(orgCandidateInvites.orgId, orgId),
-          inArray(orgCandidateInvites.inviteeEmailNormalized, normalizedEmails),
-          inArray(orgCandidateInvites.status, [
-            CANDIDATE_INVITE_STATUS.PENDING,
-            CANDIDATE_INVITE_STATUS.CLAIMED,
-          ])
-        )
-      );
+      .where(and(...existingConditions));
 
-    const existingSet = new Set(existing.map((item) => item.inviteeEmailNormalized));
-    const duplicateEmails = normalizedEmails.filter((email) => existingSet.has(email));
-    const creatableEmails = normalizedEmails.filter((email) => !existingSet.has(email));
+    const existingSet = new Set(
+      existing.map((item) =>
+        flowType === CANDIDATE_INVITE_FLOW_TYPE.TEST_MATCH
+          ? `${item.inviteeEmailNormalized}:${item.assignmentId ?? ''}`
+          : item.inviteeEmailNormalized
+      )
+    );
+    const duplicateEmails = normalizedEmails.filter((email) => {
+      const key =
+        flowType === CANDIDATE_INVITE_FLOW_TYPE.TEST_MATCH
+          ? `${email}:${assignmentId ?? ''}`
+          : email;
+      return existingSet.has(key);
+    });
+    const creatableEmails = normalizedEmails.filter((email) => {
+      const key =
+        flowType === CANDIDATE_INVITE_FLOW_TYPE.TEST_MATCH
+          ? `${email}:${assignmentId ?? ''}`
+          : email;
+      return !existingSet.has(key);
+    });
 
     if (creatableEmails.length === 0) {
       return NextResponse.json(
@@ -250,6 +347,8 @@ export async function POST(
         inviteeEmailNormalized: item.email,
         tokenHash: item.tokenHash,
         status: CANDIDATE_INVITE_STATUS.PENDING,
+        flowType,
+        assignmentId,
         expiresAt,
         invitedBy: user.id,
       }))
@@ -267,6 +366,8 @@ export async function POST(
             properties: {
               recipient_domain: item.email.split('@')[1] ?? null,
               expiry_days: expiryDays,
+              flow_type: flowType,
+              assignment_id: assignmentId,
             },
           });
         } catch (error) {
@@ -279,6 +380,8 @@ export async function POST(
       success: true,
       createdCount: tokenMaterial.length,
       duplicates: duplicateEmails,
+      flowType,
+      assignmentId,
     });
   } catch (error) {
     console.error('Failed to create candidate invites:', error);

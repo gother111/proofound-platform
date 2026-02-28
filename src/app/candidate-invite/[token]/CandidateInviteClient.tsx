@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { apiFetch } from '@/lib/api/fetch';
 import {
+  CANDIDATE_INVITE_FLOW_TYPE,
   CANDIDATE_INVITE_STATUS,
   CANDIDATE_PROOF_CARD_DEFAULT_FIELDS,
 } from '@/lib/candidate-invites-shared';
@@ -16,10 +17,16 @@ import {
 type InviteState = {
   id: string;
   status: string;
+  flowType: 'proof_card' | 'test_match';
+  assignmentId: string | null;
   maskedEmail: string;
   expiresAt: string;
   claimedAt: string | null;
   claimedByProfileId: string | null;
+  acceptedAt: string | null;
+  acceptedByProfileId: string | null;
+  matchId: string | null;
+  conversationId: string | null;
   proofSubmittedAt: string | null;
   proofShareToken: string | null;
 };
@@ -29,6 +36,13 @@ type OrganizationState = {
   slug: string;
   displayName: string;
   logoUrl: string | null;
+};
+
+type AssignmentState = {
+  id: string;
+  role: string | null;
+  status: string;
+  createdAt: string;
 };
 
 type CurrentUserState = {
@@ -60,6 +74,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
   const [submitting, setSubmitting] = useState(false);
   const [invite, setInvite] = useState<InviteState | null>(null);
   const [organization, setOrganization] = useState<OrganizationState | null>(null);
+  const [assignment, setAssignment] = useState<AssignmentState | null>(null);
   const [currentUser, setCurrentUser] = useState<CurrentUserState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [existingShareToken, setExistingShareToken] = useState('');
@@ -99,6 +114,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
       const invitePayload = await inviteResponse.json();
       setInvite(invitePayload.invite);
       setOrganization(invitePayload.organization);
+      setAssignment(invitePayload.assignment ?? null);
 
       if (userResponse.ok) {
         const userPayload = await userResponse.json();
@@ -131,13 +147,18 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
         method: 'POST',
       });
 
+      const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        const payload = await response.json().catch(() => null);
         setError(payload?.error ?? 'Failed to claim invite.');
         return;
       }
 
-      setSuccessMessage('Invite claimed. You can now submit your Proof Card.');
+      if (invite?.flowType === CANDIDATE_INVITE_FLOW_TYPE.TEST_MATCH) {
+        setSuccessMessage('Test match accepted. You can now message the organization.');
+      } else {
+        setSuccessMessage('Invite claimed. You can now submit your Proof Card.');
+      }
+
       await loadState();
     } catch (claimError) {
       console.error('Failed to claim invite:', claimError);
@@ -256,24 +277,35 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
     return null;
   }
 
+  const isTestFlow = invite.flowType === CANDIDATE_INVITE_FLOW_TYPE.TEST_MATCH;
   const isCompleted = invite.status === CANDIDATE_INVITE_STATUS.PROOF_SUBMITTED;
-  const isClaimedByCurrentUser =
+  const isClaimedByCurrentUser = Boolean(
     invite.status === CANDIDATE_INVITE_STATUS.CLAIMED &&
-    currentUser &&
-    invite.claimedByProfileId === currentUser.id;
+      currentUser &&
+      invite.claimedByProfileId === currentUser.id
+  );
+
+  const headline = isTestFlow ? 'Test invite' : 'Candidate invite';
+  const inviteDescription = isTestFlow
+    ? `${organization.displayName} invited ${invite.maskedEmail} to start a beta test match${
+        assignment?.role ? ` for ${assignment.role}` : ''
+      }.`
+    : `${organization.displayName} invited ${invite.maskedEmail} to submit a Proof Card.`;
 
   return (
     <div className="min-h-screen bg-[#F7F6F1] flex items-center justify-center p-6">
       <Card className="max-w-2xl w-full">
         <CardHeader className="space-y-2">
           <div className="flex items-center gap-2">
-            <CardTitle>Candidate invite</CardTitle>
+            <CardTitle>{headline}</CardTitle>
             <Badge variant="outline">{invite.status}</Badge>
           </div>
-          <p className="text-sm text-slate-600">
-            <strong>{organization.displayName}</strong> invited{' '}
-            <strong>{invite.maskedEmail}</strong> to submit a Proof Card.
-          </p>
+          <p className="text-sm text-slate-600">{inviteDescription}</p>
+          {assignment ? (
+            <p className="text-xs text-slate-500">
+              Assignment: {assignment.role || 'Untitled'} ({assignment.status})
+            </p>
+          ) : null}
           <p className="text-xs text-slate-500">
             Expires on {new Date(invite.expiresAt).toLocaleString()}
           </p>
@@ -298,20 +330,18 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
             </div>
           ) : null}
 
-          {currentUser && !isCompleted && invite.status === CANDIDATE_INVITE_STATUS.PENDING ? (
+          {currentUser && invite.status === CANDIDATE_INVITE_STATUS.PENDING ? (
             <div className="space-y-3">
               <p className="text-sm text-slate-700">
                 Signed in as <strong>{currentUser.email}</strong>.
               </p>
               <Button onClick={claimInvite} disabled={submitting}>
-                Claim invite
+                {isTestFlow ? 'Accept test invite' : 'Claim invite'}
               </Button>
             </div>
           ) : null}
 
-          {currentUser &&
-          !isCompleted &&
-          (isClaimedByCurrentUser || invite.status === CANDIDATE_INVITE_STATUS.CLAIMED) ? (
+          {!isTestFlow && currentUser && !isCompleted && isClaimedByCurrentUser ? (
             <div className="space-y-4">
               <p className="text-sm text-slate-700">
                 Create a new Proof Card with invite-safe defaults, or submit an existing one.
@@ -338,7 +368,25 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
             </div>
           ) : null}
 
-          {isCompleted ? (
+          {isTestFlow && isClaimedByCurrentUser ? (
+            <div className="space-y-3">
+              <p className="text-sm text-emerald-700">
+                Test match accepted. You can now use messages and matching.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {invite.conversationId ? (
+                  <Link href={`/app/i/messages?conversation=${invite.conversationId}`}>
+                    <Button>Open Messages</Button>
+                  </Link>
+                ) : null}
+                <Link href="/app/i/matching">
+                  <Button variant="outline">Open Matching</Button>
+                </Link>
+              </div>
+            </div>
+          ) : null}
+
+          {!isTestFlow && isCompleted ? (
             <div className="space-y-3">
               <p className="text-sm text-emerald-700">
                 Proof Card submitted. The company can now review it.

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,17 +13,42 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { MatchResultCard } from './MatchResultCard';
+import { ScheduleInterviewButton } from '@/components/interviews/ScheduleInterviewButton';
 import { toast } from 'sonner';
-import { Plus, Settings } from 'lucide-react';
+import { MailPlus, Plus, Settings } from 'lucide-react';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { apiFetch } from '@/lib/api/fetch';
 import { getOrganizationRecoveryActions } from '@/lib/ui/recovery-actions';
 
 interface Assignment {
   id: string;
+  orgId: string;
   role: string;
   status: string;
+  createdAt: string;
+}
+
+interface TestMatchItem {
+  matchId: string;
+  assignmentId: string;
+  assignmentRole: string | null;
+  assignmentStatus: string;
+  candidateProfileId: string | null;
+  candidateDisplayName: string | null;
+  candidateHandle: string | null;
+  candidateAvatarUrl: string | null;
+  conversationId: string | null;
   createdAt: string;
 }
 
@@ -46,17 +70,45 @@ export function MatchingOrganizationView({
   const router = useRouter();
   const rawSlug = (params as { slug?: string | string[] })?.slug;
   const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
+
   const [selectedAssignment, setSelectedAssignment] = useState<string>(assignments[0]?.id || '');
   const [matches, setMatches] = useState<unknown[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [preset, setPreset] = useState<string>('balanced');
 
+  const [testMatches, setTestMatches] = useState<TestMatchItem[]>([]);
+  const [isTestMatchesLoading, setIsTestMatchesLoading] = useState(false);
+  const [canInitiateTest, setCanInitiateTest] = useState(false);
+
+  const [isInitiateTestOpen, setIsInitiateTestOpen] = useState(false);
+  const [testInviteEmail, setTestInviteEmail] = useState('');
+  const [testInviteAssignmentId, setTestInviteAssignmentId] = useState(assignments[0]?.id || '');
+  const [isSubmittingTestInvite, setIsSubmittingTestInvite] = useState(false);
+
   const currentAssignment = assignments.find((a) => a.id === selectedAssignment);
+  const currentOrgId = currentAssignment?.orgId || assignments[0]?.orgId || null;
   const recoveryActions = getOrganizationRecoveryActions(
     'assignment-no-matches',
     slug || null,
     selectedAssignment || undefined
   );
+
+  useEffect(() => {
+    if (assignments.length === 0) {
+      return;
+    }
+
+    const assignmentStillExists = assignments.some(
+      (assignment) => assignment.id === selectedAssignment
+    );
+    if (!selectedAssignment || !assignmentStillExists) {
+      setSelectedAssignment(assignments[0].id);
+    }
+
+    if (!testInviteAssignmentId) {
+      setTestInviteAssignmentId(assignments[0].id);
+    }
+  }, [assignments, selectedAssignment, testInviteAssignmentId]);
 
   // Fetch matches when assignment or preset changes
   useEffect(() => {
@@ -80,7 +132,7 @@ export function MatchingOrganizationView({
 
         const data = await response.json();
         setMatches(data.items || []);
-      } catch (error) {
+      } catch {
         toast.error('Failed to load matches');
         setMatches([]);
       } finally {
@@ -88,8 +140,40 @@ export function MatchingOrganizationView({
       }
     };
 
-    fetchMatches();
+    void fetchMatches();
   }, [selectedAssignment, preset]);
+
+  useEffect(() => {
+    if (!currentOrgId) {
+      return;
+    }
+
+    const fetchTestMatches = async () => {
+      setIsTestMatchesLoading(true);
+      try {
+        const query = selectedAssignment
+          ? `?assignmentId=${encodeURIComponent(selectedAssignment)}`
+          : '';
+        const response = await apiFetch(`/api/organizations/${currentOrgId}/test-matches${query}`);
+
+        const payload = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error(payload?.error || 'Failed to load test matches');
+        }
+
+        setTestMatches(payload?.items || []);
+        setCanInitiateTest(Boolean(payload?.permissions?.canInitiateTest));
+      } catch (error) {
+        console.error('Failed to load test matches:', error);
+        setTestMatches([]);
+        setCanInitiateTest(false);
+      } finally {
+        setIsTestMatchesLoading(false);
+      }
+    };
+
+    void fetchTestMatches();
+  }, [currentOrgId, selectedAssignment]);
 
   const handleInterested = async (profileId: string) => {
     try {
@@ -110,12 +194,10 @@ export function MatchingOrganizationView({
 
       if (data.revealed) {
         toast.success('Mutual interest! Identity revealed.');
-        // Refresh matches to show revealed card
-        // In a real implementation, you'd update the specific match
       } else {
         toast.success('Interest recorded! Waiting for candidate response.');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to record interest');
     }
   };
@@ -123,6 +205,63 @@ export function MatchingOrganizationView({
   const handleHide = (profileId: string) => {
     setMatches(matches.filter((m: any) => m.profileId !== profileId));
     toast.success('Hidden from results');
+  };
+
+  const handleInitiateTest = async () => {
+    if (!currentOrgId) {
+      toast.error('Organization context not found');
+      return;
+    }
+
+    if (!testInviteAssignmentId) {
+      toast.error('Choose an assignment for this test');
+      return;
+    }
+
+    const normalizedEmail = testInviteEmail.trim().toLowerCase();
+    if (!normalizedEmail) {
+      toast.error('Enter tester email');
+      return;
+    }
+
+    setIsSubmittingTestInvite(true);
+    try {
+      const response = await apiFetch(`/api/organizations/${currentOrgId}/candidate-invites`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: normalizedEmail,
+          flowType: 'test_match',
+          assignmentId: testInviteAssignmentId,
+        }),
+      });
+
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Failed to send test invite');
+      }
+
+      toast.success('Test invite sent');
+      setTestInviteEmail('');
+      setIsInitiateTestOpen(false);
+
+      const query = selectedAssignment
+        ? `?assignmentId=${encodeURIComponent(selectedAssignment)}`
+        : '';
+      const refreshResponse = await apiFetch(
+        `/api/organizations/${currentOrgId}/test-matches${query}`
+      );
+      const refreshPayload = await refreshResponse.json().catch(() => null);
+      if (refreshResponse.ok) {
+        setTestMatches(refreshPayload?.items || []);
+        setCanInitiateTest(Boolean(refreshPayload?.permissions?.canInitiateTest));
+      }
+    } catch (error) {
+      console.error('Failed to send test invite:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to send test invite');
+    } finally {
+      setIsSubmittingTestInvite(false);
+    }
   };
 
   if (assignments.length === 0) {
@@ -141,10 +280,18 @@ export function MatchingOrganizationView({
                 Find candidates aligned with your mission and needs
               </p>
             </div>
-            <Button onClick={onCreateNew} style={{ backgroundColor: '#1C4D3A' }}>
-              <Plus className="w-4 h-4 mr-2" />
-              New Assignment
-            </Button>
+            <div className="flex items-center gap-2">
+              {canInitiateTest ? (
+                <Button variant="outline" onClick={() => setIsInitiateTestOpen(true)}>
+                  <MailPlus className="w-4 h-4 mr-2" />
+                  Initiate test
+                </Button>
+              ) : null}
+              <Button onClick={onCreateNew} style={{ backgroundColor: '#1C4D3A' }}>
+                <Plus className="w-4 h-4 mr-2" />
+                New Assignment
+              </Button>
+            </div>
           </div>
 
           {/* Controls */}
@@ -269,7 +416,117 @@ export function MatchingOrganizationView({
             )}
           </div>
         )}
+
+        <div className="mt-10 space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Test matches</h2>
+            {currentAssignment ? (
+              <p className="text-xs text-muted-foreground">
+                {currentAssignment.role || 'Selected assignment'}
+              </p>
+            ) : null}
+          </div>
+
+          {isTestMatchesLoading ? (
+            <Card className="p-4">
+              <p className="text-sm text-muted-foreground">Loading test matches...</p>
+            </Card>
+          ) : testMatches.length === 0 ? (
+            <Card className="p-4">
+              <p className="text-sm text-muted-foreground">
+                No test matches yet for this assignment.
+              </p>
+            </Card>
+          ) : (
+            <div className="grid gap-3 md:grid-cols-2">
+              {testMatches.map((testMatch) => (
+                <Card key={testMatch.matchId} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-medium text-[#2D3330]">
+                        {testMatch.candidateDisplayName ||
+                          testMatch.candidateHandle ||
+                          'Test candidate'}
+                      </p>
+                      <p className="text-xs text-[#6B6760]">
+                        Assignment: {testMatch.assignmentRole || 'Untitled'}
+                      </p>
+                    </div>
+                    <Badge variant="outline">Test match</Badge>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {testMatch.conversationId && slug ? (
+                      <Link
+                        href={`/app/o/${slug}/messages?conversation=${testMatch.conversationId}`}
+                      >
+                        <Button size="sm" variant="outline">
+                          Open messages
+                        </Button>
+                      </Link>
+                    ) : null}
+                    <ScheduleInterviewButton
+                      matchId={testMatch.matchId}
+                      matchAgreedAt={new Date(testMatch.createdAt)}
+                      variant="outline"
+                      size="sm"
+                    />
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
+
+      <Dialog open={isInitiateTestOpen} onOpenChange={setIsInitiateTestOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Initiate test</DialogTitle>
+            <DialogDescription>
+              Invite a tester candidate by email. Once they accept, a Test match is created.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="test-assignment">Assignment</Label>
+              <Select value={testInviteAssignmentId} onValueChange={setTestInviteAssignmentId}>
+                <SelectTrigger id="test-assignment">
+                  <SelectValue placeholder="Choose assignment" />
+                </SelectTrigger>
+                <SelectContent>
+                  {assignments.map((assignment) => (
+                    <SelectItem key={assignment.id} value={assignment.id}>
+                      {assignment.role || 'Untitled assignment'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tester-email">Tester email</Label>
+              <Input
+                id="tester-email"
+                type="email"
+                placeholder="tester@example.com"
+                value={testInviteEmail}
+                onChange={(event) => setTestInviteEmail(event.target.value)}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsInitiateTestOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleInitiateTest} disabled={isSubmittingTestInvite}>
+              {isSubmittingTestInvite ? 'Sending...' : 'Send invite'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppSurface>
   );
 }

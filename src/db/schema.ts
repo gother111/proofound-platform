@@ -50,6 +50,7 @@ export const profiles = pgTable('profiles', {
   // User preferences and onboarding
   tourCompleted: boolean('tour_completed').default(false),
   matchingEnabled: boolean('matching_enabled').default(true),
+  isBetaTesting: boolean('is_beta_testing').default(false).notNull(),
   // GDPR Account Deletion Support (Article 17: Right to Erasure)
   deletionRequestedAt: timestamp('deletion_requested_at'),
   deletionScheduledFor: timestamp('deletion_scheduled_for'),
@@ -258,12 +259,26 @@ export const orgCandidateInvites = pgTable(
     })
       .default('pending')
       .notNull(),
+    flowType: text('flow_type', {
+      enum: ['proof_card', 'test_match'],
+    })
+      .default('proof_card')
+      .notNull(),
+    assignmentId: uuid('assignment_id').references(() => assignments.id, { onDelete: 'set null' }),
     expiresAt: timestamp('expires_at').notNull(),
     invitedBy: uuid('invited_by').references(() => profiles.id, { onDelete: 'set null' }),
     claimedByProfileId: uuid('claimed_by_profile_id').references(() => profiles.id, {
       onDelete: 'set null',
     }),
     claimedAt: timestamp('claimed_at'),
+    acceptedByProfileId: uuid('accepted_by_profile_id').references(() => profiles.id, {
+      onDelete: 'set null',
+    }),
+    acceptedAt: timestamp('accepted_at'),
+    matchId: uuid('match_id').references(() => matches.id, { onDelete: 'set null' }),
+    conversationId: uuid('conversation_id').references(() => conversations.id, {
+      onDelete: 'set null',
+    }),
     proofSnippetId: uuid('proof_snippet_id'),
     proofShareToken: text('proof_share_token'),
     proofSubmittedAt: timestamp('proof_submitted_at'),
@@ -274,6 +289,10 @@ export const orgCandidateInvites = pgTable(
   (table) => ({
     orgIdIdx: index('idx_org_candidate_invites_org_id').on(table.orgId),
     statusIdx: index('idx_org_candidate_invites_status').on(table.status),
+    flowTypeIdx: index('idx_org_candidate_invites_flow_type').on(table.flowType),
+    assignmentIdIdx: index('idx_org_candidate_invites_assignment_id').on(table.assignmentId),
+    matchIdIdx: index('idx_org_candidate_invites_match_id').on(table.matchId),
+    conversationIdIdx: index('idx_org_candidate_invites_conversation_id').on(table.conversationId),
     expiresAtIdx: index('idx_org_candidate_invites_expires_at').on(table.expiresAt),
   })
 );
@@ -920,6 +939,7 @@ export const matches = pgTable(
     score: numeric('score').notNull(),
     vector: jsonb('vector').notNull(), // Subscores + details
     weights: jsonb('weights').notNull(),
+    isTestMatch: boolean('is_test_match').default(false).notNull(),
     snoozedUntil: timestamp('snoozed_until'), // When match should reappear (null = not snoozed)
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
@@ -929,6 +949,7 @@ export const matches = pgTable(
     profileIdIdx: index('matches_profile_id_idx').on(table.profileId),
     assignmentIdIdx: index('matches_assignment_id_idx').on(table.assignmentId),
     scoreIdx: index('matches_score_idx').on(table.score),
+    isTestMatchIdx: index('matches_is_test_match_idx').on(table.isTestMatch),
   })
 );
 

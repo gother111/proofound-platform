@@ -50,6 +50,7 @@ interface LeftNavProps {
     locked: boolean;
     reason?: string | null;
   };
+  isBetaTesting?: boolean;
 }
 
 interface NavItem {
@@ -61,7 +62,11 @@ interface NavItem {
   lockReason?: string | null;
 }
 
-export function LeftNav({ basePath = '/app/i', individualPortfolioGate }: LeftNavProps) {
+export function LeftNav({
+  basePath = '/app/i',
+  individualPortfolioGate,
+  isBetaTesting = false,
+}: LeftNavProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const pathname = usePathname();
@@ -272,6 +277,18 @@ export function LeftNav({ basePath = '/app/i', individualPortfolioGate }: LeftNa
         </div>
 
         <div className="p-2 border-t border-proofound-stone/60">
+          {isBetaTesting ? (
+            <div
+              className={cn(
+                'mb-2 rounded-md border px-2 py-1 text-xs font-medium text-center',
+                isV2
+                  ? 'border-proofound-forest/25 bg-proofound-forest/10 text-proofound-forest'
+                  : 'border-proofound-forest/30 bg-proofound-parchment text-proofound-forest'
+              )}
+            >
+              {isExpanded ? 'Beta testing' : 'Beta'}
+            </div>
+          ) : null}
           <Button
             variant="ghost"
             size="sm"

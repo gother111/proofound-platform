@@ -39,6 +39,7 @@ export default async function IndividualLayout({ children }: { children: React.R
             locked: !completionState.isPortfolioReady,
             reason: completionState.portfolioLockReason,
           }}
+          isBetaTesting={user.isBetaTesting}
         />
         <div className="flex-1 flex flex-col min-w-0">
           <TopBar userName={userName} userInitials={userInitials} />
