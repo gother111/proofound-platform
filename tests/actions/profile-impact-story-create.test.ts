@@ -62,6 +62,7 @@ const BASE_STORY = {
   measuredOutcomes: [
     {
       id: 'outcome-1',
+      change: 'Increased participants trained through the program',
       label: 'Participants trained',
       value: 120,
       unit: 'people',

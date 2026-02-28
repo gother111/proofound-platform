@@ -46,7 +46,7 @@ interface ImpactStoryFormProps {
 
 type OutcomeDraft = {
   id: string;
-  label: string;
+  change: string;
   value: string;
   unit: string;
   valueMode: ImpactStoryOutcomeValueMode;
@@ -85,7 +85,7 @@ const ARTIFACT_KIND_OPTIONS: ImpactStoryArtifactKind[] = [
 function createOutcomeDraft(seed?: Partial<OutcomeDraft>): OutcomeDraft {
   return {
     id: seed?.id || crypto.randomUUID(),
-    label: seed?.label || '',
+    change: seed?.change || '',
     value: seed?.value || '',
     unit: seed?.unit || '',
     valueMode: seed?.valueMode || 'absolute',
@@ -124,6 +124,28 @@ function formatTimelineForLegacy(timeline: ImpactStoryTimeline): string {
 function getVerificationStatusLabel(status: ImpactStoryVerificationRequestStatus | null) {
   if (!status) return null;
   return status.charAt(0).toUpperCase() + status.slice(1);
+}
+
+function hasMetricValue(value: string) {
+  return value.trim().length > 0;
+}
+
+function formatOutcomeSummary(outcome: ImpactStoryOutcome) {
+  const changeText = (outcome.change || outcome.label || '').trim();
+  if (!changeText) return null;
+
+  const hasValue = outcome.value !== null && outcome.value !== undefined;
+  if (!hasValue) {
+    return changeText;
+  }
+
+  const renderedValue = String(outcome.value).trim();
+  if (!renderedValue) {
+    return changeText;
+  }
+
+  const unitSuffix = outcome.unit?.trim() ? ` ${outcome.unit.trim()}` : '';
+  return `${changeText}: ${renderedValue}${unitSuffix}`;
 }
 
 export function ImpactStoryForm({
@@ -197,11 +219,12 @@ export function ImpactStoryForm({
           story.measuredOutcomes.map((outcome) =>
             createOutcomeDraft({
               id: outcome.id,
-              label: outcome.label,
-              value: String(outcome.value),
-              unit: outcome.unit,
-              valueMode: outcome.valueMode,
-              timeframe: outcome.timeframe,
+              change: outcome.change || outcome.label || '',
+              value:
+                outcome.value !== null && outcome.value !== undefined ? String(outcome.value) : '',
+              unit: outcome.unit || '',
+              valueMode: outcome.valueMode || 'absolute',
+              timeframe: outcome.timeframe || '',
               baseline:
                 outcome.baseline !== null && outcome.baseline !== undefined
                   ? String(outcome.baseline)
@@ -361,18 +384,20 @@ export function ImpactStoryForm({
     }
 
     if (outcomes.length === 0) {
-      nextErrors.outcomes = 'At least one measured outcome is required';
+      nextErrors.outcomes = 'At least one change outcome is required';
     }
 
     outcomes.forEach((outcome, index) => {
-      if (!outcome.label.trim()) nextErrors[`outcome.${index}.label`] = 'Label is required';
-      if (!outcome.value.trim()) nextErrors[`outcome.${index}.value`] = 'Value is required';
-      if (!outcome.unit.trim()) nextErrors[`outcome.${index}.unit`] = 'Unit/type is required';
-      if (!outcome.timeframe.trim())
-        nextErrors[`outcome.${index}.timeframe`] = 'Timeframe is required';
+      if (!outcome.change.trim()) {
+        nextErrors[`outcome.${index}.change`] = 'Change statement is required';
+      }
 
-      if (outcome.value.trim() && Number.isNaN(Number(outcome.value))) {
+      if (hasMetricValue(outcome.value) && Number.isNaN(Number(outcome.value))) {
         nextErrors[`outcome.${index}.value`] = 'Value must be numeric';
+      }
+
+      if (hasMetricValue(outcome.value) && !outcome.unit.trim()) {
+        nextErrors[`outcome.${index}.unit`] = 'Unit/type is required when value is provided';
       }
 
       if (outcome.baseline.trim() && Number.isNaN(Number(outcome.baseline))) {
@@ -426,14 +451,15 @@ export function ImpactStoryForm({
 
     const measuredOutcomes: ImpactStoryOutcome[] = outcomes.map((outcome) => ({
       id: outcome.id,
-      label: outcome.label.trim(),
-      value: Number(outcome.value),
-      unit: outcome.unit.trim(),
-      valueMode: outcome.valueMode,
-      timeframe: outcome.timeframe.trim(),
+      change: outcome.change.trim(),
+      label: outcome.change.trim(),
+      value: hasMetricValue(outcome.value) ? Number(outcome.value) : null,
+      unit: outcome.unit.trim() || null,
+      valueMode: hasMetricValue(outcome.value) ? outcome.valueMode : null,
+      timeframe: outcome.timeframe.trim() || null,
       baseline: outcome.baseline.trim() ? Number(outcome.baseline) : null,
       after: outcome.after.trim() ? Number(outcome.after) : null,
-      confidence: outcome.confidence,
+      confidence: hasMetricValue(outcome.value) ? outcome.confidence : null,
     }));
 
     const supportingArtifacts: ImpactStoryArtifact[] = artifacts.map((artifact) => ({
@@ -454,11 +480,9 @@ export function ImpactStoryForm({
         (affiliationType === 'organization' ? 'Affiliated organization' : 'Individual effort'),
       impact: `${ROLE_SCOPE_OPTIONS.find((item) => item.value === roleScope)?.label || 'Contributed'} as ${roleTitle.trim()}`,
       businessValue: measuredOutcomes.length
-        ? `Delivered ${measuredOutcomes.length} measured outcome${measuredOutcomes.length > 1 ? 's' : ''}`
+        ? `Documented ${measuredOutcomes.length} impact change${measuredOutcomes.length > 1 ? 's' : ''}`
         : 'Structured impact story',
-      outcomes: measuredOutcomes
-        .map((outcome) => `${outcome.label}: ${outcome.value} ${outcome.unit}`)
-        .join('; '),
+      outcomes: measuredOutcomes.map(formatOutcomeSummary).filter(Boolean).join('; '),
       affiliationType,
       affiliationDetails: affiliationDetails.trim() || null,
       roleTitle: roleTitle.trim(),
@@ -826,7 +850,7 @@ export function ImpactStoryForm({
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label>Measured outcomes *</Label>
+                <Label>Outcomes (change-first) *</Label>
                 <Button type="button" variant="outline" size="sm" onClick={addOutcome}>
                   Add outcome
                 </Button>
@@ -849,39 +873,26 @@ export function ImpactStoryForm({
                       </Button>
                     </div>
 
+                    <div className="space-y-1">
+                      <Label>Change/impact statement *</Label>
+                      <Textarea
+                        value={outcome.change}
+                        onChange={(e) => updateOutcome(outcome.id, { change: e.target.value })}
+                        placeholder="e.g., Increased awareness about stories of Ukrainians living in Sweden"
+                        rows={2}
+                      />
+                      {errors[`outcome.${index}.change`] && (
+                        <p className="text-xs text-red-500">{errors[`outcome.${index}.change`]}</p>
+                      )}
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <Label>Label *</Label>
-                        <Input
-                          value={outcome.label}
-                          onChange={(e) => updateOutcome(outcome.id, { label: e.target.value })}
-                          placeholder="e.g., Participants served"
-                        />
-                        {errors[`outcome.${index}.label`] && (
-                          <p className="text-xs text-red-500">{errors[`outcome.${index}.label`]}</p>
-                        )}
-                      </div>
-
-                      <div className="space-y-1">
-                        <Label>Timeframe *</Label>
-                        <Input
-                          value={outcome.timeframe}
-                          onChange={(e) => updateOutcome(outcome.id, { timeframe: e.target.value })}
-                          placeholder="e.g., Q3 2025"
-                        />
-                        {errors[`outcome.${index}.timeframe`] && (
-                          <p className="text-xs text-red-500">
-                            {errors[`outcome.${index}.timeframe`]}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="space-y-1">
-                        <Label>Value *</Label>
+                        <Label>Supporting metric value (optional)</Label>
                         <Input
                           value={outcome.value}
                           onChange={(e) => updateOutcome(outcome.id, { value: e.target.value })}
-                          placeholder="e.g., 1200"
+                          placeholder="e.g., 5000"
                         />
                         {errors[`outcome.${index}.value`] && (
                           <p className="text-xs text-red-500">{errors[`outcome.${index}.value`]}</p>
@@ -889,11 +900,11 @@ export function ImpactStoryForm({
                       </div>
 
                       <div className="space-y-1">
-                        <Label>Unit/type *</Label>
+                        <Label>Metric unit/type</Label>
                         <Input
                           value={outcome.unit}
                           onChange={(e) => updateOutcome(outcome.id, { unit: e.target.value })}
-                          placeholder="e.g., users, %, USD"
+                          placeholder="e.g., views, %, USD"
                         />
                         {errors[`outcome.${index}.unit`] && (
                           <p className="text-xs text-red-500">{errors[`outcome.${index}.unit`]}</p>
@@ -901,7 +912,16 @@ export function ImpactStoryForm({
                       </div>
 
                       <div className="space-y-1">
-                        <Label>Delta vs absolute *</Label>
+                        <Label>Metric timeframe (optional)</Label>
+                        <Input
+                          value={outcome.timeframe}
+                          onChange={(e) => updateOutcome(outcome.id, { timeframe: e.target.value })}
+                          placeholder="e.g., Q3 2025"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <Label>Delta vs absolute (optional)</Label>
                         <select
                           value={outcome.valueMode}
                           onChange={(e) =>
@@ -917,7 +937,7 @@ export function ImpactStoryForm({
                       </div>
 
                       <div className="space-y-1">
-                        <Label>Confidence</Label>
+                        <Label>Metric confidence (optional)</Label>
                         <select
                           value={outcome.confidence}
                           onChange={(e) =>

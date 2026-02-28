@@ -871,8 +871,13 @@ async function findExistingActiveImpactVerificationRequest(args: {
   impactStoryId: string;
   verifierEmail: string;
 }): Promise<ExistingImpactVerificationRow | null> {
-  const rows = await db
-    .select({
+  const selectFn = (db as { select?: unknown }).select;
+  if (typeof selectFn !== 'function') {
+    return null;
+  }
+
+  const selectQuery = selectFn
+    .call(db, {
       id: impactStoryVerificationRequests.id,
       status: impactStoryVerificationRequests.status,
       verifierEmail: impactStoryVerificationRequests.verifierEmail,
@@ -891,6 +896,13 @@ async function findExistingActiveImpactVerificationRequest(args: {
         )
       )
     );
+
+  const rowsResult =
+    selectQuery && typeof selectQuery === 'object' && 'limit' in selectQuery
+      ? await (selectQuery as { limit: (limit: number) => Promise<unknown> }).limit(25)
+      : await selectQuery;
+
+  const rows = Array.isArray(rowsResult) ? rowsResult : [];
 
   const matchingRows = rows.filter(
     (row) => normalizeEmail(row.verifierEmail) === args.verifierEmail
@@ -937,12 +949,84 @@ function formatOutcomesForLegacy(
 ) {
   if (!measuredOutcomes || measuredOutcomes.length === 0) return fallback;
 
-  return measuredOutcomes
-    .map((outcome) => {
-      const value = Number.isFinite(outcome.value) ? outcome.value : 0;
-      return `${outcome.label}: ${value} ${outcome.unit} (${outcome.valueMode})`;
+  const summary = measuredOutcomes
+    .map((outcome, index) => {
+      const changeText = (outcome.change || outcome.label || '').trim() || `Outcome ${index + 1}`;
+      const hasValue =
+        outcome.value !== null &&
+        outcome.value !== undefined &&
+        String(outcome.value).trim().length > 0;
+      if (!hasValue) {
+        return changeText;
+      }
+
+      const value = String(outcome.value).trim();
+      const unitSuffix = outcome.unit?.trim() ? ` ${outcome.unit.trim()}` : '';
+      return `${changeText}: ${value}${unitSuffix}`;
     })
     .join('; ');
+
+  return summary || fallback;
+}
+
+function normalizeMeasuredOutcomes(
+  measuredOutcomes: ImpactStoryOutcome[] | null | undefined
+): ImpactStoryOutcome[] {
+  if (!Array.isArray(measuredOutcomes)) {
+    return [];
+  }
+
+  return measuredOutcomes.map((outcome, index) => {
+    const normalizedChange = (outcome.change || outcome.label || '').trim();
+    const label = (outcome.label || normalizedChange || `Outcome ${index + 1}`).trim();
+    const change = normalizedChange || label;
+
+    const rawValue = outcome.value;
+    const parsedValue =
+      rawValue === null || rawValue === undefined || String(rawValue).trim().length === 0
+        ? null
+        : Number(rawValue);
+    const value = parsedValue !== null && Number.isFinite(parsedValue) ? parsedValue : null;
+
+    const baselineNumber =
+      outcome.baseline === null ||
+      outcome.baseline === undefined ||
+      String(outcome.baseline).trim().length === 0
+        ? null
+        : Number(outcome.baseline);
+    const baseline =
+      baselineNumber !== null && Number.isFinite(baselineNumber) ? baselineNumber : null;
+
+    const afterNumber =
+      outcome.after === null ||
+      outcome.after === undefined ||
+      String(outcome.after).trim().length === 0
+        ? null
+        : Number(outcome.after);
+    const after = afterNumber !== null && Number.isFinite(afterNumber) ? afterNumber : null;
+
+    const valueMode =
+      outcome.valueMode === 'delta' || outcome.valueMode === 'absolute' ? outcome.valueMode : null;
+    const confidence =
+      outcome.confidence === 'exact' ||
+      outcome.confidence === 'estimated' ||
+      outcome.confidence === 'directional'
+        ? outcome.confidence
+        : null;
+
+    return {
+      id: outcome.id || `outcome-${index + 1}`,
+      change,
+      label,
+      value,
+      unit: outcome.unit?.trim() || null,
+      valueMode,
+      timeframe: outcome.timeframe?.trim() || null,
+      baseline,
+      after,
+      confidence,
+    };
+  });
 }
 
 function buildLegacyOrgDescription(data: Omit<ImpactStory, 'id'>) {
@@ -968,7 +1052,7 @@ function buildLegacyBusinessValue(data: Omit<ImpactStory, 'id'>) {
   if (data.businessValue?.trim()) return data.businessValue.trim();
   const outcomeCount = data.measuredOutcomes?.length || 0;
   return outcomeCount > 0
-    ? `Delivered ${outcomeCount} measured outcome${outcomeCount > 1 ? 's' : ''}`
+    ? `Documented ${outcomeCount} impact change${outcomeCount > 1 ? 's' : ''}`
     : 'Structured impact story recorded';
 }
 
@@ -995,11 +1079,24 @@ function buildClaimSnapshot(
     requesterName?: string | null;
   }
 ) {
-  const measuredOutcomeClaims = (data.measuredOutcomes || []).map((outcome) => ({
-    id: `outcome:${outcome.id}`,
-    outcomeId: outcome.id,
-    label: `${outcome.label} (${outcome.value} ${outcome.unit})`,
-  }));
+  const measuredOutcomeClaims = (data.measuredOutcomes || [])
+    .map((outcome, index) => {
+      const changeText = (outcome.change || outcome.label || '').trim() || `Outcome ${index + 1}`;
+      const hasValue =
+        outcome.value !== null &&
+        outcome.value !== undefined &&
+        String(outcome.value).trim().length > 0;
+      const valueSuffix = hasValue
+        ? `${String(outcome.value).trim()}${outcome.unit?.trim() ? ` ${outcome.unit.trim()}` : ''}`
+        : null;
+      const outcomeId = (outcome.id || '').trim() || `generated-${index + 1}`;
+      return {
+        id: `outcome:${outcomeId}`,
+        outcomeId,
+        label: valueSuffix ? `${changeText} (${valueSuffix})` : changeText,
+      };
+    })
+    .filter((claim) => claim.label.trim().length > 0);
   const legacyOutcomeClaimLabel =
     measuredOutcomeClaims.length > 0 ? null : buildLegacyOutcomeClaimLabel(data.outcomes);
   const outcomeClaims =
@@ -1458,11 +1555,16 @@ function isSchemaDriftError(error: unknown, markers: string[]): boolean {
 
 export async function createImpactStory(data: Omit<ImpactStory, 'id'>) {
   const user = await requireAuth();
+  const normalizedMeasuredOutcomes = normalizeMeasuredOutcomes(data.measuredOutcomes);
+  const normalizedData = {
+    ...data,
+    measuredOutcomes: normalizedMeasuredOutcomes,
+  };
   const timelineText = formatTimelineForLegacy(data.timelineStructured, data.timeline);
-  const outcomesText = formatOutcomesForLegacy(data.measuredOutcomes, data.outcomes);
-  const legacyOrgDescription = buildLegacyOrgDescription(data);
-  const legacyImpact = buildLegacyImpact(data);
-  const legacyBusinessValue = buildLegacyBusinessValue(data);
+  const outcomesText = formatOutcomesForLegacy(normalizedMeasuredOutcomes, data.outcomes);
+  const legacyOrgDescription = buildLegacyOrgDescription(normalizedData);
+  const legacyImpact = buildLegacyImpact(normalizedData);
+  const legacyBusinessValue = buildLegacyBusinessValue(normalizedData);
   const structuredInsertPayload = {
     userId: user.id,
     title: data.title,
@@ -1478,7 +1580,7 @@ export async function createImpactStory(data: Omit<ImpactStory, 'id'>) {
     roleScope: data.roleScope ?? null,
     primaryCause: data.primaryCause ?? null,
     secondaryCauses: data.secondaryCauses ?? [],
-    measuredOutcomes: data.measuredOutcomes || [],
+    measuredOutcomes: normalizedMeasuredOutcomes,
     supportingArtifacts: data.supportingArtifacts || [],
     verified: data.verified ?? false,
   };
@@ -1757,11 +1859,16 @@ export async function requestImpactStoryVerification(
 
 export async function updateImpactStory(id: string, data: Omit<ImpactStory, 'id'>) {
   const user = await requireAuth();
+  const normalizedMeasuredOutcomes = normalizeMeasuredOutcomes(data.measuredOutcomes);
+  const normalizedData = {
+    ...data,
+    measuredOutcomes: normalizedMeasuredOutcomes,
+  };
   const timelineText = formatTimelineForLegacy(data.timelineStructured, data.timeline);
-  const outcomesText = formatOutcomesForLegacy(data.measuredOutcomes, data.outcomes);
-  const legacyOrgDescription = buildLegacyOrgDescription(data);
-  const legacyImpact = buildLegacyImpact(data);
-  const legacyBusinessValue = buildLegacyBusinessValue(data);
+  const outcomesText = formatOutcomesForLegacy(normalizedMeasuredOutcomes, data.outcomes);
+  const legacyOrgDescription = buildLegacyOrgDescription(normalizedData);
+  const legacyImpact = buildLegacyImpact(normalizedData);
+  const legacyBusinessValue = buildLegacyBusinessValue(normalizedData);
   const structuredUpdatePayload = {
     title: data.title,
     orgDescription: legacyOrgDescription,
@@ -1776,7 +1883,7 @@ export async function updateImpactStory(id: string, data: Omit<ImpactStory, 'id'
     roleScope: data.roleScope ?? null,
     primaryCause: data.primaryCause ?? null,
     secondaryCauses: data.secondaryCauses ?? [],
-    measuredOutcomes: data.measuredOutcomes || [],
+    measuredOutcomes: normalizedMeasuredOutcomes,
     supportingArtifacts: data.supportingArtifacts || [],
     verified: data.verified ?? false,
   };

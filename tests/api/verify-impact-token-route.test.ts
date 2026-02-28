@@ -113,7 +113,15 @@ function buildImpactAdminClient(overrides?: {
     role_scope: 'owned',
     affiliation_details: 'Voice of Ukrainians in Sweden',
     org_description: 'Community organization',
-    measured_outcomes: [{ id: 'o1', label: 'People supported', value: 120, unit: 'people' }],
+    measured_outcomes: [
+      {
+        id: 'o1',
+        change: 'Increased people supported',
+        label: 'People supported',
+        value: 120,
+        unit: 'people',
+      },
+    ],
     supporting_artifacts: [{ id: 'artifact-1', title: 'Report' }],
   };
   const requesterProfile = overrides?.requesterProfile || {
@@ -466,6 +474,54 @@ describe('verify impact token route', () => {
     expect(body.verification.claims.outcomeClaims.length).toBeGreaterThan(0);
     expect(body.verification.claims.outcomeClaims[0].id).toBe('outcome:o1');
     expect(body.verification.why_you_are_receiving_this).toMatch(/voice of ukrainians in sweden/i);
+  });
+
+  it('GET prefers change-first labels when structured outcomes include change text', async () => {
+    createAdminClientMock.mockReturnValue(
+      buildImpactAdminClient({
+        impactRequest: {
+          id: 'req-change-first',
+          impact_story_id: 'story-change-first',
+          requester_profile_id: 'requester-1',
+          verifier_email: 'verifier@example.com',
+          verifier_relationship: 'Program Director',
+          status: 'pending',
+          claim_snapshot: {},
+          created_at: '2026-02-20T00:00:00.000Z',
+          expires_at: '2099-02-20T00:00:00.000Z',
+        },
+        impactStory: {
+          id: 'story-change-first',
+          title: 'Change-first Story',
+          user_id: 'story-owner-1',
+          role_title: 'Program Lead',
+          role_scope: 'owned',
+          affiliation_details: 'Voice of Ukrainians in Sweden',
+          org_description: 'Community organization',
+          measured_outcomes: [
+            {
+              id: 'o-change-1',
+              change: 'Increased awareness among local communities',
+              label: 'YouTube engagement',
+              value: null,
+              unit: null,
+            },
+          ],
+          supporting_artifacts: [],
+        },
+      })
+    );
+
+    const response = await GET(new NextRequest(`http://localhost/api/verify/${TOKEN}`), {
+      params: Promise.resolve({ token: TOKEN }),
+    });
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.verification.claims.outcomeClaims[0]).toMatchObject({
+      id: 'outcome:o-change-1',
+      label: 'Increased awareness among local communities',
+    });
   });
 
   it('GET falls back to requester_email_snapshot when profile identity is unavailable', async () => {

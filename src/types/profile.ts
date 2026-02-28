@@ -47,11 +47,12 @@ export interface ImpactStoryTimeline {
 
 export interface ImpactStoryOutcome {
   id: string;
+  change?: string | null;
   label: string;
-  value: number;
-  unit: string;
-  valueMode: ImpactStoryOutcomeValueMode;
-  timeframe: string;
+  value?: number | null;
+  unit?: string | null;
+  valueMode?: ImpactStoryOutcomeValueMode | null;
+  timeframe?: string | null;
   baseline?: number | null;
   after?: number | null;
   confidence?: ImpactStoryOutcomeConfidence | null;

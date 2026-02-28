@@ -341,7 +341,8 @@ function parseStoryOutcomeClaims(measuredOutcomes: unknown): ImpactClaim[] {
 
       const outcome = row as Record<string, unknown>;
       const outcomeId = toStringOrNull(outcome.id);
-      const label = toStringOrNull(outcome.label) || `Outcome ${index + 1}`;
+      const label =
+        toStringOrNull(outcome.change) || toStringOrNull(outcome.label) || `Outcome ${index + 1}`;
       const value = outcome.value;
       const unit = toStringOrNull(outcome.unit);
       const renderedValue =

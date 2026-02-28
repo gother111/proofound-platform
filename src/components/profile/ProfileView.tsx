@@ -98,6 +98,23 @@ export function ProfileView({ data }: ProfileViewProps) {
     return keys.map((key) => getTaxonomyLabel(key, CAUSES_TAXONOMY));
   };
 
+  const getOutcomeChangeText = (outcome: NonNullable<ImpactStory['measuredOutcomes']>[number]) => {
+    return (outcome.change || outcome.label || 'Outcome').trim();
+  };
+
+  const getOutcomeMetricText = (outcome: NonNullable<ImpactStory['measuredOutcomes']>[number]) => {
+    const hasValue =
+      outcome.value !== null &&
+      outcome.value !== undefined &&
+      String(outcome.value).trim().length > 0;
+    if (!hasValue) return null;
+
+    const valueText = String(outcome.value).trim();
+    const unitSuffix = outcome.unit?.trim() ? ` ${outcome.unit.trim()}` : '';
+    const meta = [outcome.valueMode, outcome.timeframe].filter(Boolean).join(', ');
+    return `${valueText}${unitSuffix}${meta ? ` (${meta})` : ''}`;
+  };
+
   const getVerificationBadge = (
     status: ImpactStoryVerificationRequestStatus | null | undefined
   ) => {
@@ -304,16 +321,19 @@ export function ProfileView({ data }: ProfileViewProps) {
                           </h4>
                           {story.measuredOutcomes && story.measuredOutcomes.length > 0 ? (
                             <ul className="space-y-2">
-                              {story.measuredOutcomes.map((outcome) => (
-                                <li key={outcome.id} className="text-sm">
-                                  <span className="font-medium">{outcome.label}:</span>{' '}
-                                  {outcome.value} {outcome.unit}
-                                  <span className="text-muted-foreground">
-                                    {' '}
-                                    ({outcome.valueMode}, {outcome.timeframe})
-                                  </span>
-                                </li>
-                              ))}
+                              {story.measuredOutcomes.map((outcome) => {
+                                const metricText = getOutcomeMetricText(outcome);
+                                return (
+                                  <li key={outcome.id} className="text-sm">
+                                    <span className="font-medium">
+                                      {getOutcomeChangeText(outcome)}
+                                    </span>
+                                    {metricText ? (
+                                      <span className="text-muted-foreground"> · {metricText}</span>
+                                    ) : null}
+                                  </li>
+                                );
+                              })}
                             </ul>
                           ) : (
                             <p className="text-sm">{story.outcomes}</p>

@@ -59,6 +59,7 @@ const BASE_STORY = {
   measuredOutcomes: [
     {
       id: 'outcome-1',
+      change: 'Increased time saved for operations team',
       label: 'Time saved',
       value: 10,
       unit: 'hours',

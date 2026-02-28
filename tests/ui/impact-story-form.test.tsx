@@ -76,20 +76,8 @@ function fillRequiredFields() {
     target: { value: 'education' },
   });
 
-  fireEvent.change(screen.getByPlaceholderText(/Participants served/i), {
-    target: { value: 'Participants supported' },
-  });
-
-  fireEvent.change(screen.getByPlaceholderText(/Q3 2025/i), {
-    target: { value: 'Q1 2025' },
-  });
-
-  fireEvent.change(screen.getByPlaceholderText(/1200/i), {
-    target: { value: '1200' },
-  });
-
-  fireEvent.change(screen.getByPlaceholderText(/users, %, USD/i), {
-    target: { value: 'users' },
+  fireEvent.change(screen.getByPlaceholderText(/Increased awareness about stories/i), {
+    target: { value: 'Increased awareness among local communities' },
   });
 }
 
@@ -131,7 +119,39 @@ describe('ImpactStoryForm', () => {
       end: '2025-06-30',
       ongoing: false,
     });
+    expect(payload.measuredOutcomes?.[0]).toMatchObject({
+      change: 'Increased awareness among local communities',
+      label: 'Increased awareness among local communities',
+      value: null,
+      unit: null,
+    });
     expect(payload.verificationRequest).toBeNull();
+  });
+
+  it('blocks save when supporting metric value is provided without a unit', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <ImpactStoryForm
+        open={true}
+        onOpenChange={vi.fn()}
+        onSave={onSave}
+        onSendVerificationRequest={vi.fn()}
+      />
+    );
+
+    fillRequiredFields();
+
+    fireEvent.change(screen.getByPlaceholderText(/e.g., 5000/i), {
+      target: { value: '5000' },
+    });
+
+    fireEvent.submit(screen.getByRole('button', { name: /add story/i }).closest('form')!);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Unit\/type is required when value is provided/i)).toBeTruthy();
+    });
+    expect(onSave).not.toHaveBeenCalled();
   });
 
   it('requires valid verifier email for send request button', async () => {
