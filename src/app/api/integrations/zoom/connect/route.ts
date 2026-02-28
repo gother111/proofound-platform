@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
     const redirectUri = resolveOAuthRedirectUri(
       request,
       process.env.ZOOM_REDIRECT_URI,
-      '/api/integrations/zoom/callback'
+      '/api/integrations/zoom/callback',
+      { preferRequestOrigin: true }
     );
 
     // CSRF protection: tie `state` to an httpOnly cookie (10 min window)

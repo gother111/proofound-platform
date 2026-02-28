@@ -33,10 +33,10 @@ LINKEDIN_VERIFICATION_ADMIN_EMAILS=admin1@proofound.io,admin2@proofound.io
 CRON_SECRET=your_secure_random_token_here
 ZOOM_CLIENT_ID=your_zoom_client_id
 ZOOM_CLIENT_SECRET=your_zoom_client_secret
-ZOOM_REDIRECT_URI=https://yourdomain.com/api/integrations/zoom/callback
+ZOOM_REDIRECT_URI=/api/integrations/zoom/callback
 GOOGLE_CLIENT_ID=your_google_oauth_client_id
 GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
-GOOGLE_REDIRECT_URI=https://yourdomain.com/api/integrations/google/callback
+GOOGLE_REDIRECT_URI=/api/integrations/google/callback
 LINKEDIN_CLIENT_ID=your_linkedin_client_id
 LINKEDIN_CLIENT_SECRET=your_linkedin_client_secret
 E2E_PROVIDER_USER_ID=deterministic_user_uuid
@@ -359,9 +359,9 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 **Required Vars**:
 
 - `ZOOM_CLIENT_ID` and `ZOOM_CLIENT_SECRET` — Zoom OAuth app credentials.
-- `ZOOM_REDIRECT_URI` — Must match the redirect URL in your Zoom app (recommended: `https://yourdomain.com/api/integrations/zoom/callback`).
+- `ZOOM_REDIRECT_URI` — Must match the redirect URL in your Zoom app (recommended runtime value: `/api/integrations/zoom/callback`).
 - `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` — Required for Google Meet integration and Google social login through Supabase.
-- `GOOGLE_REDIRECT_URI` — Must match the app integration callback (recommended: `https://yourdomain.com/api/integrations/google/callback`).
+- `GOOGLE_REDIRECT_URI` — Must match the app integration callback (recommended runtime value: `/api/integrations/google/callback`).
 - `LINKEDIN_CLIENT_ID` and `LINKEDIN_CLIENT_SECRET` — Required for LinkedIn settings integration callback and LinkedIn social login through Supabase.
 - `LINKEDIN_REDIRECT_URI` - Set to your canonical app callback (recommended: `https://yourdomain.com/api/auth/linkedin/callback`).
 - `LINKEDIN_API_VERSION` - Optional LinkedIn REST version header for Verified APIs (`/rest/verificationReport`, `/rest/identityMe`). Defaults to `202510`.
@@ -396,9 +396,11 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 **Setup**:
 
 1. Create a Zoom OAuth app and copy the client ID/secret.
-2. Set `ZOOM_REDIRECT_URI` to the callback route above and add the same URL in Zoom app settings.
-3. Configure one Google OAuth client with both callback URIs:
+2. Set `ZOOM_REDIRECT_URI` to `/api/integrations/zoom/callback` for multi-domain runtime support and add each fully-qualified callback URL to Zoom app settings.
+3. Configure one Google OAuth client with callback URIs for each app host plus Supabase social auth:
    - `https://yourdomain.com/api/integrations/google/callback`
+   - `http://localhost:3000/api/integrations/google/callback`
+   - `https://preview.yourdomain.com/api/integrations/google/callback`
    - `https://<supabase-project>.supabase.co/auth/v1/callback`
 4. Configure LinkedIn app callback URIs:
    - `https://yourdomain.com/api/auth/linkedin/callback`

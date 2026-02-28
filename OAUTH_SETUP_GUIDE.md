@@ -39,6 +39,7 @@ Complete guide for setting up Zoom and Google Meet OAuth integrations for video 
 5. **Redirect URLs**
    - Recommended: `https://yourdomain.com/api/integrations/zoom/callback`
    - For local dev: `http://localhost:3000/api/integrations/zoom/callback`
+   - Stable preview domain: `https://preview.yourdomain.com/api/integrations/zoom/callback`
    - Supported legacy callback: `/api/auth/zoom/callback` (only use if your Zoom app is already configured to it)
 
 6. **Scopes Required**
@@ -58,7 +59,7 @@ Add to your `.env.local`:
 # Zoom OAuth
 ZOOM_CLIENT_ID=your_zoom_client_id_here
 ZOOM_CLIENT_SECRET=your_zoom_client_secret_here
-ZOOM_REDIRECT_URI=https://yourdomain.com/api/integrations/zoom/callback
+ZOOM_REDIRECT_URI=/api/integrations/zoom/callback
 ```
 
 ### Step 3: Test OAuth Flow
@@ -128,6 +129,7 @@ ZOOM_REDIRECT_URI=https://yourdomain.com/api/integrations/zoom/callback
 3. **Authorized Redirect URIs**
    - Recommended: `https://yourdomain.com/api/integrations/google/callback`
    - For local dev: `http://localhost:3000/api/integrations/google/callback`
+   - Stable preview domain: `https://preview.yourdomain.com/api/integrations/google/callback`
    - Supported legacy callback: `/api/auth/google/callback` (only use if your Google OAuth client is already configured to it)
 
 4. **Create**
@@ -142,8 +144,10 @@ Add to your `.env.local`:
 # Google OAuth
 GOOGLE_CLIENT_ID=your_google_client_id_here.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your_google_client_secret_here
-GOOGLE_REDIRECT_URI=https://yourdomain.com/api/integrations/google/callback
+GOOGLE_REDIRECT_URI=/api/integrations/google/callback
 ```
+
+Using a relative callback path is recommended for multi-domain setups because the app resolves it against the current request origin.
 
 ### Step 5: Test OAuth Flow
 
@@ -162,12 +166,12 @@ Complete `.env.local` file:
 # === Zoom OAuth ===
 ZOOM_CLIENT_ID=your_zoom_client_id
 ZOOM_CLIENT_SECRET=your_zoom_client_secret
-ZOOM_REDIRECT_URI=https://yourdomain.com/api/integrations/zoom/callback
+ZOOM_REDIRECT_URI=/api/integrations/zoom/callback
 
 # === Google OAuth ===
 GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_REDIRECT_URI=https://yourdomain.com/api/integrations/google/callback
+GOOGLE_REDIRECT_URI=/api/integrations/google/callback
 
 # === Other Required Env Vars ===
 # (Your existing Supabase, database, etc. variables)

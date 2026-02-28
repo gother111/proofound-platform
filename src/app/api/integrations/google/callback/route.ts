@@ -83,7 +83,8 @@ export async function GET(request: NextRequest) {
     const redirectUri = resolveOAuthRedirectUri(
       request,
       process.env.GOOGLE_REDIRECT_URI,
-      request.nextUrl.pathname
+      request.nextUrl.pathname,
+      { preferRequestOrigin: true }
     );
     const tokens = await exchangeGoogleCode(code, redirectUri);
 

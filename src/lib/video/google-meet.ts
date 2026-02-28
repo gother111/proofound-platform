@@ -10,7 +10,7 @@
  * 4. Add these to .env.local:
  *    GOOGLE_CLIENT_ID=your_client_id.apps.googleusercontent.com
  *    GOOGLE_CLIENT_SECRET=your_client_secret
- *    GOOGLE_REDIRECT_URI=https://yourdomain.com/api/auth/google/callback
+ *    GOOGLE_REDIRECT_URI=/api/integrations/google/callback
  * 5. Add redirect URI in Google Cloud Console
  * 6. Add scopes: https://www.googleapis.com/auth/calendar.events
  */
@@ -203,41 +203,44 @@ export async function createGoogleMeeting(
   const accessToken = await getValidGoogleToken(userId);
 
   // Create calendar event with Google Meet link
-  const response = await fetch(`${GOOGLE_CALENDAR_API}/calendars/primary/events?conferenceDataVersion=1`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify({
-      summary: config.summary,
-      description: config.description,
-      start: {
-        dateTime: config.startTime.toISOString(),
-        timeZone: config.timezone,
+  const response = await fetch(
+    `${GOOGLE_CALENDAR_API}/calendars/primary/events?conferenceDataVersion=1`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
       },
-      end: {
-        dateTime: config.endTime.toISOString(),
-        timeZone: config.timezone,
-      },
-      attendees: config.attendeeEmails?.map((email) => ({ email })),
-      conferenceData: {
-        createRequest: {
-          requestId: `meet-${Date.now()}`,
-          conferenceSolutionKey: {
-            type: 'hangoutsMeet',
+      body: JSON.stringify({
+        summary: config.summary,
+        description: config.description,
+        start: {
+          dateTime: config.startTime.toISOString(),
+          timeZone: config.timezone,
+        },
+        end: {
+          dateTime: config.endTime.toISOString(),
+          timeZone: config.timezone,
+        },
+        attendees: config.attendeeEmails?.map((email) => ({ email })),
+        conferenceData: {
+          createRequest: {
+            requestId: `meet-${Date.now()}`,
+            conferenceSolutionKey: {
+              type: 'hangoutsMeet',
+            },
           },
         },
-      },
-      reminders: {
-        useDefault: false,
-        overrides: [
-          { method: 'email', minutes: 24 * 60 }, // 1 day before
-          { method: 'popup', minutes: 30 }, // 30 minutes before
-        ],
-      },
-    }),
-  });
+        reminders: {
+          useDefault: false,
+          overrides: [
+            { method: 'email', minutes: 24 * 60 }, // 1 day before
+            { method: 'popup', minutes: 30 }, // 30 minutes before
+          ],
+        },
+      }),
+    }
+  );
 
   if (!response.ok) {
     const error = await response.text();

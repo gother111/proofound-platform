@@ -12,9 +12,39 @@ if (!(env.NEXT_PUBLIC_SITE_URL || env.SITE_URL)) missing.push('NEXT_PUBLIC_SITE_
 if (!env.DATABASE_URL) missing.push('DATABASE_URL');
 
 const hasLinkedInCreds = Boolean(env.LINKEDIN_CLIENT_ID) && Boolean(env.LINKEDIN_CLIENT_SECRET);
+const hasGoogleCreds = Boolean(env.GOOGLE_CLIENT_ID) && Boolean(env.GOOGLE_CLIENT_SECRET);
+const hasZoomCreds = Boolean(env.ZOOM_CLIENT_ID) && Boolean(env.ZOOM_CLIENT_SECRET);
+
+const googleRedirectPath = (() => {
+  try {
+    const value = env.GOOGLE_REDIRECT_URI;
+    if (!value) return null;
+    if (value.startsWith('/')) return value;
+    return new URL(value).pathname;
+  } catch {
+    return null;
+  }
+})();
+
 if (hasLinkedInCreds && !env.LINKEDIN_REDIRECT_URI) {
   warnings.push(
     'LINKEDIN_REDIRECT_URI is not set. LinkedIn OAuth may fail with redirect_uri mismatch.'
+  );
+}
+
+if (hasGoogleCreds && !env.GOOGLE_REDIRECT_URI) {
+  warnings.push(
+    'GOOGLE_REDIRECT_URI is not set. Google OAuth may fail with redirect_uri mismatch.'
+  );
+}
+
+if (hasZoomCreds && !env.ZOOM_REDIRECT_URI) {
+  warnings.push('ZOOM_REDIRECT_URI is not set. Zoom OAuth may fail with redirect_uri mismatch.');
+}
+
+if (googleRedirectPath === '/api/auth/google/callback') {
+  warnings.push(
+    'GOOGLE_REDIRECT_URI points to legacy /api/auth/google/callback. Prefer /api/integrations/google/callback.'
   );
 }
 

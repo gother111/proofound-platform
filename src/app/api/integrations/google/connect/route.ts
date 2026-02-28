@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
     const redirectUri = resolveOAuthRedirectUri(
       request,
       process.env.GOOGLE_REDIRECT_URI,
-      '/api/integrations/google/callback'
+      '/api/integrations/google/callback',
+      { preferRequestOrigin: true }
     );
 
     // CSRF protection: tie `state` to an httpOnly cookie (10 min window)

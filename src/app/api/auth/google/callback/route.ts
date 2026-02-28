@@ -4,6 +4,7 @@ import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { exchangeGoogleCode } from '@/lib/integrations/google-meet';
 import { resolveOAuthRedirectUri } from '@/lib/integrations/oauth-helpers';
+import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +15,11 @@ export const dynamic = 'force-dynamic';
  * Called by Google after user authorizes the app
  */
 export async function GET(request: NextRequest) {
+  log.warn('google.oauth.legacy_callback_used', {
+    path: request.nextUrl.pathname,
+    canonicalPath: '/api/integrations/google/callback',
+  });
+
   try {
     const authContext = await requireApiAuthContext();
     if (!authContext) {

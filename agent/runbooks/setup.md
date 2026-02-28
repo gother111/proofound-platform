@@ -91,7 +91,9 @@ Notes:
 
 - `ZOOM_REDIRECT_URI` and `GOOGLE_REDIRECT_URI` must match the redirect URIs configured in the provider consoles.
 - `GOOGLE_CLIENT_ID` must be the raw OAuth client id (for example `...apps.googleusercontent.com`) and must not include `http://` or `https://`.
-- For app-managed Google Meet integration, prefer `GOOGLE_REDIRECT_URI=https://<site-domain>/api/integrations/google/callback`.
+- For app-managed Google Meet integration, prefer `GOOGLE_REDIRECT_URI=/api/integrations/google/callback`.
+- For app-managed Zoom integration, prefer `ZOOM_REDIRECT_URI=/api/integrations/zoom/callback`.
+- Add fully-qualified callback URLs for each app host in provider dashboards (production, localhost, and stable preview domains).
 - For LinkedIn settings integration, callback must include `https://<site-domain>/api/auth/linkedin/callback`.
 - LinkedIn callback URI behavior:
   - Absolute `LINKEDIN_REDIRECT_URI`: used as-is.
