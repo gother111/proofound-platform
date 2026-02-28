@@ -33,6 +33,24 @@ function isMissingColumnError(error: unknown, column: string) {
   return (e.code === 'PGRST204' || e.code === '42703') && errorText.includes(column.toLowerCase());
 }
 
+function isAnyMissingColumnError(error: unknown) {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const e = error as { code?: string; message?: string; details?: string; hint?: string };
+  if (e.code !== 'PGRST204' && e.code !== '42703') {
+    return false;
+  }
+
+  const errorText = `${e.message || ''} ${e.details || ''} ${e.hint || ''}`.toLowerCase();
+  return (
+    errorText.includes('column') ||
+    errorText.includes('schema cache') ||
+    errorText.includes('does not exist')
+  );
+}
+
 function isNotFoundError(error: unknown) {
   if (!error || typeof error !== 'object') {
     return false;
@@ -99,11 +117,19 @@ async function getSkillVerificationByTokenOrLegacyId(
   selectClause: string,
   options?: {
     fallbackSelectClause?: string;
+    compatibilitySelectClauses?: string[];
     hydrateSkillWhenMissing?: boolean;
+    fallbackMissingColumns?: string[];
+    fallbackOnAnyMissingColumn?: boolean;
   }
 ): Promise<{ data: any; error: any }> {
   const hydrateSkillWhenMissing = options?.hydrateSkillWhenMissing ?? false;
-  const fallbackSelectClause = options?.fallbackSelectClause || null;
+  const fallbackSelectClauses = [
+    ...(options?.compatibilitySelectClauses || []),
+    ...(options?.fallbackSelectClause ? [options.fallbackSelectClause] : []),
+  ];
+  const fallbackMissingColumns = options?.fallbackMissingColumns || [];
+  const fallbackOnAnyMissingColumn = options?.fallbackOnAnyMissingColumn ?? false;
 
   const loadSkillDetails = async (skillId: string) => {
     const hintedLookup = await client
@@ -161,32 +187,46 @@ async function getSkillVerificationByTokenOrLegacyId(
     };
   };
 
+  const shouldRetryWithCompatibilitySelect = (error: unknown) => {
+    if (isSkillRelationQueryError(error)) {
+      return true;
+    }
+    if (fallbackOnAnyMissingColumn && isAnyMissingColumnError(error)) {
+      return true;
+    }
+    if (
+      fallbackMissingColumns.length > 0 &&
+      isMissingAnyColumnError(error, fallbackMissingColumns)
+    ) {
+      return true;
+    }
+    return false;
+  };
+
   const runLookup = async (column: 'verification_token' | 'id', value: string) => {
-    const primaryLookup = await client
-      .from('skill_verification_requests')
-      .select(selectClause)
-      .eq(column, value)
-      .single();
+    const selectClauses = [selectClause, ...fallbackSelectClauses];
+    let lastError: unknown = null;
 
-    if (primaryLookup.data) {
-      return hydrateSkill(primaryLookup.data);
+    for (let index = 0; index < selectClauses.length; index += 1) {
+      const currentSelectClause = selectClauses[index];
+      const lookup = await client
+        .from('skill_verification_requests')
+        .select(currentSelectClause)
+        .eq(column, value)
+        .single();
+
+      if (lookup.data) {
+        return hydrateSkill(lookup.data);
+      }
+
+      lastError = lookup.error;
+      const hasCompatibilityFallback = index < selectClauses.length - 1;
+      if (!hasCompatibilityFallback || !shouldRetryWithCompatibilitySelect(lookup.error)) {
+        return { data: null, error: lookup.error };
+      }
     }
 
-    if (!fallbackSelectClause || !isSkillRelationQueryError(primaryLookup.error)) {
-      return { data: null, error: primaryLookup.error };
-    }
-
-    const fallbackLookup = await client
-      .from('skill_verification_requests')
-      .select(fallbackSelectClause)
-      .eq(column, value)
-      .single();
-
-    if (fallbackLookup.data) {
-      return hydrateSkill(fallbackLookup.data);
-    }
-
-    return { data: null, error: fallbackLookup.error || primaryLookup.error };
+    return { data: null, error: lastError };
   };
 
   const tokenLookup = await runLookup('verification_token', token);
@@ -662,8 +702,12 @@ async function getRequesterProfileForImpactVerification(
 
 async function getRequesterProfileForSkillVerification(
   client: VerificationDataClient,
-  requesterProfileId: string
+  requesterProfileId: string | null
 ) {
+  if (!requesterProfileId) {
+    return { data: null, error: null };
+  }
+
   const selectClause = 'display_name, avatar_url, email';
   const fallbackSelectClause = 'display_name, avatar_url';
 
@@ -695,6 +739,30 @@ async function getRequesterProfileForSkillVerification(
         } as ProfileContext)
       : null,
     error: null,
+  };
+}
+
+function normalizeSkillVerificationRecord(verification: any) {
+  const integrityStatus = verification?.integrity_status === 'flagged' ? 'flagged' : 'clear';
+
+  return {
+    ...verification,
+    requester_email_snapshot: toStringOrNull(verification?.requester_email_snapshot),
+    requires_authenticated_verifier: Boolean(verification?.requires_authenticated_verifier),
+    integrity_status: integrityStatus,
+    integrity_reason:
+      integrityStatus === 'flagged' ? toStringOrNull(verification?.integrity_reason) : null,
+    integrity_meta:
+      verification?.integrity_meta && typeof verification.integrity_meta === 'object'
+        ? verification.integrity_meta
+        : {},
+    integrity_flagged_at: verification?.integrity_flagged_at ?? null,
+    risk_signals:
+      verification?.risk_signals && typeof verification.risk_signals === 'object'
+        ? verification.risk_signals
+        : {},
+    requester_ip_hash: toStringOrNull(verification?.requester_ip_hash),
+    requester_user_agent_hash: toStringOrNull(verification?.requester_user_agent_hash),
   };
 }
 
@@ -898,43 +966,85 @@ export async function GET(
         )
       `,
         {
+          compatibilitySelectClauses: [
+            `
+              id,
+              skill_id,
+              requester_profile_id,
+              requester_email_snapshot,
+              verifier_email,
+              verifier_source,
+              message,
+              status,
+              requires_authenticated_verifier,
+              integrity_status,
+              integrity_reason,
+              created_at,
+              expires_at
+            `,
+            `
+              id,
+              skill_id,
+              requester_profile_id,
+              verifier_email,
+              verifier_source,
+              message,
+              status,
+              created_at,
+              expires_at
+            `,
+          ],
           fallbackSelectClause: `
             id,
             skill_id,
             requester_profile_id,
-            requester_email_snapshot,
             verifier_email,
             verifier_source,
             message,
             status,
-            requires_authenticated_verifier,
-            integrity_status,
-            integrity_reason,
             created_at,
             expires_at
           `,
           hydrateSkillWhenMissing: true,
+          fallbackOnAnyMissingColumn: true,
         }
       );
 
-    if (verificationError || !verification) {
+    if (verificationError) {
+      if (isNotFoundError(verificationError)) {
+        return NextResponse.json(
+          { error: 'Verification request not found or invalid token' },
+          { status: 404 }
+        );
+      }
+
+      console.error('Skill verification lookup failed:', verificationError);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+
+    if (!verification) {
       return NextResponse.json(
         { error: 'Verification request not found or invalid token' },
         { status: 404 }
       );
     }
 
-    if (verification.expires_at && new Date(verification.expires_at) < new Date()) {
-      if (verification.status === 'pending') {
+    const normalizedVerification = normalizeSkillVerificationRecord(verification);
+
+    if (
+      normalizedVerification.expires_at &&
+      new Date(normalizedVerification.expires_at) < new Date()
+    ) {
+      if (normalizedVerification.status === 'pending') {
         await skillDataClient
           .from('skill_verification_requests')
           .update({ status: 'expired' })
-          .eq('id', verification.id);
+          .eq('id', normalizedVerification.id);
       }
 
       return NextResponse.json({
         verification: {
-          ...formatVerificationResponse(verification),
+          ...formatVerificationResponse(normalizedVerification),
           verification_type: 'skill',
           status: 'expired',
         },
@@ -944,7 +1054,7 @@ export async function GET(
     const { data: requesterProfile, error: requesterProfileError } =
       await getRequesterProfileForSkillVerification(
         skillDataClient,
-        verification.requester_profile_id
+        normalizedVerification.requester_profile_id
       );
     if (requesterProfileError) {
       console.error('Skill requester profile lookup error:', requesterProfileError);
@@ -953,18 +1063,18 @@ export async function GET(
     const { data: skillProofs, error: skillProofsError } = await skillDataClient
       .from('skill_proofs')
       .select('id, proof_type, title, description, url, file_path, issued_date, expires_date')
-      .eq('skill_id', verification.skill_id)
-      .eq('profile_id', verification.requester_profile_id);
+      .eq('skill_id', normalizedVerification.skill_id)
+      .eq('profile_id', normalizedVerification.requester_profile_id);
     if (skillProofsError) {
       console.error('Skill proof lookup error:', skillProofsError);
     }
 
     const requesterIdentity = resolveSkillRequesterIdentity({
       profile: requesterProfile || null,
-      requesterEmailSnapshot: verification.requester_email_snapshot,
+      requesterEmailSnapshot: normalizedVerification.requester_email_snapshot,
     });
 
-    const skill = verification.skills as any;
+    const skill = normalizedVerification.skills as any;
     let skillName = 'Unknown Skill';
 
     if (skill?.taxonomy?.name_i18n?.en) {
@@ -982,24 +1092,25 @@ export async function GET(
 
     return NextResponse.json({
       verification: {
-        id: verification.id,
+        id: normalizedVerification.id,
         verification_type: 'skill',
         skill_name: skillName,
         skill_code: skill?.skill_code || null,
         requester_name: requesterIdentity.requesterName,
         requester_email: requesterIdentity.requesterEmail,
         requester_avatar: requesterProfile?.avatar_url || null,
-        verifier_source: verification.verifier_source,
-        message: verification.message,
-        status: verification.status,
-        requires_authenticated_verifier: verification.requires_authenticated_verifier || false,
-        integrity_status: verification.integrity_status || 'clear',
+        verifier_source: normalizedVerification.verifier_source,
+        message: normalizedVerification.message,
+        status: normalizedVerification.status,
+        requires_authenticated_verifier:
+          normalizedVerification.requires_authenticated_verifier || false,
+        integrity_status: normalizedVerification.integrity_status || 'clear',
         integrity_reason:
-          (verification.integrity_status || 'clear') === 'flagged'
-            ? verification.integrity_reason || null
+          (normalizedVerification.integrity_status || 'clear') === 'flagged'
+            ? normalizedVerification.integrity_reason || null
             : null,
-        created_at: verification.created_at,
-        expires_at: verification.expires_at,
+        created_at: normalizedVerification.created_at,
+        expires_at: normalizedVerification.expires_at,
         proofs: Array.isArray(skillProofs)
           ? skillProofs.map((proof) => sanitizeSkillProofForResponse(proof as SkillProofContext))
           : [],
@@ -1349,6 +1460,36 @@ export async function POST(
         )
       `,
         {
+          compatibilitySelectClauses: [
+            `
+              id,
+              skill_id,
+              status,
+              expires_at,
+              requester_profile_id,
+              verifier_email,
+              verifier_source,
+              verifier_profile_id,
+              requires_authenticated_verifier,
+              integrity_status,
+              integrity_reason,
+              integrity_meta,
+              integrity_flagged_at,
+              risk_signals,
+              requester_ip_hash,
+              requester_user_agent_hash
+            `,
+            `
+              id,
+              skill_id,
+              status,
+              expires_at,
+              requester_profile_id,
+              verifier_email,
+              verifier_source,
+              verifier_profile_id
+            `,
+          ],
           fallbackSelectClause: `
             id,
             skill_id,
@@ -1357,29 +1498,36 @@ export async function POST(
             requester_profile_id,
             verifier_email,
             verifier_source,
-            verifier_profile_id,
-            requires_authenticated_verifier,
-            integrity_status,
-            integrity_reason,
-            integrity_meta,
-            integrity_flagged_at,
-            risk_signals,
-            requester_ip_hash,
-            requester_user_agent_hash
+            verifier_profile_id
           `,
           hydrateSkillWhenMissing: true,
+          fallbackOnAnyMissingColumn: true,
         }
       );
 
-    if (verificationError || !verification) {
+    if (verificationError) {
+      if (isNotFoundError(verificationError)) {
+        return NextResponse.json(
+          { error: 'Verification request not found or invalid token' },
+          { status: 404 }
+        );
+      }
+
+      console.error('Skill verification submit lookup failed:', verificationError);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+
+    if (!verification) {
       return NextResponse.json(
         { error: 'Verification request not found or invalid token' },
         { status: 404 }
       );
     }
 
-    const normalizedSkillVerifierEmail = normalizeEmail(verification.verifier_email);
-    if (verification.requires_authenticated_verifier) {
+    const normalizedVerification = normalizeSkillVerificationRecord(verification);
+
+    const normalizedSkillVerifierEmail = normalizeEmail(normalizedVerification.verifier_email);
+    if (normalizedVerification.requires_authenticated_verifier) {
       if (!authIdentity.isAuthenticated || !authIdentity.email) {
         return NextResponse.json(
           {
@@ -1401,18 +1549,21 @@ export async function POST(
       }
     }
 
-    if (verification.status !== 'pending') {
+    if (normalizedVerification.status !== 'pending') {
       return NextResponse.json(
-        { error: `This request has already been ${verification.status}` },
+        { error: `This request has already been ${normalizedVerification.status}` },
         { status: 400 }
       );
     }
 
-    if (verification.expires_at && new Date(verification.expires_at) < new Date()) {
+    if (
+      normalizedVerification.expires_at &&
+      new Date(normalizedVerification.expires_at) < new Date()
+    ) {
       await supabase
         .from('skill_verification_requests')
         .update({ status: 'expired' })
-        .eq('id', verification.id);
+        .eq('id', normalizedVerification.id);
 
       return NextResponse.json({ error: 'This verification request has expired' }, { status: 400 });
     }
@@ -1420,21 +1571,22 @@ export async function POST(
     const newStatus = validated.action === 'accept' ? 'accepted' : 'declined';
     const respondedAt = new Date().toISOString();
     const sameDeviceSignal = hasSameDeviceSignal({
-      requesterIpHash: verification.requester_ip_hash,
-      requesterUserAgentHash: verification.requester_user_agent_hash,
+      requesterIpHash: normalizedVerification.requester_ip_hash,
+      requesterUserAgentHash: normalizedVerification.requester_user_agent_hash,
       responderIpHash: responderFingerprints.ipHash,
       responderUserAgentHash: responderFingerprints.userAgentHash,
     });
     const mergedIntegrity = mergeIntegrityWithResponseSignal({
-      currentStatus: verification.integrity_status,
-      currentReason: verification.integrity_reason,
-      currentSignals: verification.risk_signals,
+      currentStatus: normalizedVerification.integrity_status,
+      currentReason: normalizedVerification.integrity_reason,
+      currentSignals: normalizedVerification.risk_signals,
       sameDeviceSignal,
     });
 
     const existingSkillIntegrityMeta =
-      verification.integrity_meta && typeof verification.integrity_meta === 'object'
-        ? (verification.integrity_meta as Record<string, unknown>)
+      normalizedVerification.integrity_meta &&
+      typeof normalizedVerification.integrity_meta === 'object'
+        ? (normalizedVerification.integrity_meta as Record<string, unknown>)
         : {};
 
     const skillIntegrityMeta = {
@@ -1447,27 +1599,50 @@ export async function POST(
       },
     };
 
-    const { error: updateError } = await skillDataClient
+    const fullUpdatePayload = {
+      status: newStatus,
+      responded_at: respondedAt,
+      response_message: validated.message || null,
+      responder_ip_hash: responderFingerprints.ipHash,
+      responder_user_agent_hash: responderFingerprints.userAgentHash,
+      response_auth_method: getResponseAuthMethod(authIdentity),
+      response_actor_email: authIdentity.email,
+      verifier_profile_id:
+        authIdentity.profileId || normalizedVerification.verifier_profile_id || null,
+      risk_signals: mergedIntegrity.riskSignals,
+      integrity_status: mergedIntegrity.integrityStatus,
+      integrity_reason: mergedIntegrity.integrityReason,
+      integrity_meta: skillIntegrityMeta,
+      integrity_flagged_at:
+        mergedIntegrity.integrityStatus === 'flagged'
+          ? normalizedVerification.integrity_flagged_at || mergedIntegrity.integrityFlaggedAt
+          : null,
+    };
+
+    let { error: updateError } = await skillDataClient
       .from('skill_verification_requests')
-      .update({
+      .update(fullUpdatePayload)
+      .eq('id', normalizedVerification.id);
+
+    if (updateError && isAnyMissingColumnError(updateError)) {
+      console.warn(
+        'Skill verification update falling back to legacy-compatible payload due to missing columns:',
+        updateError
+      );
+
+      const legacyUpdatePayload = {
         status: newStatus,
         responded_at: respondedAt,
         response_message: validated.message || null,
-        responder_ip_hash: responderFingerprints.ipHash,
-        responder_user_agent_hash: responderFingerprints.userAgentHash,
-        response_auth_method: getResponseAuthMethod(authIdentity),
-        response_actor_email: authIdentity.email,
-        verifier_profile_id: authIdentity.profileId || verification.verifier_profile_id || null,
-        risk_signals: mergedIntegrity.riskSignals,
-        integrity_status: mergedIntegrity.integrityStatus,
-        integrity_reason: mergedIntegrity.integrityReason,
-        integrity_meta: skillIntegrityMeta,
-        integrity_flagged_at:
-          mergedIntegrity.integrityStatus === 'flagged'
-            ? verification.integrity_flagged_at || mergedIntegrity.integrityFlaggedAt
-            : null,
-      })
-      .eq('id', verification.id);
+        verifier_profile_id:
+          authIdentity.profileId || normalizedVerification.verifier_profile_id || null,
+      };
+      const legacyUpdateResult = await skillDataClient
+        .from('skill_verification_requests')
+        .update(legacyUpdatePayload)
+        .eq('id', normalizedVerification.id);
+      updateError = legacyUpdateResult.error;
+    }
 
     if (updateError) {
       console.error('Error updating verification:', updateError);
@@ -1478,7 +1653,7 @@ export async function POST(
       const { data: skill } = await skillDataClient
         .from('skills')
         .select('evidence_strength')
-        .eq('id', verification.skill_id)
+        .eq('id', normalizedVerification.skill_id)
         .single();
 
       const currentStrength = parseFloat(skill?.evidence_strength || '0');
@@ -1490,29 +1665,36 @@ export async function POST(
           evidence_strength: newStrength.toString(),
           updated_at: new Date().toISOString(),
         })
-        .eq('id', verification.skill_id);
+        .eq('id', normalizedVerification.skill_id);
     }
 
     try {
       const { emitVerificationProvided } = await import('@/lib/analytics/events');
-      await emitVerificationProvided(verification.requester_profile_id, verification.id, {
-        skill_id: verification.skill_id,
-        requester_id: verification.requester_profile_id,
-        action: validated.action === 'accept' ? 'accepted' : 'declined',
-      });
+      await emitVerificationProvided(
+        normalizedVerification.requester_profile_id,
+        normalizedVerification.id,
+        {
+          skill_id: normalizedVerification.skill_id,
+          requester_id: normalizedVerification.requester_profile_id,
+          action: validated.action === 'accept' ? 'accepted' : 'declined',
+        }
+      );
     } catch (analyticsError) {
       console.error('Failed to emit attestation_provided event:', analyticsError);
     }
 
     try {
-      const { data: requesterProfile } = await skillDataClient
-        .from('profiles')
-        .select('email, display_name')
-        .eq('id', verification.requester_profile_id)
-        .single();
+      const { data: requesterProfile, error: requesterProfileError } =
+        await getRequesterProfileForSkillVerification(
+          skillDataClient,
+          normalizedVerification.requester_profile_id
+        );
+      if (requesterProfileError) {
+        console.error('Skill requester profile lookup error:', requesterProfileError);
+      }
 
       if (requesterProfile?.email) {
-        const skill = verification.skills as any;
+        const skill = normalizedVerification.skills as any;
         let skillName = 'your skill';
         if (skill?.taxonomy?.name_i18n?.en) {
           skillName = skill.taxonomy.name_i18n.en;
@@ -1522,7 +1704,7 @@ export async function POST(
 
         const actionText = validated.action === 'accept' ? 'verified' : 'declined to verify';
         const actionEmoji = validated.action === 'accept' ? '✅' : '❌';
-        const relationshipText = verification.verifier_source || 'your contact';
+        const relationshipText = normalizedVerification.verifier_source || 'your contact';
 
         const baseUrl = normalizeBaseUrl(
           process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL
@@ -1541,7 +1723,7 @@ export async function POST(
                 Hi${requesterProfile.display_name ? ` ${requesterProfile.display_name}` : ''},
               </p>
               <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
-                <strong>${relationshipText}</strong> (${verification.verifier_email}) has ${actionText} your 
+                <strong>${relationshipText}</strong> (${normalizedVerification.verifier_email}) has ${actionText} your 
                 <strong>"${skillName}"</strong> skill.
               </p>
               ${
@@ -1562,7 +1744,7 @@ export async function POST(
               </div>
             </div>
           `,
-          text: `Your skill verification request was ${validated.action === 'accept' ? 'accepted' : 'declined'}.\n\n${relationshipText} (${verification.verifier_email}) has ${actionText} your "${skillName}" skill.${validated.message ? `\n\nTheir message: "${validated.message}"` : ''}\n\nView your Expertise Atlas: ${expertiseUrl}`,
+          text: `Your skill verification request was ${validated.action === 'accept' ? 'accepted' : 'declined'}.\n\n${relationshipText} (${normalizedVerification.verifier_email}) has ${actionText} your "${skillName}" skill.${validated.message ? `\n\nTheir message: "${validated.message}"` : ''}\n\nView your Expertise Atlas: ${expertiseUrl}`,
         });
       }
     } catch (emailError) {
@@ -1573,11 +1755,12 @@ export async function POST(
       actorId: authIdentity.profileId,
       action: 'verification.response.recorded',
       targetType: 'skill_verification_request',
-      targetId: verification.id,
+      targetId: normalizedVerification.id,
       meta: {
         response_status: newStatus,
         response_action: validated.action,
-        requires_authenticated_verifier: verification.requires_authenticated_verifier || false,
+        requires_authenticated_verifier:
+          normalizedVerification.requires_authenticated_verifier || false,
         response_auth_method: getResponseAuthMethod(authIdentity),
         response_actor_email: authIdentity.email,
         integrity_status: mergedIntegrity.integrityStatus,

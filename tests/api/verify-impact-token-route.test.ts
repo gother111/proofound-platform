@@ -71,6 +71,24 @@ const SKILL_RELATION_AMBIGUITY_ERROR = {
   ],
 };
 
+const MISSING_REQUESTER_EMAIL_SNAPSHOT_COLUMN_ERROR = {
+  code: 'PGRST204',
+  message:
+    "Could not find the 'requester_email_snapshot' column of 'skill_verification_requests' in the schema cache",
+};
+
+const MISSING_INTEGRITY_STATUS_COLUMN_ERROR = {
+  code: 'PGRST204',
+  message:
+    "Could not find the 'integrity_status' column of 'skill_verification_requests' in the schema cache",
+};
+
+const MISSING_RESPONSE_AUTH_METHOD_COLUMN_ERROR = {
+  code: 'PGRST204',
+  message:
+    "Could not find the 'response_auth_method' column of 'skill_verification_requests' in the schema cache",
+};
+
 function buildImpactAdminClient(overrides?: {
   impactRequest?: any;
   impactStory?: any;
@@ -960,6 +978,104 @@ describe('verify impact token route', () => {
     expect(body.verification.id).toBe('skill-req-token');
   });
 
+  it('GET skill flow falls back to compatibility select when requester_email_snapshot column is unavailable', async () => {
+    const { skills: _ignoredSkills, ...verificationWithoutEmbeddedSkill } =
+      SKILL_VERIFICATION_RECORD;
+    const hydratedSkill = {
+      skill_id: 'custom-1-2-3-system-design',
+      skill_code: null,
+      custom_skill_name: null,
+      taxonomy: {
+        name_i18n: {
+          en: 'System Design',
+        },
+      },
+    };
+
+    createAdminClientMock.mockReturnValue({
+      from: vi.fn((table: string) => {
+        if (table === 'impact_story_verification_requests') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
+            }),
+          };
+        }
+
+        if (table === 'skill_verification_requests') {
+          return {
+            select: vi.fn((query: string) => ({
+              eq: vi.fn((column: string) => ({
+                single: vi.fn().mockResolvedValue(
+                  column === 'verification_token'
+                    ? query.includes('requester_email_snapshot')
+                      ? { data: null, error: MISSING_REQUESTER_EMAIL_SNAPSHOT_COLUMN_ERROR }
+                      : { data: verificationWithoutEmbeddedSkill, error: null }
+                    : {
+                        data: null,
+                        error: { code: 'PGRST116', message: 'No rows found' },
+                      }
+                ),
+              })),
+            })),
+          };
+        }
+
+        if (table === 'skills') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: hydratedSkill, error: null }),
+              }),
+            }),
+          };
+        }
+
+        if (table === 'profiles') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: {
+                    display_name: 'Requester',
+                    avatar_url: null,
+                    email: 'requester@example.com',
+                  },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+
+        if (table === 'skill_proofs') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn(() => ({
+                eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+              })),
+            }),
+          };
+        }
+
+        throw new Error(`Unexpected table: ${table}`);
+      }),
+    });
+
+    const response = await GET(new NextRequest(`http://localhost/api/verify/${TOKEN}`), {
+      params: Promise.resolve({ token: TOKEN }),
+    });
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.verification.verification_type).toBe('skill');
+    expect(body.verification.skill_name).toBe('System Design');
+    expect(body.verification.requester_name).toBe('Requester');
+    expect(body.verification.requester_email).toBe('requester@example.com');
+  });
+
   it('GET skill flow preserves requester display name when profiles email column is unavailable', async () => {
     createAdminClientMock.mockReturnValue(
       buildAdminClientForSkillFlow({
@@ -992,6 +1108,27 @@ describe('verify impact token route', () => {
     expect(body.verification.verification_type).toBe('skill');
     expect(body.verification.requester_name).toBe('Pavlo Samoshko');
     expect(body.verification.requester_email).toBe('snapshot.person@example.com');
+  });
+
+  it('GET returns 500 for non-not-found skill lookup errors', async () => {
+    createAdminClientMock.mockReturnValue(
+      buildAdminClientForSkillFlow({
+        verificationByToken: null,
+        tokenLookupError: {
+          code: 'XX000',
+          message: 'Unexpected database failure',
+        },
+      })
+    );
+
+    const response = await GET(new NextRequest(`http://localhost/api/verify/${TOKEN}`), {
+      params: Promise.resolve({ token: TOKEN }),
+    });
+
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toMatchObject({
+      error: 'Internal server error',
+    });
   });
 
   it('GET skill flow returns attached proof metadata for verifier context', async () => {
@@ -1217,6 +1354,10 @@ describe('verify impact token route', () => {
                   data: { email: 'requester@example.com', display_name: 'Requester' },
                   error: null,
                 }),
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: { email: 'requester@example.com', display_name: 'Requester' },
+                  error: null,
+                }),
               }),
             }),
           };
@@ -1296,6 +1437,181 @@ describe('verify impact token route', () => {
       status: 'declined',
       response_auth_method: 'token',
       response_actor_email: null,
+    });
+  });
+
+  it('POST skill flow falls back to compatibility select and legacy update payload when integrity columns are unavailable', async () => {
+    const { skills: _ignoredSkills, ...verificationWithoutEmbeddedSkill } =
+      SKILL_VERIFICATION_RECORD;
+    const legacyVerificationRecord = {
+      ...verificationWithoutEmbeddedSkill,
+      requires_authenticated_verifier: undefined,
+      integrity_status: undefined,
+      integrity_reason: undefined,
+      integrity_meta: undefined,
+      integrity_flagged_at: undefined,
+      risk_signals: undefined,
+      requester_ip_hash: undefined,
+      requester_user_agent_hash: undefined,
+    };
+    const hydratedSkill = {
+      skill_id: 'custom-1-2-3-system-design',
+      skill_code: null,
+      custom_skill_name: null,
+      taxonomy: {
+        name_i18n: {
+          en: 'System Design',
+        },
+      },
+    };
+    const skillVerificationUpdatePayloads: any[] = [];
+
+    createAdminClientMock.mockReturnValue({
+      from: vi.fn((table: string) => {
+        if (table === 'impact_story_verification_requests') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
+            }),
+          };
+        }
+
+        if (table === 'skill_verification_requests') {
+          return {
+            select: vi.fn((query: string) => ({
+              eq: vi.fn((column: string) => ({
+                single: vi.fn().mockResolvedValue(
+                  column === 'verification_token'
+                    ? query.includes('integrity_status')
+                      ? { data: null, error: MISSING_INTEGRITY_STATUS_COLUMN_ERROR }
+                      : { data: legacyVerificationRecord, error: null }
+                    : {
+                        data: null,
+                        error: { code: 'PGRST116', message: 'No rows found' },
+                      }
+                ),
+              })),
+            })),
+            update: vi.fn((payload: any) => {
+              skillVerificationUpdatePayloads.push(payload);
+              return {
+                eq: vi
+                  .fn()
+                  .mockResolvedValue(
+                    skillVerificationUpdatePayloads.length === 1
+                      ? { error: MISSING_RESPONSE_AUTH_METHOD_COLUMN_ERROR }
+                      : { error: null }
+                  ),
+              };
+            }),
+          };
+        }
+
+        if (table === 'skills') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: hydratedSkill, error: null }),
+              }),
+            }),
+          };
+        }
+
+        if (table === 'profiles') {
+          return {
+            select: vi.fn((selectClause: string) => ({
+              eq: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue(
+                  selectClause.includes('email')
+                    ? {
+                        data: {
+                          display_name: 'Requester',
+                          avatar_url: null,
+                          email: 'requester@example.com',
+                        },
+                        error: null,
+                      }
+                    : {
+                        data: {
+                          display_name: 'Requester',
+                          avatar_url: null,
+                        },
+                        error: null,
+                      }
+                ),
+              }),
+            })),
+          };
+        }
+
+        throw new Error(`Unexpected table: ${table}`);
+      }),
+    });
+
+    createClientMock.mockReturnValue({
+      from: vi.fn(),
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
+      },
+    });
+
+    const response = await POST(
+      new NextRequest(`http://localhost/api/verify/${TOKEN}`, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'decline',
+          message: 'Cannot verify right now',
+        }),
+      }),
+      { params: Promise.resolve({ token: TOKEN }) }
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      success: true,
+      status: 'declined',
+      verification_type: 'skill',
+    });
+    expect(skillVerificationUpdatePayloads).toHaveLength(2);
+    expect(skillVerificationUpdatePayloads[0]).toMatchObject({
+      status: 'declined',
+      response_auth_method: 'token',
+      response_actor_email: null,
+    });
+    expect(skillVerificationUpdatePayloads[1]).toMatchObject({
+      status: 'declined',
+      response_message: 'Cannot verify right now',
+    });
+    expect(skillVerificationUpdatePayloads[1].response_auth_method).toBeUndefined();
+  });
+
+  it('POST returns 500 for non-not-found skill lookup errors', async () => {
+    createAdminClientMock.mockReturnValue(
+      buildAdminClientForSkillFlow({
+        verificationByToken: null,
+        tokenLookupError: {
+          code: 'XX000',
+          message: 'Unexpected database failure',
+        },
+      })
+    );
+
+    const response = await POST(
+      new NextRequest(`http://localhost/api/verify/${TOKEN}`, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'decline',
+          message: 'Cannot verify right now',
+        }),
+      }),
+      { params: Promise.resolve({ token: TOKEN }) }
+    );
+
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toMatchObject({
+      error: 'Internal server error',
     });
   });
 
