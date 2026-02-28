@@ -103,6 +103,19 @@ interface CVJDAutoSuggestProps {
   onSkillsAdded?: (skills: LegacySuggestion[]) => void;
 }
 
+const DEFAULT_IMPORT_LIMITS = {
+  max_documents: 5,
+  max_chars_per_document: 30000,
+  max_total_chars: 90000,
+};
+
+const DEFAULT_API_METADATA: ApiSuggestResponse['metadata'] = {
+  semantic_used: false,
+  semantic_fallback_triggered: false,
+  unmapped_candidates_count: 0,
+  limits: DEFAULT_IMPORT_LIMITS,
+};
+
 const CATEGORY_OPTIONS: CandidateCategory[] = [
   'technical',
   'soft_skills',
@@ -205,12 +218,243 @@ function getContextTextPlaceholder(context: ImportContext): string {
   return 'Paste CV text here...';
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isCandidateCategory(value: unknown): value is CandidateCategory {
+  return (
+    value === 'technical' ||
+    value === 'soft_skills' ||
+    value === 'tools_technologies' ||
+    value === 'languages' ||
+    value === 'certifications' ||
+    value === 'other'
+  );
+}
+
+function normalizeImportContext(value: unknown): ImportContext {
+  if (value === 'jd' || value === 'general') {
+    return value;
+  }
+  return 'cv';
+}
+
+function normalizeCandidateCategory(value: unknown): CandidateCategory {
+  return isCandidateCategory(value) ? value : 'other';
+}
+
+function normalizeScore(value: unknown, fallback = 0): number {
+  if (typeof value !== 'number' || Number.isNaN(value)) {
+    return fallback;
+  }
+  return Math.max(0, Math.min(1, value));
+}
+
+async function readJsonSafely(response: Response): Promise<unknown | null> {
+  try {
+    return await response.clone().json();
+  } catch {
+    return null;
+  }
+}
+
+async function readTextSafely(response: Response): Promise<string> {
+  try {
+    return (await response.clone().text()).trim();
+  } catch {
+    return '';
+  }
+}
+
+async function readErrorMessage(response: Response, fallback: string): Promise<string> {
+  const payload = await readJsonSafely(response);
+  if (isRecord(payload)) {
+    const error = payload.error;
+    if (typeof error === 'string' && error.trim().length > 0) {
+      return error;
+    }
+
+    const message = payload.message;
+    if (typeof message === 'string' && message.trim().length > 0) {
+      return message;
+    }
+  }
+
+  const textPayload = await readTextSafely(response);
+  if (textPayload.length > 0) {
+    return textPayload;
+  }
+
+  return fallback;
+}
+
+function normalizeApiMetadata(value: unknown): ApiSuggestResponse['metadata'] {
+  if (!isRecord(value)) {
+    return DEFAULT_API_METADATA;
+  }
+
+  const limitsRaw = isRecord(value.limits) ? value.limits : {};
+  const maxDocuments =
+    typeof limitsRaw.max_documents === 'number' && Number.isFinite(limitsRaw.max_documents)
+      ? Math.max(1, Math.floor(limitsRaw.max_documents))
+      : DEFAULT_IMPORT_LIMITS.max_documents;
+  const maxCharsPerDocument =
+    typeof limitsRaw.max_chars_per_document === 'number' &&
+    Number.isFinite(limitsRaw.max_chars_per_document)
+      ? Math.max(1, Math.floor(limitsRaw.max_chars_per_document))
+      : DEFAULT_IMPORT_LIMITS.max_chars_per_document;
+  const maxTotalChars =
+    typeof limitsRaw.max_total_chars === 'number' && Number.isFinite(limitsRaw.max_total_chars)
+      ? Math.max(1, Math.floor(limitsRaw.max_total_chars))
+      : DEFAULT_IMPORT_LIMITS.max_total_chars;
+
+  return {
+    semantic_used: Boolean(value.semantic_used),
+    semantic_fallback_triggered: Boolean(value.semantic_fallback_triggered),
+    unmapped_candidates_count:
+      typeof value.unmapped_candidates_count === 'number' &&
+      Number.isFinite(value.unmapped_candidates_count)
+        ? Math.max(0, Math.floor(value.unmapped_candidates_count))
+        : 0,
+    limits: {
+      max_documents: maxDocuments,
+      max_chars_per_document: maxCharsPerDocument,
+      max_total_chars: maxTotalChars,
+    },
+  };
+}
+
+function normalizeApiSuggestResponse(value: unknown): ApiSuggestResponse | null {
+  if (!isRecord(value) || !Array.isArray(value.documents)) {
+    return null;
+  }
+
+  const documents: ApiDocumentResult[] = value.documents
+    .map((document, documentIndex) => {
+      if (!isRecord(document)) {
+        return null;
+      }
+
+      const documentId =
+        typeof document.document_id === 'string' && document.document_id.trim().length > 0
+          ? document.document_id
+          : `doc-${documentIndex}`;
+      const fileName =
+        typeof document.file_name === 'string' && document.file_name.trim().length > 0
+          ? document.file_name
+          : `${documentId}.txt`;
+      const context = normalizeImportContext(document.context);
+
+      const candidatesRaw = Array.isArray(document.candidates) ? document.candidates : [];
+      const candidates: ApiCandidate[] = candidatesRaw
+        .map((candidate, candidateIndex) => {
+          if (!isRecord(candidate)) {
+            return null;
+          }
+
+          const candidateId =
+            typeof candidate.candidate_id === 'string' && candidate.candidate_id.trim().length > 0
+              ? candidate.candidate_id
+              : `${documentId}::${candidateIndex}`;
+          const rawSkillText =
+            typeof candidate.raw_skill_text === 'string' ? candidate.raw_skill_text.trim() : '';
+
+          if (!rawSkillText) {
+            return null;
+          }
+
+          const category = normalizeCandidateCategory(candidate.category);
+          const evidenceSnippets = Array.isArray(candidate.evidence_snippets)
+            ? candidate.evidence_snippets
+                .filter((snippet): snippet is string => typeof snippet === 'string')
+                .map((snippet) => snippet.trim())
+                .filter(Boolean)
+                .slice(0, 3)
+            : [];
+          const confidence = normalizeScore(candidate.confidence, 0.5);
+
+          const suggestions = Array.isArray(candidate.suggestions)
+            ? candidate.suggestions
+                .map((suggestion) => {
+                  if (!isRecord(suggestion)) {
+                    return null;
+                  }
+
+                  const skillId =
+                    typeof suggestion.skill_id === 'string' ? suggestion.skill_id.trim() : '';
+                  const skillName =
+                    typeof suggestion.skill_name === 'string' ? suggestion.skill_name.trim() : '';
+
+                  if (!skillId || !skillName) {
+                    return null;
+                  }
+
+                  const rawMethod = suggestion.match_method;
+                  const matchMethod: MatchMethod =
+                    rawMethod === 'exact' ||
+                    rawMethod === 'synonym' ||
+                    rawMethod === 'fuzzy' ||
+                    rawMethod === 'semantic'
+                      ? rawMethod
+                      : 'fuzzy';
+
+                  return {
+                    skill_id: skillId,
+                    skill_name: skillName,
+                    match_method: matchMethod,
+                    score: normalizeScore(suggestion.score, 0),
+                  };
+                })
+                .filter((entry): entry is ApiSuggestion => Boolean(entry))
+            : [];
+
+          return {
+            candidate_id: candidateId,
+            raw_skill_text: rawSkillText,
+            category,
+            evidence_snippets: evidenceSnippets,
+            confidence,
+            suggestions,
+            unmapped_candidate:
+              typeof candidate.unmapped_candidate === 'boolean'
+                ? candidate.unmapped_candidate
+                : suggestions.length === 0,
+          };
+        })
+        .filter((candidate): candidate is ApiCandidate => Boolean(candidate));
+
+      const candidateCount =
+        typeof document.candidate_count === 'number' && Number.isFinite(document.candidate_count)
+          ? Math.max(0, Math.floor(document.candidate_count))
+          : candidates.length;
+
+      return {
+        document_id: documentId,
+        file_name: fileName,
+        context,
+        candidate_count: candidateCount,
+        candidates,
+      };
+    })
+    .filter((document): document is ApiDocumentResult => Boolean(document));
+
+  return {
+    documents,
+    metadata: normalizeApiMetadata(value.metadata),
+  };
+}
+
 function normalizePdfParseError(error: unknown): string {
   if (!(error instanceof Error)) {
     return 'Failed to parse PDF';
   }
 
-  if (error.message.includes('GlobalWorkerOptions.workerSrc')) {
+  if (
+    error.message.includes('GlobalWorkerOptions.workerSrc') ||
+    error.message.includes('getDocument') ||
+    error.message.includes('PDF parser initialization failed')
+  ) {
     return 'PDF parser could not start. Please refresh and re-upload the file.';
   }
 
@@ -219,9 +463,16 @@ function normalizePdfParseError(error: unknown): string {
 
 async function extractPdfText(file: File): Promise<string> {
   const pdfjsModule = await import('pdfjs-dist/webpack.mjs');
-  const pdfjs = pdfjsModule.default;
+  const getDocument =
+    (pdfjsModule as { getDocument?: unknown }).getDocument ||
+    ((pdfjsModule as { default?: { getDocument?: unknown } }).default?.getDocument ?? null);
+
+  if (typeof getDocument !== 'function') {
+    throw new Error('PDF parser initialization failed');
+  }
+
   const buffer = await file.arrayBuffer();
-  const document = await (pdfjs.getDocument as any)({
+  const document = await (getDocument as any)({
     data: new Uint8Array(buffer),
   }).promise;
 
@@ -278,12 +529,14 @@ function LegacyCvTextSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
       });
 
       if (!response.ok) {
-        const payload = await response.json();
-        throw new Error(payload.message || payload.error || 'Failed to analyze text');
+        throw new Error(await readErrorMessage(response, 'Failed to analyze text'));
       }
 
-      const payload = await response.json();
-      const parsedSuggestions = (payload.suggestions || []) as LegacySuggestion[];
+      const payload = await readJsonSafely(response);
+      const parsedSuggestions =
+        isRecord(payload) && Array.isArray(payload.suggestions)
+          ? (payload.suggestions as LegacySuggestion[])
+          : [];
       setSuggestions(parsedSuggestions);
       setSelectedSkillIds(new Set(parsedSuggestions.slice(0, 1).map((item) => item.id)));
     } catch (error) {
@@ -321,8 +574,8 @@ function LegacyCvTextSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
           continue;
         }
 
-        const payload = await response.json();
-        if (payload.error === 'Skill already exists in your profile') {
+        const payload = await readJsonSafely(response);
+        if (isRecord(payload) && payload.error === 'Skill already exists in your profile') {
           successCount += 1;
         }
       }
@@ -605,11 +858,14 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
       });
 
       if (!response.ok) {
-        const payload = await response.json();
-        throw new Error(payload.error || payload.message || 'Failed to analyze uploaded documents');
+        throw new Error(await readErrorMessage(response, 'Failed to analyze uploaded documents'));
       }
 
-      const payload = (await response.json()) as ApiSuggestResponse;
+      const payload = normalizeApiSuggestResponse(await readJsonSafely(response));
+      if (!payload) {
+        throw new Error('Invalid response format from CV analysis service');
+      }
+
       setApiMetadata(payload.metadata);
 
       const requestStateById = new Map(
@@ -675,18 +931,32 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
         `/api/expertise/taxonomy?search=${encodeURIComponent(query)}`
       );
       if (!response.ok) {
-        throw new Error('Failed to search taxonomy');
+        throw new Error(await readErrorMessage(response, 'Failed to search taxonomy'));
       }
 
-      const payload = await response.json();
-      const mappedOptions: ApiSuggestion[] = (payload.l4_skills || [])
-        .slice(0, 8)
-        .map((skill: any) => ({
-          skill_id: skill.code,
-          skill_name: skill.nameI18n?.en || skill.code,
-          match_method: 'fuzzy' as const,
+      const payload = await readJsonSafely(response);
+      const l4Skills =
+        isRecord(payload) && Array.isArray(payload.l4_skills) ? payload.l4_skills : [];
+
+      const mappedOptions = l4Skills.slice(0, 8).reduce<ApiSuggestion[]>((acc, skill: any) => {
+        const skillId = typeof skill?.code === 'string' ? skill.code.trim() : '';
+        if (!skillId) {
+          return acc;
+        }
+
+        const skillName =
+          typeof skill?.nameI18n?.en === 'string' && skill.nameI18n.en.trim().length > 0
+            ? skill.nameI18n.en.trim()
+            : skillId;
+
+        acc.push({
+          skill_id: skillId,
+          skill_name: skillName,
+          match_method: 'fuzzy',
           score: 0.5,
-        }));
+        });
+        return acc;
+      }, []);
 
       updateCandidate(documentId, candidateId, (current) => ({
         ...current,
@@ -772,8 +1042,8 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
         if (response.ok) {
           successCount += 1;
         } else {
-          const payload = await response.json();
-          if (payload.error === 'Skill already exists in your profile') {
+          const payload = await readJsonSafely(response);
+          if (isRecord(payload) && payload.error === 'Skill already exists in your profile') {
             successCount += 1;
           } else {
             failureCount += 1;

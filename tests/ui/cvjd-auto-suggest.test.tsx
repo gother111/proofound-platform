@@ -23,9 +23,7 @@ vi.mock('sonner', () => ({
 }));
 
 vi.mock('pdfjs-dist/webpack.mjs', () => ({
-  default: {
-    getDocument: (...args: any[]) => pdfGetDocumentMock(...args),
-  },
+  getDocument: (...args: any[]) => pdfGetDocumentMock(...args),
 }));
 
 describe('CVJDAutoSuggest', () => {
@@ -299,6 +297,67 @@ describe('CVJDAutoSuggest', () => {
       expect(
         screen.getByText('PDF parser could not start. Please refresh and re-upload the file.')
       ).toBeInTheDocument();
+    });
+  });
+
+  it('shows friendly parse error when parser module fails to initialize getDocument', async () => {
+    pdfGetDocumentMock.mockReturnValueOnce({
+      promise: Promise.reject(
+        new Error("Cannot read properties of undefined (reading 'getDocument')")
+      ),
+    });
+
+    render(<CVJDAutoSuggest />);
+
+    const uploadInput = screen.getByTestId('cv-upload');
+    const file = new File(['dummy-one'], 'cv-init-error.pdf', { type: 'application/pdf' });
+    Object.defineProperty(file, 'arrayBuffer', {
+      value: async () => new TextEncoder().encode('dummy-one').buffer,
+    });
+
+    fireEvent.change(uploadInput, {
+      target: {
+        files: [file],
+      },
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('PDF parser could not start. Please refresh and re-upload the file.')
+      ).toBeInTheDocument();
+    });
+  });
+
+  it('shows controlled error when cv-import analysis returns malformed payload', async () => {
+    apiFetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          metadata: {
+            semantic_used: true,
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+
+    render(<CVJDAutoSuggest />);
+
+    fireEvent.click(screen.getByRole('button', { name: /job description/i }));
+
+    const textInput = screen.getByTestId('context-text-input');
+    fireEvent.change(textInput, {
+      target: { value: 'Need React TypeScript and communication skills.' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /analyze text/i }));
+
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalledWith(
+        'Invalid response format from CV analysis service'
+      );
     });
   });
 });
