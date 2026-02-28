@@ -9,10 +9,6 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
-vi.mock('@/components/expertise/LinkedInImportModal', () => ({
-  LinkedInImportModal: () => null,
-}));
-
 vi.mock('@/components/expertise/CVJDAutoSuggest', () => ({
   CVJDAutoSuggest: () => null,
 }));
@@ -112,7 +108,6 @@ function createBaseProps() {
     ],
     domains: [{ catId: 1, nameI18n: { en: 'Universal Capabilities' }, skillCount: 1 }],
     taxonomyReady: true,
-    linkedInConnected: false,
     initialTab: 'atlas' as const,
   };
 }

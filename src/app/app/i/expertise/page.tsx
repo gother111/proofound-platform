@@ -1,9 +1,6 @@
 import { requireAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ExpertiseAtlasClient } from './ExpertiseAtlasClient';
-import { db } from '@/db';
-import { userIntegrations } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('ExpertisePage');
@@ -249,25 +246,12 @@ export default async function ExpertiseAtlasPage({ searchParams }: ExpertiseAtla
     // Calculate widget data (only if user has skills)
     const widgetData = hasSkills ? calculateWidgetData(enrichedSkills, l2NameMap) : null;
 
-    // Check LinkedIn connection status
-    const linkedInIntegration = await db
-      .select()
-      .from(userIntegrations)
-      .where(and(eq(userIntegrations.userId, user.id), eq(userIntegrations.provider, 'linkedin')))
-      .limit(1);
-
-    const isLinkedInConnected =
-      linkedInIntegration.length > 0 &&
-      linkedInIntegration[0].accessToken !== null &&
-      (!linkedInIntegration[0].tokenExpiry || new Date() < linkedInIntegration[0].tokenExpiry);
-
     return (
       <ExpertiseAtlasClient
         initialSkills={enrichedSkills}
         domains={domainsWithStats}
         taxonomyReady={taxonomyReady}
         widgetData={widgetData}
-        linkedInConnected={isLinkedInConnected}
         initialTab={initialTab}
       />
     );
@@ -280,7 +264,6 @@ export default async function ExpertiseAtlasPage({ searchParams }: ExpertiseAtla
         domains={[]}
         taxonomyReady={false}
         widgetData={null}
-        linkedInConnected={false}
         initialTab="atlas"
       />
     );

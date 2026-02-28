@@ -18,12 +18,11 @@ import { RecencyScatter } from './widgets/RecencyScatter';
 import { SkillWheel } from './widgets/SkillWheel';
 import { VerificationSourcesPie } from './widgets/VerificationSourcesPie';
 import { NextBestActions } from './widgets/NextBestActions';
-import { LinkedInImportModal } from '@/components/expertise/LinkedInImportModal';
 import { CVJDAutoSuggest } from '@/components/expertise/CVJDAutoSuggest';
 import { SkillGapsClient } from '@/components/skill-gaps/SkillGapsClient';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, BookOpen, Linkedin, TrendingUp, FileText, Grid3x3 } from 'lucide-react';
+import { Plus, BookOpen, TrendingUp, FileText, Grid3x3 } from 'lucide-react';
 import { AboutSection } from './components/AboutSection';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -34,7 +33,6 @@ interface ExpertiseAtlasClientProps {
   domains: any[];
   taxonomyReady: boolean;
   widgetData: any | null;
-  linkedInConnected: boolean;
   initialTab?: 'atlas' | 'gap-analysis' | 'import-cv';
 }
 
@@ -43,7 +41,6 @@ export function ExpertiseAtlasClient({
   domains,
   taxonomyReady,
   widgetData,
-  linkedInConnected,
   initialTab = 'atlas',
 }: ExpertiseAtlasClientProps) {
   const router = useRouter();
@@ -58,7 +55,6 @@ export function ExpertiseAtlasClient({
   const [editSkillFocus, setEditSkillFocus] = useState<'details' | 'proofs' | 'verification'>(
     'details'
   );
-  const [isLinkedInImportModalOpen, setIsLinkedInImportModalOpen] = useState(false);
   const [skillToEdit, setSkillToEdit] = useState<any | null>(null);
   const [expandedL4, setExpandedL4] = useState<string | null>(null);
 
@@ -408,16 +404,6 @@ export function ExpertiseAtlasClient({
                 Learn More
               </Link>
             </Button>
-            {linkedInConnected && (
-              <Button
-                onClick={() => setIsLinkedInImportModalOpen(true)}
-                variant="outline"
-                className="border-[#0A66C2] text-[#0A66C2] hover:bg-blue-50 font-medium rounded-xl"
-              >
-                <Linkedin className="h-4 w-4 mr-2" />
-                Import from LinkedIn
-              </Button>
-            )}
             <Button
               onClick={() => {
                 setIsAddSkillDrawerOpen(true);
@@ -718,13 +704,6 @@ export function ExpertiseAtlasClient({
           initialFocus={editSkillFocus}
           onSkillUpdated={handleSkillAdded}
           onSkillDeleted={handleSkillDeleted}
-        />
-
-        {/* LinkedIn Import Modal */}
-        <LinkedInImportModal
-          open={isLinkedInImportModalOpen}
-          onOpenChange={setIsLinkedInImportModalOpen}
-          onSkillsImported={handleSkillAdded}
         />
 
         {/* Skills Side Sheet */}
