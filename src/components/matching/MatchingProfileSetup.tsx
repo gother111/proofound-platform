@@ -1,13 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api/fetch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
 import { LocationInput, type LocationPreference } from './LocationInput';
 import { CompensationInput, type CompensationRange } from './CompensationInput';
 import { DateWindowInput, type DateWindow } from './DateWindowInput';
@@ -22,30 +20,11 @@ interface MatchingProfileSetupProps {
   onCancel: () => void;
 }
 
-interface ExpertiseStatsData {
-  skillsWithRecency?: number;
-  skillsWithProofs?: number;
-  activationThresholds?: {
-    lite?: {
-      skillsWithRecency?: number;
-    };
-  };
-}
-
-interface MatchingProfileSetupData {
-  eligibility?: {
-    counts?: {
-      hasPurpose?: boolean;
-    };
-  };
-}
-
 /**
- * Multi-step wizard for setting up matching profile (individuals).
+ * Single-page setup for individual matching preferences.
  */
 export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSetupProps) {
   const router = useRouter();
-  const [currentTab, setCurrentTab] = useState('atlas-skills');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form state
@@ -53,6 +32,7 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
   const [desiredIndustries, setDesiredIndustries] = useState<string[]>([]);
   const [orgTypes, setOrgTypes] = useState<string[]>([]);
   const [weightBias, setWeightBias] = useState(50);
+
   const [location, setLocation] = useState<LocationPreference>({ workMode: '' });
   const [hoursMinInput, setHoursMinInput] = useState('10');
   const [hoursMaxInput, setHoursMaxInput] = useState('40');
@@ -64,120 +44,6 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
     period: 'annual',
   });
   const [availability, setAvailability] = useState<DateWindow>({ earliest: '', latest: '' });
-  const [hasPurposeSignal, setHasPurposeSignal] = useState(false);
-
-  const [atlasSkillCount, setAtlasSkillCount] = useState<number | null>(null);
-  const [skillsWithRecencyCount, setSkillsWithRecencyCount] = useState<number | null>(null);
-  const [proofCount, setProofCount] = useState<number | null>(null);
-  const [liteSkillsThreshold, setLiteSkillsThreshold] = useState(3);
-  const [sampleMatches, setSampleMatches] = useState<
-    Array<{ title: string; reason: string; score: number }>
-  >([]);
-  const [sampleSource, setSampleSource] = useState<'real' | 'mock'>('mock');
-  const [sampleLoading, setSampleLoading] = useState(false);
-
-  // Fetch setup state
-  useEffect(() => {
-    const fetchSetupData = async () => {
-      try {
-        const [statsRes, setupRes] = await Promise.all([
-          apiFetch('/api/expertise/stats'),
-          apiFetch('/api/matching-profile'),
-        ]);
-
-        const [statsDataRaw, setupDataRaw] = await Promise.all([
-          statsRes.ok ? statsRes.json() : Promise.resolve({ totalL4Skills: null }),
-          setupRes.ok
-            ? setupRes.json()
-            : Promise.resolve({ eligibility: { counts: { hasPurpose: false } } }),
-        ]);
-        const statsData = statsDataRaw as ExpertiseStatsData & { totalL4Skills?: number | null };
-        const setupData = setupDataRaw as MatchingProfileSetupData;
-
-        setAtlasSkillCount(
-          typeof statsData.totalL4Skills === 'number' ? statsData.totalL4Skills : null
-        );
-        setSkillsWithRecencyCount(
-          typeof statsData.skillsWithRecency === 'number' ? statsData.skillsWithRecency : null
-        );
-        setProofCount(
-          typeof statsData.skillsWithProofs === 'number' ? statsData.skillsWithProofs : null
-        );
-        setLiteSkillsThreshold(statsData.activationThresholds?.lite?.skillsWithRecency || 3);
-        setHasPurposeSignal(Boolean(setupData.eligibility?.counts?.hasPurpose));
-      } catch (error) {
-        toast.error('Failed to load setup data');
-      }
-    };
-
-    fetchSetupData();
-  }, []);
-
-  useEffect(() => {
-    const fallbackSamples = [
-      {
-        title: desiredRoles[0] || 'Impact-focused product role',
-        reason: 'Strong values and causes overlap with one or more active organizations.',
-        score: 0.72,
-      },
-      {
-        title: desiredIndustries[0]
-          ? `${desiredIndustries[0]} opportunity`
-          : 'Mission-aligned engineering assignment',
-        reason: 'Your selected work preferences and Atlas signals are compatible.',
-        score: 0.64,
-      },
-      {
-        title:
-          orgTypes[0] === 'ngo'
-            ? 'NGO transformation project'
-            : orgTypes[0] === 'startup'
-              ? 'Startup product build assignment'
-              : 'Cross-functional growth assignment',
-        reason: 'Skills and practical constraints are close enough to start conversations.',
-        score: 0.58,
-      },
-    ];
-
-    const loadSampleMatches = async () => {
-      setSampleLoading(true);
-      let usedRealMatches = false;
-      try {
-        const response = await apiFetch('/api/core/matching/near-matches', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ k: 3, threshold: 0.2 }),
-        });
-
-        if (response.ok) {
-          const payload = await response.json();
-          const realItems = Array.isArray(payload?.items)
-            ? payload.items.slice(0, 3).map((item: any) => ({
-                title: item?.assignment?.role || 'Opportunity',
-                reason: item?.reason || 'Near match based on your current profile data.',
-                score: typeof item?.score === 'number' ? item.score : 0,
-              }))
-            : [];
-
-          if (realItems.length > 0) {
-            setSampleMatches(realItems);
-            setSampleSource('real');
-            usedRealMatches = true;
-          }
-        }
-      } catch (error) {
-        console.error('Failed to load sample matches', error);
-      } finally {
-        if (!usedRealMatches) {
-          setSampleMatches(fallbackSamples);
-          setSampleSource('mock');
-        }
-        setSampleLoading(false);
-      }
-    };
-
-    void loadSampleMatches();
-  }, [desiredIndustries, desiredRoles, orgTypes]);
 
   const handleFocusChange = (partial: {
     desiredRoles?: string[];
@@ -199,10 +65,12 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
     if (value.trim() === '') {
       return null;
     }
+
     const parsed = Number.parseInt(value, 10);
     if (Number.isNaN(parsed) || parsed < 0) {
       return null;
     }
+
     return parsed;
   };
 
@@ -224,61 +92,8 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
     return true;
   };
 
-  const handleTabChange = (nextTab: string) => {
-    const requiresWorkValidation = nextTab === 'review';
-    if (requiresWorkValidation && !validateWorkStepHours()) {
-      setCurrentTab('work');
-      return;
-    }
-    setCurrentTab(nextTab);
-  };
-
-  useEffect(() => {
-    if (!hoursValidationHint) {
-      return;
-    }
-    const min =
-      hoursMinInput.trim() === '' || Number.isNaN(Number.parseInt(hoursMinInput, 10))
-        ? null
-        : Number.parseInt(hoursMinInput, 10);
-    const max =
-      hoursMaxInput.trim() === '' || Number.isNaN(Number.parseInt(hoursMaxInput, 10))
-        ? null
-        : Number.parseInt(hoursMaxInput, 10);
-    if (min !== null && max !== null && min > 0 && max > 0) {
-      setHoursValidationHint(null);
-    }
-  }, [hoursMaxInput, hoursMinInput, hoursValidationHint]);
-
-  // Calculate progress
-  const calculateProgress = () => {
-    let completed = 0;
-    const total = 4;
-    const hasLiteSkills =
-      typeof skillsWithRecencyCount === 'number' && skillsWithRecencyCount >= liteSkillsThreshold;
-    const hasProof = typeof proofCount === 'number' && proofCount >= 1;
-    const hasBasicPreferences =
-      !!location.workMode &&
-      !!availability.earliest &&
-      !!availability.latest &&
-      compensation.min > 0 &&
-      compensation.max > 0 &&
-      !!compensation.currency;
-
-    if (hasLiteSkills) completed++;
-    if (hasProof) completed++;
-    if (hasBasicPreferences) completed++;
-    if (hasPurposeSignal) completed++;
-
-    return (completed / total) * 100;
-  };
-
-  const progress = calculateProgress();
-
-  // Submit
   const handleSubmit = async () => {
     if (!validateWorkStepHours()) {
-      setCurrentTab('work');
       return;
     }
 
@@ -287,7 +102,6 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
     try {
       const { min: hoursMin, max: hoursMax } = resolveHours();
       if (hoursMin === null || hoursMax === null) {
-        setCurrentTab('work');
         setHoursValidationHint('Minimum desired hours is 1. Enter values above 0 to continue.');
         return;
       }
@@ -308,8 +122,8 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
           hoursMax,
           compMin: compensation.min,
           compMax: compensation.max,
-          currency: compensation.currency,
           compPeriod: compensation.period,
+          currency: compensation.currency,
           availabilityEarliest: availability.earliest,
           availabilityLatest: availability.latest,
           weights,
@@ -330,7 +144,6 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
       onComplete();
       router.refresh();
     } catch (error) {
-      // Only show error toast if we haven't already shown one
       if (error instanceof Error && !error.message.includes('Failed to save')) {
         toast.error(error.message || 'Failed to save matching profile');
       } else if (!(error instanceof Error)) {
@@ -343,102 +156,68 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6">
-      {/* Header */}
       <div className="mb-6">
         <h2 className="text-2xl font-semibold mb-2" style={{ color: '#2D3330' }}>
-          Get match-ready in 4 quick steps
+          Set up your matching profile
         </h2>
-        <Progress value={progress} className="h-2" />
-        <p className="text-sm mt-2" style={{ color: '#6B6760' }}>
-          {Math.round(progress)}% complete. Save anytime and finish the rest later.
+        <p className="text-sm" style={{ color: '#6B6760' }}>
+          Save your focus, weighting, and work preferences to unlock better matches.
         </p>
       </div>
 
-      {/* Wizard tabs */}
-      <Tabs value={currentTab} onValueChange={handleTabChange} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="atlas-skills">Atlas Skills</TabsTrigger>
-          <TabsTrigger value="focus-weights">Focus & Weights</TabsTrigger>
-          <TabsTrigger value="work">Work</TabsTrigger>
-          <TabsTrigger value="review">Review</TabsTrigger>
-        </TabsList>
-
-        {/* Step 1: Atlas Skills Source */}
-        <TabsContent value="atlas-skills" className="space-y-4">
-          <div className="rounded-lg border border-[#E5E3DA] bg-[#F7F6F1] p-4">
-            <div className="flex items-start gap-3">
-              <BookOpen className="mt-0.5 h-5 w-5 text-[#1C4D3A]" />
-              <div className="space-y-2">
-                <h3 className="text-lg font-medium text-[#2D3330]">
-                  Skills come from Expertise Atlas
-                </h3>
-                <p className="text-sm" style={{ color: '#6B6760' }}>
-                  Matching now uses your Expertise Atlas as the single source of truth for skills.
-                  Edit skills, proofs, and verification there.
-                </p>
-                <p className="text-sm" style={{ color: '#2D3330' }}>
-                  Current Atlas readiness:{' '}
-                  <strong>
-                    {skillsWithRecencyCount === null ? 'Loading…' : skillsWithRecencyCount}
-                  </strong>{' '}
-                  / {liteSkillsThreshold} skills with recency and{' '}
-                  <strong>{proofCount === null ? 'Loading…' : proofCount}</strong> proof
-                  {proofCount === 1 ? '' : 's'}.
-                </p>
-                <p className="text-xs text-[#6B6760]">
-                  Tip: add skills and proofs in Atlas first, then save your preferences here.
-                </p>
-                <Button
-                  variant="outline"
-                  onClick={() => window.open('/app/i/expertise', '_blank', 'noopener,noreferrer')}
-                >
-                  Open Expertise Atlas
-                  <ExternalLink className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+      <div className="mb-6 rounded-lg border border-[#E5E3DA] bg-[#F7F6F1] p-4">
+        <div className="flex items-start gap-3">
+          <BookOpen className="mt-0.5 h-5 w-5 text-[#1C4D3A]" />
+          <div className="space-y-2">
+            <p className="text-sm text-[#2D3330]">
+              Skills come from Expertise Atlas. Add or refresh skills and proofs there.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => window.open('/app/i/expertise', '_blank', 'noopener,noreferrer')}
+            >
+              Open Expertise Atlas
+              <ExternalLink className="ml-2 h-4 w-4" />
+            </Button>
           </div>
+        </div>
+      </div>
 
-          <Button onClick={() => setCurrentTab('focus-weights')}>Next: Focus & Weights</Button>
-        </TabsContent>
-
-        {/* Step 2: Focus and Weights */}
-        <TabsContent value="focus-weights" className="space-y-5">
+      <div className="space-y-6">
+        <section className="rounded-lg border border-[#E5E3DA] bg-white p-4 space-y-4">
+          <h3 className="text-lg font-medium text-[#2D3330]">Focus</h3>
           <FocusAreasSection
             profile={{ desiredRoles, desiredIndustries, orgTypes }}
             onChange={handleFocusChange}
           />
+        </section>
 
-          <div className="space-y-3 rounded-lg border border-[#E5E3DA] bg-[#F7F6F1] p-4">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium text-[#2D3330]">Skills-first</span>
-              <span className="font-medium text-[#2D3330]">Mission-first</span>
-            </div>
-            <Slider
-              value={[weightBias]}
-              onValueChange={(values) => setWeightBias(values[0] ?? 50)}
-              min={0}
-              max={100}
-              step={1}
-              aria-label="Mission vs skills weighting"
-            />
-            <p className="text-xs text-[#6B6760]">
-              Current emphasis:{' '}
-              {weightBias < 40 ? 'Skills-first' : weightBias > 60 ? 'Mission-first' : 'Balanced'} (
-              {weightBias}%)
-            </p>
+        <section className="rounded-lg border border-[#E5E3DA] bg-white p-4 space-y-3">
+          <h3 className="text-lg font-medium text-[#2D3330]">Weights</h3>
+          <div className="flex items-center justify-between text-sm">
+            <span className="font-medium text-[#2D3330]">Skills-first</span>
+            <span className="font-medium text-[#2D3330]">Mission-first</span>
           </div>
+          <Slider
+            value={[weightBias]}
+            onValueChange={(values) => setWeightBias(values[0] ?? 50)}
+            min={0}
+            max={100}
+            step={1}
+            aria-label="Mission vs skills weighting"
+          />
+          <p className="text-xs text-[#6B6760]">
+            Current emphasis:{' '}
+            {weightBias < 40 ? 'Skills-first' : weightBias > 60 ? 'Mission-first' : 'Balanced'} ({' '}
+            {weightBias}%)
+          </p>
+        </section>
 
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setCurrentTab('atlas-skills')}>
-              Back
-            </Button>
-            <Button onClick={() => setCurrentTab('work')}>Next: Work Preferences</Button>
-          </div>
-        </TabsContent>
+        <section className="rounded-lg border border-[#E5E3DA] bg-white p-4 space-y-4">
+          <h3 className="text-lg font-medium text-[#2D3330]">Work Preferences</h3>
 
-        {/* Step 3: Work Preferences */}
-        <TabsContent value="work" className="space-y-4">
           <LocationInput value={location} onChange={setLocation} />
 
           <div>
@@ -480,124 +259,22 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
           <CompensationInput value={compensation} onChange={setCompensation} />
 
           <DateWindowInput value={availability} onChange={setAvailability} />
+        </section>
+      </div>
 
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setCurrentTab('focus-weights')}>
-              Back
-            </Button>
-            <Button
-              onClick={() => {
-                if (!validateWorkStepHours()) {
-                  return;
-                }
-                handleTabChange('review');
-              }}
-            >
-              Review & Activate
-            </Button>
-          </div>
-        </TabsContent>
-        {/* Step 4: Review & Activate */}
-        <TabsContent value="review" className="space-y-4">
-          <div>
-            <h3 className="text-lg font-medium mb-4">Review Your Profile</h3>
-
-            <div className="space-y-3 text-sm">
-              <div>
-                <strong>Atlas Skills:</strong>{' '}
-                {atlasSkillCount === null ? 'Loading…' : `${atlasSkillCount} skills`}
-              </div>
-              <div>
-                <strong>Purpose Signals:</strong>{' '}
-                {hasPurposeSignal ? 'Synced from profile' : 'Not complete on profile yet'}
-              </div>
-              <div>
-                <strong>Desired Roles:</strong> {desiredRoles.join(', ') || 'None'}
-              </div>
-              <div>
-                <strong>Desired Industries:</strong> {desiredIndustries.join(', ') || 'None'}
-              </div>
-              <div>
-                <strong>Organization Types:</strong> {orgTypes.join(', ') || 'None'}
-              </div>
-              <div>
-                <strong>Match Bias:</strong>{' '}
-                {weightBias < 40 ? 'Skills-first' : weightBias > 60 ? 'Mission-first' : 'Balanced'}{' '}
-                ({weightBias}%)
-              </div>
-              <div>
-                <strong>Work Mode:</strong> {location.workMode || 'Not set'}
-              </div>
-              <div>
-                <strong>Language signals:</strong> Derived from Atlas language skills
-              </div>
-            </div>
-
-            <div className="mt-6 p-4 rounded-md" style={{ backgroundColor: '#F7F6F1' }}>
-              <p className="text-sm" style={{ color: '#2D3330' }}>
-                <strong>Privacy Note:</strong> Your profile is completely anonymous. Organizations
-                will only see your skills, values, and qualifications—not your name, photo, or
-                background. Identity is revealed only after mutual interest.
-              </p>
-              <p className="mt-2 text-xs text-[#6B6760]">
-                Purpose signals are synced from your profile. Update them in{' '}
-                <a href="/app/i/profile" className="underline">
-                  Profile
-                </a>
-                .
-              </p>
-            </div>
-
-            <div className="mt-4 rounded-md border border-[#E5E3DA] p-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium text-[#2D3330]">Sample matches preview</h4>
-                <span className="text-xs text-[#6B6760]">
-                  {sampleSource === 'real' ? 'Real near matches' : 'Mock preview'}
-                </span>
-              </div>
-              <p className="text-xs text-[#6B6760] mt-1">
-                {sampleSource === 'real'
-                  ? 'Based on current profile data and live opportunities.'
-                  : 'Example matches shown until enough live data is available.'}
-              </p>
-              {sampleLoading ? (
-                <p className="text-xs text-[#6B6760] mt-3">Loading sample matches...</p>
-              ) : (
-                <div className="mt-3 space-y-2">
-                  {sampleMatches.map((item, index) => (
-                    <div
-                      key={`${item.title}-${index}`}
-                      className="rounded border border-[#E8E6DD] p-3"
-                    >
-                      <p className="text-sm font-medium text-[#2D3330]">{item.title}</p>
-                      <p className="text-xs text-[#6B6760]">{item.reason}</p>
-                      <p className="text-xs text-[#6B6760] mt-1">
-                        Match score preview: {Math.round(item.score * 100)}%
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setCurrentTab('work')}>
-              Back
-            </Button>
-            <Button variant="outline" onClick={onCancel}>
-              Save & Continue Later
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              style={{ backgroundColor: '#1C4D3A' }}
-            >
-              {isSubmitting ? 'Saving...' : 'Save and Continue'}
-            </Button>
-          </div>
-        </TabsContent>
-      </Tabs>
+      <div className="mt-6 flex gap-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Save & Continue Later
+        </Button>
+        <Button
+          type="button"
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          style={{ backgroundColor: '#1C4D3A' }}
+        >
+          {isSubmitting ? 'Saving...' : 'Save and Continue'}
+        </Button>
+      </div>
     </div>
   );
 }

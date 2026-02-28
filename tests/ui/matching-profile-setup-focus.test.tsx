@@ -23,6 +23,22 @@ vi.mock('sonner', () => ({
   },
 }));
 
+vi.mock('@/components/matching/FocusAreasSection', () => ({
+  FocusAreasSection: ({ onChange }: any) => (
+    <button
+      onClick={() =>
+        onChange({
+          desiredRoles: ['Software Engineer'],
+          desiredIndustries: ['Technology'],
+          orgTypes: ['startup'],
+        })
+      }
+    >
+      set focus
+    </button>
+  ),
+}));
+
 vi.mock('@/components/matching/LocationInput', () => ({
   LocationInput: ({ onChange }: any) => (
     <button onClick={() => onChange({ workMode: 'remote', country: 'US' })}>set location</button>
@@ -61,16 +77,10 @@ vi.mock('@/components/ui/slider', () => ({
   ),
 }));
 
-describe('MatchingProfileSetup focus and weighting step', () => {
+describe('MatchingProfileSetup single-page form', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     apiFetchMock.mockImplementation(async (url: string, options?: any) => {
-      if (url === '/api/expertise/stats') {
-        return { ok: true, json: async () => ({ totalL4Skills: 12 }) };
-      }
-      if (url === '/api/matching-profile' && !options?.method) {
-        return { ok: true, json: async () => ({ eligibility: { counts: { hasPurpose: true } } }) };
-      }
       if (url === '/api/matching-profile' && options?.method === 'PUT') {
         return { ok: true, json: async () => ({ profile: { profileId: 'user-1' } }) };
       }
@@ -78,29 +88,20 @@ describe('MatchingProfileSetup focus and weighting step', () => {
     });
   });
 
-  it('submits focus arrays and computed weights from slider bias', async () => {
+  it('submits focus, work, and weights payload fields for one-page setup', async () => {
     const onComplete = vi.fn();
 
     render(<MatchingProfileSetup onComplete={onComplete} onCancel={vi.fn()} />);
 
-    expect(screen.queryByRole('tab', { name: /values/i })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /next: focus & weights/i }));
-
-    fireEvent.change(screen.getByPlaceholderText(/software engineer, product manager/i), {
-      target: { value: 'Software Engineer' },
-    });
-    fireEvent.click(screen.getAllByRole('button', { name: 'Add' })[0]);
-    fireEvent.click(screen.getByLabelText('Startup'));
+    fireEvent.click(screen.getByRole('button', { name: 'set focus' }));
     fireEvent.change(screen.getByLabelText('Mission vs skills weighting'), {
       target: { value: '80' },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /next: work preferences/i }));
     fireEvent.click(screen.getByRole('button', { name: 'set location' }));
     fireEvent.click(screen.getByRole('button', { name: 'set compensation' }));
     fireEvent.click(screen.getByRole('button', { name: 'set availability' }));
 
-    fireEvent.click(screen.getByRole('button', { name: /review & activate/i }));
     fireEvent.click(screen.getByRole('button', { name: /save and continue/i }));
 
     await waitFor(() => {
@@ -115,23 +116,25 @@ describe('MatchingProfileSetup focus and weighting step', () => {
     const payload = JSON.parse(putCall[1].body);
 
     expect(payload.desiredRoles).toEqual(['Software Engineer']);
+    expect(payload.desiredIndustries).toEqual(['Technology']);
     expect(payload.orgTypes).toEqual(['startup']);
     expect(payload.weightBias).toBe(80);
     expect(payload.compPeriod).toBe('monthly');
+    expect(payload.workMode).toBe('remote');
+    expect(payload.availabilityEarliest).toBe('2026-03-01');
+    expect(payload.availabilityLatest).toBe('2026-04-01');
     expect(payload).not.toHaveProperty('valuesTags');
     expect(payload).not.toHaveProperty('causeTags');
     expect(payload).not.toHaveProperty('languages');
+
     expect(typeof payload.weights).toBe('object');
     expect(
       Object.values(payload.weights).reduce((acc: number, n: any) => acc + Number(n), 0)
     ).toBeCloseTo(1, 4);
   });
 
-  it('allows intermediate empty/zero edits but blocks progressing to Review from Work when final value is 0', async () => {
+  it('allows intermediate empty edits but blocks submit when minimum desired hours is 0', async () => {
     render(<MatchingProfileSetup onComplete={vi.fn()} onCancel={vi.fn()} />);
-
-    fireEvent.click(screen.getByRole('button', { name: /next: focus & weights/i }));
-    fireEvent.click(screen.getByRole('button', { name: /next: work preferences/i }));
 
     const minInput = screen.getByLabelText('Minimum desired');
     fireEvent.change(minInput, { target: { value: '' } });
@@ -141,11 +144,16 @@ describe('MatchingProfileSetup focus and weighting step', () => {
     expect(minInput).toHaveValue(30);
 
     fireEvent.change(minInput, { target: { value: '0' } });
-    fireEvent.click(screen.getByRole('button', { name: /review & activate/i }));
+    fireEvent.click(screen.getByRole('button', { name: /save and continue/i }));
 
     expect(
       screen.getByText('Minimum desired hours is 1. Enter values above 0 to continue.')
     ).toBeInTheDocument();
-    expect(screen.queryByText('Review Your Profile')).not.toBeInTheDocument();
+
+    expect(
+      apiFetchMock.mock.calls.some(
+        ([url, options]) => url === '/api/matching-profile' && options?.method === 'PUT'
+      )
+    ).toBe(false);
   });
 });
