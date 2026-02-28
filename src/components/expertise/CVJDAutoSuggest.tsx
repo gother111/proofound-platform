@@ -193,6 +193,18 @@ function downloadCsv(filename: string, rows: Array<Array<string | number>>) {
   URL.revokeObjectURL(url);
 }
 
+function getContextTextPlaceholder(context: ImportContext): string {
+  if (context === 'jd') {
+    return 'Paste a job description here...';
+  }
+
+  if (context === 'general') {
+    return 'Paste any general text you want to analyze for skills...';
+  }
+
+  return 'Paste CV text here...';
+}
+
 async function extractPdfText(file: File): Promise<string> {
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
   const buffer = await file.arrayBuffer();
@@ -396,11 +408,13 @@ function LegacyCvTextSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
 
 function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
   const [context, setContext] = useState<ImportContext>('cv');
+  const [manualText, setManualText] = useState('');
   const [documents, setDocuments] = useState<ParsedDocumentState[]>([]);
   const [isParsing, setIsParsing] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [apiMetadata, setApiMetadata] = useState<ApiSuggestResponse['metadata'] | null>(null);
+  const isPdfContext = context === 'cv';
 
   const approvedSkillIdsCombined = useMemo(() => {
     const selected = new Set<string>();
@@ -433,6 +447,13 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
         };
       })
     );
+  };
+
+  const switchContext = (nextContext: ImportContext) => {
+    setContext(nextContext);
+    setDocuments([]);
+    setManualText('');
+    setApiMetadata(null);
   };
 
   const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -510,10 +531,55 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
     const readyDocuments = documents.filter(
       (document) => !document.parse_error && document.parsed_text.trim()
     );
+    const textInput = manualText.trim();
 
-    if (readyDocuments.length === 0) {
-      toast.error('Upload at least one text-based PDF before analyzing.');
-      return;
+    let requestDocuments: Array<{
+      document_id: string;
+      file_name: string;
+      text: string;
+      context: ImportContext;
+    }> = [];
+    let requestDocumentStates: ParsedDocumentState[] = [];
+
+    if (isPdfContext) {
+      if (readyDocuments.length === 0) {
+        toast.error('Upload at least one text-based PDF before analyzing.');
+        return;
+      }
+
+      requestDocuments = readyDocuments.map((document) => ({
+        document_id: document.document_id,
+        file_name: document.file_name,
+        text: document.parsed_text,
+        context: document.context,
+      }));
+      requestDocumentStates = readyDocuments;
+    } else {
+      if (!textInput) {
+        toast.error('Paste text before analyzing.');
+        return;
+      }
+
+      const documentId = `${context}-${Date.now()}`;
+      const fileName = context === 'jd' ? 'job-description.txt' : 'general-text.txt';
+
+      requestDocuments = [
+        {
+          document_id: documentId,
+          file_name: fileName,
+          text: textInput,
+          context,
+        },
+      ];
+      requestDocumentStates = [
+        {
+          document_id: documentId,
+          file_name: fileName,
+          context,
+          parsed_text: textInput,
+          candidates: [],
+        },
+      ];
     }
 
     setIsAnalyzing(true);
@@ -523,12 +589,7 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          documents: readyDocuments.map((document) => ({
-            document_id: document.document_id,
-            file_name: document.file_name,
-            text: document.parsed_text,
-            context,
-          })),
+          documents: requestDocuments,
         }),
       });
 
@@ -540,29 +601,36 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
       const payload = (await response.json()) as ApiSuggestResponse;
       setApiMetadata(payload.metadata);
 
-      setDocuments((prev) =>
-        prev.map((document) => {
-          const result = payload.documents.find(
-            (item) => item.document_id === document.document_id
-          );
-          if (!result) {
-            return document;
-          }
-
-          return {
-            ...document,
-            context: result.context,
-            candidates: result.candidates.map((candidate) => ({
-              ...candidate,
-              approved: true,
-              selected_skill_ids: candidate.suggestions.slice(0, 1).map((skill) => skill.skill_id),
-              manual_search_query: candidate.raw_skill_text,
-              manual_options: [],
-              manual_loading: false,
-            })),
-          };
-        })
+      const requestStateById = new Map(
+        requestDocumentStates.map((document) => [document.document_id, document])
       );
+
+      const analyzedDocuments = payload.documents.map((result) => {
+        const source = requestStateById.get(result.document_id);
+
+        return {
+          document_id: result.document_id,
+          file_name: result.file_name,
+          context: result.context,
+          parsed_text: source?.parsed_text || '',
+          parse_error: source?.parse_error,
+          candidates: result.candidates.map((candidate) => ({
+            ...candidate,
+            approved: true,
+            selected_skill_ids: candidate.suggestions.slice(0, 1).map((skill) => skill.skill_id),
+            manual_search_query: candidate.raw_skill_text,
+            manual_options: [],
+            manual_loading: false,
+          })),
+        };
+      });
+
+      if (isPdfContext) {
+        const parseErrorDocuments = documents.filter((document) => Boolean(document.parse_error));
+        setDocuments([...parseErrorDocuments, ...analyzedDocuments]);
+      } else {
+        setDocuments(analyzedDocuments);
+      }
 
       toast.success(
         `Analyzed ${payload.documents.length} document${payload.documents.length > 1 ? 's' : ''}.`
@@ -652,36 +720,6 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
 
     downloadJson(`${document.file_name.replace(/\.pdf$/i, '')}-skills.json`, jsonPayload);
     downloadCsv(`${document.file_name.replace(/\.pdf$/i, '')}-skills.csv`, csvRows);
-  };
-
-  const exportCombined = () => {
-    const combinedSkillIds = new Set<string>();
-    const rows: Array<Array<string | number>> = [
-      ['document_id', 'file_name', 'skill_id', 'skill_name'],
-    ];
-
-    for (const document of documents) {
-      const skillMap = toSkillMap(document.candidates);
-      for (const skillId of collectValidatedSkillIds(document.candidates)) {
-        combinedSkillIds.add(skillId);
-        rows.push([document.document_id, document.file_name, skillId, skillMap.get(skillId) || '']);
-      }
-    }
-
-    const ids = Array.from(combinedSkillIds);
-
-    downloadJson('combined-cv-skills.json', { skill_ids: ids });
-    downloadCsv('combined-cv-skills.csv', rows);
-  };
-
-  const copyCombinedSkillIds = async () => {
-    if (approvedSkillIdsCombined.length === 0) {
-      toast.error('No approved skills available for copy.');
-      return;
-    }
-
-    await navigator.clipboard.writeText(JSON.stringify(approvedSkillIdsCombined, null, 2));
-    toast.success('Copied approved skill IDs to clipboard.');
   };
 
   const addApprovedSkillsToProfile = async () => {
@@ -774,7 +812,7 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
             <Button
               size="sm"
               variant={context === 'cv' ? 'default' : 'outline'}
-              onClick={() => setContext('cv')}
+              onClick={() => switchContext('cv')}
             >
               <FileText className="mr-1 h-4 w-4" />
               CV/Resume
@@ -782,7 +820,7 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
             <Button
               size="sm"
               variant={context === 'jd' ? 'default' : 'outline'}
-              onClick={() => setContext('jd')}
+              onClick={() => switchContext('jd')}
             >
               <Briefcase className="mr-1 h-4 w-4" />
               Job Description
@@ -790,47 +828,60 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
             <Button
               size="sm"
               variant={context === 'general' ? 'default' : 'outline'}
-              onClick={() => setContext('general')}
+              onClick={() => switchContext('general')}
             >
               General Text
             </Button>
           </div>
 
-          <div className="space-y-2">
-            <Input
-              data-testid="cv-upload"
-              type="file"
-              accept="application/pdf"
-              multiple
-              onChange={handleUpload}
-              disabled={isParsing || isAnalyzing}
-            />
-            <p className="text-xs text-muted-foreground">
-              Text-based PDFs only. OCR is not supported in V1.
-            </p>
-          </div>
+          {isPdfContext ? (
+            <div className="space-y-2">
+              <Input
+                data-testid="cv-upload"
+                type="file"
+                accept="application/pdf"
+                multiple
+                onChange={handleUpload}
+                disabled={isParsing || isAnalyzing}
+              />
+              <p className="text-xs text-muted-foreground">
+                Text-based PDFs only. OCR is not supported in V1.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Textarea
+                data-testid="context-text-input"
+                rows={8}
+                value={manualText}
+                onChange={(event) => setManualText(event.target.value)}
+                placeholder={getContextTextPlaceholder(context)}
+                disabled={isAnalyzing}
+              />
+              <p className="text-xs text-muted-foreground">
+                Text is processed in-memory and sent to the local suggestion engine only.
+              </p>
+            </div>
+          )}
 
           <div className="flex flex-wrap gap-2">
             <Button
               onClick={handleAnalyze}
-              disabled={isParsing || isAnalyzing || documents.length === 0}
+              disabled={
+                isParsing ||
+                isAnalyzing ||
+                (isPdfContext
+                  ? !documents.some(
+                      (document) => !document.parse_error && document.parsed_text.trim()
+                    )
+                  : !manualText.trim())
+              }
             >
-              {isAnalyzing ? 'Analyzing...' : 'Analyze Uploaded PDFs'}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={exportCombined}
-              disabled={approvedSkillIdsCombined.length === 0}
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Export Combined JSON + CSV
-            </Button>
-            <Button
-              variant="outline"
-              onClick={copyCombinedSkillIds}
-              disabled={approvedSkillIdsCombined.length === 0}
-            >
-              Copy Skill IDs
+              {isAnalyzing
+                ? 'Analyzing...'
+                : isPdfContext
+                  ? 'Analyze Uploaded PDFs'
+                  : 'Analyze Text'}
             </Button>
             <Button
               onClick={addApprovedSkillsToProfile}
@@ -1056,7 +1107,9 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
       {documents.length === 0 && (
         <Card>
           <CardContent className="pt-6 text-sm text-muted-foreground">
-            Upload one or more CV PDFs to begin extraction and mapping.
+            {isPdfContext
+              ? 'Upload one or more CV PDFs to begin extraction and mapping.'
+              : 'Paste text and run analysis to begin extraction and mapping.'}
           </CardContent>
         </Card>
       )}

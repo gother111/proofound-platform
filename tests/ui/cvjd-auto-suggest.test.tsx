@@ -152,4 +152,125 @@ describe('CVJDAutoSuggest', () => {
     expect(requestPayload.documents[0].text).toContain('React TypeScript');
     expect(requestPayload.documents[1].text).toContain('React TypeScript');
   });
+
+  it('analyzes pasted job-description text via cv-import engine', async () => {
+    apiFetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          documents: [
+            {
+              document_id: 'jd-1',
+              file_name: 'job-description.txt',
+              context: 'jd',
+              candidate_count: 0,
+              candidates: [],
+            },
+          ],
+          metadata: {
+            semantic_used: false,
+            semantic_fallback_triggered: false,
+            unmapped_candidates_count: 0,
+            limits: {
+              max_documents: 5,
+              max_chars_per_document: 30000,
+              max_total_chars: 90000,
+            },
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+
+    render(<CVJDAutoSuggest />);
+
+    fireEvent.click(screen.getByRole('button', { name: /job description/i }));
+
+    expect(screen.queryByTestId('cv-upload')).not.toBeInTheDocument();
+    const textInput = screen.getByTestId('context-text-input');
+    fireEvent.change(textInput, {
+      target: { value: 'Need React TypeScript and stakeholder communication skills.' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /analyze text/i }));
+
+    await waitFor(() => {
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/api/expertise/cv-import/suggest',
+        expect.objectContaining({ method: 'POST' })
+      );
+    });
+
+    const suggestCall = apiFetchMock.mock.calls.find(
+      ([url]) => url === '/api/expertise/cv-import/suggest'
+    );
+    expect(suggestCall).toBeDefined();
+
+    const requestPayload = JSON.parse(String(suggestCall?.[1]?.body || '{}'));
+    expect(requestPayload.documents).toHaveLength(1);
+    expect(requestPayload.documents[0].context).toBe('jd');
+    expect(requestPayload.documents[0].text).toContain('React TypeScript');
+  });
+
+  it('analyzes pasted general text via cv-import engine', async () => {
+    apiFetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          documents: [
+            {
+              document_id: 'general-1',
+              file_name: 'general-text.txt',
+              context: 'general',
+              candidate_count: 0,
+              candidates: [],
+            },
+          ],
+          metadata: {
+            semantic_used: false,
+            semantic_fallback_triggered: false,
+            unmapped_candidates_count: 0,
+            limits: {
+              max_documents: 5,
+              max_chars_per_document: 30000,
+              max_total_chars: 90000,
+            },
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+
+    render(<CVJDAutoSuggest />);
+
+    fireEvent.click(screen.getByRole('button', { name: /general text/i }));
+
+    const textInput = screen.getByTestId('context-text-input');
+    fireEvent.change(textInput, {
+      target: { value: 'Led a project with Docker, Kubernetes, and collaboration across teams.' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /analyze text/i }));
+
+    await waitFor(() => {
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/api/expertise/cv-import/suggest',
+        expect.objectContaining({ method: 'POST' })
+      );
+    });
+
+    const suggestCall = apiFetchMock.mock.calls.find(
+      ([url]) => url === '/api/expertise/cv-import/suggest'
+    );
+    expect(suggestCall).toBeDefined();
+
+    const requestPayload = JSON.parse(String(suggestCall?.[1]?.body || '{}'));
+    expect(requestPayload.documents).toHaveLength(1);
+    expect(requestPayload.documents[0].context).toBe('general');
+    expect(requestPayload.documents[0].text).toContain('Docker');
+  });
 });
