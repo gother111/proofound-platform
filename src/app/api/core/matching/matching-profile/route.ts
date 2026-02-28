@@ -2,13 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
-import { matchingProfiles, skills } from '@/db/schema';
+import { individualProfiles, matchingProfiles, skills } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { emitAnalyticsEventAsync, emitProfileActivated } from '@/lib/analytics/events';
 import { evaluateIndividualMatchability } from '@/lib/matching/eligibility';
 import { getWeightBiasBucket } from '@/lib/core/matching/presets';
 import { MATCHABILITY_STRONG_SKILLS_WITH_RECENCY } from '@/lib/matching/thresholds';
+import {
+  normalizeIndividualCauses,
+  normalizeIndividualValueLabels,
+} from '@/lib/profile/normalizePurposeLinks';
 
 export const dynamic = 'force-dynamic';
 const ENABLE_MATCHING_PROFILE_SKILL_WRITES =
@@ -167,8 +171,37 @@ export async function PUT(request: NextRequest) {
     // Validate input
     const validatedData = MatchingProfileSchema.parse(body);
 
-    // Extract skills separately
-    const { skills: skillsInput, weightBias, ...profileData } = validatedData;
+    // Extract fields that require custom handling.
+    const {
+      skills: skillsInput,
+      weightBias,
+      valuesTags,
+      causeTags,
+      ...profileData
+    } = validatedData;
+
+    let resolvedValuesTags = valuesTags;
+    let resolvedCauseTags = causeTags;
+
+    if (resolvedValuesTags === undefined || resolvedCauseTags === undefined) {
+      const individualProfile = await db.query.individualProfiles.findFirst({
+        where: eq(individualProfiles.userId, user.id),
+      });
+
+      if (resolvedValuesTags === undefined) {
+        const normalizedValues = normalizeIndividualValueLabels(individualProfile?.values);
+        if (normalizedValues.length > 0) {
+          resolvedValuesTags = normalizedValues;
+        }
+      }
+
+      if (resolvedCauseTags === undefined) {
+        const normalizedCauses = normalizeIndividualCauses(individualProfile?.causes);
+        if (normalizedCauses.length > 0) {
+          resolvedCauseTags = normalizedCauses;
+        }
+      }
+    }
 
     const {
       availabilityEarliest,
@@ -182,6 +215,8 @@ export async function PUT(request: NextRequest) {
     const profileToUpsert: typeof matchingProfiles.$inferInsert = {
       profileId: user.id,
       ...restProfile,
+      ...(resolvedValuesTags !== undefined ? { valuesTags: resolvedValuesTags } : {}),
+      ...(resolvedCauseTags !== undefined ? { causeTags: resolvedCauseTags } : {}),
       ...(availabilityEarliest !== undefined ? { availabilityEarliest } : {}),
       ...(availabilityLatest !== undefined ? { availabilityLatest } : {}),
       ...(desiredRoles !== undefined ? { desiredRoles } : {}),

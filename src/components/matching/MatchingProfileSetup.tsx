@@ -8,7 +8,6 @@ import { apiFetch } from '@/lib/api/fetch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { TypeaheadChips, type TypeaheadOption } from './TypeaheadChips';
 import { LocationInput, type LocationPreference } from './LocationInput';
 import { CompensationInput, type CompensationRange } from './CompensationInput';
 import { DateWindowInput, type DateWindow } from './DateWindowInput';
@@ -33,6 +32,14 @@ interface ExpertiseStatsData {
   };
 }
 
+interface MatchingProfileSetupData {
+  eligibility?: {
+    counts?: {
+      hasPurpose?: boolean;
+    };
+  };
+}
+
 /**
  * Multi-step wizard for setting up matching profile (individuals).
  */
@@ -42,8 +49,6 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form state
-  const [valuesTags, setValuesTags] = useState<string[]>([]);
-  const [causeTags, setCauseTags] = useState<string[]>([]);
   const [desiredRoles, setDesiredRoles] = useState<string[]>([]);
   const [desiredIndustries, setDesiredIndustries] = useState<string[]>([]);
   const [orgTypes, setOrgTypes] = useState<string[]>([]);
@@ -59,10 +64,8 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
     period: 'annual',
   });
   const [availability, setAvailability] = useState<DateWindow>({ earliest: '', latest: '' });
+  const [hasPurposeSignal, setHasPurposeSignal] = useState(false);
 
-  // Taxonomy options (will be fetched from API)
-  const [valuesOptions, setValuesOptions] = useState<TypeaheadOption[]>([]);
-  const [causesOptions, setCausesOptions] = useState<TypeaheadOption[]>([]);
   const [atlasSkillCount, setAtlasSkillCount] = useState<number | null>(null);
   const [skillsWithRecencyCount, setSkillsWithRecencyCount] = useState<number | null>(null);
   const [proofCount, setProofCount] = useState<number | null>(null);
@@ -73,25 +76,24 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
   const [sampleSource, setSampleSource] = useState<'real' | 'mock'>('mock');
   const [sampleLoading, setSampleLoading] = useState(false);
 
-  // Fetch taxonomies + Atlas skill stats
+  // Fetch setup state
   useEffect(() => {
     const fetchSetupData = async () => {
       try {
-        const [valuesRes, causesRes, statsRes] = await Promise.all([
-          apiFetch('/api/taxonomy/values'),
-          apiFetch('/api/taxonomy/causes'),
+        const [statsRes, setupRes] = await Promise.all([
           apiFetch('/api/expertise/stats'),
+          apiFetch('/api/matching-profile'),
         ]);
 
-        const [valuesData, causesData, statsDataRaw] = await Promise.all([
-          valuesRes.json(),
-          causesRes.json(),
+        const [statsDataRaw, setupDataRaw] = await Promise.all([
           statsRes.ok ? statsRes.json() : Promise.resolve({ totalL4Skills: null }),
+          setupRes.ok
+            ? setupRes.json()
+            : Promise.resolve({ eligibility: { counts: { hasPurpose: false } } }),
         ]);
         const statsData = statsDataRaw as ExpertiseStatsData & { totalL4Skills?: number | null };
+        const setupData = setupDataRaw as MatchingProfileSetupData;
 
-        setValuesOptions(valuesData.items || []);
-        setCausesOptions(causesData.items || []);
         setAtlasSkillCount(
           typeof statsData.totalL4Skills === 'number' ? statsData.totalL4Skills : null
         );
@@ -102,6 +104,7 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
           typeof statsData.skillsWithProofs === 'number' ? statsData.skillsWithProofs : null
         );
         setLiteSkillsThreshold(statsData.activationThresholds?.lite?.skillsWithRecency || 3);
+        setHasPurposeSignal(Boolean(setupData.eligibility?.counts?.hasPurpose));
       } catch (error) {
         toast.error('Failed to load setup data');
       }
@@ -254,7 +257,6 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
     const hasLiteSkills =
       typeof skillsWithRecencyCount === 'number' && skillsWithRecencyCount >= liteSkillsThreshold;
     const hasProof = typeof proofCount === 'number' && proofCount >= 1;
-    const hasPurpose = valuesTags.length > 0 || causeTags.length > 0;
     const hasBasicPreferences =
       !!location.workMode &&
       !!availability.earliest &&
@@ -266,7 +268,7 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
     if (hasLiteSkills) completed++;
     if (hasProof) completed++;
     if (hasBasicPreferences) completed++;
-    if (hasPurpose) completed++;
+    if (hasPurposeSignal) completed++;
 
     return (completed / total) * 100;
   };
@@ -298,8 +300,6 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
           desiredRoles,
           desiredIndustries,
           orgTypes,
-          valuesTags,
-          causeTags,
           workMode: location.workMode,
           country: location.country,
           city: location.city,
@@ -356,10 +356,9 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
 
       {/* Wizard tabs */}
       <Tabs value={currentTab} onValueChange={handleTabChange} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="atlas-skills">Atlas Skills</TabsTrigger>
           <TabsTrigger value="focus-weights">Focus & Weights</TabsTrigger>
-          <TabsTrigger value="values">Values</TabsTrigger>
           <TabsTrigger value="work">Work</TabsTrigger>
           <TabsTrigger value="review">Review</TabsTrigger>
         </TabsList>
@@ -434,42 +433,11 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
             <Button variant="outline" onClick={() => setCurrentTab('atlas-skills')}>
               Back
             </Button>
-            <Button onClick={() => setCurrentTab('values')}>Next: Values & Causes</Button>
-          </div>
-        </TabsContent>
-
-        {/* Step 3: Values & Causes */}
-        <TabsContent value="values" className="space-y-4">
-          <div>
-            <Label>Your Top Values (Optional)</Label>
-            <TypeaheadChips
-              options={valuesOptions}
-              value={valuesTags}
-              onChange={setValuesTags}
-              placeholder="Search values..."
-              maxSelections={5}
-            />
-          </div>
-
-          <div>
-            <Label>Causes You Care About</Label>
-            <TypeaheadChips
-              options={causesOptions}
-              value={causeTags}
-              onChange={setCauseTags}
-              placeholder="Search causes..."
-            />
-          </div>
-
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setCurrentTab('focus-weights')}>
-              Back
-            </Button>
             <Button onClick={() => setCurrentTab('work')}>Next: Work Preferences</Button>
           </div>
         </TabsContent>
 
-        {/* Step 4: Work Preferences */}
+        {/* Step 3: Work Preferences */}
         <TabsContent value="work" className="space-y-4">
           <LocationInput value={location} onChange={setLocation} />
 
@@ -514,7 +482,7 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
           <DateWindowInput value={availability} onChange={setAvailability} />
 
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setCurrentTab('values')}>
+            <Button variant="outline" onClick={() => setCurrentTab('focus-weights')}>
               Back
             </Button>
             <Button
@@ -529,7 +497,7 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
             </Button>
           </div>
         </TabsContent>
-        {/* Step 5: Review & Activate */}
+        {/* Step 4: Review & Activate */}
         <TabsContent value="review" className="space-y-4">
           <div>
             <h3 className="text-lg font-medium mb-4">Review Your Profile</h3>
@@ -540,10 +508,8 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
                 {atlasSkillCount === null ? 'Loading…' : `${atlasSkillCount} skills`}
               </div>
               <div>
-                <strong>Values:</strong> {valuesTags.join(', ') || 'None'}
-              </div>
-              <div>
-                <strong>Causes:</strong> {causeTags.join(', ') || 'None'}
+                <strong>Purpose Signals:</strong>{' '}
+                {hasPurposeSignal ? 'Synced from profile' : 'Not complete on profile yet'}
               </div>
               <div>
                 <strong>Desired Roles:</strong> {desiredRoles.join(', ') || 'None'}
@@ -572,6 +538,13 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
                 <strong>Privacy Note:</strong> Your profile is completely anonymous. Organizations
                 will only see your skills, values, and qualifications—not your name, photo, or
                 background. Identity is revealed only after mutual interest.
+              </p>
+              <p className="mt-2 text-xs text-[#6B6760]">
+                Purpose signals are synced from your profile. Update them in{' '}
+                <a href="/app/i/profile" className="underline">
+                  Profile
+                </a>
+                .
               </p>
             </div>
 

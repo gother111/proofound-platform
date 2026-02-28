@@ -23,12 +23,6 @@ vi.mock('sonner', () => ({
   },
 }));
 
-vi.mock('@/components/matching/TypeaheadChips', () => ({
-  TypeaheadChips: ({ onChange }: any) => (
-    <button onClick={() => onChange(['value-a', 'value-b', 'value-c'])}>set chips</button>
-  ),
-}));
-
 vi.mock('@/components/matching/LocationInput', () => ({
   LocationInput: ({ onChange }: any) => (
     <button onClick={() => onChange({ workMode: 'remote', country: 'US' })}>set location</button>
@@ -53,10 +47,6 @@ vi.mock('@/components/matching/DateWindowInput', () => ({
   ),
 }));
 
-vi.mock('@/components/matching/CEFRLanguageRow', () => ({
-  CEFRLanguageRow: () => <div>language row</div>,
-}));
-
 vi.mock('@/components/ui/slider', () => ({
   Slider: ({ value, onValueChange, min = 0, max = 100, step = 1, ...rest }: any) => (
     <input
@@ -75,14 +65,11 @@ describe('MatchingProfileSetup focus and weighting step', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     apiFetchMock.mockImplementation(async (url: string, options?: any) => {
-      if (url === '/api/taxonomy/values') {
-        return { ok: true, json: async () => ({ items: [] }) };
-      }
-      if (url === '/api/taxonomy/causes') {
-        return { ok: true, json: async () => ({ items: [] }) };
-      }
       if (url === '/api/expertise/stats') {
         return { ok: true, json: async () => ({ totalL4Skills: 12 }) };
+      }
+      if (url === '/api/matching-profile' && !options?.method) {
+        return { ok: true, json: async () => ({ eligibility: { counts: { hasPurpose: true } } }) };
       }
       if (url === '/api/matching-profile' && options?.method === 'PUT') {
         return { ok: true, json: async () => ({ profile: { profileId: 'user-1' } }) };
@@ -96,7 +83,7 @@ describe('MatchingProfileSetup focus and weighting step', () => {
 
     render(<MatchingProfileSetup onComplete={onComplete} onCancel={vi.fn()} />);
 
-    expect(screen.queryByRole('tab', { name: /languages/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: /values/i })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /next: focus & weights/i }));
 
     fireEvent.change(screen.getByPlaceholderText(/software engineer, product manager/i), {
@@ -107,9 +94,6 @@ describe('MatchingProfileSetup focus and weighting step', () => {
     fireEvent.change(screen.getByLabelText('Mission vs skills weighting'), {
       target: { value: '80' },
     });
-
-    fireEvent.click(screen.getByRole('button', { name: /next: values & causes/i }));
-    fireEvent.click(screen.getAllByRole('button', { name: 'set chips' })[0]);
 
     fireEvent.click(screen.getByRole('button', { name: /next: work preferences/i }));
     fireEvent.click(screen.getByRole('button', { name: 'set location' }));
@@ -134,6 +118,8 @@ describe('MatchingProfileSetup focus and weighting step', () => {
     expect(payload.orgTypes).toEqual(['startup']);
     expect(payload.weightBias).toBe(80);
     expect(payload.compPeriod).toBe('monthly');
+    expect(payload).not.toHaveProperty('valuesTags');
+    expect(payload).not.toHaveProperty('causeTags');
     expect(payload).not.toHaveProperty('languages');
     expect(typeof payload.weights).toBe('object');
     expect(
@@ -145,7 +131,6 @@ describe('MatchingProfileSetup focus and weighting step', () => {
     render(<MatchingProfileSetup onComplete={vi.fn()} onCancel={vi.fn()} />);
 
     fireEvent.click(screen.getByRole('button', { name: /next: focus & weights/i }));
-    fireEvent.click(screen.getByRole('button', { name: /next: values & causes/i }));
     fireEvent.click(screen.getByRole('button', { name: /next: work preferences/i }));
 
     const minInput = screen.getByLabelText('Minimum desired');

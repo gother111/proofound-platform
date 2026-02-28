@@ -30,6 +30,9 @@ vi.mock('@/lib/analytics/events', () => ({
 vi.mock('@/db', () => ({
   db: {
     query: {
+      individualProfiles: {
+        findFirst: vi.fn(),
+      },
       matchingProfiles: {
         findFirst: vi.fn(),
       },
@@ -55,6 +58,7 @@ describe('core matching profile route', () => {
     (evaluateIndividualMatchability as any).mockResolvedValue({
       eligible: false,
     });
+    (db.query.individualProfiles.findFirst as any).mockResolvedValue(null);
     (db.query.skills.findMany as any).mockResolvedValue([]);
   });
 
@@ -140,5 +144,47 @@ describe('core matching profile route', () => {
     expect(onConflictDoNothing).toHaveBeenCalled();
     expect(payload.profile.profileId).toBe(userId);
     expect(Array.isArray(payload.profile.skills)).toBe(true);
+  });
+
+  it('hydrates valuesTags and causeTags from individual profile when omitted in payload', async () => {
+    const updatedProfile = {
+      profileId: userId,
+      valuesTags: ['Integrity', 'Innovation'],
+      causeTags: ['Climate', 'Education'],
+      createdAt: new Date('2026-02-23T00:00:00.000Z'),
+      updatedAt: new Date('2026-02-23T00:00:00.000Z'),
+    };
+
+    (db.query.individualProfiles.findFirst as any).mockResolvedValue({
+      userId,
+      values: [{ label: 'Integrity' }, { label: 'Innovation' }],
+      causes: ['Climate', 'Education'],
+    });
+    (db.query.matchingProfiles.findFirst as any).mockResolvedValue(updatedProfile);
+
+    const onConflictDoUpdate = vi.fn().mockResolvedValue(undefined);
+    const values = vi.fn().mockReturnValue({ onConflictDoUpdate });
+    (db.insert as any).mockReturnValue({ values });
+
+    const req = new NextRequest('http://localhost/api/core/matching/matching-profile', {
+      method: 'PUT',
+      body: JSON.stringify({
+        desiredRoles: ['Staff Engineer'],
+        desiredIndustries: ['Technology'],
+        orgTypes: ['startup'],
+        workMode: 'remote',
+      }),
+    });
+
+    const res = await PUT(req);
+
+    expect(res.status).toBe(200);
+    expect(values).toHaveBeenCalledWith(
+      expect.objectContaining({
+        profileId: userId,
+        valuesTags: ['Integrity', 'Innovation'],
+        causeTags: ['Climate', 'Education'],
+      })
+    );
   });
 });
