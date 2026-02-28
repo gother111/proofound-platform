@@ -205,13 +205,23 @@ function getContextTextPlaceholder(context: ImportContext): string {
   return 'Paste CV text here...';
 }
 
+function normalizePdfParseError(error: unknown): string {
+  if (!(error instanceof Error)) {
+    return 'Failed to parse PDF';
+  }
+
+  if (error.message.includes('GlobalWorkerOptions.workerSrc')) {
+    return 'PDF parser could not start. Please refresh and re-upload the file.';
+  }
+
+  return error.message;
+}
+
 async function extractPdfText(file: File): Promise<string> {
-  const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+  const pdfjs = await import('pdfjs-dist/webpack.mjs');
   const buffer = await file.arrayBuffer();
-  // Keep parsing local and avoid remote worker fetches.
   const document = await (pdfjs.getDocument as any)({
     data: new Uint8Array(buffer),
-    disableWorker: true,
   }).promise;
 
   const pageTexts: string[] = [];
@@ -509,7 +519,7 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
             file_name: file.name,
             context,
             parsed_text: '',
-            parse_error: error instanceof Error ? error.message : 'Failed to parse PDF',
+            parse_error: normalizePdfParseError(error),
             candidates: [],
           });
         }

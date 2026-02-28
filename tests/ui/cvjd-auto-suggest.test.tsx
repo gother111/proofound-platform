@@ -22,7 +22,7 @@ vi.mock('sonner', () => ({
   },
 }));
 
-vi.mock('pdfjs-dist/legacy/build/pdf.mjs', () => ({
+vi.mock('pdfjs-dist/webpack.mjs', () => ({
   getDocument: (...args: any[]) => pdfGetDocumentMock(...args),
 }));
 
@@ -272,5 +272,31 @@ describe('CVJDAutoSuggest', () => {
     expect(requestPayload.documents).toHaveLength(1);
     expect(requestPayload.documents[0].context).toBe('general');
     expect(requestPayload.documents[0].text).toContain('Docker');
+  });
+
+  it('shows friendly parse error when pdf worker initialization fails', async () => {
+    pdfGetDocumentMock.mockReturnValueOnce({
+      promise: Promise.reject(new Error('No "GlobalWorkerOptions.workerSrc" specified.')),
+    });
+
+    render(<CVJDAutoSuggest />);
+
+    const uploadInput = screen.getByTestId('cv-upload');
+    const file = new File(['dummy-one'], 'cv-error.pdf', { type: 'application/pdf' });
+    Object.defineProperty(file, 'arrayBuffer', {
+      value: async () => new TextEncoder().encode('dummy-one').buffer,
+    });
+
+    fireEvent.change(uploadInput, {
+      target: {
+        files: [file],
+      },
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('PDF parser could not start. Please refresh and re-upload the file.')
+      ).toBeInTheDocument();
+    });
   });
 });
