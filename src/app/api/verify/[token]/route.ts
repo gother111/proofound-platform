@@ -283,6 +283,21 @@ type ProfileContext = {
   email?: string | null;
 };
 
+type SkillProofContext = {
+  id?: string | null;
+  proof_type?: string | null;
+  title?: string | null;
+  description?: string | null;
+  url?: string | null;
+  file_path?: string | null;
+  issued_date?: string | null;
+  expires_date?: string | null;
+};
+
+type VerificationDataClient =
+  | ReturnType<typeof createAdminClient>
+  | Awaited<ReturnType<typeof createClient>>;
+
 function isMissingAnyColumnError(error: unknown, columns: string[]) {
   return columns.some((column) => isMissingColumnError(error, column));
 }
@@ -644,6 +659,78 @@ async function getRequesterProfileForImpactVerification(
   return { data: null, error: null };
 }
 
+async function getRequesterProfileForSkillVerification(
+  client: VerificationDataClient,
+  requesterProfileId: string
+) {
+  const selectClause = 'display_name, avatar_url, email';
+  const fallbackSelectClause = 'display_name, avatar_url';
+
+  const primaryLookup = await client
+    .from('profiles')
+    .select(selectClause)
+    .eq('id', requesterProfileId)
+    .maybeSingle();
+
+  if (!isMissingColumnError(primaryLookup.error, 'email')) {
+    return primaryLookup as { data: ProfileContext | null; error: unknown };
+  }
+
+  const fallbackLookup = await client
+    .from('profiles')
+    .select(fallbackSelectClause)
+    .eq('id', requesterProfileId)
+    .maybeSingle();
+
+  if (fallbackLookup.error) {
+    return fallbackLookup as { data: ProfileContext | null; error: unknown };
+  }
+
+  return {
+    data: fallbackLookup.data
+      ? ({
+          ...fallbackLookup.data,
+          email: null,
+        } as ProfileContext)
+      : null,
+    error: null,
+  };
+}
+
+function resolveSkillRequesterIdentity(args: {
+  profile: ProfileContext | null;
+  requesterEmailSnapshot: unknown;
+}) {
+  const profileName = toStringOrNull(args.profile?.display_name);
+  const profileEmail = toStringOrNull(args.profile?.email);
+  const snapshotEmail = toStringOrNull(args.requesterEmailSnapshot);
+
+  const requesterName =
+    profileName ||
+    formatDisplayNameFromEmail(snapshotEmail) ||
+    formatDisplayNameFromEmail(profileEmail) ||
+    'Unknown';
+  const requesterEmail = profileEmail || snapshotEmail || '';
+
+  return {
+    requesterName,
+    requesterEmail,
+  };
+}
+
+function sanitizeSkillProofForResponse(proof: SkillProofContext) {
+  return {
+    id: toStringOrNull(proof.id) || '',
+    proof_type: toStringOrNull(proof.proof_type) || 'link',
+    title: toStringOrNull(proof.title) || 'Proof',
+    description: toStringOrNull(proof.description),
+    url: toStringOrNull(proof.url),
+    file_path: toStringOrNull(proof.file_path),
+    issued_date: toStringOrNull(proof.issued_date),
+    expires_date: toStringOrNull(proof.expires_date),
+  };
+}
+
 async function getImpactVerificationRequestByToken(
   adminClient: ReturnType<typeof createAdminClient>,
   token: string
@@ -791,6 +878,7 @@ export async function GET(
         id,
         skill_id,
         requester_profile_id,
+        requester_email_snapshot,
         verifier_email,
         verifier_source,
         message,
@@ -813,6 +901,7 @@ export async function GET(
             id,
             skill_id,
             requester_profile_id,
+            requester_email_snapshot,
             verifier_email,
             verifier_source,
             message,
@@ -851,11 +940,28 @@ export async function GET(
       });
     }
 
-    const { data: requesterProfile } = await skillDataClient
-      .from('profiles')
-      .select('display_name, avatar_url, email')
-      .eq('id', verification.requester_profile_id)
-      .single();
+    const { data: requesterProfile, error: requesterProfileError } =
+      await getRequesterProfileForSkillVerification(
+        skillDataClient,
+        verification.requester_profile_id
+      );
+    if (requesterProfileError) {
+      console.error('Skill requester profile lookup error:', requesterProfileError);
+    }
+
+    const { data: skillProofs, error: skillProofsError } = await skillDataClient
+      .from('skill_proofs')
+      .select('id, proof_type, title, description, url, file_path, issued_date, expires_date')
+      .eq('skill_id', verification.skill_id)
+      .eq('profile_id', verification.requester_profile_id);
+    if (skillProofsError) {
+      console.error('Skill proof lookup error:', skillProofsError);
+    }
+
+    const requesterIdentity = resolveSkillRequesterIdentity({
+      profile: requesterProfile || null,
+      requesterEmailSnapshot: verification.requester_email_snapshot,
+    });
 
     const skill = verification.skills as any;
     let skillName = 'Unknown Skill';
@@ -879,9 +985,8 @@ export async function GET(
         verification_type: 'skill',
         skill_name: skillName,
         skill_code: skill?.skill_code || null,
-        requester_name:
-          requesterProfile?.display_name || requesterProfile?.email?.split('@')[0] || 'Unknown',
-        requester_email: requesterProfile?.email || '',
+        requester_name: requesterIdentity.requesterName,
+        requester_email: requesterIdentity.requesterEmail,
         requester_avatar: requesterProfile?.avatar_url || null,
         verifier_source: verification.verifier_source,
         message: verification.message,
@@ -894,6 +999,9 @@ export async function GET(
             : null,
         created_at: verification.created_at,
         expires_at: verification.expires_at,
+        proofs: Array.isArray(skillProofs)
+          ? skillProofs.map((proof) => sanitizeSkillProofForResponse(proof as SkillProofContext))
+          : [],
       },
     });
   } catch (error) {

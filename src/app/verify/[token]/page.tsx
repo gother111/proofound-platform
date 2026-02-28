@@ -18,6 +18,7 @@ interface SkillVerificationData {
   verification_type?: 'skill';
   skill_name: string;
   skill_code: string | null;
+  proofs?: SkillProofData[];
   requester_name: string;
   requester_email: string;
   requester_avatar?: string;
@@ -36,6 +37,17 @@ interface ImpactClaim {
   label: string;
   outcomeId?: string;
   enabled?: boolean;
+}
+
+interface SkillProofData {
+  id: string;
+  proof_type: string;
+  title: string;
+  description?: string | null;
+  url?: string | null;
+  file_path?: string | null;
+  issued_date?: string | null;
+  expires_date?: string | null;
 }
 
 interface ImpactVerificationData {
@@ -68,6 +80,40 @@ type VerificationData = SkillVerificationData | ImpactVerificationData;
 
 function isImpactVerification(data: VerificationData | null): data is ImpactVerificationData {
   return Boolean(data && data.verification_type === 'impact_story');
+}
+
+function skillProofTypeLabel(value: string): string {
+  switch (value) {
+    case 'certification':
+      return 'Certification';
+    case 'project':
+      return 'Project';
+    case 'media':
+      return 'Media';
+    case 'reference':
+      return 'Reference';
+    case 'document':
+      return 'Document';
+    case 'link':
+    default:
+      return 'Link';
+  }
+}
+
+function isImageProof(url: string | null | undefined): boolean {
+  if (!url) {
+    return false;
+  }
+
+  const normalized = url.toLowerCase();
+  return (
+    normalized.includes('.png') ||
+    normalized.includes('.jpg') ||
+    normalized.includes('.jpeg') ||
+    normalized.includes('.webp') ||
+    normalized.includes('.heif') ||
+    normalized.includes('.heic')
+  );
 }
 
 export default function VerifySkillPage() {
@@ -408,9 +454,6 @@ export default function VerifySkillPage() {
                 <p className="text-sm font-medium text-[#6B6760]">Skill to verify</p>
                 <div className="p-4 border-l-4 border-[#1C4D3A] bg-white rounded-r-lg">
                   <p className="font-semibold text-lg text-[#1C4D3A]">{data.skill_name}</p>
-                  {data.skill_code && (
-                    <p className="text-xs text-[#6B6760] font-mono mt-1">{data.skill_code}</p>
-                  )}
                 </div>
               </div>
 
@@ -419,6 +462,69 @@ export default function VerifySkillPage() {
                 <Badge variant="outline" className="text-[#1C4D3A] border-[#1C4D3A]">
                   {getSourceLabel(data.verifier_source || 'peer')}
                 </Badge>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-[#6B6760]">Supporting proof(s)</p>
+                {Array.isArray(data.proofs) && data.proofs.length > 0 ? (
+                  <div className="space-y-2 rounded-lg border p-3 bg-white">
+                    {data.proofs.map((proof) => (
+                      <div
+                        key={proof.id}
+                        className="rounded-md border border-[#E8E6DD] px-3 py-2 space-y-2"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="text-sm font-medium text-[#2D3330]">{proof.title}</p>
+                          <Badge variant="outline" className="text-xs whitespace-nowrap">
+                            {skillProofTypeLabel(proof.proof_type)}
+                          </Badge>
+                        </div>
+
+                        {proof.description && (
+                          <p className="text-xs text-[#6B6760]">{proof.description}</p>
+                        )}
+
+                        {(proof.issued_date || proof.expires_date) && (
+                          <p className="text-xs text-[#6B6760]">
+                            {proof.issued_date
+                              ? `Issued: ${new Date(proof.issued_date).toLocaleDateString()}`
+                              : ''}
+                            {proof.issued_date && proof.expires_date ? ' • ' : ''}
+                            {proof.expires_date
+                              ? `Expires: ${new Date(proof.expires_date).toLocaleDateString()}`
+                              : ''}
+                          </p>
+                        )}
+
+                        {proof.url && isImageProof(proof.url) && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={proof.url}
+                            alt={`Proof image: ${proof.title}`}
+                            className="max-h-40 rounded border border-[#E8E6DD]"
+                          />
+                        )}
+
+                        {proof.url && (
+                          <a
+                            href={proof.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-[#1C4D3A] hover:underline"
+                          >
+                            Open proof
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-dashed border-[#E8E6DD] bg-white p-3">
+                    <p className="text-sm text-[#6B6760]">
+                      No supporting proofs were attached to this request.
+                    </p>
+                  </div>
+                )}
               </div>
             </>
           )}

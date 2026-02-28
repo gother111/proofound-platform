@@ -213,6 +213,9 @@ function buildAdminClientForSkillFlow(overrides?: {
   verificationById?: any;
   idLookupError?: any;
   requesterProfile?: any;
+  requesterProfileFallback?: any;
+  requesterProfileSelectError?: any;
+  skillProofs?: any[];
   skillEvidenceStrength?: string;
   onSkillVerificationUpdate?: (payload: any) => void;
   onSkillUpdate?: (payload: any) => void;
@@ -230,6 +233,11 @@ function buildAdminClientForSkillFlow(overrides?: {
     avatar_url: null,
     email: 'requester@example.com',
   };
+  const requesterProfileFallback = overrides?.requesterProfileFallback || {
+    display_name: requesterProfile.display_name,
+    avatar_url: requesterProfile.avatar_url,
+  };
+  const skillProofs = overrides?.skillProofs || [];
   const skillEvidenceStrength = overrides?.skillEvidenceStrength || '0.3';
 
   return {
@@ -320,17 +328,35 @@ function buildAdminClientForSkillFlow(overrides?: {
 
       if (table === 'profiles') {
         return {
-          select: vi.fn().mockReturnValue({
+          select: vi.fn((selectClause: string) => ({
             eq: vi.fn().mockReturnValue({
               single: vi.fn().mockResolvedValue({
                 data: requesterProfile,
                 error: null,
               }),
-              maybeSingle: vi.fn().mockResolvedValue({
-                data: requesterProfile,
+              maybeSingle: vi
+                .fn()
+                .mockResolvedValue(
+                  overrides?.requesterProfileSelectError && selectClause.includes('email')
+                    ? { data: null, error: overrides.requesterProfileSelectError }
+                    : selectClause.includes('email')
+                      ? { data: requesterProfile, error: null }
+                      : { data: requesterProfileFallback, error: null }
+                ),
+            }),
+          })),
+        };
+      }
+
+      if (table === 'skill_proofs') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn(() => ({
+              eq: vi.fn().mockResolvedValue({
+                data: skillProofs,
                 error: null,
               }),
-            }),
+            })),
           }),
         };
       }
@@ -878,6 +904,89 @@ describe('verify impact token route', () => {
     expect(body.verification.id).toBe('skill-req-token');
   });
 
+  it('GET skill flow preserves requester display name when profiles email column is unavailable', async () => {
+    createAdminClientMock.mockReturnValue(
+      buildAdminClientForSkillFlow({
+        verificationByToken: {
+          ...SKILL_VERIFICATION_RECORD,
+          requester_email_snapshot: 'snapshot.person@example.com',
+        },
+        requesterProfile: {
+          display_name: 'Pavlo Samoshko',
+          avatar_url: null,
+          email: null,
+        },
+        requesterProfileFallback: {
+          display_name: 'Pavlo Samoshko',
+          avatar_url: null,
+        },
+        requesterProfileSelectError: {
+          code: 'PGRST204',
+          message: "Could not find the 'email' column of 'profiles' in the schema cache",
+        },
+      })
+    );
+
+    const response = await GET(new NextRequest(`http://localhost/api/verify/${TOKEN}`), {
+      params: Promise.resolve({ token: TOKEN }),
+    });
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.verification.verification_type).toBe('skill');
+    expect(body.verification.requester_name).toBe('Pavlo Samoshko');
+    expect(body.verification.requester_email).toBe('snapshot.person@example.com');
+  });
+
+  it('GET skill flow returns attached proof metadata for verifier context', async () => {
+    createAdminClientMock.mockReturnValue(
+      buildAdminClientForSkillFlow({
+        skillProofs: [
+          {
+            id: 'proof-cert-1',
+            proof_type: 'certification',
+            title: 'Swedish B2 Certificate',
+            description: 'Official language certificate',
+            url: 'https://cdn.proofound.test/certificates/swedish-b2.png',
+            file_path: 'proof/user-1/swedish-b2.png',
+            issued_date: '2024-01-01',
+            expires_date: '2028-01-01',
+          },
+          {
+            id: 'proof-link-2',
+            proof_type: 'link',
+            title: 'Project demo',
+            description: null,
+            url: 'https://example.com/demo',
+            file_path: null,
+            issued_date: null,
+            expires_date: null,
+          },
+        ],
+      })
+    );
+
+    const response = await GET(new NextRequest(`http://localhost/api/verify/${TOKEN}`), {
+      params: Promise.resolve({ token: TOKEN }),
+    });
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.verification.verification_type).toBe('skill');
+    expect(body.verification.proofs).toHaveLength(2);
+    expect(body.verification.proofs[0]).toMatchObject({
+      id: 'proof-cert-1',
+      proof_type: 'certification',
+      title: 'Swedish B2 Certificate',
+      url: 'https://cdn.proofound.test/certificates/swedish-b2.png',
+    });
+    expect(body.verification.proofs[1]).toMatchObject({
+      id: 'proof-link-2',
+      proof_type: 'link',
+      title: 'Project demo',
+    });
+  });
+
   it('GET succeeds for valid skill token when relation embed is ambiguous (PGRST201)', async () => {
     const { skills: _ignoredSkills, ...verificationWithoutEmbeddedSkill } =
       SKILL_VERIFICATION_RECORD;
@@ -945,7 +1054,25 @@ describe('verify impact token route', () => {
                   },
                   error: null,
                 }),
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: {
+                    display_name: 'Requester',
+                    avatar_url: null,
+                    email: 'requester@example.com',
+                  },
+                  error: null,
+                }),
               }),
+            }),
+          };
+        }
+
+        if (table === 'skill_proofs') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn(() => ({
+                eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+              })),
             }),
           };
         }
