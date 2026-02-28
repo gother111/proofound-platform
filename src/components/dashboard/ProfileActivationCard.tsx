@@ -16,6 +16,7 @@ import { apiFetch } from '@/lib/api/fetch';
 import { CheckCircle2, AlertCircle, Lock, Target, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { getIndividualRecoveryActions } from '@/lib/ui/recovery-actions';
+import { DASHBOARD_STATUS_CHIP_CLASS } from '@/components/dashboard/chipStyles';
 
 type ProfileCompletenessResponse = {
   percentage: number;
@@ -236,7 +237,7 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
   return (
     <Card className="h-full">
       <CardHeader className="flex flex-row items-start justify-between space-y-0">
-        <div className="space-y-1">
+        <div className="min-w-0 space-y-1">
           <CardTitle className="text-lg flex items-center gap-2">
             <Target className="h-5 w-5 text-[#1C4D3A]" />
             Get match-ready in 4 quick steps
@@ -245,7 +246,7 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
             You are active now. Completing these steps improves match quality.
           </p>
         </div>
-        <Badge variant="outline" className="text-xs">
+        <Badge variant="outline" className={DASHBOARD_STATUS_CHIP_CLASS}>
           {status.badge}
         </Badge>
       </CardHeader>

@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api/fetch';
 import { Bell, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { DASHBOARD_STATUS_CHIP_CLASS } from '@/components/dashboard/chipStyles';
 
 type NotificationsCardProps = {
   useMockData?: boolean;
@@ -87,14 +88,14 @@ export function NotificationsCard({ useMockData, onVisibilityChange }: Notificat
   return (
     <Card className="h-full">
       <CardHeader className="flex flex-row items-start justify-between space-y-0">
-        <div className="space-y-1">
+        <div className="min-w-0 space-y-1">
           <CardTitle className="text-lg flex items-center gap-2">
             <Bell className="h-5 w-5 text-[#1C4D3A]" />
             Inbox
           </CardTitle>
           <p className="text-sm text-muted-foreground">Latest unread updates and reminders.</p>
         </div>
-        <Badge variant="outline" className="text-xs">
+        <Badge variant="outline" className={DASHBOARD_STATUS_CHIP_CLASS}>
           {items.length} unread
         </Badge>
       </CardHeader>

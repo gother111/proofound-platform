@@ -7,6 +7,7 @@ import { AlertTriangle, ArrowRight, CheckCircle2, ShieldCheck } from 'lucide-rea
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { OrganizationReadiness } from '@/lib/momentum/types';
+import { DASHBOARD_STATUS_CHIP_CLASS } from '@/components/dashboard/chipStyles';
 
 interface OrgReadinessCardProps {
   orgRef: string;
@@ -46,7 +47,7 @@ export function OrgReadinessCard({ orgRef }: OrgReadinessCardProps) {
   return (
     <Card className="p-4 space-y-4" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-        <div>
+        <div className="min-w-0">
           <h3 className="text-lg font-semibold text-[#2D3330] inline-flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-[#1C4D3A]" />
             Assignment Readiness
@@ -57,7 +58,9 @@ export function OrgReadinessCard({ orgRef }: OrgReadinessCardProps) {
               : 'Your pipeline has activity. Tighten readiness checks to improve shortlist quality.'}
           </p>
         </div>
-        <Badge variant="outline">Score {data.readinessScore}/100</Badge>
+        <Badge variant="outline" className={DASHBOARD_STATUS_CHIP_CLASS}>
+          Score {data.readinessScore}/100
+        </Badge>
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-4">

@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api/fetch';
+import { DASHBOARD_STATUS_CHIP_CLASS } from '@/components/dashboard/chipStyles';
 
 interface NextBestAction {
   id: string;
@@ -183,11 +184,11 @@ export function NextBestActionsWidget({ useMockData, onActionClick }: NextBestAc
     <Card>
       <CardHeader className="space-y-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-lg">
+          <CardTitle className="min-w-0 flex items-center gap-2 text-lg">
             <Sparkles className="h-5 w-5 text-[#1C4D3A]" />
             Next Best Actions
           </CardTitle>
-          <Badge variant="outline" className={status.color}>
+          <Badge variant="outline" className={`${DASHBOARD_STATUS_CHIP_CLASS} ${status.color}`}>
             {status.text}
           </Badge>
         </div>

@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api/fetch';
 import { AlarmClock, CheckCircle2, Clock4, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
+import { DASHBOARD_STATUS_CHIP_CLASS } from '@/components/dashboard/chipStyles';
 
 type InterviewsResponse = {
   interviews?: {
@@ -95,14 +96,16 @@ export function InterviewsFeedbackCard({
   return (
     <Card className="h-full">
       <CardHeader className="flex flex-row items-start justify-between space-y-0">
-        <div className="space-y-1">
+        <div className="min-w-0 space-y-1">
           <CardTitle className="text-lg flex items-center gap-2">
             <Clock4 className="h-5 w-5 text-[#1C4D3A]" />
             Interviews & Feedback
           </CardTitle>
           <p className="text-sm text-muted-foreground">Keep 7d interviews & 48h feedback moving.</p>
         </div>
-        <Badge className={`text-xs ${slaBadge.tone}`}>{slaBadge.label}</Badge>
+        <Badge className={`${DASHBOARD_STATUS_CHIP_CLASS} ${slaBadge.tone}`}>
+          {slaBadge.label}
+        </Badge>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-3 gap-3 text-center">

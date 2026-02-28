@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { IndividualReadiness } from '@/lib/momentum/types';
+import { DASHBOARD_STATUS_CHIP_CLASS } from '@/components/dashboard/chipStyles';
 
 export function ReadinessSprintPanel() {
   const [data, setData] = useState<IndividualReadiness | null>(null);
@@ -45,7 +46,7 @@ export function ReadinessSprintPanel() {
   return (
     <Card className="p-4 border space-y-4" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-        <div>
+        <div className="min-w-0">
           <h2 className="text-lg font-semibold text-[#2D3330]">Readiness Sprint</h2>
           <p className="text-sm text-[#6B6760]">
             {data.marketActivityLow
@@ -53,7 +54,7 @@ export function ReadinessSprintPanel() {
               : 'Keep momentum with your top readiness actions this week.'}
           </p>
         </div>
-        <Badge variant="outline" className="w-fit">
+        <Badge variant="outline" className={`w-fit ${DASHBOARD_STATUS_CHIP_CLASS}`}>
           Score {data.readinessScore}/100
         </Badge>
       </div>

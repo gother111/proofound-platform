@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api/fetch';
 import { HeartPulse, SmilePlus, Activity, Shield } from 'lucide-react';
 import Link from 'next/link';
+import { DASHBOARD_STATUS_CHIP_CLASS } from '@/components/dashboard/chipStyles';
 
 type ZenSnapshotCardProps = {
   useMockData?: boolean;
@@ -61,7 +62,7 @@ export function ZenSnapshotCard({ useMockData }: ZenSnapshotCardProps) {
   return (
     <Card className="h-full">
       <CardHeader className="flex flex-row items-start justify-between space-y-0">
-        <div className="space-y-1">
+        <div className="min-w-0 space-y-1">
           <CardTitle className="text-lg flex items-center gap-2">
             <HeartPulse className="h-5 w-5 text-[#1C4D3A]" />
             Zen Snapshot
@@ -70,7 +71,7 @@ export function ZenSnapshotCard({ useMockData }: ZenSnapshotCardProps) {
             Private wellbeing check-ins; never shared.
           </p>
         </div>
-        <Badge className={`text-xs ${badge.tone}`}>{badge.text}</Badge>
+        <Badge className={`${DASHBOARD_STATUS_CHIP_CLASS} ${badge.tone}`}>{badge.text}</Badge>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="rounded-lg border border-[#E8E6DD] p-3 flex items-center justify-between">

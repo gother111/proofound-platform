@@ -2,6 +2,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { StatTileModel } from '@/lib/ui/v2/types';
 import { TrendingDown, TrendingUp, Minus } from 'lucide-react';
+import { DASHBOARD_TREND_CHIP_CLASS } from '@/components/dashboard/chipStyles';
 
 interface MetricStripProps extends React.HTMLAttributes<HTMLDivElement> {
   metrics: StatTileModel[];
@@ -36,24 +37,32 @@ export function MetricStrip({ metrics, className, ...props }: MetricStripProps) 
           </div>
 
           {(metric.trend || metric.description) && (
-            <div className="flex items-center gap-2 mt-auto pt-1 text-sm">
+            <div className="mt-auto flex min-w-0 items-start gap-2 pt-1 text-sm">
               {metric.trend && (
                 <span
                   className={cn(
-                    'flex items-center text-xs font-medium px-1.5 py-0.5 rounded-md',
+                    DASHBOARD_TREND_CHIP_CLASS,
                     metric.trend.direction === 'up' && 'text-emerald-700 bg-emerald-50',
                     metric.trend.direction === 'down' && 'text-rose-700 bg-rose-50',
                     metric.trend.direction === 'neutral' && 'text-slate-600 bg-slate-100'
                   )}
                 >
-                  {metric.trend.direction === 'up' && <TrendingUp className="w-3 h-3 mr-1" />}
-                  {metric.trend.direction === 'down' && <TrendingDown className="w-3 h-3 mr-1" />}
-                  {metric.trend.direction === 'neutral' && <Minus className="w-3 h-3 mr-1" />}
-                  {metric.trend.label}
+                  {metric.trend.direction === 'up' && (
+                    <TrendingUp className="mt-0.5 h-3 w-3 shrink-0" />
+                  )}
+                  {metric.trend.direction === 'down' && (
+                    <TrendingDown className="mt-0.5 h-3 w-3 shrink-0" />
+                  )}
+                  {metric.trend.direction === 'neutral' && (
+                    <Minus className="mt-0.5 h-3 w-3 shrink-0" />
+                  )}
+                  <span>{metric.trend.label}</span>
                 </span>
               )}
               {metric.description && (
-                <span className="text-xs text-muted-foreground truncate">{metric.description}</span>
+                <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+                  {metric.description}
+                </span>
               )}
             </div>
           )}

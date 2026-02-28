@@ -14,6 +14,7 @@ import { Progress } from '@/components/ui/progress';
 import { apiFetch } from '@/lib/api/fetch';
 import { ArrowRight, Sparkles, Target } from 'lucide-react';
 import Link from 'next/link';
+import { DASHBOARD_STATUS_CHIP_CLASS } from '@/components/dashboard/chipStyles';
 
 type MatchingReadinessCardProps = {
   useMockData?: boolean;
@@ -64,7 +65,7 @@ export function MatchingReadinessCard({ useMockData, onActionClick }: MatchingRe
   return (
     <Card className="h-full">
       <CardHeader className="flex flex-row items-start justify-between space-y-0">
-        <div className="space-y-1">
+        <div className="min-w-0 space-y-1">
           <CardTitle className="text-lg flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-[#1C4D3A]" />
             Matching Readiness
@@ -73,7 +74,7 @@ export function MatchingReadinessCard({ useMockData, onActionClick }: MatchingRe
             Fix the top gaps to unlock better matches.
           </p>
         </div>
-        <Badge variant="outline" className="text-xs">
+        <Badge variant="outline" className={DASHBOARD_STATUS_CHIP_CLASS}>
           {status.label}
         </Badge>
       </CardHeader>

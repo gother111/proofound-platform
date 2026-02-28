@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { apiFetch } from '@/lib/api/fetch';
 import { TrendingUp, Gauge, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { DASHBOARD_STATUS_CHIP_CLASS } from '@/components/dashboard/chipStyles';
 
 type MetricRow = {
   metric: string;
@@ -76,14 +77,14 @@ export function MomentumMetricsCard({ useMockData }: MomentumMetricsCardProps) {
   return (
     <Card className="h-full">
       <CardHeader className="flex flex-row items-start justify-between space-y-0">
-        <div className="space-y-1">
+        <div className="min-w-0 space-y-1">
           <CardTitle className="text-lg flex items-center gap-2">
             <Gauge className="h-5 w-5 text-[#1C4D3A]" />
             Momentum Metrics
           </CardTitle>
           <p className="text-sm text-muted-foreground">Core PRD metrics: TTFQI, TTV, TTSC.</p>
         </div>
-        <Badge variant="outline" className="text-xs">
+        <Badge variant="outline" className={DASHBOARD_STATUS_CHIP_CLASS}>
           Weekly
         </Badge>
       </CardHeader>
