@@ -335,7 +335,7 @@ export function EnhancedDataImportDialog({ open, onOpenChange }: EnhancedDataImp
 
               {/* Data Summary */}
               {validationResult.summary && (
-                <Card>
+                <Card variant="bento">
                   <CardContent className="pt-6">
                     <h3 className="font-semibold mb-4">Import Summary</h3>
                     <div className="grid grid-cols-2 gap-4">
@@ -354,7 +354,7 @@ export function EnhancedDataImportDialog({ open, onOpenChange }: EnhancedDataImp
 
               {/* Import Mode Selection */}
               {validationResult.valid && (
-                <Card>
+                <Card variant="bento">
                   <CardContent className="pt-6">
                     <h3 className="font-semibold mb-4 flex items-center gap-2">
                       <Merge className="w-4 h-4" />

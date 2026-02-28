@@ -55,7 +55,7 @@ export function L4Card({ skill, onEdit }: L4CardProps) {
   const recencyText = skill.lastUsedAt ? getRecencyText(new Date(skill.lastUsedAt)) : 'Never used';
 
   return (
-    <Card className="border border-proofound-stone bg-white p-6 space-y-5 shadow-sm hover:shadow-md transition-shadow duration-300 rounded-xl">
+    <Card variant="flat" className="p-6 space-y-5 rounded-xl">
       {/* Header Row */}
       <div className="flex items-start justify-between">
         <div className="flex-1">

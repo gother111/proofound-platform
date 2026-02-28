@@ -49,9 +49,9 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
       }
 
       const auditData: AuditLogResponse = await response.json();
-      
+
       if (append) {
-        setData(prevData => {
+        setData((prevData) => {
           if (!prevData) return auditData;
           return {
             ...auditData,
@@ -61,7 +61,7 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
       } else {
         setData(auditData);
       }
-      
+
       setOffset(newOffset);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load audit log');
@@ -123,7 +123,7 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
 
   if (loading) {
     return (
-      <Card className="border-proofound-stone dark:border-border rounded-2xl">
+      <Card variant="bento" className="border-proofound-stone dark:border-border rounded-2xl">
         <CardContent className="pt-6">
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-proofound-forest" />
@@ -138,7 +138,7 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
 
   if (error || !data) {
     return (
-      <Card className="border-red-200 dark:border-red-900 rounded-2xl">
+      <Card variant="bento" className="border-red-200 dark:border-red-900 rounded-2xl">
         <CardContent className="pt-6">
           <p className="text-red-600 dark:text-red-400">
             {error || 'Failed to load audit log. Please try again.'}
@@ -150,7 +150,7 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
 
   return (
     <div className="space-y-4">
-      <Card className="border-proofound-stone dark:border-border rounded-2xl">
+      <Card variant="bento" className="border-proofound-stone dark:border-border rounded-2xl">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -213,11 +213,7 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
           {/* Load More Button */}
           {data.hasMore && (
             <div className="mt-6 text-center">
-              <Button
-                variant="outline"
-                onClick={handleLoadMore}
-                disabled={loadingMore}
-              >
+              <Button variant="outline" onClick={handleLoadMore} disabled={loadingMore}>
                 {loadingMore ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -233,7 +229,8 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
           {/* Privacy Note */}
           <div className="mt-6 bg-blue-50 dark:bg-slate-800 border border-blue-200 dark:border-blue-900 rounded-lg p-4">
             <p className="text-xs text-blue-800 dark:text-blue-300">
-              ℹ️ All IP addresses shown are hashed (SHA-256) and abbreviated for privacy. Full IP addresses are never stored.
+              ℹ️ All IP addresses shown are hashed (SHA-256) and abbreviated for privacy. Full IP
+              addresses are never stored.
             </p>
           </div>
         </CardContent>
@@ -241,4 +238,3 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
     </div>
   );
 }
-

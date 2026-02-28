@@ -169,7 +169,7 @@ export function MatchResultCard({
   };
 
   return (
-    <Card className="p-4" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+    <Card variant="bento" className="p-4">
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">

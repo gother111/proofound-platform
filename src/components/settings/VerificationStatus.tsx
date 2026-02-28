@@ -544,7 +544,10 @@ export function VerificationStatus() {
       </div>
 
       <div className="grid grid-cols-1 gap-4">
-        <Card className="border-2 hover:border-proofound-terracotta/30 transition-colors cursor-pointer">
+        <Card
+          variant="bento"
+          className="border-2 hover:border-proofound-terracotta/30 transition-colors cursor-pointer"
+        >
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-full bg-proofound-terracotta/10 flex items-center justify-center flex-shrink-0">
@@ -568,7 +571,10 @@ export function VerificationStatus() {
           </CardContent>
         </Card>
 
-        <Card className="border-2 hover:border-[#0A66C2]/30 transition-colors cursor-pointer">
+        <Card
+          variant="bento"
+          className="border-2 hover:border-[#0A66C2]/30 transition-colors cursor-pointer"
+        >
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-full bg-[#0A66C2]/10 flex items-center justify-center flex-shrink-0">

@@ -89,9 +89,9 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
       {/* Semantic header with role="banner" for main site header */}
       <header
         className={cn(
-          'sticky top-0 z-40 min-h-14 px-4 flex items-center justify-between gap-2 md:gap-4 py-2 md:py-0 transition-all',
+          'sticky top-0 z-40 min-h-14 px-4 flex items-center justify-between gap-2 md:gap-4 py-2 md:py-0 transition-all duration-300',
           isV2
-            ? 'bg-white/80 backdrop-blur-md border-b border-proofound-stone/40 shadow-sm'
+            ? 'bg-white/60 backdrop-blur-xl border-b border-proofound-stone/30 shadow-sm dark:bg-[#1A1D2E]/60 dark:border-white/10'
             : 'bg-neutral-light-50 border-b border-proofound-stone/60'
         )}
         role="banner"

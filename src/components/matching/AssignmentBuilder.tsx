@@ -127,9 +127,13 @@ export function AssignmentBuilder({ orgId, orgSlug }: AssignmentBuilderProps) {
           />
         );
       case 1:
-        return <Step2TargetOutcomes form={form} onNext={() => void handleNext()} onBack={handleBack} />;
+        return (
+          <Step2TargetOutcomes form={form} onNext={() => void handleNext()} onBack={handleBack} />
+        );
       case 2:
-        return <Step3WeightMatrix form={form} onNext={() => void handleNext()} onBack={handleBack} />;
+        return (
+          <Step3WeightMatrix form={form} onNext={() => void handleNext()} onBack={handleBack} />
+        );
       case 3:
         return <Step4Practicals form={form} onNext={() => void handleNext()} onBack={handleBack} />;
       case 4:
@@ -157,20 +161,25 @@ export function AssignmentBuilder({ orgId, orgSlug }: AssignmentBuilderProps) {
             const isCurrent = index === currentStep;
 
             return (
-              <div key={step} className="flex flex-col items-center gap-2 bg-proofound-parchment dark:bg-background px-2">
+              <div
+                key={step}
+                className="flex flex-col items-center gap-2 bg-proofound-parchment dark:bg-background px-2"
+              >
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${isCompleted
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+                    isCompleted
                       ? 'bg-proofound-forest text-white'
                       : isCurrent
                         ? 'bg-proofound-forest/20 text-proofound-forest border-2 border-proofound-forest'
                         : 'bg-proofound-stone/30 text-proofound-charcoal/50'
-                    }`}
+                  }`}
                 >
                   {index + 1}
                 </div>
                 <span
-                  className={`text-xs font-medium hidden sm:block ${isCurrent ? 'text-proofound-forest' : 'text-proofound-charcoal/50'
-                    }`}
+                  className={`text-xs font-medium hidden sm:block ${
+                    isCurrent ? 'text-proofound-forest' : 'text-proofound-charcoal/50'
+                  }`}
                 >
                   {step}
                 </span>
@@ -181,10 +190,8 @@ export function AssignmentBuilder({ orgId, orgSlug }: AssignmentBuilderProps) {
       </div>
 
       {/* Step Content */}
-      <Card className="border-proofound-stone dark:border-border rounded-2xl shadow-sm">
-        <CardContent className="p-6 md:p-8">
-          {renderStep()}
-        </CardContent>
+      <Card variant="bento" className="rounded-2xl shadow-sm">
+        <CardContent className="p-6 md:p-8">{renderStep()}</CardContent>
       </Card>
 
       {/* Mobile Navigation (if not handled inside steps) */}

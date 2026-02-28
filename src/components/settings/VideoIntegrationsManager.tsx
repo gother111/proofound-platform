@@ -162,7 +162,7 @@ export function VideoIntegrationsManager({
 
   const content = (
     <div className="space-y-4">
-      <Card className="border-[#E8E6DD] dark:border-border">
+      <Card variant="bento" className="border-[#E8E6DD] dark:border-border">
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
@@ -228,7 +228,7 @@ export function VideoIntegrationsManager({
         </CardContent>
       </Card>
 
-      <Card className="border-[#E8E6DD] dark:border-border">
+      <Card variant="bento" className="border-[#E8E6DD] dark:border-border">
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">

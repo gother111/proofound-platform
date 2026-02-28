@@ -122,7 +122,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
-          <Card key={i} className="p-6">
+          <Card variant="bento" key={i} className="p-6">
             <div className="animate-pulse space-y-3">
               <div className="h-4 bg-gray-200 rounded w-3/4"></div>
               <div className="h-3 bg-gray-200 rounded w-1/2"></div>
@@ -135,7 +135,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
 
   if (matches.length === 0) {
     return (
-      <Card className="p-12 text-center">
+      <Card variant="bento" className="p-12 text-center">
         <Clock className="h-16 w-16 mx-auto mb-4 text-[#A8B69D]" />
         <h3 className="text-lg font-semibold text-[#2D3330] mb-2">No Snoozed Matches</h3>
         <p className="text-sm text-[#6B6760] mb-6">
@@ -155,7 +155,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
   return (
     <div className="space-y-4">
       {matches.map((match) => (
-        <Card key={match.id} className="p-6 hover:shadow-md transition-shadow">
+        <Card variant="bento" key={match.id} className="p-6">
           <div className="flex items-start justify-between gap-6">
             {/* Match Info */}
             <div className="flex-1">

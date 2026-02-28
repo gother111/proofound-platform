@@ -5,7 +5,14 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { AlertTriangle, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
 
@@ -93,7 +100,7 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
 
   if (loading) {
     return (
-      <Card className="border-proofound-stone dark:border-border rounded-2xl">
+      <Card variant="bento" className="border-proofound-stone dark:border-border rounded-2xl">
         <CardContent className="pt-6">
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-proofound-forest" />
@@ -106,7 +113,10 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
   // Show deleted state
   if (accountStatus?.accountStatus === 'deleted') {
     return (
-      <Card className="border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950 rounded-2xl">
+      <Card
+        variant="bento"
+        className="border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950 rounded-2xl"
+      >
         <CardHeader>
           <div className="flex items-start gap-3">
             <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
@@ -128,7 +138,10 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
   return (
     <div className="space-y-4">
       {error && (
-        <Card className="border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950 rounded-2xl">
+        <Card
+          variant="bento"
+          className="border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950 rounded-2xl"
+        >
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">
               <XCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
@@ -139,7 +152,10 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
       )}
 
       {success && (
-        <Card className="border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950 rounded-2xl">
+        <Card
+          variant="bento"
+          className="border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950 rounded-2xl"
+        >
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">
               <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5" />
@@ -149,7 +165,7 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
         </Card>
       )}
 
-      <Card className="border-red-200 dark:border-red-900 rounded-2xl">
+      <Card variant="bento" className="border-red-200 dark:border-red-900 rounded-2xl">
         <CardHeader>
           <div className="flex items-start gap-4">
             <div className="p-3 bg-red-100 dark:bg-red-900 rounded-lg">
@@ -243,9 +259,7 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
               />
             </div>
 
-            {error && (
-              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-            )}
+            {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
           </div>
 
           <DialogFooter>
@@ -282,4 +296,3 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
     </div>
   );
 }
-

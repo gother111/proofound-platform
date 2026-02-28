@@ -86,7 +86,7 @@ export function NotificationsCard({ useMockData, onVisibilityChange }: Notificat
   }, [items.length, loading, onVisibilityChange]);
 
   return (
-    <Card className="h-full">
+    <Card variant="bento" className="h-full">
       <CardHeader className="flex flex-row items-start justify-between space-y-0">
         <div className="min-w-0 space-y-1">
           <CardTitle className="text-lg flex items-center gap-2">

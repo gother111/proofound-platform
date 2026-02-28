@@ -132,7 +132,7 @@ export function NextBestActionsWidget({ useMockData, onActionClick }: NextBestAc
 
   if (loading) {
     return (
-      <Card>
+      <Card variant="bento">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Sparkles className="h-5 w-5 text-[#1C4D3A]" />
@@ -181,7 +181,7 @@ export function NextBestActionsWidget({ useMockData, onActionClick }: NextBestAc
   const status = getProfileStatus();
 
   return (
-    <Card>
+    <Card variant="bento">
       <CardHeader className="space-y-4">
         <div className="flex items-center justify-between">
           <CardTitle className="min-w-0 flex items-center gap-2 text-lg">

@@ -73,7 +73,7 @@ export function InterviewConfirmation({
         </p>
       </div>
 
-      <Card>
+      <Card variant="bento">
         <CardHeader>
           <CardTitle className="text-lg">Interview Details</CardTitle>
         </CardHeader>
@@ -156,7 +156,7 @@ export function InterviewConfirmation({
       </Card>
 
       {/* Next Steps */}
-      <Card className="mt-6">
+      <Card variant="bento" className="mt-6">
         <CardHeader>
           <CardTitle className="text-lg">Next Steps</CardTitle>
         </CardHeader>

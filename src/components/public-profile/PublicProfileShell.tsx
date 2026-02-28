@@ -23,12 +23,12 @@ export function PublicProfileShell({
   return (
     <div
       className={cn(
-        compact ? 'bg-[#F7F6F1] p-3' : 'min-h-screen bg-[#F7F6F1] p-4 sm:p-6 md:p-8',
+        compact ? 'bg-japandi-bg p-3' : 'min-h-screen bg-japandi-bg p-4 sm:p-6 md:p-8',
         className
       )}
     >
       <div className={cn('mx-auto w-full', maxWidthClassName)}>
-        <div className="overflow-hidden rounded-2xl border border-[#E8E6DD] bg-white shadow-[0_16px_38px_rgba(45,51,48,0.08)]">
+        <div className="overflow-hidden rounded-2xl border border-white/40 bg-white/60 backdrop-blur-2xl shadow-xl">
           <div className="h-2 bg-gradient-to-r from-[#1C4D3A] via-[#2B5F49] to-[#C76B4A]" />
           {header ? (
             <div className="border-b border-[#ECEAE3] px-4 py-4 sm:px-5">{header}</div>

@@ -80,7 +80,7 @@ export function L1Grid({ domains, onDomainClick, l2CategoriesPerL1, onL2Click }:
         If the wording feels unfamiliar, pick the closest match—examples will appear as you drill
         down.
       </p>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="flex overflow-x-auto snap-x snap-mandatory pb-4 md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 hide-scrollbar">
         {domains.map((domain) => {
           const colors = DOMAIN_COLORS[domain.catId] || DOMAIN_COLORS[1];
           const isExpanded = expandedDomain === domain.catId;
@@ -88,9 +88,10 @@ export function L1Grid({ domains, onDomainClick, l2CategoriesPerL1, onL2Click }:
 
           return (
             <Card
+              variant="bento"
               key={domain.catId}
-              className={`border ${colors.border} bg-white p-6 cursor-pointer transition-all duration-300 hover:shadow-lg rounded-xl ${
-                isExpanded ? 'ring-2 ring-offset-2 ring-proofound-forest shadow-lg' : 'shadow-sm'
+              className={`snap-center min-w-[85vw] md:min-w-0 md:w-auto border ${colors.border} p-6 cursor-pointer rounded-xl ${
+                isExpanded ? 'ring-2 ring-offset-2 ring-proofound-forest shadow-lg' : ''
               }`}
               onClick={() => handleDomainClick(domain.catId)}
             >

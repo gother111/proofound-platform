@@ -111,7 +111,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
 
           {/* Account Tab */}
           <TabsContent value="account" className="space-y-6">
-            <Card className="border-proofound-stone dark:border-border rounded-2xl">
+            <Card variant="bento" className="border-proofound-stone dark:border-border rounded-2xl">
               <CardHeader>
                 <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
                   Email & Authentication
@@ -140,7 +140,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
               </CardContent>
             </Card>
 
-            <Card className="border-proofound-stone dark:border-border rounded-2xl">
+            <Card variant="bento" className="border-proofound-stone dark:border-border rounded-2xl">
               <CardHeader>
                 <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
                   Identity Verification
@@ -154,7 +154,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
               </CardContent>
             </Card>
 
-            <Card className="border-proofound-stone dark:border-border rounded-2xl">
+            <Card variant="bento" className="border-proofound-stone dark:border-border rounded-2xl">
               <CardHeader>
                 <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
                   Password
@@ -168,7 +168,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
               </CardContent>
             </Card>
 
-            <Card className="border-proofound-stone dark:border-border rounded-2xl">
+            <Card variant="bento" className="border-proofound-stone dark:border-border rounded-2xl">
               <CardHeader>
                 <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
                   Language
@@ -188,7 +188,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
               </CardContent>
             </Card>
 
-            <Card className="border-proofound-stone dark:border-border rounded-2xl">
+            <Card variant="bento" className="border-proofound-stone dark:border-border rounded-2xl">
               <CardHeader>
                 <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
                   Help & Support
@@ -226,7 +226,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
 
           {/* Integrations Tab */}
           <TabsContent value="integrations" className="space-y-6">
-            <Card className="border-proofound-stone dark:border-border rounded-2xl">
+            <Card variant="bento" className="border-proofound-stone dark:border-border rounded-2xl">
               <CardHeader>
                 <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
                   Connected Accounts
@@ -240,7 +240,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
               </CardContent>
             </Card>
 
-            <Card className="border-proofound-stone dark:border-border rounded-2xl">
+            <Card variant="bento" className="border-proofound-stone dark:border-border rounded-2xl">
               <CardHeader>
                 <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
                   Video Conferencing
@@ -257,7 +257,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
 
           {/* Notifications Tab */}
           <TabsContent value="notifications" className="space-y-6">
-            <Card className="border-proofound-stone dark:border-border rounded-2xl">
+            <Card variant="bento" className="border-proofound-stone dark:border-border rounded-2xl">
               <CardHeader>
                 <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
                   Notifications

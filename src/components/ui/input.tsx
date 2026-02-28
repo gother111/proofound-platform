@@ -92,10 +92,10 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const hasSuccess = success && !hasError;
 
     const inputClasses = cn(
-      'flex h-11 w-full rounded-md border bg-white px-3 py-2 text-base text-proofound-charcoal transition-all duration-200',
+      'flex h-11 w-full rounded-xl border bg-white px-3 py-2 text-base text-proofound-charcoal transition-all duration-300 hover:border-proofound-stone/80',
       'file:border-0 file:bg-transparent file:text-sm file:font-medium',
       'placeholder:text-muted-foreground/70',
-      'focus-visible:outline-none focus-visible:ring-2',
+      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1',
       'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-proofound-parchment',
       // Default state
       !hasError &&

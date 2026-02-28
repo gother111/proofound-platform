@@ -139,7 +139,10 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <Card className="border-proofound-stone dark:border-border rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-900">
+      <Card
+        variant="bento"
+        className="border-proofound-stone dark:border-border rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-900"
+      >
         <CardContent className="pt-6">
           <div className="flex items-start gap-4">
             <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
@@ -181,7 +184,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
 
       {/* Data Categories */}
       {privacySummaryEnabled ? (
-        <Card className="border-proofound-stone dark:border-border rounded-xl">
+        <Card variant="bento" className="border-proofound-stone dark:border-border rounded-xl">
           <CardHeader>
             <CardTitle className="text-xl font-['Crimson_Pro']">What others can see</CardTitle>
             <CardDescription>
@@ -216,7 +219,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
         </Card>
       ) : null}
 
-      <Card className="border-proofound-stone dark:border-border rounded-xl">
+      <Card variant="bento" className="border-proofound-stone dark:border-border rounded-xl">
         <CardHeader>
           <CardTitle className="text-lg font-['Crimson_Pro']">Quick privacy fixes</CardTitle>
           <CardDescription>
@@ -253,7 +256,10 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Profile Data */}
-        <Card className="border-proofound-stone dark:border-border rounded-xl hover:shadow-md transition-shadow">
+        <Card
+          variant="bento"
+          className="border-proofound-stone dark:border-border rounded-xl hover:shadow-md transition-shadow"
+        >
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
@@ -283,7 +289,10 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
         </Card>
 
         {/* Skills & Expertise */}
-        <Card className="border-proofound-stone dark:border-border rounded-xl hover:shadow-md transition-shadow">
+        <Card
+          variant="bento"
+          className="border-proofound-stone dark:border-border rounded-xl hover:shadow-md transition-shadow"
+        >
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
@@ -313,7 +322,10 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
         </Card>
 
         {/* Projects & Work History */}
-        <Card className="border-proofound-stone dark:border-border rounded-xl hover:shadow-md transition-shadow">
+        <Card
+          variant="bento"
+          className="border-proofound-stone dark:border-border rounded-xl hover:shadow-md transition-shadow"
+        >
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
@@ -345,7 +357,10 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
         </Card>
 
         {/* Match History */}
-        <Card className="border-proofound-stone dark:border-border rounded-xl hover:shadow-md transition-shadow">
+        <Card
+          variant="bento"
+          className="border-proofound-stone dark:border-border rounded-xl hover:shadow-md transition-shadow"
+        >
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
@@ -377,7 +392,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
       </div>
 
       {/* Analytics Card */}
-      <Card className="border-proofound-stone dark:border-border rounded-xl">
+      <Card variant="bento" className="border-proofound-stone dark:border-border rounded-xl">
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
@@ -409,7 +424,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
       </Card>
 
       {/* Your Rights */}
-      <Card className="border-proofound-stone dark:border-border rounded-xl">
+      <Card variant="bento" className="border-proofound-stone dark:border-border rounded-xl">
         <CardHeader>
           <CardTitle className="text-xl font-['Crimson_Pro']">Your Rights</CardTitle>
           <CardDescription>
@@ -484,7 +499,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
       </div>
 
       {/* Learn More */}
-      <Card className="border-proofound-stone dark:border-border rounded-xl">
+      <Card variant="bento" className="border-proofound-stone dark:border-border rounded-xl">
         <CardContent className="pt-6">
           <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
             Learn more about how we protect your privacy in our{' '}

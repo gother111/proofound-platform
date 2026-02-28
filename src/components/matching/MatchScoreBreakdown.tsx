@@ -103,7 +103,7 @@ export function MatchScoreBreakdown({
   };
 
   return (
-    <Card className="border-[#E8E6DD] rounded-3xl">
+    <Card variant="bento" className="rounded-3xl">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Match Score Breakdown</span>

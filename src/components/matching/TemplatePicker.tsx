@@ -137,7 +137,7 @@ export function TemplatePicker({
               {templates.map((template) => {
                 const recommendedMode = resolveRecommendedMode(template);
                 return (
-                  <Card key={template.id} className="p-4 space-y-3">
+                  <Card variant="bento" key={template.id} className="p-4 space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">

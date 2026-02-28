@@ -230,7 +230,7 @@ export function InterviewScheduler({
       </div>
 
       {/* Step Content */}
-      <Card>
+      <Card variant="bento">
         <CardHeader>
           <CardTitle className="text-lg">{steps[currentStepIndex].label}</CardTitle>
           <CardDescription>

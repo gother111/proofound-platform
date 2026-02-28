@@ -225,7 +225,7 @@ export function ProjectsCard({
 
   if (isLoading) {
     return (
-      <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+      <Card variant="bento" className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
             Projects
@@ -240,7 +240,7 @@ export function ProjectsCard({
 
   if (error) {
     return (
-      <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+      <Card variant="bento" className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
             Projects
@@ -269,7 +269,7 @@ export function ProjectsCard({
 
     if (organizationProjects.length === 0) {
       return (
-        <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+        <Card variant="bento" className="p-4">
           <div className="flex items-center justify-between mb-3">
             <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
               Projects
@@ -303,7 +303,7 @@ export function ProjectsCard({
     }
 
     return (
-      <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+      <Card variant="bento" className="p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
@@ -397,7 +397,7 @@ export function ProjectsCard({
 
   if (individualProjects.length === 0) {
     return (
-      <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+      <Card variant="bento" className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
             Projects
@@ -431,7 +431,7 @@ export function ProjectsCard({
   }
 
   return (
-    <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+    <Card variant="bento" className="p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>

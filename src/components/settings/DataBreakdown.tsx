@@ -78,7 +78,7 @@ export function DataBreakdown({ userId }: DataBreakdownProps) {
 
   if (loading) {
     return (
-      <Card className="border-proofound-stone dark:border-border rounded-2xl">
+      <Card variant="bento" className="border-proofound-stone dark:border-border rounded-2xl">
         <CardContent className="pt-6">
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-proofound-forest" />
@@ -93,7 +93,7 @@ export function DataBreakdown({ userId }: DataBreakdownProps) {
 
   if (error || !data) {
     return (
-      <Card className="border-red-200 dark:border-red-900 rounded-2xl">
+      <Card variant="bento" className="border-red-200 dark:border-red-900 rounded-2xl">
         <CardContent className="pt-6">
           <p className="text-red-600 dark:text-red-400">
             {error || 'Failed to load data. Please try again.'}
@@ -302,7 +302,7 @@ export function DataBreakdown({ userId }: DataBreakdownProps) {
 
   return (
     <div className="space-y-4">
-      <Card className="border-proofound-stone dark:border-border rounded-2xl">
+      <Card variant="bento" className="border-proofound-stone dark:border-border rounded-2xl">
         <CardHeader>
           <CardTitle className="text-2xl font-['Crimson_Pro']">Data Breakdown</CardTitle>
           <CardDescription>Detailed view of all data we have collected about you</CardDescription>
@@ -313,6 +313,7 @@ export function DataBreakdown({ userId }: DataBreakdownProps) {
         const isExpanded = expandedSections.has(section.id);
         return (
           <Card
+            variant="bento"
             key={section.id}
             className="border-proofound-stone dark:border-border rounded-xl overflow-hidden"
           >

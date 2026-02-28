@@ -76,7 +76,7 @@ export function PortfolioVisibilityCard() {
   };
 
   return (
-    <Card>
+    <Card variant="bento">
       <CardHeader>
         <CardTitle>Public Portfolio Visibility</CardTitle>
         <CardDescription>Controls what is shown on your public portfolio page.</CardDescription>

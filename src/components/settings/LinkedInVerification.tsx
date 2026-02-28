@@ -220,7 +220,7 @@ export function LinkedInVerification({
           </AlertDescription>
         </Alert>
 
-        <Card className="p-6">
+        <Card variant="bento" className="p-6">
           <div className="space-y-4">
             {/* Confidence Score */}
             <div>
@@ -335,7 +335,7 @@ export function LinkedInVerification({
   // Main verification flow
   return (
     <div className="space-y-6">
-      <Card className="p-6 border-[#0A66C2]">
+      <Card variant="bento" className="p-6 border-[#0A66C2]">
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 rounded-full bg-[#0A66C2]/10 flex items-center justify-center flex-shrink-0">
             <Linkedin className="w-6 h-6 text-[#0A66C2]" />

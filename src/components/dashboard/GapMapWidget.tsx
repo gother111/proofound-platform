@@ -59,7 +59,7 @@ export function GapMapWidget() {
 
   if (loading) {
     return (
-      <Card className="glass-card">
+      <Card variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg font-display text-foreground">
             <Target className="h-5 w-5 text-primary" />
@@ -82,7 +82,7 @@ export function GapMapWidget() {
 
   if (topGaps.length === 0) {
     return (
-      <Card className="glass-card">
+      <Card variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg font-display text-foreground">
             <Target className="h-5 w-5 text-primary" />
@@ -110,7 +110,7 @@ export function GapMapWidget() {
   }
 
   return (
-    <Card className="glass-card">
+    <Card variant="glass">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle className="flex items-center gap-2 text-lg font-display text-foreground">
           <Target className="h-5 w-5 text-primary" />

@@ -108,7 +108,7 @@ export function DemographicOptIn({ userId, initialData = {}, onSave }: Demograph
   };
 
   return (
-    <Card className="border-[#E8E6DD]">
+    <Card variant="bento" className="border-[#E8E6DD]">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>

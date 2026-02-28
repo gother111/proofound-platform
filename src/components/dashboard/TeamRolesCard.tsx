@@ -135,7 +135,7 @@ export function TeamRolesCard({
   // If no orgId provided, show individual placeholder
   if (!orgId) {
     return (
-      <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+      <Card variant="bento" className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
             Team
@@ -167,7 +167,7 @@ export function TeamRolesCard({
   // Loading state
   if (isLoading) {
     return (
-      <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+      <Card variant="bento" className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
             Team
@@ -183,7 +183,7 @@ export function TeamRolesCard({
   // Error state
   if (error) {
     return (
-      <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+      <Card variant="bento" className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
             Team
@@ -202,7 +202,7 @@ export function TeamRolesCard({
   // Empty state
   if (members.length === 0) {
     return (
-      <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+      <Card variant="bento" className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
             Team
@@ -238,7 +238,7 @@ export function TeamRolesCard({
 
   // Team list view
   return (
-    <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+    <Card variant="bento" className="p-4">
       {/* Header with stats */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">

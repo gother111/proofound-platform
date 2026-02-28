@@ -387,7 +387,7 @@ export function ExpertiseAtlasClient({
 
   return (
     <div className={`min-h-[calc(100vh-3.5rem)] ${bgClass}`}>
-      <div className="mx-auto max-w-7xl px-6 py-8">
+      <div className="mx-auto max-w-7xl px-4 py-6 md:px-6 md:py-8">
         {/* Header */}
         <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -470,7 +470,7 @@ export function ExpertiseAtlasClient({
                       Dashboard
                     </h2>
 
-                    <div className="bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                    <div className="rounded-xl border border-white/40 bg-white/60 backdrop-blur-xl p-6 shadow-sm hover:shadow-md hover:bg-white/80 transition-all duration-300">
                       <div className="flex items-start justify-between gap-4">
                         <div>
                           <p className="text-sm text-muted-foreground">Match-readiness snapshot</p>
@@ -529,7 +529,7 @@ export function ExpertiseAtlasClient({
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Row 1 */}
                         {shouldShowCredibility && (
-                          <div className="bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                          <div className="rounded-xl border border-white/40 bg-white/60 backdrop-blur-xl p-6 shadow-sm hover:shadow-md hover:bg-white/80 transition-all duration-300">
                             <p className="text-xs text-muted-foreground mb-2">
                               Why this matters: proofs + verifications boost trust in matches.
                             </p>
@@ -540,7 +540,7 @@ export function ExpertiseAtlasClient({
                           </div>
                         )}
                         {shouldShowRelevance && (
-                          <div className="bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                          <div className="rounded-xl border border-white/40 bg-white/60 backdrop-blur-xl p-6 shadow-sm hover:shadow-md hover:bg-white/80 transition-all duration-300">
                             <p className="text-xs text-muted-foreground mb-2">
                               Why this matters: align your skills to what roles need now.
                             </p>
@@ -553,7 +553,7 @@ export function ExpertiseAtlasClient({
 
                         {/* Row 2 */}
                         {shouldShowSkillWheel && (
-                          <div className="bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                          <div className="rounded-xl border border-white/40 bg-white/60 backdrop-blur-xl p-6 shadow-sm hover:shadow-md hover:bg-white/80 transition-all duration-300">
                             <p className="text-xs text-muted-foreground mb-2">
                               Why this matters: breadth vs focus—click a sector to deepen proof.
                             </p>
@@ -564,7 +564,7 @@ export function ExpertiseAtlasClient({
                           </div>
                         )}
                         {shouldShowVerificationSources && (
-                          <div className="bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                          <div className="rounded-xl border border-white/40 bg-white/60 backdrop-blur-xl p-6 shadow-sm hover:shadow-md hover:bg-white/80 transition-all duration-300">
                             <p className="text-xs text-muted-foreground mb-2">
                               Why this matters: see where verifications come from; rebalance if
                               needed.
@@ -578,7 +578,7 @@ export function ExpertiseAtlasClient({
 
                         {/* Row 3 - Full Width */}
                         {shouldShowScatter && (
-                          <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                          <div className="lg:col-span-2 rounded-xl border border-white/40 bg-white/60 backdrop-blur-xl p-6 shadow-sm hover:shadow-md hover:bg-white/80 transition-all duration-300">
                             <p className="text-xs text-muted-foreground mb-2">
                               Why this matters: freshness drives match rank. Update stale items.
                             </p>
@@ -591,7 +591,7 @@ export function ExpertiseAtlasClient({
 
                         {/* Row 4 - Full Width */}
                         {shouldShowCoverage && (
-                          <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                          <div className="lg:col-span-2 rounded-xl border border-white/40 bg-white/60 backdrop-blur-xl p-6 shadow-sm hover:shadow-md hover:bg-white/80 transition-all duration-300">
                             <p className="text-xs text-muted-foreground mb-2">
                               Why this matters: coverage shows where you’re strong and what to fill
                               next.
@@ -605,7 +605,7 @@ export function ExpertiseAtlasClient({
 
                         {/* Row 5 - Full Width */}
                         {shouldShowNextBestActions && (
-                          <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                          <div className="lg:col-span-2 rounded-xl border border-white/40 bg-white/60 backdrop-blur-xl p-6 shadow-sm hover:shadow-md hover:bg-white/80 transition-all duration-300">
                             <p className="text-xs text-muted-foreground mb-2">
                               Why this matters: do the next best actions to lift readiness quickly.
                             </p>

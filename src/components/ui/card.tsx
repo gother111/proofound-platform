@@ -32,15 +32,19 @@ import { cn } from '@/lib/utils';
  */
 
 const cardVariants = cva(
-  'rounded-lg border bg-white text-proofound-charcoal transition-all duration-200 dark:bg-[#252834] dark:text-[#E8DCC4]',
+  'rounded-xl border bg-white text-proofound-charcoal transition-all duration-300 dark:bg-[#252834] dark:text-[#E8DCC4]',
   {
     variants: {
       variant: {
         default: 'border-proofound-stone shadow-sm dark:border-[#D4C4A8]/10',
-        flat: 'border-proofound-stone dark:border-[#D4C4A8]/10',
+        flat: 'border-proofound-stone/30 bg-transparent shadow-none dark:border-[#D4C4A8]/10',
         elevated: 'border-proofound-stone shadow-md dark:border-[#D4C4A8]/10',
         interactive:
-          'border-proofound-stone shadow-sm hover:shadow-md hover:-translate-y-0.5 cursor-pointer dark:border-[#D4C4A8]/10',
+          'border-proofound-stone shadow-sm hover:shadow-md hover:-translate-y-1 hover:border-proofound-stone/80 cursor-pointer dark:border-[#D4C4A8]/10 dark:hover:border-[#D4C4A8]/30',
+        glass:
+          'border-white/20 bg-white/60 backdrop-blur-md shadow-sm dark:bg-[#252834]/60 dark:border-[#D4C4A8]/10',
+        bento:
+          'border-proofound-stone/60 bg-white/50 backdrop-blur-xl shadow-sm hover:shadow-md hover:-translate-y-1 hover:scale-[1.01] hover:border-white/60 hover:bg-white/80 transition-all duration-300 transform-gpu dark:bg-[#252834]/50 dark:border-[#D4C4A8]/10',
       },
     },
     defaultVariants: {
@@ -83,7 +87,7 @@ const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HT
   ({ className, children, ...props }, ref) => (
     <h3
       ref={ref}
-      className={cn('text-2xl font-semibold leading-none tracking-tight font-display', className)}
+      className={cn('text-xl font-semibold leading-none tracking-tight font-display', className)}
       {...props}
     >
       {children}

@@ -115,6 +115,7 @@ export function VideoProviderSelector({
     <div className="space-y-3">
       {providers.map((provider) => (
         <Card
+          variant="bento"
           key={provider.id}
           className={`p-4 cursor-pointer transition-all ${
             selectedProvider === provider.id

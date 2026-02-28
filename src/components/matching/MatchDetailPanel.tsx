@@ -69,7 +69,7 @@ export function MatchDetailPanel({ match, assignment, profile }: MatchDetailPane
   const improvementTips = generateImprovementTips(match, profile, assignment);
 
   return (
-    <Card className="w-full">
+    <Card variant="bento" className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Why This Match?</span>

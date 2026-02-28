@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Logo } from '@/components/brand/Logo';
@@ -323,7 +324,7 @@ export default async function PortfolioPage({
       }
     >
       <div className="space-y-4">
-        <section className="rounded-xl border border-[#E8E6DD] bg-[#FCFBF8] p-4 sm:p-5">
+        <Card variant="bento" className="p-4 sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-2.5">
               <div className="flex items-start gap-3">
@@ -385,7 +386,7 @@ export default async function PortfolioPage({
               </div>
             ) : null}
           </div>
-        </section>
+        </Card>
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
           <div className="space-y-4">
@@ -413,7 +414,7 @@ export default async function PortfolioPage({
                   {featuredProofs.slice(0, 5).map((proof) => (
                     <article
                       key={proof.id}
-                      className="space-y-2 rounded-lg border border-[#E8E6DD] bg-white p-3"
+                      className="space-y-2 rounded-xl border border-white/40 bg-white/40 p-3 shadow-sm transition-all duration-300 hover:bg-white/60"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
@@ -575,7 +576,7 @@ export default async function PortfolioPage({
                 {visibility.contact && visibility.workEmail && individual?.work_email ? (
                   <ContactPill href={`mailto:${individual.work_email}`} label="Work email" />
                 ) : (
-                  <p className="rounded-md border border-[#E8E6DD] bg-white px-3 py-2 text-[#6B6760]">
+                  <p className="rounded-xl border border-white/40 bg-white/40 px-3 py-2 text-[#6B6760] shadow-sm">
                     Contact hidden
                   </p>
                 )}
@@ -782,7 +783,7 @@ function StatusChip({
 
 function OpenToRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border border-[#E8E6DD] bg-white px-3 py-2">
+    <div className="rounded-xl border border-white/40 bg-white/40 px-3 py-2 shadow-sm transition-colors hover:bg-white/60">
       <p className="text-xs font-semibold uppercase tracking-[0.06em] text-[#6B6760]">{label}</p>
       <p className="text-sm text-[#2D3330]">{value}</p>
     </div>
@@ -791,7 +792,7 @@ function OpenToRow({ label, value }: { label: string; value: string }) {
 
 function TagPill({ label }: { label: string }) {
   return (
-    <span className="rounded-full border border-[#D9D5CC] bg-white px-3 py-1 text-sm text-[#2D3330]">
+    <span className="rounded-full border border-white/40 bg-white/40 px-3 py-1 text-sm text-[#2D3330] shadow-sm transition-colors hover:bg-white/60">
       {label}
     </span>
   );
@@ -803,7 +804,7 @@ function ContactPill({ href, label, icon }: { href: string; label: string; icon?
       href={href}
       target={href.startsWith('http') ? '_blank' : undefined}
       rel="noreferrer"
-      className="flex items-center gap-2 rounded-full border border-[#D9D5CC] bg-white px-3 py-1 text-[#2D3330] hover:border-[#1C4D3A]/40 hover:text-[#1C4D3A]"
+      className="flex items-center gap-2 rounded-full border border-white/40 bg-white/40 px-3 py-1 text-[#2D3330] shadow-sm transition-colors hover:bg-white/60 hover:text-[#1C4D3A]"
     >
       {icon ?? <CalendarClock className="h-4 w-4" />}
       {label}

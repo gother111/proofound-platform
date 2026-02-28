@@ -22,49 +22,50 @@ export function OrganizationMatchingEmpty({
   const remediationActions = getOrganizationRecoveryActions('org-matching-empty', orgSlug);
 
   return (
-    <div className="flex items-center justify-center min-h-[60vh] px-4">
+    <div className="flex items-center justify-center min-h-[60vh] px-4 md:px-0">
       <Card
-        className="max-w-2xl p-8 text-center"
-        style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}
+        variant="glass"
+        className="relative max-w-2xl w-full p-8 md:p-12 text-center overflow-hidden"
       >
+        {/* Decorative background glow */}
+        <div className="absolute inset-0 bg-gradient-to-br from-proofound-parchment/60 via-transparent to-transparent pointer-events-none" />
+
         {/* Icon */}
-        <div className="flex justify-center mb-6">
-          <div
-            className="w-16 h-16 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: '#E8E6DD' }}
-          >
-            <Users className="w-8 h-8" style={{ color: '#1C4D3A' }} />
+        <div className="relative z-10 flex justify-center mb-8">
+          <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-white/60 shadow-sm border border-white/80 backdrop-blur-md transform -rotate-3 hover:rotate-0 transition-transform duration-300">
+            <Users className="w-10 h-10 text-proofound-forest" strokeWidth={1.5} />
           </div>
         </div>
 
         {/* Heading */}
-        <h2 className="text-2xl font-semibold mb-3" style={{ color: '#2D3330' }}>
-          Find Perfect-Fit Contributors
-        </h2>
-
-        {/* Description */}
-        <p className="text-base mb-6" style={{ color: '#6B6760' }}>
-          Create your first assignment to match with skilled individuals who align with your mission
-          and values. Blind-first matching removes bias from your hiring—candidates remain anonymous
-          until there&apos;s mutual interest.
-        </p>
+        <div className="relative z-10 space-y-3 mb-8">
+          <h2 className="text-3xl font-semibold text-proofound-charcoal font-display tracking-tight">
+            Find Perfect-Fit Contributors
+          </h2>
+          {/* Description */}
+          <p className="text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
+            Create your first assignment to match with skilled individuals who align with your
+            mission and values. Blind-first matching removes bias from your hiring—candidates remain
+            anonymous until there&apos;s mutual interest.
+          </p>
+        </div>
 
         {/* CTA */}
-        <Button
-          size="lg"
-          onClick={onCreateAssignment}
-          className="mb-4"
-          style={{ backgroundColor: '#1C4D3A' }}
-        >
-          Create Your First Assignment
-        </Button>
+        <div className="relative z-10 flex flex-col items-center gap-3">
+          <Button
+            size="lg"
+            onClick={onCreateAssignment}
+            className="bg-proofound-forest text-white hover:bg-proofound-forest/90 shadow-md"
+          >
+            Create Your First Assignment
+          </Button>
+          {/* Secondary info */}
+          <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+            Define skills, values, and impact areas • High-quality candidates
+          </p>
+        </div>
 
-        {/* Secondary info */}
-        <p className="text-sm" style={{ color: '#6B6760' }}>
-          Define skills, values, and impact areas • Candidates remain anonymous
-        </p>
-
-        <div className="mt-6 grid grid-cols-1 gap-2 text-left">
+        <div className="relative z-10 mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-left">
           {remediationActions.map((action) => (
             <button
               key={action.id}
@@ -76,19 +77,21 @@ export function OrganizationMatchingEmpty({
                 }
                 router.push(action.actionUrl);
               }}
-              className="rounded-lg border border-[#E8E6DD] bg-white px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
+              className="group flex flex-col p-5 rounded-xl border border-proofound-stone/40 bg-white/40 backdrop-blur-md hover:bg-white border-b-4 hover:border-b-proofound-forest/40 transition-all duration-300"
             >
-              <p className="text-sm font-medium text-[#2D3330]">{action.title}</p>
-              <p className="text-xs text-[#6B6760]">{action.description}</p>
+              <h3 className="text-sm font-semibold text-proofound-charcoal mb-2 group-hover:text-proofound-forest transition-colors">
+                {action.title}
+              </h3>
+              <p className="text-xs text-muted-foreground leading-relaxed">{action.description}</p>
             </button>
           ))}
         </div>
 
         {/* Subtle background decoration */}
-        <div className="mt-8 flex justify-center gap-2 opacity-20">
-          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#7A9278' }} />
-          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#C76B4A' }} />
-          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#7A9278' }} />
+        <div className="mt-10 flex justify-center gap-3 opacity-30 pointer-events-none">
+          <div className="w-2 h-2 rounded-full bg-proofound-sage" />
+          <div className="w-2 h-2 rounded-full bg-proofound-ochre" />
+          <div className="w-2 h-2 rounded-full bg-proofound-sage" />
         </div>
       </Card>
     </div>

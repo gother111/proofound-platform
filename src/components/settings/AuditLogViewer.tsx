@@ -187,7 +187,7 @@ export function AuditLogViewer() {
 
   if (isLoading && events.length === 0) {
     return (
-      <Card>
+      <Card variant="bento">
         <CardContent className="py-12">
           <div className="flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100" />
@@ -201,7 +201,7 @@ export function AuditLogViewer() {
   const totalPages = Math.ceil(total / LIMIT);
 
   return (
-    <Card>
+    <Card variant="bento">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>

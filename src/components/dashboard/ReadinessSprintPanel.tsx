@@ -33,7 +33,7 @@ export function ReadinessSprintPanel() {
 
   if (loading) {
     return (
-      <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+      <Card variant="bento" className="p-4">
         <p className="text-sm text-[#6B6760]">Loading readiness sprint...</p>
       </Card>
     );

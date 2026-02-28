@@ -441,11 +441,7 @@ export function VerificationsClient({
   };
 
   const renderIncomingRequestCard = (request: VerificationRequest) => (
-    <Card
-      key={`${request.request_type}-${request.id}`}
-      className="p-6 hover:shadow-md transition-shadow"
-      style={{ backgroundColor: '#FDFCFA', borderColor: 'rgba(232, 230, 221, 0.6)' }}
-    >
+    <Card variant="bento" key={`${request.request_type}-${request.id}`} className="p-6">
       <div className="flex gap-4">
         <div
           className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
@@ -568,11 +564,7 @@ export function VerificationsClient({
   );
 
   const renderSentRequestCard = (request: VerificationRequest) => (
-    <Card
-      key={`${request.request_type}-${request.id}`}
-      className="p-6"
-      style={{ backgroundColor: '#FDFCFA', borderColor: 'rgba(232, 230, 221, 0.6)' }}
-    >
+    <Card variant="bento" key={`${request.request_type}-${request.id}`} className="p-6">
       <div className="flex items-start justify-between gap-4 mb-3">
         <div className="flex-1 min-w-0">
           <h3

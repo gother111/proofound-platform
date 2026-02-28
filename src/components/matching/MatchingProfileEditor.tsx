@@ -77,26 +77,26 @@ export function MatchingProfileEditor({ profileId, onSave, onCancel }: MatchingP
   // Load existing profile if profileId provided
   const loadProfile = useCallback(
     async (id: string) => {
-    try {
-      setIsLoading(true);
-      const response = await apiFetch(`/api/matching/profile/${id}`);
+      try {
+        setIsLoading(true);
+        const response = await apiFetch(`/api/matching/profile/${id}`);
 
-      if (!response.ok) {
-        throw new Error('Failed to load profile');
+        if (!response.ok) {
+          throw new Error('Failed to load profile');
+        }
+
+        const data = await response.json();
+        setProfile(data.profile);
+      } catch (error) {
+        console.error('Failed to load matching profile:', error);
+        toast({
+          title: 'Failed to load profile',
+          description: 'Could not load matching preferences',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
       }
-
-      const data = await response.json();
-      setProfile(data.profile);
-    } catch (error) {
-      console.error('Failed to load matching profile:', error);
-      toast({
-        title: 'Failed to load profile',
-        description: 'Could not load matching preferences',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
     },
     [toast]
   );
@@ -190,7 +190,7 @@ export function MatchingProfileEditor({ profileId, onSave, onCancel }: MatchingP
 
   if (isLoading) {
     return (
-      <Card>
+      <Card variant="bento">
         <CardContent className="py-12">
           <div className="flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100" />
@@ -246,7 +246,7 @@ export function MatchingProfileEditor({ profileId, onSave, onCancel }: MatchingP
   return (
     <div className="space-y-6">
       {/* Profile Name */}
-      <Card>
+      <Card variant="bento">
         <CardHeader>
           <CardTitle>Profile Name</CardTitle>
           <CardDescription>Give this matching profile a descriptive name</CardDescription>
@@ -261,7 +261,7 @@ export function MatchingProfileEditor({ profileId, onSave, onCancel }: MatchingP
       </Card>
 
       {/* Matching Weights */}
-      <Card>
+      <Card variant="bento">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -323,7 +323,7 @@ export function MatchingProfileEditor({ profileId, onSave, onCancel }: MatchingP
       </Card>
 
       {/* Hard Constraints */}
-      <Card>
+      <Card variant="bento">
         <CardHeader>
           <CardTitle>Hard Constraints</CardTitle>
           <CardDescription>Set must-have requirements that filter out candidates</CardDescription>

@@ -36,10 +36,7 @@ interface MeetingLinkGeneratorProps {
   onLinkGenerated?: (link: string) => void;
 }
 
-export function MeetingLinkGenerator({
-  interviewId,
-  onLinkGenerated,
-}: MeetingLinkGeneratorProps) {
+export function MeetingLinkGenerator({ interviewId, onLinkGenerated }: MeetingLinkGeneratorProps) {
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -138,7 +135,7 @@ export function MeetingLinkGenerator({
 
   if (isLoading) {
     return (
-      <Card className="border-proofound-stone dark:border-border rounded-2xl">
+      <Card variant="bento" className="rounded-2xl">
         <CardContent className="py-8 text-center text-[#6B6760] dark:text-muted-foreground">
           Loading integrations...
         </CardContent>
@@ -148,7 +145,7 @@ export function MeetingLinkGenerator({
 
   return (
     <div className="space-y-6">
-      <Card className="border-proofound-stone dark:border-border rounded-2xl">
+      <Card variant="bento" className="rounded-2xl">
         <CardHeader>
           <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground flex items-center gap-2">
             <Video className="w-5 h-5" />
@@ -198,11 +195,7 @@ export function MeetingLinkGenerator({
                   >
                     Generate Link
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleDisconnect('zoom')}
-                  >
+                  <Button size="sm" variant="ghost" onClick={() => handleDisconnect('zoom')}>
                     Disconnect
                   </Button>
                 </div>
@@ -260,11 +253,7 @@ export function MeetingLinkGenerator({
                   >
                     Generate Link
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleDisconnect('google')}
-                  >
+                  <Button size="sm" variant="ghost" onClick={() => handleDisconnect('google')}>
                     Disconnect
                   </Button>
                 </div>
@@ -315,8 +304,8 @@ export function MeetingLinkGenerator({
             <Alert className="border-blue-300 bg-blue-50">
               <Settings className="h-4 w-4 text-blue-600" />
               <AlertDescription className="text-sm">
-                <strong>Connect a video service</strong> to automatically generate meeting links
-                for interviews. Both Zoom and Google Meet are supported.
+                <strong>Connect a video service</strong> to automatically generate meeting links for
+                interviews. Both Zoom and Google Meet are supported.
               </AlertDescription>
             </Alert>
           )}
@@ -324,20 +313,27 @@ export function MeetingLinkGenerator({
       </Card>
 
       {/* Benefits Card */}
-      <Card className="border-proofound-stone dark:border-border rounded-2xl">
+      <Card variant="bento" className="rounded-2xl">
         <CardHeader>
           <CardTitle className="text-lg font-['Crimson_Pro']">Benefits</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2 text-sm text-[#6B6760] dark:text-muted-foreground">
-            <p>• <strong>Automatic link generation:</strong> Create meeting links with one click</p>
-            <p>• <strong>Calendar integration:</strong> Invites sent to all participants</p>
-            <p>• <strong>No manual setup:</strong> Save time on interview coordination</p>
-            <p>• <strong>Professional experience:</strong> Seamless scheduling for candidates</p>
+            <p>
+              • <strong>Automatic link generation:</strong> Create meeting links with one click
+            </p>
+            <p>
+              • <strong>Calendar integration:</strong> Invites sent to all participants
+            </p>
+            <p>
+              • <strong>No manual setup:</strong> Save time on interview coordination
+            </p>
+            <p>
+              • <strong>Professional experience:</strong> Seamless scheduling for candidates
+            </p>
           </div>
         </CardContent>
       </Card>
     </div>
   );
 }
-

@@ -123,7 +123,7 @@ END:VCALENDAR`;
   };
 
   return (
-    <Card>
+    <Card variant="bento">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="space-y-1">

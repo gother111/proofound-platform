@@ -63,7 +63,7 @@ export function ExplainPanel({ result, className }: ExplainPanelProps) {
   const quality = getQualityBadge(result.score);
 
   return (
-    <Card className={`p-6 ${className || ''}`} style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+    <Card variant="bento" className={`p-6 ${className || ''}`}>
       {/* Overall score */}
       <div className="text-center mb-6">
         <div className="text-5xl font-bold mb-2" style={{ color: quality.color }}>

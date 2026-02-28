@@ -111,7 +111,7 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
 
   if (loading) {
     return (
-      <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+      <Card variant="bento" className="p-4 border">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-medium text-[#2D3330]">Hidden</h3>
           <Loader2 className="w-4 h-4 animate-spin text-[#1C4D3A]" />
@@ -123,7 +123,7 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
 
   if (error) {
     return (
-      <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+      <Card variant="bento" className="p-4 border">
         <div className="flex items-center gap-2 mb-2 text-[#DC2626]">
           <EyeOff className="w-4 h-4" />
           <h3 className="text-sm font-medium">Hidden</h3>
@@ -138,7 +138,7 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
 
   if (hidden.length === 0) {
     return (
-      <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+      <Card variant="bento" className="p-4 border">
         <div className="flex items-center gap-2 mb-1">
           <EyeOff className="w-4 h-4 text-[#6B6760]" />
           <h3 className="text-sm font-medium text-[#2D3330]">Hidden</h3>
@@ -149,7 +149,7 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
   }
 
   return (
-    <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+    <Card variant="bento" className="p-4 border">
       <div className="flex items-center gap-2 mb-3">
         <EyeOff className="w-4 h-4 text-[#6B6760]" />
         <h3 className="text-sm font-medium text-[#2D3330]">Hidden</h3>
@@ -216,4 +216,3 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
     </Card>
   );
 }
-

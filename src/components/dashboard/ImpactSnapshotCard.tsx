@@ -100,7 +100,7 @@ export function ImpactSnapshotCard() {
   // Loading state
   if (isLoading) {
     return (
-      <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+      <Card variant="bento" className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
             Impact
@@ -116,7 +116,7 @@ export function ImpactSnapshotCard() {
   // Error state
   if (error) {
     return (
-      <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+      <Card variant="bento" className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
             Impact
@@ -140,7 +140,7 @@ export function ImpactSnapshotCard() {
       snapshot.projects.total === 0)
   ) {
     return (
-      <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+      <Card variant="bento" className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
             Impact
@@ -167,7 +167,7 @@ export function ImpactSnapshotCard() {
 
   // Impact snapshot view
   return (
-    <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+    <Card variant="bento" className="p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
