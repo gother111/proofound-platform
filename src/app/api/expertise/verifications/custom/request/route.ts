@@ -37,6 +37,132 @@ type SelectedArtifactRecord = {
   label: string;
 };
 
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
+type SelectedSkillRow = {
+  id: string;
+  skill_id: string | null;
+  skill_code: string | null;
+  name_i18n?: unknown;
+  taxonomy?: {
+    name_i18n?: unknown;
+  } | null;
+};
+
+type SkillTaxonomyRow = {
+  code: string;
+  name_i18n?: unknown;
+};
+
+type SelectedSkillsLoadResult = {
+  data: SelectedSkillRow[] | null;
+  error: unknown | null;
+};
+
+function uniqueNonEmptySkillCodes(skills: Array<{ skill_code: string | null }>): string[] {
+  return [
+    ...new Set(skills.map((skill) => skill.skill_code).filter((code): code is string => !!code)),
+  ];
+}
+
+async function loadSelectedSkills(
+  supabase: SupabaseServerClient,
+  profileId: string,
+  selectedSkillIds: string[]
+): Promise<SelectedSkillsLoadResult> {
+  if (selectedSkillIds.length === 0) {
+    return {
+      data: [],
+      error: null,
+    };
+  }
+
+  const primarySkillSelect = `
+    id,
+    skill_id,
+    skill_code,
+    name_i18n,
+    taxonomy:skills_taxonomy!skills_skill_code_fkey (
+      name_i18n
+    )
+  `;
+  const fallbackSkillSelect = 'id, skill_id, skill_code, name_i18n';
+
+  const primaryResult = await supabase
+    .from('skills')
+    .select(primarySkillSelect)
+    .eq('profile_id', profileId)
+    .in('id', selectedSkillIds);
+
+  if (!primaryResult.error) {
+    return {
+      data: (primaryResult.data as SelectedSkillRow[] | null) || [],
+      error: null,
+    };
+  }
+
+  console.warn(
+    'Falling back to manual taxonomy lookup for selected skills in custom verification request:',
+    primaryResult.error
+  );
+
+  const fallbackSkillsResult = await supabase
+    .from('skills')
+    .select(fallbackSkillSelect)
+    .eq('profile_id', profileId)
+    .in('id', selectedSkillIds);
+
+  if (fallbackSkillsResult.error) {
+    return {
+      data: null,
+      error: fallbackSkillsResult.error,
+    };
+  }
+
+  const fallbackSkills =
+    ((fallbackSkillsResult.data as SelectedSkillRow[] | null) || []).map((skill) => ({
+      ...skill,
+      taxonomy: null,
+    })) || [];
+
+  const skillCodes = uniqueNonEmptySkillCodes(fallbackSkills);
+  if (skillCodes.length === 0) {
+    return {
+      data: fallbackSkills,
+      error: null,
+    };
+  }
+
+  const taxonomyResult = await supabase
+    .from('skills_taxonomy')
+    .select('code, name_i18n')
+    .in('code', skillCodes);
+
+  if (taxonomyResult.error) {
+    return {
+      data: null,
+      error: taxonomyResult.error,
+    };
+  }
+
+  const taxonomyByCode = new Map<string, { name_i18n?: unknown }>();
+  for (const taxonomy of (taxonomyResult.data as SkillTaxonomyRow[] | null) || []) {
+    taxonomyByCode.set(taxonomy.code, {
+      name_i18n: taxonomy.name_i18n,
+    });
+  }
+
+  const stitchedSkills = fallbackSkills.map((skill) => ({
+    ...skill,
+    taxonomy: skill.skill_code ? taxonomyByCode.get(skill.skill_code) || null : null,
+  }));
+
+  return {
+    data: stitchedSkills,
+    error: null,
+  };
+}
+
 function isUniqueViolationError(error: unknown): boolean {
   if (!error || typeof error !== 'object') {
     return false;
@@ -173,21 +299,11 @@ export async function POST(request: NextRequest) {
     const selectedSkillIds: string[] = [];
 
     if (groupedArtifacts.skill.length > 0) {
-      const { data: skills, error: skillsError } = await supabase
-        .from('skills')
-        .select(
-          `
-          id,
-          skill_id,
-          skill_code,
-          name_i18n,
-          taxonomy:skills_taxonomy!skills_skill_code_fkey (
-            name_i18n
-          )
-        `
-        )
-        .eq('profile_id', user.id)
-        .in('id', groupedArtifacts.skill);
+      const { data: skills, error: skillsError } = await loadSelectedSkills(
+        supabase,
+        user.id,
+        groupedArtifacts.skill
+      );
 
       if (skillsError) {
         console.error(

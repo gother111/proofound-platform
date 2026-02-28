@@ -171,6 +171,79 @@ describe('custom verification API routes', () => {
     });
   });
 
+  it('returns skills when skill relation join fails but taxonomy fallback succeeds', async () => {
+    const skillId = '33333333-3333-4333-8333-333333333333';
+    const skillCode = '01.02.03.004';
+
+    vi.mocked(createClient).mockResolvedValue({
+      from: vi.fn((table: string) => {
+        if (table === 'skills') {
+          return {
+            select: vi.fn((columns?: string) => {
+              if (String(columns).includes('skills_taxonomy!skills_skill_code_fkey')) {
+                return thenableResult({
+                  data: null,
+                  error: { message: 'Could not find relation skills_skill_code_fkey' },
+                });
+              }
+
+              return thenableResult({
+                data: [
+                  {
+                    id: skillId,
+                    skill_id: 'custom-1-2-3-typescript',
+                    skill_code: skillCode,
+                    competency_label: 'C4',
+                    name_i18n: null,
+                  },
+                ],
+                error: null,
+              });
+            }),
+          };
+        }
+
+        if (table === 'skills_taxonomy') {
+          return {
+            select: vi.fn(() =>
+              thenableResult({
+                data: [{ code: skillCode, name_i18n: { en: 'Taxonomy TypeScript' } }],
+                error: null,
+              })
+            ),
+          };
+        }
+
+        if (table === 'skill_verification_requests') {
+          return {
+            select: vi.fn(() => thenableResult({ data: [], error: null })),
+          };
+        }
+
+        return {
+          select: vi.fn(() => thenableResult({ data: [], error: null })),
+        };
+      }),
+    } as any);
+
+    const response = await getArtifacts();
+    expect(response.status).toBe(200);
+
+    await expect(response.json()).resolves.toMatchObject({
+      total: 1,
+      artifacts: {
+        skill: [
+          {
+            id: skillId,
+            type: 'skill',
+            label: 'Taxonomy TypeScript',
+            subtitle: 'Level C4',
+          },
+        ],
+      },
+    });
+  });
+
   it('returns 400 for invalid custom request payload', async () => {
     vi.mocked(createClient).mockResolvedValue({
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null } }) },
@@ -412,6 +485,137 @@ describe('custom verification API routes', () => {
         expect.objectContaining({
           skill_id: skillId,
           verifier_source: 'external',
+        }),
+      ])
+    );
+  });
+
+  it('creates custom request when selected-skill relation join fails but fallback succeeds', async () => {
+    const skillId = '44444444-4444-4444-8444-444444444444';
+    const skillCode = '02.03.04.005';
+    const linkedSkillInsertSpy = vi.fn().mockResolvedValue({ error: null });
+
+    vi.mocked(createClient).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { email: 'requester@example.com' } },
+          error: null,
+        }),
+      },
+      from: vi.fn((table: string) => {
+        if (table === 'skills') {
+          return {
+            select: vi.fn((columns?: string) => {
+              if (String(columns).includes('skills_taxonomy!skills_skill_code_fkey')) {
+                return thenableResult({
+                  data: null,
+                  error: { message: 'relation skills_skill_code_fkey not found' },
+                });
+              }
+
+              return thenableResult({
+                data: [
+                  {
+                    id: skillId,
+                    skill_id: 'custom-1-2-3-typescript',
+                    skill_code: skillCode,
+                    name_i18n: null,
+                  },
+                ],
+                error: null,
+              });
+            }),
+          };
+        }
+
+        if (table === 'skills_taxonomy') {
+          return {
+            select: vi.fn(() =>
+              thenableResult({
+                data: [{ code: skillCode, name_i18n: { en: 'Taxonomy Skill' } }],
+                error: null,
+              })
+            ),
+          };
+        }
+
+        if (table === 'skill_verification_requests') {
+          return {
+            select: vi.fn(() => thenableResult({ data: [], error: null })),
+            insert: linkedSkillInsertSpy,
+          };
+        }
+
+        if (table === 'custom_verification_requests') {
+          return {
+            insert: vi.fn(() => ({
+              select: vi.fn(() => ({
+                single: vi.fn().mockResolvedValue({
+                  data: {
+                    id: 'custom-request-fallback',
+                    status: 'pending',
+                    verifier_email: 'mentor@example.com',
+                    verifier_relationship: 'peer',
+                    created_at: new Date().toISOString(),
+                    expires_at: new Date(Date.now() + 86400000).toISOString(),
+                  },
+                  error: null,
+                }),
+              })),
+            })),
+          };
+        }
+
+        if (table === 'custom_verification_request_items') {
+          return {
+            insert: vi.fn().mockResolvedValue({ error: null }),
+          };
+        }
+
+        if (table === 'profiles') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                single: vi.fn().mockResolvedValue({
+                  data: { display_name: 'Requester Name' },
+                  error: null,
+                }),
+              })),
+            })),
+          };
+        }
+
+        throw new Error(`Unexpected table: ${table}`);
+      }),
+    } as any);
+
+    vi.mocked(createAdminClient).mockReturnValue({
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+          })),
+        })),
+      })),
+    } as any);
+
+    const response = await postCustomRequest(
+      new NextRequest('http://localhost/api/expertise/verifications/custom/request', {
+        method: 'POST',
+        body: JSON.stringify({
+          verifierEmail: 'mentor@example.com',
+          relationship: 'peer',
+          artifacts: [{ type: 'skill', id: skillId }],
+        }),
+      })
+    );
+
+    expect(response.status).toBe(201);
+    expect(linkedSkillInsertSpy).toHaveBeenCalledTimes(1);
+    expect(linkedSkillInsertSpy).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          skill_id: skillId,
         }),
       ])
     );

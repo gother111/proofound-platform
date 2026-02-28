@@ -19,6 +19,124 @@ type CustomArtifact = {
   subtitle?: string;
 };
 
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
+type SkillArtifactRow = {
+  id: string;
+  skill_id: string | null;
+  skill_code: string | null;
+  competency_label: string | null;
+  name_i18n?: unknown;
+  taxonomy?: {
+    name_i18n?: unknown;
+  } | null;
+};
+
+type SkillTaxonomyRow = {
+  code: string;
+  name_i18n?: unknown;
+};
+
+type SkillLoadResult = {
+  data: SkillArtifactRow[] | null;
+  error: unknown | null;
+};
+
+function uniqueNonEmptySkillCodes(skills: Array<{ skill_code: string | null }>): string[] {
+  return [
+    ...new Set(skills.map((skill) => skill.skill_code).filter((code): code is string => !!code)),
+  ];
+}
+
+async function loadSkillsForArtifacts(
+  supabase: SupabaseServerClient,
+  profileId: string
+): Promise<SkillLoadResult> {
+  const primarySkillSelect = `
+    id,
+    skill_id,
+    skill_code,
+    competency_label,
+    name_i18n,
+    taxonomy:skills_taxonomy!skills_skill_code_fkey (
+      name_i18n
+    )
+  `;
+  const fallbackSkillSelect = 'id, skill_id, skill_code, competency_label, name_i18n';
+
+  const primaryResult = await supabase
+    .from('skills')
+    .select(primarySkillSelect)
+    .eq('profile_id', profileId);
+
+  if (!primaryResult.error) {
+    return {
+      data: (primaryResult.data as SkillArtifactRow[] | null) || [],
+      error: null,
+    };
+  }
+
+  console.warn(
+    'Falling back to manual taxonomy lookup for custom verification artifact skills:',
+    primaryResult.error
+  );
+
+  const fallbackSkillsResult = await supabase
+    .from('skills')
+    .select(fallbackSkillSelect)
+    .eq('profile_id', profileId);
+
+  if (fallbackSkillsResult.error) {
+    return {
+      data: null,
+      error: fallbackSkillsResult.error,
+    };
+  }
+
+  const fallbackSkills =
+    ((fallbackSkillsResult.data as SkillArtifactRow[] | null) || []).map((skill) => ({
+      ...skill,
+      taxonomy: null,
+    })) || [];
+
+  const skillCodes = uniqueNonEmptySkillCodes(fallbackSkills);
+  if (skillCodes.length === 0) {
+    return {
+      data: fallbackSkills,
+      error: null,
+    };
+  }
+
+  const taxonomyResult = await supabase
+    .from('skills_taxonomy')
+    .select('code, name_i18n')
+    .in('code', skillCodes);
+
+  if (taxonomyResult.error) {
+    return {
+      data: null,
+      error: taxonomyResult.error,
+    };
+  }
+
+  const taxonomyByCode = new Map<string, { name_i18n?: unknown }>();
+  for (const taxonomy of (taxonomyResult.data as SkillTaxonomyRow[] | null) || []) {
+    taxonomyByCode.set(taxonomy.code, {
+      name_i18n: taxonomy.name_i18n,
+    });
+  }
+
+  const stitchedSkills = fallbackSkills.map((skill) => ({
+    ...skill,
+    taxonomy: skill.skill_code ? taxonomyByCode.get(skill.skill_code) || null : null,
+  }));
+
+  return {
+    data: stitchedSkills,
+    error: null,
+  };
+}
+
 function readI18nEnglish(value: unknown): string | null {
   if (!value) {
     return null;
@@ -75,21 +193,7 @@ export async function GET() {
       projectsResult,
       volunteeringResult,
     ] = await Promise.all([
-      supabase
-        .from('skills')
-        .select(
-          `
-          id,
-          skill_id,
-          skill_code,
-          competency_label,
-          name_i18n,
-          taxonomy:skills_taxonomy!skills_skill_code_fkey (
-            name_i18n
-          )
-        `
-        )
-        .eq('profile_id', user.id),
+      loadSkillsForArtifacts(supabase, user.id),
       supabase
         .from('experiences')
         .select('id, title, org_description')
