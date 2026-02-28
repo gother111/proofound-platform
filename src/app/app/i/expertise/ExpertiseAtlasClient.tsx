@@ -314,7 +314,13 @@ export function ExpertiseAtlasClient({
   };
 
   const handleCoverageClick = (l1: number, l2: number) => {
-    setSideSheetFilter(`Skills in L1-${l1} / L2-${l2}`);
+    const domainName =
+      domains.find((domain) => domain.catId === l1)?.nameI18n?.en || `Domain ${l1}`;
+    const categoryName =
+      l2CategoriesPerL1[l1]?.find((category) => category.subcatId === l2)?.nameI18n?.en ||
+      `Category ${l2}`;
+
+    setSideSheetFilter(`Skills in ${domainName} / ${categoryName}`);
     setFilters({ ...filters, l1Domains: [l1] });
     setIsSideSheetOpen(true);
   };

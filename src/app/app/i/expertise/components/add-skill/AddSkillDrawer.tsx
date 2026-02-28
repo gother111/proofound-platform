@@ -271,7 +271,7 @@ export function AddSkillDrawer({
       console.error('Error fetching L4 skills:', error);
       setL4Skills([]);
       toast({
-        title: 'Could not load L4 skills',
+        title: 'Could not load skills',
         description:
           error instanceof Error
             ? error.message
@@ -636,7 +636,7 @@ export function AddSkillDrawer({
       toast({
         title: 'Missing Domain',
         description:
-          'Please select a domain (L1) for this skill. Try browsing categories to select the correct domain.',
+          'Please select a domain for this skill. Try browsing categories to select the correct domain.',
         variant: 'destructive',
       });
       return;
@@ -646,7 +646,7 @@ export function AddSkillDrawer({
       toast({
         title: 'Missing Category',
         description:
-          'Please select a category (L2) for this skill. Try browsing categories to select the correct category.',
+          'Please select a category for this skill. Try browsing categories to select the correct category.',
         variant: 'destructive',
       });
       return;
@@ -656,7 +656,7 @@ export function AddSkillDrawer({
       toast({
         title: 'Missing Subcategory',
         description:
-          'Please select a subcategory (L3) for this skill. Try browsing categories to select the correct subcategory.',
+          'Please select a subcategory for this skill. Try browsing categories to select the correct subcategory.',
         variant: 'destructive',
       });
       return;

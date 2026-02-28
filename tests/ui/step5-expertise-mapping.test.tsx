@@ -138,6 +138,9 @@ describe('Step5ExpertiseMapping', () => {
       />
     );
 
+    expect(screen.getByLabelText('Search skills')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Search L4 skills')).not.toBeInTheDocument();
+
     fireEvent.change(screen.getByPlaceholderText(/type a skill name/i), {
       target: { value: 'react' },
     });

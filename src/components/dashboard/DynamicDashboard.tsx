@@ -226,7 +226,7 @@ function getWidgetContent(widgetId: string): {
           <ul className="space-y-2">
             <li className="flex items-start gap-2">
               <span className="text-primary">→</span>
-              <span>Add 3 more L4 skills to reach activation threshold</span>
+              <span>Add 3 more skills to reach activation threshold</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary">→</span>

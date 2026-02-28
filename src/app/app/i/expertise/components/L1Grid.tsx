@@ -181,7 +181,7 @@ export function L1Grid({ domains, onDomainClick, l2CategoriesPerL1, onL2Click }:
                 <div className="mt-6 pt-4 border-t border-proofound-stone">
                   {l2Categories.length === 0 ? (
                     <p className="text-sm text-muted-foreground italic text-center py-2">
-                      No L2 categories with skills in this domain.
+                      No categories with skills in this domain.
                     </p>
                   ) : (
                     <div className="space-y-2">

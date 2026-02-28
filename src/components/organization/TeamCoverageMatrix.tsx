@@ -71,7 +71,7 @@ export function TeamCoverageMatrix({ organizationId }: TeamCoverageMatrixProps) 
 
   const exportToCSV = () => {
     // Create CSV content
-    const headers = ['Skill (L4)', 'Category (L2)', 'Coverage', ...members.map((m) => m.name)];
+    const headers = ['Skill', 'Category', 'Coverage', ...members.map((m) => m.name)];
     const rows = skillCoverage.map((skill) => [
       skill.l4_name,
       skill.l2_name,
@@ -212,8 +212,8 @@ export function TeamCoverageMatrix({ organizationId }: TeamCoverageMatrixProps) 
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[#E8E6DD]">
-                <th className="text-left p-3 font-semibold text-[#2D3330]">Skill (L4)</th>
-                <th className="text-left p-3 font-semibold text-[#2D3330]">Category (L2)</th>
+                <th className="text-left p-3 font-semibold text-[#2D3330]">Skill</th>
+                <th className="text-left p-3 font-semibold text-[#2D3330]">Category</th>
                 <th className="text-center p-3 font-semibold text-[#2D3330]">Coverage</th>
                 {members.map((member) => (
                   <th key={member.id} className="text-center p-3 min-w-[80px]">

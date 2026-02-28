@@ -88,9 +88,9 @@ export function DashboardFilters({ filters, onFilterChange }: DashboardFiltersPr
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        {/* L1 Domains */}
+        {/* Domains */}
         <div className="space-y-2">
-          <div className="text-xs font-medium text-muted-foreground">L1 Domains</div>
+          <div className="text-xs font-medium text-muted-foreground">Domains</div>
           <div className="flex flex-wrap gap-1.5">
             {L1_OPTIONS.map((option) => (
               <button

@@ -123,7 +123,7 @@ export function ExpertiseDepthWidget() {
 
           <div className="flex-1">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-semibold text-[#2D3330]">L4 Skills Progress</span>
+              <span className="text-xs font-semibold text-[#2D3330]">Skills Progress</span>
             </div>
             {stats.totalL4Skills < stats.activationThreshold ? (
               <p className="text-xs text-[#6B6760]">

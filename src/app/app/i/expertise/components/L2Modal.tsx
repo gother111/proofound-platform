@@ -166,7 +166,7 @@ export function L2Modal({
                       variant="outline"
                       className="border-proofound-forest text-proofound-forest shrink-0 bg-proofound-forest/5"
                     >
-                      {l3.l4Count} L4
+                      {l3.l4Count} skills
                     </Badge>
                   </button>
 
@@ -286,7 +286,7 @@ export function L2Modal({
         {/* Footer Info */}
         <div className="p-4 border-t border-proofound-stone bg-proofound-parchment/50">
           <p className="text-xs text-muted-foreground text-center font-sans">
-            Click a subcategory to see your L4 skills in that area
+            Click a subcategory to see your skills in that area
           </p>
         </div>
       </DialogContent>

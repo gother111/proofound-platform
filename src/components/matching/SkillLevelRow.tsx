@@ -25,12 +25,12 @@ interface SkillLevelRowProps {
 }
 
 const SKILL_LEVELS = [
-  { value: 0, label: 'L0 - Beginner' },
-  { value: 1, label: 'L1 - Novice' },
-  { value: 2, label: 'L2 - Intermediate' },
-  { value: 3, label: 'L3 - Advanced' },
-  { value: 4, label: 'L4 - Expert' },
-  { value: 5, label: 'L5 - Master' },
+  { value: 0, label: 'Beginner' },
+  { value: 1, label: 'Novice' },
+  { value: 2, label: 'Intermediate' },
+  { value: 3, label: 'Advanced' },
+  { value: 4, label: 'Expert' },
+  { value: 5, label: 'Master' },
 ];
 
 /**

@@ -263,7 +263,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
                 <div>
                   <CardTitle className="text-lg font-['Crimson_Pro']">Profile Data</CardTitle>
                   <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground mt-0.5">
-                    Tier 1 PII
+                    Personal
                   </p>
                 </div>
               </div>
@@ -293,7 +293,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
                 <div>
                   <CardTitle className="text-lg font-['Crimson_Pro']">Skills & Expertise</CardTitle>
                   <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground mt-0.5">
-                    Tier 2 Sensitive
+                    Sensitive
                   </p>
                 </div>
               </div>
@@ -325,7 +325,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
                     Projects & Work History
                   </CardTitle>
                   <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground mt-0.5">
-                    Tier 2 Sensitive
+                    Sensitive
                   </p>
                 </div>
               </div>
@@ -355,7 +355,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
                 <div>
                   <CardTitle className="text-lg font-['Crimson_Pro']">Match History</CardTitle>
                   <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground mt-0.5">
-                    Tier 3 Operational
+                    Operational
                   </p>
                 </div>
               </div>
@@ -385,7 +385,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
             </div>
             <div>
               <CardTitle className="text-lg font-['Crimson_Pro']">Analytics</CardTitle>
-              <CardDescription>Tier 3 Pseudonymized</CardDescription>
+              <CardDescription>Operational (Pseudonymized)</CardDescription>
             </div>
           </div>
         </CardHeader>

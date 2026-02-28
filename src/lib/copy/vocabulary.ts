@@ -13,8 +13,8 @@ const PLAIN_VOCABULARY = {
 const CANONICAL_VOCABULARY = {
   pacLabel: 'PAC',
   pacTooltip: 'PAC (Purpose-Alignment Contribution) quantifies values and causes alignment.',
-  skillsLabel: 'L4 skills',
-  expertiseSystemLabel: 'L1-L4 Atlas',
+  skillsLabel: 'skills',
+  expertiseSystemLabel: 'Expertise Atlas',
   ttfqiLabel: 'TTFQI',
   ttscLabel: 'TTSC',
 } as const;

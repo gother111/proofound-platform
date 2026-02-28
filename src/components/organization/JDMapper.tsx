@@ -122,7 +122,7 @@ export function JDMapper({ onSkillsSelected }: JDMapperProps) {
             <h3 className="text-lg font-semibold text-[#2D3330]">Paste Job Description</h3>
           </div>
           <p className="text-sm text-[#6B6760]">
-            Paste a job description and we'll automatically extract and map skills to our L4
+            Paste a job description and we'll automatically extract and map skills to our skill
             taxonomy
           </p>
         </div>

@@ -365,7 +365,7 @@ export function Step5ExpertiseMapping({
           <span className="text-sm text-muted-foreground">Step 5 of 5</span>
         </div>
         <p className="text-muted-foreground">
-          Pick L4 skills, link to business value and target outcomes, and specify education
+          Pick skills, link to business value and target outcomes, and specify education
           requirements.
         </p>
         <Progress value={100} className="mt-4" />
@@ -392,7 +392,7 @@ export function Step5ExpertiseMapping({
       )}
 
       <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
-        <Label htmlFor="skill-search">Search L4 skills</Label>
+        <Label htmlFor="skill-search">Search skills</Label>
         <div className="relative">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input

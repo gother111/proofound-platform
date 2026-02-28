@@ -104,10 +104,10 @@ export function CoverageHeatmap({ data, onCellClick }: CoverageHeatmapProps) {
                       hover:scale-105 transition-all duration-200 shadow-sm
                       ${getLevelColor(item.avgLevel)}
                     `}
-                    title={`${item.l2Name || `L2-${item.l2}`}: ${item.count} skills, avg level ${item.avgLevel.toFixed(1)}`}
+                    title={`${item.l2Name || `Category ${item.l2}`}: ${item.count} skills, avg level ${item.avgLevel.toFixed(1)}`}
                   >
                     <span className="text-xs text-center line-clamp-2 mb-1 font-medium leading-tight">
-                      {item.l2Name || `L2-${item.l2}`}
+                      {item.l2Name || `Category ${item.l2}`}
                     </span>
                     <span className="text-xl font-bold font-display">{item.count}</span>
                     <span className="text-[10px] opacity-80 uppercase tracking-wider mt-1">
@@ -123,9 +123,8 @@ export function CoverageHeatmap({ data, onCellClick }: CoverageHeatmapProps) {
 
       <div className="mt-6 p-4 rounded-xl bg-proofound-parchment text-xs text-muted-foreground border border-proofound-stone">
         <p>
-          <strong>How to read:</strong> Each cell shows skills in a specific L1 domain and L2
-          category. The number indicates skill count, and the color represents average competency
-          level (1-5).
+          <strong>How to read:</strong> Each cell shows skills in a specific domain and category.
+          The number indicates skill count, and the color represents average competency level (1-5).
         </p>
       </div>
     </div>

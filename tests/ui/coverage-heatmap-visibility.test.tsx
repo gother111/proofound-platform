@@ -27,4 +27,13 @@ describe('CoverageHeatmap visibility behavior', () => {
 
     expect(screen.getByText('No skills to display')).toBeInTheDocument();
   });
+
+  it('uses plain category fallback labels and plain helper copy', () => {
+    render(
+      <CoverageHeatmap data={[{ l1: 2, l2: 42, count: 3, avgLevel: 2.5 }]} onCellClick={vi.fn()} />
+    );
+
+    expect(screen.getByText('Category 42')).toBeInTheDocument();
+    expect(screen.getByText(/specific domain and category/i)).toBeInTheDocument();
+  });
 });

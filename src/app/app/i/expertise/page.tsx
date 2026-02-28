@@ -313,7 +313,7 @@ function calculateWidgetData(skills: any[], l2NameMap: Record<number, any>) {
         avgLevel: 0,
         l1: skill.taxonomy.cat_id,
         l2: skill.taxonomy.subcat_id,
-        l2Name: l2Info?.nameI18n?.en || `L2-${skill.taxonomy.subcat_id}`,
+        l2Name: l2Info?.nameI18n?.en || `Category ${skill.taxonomy.subcat_id}`,
       };
     }
     coverageData[key].count++;
