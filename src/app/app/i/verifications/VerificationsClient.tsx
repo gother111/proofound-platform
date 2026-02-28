@@ -730,9 +730,7 @@ export function VerificationsClient({
       <CustomVerificationRequestDialog
         open={customDialogOpen}
         onOpenChange={setCustomDialogOpen}
-        onCreated={() => {
-          router.refresh();
-        }}
+        onCreated={() => router.refresh()}
       />
       <BundleCancelDialog
         open={bundleDialogOpen}

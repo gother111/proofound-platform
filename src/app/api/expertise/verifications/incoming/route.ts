@@ -43,29 +43,23 @@ export async function GET(request: NextRequest) {
         responded_at,
         response_message,
         expires_at,
-        skills:skill_id (
+        skills:skills!skill_verification_requests_skill_id_fkey (
           id,
-          skill_code,
-          competency_level,
-          name_i18n,
-          skills_taxonomy (
-            id,
+          competency_level:level,
+          skills_taxonomy:skills_taxonomy!skills_skill_code_fkey (
             name_i18n,
-            skills_l3 (
-              id,
+            skills_l3:skills_l3!skills_taxonomy_cat_id_subcat_id_l3_id_fkey (
               name_i18n,
-              skills_subcategories (
-                id,
+              skills_subcategories:skills_subcategories!skills_l3_cat_id_subcat_id_fkey (
                 name_i18n,
-                skills_categories (
-                  id,
+                skills_categories:skills_categories!skills_subcategories_cat_id_fkey (
                   name_i18n
                 )
               )
             )
           )
         ),
-        profiles:requester_profile_id (
+        profiles:profiles!skill_verification_requests_requester_profile_id_fkey (
           id,
           display_name,
           handle,

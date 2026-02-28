@@ -57,7 +57,8 @@ describe('CustomVerificationRequestDialog', () => {
   });
 
   it('loads artifacts, shows email hint, and submits selected artifacts', async () => {
-    render(<CustomVerificationRequestDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} />);
+    const onCreated = vi.fn();
+    render(<CustomVerificationRequestDialog open onOpenChange={vi.fn()} onCreated={onCreated} />);
 
     await screen.findByText('TypeScript');
 
@@ -86,5 +87,6 @@ describe('CustomVerificationRequestDialog', () => {
     expect(body.verifierEmail).toBe('mentor@example.com');
     expect(body.relationship).toBe('peer');
     expect(body.artifacts).toEqual([{ type: 'skill', id: 'skill-1' }]);
+    expect(onCreated).toHaveBeenCalledTimes(1);
   });
 });

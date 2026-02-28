@@ -38,6 +38,7 @@ function createSupabaseClientMock(options: {
   incomingSkill: unknown[];
   sentSkill: unknown[];
   sentImpact: unknown[];
+  capturedSkillSelects?: string[];
 }) {
   const resolveQuery = (table: string, column: string): QueryResult => {
     if (table === 'skill_verification_requests' && column === 'verifier_email') {
@@ -59,11 +60,17 @@ function createSupabaseClientMock(options: {
       }),
     },
     from: vi.fn((table: string) => ({
-      select: vi.fn(() => ({
-        eq: vi.fn((column: string) => ({
-          order: vi.fn().mockResolvedValue(resolveQuery(table, column)),
-        })),
-      })),
+      select: vi.fn((selectQuery?: string) => {
+        if (table === 'skill_verification_requests' && typeof selectQuery === 'string') {
+          options.capturedSkillSelects?.push(selectQuery);
+        }
+
+        return {
+          eq: vi.fn((column: string) => ({
+            order: vi.fn().mockResolvedValue(resolveQuery(table, column)),
+          })),
+        };
+      }),
     })),
   };
 }
@@ -87,6 +94,7 @@ describe('VerificationsPage', () => {
   });
 
   it('merges skill and impact requests for incoming and sent views', async () => {
+    const capturedSkillSelects: string[] = [];
     createClientMock.mockResolvedValue(
       createSupabaseClientMock({
         userEmail: 'user@example.com',
@@ -125,6 +133,7 @@ describe('VerificationsPage', () => {
             impact_stories: { id: 'story-2', title: 'Public Health Program' },
           },
         ],
+        capturedSkillSelects,
       })
     );
 
@@ -174,6 +183,12 @@ describe('VerificationsPage', () => {
       'skill',
     ]);
     expect(props.sentRequests[0]?.impact_story_title).toBe('Public Health Program');
+
+    const combinedSkillSelect = capturedSkillSelects.join('\n');
+    expect(combinedSkillSelect).toContain(
+      'skills:skills!skill_verification_requests_skill_id_fkey'
+    );
+    expect(combinedSkillSelect).toContain('competency_level:level');
   });
 
   it('falls back gracefully when admin client for incoming impact requests is unavailable', async () => {
