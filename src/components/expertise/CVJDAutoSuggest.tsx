@@ -218,7 +218,8 @@ function normalizePdfParseError(error: unknown): string {
 }
 
 async function extractPdfText(file: File): Promise<string> {
-  const pdfjs = await import('pdfjs-dist/webpack.mjs');
+  const pdfjsModule = await import('pdfjs-dist/webpack.mjs');
+  const pdfjs = pdfjsModule.default;
   const buffer = await file.arrayBuffer();
   const document = await (pdfjs.getDocument as any)({
     data: new Uint8Array(buffer),

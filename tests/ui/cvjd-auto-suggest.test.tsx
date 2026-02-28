@@ -23,7 +23,9 @@ vi.mock('sonner', () => ({
 }));
 
 vi.mock('pdfjs-dist/webpack.mjs', () => ({
-  getDocument: (...args: any[]) => pdfGetDocumentMock(...args),
+  default: {
+    getDocument: (...args: any[]) => pdfGetDocumentMock(...args),
+  },
 }));
 
 describe('CVJDAutoSuggest', () => {
