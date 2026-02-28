@@ -96,6 +96,7 @@ describe('MatchingProfileSetup focus and weighting step', () => {
 
     render(<MatchingProfileSetup onComplete={onComplete} onCancel={vi.fn()} />);
 
+    expect(screen.queryByRole('tab', { name: /languages/i })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /next: focus & weights/i }));
 
     fireEvent.change(screen.getByPlaceholderText(/software engineer, product manager/i), {
@@ -115,7 +116,6 @@ describe('MatchingProfileSetup focus and weighting step', () => {
     fireEvent.click(screen.getByRole('button', { name: 'set compensation' }));
     fireEvent.click(screen.getByRole('button', { name: 'set availability' }));
 
-    fireEvent.click(screen.getByRole('button', { name: /next: languages/i }));
     fireEvent.click(screen.getByRole('button', { name: /review & activate/i }));
     fireEvent.click(screen.getByRole('button', { name: /save and continue/i }));
 
@@ -134,13 +134,14 @@ describe('MatchingProfileSetup focus and weighting step', () => {
     expect(payload.orgTypes).toEqual(['startup']);
     expect(payload.weightBias).toBe(80);
     expect(payload.compPeriod).toBe('monthly');
+    expect(payload).not.toHaveProperty('languages');
     expect(typeof payload.weights).toBe('object');
     expect(
       Object.values(payload.weights).reduce((acc: number, n: any) => acc + Number(n), 0)
     ).toBeCloseTo(1, 4);
   });
 
-  it('allows intermediate empty/zero edits but blocks progressing from Work step when final value is 0', async () => {
+  it('allows intermediate empty/zero edits but blocks progressing to Review from Work when final value is 0', async () => {
     render(<MatchingProfileSetup onComplete={vi.fn()} onCancel={vi.fn()} />);
 
     fireEvent.click(screen.getByRole('button', { name: /next: focus & weights/i }));
@@ -155,11 +156,11 @@ describe('MatchingProfileSetup focus and weighting step', () => {
     expect(minInput).toHaveValue(30);
 
     fireEvent.change(minInput, { target: { value: '0' } });
-    fireEvent.click(screen.getByRole('button', { name: /next: languages/i }));
+    fireEvent.click(screen.getByRole('button', { name: /review & activate/i }));
 
     expect(
       screen.getByText('Minimum desired hours is 1. Enter values above 0 to continue.')
     ).toBeInTheDocument();
-    expect(screen.queryByText('Languages & Proficiency')).not.toBeInTheDocument();
+    expect(screen.queryByText('Review Your Profile')).not.toBeInTheDocument();
   });
 });

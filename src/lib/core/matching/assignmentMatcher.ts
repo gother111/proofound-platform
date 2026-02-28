@@ -2,7 +2,7 @@ import { inArray } from 'drizzle-orm';
 
 import { db } from '@/db';
 import type { Assignment } from '@/db/schema';
-import { assignmentExpertiseMatrix, matchingProfiles, skills } from '@/db/schema';
+import { assignmentExpertiseMatrix, matchingProfiles, skills, skillsTaxonomy } from '@/db/schema';
 import { deriveRequirementsFromMatrix } from '@/lib/assignments/expertise-matrix';
 import { log } from '@/lib/log';
 import { scrubDisallowedFields } from '@/lib/core/matching/firewall';
@@ -25,6 +25,11 @@ import {
 } from '@/lib/core/matching/scorers';
 import { annRetrieveSimilarProfiles, batchGetMissionVisionScores } from '@/lib/matching/semantic';
 import { toAnnualCompensationRange } from '@/lib/matching/compensation';
+import {
+  deriveAtlasLanguageLevels,
+  parseLegacyLanguageLevels,
+  resolveLanguageLevel,
+} from '@/lib/core/matching/language-resolution';
 
 export type AssignmentMatchResult = {
   profileId: string;
@@ -160,6 +165,7 @@ export async function computeAssignmentMatches(input: ComputeAssignmentMatchesIn
   }
 
   const skillsByProfile: Record<string, Record<string, Skill>> = {};
+  const profileSkillRows = new Map<string, typeof candidateSkills>();
 
   for (const skill of candidateSkills) {
     if (!skillsByProfile[skill.profileId]) {
@@ -174,6 +180,37 @@ export async function computeAssignmentMatches(input: ComputeAssignmentMatchesIn
       impactScore: skill.impactScore ? parseFloat(skill.impactScore) : undefined,
       lastUsedAt: skill.lastUsedAt || undefined,
     };
+
+    const existingRows = profileSkillRows.get(skill.profileId) || [];
+    existingRows.push(skill);
+    profileSkillRows.set(skill.profileId, existingRows);
+  }
+
+  const skillTaxonomyCodes = Array.from(
+    new Set(
+      candidateSkills
+        .map((skill) => skill.skillCode || skill.skillId)
+        .filter((code): code is string => Boolean(code))
+    )
+  );
+  const skillTaxonomyRows =
+    skillTaxonomyCodes.length > 0
+      ? await db
+          .select({
+            code: skillsTaxonomy.code,
+            catId: skillsTaxonomy.catId,
+            subcatId: skillsTaxonomy.subcatId,
+            l3Id: skillsTaxonomy.l3Id,
+            slug: skillsTaxonomy.slug,
+            nameI18n: skillsTaxonomy.nameI18n,
+            tags: skillsTaxonomy.tags,
+          })
+          .from(skillsTaxonomy)
+          .where(inArray(skillsTaxonomy.code, skillTaxonomyCodes))
+      : [];
+  const atlasLanguagesByProfile = new Map<string, ReturnType<typeof deriveAtlasLanguageLevels>>();
+  for (const [profileId, rows] of profileSkillRows.entries()) {
+    atlasLanguagesByProfile.set(profileId, deriveAtlasLanguageLevels(rows, skillTaxonomyRows));
   }
 
   // Batch fetch mission/vision scores for PAC (if using semantic matching)
@@ -303,11 +340,16 @@ export async function computeAssignmentMatches(input: ComputeAssignmentMatchesIn
     }
 
     // Language
-    if (assignment.minLanguage && profile.languages) {
+    if (assignment.minLanguage) {
       const minLang = assignment.minLanguage as { code: string; level: string };
-      const candidateLangs = profile.languages as Array<{ code: string; level: string }>;
-      const matchingLang = candidateLangs.find((l) => l.code === minLang.code);
-      subscores.language = matchingLang ? scoreLanguage(minLang.level, matchingLang.level) : 0;
+      const atlasLanguageLevels = atlasLanguagesByProfile.get(profile.profileId) || {};
+      const legacyLanguageLevels = parseLegacyLanguageLevels(profile.languages);
+      const candidateLevel = resolveLanguageLevel(
+        minLang.code,
+        atlasLanguageLevels,
+        legacyLanguageLevels
+      );
+      subscores.language = candidateLevel ? scoreLanguage(minLang.level, candidateLevel) : 0;
     } else {
       subscores.language = 1.0;
     }

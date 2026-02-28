@@ -9,14 +9,13 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { TypeaheadChips, type TypeaheadOption } from './TypeaheadChips';
-import { CEFRLanguageRow, type LanguageProficiency } from './CEFRLanguageRow';
 import { LocationInput, type LocationPreference } from './LocationInput';
 import { CompensationInput, type CompensationRange } from './CompensationInput';
 import { DateWindowInput, type DateWindow } from './DateWindowInput';
 import { FocusAreasSection } from './FocusAreasSection';
 import { Slider } from '@/components/ui/slider';
 import { toast } from 'sonner';
-import { BookOpen, ExternalLink, Plus } from 'lucide-react';
+import { BookOpen, ExternalLink } from 'lucide-react';
 import { weightsFromMissionSkillsBias } from '@/lib/core/matching/presets';
 
 interface MatchingProfileSetupProps {
@@ -60,7 +59,6 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
     period: 'annual',
   });
   const [availability, setAvailability] = useState<DateWindow>({ earliest: '', latest: '' });
-  const [languages, setLanguages] = useState<LanguageProficiency[]>([]);
 
   // Taxonomy options (will be fetched from API)
   const [valuesOptions, setValuesOptions] = useState<TypeaheadOption[]>([]);
@@ -123,7 +121,7 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
         title: desiredIndustries[0]
           ? `${desiredIndustries[0]} opportunity`
           : 'Mission-aligned engineering assignment',
-        reason: 'Your selected work preferences and language profile are compatible.',
+        reason: 'Your selected work preferences and Atlas signals are compatible.',
         score: 0.64,
       },
       {
@@ -178,11 +176,6 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
     void loadSampleMatches();
   }, [desiredIndustries, desiredRoles, orgTypes]);
 
-  // Add language
-  const handleAddLanguage = () => {
-    setLanguages([...languages, { code: 'en', level: 'B2' }]);
-  };
-
   const handleFocusChange = (partial: {
     desiredRoles?: string[];
     desiredIndustries?: string[];
@@ -229,7 +222,7 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
   };
 
   const handleTabChange = (nextTab: string) => {
-    const requiresWorkValidation = nextTab === 'languages' || nextTab === 'review';
+    const requiresWorkValidation = nextTab === 'review';
     if (requiresWorkValidation && !validateWorkStepHours()) {
       setCurrentTab('work');
       return;
@@ -319,7 +312,6 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
           compPeriod: compensation.period,
           availabilityEarliest: availability.earliest,
           availabilityLatest: availability.latest,
-          languages,
           weights,
           weightBias,
         }),
@@ -364,12 +356,11 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
 
       {/* Wizard tabs */}
       <Tabs value={currentTab} onValueChange={handleTabChange} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="atlas-skills">Atlas Skills</TabsTrigger>
           <TabsTrigger value="focus-weights">Focus & Weights</TabsTrigger>
           <TabsTrigger value="values">Values</TabsTrigger>
           <TabsTrigger value="work">Work</TabsTrigger>
-          <TabsTrigger value="languages">Languages</TabsTrigger>
           <TabsTrigger value="review">Review</TabsTrigger>
         </TabsList>
 
@@ -531,52 +522,14 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
                 if (!validateWorkStepHours()) {
                   return;
                 }
-                setCurrentTab('languages');
+                handleTabChange('review');
               }}
             >
-              Next: Languages
+              Review & Activate
             </Button>
           </div>
         </TabsContent>
-
-        {/* Step 5: Languages */}
-        <TabsContent value="languages" className="space-y-4">
-          <div>
-            <Label>Languages & Proficiency</Label>
-            <p className="text-sm mb-3" style={{ color: '#6B6760' }}>
-              Add languages you can work in with your CEFR level (A1-C2).
-            </p>
-
-            <div className="space-y-3 mb-3">
-              {languages.map((lang, index) => (
-                <CEFRLanguageRow
-                  key={index}
-                  language={lang}
-                  onChange={(updated) => {
-                    const newLangs = [...languages];
-                    newLangs[index] = updated;
-                    setLanguages(newLangs);
-                  }}
-                  onRemove={() => setLanguages(languages.filter((_, i) => i !== index))}
-                />
-              ))}
-            </div>
-
-            <Button variant="outline" size="sm" onClick={handleAddLanguage}>
-              <Plus className="w-4 h-4 mr-1" />
-              Add Language
-            </Button>
-          </div>
-
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setCurrentTab('work')}>
-              Back
-            </Button>
-            <Button onClick={() => handleTabChange('review')}>Review & Activate</Button>
-          </div>
-        </TabsContent>
-
-        {/* Step 6: Review & Activate */}
+        {/* Step 5: Review & Activate */}
         <TabsContent value="review" className="space-y-4">
           <div>
             <h3 className="text-lg font-medium mb-4">Review Your Profile</h3>
@@ -610,7 +563,7 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
                 <strong>Work Mode:</strong> {location.workMode || 'Not set'}
               </div>
               <div>
-                <strong>Languages:</strong> {languages.length} language(s)
+                <strong>Language signals:</strong> Derived from Atlas language skills
               </div>
             </div>
 
@@ -656,7 +609,7 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
           </div>
 
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setCurrentTab('languages')}>
+            <Button variant="outline" onClick={() => setCurrentTab('work')}>
               Back
             </Button>
             <Button variant="outline" onClick={onCancel}>

@@ -8,6 +8,7 @@ import {
   matches,
   organizations,
   skills,
+  skillsTaxonomy,
 } from '@/db/schema';
 import { eq, inArray, sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
@@ -38,6 +39,11 @@ import { batchGetMissionVisionScoresForProfile } from '@/lib/matching/semantic';
 import { isTrustedInternalRequest, requireApiAuth } from '@/lib/api/auth';
 import { evaluateIndividualMatchability, toNotMatchablePayload } from '@/lib/matching/eligibility';
 import { calculateFocusBoost } from '@/lib/core/matching/focus';
+import {
+  deriveAtlasLanguageLevels,
+  parseLegacyLanguageLevels,
+  resolveLanguageLevel,
+} from '@/lib/core/matching/language-resolution';
 import { toAnnualCompensationRange } from '@/lib/matching/compensation';
 
 export const dynamic = 'force-dynamic';
@@ -220,6 +226,31 @@ export async function POST(request: NextRequest) {
         lastUsedAt: skill.lastUsedAt || undefined,
       };
     }
+
+    const userSkillCodes = Array.from(
+      new Set(
+        userSkills
+          .map((skill) => skill.skillCode || skill.skillId)
+          .filter((code): code is string => Boolean(code))
+      )
+    );
+    const userSkillTaxonomyRows =
+      userSkillCodes.length > 0
+        ? await db
+            .select({
+              code: skillsTaxonomy.code,
+              catId: skillsTaxonomy.catId,
+              subcatId: skillsTaxonomy.subcatId,
+              l3Id: skillsTaxonomy.l3Id,
+              slug: skillsTaxonomy.slug,
+              nameI18n: skillsTaxonomy.nameI18n,
+              tags: skillsTaxonomy.tags,
+            })
+            .from(skillsTaxonomy)
+            .where(inArray(skillsTaxonomy.code, userSkillCodes))
+        : [];
+    const atlasLanguageLevels = deriveAtlasLanguageLevels(userSkills, userSkillTaxonomyRows);
+    const legacyLanguageLevels = parseLegacyLanguageLevels(profile.languages);
 
     // Determine weights
     const weights = validatedData.weights
@@ -449,12 +480,14 @@ export async function POST(request: NextRequest) {
       }
 
       // Language
-      if (assignment.minLanguage && profile.languages) {
+      if (assignment.minLanguage) {
         const minLang = assignment.minLanguage as { code: string; level: string };
-        const candidateLangs = profile.languages as Array<{ code: string; level: string }>;
-        const matchingLang = candidateLangs.find((l) => l.code === minLang.code);
-
-        subscores.language = matchingLang ? scoreLanguage(minLang.level, matchingLang.level) : 0;
+        const candidateLevel = resolveLanguageLevel(
+          minLang.code,
+          atlasLanguageLevels,
+          legacyLanguageLevels
+        );
+        subscores.language = candidateLevel ? scoreLanguage(minLang.level, candidateLevel) : 0;
       } else {
         subscores.language = 1.0;
       }
