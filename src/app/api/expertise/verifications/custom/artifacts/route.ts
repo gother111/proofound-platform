@@ -117,52 +117,60 @@ export async function GET() {
         .eq('verified', false),
     ]);
 
-    if (skillsResult.error) {
-      console.error('Failed to load skills for custom verification artifacts:', skillsResult.error);
-      return NextResponse.json({ error: 'Failed to load artifacts' }, { status: 500 });
-    }
+    const sourceErrors = {
+      skill: skillsResult.error,
+      experience: experiencesResult.error,
+      education: educationResult.error,
+      impact_story: impactStoriesResult.error,
+      project: projectsResult.error,
+      volunteering: volunteeringResult.error,
+    } as const;
 
-    if (experiencesResult.error) {
+    if (sourceErrors.skill) {
+      console.error('Failed to load skills for custom verification artifacts:', sourceErrors.skill);
+    }
+    if (sourceErrors.experience) {
       console.error(
         'Failed to load experiences for custom verification artifacts:',
-        experiencesResult.error
+        sourceErrors.experience
       );
-      return NextResponse.json({ error: 'Failed to load artifacts' }, { status: 500 });
     }
-
-    if (educationResult.error) {
+    if (sourceErrors.education) {
       console.error(
         'Failed to load education for custom verification artifacts:',
-        educationResult.error
+        sourceErrors.education
       );
-      return NextResponse.json({ error: 'Failed to load artifacts' }, { status: 500 });
     }
-
-    if (impactStoriesResult.error) {
+    if (sourceErrors.impact_story) {
       console.error(
         'Failed to load impact stories for custom verification artifacts:',
-        impactStoriesResult.error
+        sourceErrors.impact_story
       );
-      return NextResponse.json({ error: 'Failed to load artifacts' }, { status: 500 });
     }
-
-    if (projectsResult.error) {
+    if (sourceErrors.project) {
       console.error(
         'Failed to load projects for custom verification artifacts:',
-        projectsResult.error
+        sourceErrors.project
       );
-      return NextResponse.json({ error: 'Failed to load artifacts' }, { status: 500 });
     }
-
-    if (volunteeringResult.error) {
+    if (sourceErrors.volunteering) {
       console.error(
         'Failed to load volunteering for custom verification artifacts:',
-        volunteeringResult.error
+        sourceErrors.volunteering
       );
+    }
+
+    const allSourcesFailed = Object.values(sourceErrors).every((error) => Boolean(error));
+    if (allSourcesFailed) {
       return NextResponse.json({ error: 'Failed to load artifacts' }, { status: 500 });
     }
 
-    const allSkills = skillsResult.data || [];
+    const allSkills = sourceErrors.skill ? [] : skillsResult.data || [];
+    const experiences = sourceErrors.experience ? [] : experiencesResult.data || [];
+    const education = sourceErrors.education ? [] : educationResult.data || [];
+    const impactStories = sourceErrors.impact_story ? [] : impactStoriesResult.data || [];
+    const projects = sourceErrors.project ? [] : projectsResult.data || [];
+    const volunteering = sourceErrors.volunteering ? [] : volunteeringResult.data || [];
     const skillIds = allSkills.map((skill) => skill.id);
     const acceptedSkillIds = new Set<string>();
 
@@ -176,12 +184,11 @@ export async function GET() {
 
       if (acceptedError) {
         console.error('Failed to load accepted skill verification requests:', acceptedError);
-        return NextResponse.json({ error: 'Failed to load artifacts' }, { status: 500 });
-      }
-
-      for (const request of acceptedRequests || []) {
-        if (request.skill_id) {
-          acceptedSkillIds.add(request.skill_id);
+      } else {
+        for (const request of acceptedRequests || []) {
+          if (request.skill_id) {
+            acceptedSkillIds.add(request.skill_id);
+          }
         }
       }
     }
@@ -195,24 +202,24 @@ export async function GET() {
           label: skillLabel(skill),
           subtitle: skill.competency_label ? `Level ${skill.competency_label}` : undefined,
         })),
-      experience: (experiencesResult.data || []).map((experience) => ({
+      experience: experiences.map((experience) => ({
         id: experience.id,
         type: 'experience',
         label: experience.title,
         subtitle: experience.org_description || undefined,
       })),
-      education: (educationResult.data || []).map((item) => ({
+      education: education.map((item) => ({
         id: item.id,
         type: 'education',
         label: `${item.degree} at ${item.institution}`,
       })),
-      impact_story: (impactStoriesResult.data || []).map((story) => ({
+      impact_story: impactStories.map((story) => ({
         id: story.id,
         type: 'impact_story',
         label: story.title,
         subtitle: story.org_description || undefined,
       })),
-      project: (projectsResult.data || []).map((project) => ({
+      project: projects.map((project) => ({
         id: project.id,
         type: 'project',
         label: project.title,
@@ -221,7 +228,7 @@ export async function GET() {
             ? [project.role_title, project.organization_name].filter(Boolean).join(' at ')
             : undefined,
       })),
-      volunteering: (volunteeringResult.data || []).map((entry) => ({
+      volunteering: volunteering.map((entry) => ({
         id: entry.id,
         type: 'volunteering',
         label: entry.title,

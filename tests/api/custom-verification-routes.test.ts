@@ -52,7 +52,7 @@ describe('custom verification API routes', () => {
     vi.mocked(sendEmail).mockResolvedValue({ success: true });
   });
 
-  it('returns 500 when artifact loading fails', async () => {
+  it('returns partial artifacts with 200 when one source fails', async () => {
     vi.mocked(createClient).mockResolvedValue({
       from: vi.fn((table: string) => {
         if (table === 'skills') {
@@ -66,6 +66,17 @@ describe('custom verification API routes', () => {
           };
         }
 
+        if (table === 'experiences') {
+          return {
+            select: vi.fn(() =>
+              thenableResult({
+                data: [{ id: 'exp-1', title: 'Experience One', org_description: 'Org' }],
+                error: null,
+              })
+            ),
+          };
+        }
+
         return {
           select: vi.fn(() => thenableResult({ data: [], error: null })),
         };
@@ -73,7 +84,91 @@ describe('custom verification API routes', () => {
     } as any);
 
     const response = await getArtifacts();
+    expect(response.status).toBe(200);
+
+    await expect(response.json()).resolves.toMatchObject({
+      total: 1,
+      artifacts: {
+        skill: [],
+        experience: [{ id: 'exp-1', type: 'experience', label: 'Experience One' }],
+      },
+    });
+  });
+
+  it('returns 500 when all artifact sources fail', async () => {
+    vi.mocked(createClient).mockResolvedValue({
+      from: vi.fn(() => ({
+        select: vi.fn(() =>
+          thenableResult({
+            data: null,
+            error: { message: 'all failed' },
+          })
+        ),
+      })),
+    } as any);
+
+    const response = await getArtifacts();
     expect(response.status).toBe(500);
+  });
+
+  it('returns skills when accepted-skill lookup fails', async () => {
+    const skillId = '22222222-2222-4222-8222-222222222222';
+
+    vi.mocked(createClient).mockResolvedValue({
+      from: vi.fn((table: string) => {
+        if (table === 'skills') {
+          return {
+            select: vi.fn(() =>
+              thenableResult({
+                data: [
+                  {
+                    id: skillId,
+                    skill_id: 'custom-1-2-3-typescript',
+                    skill_code: null,
+                    competency_label: 'C3',
+                    name_i18n: { en: 'TypeScript' },
+                    taxonomy: null,
+                  },
+                ],
+                error: null,
+              })
+            ),
+          };
+        }
+
+        if (table === 'skill_verification_requests') {
+          return {
+            select: vi.fn(() =>
+              thenableResult({
+                data: null,
+                error: { message: 'accepted query failed' },
+              })
+            ),
+          };
+        }
+
+        return {
+          select: vi.fn(() => thenableResult({ data: [], error: null })),
+        };
+      }),
+    } as any);
+
+    const response = await getArtifacts();
+    expect(response.status).toBe(200);
+
+    await expect(response.json()).resolves.toMatchObject({
+      total: 1,
+      artifacts: {
+        skill: [
+          {
+            id: skillId,
+            type: 'skill',
+            label: 'TypeScript',
+            subtitle: 'Level C3',
+          },
+        ],
+      },
+    });
   });
 
   it('returns 400 for invalid custom request payload', async () => {
