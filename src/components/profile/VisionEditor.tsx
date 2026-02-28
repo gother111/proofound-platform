@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -91,8 +91,14 @@ export function VisionEditor({
   const [selectedCauses, setSelectedCauses] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const normalizedAvailableValues = normalizeLabels(availableValues);
-  const normalizedAvailableCauses = normalizeLabels(availableCauses);
+  const normalizedAvailableValues = useMemo(
+    () => normalizeLabels(availableValues),
+    [availableValues]
+  );
+  const normalizedAvailableCauses = useMemo(
+    () => normalizeLabels(availableCauses),
+    [availableCauses]
+  );
 
   useEffect(() => {
     if (open) {
