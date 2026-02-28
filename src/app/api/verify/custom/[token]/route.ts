@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 import { createAdminClient } from '@/lib/supabase/admin';
 import { hashVerificationToken } from '@/lib/verification/custom-verification';
+import type { CustomVerificationRelationship } from '@/lib/verification/custom-verification';
 
 const RespondSchema = z.object({
   action: z.enum(['accept', 'decline']),
@@ -19,7 +20,7 @@ type CustomRequestItemRow = {
 
 type CustomRequestGetRow = {
   id: string;
-  verifier_relationship: 'peer' | 'manager' | 'external';
+  verifier_relationship: CustomVerificationRelationship;
   message: string | null;
   status: string;
   created_at: string;

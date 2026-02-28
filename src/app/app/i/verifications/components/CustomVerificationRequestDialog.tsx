@@ -25,6 +25,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  CUSTOM_VERIFICATION_SELECTABLE_RELATIONSHIPS,
+  relationshipDisplayLabel,
+  type SelectableCustomVerificationRelationship,
+} from '@/lib/verification/custom-verification';
 
 type ArtifactType =
   | 'skill'
@@ -78,7 +83,8 @@ export function CustomVerificationRequestDialog({ open, onOpenChange, onCreated 
   });
 
   const [verifierEmail, setVerifierEmail] = useState('');
-  const [relationship, setRelationship] = useState<'peer' | 'manager' | 'external'>('peer');
+  const [relationship, setRelationship] =
+    useState<SelectableCustomVerificationRelationship>('peer');
   const [message, setMessage] = useState('');
   const [selectedArtifacts, setSelectedArtifacts] = useState<Record<string, Artifact>>({});
 
@@ -317,15 +323,19 @@ export function CustomVerificationRequestDialog({ open, onOpenChange, onCreated 
             <Label style={{ color: '#2D3330' }}>Relationship to requester</Label>
             <Select
               value={relationship}
-              onValueChange={(value) => setRelationship(value as typeof relationship)}
+              onValueChange={(value) =>
+                setRelationship(value as SelectableCustomVerificationRelationship)
+              }
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="peer">Peer</SelectItem>
-                <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="external">External</SelectItem>
+                {CUSTOM_VERIFICATION_SELECTABLE_RELATIONSHIPS.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {relationshipDisplayLabel(option)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

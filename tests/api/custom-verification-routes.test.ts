@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
+import { sendEmail } from '@/lib/email/sender';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { GET as getArtifacts } from '@/app/api/expertise/verifications/custom/artifacts/route';
@@ -48,6 +49,7 @@ describe('custom verification API routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(requireAuth).mockResolvedValue({ id: 'user-1' } as any);
+    vi.mocked(sendEmail).mockResolvedValue({ success: true });
   });
 
   it('returns 500 when artifact loading fails', async () => {
@@ -204,6 +206,120 @@ describe('custom verification API routes', () => {
     await expect(response.json()).resolves.toMatchObject({
       code: 'DUPLICATE_VERIFICATION_REQUEST',
     });
+  });
+
+  it('accepts expanded relationship options and maps client relationship to external skill source', async () => {
+    const skillId = '99999999-1111-4111-8111-111111111111';
+    const skillInsertSpy = vi.fn().mockResolvedValue({ error: null });
+
+    vi.mocked(createClient).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { email: 'requester@example.com' } },
+          error: null,
+        }),
+      },
+      from: vi.fn((table: string) => {
+        if (table === 'skills') {
+          return {
+            select: vi.fn(() =>
+              thenableResult({
+                data: [
+                  {
+                    id: skillId,
+                    skill_id: 'custom-1-2-3-typescript',
+                    skill_code: null,
+                    name_i18n: { en: 'TypeScript' },
+                    taxonomy: null,
+                  },
+                ],
+                error: null,
+              })
+            ),
+          };
+        }
+
+        if (table === 'skill_verification_requests') {
+          return {
+            select: vi.fn(() => thenableResult({ data: [], error: null })),
+            insert: skillInsertSpy,
+          };
+        }
+
+        if (table === 'custom_verification_requests') {
+          return {
+            insert: vi.fn(() => ({
+              select: vi.fn(() => ({
+                single: vi.fn().mockResolvedValue({
+                  data: {
+                    id: 'custom-request-2',
+                    status: 'pending',
+                    verifier_email: 'client@example.com',
+                    verifier_relationship: 'client',
+                    created_at: new Date().toISOString(),
+                    expires_at: new Date(Date.now() + 86400000).toISOString(),
+                  },
+                  error: null,
+                }),
+              })),
+            })),
+          };
+        }
+
+        if (table === 'custom_verification_request_items') {
+          return {
+            insert: vi.fn().mockResolvedValue({ error: null }),
+          };
+        }
+
+        if (table === 'profiles') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                single: vi.fn().mockResolvedValue({
+                  data: { display_name: 'Requester Name' },
+                  error: null,
+                }),
+              })),
+            })),
+          };
+        }
+
+        throw new Error(`Unexpected table: ${table}`);
+      }),
+    } as any);
+
+    vi.mocked(createAdminClient).mockReturnValue({
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+          })),
+        })),
+      })),
+    } as any);
+
+    const response = await postCustomRequest(
+      new NextRequest('http://localhost/api/expertise/verifications/custom/request', {
+        method: 'POST',
+        body: JSON.stringify({
+          verifierEmail: 'client@example.com',
+          relationship: 'client',
+          artifacts: [{ type: 'skill', id: skillId }],
+        }),
+      })
+    );
+
+    expect(response.status).toBe(201);
+    expect(skillInsertSpy).toHaveBeenCalledTimes(1);
+    expect(skillInsertSpy).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          skill_id: skillId,
+          verifier_source: 'external',
+        }),
+      ])
+    );
   });
 
   it('returns proofound user email hint when account exists', async () => {

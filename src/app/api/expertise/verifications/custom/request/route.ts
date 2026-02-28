@@ -11,6 +11,7 @@ import {
   artifactTypeLabel,
   generateVerificationToken,
   hashVerificationToken,
+  mapCustomRelationshipToSkillVerifierSource,
   normalizeVerifierEmail,
   parseCustomSkillName,
   relationshipLabel,
@@ -454,12 +455,15 @@ export async function POST(request: NextRequest) {
     }
 
     if (selectedSkillIds.length > 0) {
+      const mappedSkillVerifierSource = mapCustomRelationshipToSkillVerifierSource(
+        parsed.data.relationship
+      );
       const skillRequestRows = selectedSkillIds.map((skillId) => ({
         skill_id: skillId,
         requester_profile_id: user.id,
         verifier_email: verifierEmail,
         verifier_profile_id: verifierProfileId,
-        verifier_source: parsed.data.relationship,
+        verifier_source: mappedSkillVerifierSource,
         message: parsed.data.message?.trim() || null,
         custom_request_id: customRequest.id,
         status: 'pending',

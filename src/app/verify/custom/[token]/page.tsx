@@ -8,6 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  relationshipDisplayLabel,
+  type CustomVerificationRelationship,
+} from '@/lib/verification/custom-verification';
 
 type VerifyItem = {
   id: string;
@@ -21,7 +25,7 @@ type VerificationData = {
   id: string;
   requester_name: string;
   requester_avatar?: string | null;
-  relationship: 'peer' | 'manager' | 'external';
+  relationship: CustomVerificationRelationship;
   message?: string;
   status: 'pending' | 'accepted' | 'declined' | 'expired';
   created_at: string;
@@ -47,18 +51,6 @@ function artifactTypeLabel(type: VerifyItem['artifact_type']): string {
     default:
       return 'Skill';
   }
-}
-
-function relationshipLabel(relationship: VerificationData['relationship']): string {
-  if (relationship === 'manager') {
-    return 'Manager / Supervisor';
-  }
-
-  if (relationship === 'external') {
-    return 'External Collaborator';
-  }
-
-  return 'Peer / Colleague';
 }
 
 export default function VerifyCustomRequestPage() {
@@ -263,7 +255,7 @@ export default function VerifyCustomRequestPage() {
           <div>
             <p className="text-sm font-medium text-[#6B6760] mb-2">Your Relationship</p>
             <Badge variant="outline" className="text-[#1C4D3A] border-[#1C4D3A]">
-              {relationshipLabel(data?.relationship || 'peer')}
+              {relationshipDisplayLabel(data?.relationship || 'peer')}
             </Badge>
           </div>
 

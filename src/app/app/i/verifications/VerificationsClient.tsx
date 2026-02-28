@@ -81,6 +81,13 @@ type DeleteSentRequestResponse = {
   customRequestId?: string;
 };
 
+type ResendSentRequestResponse = {
+  error?: string;
+  resentRequestId?: string;
+  reusedRecord?: boolean;
+  bundled?: boolean;
+};
+
 type RequestStatusFilter = 'pending' | 'accepted' | 'declined' | 'all';
 
 const STATUS_FILTERS: RequestStatusFilter[] = ['pending', 'accepted', 'declined', 'all'];
@@ -109,6 +116,7 @@ export function VerificationsClient({
   const [bundleDialogOpen, setBundleDialogOpen] = useState(false);
   const [bundleRequestId, setBundleRequestId] = useState<string | null>(null);
   const [deletingRequestIds, setDeletingRequestIds] = useState<Record<string, boolean>>({});
+  const [resendingRequestIds, setResendingRequestIds] = useState<Record<string, boolean>>({});
 
   const handleRespond = (request: VerificationRequest, action: 'accept' | 'decline') => {
     setSelectedRequest(request);
@@ -134,6 +142,23 @@ export function VerificationsClient({
     }
 
     return request.status === 'pending' || request.status === 'failed';
+  };
+
+  const canResendSentRequest = (request: VerificationRequest) => {
+    if (request.request_type === 'skill') {
+      return (
+        request.status === 'pending' ||
+        request.status === 'declined' ||
+        request.status === 'expired'
+      );
+    }
+
+    return (
+      request.status === 'pending' ||
+      request.status === 'failed' ||
+      request.status === 'declined' ||
+      request.status === 'expired'
+    );
   };
 
   const openBundleCancelDialog = (customRequestId: string) => {
@@ -198,6 +223,56 @@ export function VerificationsClient({
       toast.error('Failed to delete verification request.');
     } finally {
       setDeletingRequestIds((prev) => {
+        const next = { ...prev };
+        delete next[request.id];
+        return next;
+      });
+    }
+  };
+
+  const handleResendSentRequest = async (request: VerificationRequest) => {
+    if (!canResendSentRequest(request)) {
+      return;
+    }
+
+    setResendingRequestIds((prev) => ({ ...prev, [request.id]: true }));
+    try {
+      const response = await apiFetch(
+        `/api/expertise/verifications/sent/${request.request_type}/${request.id}`,
+        {
+          method: 'POST',
+        }
+      );
+
+      let body: ResendSentRequestResponse = {};
+      try {
+        body = (await response.json()) as ResendSentRequestResponse;
+      } catch {
+        body = {};
+      }
+
+      if (!response.ok) {
+        toast.error(body.error || 'Failed to resend verification request.');
+        return;
+      }
+
+      const createdNewRequest = Boolean(
+        body.resentRequestId && body.resentRequestId !== request.id
+      );
+      if (createdNewRequest || body.bundled) {
+        router.refresh();
+      }
+
+      toast.success(
+        request.request_type === 'skill' && request.custom_request_id
+          ? 'Bundled verification request resent.'
+          : 'Verification request resent.'
+      );
+    } catch (error) {
+      console.error('Failed to resend sent verification request:', error);
+      toast.error('Failed to resend verification request.');
+    } finally {
+      setResendingRequestIds((prev) => {
         const next = { ...prev };
         delete next[request.id];
         return next;
@@ -571,25 +646,46 @@ export function VerificationsClient({
           Sent {formatDate(request.created_at)}
           {request.responded_at && ` • Responded ${formatDate(request.responded_at)}`}
         </p>
-        {canDeleteSentRequest(request) && (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              void handleDeleteSentRequest(request);
-            }}
-            disabled={Boolean(deletingRequestIds[request.id])}
-            className="border-[#C76B4A] text-[#8B4A36] hover:bg-[#FFF0F0]"
-          >
-            <Trash2 className="h-4 w-4 mr-1" />
-            {deletingRequestIds[request.id]
-              ? 'Deleting...'
-              : request.request_type === 'skill' && request.custom_request_id
-                ? 'Manage Bundle'
-                : 'Delete'}
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {canResendSentRequest(request) && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                void handleResendSentRequest(request);
+              }}
+              disabled={Boolean(resendingRequestIds[request.id])}
+              className="border-[#1C4D3A] text-[#1C4D3A] hover:bg-[#E8F5E9]"
+            >
+              <Send className="h-4 w-4 mr-1" />
+              {resendingRequestIds[request.id]
+                ? 'Resending...'
+                : request.request_type === 'skill' && request.custom_request_id
+                  ? 'Resend bundle'
+                  : 'Resend request'}
+            </Button>
+          )}
+          {canDeleteSentRequest(request) && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                void handleDeleteSentRequest(request);
+              }}
+              disabled={Boolean(deletingRequestIds[request.id])}
+              className="border-[#C76B4A] text-[#8B4A36] hover:bg-[#FFF0F0]"
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              {deletingRequestIds[request.id]
+                ? 'Deleting...'
+                : request.request_type === 'skill' && request.custom_request_id
+                  ? 'Manage Bundle'
+                  : 'Delete'}
+            </Button>
+          )}
+        </div>
       </div>
     </Card>
   );

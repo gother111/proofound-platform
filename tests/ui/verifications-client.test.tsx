@@ -216,6 +216,38 @@ describe('VerificationsClient', () => {
     });
   });
 
+  it('resends a non-bundled pending sent request', async () => {
+    const sentRequests = [
+      makeRequest({
+        id: 'sent-resend-1',
+        verifier_email: 'mentor@company.com',
+        status: 'pending',
+      }),
+    ];
+
+    render(
+      <VerificationsClient
+        incomingRequests={[]}
+        sentRequests={sentRequests}
+        userEmail="me@proofound.io"
+      />
+    );
+
+    const sentTab = screen.getByRole('tab', { name: /^Sent/i });
+    fireEvent.mouseDown(sentTab);
+    fireEvent.click(sentTab);
+    fireEvent.keyDown(sentTab, { key: 'Enter' });
+    await waitFor(() => expect(screen.getByText('mentor@company.com')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Resend request' }));
+
+    await waitFor(() =>
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/api/expertise/verifications/sent/skill/sent-resend-1',
+        expect.objectContaining({ method: 'POST' })
+      )
+    );
+  });
+
   it('opens bundle cancellation dialog for bundled pending sent skill request', async () => {
     const sentRequests = [
       makeRequest({
@@ -243,5 +275,44 @@ describe('VerificationsClient', () => {
 
     expect(screen.getByTestId('bundle-dialog-open')).toHaveTextContent('bundle-request-1');
     expect(apiFetchMock).not.toHaveBeenCalled();
+  });
+
+  it('resends bundled skill requests and refreshes on bundled response', async () => {
+    const sentRequests = [
+      makeRequest({
+        id: 'sent-bundle-resend-1',
+        verifier_email: 'bundle@company.com',
+        status: 'pending',
+        custom_request_id: 'bundle-request-2',
+      }),
+    ];
+
+    apiFetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ success: true, bundled: true, resentRequestId: 'bundle-request-2' }),
+    });
+
+    render(
+      <VerificationsClient
+        incomingRequests={[]}
+        sentRequests={sentRequests}
+        userEmail="me@proofound.io"
+      />
+    );
+
+    const sentTab = screen.getByRole('tab', { name: /^Sent/i });
+    fireEvent.mouseDown(sentTab);
+    fireEvent.click(sentTab);
+    fireEvent.keyDown(sentTab, { key: 'Enter' });
+    await waitFor(() => expect(screen.getByText('bundle@company.com')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Resend bundle' }));
+
+    await waitFor(() =>
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/api/expertise/verifications/sent/skill/sent-bundle-resend-1',
+        expect.objectContaining({ method: 'POST' })
+      )
+    );
+    await waitFor(() => expect(refreshMock).toHaveBeenCalledTimes(1));
   });
 });

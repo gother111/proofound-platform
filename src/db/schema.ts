@@ -626,7 +626,17 @@ export const customVerificationRequests = pgTable('custom_verification_requests'
     onDelete: 'set null',
   }),
   verifierRelationship: text('verifier_relationship', {
-    enum: ['peer', 'manager', 'external'],
+    enum: [
+      'colleague',
+      'peer',
+      'manager',
+      'skip_level_manager',
+      'direct_report',
+      'client',
+      'partner',
+      'mentor_coach',
+      'external',
+    ],
   }).notNull(),
   message: text('message'),
   tokenHash: text('token_hash').notNull().unique(),

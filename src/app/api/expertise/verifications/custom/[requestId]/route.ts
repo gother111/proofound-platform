@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { requireApiAuthContext } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { writeVerificationAuditLog } from '@/lib/verification/integrity';
+import type { CustomVerificationRelationship } from '@/lib/verification/custom-verification';
 
 const CancelSelectedSchema = z.object({
   action: z.literal('cancel_selected'),
@@ -24,7 +25,7 @@ type BundleRequestRow = {
   id: string;
   requester_profile_id: string;
   verifier_email: string;
-  verifier_relationship: 'peer' | 'manager' | 'external';
+  verifier_relationship: CustomVerificationRelationship;
   message: string | null;
   status: 'pending' | 'accepted' | 'declined' | 'expired' | 'cancelled';
   created_at: string;

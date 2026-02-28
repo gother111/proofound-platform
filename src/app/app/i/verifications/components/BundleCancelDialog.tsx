@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import type { CustomVerificationRelationship } from '@/lib/verification/custom-verification';
 
 type BundleItem = {
   id: string;
@@ -28,7 +29,7 @@ type BundleItem = {
 type BundleRequest = {
   id: string;
   verifier_email: string;
-  verifier_relationship: 'peer' | 'manager' | 'external';
+  verifier_relationship: CustomVerificationRelationship;
   status: 'pending' | 'accepted' | 'declined' | 'expired' | 'cancelled';
   items: BundleItem[];
 };
