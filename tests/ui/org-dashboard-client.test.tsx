@@ -5,6 +5,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { OrgDashboardClient } from '../../src/app/app/o/[slug]/home/OrgDashboardClient';
 
 let orgPipelineVisible = true;
+let tasksCardPropsHistory: Array<{
+  persona?: 'individual' | 'organization';
+  orgRef?: string;
+}> = [];
+let projectsCardPropsHistory: Array<{
+  persona?: 'individual' | 'organization';
+  orgId?: string;
+  orgSlug?: string;
+}> = [];
 
 vi.mock('sonner', () => ({
   toast: {
@@ -17,10 +26,30 @@ vi.mock('@/components/dashboard/OrgGoalsCard', () => ({
   OrgGoalsCard: () => <div>widget:org-goals</div>,
 }));
 vi.mock('@/components/dashboard/TasksCard', () => ({
-  TasksCard: () => <div>widget:tasks</div>,
+  TasksCard: ({
+    persona,
+    orgRef,
+  }: {
+    persona?: 'individual' | 'organization';
+    orgRef?: string;
+  }) => {
+    tasksCardPropsHistory.push({ persona, orgRef });
+    return <div>widget:tasks</div>;
+  },
 }));
 vi.mock('@/components/dashboard/ProjectsCard', () => ({
-  ProjectsCard: () => <div>widget:projects</div>,
+  ProjectsCard: ({
+    persona,
+    orgId,
+    orgSlug,
+  }: {
+    persona?: 'individual' | 'organization';
+    orgId?: string;
+    orgSlug?: string;
+  }) => {
+    projectsCardPropsHistory.push({ persona, orgId, orgSlug });
+    return <div>widget:projects</div>;
+  },
 }));
 vi.mock('@/components/dashboard/OrgMatchingCard', () => ({
   OrgMatchingCard: ({
@@ -57,6 +86,8 @@ vi.mock('@/components/dashboard/WhileAwayCard', () => ({
 describe('OrgDashboardClient', () => {
   beforeEach(() => {
     orgPipelineVisible = true;
+    tasksCardPropsHistory = [];
+    projectsCardPropsHistory = [];
     const storage = new Map<string, string>();
     const localStorageMock = {
       getItem: vi.fn((key: string) => storage.get(key) ?? null),
@@ -104,6 +135,25 @@ describe('OrgDashboardClient', () => {
     expect(screen.getAllByText('widget:org-readiness')).toHaveLength(1);
     expect(screen.queryByText('widget:tasks')).not.toBeInTheDocument();
     expect(screen.queryByText('widget:org-goals')).not.toBeInTheDocument();
+  });
+
+  it('passes organization context props to tasks and projects widgets', async () => {
+    render(<OrgDashboardClient orgSlug="acme" orgId="org-123" userRole="owner" />);
+
+    await waitFor(() => {
+      expect(screen.getByText('widget:tasks')).toBeInTheDocument();
+      expect(screen.getByText('widget:projects')).toBeInTheDocument();
+    });
+
+    expect(tasksCardPropsHistory).toContainEqual({
+      persona: 'organization',
+      orgRef: 'acme',
+    });
+    expect(projectsCardPropsHistory).toContainEqual({
+      persona: 'organization',
+      orgId: 'org-123',
+      orgSlug: 'acme',
+    });
   });
 
   it('omits while-away widget when the card reports no updates', async () => {

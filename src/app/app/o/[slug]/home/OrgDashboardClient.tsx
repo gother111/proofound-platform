@@ -326,9 +326,9 @@ export function OrgDashboardClient({ orgSlug, orgId, userRole }: OrgDashboardCli
           />
         );
       case 'tasks':
-        return <TasksCard />;
+        return <TasksCard persona="organization" orgRef={orgSlug} />;
       case 'projects':
-        return <ProjectsCard />;
+        return <ProjectsCard persona="organization" orgId={orgId} orgSlug={orgSlug} />;
       case 'while-away':
         return (
           <WhileAwayCard

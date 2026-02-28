@@ -385,7 +385,7 @@ export function DraggableDashboard({
           />
         );
       case 'tasks':
-        return <TasksCard />;
+        return <TasksCard persona="individual" />;
       case 'projects':
         return (
           <ProjectsCard

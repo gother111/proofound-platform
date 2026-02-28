@@ -1,18 +1,5 @@
 'use client';
 
-/**
- * ProjectsCard Widget
- *
- * Displays user's projects with status and recency info
- * Part of the customizable dashboard (PRD F2)
- *
- * Features:
- * - Shows current active/ongoing projects
- * - Project type badges
- * - Organization and role info
- * - Quick stats summary
- */
-
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,14 +16,14 @@ import {
   CheckCircle,
   PauseCircle,
   ExternalLink,
+  Building2,
+  Clock3,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/api/fetch';
 
-// Type definitions
-interface Project {
+interface IndividualProject {
   id: string;
   title: string;
   description?: string | null;
@@ -46,23 +33,41 @@ interface Project {
   endDate?: string | null;
   organizationName?: string | null;
   roleTitle?: string | null;
-  impactSummary?: string | null;
-  verified: boolean;
-  tags?: string[] | null;
 }
 
-interface ProjectsStats {
+interface OrganizationProject {
+  id: string;
+  title: string;
+  description?: string | null;
+  status: 'planning' | 'active' | 'completed' | 'on_hold' | 'cancelled';
+  startDate?: string | null;
+  endDate?: string | null;
+  createdAt?: string | null;
+}
+
+interface IndividualProjectsStats {
   total: number;
   ongoing: number;
   concluded: number;
   paused: number;
 }
 
+interface OrganizationProjectsStats {
+  total: number;
+  active: number;
+  planning: number;
+  completed: number;
+  onHold: number;
+  cancelled: number;
+}
+
 interface ProjectsCardProps {
+  persona?: 'individual' | 'organization';
+  orgId?: string;
+  orgSlug?: string;
   onVisibilityChange?: (visible: boolean) => void;
 }
 
-// Project type config
 const projectTypeConfig = {
   work: { label: 'Work', icon: Briefcase, color: '#1C4D3A', bg: '#D8EDE4' },
   volunteer: { label: 'Volunteer', icon: Heart, color: '#DC2626', bg: '#FEE2E2' },
@@ -71,16 +76,17 @@ const projectTypeConfig = {
   hobby: { label: 'Hobby', icon: Gamepad2, color: '#3B82F6', bg: '#DBEAFE' },
 };
 
-// Status config
-const statusConfig = {
-  ongoing: { label: 'Ongoing', icon: ExternalLink, color: '#1C4D3A', bg: '#D8EDE4' },
-  concluded: { label: 'Concluded', icon: CheckCircle, color: '#166534', bg: '#DCFCE7' },
-  paused: { label: 'Paused', icon: PauseCircle, color: '#F59E0B', bg: '#FEF3C7' },
-  archived: { label: 'Archived', icon: FolderKanban, color: '#6B6760', bg: '#E8E6DD' },
+const organizationStatusConfig = {
+  active: { label: 'Active', icon: Briefcase, color: '#1C4D3A', bg: '#D8EDE4' },
+  planning: { label: 'Planning', icon: Clock3, color: '#1E40AF', bg: '#DBEAFE' },
+  completed: { label: 'Completed', icon: CheckCircle, color: '#166534', bg: '#DCFCE7' },
+  on_hold: { label: 'On Hold', icon: PauseCircle, color: '#F59E0B', bg: '#FEF3C7' },
+  cancelled: { label: 'Cancelled', icon: AlertCircle, color: '#6B6760', bg: '#E8E6DD' },
 };
 
-// Format date range
-function formatDateRange(startDate: string, endDate?: string | null): string {
+function formatDateRange(startDate?: string | null, endDate?: string | null): string {
+  if (!startDate) return 'No timeline set';
+
   const start = new Date(startDate);
   const startStr = start.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 
@@ -93,32 +99,103 @@ function formatDateRange(startDate: string, endDate?: string | null): string {
   return `${startStr} - ${endStr}`;
 }
 
-export function ProjectsCard({ onVisibilityChange }: ProjectsCardProps) {
-  const router = useRouter();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [stats, setStats] = useState<ProjectsStats | null>(null);
+function normalizeOrganizationProject(raw: Record<string, any>): OrganizationProject {
+  const statusRaw = String(raw.status || '').toLowerCase();
+  const normalizedStatus: OrganizationProject['status'] =
+    statusRaw === 'planning' ||
+    statusRaw === 'active' ||
+    statusRaw === 'completed' ||
+    statusRaw === 'on_hold' ||
+    statusRaw === 'cancelled'
+      ? statusRaw
+      : 'active';
+
+  return {
+    id: String(raw.id),
+    title: String(raw.title || 'Untitled project'),
+    description: raw.description ?? null,
+    status: normalizedStatus,
+    startDate: raw.start_date ?? raw.startDate ?? null,
+    endDate: raw.end_date ?? raw.endDate ?? null,
+    createdAt: raw.created_at ?? raw.createdAt ?? null,
+  };
+}
+
+function getOrgProjectsPath(orgSlug?: string): string {
+  return orgSlug ? `/app/o/${orgSlug}/projects` : '/app/o';
+}
+
+function computeOrganizationStats(projects: OrganizationProject[]): OrganizationProjectsStats {
+  return {
+    total: projects.length,
+    active: projects.filter((project) => project.status === 'active').length,
+    planning: projects.filter((project) => project.status === 'planning').length,
+    completed: projects.filter((project) => project.status === 'completed').length,
+    onHold: projects.filter((project) => project.status === 'on_hold').length,
+    cancelled: projects.filter((project) => project.status === 'cancelled').length,
+  };
+}
+
+export function ProjectsCard({
+  persona = 'individual',
+  orgId,
+  orgSlug,
+  onVisibilityChange,
+}: ProjectsCardProps) {
+  const [individualProjects, setIndividualProjects] = useState<IndividualProject[]>([]);
+  const [organizationProjects, setOrganizationProjects] = useState<OrganizationProject[]>([]);
+  const [individualStats, setIndividualStats] = useState<IndividualProjectsStats | null>(null);
+  const [organizationStats, setOrganizationStats] = useState<OrganizationProjectsStats | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
 
-  // Fetch projects from API
   useEffect(() => {
     async function fetchProjects() {
       try {
         setIsLoading(true);
         setError(null);
 
-        const response = await apiFetch('/api/projects?limit=5');
+        if (persona === 'organization') {
+          if (!orgId) {
+            throw new Error('Organization context is missing');
+          }
 
+          const response = await apiFetch(`/api/organizations/${orgId}/projects`);
+          if (!response.ok) {
+            throw new Error('Failed to fetch organization projects');
+          }
+
+          const data = await response.json();
+          const normalized = ((data.projects as Record<string, any>[] | undefined) || []).map(
+            normalizeOrganizationProject
+          );
+
+          setOrganizationProjects(
+            normalized.filter((project) => project.status !== 'cancelled').slice(0, 3)
+          );
+          setOrganizationStats(computeOrganizationStats(normalized));
+          setIndividualProjects([]);
+          setIndividualStats(null);
+          return;
+        }
+
+        const response = await apiFetch('/api/projects?limit=5');
         if (!response.ok) {
           throw new Error('Failed to fetch projects');
         }
 
         const data = await response.json();
-        // Filter out archived and show active projects first
-        const activeProjects = data.projects.filter((p: Project) => p.status !== 'archived');
-        setProjects(activeProjects.slice(0, 3));
-        setStats(data.stats);
+        const activeProjects = ((data.projects as IndividualProject[] | undefined) || []).filter(
+          (project) => project.status !== 'archived'
+        );
+
+        setIndividualProjects(activeProjects.slice(0, 3));
+        setIndividualStats(data.stats || null);
+        setOrganizationProjects([]);
+        setOrganizationStats(null);
       } catch (err) {
         console.error('Error fetching projects:', err);
         setError(err instanceof Error ? err.message : 'Failed to load projects');
@@ -128,15 +205,24 @@ export function ProjectsCard({ onVisibilityChange }: ProjectsCardProps) {
     }
 
     fetchProjects();
-  }, []);
+  }, [orgId, persona]);
 
   useEffect(() => {
     if (isLoading) return;
-    const hasVisibleContent = error ? true : projects.length > 0;
-    onVisibilityChange?.(hasVisibleContent);
-  }, [error, isLoading, onVisibilityChange, projects.length]);
 
-  // Loading state
+    const projectCount =
+      persona === 'organization' ? organizationProjects.length : individualProjects.length;
+    const hasVisibleContent = error ? true : projectCount > 0;
+    onVisibilityChange?.(hasVisibleContent);
+  }, [
+    error,
+    individualProjects.length,
+    isLoading,
+    onVisibilityChange,
+    organizationProjects.length,
+    persona,
+  ]);
+
   if (isLoading) {
     return (
       <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
@@ -152,7 +238,6 @@ export function ProjectsCard({ onVisibilityChange }: ProjectsCardProps) {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
@@ -171,8 +256,146 @@ export function ProjectsCard({ onVisibilityChange }: ProjectsCardProps) {
     );
   }
 
-  // Empty state
-  if (projects.length === 0) {
+  if (persona === 'organization') {
+    const organizationPath = getOrgProjectsPath(orgSlug);
+    const stats =
+      organizationStats ||
+      computeOrganizationStats(
+        organizationProjects.map((project) => ({
+          ...project,
+          status: project.status,
+        }))
+      );
+
+    if (organizationProjects.length === 0) {
+      return (
+        <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+          <div className="flex items-center justify-between mb-3">
+            <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
+              Projects
+            </h5>
+          </div>
+
+          <div className="text-center py-6">
+            <Building2 className="w-10 h-10 mx-auto mb-2" style={{ color: '#E8E6DD' }} />
+            <p className="text-xs mb-3" style={{ color: '#6B6760' }}>
+              Add organization projects to showcase current work and outcomes.
+            </p>
+            <Link href={organizationPath}>
+              <Button
+                size="sm"
+                className="h-7 text-xs"
+                style={{
+                  backgroundColor: isHovered ? '#2D5F4A' : '#1C4D3A',
+                  color: '#F7F6F1',
+                  transition: 'background-color 200ms',
+                }}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                Add Project
+              </Button>
+            </Link>
+          </div>
+        </Card>
+      );
+    }
+
+    return (
+      <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
+              Projects
+            </h5>
+            {stats.active > 0 && (
+              <span
+                className="text-xs px-1.5 py-0.5 rounded"
+                style={{ backgroundColor: '#D8EDE4', color: '#1C4D3A' }}
+              >
+                {stats.active} active
+              </span>
+            )}
+          </div>
+          <Link
+            href={organizationPath}
+            className="text-xs hover:underline"
+            style={{ color: '#1C4D3A' }}
+          >
+            View all
+          </Link>
+        </div>
+
+        <div className="space-y-3">
+          {organizationProjects.map((project) => {
+            const config = organizationStatusConfig[project.status];
+            const StatusIcon = config.icon;
+
+            return (
+              <div key={project.id} className="space-y-1.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start gap-2 min-w-0 flex-1">
+                    <StatusIcon
+                      className="w-4 h-4 mt-0.5 flex-shrink-0"
+                      style={{ color: config.color }}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate" style={{ color: '#2D3330' }}>
+                        {project.title}
+                      </p>
+                      <p className="text-xs truncate" style={{ color: '#6B6760' }}>
+                        {project.description?.trim() ||
+                          formatDateRange(project.startDate, project.endDate)}
+                      </p>
+                    </div>
+                  </div>
+                  <Badge
+                    variant="secondary"
+                    className="text-[10px] px-1.5 py-0 flex-shrink-0"
+                    style={{ backgroundColor: config.bg, color: config.color }}
+                  >
+                    {config.label}
+                  </Badge>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div
+          className="mt-4 pt-3 border-t flex items-center justify-between"
+          style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}
+        >
+          <div className="flex items-center gap-3 text-xs" style={{ color: '#6B6760' }}>
+            <span className="flex items-center gap-1">
+              <CheckCircle className="w-3 h-3" style={{ color: '#166534' }} />
+              {stats.completed} completed
+            </span>
+            {stats.onHold > 0 && (
+              <span className="flex items-center gap-1">
+                <PauseCircle className="w-3 h-3" style={{ color: '#F59E0B' }} />
+                {stats.onHold} on hold
+              </span>
+            )}
+          </div>
+          <Link href={organizationPath}>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 px-2 text-xs"
+              style={{ color: '#1C4D3A' }}
+            >
+              Manage
+              <ExternalLink className="w-3 h-3 ml-1" />
+            </Button>
+          </Link>
+        </div>
+      </Card>
+    );
+  }
+
+  if (individualProjects.length === 0) {
     return (
       <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
         <div className="flex items-center justify-between mb-3">
@@ -207,21 +430,19 @@ export function ProjectsCard({ onVisibilityChange }: ProjectsCardProps) {
     );
   }
 
-  // Projects list view
   return (
     <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
-      {/* Header with stats */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
             Projects
           </h5>
-          {stats && stats.ongoing > 0 && (
+          {individualStats && individualStats.ongoing > 0 && (
             <span
               className="text-xs px-1.5 py-0.5 rounded"
               style={{ backgroundColor: '#D8EDE4', color: '#1C4D3A' }}
             >
-              {stats.ongoing} active
+              {individualStats.ongoing} active
             </span>
           )}
         </div>
@@ -234,9 +455,8 @@ export function ProjectsCard({ onVisibilityChange }: ProjectsCardProps) {
         </Link>
       </div>
 
-      {/* Projects list */}
       <div className="space-y-3">
-        {projects.map((project) => {
+        {individualProjects.map((project) => {
           const typeConfig = projectTypeConfig[project.projectType];
           const TypeIcon = typeConfig.icon;
 
@@ -272,8 +492,7 @@ export function ProjectsCard({ onVisibilityChange }: ProjectsCardProps) {
         })}
       </div>
 
-      {/* Quick stats footer */}
-      {stats && (
+      {individualStats && (
         <div
           className="mt-4 pt-3 border-t flex items-center justify-between"
           style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}
@@ -281,12 +500,12 @@ export function ProjectsCard({ onVisibilityChange }: ProjectsCardProps) {
           <div className="flex items-center gap-3 text-xs" style={{ color: '#6B6760' }}>
             <span className="flex items-center gap-1">
               <CheckCircle className="w-3 h-3" style={{ color: '#166534' }} />
-              {stats.concluded} completed
+              {individualStats.concluded} completed
             </span>
-            {stats.paused > 0 && (
+            {individualStats.paused > 0 && (
               <span className="flex items-center gap-1">
                 <PauseCircle className="w-3 h-3" style={{ color: '#F59E0B' }} />
-                {stats.paused} paused
+                {individualStats.paused} paused
               </span>
             )}
           </div>
