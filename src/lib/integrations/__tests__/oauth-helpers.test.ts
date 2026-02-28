@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { buildOAuthCallbackHtml, resolveOAuthRedirectUri } from '@/lib/integrations/oauth-helpers';
+import {
+  buildOAuthCallbackHtml,
+  resolveIntegrationReturnPath,
+  resolveOAuthRedirectUri,
+} from '@/lib/integrations/oauth-helpers';
 
 describe('oauth helpers', () => {
   const originalSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
@@ -78,5 +82,17 @@ describe('oauth helpers', () => {
         preferRequestOrigin: true,
       })
     ).toBe('https://demo.proofound.io/api/auth/linkedin/callback');
+  });
+
+  it('returns sanitized integration return path for valid app route', () => {
+    expect(resolveIntegrationReturnPath('/app/o/acme/settings/integrations')).toBe(
+      '/app/o/acme/settings/integrations'
+    );
+  });
+
+  it('falls back to default integration path for invalid return path', () => {
+    expect(resolveIntegrationReturnPath('https://evil.example')).toBe(
+      '/app/i/settings?tab=integrations'
+    );
   });
 });

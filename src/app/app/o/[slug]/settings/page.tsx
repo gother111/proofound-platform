@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { formatDate } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
-import { ArrowRight, Target, UserCircle, Users } from 'lucide-react';
+import { ArrowRight, Link2, Target, UserCircle, Users } from 'lucide-react';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 
 export const dynamic = 'force-dynamic';
@@ -57,10 +57,10 @@ export default async function OrganizationSettingsPage({
               Settings Hub
             </CardTitle>
             <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-              Open a settings section to manage profile, team, and goals.
+              Open a settings section to manage profile, team, goals, and integrations.
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Link
               href={`/app/o/${slug}/settings/profile`}
               className="rounded-xl border border-proofound-stone dark:border-border p-4 bg-white/60 dark:bg-background/50 hover:border-proofound-forest/50 transition-colors"
@@ -100,6 +100,21 @@ export default async function OrganizationSettingsPage({
               <p className="mt-3 font-medium text-proofound-charcoal dark:text-foreground">Goals</p>
               <p className="text-xs mt-1 text-proofound-charcoal/70 dark:text-muted-foreground">
                 Define and track organizational goals and progress.
+              </p>
+            </Link>
+            <Link
+              href={`/app/o/${slug}/settings/integrations`}
+              className="rounded-xl border border-proofound-stone dark:border-border p-4 bg-white/60 dark:bg-background/50 hover:border-proofound-forest/50 transition-colors"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <Link2 className="w-5 h-5 text-proofound-forest" />
+                <ArrowRight className="w-4 h-4 text-proofound-charcoal/50" />
+              </div>
+              <p className="mt-3 font-medium text-proofound-charcoal dark:text-foreground">
+                Integrations
+              </p>
+              <p className="text-xs mt-1 text-proofound-charcoal/70 dark:text-muted-foreground">
+                Connect Zoom or Google Meet for interviews.
               </p>
             </Link>
           </CardContent>

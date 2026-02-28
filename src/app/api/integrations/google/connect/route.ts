@@ -10,7 +10,10 @@ import { requireApiAuthContext } from '@/lib/auth';
 import { getGoogleAuthUrl } from '@/lib/integrations/google-meet';
 import { log } from '@/lib/log';
 import { randomBytes } from 'crypto';
-import { resolveOAuthRedirectUri } from '@/lib/integrations/oauth-helpers';
+import {
+  resolveIntegrationReturnPath,
+  resolveOAuthRedirectUri,
+} from '@/lib/integrations/oauth-helpers';
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,6 +22,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { user } = authContext;
+    const returnTo = resolveIntegrationReturnPath(request.nextUrl.searchParams.get('returnTo'));
 
     // Get redirect URI
     const redirectUri = resolveOAuthRedirectUri(
@@ -38,6 +42,13 @@ export async function GET(request: NextRequest) {
     // Redirect to Google OAuth
     const res = NextResponse.redirect(authUrl);
     res.cookies.set('google_oauth_state', state, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 10 * 60,
+      path: '/',
+    });
+    res.cookies.set('google_oauth_return_to', returnTo, {
       httpOnly: true,
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',

@@ -1,4 +1,7 @@
 import type { NextRequest } from 'next/server';
+import { sanitizeReturnPath } from '@/lib/navigation/sanitize-return-path';
+
+export const DEFAULT_INTEGRATIONS_RETURN_PATH = '/app/i/settings?tab=integrations';
 
 interface OAuthCallbackHtmlOptions {
   success?: string;
@@ -16,7 +19,7 @@ export function buildOAuthCallbackHtml({
   error,
   message,
   defaultType,
-  redirectBasePath = '/app/i/settings?tab=integrations',
+  redirectBasePath = DEFAULT_INTEGRATIONS_RETURN_PATH,
 }: OAuthCallbackHtmlOptions): string {
   const [basePath, baseQuery = ''] = redirectBasePath.split('?');
   const params = new URLSearchParams(baseQuery);
@@ -47,6 +50,13 @@ export function buildOAuthCallbackHtml({
     <p>Returning to Proofound settings...</p>
   </body>
 </html>`;
+}
+
+/**
+ * Resolve and sanitize an internal return path for integration OAuth flows.
+ */
+export function resolveIntegrationReturnPath(value: unknown, fallback?: string): string {
+  return sanitizeReturnPath(value, fallback ?? DEFAULT_INTEGRATIONS_RETURN_PATH);
 }
 
 /**

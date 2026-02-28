@@ -18,17 +18,21 @@ interface Integration {
 
 interface VideoIntegrationsManagerProps {
   variant?: 'inline' | 'standalone';
+  returnTo?: string;
 }
 
 const SETTINGS_TAB_PATH = '/app/i/settings?tab=integrations';
 
-export function VideoIntegrationsManager({ variant = 'inline' }: VideoIntegrationsManagerProps) {
+export function VideoIntegrationsManager({
+  variant = 'inline',
+  returnTo = SETTINGS_TAB_PATH,
+}: VideoIntegrationsManagerProps) {
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState<string | null>(null);
   const searchParams = useSearchParams();
 
-  const cleanupPath = SETTINGS_TAB_PATH;
+  const cleanupPath = returnTo;
 
   useEffect(() => {
     fetchIntegrations();
@@ -42,7 +46,7 @@ export function VideoIntegrationsManager({ variant = 'inline' }: VideoIntegratio
       toast.success('Zoom connected successfully');
       window.history.replaceState({}, '', cleanupPath);
     } else if (success === 'google_connected') {
-      toast.success('Google Calendar connected successfully');
+      toast.success('Google Meet connected successfully');
       window.history.replaceState({}, '', cleanupPath);
     } else if (error) {
       toast.error(`Connection failed: ${message || error}`);
@@ -68,7 +72,8 @@ export function VideoIntegrationsManager({ variant = 'inline' }: VideoIntegratio
     setConnecting(provider);
     try {
       // Endpoint returns a canonical provider connect path.
-      const response = await fetch(`/api/integrations/video/${provider}/auth`);
+      const authParams = new URLSearchParams({ returnTo: cleanupPath });
+      const response = await fetch(`/api/integrations/video/${provider}/auth?${authParams}`);
       if (!response.ok) {
         throw new Error('Failed to initiate connection');
       }

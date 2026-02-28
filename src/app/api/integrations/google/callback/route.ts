@@ -11,9 +11,34 @@ import { sql } from 'drizzle-orm';
 import { exchangeGoogleCode } from '@/lib/integrations/google-meet';
 import { log } from '@/lib/log';
 import { requireApiAuthContext } from '@/lib/auth';
-import { buildOAuthCallbackHtml, resolveOAuthRedirectUri } from '@/lib/integrations/oauth-helpers';
+import {
+  buildOAuthCallbackHtml,
+  resolveIntegrationReturnPath,
+  resolveOAuthRedirectUri,
+} from '@/lib/integrations/oauth-helpers';
 
 export async function GET(request: NextRequest) {
+  const redirectBasePath = resolveIntegrationReturnPath(
+    request.cookies.get('google_oauth_return_to')?.value
+  );
+  const buildHtmlResponse = (params: {
+    success?: string;
+    error?: string;
+    message?: string;
+    defaultType: string;
+  }) => {
+    const response = new NextResponse(
+      buildOAuthCallbackHtml({
+        ...params,
+        redirectBasePath,
+      }),
+      { headers: { 'Content-Type': 'text/html' } }
+    );
+    response.cookies.set('google_oauth_state', '', { maxAge: 0, path: '/' });
+    response.cookies.set('google_oauth_return_to', '', { maxAge: 0, path: '/' });
+    return response;
+  };
+
   try {
     const authContext = await requireApiAuthContext();
     if (!authContext) {
@@ -29,38 +54,29 @@ export async function GET(request: NextRequest) {
     // Check for OAuth error
     if (error) {
       log.warn('google.oauth.error', { error });
-      return new NextResponse(
-        buildOAuthCallbackHtml({
-          error: 'google_auth_failed',
-          message: error,
-          defaultType: 'google_oauth',
-        }),
-        { headers: { 'Content-Type': 'text/html' } }
-      );
+      return buildHtmlResponse({
+        error: 'google_auth_failed',
+        message: error,
+        defaultType: 'google_oauth',
+      });
     }
 
     if (!code || !state) {
-      return new NextResponse(
-        buildOAuthCallbackHtml({
-          error: 'google_auth_failed',
-          message: 'Missing authorization code or state',
-          defaultType: 'google_oauth',
-        }),
-        { headers: { 'Content-Type': 'text/html' } }
-      );
+      return buildHtmlResponse({
+        error: 'google_auth_failed',
+        message: 'Missing authorization code or state',
+        defaultType: 'google_oauth',
+      });
     }
 
     const expectedState = request.cookies.get('google_oauth_state')?.value;
     if (!expectedState || expectedState !== state) {
       log.warn('google.oauth.state_mismatch', { userId: user.id });
-      return new NextResponse(
-        buildOAuthCallbackHtml({
-          error: 'google_auth_failed',
-          message: 'Invalid or expired OAuth state. Please try connecting again.',
-          defaultType: 'google_oauth',
-        }),
-        { headers: { 'Content-Type': 'text/html' } }
-      );
+      return buildHtmlResponse({
+        error: 'google_auth_failed',
+        message: 'Invalid or expired OAuth state. Please try connecting again.',
+        defaultType: 'google_oauth',
+      });
     }
 
     // Exchange code for tokens
@@ -89,27 +105,19 @@ export async function GET(request: NextRequest) {
 
     log.info('google.oauth.connected', { userId: user.id });
 
-    const res = new NextResponse(
-      buildOAuthCallbackHtml({
-        success: 'google_connected',
-        defaultType: 'google_oauth',
-      }),
-      { headers: { 'Content-Type': 'text/html' } }
-    );
-    res.cookies.set('google_oauth_state', '', { maxAge: 0, path: '/' });
-    return res;
+    return buildHtmlResponse({
+      success: 'google_connected',
+      defaultType: 'google_oauth',
+    });
   } catch (error) {
     log.error('google.oauth.callback.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
 
-    return new NextResponse(
-      buildOAuthCallbackHtml({
-        error: 'google_auth_failed',
-        message: error instanceof Error ? error.message : 'Failed to connect Google',
-        defaultType: 'google_oauth',
-      }),
-      { headers: { 'Content-Type': 'text/html' } }
-    );
+    return buildHtmlResponse({
+      error: 'google_auth_failed',
+      message: error instanceof Error ? error.message : 'Failed to connect Google',
+      defaultType: 'google_oauth',
+    });
   }
 }
