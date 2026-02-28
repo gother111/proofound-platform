@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, type ChangeEvent } from 'react';
-import { Briefcase, Download, FileText, Plus, Search, Sparkles } from 'lucide-react';
+import { Briefcase, Download, FileText, Search, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { apiFetch } from '@/lib/api/fetch';
@@ -18,6 +18,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { CvImportWizard } from '@/components/expertise/cv-import/CvImportWizard';
 
 type ImportContext = 'cv' | 'jd' | 'general';
 
@@ -720,6 +721,65 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
     setApiMetadata(null);
   };
 
+  const handleWizardApplyComplete = (payload: {
+    skillIds: string[];
+    skillNameById: Record<string, string>;
+  }) => {
+    if (!onSkillsAdded || payload.skillIds.length === 0) {
+      return;
+    }
+
+    const mappedSuggestions: LegacySuggestion[] = payload.skillIds.map((skillId) => ({
+      id: skillId,
+      code: skillId,
+      name: payload.skillNameById[skillId] || skillId,
+      aliases: [],
+      description: null,
+      slug: skillId,
+      tags: null,
+      score: 1,
+      confidence: 1,
+    }));
+
+    onSkillsAdded(mappedSuggestions);
+  };
+
+  if (isPdfContext) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-proofound-forest" />
+              Select Import Context
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant={context === 'cv' ? 'default' : 'outline'}
+                onClick={() => switchContext('cv')}
+              >
+                <FileText className="mr-1 h-4 w-4" />
+                CV/Resume
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => switchContext('jd')}>
+                <Briefcase className="mr-1 h-4 w-4" />
+                Job Description
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => switchContext('general')}>
+                General Text
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <CvImportWizard onApplyComplete={handleWizardApplyComplete} />
+      </div>
+    );
+  }
+
   const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const fileList = Array.from(event.target.files || []);
 
@@ -1090,11 +1150,7 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              variant={context === 'cv' ? 'default' : 'outline'}
-              onClick={() => switchContext('cv')}
-            >
+            <Button size="sm" variant="outline" onClick={() => switchContext('cv')}>
               <FileText className="mr-1 h-4 w-4" />
               CV/Resume
             </Button>

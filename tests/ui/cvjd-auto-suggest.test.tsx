@@ -72,7 +72,7 @@ describe('CVJDAutoSuggest', () => {
     expect(screen.getByRole('button', { name: /Analyze & Suggest Skills/i })).toBeInTheDocument();
   });
 
-  it('uploads multiple PDFs and sends structured multi-document payload for analysis', async () => {
+  it('uploads multiple PDFs and sends structured wizard payload for CV analysis', async () => {
     apiFetchMock.mockResolvedValueOnce(
       new Response(
         JSON.stringify({
@@ -81,15 +81,21 @@ describe('CVJDAutoSuggest', () => {
               document_id: 'doc-1',
               file_name: 'cv-1.pdf',
               context: 'cv',
-              candidate_count: 0,
-              candidates: [],
+              work_experiences: [],
+              learning_experiences: [],
+              volunteering: [],
+              languages: [],
+              skill_candidates: [],
             },
             {
               document_id: 'doc-2',
               file_name: 'cv-2.pdf',
               context: 'cv',
-              candidate_count: 0,
-              candidates: [],
+              work_experiences: [],
+              learning_experiences: [],
+              volunteering: [],
+              languages: [],
+              skill_candidates: [],
             },
           ],
           metadata: {
@@ -137,13 +143,13 @@ describe('CVJDAutoSuggest', () => {
 
     await waitFor(() => {
       expect(apiFetchMock).toHaveBeenCalledWith(
-        '/api/expertise/cv-import/suggest',
+        '/api/expertise/cv-import/wizard-suggest',
         expect.objectContaining({ method: 'POST' })
       );
     });
 
     const suggestCall = apiFetchMock.mock.calls.find(
-      ([url]) => url === '/api/expertise/cv-import/suggest'
+      ([url]) => url === '/api/expertise/cv-import/wizard-suggest'
     );
     expect(suggestCall).toBeDefined();
 
