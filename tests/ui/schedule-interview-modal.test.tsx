@@ -207,4 +207,59 @@ describe('ScheduleInterviewModal', () => {
     expect(requestBody?.platform).toBe('google_meet');
     expect(requestBody?.manualMeetingLink).toBeUndefined();
   });
+
+  it('renders backend actionable message when schedule API returns message + code', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string | URL) => {
+        const url = typeof input === 'string' ? input : input.toString();
+
+        if (url === '/api/integrations/video/status') {
+          return {
+            ok: true,
+            json: async () => ({
+              zoom: { connected: false },
+              google: { connected: true },
+            }),
+          };
+        }
+
+        if (url === '/api/interviews/schedule') {
+          return {
+            ok: false,
+            json: async () => ({
+              error: 'Failed to create Google meeting',
+              code: 'GOOGLE_RECONNECT_REQUIRED',
+              message: 'Reconnect Google Calendar in Settings > Integrations and retry.',
+            }),
+          };
+        }
+
+        return { ok: true, json: async () => ({}) };
+      })
+    );
+
+    render(
+      <ScheduleInterviewModal
+        isOpen
+        onClose={vi.fn()}
+        matchId="6e704a5a-a89e-43cc-9f71-d1f29fd7f3dd"
+        matchAgreedAt={new Date()}
+      />
+    );
+
+    const selects = await screen.findAllByTestId('mock-select');
+    const dateSelect = selects[0] as HTMLSelectElement;
+    const timeSelect = selects[1] as HTMLSelectElement;
+
+    fireEvent.change(dateSelect, { target: { value: dateSelect.options[0].value } });
+    fireEvent.change(timeSelect, { target: { value: timeSelect.options[0].value } });
+    fireEvent.click(screen.getByRole('button', { name: /schedule interview/i }));
+
+    await waitFor(() =>
+      expect(
+        screen.getByText('Reconnect Google Calendar in Settings > Integrations and retry.')
+      ).toBeInTheDocument()
+    );
+  });
 });

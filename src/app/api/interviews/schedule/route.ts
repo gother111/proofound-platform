@@ -13,6 +13,8 @@ import { getRows } from '@/lib/db/rows';
 import { isActiveOrgMember } from '@/lib/api/auth';
 import { InterviewPlatformSchema, normalizeInterviewPlatform } from '@/lib/contracts/domain';
 import { postInterviewUpdateMessageBestEffort } from '@/lib/interviews/messaging';
+import { classifyGoogleScheduleError } from '@/lib/interviews/schedule-errors';
+import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
@@ -184,7 +186,86 @@ const INTERVIEW_POLICY_PRESETS = {
   },
 } as const;
 
+type InterviewScheduleStep =
+  | 'integration_lookup'
+  | 'token_refresh'
+  | 'meeting_create'
+  | 'interview_insert'
+  | 'unknown';
+
+function truncateProviderMessage(value: string | null | undefined): string | undefined {
+  if (!value) return undefined;
+  const normalized = value.replace(/\s+/g, ' ').trim();
+  if (!normalized) return undefined;
+  return normalized.slice(0, 280);
+}
+
+async function handleKnownGoogleFailure(params: {
+  supabase: Awaited<ReturnType<typeof createClient>>;
+  userId: string;
+  matchId: string;
+  step: InterviewScheduleStep;
+  error: unknown;
+}) {
+  const classified = classifyGoogleScheduleError(params.error);
+  if (!classified) {
+    return null;
+  }
+
+  if (classified.shouldDisconnectIntegration) {
+    const { error: disconnectError } = await params.supabase
+      .from('user_video_integrations')
+      .delete()
+      .eq('user_id', params.userId)
+      .eq('provider', 'google_meet');
+
+    if (disconnectError) {
+      log.warn('interview.schedule.google.auto_disconnect_failed', {
+        matchId: params.matchId,
+        userId: params.userId,
+        provider: 'google_meet',
+        step: params.step,
+        code: classified.code,
+        providerMessage: truncateProviderMessage(classified.providerMessage),
+      });
+    } else {
+      log.info('interview.schedule.google.auto_disconnected', {
+        matchId: params.matchId,
+        userId: params.userId,
+        provider: 'google_meet',
+        step: params.step,
+        code: classified.code,
+      });
+    }
+  }
+
+  log.error('interview.schedule.failed', {
+    matchId: params.matchId,
+    userId: params.userId,
+    provider: 'google_meet',
+    step: params.step,
+    code: classified.code,
+    providerMessage: truncateProviderMessage(classified.providerMessage),
+  });
+
+  return NextResponse.json(
+    {
+      error: classified.error,
+      code: classified.code,
+      message: classified.message,
+    },
+    { status: 400 }
+  );
+}
+
 export async function POST(request: NextRequest) {
+  const scheduleFailureContext: {
+    matchId?: string;
+    userId?: string;
+    provider?: 'zoom' | 'google_meet';
+    step?: InterviewScheduleStep;
+  } = {};
+
   try {
     const supabase = await createClient();
     const {
@@ -195,9 +276,11 @@ export async function POST(request: NextRequest) {
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    scheduleFailureContext.userId = user.id;
 
     const body = await request.json();
     const data = ScheduleInterviewSchema.parse(body);
+    scheduleFailureContext.matchId = data.matchId;
     const normalizedPlatform = normalizeInterviewPlatform(data.platform);
     const activePolicy = INTERVIEW_POLICY_PRESETS[data.policyPreset];
     const durationMinutes = data.durationMinutes ?? 30;
@@ -321,6 +404,8 @@ export async function POST(request: NextRequest) {
       meetingId = `manual-${Date.now()}`;
     } else {
       const provider = normalizedPlatform === 'google_meet' ? 'google_meet' : 'zoom';
+      scheduleFailureContext.provider = provider;
+      scheduleFailureContext.step = 'integration_lookup';
 
       const { data: videoIntegration, error: integrationError } = await supabase
         .from('user_video_integrations')
@@ -341,6 +426,7 @@ export async function POST(request: NextRequest) {
       let accessToken = videoIntegration.access_token;
       if (new Date(videoIntegration.token_expiry) < new Date()) {
         if (normalizedPlatform === 'zoom') {
+          scheduleFailureContext.step = 'token_refresh';
           const { refreshZoomToken } = await import('@/lib/integrations/zoom');
           const newTokens = await refreshZoomToken(videoIntegration.refresh_token);
           accessToken = newTokens.access_token;
@@ -354,22 +440,40 @@ export async function POST(request: NextRequest) {
             .eq('user_id', user.id)
             .eq('provider', 'zoom');
         } else {
-          const { refreshGoogleToken } = await import('@/lib/integrations/google-meet');
-          const newTokens = await refreshGoogleToken(videoIntegration.refresh_token);
-          accessToken = newTokens.access_token;
+          scheduleFailureContext.step = 'token_refresh';
+          try {
+            const { refreshGoogleToken } = await import('@/lib/integrations/google-meet');
+            const newTokens = await refreshGoogleToken(videoIntegration.refresh_token);
+            accessToken = newTokens.access_token;
 
-          await supabase
-            .from('user_video_integrations')
-            .update({
-              access_token: newTokens.access_token,
-              token_expiry: new Date(Date.now() + newTokens.expires_in * 1000).toISOString(),
-            })
-            .eq('user_id', user.id)
-            .eq('provider', 'google_meet');
+            await supabase
+              .from('user_video_integrations')
+              .update({
+                access_token: newTokens.access_token,
+                token_expiry: new Date(Date.now() + newTokens.expires_in * 1000).toISOString(),
+              })
+              .eq('user_id', user.id)
+              .eq('provider', 'google_meet');
+          } catch (refreshError) {
+            const knownFailureResponse = await handleKnownGoogleFailure({
+              supabase,
+              userId: user.id,
+              matchId: data.matchId,
+              step: 'token_refresh',
+              error: refreshError,
+            });
+
+            if (knownFailureResponse) {
+              return knownFailureResponse;
+            }
+
+            throw refreshError;
+          }
         }
       }
 
       if (normalizedPlatform === 'zoom') {
+        scheduleFailureContext.step = 'meeting_create';
         const { createZoomMeeting } = await import('@/lib/integrations/zoom');
         const meeting = await createZoomMeeting(accessToken, {
           topic: `Interview - ${match.role || 'Proofound Match'}`,
@@ -397,14 +501,33 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        const meeting = await createGoogleMeet(accessToken, {
-          summary: `Interview - ${match.role || 'Proofound Match'}`,
-          start_time: data.scheduledAt,
-          duration: durationMinutes,
-          timezone: data.timezone,
-          description: 'Interview session via Proofound',
-          attendees: participantEmails,
-        });
+        scheduleFailureContext.step = 'meeting_create';
+        let meeting: Awaited<ReturnType<typeof createGoogleMeet>>;
+        try {
+          meeting = await createGoogleMeet(accessToken, {
+            summary: `Interview - ${match.role || 'Proofound Match'}`,
+            start_time: data.scheduledAt,
+            duration: durationMinutes,
+            timezone: data.timezone,
+            description: 'Interview session via Proofound',
+            attendees: participantEmails,
+          });
+        } catch (meetingError) {
+          const knownFailureResponse = await handleKnownGoogleFailure({
+            supabase,
+            userId: user.id,
+            matchId: data.matchId,
+            step: 'meeting_create',
+            error: meetingError,
+          });
+
+          if (knownFailureResponse) {
+            return knownFailureResponse;
+          }
+
+          throw meetingError;
+        }
+
         meetingLink = meeting.hangoutLink;
         meetingId = meeting.id;
       }
@@ -435,6 +558,7 @@ export async function POST(request: NextRequest) {
       duration_minutes: durationMinutes,
       meeting_link: meetingLink,
     };
+    scheduleFailureContext.step = 'interview_insert';
 
     let lastInsertError: any = null;
 
@@ -537,7 +661,14 @@ export async function POST(request: NextRequest) {
       message: 'Interview scheduled successfully',
     });
   } catch (error: any) {
-    console.error('Failed to schedule interview:', error);
+    log.error('interview.schedule.failed', {
+      matchId: scheduleFailureContext.matchId,
+      userId: scheduleFailureContext.userId,
+      provider: scheduleFailureContext.provider,
+      step: scheduleFailureContext.step ?? 'unknown',
+      code: 'UNEXPECTED_FAILURE',
+      providerMessage: truncateProviderMessage(error instanceof Error ? error.message : null),
+    });
 
     if (error.name === 'ZodError') {
       return NextResponse.json(

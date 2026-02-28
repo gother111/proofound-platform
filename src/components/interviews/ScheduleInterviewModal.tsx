@@ -174,7 +174,16 @@ export function ScheduleInterviewModal({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || data.details?.join(', ') || 'Failed to schedule interview');
+        const apiMessage =
+          (typeof data?.message === 'string' && data.message.trim()) ||
+          (data?.code === 'GOOGLE_RECONNECT_REQUIRED'
+            ? 'Reconnect Google Calendar in Settings > Integrations and retry.'
+            : null) ||
+          (typeof data?.error === 'string' && data.error.trim()) ||
+          data?.details?.join(', ') ||
+          'Failed to schedule interview';
+
+        throw new Error(apiMessage);
       }
 
       // Success!
