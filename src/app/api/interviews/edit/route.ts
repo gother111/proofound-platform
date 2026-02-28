@@ -1,25 +1,16 @@
-/**
- * Interview Cancellation API
- * POST /api/interviews/cancel
- *
- * Implements PRD Gap 1: Cancel scheduled interview
- *
- * Features:
- * - Cancels meeting in Zoom or Google Meet
- * - Updates interview status
- * - Notifies all participants
- */
-
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
+
+import { createClient } from '@/lib/supabase/server';
 import {
   canManageInterviewAsOrgAdmin,
   postInterviewUpdateMessageBestEffort,
 } from '@/lib/interviews/messaging';
 
-const CancelInterviewSchema = z.object({
+const EditInterviewSchema = z.object({
   interviewId: z.string().uuid(),
+  scheduledAt: z.string().datetime(),
+  timezone: z.string().optional(),
   reason: z.string().optional(),
 });
 
@@ -40,7 +31,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { interviewId, reason } = CancelInterviewSchema.parse(body);
+    const { interviewId, scheduledAt, timezone, reason } = EditInterviewSchema.parse(body);
 
     const { allowed, context } = await canManageInterviewAsOrgAdmin(supabase, user.id, interviewId);
     if (!context) {
@@ -49,18 +40,29 @@ export async function POST(request: NextRequest) {
 
     if (!allowed) {
       return NextResponse.json(
-        { error: 'Only organization owners/admins can cancel interviews' },
+        { error: 'Only organization owners/admins can edit interviews' },
         { status: 403 }
       );
     }
 
-    if (context.status === 'cancelled') {
-      return NextResponse.json({ error: 'Interview already cancelled' }, { status: 400 });
-    }
-
     if (context.status !== 'scheduled') {
       return NextResponse.json(
-        { error: 'Only scheduled interviews can be cancelled' },
+        { error: 'Only scheduled interviews can be edited' },
+        { status: 400 }
+      );
+    }
+
+    if (context.scheduledAt && context.scheduledAt.getTime() <= Date.now()) {
+      return NextResponse.json(
+        { error: 'Only upcoming scheduled interviews can be edited' },
+        { status: 400 }
+      );
+    }
+
+    const nextScheduledAt = new Date(scheduledAt);
+    if (Number.isNaN(nextScheduledAt.getTime()) || nextScheduledAt.getTime() <= Date.now()) {
+      return NextResponse.json(
+        { error: 'New interview time must be in the future' },
         { status: 400 }
       );
     }
@@ -77,37 +79,40 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const updatedAt = new Date().toISOString();
     const updatePayload: Record<string, unknown> = {
-      status: 'cancelled',
-      updated_at: updatedAt,
+      scheduled_at: nextScheduledAt.toISOString(),
+      updated_at: new Date().toISOString(),
     };
 
+    if (timezone) {
+      updatePayload.timezone = timezone;
+    }
+
     if (reason?.trim()) {
-      updatePayload.notes = `${existingNotes ? `${existingNotes}\n\n` : ''}Cancelled: ${reason.trim()}`;
+      updatePayload.notes = `${existingNotes ? `${existingNotes}\n\n` : ''}Updated: ${reason.trim()}`;
     }
 
     let updateResult = await supabase
       .from('interviews')
       .update(updatePayload)
       .eq('id', interviewId);
+
     if (updateResult.error && isMissingColumnError(updateResult.error, 'notes')) {
       delete updatePayload.notes;
-      updateResult = await supabase
-        .from('interviews')
-        .update({
-          status: 'cancelled',
-          updated_at: updatedAt,
-        })
-        .eq('id', interviewId);
+      updateResult = await supabase.from('interviews').update(updatePayload).eq('id', interviewId);
+    }
+
+    if (updateResult.error && isMissingColumnError(updateResult.error, 'timezone')) {
+      delete updatePayload.timezone;
+      updateResult = await supabase.from('interviews').update(updatePayload).eq('id', interviewId);
     }
 
     if (updateResult.error) {
-      return NextResponse.json({ error: 'Failed to cancel interview' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to edit interview' }, { status: 500 });
     }
 
     await postInterviewUpdateMessageBestEffort({
-      action: 'cancelled',
+      action: 'edited',
       actorUserId: user.id,
       interviewId,
       matchId: context.matchId,
@@ -119,19 +124,24 @@ export async function POST(request: NextRequest) {
         timezone: context.timezone,
       },
       next: {
-        scheduledAt: context.scheduledAt,
+        scheduledAt: nextScheduledAt.toISOString(),
         platform: context.platform,
         meetingUrl: context.meetingUrl,
-        timezone: context.timezone,
+        timezone: timezone ?? context.timezone,
       },
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Interview cancelled successfully',
+      message: 'Interview updated successfully',
+      interview: {
+        id: interviewId,
+        scheduledAt: nextScheduledAt.toISOString(),
+        timezone: timezone ?? context.timezone ?? 'UTC',
+      },
     });
   } catch (error: any) {
-    console.error('Interview cancellation error:', error);
+    console.error('Interview edit error:', error);
 
     if (error.name === 'ZodError') {
       return NextResponse.json(
@@ -140,6 +150,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ error: 'Failed to cancel interview' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to edit interview' }, { status: 500 });
   }
 }

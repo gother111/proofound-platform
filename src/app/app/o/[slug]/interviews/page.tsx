@@ -17,16 +17,25 @@ import {
   FileCheck,
   CalendarPlus,
   Download,
+  Pencil,
+  XCircle,
 } from 'lucide-react';
-import { ScheduleInterviewButton } from '@/components/interviews/ScheduleInterviewButton';
 import { DecisionDialog } from '@/components/decisions/DecisionDialog';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   buildGoogleCalendarUrl,
   downloadInterviewIcs,
   type InterviewCalendarPayload,
 } from '@/lib/interviews/calendar';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
+import { toast } from 'sonner';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,6 +57,12 @@ export default function OrganizationInterviewsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [decisionDialogOpen, setDecisionDialogOpen] = useState(false);
   const [selectedInterview, setSelectedInterview] = useState<Interview | null>(null);
+  const [editingInterview, setEditingInterview] = useState<Interview | null>(null);
+  const [editDate, setEditDate] = useState('');
+  const [editTime, setEditTime] = useState('');
+  const [editReason, setEditReason] = useState('');
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [isCancellingInterviewId, setIsCancellingInterviewId] = useState<string | null>(null);
 
   useEffect(() => {
     loadInterviews();
@@ -130,6 +145,103 @@ export default function OrganizationInterviewsPage() {
       ? `Interview with ${interview.candidateName}`
       : 'Proofound interview',
   });
+
+  const openEditDialog = (interview: Interview) => {
+    const scheduled = new Date(interview.scheduledAt);
+    const localDate = `${scheduled.getFullYear()}-${String(scheduled.getMonth() + 1).padStart(
+      2,
+      '0'
+    )}-${String(scheduled.getDate()).padStart(2, '0')}`;
+    const localTime = `${String(scheduled.getHours()).padStart(2, '0')}:${String(
+      scheduled.getMinutes()
+    ).padStart(2, '0')}`;
+
+    setEditingInterview(interview);
+    setEditDate(localDate);
+    setEditTime(localTime);
+    setEditReason('');
+  };
+
+  const closeEditDialog = () => {
+    setEditingInterview(null);
+    setEditDate('');
+    setEditTime('');
+    setEditReason('');
+    setIsSavingEdit(false);
+  };
+
+  const handleSaveInterviewEdit = async () => {
+    if (!editingInterview) return;
+    if (!editDate || !editTime) {
+      toast.error('Select both date and time before saving');
+      return;
+    }
+
+    const editedAt = new Date(`${editDate}T${editTime}:00`);
+    if (Number.isNaN(editedAt.getTime())) {
+      toast.error('Invalid date or time');
+      return;
+    }
+
+    setIsSavingEdit(true);
+    try {
+      const response = await fetch('/api/interviews/edit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          interviewId: editingInterview.id,
+          scheduledAt: editedAt.toISOString(),
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+          ...(editReason.trim() ? { reason: editReason.trim() } : {}),
+        }),
+      });
+
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload.error || 'Failed to update interview');
+      }
+
+      toast.success('Interview updated');
+      closeEditDialog();
+      await loadInterviews();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update interview');
+      setIsSavingEdit(false);
+    }
+  };
+
+  const handleCancelInterview = async (interview: Interview) => {
+    if (!confirm('Are you sure you want to cancel this interview?')) {
+      return;
+    }
+
+    const reasonInput = window.prompt('Optional reason for cancellation (shown in conversation):');
+    const reason = typeof reasonInput === 'string' ? reasonInput.trim() : '';
+
+    setIsCancellingInterviewId(interview.id);
+    try {
+      const response = await fetch('/api/interviews/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          interviewId: interview.id,
+          ...(reason ? { reason } : {}),
+        }),
+      });
+
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload.error || 'Failed to cancel interview');
+      }
+
+      toast.success('Interview cancelled');
+      await loadInterviews();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to cancel interview');
+    } finally {
+      setIsCancellingInterviewId(null);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -281,16 +393,30 @@ export default function OrganizationInterviewsPage() {
                   {/* Actions */}
                   <div className="flex flex-col gap-2">
                     {interview.status === 'scheduled' &&
-                      interview.matchAgreedAt &&
                       new Date(interview.scheduledAt) > new Date() && (
-                        <ScheduleInterviewButton
-                          matchId={interview.matchId}
-                          matchAgreedAt={new Date(interview.matchAgreedAt)}
-                          existingInterviewsCount={1}
-                          variant="outline"
-                          size="sm"
-                          onScheduled={loadInterviews}
-                        />
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openEditDialog(interview)}
+                            className="flex items-center gap-2"
+                          >
+                            <Pencil className="w-4 h-4" />
+                            Edit Interview
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleCancelInterview(interview)}
+                            disabled={isCancellingInterviewId === interview.id}
+                            className="flex items-center gap-2 text-[#A03A2A] border-[#E0C9C1]"
+                          >
+                            <XCircle className="w-4 h-4" />
+                            {isCancellingInterviewId === interview.id
+                              ? 'Cancelling...'
+                              : 'Cancel Interview'}
+                          </Button>
+                        </>
                       )}
                     {/* Decision button for completed interviews or past scheduled interviews */}
                     {(interview.status === 'completed' ||
@@ -313,6 +439,74 @@ export default function OrganizationInterviewsPage() {
             ))}
           </div>
         )}
+
+        <Dialog
+          open={Boolean(editingInterview)}
+          onOpenChange={(open) => !open && closeEditDialog()}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit Interview</DialogTitle>
+              <DialogDescription>
+                Update the interview time. Changes will be sent to the candidate via messaging.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[#2D3330]" htmlFor="edit-interview-date">
+                  Date
+                </label>
+                <input
+                  id="edit-interview-date"
+                  type="date"
+                  value={editDate}
+                  onChange={(event) => setEditDate(event.target.value)}
+                  className="h-10 w-full rounded-md border border-gray-300 px-3 text-sm"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[#2D3330]" htmlFor="edit-interview-time">
+                  Time
+                </label>
+                <input
+                  id="edit-interview-time"
+                  type="time"
+                  value={editTime}
+                  onChange={(event) => setEditTime(event.target.value)}
+                  className="h-10 w-full rounded-md border border-gray-300 px-3 text-sm"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  className="text-sm font-medium text-[#2D3330]"
+                  htmlFor="edit-interview-reason"
+                >
+                  Reason (optional)
+                </label>
+                <textarea
+                  id="edit-interview-reason"
+                  value={editReason}
+                  onChange={(event) => setEditReason(event.target.value)}
+                  rows={3}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                  placeholder="Add context for the update..."
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2">
+              <Button variant="outline" onClick={closeEditDialog} disabled={isSavingEdit}>
+                Close
+              </Button>
+              <Button onClick={handleSaveInterviewEdit} disabled={isSavingEdit}>
+                {isSavingEdit ? 'Saving...' : 'Save changes'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Decision Dialog */}
         {selectedInterview && (

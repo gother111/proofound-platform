@@ -12,6 +12,7 @@ import { sql } from 'drizzle-orm';
 import { getRows } from '@/lib/db/rows';
 import { isActiveOrgMember } from '@/lib/api/auth';
 import { InterviewPlatformSchema, normalizeInterviewPlatform } from '@/lib/contracts/domain';
+import { postInterviewUpdateMessageBestEffort } from '@/lib/interviews/messaging';
 
 export const dynamic = 'force-dynamic';
 
@@ -491,6 +492,19 @@ export async function POST(request: NextRequest) {
     } catch (analyticsError) {
       console.error('Failed to emit interview_scheduled event:', analyticsError);
     }
+
+    await postInterviewUpdateMessageBestEffort({
+      action: 'scheduled',
+      actorUserId: user.id,
+      interviewId: interview.id,
+      matchId: data.matchId,
+      next: {
+        scheduledAt: data.scheduledAt,
+        platform: persistedPlatform,
+        meetingUrl: meetingLink,
+        timezone: data.timezone,
+      },
+    });
 
     return NextResponse.json({
       success: true,
