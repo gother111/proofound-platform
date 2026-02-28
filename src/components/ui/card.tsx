@@ -37,14 +37,12 @@ const cardVariants = cva(
     variants: {
       variant: {
         default: 'border-proofound-stone shadow-sm dark:border-[#D4C4A8]/10',
-        flat: 'border-proofound-stone/30 bg-transparent shadow-none dark:border-[#D4C4A8]/10',
+        flat: 'card-flat',
         elevated: 'border-proofound-stone shadow-md dark:border-[#D4C4A8]/10',
         interactive:
           'border-proofound-stone shadow-sm hover:shadow-md hover:-translate-y-1 hover:border-proofound-stone/80 cursor-pointer dark:border-[#D4C4A8]/10 dark:hover:border-[#D4C4A8]/30',
-        glass:
-          'border-white/20 bg-white/60 backdrop-blur-md shadow-sm dark:bg-[#252834]/60 dark:border-[#D4C4A8]/10',
-        bento:
-          'border-proofound-stone/60 bg-white/50 backdrop-blur-xl shadow-sm hover:shadow-md hover:-translate-y-1 hover:scale-[1.01] hover:border-white/60 hover:bg-white/80 transition-all duration-300 transform-gpu dark:bg-[#252834]/50 dark:border-[#D4C4A8]/10',
+        glass: 'card-glass',
+        bento: 'card-bento',
       },
     },
     defaultVariants: {

@@ -338,12 +338,16 @@
     display: none;
   }
 
-  .glass-card {
-    @apply bg-white/60 backdrop-blur-md border border-white/20 shadow-sm;
+  .card-glass {
+    @apply border-white/20 bg-white/60 backdrop-blur-md shadow-sm dark:bg-[#252834]/60 dark:border-[#D4C4A8]/10;
   }
 
-  .glass-card-dark {
-    @apply dark:bg-black/40 dark:backdrop-blur-md dark:border-white/10 dark:shadow-sm;
+  .card-bento {
+    @apply border-proofound-stone/60 bg-white/50 backdrop-blur-xl shadow-sm hover:shadow-md hover:-translate-y-1 hover:scale-[1.01] hover:border-white/60 hover:bg-white/80 transition-all duration-300 transform-gpu dark:bg-[#252834]/50 dark:border-[#D4C4A8]/10;
+  }
+
+  .card-flat {
+    @apply border-proofound-stone/30 bg-transparent shadow-none dark:border-[#D4C4A8]/10;
   }
 
   .safe-area-inset-bottom {

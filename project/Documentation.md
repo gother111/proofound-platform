@@ -2267,3 +2267,90 @@ Open risks/TODO:
 - `app_migration_ledger` required manual checksum reconciliation for `20260212120000_legacy_policies_sql` before continuing migration apply.
 - Database role default `search_path` is empty in this environment; canonical runner currently assumes default schema visibility for unqualified relation names.
 - Follow-up recommended: patch canonical runner to set `search_path` explicitly at session start (or fully schema-qualify remaining unqualified legacy SQL migrations) to remove this operational footgun.
+
+## 2026-02-28: Phase 3 - Modernize Public Portfolio & Expertise Atlas
+
+What changed:
+
+- Modernized the `PublicProfileShell` and `PublicProfileSection` components in `src/components/public-profile/` to use the translucent `bento` glass Card variant and a `japandi-bg` background.
+- Refactored `src/app/portfolio/[handle]/page.tsx` elements (like ContactPill, OpenToRow, TagPill) to use glassmorphic styling, replacing hardcoded `#FCFBF8` and `#E8E6DD` colors.
+- Modernized the Expertise Atlas widgets located in `src/app/app/i/expertise/ExpertiseAtlasClient.tsx` alongside `L1Grid.tsx` and `L4Card.tsx`, replacing older class-based setups with `<Card variant="bento">` for a unified aesthetic.
+
+Why:
+
+- To continue the platform-wide UI modernization effort (Phase 3) focusing on the Public Portfolio and Expertise Atlas pages.
+
+How to verify:
+
+- Visit a public portfolio page (`/portfolio/[handle]`) and observe the frosted glass cards over the Japandi background.
+- Visit the Expertise Atlas (`/app/i/expertise`) and view the dashboard widgets, domains grid, and skill cards which now employ the `bento` variants with subtle hover animations.
+- Ran `npm run lint` to ensure stability.
+
+Open risks/TODO:
+
+- Proceed to Phase 4: Modernize Matching, Verifications & Interviews pipeline.
+
+## 2026-02-28: Phase 4 - Modernize Matching, Verifications & Interviews pipeline
+
+What changed:
+
+- Modernized the `MatchResultCard`, `MatchDetailPanel`, `ExplainPanel`, `RankDisplay`, `MatchingOrganizationView`, `MatchScoreBreakdown`, `TemplatePicker`, and various Matching empty states to use the `bento` Card variant for consistent UI.
+- Upgraded the `VerificationsClient` request cards (both incoming and sent) in `src/app/app/i/verifications/` to use translucent bento cards.
+- Modernized Interview components including `InterviewCard`, `InterviewConfirmation`, `MeetingLinkGenerator`, `InterviewScheduler`, and `VideoProviderSelector` with the new primitive `Card variant="bento"`.
+
+Why:
+
+- To continue the platform-wide UI modernization (Phase 4), ensuring that the matching pipeline, verification requests, and interview configurations follow the new glassmorphic aesthetics.
+
+How to verify:
+
+- Visit any matching configuration or result page to observe the unified bento styling and removed inline borders/backgrounds.
+- Tested locally with `npm run lint` and `npm run typecheck` to confirm no build issues.
+
+Open risks/TODO:
+
+- Final step is Phase 5: Modernize Messaging & Settings.
+
+## 2026-02-28: Phase 5 - Modernize Messaging & Settings
+
+What changed:
+
+- Ran a bulk search and AST-safe replacement to convert all standard generic `<Card>` wrappers in `src/components/messaging` and `src/components/settings` to use `<Card variant="bento">`.
+- Updated 13 files across the two directories, including `RevealIdentityCard`, `PrivacyOverview`, `AuditLogViewer`, `VerificationStatus`, and others.
+
+Why:
+
+- To align the final remaining modules of the platform with the modernized UI design tokens (bento box layouts and glassmorphism).
+
+How to verify:
+
+- Visit any Settings page or Messaging view and open respective components to see the glassmorphic bento cards with hover animations.
+- Validated programmatically via `npm run lint` and `npm run typecheck`, both of which succeed without regressions.
+
+Open risks/TODO:
+
+- The huge platform-wide UI modernization task requested by the user spanning 5 phases is formally fully complete.
+
+## 2026-02-28: Phase 6 - UX/UI Precision Refinement
+
+What changed:
+
+- Modernized the `IndividualMatchingEmpty.tsx` and `OrganizationMatchingEmpty.tsx` empty states with rich illustrations, `glass` variant cards, and actionable Call-To-Action (CTA) buttons.
+- Refactored `src/app/app/i/expertise/components/L1Grid.tsx` domain cards into a horizontal scroll-snap carousel on mobile viewports for better responsive UX.
+- Simplified nested glass layers in `src/app/app/i/expertise/components/L4Card.tsx` by utilizing the `<Card variant="flat">` primitive within the Bento layouts.
+- Re-audited and standardized horizontal padding alignments for mobile in `ExpertiseAtlasClient.tsx`.
+
+Why:
+
+- To achieve a more mathematically aligned layout, eliminate the muddy "glass-on-glass" visual noise, provide actionable CTAs in empty states, and tailor the mobile experience rather than relying solely on endless vertical scrolls. This was driven by a comprehensive platform UX/UI audit focusing on typography, micro-interactions, and spatial geometry.
+
+How to verify:
+
+- Inspect any Matching section with no results to observe the revamped empty states and functional CTAs.
+- View the Expertise Atlas on a mobile viewport (under 768px wide) to use the swipeable horizontal domain carousel.
+- Observe the clean, non-glassy finish of L4 skill cards nested inside their domain containers.
+- Code successfully compiled with `npm run build` and `npm run lint`.
+
+Open risks/TODO:
+
+- Continuous monitoring of user engagement with the new empty state actionable buttons. This concludes Phase 6 and the platform-wide UX/UI review loop.

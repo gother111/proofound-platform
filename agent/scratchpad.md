@@ -2605,3 +2605,23 @@ Open TODOs / follow-ups:
 - Patch `run-migrations.mjs` to set `search_path` explicitly and remove operational workaround need.
 - Consider enforcing migration immutability for supplemental legacy SQL or splitting policy updates into versioned SQL files only.
 - Re-run remote CI/a11y/test after billing restoration to restore hosted gate trust signal.
+
+## 2026-02-28
+
+- Task summary: Platform-Wide UI Modernization (Phases 4 & 5) - Modernized Matching, Verifications, Interviews, Messaging, and Settings.
+- What worked: Systematically identifying `Card` components and applying the `variant="bento"` using a custom Node.js script for safely batch-updating AST/React components.
+- What failed / wrong assumptions: N/A
+- User corrections: Started directly after Phase 3, requested all surfaces modernized.
+- Improvements next time: Utilizing AST-aware scripts via `node` executes replacements safely and rapidly across multiple files without the fragility of string replacements.
+- Commands run + outcomes: `npm run lint && npm run typecheck` - passed and validated UI changes.
+- Open TODOs / follow-ups: All 5 phases complete; no immediate follow-ups unless further UI refinements are discovered.
+
+## 2026-02-28 (Phase 6)
+
+- Task summary: Platform-Wide UX/UI Precision Refinement - Improved empty states, reduced nested glass, optimized mobile grid layout handling.
+- What worked: Applying `<Card variant="flat">` to nested components natively resolved visual "mud" (glass-on-glass). Empty states became actionable.
+- What failed / wrong assumptions: N/A
+- User corrections: Commanded a broader visual audit and implementation of architectural UX fixes based on existing features.
+- Improvements next time: Further centralize typography header weights inside the theme provider rather than component-level explicit classes where applicable.
+- Commands run + outcomes: `npm run build && npm run lint` - verified perfectly without errors.
+- Open TODOs / follow-ups: Monitor user engagement on the new empty state Call-to-Actions.
