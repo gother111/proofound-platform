@@ -34,12 +34,6 @@ vi.mock('@/components/ui/label', () => ({
   ),
 }));
 
-vi.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-  },
-}));
-
 describe('ExperienceForm', () => {
   function renderForm(overrides?: Partial<React.ComponentProps<typeof ExperienceForm>>) {
     const onSave = vi.fn();
@@ -54,20 +48,19 @@ describe('ExperienceForm', () => {
 
   function fillRequiredTextFields() {
     fireEvent.change(screen.getByLabelText(/Role\/Title/i), { target: { value: 'Product Lead' } });
-    fireEvent.change(screen.getByLabelText(/Organization/i), {
+    fireEvent.change(screen.getByLabelText(/Organization Name/i), {
       target: { value: 'Proofound' },
     });
-    fireEvent.change(screen.getByLabelText(/Outcomes/i), {
-      target: { value: 'Reduced average hiring cycle time by 32%.' },
+    fireEvent.change(screen.getByLabelText(/Industry/i), { target: { value: 'Technology' } });
+
+    fireEvent.change(screen.getByPlaceholderText(/Hiring cycle time/i), {
+      target: { value: 'Reduced hiring cycle time' },
     });
-    fireEvent.change(screen.getByLabelText(/Projects/i), {
-      target: { value: 'Launched interview rubric revamp.' },
+    fireEvent.change(screen.getByPlaceholderText(/Interview rubric revamp/i), {
+      target: { value: 'Interview rubric revamp' },
     });
-    fireEvent.change(screen.getByLabelText(/Colleagues/i), {
-      target: { value: 'Partnered with recruiting and engineering leads.' },
-    });
-    fireEvent.change(screen.getByLabelText(/Achievements/i), {
-      target: { value: 'Established first skills-based hiring pilot.' },
+    fireEvent.change(screen.getByPlaceholderText(/Jan 2024 - May 2024/i), {
+      target: { value: 'Jan 2024 - Present' },
     });
   }
 
@@ -81,11 +74,12 @@ describe('ExperienceForm', () => {
     expect(onSave).not.toHaveBeenCalled();
   });
 
-  it('accepts empty end month and emits present timeline', async () => {
+  it('accepts ongoing timeline and emits endDate null', async () => {
     const { onSave } = renderForm();
 
     fillRequiredTextFields();
     fireEvent.change(screen.getByLabelText(/Start month/i), { target: { value: '2024-01' } });
+    fireEvent.click(screen.getByLabelText(/Ongoing/i));
 
     fireEvent.click(screen.getByRole('button', { name: /Add Experience/i }));
 
@@ -95,6 +89,18 @@ describe('ExperienceForm', () => {
         startDate: '2024-01-01',
         endDate: null,
         duration: 'Jan 2024 - Present',
+        organizationName: 'Proofound',
+        measuredOutcomes: [
+          expect.objectContaining({
+            name: 'Reduced hiring cycle time',
+          }),
+        ],
+        projectEntries: [
+          expect.objectContaining({
+            name: 'Interview rubric revamp',
+            duration: 'Jan 2024 - Present',
+          }),
+        ],
       })
     );
   });
@@ -110,6 +116,22 @@ describe('ExperienceForm', () => {
 
     await waitFor(() =>
       expect(screen.getByText('End month cannot be earlier than start month')).toBeInTheDocument()
+    );
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it('requires custom industry text when Other is selected', async () => {
+    const { onSave } = renderForm();
+
+    fillRequiredTextFields();
+    fireEvent.change(screen.getByLabelText(/Industry/i), { target: { value: 'Other' } });
+    fireEvent.change(screen.getByLabelText(/Start month/i), { target: { value: '2024-06' } });
+    fireEvent.click(screen.getByLabelText(/Ongoing/i));
+
+    fireEvent.click(screen.getByRole('button', { name: /Add Experience/i }));
+
+    await waitFor(() =>
+      expect(screen.getByText('Enter custom industry when selecting Other')).toBeInTheDocument()
     );
     expect(onSave).not.toHaveBeenCalled();
   });

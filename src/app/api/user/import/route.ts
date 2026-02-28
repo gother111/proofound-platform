@@ -208,7 +208,8 @@ export async function POST(request: NextRequest) {
             return {
               userId: user.id,
               title: experience.role || 'Imported Experience',
-              orgDescription: experience.organization,
+              organizationName: experience.organization?.trim() || null,
+              orgDescription: 'Organization details not specified',
               duration: timeline.duration,
               startDate: timeline.startDate,
               endDate: timeline.endDate,

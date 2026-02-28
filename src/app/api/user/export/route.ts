@@ -142,7 +142,10 @@ export async function GET() {
 
         return {
           type: 'work',
-          organization: experience.orgDescription || 'Organization not specified',
+          organization:
+            experience.organizationName ||
+            experience.orgDescription ||
+            'Organization not specified',
           role: experience.title || undefined,
           startDate: timeline.startDate || undefined,
           endDate: timeline.endDate,

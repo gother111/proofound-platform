@@ -1,4 +1,9 @@
 import { LucideIcon } from 'lucide-react';
+import type {
+  ExperienceEmployeeAmount,
+  ExperienceOrganizationType,
+  ExperienceParticipationCapacity,
+} from '@/lib/profile/experience-options';
 
 export interface BasicInfo {
   name: string;
@@ -124,15 +129,35 @@ export interface ImpactStory {
   saveWarning?: string | null;
 }
 
+export interface ExperienceMeasuredOutcome {
+  id: string;
+  name: string;
+  value?: number | null;
+  unit?: string | null;
+}
+
+export interface ExperienceProjectEntry {
+  id: string;
+  name: string;
+  participationCapacity: ExperienceParticipationCapacity;
+  duration: string;
+}
+
 export interface Experience {
   id: string;
   title: string;
+  organizationName?: string | null;
+  organizationType?: ExperienceOrganizationType | null;
+  organizationIndustry?: string | null;
+  organizationEmployeeAmount?: ExperienceEmployeeAmount | null;
   orgDescription: string;
   duration: string;
   outcomes: string;
   projects: string;
   colleagues: string;
   achievements: string;
+  measuredOutcomes?: ExperienceMeasuredOutcome[];
+  projectEntries?: ExperienceProjectEntry[];
   startDate?: string | null;
   endDate?: string | null;
   verified: boolean | null;

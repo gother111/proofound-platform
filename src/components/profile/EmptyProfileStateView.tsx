@@ -362,7 +362,7 @@ export function EmptyProfileStateView({
                       <h3 className="text-lg">Map Your Journey</h3>
                       <p className="text-sm text-muted-foreground max-w-md mx-auto">
                         Share your chronological timeline of education and work experiences. Focus
-                        on outcomes, projects, colleagues, and achievements along the way.
+                        on outcomes and projects along the way.
                       </p>
                     </div>
                     <div className="flex flex-col items-center gap-3">
@@ -400,7 +400,7 @@ export function EmptyProfileStateView({
                       <div>
                         <h4 className="text-sm mb-1">Professional Experience</h4>
                         <p className="text-xs text-muted-foreground mb-3">
-                          Share outcomes, projects, colleagues, and achievements in each role
+                          Share outcomes and projects in each role
                         </p>
                         <Button
                           variant="ghost"

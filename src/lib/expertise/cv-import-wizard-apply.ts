@@ -180,6 +180,7 @@ export async function applyWizardSelections(
     const existingExperiences = await tx
       .select({
         title: experiences.title,
+        organizationName: experiences.organizationName,
         organization: experiences.orgDescription,
         duration: experiences.duration,
       })
@@ -187,13 +188,20 @@ export async function applyWizardSelections(
       .where(eq(experiences.userId, userId));
 
     const existingExperienceKeys = new Set(
-      existingExperiences.map((entry) => buildExperienceKey(entry))
+      existingExperiences.map((entry) =>
+        buildExperienceKey({
+          title: entry.title,
+          organization: entry.organizationName || entry.organization,
+          duration: entry.duration,
+        })
+      )
     );
 
     const workInputs = parsedInput.documents.flatMap((document) => document.work_experiences);
     const workRows = [] as Array<{
       userId: string;
       title: string;
+      organizationName: string | null;
       orgDescription: string;
       duration: string;
       outcomes: string;
@@ -219,7 +227,8 @@ export async function applyWizardSelections(
       workRows.push({
         userId,
         title: entry.title,
-        orgDescription: entry.organization,
+        organizationName: entry.organization.trim() || null,
+        orgDescription: 'Organization details not specified',
         duration: entry.duration,
         outcomes: entry.summary,
         projects: entry.summary,

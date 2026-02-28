@@ -17,8 +17,6 @@ import {
   HandHeart,
   Network,
   FolderOpen,
-  Trophy,
-  Users,
 } from 'lucide-react';
 import { MissionCard } from './MissionCard';
 import { ValuesCard } from './ValuesCard';
@@ -45,12 +43,23 @@ interface ProfileViewProps {
     experiences: Array<{
       id: string;
       title: string;
+      organizationName?: string | null;
       orgDescription: string;
       duration: string;
       outcomes: string;
       projects: string;
-      colleagues: string;
-      achievements: string;
+      measuredOutcomes?: Array<{
+        id: string;
+        name: string;
+        value?: number | null;
+        unit?: string | null;
+      }>;
+      projectEntries?: Array<{
+        id: string;
+        name: string;
+        participationCapacity: 'owned' | 'co_led' | 'contributed';
+        duration: string;
+      }>;
       verified: boolean;
     }>;
     education: Array<{
@@ -91,6 +100,13 @@ export function ProfileView({ data }: ProfileViewProps) {
     if (scope === 'co_led') return 'Co-led';
     if (scope === 'contributed') return 'Contributed';
     return null;
+  };
+
+  const getParticipationCapacityLabel = (capacity?: string | null) => {
+    if (capacity === 'owned') return 'Owned';
+    if (capacity === 'co_led') return 'Co-led';
+    if (capacity === 'contributed') return 'Contributed';
+    return 'Contributed';
   };
 
   const getCauseLabels = (story: ImpactStory) => {
@@ -418,6 +434,9 @@ export function ProfileView({ data }: ProfileViewProps) {
                               />
                             )}
                           </div>
+                          {experience.organizationName ? (
+                            <p className="text-sm mb-1">{experience.organizationName}</p>
+                          ) : null}
                           <p className="text-sm text-muted-foreground mb-1">
                             {experience.orgDescription}
                           </p>
@@ -431,28 +450,50 @@ export function ProfileView({ data }: ProfileViewProps) {
                                 <Target className="w-3 h-3" />
                                 Outcomes
                               </h5>
-                              <p className="text-sm">{experience.outcomes}</p>
+                              {experience.measuredOutcomes &&
+                              experience.measuredOutcomes.length > 0 ? (
+                                <ul className="space-y-1">
+                                  {experience.measuredOutcomes.map((outcome) => (
+                                    <li key={outcome.id} className="text-sm">
+                                      <span className="font-medium">{outcome.name}</span>
+                                      {outcome.value !== null &&
+                                      outcome.value !== undefined &&
+                                      String(outcome.value).trim().length > 0 ? (
+                                        <span className="text-muted-foreground">
+                                          {`: ${String(outcome.value)}${outcome.unit ? ` ${outcome.unit}` : ''}`}
+                                        </span>
+                                      ) : null}
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p className="text-sm">{experience.outcomes}</p>
+                              )}
                             </div>
                             <div>
                               <h5 className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
                                 <FolderOpen className="w-3 h-3" />
                                 Projects
                               </h5>
-                              <p className="text-sm">{experience.projects}</p>
-                            </div>
-                            <div>
-                              <h5 className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
-                                <Users className="w-3 h-3" />
-                                Colleagues
-                              </h5>
-                              <p className="text-sm">{experience.colleagues}</p>
-                            </div>
-                            <div>
-                              <h5 className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
-                                <Trophy className="w-3 h-3" />
-                                Achievements
-                              </h5>
-                              <p className="text-sm">{experience.achievements}</p>
+                              {experience.projectEntries && experience.projectEntries.length > 0 ? (
+                                <ul className="space-y-1">
+                                  {experience.projectEntries.map((project) => (
+                                    <li key={project.id} className="text-sm">
+                                      <span className="font-medium">{project.name}</span>
+                                      <span className="text-muted-foreground">
+                                        {' '}
+                                        (
+                                        {getParticipationCapacityLabel(
+                                          project.participationCapacity
+                                        )}
+                                        , {project.duration})
+                                      </span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p className="text-sm">{experience.projects}</p>
+                              )}
                             </div>
                           </div>
                         </div>

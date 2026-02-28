@@ -1175,12 +1175,26 @@ export const experiences = pgTable(
       .notNull(),
     projectId: uuid('project_id').references(() => projects.id, { onDelete: 'set null' }),
     title: text('title').notNull(), // "Leading systemic change" not "Director"
+    organizationName: text('organization_name'),
+    organizationType: text('organization_type', {
+      enum: ['company', 'ngo', 'government', 'academic', 'network', 'other'],
+    }),
+    organizationIndustry: text('organization_industry'),
+    organizationEmployeeAmount: text('organization_employee_amount', {
+      enum: ['1-10', '11-50', '51-200', '201-500', '501-1000', '1001-5000', '5001+'],
+    }),
     orgDescription: text('org_description').notNull(), // Size, industry, location
     duration: text('duration').notNull(),
     startDate: date('start_date'),
     endDate: date('end_date'),
     outcomes: text('outcomes').notNull(), // Measurable outcomes
     projects: text('projects').notNull(), // Key projects and initiatives
+    measuredOutcomes: jsonb('measured_outcomes')
+      .default(sql`'[]'::jsonb`)
+      .notNull(),
+    projectEntries: jsonb('project_entries')
+      .default(sql`'[]'::jsonb`)
+      .notNull(),
     colleagues: text('colleagues').notNull(), // Collaboration and team context
     achievements: text('achievements').notNull(), // Notable achievements
     verified: boolean('verified').default(false),

@@ -76,7 +76,11 @@ function normalizeLegacyExportToV3(raw: any): UserDataImportV3 {
 
   const experiences = (raw?.workHistory?.experiences ?? []).map((experience: any) => ({
     type: experience?.type || 'work',
-    organization: experience?.organization || experience?.orgDescription || 'Unknown organization',
+    organization:
+      experience?.organization ||
+      experience?.organizationName ||
+      experience?.orgDescription ||
+      'Unknown organization',
     role: experience?.role || experience?.title || undefined,
     startDate: experience?.startDate || undefined,
     endDate: experience?.endDate || null,

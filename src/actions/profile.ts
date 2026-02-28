@@ -28,6 +28,11 @@ import { MATCHABILITY_STRONG_SKILLS_WITH_RECENCY } from '@/lib/matching/threshol
 import { sendEmail } from '@/lib/email/sender';
 import { resolveSiteUrlFromHeaders } from '@/lib/env';
 import { buildExperienceTimeline } from '@/lib/profile/experience-timeline';
+import {
+  EXPERIENCE_EMPLOYEE_AMOUNT_OPTIONS,
+  EXPERIENCE_ORGANIZATION_TYPE_OPTIONS,
+  EXPERIENCE_PARTICIPATION_CAPACITY_OPTIONS,
+} from '@/lib/profile/experience-options';
 import { isMissingColumnError } from '@/lib/db/schemaCompatibility';
 import {
   createIndividualDefaultPurposeLinks,
@@ -61,6 +66,8 @@ import type {
   ImpactStoryVerificationRequestInput,
   ImpactStoryVerificationRequestStatus,
   Experience,
+  ExperienceMeasuredOutcome,
+  ExperienceProjectEntry,
   Education as EducationType,
   Volunteering as VolunteeringType,
   FieldVisibility,
@@ -424,12 +431,18 @@ export async function getProfileData(): Promise<ProfileData> {
           .select({
             id: experiences.id,
             title: experiences.title,
+            organizationName: experiences.organizationName,
+            organizationType: experiences.organizationType,
+            organizationIndustry: experiences.organizationIndustry,
+            organizationEmployeeAmount: experiences.organizationEmployeeAmount,
             orgDescription: experiences.orgDescription,
             duration: experiences.duration,
             startDate: experiences.startDate,
             endDate: experiences.endDate,
             outcomes: experiences.outcomes,
             projects: experiences.projects,
+            measuredOutcomes: experiences.measuredOutcomes,
+            projectEntries: experiences.projectEntries,
             colleagues: experiences.colleagues,
             achievements: experiences.achievements,
             verified: experiences.verified,
@@ -559,12 +572,35 @@ export async function getProfileData(): Promise<ProfileData> {
       return {
         id: row.id,
         title: row.title,
+        organizationName:
+          typeof row.organizationName === 'string' && row.organizationName.trim().length > 0
+            ? row.organizationName.trim()
+            : null,
+        organizationType:
+          typeof row.organizationType === 'string' &&
+          Object.prototype.hasOwnProperty.call(
+            EXPERIENCE_ORGANIZATION_TYPE_LABELS,
+            row.organizationType
+          )
+            ? row.organizationType
+            : null,
+        organizationIndustry:
+          typeof row.organizationIndustry === 'string' && row.organizationIndustry.trim().length > 0
+            ? row.organizationIndustry.trim()
+            : null,
+        organizationEmployeeAmount:
+          typeof row.organizationEmployeeAmount === 'string' &&
+          row.organizationEmployeeAmount.trim().length > 0
+            ? row.organizationEmployeeAmount.trim()
+            : null,
         orgDescription: row.orgDescription,
         duration: timeline.duration,
         startDate: timeline.startDate,
         endDate: timeline.endDate,
         outcomes: row.outcomes,
         projects: row.projects,
+        measuredOutcomes: normalizeExperienceMeasuredOutcomes(row.measuredOutcomes),
+        projectEntries: normalizeExperienceProjectEntries(row.projectEntries),
         colleagues: row.colleagues,
         achievements: row.achievements,
         verified: row.verified,
@@ -805,6 +841,202 @@ type ImpactStoryVerificationRequestInternalResult = {
 const ACTIVE_IMPACT_VERIFICATION_STATUSES = ['pending', 'accepted'] as const;
 const DUPLICATE_IMPACT_VERIFICATION_WARNING =
   'An active verification request already exists for this verifier.';
+
+const EXPERIENCE_PARTICIPATION_LABELS: Record<string, string> =
+  EXPERIENCE_PARTICIPATION_CAPACITY_OPTIONS.reduce(
+    (acc, option) => ({ ...acc, [option.value]: option.label }),
+    {} as Record<string, string>
+  );
+
+const EXPERIENCE_ORGANIZATION_TYPE_LABELS: Record<string, string> =
+  EXPERIENCE_ORGANIZATION_TYPE_OPTIONS.reduce(
+    (acc, option) => ({ ...acc, [option.value]: option.label }),
+    {} as Record<string, string>
+  );
+
+const EXPERIENCE_EMPLOYEE_AMOUNT_SET = new Set(
+  EXPERIENCE_EMPLOYEE_AMOUNT_OPTIONS.map((option) => option.value)
+);
+
+function normalizeExperienceMeasuredOutcomes(value: unknown): ExperienceMeasuredOutcome[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  type NormalizedOutcomeRow = {
+    id: string;
+    name: string;
+    value: number | null;
+    unit: string | null;
+  };
+
+  const normalized: NormalizedOutcomeRow[] = value
+    .map((entry, index) => {
+      if (!entry || typeof entry !== 'object') {
+        return null;
+      }
+
+      const row = entry as Record<string, unknown>;
+      const name = typeof row.name === 'string' ? row.name.trim() : '';
+      if (!name) {
+        return null;
+      }
+
+      const rawValue = row.value;
+      const parsedValue =
+        rawValue === null || rawValue === undefined || String(rawValue).trim().length === 0
+          ? null
+          : Number(rawValue);
+
+      return {
+        id:
+          typeof row.id === 'string' && row.id.trim().length > 0
+            ? row.id.trim()
+            : `outcome-${index + 1}`,
+        name,
+        value: parsedValue !== null && Number.isFinite(parsedValue) ? parsedValue : null,
+        unit: typeof row.unit === 'string' && row.unit.trim().length > 0 ? row.unit.trim() : null,
+      };
+    })
+    .filter((entry): entry is NormalizedOutcomeRow => entry !== null);
+
+  return normalized;
+}
+
+function normalizeExperienceProjectEntries(value: unknown): ExperienceProjectEntry[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((entry, index) => {
+      if (!entry || typeof entry !== 'object') {
+        return null;
+      }
+
+      const row = entry as Record<string, unknown>;
+      const name = typeof row.name === 'string' ? row.name.trim() : '';
+      const duration = typeof row.duration === 'string' ? row.duration.trim() : '';
+      const participationCapacity =
+        typeof row.participationCapacity === 'string' &&
+        Object.prototype.hasOwnProperty.call(
+          EXPERIENCE_PARTICIPATION_LABELS,
+          row.participationCapacity
+        )
+          ? row.participationCapacity
+          : 'contributed';
+
+      if (!name || !duration) {
+        return null;
+      }
+
+      return {
+        id:
+          typeof row.id === 'string' && row.id.trim().length > 0
+            ? row.id.trim()
+            : `project-${index + 1}`,
+        name,
+        participationCapacity:
+          participationCapacity as ExperienceProjectEntry['participationCapacity'],
+        duration,
+      };
+    })
+    .filter((entry): entry is ExperienceProjectEntry => entry !== null);
+}
+
+function summarizeExperienceOutcomes(
+  measuredOutcomes: ExperienceMeasuredOutcome[] | null | undefined,
+  fallback: string
+) {
+  if (!Array.isArray(measuredOutcomes) || measuredOutcomes.length === 0) {
+    return fallback;
+  }
+
+  const summary = measuredOutcomes
+    .map((outcome) => {
+      const name = outcome.name?.trim();
+      if (!name) return null;
+
+      const hasValue =
+        outcome.value !== null &&
+        outcome.value !== undefined &&
+        String(outcome.value).trim().length > 0;
+
+      if (!hasValue) {
+        return name;
+      }
+
+      const value = String(outcome.value).trim();
+      const unitSuffix = outcome.unit?.trim() ? ` ${outcome.unit.trim()}` : '';
+      return `${name}: ${value}${unitSuffix}`;
+    })
+    .filter((entry): entry is string => Boolean(entry))
+    .join('; ');
+
+  return summary || fallback;
+}
+
+function summarizeExperienceProjects(
+  projectEntries: ExperienceProjectEntry[] | null | undefined,
+  fallback: string
+) {
+  if (!Array.isArray(projectEntries) || projectEntries.length === 0) {
+    return fallback;
+  }
+
+  const summary = projectEntries
+    .map((project) => {
+      const name = project.name?.trim();
+      const duration = project.duration?.trim();
+      if (!name || !duration) {
+        return null;
+      }
+
+      const participationLabel =
+        EXPERIENCE_PARTICIPATION_LABELS[project.participationCapacity] || 'Contributed';
+      return `${name} (${participationLabel}, ${duration})`;
+    })
+    .filter((entry): entry is string => Boolean(entry))
+    .join('; ');
+
+  return summary || fallback;
+}
+
+function buildPublicExperienceOrgDescription(data: {
+  organizationType?: string | null;
+  organizationIndustry?: string | null;
+  organizationEmployeeAmount?: string | null;
+  orgDescription?: string | null;
+}) {
+  const orgType =
+    typeof data.organizationType === 'string'
+      ? EXPERIENCE_ORGANIZATION_TYPE_LABELS[data.organizationType] || null
+      : null;
+  const organizationIndustry =
+    typeof data.organizationIndustry === 'string' ? data.organizationIndustry.trim() : '';
+  const employeeAmount =
+    typeof data.organizationEmployeeAmount === 'string'
+      ? data.organizationEmployeeAmount.trim()
+      : '';
+
+  const parts = [
+    orgType,
+    organizationIndustry || null,
+    employeeAmount ? `${employeeAmount} employees` : null,
+  ]
+    .filter((part): part is string => Boolean(part && part.trim().length > 0))
+    .map((part) => part.trim());
+
+  if (parts.length > 0) {
+    return parts.join(', ');
+  }
+
+  if (data.orgDescription?.trim()) {
+    return data.orgDescription.trim();
+  }
+
+  return 'Organization details not specified';
+}
 
 type ExistingImpactVerificationRow = {
   id: string;
@@ -1952,20 +2184,60 @@ export async function createExperience(data: Omit<Experience, 'id'>) {
     endDate: data.endDate,
     duration: data.duration,
   });
+  const normalizedMeasuredOutcomes = normalizeExperienceMeasuredOutcomes(data.measuredOutcomes);
+  const normalizedProjectEntries = normalizeExperienceProjectEntries(data.projectEntries);
+  const organizationType =
+    typeof data.organizationType === 'string' &&
+    Object.prototype.hasOwnProperty.call(EXPERIENCE_ORGANIZATION_TYPE_LABELS, data.organizationType)
+      ? data.organizationType
+      : null;
+  const organizationEmployeeAmount =
+    typeof data.organizationEmployeeAmount === 'string' &&
+    EXPERIENCE_EMPLOYEE_AMOUNT_SET.has(data.organizationEmployeeAmount as any)
+      ? data.organizationEmployeeAmount
+      : null;
+  const organizationIndustry =
+    typeof data.organizationIndustry === 'string' && data.organizationIndustry.trim().length > 0
+      ? data.organizationIndustry.trim()
+      : null;
+  const organizationName =
+    typeof data.organizationName === 'string' && data.organizationName.trim().length > 0
+      ? data.organizationName.trim()
+      : null;
+  const outcomesText = summarizeExperienceOutcomes(
+    normalizedMeasuredOutcomes,
+    (data.outcomes || '').trim() || 'Not specified'
+  );
+  const projectsText = summarizeExperienceProjects(
+    normalizedProjectEntries,
+    (data.projects || '').trim() || 'Not specified'
+  );
+  const publicOrgDescription = buildPublicExperienceOrgDescription({
+    organizationType,
+    organizationIndustry,
+    organizationEmployeeAmount,
+    orgDescription: data.orgDescription,
+  });
 
   const [inserted] = await db
     .insert(experiences)
     .values({
       userId: user.id,
       title: data.title,
-      orgDescription: data.orgDescription,
+      organizationName,
+      organizationType,
+      organizationIndustry,
+      organizationEmployeeAmount,
+      orgDescription: publicOrgDescription,
       duration: timeline.duration,
       startDate: timeline.startDate,
       endDate: timeline.endDate,
-      outcomes: data.outcomes,
-      projects: data.projects,
-      colleagues: data.colleagues,
-      achievements: data.achievements,
+      outcomes: outcomesText,
+      projects: projectsText,
+      measuredOutcomes: normalizedMeasuredOutcomes,
+      projectEntries: normalizedProjectEntries,
+      colleagues: data.colleagues || 'Not specified',
+      achievements: data.achievements || 'Not specified',
       verified: data.verified ?? false,
     })
     .returning();
@@ -1984,6 +2256,8 @@ export async function createExperience(data: Omit<Experience, 'id'>) {
     startDate: normalizedTimeline.startDate,
     endDate: normalizedTimeline.endDate,
     duration: normalizedTimeline.duration,
+    measuredOutcomes: normalizeExperienceMeasuredOutcomes((inserted as any).measuredOutcomes),
+    projectEntries: normalizeExperienceProjectEntries((inserted as any).projectEntries),
   };
 }
 
@@ -1994,19 +2268,85 @@ export async function updateExperience(id: string, data: Omit<Experience, 'id'>)
     endDate: data.endDate,
     duration: data.duration,
   });
+  const normalizedMeasuredOutcomes = normalizeExperienceMeasuredOutcomes(data.measuredOutcomes);
+  const normalizedProjectEntries = normalizeExperienceProjectEntries(data.projectEntries);
+  const hasOutcomeInput =
+    normalizedMeasuredOutcomes.length > 0 ||
+    (typeof data.outcomes === 'string' && data.outcomes.trim().length > 0);
+  const hasProjectInput =
+    normalizedProjectEntries.length > 0 ||
+    (typeof data.projects === 'string' && data.projects.trim().length > 0);
+
+  const organizationType =
+    typeof data.organizationType === 'string' &&
+    Object.prototype.hasOwnProperty.call(EXPERIENCE_ORGANIZATION_TYPE_LABELS, data.organizationType)
+      ? data.organizationType
+      : data.organizationType === null
+        ? null
+        : undefined;
+  const organizationEmployeeAmount =
+    typeof data.organizationEmployeeAmount === 'string' &&
+    EXPERIENCE_EMPLOYEE_AMOUNT_SET.has(data.organizationEmployeeAmount as any)
+      ? data.organizationEmployeeAmount
+      : data.organizationEmployeeAmount === null
+        ? null
+        : undefined;
+  const organizationIndustry =
+    typeof data.organizationIndustry === 'string'
+      ? data.organizationIndustry.trim() || null
+      : data.organizationIndustry === null
+        ? null
+        : undefined;
+  const organizationName =
+    typeof data.organizationName === 'string'
+      ? data.organizationName.trim() || null
+      : data.organizationName === null
+        ? null
+        : undefined;
+  const shouldUpdateOrgDescription =
+    data.orgDescription !== undefined ||
+    data.organizationType !== undefined ||
+    data.organizationIndustry !== undefined ||
+    data.organizationEmployeeAmount !== undefined;
+  const publicOrgDescription = shouldUpdateOrgDescription
+    ? buildPublicExperienceOrgDescription({
+        organizationType: organizationType === undefined ? null : organizationType,
+        organizationIndustry: organizationIndustry === undefined ? null : organizationIndustry,
+        organizationEmployeeAmount:
+          organizationEmployeeAmount === undefined ? null : organizationEmployeeAmount,
+        orgDescription: data.orgDescription,
+      })
+    : undefined;
 
   const [updated] = await db
     .update(experiences)
     .set({
       title: data.title,
-      orgDescription: data.orgDescription,
+      organizationName,
+      organizationType,
+      organizationIndustry,
+      organizationEmployeeAmount,
+      orgDescription: publicOrgDescription,
       duration: timeline.duration,
       startDate: timeline.startDate,
       endDate: timeline.endDate,
-      outcomes: data.outcomes,
-      projects: data.projects,
-      colleagues: data.colleagues,
-      achievements: data.achievements,
+      outcomes: hasOutcomeInput
+        ? summarizeExperienceOutcomes(
+            normalizedMeasuredOutcomes,
+            (data.outcomes || '').trim() || 'Not specified'
+          )
+        : undefined,
+      projects: hasProjectInput
+        ? summarizeExperienceProjects(
+            normalizedProjectEntries,
+            (data.projects || '').trim() || 'Not specified'
+          )
+        : undefined,
+      measuredOutcomes:
+        data.measuredOutcomes !== undefined ? normalizedMeasuredOutcomes : undefined,
+      projectEntries: data.projectEntries !== undefined ? normalizedProjectEntries : undefined,
+      colleagues: data.colleagues ?? undefined,
+      achievements: data.achievements ?? undefined,
       verified: data.verified ?? false,
     })
     .where(and(eq(experiences.id, id), eq(experiences.userId, user.id)))
@@ -2030,6 +2370,8 @@ export async function updateExperience(id: string, data: Omit<Experience, 'id'>)
     startDate: normalizedTimeline.startDate,
     endDate: normalizedTimeline.endDate,
     duration: normalizedTimeline.duration,
+    measuredOutcomes: normalizeExperienceMeasuredOutcomes((updated as any).measuredOutcomes),
+    projectEntries: normalizeExperienceProjectEntries((updated as any).projectEntries),
   };
 }
 

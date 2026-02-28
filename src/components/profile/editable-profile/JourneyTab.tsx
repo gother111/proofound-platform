@@ -5,17 +5,61 @@ import type { Experience } from '@/types/profile';
 import { Card } from '@/components/ui/card';
 import { TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Briefcase, CheckCircle2, FolderOpen, Pencil, Plus, Target, X } from 'lucide-react';
 import {
-  Briefcase,
-  CheckCircle2,
-  FolderOpen,
-  Pencil,
-  Plus,
-  Target,
-  Trophy,
-  Users,
-  X,
-} from 'lucide-react';
+  EXPERIENCE_PARTICIPATION_CAPACITY_OPTIONS,
+  type ExperienceParticipationCapacity,
+} from '@/lib/profile/experience-options';
+
+const participationLabels = EXPERIENCE_PARTICIPATION_CAPACITY_OPTIONS.reduce(
+  (acc, option) => ({ ...acc, [option.value]: option.label }),
+  {} as Record<ExperienceParticipationCapacity, string>
+);
+
+function renderOutcomeSummary(experience: Experience) {
+  if (experience.measuredOutcomes && experience.measuredOutcomes.length > 0) {
+    return (
+      <ul className="space-y-1">
+        {experience.measuredOutcomes.map((outcome) => {
+          const valueSuffix =
+            outcome.value !== null && outcome.value !== undefined
+              ? `: ${String(outcome.value)}${outcome.unit ? ` ${outcome.unit}` : ''}`
+              : '';
+
+          return (
+            <li key={outcome.id} className="text-sm">
+              <span className="font-medium">{outcome.name}</span>
+              <span className="text-muted-foreground">{valueSuffix}</span>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }
+
+  return <p className="text-sm">{experience.outcomes}</p>;
+}
+
+function renderProjectSummary(experience: Experience) {
+  if (experience.projectEntries && experience.projectEntries.length > 0) {
+    return (
+      <ul className="space-y-1">
+        {experience.projectEntries.map((project) => (
+          <li key={project.id} className="text-sm">
+            <span className="font-medium">{project.name}</span>
+            <span className="text-muted-foreground">
+              {' '}
+              ({participationLabels[project.participationCapacity] || 'Contributed'},{' '}
+              {project.duration})
+            </span>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
+  return <p className="text-sm">{experience.projects}</p>;
+}
 
 export interface JourneyTabProps {
   experiences: Experience[];
@@ -33,9 +77,7 @@ export function JourneyTab({
   return (
     <TabsContent value="journey" className="space-y-6">
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-muted-foreground">
-          My professional outcomes, projects, and achievements
-        </p>
+        <p className="text-sm text-muted-foreground">My professional outcomes and projects</p>
         {experiences.length > 0 && (
           <Button
             size="sm"
@@ -86,8 +128,7 @@ export function JourneyTab({
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">Map Your Journey</h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                Share your professional experiences with outcomes, key projects, collaboration
-                context, and achievements.
+                Share your professional experiences with measurable outcomes and project context.
               </p>
             </div>
             <Button
@@ -98,7 +139,7 @@ export function JourneyTab({
               Add Experience
             </Button>
             <div className="pt-4 text-xs text-muted-foreground">
-              <p>💡 Tip: Emphasize outcomes and teamwork over generic responsibility lists</p>
+              <p>Tip: Emphasize concrete outcomes and project participation</p>
             </div>
           </div>
         </Card>
@@ -140,6 +181,9 @@ export function JourneyTab({
                   <h4 className="text-lg font-display font-semibold">{exp.title}</h4>
                   {exp.verified && <CheckCircle2 className="w-4 h-4 text-[#7A9278]" />}
                 </div>
+                {exp.organizationName ? (
+                  <p className="text-sm text-foreground mb-1">{exp.organizationName}</p>
+                ) : null}
                 <p className="text-sm text-muted-foreground mb-1">{exp.orgDescription}</p>
                 <p className="text-xs text-muted-foreground mb-4">{exp.duration}</p>
                 <div className="space-y-3">
@@ -148,28 +192,14 @@ export function JourneyTab({
                       <Target className="w-3 h-3" />
                       Outcomes
                     </h5>
-                    <p className="text-sm">{exp.outcomes}</p>
+                    {renderOutcomeSummary(exp)}
                   </div>
                   <div>
                     <h5 className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
                       <FolderOpen className="w-3 h-3" />
                       Projects
                     </h5>
-                    <p className="text-sm">{exp.projects}</p>
-                  </div>
-                  <div>
-                    <h5 className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
-                      <Users className="w-3 h-3" />
-                      Colleagues
-                    </h5>
-                    <p className="text-sm">{exp.colleagues}</p>
-                  </div>
-                  <div>
-                    <h5 className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
-                      <Trophy className="w-3 h-3" />
-                      Achievements
-                    </h5>
-                    <p className="text-sm">{exp.achievements}</p>
+                    {renderProjectSummary(exp)}
                   </div>
                 </div>
               </div>
