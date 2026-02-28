@@ -244,14 +244,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Check if interview already exists for this match (only 1 per match).
-    const { data: existingInterview } = await supabase
+    // 2. Check if a non-cancelled interview already exists for this match.
+    const { data: interviewsForMatch, error: interviewsForMatchError } = await supabase
       .from('interviews')
-      .select('id')
+      .select('id, status')
       .eq('match_id', data.matchId)
-      .maybeSingle();
+      .limit(10);
 
-    if (existingInterview) {
+    let hasBlockingInterview = false;
+
+    if (interviewsForMatchError) {
+      if (!isMissingColumnError(interviewsForMatchError, 'status')) {
+        throw interviewsForMatchError;
+      }
+
+      // Legacy fallback when status is not present: preserve existing behavior.
+      const { data: legacyExistingInterview, error: legacyExistingInterviewError } = await supabase
+        .from('interviews')
+        .select('id')
+        .eq('match_id', data.matchId)
+        .maybeSingle();
+
+      if (legacyExistingInterviewError) {
+        throw legacyExistingInterviewError;
+      }
+
+      hasBlockingInterview = Boolean(legacyExistingInterview);
+    } else {
+      hasBlockingInterview = (interviewsForMatch ?? []).some(
+        (interview: { status?: string | null }) => interview.status !== 'cancelled'
+      );
+    }
+
+    if (hasBlockingInterview) {
       return NextResponse.json(
         { error: 'Interview already exists for this match' },
         { status: 400 }
