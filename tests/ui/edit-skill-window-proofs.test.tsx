@@ -445,4 +445,128 @@ describe('EditSkillWindow proof refresh behavior', () => {
 
     expect(payload.verifierEmail).toBe('mentor@example.com');
   });
+
+  it('deletes a pending verification request from edit flow', async () => {
+    const onSkillUpdated = vi.fn();
+
+    apiFetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (url.endsWith('/proofs') && !init?.method) {
+        return mockResponse({ proofs: [] });
+      }
+      if (url.endsWith('/verification-request') && !init?.method) {
+        return mockResponse({
+          requests: [
+            {
+              id: 'verification-1',
+              status: 'pending',
+              verifier_source: 'peer',
+              verifier_email: 'mentor@example.com',
+              message: 'Please verify this skill.',
+              created_at: '2026-02-26T00:00:00.000Z',
+            },
+          ],
+        });
+      }
+      if (url.endsWith('/verifications/sent/skill/verification-1') && init?.method === 'DELETE') {
+        return mockResponse({ success: true });
+      }
+      return mockResponse({});
+    });
+
+    render(
+      <EditSkillWindow
+        open
+        onOpenChange={vi.fn()}
+        skill={baseSkill}
+        onSkillUpdated={onSkillUpdated}
+        onSkillDeleted={vi.fn()}
+      />
+    );
+
+    await screen.findByText('mentor@example.com');
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Delete verification request for mentor@example.com',
+      })
+    );
+
+    await waitFor(() =>
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/api/expertise/verifications/sent/skill/verification-1',
+        expect.objectContaining({ method: 'DELETE' })
+      )
+    );
+
+    await waitFor(() => expect(onSkillUpdated).toHaveBeenCalledTimes(1));
+    expect(screen.queryByText('mentor@example.com')).not.toBeInTheDocument();
+  });
+
+  it('shows bundled request guidance when deleting a bundled verification request', async () => {
+    const onSkillUpdated = vi.fn();
+
+    apiFetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (url.endsWith('/proofs') && !init?.method) {
+        return mockResponse({ proofs: [] });
+      }
+      if (url.endsWith('/verification-request') && !init?.method) {
+        return mockResponse({
+          requests: [
+            {
+              id: 'verification-2',
+              status: 'pending',
+              verifier_source: 'peer',
+              verifier_email: 'bundle@example.com',
+              custom_request_id: 'bundle-1',
+              message: 'Bundled verification',
+              created_at: '2026-02-26T00:00:00.000Z',
+            },
+          ],
+        });
+      }
+      if (url.endsWith('/verifications/sent/skill/verification-2') && init?.method === 'DELETE') {
+        return mockResponse(
+          {
+            code: 'BUNDLED_REQUEST',
+            error: 'This verification request belongs to a bundled request.',
+          },
+          409
+        );
+      }
+      return mockResponse({});
+    });
+
+    render(
+      <EditSkillWindow
+        open
+        onOpenChange={vi.fn()}
+        skill={baseSkill}
+        onSkillUpdated={onSkillUpdated}
+        onSkillDeleted={vi.fn()}
+      />
+    );
+
+    await screen.findByText('bundle@example.com');
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Delete verification request for bundle@example.com',
+      })
+    );
+
+    await waitFor(() =>
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/api/expertise/verifications/sent/skill/verification-2',
+        expect.objectContaining({ method: 'DELETE' })
+      )
+    );
+
+    await waitFor(() =>
+      expect(toastMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Bundled verification request',
+          variant: 'destructive',
+        })
+      )
+    );
+    expect(onSkillUpdated).not.toHaveBeenCalled();
+  });
 });

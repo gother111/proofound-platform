@@ -1,4 +1,4 @@
-import { CheckCircle2, Loader2 } from 'lucide-react';
+import { CheckCircle2, Loader2, Trash2 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,9 @@ type VerificationSectionProps = {
   newVerificationRequest: VerificationDraft;
   setNewVerificationRequest: (request: VerificationDraft) => void;
   requestingVerification: boolean;
+  deletingVerificationId: string | null;
   onRequestVerification: () => void;
+  onDeleteVerificationRequest: (request: VerificationRequest) => void;
 };
 
 export function VerificationSection({
@@ -28,7 +30,9 @@ export function VerificationSection({
   newVerificationRequest,
   setNewVerificationRequest,
   requestingVerification,
+  deletingVerificationId,
   onRequestVerification,
+  onDeleteVerificationRequest,
 }: VerificationSectionProps) {
   return (
     <div>
@@ -178,6 +182,19 @@ export function VerificationSection({
                     </p>
                   )}
                 </div>
+                {request.status === 'pending' && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onDeleteVerificationRequest(request)}
+                    disabled={deletingVerificationId === request.id}
+                    aria-label={`Delete verification request for ${request.verifier_email}`}
+                    className="text-[#C76B4A] hover:text-[#8B4A36] hover:bg-[#FFF0F0]"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </Card>
           ))}

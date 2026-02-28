@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 type SkillVerificationRecord = {
   id: string;
   skill_id: string;
+  custom_request_id?: string | null;
   requester_profile_id: string;
   verifier_email: string;
   verifier_source: 'peer' | 'manager' | 'external';
@@ -72,6 +73,7 @@ type UnifiedVerificationRecord = {
   request_type: 'skill' | 'impact_story';
   id: string;
   skill_id?: string;
+  custom_request_id?: string | null;
   impact_story_id?: string;
   impact_story_title?: string | null;
   requester_profile_id: string;
@@ -94,6 +96,7 @@ function mapSkillRequestToUnified(request: SkillVerificationRecord): UnifiedVeri
     request_type: 'skill',
     id: request.id,
     skill_id: request.skill_id,
+    custom_request_id: request.custom_request_id || null,
     requester_profile_id: request.requester_profile_id,
     verifier_email: request.verifier_email,
     verifier_source: request.verifier_source,
@@ -147,6 +150,7 @@ export default async function VerificationsPage() {
   const verificationSelect = `
     id,
     skill_id,
+    custom_request_id,
     requester_profile_id,
     verifier_email,
     verifier_source,

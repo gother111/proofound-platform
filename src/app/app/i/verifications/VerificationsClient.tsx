@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   ShieldCheck,
   Clock,
@@ -12,19 +13,24 @@ import {
   ExternalLink,
   Mail,
   Send,
+  Trash2,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
+import { apiFetch } from '@/lib/api/fetch';
+import { toast } from 'sonner';
 import { RespondDialog } from './components/RespondDialog';
 import { CustomVerificationRequestDialog } from './components/CustomVerificationRequestDialog';
+import { BundleCancelDialog } from './components/BundleCancelDialog';
 
 interface VerificationRequest {
   request_type: 'skill' | 'impact_story';
   id: string;
   skill_id?: string;
+  custom_request_id?: string | null;
   impact_story_id?: string;
   impact_story_title?: string | null;
   requester_profile_id: string;
@@ -69,6 +75,12 @@ interface VerificationsClientProps {
   userEmail: string;
 }
 
+type DeleteSentRequestResponse = {
+  error?: string;
+  code?: string;
+  customRequestId?: string;
+};
+
 type RequestStatusFilter = 'pending' | 'accepted' | 'declined' | 'all';
 
 const STATUS_FILTERS: RequestStatusFilter[] = ['pending', 'accepted', 'declined', 'all'];
@@ -87,12 +99,16 @@ export function VerificationsClient({
   incomingRequests: initialIncomingRequests,
   sentRequests: initialSentRequests,
 }: VerificationsClientProps) {
+  const router = useRouter();
   const [incomingRequests, setIncomingRequests] = useState(initialIncomingRequests);
-  const [sentRequests] = useState(initialSentRequests);
+  const [sentRequests, setSentRequests] = useState(initialSentRequests);
   const [selectedRequest, setSelectedRequest] = useState<VerificationRequest | null>(null);
   const [respondDialogOpen, setRespondDialogOpen] = useState(false);
   const [respondAction, setRespondAction] = useState<'accept' | 'decline'>('accept');
   const [customDialogOpen, setCustomDialogOpen] = useState(false);
+  const [bundleDialogOpen, setBundleDialogOpen] = useState(false);
+  const [bundleRequestId, setBundleRequestId] = useState<string | null>(null);
+  const [deletingRequestIds, setDeletingRequestIds] = useState<Record<string, boolean>>({});
 
   const handleRespond = (request: VerificationRequest, action: 'accept' | 'decline') => {
     setSelectedRequest(request);
@@ -110,6 +126,83 @@ export function VerificationsClient({
     );
     setRespondDialogOpen(false);
     setSelectedRequest(null);
+  };
+
+  const canDeleteSentRequest = (request: VerificationRequest) => {
+    if (request.request_type === 'skill') {
+      return request.status === 'pending';
+    }
+
+    return request.status === 'pending' || request.status === 'failed';
+  };
+
+  const openBundleCancelDialog = (customRequestId: string) => {
+    setBundleRequestId(customRequestId);
+    setBundleDialogOpen(true);
+  };
+
+  const handleBundleItemsCanceled = (removedSkillRequestIds: string[]) => {
+    if (removedSkillRequestIds.length > 0) {
+      const removedSet = new Set(removedSkillRequestIds);
+      setSentRequests((prev) => prev.filter((item) => !removedSet.has(item.id)));
+    }
+  };
+
+  const handleBundleDialogOpenChange = (open: boolean) => {
+    setBundleDialogOpen(open);
+    if (!open) {
+      setBundleRequestId(null);
+    }
+  };
+
+  const handleDeleteSentRequest = async (request: VerificationRequest) => {
+    if (!canDeleteSentRequest(request)) {
+      return;
+    }
+
+    if (request.request_type === 'skill' && request.custom_request_id) {
+      openBundleCancelDialog(request.custom_request_id);
+      return;
+    }
+
+    setDeletingRequestIds((prev) => ({ ...prev, [request.id]: true }));
+    try {
+      const response = await apiFetch(
+        `/api/expertise/verifications/sent/${request.request_type}/${request.id}`,
+        {
+          method: 'DELETE',
+        }
+      );
+
+      let body: DeleteSentRequestResponse = {};
+      try {
+        body = (await response.json()) as DeleteSentRequestResponse;
+      } catch {
+        body = {};
+      }
+
+      if (response.ok) {
+        setSentRequests((prev) => prev.filter((item) => item.id !== request.id));
+        toast.success('Verification request deleted.');
+        return;
+      }
+
+      if (response.status === 409 && body.code === 'BUNDLED_REQUEST' && body.customRequestId) {
+        openBundleCancelDialog(body.customRequestId);
+        return;
+      }
+
+      toast.error(body.error || 'Failed to delete verification request.');
+    } catch (error) {
+      console.error('Failed to delete sent verification request:', error);
+      toast.error('Failed to delete verification request.');
+    } finally {
+      setDeletingRequestIds((prev) => {
+        const next = { ...prev };
+        delete next[request.id];
+        return next;
+      });
+    }
   };
 
   const getSkillName = (request: VerificationRequest): string => {
@@ -473,10 +566,31 @@ export function VerificationsClient({
         </div>
       )}
 
-      <p className="text-xs" style={{ color: '#6B7470' }}>
-        Sent {formatDate(request.created_at)}
-        {request.responded_at && ` • Responded ${formatDate(request.responded_at)}`}
-      </p>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs" style={{ color: '#6B7470' }}>
+          Sent {formatDate(request.created_at)}
+          {request.responded_at && ` • Responded ${formatDate(request.responded_at)}`}
+        </p>
+        {canDeleteSentRequest(request) && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              void handleDeleteSentRequest(request);
+            }}
+            disabled={Boolean(deletingRequestIds[request.id])}
+            className="border-[#C76B4A] text-[#8B4A36] hover:bg-[#FFF0F0]"
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            {deletingRequestIds[request.id]
+              ? 'Deleting...'
+              : request.request_type === 'skill' && request.custom_request_id
+                ? 'Manage Bundle'
+                : 'Delete'}
+          </Button>
+        )}
+      </div>
     </Card>
   );
 
@@ -613,7 +727,19 @@ export function VerificationsClient({
           getCompetencyLabel={getCompetencyLabel}
         />
       )}
-      <CustomVerificationRequestDialog open={customDialogOpen} onOpenChange={setCustomDialogOpen} />
+      <CustomVerificationRequestDialog
+        open={customDialogOpen}
+        onOpenChange={setCustomDialogOpen}
+        onCreated={() => {
+          router.refresh();
+        }}
+      />
+      <BundleCancelDialog
+        open={bundleDialogOpen}
+        onOpenChange={handleBundleDialogOpenChange}
+        requestId={bundleRequestId}
+        onCanceled={handleBundleItemsCanceled}
+      />
     </AppSurface>
   );
 }

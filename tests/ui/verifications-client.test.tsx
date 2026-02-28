@@ -1,7 +1,53 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ComponentProps } from 'react';
+
 import { VerificationsClient } from '@/app/app/i/verifications/VerificationsClient';
+
+const { refreshMock, apiFetchMock, bundleDialogSpy } = vi.hoisted(() => ({
+  refreshMock: vi.fn(),
+  apiFetchMock: vi.fn(),
+  bundleDialogSpy: vi.fn(),
+}));
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    refresh: refreshMock,
+  }),
+}));
+
+vi.mock('@/lib/api/fetch', () => ({
+  apiFetch: (...args: any[]) => apiFetchMock(...args),
+}));
+
+vi.mock('sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+vi.mock('@/app/app/i/verifications/components/CustomVerificationRequestDialog', () => ({
+  CustomVerificationRequestDialog: ({
+    onCreated,
+  }: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    onCreated?: () => void;
+  }) => <button onClick={() => onCreated?.()}>Trigger custom request created</button>,
+}));
+
+vi.mock('@/app/app/i/verifications/components/BundleCancelDialog', () => ({
+  BundleCancelDialog: (props: {
+    open: boolean;
+    requestId: string | null;
+    onOpenChange: (open: boolean) => void;
+    onCanceled: (removedSkillRequestIds: string[]) => void;
+  }) => {
+    bundleDialogSpy(props);
+    return props.open ? <div data-testid="bundle-dialog-open">{props.requestId}</div> : null;
+  },
+}));
 
 type VerificationRequest = ComponentProps<typeof VerificationsClient>['incomingRequests'][number];
 
@@ -30,6 +76,14 @@ function makeRequest(overrides: Partial<VerificationRequest> = {}): Verification
 }
 
 describe('VerificationsClient', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    apiFetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true }),
+    });
+  });
+
   it('renders incoming and sent requests in separate top-level tabs', () => {
     const incomingRequests = [
       makeRequest({ id: 'incoming-pending', status: 'pending' }),
@@ -114,5 +168,80 @@ describe('VerificationsClient', () => {
     expect(screen.queryByRole('button', { name: /accept/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /decline/i })).not.toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /^Sent/i })).toBeInTheDocument();
+  });
+
+  it('refreshes the page after custom verification request creation', () => {
+    render(
+      <VerificationsClient incomingRequests={[]} sentRequests={[]} userEmail="me@proofound.io" />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Trigger custom request created' }));
+
+    expect(refreshMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('deletes a non-bundled pending sent request', async () => {
+    const sentRequests = [
+      makeRequest({
+        id: 'sent-delete-1',
+        verifier_email: 'mentor@company.com',
+        status: 'pending',
+      }),
+    ];
+
+    render(
+      <VerificationsClient
+        incomingRequests={[]}
+        sentRequests={sentRequests}
+        userEmail="me@proofound.io"
+      />
+    );
+
+    const sentTab = screen.getByRole('tab', { name: /^Sent/i });
+    fireEvent.mouseDown(sentTab);
+    fireEvent.click(sentTab);
+    fireEvent.keyDown(sentTab, { key: 'Enter' });
+    await waitFor(() => expect(screen.getByText('mentor@company.com')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+
+    await waitFor(() =>
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/api/expertise/verifications/sent/skill/sent-delete-1',
+        expect.objectContaining({ method: 'DELETE' })
+      )
+    );
+
+    await waitFor(() => {
+      expect(screen.queryByText('mentor@company.com')).not.toBeInTheDocument();
+    });
+  });
+
+  it('opens bundle cancellation dialog for bundled pending sent skill request', async () => {
+    const sentRequests = [
+      makeRequest({
+        id: 'sent-bundle-1',
+        verifier_email: 'bundle@company.com',
+        status: 'pending',
+        custom_request_id: 'bundle-request-1',
+      }),
+    ];
+
+    render(
+      <VerificationsClient
+        incomingRequests={[]}
+        sentRequests={sentRequests}
+        userEmail="me@proofound.io"
+      />
+    );
+
+    const sentTab = screen.getByRole('tab', { name: /^Sent/i });
+    fireEvent.mouseDown(sentTab);
+    fireEvent.click(sentTab);
+    fireEvent.keyDown(sentTab, { key: 'Enter' });
+    await waitFor(() => expect(screen.getByText('bundle@company.com')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Manage Bundle' }));
+
+    expect(screen.getByTestId('bundle-dialog-open')).toHaveTextContent('bundle-request-1');
+    expect(apiFetchMock).not.toHaveBeenCalled();
   });
 });

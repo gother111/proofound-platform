@@ -28,9 +28,10 @@ export type VerificationDraft = {
 
 export type VerificationRequest = {
   id: string;
-  status: 'pending' | 'accepted' | 'declined';
+  status: 'pending' | 'accepted' | 'declined' | 'expired' | 'failed';
   verifier_source: 'peer' | 'manager' | 'external';
   verifier_email: string;
+  custom_request_id?: string | null;
   message?: string;
   created_at: string;
   responded_at?: string;

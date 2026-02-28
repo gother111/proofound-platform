@@ -104,6 +104,11 @@ type SkillRecord = {
   };
 };
 
+type DeleteVerificationResponse = {
+  error?: string;
+  code?: string;
+};
+
 interface EditSkillWindowProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -151,6 +156,7 @@ export function EditSkillWindow({
   const [loadingVerifications, setLoadingVerifications] = useState(false);
   const [showRequestVerification, setShowRequestVerification] = useState(false);
   const [requestingVerification, setRequestingVerification] = useState(false);
+  const [deletingVerificationId, setDeletingVerificationId] = useState<string | null>(null);
   const [newVerificationRequest, setNewVerificationRequest] = useState<VerificationDraft>({
     verifierEmail: '',
     verifierSource: 'peer',
@@ -527,6 +533,62 @@ export function EditSkillWindow({
     }
   };
 
+  const handleDeleteVerificationRequest = async (verificationRequest: VerificationRequest) => {
+    setDeletingVerificationId(verificationRequest.id);
+    try {
+      const response = await apiFetch(
+        `/api/expertise/verifications/sent/skill/${verificationRequest.id}`,
+        {
+          method: 'DELETE',
+        }
+      );
+
+      let body: DeleteVerificationResponse = {};
+      try {
+        body = (await response.json()) as DeleteVerificationResponse;
+      } catch {
+        body = {};
+      }
+
+      if (response.ok) {
+        setVerificationRequests((current) =>
+          current.filter((request) => request.id !== verificationRequest.id)
+        );
+        toast({
+          title: 'Verification Request Removed',
+          description: 'The pending verification request has been deleted.',
+        });
+        onSkillUpdated();
+        return;
+      }
+
+      if (response.status === 409 && body.code === 'BUNDLED_REQUEST') {
+        toast({
+          title: 'Bundled verification request',
+          description:
+            'This request is part of a bundle. Open Verification Requests to cancel specific artifacts.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      toast({
+        title: 'Error',
+        description: body.error || 'Failed to delete verification request. Please try again.',
+        variant: 'destructive',
+      });
+    } catch (error) {
+      console.error('Error deleting verification request:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete verification request. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeletingVerificationId(null);
+    }
+  };
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -624,7 +686,9 @@ export function EditSkillWindow({
                 newVerificationRequest={newVerificationRequest}
                 setNewVerificationRequest={setNewVerificationRequest}
                 requestingVerification={requestingVerification}
+                deletingVerificationId={deletingVerificationId}
                 onRequestVerification={handleRequestVerification}
+                onDeleteVerificationRequest={handleDeleteVerificationRequest}
               />
             </div>
 
