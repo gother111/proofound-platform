@@ -101,6 +101,14 @@ Notes:
   - Unset `LINKEDIN_REDIRECT_URI`: defaults to `<current-origin>/api/auth/linkedin/callback` (recommended for prod + demo domain support).
 - Callbacks validate an httpOnly state cookie set during connect (`zoom_oauth_state`, `google_oauth_state`). If the cookie is missing (for example, using a different domain, or blocked cookies), the callback will fail.
 
+Google `403 access_denied` ("app not verified") quick response:
+
+1. Check Google OAuth consent screen status (`Testing` vs `In production`) in Google Cloud Console.
+2. If in `Testing`, add the affected account under OAuth **Test users** and retry.
+3. If in `In production`, confirm whether configured Calendar scopes require verification and complete Google app verification requirements.
+4. Re-test from `/app/i/settings?tab=integrations` with **Connect Google Calendar**.
+5. If still failing, capture callback query details (`error`, `error_description`, `error_subtype`) for logs and triage.
+
 Strict provider E2E deterministic account:
 
 - `E2E_PROVIDER_USER_ID`, `E2E_PROVIDER_USER_EMAIL`, `E2E_PROVIDER_USER_PASSWORD`

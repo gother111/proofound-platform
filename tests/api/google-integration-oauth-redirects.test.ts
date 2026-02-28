@@ -129,4 +129,42 @@ describe('google integration oauth redirect resolution', () => {
     expect(setCookieHeader).toContain('google_oauth_state=');
     expect(setCookieHeader).toContain('Max-Age=0');
   });
+
+  it('returns actionable guidance for unverified-app 403 access_denied callback errors', async () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
+    process.env.GOOGLE_REDIRECT_URI = '/api/integrations/google/callback';
+
+    const response = await googleCallbackGet(
+      new NextRequest(
+        'https://preview.proofound.io/api/integrations/google/callback?error=access_denied&error_description=Access%20blocked%3A%20proofound.io%20has%20not%20completed%20the%20Google%20verification%20process&error_subtype=app_not_verified'
+      )
+    );
+
+    const body = await response.text();
+    const setCookieHeader = response.headers.get('set-cookie') || '';
+
+    expect(response.status).toBe(200);
+    expect(body).toContain('has+not+completed+Google+verification');
+    expect(exchangeGoogleCodeMock).not.toHaveBeenCalled();
+    expect(dbExecuteMock).not.toHaveBeenCalled();
+    expect(setCookieHeader).toContain('google_oauth_state=');
+    expect(setCookieHeader).toContain('Max-Age=0');
+  });
+
+  it('keeps generic OAuth error messaging for non-verification denial cases', async () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
+    process.env.GOOGLE_REDIRECT_URI = '/api/integrations/google/callback';
+
+    const response = await googleCallbackGet(
+      new NextRequest(
+        'https://preview.proofound.io/api/integrations/google/callback?error=access_denied&error_description=The%20resource%20owner%20or%20authorization%20server%20denied%20the%20request'
+      )
+    );
+
+    const body = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(body).toContain('authorization+server+denied+the+request');
+    expect(body).not.toContain('has+not+completed+Google+verification');
+  });
 });

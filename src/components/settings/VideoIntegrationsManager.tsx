@@ -22,6 +22,29 @@ interface VideoIntegrationsManagerProps {
 }
 
 const SETTINGS_TAB_PATH = '/app/i/settings?tab=integrations';
+const GOOGLE_VERIFICATION_HELP =
+  'Google blocked access because the Proofound app is not verified for your account. Ask an admin to add your Google account as a test user (Testing mode) or complete Google app verification (Production mode), then try again.';
+
+function isGoogleVerificationDenied(error?: string | null, message?: string | null): boolean {
+  const combined = `${error || ''} ${message || ''}`.toLowerCase();
+  return (
+    combined.includes('access_denied') &&
+    (combined.includes('has not completed the google verification process') ||
+      combined.includes('app not verified') ||
+      combined.includes('verification process') ||
+      combined.includes('unverified') ||
+      combined.includes('sensitive') ||
+      combined.includes('restricted'))
+  );
+}
+
+function getOAuthErrorToastMessage(error?: string | null, message?: string | null): string {
+  if (isGoogleVerificationDenied(error, message)) {
+    return GOOGLE_VERIFICATION_HELP;
+  }
+
+  return `Connection failed: ${message || error || 'Unknown error'}`;
+}
 
 export function VideoIntegrationsManager({
   variant = 'inline',
@@ -49,7 +72,7 @@ export function VideoIntegrationsManager({
       toast.success('Google Meet connected successfully');
       window.history.replaceState({}, '', cleanupPath);
     } else if (error) {
-      toast.error(`Connection failed: ${message || error}`);
+      toast.error(getOAuthErrorToastMessage(error, message));
       window.history.replaceState({}, '', cleanupPath);
     }
   }, [searchParams, cleanupPath]);
@@ -260,6 +283,12 @@ export function VideoIntegrationsManager({
                     a manual meeting link.
                   </p>
                 </div>
+              </div>
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-xs text-blue-900">
+                  If Google shows "Access blocked" with "Error 403: access_denied", an admin must
+                  add your Google account as a test user or complete Google app verification.
+                </p>
               </div>
               <Button
                 onClick={() => handleConnect('google')}

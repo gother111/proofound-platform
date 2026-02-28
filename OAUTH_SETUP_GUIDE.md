@@ -270,6 +270,24 @@ Primary paths used by the app:
 - Missing required scopes
 - Test user not added (in development)
 
+**Google: "Access blocked: proofound.io has not completed the Google verification process" (403 `access_denied`)**
+
+Operator checklist:
+
+1. OAuth consent screen publishing status
+   - In Google Cloud Console, open **APIs & Services -> OAuth consent screen**.
+   - Confirm whether app is in **Testing** or **In production**.
+2. If consent screen is in Testing mode
+   - Add every affected Google account under **Test users**.
+   - Save changes and retry OAuth with one of those test users.
+3. If consent screen is in Production mode
+   - Verify whether your configured scopes (especially Calendar scopes) require Google app verification.
+   - Complete verification requirements in Google Cloud Console before expecting broad account access.
+4. Re-test flow
+   - Retry from `/app/i/settings?tab=integrations` -> **Connect Google Calendar**.
+   - Confirm callback returns to Proofound with `success=google_connected`.
+   - If it still fails, capture the full `error`, `error_description`, and `error_subtype` query params for diagnostics.
+
 **Token Expired Errors**
 
 - Implement token refresh logic

@@ -101,4 +101,12 @@ describe('IntegrationsClient', () => {
       })
     );
   });
+
+  it('renders Google verification troubleshooting guidance when Google is disconnected', async () => {
+    render(<IntegrationsClient />);
+
+    expect(
+      await screen.findByText(/if google shows "access blocked" with "error 403: access_denied"/i)
+    ).toBeInTheDocument();
+  });
 });

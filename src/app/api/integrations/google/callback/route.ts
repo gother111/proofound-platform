@@ -17,6 +17,54 @@ import {
   resolveOAuthRedirectUri,
 } from '@/lib/integrations/oauth-helpers';
 
+const GOOGLE_VERIFICATION_BLOCKED_MESSAGE =
+  'Google blocked access because the Proofound app has not completed Google verification. Ask an admin to add your Google account as a test user (Testing mode) or complete Google app verification (Production mode), then try again.';
+
+function truncateForLog(value: string | null, maxLength = 240): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const normalized = value.replace(/\s+/g, ' ').trim();
+  if (!normalized) {
+    return undefined;
+  }
+
+  return normalized.slice(0, maxLength);
+}
+
+function normalizeGoogleOAuthError(searchParams: URLSearchParams): {
+  code: string;
+  description: string | null;
+  subtype: string | null;
+  message: string;
+  verificationBlocked: boolean;
+} {
+  const code = searchParams.get('error')?.trim() || 'oauth_error';
+  const description = searchParams.get('error_description')?.trim() || null;
+  const subtype = searchParams.get('error_subtype')?.trim() || null;
+
+  const combined = `${code} ${description || ''} ${subtype || ''}`.toLowerCase();
+  const verificationBlocked =
+    code.toLowerCase() === 'access_denied' &&
+    (combined.includes('has not completed the google verification process') ||
+      combined.includes('app not verified') ||
+      combined.includes('verification process') ||
+      combined.includes('unverified app') ||
+      combined.includes('sensitive') ||
+      combined.includes('restricted'));
+
+  return {
+    code,
+    description,
+    subtype,
+    verificationBlocked,
+    message: verificationBlocked
+      ? GOOGLE_VERIFICATION_BLOCKED_MESSAGE
+      : description || subtype || code || 'OAuth authorization was denied.',
+  };
+}
+
 export async function GET(request: NextRequest) {
   const redirectBasePath = resolveIntegrationReturnPath(
     request.cookies.get('google_oauth_return_to')?.value
@@ -53,10 +101,16 @@ export async function GET(request: NextRequest) {
 
     // Check for OAuth error
     if (error) {
-      log.warn('google.oauth.error', { error });
+      const oauthError = normalizeGoogleOAuthError(searchParams);
+      log.warn('google.oauth.error', {
+        error: oauthError.code,
+        errorDescription: truncateForLog(oauthError.description),
+        errorSubtype: truncateForLog(oauthError.subtype),
+        verificationBlocked: oauthError.verificationBlocked,
+      });
       return buildHtmlResponse({
         error: 'google_auth_failed',
-        message: error,
+        message: oauthError.message,
         defaultType: 'google_oauth',
       });
     }
