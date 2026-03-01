@@ -36,6 +36,7 @@ interface TeamRolesCardProps {
   orgSlug?: string;
   orgId?: string;
   canManageSettings?: boolean;
+  initialData?: any;
   onVisibilityChange?: (visible: boolean) => void;
 }
 
@@ -81,16 +82,27 @@ export function TeamRolesCard({
   orgSlug,
   orgId,
   canManageSettings = false,
+  initialData,
   onVisibilityChange,
 }: TeamRolesCardProps) {
-  const [members, setMembers] = useState<TeamMember[]>([]);
-  const [stats, setStats] = useState<TeamStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [members, setMembers] = useState<TeamMember[]>(() => {
+    if (initialData?.members) return initialData.members.slice(0, 5);
+    return [];
+  });
+  const [stats, setStats] = useState<TeamStats | null>(initialData?.stats || null);
+  const [isLoading, setIsLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
 
   // Fetch team members from API
   useEffect(() => {
+    if (initialData) {
+      setMembers((initialData.members || []).slice(0, 5));
+      setStats(initialData.stats);
+      setIsLoading(false);
+      return;
+    }
+
     async function fetchTeam() {
       if (!orgId) {
         setIsLoading(false);
@@ -119,7 +131,7 @@ export function TeamRolesCard({
     }
 
     fetchTeam();
-  }, [orgId]);
+  }, [orgId, initialData]);
 
   useEffect(() => {
     if (isLoading) return;

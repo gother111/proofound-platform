@@ -21,6 +21,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MatchResultCard } from './MatchResultCard';
@@ -84,6 +93,7 @@ export function MatchingOrganizationView({
   const [testInviteEmail, setTestInviteEmail] = useState('');
   const [testInviteAssignmentId, setTestInviteAssignmentId] = useState(assignments[0]?.id || '');
   const [isSubmittingTestInvite, setIsSubmittingTestInvite] = useState(false);
+  const isDesktop = useMediaQuery('(min-width: 768px)');
 
   const currentAssignment = assignments.find((a) => a.id === selectedAssignment);
   const currentOrgId = currentAssignment?.orgId || assignments[0]?.orgId || null;
@@ -262,6 +272,90 @@ export function MatchingOrganizationView({
     } finally {
       setIsSubmittingTestInvite(false);
     }
+  };
+
+  const InitiateTestModalContentBody = () => (
+    <div className="px-4 md:px-0">
+      <DialogHeader className="md:px-0 text-left">
+        <DialogTitle>Initiate test</DialogTitle>
+        <DialogDescription>
+          Invite a tester candidate by email. Once they accept, a Test match is created.
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="space-y-4 py-4">
+        <div className="space-y-2">
+          <Label htmlFor="test-assignment">Assignment</Label>
+          <Select value={testInviteAssignmentId} onValueChange={setTestInviteAssignmentId}>
+            <SelectTrigger id="test-assignment">
+              <SelectValue placeholder="Choose assignment" />
+            </SelectTrigger>
+            <SelectContent>
+              {assignments.map((assignment) => (
+                <SelectItem key={assignment.id} value={assignment.id}>
+                  {assignment.role || 'Untitled assignment'}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="tester-email">Tester email</Label>
+          <Input
+            id="tester-email"
+            type="email"
+            placeholder="tester@example.com"
+            value={testInviteEmail}
+            onChange={(event) => setTestInviteEmail(event.target.value)}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  const InitiateTestModalFooter = () => (
+    <div className="px-4 md:px-0 pb-4 md:pb-0">
+      <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+        <Button
+          variant="outline"
+          onClick={() => setIsInitiateTestOpen(false)}
+          className="w-full sm:w-auto"
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={handleInitiateTest}
+          disabled={isSubmittingTestInvite}
+          className="w-full sm:w-auto"
+        >
+          {isSubmittingTestInvite ? 'Sending...' : 'Send invite'}
+        </Button>
+      </DialogFooter>
+    </div>
+  );
+
+  const renderInitiateTestModal = () => {
+    if (isDesktop) {
+      return (
+        <Dialog open={isInitiateTestOpen} onOpenChange={setIsInitiateTestOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <InitiateTestModalContentBody />
+            <InitiateTestModalFooter />
+          </DialogContent>
+        </Dialog>
+      );
+    }
+    return (
+      <Drawer open={isInitiateTestOpen} onOpenChange={setIsInitiateTestOpen}>
+        <DrawerContent>
+          <div className="mx-auto w-full max-w-sm overflow-y-auto pb-6">
+            <InitiateTestModalContentBody />
+            <InitiateTestModalFooter />
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
   };
 
   if (assignments.length === 0) {
@@ -479,54 +573,7 @@ export function MatchingOrganizationView({
         </div>
       </div>
 
-      <Dialog open={isInitiateTestOpen} onOpenChange={setIsInitiateTestOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Initiate test</DialogTitle>
-            <DialogDescription>
-              Invite a tester candidate by email. Once they accept, a Test match is created.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label htmlFor="test-assignment">Assignment</Label>
-              <Select value={testInviteAssignmentId} onValueChange={setTestInviteAssignmentId}>
-                <SelectTrigger id="test-assignment">
-                  <SelectValue placeholder="Choose assignment" />
-                </SelectTrigger>
-                <SelectContent>
-                  {assignments.map((assignment) => (
-                    <SelectItem key={assignment.id} value={assignment.id}>
-                      {assignment.role || 'Untitled assignment'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="tester-email">Tester email</Label>
-              <Input
-                id="tester-email"
-                type="email"
-                placeholder="tester@example.com"
-                value={testInviteEmail}
-                onChange={(event) => setTestInviteEmail(event.target.value)}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsInitiateTestOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleInitiateTest} disabled={isSubmittingTestInvite}>
-              {isSubmittingTestInvite ? 'Sending...' : 'Send invite'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {renderInitiateTestModal()}
     </AppSurface>
   );
 }

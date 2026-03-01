@@ -12,10 +12,16 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Briefcase, Users, Target, TrendingUp, ArrowRight, Building2 } from 'lucide-react';
 import { OrgDashboardClient } from './OrgDashboardClient';
-import { db } from '@/db';
-import { assignments, matches, matchInterest, organizationMembers } from '@/db/schema';
-import { eq, and, sql } from 'drizzle-orm';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
+import {
+  getOrgDashboardMetrics,
+  getOrgGoalsData,
+  getOrgProjectsData,
+  getOrgTeamData,
+  getOrgReadinessData,
+  getOrgMomentumData,
+  getOrgUpdatesData,
+} from '@/lib/dashboard/orgDataFetchers';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,7 +40,8 @@ export default async function OrganizationHomePage({
 
   const { org, membership } = result;
 
-  // Fetch org dashboard metrics for hero section
+  // Fetch all dashboard data concurrently on the server
+  let dashboardData: any = {};
   let metrics = {
     activeAssignments: 0,
     totalMatches: 0,
@@ -43,51 +50,42 @@ export default async function OrganizationHomePage({
   };
 
   try {
-    // Query DB directly to avoid URL/env issues during SSR
-    const [assignmentsData, teamData, matchesData, shortlistData] = await Promise.all([
-      db
-        .select({
-          status: assignments.status,
-          count: sql<number>`count(*)::int`,
-        })
-        .from(assignments)
-        .where(eq(assignments.orgId, org.id))
-        .groupBy(assignments.status),
-      db
-        .select({
-          role: organizationMembers.role,
-          count: sql<number>`count(*)::int`,
-        })
-        .from(organizationMembers)
-        .where(eq(organizationMembers.orgId, org.id))
-        .groupBy(organizationMembers.role),
-      db
-        .select({
-          matchCount: sql<number>`count(${matches.id})::int`,
-        })
-        .from(assignments)
-        .leftJoin(
-          matches,
-          and(eq(matches.assignmentId, assignments.id), eq(assignments.status, 'active'))
-        )
-        .where(eq(assignments.orgId, org.id)),
-      db
-        .select({
-          count: sql<number>`count(*)::int`,
-        })
-        .from(matchInterest)
-        .innerJoin(assignments, eq(matchInterest.assignmentId, assignments.id))
-        .where(eq(assignments.orgId, org.id)),
+    const [
+      dashboardMetrics,
+      goalsData,
+      projectsData,
+      teamDataResult,
+      readinessData,
+      momentumData,
+      updatesData,
+    ] = await Promise.all([
+      getOrgDashboardMetrics(org.id, user.id),
+      getOrgGoalsData(org.id),
+      getOrgProjectsData(org.id),
+      getOrgTeamData(org.id),
+      getOrgReadinessData(org.id, user.id),
+      getOrgMomentumData(user.id, slug),
+      getOrgUpdatesData(user.id, slug),
     ]);
 
+    dashboardData = {
+      pipeline: dashboardMetrics?.pipeline || null,
+      goals: goalsData,
+      projects: projectsData,
+      team: teamDataResult,
+      readiness: readinessData,
+      momentum: momentumData,
+      updates: updatesData,
+    };
+
     metrics = {
-      activeAssignments: assignmentsData.find((a) => a.status === 'active')?.count || 0,
-      totalMatches: matchesData[0]?.matchCount || 0,
-      teamMembers: teamData.reduce((sum, t) => sum + (t.count || 0), 0),
-      shortlists: shortlistData[0]?.count || 0,
+      activeAssignments: dashboardData.pipeline?.openAssignments || 0,
+      totalMatches: dashboardData.pipeline?.matches?.totalMatches || 0,
+      teamMembers: dashboardData.team?.stats?.total || 0,
+      shortlists: dashboardData.pipeline?.shortlists || 0,
     };
   } catch (error) {
-    console.error('Failed to fetch org dashboard metrics:', error);
+    console.error('Failed to fetch org dashboard data:', error);
   }
 
   return (
@@ -186,7 +184,12 @@ export default async function OrganizationHomePage({
           </section>
 
           {/* Customizable Dashboard */}
-          <OrgDashboardClient orgSlug={slug} orgId={org.id} userRole={membership.role} />
+          <OrgDashboardClient
+            orgSlug={slug}
+            orgId={org.id}
+            userRole={membership.role}
+            initialData={dashboardData}
+          />
         </div>
       </div>
     </AppSurface>

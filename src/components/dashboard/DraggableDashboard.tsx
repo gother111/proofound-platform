@@ -77,12 +77,14 @@ try {
 
 interface DraggableDashboardProps {
   initialLayout?: DashboardWidget[];
+  initialData?: any;
   onError?: (message: string) => void;
   onLoadingChange?: (isLoading: boolean) => void;
 }
 
 export function DraggableDashboard({
   initialLayout,
+  initialData,
   onError,
   onLoadingChange,
 }: DraggableDashboardProps) {
@@ -375,20 +377,23 @@ export function DraggableDashboard({
       case 'while-away':
         return (
           <WhileAwayCard
+            initialData={initialData?.whileAway}
             onVisibilityChange={(visible) => handleWidgetVisibilityChange(widgetId, visible)}
           />
         );
       case 'goals':
         return (
           <GoalsCard
+            initialData={initialData?.goals}
             onVisibilityChange={(visible) => handleWidgetVisibilityChange(widgetId, visible)}
           />
         );
       case 'tasks':
-        return <TasksCard persona="individual" />;
+        return <TasksCard persona="individual" initialData={initialData?.tasks} />;
       case 'projects':
         return (
           <ProjectsCard
+            initialData={initialData?.projects}
             onVisibilityChange={(visible) => handleWidgetVisibilityChange(widgetId, visible)}
           />
         );
@@ -397,24 +402,26 @@ export function DraggableDashboard({
       case 'impact-snapshot':
         return <ImpactSnapshotCard />;
       case 'explore':
-        return <ExploreCard />;
+        return <ExploreCard initialData={initialData?.explore} />;
       case 'gap-map':
         return <GapMapWidget />;
       case 'next-best-actions':
         return (
           <NextBestActionsWidget
             useMockData={mockMode}
+            initialData={initialData?.profileCompleteness}
             onActionClick={(actionId) =>
               logDashboardEvent('next_best_action_clicked', { actionId })
             }
           />
         );
       case 'profile-activation':
-        return <ProfileActivationCard useMockData={mockMode} />;
+        return <ProfileActivationCard useMockData={mockMode} initialData={initialData} />;
       case 'matching-readiness':
         return (
           <MatchingReadinessCard
             useMockData={mockMode}
+            initialData={initialData?.skillGaps}
             onActionClick={(actionId) =>
               logDashboardEvent('next_best_action_clicked', { actionId })
             }
@@ -424,13 +431,14 @@ export function DraggableDashboard({
         return (
           <InterviewsFeedbackCard
             useMockData={mockMode}
+            initialData={initialData?.interviews}
             onActionClick={(actionId) =>
               logDashboardEvent('next_best_action_clicked', { actionId })
             }
           />
         );
       case 'momentum-metrics':
-        return <MomentumMetricsCard useMockData={mockMode} />;
+        return <MomentumMetricsCard useMockData={mockMode} initialData={initialData?.momentum} />;
       case 'zen-snapshot':
         return <ZenSnapshotCard useMockData={mockMode} />;
       case 'notifications':

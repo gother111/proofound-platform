@@ -18,6 +18,7 @@ import { DASHBOARD_STATUS_CHIP_CLASS } from '@/components/dashboard/chipStyles';
 
 type MatchingReadinessCardProps = {
   useMockData?: boolean;
+  initialData?: GapResponse | null;
   onActionClick?: (actionId: string) => void;
 };
 
@@ -25,9 +26,15 @@ type GapResponse = {
   gaps?: { skillCode: string; gap: number }[];
 };
 
-export function MatchingReadinessCard({ useMockData, onActionClick }: MatchingReadinessCardProps) {
-  const [gapCount, setGapCount] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
+export function MatchingReadinessCard({
+  useMockData,
+  initialData,
+  onActionClick,
+}: MatchingReadinessCardProps) {
+  const [gapCount, setGapCount] = useState<number | null>(
+    initialData?.gaps ? initialData.gaps.length : null
+  );
+  const [loading, setLoading] = useState(!initialData && !useMockData);
 
   useEffect(() => {
     if (useMockData) {
@@ -35,6 +42,8 @@ export function MatchingReadinessCard({ useMockData, onActionClick }: MatchingRe
       setLoading(false);
       return;
     }
+
+    if (initialData || useMockData) return;
 
     async function load() {
       try {
@@ -51,7 +60,7 @@ export function MatchingReadinessCard({ useMockData, onActionClick }: MatchingRe
     }
 
     load();
-  }, [useMockData]);
+  }, [useMockData, initialData]);
 
   const status = (() => {
     if (gapCount === null) return { label: 'Loading', tone: 'text-muted-foreground' };

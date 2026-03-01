@@ -15,20 +15,41 @@ const titles = [
 interface WhileAwayCardProps {
   persona?: 'individual' | 'organization';
   orgRef?: string;
+  initialData?: any;
   onVisibilityChange?: (visible: boolean) => void;
 }
 
 export function WhileAwayCard({
   persona = 'individual',
   orgRef,
+  initialData,
   onVisibilityChange,
 }: WhileAwayCardProps) {
-  const [updates, setUpdates] = useState<Array<{ text: string; actionUrl?: string }>>([]);
+  const [updates, setUpdates] = useState<Array<{ text: string; actionUrl?: string }>>(() => {
+    if (initialData?.updates) {
+      return initialData.updates.map((item: any) => ({
+        text: item.text,
+        actionUrl: item.actionUrl,
+      }));
+    }
+    return [];
+  });
   const [dismissed, setDismissed] = useState(false);
-  const [resolved, setResolved] = useState(false);
+  const [resolved, setResolved] = useState(!!initialData);
   const [title] = useState(() => titles[Math.floor(Math.random() * titles.length)]);
 
   useEffect(() => {
+    if (initialData) {
+      setUpdates(
+        initialData.updates?.map((item: any) => ({
+          text: item.text,
+          actionUrl: item.actionUrl,
+        })) || []
+      );
+      setResolved(true);
+      return;
+    }
+
     let isMounted = true;
 
     async function load() {
@@ -67,7 +88,7 @@ export function WhileAwayCard({
     return () => {
       isMounted = false;
     };
-  }, [persona, orgRef]);
+  }, [persona, orgRef, initialData]);
 
   const hasContent = useMemo(
     () => resolved && updates.length > 0 && !dismissed,

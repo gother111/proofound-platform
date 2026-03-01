@@ -35,6 +35,7 @@ import {
   type InterviewCalendarPayload,
 } from '@/lib/interviews/calendar';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
+import { getInterviews as getInterviewsAction } from '@/app/actions/interviews';
 import { toast } from 'sonner';
 
 export const dynamic = 'force-dynamic';
@@ -85,33 +86,13 @@ export default function OrganizationInterviewsPage() {
   const loadInterviews = async () => {
     setIsLoading(true);
 
-    // Add timeout to prevent infinite loading
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
     try {
-      const response = await fetch('/api/interviews/schedule', {
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (response.ok) {
-        const data = await response.json();
-        setInterviews(data.interviews || []);
-      } else {
-        console.error('Failed to load interviews:', response.status);
-        setInterviews([]); // Set empty array on error
-      }
+      const data = await getInterviewsAction();
+      setInterviews(data.interviews || []);
     } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        console.error('Interviews request timed out');
-      } else {
-        console.error('Failed to load interviews:', error);
-      }
+      console.error('Failed to load interviews:', error);
       setInterviews([]); // Set empty array on error
     } finally {
-      clearTimeout(timeoutId);
       setIsLoading(false);
     }
   };

@@ -12,6 +12,7 @@ import type { MomentumSummary, ReadinessAction } from '@/lib/momentum/types';
 interface TasksCardProps {
   persona?: 'individual' | 'organization';
   orgRef?: string;
+  initialData?: any;
   onVisibilityChange?: (visible: boolean) => void;
 }
 
@@ -32,14 +33,21 @@ function getTasksFallbackHref(persona: 'individual' | 'organization', orgRef?: s
 export function TasksCard({
   persona = 'individual',
   orgRef,
+  initialData,
   onVisibilityChange,
 }: TasksCardProps = {}) {
-  const [summary, setSummary] = useState<MomentumSummary | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState<MomentumSummary | null>(initialData || null);
+  const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
+    if (initialData) {
+      setSummary(initialData);
+      setLoading(false);
+      return;
+    }
+
     let mounted = true;
 
     async function fetchTasks() {
@@ -77,7 +85,7 @@ export function TasksCard({
     return () => {
       mounted = false;
     };
-  }, [orgRef, persona]);
+  }, [orgRef, persona, initialData]);
 
   const actions = useMemo(() => summary?.topActions.slice(0, 3) || [], [summary]);
 

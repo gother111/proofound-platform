@@ -39,6 +39,7 @@ interface OrgGoalsCardProps {
   orgSlug: string;
   orgId: string;
   canManageSettings?: boolean;
+  initialData?: any;
   onVisibilityChange?: (visible: boolean) => void;
 }
 
@@ -78,15 +79,28 @@ export function OrgGoalsCard({
   orgSlug,
   orgId,
   canManageSettings = false,
+  initialData,
   onVisibilityChange,
 }: OrgGoalsCardProps) {
-  const [goals, setGoals] = useState<OrgGoal[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [goals, setGoals] = useState<OrgGoal[]>(() => {
+    if (initialData) {
+      return (initialData || []).filter((g: OrgGoal) => g.status !== 'abandoned').slice(0, 3);
+    }
+    return [];
+  });
+  const [isLoading, setIsLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
 
   // Fetch org goals from API
   useEffect(() => {
+    if (initialData) {
+      const activeGoals = (initialData || []).filter((g: OrgGoal) => g.status !== 'abandoned');
+      setGoals(activeGoals.slice(0, 3));
+      setIsLoading(false);
+      return;
+    }
+
     async function fetchGoals() {
       try {
         setIsLoading(true);
@@ -113,7 +127,7 @@ export function OrgGoalsCard({
     if (orgId) {
       fetchGoals();
     }
-  }, [orgId]);
+  }, [orgId, initialData]);
 
   useEffect(() => {
     if (isLoading) return;

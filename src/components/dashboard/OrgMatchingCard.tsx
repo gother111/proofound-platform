@@ -36,6 +36,7 @@ import { apiFetch } from '@/lib/api/fetch';
 interface OrgMatchingCardProps {
   orgSlug: string;
   className?: string;
+  initialData?: any;
   onVisibilityChange?: (visible: boolean) => void;
 }
 
@@ -73,14 +74,25 @@ const pipelineStages = [
   { key: 'intros', label: 'Intros', icon: MessageCircle, color: '#9333EA', bg: '#F3E8FF' },
 ];
 
-export function OrgMatchingCard({ orgSlug, className, onVisibilityChange }: OrgMatchingCardProps) {
-  const [dashboard, setDashboard] = useState<OrgDashboard | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export function OrgMatchingCard({
+  orgSlug,
+  className,
+  initialData,
+  onVisibilityChange,
+}: OrgMatchingCardProps) {
+  const [dashboard, setDashboard] = useState<OrgDashboard | null>(initialData || null);
+  const [isLoading, setIsLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
 
   // Fetch org dashboard data
   useEffect(() => {
+    if (initialData) {
+      setDashboard(initialData);
+      setIsLoading(false);
+      return;
+    }
+
     async function fetchDashboard() {
       try {
         setIsLoading(true);
@@ -105,7 +117,7 @@ export function OrgMatchingCard({ orgSlug, className, onVisibilityChange }: OrgM
     if (orgSlug) {
       fetchDashboard();
     }
-  }, [orgSlug]);
+  }, [orgSlug, initialData]);
 
   useEffect(() => {
     if (isLoading) return;

@@ -29,15 +29,17 @@ type Interview = NonNullable<InterviewsResponse['interviews']>[number];
 
 type InterviewsFeedbackCardProps = {
   useMockData?: boolean;
+  initialData?: InterviewsResponse | null;
   onActionClick?: (actionId: string) => void;
 };
 
 export function InterviewsFeedbackCard({
   useMockData,
+  initialData,
   onActionClick,
 }: InterviewsFeedbackCardProps) {
-  const [data, setData] = useState<Interview[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<Interview[]>(initialData?.interviews || []);
+  const [loading, setLoading] = useState(!initialData && !useMockData);
 
   useEffect(() => {
     if (useMockData) {
@@ -54,6 +56,8 @@ export function InterviewsFeedbackCard({
       return;
     }
 
+    if (initialData || useMockData) return;
+
     async function load() {
       try {
         const response = await apiFetch('/api/interviews');
@@ -69,7 +73,7 @@ export function InterviewsFeedbackCard({
     }
 
     load();
-  }, [useMockData]);
+  }, [useMockData, initialData]);
 
   const counts = useMemo(() => {
     const upcoming = data.filter((i) => i.status === 'scheduled').length;

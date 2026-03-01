@@ -47,12 +47,17 @@ interface ProfileCompleteness {
 
 type NextBestActionsWidgetProps = {
   useMockData?: boolean;
+  initialData?: ProfileCompleteness | null;
   onActionClick?: (actionId: string) => void;
 };
 
-export function NextBestActionsWidget({ useMockData, onActionClick }: NextBestActionsWidgetProps) {
-  const [completeness, setCompleteness] = useState<ProfileCompleteness | null>(null);
-  const [loading, setLoading] = useState(true);
+export function NextBestActionsWidget({
+  useMockData,
+  initialData,
+  onActionClick,
+}: NextBestActionsWidgetProps) {
+  const [completeness, setCompleteness] = useState<ProfileCompleteness | null>(initialData || null);
+  const [loading, setLoading] = useState(!initialData && !useMockData);
   const router = useRouter();
 
   useEffect(() => {
@@ -85,6 +90,8 @@ export function NextBestActionsWidget({ useMockData, onActionClick }: NextBestAc
       return;
     }
 
+    if (initialData || useMockData) return;
+
     async function fetchNextBestActions() {
       try {
         const response = await apiFetch('/api/profile/completeness');
@@ -100,7 +107,7 @@ export function NextBestActionsWidget({ useMockData, onActionClick }: NextBestAc
     }
 
     fetchNextBestActions();
-  }, [useMockData]);
+  }, [useMockData, initialData]);
 
   const getIcon = (action: NextBestAction) => {
     switch (action.category) {

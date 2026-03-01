@@ -1,12 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { FieldVisibilityControls } from './FieldVisibilityControls';
 import { apiFetch } from '@/lib/api/fetch';
 
@@ -16,7 +13,12 @@ interface VisibilitySettingsModalProps {
   userId?: string;
 }
 
-export function VisibilitySettingsModal({ open, onOpenChange, userId }: VisibilitySettingsModalProps) {
+export function VisibilitySettingsModal({
+  open,
+  onOpenChange,
+  userId,
+}: VisibilitySettingsModalProps) {
+  const isDesktop = useMediaQuery('(min-width: 768px)');
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,23 +33,42 @@ export function VisibilitySettingsModal({ open, onOpenChange, userId }: Visibili
     }
   }, [open, userId]);
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-['Crimson_Pro']">
-            Field-Level Privacy Controls
-          </DialogTitle>
-        </DialogHeader>
+  const ContentBody = () =>
+    currentUserId ? (
+      <FieldVisibilityControls userId={currentUserId} />
+    ) : (
+      <div className="flex items-center justify-center py-8">
+        <p className="text-[#6B6760]">Loading...</p>
+      </div>
+    );
 
-        {currentUserId ? (
-          <FieldVisibilityControls userId={currentUserId} />
-        ) : (
-          <div className="flex items-center justify-center py-8">
-            <p className="text-[#6B6760]">Loading...</p>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
+  if (isDesktop) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-['Crimson_Pro']">
+              Field-Level Privacy Controls
+            </DialogTitle>
+          </DialogHeader>
+          <ContentBody />
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent>
+        <DrawerHeader className="text-left">
+          <DrawerTitle className="text-2xl font-['Crimson_Pro']">
+            Field-Level Privacy Controls
+          </DrawerTitle>
+        </DrawerHeader>
+        <div className="max-h-[70vh] overflow-y-auto px-4 pb-4">
+          <ContentBody />
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 }

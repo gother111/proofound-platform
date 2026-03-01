@@ -12,57 +12,31 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { apiFetch } from '@/lib/api/fetch';
 import { CheckCircle2, AlertCircle, Lock, Target, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { getIndividualRecoveryActions } from '@/lib/ui/recovery-actions';
 import { DASHBOARD_STATUS_CHIP_CLASS } from '@/components/dashboard/chipStyles';
-
-type ProfileCompletenessResponse = {
-  percentage: number;
-  missing: string[];
-  actions: { id: string; title: string; actionUrl: string }[];
-  skillCount?: number;
-  proofCount?: number;
-  valuesCount?: number;
-};
-
-type ExpertiseStatsResponse = {
-  skillsWithRecency: number;
-  activationThresholds: {
-    lite: { skillsWithRecency: number; proofCount: number };
-    strong: { skillsWithRecency: number; proofCount: number };
-  };
-  progressByTier: {
-    lite: { skillsWithRecencyProgress: number; proofProgress: number };
-    strong: { skillsWithRecencyProgress: number; proofProgress: number };
-  };
-  eligibility?: {
-    tier: 'none' | 'lite' | 'strong';
-    nextTierTarget: null | {
-      tier: 'lite' | 'strong';
-      message: string;
-      remaining: {
-        skillsWithRecency: number;
-        proofCount: number;
-        purpose: number;
-        constraints: number;
-      };
-    };
-  };
-  featureFlags?: {
-    activationTiering?: boolean;
-  };
-};
+import {
+  getProfileCompleteness,
+  getExpertiseStats,
+  type ProfileCompletenessData,
+  type ExpertiseStatsData,
+} from '@/app/actions/dashboard';
 
 type ProfileActivationCardProps = {
   useMockData?: boolean;
+  initialData?: {
+    completenessJson: ProfileCompletenessData;
+    statsJson: ExpertiseStatsData;
+  } | null;
 };
 
-export function ProfileActivationCard({ useMockData }: ProfileActivationCardProps) {
-  const [data, setData] = useState<ProfileCompletenessResponse | null>(null);
-  const [stats, setStats] = useState<ExpertiseStatsResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+export function ProfileActivationCard({ useMockData, initialData }: ProfileActivationCardProps) {
+  const [data, setData] = useState<ProfileCompletenessData | null>(
+    initialData?.completenessJson || null
+  );
+  const [stats, setStats] = useState<ExpertiseStatsData | null>(initialData?.statsJson || null);
+  const [loading, setLoading] = useState(!initialData);
 
   useEffect(() => {
     if (useMockData) {
@@ -70,15 +44,36 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
         percentage: 68,
         missing: ['proof', 'values'],
         actions: [
-          { id: 'add-proof', title: 'Upload a proof', actionUrl: '/app/i/profile?tab=proofs' },
-          { id: 'add-values', title: 'Pick your values', actionUrl: '/app/i/profile' },
+          {
+            id: 'add-proof',
+            title: 'Upload a proof',
+            description: '',
+            priority: 'medium',
+            category: 'expertise',
+            actionUrl: '/app/i/profile?tab=proofs',
+            completed: false,
+          },
+          {
+            id: 'add-values',
+            title: 'Pick your values',
+            description: '',
+            priority: 'medium',
+            category: 'profile',
+            actionUrl: '/app/i/profile',
+            completed: false,
+          },
         ],
         skillCount: 8,
         proofCount: 0,
         valuesCount: 1,
       });
       setStats({
+        totalL4Skills: 8,
         skillsWithRecency: 8,
+        skillsWithProofs: 0,
+        skillsWithVerifications: 0,
+        progressPercentage: 80,
+        activationThreshold: 10,
         activationThresholds: {
           lite: { skillsWithRecency: 3, proofCount: 1 },
           strong: { skillsWithRecency: 10, proofCount: 1 },
@@ -109,20 +104,18 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
     }
 
     async function load() {
+      if (initialData) {
+        setLoading(false);
+        return;
+      }
       try {
-        const [completenessResponse, statsResponse] = await Promise.all([
-          apiFetch('/api/profile/completeness'),
-          apiFetch('/api/expertise/stats'),
+        const [completenessJson, statsJson] = await Promise.all([
+          getProfileCompleteness(),
+          getExpertiseStats(),
         ]);
 
-        if (!completenessResponse.ok) throw new Error('Failed to fetch completeness');
-        const completenessJson = (await completenessResponse.json()) as ProfileCompletenessResponse;
         setData(completenessJson);
-
-        if (statsResponse.ok) {
-          const statsJson = (await statsResponse.json()) as ExpertiseStatsResponse;
-          setStats(statsJson);
-        }
+        setStats(statsJson);
       } catch (error) {
         console.error(error);
         // Graceful fallback
@@ -130,15 +123,36 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
           percentage: 42,
           missing: ['skills', 'proof'],
           actions: [
-            { id: 'add-skills', title: 'Add skills', actionUrl: '/app/i/expertise' },
-            { id: 'add-proof', title: 'Upload a proof', actionUrl: '/app/i/profile?tab=proofs' },
+            {
+              id: 'add-skills',
+              title: 'Add skills',
+              description: '',
+              priority: 'high',
+              category: 'expertise',
+              actionUrl: '/app/i/expertise',
+              completed: false,
+            },
+            {
+              id: 'add-proof',
+              title: 'Upload a proof',
+              description: '',
+              priority: 'medium',
+              category: 'expertise',
+              actionUrl: '/app/i/profile?tab=proofs',
+              completed: false,
+            },
           ],
           skillCount: 3,
           proofCount: 0,
           valuesCount: 0,
         });
         setStats({
+          totalL4Skills: 3,
           skillsWithRecency: 3,
+          skillsWithProofs: 0,
+          skillsWithVerifications: 0,
+          progressPercentage: 30,
+          activationThreshold: 10,
           activationThresholds: {
             lite: { skillsWithRecency: 3, proofCount: 1 },
             strong: { skillsWithRecency: 10, proofCount: 1 },
@@ -146,6 +160,10 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
           progressByTier: {
             lite: { skillsWithRecencyProgress: 100, proofProgress: 0 },
             strong: { skillsWithRecencyProgress: 30, proofProgress: 0 },
+          },
+          eligibility: {
+            tier: 'none',
+            nextTierTarget: null,
           },
           featureFlags: {
             activationTiering: true,
@@ -157,7 +175,7 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
     }
 
     load();
-  }, [useMockData]);
+  }, [useMockData, initialData]);
 
   const status = useMemo(() => {
     const tier = stats?.eligibility?.tier || 'none';
@@ -224,7 +242,7 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
     const hints =
       nextTierActions.length > 0
         ? nextTierActions
-        : (data?.actions || []).map((action) => ({
+        : (data?.actions || []).map((action: any) => ({
             id: action.id,
             title: action.title,
             description: 'Complete this action to improve activation readiness.',

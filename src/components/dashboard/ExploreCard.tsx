@@ -14,13 +14,20 @@ import {
 interface ExploreCardProps {
   persona?: 'individual' | 'organization';
   orgRef?: string;
+  initialData?: any;
 }
 
-export function ExploreCard({ persona = 'individual', orgRef }: ExploreCardProps) {
-  const [summary, setSummary] = useState<MomentumSummary | null>(null);
-  const [loading, setLoading] = useState(true);
+export function ExploreCard({ persona = 'individual', orgRef, initialData }: ExploreCardProps) {
+  const [summary, setSummary] = useState<MomentumSummary | null>(initialData || null);
+  const [loading, setLoading] = useState(!initialData);
 
   useEffect(() => {
+    if (initialData) {
+      setSummary(initialData);
+      setLoading(false);
+      return;
+    }
+
     async function load() {
       try {
         const params = new URLSearchParams({ persona });
@@ -41,7 +48,7 @@ export function ExploreCard({ persona = 'individual', orgRef }: ExploreCardProps
     }
 
     load();
-  }, [persona, orgRef]);
+  }, [persona, orgRef, initialData]);
 
   const actions = useMemo(() => summary?.topActions?.slice(0, 3) || [], [summary]);
 

@@ -16,6 +16,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { Button } from '@/components/ui/button';
 import { BellOff, Calendar, Clock } from 'lucide-react';
 import { toast } from 'sonner';
@@ -44,6 +53,7 @@ export function SnoozeDialog({
 }: SnoozeDialogProps) {
   const [selectedWeeks, setSelectedWeeks] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isDesktop = useMediaQuery('(min-width: 768px)');
 
   const handleSnooze = async () => {
     setIsSubmitting(true);
@@ -77,10 +87,10 @@ export function SnoozeDialog({
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
+  const ModalContentBody = () => (
+    <>
+      <div className="px-4 md:px-0">
+        <DialogHeader className="md:px-0 text-left">
           <DialogTitle className="flex items-center gap-2">
             <BellOff className="w-5 h-5 text-[#6B6760]" />
             Snooze This Match
@@ -90,78 +100,105 @@ export function SnoozeDialog({
             selected time.
           </DialogDescription>
         </DialogHeader>
+      </div>
 
-        <div className="space-y-3 py-4">
-          {snoozeDurations.map((duration) => (
-            <button
-              key={duration.weeks}
-              onClick={() => setSelectedWeeks(duration.weeks)}
-              className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
-                selectedWeeks === duration.weeks
-                  ? 'border-[#1C4D3A] bg-[#E8F5E1]'
-                  : 'border-[#E8E6DD] bg-white hover:border-[#1C4D3A]/30'
-              }`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    {duration.weeks === 1 ? (
-                      <Clock className="w-4 h-4 text-[#1C4D3A]" />
-                    ) : (
-                      <Calendar className="w-4 h-4 text-[#1C4D3A]" />
-                    )}
-                    <span className="font-medium text-[#2D3330]">{duration.label}</span>
-                  </div>
-                  <p className="text-sm text-[#6B6760]">{duration.description}</p>
-                  <p className="text-xs text-[#6B6760] mt-1">
-                    Returns:{' '}
-                    {new Date(
-                      Date.now() + duration.weeks * 7 * 24 * 60 * 60 * 1000
-                    ).toLocaleDateString()}
-                  </p>
+      <div className="space-y-3 py-4 px-4 md:px-0">
+        {snoozeDurations.map((duration) => (
+          <button
+            key={duration.weeks}
+            onClick={() => setSelectedWeeks(duration.weeks)}
+            className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+              selectedWeeks === duration.weeks
+                ? 'border-[#1C4D3A] bg-[#E8F5E1]'
+                : 'border-[#E8E6DD] bg-white hover:border-[#1C4D3A]/30'
+            }`}
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  {duration.weeks === 1 ? (
+                    <Clock className="w-4 h-4 text-[#1C4D3A]" />
+                  ) : (
+                    <Calendar className="w-4 h-4 text-[#1C4D3A]" />
+                  )}
+                  <span className="font-medium text-[#2D3330]">{duration.label}</span>
                 </div>
-                {selectedWeeks === duration.weeks && (
-                  <div className="w-5 h-5 rounded-full bg-[#1C4D3A] flex items-center justify-center flex-shrink-0">
-                    <svg
-                      className="w-3 h-3 text-white"
-                      fill="none"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path d="M5 13l4 4L19 7"></path>
-                    </svg>
-                  </div>
-                )}
+                <p className="text-sm text-[#6B6760]">{duration.description}</p>
+                <p className="text-xs text-[#6B6760] mt-1">
+                  Returns:{' '}
+                  {new Date(
+                    Date.now() + duration.weeks * 7 * 24 * 60 * 60 * 1000
+                  ).toLocaleDateString()}
+                </p>
               </div>
-            </button>
-          ))}
-        </div>
+              {selectedWeeks === duration.weeks && (
+                <div className="w-5 h-5 rounded-full bg-[#1C4D3A] flex items-center justify-center flex-shrink-0">
+                  <svg
+                    className="w-3 h-3 text-white"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </div>
+              )}
+            </div>
+          </button>
+        ))}
+      </div>
 
-        <div className="bg-[#F7F6F1] rounded-lg p-3 border border-[#E8E6DD]">
+      <div className="px-4 md:px-0 pb-4 md:pb-0">
+        <div className="bg-[#F7F6F1] rounded-lg p-3 border border-[#E8E6DD] mb-4">
           <p className="text-xs leading-relaxed text-[#2D3330]">
             <strong className="font-semibold">Note:</strong> You can view and manage snoozed matches
             from your Matching preferences. Snoozed matches won't affect your overall match score.
           </p>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+            className="w-full sm:w-auto"
+          >
             Cancel
           </Button>
           <Button
             onClick={handleSnooze}
             disabled={isSubmitting}
-            className="bg-[#1C4D3A] text-white"
+            className="bg-[#1C4D3A] text-white w-full sm:w-auto"
           >
             {isSubmitting
               ? 'Snoozing...'
               : `Snooze for ${selectedWeeks} ${selectedWeeks === 1 ? 'week' : 'weeks'}`}
           </Button>
         </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </>
+  );
+
+  if (isDesktop) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-md">
+          <ModalContentBody />
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent>
+        <div className="mx-auto w-full max-w-sm overflow-y-auto pb-6">
+          <ModalContentBody />
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 }

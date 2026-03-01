@@ -16,11 +16,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Share2,
@@ -34,6 +41,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { generateEmbedCodeFromUrl, generateShareText } from '@/lib/profile/snippet-generator';
 import { apiFetch } from '@/lib/api/fetch';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 type ProfileType = 'individual' | 'organization';
 
@@ -117,6 +125,7 @@ export function ShareProfileDialog({
   profileType = 'individual',
   orgId,
 }: ShareProfileDialogProps) {
+  const isDesktop = useMediaQuery('(min-width: 768px)');
   const [fields, setFields] = useState<Record<string, boolean | number>>(
     getDefaultFields(profileType)
   );
@@ -217,225 +226,279 @@ export function ShareProfileDialog({
   const shareTexts = generateShareText({ name: userName, headline: userHeadline });
   const embedCode = generatedSnippet ? generateEmbedCodeFromUrl(generatedSnippet.url, format) : '';
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Share2 className="h-5 w-5" />
-            Share Your {profileType === 'organization' ? 'Organization' : 'Profile'}
-          </DialogTitle>
-          <DialogDescription>
-            Create a shareable link or embed code for your{' '}
-            {profileType === 'organization' ? 'organization profile' : 'profile'}
-          </DialogDescription>
-        </DialogHeader>
-
-        {!generatedSnippet ? (
-          <div className="space-y-6">
-            {/* Fields Selection */}
-            <div>
-              <Label className="text-base font-semibold mb-3 block">What to Share</Label>
-              <div className="grid grid-cols-2 gap-3">
-                {Object.entries(fieldLabels).map(([key, label]) => (
-                  <div key={key} className="flex items-center space-x-2">
-                    <Switch
-                      id={key}
-                      checked={Boolean(fields[key])}
-                      onCheckedChange={() => handleFieldToggle(key)}
-                    />
-                    <Label htmlFor={key} className="cursor-pointer">
-                      {label}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Format Selection */}
-            <div>
-              <Label className="text-base font-semibold mb-3 block">Format</Label>
-              <RadioGroup value={format} onValueChange={(v: any) => setFormat(v)}>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="mini" id="mini" />
-                  <Label htmlFor="mini" className="cursor-pointer">
-                    Mini (Compact badge)
+  const DialogContentBody = () => (
+    <>
+      {!generatedSnippet ? (
+        <div className="space-y-6">
+          {/* Fields Selection */}
+          <div>
+            <Label className="text-base font-semibold mb-3 block">What to Share</Label>
+            <div className="grid grid-cols-2 gap-3">
+              {Object.entries(fieldLabels).map(([key, label]) => (
+                <div key={key} className="flex items-center space-x-2">
+                  <Switch
+                    id={key}
+                    checked={Boolean(fields[key])}
+                    onCheckedChange={() => handleFieldToggle(key)}
+                  />
+                  <Label htmlFor={key} className="cursor-pointer">
+                    {label}
                   </Label>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="card" id="card" />
-                  <Label htmlFor="card" className="cursor-pointer">
-                    Card (Standard profile card)
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="full" id="full" />
-                  <Label htmlFor="full" className="cursor-pointer">
-                    Full (Complete profile view)
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            {/* Theme Selection */}
-            <div>
-              <Label className="text-base font-semibold mb-3 block">Theme</Label>
-              <RadioGroup value={theme} onValueChange={(v: any) => setTheme(v)}>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="light" id="light" />
-                  <Label htmlFor="light" className="cursor-pointer">
-                    Light
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="dark" id="dark" />
-                  <Label htmlFor="dark" className="cursor-pointer">
-                    Dark
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="auto" id="auto" />
-                  <Label htmlFor="auto" className="cursor-pointer">
-                    Auto (Match viewer's preference)
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            {/* Expiration */}
-            <div>
-              <Label className="text-base font-semibold mb-3 block">Expiration (Optional)</Label>
-              <Input
-                type="number"
-                placeholder="Days until link expires (leave empty for no expiration)"
-                value={expiresInDays || ''}
-                onChange={(e) => setExpiresInDays(e.target.value ? parseInt(e.target.value) : null)}
-                min={1}
-                max={365}
-              />
+              ))}
             </div>
           </div>
-        ) : (
-          <Tabs defaultValue="link" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="link">
-                <LinkIcon className="h-4 w-4 mr-2" />
-                Link
-              </TabsTrigger>
-              <TabsTrigger value="embed">
-                <Code className="h-4 w-4 mr-2" />
-                Embed
-              </TabsTrigger>
-              <TabsTrigger value="social">
-                <Twitter className="h-4 w-4 mr-2" />
-                Social
-              </TabsTrigger>
-            </TabsList>
 
-            <TabsContent value="link" className="space-y-3">
+          {/* Format Selection */}
+          <div>
+            <Label className="text-base font-semibold mb-3 block">Format</Label>
+            <RadioGroup value={format} onValueChange={(v: any) => setFormat(v)}>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="mini" id="mini" />
+                <Label htmlFor="mini" className="cursor-pointer">
+                  Mini (Compact badge)
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="card" id="card" />
+                <Label htmlFor="card" className="cursor-pointer">
+                  Card (Standard profile card)
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="full" id="full" />
+                <Label htmlFor="full" className="cursor-pointer">
+                  Full (Complete profile view)
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          {/* Theme Selection */}
+          <div>
+            <Label className="text-base font-semibold mb-3 block">Theme</Label>
+            <RadioGroup value={theme} onValueChange={(v: any) => setTheme(v)}>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="light" id="light" />
+                <Label htmlFor="light" className="cursor-pointer">
+                  Light
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="dark" id="dark" />
+                <Label htmlFor="dark" className="cursor-pointer">
+                  Dark
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="auto" id="auto" />
+                <Label htmlFor="auto" className="cursor-pointer">
+                  Auto (Match viewer's preference)
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          {/* Expiration */}
+          <div>
+            <Label className="text-base font-semibold mb-3 block">Expiration (Optional)</Label>
+            <Input
+              type="number"
+              placeholder="Days until link expires (leave empty for no expiration)"
+              value={expiresInDays || ''}
+              onChange={(e) => setExpiresInDays(e.target.value ? parseInt(e.target.value) : null)}
+              min={1}
+              max={365}
+            />
+          </div>
+        </div>
+      ) : (
+        <Tabs defaultValue="link" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="link">
+              <LinkIcon className="h-4 w-4 mr-2" />
+              Link
+            </TabsTrigger>
+            <TabsTrigger value="embed">
+              <Code className="h-4 w-4 mr-2" />
+              Embed
+            </TabsTrigger>
+            <TabsTrigger value="social">
+              <Twitter className="h-4 w-4 mr-2" />
+              Social
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="link" className="space-y-3 mt-4">
+            <div>
+              <Label>Shareable URL</Label>
+              <div className="flex gap-2 mt-2">
+                <Input value={generatedSnippet.url} readOnly />
+                <Button
+                  size="icon"
+                  variant="outline"
+                  onClick={() => handleCopy(generatedSnippet.url, 'URL')}
+                >
+                  {copied === 'URL' ? (
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+              <Button
+                className="mt-2 w-full"
+                variant="outline"
+                onClick={() => window.open(generatedSnippet.url, '_blank', 'noopener,noreferrer')}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Open Link
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="embed" className="space-y-3 mt-4">
+            <div>
+              <Label>HTML Embed Code</Label>
+              <div className="mt-2 space-y-2">
+                <textarea
+                  className="w-full h-32 p-3 text-xs font-mono rounded border"
+                  value={embedCode}
+                  readOnly
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleCopy(embedCode, 'Embed code')}
+                  className="w-full"
+                >
+                  {copied === 'Embed code' ? (
+                    <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" />
+                  ) : (
+                    <Copy className="h-4 w-4 mr-2" />
+                  )}
+                  Copy Embed Code
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="social" className="space-y-3 mt-4">
+            <div className="space-y-3">
               <div>
-                <Label>Shareable URL</Label>
+                <Label>Twitter</Label>
                 <div className="flex gap-2 mt-2">
-                  <Input value={generatedSnippet.url} readOnly />
+                  <Input value={shareTexts.twitter} readOnly />
                   <Button
                     size="icon"
                     variant="outline"
-                    onClick={() => handleCopy(generatedSnippet.url, 'URL')}
+                    onClick={() => handleCopy(shareTexts.twitter, 'Twitter text')}
                   >
-                    {copied === 'URL' ? (
+                    {copied === 'Twitter text' ? (
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
                     ) : (
                       <Copy className="h-4 w-4" />
                     )}
                   </Button>
                 </div>
-                <Button
-                  className="mt-2 w-full"
-                  variant="outline"
-                  onClick={() => window.open(generatedSnippet.url, '_blank', 'noopener,noreferrer')}
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Open Link
-                </Button>
               </div>
-            </TabsContent>
 
-            <TabsContent value="embed" className="space-y-3">
               <div>
-                <Label>HTML Embed Code</Label>
-                <div className="mt-2 space-y-2">
-                  <textarea
-                    className="w-full h-32 p-3 text-xs font-mono rounded border"
-                    value={embedCode}
-                    readOnly
-                  />
+                <Label>LinkedIn</Label>
+                <div className="flex gap-2 mt-2">
+                  <Input value={shareTexts.linkedin} readOnly />
                   <Button
+                    size="icon"
                     variant="outline"
-                    size="sm"
-                    onClick={() => handleCopy(embedCode, 'Embed code')}
-                    className="w-full"
+                    onClick={() => handleCopy(shareTexts.linkedin, 'LinkedIn text')}
                   >
-                    {copied === 'Embed code' ? (
-                      <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" />
+                    {copied === 'LinkedIn text' ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
                     ) : (
-                      <Copy className="h-4 w-4 mr-2" />
+                      <Copy className="h-4 w-4" />
                     )}
-                    Copy Embed Code
                   </Button>
                 </div>
               </div>
-            </TabsContent>
+            </div>
+          </TabsContent>
+        </Tabs>
+      )}
+    </>
+  );
 
-            <TabsContent value="social" className="space-y-3">
-              <div className="space-y-3">
-                <div>
-                  <Label>Twitter</Label>
-                  <div className="flex gap-2 mt-2">
-                    <Input value={shareTexts.twitter} readOnly />
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      onClick={() => handleCopy(shareTexts.twitter, 'Twitter text')}
-                    >
-                      {copied === 'Twitter text' ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
+  const TitleAndDescription = () => (
+    <>
+      <div className="flex items-center gap-2">
+        <Share2 className="h-5 w-5" />
+        <span className="font-semibold text-lg">
+          Share Your {profileType === 'organization' ? 'Organization' : 'Profile'}
+        </span>
+      </div>
+      <p className="text-sm text-muted-foreground mt-2">
+        Create a shareable link or embed code for your{' '}
+        {profileType === 'organization' ? 'organization profile' : 'profile'}
+      </p>
+    </>
+  );
 
-                <div>
-                  <Label>LinkedIn</Label>
-                  <div className="flex gap-2 mt-2">
-                    <Input value={shareTexts.linkedin} readOnly />
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      onClick={() => handleCopy(shareTexts.linkedin, 'LinkedIn text')}
-                    >
-                      {copied === 'LinkedIn text' ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
+  if (isDesktop) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle asChild>
+              <div className="flex items-center gap-2">
+                <Share2 className="h-5 w-5" />
+                Share Your {profileType === 'organization' ? 'Organization' : 'Profile'}
               </div>
-            </TabsContent>
-          </Tabs>
-        )}
+            </DialogTitle>
+            <DialogDescription>
+              Create a shareable link or embed code for your{' '}
+              {profileType === 'organization' ? 'organization profile' : 'profile'}
+            </DialogDescription>
+          </DialogHeader>
 
-        <DialogFooter>
+          <DialogContentBody />
+
+          <DialogFooter>
+            {!generatedSnippet ? (
+              <>
+                <Button variant="outline" onClick={onClose} disabled={isGenerating}>
+                  Cancel
+                </Button>
+                <Button onClick={handleGenerate} disabled={isGenerating}>
+                  {isGenerating ? 'Generating...' : 'Generate Shareable Link'}
+                </Button>
+              </>
+            ) : (
+              <Button onClick={onClose} className="w-full">
+                Done
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Drawer open={isOpen} onOpenChange={onClose}>
+      <DrawerContent>
+        <DrawerHeader className="text-left">
+          <TitleAndDescription />
+        </DrawerHeader>
+        <div className="max-h-[70vh] overflow-y-auto px-4 pb-4">
+          <DialogContentBody />
+        </div>
+        <DrawerFooter className="pt-2">
           {!generatedSnippet ? (
             <>
-              <Button variant="outline" onClick={onClose} disabled={isGenerating}>
-                Cancel
-              </Button>
               <Button onClick={handleGenerate} disabled={isGenerating}>
                 {isGenerating ? 'Generating...' : 'Generate Shareable Link'}
+              </Button>
+              <Button variant="outline" onClick={onClose} disabled={isGenerating}>
+                Cancel
               </Button>
             </>
           ) : (
@@ -443,8 +506,8 @@ export function ShareProfileDialog({
               Done
             </Button>
           )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 }

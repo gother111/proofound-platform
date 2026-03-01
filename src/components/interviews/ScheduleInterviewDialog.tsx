@@ -45,6 +45,8 @@ interface ScheduleInterviewDialogProps {
   participantNames: string[];
 }
 
+import { scheduleInterview } from '@/app/actions/interviews';
+
 export function ScheduleInterviewDialog({
   open,
   onOpenChange,
@@ -95,25 +97,13 @@ export function ScheduleInterviewDialog({
     }
 
     try {
-      const response = await fetch('/api/interviews/schedule', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          matchId: applicationId, // API expects matchId
-          scheduledAt: scheduledDateTime.toISOString(),
-          platform,
-          participantUserIds: participantIds,
-          timezone,
-          notes,
-          ...(platform === 'manual' && { manualMeetingLink }),
-        }),
+      await scheduleInterview({
+        matchId: applicationId,
+        scheduledAt: scheduledDateTime.toISOString(),
+        platform,
+        timezone,
+        ...(platform === 'manual' && { manualMeetingLink }),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to schedule interview');
-      }
 
       toast.success('Interview scheduled successfully!');
       onOpenChange(false);

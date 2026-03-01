@@ -43,6 +43,7 @@ interface OrgDashboardClientProps {
   orgSlug: string;
   orgId: string;
   userRole: string;
+  initialData?: any;
 }
 
 interface DashboardWidget {
@@ -172,7 +173,12 @@ const ORG_PRESET_LAYOUTS: Record<
   },
 };
 
-export function OrgDashboardClient({ orgSlug, orgId, userRole }: OrgDashboardClientProps) {
+export function OrgDashboardClient({
+  orgSlug,
+  orgId,
+  userRole,
+  initialData,
+}: OrgDashboardClientProps) {
   const [layout, setLayout] = useState<DashboardWidget[]>(DEFAULT_ORG_LAYOUT);
   const [widgetVisibility, setWidgetVisibility] = useState<Record<string, boolean>>({});
   const [editMode, setEditMode] = useState(false);
@@ -302,6 +308,7 @@ export function OrgDashboardClient({ orgSlug, orgId, userRole }: OrgDashboardCli
           <OrgMatchingCard
             orgSlug={orgSlug}
             className="lg:col-span-2"
+            initialData={initialData?.pipeline}
             onVisibilityChange={(visible) => handleWidgetVisibilityChange(widgetId, visible)}
           />
         );
@@ -311,34 +318,52 @@ export function OrgDashboardClient({ orgSlug, orgId, userRole }: OrgDashboardCli
             orgSlug={orgSlug}
             orgId={orgId}
             canManageSettings={canManageSettings}
+            initialData={initialData?.goals}
             onVisibilityChange={(visible) => handleWidgetVisibilityChange(widgetId, visible)}
           />
         );
       case 'org-readiness':
-        return <OrgReadinessCard orgRef={orgSlug} />;
+        return <OrgReadinessCard orgRef={orgSlug} initialData={initialData?.readiness} />;
       case 'team':
         return (
           <TeamRolesCard
             orgSlug={orgSlug}
             orgId={orgId}
             canManageSettings={canManageSettings}
+            initialData={initialData?.team}
             onVisibilityChange={(visible) => handleWidgetVisibilityChange(widgetId, visible)}
           />
         );
       case 'tasks':
-        return <TasksCard persona="organization" orgRef={orgSlug} />;
+        return (
+          <TasksCard persona="organization" orgRef={orgSlug} initialData={initialData?.momentum} />
+        );
       case 'projects':
-        return <ProjectsCard persona="organization" orgId={orgId} orgSlug={orgSlug} />;
+        return (
+          <ProjectsCard
+            persona="organization"
+            orgId={orgId}
+            orgSlug={orgSlug}
+            initialData={initialData?.projects}
+          />
+        );
       case 'while-away':
         return (
           <WhileAwayCard
             persona="organization"
             orgRef={orgSlug}
+            initialData={initialData?.updates}
             onVisibilityChange={(visible) => handleWidgetVisibilityChange(widgetId, visible)}
           />
         );
       case 'explore':
-        return <ExploreCard persona="organization" orgRef={orgSlug} />;
+        return (
+          <ExploreCard
+            persona="organization"
+            orgRef={orgSlug}
+            initialData={initialData?.momentum}
+          />
+        );
       default:
         return null;
     }

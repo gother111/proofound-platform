@@ -6,6 +6,7 @@ import { DashboardWidget } from '@/lib/dashboard/layout';
 
 interface DashboardClientProps {
   initialLayout?: DashboardWidget[];
+  initialData?: any;
 }
 
 class DashboardErrorBoundary extends React.Component<
@@ -37,7 +38,7 @@ class DashboardErrorBoundary extends React.Component<
   }
 }
 
-export function DashboardClient({ initialLayout }: DashboardClientProps) {
+export function DashboardClient({ initialLayout, initialData }: DashboardClientProps) {
   const [isDashboardLoading, setIsDashboardLoading] = useState(true);
   const [hasRenderError, setHasRenderError] = useState(false);
 
@@ -61,6 +62,7 @@ export function DashboardClient({ initialLayout }: DashboardClientProps) {
         ) : (
           <DraggableDashboard
             initialLayout={initialLayout}
+            initialData={initialData}
             onError={(message: string) => handleErrorFallback(message)}
             onLoadingChange={(isLoading: boolean) => setIsDashboardLoading(isLoading)}
           />

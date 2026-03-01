@@ -65,6 +65,7 @@ interface ProjectsCardProps {
   persona?: 'individual' | 'organization';
   orgId?: string;
   orgSlug?: string;
+  initialData?: any;
   onVisibilityChange?: (visible: boolean) => void;
 }
 
@@ -140,19 +141,42 @@ export function ProjectsCard({
   persona = 'individual',
   orgId,
   orgSlug,
+  initialData,
   onVisibilityChange,
 }: ProjectsCardProps) {
-  const [individualProjects, setIndividualProjects] = useState<IndividualProject[]>([]);
-  const [organizationProjects, setOrganizationProjects] = useState<OrganizationProject[]>([]);
-  const [individualStats, setIndividualStats] = useState<IndividualProjectsStats | null>(null);
-  const [organizationStats, setOrganizationStats] = useState<OrganizationProjectsStats | null>(
-    null
+  const [individualProjects, setIndividualProjects] = useState<IndividualProject[]>(() =>
+    persona === 'individual' && initialData?.projects ? initialData.projects.slice(0, 3) : []
   );
-  const [isLoading, setIsLoading] = useState(true);
+  const [organizationProjects, setOrganizationProjects] = useState<OrganizationProject[]>(() =>
+    persona === 'organization' && initialData?.projects ? initialData.projects.slice(0, 3) : []
+  );
+  const [individualStats, setIndividualStats] = useState<IndividualProjectsStats | null>(
+    persona === 'individual' && initialData?.stats ? initialData.stats : null
+  );
+  const [organizationStats, setOrganizationStats] = useState<OrganizationProjectsStats | null>(
+    persona === 'organization' && initialData?.stats ? initialData.stats : null
+  );
+  const [isLoading, setIsLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
+    if (initialData) {
+      if (persona === 'organization') {
+        setOrganizationProjects(initialData.projects?.slice(0, 3) || []);
+        setOrganizationStats(initialData.stats || null);
+        setIndividualProjects([]);
+        setIndividualStats(null);
+      } else {
+        setIndividualProjects(initialData.projects?.slice(0, 3) || []);
+        setIndividualStats(initialData.stats || null);
+        setOrganizationProjects([]);
+        setOrganizationStats(null);
+      }
+      setIsLoading(false);
+      return;
+    }
+
     async function fetchProjects() {
       try {
         setIsLoading(true);
@@ -205,7 +229,7 @@ export function ProjectsCard({
     }
 
     fetchProjects();
-  }, [orgId, persona]);
+  }, [orgId, persona, initialData]);
 
   useEffect(() => {
     if (isLoading) return;

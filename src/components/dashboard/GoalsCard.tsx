@@ -51,6 +51,7 @@ interface GoalsApiResponse {
 
 interface GoalsCardProps {
   onVisibilityChange?: (visible: boolean) => void;
+  initialData?: GoalsApiResponse | null;
 }
 
 // Status color mapping
@@ -62,16 +63,22 @@ const statusConfig = {
   archived: { label: 'Archived', icon: Clock, color: '#9CA3AF', bg: '#F3F4F6' },
 };
 
-export function GoalsCard({ onVisibilityChange }: GoalsCardProps) {
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [stats, setStats] = useState<GoalsStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export function GoalsCard({ onVisibilityChange, initialData }: GoalsCardProps) {
+  const [goals, setGoals] = useState<Goal[]>(
+    initialData ? initialData.goals.filter((g) => g.status !== 'archived').slice(0, 3) : []
+  );
+  const [stats, setStats] = useState<GoalsStats | null>(initialData?.stats || null);
+  const [isLoading, setIsLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
 
   // Fetch goals from API
   useEffect(() => {
     async function fetchGoals() {
+      if (initialData) {
+        setIsLoading(false);
+        return;
+      }
       try {
         setIsLoading(true);
         setError(null);
@@ -97,7 +104,7 @@ export function GoalsCard({ onVisibilityChange }: GoalsCardProps) {
     }
 
     fetchGoals();
-  }, []);
+  }, [initialData]);
 
   useEffect(() => {
     if (isLoading) return;

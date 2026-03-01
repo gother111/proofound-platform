@@ -15,6 +15,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Info, Heart, Target, CheckCircle2 } from 'lucide-react';
@@ -50,145 +58,159 @@ export function PACScoreExplainer({
 
   // Default trigger if none provided
   const defaultTrigger = (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="text-xs gap-1"
-      style={{ color: '#1C4D3A' }}
-    >
+    <Button variant="ghost" size="sm" className="text-xs gap-1" style={{ color: '#1C4D3A' }}>
       <Info className="w-3.5 h-3.5" />
       Why this match?
     </Button>
   );
 
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || defaultTrigger}
-      </DialogTrigger>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
+  const isDesktop = useMediaQuery('(min-width: 768px)');
+
+  const ModalContentBody = () => (
+    <>
+      <div className="space-y-6 py-4 px-4 md:px-0">
+        <DialogHeader className="md:px-0 px-2 text-left">
           <DialogTitle className="flex items-center gap-2">
             <Heart className="w-5 h-5" style={{ color: '#1C4D3A' }} />
             Purpose-Alignment Contribution (PAC)
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
-          {/* Overall PAC Score */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-[#2D3330]">Overall PAC Score</span>
-              <span className="text-2xl font-semibold" style={{ color: '#1C4D3A' }}>
-                {pacPercent}%
-              </span>
-            </div>
-            <Progress value={pacPercent} className="h-2" />
-            <p className="text-xs text-[#6B6760] mt-2">
-              Measures how well your purpose aligns with this opportunity
-            </p>
+        {/* Overall PAC Score */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-[#2D3330]">Overall PAC Score</span>
+            <span className="text-2xl font-semibold" style={{ color: '#1C4D3A' }}>
+              {pacPercent}%
+            </span>
           </div>
-
-          {/* Values Overlap */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Heart className="w-4 h-4" style={{ color: '#C76B4A' }} />
-              <h4 className="font-medium text-sm text-[#2D3330]">Values Alignment</h4>
-            </div>
-
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-[#6B6760]">Overlap</span>
-              <span className="text-sm font-semibold" style={{ color: '#C76B4A' }}>
-                {valuesPercent}%
-              </span>
-            </div>
-            <Progress value={valuesPercent} className="h-1.5 mb-3" />
-
-            {sharedValues.length > 0 ? (
-              <div>
-                <p className="text-xs text-[#6B6760] mb-2">Shared values:</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {sharedValues.map((value, idx) => (
-                    <Badge
-                      key={idx}
-                      variant="secondary"
-                      className="text-xs bg-[#C76B4A]/10 text-[#C76B4A] border-[#C76B4A]/20"
-                    >
-                      <CheckCircle2 className="w-3 h-3 mr-1" />
-                      {value}
-                    </Badge>
-                  ))}
-                </div>
-                <p className="text-xs text-[#6B6760] mt-2">
-                  {sharedValues.length} of {totalValues} values in common
-                </p>
-              </div>
-            ) : (
-              <p className="text-xs text-[#6B6760]">No values overlap data available</p>
-            )}
-          </div>
-
-          {/* Causes Overlap */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Target className="w-4 h-4" style={{ color: '#1C4D3A' }} />
-              <h4 className="font-medium text-sm text-[#2D3330]">Causes Alignment</h4>
-            </div>
-
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-[#6B6760]">Overlap</span>
-              <span className="text-sm font-semibold" style={{ color: '#1C4D3A' }}>
-                {causesPercent}%
-              </span>
-            </div>
-            <Progress value={causesPercent} className="h-1.5 mb-3" />
-
-            {sharedCauses.length > 0 ? (
-              <div>
-                <p className="text-xs text-[#6B6760] mb-2">Shared causes:</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {sharedCauses.map((cause, idx) => (
-                    <Badge
-                      key={idx}
-                      variant="secondary"
-                      className="text-xs bg-[#1C4D3A]/10 text-[#1C4D3A] border-[#1C4D3A]/20"
-                    >
-                      <CheckCircle2 className="w-3 h-3 mr-1" />
-                      {cause}
-                    </Badge>
-                  ))}
-                </div>
-                <p className="text-xs text-[#6B6760] mt-2">
-                  {sharedCauses.length} of {totalCauses} causes in common
-                </p>
-              </div>
-            ) : (
-              <p className="text-xs text-[#6B6760]">No causes overlap data available</p>
-            )}
-          </div>
-
-          {/* Explanation */}
-          <div className="bg-[#F7F6F1] rounded-lg p-4 border border-[#E8E6DD]">
-            <p className="text-xs leading-relaxed text-[#2D3330]">
-              <strong className="font-semibold">How PAC is calculated:</strong>
-              <br />
-              PAC uses <em>Jaccard similarity</em> to measure the overlap between your values and
-              causes with those of this opportunity. Higher overlap means stronger alignment with
-              your purpose.
-            </p>
-          </div>
+          <Progress value={pacPercent} className="h-2" />
+          <p className="text-xs text-[#6B6760] mt-2">
+            Measures how well your purpose aligns with this opportunity
+          </p>
         </div>
 
-        <div className="flex justify-end pt-2">
-          <Button
-            onClick={() => setOpen(false)}
-            style={{ backgroundColor: '#1C4D3A' }}
-            className="text-white"
-          >
-            Got it
-          </Button>
+        {/* Values Overlap */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Heart className="w-4 h-4" style={{ color: '#C76B4A' }} />
+            <h4 className="font-medium text-sm text-[#2D3330]">Values Alignment</h4>
+          </div>
+
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-[#6B6760]">Overlap</span>
+            <span className="text-sm font-semibold" style={{ color: '#C76B4A' }}>
+              {valuesPercent}%
+            </span>
+          </div>
+          <Progress value={valuesPercent} className="h-1.5 mb-3" />
+
+          {sharedValues.length > 0 ? (
+            <div>
+              <p className="text-xs text-[#6B6760] mb-2">Shared values:</p>
+              <div className="flex flex-wrap gap-1.5">
+                {sharedValues.map((value, idx) => (
+                  <Badge
+                    key={idx}
+                    variant="secondary"
+                    className="text-xs bg-[#C76B4A]/10 text-[#C76B4A] border-[#C76B4A]/20"
+                  >
+                    <CheckCircle2 className="w-3 h-3 mr-1" />
+                    {value}
+                  </Badge>
+                ))}
+              </div>
+              <p className="text-xs text-[#6B6760] mt-2">
+                {sharedValues.length} of {totalValues} values in common
+              </p>
+            </div>
+          ) : (
+            <p className="text-xs text-[#6B6760]">No values overlap data available</p>
+          )}
         </div>
-      </DialogContent>
-    </Dialog>
+
+        {/* Causes Overlap */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Target className="w-4 h-4" style={{ color: '#1C4D3A' }} />
+            <h4 className="font-medium text-sm text-[#2D3330]">Causes Alignment</h4>
+          </div>
+
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-[#6B6760]">Overlap</span>
+            <span className="text-sm font-semibold" style={{ color: '#1C4D3A' }}>
+              {causesPercent}%
+            </span>
+          </div>
+          <Progress value={causesPercent} className="h-1.5 mb-3" />
+
+          {sharedCauses.length > 0 ? (
+            <div>
+              <p className="text-xs text-[#6B6760] mb-2">Shared causes:</p>
+              <div className="flex flex-wrap gap-1.5">
+                {sharedCauses.map((cause, idx) => (
+                  <Badge
+                    key={idx}
+                    variant="secondary"
+                    className="text-xs bg-[#1C4D3A]/10 text-[#1C4D3A] border-[#1C4D3A]/20"
+                  >
+                    <CheckCircle2 className="w-3 h-3 mr-1" />
+                    {cause}
+                  </Badge>
+                ))}
+              </div>
+              <p className="text-xs text-[#6B6760] mt-2">
+                {sharedCauses.length} of {totalCauses} causes in common
+              </p>
+            </div>
+          ) : (
+            <p className="text-xs text-[#6B6760]">No causes overlap data available</p>
+          )}
+        </div>
+
+        {/* Explanation */}
+        <div className="bg-[#F7F6F1] rounded-lg p-4 border border-[#E8E6DD]">
+          <p className="text-xs leading-relaxed text-[#2D3330]">
+            <strong className="font-semibold">How PAC is calculated:</strong>
+            <br />
+            PAC uses <em>Jaccard similarity</em> to measure the overlap between your values and
+            causes with those of this opportunity. Higher overlap means stronger alignment with your
+            purpose.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex justify-end pt-2 pb-4 md:pb-0 px-4 md:px-0">
+        <Button
+          onClick={() => setOpen(false)}
+          style={{ backgroundColor: '#1C4D3A' }}
+          className="text-white w-full md:w-auto"
+        >
+          Got it
+        </Button>
+      </div>
+    </>
+  );
+
+  if (isDesktop) {
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
+        <DialogContent className="max-w-lg p-6">
+          <ModalContentBody />
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild>{trigger || defaultTrigger}</DrawerTrigger>
+      <DrawerContent>
+        <div className="overflow-y-auto w-full">
+          <ModalContentBody />
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 }

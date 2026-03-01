@@ -32,11 +32,21 @@ type MetricsResponse = {
 
 type MomentumMetricsCardProps = {
   useMockData?: boolean;
+  initialData?: MetricsResponse | null;
 };
 
-export function MomentumMetricsCard({ useMockData }: MomentumMetricsCardProps) {
-  const [metrics, setMetrics] = useState<MetricRow[]>([]);
-  const [loading, setLoading] = useState(true);
+export function MomentumMetricsCard({ useMockData, initialData }: MomentumMetricsCardProps) {
+  const [metrics, setMetrics] = useState<MetricRow[]>(() => {
+    if (initialData?.metrics) {
+      const rows: MetricRow[] = [];
+      if (initialData.metrics.ttfqi) rows.push(initialData.metrics.ttfqi);
+      if (initialData.metrics.ttv) rows.push(initialData.metrics.ttv);
+      if (initialData.metrics.ttsc) rows.push(initialData.metrics.ttsc);
+      return rows;
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState(!initialData && !useMockData);
 
   useEffect(() => {
     if (useMockData) {
@@ -48,6 +58,8 @@ export function MomentumMetricsCard({ useMockData }: MomentumMetricsCardProps) {
       setLoading(false);
       return;
     }
+
+    if (initialData || useMockData) return;
 
     async function load() {
       try {
@@ -72,7 +84,7 @@ export function MomentumMetricsCard({ useMockData }: MomentumMetricsCardProps) {
     }
 
     load();
-  }, [useMockData]);
+  }, [useMockData, initialData]);
 
   return (
     <Card className="h-full">

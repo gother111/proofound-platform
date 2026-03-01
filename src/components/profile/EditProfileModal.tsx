@@ -7,11 +7,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { BasicInfo } from '@/types/profile';
 import { FormErrorBoundary } from '@/components/ErrorBoundary';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 interface EditProfileModalProps {
   open: boolean;
@@ -21,6 +30,7 @@ interface EditProfileModalProps {
 }
 
 export function EditProfileModal({ open, onOpenChange, basicInfo, onSave }: EditProfileModalProps) {
+  const isDesktop = useMediaQuery('(min-width: 768px)');
   const [name, setName] = useState(basicInfo.name);
   const [tagline, setTagline] = useState(basicInfo.tagline || '');
   const [location, setLocation] = useState(basicInfo.location || '');
@@ -74,93 +84,121 @@ export function EditProfileModal({ open, onOpenChange, basicInfo, onSave }: Edit
 
   const taglineCharsLeft = 200 - tagline.length;
 
+  const FormContent = () => (
+    <FormErrorBoundary>
+      <div className="space-y-4 py-4 px-4 md:px-0">
+        {/* Name */}
+        <div className="space-y-2">
+          <Label htmlFor="name">
+            Name <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            id="name"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              setErrors((prev) => ({ ...prev, name: '' }));
+            }}
+            placeholder="Your full name"
+            className={errors.name ? 'border-red-500' : ''}
+          />
+          {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
+        </div>
+
+        {/* Tagline */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="tagline">Tagline</Label>
+            <span
+              className={`text-xs ${
+                taglineCharsLeft < 0
+                  ? 'text-red-500'
+                  : taglineCharsLeft < 20
+                    ? 'text-yellow-600'
+                    : 'text-muted-foreground'
+              }`}
+            >
+              {taglineCharsLeft} characters left
+            </span>
+          </div>
+          <textarea
+            id="tagline"
+            value={tagline}
+            onChange={(e) => {
+              setTagline(e.target.value);
+              setErrors((prev) => ({ ...prev, tagline: '' }));
+            }}
+            placeholder="A brief statement that captures who you are and what you care about"
+            className={`flex min-h-[80px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
+              errors.tagline ? 'border-red-500' : ''
+            }`}
+            maxLength={200}
+          />
+          {errors.tagline && <p className="text-xs text-red-500">{errors.tagline}</p>}
+        </div>
+
+        {/* Location */}
+        <div className="space-y-2">
+          <Label htmlFor="location">Location</Label>
+          <Input
+            id="location"
+            value={location}
+            onChange={(e) => {
+              setLocation(e.target.value);
+              setErrors((prev) => ({ ...prev, location: '' }));
+            }}
+            placeholder="City, Country"
+            className={errors.location ? 'border-red-500' : ''}
+          />
+          {errors.location && <p className="text-xs text-red-500">{errors.location}</p>}
+        </div>
+      </div>
+    </FormErrorBoundary>
+  );
+
+  if (isDesktop) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-md">
+          <form onSubmit={handleSave} className="space-y-4">
+            <DialogHeader>
+              <DialogTitle>Edit Profile</DialogTitle>
+              <DialogDescription>Update your basic information</DialogDescription>
+            </DialogHeader>
+
+            <FormContent />
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Save Changes</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <form onSubmit={handleSave} className="space-y-4">
-          <DialogHeader>
-            <DialogTitle>Edit Profile</DialogTitle>
-            <DialogDescription>Update your basic information</DialogDescription>
-          </DialogHeader>
-
-          <FormErrorBoundary>
-            <div className="space-y-4 py-4">
-              {/* Name */}
-              <div className="space-y-2">
-                <Label htmlFor="name">
-                  Name <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => {
-                    setName(e.target.value);
-                    setErrors((prev) => ({ ...prev, name: '' }));
-                  }}
-                  placeholder="Your full name"
-                  className={errors.name ? 'border-red-500' : ''}
-                />
-                {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
-              </div>
-
-              {/* Tagline */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="tagline">Tagline</Label>
-                  <span
-                    className={`text-xs ${
-                      taglineCharsLeft < 0
-                        ? 'text-red-500'
-                        : taglineCharsLeft < 20
-                          ? 'text-yellow-600'
-                          : 'text-muted-foreground'
-                    }`}
-                  >
-                    {taglineCharsLeft} characters left
-                  </span>
-                </div>
-                <textarea
-                  id="tagline"
-                  value={tagline}
-                  onChange={(e) => {
-                    setTagline(e.target.value);
-                    setErrors((prev) => ({ ...prev, tagline: '' }));
-                  }}
-                  placeholder="A brief statement that captures who you are and what you care about"
-                  className={`flex min-h-[80px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
-                    errors.tagline ? 'border-red-500' : ''
-                  }`}
-                  maxLength={200}
-                />
-                {errors.tagline && <p className="text-xs text-red-500">{errors.tagline}</p>}
-              </div>
-
-              {/* Location */}
-              <div className="space-y-2">
-                <Label htmlFor="location">Location</Label>
-                <Input
-                  id="location"
-                  value={location}
-                  onChange={(e) => {
-                    setLocation(e.target.value);
-                    setErrors((prev) => ({ ...prev, location: '' }));
-                  }}
-                  placeholder="City, Country"
-                  className={errors.location ? 'border-red-500' : ''}
-                />
-                {errors.location && <p className="text-xs text-red-500">{errors.location}</p>}
-              </div>
-            </div>
-          </FormErrorBoundary>
-
-          <DialogFooter>
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent>
+        <form onSubmit={handleSave}>
+          <DrawerHeader className="text-left">
+            <DrawerTitle>Edit Profile</DrawerTitle>
+            <DrawerDescription>Update your basic information</DrawerDescription>
+          </DrawerHeader>
+          <div className="max-h-[60vh] overflow-y-auto">
+            <FormContent />
+          </div>
+          <DrawerFooter className="pt-2">
+            <Button type="submit">Save Changes</Button>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit">Save Changes</Button>
-          </DialogFooter>
+          </DrawerFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </DrawerContent>
+    </Drawer>
   );
 }

@@ -21,6 +21,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -145,11 +153,12 @@ export function MatchExplainerModal({
     </Button>
   );
 
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
+  const isDesktop = useMediaQuery('(min-width: 768px)');
+
+  const ModalContentBody = () => (
+    <>
+      <div className="space-y-6 py-4 px-4 md:px-0">
+        <DialogHeader className="md:px-0 px-2 text-left">
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Zap className="w-6 h-6 text-[#1C4D3A]" />
             Why This Match?
@@ -159,338 +168,354 @@ export function MatchExplainerModal({
           </p>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
-          {/* Overall Score & Rank */}
-          <div className="bg-gradient-to-br from-[#E8F5E1] to-[#F7F6F1] rounded-xl p-6 border border-[#E8E6DD]">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <p className="text-sm text-[#6B6760] mb-1">Overall Match Score</p>
-                <p className="text-4xl font-bold text-[#1C4D3A]">{overallPercent}%</p>
-              </div>
-              {(rank || rankBand) && (
-                <div className="text-right">
-                  <p className="text-sm text-[#6B6760] mb-1">Your Ranking</p>
-                  <div className="flex items-center gap-2">
-                    <Award className="w-5 h-5" style={{ color: getRankColor() }} />
-                    <p className="text-xl font-semibold" style={{ color: getRankColor() }}>
-                      {getRankDisplay()}
-                    </p>
-                  </div>
-                </div>
-              )}
+        {/* Overall Score & Rank */}
+        <div className="bg-gradient-to-br from-[#E8F5E1] to-[#F7F6F1] rounded-xl p-6 border border-[#E8E6DD]">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <p className="text-sm text-[#6B6760] mb-1">Overall Match Score</p>
+              <p className="text-4xl font-bold text-[#1C4D3A]">{overallPercent}%</p>
             </div>
-
-            <Progress value={overallPercent} className="h-3" />
-
-            <p className="text-xs text-[#6B6760] mt-3">
-              This score combines your skills, purpose alignment, constraints match, and credential
-              strength.
-            </p>
+            {(rank || rankBand) && (
+              <div className="text-right">
+                <p className="text-sm text-[#6B6760] mb-1">Your Ranking</p>
+                <div className="flex items-center gap-2">
+                  <Award className="w-5 h-5" style={{ color: getRankColor() }} />
+                  <p className="text-xl font-semibold" style={{ color: getRankColor() }}>
+                    {getRankDisplay()}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Tabbed Breakdown */}
-          <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="skills">Skills</TabsTrigger>
-              <TabsTrigger value="purpose">Purpose</TabsTrigger>
-              <TabsTrigger value="constraints">Constraints</TabsTrigger>
-            </TabsList>
+          <Progress value={overallPercent} className="h-3" />
 
-            {/* Overview Tab */}
-            <TabsContent value="overview" className="space-y-4 pt-4">
-              <h4 className="text-sm font-semibold text-[#2D3330] mb-3">
-                Score Breakdown by Category
-              </h4>
+          <p className="text-xs text-[#6B6760] mt-3">
+            This score combines your skills, purpose alignment, constraints match, and credential
+            strength.
+          </p>
+        </div>
 
-              {/* Skills */}
-              {subscores.skills !== undefined && (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-[#1C4D3A]" />
-                      <span className="text-sm font-medium text-[#2D3330]">Skills Match</span>
-                    </div>
-                    <span className="text-sm font-semibold text-[#1C4D3A]">{skillsPercent}%</span>
+        {/* Tabbed Breakdown */}
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="skills">Skills</TabsTrigger>
+            <TabsTrigger value="purpose">Purpose</TabsTrigger>
+            <TabsTrigger value="constraints">Constraints</TabsTrigger>
+          </TabsList>
+
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-4 pt-4">
+            <h4 className="text-sm font-semibold text-[#2D3330] mb-3">
+              Score Breakdown by Category
+            </h4>
+
+            {/* Skills */}
+            {subscores.skills !== undefined && (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-[#1C4D3A]" />
+                    <span className="text-sm font-medium text-[#2D3330]">Skills Match</span>
                   </div>
-                  <Progress value={skillsPercent} className="h-2" />
+                  <span className="text-sm font-semibold text-[#1C4D3A]">{skillsPercent}%</span>
                 </div>
-              )}
+                <Progress value={skillsPercent} className="h-2" />
+              </div>
+            )}
 
-              {/* PAC */}
-              {subscores.pac !== undefined && (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Heart className="w-4 h-4 text-[#C76B4A]" />
-                      <span className="text-sm font-medium text-[#2D3330]">
-                        {UI_VOCABULARY.pacLabel}
-                      </span>
-                    </div>
-                    <span className="text-sm font-semibold text-[#C76B4A]">{pacPercent}%</span>
-                  </div>
-                  <Progress value={pacPercent} className="h-2" />
-                </div>
-              )}
-
-              {/* Constraints */}
-              {subscores.constraints !== undefined && (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-[#1C4D3A]" />
-                      <span className="text-sm font-medium text-[#2D3330]">
-                        Practical Constraints
-                      </span>
-                    </div>
-                    <span className="text-sm font-semibold text-[#1C4D3A]">
-                      {constraintsPercent}%
+            {/* PAC */}
+            {subscores.pac !== undefined && (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Heart className="w-4 h-4 text-[#C76B4A]" />
+                    <span className="text-sm font-medium text-[#2D3330]">
+                      {UI_VOCABULARY.pacLabel}
                     </span>
                   </div>
-                  <Progress value={constraintsPercent} className="h-2" />
+                  <span className="text-sm font-semibold text-[#C76B4A]">{pacPercent}%</span>
                 </div>
-              )}
-
-              {/* Recency */}
-              {subscores.recency !== undefined && (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 text-[#6B6760]" />
-                      <span className="text-sm font-medium text-[#2D3330]">Skill Recency</span>
-                    </div>
-                    <span className="text-sm font-semibold text-[#6B6760]">{recencyPercent}%</span>
-                  </div>
-                  <Progress value={recencyPercent} className="h-2" />
-                </div>
-              )}
-
-              {/* Evidence */}
-              {subscores.evidence !== undefined && (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Award className="w-4 h-4 text-[#6B6760]" />
-                      <span className="text-sm font-medium text-[#2D3330]">Evidence Strength</span>
-                    </div>
-                    <span className="text-sm font-semibold text-[#6B6760]">{evidencePercent}%</span>
-                  </div>
-                  <Progress value={evidencePercent} className="h-2" />
-                </div>
-              )}
-
-              <div className="bg-[#F7F6F1] rounded-lg p-4 border border-[#E8E6DD] mt-4">
-                <p className="text-xs leading-relaxed text-[#2D3330]">
-                  <strong className="font-semibold">How it works:</strong> Your composite score is a
-                  weighted combination of these factors. Higher scores in key areas (Skills +
-                  Purpose) boost your overall match.
-                </p>
+                <Progress value={pacPercent} className="h-2" />
               </div>
-            </TabsContent>
+            )}
 
-            {/* Skills Tab */}
-            <TabsContent value="skills" className="space-y-4 pt-4">
-              {skillsMatch ? (
-                <>
-                  {/* Required Skills */}
-                  {skillsMatch.required.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-semibold text-[#2D3330] mb-3">Required Skills</h4>
-                      <div className="space-y-2">
-                        {skillsMatch.required.map((skill, idx) => (
-                          <div
-                            key={idx}
-                            className="flex items-center justify-between p-3 rounded-lg border border-[#E8E6DD] bg-white"
-                          >
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-[#2D3330]">
-                                {skill.skillName}
-                              </p>
-                              <p className="text-xs text-[#6B6760] mt-0.5">
-                                Required: Level {skill.requiredLevel} • You have: Level{' '}
-                                {skill.yourLevel}
-                              </p>
-                            </div>
-                            {skill.met ? (
-                              <CheckCircle2 className="w-5 h-5 text-[#1C4D3A] flex-shrink-0" />
-                            ) : (
-                              <AlertCircle className="w-5 h-5 text-[#C76B4A] flex-shrink-0" />
-                            )}
+            {/* Constraints */}
+            {subscores.constraints !== undefined && (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#1C4D3A]" />
+                    <span className="text-sm font-medium text-[#2D3330]">
+                      Practical Constraints
+                    </span>
+                  </div>
+                  <span className="text-sm font-semibold text-[#1C4D3A]">
+                    {constraintsPercent}%
+                  </span>
+                </div>
+                <Progress value={constraintsPercent} className="h-2" />
+              </div>
+            )}
+
+            {/* Recency */}
+            {subscores.recency !== undefined && (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-[#6B6760]" />
+                    <span className="text-sm font-medium text-[#2D3330]">Skill Recency</span>
+                  </div>
+                  <span className="text-sm font-semibold text-[#6B6760]">{recencyPercent}%</span>
+                </div>
+                <Progress value={recencyPercent} className="h-2" />
+              </div>
+            )}
+
+            {/* Evidence */}
+            {subscores.evidence !== undefined && (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Award className="w-4 h-4 text-[#6B6760]" />
+                    <span className="text-sm font-medium text-[#2D3330]">Evidence Strength</span>
+                  </div>
+                  <span className="text-sm font-semibold text-[#6B6760]">{evidencePercent}%</span>
+                </div>
+                <Progress value={evidencePercent} className="h-2" />
+              </div>
+            )}
+
+            <div className="bg-[#F7F6F1] rounded-lg p-4 border border-[#E8E6DD] mt-4">
+              <p className="text-xs leading-relaxed text-[#2D3330]">
+                <strong className="font-semibold">How it works:</strong> Your composite score is a
+                weighted combination of these factors. Higher scores in key areas (Skills + Purpose)
+                boost your overall match.
+              </p>
+            </div>
+          </TabsContent>
+
+          {/* Skills Tab */}
+          <TabsContent value="skills" className="space-y-4 pt-4">
+            {skillsMatch ? (
+              <>
+                {/* Required Skills */}
+                {skillsMatch.required.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-[#2D3330] mb-3">Required Skills</h4>
+                    <div className="space-y-2">
+                      {skillsMatch.required.map((skill, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between p-3 rounded-lg border border-[#E8E6DD] bg-white"
+                        >
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-[#2D3330]">{skill.skillName}</p>
+                            <p className="text-xs text-[#6B6760] mt-0.5">
+                              Required: Level {skill.requiredLevel} • You have: Level{' '}
+                              {skill.yourLevel}
+                            </p>
                           </div>
+                          {skill.met ? (
+                            <CheckCircle2 className="w-5 h-5 text-[#1C4D3A] flex-shrink-0" />
+                          ) : (
+                            <AlertCircle className="w-5 h-5 text-[#C76B4A] flex-shrink-0" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Nice-to-Have Skills */}
+                {skillsMatch.nice.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-[#2D3330] mb-3">
+                      Nice-to-Have Skills
+                    </h4>
+                    <div className="space-y-2">
+                      {skillsMatch.nice.map((skill, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between p-3 rounded-lg border border-[#E8E6DD] bg-white"
+                        >
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-[#2D3330]">{skill.skillName}</p>
+                            <p className="text-xs text-[#6B6760] mt-0.5">
+                              Your level: {skill.yourLevel}
+                            </p>
+                          </div>
+                          {skill.met && (
+                            <CheckCircle2 className="w-5 h-5 text-[#1C4D3A] flex-shrink-0" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-[#6B6760]">No skills data available</p>
+            )}
+          </TabsContent>
+
+          {/* Purpose Tab */}
+          <TabsContent value="purpose" className="space-y-4 pt-4">
+            {pac ? (
+              <>
+                {/* Values Alignment */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Heart className="w-5 h-5 text-[#C76B4A]" />
+                    <h4 className="font-semibold text-sm text-[#2D3330]">Values Alignment</h4>
+                  </div>
+
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-[#6B6760]">Overlap</span>
+                    <span className="text-sm font-semibold text-[#C76B4A]">
+                      {Math.round(pac.valuesOverlap * 100)}%
+                    </span>
+                  </div>
+                  <Progress value={pac.valuesOverlap * 100} className="h-2 mb-3" />
+
+                  {pac.sharedValues.length > 0 ? (
+                    <div>
+                      <p className="text-xs text-[#6B6760] mb-2">Shared values:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {pac.sharedValues.map((value, idx) => (
+                          <Badge
+                            key={idx}
+                            variant="secondary"
+                            className="bg-[#C76B4A]/10 text-[#C76B4A] border-[#C76B4A]/20"
+                          >
+                            <CheckCircle2 className="w-3 h-3 mr-1" />
+                            {value}
+                          </Badge>
                         ))}
                       </div>
+                      <p className="text-xs text-[#6B6760] mt-2">
+                        {pac.sharedValues.length} of {pac.totalValues} values in common
+                      </p>
                     </div>
+                  ) : (
+                    <p className="text-xs text-[#6B6760]">No values in common</p>
                   )}
+                </div>
 
-                  {/* Nice-to-Have Skills */}
-                  {skillsMatch.nice.length > 0 && (
+                {/* Causes Alignment */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Target className="w-5 h-5 text-[#1C4D3A]" />
+                    <h4 className="font-semibold text-sm text-[#2D3330]">Causes Alignment</h4>
+                  </div>
+
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-[#6B6760]">Overlap</span>
+                    <span className="text-sm font-semibold text-[#1C4D3A]">
+                      {Math.round(pac.causesOverlap * 100)}%
+                    </span>
+                  </div>
+                  <Progress value={pac.causesOverlap * 100} className="h-2 mb-3" />
+
+                  {pac.sharedCauses.length > 0 ? (
                     <div>
-                      <h4 className="text-sm font-semibold text-[#2D3330] mb-3">
-                        Nice-to-Have Skills
-                      </h4>
-                      <div className="space-y-2">
-                        {skillsMatch.nice.map((skill, idx) => (
-                          <div
+                      <p className="text-xs text-[#6B6760] mb-2">Shared causes:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {pac.sharedCauses.map((cause, idx) => (
+                          <Badge
                             key={idx}
-                            className="flex items-center justify-between p-3 rounded-lg border border-[#E8E6DD] bg-white"
+                            variant="secondary"
+                            className="bg-[#1C4D3A]/10 text-[#1C4D3A] border-[#1C4D3A]/20"
                           >
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-[#2D3330]">
-                                {skill.skillName}
-                              </p>
-                              <p className="text-xs text-[#6B6760] mt-0.5">
-                                Your level: {skill.yourLevel}
-                              </p>
-                            </div>
-                            {skill.met && (
-                              <CheckCircle2 className="w-5 h-5 text-[#1C4D3A] flex-shrink-0" />
-                            )}
-                          </div>
+                            <CheckCircle2 className="w-3 h-3 mr-1" />
+                            {cause}
+                          </Badge>
                         ))}
                       </div>
+                      <p className="text-xs text-[#6B6760] mt-2">
+                        {pac.sharedCauses.length} of {pac.totalCauses} causes in common
+                      </p>
                     </div>
+                  ) : (
+                    <p className="text-xs text-[#6B6760]">No causes in common</p>
                   )}
-                </>
-              ) : (
-                <p className="text-sm text-[#6B6760]">No skills data available</p>
-              )}
-            </TabsContent>
+                </div>
 
-            {/* Purpose Tab */}
-            <TabsContent value="purpose" className="space-y-4 pt-4">
-              {pac ? (
-                <>
-                  {/* Values Alignment */}
-                  <div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <Heart className="w-5 h-5 text-[#C76B4A]" />
-                      <h4 className="font-semibold text-sm text-[#2D3330]">Values Alignment</h4>
+                <div className="bg-[#F7F6F1] rounded-lg p-4 border border-[#E8E6DD]">
+                  <p className="text-xs leading-relaxed text-[#2D3330]">
+                    <strong className="font-semibold">{UI_VOCABULARY.pacLabel}</strong> uses value
+                    and cause overlap to estimate mission alignment. Higher scores mean this role
+                    aligns more closely with what matters to you.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-[#6B6760]">No purpose alignment data available</p>
+            )}
+          </TabsContent>
+
+          {/* Constraints Tab */}
+          <TabsContent value="constraints" className="space-y-3 pt-4">
+            {constraints ? (
+              <>
+                {Object.entries(constraints).map(([key, value]) => (
+                  <div
+                    key={key}
+                    className="flex items-start justify-between p-3 rounded-lg border border-[#E8E6DD] bg-white"
+                  >
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-[#2D3330] capitalize mb-0.5">
+                        {key.replace(/([A-Z])/g, ' $1').trim()}
+                      </p>
+                      {value.details && <p className="text-xs text-[#6B6760]">{value.details}</p>}
                     </div>
-
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-[#6B6760]">Overlap</span>
-                      <span className="text-sm font-semibold text-[#C76B4A]">
-                        {Math.round(pac.valuesOverlap * 100)}%
-                      </span>
-                    </div>
-                    <Progress value={pac.valuesOverlap * 100} className="h-2 mb-3" />
-
-                    {pac.sharedValues.length > 0 ? (
-                      <div>
-                        <p className="text-xs text-[#6B6760] mb-2">Shared values:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {pac.sharedValues.map((value, idx) => (
-                            <Badge
-                              key={idx}
-                              variant="secondary"
-                              className="bg-[#C76B4A]/10 text-[#C76B4A] border-[#C76B4A]/20"
-                            >
-                              <CheckCircle2 className="w-3 h-3 mr-1" />
-                              {value}
-                            </Badge>
-                          ))}
-                        </div>
-                        <p className="text-xs text-[#6B6760] mt-2">
-                          {pac.sharedValues.length} of {pac.totalValues} values in common
-                        </p>
-                      </div>
+                    {value.match ? (
+                      <CheckCircle2 className="w-5 h-5 text-[#1C4D3A] flex-shrink-0 ml-2" />
                     ) : (
-                      <p className="text-xs text-[#6B6760]">No values in common</p>
+                      <AlertCircle className="w-5 h-5 text-[#C76B4A] flex-shrink-0 ml-2" />
                     )}
                   </div>
+                ))}
+              </>
+            ) : (
+              <p className="text-sm text-[#6B6760]">No constraints data available</p>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
 
-                  {/* Causes Alignment */}
-                  <div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <Target className="w-5 h-5 text-[#1C4D3A]" />
-                      <h4 className="font-semibold text-sm text-[#2D3330]">Causes Alignment</h4>
-                    </div>
+      {/* Footer */}
+      <div className="flex justify-between items-center pt-4 border-t border-[#E8E6DD] px-4 md:px-0">
+        <p className="text-xs text-[#6B6760]">
+          Match calculated on {new Date().toLocaleDateString()}
+        </p>
+        <Button onClick={() => setOpen(false)} className="bg-[#1C4D3A] text-white">
+          Got it
+        </Button>
+      </div>
+    </>
+  );
 
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-[#6B6760]">Overlap</span>
-                      <span className="text-sm font-semibold text-[#1C4D3A]">
-                        {Math.round(pac.causesOverlap * 100)}%
-                      </span>
-                    </div>
-                    <Progress value={pac.causesOverlap * 100} className="h-2 mb-3" />
+  if (isDesktop) {
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <ModalContentBody />
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
-                    {pac.sharedCauses.length > 0 ? (
-                      <div>
-                        <p className="text-xs text-[#6B6760] mb-2">Shared causes:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {pac.sharedCauses.map((cause, idx) => (
-                            <Badge
-                              key={idx}
-                              variant="secondary"
-                              className="bg-[#1C4D3A]/10 text-[#1C4D3A] border-[#1C4D3A]/20"
-                            >
-                              <CheckCircle2 className="w-3 h-3 mr-1" />
-                              {cause}
-                            </Badge>
-                          ))}
-                        </div>
-                        <p className="text-xs text-[#6B6760] mt-2">
-                          {pac.sharedCauses.length} of {pac.totalCauses} causes in common
-                        </p>
-                      </div>
-                    ) : (
-                      <p className="text-xs text-[#6B6760]">No causes in common</p>
-                    )}
-                  </div>
-
-                  <div className="bg-[#F7F6F1] rounded-lg p-4 border border-[#E8E6DD]">
-                    <p className="text-xs leading-relaxed text-[#2D3330]">
-                      <strong className="font-semibold">{UI_VOCABULARY.pacLabel}</strong> uses value
-                      and cause overlap to estimate mission alignment. Higher scores mean this role
-                      aligns more closely with what matters to you.
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <p className="text-sm text-[#6B6760]">No purpose alignment data available</p>
-              )}
-            </TabsContent>
-
-            {/* Constraints Tab */}
-            <TabsContent value="constraints" className="space-y-3 pt-4">
-              {constraints ? (
-                <>
-                  {Object.entries(constraints).map(([key, value]) => (
-                    <div
-                      key={key}
-                      className="flex items-start justify-between p-3 rounded-lg border border-[#E8E6DD] bg-white"
-                    >
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-[#2D3330] capitalize mb-0.5">
-                          {key.replace(/([A-Z])/g, ' $1').trim()}
-                        </p>
-                        {value.details && <p className="text-xs text-[#6B6760]">{value.details}</p>}
-                      </div>
-                      {value.match ? (
-                        <CheckCircle2 className="w-5 h-5 text-[#1C4D3A] flex-shrink-0 ml-2" />
-                      ) : (
-                        <AlertCircle className="w-5 h-5 text-[#C76B4A] flex-shrink-0 ml-2" />
-                      )}
-                    </div>
-                  ))}
-                </>
-              ) : (
-                <p className="text-sm text-[#6B6760]">No constraints data available</p>
-              )}
-            </TabsContent>
-          </Tabs>
+  return (
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild>{trigger || defaultTrigger}</DrawerTrigger>
+      <DrawerContent className="max-h-[90vh]">
+        <div className="overflow-y-auto w-full">
+          <ModalContentBody />
         </div>
-
-        {/* Footer */}
-        <div className="flex justify-between items-center pt-4 border-t border-[#E8E6DD]">
-          <p className="text-xs text-[#6B6760]">
-            Match calculated on {new Date().toLocaleDateString()}
-          </p>
-          <Button onClick={() => setOpen(false)} className="bg-[#1C4D3A] text-white">
-            Got it
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+      </DrawerContent>
+    </Drawer>
   );
 }

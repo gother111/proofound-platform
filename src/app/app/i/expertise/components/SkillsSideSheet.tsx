@@ -1,9 +1,11 @@
 'use client';
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit2, Calendar, TrendingUp, Award, Lock } from 'lucide-react';
+import { Edit2, Calendar, TrendingUp, Award, Lock, X } from 'lucide-react';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 interface Skill {
   id: string;
@@ -61,91 +63,121 @@ export function SkillsSideSheet({
   filterDescription,
   onSkillClick,
 }: SkillsSideSheetProps) {
+  const isDesktop = useMediaQuery('(min-width: 768px)');
+
+  const Content = () => (
+    <div className="mt-6 space-y-3 pb-8">
+      {skills.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-sm text-muted-foreground">No skills match the current filters</p>
+        </div>
+      ) : (
+        skills.map((skill) => {
+          const skillName =
+            skill.skill_name ||
+            skill.taxonomy?.name_i18n?.en ||
+            skill.custom_skill_name ||
+            'Unknown Skill';
+          const level = skill.level || 1;
+          const recency = formatRecency(skill.lastUsedAt);
+          const relevance = skill.relevance || 'current';
+          const proofCount = (skill as any).proof_count ?? 0;
+          const verificationCount = (skill as any).verification_count ?? 0;
+
+          return (
+            <div
+              key={skill.id}
+              className="p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <h4 className="font-medium flex-1">{skillName}</h4>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => onSkillClick(skill.id)}
+                  className="h-8 w-8 p-0 shrink-0"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <Badge className={getLevelColor(level)}>{getLevelLabel(level)}</Badge>
+
+                <Badge variant="outline" className="gap-1">
+                  <Calendar className="w-3 h-3" />
+                  {recency}
+                </Badge>
+
+                <Badge variant="outline" className="gap-1">
+                  <Lock className="w-3 h-3" />
+                  Proofs visible after mutual match
+                </Badge>
+
+                <Badge variant="outline" className="gap-1">
+                  <Award className="w-3 h-3" />
+                  {verificationCount > 0 ? `${verificationCount} verified` : 'Request verification'}
+                </Badge>
+
+                {relevance !== 'current' && (
+                  <Badge
+                    variant="outline"
+                    className={`gap-1 ${
+                      relevance === 'emerging'
+                        ? 'text-blue-600 dark:text-blue-400'
+                        : 'text-red-600 dark:text-red-400'
+                    }`}
+                  >
+                    <TrendingUp className="w-3 h-3" />
+                    {relevance === 'emerging' ? 'Emerging' : 'Obsolete'}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+
+  if (isDesktop) {
+    return (
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent className="w-full sm:w-[500px] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>{filterDescription}</SheetTitle>
+            <p className="text-sm text-muted-foreground">
+              {skills.length} {skills.length === 1 ? 'skill' : 'skills'} found
+            </p>
+          </SheetHeader>
+          <Content />
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:w-[500px] overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>{filterDescription}</SheetTitle>
-          <p className="text-sm text-muted-foreground">
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent>
+        <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
+        <DrawerHeader className="text-left mt-2 relative">
+          <DrawerTitle>{filterDescription}</DrawerTitle>
+          <p className="text-sm text-muted-foreground mt-1">
             {skills.length} {skills.length === 1 ? 'skill' : 'skills'} found
           </p>
-        </SheetHeader>
-
-        <div className="mt-6 space-y-3">
-          {skills.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-sm text-muted-foreground">No skills match the current filters</p>
-            </div>
-          ) : (
-            skills.map((skill) => {
-              const skillName =
-                skill.skill_name ||
-                skill.taxonomy?.name_i18n?.en ||
-                skill.custom_skill_name ||
-                'Unknown Skill';
-              const level = skill.level || 1;
-              const recency = formatRecency(skill.lastUsedAt);
-              const relevance = skill.relevance || 'current';
-              const proofCount = (skill as any).proof_count ?? 0;
-              const verificationCount = (skill as any).verification_count ?? 0;
-
-              return (
-                <div
-                  key={skill.id}
-                  className="p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <h4 className="font-medium flex-1">{skillName}</h4>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => onSkillClick(skill.id)}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    <Badge className={getLevelColor(level)}>{getLevelLabel(level)}</Badge>
-
-                    <Badge variant="outline" className="gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {recency}
-                    </Badge>
-
-                    <Badge variant="outline" className="gap-1">
-                      <Lock className="w-3 h-3" />
-                      Proofs visible after mutual match
-                    </Badge>
-
-                    <Badge variant="outline" className="gap-1">
-                      <Award className="w-3 h-3" />
-                      {verificationCount > 0
-                        ? `${verificationCount} verified`
-                        : 'Request verification'}
-                    </Badge>
-
-                    {relevance !== 'current' && (
-                      <Badge
-                        variant="outline"
-                        className={`gap-1 ${
-                          relevance === 'emerging'
-                            ? 'text-blue-600 dark:text-blue-400'
-                            : 'text-red-600 dark:text-red-400'
-                        }`}
-                      >
-                        <TrendingUp className="w-3 h-3" />
-                        {relevance === 'emerging' ? 'Emerging' : 'Obsolete'}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              );
-            })
-          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-4 top-4 rounded-full"
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </DrawerHeader>
+        <div className="px-4 max-h-[75vh] min-h-[50vh] overflow-y-auto">
+          <Content />
         </div>
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   );
 }

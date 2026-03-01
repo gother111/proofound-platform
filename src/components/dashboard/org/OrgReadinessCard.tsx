@@ -11,13 +11,20 @@ import { DASHBOARD_STATUS_CHIP_CLASS } from '@/components/dashboard/chipStyles';
 
 interface OrgReadinessCardProps {
   orgRef: string;
+  initialData?: any;
 }
 
-export function OrgReadinessCard({ orgRef }: OrgReadinessCardProps) {
-  const [data, setData] = useState<OrganizationReadiness | null>(null);
-  const [loading, setLoading] = useState(true);
+export function OrgReadinessCard({ orgRef, initialData }: OrgReadinessCardProps) {
+  const [data, setData] = useState<OrganizationReadiness | null>(initialData || null);
+  const [loading, setLoading] = useState(!initialData);
 
   useEffect(() => {
+    if (initialData) {
+      setData(initialData);
+      setLoading(false);
+      return;
+    }
+
     async function load() {
       try {
         const response = await fetch(`/api/org/readiness?org=${encodeURIComponent(orgRef)}`, {
@@ -34,7 +41,7 @@ export function OrgReadinessCard({ orgRef }: OrgReadinessCardProps) {
     }
 
     load();
-  }, [orgRef]);
+  }, [orgRef, initialData]);
 
   if (loading || !data) {
     return (

@@ -2354,3 +2354,10 @@ How to verify:
 Open risks/TODO:
 
 - Continuous monitoring of user engagement with the new empty state actionable buttons. This concludes Phase 6 and the platform-wide UX/UI review loop.
+
+### Phase 2: Mobile Interaction Paradigm (Drawers)
+
+- **What changed**: Refactored major dialogs and modals across Matching, Profiles, Interviews, and Settings to use a responsive `Drawer` on mobile and `Dialog` on desktop (`useMediaQuery`). Components include: `MatchExplainerModal`, `PACScoreExplainer`, `SnoozeDialog`, `ConsentToShareDialog`, `VerificationGatesWarning`, `MatchingOrganizationView` (Initiate Test Modal), and others.
+- **Why**: To provide a more mobile-friendly, ergonomic bottom-sheet experience for users on small screens while retaining standard dialogues for desktop, aligning closely with modern UI paradigms.
+- **How to verify**: Resize viewport to <768px and trigger any of the matching/profile modals. Ensure they animate from the bottom as a Drawer.
+- **Open risks / TODO**: Phase 3 and 4 remain to migrate to Server Components/Actions and add streaming UI.

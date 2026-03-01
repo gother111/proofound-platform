@@ -8,10 +8,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 interface CustomizeModalProps {
   open: boolean;
@@ -40,6 +50,7 @@ const widgetOptions = [
 
 export function CustomizeModal({ open, onOpenChange }: CustomizeModalProps) {
   const { toast } = useToast();
+  const isDesktop = useMediaQuery('(min-width: 768px)');
   const [widgets, setWidgets] = useState<WidgetState>({
     goals: true,
     tasks: true,
@@ -77,50 +88,80 @@ export function CustomizeModal({ open, onOpenChange }: CustomizeModalProps) {
     onOpenChange(false);
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Customize Your Dashboard</DialogTitle>
-          <DialogDescription>
-            Select which widgets you want to see on your dashboard
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            {widgetOptions.map((widget) => (
-              <div
-                key={widget.id}
-                className="flex items-start space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
-              >
-                <Checkbox
-                  id={widget.id}
-                  checked={widgets[widget.id as keyof WidgetState]}
-                  onCheckedChange={(checked) =>
-                    setWidgets({ ...widgets, [widget.id]: checked as boolean })
-                  }
-                />
-                <div className="flex-1 space-y-1">
-                  <Label htmlFor={widget.id} className="text-sm font-medium cursor-pointer">
-                    {widget.label}
-                  </Label>
-                  <p className="text-xs text-muted-foreground">{widget.description}</p>
-                </div>
-              </div>
-            ))}
+  const ContentForm = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {widgetOptions.map((widget) => (
+        <div
+          key={widget.id}
+          className="flex items-start space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+        >
+          <Checkbox
+            id={widget.id}
+            checked={widgets[widget.id as keyof WidgetState]}
+            onCheckedChange={(checked) =>
+              setWidgets({ ...widgets, [widget.id]: checked as boolean })
+            }
+          />
+          <div className="flex-1 space-y-1">
+            <Label htmlFor={widget.id} className="text-sm font-medium cursor-pointer">
+              {widget.label}
+            </Label>
+            <p className="text-xs text-muted-foreground">{widget.description}</p>
           </div>
         </div>
+      ))}
+    </div>
+  );
 
-        <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
+  if (isDesktop) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Customize Your Dashboard</DialogTitle>
+            <DialogDescription>
+              Select which widgets you want to see on your dashboard
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <ContentForm />
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} style={{ backgroundColor: '#1C4D3A', color: '#F7F6F1' }}>
+              Save Changes
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent>
+        <DrawerHeader className="text-left">
+          <DrawerTitle>Customize Your Dashboard</DrawerTitle>
+          <DrawerDescription>
+            Select which widgets you want to see on your dashboard
+          </DrawerDescription>
+        </DrawerHeader>
+        <div className="px-4 py-2 max-h-[60vh] overflow-y-auto">
+          <ContentForm />
+        </div>
+        <DrawerFooter className="pt-2">
           <Button onClick={handleSave} style={{ backgroundColor: '#1C4D3A', color: '#F7F6F1' }}>
             Save Changes
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+          <DrawerClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DrawerClose>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 }

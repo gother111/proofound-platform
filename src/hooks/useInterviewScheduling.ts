@@ -8,6 +8,8 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 
+import { scheduleInterview as scheduleInterviewAction } from '@/app/actions/interviews';
+
 export interface InterviewScheduleData {
   matchId: string;
   scheduledAt: Date;
@@ -73,24 +75,18 @@ export function useInterviewScheduling(options: UseInterviewSchedulingOptions = 
       setError(null);
 
       try {
-        const response = await fetch('/api/interviews/schedule', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            matchId: data.matchId,
-            scheduledAt: data.scheduledAt.toISOString(),
-            platform: data.platform,
-            participantUserIds: data.participantUserIds,
-            timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
-            policyPreset: options.policyPreset || 'startup',
-            durationMinutes: data.durationMinutes ?? 30,
-          }),
+        const result = await scheduleInterviewAction({
+          matchId: data.matchId,
+          scheduledAt: data.scheduledAt.toISOString(),
+          platform: data.platform,
+          participantUserIds: data.participantUserIds,
+          timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+          policyPreset: options.policyPreset || 'startup',
+          durationMinutes: data.durationMinutes ?? 30,
         });
 
-        const result = await response.json();
-
-        if (!response.ok) {
-          throw new Error(result.error || 'Failed to schedule interview');
+        if (!result.success) {
+          throw new Error('Failed to schedule interview');
         }
 
         const interview = result.interview as Interview;
