@@ -255,10 +255,22 @@ function normalizePdfParseError(error: unknown): string {
 }
 
 async function extractPdfText(file: File): Promise<string> {
-  const pdfjsModule = await import('pdfjs-dist/webpack.mjs');
-  const getDocument =
-    (pdfjsModule as { getDocument?: unknown }).getDocument ||
-    ((pdfjsModule as { default?: { getDocument?: unknown } }).default?.getDocument ?? null);
+  const pdfjsEntrypoints = ['pdfjs-dist/webpack.mjs', 'pdfjs-dist/build/pdf.mjs'] as const;
+  let getDocument: unknown = null;
+
+  for (const entrypoint of pdfjsEntrypoints) {
+    try {
+      const pdfjsModule = await import(entrypoint);
+      getDocument =
+        (pdfjsModule as { getDocument?: unknown }).getDocument ||
+        ((pdfjsModule as { default?: { getDocument?: unknown } }).default?.getDocument ?? null);
+      if (typeof getDocument === 'function') {
+        break;
+      }
+    } catch {
+      // Try the next known entrypoint.
+    }
+  }
 
   if (typeof getDocument !== 'function') {
     throw new Error('PDF parser initialization failed');
@@ -874,6 +886,16 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       const parseErrorDocuments = documents.filter((document) => Boolean(document.parse_error));
       setDocuments([...parseErrorDocuments, ...analyzedDocuments]);
       setCurrentStepIndex(0);
+
+      const totalSkillCandidates = payload.documents.reduce(
+        (count, document) => count + document.skill_candidates.length,
+        0
+      );
+      if (payload.metadata.semantic_fallback_triggered && totalSkillCandidates === 0) {
+        toast.info(
+          'Skill suggestions are temporarily unavailable, but core CV entities were extracted.'
+        );
+      }
 
       toast.success(
         `Analyzed ${payload.documents.length} document${payload.documents.length > 1 ? 's' : ''}.`

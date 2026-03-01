@@ -151,4 +151,46 @@ describe('cv-import wizard extractor', () => {
       )
     ).rejects.toThrow('Invalid literal value');
   });
+
+  it('continues entity extraction when skill suggestion dependency fails', async () => {
+    mockSuggestSkillsForDocuments.mockRejectedValueOnce(new Error('relation "skills_taxonomy"'));
+
+    const { suggestWizardForDocuments } = await import(
+      '@/lib/expertise/cv-import-wizard-extractor'
+    );
+
+    const response = await suggestWizardForDocuments(
+      {
+        documents: [
+          {
+            document_id: 'doc-fallback',
+            file_name: 'cv.pdf',
+            context: 'cv',
+            text: [
+              'Experience',
+              'Senior Engineer at Acme',
+              '2021 - Present',
+              'Built React products for enterprise customers.',
+              '',
+              'Languages',
+              'English - Native',
+            ].join('\n'),
+          },
+        ],
+      },
+      {
+        maxDocuments: 5,
+        maxCharsPerDocument: 30000,
+        maxTotalChars: 90000,
+      },
+      {
+        semanticEnabled: false,
+      }
+    );
+
+    const document = response.documents[0];
+    expect(document.work_experiences.length).toBeGreaterThan(0);
+    expect(document.skill_candidates).toHaveLength(0);
+    expect(response.metadata.semantic_fallback_triggered).toBe(true);
+  });
 });

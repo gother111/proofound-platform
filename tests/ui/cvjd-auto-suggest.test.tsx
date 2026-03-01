@@ -281,8 +281,8 @@ describe('CVJDAutoSuggest', () => {
   });
 
   it('shows friendly parse error when pdf worker initialization fails', async () => {
-    pdfGetDocumentMock.mockReturnValueOnce({
-      promise: Promise.reject(new Error('No "GlobalWorkerOptions.workerSrc" specified.')),
+    pdfGetDocumentMock.mockImplementationOnce(() => {
+      throw new Error('No "GlobalWorkerOptions.workerSrc" specified.');
     });
 
     render(<CVJDAutoSuggest />);
@@ -307,10 +307,8 @@ describe('CVJDAutoSuggest', () => {
   });
 
   it('shows friendly parse error when parser module fails to initialize getDocument', async () => {
-    pdfGetDocumentMock.mockReturnValueOnce({
-      promise: Promise.reject(
-        new Error("Cannot read properties of undefined (reading 'getDocument')")
-      ),
+    pdfGetDocumentMock.mockImplementationOnce(() => {
+      throw new Error("Cannot read properties of undefined (reading 'getDocument')");
     });
 
     render(<CVJDAutoSuggest />);

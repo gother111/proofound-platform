@@ -264,6 +264,77 @@ describe('CvImportWizard', () => {
     expect(requestPayload.documents[0].skill_ids).toContain('skill_react');
   });
 
+  it('shows partial-success info when skill suggestions are unavailable but extraction succeeds', async () => {
+    apiFetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          documents: [
+            {
+              document_id: 'doc-1',
+              file_name: 'cv.pdf',
+              context: 'cv',
+              work_experiences: [
+                {
+                  item_id: 'work-1',
+                  title: 'Senior Engineer',
+                  organization: 'Acme',
+                  duration: '2021 - Present',
+                  summary: 'Built React products.',
+                  evidence_snippets: ['Senior Engineer at Acme'],
+                  confidence: 0.8,
+                },
+              ],
+              learning_experiences: [],
+              volunteering: [],
+              languages: [],
+              skill_candidates: [],
+            },
+          ],
+          metadata: {
+            semantic_used: false,
+            semantic_fallback_triggered: true,
+            unmapped_candidates_count: 0,
+            limits: {
+              max_documents: 5,
+              max_chars_per_document: 30000,
+              max_total_chars: 90000,
+            },
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+
+    render(<CvImportWizard />);
+
+    const uploadInput = screen.getByTestId('cv-upload');
+    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
+    Object.defineProperty(file, 'arrayBuffer', {
+      value: async () => new TextEncoder().encode('dummy').buffer,
+    });
+
+    fireEvent.change(uploadInput, {
+      target: {
+        files: [file],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
+
+    await waitFor(() => {
+      expect(toastInfoMock).toHaveBeenCalledWith(
+        'Skill suggestions are temporarily unavailable, but core CV entities were extracted.'
+      );
+    });
+  });
+
   it('shows detailed backend message when wizard suggest returns generic wrapper error', async () => {
     apiFetchMock.mockResolvedValueOnce(
       new Response(
@@ -308,10 +379,8 @@ describe('CvImportWizard', () => {
   });
 
   it('shows parser-init friendly message when getDocument path fails', async () => {
-    pdfGetDocumentMock.mockReturnValueOnce({
-      promise: Promise.reject(
-        new Error("Cannot read properties of undefined (reading 'getDocument')")
-      ),
+    pdfGetDocumentMock.mockImplementationOnce(() => {
+      throw new Error("Cannot read properties of undefined (reading 'getDocument')");
     });
 
     render(<CvImportWizard />);

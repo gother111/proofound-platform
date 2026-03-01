@@ -4,7 +4,11 @@ import {
   type CEFRLevel,
   type TaxonomyItem,
 } from '@/lib/taxonomy/data';
-import { suggestSkillsForDocuments, type CvImportLimits } from '@/lib/expertise/cv-import-suggest';
+import {
+  suggestSkillsForDocuments,
+  type CvImportLimits,
+  type CvImportSuggestResponse,
+} from '@/lib/expertise/cv-import-suggest';
 import {
   CvImportWizardSuggestRequestSchema,
   CvImportWizardSuggestResponseSchema,
@@ -524,6 +528,31 @@ function extractWizardEntities(text: string) {
   };
 }
 
+function buildSkillSuggestionFallback(
+  input: CvImportWizardSuggestRequest,
+  limits: CvImportLimits
+): CvImportSuggestResponse {
+  return {
+    documents: input.documents.map((document) => ({
+      document_id: document.document_id,
+      file_name: document.file_name,
+      context: document.context,
+      candidate_count: 0,
+      candidates: [],
+    })),
+    metadata: {
+      semantic_used: false,
+      semantic_fallback_triggered: true,
+      unmapped_candidates_count: 0,
+      limits: {
+        max_documents: limits.maxDocuments,
+        max_chars_per_document: limits.maxCharsPerDocument,
+        max_total_chars: limits.maxTotalChars,
+      },
+    },
+  };
+}
+
 export async function suggestWizardForDocuments(
   input: CvImportWizardSuggestRequest,
   limits: CvImportLimits,
@@ -537,17 +566,27 @@ export async function suggestWizardForDocuments(
     }
   }
 
-  const skillResponse = await suggestSkillsForDocuments(
-    {
-      documents: parsedInput.documents,
-      suggestions_limit: options.suggestionsLimit,
-    },
-    limits,
-    {
-      semanticEnabled: options.semanticEnabled,
-      suggestionsLimit: options.suggestionsLimit,
-    }
-  );
+  let skillResponse: CvImportSuggestResponse;
+
+  try {
+    skillResponse = await suggestSkillsForDocuments(
+      {
+        documents: parsedInput.documents,
+        suggestions_limit: options.suggestionsLimit,
+      },
+      limits,
+      {
+        semanticEnabled: options.semanticEnabled,
+        suggestionsLimit: options.suggestionsLimit,
+      }
+    );
+  } catch (error) {
+    console.error(
+      '[cv-import-wizard] skill suggestion dependency failed; continuing without skill candidates',
+      error
+    );
+    skillResponse = buildSkillSuggestionFallback(parsedInput, limits);
+  }
 
   const skillResultById = new Map(
     skillResponse.documents.map((document) => [document.document_id, document])
