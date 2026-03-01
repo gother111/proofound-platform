@@ -104,3 +104,32 @@ def test_avoids_short_token_false_positive():
 
     # Very short terms require strict threshold and should not overmatch broadly.
     assert len(matched[0].suggestions) <= 1
+
+
+def test_matches_noisy_variants_with_confusables_and_leet_text():
+    db = _skill_db_fixture()
+    candidates = [
+        CandidateSeed(
+            # Cyrillic confusables for "React.js"
+            raw_skill_text="Rеаct.js",
+            evidence_snippets=("Built UI with React.js",),
+            confidence=0.8,
+            category="technical",
+        ),
+        CandidateSeed(
+            raw_skill_text="Typ3Scr1pt",
+            evidence_snippets=("Strong Typ3Scr1pt experience",),
+            confidence=0.76,
+            category="technical",
+        ),
+    ]
+
+    matched = match_skill_candidates(candidates, db, suggestions_limit=5)
+
+    assert matched[0].suggestions
+    assert matched[0].suggestions[0].skill_name == "React"
+    assert matched[0].suggestions[0].match_method in {"exact", "synonym", "fuzzy"}
+
+    assert matched[1].suggestions
+    assert matched[1].suggestions[0].skill_name == "TypeScript"
+    assert matched[1].suggestions[0].match_method in {"exact", "synonym", "fuzzy"}

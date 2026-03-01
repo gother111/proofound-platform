@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from python_cv.text_normalize import normalize_token
+from python_cv.text_normalize import expand_token_variants, normalize_token
 
 DEFAULT_DB_PATH = Path(__file__).resolve().parent / "data" / "skills_db.json"
 
@@ -117,21 +117,17 @@ def load_skill_db(force_reload: bool = False) -> SkillDb:
     term_to_codes: dict[str, set[str]] = {}
 
     for skill in skills:
-        normalized_name = normalize_token(skill.name)
-        if normalized_name:
+        for normalized_name in expand_token_variants(skill.name):
             by_name_map.setdefault(normalized_name, []).append(skill)
             term_to_codes.setdefault(normalized_name, set()).add(skill.code)
 
         for alias in skill.aliases:
-            normalized_alias = normalize_token(alias)
-            if not normalized_alias:
-                continue
-            by_alias_map.setdefault(normalized_alias, []).append(skill)
-            term_to_codes.setdefault(normalized_alias, set()).add(skill.code)
+            for normalized_alias in expand_token_variants(alias):
+                by_alias_map.setdefault(normalized_alias, []).append(skill)
+                term_to_codes.setdefault(normalized_alias, set()).add(skill.code)
 
         for term in skill.search_terms:
-            normalized_term = normalize_token(term)
-            if normalized_term:
+            for normalized_term in expand_token_variants(term):
                 term_to_codes.setdefault(normalized_term, set()).add(skill.code)
 
     by_name = {key: tuple(value) for key, value in by_name_map.items()}

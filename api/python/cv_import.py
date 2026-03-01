@@ -52,23 +52,37 @@ def _safe_context(value: Any, default: str = "cv") -> str:
     return default
 
 
-def _document_from_error(document_id: str, file_name: str, context: str, parse_error: str) -> dict[str, Any]:
+def _document_from_error(
+    document_id: str,
+    file_name: str,
+    context: str,
+    parse_error: str,
+    *,
+    parse_error_code: str | None = None,
+) -> dict[str, Any]:
     return {
         "document_id": document_id,
         "file_name": file_name,
         "context": context,
         "parsed_text": "",
         "parse_error": parse_error,
+        "parse_error_code": parse_error_code,
     }
 
 
-def _wizard_error_document(document_id: str, file_name: str, parse_error: str) -> dict[str, Any]:
+def _wizard_error_document(
+    document_id: str,
+    file_name: str,
+    parse_error: str,
+    parse_error_code: str | None = None,
+) -> dict[str, Any]:
     return {
         "document_id": document_id,
         "file_name": file_name,
         "context": "cv",
         "parsed_text": "",
         "parse_error": parse_error,
+        "parse_error_code": parse_error_code,
         "work_experiences": [],
         "learning_experiences": [],
         "volunteering": [],
@@ -82,6 +96,7 @@ def _skill_error_document(
     file_name: str,
     context: str,
     parse_error: str,
+    parse_error_code: str | None = None,
 ) -> dict[str, Any]:
     return {
         "document_id": document_id,
@@ -89,6 +104,7 @@ def _skill_error_document(
         "context": context,
         "parsed_text": "",
         "parse_error": parse_error,
+        "parse_error_code": parse_error_code,
         "candidate_count": 0,
         "candidates": [],
     }
@@ -136,7 +152,13 @@ async def _parse_multipart_documents(
         content_type = getattr(upload, "content_type", None) or ""
         if "pdf" not in content_type.lower() and not file_name.lower().endswith(".pdf"):
             failed_documents.append(
-                _document_from_error(document_id, file_name, context, "Only PDF files are supported in V1.")
+                _document_from_error(
+                    document_id,
+                    file_name,
+                    context,
+                    "Only PDF files are supported in V1.",
+                    parse_error_code=ERROR_CODE_PDF_PARSE_FAILED,
+                )
             )
             continue
 
@@ -148,6 +170,7 @@ async def _parse_multipart_documents(
                     file_name,
                     context,
                     f"File exceeds max size of {max_file_size_bytes // (1024 * 1024)}MB.",
+                    parse_error_code=ERROR_CODE_PDF_PARSE_FAILED,
                 )
             )
             continue
@@ -167,14 +190,32 @@ async def _parse_multipart_documents(
                 }
             )
         except PdfEmptyTextError as exc:
-            failed_documents.append(_document_from_error(document_id, file_name, context, str(exc)))
-        except PdfParseError as exc:
             failed_documents.append(
                 _document_from_error(
                     document_id,
                     file_name,
                     context,
-                    f"PDF parser could not start. Please refresh and re-upload the file. ({exc})",
+                    str(exc),
+                    parse_error_code=ERROR_CODE_PDF_EMPTY_TEXT,
+                )
+            )
+        except PdfParseError as exc:
+            error_message = str(exc).lower()
+            if "password" in error_message or "encrypted" in error_message:
+                parse_error = (
+                    "PDF is encrypted or password-protected. Please export an unlocked copy and retry."
+                )
+            elif "not a pdf" in error_message or "syntax" in error_message:
+                parse_error = "The uploaded file is not a valid PDF. Please re-export and try again."
+            else:
+                parse_error = "PDF parser could not start. Please refresh and re-upload the file."
+            failed_documents.append(
+                _document_from_error(
+                    document_id,
+                    file_name,
+                    context,
+                    parse_error,
+                    parse_error_code=ERROR_CODE_PDF_PARSE_FAILED,
                 )
             )
 
@@ -235,6 +276,7 @@ async def wizard_suggest(request: Request):
                             document_id=item["document_id"],
                             file_name=item["file_name"],
                             parse_error=item["parse_error"],
+                            parse_error_code=item.get("parse_error_code"),
                         )
                         for item in failed_documents
                     ],
@@ -255,6 +297,7 @@ async def wizard_suggest(request: Request):
                 document_id=item["document_id"],
                 file_name=item["file_name"],
                 parse_error=item["parse_error"],
+                parse_error_code=item.get("parse_error_code"),
             )
             for item in failed_documents
         ]
@@ -322,6 +365,7 @@ async def suggest(request: Request):
                             file_name=item["file_name"],
                             context=item.get("context", "cv"),
                             parse_error=item["parse_error"],
+                            parse_error_code=item.get("parse_error_code"),
                         )
                         for item in failed_documents
                     ],
@@ -343,6 +387,7 @@ async def suggest(request: Request):
                 file_name=item["file_name"],
                 context=item.get("context", "cv"),
                 parse_error=item["parse_error"],
+                parse_error_code=item.get("parse_error_code"),
             )
             for item in failed_documents
         ]

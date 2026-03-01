@@ -7,7 +7,7 @@ from rapidfuzz import fuzz, process
 
 from python_cv.skill_candidate_extract import CandidateSeed
 from python_cv.skill_db import SkillDb
-from python_cv.text_normalize import normalize_token
+from python_cv.text_normalize import expand_token_variants, normalize_token
 
 
 @dataclass(frozen=True)
@@ -32,9 +32,13 @@ class MatchedCandidate:
 def _fuzzy_threshold(normalized_candidate: str) -> int:
     token_count = len(normalized_candidate.split())
     if token_count <= 1 and len(normalized_candidate) <= 2:
-        return 98
+        return 100
+    if token_count <= 1 and len(normalized_candidate) <= 3:
+        return 97
     if token_count <= 1 and len(normalized_candidate) <= 4:
         return 95
+    if token_count <= 1 and len(normalized_candidate) <= 6:
+        return 92
     if token_count <= 2:
         return 90
     return 86
@@ -42,20 +46,6 @@ def _fuzzy_threshold(normalized_candidate: str) -> int:
 
 def _method_rank(method: str) -> int:
     return {"exact": 4, "synonym": 3, "fuzzy": 2, "semantic": 1}.get(method, 0)
-
-
-def _token_variants(value: str) -> tuple[str, ...]:
-    variants = {value}
-
-    punctuation_as_space = normalize_token(value.replace(".", " ").replace("/", " ").replace("-", " "))
-    if punctuation_as_space:
-        variants.add(punctuation_as_space)
-
-    punctuation_removed = normalize_token(value.replace(".", "").replace("/", "").replace("-", ""))
-    if punctuation_removed:
-        variants.add(punctuation_removed)
-
-    return tuple(sorted(variants))
 
 
 def _upsert_suggestion(container: dict[str, MatchedSuggestion], suggestion: MatchedSuggestion) -> None:
@@ -91,10 +81,11 @@ def match_skill_candidates(
 
     for index, candidate in enumerate(candidates, start=1):
         normalized_candidate = normalize_token(candidate.raw_skill_text)
+        candidate_variants = expand_token_variants(candidate.raw_skill_text)
         suggestion_map: dict[str, MatchedSuggestion] = {}
 
-        if normalized_candidate:
-            for token_variant in _token_variants(normalized_candidate):
+        if normalized_candidate and candidate_variants:
+            for token_variant in candidate_variants:
                 for exact_skill in skill_db.by_name.get(token_variant, ()):  # exact name
                     _upsert_suggestion(
                         suggestion_map,
@@ -117,42 +108,50 @@ def match_skill_candidates(
                         ),
                     )
 
-            threshold = _fuzzy_threshold(normalized_candidate)
+            fuzzy_variants = sorted(
+                set(candidate_variants),
+                key=lambda item: (-len(item), item),
+            )[:3]
 
-            fuzzy_matches = process.extract(
-                normalized_candidate,
-                skill_db.term_choices,
-                scorer=fuzz.WRatio,
-                limit=80,
-            )
-
-            for term, ratio, _ in fuzzy_matches:
-                if int(ratio) < threshold:
+            for fuzzy_variant in fuzzy_variants:
+                threshold = _fuzzy_threshold(fuzzy_variant)
+                if threshold >= 100:
                     continue
 
-                normalized_term = normalize_token(term)
-                if not normalized_term:
-                    continue
+                fuzzy_matches = process.extract(
+                    fuzzy_variant,
+                    skill_db.term_choices,
+                    scorer=fuzz.WRatio,
+                    limit=80,
+                )
 
-                for code in skill_db.term_to_codes.get(normalized_term, ()):  # fuzzy to code
-                    skill = skill_db.by_code.get(code)
-                    if skill is None:
+                for term, ratio, _ in fuzzy_matches:
+                    if int(ratio) < threshold:
                         continue
 
-                    token_score = fuzz.token_set_ratio(normalized_candidate, normalized_term)
-                    combined = max(float(ratio), float(token_score)) / 100.0
-                    if combined < threshold / 100.0:
+                    normalized_term = normalize_token(term)
+                    if not normalized_term:
                         continue
 
-                    _upsert_suggestion(
-                        suggestion_map,
-                        MatchedSuggestion(
-                            skill_id=skill.code,
-                            skill_name=skill.name,
-                            match_method="fuzzy",
-                            score=min(0.94, combined),
-                        ),
-                    )
+                    for code in skill_db.term_to_codes.get(normalized_term, ()):  # fuzzy to code
+                        skill = skill_db.by_code.get(code)
+                        if skill is None:
+                            continue
+
+                        token_score = fuzz.token_set_ratio(fuzzy_variant, normalized_term)
+                        combined = max(float(ratio), float(token_score)) / 100.0
+                        if combined < threshold / 100.0:
+                            continue
+
+                        _upsert_suggestion(
+                            suggestion_map,
+                            MatchedSuggestion(
+                                skill_id=skill.code,
+                                skill_name=skill.name,
+                                match_method="fuzzy",
+                                score=min(0.94, combined),
+                            ),
+                        )
 
         suggestions = _dedupe_sorted(suggestion_map.values(), suggestions_limit)
 
