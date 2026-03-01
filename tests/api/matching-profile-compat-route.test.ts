@@ -105,7 +105,10 @@ describe('matching profile legacy compatibility route', () => {
       profileId: userId,
       weights: null,
       desiredRoles: ['Policy Analyst'],
-      desiredIndustries: ['Public Policy'],
+      desiredIndustries: ['Other service activities'],
+      preferredIndustryKeys: ['other_service_activities'],
+      preferredIndustryLabels: ['Other service activities'],
+      preferredIndustryLegacy: ['Public Policy'],
       orgTypes: ['government'],
       verified: {
         __compat_profile: {
@@ -125,7 +128,7 @@ describe('matching profile legacy compatibility route', () => {
     expect(payload.profiles[0].name).toBe('Policy Analyst');
     expect(payload.profiles[0].constraints.requireProfileComplete).toBe(true);
     expect(payload.profiles[0].desiredRoles).toEqual(['Policy Analyst']);
-    expect(payload.profiles[0].desiredIndustries).toEqual(['Public Policy']);
+    expect(payload.profiles[0].desiredIndustries).toEqual(['Other service activities']);
     expect(payload.profiles[0].orgTypes).toEqual(['government']);
   });
 });

@@ -9,12 +9,58 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useState } from 'react';
+import { TypeaheadChips } from '@/components/matching/TypeaheadChips';
+import { useMemo, useState } from 'react';
 import { X } from 'lucide-react';
+import { INDUSTRY_OPTIONS, mapIndustryListToCanonical } from '@/lib/industry/options';
 
-export function FocusAreasSection({ profile, onChange }: any) {
+type FocusProfile = {
+  desiredRoles: string[];
+  desiredIndustries?: string[];
+  preferredIndustryKeys?: string[];
+  preferredIndustryLabels?: string[];
+  avoidIndustryKeys?: string[];
+  avoidIndustryLabels?: string[];
+  orgTypes?: string[];
+};
+
+export function FocusAreasSection({
+  profile,
+  onChange,
+}: {
+  profile: FocusProfile;
+  onChange: (partial: Partial<FocusProfile>) => void;
+}) {
   const [roleInput, setRoleInput] = useState('');
-  const [industryInput, setIndustryInput] = useState('');
+
+  const preferredIndustryKeys = useMemo(() => {
+    if (Array.isArray(profile.preferredIndustryKeys)) {
+      return profile.preferredIndustryKeys;
+    }
+    return mapIndustryListToCanonical(profile.desiredIndustries).keys;
+  }, [profile.preferredIndustryKeys, profile.desiredIndustries]);
+
+  const preferredIndustryLabels = useMemo(
+    () =>
+      INDUSTRY_OPTIONS.filter((option) => preferredIndustryKeys.includes(option.key)).map(
+        (option) => option.label
+      ),
+    [preferredIndustryKeys]
+  );
+
+  const avoidIndustryKeys = useMemo(() => {
+    if (Array.isArray(profile.avoidIndustryKeys)) {
+      return profile.avoidIndustryKeys;
+    }
+    return mapIndustryListToCanonical(profile.avoidIndustryLabels).keys;
+  }, [profile.avoidIndustryKeys, profile.avoidIndustryLabels]);
+  const avoidIndustryLabels = useMemo(
+    () =>
+      INDUSTRY_OPTIONS.filter((option) => avoidIndustryKeys.includes(option.key)).map(
+        (option) => option.label
+      ),
+    [avoidIndustryKeys]
+  );
 
   const handleAddRole = () => {
     if (roleInput.trim()) {
@@ -27,16 +73,24 @@ export function FocusAreasSection({ profile, onChange }: any) {
     onChange({ desiredRoles: profile.desiredRoles.filter((r: string) => r !== role) });
   };
 
-  const handleAddIndustry = () => {
-    if (industryInput.trim()) {
-      onChange({ desiredIndustries: [...profile.desiredIndustries, industryInput.trim()] });
-      setIndustryInput('');
-    }
+  const setPreferredIndustries = (keys: string[]) => {
+    const labels = INDUSTRY_OPTIONS.filter((option) => keys.includes(option.key)).map(
+      (option) => option.label
+    );
+    onChange({
+      preferredIndustryKeys: keys,
+      preferredIndustryLabels: labels,
+      desiredIndustries: labels,
+    });
   };
 
-  const handleRemoveIndustry = (industry: string) => {
+  const setAvoidIndustries = (keys: string[]) => {
+    const labels = INDUSTRY_OPTIONS.filter((option) => keys.includes(option.key)).map(
+      (option) => option.label
+    );
     onChange({
-      desiredIndustries: profile.desiredIndustries.filter((i: string) => i !== industry),
+      avoidIndustryKeys: keys,
+      avoidIndustryLabels: labels,
     });
   };
 
@@ -58,7 +112,6 @@ export function FocusAreasSection({ profile, onChange }: any) {
 
   return (
     <div className="space-y-6">
-      {/* Desired Roles */}
       <div className="space-y-2">
         <Label htmlFor="roles">Roles You're Interested In</Label>
         <div className="flex gap-2">
@@ -89,38 +142,35 @@ export function FocusAreasSection({ profile, onChange }: any) {
         </div>
       </div>
 
-      {/* Preferred Industries */}
       <div className="space-y-2">
-        <Label htmlFor="industries">Preferred Industries</Label>
-        <div className="flex gap-2">
-          <Input
-            id="industries"
-            value={industryInput}
-            onChange={(e) => setIndustryInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddIndustry())}
-            placeholder="e.g., Healthcare, Education, Technology"
-          />
-          <button
-            type="button"
-            onClick={handleAddIndustry}
-            className="px-4 py-2 bg-proofound-forest text-white rounded-md hover:bg-proofound-forest/90"
-          >
-            Add
-          </button>
-        </div>
-        <div className="flex flex-wrap gap-2 mt-2">
-          {profile.desiredIndustries.map((industry: string, i: number) => (
-            <Badge key={i} variant="secondary" className="gap-1">
-              {industry}
-              <button onClick={() => handleRemoveIndustry(industry)} className="ml-1">
-                <X className="w-3 h-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
+        <Label>Preferred industries</Label>
+        <TypeaheadChips
+          options={INDUSTRY_OPTIONS}
+          value={preferredIndustryKeys}
+          onChange={setPreferredIndustries}
+          placeholder="Select preferred industries"
+          maxSelections={19}
+        />
+        <p className="text-xs text-muted-foreground">
+          Selected:{' '}
+          {preferredIndustryLabels.length > 0 ? preferredIndustryLabels.join(', ') : 'None'}
+        </p>
       </div>
 
-      {/* Organization Types */}
+      <div className="space-y-2">
+        <Label>Avoid industries</Label>
+        <TypeaheadChips
+          options={INDUSTRY_OPTIONS}
+          value={avoidIndustryKeys}
+          onChange={setAvoidIndustries}
+          placeholder="Select industries to avoid"
+          maxSelections={19}
+        />
+        <p className="text-xs text-muted-foreground">
+          Selected: {avoidIndustryLabels.length > 0 ? avoidIndustryLabels.join(', ') : 'None'}
+        </p>
+      </div>
+
       <div className="space-y-2">
         <Label>Organization Types</Label>
         <div className="space-y-2">

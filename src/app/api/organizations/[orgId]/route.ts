@@ -5,6 +5,7 @@ import { organizations, organizationMembers } from '@/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
 import { LEGAL_FORM_VALUES, ORGANIZATION_SIZE_VALUES } from '@/lib/organizations/profile-options';
+import { mapIndustryValueToCanonical, resolveIndustryFromInputs } from '@/lib/industry/options';
 import { normalizeOrganizationValues } from '@/lib/organizations/normalizeValues';
 import {
   normalizeOrganizationCauses,
@@ -213,6 +214,8 @@ export async function PUT(
       website,
       tagline,
       industry,
+      industryKey,
+      industryLabel,
       organizationSize,
       impactArea,
       legalForm,
@@ -317,6 +320,23 @@ export async function PUT(
           { status: 400 }
         );
       }
+    }
+
+    if (industry !== undefined && industry !== null && typeof industry !== 'string') {
+      return NextResponse.json({ error: 'Industry must be a string or null' }, { status: 400 });
+    }
+    if (industryKey !== undefined && industryKey !== null && typeof industryKey !== 'string') {
+      return NextResponse.json({ error: 'Industry key must be a string or null' }, { status: 400 });
+    }
+    if (
+      industryLabel !== undefined &&
+      industryLabel !== null &&
+      typeof industryLabel !== 'string'
+    ) {
+      return NextResponse.json(
+        { error: 'Industry label must be a string or null' },
+        { status: 400 }
+      );
     }
 
     const [currentOrg] = await db
@@ -480,7 +500,32 @@ export async function PUT(
       updateData.website = normalizedWebsite.value;
     }
     if (tagline !== undefined) updateData.tagline = tagline?.trim() || null;
-    if (industry !== undefined) updateData.industry = industry?.trim() || null;
+    if (industry !== undefined || industryKey !== undefined || industryLabel !== undefined) {
+      if (
+        typeof industryKey === 'string' &&
+        industryKey.trim().length > 0 &&
+        typeof industryLabel === 'string' &&
+        industryLabel.trim().length > 0
+      ) {
+        const mappedLabel = mapIndustryValueToCanonical(industryLabel.trim());
+        if (mappedLabel.industryKey !== industryKey.trim()) {
+          return NextResponse.json(
+            { error: 'Industry key and label do not match' },
+            { status: 400 }
+          );
+        }
+      }
+
+      const resolvedIndustry = resolveIndustryFromInputs({
+        industryKey,
+        industryLabel,
+        legacyIndustry: industry,
+      });
+      updateData.industry = resolvedIndustry.industryLabel;
+      updateData.industryKey = resolvedIndustry.industryKey;
+      updateData.industryLabel = resolvedIndustry.industryLabel;
+      updateData.industryLegacyText = resolvedIndustry.legacyText;
+    }
     if (organizationSize !== undefined)
       updateData.organizationSize = organizationSize?.trim() || null;
     if (impactArea !== undefined) updateData.impactArea = impactArea?.trim() || null;

@@ -33,6 +33,9 @@ type OrganizationRow = Pick<
   | 'missionLinks'
   | 'visionLinks'
   | 'industry'
+  | 'industryKey'
+  | 'industryLabel'
+  | 'industryLegacyText'
   | 'organizationSize'
   | 'impactArea'
   | 'legalForm'
@@ -130,6 +133,9 @@ function mapOrganization(
     missionLinks: (row.missionLinks as OrganizationRow['missionLinks']) ?? null,
     visionLinks: (row.visionLinks as OrganizationRow['visionLinks']) ?? null,
     industry: row.industry ?? null,
+    industryKey: row.industryKey ?? null,
+    industryLabel: row.industryLabel ?? null,
+    industryLegacyText: row.industryLegacyText ?? null,
     organizationSize: row.organizationSize ?? null,
     impactArea: row.impactArea ?? null,
     legalForm: row.legalForm ?? null,
@@ -251,6 +257,9 @@ const getUserOrganizationsCached = cache(async (userId: string) => {
           missionLinks:mission_links,
           visionLinks:vision_links,
           industry,
+          industryKey:industry_key,
+          industryLabel:industry_label,
+          industryLegacyText:industry_legacy_text,
           organizationSize:organization_size,
           impactArea:impact_area,
           legalForm:legal_form,
@@ -333,6 +342,9 @@ const getActiveOrgCached = cache(async (slug: string, userId: string) => {
         missionLinks:mission_links,
         visionLinks:vision_links,
         industry,
+        industryKey:industry_key,
+        industryLabel:industry_label,
+        industryLegacyText:industry_legacy_text,
         organizationSize:organization_size,
         impactArea:impact_area,
         legalForm:legal_form,
@@ -397,6 +409,12 @@ const getActiveOrgCached = cache(async (slug: string, userId: string) => {
         | OrganizationRow['visionLinks']
         | undefined,
       industry: (data as Record<string, unknown>).industry as string | null | undefined,
+      industryKey: (data as Record<string, unknown>).industryKey as string | null | undefined,
+      industryLabel: (data as Record<string, unknown>).industryLabel as string | null | undefined,
+      industryLegacyText: (data as Record<string, unknown>).industryLegacyText as
+        | string
+        | null
+        | undefined,
       organizationSize: (data as Record<string, unknown>).organizationSize as
         | OrganizationRow['organizationSize']
         | undefined,

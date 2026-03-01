@@ -26,7 +26,7 @@ import {
 } from '@/lib/core/matching/scorers';
 import { getPreset, normalizeWeights, type PresetKey } from '@/lib/core/matching/presets';
 import { evaluateIndividualMatchability, toNotMatchablePayload } from '@/lib/matching/eligibility';
-import { calculateFocusBoost } from '@/lib/core/matching/focus';
+import { calculateFocusBoost, isIndustryAvoided } from '@/lib/core/matching/focus';
 import {
   deriveAtlasLanguageLevels,
   parseLegacyLanguageLevels,
@@ -216,17 +216,35 @@ export async function POST(request: NextRequest) {
             .select({
               id: organizations.id,
               type: organizations.type,
+              industryKey: organizations.industryKey,
               industry: organizations.industry,
             })
             .from(organizations)
             .where(inArray(organizations.id, orgIds))
         : [];
     const orgById = new Map(orgRows.map((row) => [row.id, row]));
+    const focusPreferences = {
+      desiredRoles: (profile.desiredRoles as string[] | null) || [],
+      desiredIndustries: (profile.desiredIndustries as string[] | null) || [],
+      preferredIndustryKeys: (profile.preferredIndustryKeys as string[] | null) || [],
+      avoidIndustryKeys: (profile.avoidIndustryKeys as string[] | null) || [],
+      orgTypes: (profile.orgTypes as string[] | null) || [],
+    };
 
     // Compute scores (with relaxed filters)
     const results: NearMatchResult[] = [];
 
     for (const assignment of activeAssignments) {
+      const organization = orgById.get(assignment.orgId);
+      if (
+        isIndustryAvoided(focusPreferences, {
+          orgIndustryKey: organization?.industryKey,
+          orgIndustry: organization?.industry,
+        })
+      ) {
+        continue;
+      }
+
       const mustHaveSkills = (assignment.mustHaveSkills as Skill[]) || [];
       const niceToHaveSkills = (assignment.niceToHaveSkills as Skill[]) || [];
 
@@ -313,19 +331,12 @@ export async function POST(request: NextRequest) {
 
       // Compose weighted score
       const composed = composeWeighted(subscores, weights);
-      const organization = orgById.get(assignment.orgId);
-      const focusBoost = calculateFocusBoost(
-        {
-          desiredRoles: (profile.desiredRoles as string[] | null) || [],
-          desiredIndustries: (profile.desiredIndustries as string[] | null) || [],
-          orgTypes: (profile.orgTypes as string[] | null) || [],
-        },
-        {
-          assignmentRole: assignment.role,
-          orgIndustry: organization?.industry,
-          orgType: organization?.type,
-        }
-      );
+      const focusBoost = calculateFocusBoost(focusPreferences, {
+        assignmentRole: assignment.role,
+        orgIndustryKey: organization?.industryKey,
+        orgIndustry: organization?.industry,
+        orgType: organization?.type,
+      });
       const finalScore = Math.min(1, composed.total + focusBoost.boost);
 
       // Only include if score meets threshold

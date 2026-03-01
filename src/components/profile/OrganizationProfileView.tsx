@@ -36,6 +36,9 @@ type OrganizationProfile = {
   website: string | null;
   foundedDate: string | null;
   industry: string | null;
+  industryKey: string | null;
+  industryLabel: string | null;
+  industryLegacyText: string | null;
   organizationSize: string | null;
   impactArea: string | null;
   legalForm: string | null;

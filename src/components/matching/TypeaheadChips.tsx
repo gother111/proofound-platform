@@ -12,7 +12,7 @@ export interface TypeaheadOption {
 }
 
 interface TypeaheadChipsProps {
-  options: TypeaheadOption[];
+  options: readonly TypeaheadOption[];
   value: string[];
   onChange: (value: string[]) => void;
   placeholder?: string;

@@ -11,6 +11,7 @@ import { matchingProfiles } from '@/db/schema';
 import { requireApiAuthContext } from '@/lib/auth';
 import { addDeprecationHeaders } from '@/lib/api/deprecation';
 import { GET as getCanonicalMatchingProfile } from '@/app/api/core/matching/matching-profile/route';
+import { mapIndustryListToCanonical } from '@/lib/industry/options';
 
 const CanonicalPath = '/api/core/matching/matching-profile';
 
@@ -20,13 +21,20 @@ function toLegacyProfile(profile: any) {
   }
 
   const verified = (profile.verified || {}) as Record<string, boolean>;
+  const preferred = mapIndustryListToCanonical(
+    profile.preferredIndustryKeys?.length
+      ? profile.preferredIndustryKeys
+      : profile.preferredIndustryLabels?.length
+        ? profile.preferredIndustryLabels
+        : profile.desiredIndustries
+  );
 
   return {
     id: profile.profileId,
     name: 'Default Profile',
     weights: profile.weights || {},
     desiredRoles: profile.desiredRoles || [],
-    desiredIndustries: profile.desiredIndustries || [],
+    desiredIndustries: preferred.labels,
     orgTypes: profile.orgTypes || [],
     constraints: {
       requireEmailVerified: !!verified.email,

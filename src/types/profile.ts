@@ -149,6 +149,9 @@ export interface Experience {
   organizationName?: string | null;
   organizationType?: ExperienceOrganizationType | null;
   organizationIndustry?: string | null;
+  organizationIndustryKey?: string | null;
+  organizationIndustryLabel?: string | null;
+  organizationIndustryLegacyText?: string | null;
   organizationEmployeeAmount?: ExperienceEmployeeAmount | null;
   orgDescription: string;
   duration: string;

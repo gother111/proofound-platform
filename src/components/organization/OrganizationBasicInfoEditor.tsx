@@ -24,6 +24,7 @@ import {
   ORGANIZATION_SIZE_OPTIONS,
   ORGANIZATION_SIZE_VALUES,
 } from '@/lib/organizations/profile-options';
+import { INDUSTRY_OPTIONS, isIndustryKey, resolveIndustryFromInputs } from '@/lib/industry/options';
 import { Plus, X } from 'lucide-react';
 import type { PurposeLinks } from '@/types/profile';
 
@@ -38,6 +39,9 @@ interface OrganizationBasicInfoEditorProps {
     missionLinks: PurposeLinks;
     visionLinks: PurposeLinks;
     industry: string | null;
+    industryKey: string | null;
+    industryLabel: string | null;
+    industryLegacyText: string | null;
     organizationSize: string | null;
     impactArea: string | null;
     legalForm: string | null;
@@ -90,6 +94,11 @@ export function OrganizationBasicInfoEditor({
   const isLegalFormValue = (value: string): value is LegalFormValue =>
     LEGAL_FORM_VALUES.some((option) => option === value);
   const hasCauses = Array.isArray(org.causes) && org.causes.length > 0;
+  const initialIndustry = resolveIndustryFromInputs({
+    industryKey: org.industryKey,
+    industryLabel: org.industryLabel,
+    legacyIndustry: org.industry,
+  });
 
   useEffect(() => {
     setMissionLinks((prev) => pruneOrganizationPurposeLinks(prev, values, org.causes ?? []));
@@ -153,7 +162,7 @@ export function OrganizationBasicInfoEditor({
     const tagline = String(formData.get('tagline') ?? '').trim();
     const mission = String(formData.get('mission') ?? '').trim();
     const vision = String(formData.get('vision') ?? '').trim();
-    const industry = String(formData.get('industry') ?? '').trim();
+    const industryKeyRaw = String(formData.get('industryKey') ?? '').trim();
     const organizationSizeRaw = String(formData.get('organizationSize') ?? '').trim();
     const impactArea = String(formData.get('impactArea') ?? '').trim();
     const legalFormRaw = String(formData.get('legalForm') ?? '').trim();
@@ -181,6 +190,12 @@ export function OrganizationBasicInfoEditor({
         : null;
     const legalForm = legalFormRaw && isLegalFormValue(legalFormRaw) ? legalFormRaw : null;
     const foundedDate = foundedDateRaw || null;
+    const selectedIndustryKey = isIndustryKey(industryKeyRaw)
+      ? industryKeyRaw
+      : initialIndustry.industryKey;
+    const selectedIndustryLabel = INDUSTRY_OPTIONS.find(
+      (option) => option.key === selectedIndustryKey
+    )?.label;
 
     const normalizedWebsite = normalizeOrganizationWebsite(websiteInput);
     if (normalizedWebsite.error) {
@@ -234,7 +249,9 @@ export function OrganizationBasicInfoEditor({
           tagline: tagline || null,
           mission: mission || null,
           vision: vision || null,
-          industry: industry || null,
+          industry: selectedIndustryLabel || null,
+          industryKey: selectedIndustryKey,
+          industryLabel: selectedIndustryLabel || null,
           organizationSize,
           impactArea: impactArea || null,
           legalForm,
@@ -532,16 +549,21 @@ export function OrganizationBasicInfoEditor({
           </div>
 
           <div>
-            <Label htmlFor="industry" className="text-proofound-charcoal dark:text-foreground">
+            <Label htmlFor="industryKey" className="text-proofound-charcoal dark:text-foreground">
               Industry
             </Label>
-            <Input
-              id="industry"
-              name="industry"
-              defaultValue={org.industry || ''}
-              placeholder="Primary industry or sector"
-              className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
-            />
+            <select
+              id="industryKey"
+              name="industryKey"
+              defaultValue={initialIndustry.industryKey}
+              className="flex h-11 w-full rounded-lg border border-proofound-stone dark:border-border bg-white dark:bg-background px-4 py-2 text-base text-proofound-charcoal dark:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest"
+            >
+              {INDUSTRY_OPTIONS.map((option) => (
+                <option key={option.key} value={option.key}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>

@@ -66,7 +66,11 @@ describe('core matching profile route', () => {
     const updatedProfile = {
       profileId: userId,
       desiredRoles: ['Staff Engineer'],
-      desiredIndustries: ['Technology'],
+      desiredIndustries: ['Information and communication'],
+      preferredIndustryKeys: ['information_and_communication'],
+      preferredIndustryLabels: ['Information and communication'],
+      avoidIndustryKeys: [],
+      avoidIndustryLabels: [],
       orgTypes: ['startup'],
       weights: { skills: 0.3, pac: 0.2 },
       createdAt: new Date('2026-02-22T00:00:00.000Z'),
@@ -103,13 +107,17 @@ describe('core matching profile route', () => {
       expect.objectContaining({
         profileId: userId,
         desiredRoles: ['Staff Engineer'],
-        desiredIndustries: ['Technology'],
+        desiredIndustries: ['Information and communication'],
+        preferredIndustryKeys: ['information_and_communication'],
+        preferredIndustryLabels: ['Information and communication'],
+        preferredIndustryLegacy: ['Technology'],
         orgTypes: ['startup'],
         compPeriod: 'monthly',
       })
     );
     expect(payload.profile.desiredRoles).toEqual(['Staff Engineer']);
-    expect(payload.profile.desiredIndustries).toEqual(['Technology']);
+    expect(payload.profile.desiredIndustries).toEqual(['Information and communication']);
+    expect(payload.profile.preferredIndustryKeys).toEqual(['information_and_communication']);
     expect(payload.profile.orgTypes).toEqual(['startup']);
   });
 
@@ -184,6 +192,10 @@ describe('core matching profile route', () => {
         profileId: userId,
         valuesTags: ['Integrity', 'Innovation'],
         causeTags: ['Climate', 'Education'],
+        desiredIndustries: ['Information and communication'],
+        preferredIndustryKeys: ['information_and_communication'],
+        preferredIndustryLabels: ['Information and communication'],
+        preferredIndustryLegacy: ['Technology'],
       })
     );
   });

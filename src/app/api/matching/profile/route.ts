@@ -11,6 +11,7 @@ import { db } from '@/db';
 import { matchingProfiles } from '@/db/schema';
 import { requireApiAuthContext } from '@/lib/auth';
 import { log } from '@/lib/log';
+import { mapIndustryListToCanonical } from '@/lib/industry/options';
 
 const DEFAULT_WEIGHTS = {
   skills: 0.3,
@@ -40,6 +41,10 @@ const CompatProfileSchema = z.object({
   constraints: z.record(z.any()).optional(),
   desiredRoles: z.array(z.string()).optional(),
   desiredIndustries: z.array(z.string()).optional(),
+  preferredIndustryKeys: z.array(z.string()).optional(),
+  preferredIndustryLabels: z.array(z.string()).optional(),
+  avoidIndustryKeys: z.array(z.string()).optional(),
+  avoidIndustryLabels: z.array(z.string()).optional(),
   orgTypes: z.array(z.enum(['company', 'ngo', 'government', 'network', 'startup'])).optional(),
 });
 
@@ -87,13 +92,20 @@ function mergeCompatMeta(
 
 function toCompatProfile(profile: typeof matchingProfiles.$inferSelect) {
   const meta = extractCompatMeta(profile);
+  const preferred = mapIndustryListToCanonical(
+    profile.preferredIndustryKeys && profile.preferredIndustryKeys.length > 0
+      ? profile.preferredIndustryKeys
+      : profile.preferredIndustryLabels && profile.preferredIndustryLabels.length > 0
+        ? profile.preferredIndustryLabels
+        : profile.desiredIndustries
+  );
 
   return {
     id: profile.profileId,
     name: meta.name ?? 'Default Profile',
     weights: (profile.weights as Record<string, number> | null) ?? DEFAULT_WEIGHTS,
     desiredRoles: profile.desiredRoles ?? [],
-    desiredIndustries: profile.desiredIndustries ?? [],
+    desiredIndustries: preferred.labels,
     orgTypes: profile.orgTypes ?? [],
     constraints: { ...DEFAULT_CONSTRAINTS, ...(meta.constraints ?? {}) },
     isActive: true,
@@ -105,6 +117,18 @@ function toCompatProfile(profile: typeof matchingProfiles.$inferSelect) {
 async function upsertCompatProfile(userId: string, data: z.infer<typeof CompatProfileSchema>) {
   const now = new Date();
   const shouldUpdateCompatMeta = data.name !== undefined || data.constraints !== undefined;
+  const hasPreferredInput =
+    data.desiredIndustries !== undefined ||
+    data.preferredIndustryKeys !== undefined ||
+    data.preferredIndustryLabels !== undefined;
+  const hasAvoidInput =
+    data.avoidIndustryKeys !== undefined || data.avoidIndustryLabels !== undefined;
+  const preferred = mapIndustryListToCanonical(
+    data.preferredIndustryKeys ?? data.preferredIndustryLabels ?? data.desiredIndustries ?? []
+  );
+  const avoid = mapIndustryListToCanonical(
+    data.avoidIndustryKeys ?? data.avoidIndustryLabels ?? []
+  );
 
   let compatVerified: Record<string, unknown> | undefined;
   if (shouldUpdateCompatMeta) {
@@ -124,7 +148,21 @@ async function upsertCompatProfile(userId: string, data: z.infer<typeof CompatPr
       profileId: userId,
       ...(data.weights ? { weights: data.weights } : {}),
       ...(data.desiredRoles ? { desiredRoles: data.desiredRoles } : {}),
-      ...(data.desiredIndustries ? { desiredIndustries: data.desiredIndustries } : {}),
+      ...(hasPreferredInput
+        ? {
+            desiredIndustries: preferred.labels,
+            preferredIndustryKeys: preferred.keys,
+            preferredIndustryLabels: preferred.labels,
+            preferredIndustryLegacy: preferred.legacy,
+          }
+        : {}),
+      ...(hasAvoidInput
+        ? {
+            avoidIndustryKeys: avoid.keys,
+            avoidIndustryLabels: avoid.labels,
+            avoidIndustryLegacy: avoid.legacy,
+          }
+        : {}),
       ...(data.orgTypes ? { orgTypes: data.orgTypes } : {}),
       ...(compatVerified ? { verified: compatVerified } : {}),
     })
@@ -133,7 +171,21 @@ async function upsertCompatProfile(userId: string, data: z.infer<typeof CompatPr
       set: {
         ...(data.weights ? { weights: data.weights } : {}),
         ...(data.desiredRoles ? { desiredRoles: data.desiredRoles } : {}),
-        ...(data.desiredIndustries ? { desiredIndustries: data.desiredIndustries } : {}),
+        ...(hasPreferredInput
+          ? {
+              desiredIndustries: preferred.labels,
+              preferredIndustryKeys: preferred.keys,
+              preferredIndustryLabels: preferred.labels,
+              preferredIndustryLegacy: preferred.legacy,
+            }
+          : {}),
+        ...(hasAvoidInput
+          ? {
+              avoidIndustryKeys: avoid.keys,
+              avoidIndustryLabels: avoid.labels,
+              avoidIndustryLegacy: avoid.legacy,
+            }
+          : {}),
         ...(data.orgTypes ? { orgTypes: data.orgTypes } : {}),
         ...(compatVerified ? { verified: compatVerified } : {}),
         updatedAt: now,

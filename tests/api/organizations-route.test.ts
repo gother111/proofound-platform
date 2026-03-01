@@ -229,9 +229,28 @@ describe('organizations [orgId] route', () => {
       expect.objectContaining({
         organizationSize: '11-50',
         legalForm: 'llc',
-        industry: 'Tech',
+        industry: 'Information and communication',
+        industryKey: 'information_and_communication',
+        industryLabel: 'Information and communication',
       })
     );
+  });
+
+  it('returns 400 when industry key and label mismatch', async () => {
+    mockMembership('admin');
+
+    const response = await PUT(
+      buildPutRequest({
+        industryKey: 'education',
+        industryLabel: 'Financial and insurance activities',
+      }),
+      params
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe('Industry key and label do not match');
+    expect(db.update).not.toHaveBeenCalled();
   });
 
   it('returns 400 when values is not an array', async () => {

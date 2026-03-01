@@ -179,10 +179,10 @@ export function OrgDetailModal({ org, open, onClose, onOrgUpdated }: OrgDetailMo
                   {getSizeBadge(org.organizationSize)}
                 </div>
 
-                {org.industry && (
+                {(org.industryLabel || org.industry) && (
                   <div className="flex items-center gap-2">
                     <Briefcase className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{org.industry}</span>
+                    <span className="text-sm">{org.industryLabel || org.industry}</span>
                   </div>
                 )}
 

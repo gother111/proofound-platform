@@ -51,7 +51,9 @@ describe('ExperienceForm', () => {
     fireEvent.change(screen.getByLabelText(/Organization Name/i), {
       target: { value: 'Proofound' },
     });
-    fireEvent.change(screen.getByLabelText(/Industry/i), { target: { value: 'Technology' } });
+    fireEvent.change(screen.getByLabelText(/Industry/i), {
+      target: { value: 'information_and_communication' },
+    });
 
     fireEvent.change(screen.getByPlaceholderText(/Hiring cycle time/i), {
       target: { value: 'Reduced hiring cycle time' },
@@ -120,19 +122,22 @@ describe('ExperienceForm', () => {
     expect(onSave).not.toHaveBeenCalled();
   });
 
-  it('requires custom industry text when Other is selected', async () => {
+  it('maps selected taxonomy industry key to canonical label in payload', async () => {
     const { onSave } = renderForm();
 
     fillRequiredTextFields();
-    fireEvent.change(screen.getByLabelText(/Industry/i), { target: { value: 'Other' } });
     fireEvent.change(screen.getByLabelText(/Start month/i), { target: { value: '2024-06' } });
     fireEvent.click(screen.getByLabelText(/Ongoing/i));
 
     fireEvent.click(screen.getByRole('button', { name: /Add Experience/i }));
 
-    await waitFor(() =>
-      expect(screen.getByText('Enter custom industry when selecting Other')).toBeInTheDocument()
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationIndustryKey: 'information_and_communication',
+        organizationIndustryLabel: 'Information and communication',
+        organizationIndustry: 'Information and communication',
+      })
     );
-    expect(onSave).not.toHaveBeenCalled();
   });
 });

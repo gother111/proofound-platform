@@ -56,6 +56,9 @@ const org = {
   missionLinks: { values: ['Integrity'], causes: ['Climate Justice'] },
   visionLinks: { values: ['Integrity'], causes: ['Climate Justice'] },
   industry: null,
+  industryKey: null,
+  industryLabel: null,
+  industryLegacyText: null,
   organizationSize: null,
   impactArea: null,
   legalForm: null,
@@ -105,7 +108,9 @@ describe('OrganizationBasicInfoEditor', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: /Add Value/i }));
     fireEvent.change(screen.getByLabelText(/Tagline/i), { target: { value: 'Trust-led hiring' } });
-    fireEvent.change(screen.getByLabelText(/Industry/i), { target: { value: 'Technology' } });
+    fireEvent.change(screen.getByLabelText(/Industry/i), {
+      target: { value: 'information_and_communication' },
+    });
     fireEvent.change(screen.getByLabelText(/Organization Size/i), { target: { value: '11-50' } });
     fireEvent.change(screen.getByLabelText(/Impact Area/i), { target: { value: 'Education' } });
     fireEvent.change(screen.getByLabelText(/Legal Form/i), { target: { value: 'llc' } });
@@ -123,7 +128,9 @@ describe('OrganizationBasicInfoEditor', () => {
     expect(payload.missionLinks).toEqual({ values: ['Integrity'], causes: ['Climate Justice'] });
     expect(payload.visionLinks).toEqual({ values: ['Integrity'], causes: ['Climate Justice'] });
     expect(payload.tagline).toBe('Trust-led hiring');
-    expect(payload.industry).toBe('Technology');
+    expect(payload.industry).toBe('Information and communication');
+    expect(payload.industryKey).toBe('information_and_communication');
+    expect(payload.industryLabel).toBe('Information and communication');
     expect(payload.organizationSize).toBe('11-50');
     expect(payload.impactArea).toBe('Education');
     expect(payload.legalForm).toBe('llc');

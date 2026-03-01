@@ -29,7 +29,11 @@ vi.mock('@/components/matching/FocusAreasSection', () => ({
       onClick={() =>
         onChange({
           desiredRoles: ['Software Engineer'],
-          desiredIndustries: ['Technology'],
+          desiredIndustries: ['Information and communication'],
+          preferredIndustryKeys: ['information_and_communication'],
+          preferredIndustryLabels: ['Information and communication'],
+          avoidIndustryKeys: ['education'],
+          avoidIndustryLabels: ['Education'],
           orgTypes: ['startup'],
         })
       }
@@ -116,7 +120,11 @@ describe('MatchingProfileSetup single-page form', () => {
     const payload = JSON.parse(putCall[1].body);
 
     expect(payload.desiredRoles).toEqual(['Software Engineer']);
-    expect(payload.desiredIndustries).toEqual(['Technology']);
+    expect(payload.desiredIndustries).toEqual(['Information and communication']);
+    expect(payload.preferredIndustryKeys).toEqual(['information_and_communication']);
+    expect(payload.preferredIndustryLabels).toEqual(['Information and communication']);
+    expect(payload.avoidIndustryKeys).toEqual(['education']);
+    expect(payload.avoidIndustryLabels).toEqual(['Education']);
     expect(payload.orgTypes).toEqual(['startup']);
     expect(payload.weightBias).toBe(80);
     expect(payload.compPeriod).toBe('monthly');

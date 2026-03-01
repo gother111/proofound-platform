@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { calculateFocusBoost } from '@/lib/core/matching/focus';
+import { calculateFocusBoost, isIndustryAvoided } from '@/lib/core/matching/focus';
 
 describe('calculateFocusBoost', () => {
   it('applies role-only boost', () => {
@@ -16,6 +16,15 @@ describe('calculateFocusBoost', () => {
   });
 
   it('applies industry-only boost', () => {
+    const result = calculateFocusBoost(
+      { preferredIndustryKeys: ['human_health_and_social_work_activities'] },
+      { orgIndustryKey: 'human_health_and_social_work_activities' }
+    );
+
+    expect(result.boost).toBeCloseTo(0.025, 5);
+  });
+
+  it('supports legacy desired industries via canonical fallback', () => {
     const result = calculateFocusBoost(
       { desiredIndustries: ['Healthcare'] },
       { orgIndustry: 'healthcare' }
@@ -39,6 +48,7 @@ describe('calculateFocusBoost', () => {
       },
       {
         assignmentRole: 'Software Engineer',
+        orgIndustryKey: 'information_and_communication',
         orgIndustry: 'Technology',
         orgType: 'company',
       }
@@ -50,5 +60,14 @@ describe('calculateFocusBoost', () => {
   it('returns zero boost with no focus inputs', () => {
     const result = calculateFocusBoost({}, { assignmentRole: 'Engineer' });
     expect(result.boost).toBe(0);
+  });
+
+  it('flags assignments in avoided industries for exclusion', () => {
+    const avoided = isIndustryAvoided(
+      { avoidIndustryKeys: ['education'] },
+      { orgIndustryKey: 'education', orgIndustry: 'Education' }
+    );
+
+    expect(avoided).toBe(true);
   });
 });

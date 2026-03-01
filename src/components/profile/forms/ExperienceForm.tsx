@@ -21,13 +21,19 @@ import {
 } from '@/lib/profile/experience-timeline';
 import {
   EXPERIENCE_EMPLOYEE_AMOUNT_OPTIONS,
-  EXPERIENCE_INDUSTRY_PRESET_OPTIONS,
   EXPERIENCE_ORGANIZATION_TYPE_OPTIONS,
   EXPERIENCE_PARTICIPATION_CAPACITY_OPTIONS,
   type ExperienceEmployeeAmount,
   type ExperienceOrganizationType,
   type ExperienceParticipationCapacity,
 } from '@/lib/profile/experience-options';
+import {
+  DEFAULT_INDUSTRY_KEY,
+  INDUSTRY_OPTIONS,
+  getIndustryLabelForKey,
+  isIndustryKey,
+  resolveIndustryFromInputs,
+} from '@/lib/industry/options';
 
 const monthInputRegex = /^\d{4}-(0[1-9]|1[0-2])$/;
 
@@ -64,8 +70,7 @@ const experienceSchema = z
     title: z.string().min(1, 'Title is required'),
     organizationName: z.string().min(1, 'Organization name is required'),
     organizationType: z.enum(orgTypeValues),
-    organizationIndustryPreset: z.string().min(1, 'Industry is required'),
-    organizationIndustryCustom: z.string().optional(),
+    organizationIndustryKey: z.string().min(1, 'Industry is required'),
     organizationEmployeeAmount: z.enum(employeeAmountValues),
     startMonth: z.string().regex(monthInputRegex, 'Start month is required'),
     ongoing: z.boolean().default(false),
@@ -90,17 +95,6 @@ const experienceSchema = z
         code: z.ZodIssueCode.custom,
         message: 'End month cannot be earlier than start month',
         path: ['endMonth'],
-      });
-    }
-
-    if (
-      value.organizationIndustryPreset === 'Other' &&
-      (!value.organizationIndustryCustom || value.organizationIndustryCustom.trim().length === 0)
-    ) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Enter custom industry when selecting Other',
-        path: ['organizationIndustryCustom'],
       });
     }
 
@@ -182,25 +176,6 @@ function summarizeProjects(projects: ExperienceFormData['projects']) {
     .join('; ');
 }
 
-function resolveIndustryForEdit(industry: string | null | undefined): {
-  preset: string;
-  custom: string;
-} {
-  if (!industry || industry.trim().length === 0) {
-    return { preset: '', custom: '' };
-  }
-
-  const matched = EXPERIENCE_INDUSTRY_PRESET_OPTIONS.find(
-    (option) => option.toLowerCase() === industry.trim().toLowerCase()
-  );
-
-  if (matched && matched !== 'Other') {
-    return { preset: matched, custom: '' };
-  }
-
-  return { preset: 'Other', custom: industry.trim() };
-}
-
 export function ExperienceForm({ open, onOpenChange, experience, onSave }: ExperienceFormProps) {
   const {
     register,
@@ -217,8 +192,7 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
       title: '',
       organizationName: '',
       organizationType: 'company',
-      organizationIndustryPreset: '',
-      organizationIndustryCustom: '',
+      organizationIndustryKey: DEFAULT_INDUSTRY_KEY,
       organizationEmployeeAmount: '11-50',
       startMonth: '',
       ongoing: false,
@@ -247,8 +221,6 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
   });
 
   const ongoing = watch('ongoing');
-  const selectedIndustryPreset = watch('organizationIndustryPreset');
-
   useEffect(() => {
     if (ongoing) {
       setValue('endMonth', '');
@@ -265,7 +237,11 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
         duration: experience.duration,
       });
 
-      const resolvedIndustry = resolveIndustryForEdit(experience.organizationIndustry);
+      const resolvedIndustry = resolveIndustryFromInputs({
+        industryKey: experience.organizationIndustryKey,
+        industryLabel: experience.organizationIndustryLabel,
+        legacyIndustry: experience.organizationIndustry,
+      });
 
       const outcomeDefaults =
         experience.measuredOutcomes && experience.measuredOutcomes.length > 0
@@ -308,8 +284,7 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
         title: experience.title,
         organizationName: experience.organizationName || '',
         organizationType: experience.organizationType || 'company',
-        organizationIndustryPreset: resolvedIndustry.preset,
-        organizationIndustryCustom: resolvedIndustry.custom,
+        organizationIndustryKey: resolvedIndustry.industryKey,
         organizationEmployeeAmount: experience.organizationEmployeeAmount || '11-50',
         startMonth: isoDateToMonthInput(timeline.startDate),
         ongoing: !timeline.endDate,
@@ -325,8 +300,7 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
       title: '',
       organizationName: '',
       organizationType: 'company',
-      organizationIndustryPreset: '',
-      organizationIndustryCustom: '',
+      organizationIndustryKey: DEFAULT_INDUSTRY_KEY,
       organizationEmployeeAmount: '11-50',
       startMonth: '',
       ongoing: false,
@@ -356,16 +330,18 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
       duration: project.duration.trim(),
     }));
 
-    const industry =
-      data.organizationIndustryPreset === 'Other'
-        ? data.organizationIndustryCustom?.trim() || null
-        : data.organizationIndustryPreset.trim() || null;
+    const industryKey = isIndustryKey(data.organizationIndustryKey)
+      ? data.organizationIndustryKey
+      : DEFAULT_INDUSTRY_KEY;
+    const industryLabel = getIndustryLabelForKey(industryKey);
 
     onSave({
       title: data.title,
       organizationName: data.organizationName.trim(),
       organizationType: data.organizationType,
-      organizationIndustry: industry,
+      organizationIndustry: industryLabel,
+      organizationIndustryKey: industryKey,
+      organizationIndustryLabel: industryLabel,
       organizationEmployeeAmount: data.organizationEmployeeAmount,
       orgDescription: experience?.orgDescription || 'Organization details not specified',
       duration: timeline.duration,
@@ -464,41 +440,24 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="organizationIndustryPreset">
+            <Label htmlFor="organizationIndustryKey">
               Industry <span className="text-red-500">*</span>
             </Label>
             <select
-              id="organizationIndustryPreset"
-              {...register('organizationIndustryPreset')}
+              id="organizationIndustryKey"
+              {...register('organizationIndustryKey')}
               className={`flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ${
-                errors.organizationIndustryPreset ? 'border-red-500' : 'border-input'
+                errors.organizationIndustryKey ? 'border-red-500' : 'border-input'
               }`}
             >
-              <option value="">Select industry</option>
-              {EXPERIENCE_INDUSTRY_PRESET_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
+              {INDUSTRY_OPTIONS.map((option) => (
+                <option key={option.key} value={option.key}>
+                  {option.label}
                 </option>
               ))}
             </select>
-            {errors.organizationIndustryPreset && (
-              <p className="text-xs text-red-500">{errors.organizationIndustryPreset.message}</p>
-            )}
-            {selectedIndustryPreset === 'Other' && (
-              <div className="space-y-1">
-                <Label htmlFor="organizationIndustryCustom">Custom industry</Label>
-                <Input
-                  id="organizationIndustryCustom"
-                  {...register('organizationIndustryCustom')}
-                  placeholder="Type industry"
-                  className={errors.organizationIndustryCustom ? 'border-red-500' : ''}
-                />
-                {errors.organizationIndustryCustom && (
-                  <p className="text-xs text-red-500">
-                    {errors.organizationIndustryCustom.message}
-                  </p>
-                )}
-              </div>
+            {errors.organizationIndustryKey && (
+              <p className="text-xs text-red-500">{errors.organizationIndustryKey.message}</p>
             )}
           </div>
 

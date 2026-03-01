@@ -9,6 +9,7 @@ import { emitAnalyticsEventAsync, emitProfileActivated } from '@/lib/analytics/e
 import { evaluateIndividualMatchability } from '@/lib/matching/eligibility';
 import { getWeightBiasBucket } from '@/lib/core/matching/presets';
 import { MATCHABILITY_STRONG_SKILLS_WITH_RECENCY } from '@/lib/matching/thresholds';
+import { mapIndustryListToCanonical } from '@/lib/industry/options';
 import {
   normalizeIndividualCauses,
   normalizeIndividualValueLabels,
@@ -90,11 +91,82 @@ const MatchingProfileSchema = z.object({
   currency: z.string().optional(),
   desiredRoles: z.array(z.string()).optional(),
   desiredIndustries: z.array(z.string()).optional(),
+  preferredIndustryKeys: z.array(z.string()).optional(),
+  preferredIndustryLabels: z.array(z.string()).optional(),
+  avoidIndustryKeys: z.array(z.string()).optional(),
+  avoidIndustryLabels: z.array(z.string()).optional(),
   orgTypes: z.array(z.enum(['company', 'ngo', 'government', 'network', 'startup'])).optional(),
   weights: z.record(z.number()).optional(),
   weightBias: z.number().min(0).max(100).optional(),
   skills: z.array(SkillInputSchema).optional(),
 });
+
+function normalizeProfileIndustries(
+  input: Pick<
+    z.infer<typeof MatchingProfileSchema>,
+    | 'desiredIndustries'
+    | 'preferredIndustryKeys'
+    | 'preferredIndustryLabels'
+    | 'avoidIndustryKeys'
+    | 'avoidIndustryLabels'
+  >
+) {
+  const hasPreferredInput =
+    input.preferredIndustryKeys !== undefined ||
+    input.preferredIndustryLabels !== undefined ||
+    input.desiredIndustries !== undefined;
+  const hasAvoidInput =
+    input.avoidIndustryKeys !== undefined || input.avoidIndustryLabels !== undefined;
+
+  const preferredInput =
+    input.preferredIndustryKeys ?? input.preferredIndustryLabels ?? input.desiredIndustries ?? [];
+  const avoidInput = input.avoidIndustryKeys ?? input.avoidIndustryLabels ?? [];
+
+  const preferred = mapIndustryListToCanonical(preferredInput);
+  const avoid = mapIndustryListToCanonical(avoidInput);
+
+  return {
+    hasPreferredInput,
+    hasAvoidInput,
+    preferred,
+    avoid,
+  };
+}
+
+function normalizeProfileResponse(
+  profile: typeof matchingProfiles.$inferSelect | null | undefined,
+  userSkills: unknown[]
+) {
+  if (!profile) {
+    return null;
+  }
+
+  const preferredFromCanonical = mapIndustryListToCanonical(
+    profile.preferredIndustryKeys && profile.preferredIndustryKeys.length > 0
+      ? profile.preferredIndustryKeys
+      : profile.preferredIndustryLabels
+  );
+  const preferredFromLegacy = mapIndustryListToCanonical(profile.desiredIndustries);
+  const preferred =
+    preferredFromCanonical.keys.length > 0 ? preferredFromCanonical : preferredFromLegacy;
+  const avoid = mapIndustryListToCanonical(
+    profile.avoidIndustryKeys && profile.avoidIndustryKeys.length > 0
+      ? profile.avoidIndustryKeys
+      : profile.avoidIndustryLabels
+  );
+
+  return {
+    ...profile,
+    desiredIndustries: preferred.labels,
+    preferredIndustryKeys: preferred.keys,
+    preferredIndustryLabels: preferred.labels,
+    preferredIndustryLegacy: preferred.legacy,
+    avoidIndustryKeys: avoid.keys,
+    avoidIndustryLabels: avoid.labels,
+    avoidIndustryLegacy: avoid.legacy,
+    skills: userSkills,
+  };
+}
 
 /**
  * GET /api/matching-profile
@@ -139,10 +211,7 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      profile: {
-        ...profile,
-        skills: userSkills,
-      },
+      profile: normalizeProfileResponse(profile, userSkills),
       eligibility,
     });
   } catch (error) {
@@ -208,9 +277,20 @@ export async function PUT(request: NextRequest) {
       availabilityLatest,
       desiredRoles,
       desiredIndustries,
+      preferredIndustryKeys,
+      preferredIndustryLabels,
+      avoidIndustryKeys,
+      avoidIndustryLabels,
       orgTypes,
       ...restProfile
     } = profileData;
+    const normalizedIndustries = normalizeProfileIndustries({
+      desiredIndustries,
+      preferredIndustryKeys,
+      preferredIndustryLabels,
+      avoidIndustryKeys,
+      avoidIndustryLabels,
+    });
 
     const profileToUpsert: typeof matchingProfiles.$inferInsert = {
       profileId: user.id,
@@ -220,7 +300,21 @@ export async function PUT(request: NextRequest) {
       ...(availabilityEarliest !== undefined ? { availabilityEarliest } : {}),
       ...(availabilityLatest !== undefined ? { availabilityLatest } : {}),
       ...(desiredRoles !== undefined ? { desiredRoles } : {}),
-      ...(desiredIndustries !== undefined ? { desiredIndustries } : {}),
+      ...(normalizedIndustries.hasPreferredInput
+        ? {
+            desiredIndustries: normalizedIndustries.preferred.labels,
+            preferredIndustryKeys: normalizedIndustries.preferred.keys,
+            preferredIndustryLabels: normalizedIndustries.preferred.labels,
+            preferredIndustryLegacy: normalizedIndustries.preferred.legacy,
+          }
+        : {}),
+      ...(normalizedIndustries.hasAvoidInput
+        ? {
+            avoidIndustryKeys: normalizedIndustries.avoid.keys,
+            avoidIndustryLabels: normalizedIndustries.avoid.labels,
+            avoidIndustryLegacy: normalizedIndustries.avoid.legacy,
+          }
+        : {}),
       ...(orgTypes !== undefined ? { orgTypes } : {}),
     };
 
@@ -261,7 +355,15 @@ export async function PUT(request: NextRequest) {
       skillCount: skillsInput?.length || 0,
     });
 
-    if (desiredRoles !== undefined || desiredIndustries !== undefined || orgTypes !== undefined) {
+    const desiredIndustryLabelsForAnalytics = normalizedIndustries.hasPreferredInput
+      ? normalizedIndustries.preferred.labels
+      : undefined;
+
+    if (
+      desiredRoles !== undefined ||
+      desiredIndustryLabelsForAnalytics !== undefined ||
+      orgTypes !== undefined
+    ) {
       emitAnalyticsEventAsync({
         eventType: 'matching_focus_updated',
         userId: user.id,
@@ -270,11 +372,11 @@ export async function PUT(request: NextRequest) {
         entityId: user.id,
         properties: {
           desiredRolesCount: desiredRoles?.length ?? 0,
-          desiredIndustriesCount: desiredIndustries?.length ?? 0,
+          desiredIndustriesCount: desiredIndustryLabelsForAnalytics?.length ?? 0,
           orgTypesCount: orgTypes?.length ?? 0,
           hasFocusFields:
             (desiredRoles?.length ?? 0) > 0 ||
-            (desiredIndustries?.length ?? 0) > 0 ||
+            (desiredIndustryLabelsForAnalytics?.length ?? 0) > 0 ||
             (orgTypes?.length ?? 0) > 0,
         },
       });
@@ -292,7 +394,7 @@ export async function PUT(request: NextRequest) {
           biasBucket: getWeightBiasBucket(weightBias),
           hasFocusFields:
             (desiredRoles?.length ?? 0) > 0 ||
-            (desiredIndustries?.length ?? 0) > 0 ||
+            (desiredIndustryLabelsForAnalytics?.length ?? 0) > 0 ||
             (orgTypes?.length ?? 0) > 0,
         },
       });
@@ -312,10 +414,7 @@ export async function PUT(request: NextRequest) {
     });
 
     return NextResponse.json({
-      profile: {
-        ...updatedProfile,
-        skills: updatedSkills,
-      },
+      profile: normalizeProfileResponse(updatedProfile, updatedSkills),
       eligibility,
     });
   } catch (error) {

@@ -197,8 +197,8 @@ export function OrganizationsTable() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {org.industry ? (
-                      <Badge variant="outline">{org.industry}</Badge>
+                    {org.industryLabel || org.industry ? (
+                      <Badge variant="outline">{org.industryLabel || org.industry}</Badge>
                     ) : (
                       <span className="text-muted-foreground">N/A</span>
                     )}

@@ -28,6 +28,7 @@ import { MATCHABILITY_STRONG_SKILLS_WITH_RECENCY } from '@/lib/matching/threshol
 import { sendEmail } from '@/lib/email/sender';
 import { resolveSiteUrlFromHeaders } from '@/lib/env';
 import { buildExperienceTimeline } from '@/lib/profile/experience-timeline';
+import { resolveIndustryFromInputs } from '@/lib/industry/options';
 import {
   EXPERIENCE_EMPLOYEE_AMOUNT_OPTIONS,
   EXPERIENCE_ORGANIZATION_TYPE_OPTIONS,
@@ -434,6 +435,9 @@ export async function getProfileData(): Promise<ProfileData> {
             organizationName: experiences.organizationName,
             organizationType: experiences.organizationType,
             organizationIndustry: experiences.organizationIndustry,
+            organizationIndustryKey: experiences.organizationIndustryKey,
+            organizationIndustryLabel: experiences.organizationIndustryLabel,
+            organizationIndustryLegacyText: experiences.organizationIndustryLegacyText,
             organizationEmployeeAmount: experiences.organizationEmployeeAmount,
             orgDescription: experiences.orgDescription,
             duration: experiences.duration,
@@ -585,8 +589,24 @@ export async function getProfileData(): Promise<ProfileData> {
             ? row.organizationType
             : null,
         organizationIndustry:
-          typeof row.organizationIndustry === 'string' && row.organizationIndustry.trim().length > 0
-            ? row.organizationIndustry.trim()
+          typeof (row.organizationIndustryLabel || row.organizationIndustry) === 'string' &&
+          (row.organizationIndustryLabel || row.organizationIndustry).trim().length > 0
+            ? (row.organizationIndustryLabel || row.organizationIndustry).trim()
+            : null,
+        organizationIndustryKey:
+          typeof row.organizationIndustryKey === 'string' &&
+          row.organizationIndustryKey.trim().length > 0
+            ? row.organizationIndustryKey.trim()
+            : null,
+        organizationIndustryLabel:
+          typeof row.organizationIndustryLabel === 'string' &&
+          row.organizationIndustryLabel.trim().length > 0
+            ? row.organizationIndustryLabel.trim()
+            : null,
+        organizationIndustryLegacyText:
+          typeof row.organizationIndustryLegacyText === 'string' &&
+          row.organizationIndustryLegacyText.trim().length > 0
+            ? row.organizationIndustryLegacyText.trim()
             : null,
         organizationEmployeeAmount:
           typeof row.organizationEmployeeAmount === 'string' &&
@@ -1004,6 +1024,8 @@ function summarizeExperienceProjects(
 
 function buildPublicExperienceOrgDescription(data: {
   organizationType?: string | null;
+  organizationIndustryKey?: string | null;
+  organizationIndustryLabel?: string | null;
   organizationIndustry?: string | null;
   organizationEmployeeAmount?: string | null;
   orgDescription?: string | null;
@@ -1012,8 +1034,19 @@ function buildPublicExperienceOrgDescription(data: {
     typeof data.organizationType === 'string'
       ? EXPERIENCE_ORGANIZATION_TYPE_LABELS[data.organizationType] || null
       : null;
-  const organizationIndustry =
-    typeof data.organizationIndustry === 'string' ? data.organizationIndustry.trim() : '';
+  const hasIndustryInput = Boolean(
+    (typeof data.organizationIndustryKey === 'string' && data.organizationIndustryKey.trim()) ||
+      (typeof data.organizationIndustryLabel === 'string' &&
+        data.organizationIndustryLabel.trim()) ||
+      (typeof data.organizationIndustry === 'string' && data.organizationIndustry.trim())
+  );
+  const organizationIndustry = hasIndustryInput
+    ? resolveIndustryFromInputs({
+        industryKey: data.organizationIndustryKey,
+        industryLabel: data.organizationIndustryLabel,
+        legacyIndustry: data.organizationIndustry,
+      }).industryLabel
+    : '';
   const employeeAmount =
     typeof data.organizationEmployeeAmount === 'string'
       ? data.organizationEmployeeAmount.trim()
@@ -2196,10 +2229,12 @@ export async function createExperience(data: Omit<Experience, 'id'>) {
     EXPERIENCE_EMPLOYEE_AMOUNT_SET.has(data.organizationEmployeeAmount as any)
       ? data.organizationEmployeeAmount
       : null;
-  const organizationIndustry =
-    typeof data.organizationIndustry === 'string' && data.organizationIndustry.trim().length > 0
-      ? data.organizationIndustry.trim()
-      : null;
+  const resolvedIndustry = resolveIndustryFromInputs({
+    industryKey: data.organizationIndustryKey,
+    industryLabel: data.organizationIndustryLabel,
+    legacyIndustry: data.organizationIndustry,
+  });
+  const organizationIndustry = resolvedIndustry.industryLabel;
   const organizationName =
     typeof data.organizationName === 'string' && data.organizationName.trim().length > 0
       ? data.organizationName.trim()
@@ -2214,6 +2249,8 @@ export async function createExperience(data: Omit<Experience, 'id'>) {
   );
   const publicOrgDescription = buildPublicExperienceOrgDescription({
     organizationType,
+    organizationIndustryKey: resolvedIndustry.industryKey,
+    organizationIndustryLabel: resolvedIndustry.industryLabel,
     organizationIndustry,
     organizationEmployeeAmount,
     orgDescription: data.orgDescription,
@@ -2227,6 +2264,9 @@ export async function createExperience(data: Omit<Experience, 'id'>) {
       organizationName,
       organizationType,
       organizationIndustry,
+      organizationIndustryKey: resolvedIndustry.industryKey,
+      organizationIndustryLabel: resolvedIndustry.industryLabel,
+      organizationIndustryLegacyText: resolvedIndustry.legacyText,
       organizationEmployeeAmount,
       orgDescription: publicOrgDescription,
       duration: timeline.duration,
@@ -2291,12 +2331,17 @@ export async function updateExperience(id: string, data: Omit<Experience, 'id'>)
       : data.organizationEmployeeAmount === null
         ? null
         : undefined;
-  const organizationIndustry =
-    typeof data.organizationIndustry === 'string'
-      ? data.organizationIndustry.trim() || null
-      : data.organizationIndustry === null
-        ? null
-        : undefined;
+  const resolvedIndustry =
+    data.organizationIndustry !== undefined ||
+    data.organizationIndustryKey !== undefined ||
+    data.organizationIndustryLabel !== undefined
+      ? resolveIndustryFromInputs({
+          industryKey: data.organizationIndustryKey,
+          industryLabel: data.organizationIndustryLabel,
+          legacyIndustry: data.organizationIndustry,
+        })
+      : null;
+  const organizationIndustry = resolvedIndustry ? resolvedIndustry.industryLabel : undefined;
   const organizationName =
     typeof data.organizationName === 'string'
       ? data.organizationName.trim() || null
@@ -2307,10 +2352,14 @@ export async function updateExperience(id: string, data: Omit<Experience, 'id'>)
     data.orgDescription !== undefined ||
     data.organizationType !== undefined ||
     data.organizationIndustry !== undefined ||
+    data.organizationIndustryKey !== undefined ||
+    data.organizationIndustryLabel !== undefined ||
     data.organizationEmployeeAmount !== undefined;
   const publicOrgDescription = shouldUpdateOrgDescription
     ? buildPublicExperienceOrgDescription({
         organizationType: organizationType === undefined ? null : organizationType,
+        organizationIndustryKey: resolvedIndustry ? resolvedIndustry.industryKey : null,
+        organizationIndustryLabel: resolvedIndustry ? resolvedIndustry.industryLabel : null,
         organizationIndustry: organizationIndustry === undefined ? null : organizationIndustry,
         organizationEmployeeAmount:
           organizationEmployeeAmount === undefined ? null : organizationEmployeeAmount,
@@ -2325,6 +2374,9 @@ export async function updateExperience(id: string, data: Omit<Experience, 'id'>)
       organizationName,
       organizationType,
       organizationIndustry,
+      organizationIndustryKey: resolvedIndustry ? resolvedIndustry.industryKey : undefined,
+      organizationIndustryLabel: resolvedIndustry ? resolvedIndustry.industryLabel : undefined,
+      organizationIndustryLegacyText: resolvedIndustry ? resolvedIndustry.legacyText : undefined,
       organizationEmployeeAmount,
       orgDescription: publicOrgDescription,
       duration: timeline.duration,

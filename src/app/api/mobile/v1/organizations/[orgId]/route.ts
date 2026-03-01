@@ -7,6 +7,7 @@ import { organizationMembers, organizations } from '@/db/schema';
 import { requireMobileAuth } from '@/lib/api/mobile/auth';
 import { mobileError, mobileSuccess } from '@/lib/api/mobile/response';
 import { LEGAL_FORM_VALUES, ORGANIZATION_SIZE_VALUES } from '@/lib/organizations/profile-options';
+import { mapIndustryValueToCanonical, resolveIndustryFromInputs } from '@/lib/industry/options';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +21,8 @@ const UpdateSchema = z.object({
   website: z.string().nullable().optional(),
   tagline: z.string().nullable().optional(),
   industry: z.string().nullable().optional(),
+  industryKey: z.string().nullable().optional(),
+  industryLabel: z.string().nullable().optional(),
   organizationSize: z.enum(ORGANIZATION_SIZE_VALUES).nullable().optional(),
   impactArea: z.string().nullable().optional(),
   legalForm: z.enum(LEGAL_FORM_VALUES).nullable().optional(),
@@ -124,12 +127,42 @@ export async function PATCH(
       return mobileError('validation_error', 'Founded date must be valid YYYY-MM-DD', 400);
     }
 
+    const updateData: Record<string, unknown> = {
+      ...parsed.data,
+      updatedAt: new Date(),
+    };
+
+    if (
+      parsed.data.industry !== undefined ||
+      parsed.data.industryKey !== undefined ||
+      parsed.data.industryLabel !== undefined
+    ) {
+      if (
+        typeof parsed.data.industryKey === 'string' &&
+        parsed.data.industryKey.trim().length > 0 &&
+        typeof parsed.data.industryLabel === 'string' &&
+        parsed.data.industryLabel.trim().length > 0
+      ) {
+        const mappedLabel = mapIndustryValueToCanonical(parsed.data.industryLabel.trim());
+        if (mappedLabel.industryKey !== parsed.data.industryKey.trim()) {
+          return mobileError('validation_error', 'Industry key and label do not match', 400);
+        }
+      }
+
+      const resolvedIndustry = resolveIndustryFromInputs({
+        industryKey: parsed.data.industryKey,
+        industryLabel: parsed.data.industryLabel,
+        legacyIndustry: parsed.data.industry,
+      });
+      updateData.industry = resolvedIndustry.industryLabel;
+      updateData.industryKey = resolvedIndustry.industryKey;
+      updateData.industryLabel = resolvedIndustry.industryLabel;
+      updateData.industryLegacyText = resolvedIndustry.legacyText;
+    }
+
     const [updated] = await db
       .update(organizations)
-      .set({
-        ...parsed.data,
-        updatedAt: new Date(),
-      })
+      .set(updateData)
       .where(eq(organizations.id, orgId))
       .returning();
 

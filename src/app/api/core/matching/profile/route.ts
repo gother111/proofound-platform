@@ -41,7 +41,7 @@ import {
 } from '@/lib/matching/semantic';
 import { isTrustedInternalRequest, requireApiAuth } from '@/lib/api/auth';
 import { evaluateIndividualMatchability, toNotMatchablePayload } from '@/lib/matching/eligibility';
-import { calculateFocusBoost } from '@/lib/core/matching/focus';
+import { calculateFocusBoost, isIndustryAvoided } from '@/lib/core/matching/focus';
 import {
   deriveAtlasLanguageLevels,
   parseLegacyLanguageLevels,
@@ -399,6 +399,7 @@ export async function POST(request: NextRequest) {
             .select({
               id: organizations.id,
               type: organizations.type,
+              industryKey: organizations.industryKey,
               industry: organizations.industry,
             })
             .from(organizations)
@@ -439,6 +440,13 @@ export async function POST(request: NextRequest) {
         })
         .map((m) => m.assignmentId)
     );
+    const focusPreferences = {
+      desiredRoles: (profile.desiredRoles as string[] | null) || [],
+      desiredIndustries: (profile.desiredIndustries as string[] | null) || [],
+      preferredIndustryKeys: (profile.preferredIndustryKeys as string[] | null) || [],
+      avoidIndustryKeys: (profile.avoidIndustryKeys as string[] | null) || [],
+      orgTypes: (profile.orgTypes as string[] | null) || [],
+    };
 
     for (const assignment of activeAssignments) {
       // Skip snoozed matches
@@ -447,6 +455,15 @@ export async function POST(request: NextRequest) {
       }
       // Skip hidden matches
       if (hiddenAssignmentIds.has(assignment.id)) {
+        continue;
+      }
+      const organization = orgById.get(assignment.orgId);
+      if (
+        isIndustryAvoided(focusPreferences, {
+          orgIndustryKey: organization?.industryKey,
+          orgIndustry: organization?.industry,
+        })
+      ) {
         continue;
       }
 
@@ -579,19 +596,12 @@ export async function POST(request: NextRequest) {
 
       // Compose weighted score
       const composed = composeWeighted(subscores, weights);
-      const organization = orgById.get(assignment.orgId);
-      const focusBoost = calculateFocusBoost(
-        {
-          desiredRoles: (profile.desiredRoles as string[] | null) || [],
-          desiredIndustries: (profile.desiredIndustries as string[] | null) || [],
-          orgTypes: (profile.orgTypes as string[] | null) || [],
-        },
-        {
-          assignmentRole: assignment.role,
-          orgIndustry: organization?.industry,
-          orgType: organization?.type,
-        }
-      );
+      const focusBoost = calculateFocusBoost(focusPreferences, {
+        assignmentRole: assignment.role,
+        orgIndustryKey: organization?.industryKey,
+        orgIndustry: organization?.industry,
+        orgType: organization?.type,
+      });
       const finalScore = Math.min(1, composed.total + focusBoost.boost);
 
       // Scrub org-identifying info from assignment

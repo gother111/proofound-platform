@@ -72,7 +72,10 @@ export default async function OrganizationProfileSettingsPage({
               org.vision && (visionLinks.values.length === 0 || visionLinks.causes.length === 0)
                 ? createOrganizationDefaultPurposeLinks(normalizedValues, normalizedCauses)
                 : visionLinks,
-            industry: org.industry,
+            industry: org.industryLabel || org.industry,
+            industryKey: org.industryKey,
+            industryLabel: org.industryLabel,
+            industryLegacyText: org.industryLegacyText,
             organizationSize: org.organizationSize,
             impactArea: org.impactArea,
             legalForm: org.legalForm,

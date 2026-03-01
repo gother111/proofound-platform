@@ -30,6 +30,10 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
   // Form state
   const [desiredRoles, setDesiredRoles] = useState<string[]>([]);
   const [desiredIndustries, setDesiredIndustries] = useState<string[]>([]);
+  const [preferredIndustryKeys, setPreferredIndustryKeys] = useState<string[]>([]);
+  const [preferredIndustryLabels, setPreferredIndustryLabels] = useState<string[]>([]);
+  const [avoidIndustryKeys, setAvoidIndustryKeys] = useState<string[]>([]);
+  const [avoidIndustryLabels, setAvoidIndustryLabels] = useState<string[]>([]);
   const [orgTypes, setOrgTypes] = useState<string[]>([]);
   const [weightBias, setWeightBias] = useState(50);
 
@@ -48,15 +52,31 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
   const handleFocusChange = (partial: {
     desiredRoles?: string[];
     desiredIndustries?: string[];
+    preferredIndustryKeys?: string[];
+    preferredIndustryLabels?: string[];
+    avoidIndustryKeys?: string[];
+    avoidIndustryLabels?: string[];
     orgTypes?: string[];
   }) => {
-    if (partial.desiredRoles) {
+    if (partial.desiredRoles !== undefined) {
       setDesiredRoles(partial.desiredRoles);
     }
-    if (partial.desiredIndustries) {
+    if (partial.desiredIndustries !== undefined) {
       setDesiredIndustries(partial.desiredIndustries);
     }
-    if (partial.orgTypes) {
+    if (partial.preferredIndustryKeys !== undefined) {
+      setPreferredIndustryKeys(partial.preferredIndustryKeys);
+    }
+    if (partial.preferredIndustryLabels !== undefined) {
+      setPreferredIndustryLabels(partial.preferredIndustryLabels);
+    }
+    if (partial.avoidIndustryKeys !== undefined) {
+      setAvoidIndustryKeys(partial.avoidIndustryKeys);
+    }
+    if (partial.avoidIndustryLabels !== undefined) {
+      setAvoidIndustryLabels(partial.avoidIndustryLabels);
+    }
+    if (partial.orgTypes !== undefined) {
       setOrgTypes(partial.orgTypes);
     }
   };
@@ -113,6 +133,10 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
         body: JSON.stringify({
           desiredRoles,
           desiredIndustries,
+          preferredIndustryKeys,
+          preferredIndustryLabels,
+          avoidIndustryKeys,
+          avoidIndustryLabels,
           orgTypes,
           workMode: location.workMode,
           country: location.country,
@@ -189,7 +213,15 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
         <section className="rounded-lg border border-proofound-stone bg-white p-4 space-y-4">
           <h3 className="text-lg font-medium text-foreground">Focus</h3>
           <FocusAreasSection
-            profile={{ desiredRoles, desiredIndustries, orgTypes }}
+            profile={{
+              desiredRoles,
+              desiredIndustries,
+              preferredIndustryKeys,
+              preferredIndustryLabels,
+              avoidIndustryKeys,
+              avoidIndustryLabels,
+              orgTypes,
+            }}
             onChange={handleFocusChange}
           />
         </section>

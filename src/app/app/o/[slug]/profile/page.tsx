@@ -28,6 +28,9 @@ type ClientOrganizationProfile = {
   website: string | null;
   foundedDate: string | null;
   industry: string | null;
+  industryKey: string | null;
+  industryLabel: string | null;
+  industryLegacyText: string | null;
   organizationSize: string | null;
   impactArea: string | null;
   legalForm: string | null;
@@ -59,7 +62,7 @@ export default async function OrganizationProfilePage({
   // Check if organization profile is empty (has minimal data beyond required fields)
   const hasBasicInfo = Boolean(org.tagline || org.mission || org.vision || org.website);
   const hasBusinessDetails = Boolean(
-    org.industry || org.organizationSize || org.impactArea || org.legalForm
+    org.industryLabel || org.industry || org.organizationSize || org.impactArea || org.legalForm
   );
   const hasExtendedInfo = Boolean(normalizedValues.length > 0 || org.workCulture || org.legalName);
 
@@ -71,7 +74,7 @@ export default async function OrganizationProfilePage({
     org.tagline,
     org.mission,
     org.vision,
-    org.industry,
+    org.industryLabel || org.industry,
     org.organizationSize,
     org.impactArea,
     org.legalForm,
@@ -114,7 +117,10 @@ export default async function OrganizationProfilePage({
         : org.foundedDate
           ? String(org.foundedDate)
           : null,
-    industry: org.industry,
+    industry: org.industryLabel || org.industry,
+    industryKey: org.industryKey,
+    industryLabel: org.industryLabel,
+    industryLegacyText: org.industryLegacyText,
     organizationSize: org.organizationSize,
     impactArea: org.impactArea,
     legalForm: org.legalForm,

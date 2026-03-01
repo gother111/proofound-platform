@@ -172,6 +172,9 @@ export const organizations = pgTable('organizations', {
   website: text('website'),
   // Business details
   industry: text('industry'),
+  industryKey: text('industry_key'),
+  industryLabel: text('industry_label'),
+  industryLegacyText: text('industry_legacy_text'),
   organizationSize: text('organization_size', {
     enum: ['1-10', '11-50', '51-200', '201-500', '501-1000', '1001-5000', '5001+'],
   }),
@@ -552,6 +555,30 @@ export const matchingProfiles = pgTable('matching_profiles', {
     .default(sql`'{}'::text[]`)
     .notNull(),
   desiredIndustries: text('desired_industries')
+    .array()
+    .default(sql`'{}'::text[]`)
+    .notNull(),
+  preferredIndustryKeys: text('preferred_industry_keys')
+    .array()
+    .default(sql`'{}'::text[]`)
+    .notNull(),
+  preferredIndustryLabels: text('preferred_industry_labels')
+    .array()
+    .default(sql`'{}'::text[]`)
+    .notNull(),
+  preferredIndustryLegacy: text('preferred_industry_legacy')
+    .array()
+    .default(sql`'{}'::text[]`)
+    .notNull(),
+  avoidIndustryKeys: text('avoid_industry_keys')
+    .array()
+    .default(sql`'{}'::text[]`)
+    .notNull(),
+  avoidIndustryLabels: text('avoid_industry_labels')
+    .array()
+    .default(sql`'{}'::text[]`)
+    .notNull(),
+  avoidIndustryLegacy: text('avoid_industry_legacy')
     .array()
     .default(sql`'{}'::text[]`)
     .notNull(),
@@ -1330,6 +1357,9 @@ export const experiences = pgTable(
       enum: ['company', 'ngo', 'government', 'academic', 'network', 'other'],
     }),
     organizationIndustry: text('organization_industry'),
+    organizationIndustryKey: text('organization_industry_key'),
+    organizationIndustryLabel: text('organization_industry_label'),
+    organizationIndustryLegacyText: text('organization_industry_legacy_text'),
     organizationEmployeeAmount: text('organization_employee_amount', {
       enum: ['1-10', '11-50', '51-200', '201-500', '501-1000', '1001-5000', '5001+'],
     }),
