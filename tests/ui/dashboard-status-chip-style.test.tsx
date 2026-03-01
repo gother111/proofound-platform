@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { InterviewsFeedbackCard } from '@/components/dashboard/InterviewsFeedbackCard';
 import { MatchingReadinessCard } from '@/components/dashboard/MatchingReadinessCard';
 import { ProfileActivationCard } from '@/components/dashboard/ProfileActivationCard';
 import { DASHBOARD_STATUS_CHIP_CLASS } from '@/components/dashboard/chipStyles';
@@ -28,6 +29,8 @@ describe('Dashboard status badge styling', () => {
 
     const badge = screen.getByText('Actionable');
     expectClassTokens(badge.className, DASHBOARD_STATUS_CHIP_CLASS);
+    expect(badge.className).toContain('whitespace-nowrap');
+    expect(badge.className).toContain('shrink-0');
   });
 
   it('uses shared status chip classes when profile activation falls back to Not active', async () => {
@@ -43,5 +46,18 @@ describe('Dashboard status badge styling', () => {
 
     const badge = screen.getByText('Not active');
     expectClassTokens(badge.className, DASHBOARD_STATUS_CHIP_CLASS);
+    expect(badge.className).toContain('whitespace-nowrap');
+    expect(badge.className).toContain('shrink-0');
+  });
+
+  it('uses shared status chip classes for interviews feedback status badge', () => {
+    render(
+      <InterviewsFeedbackCard initialData={{ interviews: [{ id: '1', status: 'scheduled' }] }} />
+    );
+
+    const badge = screen.getByText('On track');
+    expectClassTokens(badge.className, DASHBOARD_STATUS_CHIP_CLASS);
+    expect(badge.className).toContain('whitespace-nowrap');
+    expect(badge.className).toContain('shrink-0');
   });
 });

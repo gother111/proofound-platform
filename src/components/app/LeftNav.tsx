@@ -185,7 +185,7 @@ export function LeftNav({
         className={cn(
           'hidden md:flex border-r transition-all duration-300 ease-in-out flex-shrink-0 flex-col z-30',
           isV2
-            ? 'bg-white/60 backdrop-blur-xl border-proofound-stone/30 shadow-sm dark:bg-[#1A1D2E]/60 dark:border-white/10'
+            ? 'glass-panel border-r-proofound-stone/30 shadow-sm rounded-none border-y-0 border-l-0 dark:border-r-white/10'
             : 'bg-neutral-light-50 border-proofound-stone/60',
           isExpanded ? 'w-52' : 'w-14'
         )}

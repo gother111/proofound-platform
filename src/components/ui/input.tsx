@@ -100,14 +100,14 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       // Default state
       !hasError &&
         !hasSuccess &&
-        'border-proofound-stone focus-visible:ring-proofound-forest focus-visible:border-proofound-forest',
+        'border-border focus-visible:ring-ring focus-visible:border-primary',
       // Error state
       hasError &&
         'border-destructive focus-visible:ring-destructive focus-visible:border-destructive',
       // Success state
       hasSuccess && 'border-success focus-visible:ring-success focus-visible:border-success',
       // Dark mode
-      'dark:border-[#D4C4A8]/10 dark:bg-[#2C3244] dark:text-[#E8DCC4] dark:placeholder:text-muted-foreground dark:focus-visible:ring-[#D4C4A8]',
+      'dark:border-border dark:bg-background dark:text-foreground dark:placeholder:text-muted-foreground dark:focus-visible:ring-primary',
       className
     );
 
@@ -123,10 +123,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <div className="w-full">
         {/* Label */}
         {label && (
-          <label
-            htmlFor={inputId}
-            className="block text-sm font-medium text-proofound-charcoal dark:text-[#E8DCC4] mb-1.5"
-          >
+          <label htmlFor={inputId} className="block text-sm font-medium text-foreground mb-1.5">
             {label}
             {isRequired && (
               <span className="text-destructive ml-1" aria-label="required">
@@ -193,7 +190,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
             {/* Helper text */}
             {!hasError && helperText && (
-              <p id={helperId} className="text-sm text-muted-foreground dark:text-[#8A8174]">
+              <p id={helperId} className="text-sm text-muted-foreground dark:text-muted-foreground">
                 {helperText}
               </p>
             )}

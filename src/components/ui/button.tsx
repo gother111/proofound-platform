@@ -38,23 +38,23 @@ import { cn } from '@/lib/utils';
  */
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-base font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-base font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed',
   {
     variants: {
       variant: {
         default:
-          'bg-proofound-forest text-white hover:bg-proofound-forest/90 hover:-translate-y-1 active:translate-y-0 shadow-sm hover:shadow-md dark:bg-[#D4C4A8] dark:text-[#1A1D2E] dark:hover:bg-[#E4D4B8]',
+          'bg-proofound-forest text-white hover:bg-proofound-forest/90 hover:-translate-y-1 active:translate-y-0 shadow-sm hover:shadow-md dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90',
         destructive:
-          'bg-destructive text-white hover:bg-destructive/90 hover:-translate-y-1 active:translate-y-0 shadow-sm hover:shadow-md dark:bg-[#D4826F] dark:hover:bg-[#E49280]',
+          'bg-destructive text-white hover:bg-destructive/90 hover:-translate-y-1 active:translate-y-0 shadow-sm hover:shadow-md dark:bg-destructive dark:hover:bg-destructive/90',
         outline:
-          'border-2 border-proofound-forest bg-transparent text-proofound-forest hover:bg-proofound-forest/5 hover:-translate-y-1 active:translate-y-0 dark:border-[#D4C4A8] dark:text-[#D4C4A8] dark:hover:bg-[#D4C4A8]/10',
+          'border-2 border-proofound-forest bg-transparent text-proofound-forest hover:bg-proofound-forest/5 hover:-translate-y-1 active:translate-y-0 dark:border-primary dark:text-primary dark:hover:bg-primary/10',
         secondary:
-          'bg-proofound-terracotta text-white hover:bg-proofound-terracotta/90 hover:-translate-y-1 active:translate-y-0 shadow-sm hover:shadow-md dark:bg-[#C86B4A] dark:hover:bg-[#D87B5A]',
+          'bg-proofound-terracotta text-white hover:bg-proofound-terracotta/90 hover:-translate-y-1 active:translate-y-0 shadow-sm hover:shadow-md dark:bg-secondary dark:hover:bg-secondary/90 dark:text-secondary-foreground',
         ghost:
-          'hover:bg-proofound-forest/5 hover:text-proofound-forest dark:hover:bg-[#D4C4A8]/10 dark:hover:text-[#D4C4A8]',
-        link: 'text-proofound-forest underline-offset-4 hover:underline dark:text-[#D4C4A8]',
+          'hover:bg-proofound-forest/5 hover:text-proofound-forest dark:hover:bg-primary/10 dark:hover:text-primary',
+        link: 'text-proofound-forest underline-offset-4 hover:underline dark:text-primary',
         glass:
-          'border border-white/40 bg-white/40 backdrop-blur-md text-proofound-charcoal shadow-sm hover:bg-white/60 hover:-translate-y-1 hover:shadow-md active:translate-y-0 dark:bg-white/10 dark:text-[#E8DCC4] dark:border-white/10 dark:hover:bg-white/20',
+          'glass-panel text-proofound-charcoal shadow-sm hover:bg-white/60 hover:-translate-y-1 hover:shadow-md active:translate-y-0 dark:text-foreground dark:hover:bg-white/20',
       },
       size: {
         default: 'h-11 px-6 py-2 min-w-[44px]', // 44px minimum touch target

@@ -32,17 +32,17 @@ import { cn } from '@/lib/utils';
  */
 
 const cardVariants = cva(
-  'rounded-xl border bg-white text-proofound-charcoal transition-all duration-300 dark:bg-[#252834] dark:text-[#E8DCC4]',
+  'rounded-2xl border bg-card text-card-foreground transition-all duration-300 dark:bg-card dark:text-card-foreground',
   {
     variants: {
       variant: {
-        default: 'border-proofound-stone shadow-sm dark:border-[#D4C4A8]/10',
+        default: 'border-border shadow-sm dark:border-border',
         flat: 'card-flat',
-        elevated: 'border-proofound-stone shadow-md dark:border-[#D4C4A8]/10',
+        elevated: 'border-border shadow-md dark:border-border',
         interactive:
-          'border-proofound-stone shadow-sm hover:shadow-md hover:-translate-y-1 hover:border-proofound-stone/80 cursor-pointer dark:border-[#D4C4A8]/10 dark:hover:border-[#D4C4A8]/30',
-        glass: 'card-glass',
-        bento: 'card-bento',
+          'border-border shadow-sm hover:shadow-md hover:-translate-y-1 hover:border-border cursor-pointer dark:border-border dark:hover:border-border/80',
+        glass: 'glass-panel',
+        bento: 'glass-panel-heavy',
       },
     },
     defaultVariants: {
@@ -100,7 +100,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn('text-sm text-muted-foreground dark:text-[#A8A299]', className)}
+    className={cn('text-sm text-muted-foreground dark:text-muted-foreground', className)}
     {...props}
   />
 ));

@@ -18,8 +18,8 @@ export function EmptyStatePanel({
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center text-center rounded-[24px] border border-dashed border-proofound-stone/60 bg-white/40 backdrop-blur-sm w-full transition-all duration-300 hover:bg-white/60 hover:border-proofound-stone/80 hover:shadow-sm dark:bg-[#252834]/40 dark:border-[#D4C4A8]/10 dark:hover:bg-[#252834]/60',
-        compact ? 'py-8 px-4' : 'py-16 px-6',
+        'flex flex-col items-center justify-center text-center border-dashed font-medium w-full transition-all duration-300 glass-panel hover:bg-white/70 dark:hover:bg-[#1A1D2E]/80',
+        compact ? 'py-8 px-4 rounded-2xl' : 'py-16 px-6 rounded-3xl',
         className
       )}
       {...props}

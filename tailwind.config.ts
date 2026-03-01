@@ -140,6 +140,7 @@ const config: Config = {
         sm: '0.25rem', // 4px - small elements
         xl: '1rem', // 16px - icon containers
         '2xl': '1.5rem', // 24px - large cards
+        '3xl': '2rem', // 32px - extra large panels
       },
       boxShadow: brandTokens.shadows,
       keyframes: {

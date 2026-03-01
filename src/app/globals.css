@@ -40,11 +40,16 @@
      * Border & Subtle Elements:
      * - Stone (#E8E6DD) on Parchment: 1.1:1 (visible, not for text)
      */
-    --proofound-forest: #1c4d3a; /* Primary brand color - deep forest green */
-    --proofound-parchment: #f7f6f1; /* Background color - warm off-white */
-    --proofound-terracotta: #c76b4a; /* Accent color - warm terracotta */
-    --proofound-charcoal: #2d3330; /* Text color - rich charcoal */
-    --proofound-stone: #e8e6dd; /* Border color - soft stone */
+    --proofound-forest: #1c4d3a;
+    /* Primary brand color - deep forest green */
+    --proofound-parchment: #f7f6f1;
+    /* Background color - warm off-white */
+    --proofound-terracotta: #c76b4a;
+    /* Accent color - warm terracotta */
+    --proofound-charcoal: #2d3330;
+    /* Text color - rich charcoal */
+    --proofound-stone: #e8e6dd;
+    /* Border color - soft stone */
 
     /* Japandi Natural Palette - Aligned with Figma */
     --background: 43 26% 95%;
@@ -294,9 +299,11 @@
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }
@@ -338,16 +345,16 @@
     display: none;
   }
 
-  .card-glass {
-    @apply border-white/20 bg-white/60 backdrop-blur-md shadow-sm dark:bg-[#252834]/60 dark:border-[#D4C4A8]/10;
+  .glass-panel {
+    @apply bg-white/60 backdrop-blur-md border border-proofound-stone/30 shadow-sm dark:bg-[#1A1D2E]/60 dark:border-white/10;
   }
 
-  .card-bento {
-    @apply border-proofound-stone/60 bg-white/50 backdrop-blur-xl shadow-sm hover:shadow-md hover:-translate-y-1 hover:scale-[1.01] hover:border-white/60 hover:bg-white/80 transition-all duration-300 transform-gpu dark:bg-[#252834]/50 dark:border-[#D4C4A8]/10;
+  .glass-panel-heavy {
+    @apply bg-white/50 backdrop-blur-xl border border-proofound-stone/60 shadow-sm transition-all duration-300 transform-gpu dark:bg-[#252834]/50 dark:border-white/10;
   }
 
   .card-flat {
-    @apply border-proofound-stone/30 bg-transparent shadow-none dark:border-[#D4C4A8]/10;
+    @apply border-proofound-stone/30 bg-transparent shadow-none dark:border-border;
   }
 
   .safe-area-inset-bottom {

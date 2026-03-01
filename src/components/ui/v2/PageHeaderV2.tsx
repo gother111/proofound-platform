@@ -31,12 +31,12 @@ export function PageHeaderV2({
     >
       <div className="flex gap-4">
         {Icon && (
-          <div className="mt-1 flex-shrink-0 bg-white p-2.5 rounded-xl border border-proofound-stone shadow-sm h-fit">
-            <Icon className="w-6 h-6 text-proofound-forest" />
+          <div className="mt-1 flex-shrink-0 bg-card p-2.5 rounded-xl border border-border shadow-sm h-fit">
+            <Icon className="w-6 h-6 text-primary" />
           </div>
         )}
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl md:text-3xl font-display font-semibold tracking-tight text-proofound-charcoal">
+          <h1 className="text-2xl md:text-3xl font-display font-semibold tracking-tight text-foreground">
             {title}
           </h1>
           {description && (
@@ -86,7 +86,6 @@ export function PageHeaderV2({
               <Button
                 variant={primaryAction.variant || 'default'}
                 size="sm"
-                className="bg-proofound-forest hover:bg-proofound-forest/90 text-white"
                 asChild
                 disabled={primaryAction.disabled}
               >
@@ -99,7 +98,6 @@ export function PageHeaderV2({
               <Button
                 variant={primaryAction.variant || 'default'}
                 size="sm"
-                className="bg-proofound-forest hover:bg-proofound-forest/90 text-white"
                 onClick={primaryAction.onClick}
                 disabled={primaryAction.disabled}
               >

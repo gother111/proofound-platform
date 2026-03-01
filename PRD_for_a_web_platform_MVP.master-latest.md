@@ -1,5 +1,34 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-03-01`
+
+# Addendum - PRD-Relevant Delta Note (2026-03-01)
+
+Scope rule for this PRD:
+
+- Only include changes that alter product behavior, user journeys, goals, or guardrails.
+- Keep implementation details, UI polish, and operational hardening in status/change docs.
+
+PRD-relevant updates since `2026-02-26`:
+
+- Organization interview lifecycle behavior is now explicit across the journey:
+  - Schedule interview
+  - Edit interview
+  - Cancel interview
+  - Post lifecycle updates into conversation thread as user-visible context
+- Canceled interviews no longer block scheduling a replacement interview for the same match.
+- Google Meet integration failures now surface actionable reconnect/verification guidance, reducing dead-end scheduling states.
+
+No PRD-level changes confirmed for:
+
+- Problem statement, personas, and anti-goals
+- North Star metric (`TTSC`) and outcome metrics (`TTFQI`, `TTV`, `PAC`, fairness and well-being framing)
+- Portfolio-first day-1 promise and visibility-control model
+
+Source notes:
+
+- Product status and implementation details remain in:
+  - `project/Documentation.md`
+  - `project/changes/entries/*`
 
 # Addendum — Public Portfolio Brief (v0.1)
 

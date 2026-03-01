@@ -91,7 +91,7 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
         className={cn(
           'sticky top-0 z-40 min-h-14 px-4 flex items-center justify-between gap-2 md:gap-4 py-2 md:py-0 transition-all duration-300',
           isV2
-            ? 'bg-white/60 backdrop-blur-xl border-b border-proofound-stone/30 shadow-sm dark:bg-[#1A1D2E]/60 dark:border-white/10'
+            ? 'glass-panel border-b-proofound-stone/30 shadow-sm rounded-none border-x-0 border-t-0'
             : 'bg-neutral-light-50 border-b border-proofound-stone/60'
         )}
         role="banner"

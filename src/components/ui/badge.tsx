@@ -51,7 +51,7 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          'border-transparent bg-proofound-forest text-white hover:bg-proofound-forest/90 dark:bg-[#D4C4A8] dark:text-[#1A1D2E]',
+          'border-transparent bg-proofound-forest text-white hover:bg-proofound-forest/90 dark:bg-primary dark:text-primary-foreground',
         secondary:
           'border-transparent bg-proofound-terracotta text-white hover:bg-proofound-terracotta/90 hover:shadow-sm',
         destructive: 'border-transparent bg-destructive text-white hover:bg-destructive/90',
@@ -60,9 +60,9 @@ const badgeVariants = cva(
           'border-transparent bg-extended-ochre text-proofound-charcoal hover:bg-extended-ochre/90', // Dark text for better contrast
         info: 'border-transparent bg-extended-teal text-white hover:bg-extended-teal/90',
         outline:
-          'text-proofound-charcoal dark:text-[#E8DCC4] border-proofound-stone dark:border-[#D4C4A8]/10',
+          'text-proofound-charcoal dark:text-foreground border-proofound-stone dark:border-border',
         glass:
-          'border-white/40 bg-white/40 backdrop-blur-md text-proofound-charcoal shadow-sm hover:bg-white/60 dark:bg-white/10 dark:text-[#E8DCC4] dark:border-white/10 dark:hover:bg-white/20',
+          'glass-panel text-proofound-charcoal hover:bg-white/60 dark:text-foreground dark:hover:bg-white/20',
         'verified-premium':
           'border-emerald-200/60 bg-emerald-50/80 text-emerald-800 shadow-[0_0_10px_rgba(16,185,129,0.15)] backdrop-blur-sm hover:bg-emerald-100/80 hover:shadow-[0_0_15px_rgba(16,185,129,0.25)] dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800/50',
       },

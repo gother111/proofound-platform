@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-03-01`
 
 # Release Checklist
 
@@ -32,6 +32,14 @@
 - [ ] Individual shell basic navigation works (`/app/i/*`).
 - [ ] Organization shell basic navigation works (`/app/o/<slug>/*`).
 - [ ] Admin smoke checks pass (`/admin`, core sections).
+
+### Revamp Stabilization Regression Smoke (PRO-119)
+
+- [ ] Command palette opens via `Cmd+K`, remains open during in-panel interaction, and closes with Escape.
+- [ ] Dashboard guided tour/spotlight trigger works in provider-wrapped layouts and non-provider render contexts do not crash.
+- [ ] Individual matching blocked-state renders expected gated UI and no request-order dependency regressions.
+- [ ] Interview scheduling flow supports manual and provider paths with valid default slot selection.
+- [ ] Validation evidence is aligned with `project/changes/entries/2026-03-01T09-42-33Z__master__d9a1a144.md`.
 
 ## 3) Data and Migration Safety
 

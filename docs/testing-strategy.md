@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-03-01`
 
 # Testing Strategy
 
@@ -83,6 +83,19 @@ This document defines the current testing architecture for Proofound and the com
   - `npm run go:no-go`
 - End-to-end strict gate runner:
   - `npm run gates:mvp:strict`
+
+### 8) UI Refactor Contract Regressions (Fast)
+
+- Scope: fast UI contracts that catch common runtime and integration regressions after dashboard, matching, and interview UI refactors.
+- Canonical tests:
+  - `tests/ui/dashboard-client.test.tsx`
+  - `tests/ui/matching-page-gated.test.tsx`
+  - `tests/ui/schedule-interview-modal.test.tsx`
+  - `tests/ui/organization-interviews-page-actions.test.tsx`
+- Focused run command:
+  - `npm run test -- tests/ui/dashboard-client.test.tsx tests/ui/matching-page-gated.test.tsx tests/ui/schedule-interview-modal.test.tsx tests/ui/organization-interviews-page-actions.test.tsx`
+- Source change record:
+  - `project/changes/entries/2026-03-01T09-42-33Z__master__d9a1a144.md`
 
 ## Command Matrix
 
