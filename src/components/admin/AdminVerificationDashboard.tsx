@@ -283,15 +283,15 @@ export function AdminVerificationDashboard() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-[#E8E6DD] flex items-center justify-center text-[#6B6760] font-semibold">
+                <div className="w-full h-full bg-proofound-stone flex items-center justify-center text-muted-foreground font-semibold">
                   {verification.userName.charAt(0).toUpperCase()}
                 </div>
               )}
             </Avatar>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-[#2D3330] truncate">{verification.userName}</h3>
+              <h3 className="font-semibold text-foreground truncate">{verification.userName}</h3>
               {verification.userEmail && (
-                <p className="text-sm text-[#6B6760] truncate">{verification.userEmail}</p>
+                <p className="text-sm text-muted-foreground truncate">{verification.userEmail}</p>
               )}
             </div>
           </div>
@@ -314,7 +314,7 @@ export function AdminVerificationDashboard() {
           </div>
 
           {/* Key signals */}
-          <div className="space-y-2 mb-4 text-sm text-[#6B6760]">
+          <div className="space-y-2 mb-4 text-sm text-muted-foreground">
             {verification.signals.connectionCount && (
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4" />
@@ -346,7 +346,7 @@ export function AdminVerificationDashboard() {
               <ExternalLink className="w-3 h-3" />
             </a>
           ) : (
-            <div className="flex items-center gap-2 text-sm text-[#6B6760] mb-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
               <Linkedin className="w-4 h-4" />
               LinkedIn profile URL unavailable (review from API report/signals)
             </div>
@@ -408,8 +408,8 @@ export function AdminVerificationDashboard() {
       return (
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
-            <Loader2 className="h-8 w-8 text-[#6B6760] animate-spin mx-auto mb-2" />
-            <p className="text-[#6B6760]">Loading verifications...</p>
+            <Loader2 className="h-8 w-8 text-muted-foreground animate-spin mx-auto mb-2" />
+            <p className="text-muted-foreground">Loading verifications...</p>
           </div>
         </div>
       );
@@ -419,9 +419,9 @@ export function AdminVerificationDashboard() {
       return (
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
-            <AlertCircle className="h-12 w-12 text-[#9B9891] mx-auto mb-3" />
-            <h3 className="text-lg font-semibold text-[#2D3330] mb-2">No verifications pending</h3>
-            <p className="text-[#6B6760]">
+            <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+            <h3 className="text-lg font-semibold text-foreground mb-2">No verifications pending</h3>
+            <p className="text-muted-foreground">
               {selectedTab === 'all'
                 ? 'All LinkedIn verifications have been reviewed.'
                 : `No ${selectedTab} confidence verifications at this time.`}
@@ -442,8 +442,8 @@ export function AdminVerificationDashboard() {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 text-[#6B6760] animate-spin mx-auto mb-2" />
-          <p className="text-[#6B6760]">Loading verification queue...</p>
+          <Loader2 className="h-8 w-8 text-muted-foreground animate-spin mx-auto mb-2" />
+          <p className="text-muted-foreground">Loading verification queue...</p>
         </div>
       </div>
     );
@@ -457,21 +457,21 @@ export function AdminVerificationDashboard() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#6B6760]">Pending Verifications</p>
-                <p className="text-3xl font-bold text-[#2D3330]">{stats.total}</p>
+                <p className="text-sm text-muted-foreground">Pending Verifications</p>
+                <p className="text-3xl font-bold text-foreground">{stats.total}</p>
               </div>
               <div className="flex gap-6">
                 <div className="text-center">
                   <p className="text-2xl font-bold text-green-600">{stats.high}</p>
-                  <p className="text-xs text-[#6B6760]">High Confidence</p>
+                  <p className="text-xs text-muted-foreground">High Confidence</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-amber-600">{stats.medium}</p>
-                  <p className="text-xs text-[#6B6760]">Medium</p>
+                  <p className="text-xs text-muted-foreground">Medium</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-gray-600">{stats.low}</p>
-                  <p className="text-xs text-[#6B6760]">Low</p>
+                  <p className="text-xs text-muted-foreground">Low</p>
                 </div>
               </div>
             </div>
@@ -481,7 +481,7 @@ export function AdminVerificationDashboard() {
 
       {/* Tabs */}
       <Tabs value={selectedTab} onValueChange={(v) => setSelectedTab(v as any)} className="w-full">
-        <TabsList className="w-full justify-start mb-6 bg-white border border-[#E8E6DD] transition-all duration-300">
+        <TabsList className="w-full justify-start mb-6 bg-white border border-proofound-stone transition-all duration-300">
           <TabsTrigger value="all" className="gap-2 transition-all duration-200">
             All
             {stats && (

@@ -3,7 +3,12 @@ export const DOMAIN_COLORS: Record<
   number,
   { bg: string; border: string; text: string; icon: string }
 > = {
-  1: { bg: 'bg-[#EEF1EA]', border: 'border-[#7A9278]', text: 'text-[#1C4D3A]', icon: '🌍' }, // U - Universal
+  1: {
+    bg: 'bg-proofound-forest/5',
+    border: 'border-[#7A9278]',
+    text: 'text-proofound-forest',
+    icon: '🌍',
+  }, // U - Universal
   2: { bg: 'bg-[#FFF4E6]', border: 'border-[#D4A574]', text: 'text-[#8B6F47]', icon: '⚙️' }, // F - Functional
   3: { bg: 'bg-[#E8F3F8]', border: 'border-[#6B9AB8]', text: 'text-[#3E5C73]', icon: '🔧' }, // T - Tools
   4: { bg: 'bg-[#F5EEF8]', border: 'border-[#9B7BA8]', text: 'text-[#6B4C7A]', icon: '🗣️' }, // L - Languages

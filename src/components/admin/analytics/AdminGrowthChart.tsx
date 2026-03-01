@@ -3,7 +3,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
 
@@ -56,7 +65,7 @@ export function AdminGrowthChart() {
         </CardHeader>
         <CardContent>
           <div className="h-80 flex items-center justify-center">
-            <p className="text-[#6B6760]">Loading chart...</p>
+            <p className="text-muted-foreground">Loading chart...</p>
           </div>
         </CardContent>
       </Card>
@@ -71,7 +80,7 @@ export function AdminGrowthChart() {
         </CardHeader>
         <CardContent>
           <div className="h-80 flex items-center justify-center">
-            <p className="text-[#6B6760]">No data available</p>
+            <p className="text-muted-foreground">No data available</p>
           </div>
         </CardContent>
       </Card>

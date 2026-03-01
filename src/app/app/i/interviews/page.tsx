@@ -88,8 +88,8 @@ export default function InterviewsPage() {
       <AppSurface>
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
-            <div className="h-8 w-48 bg-[#E8E6DD] dark:bg-[#2C3244] rounded animate-pulse mb-2" />
-            <div className="h-4 w-64 bg-[#E8E6DD] dark:bg-[#2C3244] rounded animate-pulse" />
+            <div className="h-8 w-48 bg-proofound-stone dark:bg-[#2C3244] rounded animate-pulse mb-2" />
+            <div className="h-4 w-64 bg-proofound-stone dark:bg-[#2C3244] rounded animate-pulse" />
           </div>
           <div className="space-y-4">
             {Array.from({ length: 3 }).map((_, i) => (
@@ -117,13 +117,13 @@ export default function InterviewsPage() {
         {/* Interviews List */}
         {interviews.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-4 bg-white rounded-xl border border-dashed border-gray-300 text-center">
-            <div className="w-16 h-16 bg-[#F7F6F1] rounded-full flex items-center justify-center mb-4">
+            <div className="w-16 h-16 bg-japandi-bg rounded-full flex items-center justify-center mb-4">
               <Calendar className="w-8 h-8" style={{ color: '#1C4D3A' }} />
             </div>
             <h2 className="text-xl font-medium mb-2" style={{ color: '#2D3330' }}>
               No Interviews Scheduled
             </h2>
-            <p className="text-sm text-[#6B6760] max-w-md mb-6">
+            <p className="text-sm text-muted-foreground max-w-md mb-6">
               Once you match with an organization and they shortlist you, you can schedule an
               interview. Interviews are 30 minutes and must be scheduled within 7 days of
               acceptance.

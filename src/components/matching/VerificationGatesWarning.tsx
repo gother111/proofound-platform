@@ -75,7 +75,7 @@ export function VerificationGatesWarning({
     <div className="space-y-4 py-4 px-4 md:px-0">
       {/* Unmet Gates */}
       <div>
-        <h4 className="text-sm font-semibold text-[#2D3330] mb-3">
+        <h4 className="text-sm font-semibold text-foreground mb-3">
           Required Verifications ({unmetGates.length})
         </h4>
         <div className="space-y-2">
@@ -110,7 +110,7 @@ export function VerificationGatesWarning({
       {/* Completed Verifications */}
       {userVerifications.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold text-[#2D3330] mb-3">
+          <h4 className="text-sm font-semibold text-foreground mb-3">
             Completed Verifications ({userVerifications.length})
           </h4>
           <div className="space-y-2">
@@ -164,7 +164,7 @@ export function VerificationGatesWarning({
               handleCompleteVerification(unmetGates[0].type);
             }
           }}
-          className="bg-[#1C4D3A] text-white w-full sm:w-auto"
+          className="bg-proofound-forest text-white w-full sm:w-auto"
         >
           Complete Verifications
         </Button>

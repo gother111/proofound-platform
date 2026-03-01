@@ -189,10 +189,10 @@ export function AddSkillDrawerView({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
         <SheetHeader>
-          <SheetTitle className="text-2xl font-semibold text-[#2D3330]">
+          <SheetTitle className="text-2xl font-semibold text-foreground">
             Add Skill to Atlas
           </SheetTitle>
-          <SheetDescription className="text-[#6B6760]">
+          <SheetDescription className="text-muted-foreground">
             {mode === 'search'
               ? 'Search for a skill by name or browse the taxonomy'
               : 'Follow the 4 steps to add a new skill to your expertise atlas'}

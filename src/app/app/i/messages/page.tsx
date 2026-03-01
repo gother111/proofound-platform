@@ -161,13 +161,13 @@ function MessagesPageContent() {
   if (isAuthLoading || !currentUserId) {
     return (
       <div className="h-full flex items-center justify-center">
-        <p className="text-[#6B6760]">Loading...</p>
+        <p className="text-muted-foreground">Loading...</p>
       </div>
     );
   }
 
   const isV2 = process.env.NEXT_PUBLIC_UI_REFACTOR_V2 === 'true';
-  const rightPaneBgClass = isV2 ? 'bg-transparent' : 'bg-[#F7F6F1]';
+  const rightPaneBgClass = isV2 ? 'bg-transparent' : 'bg-japandi-bg';
 
   return (
     <div className="h-full min-h-[calc(100vh-3.5rem)] flex flex-col md:flex-row">
@@ -204,10 +204,10 @@ function MessagesPageContent() {
           />
         ) : (
           <div className="text-center space-y-4">
-            <MessageSquare className="h-16 w-16 mx-auto text-[#6B6760] opacity-50" />
+            <MessageSquare className="h-16 w-16 mx-auto text-muted-foreground opacity-50" />
             <div className="space-y-2">
-              <p className="text-lg font-medium text-[#2D3330]">Select a conversation</p>
-              <p className="text-sm text-[#6B6760]">
+              <p className="text-lg font-medium text-foreground">Select a conversation</p>
+              <p className="text-sm text-muted-foreground">
                 Choose a conversation from the list to start messaging
               </p>
             </div>
@@ -224,7 +224,7 @@ export default function MessagesPage() {
     <Suspense
       fallback={
         <div className="h-full flex items-center justify-center">
-          <p className="text-[#6B6760]">Loading...</p>
+          <p className="text-muted-foreground">Loading...</p>
         </div>
       }
     >

@@ -109,7 +109,7 @@ export function MatchingResultsCard({ className, basePath = '/app/i' }: Matching
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="p-2.5 rounded-lg border border-[#E8E6DD]/60 bg-[#F7F6F1]/50 space-y-2"
+              className="p-2.5 rounded-lg border border-proofound-stone/60 bg-japandi-bg/50 space-y-2"
             >
               <div className="flex justify-between">
                 <Skeleton className="h-4 w-1/2 rounded-md" />
@@ -178,10 +178,10 @@ export function MatchingResultsCard({ className, basePath = '/app/i' }: Matching
             <Link
               key={action.id}
               href={action.actionUrl}
-              className="block rounded-lg border border-[#E8E6DD] px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
+              className="block rounded-lg border border-proofound-stone px-3 py-2 hover:border-proofound-forest hover:bg-japandi-bg"
             >
-              <p className="text-xs font-semibold text-[#2D3330]">{action.title}</p>
-              <p className="text-xs text-[#6B6760] mt-1">{action.description}</p>
+              <p className="text-xs font-semibold text-foreground">{action.title}</p>
+              <p className="text-xs text-muted-foreground mt-1">{action.description}</p>
             </Link>
           ))}
         </div>

@@ -44,6 +44,7 @@ import {
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UI_VOCABULARY } from '@/lib/copy/vocabulary';
+import { motion } from 'framer-motion';
 
 interface MatchExplainerProps {
   // Overall match data
@@ -146,7 +147,7 @@ export function MatchExplainerModal({
     <Button
       variant="ghost"
       size="sm"
-      className="text-xs gap-1.5 text-[#1C4D3A] hover:bg-[#1C4D3A]/5"
+      className="text-xs gap-1.5 text-proofound-forest hover:bg-proofound-forest/5"
     >
       <Info className="w-4 h-4" />
       Why this match?
@@ -156,28 +157,31 @@ export function MatchExplainerModal({
   const isDesktop = useMediaQuery('(min-width: 768px)');
 
   const ModalContentBody = () => (
-    <>
-      <div className="space-y-6 py-4 px-4 md:px-0">
+    <motion.div
+      layoutId={matchId ? `match-card-${matchId}` : undefined}
+      className="bg-background sm:rounded-xl shadow-lg border-0 sm:border p-0 sm:p-2 sm:m-1 h-full w-full flex flex-col"
+    >
+      <div className="space-y-6 py-4 px-4 md:px-0 flex-1 flex flex-col">
         <DialogHeader className="md:px-0 px-2 text-left">
           <DialogTitle className="flex items-center gap-2 text-xl">
-            <Zap className="w-6 h-6 text-[#1C4D3A]" />
+            <Zap className="w-6 h-6 text-proofound-forest" />
             Why This Match?
           </DialogTitle>
-          <p className="text-sm text-[#6B6760] mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Complete transparency into how we calculated this match
           </p>
         </DialogHeader>
 
         {/* Overall Score & Rank */}
-        <div className="bg-gradient-to-br from-[#E8F5E1] to-[#F7F6F1] rounded-xl p-6 border border-[#E8E6DD]">
+        <div className="bg-gradient-to-br from-[#E8F5E1] to-[#F7F6F1] rounded-xl p-6 border border-proofound-stone">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <p className="text-sm text-[#6B6760] mb-1">Overall Match Score</p>
-              <p className="text-4xl font-bold text-[#1C4D3A]">{overallPercent}%</p>
+              <p className="text-sm text-muted-foreground mb-1">Overall Match Score</p>
+              <p className="text-4xl font-bold text-proofound-forest">{overallPercent}%</p>
             </div>
             {(rank || rankBand) && (
               <div className="text-right">
-                <p className="text-sm text-[#6B6760] mb-1">Your Ranking</p>
+                <p className="text-sm text-muted-foreground mb-1">Your Ranking</p>
                 <div className="flex items-center gap-2">
                   <Award className="w-5 h-5" style={{ color: getRankColor() }} />
                   <p className="text-xl font-semibold" style={{ color: getRankColor() }}>
@@ -190,7 +194,7 @@ export function MatchExplainerModal({
 
           <Progress value={overallPercent} className="h-3" />
 
-          <p className="text-xs text-[#6B6760] mt-3">
+          <p className="text-xs text-muted-foreground mt-3">
             This score combines your skills, purpose alignment, constraints match, and credential
             strength.
           </p>
@@ -207,7 +211,7 @@ export function MatchExplainerModal({
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-4 pt-4">
-            <h4 className="text-sm font-semibold text-[#2D3330] mb-3">
+            <h4 className="text-sm font-semibold text-foreground mb-3">
               Score Breakdown by Category
             </h4>
 
@@ -216,10 +220,12 @@ export function MatchExplainerModal({
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-[#1C4D3A]" />
-                    <span className="text-sm font-medium text-[#2D3330]">Skills Match</span>
+                    <TrendingUp className="w-4 h-4 text-proofound-forest" />
+                    <span className="text-sm font-medium text-foreground">Skills Match</span>
                   </div>
-                  <span className="text-sm font-semibold text-[#1C4D3A]">{skillsPercent}%</span>
+                  <span className="text-sm font-semibold text-proofound-forest">
+                    {skillsPercent}%
+                  </span>
                 </div>
                 <Progress value={skillsPercent} className="h-2" />
               </div>
@@ -230,12 +236,14 @@ export function MatchExplainerModal({
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <Heart className="w-4 h-4 text-[#C76B4A]" />
-                    <span className="text-sm font-medium text-[#2D3330]">
+                    <Heart className="w-4 h-4 text-proofound-terracotta" />
+                    <span className="text-sm font-medium text-foreground">
                       {UI_VOCABULARY.pacLabel}
                     </span>
                   </div>
-                  <span className="text-sm font-semibold text-[#C76B4A]">{pacPercent}%</span>
+                  <span className="text-sm font-semibold text-proofound-terracotta">
+                    {pacPercent}%
+                  </span>
                 </div>
                 <Progress value={pacPercent} className="h-2" />
               </div>
@@ -246,12 +254,12 @@ export function MatchExplainerModal({
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-[#1C4D3A]" />
-                    <span className="text-sm font-medium text-[#2D3330]">
+                    <CheckCircle2 className="w-4 h-4 text-proofound-forest" />
+                    <span className="text-sm font-medium text-foreground">
                       Practical Constraints
                     </span>
                   </div>
-                  <span className="text-sm font-semibold text-[#1C4D3A]">
+                  <span className="text-sm font-semibold text-proofound-forest">
                     {constraintsPercent}%
                   </span>
                 </div>
@@ -264,10 +272,12 @@ export function MatchExplainerModal({
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-[#6B6760]" />
-                    <span className="text-sm font-medium text-[#2D3330]">Skill Recency</span>
+                    <AlertCircle className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">Skill Recency</span>
                   </div>
-                  <span className="text-sm font-semibold text-[#6B6760]">{recencyPercent}%</span>
+                  <span className="text-sm font-semibold text-muted-foreground">
+                    {recencyPercent}%
+                  </span>
                 </div>
                 <Progress value={recencyPercent} className="h-2" />
               </div>
@@ -278,17 +288,19 @@ export function MatchExplainerModal({
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <Award className="w-4 h-4 text-[#6B6760]" />
-                    <span className="text-sm font-medium text-[#2D3330]">Evidence Strength</span>
+                    <Award className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">Evidence Strength</span>
                   </div>
-                  <span className="text-sm font-semibold text-[#6B6760]">{evidencePercent}%</span>
+                  <span className="text-sm font-semibold text-muted-foreground">
+                    {evidencePercent}%
+                  </span>
                 </div>
                 <Progress value={evidencePercent} className="h-2" />
               </div>
             )}
 
-            <div className="bg-[#F7F6F1] rounded-lg p-4 border border-[#E8E6DD] mt-4">
-              <p className="text-xs leading-relaxed text-[#2D3330]">
+            <div className="bg-japandi-bg rounded-lg p-4 border border-proofound-stone mt-4">
+              <p className="text-xs leading-relaxed text-foreground">
                 <strong className="font-semibold">How it works:</strong> Your composite score is a
                 weighted combination of these factors. Higher scores in key areas (Skills + Purpose)
                 boost your overall match.
@@ -303,24 +315,24 @@ export function MatchExplainerModal({
                 {/* Required Skills */}
                 {skillsMatch.required.length > 0 && (
                   <div>
-                    <h4 className="text-sm font-semibold text-[#2D3330] mb-3">Required Skills</h4>
+                    <h4 className="text-sm font-semibold text-foreground mb-3">Required Skills</h4>
                     <div className="space-y-2">
                       {skillsMatch.required.map((skill, idx) => (
                         <div
                           key={idx}
-                          className="flex items-center justify-between p-3 rounded-lg border border-[#E8E6DD] bg-white"
+                          className="flex items-center justify-between p-3 rounded-lg border border-proofound-stone bg-white"
                         >
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-[#2D3330]">{skill.skillName}</p>
-                            <p className="text-xs text-[#6B6760] mt-0.5">
+                            <p className="text-sm font-medium text-foreground">{skill.skillName}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
                               Required: Level {skill.requiredLevel} • You have: Level{' '}
                               {skill.yourLevel}
                             </p>
                           </div>
                           {skill.met ? (
-                            <CheckCircle2 className="w-5 h-5 text-[#1C4D3A] flex-shrink-0" />
+                            <CheckCircle2 className="w-5 h-5 text-proofound-forest flex-shrink-0" />
                           ) : (
-                            <AlertCircle className="w-5 h-5 text-[#C76B4A] flex-shrink-0" />
+                            <AlertCircle className="w-5 h-5 text-proofound-terracotta flex-shrink-0" />
                           )}
                         </div>
                       ))}
@@ -331,23 +343,23 @@ export function MatchExplainerModal({
                 {/* Nice-to-Have Skills */}
                 {skillsMatch.nice.length > 0 && (
                   <div>
-                    <h4 className="text-sm font-semibold text-[#2D3330] mb-3">
+                    <h4 className="text-sm font-semibold text-foreground mb-3">
                       Nice-to-Have Skills
                     </h4>
                     <div className="space-y-2">
                       {skillsMatch.nice.map((skill, idx) => (
                         <div
                           key={idx}
-                          className="flex items-center justify-between p-3 rounded-lg border border-[#E8E6DD] bg-white"
+                          className="flex items-center justify-between p-3 rounded-lg border border-proofound-stone bg-white"
                         >
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-[#2D3330]">{skill.skillName}</p>
-                            <p className="text-xs text-[#6B6760] mt-0.5">
+                            <p className="text-sm font-medium text-foreground">{skill.skillName}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
                               Your level: {skill.yourLevel}
                             </p>
                           </div>
                           {skill.met && (
-                            <CheckCircle2 className="w-5 h-5 text-[#1C4D3A] flex-shrink-0" />
+                            <CheckCircle2 className="w-5 h-5 text-proofound-forest flex-shrink-0" />
                           )}
                         </div>
                       ))}
@@ -356,7 +368,7 @@ export function MatchExplainerModal({
                 )}
               </>
             ) : (
-              <p className="text-sm text-[#6B6760]">No skills data available</p>
+              <p className="text-sm text-muted-foreground">No skills data available</p>
             )}
           </TabsContent>
 
@@ -367,13 +379,13 @@ export function MatchExplainerModal({
                 {/* Values Alignment */}
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <Heart className="w-5 h-5 text-[#C76B4A]" />
-                    <h4 className="font-semibold text-sm text-[#2D3330]">Values Alignment</h4>
+                    <Heart className="w-5 h-5 text-proofound-terracotta" />
+                    <h4 className="font-semibold text-sm text-foreground">Values Alignment</h4>
                   </div>
 
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-[#6B6760]">Overlap</span>
-                    <span className="text-sm font-semibold text-[#C76B4A]">
+                    <span className="text-xs text-muted-foreground">Overlap</span>
+                    <span className="text-sm font-semibold text-proofound-terracotta">
                       {Math.round(pac.valuesOverlap * 100)}%
                     </span>
                   </div>
@@ -381,38 +393,38 @@ export function MatchExplainerModal({
 
                   {pac.sharedValues.length > 0 ? (
                     <div>
-                      <p className="text-xs text-[#6B6760] mb-2">Shared values:</p>
+                      <p className="text-xs text-muted-foreground mb-2">Shared values:</p>
                       <div className="flex flex-wrap gap-2">
                         {pac.sharedValues.map((value, idx) => (
                           <Badge
                             key={idx}
                             variant="secondary"
-                            className="bg-[#C76B4A]/10 text-[#C76B4A] border-[#C76B4A]/20"
+                            className="bg-proofound-terracotta/10 text-proofound-terracotta border-[#C76B4A]/20"
                           >
                             <CheckCircle2 className="w-3 h-3 mr-1" />
                             {value}
                           </Badge>
                         ))}
                       </div>
-                      <p className="text-xs text-[#6B6760] mt-2">
+                      <p className="text-xs text-muted-foreground mt-2">
                         {pac.sharedValues.length} of {pac.totalValues} values in common
                       </p>
                     </div>
                   ) : (
-                    <p className="text-xs text-[#6B6760]">No values in common</p>
+                    <p className="text-xs text-muted-foreground">No values in common</p>
                   )}
                 </div>
 
                 {/* Causes Alignment */}
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <Target className="w-5 h-5 text-[#1C4D3A]" />
-                    <h4 className="font-semibold text-sm text-[#2D3330]">Causes Alignment</h4>
+                    <Target className="w-5 h-5 text-proofound-forest" />
+                    <h4 className="font-semibold text-sm text-foreground">Causes Alignment</h4>
                   </div>
 
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-[#6B6760]">Overlap</span>
-                    <span className="text-sm font-semibold text-[#1C4D3A]">
+                    <span className="text-xs text-muted-foreground">Overlap</span>
+                    <span className="text-sm font-semibold text-proofound-forest">
                       {Math.round(pac.causesOverlap * 100)}%
                     </span>
                   </div>
@@ -420,30 +432,30 @@ export function MatchExplainerModal({
 
                   {pac.sharedCauses.length > 0 ? (
                     <div>
-                      <p className="text-xs text-[#6B6760] mb-2">Shared causes:</p>
+                      <p className="text-xs text-muted-foreground mb-2">Shared causes:</p>
                       <div className="flex flex-wrap gap-2">
                         {pac.sharedCauses.map((cause, idx) => (
                           <Badge
                             key={idx}
                             variant="secondary"
-                            className="bg-[#1C4D3A]/10 text-[#1C4D3A] border-[#1C4D3A]/20"
+                            className="bg-proofound-forest/10 text-proofound-forest border-proofound-forest/20"
                           >
                             <CheckCircle2 className="w-3 h-3 mr-1" />
                             {cause}
                           </Badge>
                         ))}
                       </div>
-                      <p className="text-xs text-[#6B6760] mt-2">
+                      <p className="text-xs text-muted-foreground mt-2">
                         {pac.sharedCauses.length} of {pac.totalCauses} causes in common
                       </p>
                     </div>
                   ) : (
-                    <p className="text-xs text-[#6B6760]">No causes in common</p>
+                    <p className="text-xs text-muted-foreground">No causes in common</p>
                   )}
                 </div>
 
-                <div className="bg-[#F7F6F1] rounded-lg p-4 border border-[#E8E6DD]">
-                  <p className="text-xs leading-relaxed text-[#2D3330]">
+                <div className="bg-japandi-bg rounded-lg p-4 border border-proofound-stone">
+                  <p className="text-xs leading-relaxed text-foreground">
                     <strong className="font-semibold">{UI_VOCABULARY.pacLabel}</strong> uses value
                     and cause overlap to estimate mission alignment. Higher scores mean this role
                     aligns more closely with what matters to you.
@@ -451,7 +463,7 @@ export function MatchExplainerModal({
                 </div>
               </>
             ) : (
-              <p className="text-sm text-[#6B6760]">No purpose alignment data available</p>
+              <p className="text-sm text-muted-foreground">No purpose alignment data available</p>
             )}
           </TabsContent>
 
@@ -462,46 +474,48 @@ export function MatchExplainerModal({
                 {Object.entries(constraints).map(([key, value]) => (
                   <div
                     key={key}
-                    className="flex items-start justify-between p-3 rounded-lg border border-[#E8E6DD] bg-white"
+                    className="flex items-start justify-between p-3 rounded-lg border border-proofound-stone bg-white"
                   >
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-[#2D3330] capitalize mb-0.5">
+                      <p className="text-sm font-medium text-foreground capitalize mb-0.5">
                         {key.replace(/([A-Z])/g, ' $1').trim()}
                       </p>
-                      {value.details && <p className="text-xs text-[#6B6760]">{value.details}</p>}
+                      {value.details && (
+                        <p className="text-xs text-muted-foreground">{value.details}</p>
+                      )}
                     </div>
                     {value.match ? (
-                      <CheckCircle2 className="w-5 h-5 text-[#1C4D3A] flex-shrink-0 ml-2" />
+                      <CheckCircle2 className="w-5 h-5 text-proofound-forest flex-shrink-0 ml-2" />
                     ) : (
-                      <AlertCircle className="w-5 h-5 text-[#C76B4A] flex-shrink-0 ml-2" />
+                      <AlertCircle className="w-5 h-5 text-proofound-terracotta flex-shrink-0 ml-2" />
                     )}
                   </div>
                 ))}
               </>
             ) : (
-              <p className="text-sm text-[#6B6760]">No constraints data available</p>
+              <p className="text-sm text-muted-foreground">No constraints data available</p>
             )}
           </TabsContent>
         </Tabs>
       </div>
 
       {/* Footer */}
-      <div className="flex justify-between items-center pt-4 border-t border-[#E8E6DD] px-4 md:px-0">
-        <p className="text-xs text-[#6B6760]">
+      <div className="flex justify-between items-center py-4 border-t border-proofound-stone px-4 md:px-0 mt-4">
+        <p className="text-xs text-muted-foreground">
           Match calculated on {new Date().toLocaleDateString()}
         </p>
-        <Button onClick={() => setOpen(false)} className="bg-[#1C4D3A] text-white">
+        <Button onClick={() => setOpen(false)} className="bg-proofound-forest text-white">
           Got it
         </Button>
       </div>
-    </>
+    </motion.div>
   );
 
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-transparent border-none shadow-none p-0 sm:max-w-2xl [&>button]:right-6 [&>button]:top-6 [&>button]:text-muted-foreground [&>button]:z-50 [&>button]:bg-background/50 [&>button]:backdrop-blur-sm [&>button]:rounded-full [&>button]:p-1.5 [&>button]:hover:bg-background">
           <ModalContentBody />
         </DialogContent>
       </Dialog>
@@ -511,8 +525,8 @@ export function MatchExplainerModal({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>{trigger || defaultTrigger}</DrawerTrigger>
-      <DrawerContent className="max-h-[90vh]">
-        <div className="overflow-y-auto w-full">
+      <DrawerContent className="max-h-[90vh] bg-transparent border-none p-0 pt-4">
+        <div className="overflow-y-auto w-full h-full rounded-t-xl overflow-hidden shadow-2xl mt-4">
           <ModalContentBody />
         </div>
       </DrawerContent>

@@ -2643,3 +2643,31 @@ Open TODOs / follow-ups:
 - **Improvements next time**: Always be mindful to clean up unused imports from the parent component when extracting logic into new child components.
 - **Outcome**: Phase 4 is complete. The dashboard UI now streams in, significantly improving perceived performance (TTFB and LCP).
 - **Open TODOs**: N/A
+
+2026-03-01 03:40:00 (Web Awards UX/UI Upgrade)
+Task: Executed Phase 1 of UX/UI Top-Class Upgrade
+Worked:
+
+- `cmdk` command palette injected gracefully over layouts with Cmd+K interception.
+- Fluid Typography `clamp()` values scale organically from mobile to 8k without snap-jumps.
+- `framer-motion` seamlessly provides widget stagger load, dropping physical presence into DnD tools.
+  Failed:
+- Encountered a Syntax issue with a nested empty-state ternary operator after component extraction. Restored.
+- React components required explicit framer-motion `motion.div` wrappers to inherit animation, breaking initially without standard elements.
+  Corrections:
+- Ensured React `useEffect` hooks didn't overwrite or block existing Drag-and-Drop sensors when animating components.
+  Improvements:
+- Next step for phase 2 needs rigorous focus on context-preserving `layoutId` morphing across Next.js subpages.
+  Commands: `npm install framer-motion @radix-ui/react-tooltip cmdk`, `npm run typecheck`
+  Follow-ups:
+- Re-architect `<Card>` subcomponents away from raw tailwind to unified `motion.div` primitives.
+
+## 2026-03-01: Web Awards UX/UI Upgrade (Phase 2)
+
+- **Task summary**: Executed Phase 2 of the UX/UI Top-Class Upgrade. Integrated Framer Motion shared layout morphing, Ambient Personalization, and Contextual Spotlight Onboarding.
+- **What worked**: Building a custom `<SpotlightProvider>` using SVG masking and `framer-motion` spring animations provided a dynamic, zero-dependency onboarding flow. `fast-average-color` enabled dynamic blurred gradients behind profile headers beautifully.
+- **What failed / wrong assumptions**: Identifying appropriate matching DOM IDs for `dnd-kit` sortable items was slightly tricky, as the sortable element wrapper was separate from the motion div.
+- **User corrections**: None. Directed to complete the implementation plan designed.
+- **Improvements next time**: Leveraging React Context for global UI overlays (like Spotlight) early simplifies props passing when triggers need to exist deep within page content.
+- **Commands run + outcomes**: `npm run typecheck` - passed and validated UI changes.
+- **Open TODOs / follow-ups**: Ensure all elements tracked by the spotlight onboarding tour adapt well under extreme resize conditions.

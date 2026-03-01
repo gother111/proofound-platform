@@ -196,7 +196,7 @@ export function InterviewScheduler({
       {/* Progress Bar */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-lg font-semibold text-[#2D3330]">Schedule Interview</h2>
+          <h2 className="text-lg font-semibold text-foreground">Schedule Interview</h2>
           <Badge variant="outline" className="text-xs">
             Step {currentStepIndex + 1} of {steps.length}
           </Badge>
@@ -209,16 +209,16 @@ export function InterviewScheduler({
             <div
               key={step.id}
               className={`flex flex-col items-center ${
-                index <= currentStepIndex ? 'text-[#1C4D3A]' : 'text-[#6B6760]'
+                index <= currentStepIndex ? 'text-proofound-forest' : 'text-muted-foreground'
               }`}
             >
               <div
                 className={`flex items-center justify-center w-8 h-8 rounded-full border-2 mb-1 ${
                   index < currentStepIndex
-                    ? 'bg-[#1C4D3A] border-[#1C4D3A] text-white'
+                    ? 'bg-proofound-forest border-proofound-forest text-white'
                     : index === currentStepIndex
-                      ? 'border-[#1C4D3A] bg-[#E8F5E1]'
-                      : 'border-[#E8E6DD] bg-white'
+                      ? 'border-proofound-forest bg-proofound-success-tint'
+                      : 'border-proofound-stone bg-white'
                 }`}
               >
                 {index < currentStepIndex ? <CheckCircle className="w-4 h-4" /> : step.icon}
@@ -264,7 +264,7 @@ export function InterviewScheduler({
           {currentStep === 'duration' && (
             <div className="space-y-4">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-[#2D3330]">Policy preset</p>
+                <p className="text-sm font-medium text-foreground">Policy preset</p>
                 <div className="grid grid-cols-2 gap-2">
                   {(Object.keys(policyConfig) as Array<keyof typeof policyConfig>).map((preset) => (
                     <button
@@ -278,14 +278,14 @@ export function InterviewScheduler({
                       }}
                       className={`rounded-lg border px-3 py-2 text-left ${
                         policyPreset === preset
-                          ? 'border-[#1C4D3A] bg-[#E8F5E1]'
-                          : 'border-[#E8E6DD] bg-white'
+                          ? 'border-proofound-forest bg-proofound-success-tint'
+                          : 'border-proofound-stone bg-white'
                       }`}
                     >
-                      <p className="text-sm font-medium text-[#2D3330]">
+                      <p className="text-sm font-medium text-foreground">
                         {policyConfig[preset].label}
                       </p>
-                      <p className="text-xs text-[#6B6760]">
+                      <p className="text-xs text-muted-foreground">
                         {policyConfig[preset].scheduleWithinDays}d window · up to{' '}
                         {policyConfig[preset].maxDurationMinutes}m
                       </p>
@@ -294,12 +294,12 @@ export function InterviewScheduler({
                 </div>
               </div>
 
-              <div className="p-4 bg-[#E8F5E1] rounded-lg border border-[#1C4D3A]/20">
+              <div className="p-4 bg-proofound-success-tint rounded-lg border border-proofound-forest/20">
                 <div className="flex items-center gap-3">
-                  <Clock className="w-5 h-5 text-[#1C4D3A]" />
+                  <Clock className="w-5 h-5 text-proofound-forest" />
                   <div>
-                    <p className="font-semibold text-[#2D3330]">Duration: {duration} minutes</p>
-                    <p className="text-sm text-[#6B6760]">
+                    <p className="font-semibold text-foreground">Duration: {duration} minutes</p>
+                    <p className="text-sm text-muted-foreground">
                       Max duration for {activePolicy.label.toLowerCase()} preset is{' '}
                       {activePolicy.maxDurationMinutes} minutes.
                     </p>
@@ -308,7 +308,7 @@ export function InterviewScheduler({
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm font-medium text-[#2D3330]">Interview duration</p>
+                <p className="text-sm font-medium text-foreground">Interview duration</p>
                 <div className="flex flex-wrap gap-2">
                   {[30, 45, 60].map((value) => (
                     <Button
@@ -317,7 +317,7 @@ export function InterviewScheduler({
                       variant={duration === value ? 'default' : 'outline'}
                       disabled={value > activePolicy.maxDurationMinutes}
                       onClick={() => setDuration(value)}
-                      className={duration === value ? 'bg-[#1C4D3A] text-white' : ''}
+                      className={duration === value ? 'bg-proofound-forest text-white' : ''}
                     >
                       {value} min
                     </Button>
@@ -325,8 +325,8 @@ export function InterviewScheduler({
                 </div>
               </div>
 
-              <div className="p-3 bg-[#F7F6F1] rounded-lg border border-[#E8E6DD]">
-                <p className="text-xs text-[#6B6760]">
+              <div className="p-3 bg-japandi-bg rounded-lg border border-proofound-stone">
+                <p className="text-xs text-muted-foreground">
                   <strong>Note:</strong> Presets provide recommended defaults. Advanced mode keeps
                   stricter manual control.
                 </p>
@@ -337,13 +337,13 @@ export function InterviewScheduler({
           {/* Step 4: Timezone */}
           {currentStep === 'timezone' && (
             <div className="space-y-4">
-              <div className="p-4 border border-[#E8E6DD] rounded-lg">
+              <div className="p-4 border border-proofound-stone rounded-lg">
                 <div className="flex items-start gap-3">
-                  <Globe className="w-5 h-5 text-[#1C4D3A] flex-shrink-0 mt-0.5" />
+                  <Globe className="w-5 h-5 text-proofound-forest flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
-                    <p className="font-medium text-[#2D3330] mb-1">Detected Timezone</p>
-                    <p className="text-sm text-[#6B6760] mb-3">{timezone}</p>
-                    <p className="text-xs text-[#6B6760]">
+                    <p className="font-medium text-foreground mb-1">Detected Timezone</p>
+                    <p className="text-sm text-muted-foreground mb-3">{timezone}</p>
+                    <p className="text-xs text-muted-foreground">
                       All participants will receive calendar invites adjusted to their local
                       timezone.
                     </p>
@@ -352,11 +352,11 @@ export function InterviewScheduler({
               </div>
 
               {selectedDate && selectedTime && (
-                <div className="p-3 bg-[#E8F5E1] rounded-lg">
-                  <p className="text-sm text-[#2D3330]">
+                <div className="p-3 bg-proofound-success-tint rounded-lg">
+                  <p className="text-sm text-foreground">
                     <strong>Your interview time:</strong>
                   </p>
-                  <p className="text-lg font-semibold text-[#1C4D3A] mt-1">
+                  <p className="text-lg font-semibold text-proofound-forest mt-1">
                     {selectedDate.toLocaleDateString('en-US', {
                       weekday: 'long',
                       year: 'numeric',
@@ -375,28 +375,28 @@ export function InterviewScheduler({
             <div className="space-y-4">
               <div className="grid grid-cols-1 gap-3">
                 {/* Candidate */}
-                <div className="p-3 border border-[#E8E6DD] rounded-lg">
-                  <p className="text-xs text-[#6B6760] mb-1">Candidate</p>
-                  <p className="font-medium text-[#2D3330]">{candidateName}</p>
+                <div className="p-3 border border-proofound-stone rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-1">Candidate</p>
+                  <p className="font-medium text-foreground">{candidateName}</p>
                 </div>
 
                 {/* Platform */}
-                <div className="p-3 border border-[#E8E6DD] rounded-lg">
-                  <p className="text-xs text-[#6B6760] mb-1">Platform</p>
+                <div className="p-3 border border-proofound-stone rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-1">Platform</p>
                   <div className="flex items-center gap-2">
-                    <Video className="w-4 h-4 text-[#1C4D3A]" />
-                    <p className="font-medium text-[#2D3330] capitalize">
+                    <Video className="w-4 h-4 text-proofound-forest" />
+                    <p className="font-medium text-foreground capitalize">
                       {provider === 'google_meet' ? 'Google Meet' : 'Zoom'}
                     </p>
                   </div>
                 </div>
 
                 {/* Date & Time */}
-                <div className="p-3 border border-[#E8E6DD] rounded-lg">
-                  <p className="text-xs text-[#6B6760] mb-1">Date & Time</p>
+                <div className="p-3 border border-proofound-stone rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-1">Date & Time</p>
                   <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-[#1C4D3A]" />
-                    <p className="font-medium text-[#2D3330]">
+                    <Calendar className="w-4 h-4 text-proofound-forest" />
+                    <p className="font-medium text-foreground">
                       {selectedDate?.toLocaleDateString('en-US', {
                         weekday: 'short',
                         month: 'short',
@@ -408,26 +408,26 @@ export function InterviewScheduler({
                 </div>
 
                 {/* Duration */}
-                <div className="p-3 border border-[#E8E6DD] rounded-lg">
-                  <p className="text-xs text-[#6B6760] mb-1">Duration</p>
+                <div className="p-3 border border-proofound-stone rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-1">Duration</p>
                   <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-[#1C4D3A]" />
-                    <p className="font-medium text-[#2D3330]">{duration} minutes</p>
+                    <Clock className="w-4 h-4 text-proofound-forest" />
+                    <p className="font-medium text-foreground">{duration} minutes</p>
                   </div>
                 </div>
 
                 {/* Policy Preset */}
-                <div className="p-3 border border-[#E8E6DD] rounded-lg">
-                  <p className="text-xs text-[#6B6760] mb-1">Policy preset</p>
-                  <p className="font-medium text-[#2D3330]">{activePolicy.label}</p>
+                <div className="p-3 border border-proofound-stone rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-1">Policy preset</p>
+                  <p className="font-medium text-foreground">{activePolicy.label}</p>
                 </div>
 
                 {/* Timezone */}
-                <div className="p-3 border border-[#E8E6DD] rounded-lg">
-                  <p className="text-xs text-[#6B6760] mb-1">Timezone</p>
+                <div className="p-3 border border-proofound-stone rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-1">Timezone</p>
                   <div className="flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-[#1C4D3A]" />
-                    <p className="font-medium text-[#2D3330]">{timezone}</p>
+                    <Globe className="w-4 h-4 text-proofound-forest" />
+                    <p className="font-medium text-foreground">{timezone}</p>
                   </div>
                 </div>
               </div>
@@ -469,7 +469,7 @@ export function InterviewScheduler({
         <Button
           onClick={handleNext}
           disabled={!canProceed() || isSubmitting}
-          className="bg-[#1C4D3A] text-white"
+          className="bg-proofound-forest text-white"
         >
           {isSubmitting ? (
             'Scheduling...'

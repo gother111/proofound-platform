@@ -235,35 +235,35 @@ export function ProfileView({ data }: ProfileViewProps) {
                 <TabsList className="grid grid-cols-5 w-full rounded-full bg-muted/30 p-1">
                   <TabsTrigger
                     value="impact"
-                    className="rounded-full text-xs sm:text-sm text-[#2D3330]/70 hover:text-[#2D3330] dark:text-[#E8DCC4]/70 dark:hover:text-[#E8DCC4] data-[state=active]:text-[#2D3330] dark:data-[state=active]:text-[#E8DCC4]"
+                    className="rounded-full text-xs sm:text-sm text-foreground/70 hover:text-foreground dark:text-[#E8DCC4]/70 dark:hover:text-[#E8DCC4] data-[state=active]:text-foreground dark:data-[state=active]:text-[#E8DCC4]"
                   >
                     <Target className="w-4 h-4 mr-1" />
                     <span className="hidden sm:inline">Impact</span>
                   </TabsTrigger>
                   <TabsTrigger
                     value="journey"
-                    className="rounded-full text-xs sm:text-sm text-[#2D3330]/70 hover:text-[#2D3330] dark:text-[#E8DCC4]/70 dark:hover:text-[#E8DCC4] data-[state=active]:text-[#2D3330] dark:data-[state=active]:text-[#E8DCC4]"
+                    className="rounded-full text-xs sm:text-sm text-foreground/70 hover:text-foreground dark:text-[#E8DCC4]/70 dark:hover:text-[#E8DCC4] data-[state=active]:text-foreground dark:data-[state=active]:text-[#E8DCC4]"
                   >
                     <Briefcase className="w-4 h-4 mr-1" />
                     <span className="hidden sm:inline">Journey</span>
                   </TabsTrigger>
                   <TabsTrigger
                     value="learning"
-                    className="rounded-full text-xs sm:text-sm text-[#2D3330]/70 hover:text-[#2D3330] dark:text-[#E8DCC4]/70 dark:hover:text-[#E8DCC4] data-[state=active]:text-[#2D3330] dark:data-[state=active]:text-[#E8DCC4]"
+                    className="rounded-full text-xs sm:text-sm text-foreground/70 hover:text-foreground dark:text-[#E8DCC4]/70 dark:hover:text-[#E8DCC4] data-[state=active]:text-foreground dark:data-[state=active]:text-[#E8DCC4]"
                   >
                     <GraduationCap className="w-4 h-4 mr-1" />
                     <span className="hidden sm:inline">Learning</span>
                   </TabsTrigger>
                   <TabsTrigger
                     value="service"
-                    className="rounded-full text-xs sm:text-sm text-[#2D3330]/70 hover:text-[#2D3330] dark:text-[#E8DCC4]/70 dark:hover:text-[#E8DCC4] data-[state=active]:text-[#2D3330] dark:data-[state=active]:text-[#E8DCC4]"
+                    className="rounded-full text-xs sm:text-sm text-foreground/70 hover:text-foreground dark:text-[#E8DCC4]/70 dark:hover:text-[#E8DCC4] data-[state=active]:text-foreground dark:data-[state=active]:text-[#E8DCC4]"
                   >
                     <HandHeart className="w-4 h-4 mr-1" />
                     <span className="hidden sm:inline">Service</span>
                   </TabsTrigger>
                   <TabsTrigger
                     value="network"
-                    className="rounded-full text-xs sm:text-sm text-[#2D3330]/70 hover:text-[#2D3330] dark:text-[#E8DCC4]/70 dark:hover:text-[#E8DCC4] data-[state=active]:text-[#2D3330] dark:data-[state=active]:text-[#E8DCC4]"
+                    className="rounded-full text-xs sm:text-sm text-foreground/70 hover:text-foreground dark:text-[#E8DCC4]/70 dark:hover:text-[#E8DCC4] data-[state=active]:text-foreground dark:data-[state=active]:text-[#E8DCC4]"
                   >
                     <Network className="w-4 h-4 mr-1" />
                     <span className="hidden sm:inline">Network</span>
@@ -368,7 +368,7 @@ export function ProfileView({ data }: ProfileViewProps) {
                                     href={artifact.url}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="text-[#1C4D3A] underline underline-offset-2"
+                                    className="text-proofound-forest underline underline-offset-2"
                                   >
                                     {artifact.title}
                                   </a>{' '}

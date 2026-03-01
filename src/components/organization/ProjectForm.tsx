@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { motion } from 'framer-motion';
 
 interface OrganizationProject {
   id?: string;
@@ -129,141 +130,146 @@ export function ProjectForm({ open, onOpenChange, project, onSave }: ProjectForm
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{project ? 'Edit Project' : 'Add Project'}</DialogTitle>
-          <DialogDescription>
-            Document an organization-wide project with its outcomes and business value
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-transparent border-none shadow-none p-0 sm:max-w-2xl [&>button]:right-6 [&>button]:top-6 [&>button]:text-muted-foreground [&>button]:z-50 [&>button]:bg-background/50 [&>button]:backdrop-blur-sm [&>button]:rounded-full [&>button]:p-1.5 [&>button]:hover:bg-background">
+        <motion.div
+          layoutId={project?.id ? `project-card-${project.id}` : undefined}
+          className="bg-background rounded-xl shadow-lg border p-6 m-1 w-full"
+        >
+          <DialogHeader>
+            <DialogTitle>{project ? 'Edit Project' : 'Add Project'}</DialogTitle>
+            <DialogDescription>
+              Document an organization-wide project with its outcomes and business value
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          {/* Title */}
-          <div className="space-y-2">
-            <Label htmlFor="title">Title *</Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="e.g., Customer Portal Redesign"
-            />
+          <div className="space-y-4 py-4">
+            {/* Title */}
+            <div className="space-y-2">
+              <Label htmlFor="title">Title *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="e.g., Customer Portal Redesign"
+              />
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <Label htmlFor="description">Description *</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Describe the project, its goals, and scope"
+                rows={3}
+              />
+            </div>
+
+            {/* Status */}
+            <div className="space-y-2">
+              <Label htmlFor="status">Status *</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value: any) => setFormData({ ...formData, status: value })}
+              >
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Dates */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="startDate">Start Date *</Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={formData.startDate}
+                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="endDate">End Date (Optional)</Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={formData.endDate || ''}
+                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                />
+              </div>
+            </div>
+
+            {/* Impact Created */}
+            <div className="space-y-2">
+              <Label htmlFor="impactCreated">Impact Created *</Label>
+              <Textarea
+                id="impactCreated"
+                value={formData.impactCreated}
+                onChange={(e) => setFormData({ ...formData, impactCreated: e.target.value })}
+                placeholder="What positive change did this project create?"
+                rows={3}
+              />
+              <p className="text-xs text-muted-foreground">
+                Describe the measurable impact and changes brought by this project
+              </p>
+            </div>
+
+            {/* Business Value */}
+            <div className="space-y-2">
+              <Label htmlFor="businessValue">Business Value *</Label>
+              <Textarea
+                id="businessValue"
+                value={formData.businessValue}
+                onChange={(e) => setFormData({ ...formData, businessValue: e.target.value })}
+                placeholder="What business value was delivered?"
+                rows={3}
+              />
+              <p className="text-xs text-muted-foreground">
+                Explain the organizational or business value created
+              </p>
+            </div>
+
+            {/* Outcomes */}
+            <div className="space-y-2">
+              <Label htmlFor="outcomes">Outcomes *</Label>
+              <Textarea
+                id="outcomes"
+                value={formData.outcomes}
+                onChange={(e) => setFormData({ ...formData, outcomes: e.target.value })}
+                placeholder="What were the measurable outcomes?"
+                rows={3}
+              />
+              <p className="text-xs text-muted-foreground">
+                List specific, measurable results and achievements
+              </p>
+            </div>
+
+            {error && <p className="text-sm text-red-500">{error}</p>}
           </div>
 
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description">Description *</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Describe the project, its goals, and scope"
-              rows={3}
-            />
-          </div>
-
-          {/* Status */}
-          <div className="space-y-2">
-            <Label htmlFor="status">Status *</Label>
-            <Select
-              value={formData.status}
-              onValueChange={(value: any) => setFormData({ ...formData, status: value })}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isLoading}
             >
-              <SelectTrigger id="status">
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                {STATUS_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Dates */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date *</Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={formData.startDate}
-                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="endDate">End Date (Optional)</Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={formData.endDate || ''}
-                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-              />
-            </div>
-          </div>
-
-          {/* Impact Created */}
-          <div className="space-y-2">
-            <Label htmlFor="impactCreated">Impact Created *</Label>
-            <Textarea
-              id="impactCreated"
-              value={formData.impactCreated}
-              onChange={(e) => setFormData({ ...formData, impactCreated: e.target.value })}
-              placeholder="What positive change did this project create?"
-              rows={3}
-            />
-            <p className="text-xs text-muted-foreground">
-              Describe the measurable impact and changes brought by this project
-            </p>
-          </div>
-
-          {/* Business Value */}
-          <div className="space-y-2">
-            <Label htmlFor="businessValue">Business Value *</Label>
-            <Textarea
-              id="businessValue"
-              value={formData.businessValue}
-              onChange={(e) => setFormData({ ...formData, businessValue: e.target.value })}
-              placeholder="What business value was delivered?"
-              rows={3}
-            />
-            <p className="text-xs text-muted-foreground">
-              Explain the organizational or business value created
-            </p>
-          </div>
-
-          {/* Outcomes */}
-          <div className="space-y-2">
-            <Label htmlFor="outcomes">Outcomes *</Label>
-            <Textarea
-              id="outcomes"
-              value={formData.outcomes}
-              onChange={(e) => setFormData({ ...formData, outcomes: e.target.value })}
-              placeholder="What were the measurable outcomes?"
-              rows={3}
-            />
-            <p className="text-xs text-muted-foreground">
-              List specific, measurable results and achievements
-            </p>
-          </div>
-
-          {error && <p className="text-sm text-red-500">{error}</p>}
-        </div>
-
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isLoading}
-          >
-            Cancel
-          </Button>
-          <Button type="button" onClick={handleSave} disabled={isLoading}>
-            {isLoading ? 'Saving...' : project ? 'Update' : 'Create'}
-          </Button>
-        </DialogFooter>
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleSave} disabled={isLoading}>
+              {isLoading ? 'Saving...' : project ? 'Update' : 'Create'}
+            </Button>
+          </DialogFooter>
+        </motion.div>
       </DialogContent>
     </Dialog>
   );

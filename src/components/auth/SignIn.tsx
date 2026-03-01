@@ -34,7 +34,7 @@ function SignInSubmitButton() {
       type="submit"
       size="lg"
       disabled={pending}
-      className="w-full rounded-xl bg-proofound-forest py-[14px] text-[15px] font-semibold tracking-[0.01em] text-white shadow-sm transition-all hover:-translate-y-[1px] hover:bg-[#2D5D4A] hover:shadow-md disabled:bg-[#E8E6DD] disabled:text-[#2D3330]/40"
+      className="w-full rounded-xl bg-proofound-forest py-[14px] text-[15px] font-semibold tracking-[0.01em] text-white shadow-sm transition-all hover:-translate-y-[1px] hover:bg-[#2D5D4A] hover:shadow-md disabled:bg-proofound-stone disabled:text-foreground/40"
     >
       {pending ? 'Signing in…' : 'Sign in'}
     </Button>
@@ -96,7 +96,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
   // Layout container with Figma background tokens and animated accents
   // Responsive: Adapts padding and card size for mobile/tablet/desktop
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F7F6F1] px-4 sm:px-6 py-8 sm:py-16 text-[#2D3330]">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-japandi-bg px-4 sm:px-6 py-8 sm:py-16 text-foreground">
       {/* Network background from design system */}
       <div className="pointer-events-none absolute inset-0 opacity-60">
         <NetworkBackground />
@@ -127,7 +127,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
         className="relative z-10 w-full max-w-[480px] px-2 sm:px-4"
         data-testid="login-form-shell"
       >
-        <Card className="mx-auto overflow-hidden rounded-[24px] border border-[#E8E6DD] bg-white/95 p-6 sm:p-10 md:p-12 shadow-[0_4px_24px_rgba(29,51,48,0.08)] backdrop-blur">
+        <Card className="mx-auto overflow-hidden rounded-[24px] border border-proofound-stone bg-white/95 p-6 sm:p-10 md:p-12 shadow-[0_4px_24px_rgba(29,51,48,0.08)] backdrop-blur">
           {/* Brand mark and welcoming copy */}
           <div className="mb-10 text-center">
             <motion.div
@@ -145,7 +145,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                 priority
               />
             </motion.div>
-            <h1 className="font-display text-[28px] font-semibold leading-9 tracking-[-0.01em] text-[#2D3330]">
+            <h1 className="font-display text-[28px] font-semibold leading-9 tracking-[-0.01em] text-foreground">
               Welcome back
             </h1>
             <p className="mt-3 text-[15px] leading-[22px] text-muted-foreground">
@@ -182,7 +182,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
             <div className="space-y-2">
               <Label
                 htmlFor="email"
-                className="flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.08em] text-[#2D3330]"
+                className="flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.08em] text-foreground"
               >
                 <Mail className="h-4 w-4 text-proofound-forest" aria-hidden="true" />
                 Email address
@@ -210,7 +210,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                   aria-required="true"
                   aria-invalid={error ? 'true' : 'false'}
                   aria-describedby={error ? 'signin-error' : undefined}
-                  className="h-11 rounded-xl border border-[#E8E6DD] bg-white pl-12 pr-4 text-[15px] text-[#2D3330] transition-all focus-visible:border-2 focus-visible:border-proofound-forest focus-visible:px-[43px] focus-visible:ring-[3px] focus-visible:ring-proofound-forest/10"
+                  className="h-11 rounded-xl border border-proofound-stone bg-white pl-12 pr-4 text-[15px] text-foreground transition-all focus-visible:border-2 focus-visible:border-proofound-forest focus-visible:px-[43px] focus-visible:ring-[3px] focus-visible:ring-proofound-forest/10"
                 />
               </div>
             </div>
@@ -218,7 +218,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
             <div className="space-y-2">
               <Label
                 htmlFor="password"
-                className="flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.08em] text-[#2D3330]"
+                className="flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.08em] text-foreground"
               >
                 <Lock className="h-4 w-4 text-proofound-forest" aria-hidden="true" />
                 Password
@@ -246,7 +246,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                   aria-required="true"
                   aria-invalid={error ? 'true' : 'false'}
                   aria-describedby={error ? 'signin-error' : undefined}
-                  className="h-11 rounded-xl border border-[#E8E6DD] bg-white pl-12 pr-12 text-[15px] text-[#2D3330] transition-all focus-visible:border-2 focus-visible:border-proofound-forest focus-visible:px-[43px] focus-visible:ring-[3px] focus-visible:ring-proofound-forest/10"
+                  className="h-11 rounded-xl border border-proofound-stone bg-white pl-12 pr-12 text-[15px] text-foreground transition-all focus-visible:border-2 focus-visible:border-proofound-forest focus-visible:px-[43px] focus-visible:ring-[3px] focus-visible:ring-proofound-forest/10"
                 />
                 <button
                   type="button"
@@ -266,7 +266,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
             <div className="flex items-center justify-between pt-2">
               <label
                 htmlFor="remember"
-                className="flex cursor-pointer items-center gap-2 text-[14px] text-[#2D3330] min-h-[44px] py-1"
+                className="flex cursor-pointer items-center gap-2 text-[14px] text-foreground min-h-[44px] py-1"
               >
                 <Checkbox
                   id="remember"
@@ -288,7 +288,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
 
           {/* Divider with soft typography */}
           <div className="relative my-7">
-            <Separator className="bg-[#E8E6DD]" />
+            <Separator className="bg-proofound-stone" />
             <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-center overline">
               Or continue with
             </span>

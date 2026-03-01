@@ -648,7 +648,7 @@ export function VerificationsClient({
                 void handleResendSentRequest(request);
               }}
               disabled={Boolean(resendingRequestIds[request.id])}
-              className="border-[#1C4D3A] text-[#1C4D3A] hover:bg-[#E8F5E9]"
+              className="border-proofound-forest text-proofound-forest hover:bg-[#E8F5E9]"
             >
               <Send className="h-4 w-4 mr-1" />
               {resendingRequestIds[request.id]

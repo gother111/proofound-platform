@@ -28,8 +28,8 @@ export function DeleteSkillDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-[#2D3330]">Delete Skill?</DialogTitle>
-          <DialogDescription className="text-[#6B6760]">
+          <DialogTitle className="text-xl font-semibold text-foreground">Delete Skill?</DialogTitle>
+          <DialogDescription className="text-muted-foreground">
             This will permanently remove <strong>{skillName}</strong> and all its proofs from your
             Expertise Atlas. This action cannot be undone.
           </DialogDescription>
@@ -46,7 +46,7 @@ export function DeleteSkillDialog({
           <Button
             onClick={onDelete}
             disabled={deleting}
-            className="flex-1 bg-[#C76B4A] text-white hover:bg-[#8B4A36]"
+            className="flex-1 bg-proofound-terracotta text-white hover:bg-[#8B4A36]"
           >
             {deleting ? (
               <>

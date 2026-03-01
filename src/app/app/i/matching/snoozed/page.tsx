@@ -10,8 +10,10 @@ export default async function SnoozedMatchesPage() {
   return (
     <AppSurface>
       <div className="mb-8">
-        <h1 className="text-3xl font-semibold text-[#2D3330] mb-2 font-display">Snoozed Matches</h1>
-        <p className="text-[#6B6760]">
+        <h1 className="text-3xl font-semibold text-foreground mb-2 font-display">
+          Snoozed Matches
+        </h1>
+        <p className="text-muted-foreground">
           Opportunities you&apos;ve temporarily hidden. They&apos;ll automatically reappear when the
           snooze period ends.
         </p>

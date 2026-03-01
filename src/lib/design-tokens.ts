@@ -1,13 +1,13 @@
 /**
  * Proofound Design System Tokens
- * 
+ *
  * Central source of truth for all design values from Figma.
  * Import these instead of hardcoding colors/spacing.
- * 
+ *
  * @example
  * ```tsx
  * import { colors, typography, spacing } from '@/lib/design-tokens';
- * 
+ *
  * <div style={{ color: colors.brand.forest }}>
  *   <h1 className={typography.displayClass}>Title</h1>
  * </div>
@@ -17,23 +17,23 @@
 export const colors = {
   // Primary Brand Colors
   brand: {
-    forest: '#1C4D3A',      // Primary green - main CTAs, headers
-    terracotta: '#C76B4A',  // Accent - highlights, secondary actions
-    parchment: '#F7F6F1',   // Background - main page background
-    charcoal: '#2D3330',    // Text - primary text color
-    stone: '#E8E6DD',       // Border - subtle dividers
+    forest: '#1C4D3A', // Primary green - main CTAs, headers
+    terracotta: '#C76B4A', // Accent - highlights, secondary actions
+    parchment: '#F7F6F1', // Background - main page background
+    charcoal: '#2D3330', // Text - primary text color
+    stone: '#E8E6DD', // Border - subtle dividers
   },
-  
+
   // Extended Japandi Palette
   extended: {
-    sage: '#7A9278',        // Success states, nature elements
-    teal: '#5C8B89',        // Interactive elements, links
-    ochre: '#D4A574',       // Warnings, highlights
-    clay: '#C9A57B',        // Secondary accents
-    sand: '#E0D5C7',        // Subtle backgrounds
-    bamboo: '#6B7F5F',      // Supporting green tones
+    sage: '#7A9278', // Success states, nature elements
+    teal: '#5C8B89', // Interactive elements, links
+    ochre: '#D4A574', // Warnings, highlights
+    clay: '#C9A57B', // Secondary accents
+    sand: '#E0D5C7', // Subtle backgrounds
+    bamboo: '#6B7F5F', // Supporting green tones
   },
-  
+
   // Semantic Colors (Light Mode)
   semantic: {
     success: '#7A9278',
@@ -41,14 +41,14 @@ export const colors = {
     error: '#C76B4A',
     info: '#5C8B89',
   },
-  
+
   // Dark Mode Palette
   dark: {
-    background: '#1A1D2E',      // Deep navy night
-    foreground: '#E8DCC4',      // Cream canvas
-    primary: '#D4C4A8',         // Warm beige stone
-    secondary: '#C86B4A',       // Deep terracotta
-    surface: '#252834',         // Card backgrounds
+    background: '#1A1D2E', // Deep navy night
+    foreground: '#E8DCC4', // Cream canvas
+    primary: '#D4C4A8', // Warm beige stone
+    secondary: '#C86B4A', // Deep terracotta
+    surface: '#252834', // Card backgrounds
     surfaceInteractive: '#2C3244', // Interactive surfaces
     border: 'rgba(212, 196, 168, 0.1)',
     text: {
@@ -57,7 +57,7 @@ export const colors = {
       muted: '#6B6760',
     },
   },
-  
+
   // UI Surfaces
   surfaces: {
     white: '#FFFFFF',
@@ -65,7 +65,7 @@ export const colors = {
     lightParchment: '#FAF9F6',
     darkParchment: '#F0EDE6',
   },
-  
+
   // Text Colors
   text: {
     primary: '#2D3330',
@@ -73,7 +73,7 @@ export const colors = {
     muted: '#9B9891',
     inverse: '#FFFFFF',
   },
-  
+
   // State Colors
   state: {
     hover: 'rgba(28, 77, 58, 0.05)',
@@ -81,7 +81,7 @@ export const colors = {
     disabled: 'rgba(45, 51, 48, 0.3)',
     focus: 'rgba(28, 77, 58, 0.2)',
   },
-  
+
   // Transparency Levels
   alpha: {
     10: '1a',
@@ -103,27 +103,27 @@ export const typography = {
     body: "'Inter', sans-serif",
     mono: "'Monaco', 'Courier New', monospace",
   },
-  
+
   // Tailwind Classes for Typography
   displayClass: "font-['Crimson_Pro']",
-  bodyClass: "", // Default Inter
-  
+  bodyClass: '', // Default Inter
+
   // Font Sizes (maps to Tailwind, but can be used with inline styles)
   sizes: {
-    xs: '0.75rem',      // 12px
-    sm: '0.875rem',     // 14px
-    base: '1rem',       // 16px
-    lg: '1.125rem',     // 18px
-    xl: '1.25rem',      // 20px
-    '2xl': '1.5rem',    // 24px
-    '3xl': '1.875rem',  // 30px
-    '4xl': '2.25rem',   // 36px
-    '5xl': '3rem',      // 48px
-    '6xl': '3.75rem',   // 60px
-    '7xl': '4.5rem',    // 72px
-    '8xl': '6rem',      // 96px
+    xs: '0.75rem', // 12px
+    sm: '0.875rem', // 14px
+    base: '1rem', // 16px
+    lg: '1.125rem', // 18px
+    xl: '1.25rem', // 20px
+    '2xl': '1.5rem', // 24px
+    '3xl': '1.875rem', // 30px
+    '4xl': '2.25rem', // 36px
+    '5xl': '3rem', // 48px
+    '6xl': '3.75rem', // 60px
+    '7xl': '4.5rem', // 72px
+    '8xl': '6rem', // 96px
   },
-  
+
   // Line Heights
   leading: {
     none: '1',
@@ -133,7 +133,7 @@ export const typography = {
     relaxed: '1.625',
     loose: '2',
   },
-  
+
   // Font Weights
   weights: {
     light: '300',
@@ -147,47 +147,47 @@ export const typography = {
 export const spacing = {
   // Section Spacing
   section: {
-    xs: '1.5rem',   // 24px
-    sm: '2rem',     // 32px
-    md: '3rem',     // 48px
-    lg: '4rem',     // 64px
-    xl: '6rem',     // 96px
-    '2xl': '8rem',  // 128px
+    xs: '1.5rem', // 24px
+    sm: '2rem', // 32px
+    md: '3rem', // 48px
+    lg: '4rem', // 64px
+    xl: '6rem', // 96px
+    '2xl': '8rem', // 128px
   },
-  
+
   // Component Spacing
   component: {
-    xs: '0.5rem',   // 8px
-    sm: '0.75rem',  // 12px
-    md: '1rem',     // 16px
-    lg: '1.5rem',   // 24px
-    xl: '2rem',     // 32px
+    xs: '0.5rem', // 8px
+    sm: '0.75rem', // 12px
+    md: '1rem', // 16px
+    lg: '1.5rem', // 24px
+    xl: '2rem', // 32px
   },
-  
+
   // Card/Container Padding
   container: {
-    mobile: '1rem',     // 16px
-    tablet: '1.5rem',   // 24px
-    desktop: '2rem',    // 32px
+    mobile: '1rem', // 16px
+    tablet: '1.5rem', // 24px
+    desktop: '2rem', // 32px
   },
-  
+
   // Gaps
   gap: {
-    tight: '0.5rem',    // 8px
-    normal: '1rem',     // 16px
-    relaxed: '1.5rem',  // 24px
-    loose: '2rem',      // 32px
+    tight: '0.5rem', // 8px
+    normal: '1rem', // 16px
+    relaxed: '1.5rem', // 24px
+    loose: '2rem', // 32px
   },
 } as const;
 
 export const borderRadius = {
   none: '0',
-  sm: '0.25rem',      // 4px
-  DEFAULT: '0.5rem',  // 8px
-  md: '0.625rem',     // 10px
-  lg: '0.75rem',      // 12px
-  xl: '1rem',         // 16px
-  '2xl': '1.5rem',    // 24px
+  sm: '0.25rem', // 4px
+  DEFAULT: '0.5rem', // 8px
+  md: '0.625rem', // 10px
+  lg: '0.75rem', // 12px
+  xl: '1rem', // 16px
+  '2xl': '1.5rem', // 24px
   full: '9999px',
 } as const;
 
@@ -200,7 +200,7 @@ export const shadows = {
   '2xl': '0 25px 50px -12px rgba(45, 51, 48, 0.25)',
   inner: 'inset 0 2px 4px 0 rgba(45, 51, 48, 0.05)',
   none: 'none',
-  
+
   // Dark mode shadows
   dark: {
     sm: '0 1px 2px 0 rgba(0, 0, 0, 0.3)',
@@ -239,14 +239,14 @@ export const transitions = {
     slow: '350ms',
     slower: '500ms',
   },
-  
+
   easing: {
     default: 'cubic-bezier(0.4, 0, 0.2, 1)',
     in: 'cubic-bezier(0.4, 0, 1, 1)',
     out: 'cubic-bezier(0, 0, 0.2, 1)',
     inOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
   },
-  
+
   // Tailwind class utilities
   classes: {
     fast: 'transition-all duration-150',
@@ -256,11 +256,11 @@ export const transitions = {
 } as const;
 
 export const iconSizes = {
-  xs: 'w-3 h-3',      // 12px
-  sm: 'w-4 h-4',      // 16px
-  md: 'w-5 h-5',      // 20px
-  lg: 'w-6 h-6',      // 24px
-  xl: 'w-8 h-8',      // 32px
+  xs: 'w-3 h-3', // 12px
+  sm: 'w-4 h-4', // 16px
+  md: 'w-5 h-5', // 20px
+  lg: 'w-6 h-6', // 24px
+  xl: 'w-8 h-8', // 32px
   '2xl': 'w-12 h-12', // 48px
 } as const;
 
@@ -282,55 +282,58 @@ export const commonStyles = {
   page: {
     background: colors.brand.parchment,
     backgroundDark: colors.dark.background,
-    className: 'bg-[#F7F6F1] dark:bg-[#1A1D2E] min-h-screen',
+    className: 'bg-japandi-bg dark:bg-[#1A1D2E] min-h-screen',
   },
-  
+
   card: {
     background: colors.surfaces.white,
     backgroundDark: colors.dark.surface,
     border: colors.brand.stone,
-    className: 'bg-white dark:bg-[#252834] border border-[#E8E6DD] dark:border-[#D4C4A8]/10 rounded-lg',
+    className:
+      'bg-white dark:bg-[#252834] border border-proofound-stone dark:border-[#D4C4A8]/10 rounded-lg',
   },
-  
+
   header: {
     background: colors.surfaces.offWhite,
     backgroundDark: colors.dark.surface,
     border: colors.brand.stone,
-    className: 'bg-[#FDFCFA] dark:bg-[#252834] border-b border-[#E8E6DD] dark:border-[#D4C4A8]/10',
+    className:
+      'bg-[#FDFCFA] dark:bg-[#252834] border-b border-proofound-stone dark:border-[#D4C4A8]/10',
   },
-  
+
   button: {
     primary: {
       background: colors.brand.forest,
       backgroundDark: colors.dark.primary,
       text: colors.surfaces.white,
-      className: 'bg-[#1C4D3A] dark:bg-[#D4C4A8] text-white dark:text-[#1A1D2E] hover:bg-[#2D5D4A] dark:hover:bg-[#E4D4B8]',
+      className:
+        'bg-proofound-forest dark:bg-[#D4C4A8] text-white dark:text-[#1A1D2E] hover:bg-[#2D5D4A] dark:hover:bg-[#E4D4B8]',
     },
-    
+
     secondary: {
       background: colors.brand.terracotta,
       text: colors.surfaces.white,
-      className: 'bg-[#C76B4A] text-white hover:bg-[#D77B5A]',
+      className: 'bg-proofound-terracotta text-white hover:bg-[#D77B5A]',
     },
   },
-  
+
   text: {
     primary: {
       light: colors.text.primary,
       dark: colors.dark.text.primary,
-      className: 'text-[#2D3330] dark:text-[#E8DCC4]',
+      className: 'text-foreground dark:text-[#E8DCC4]',
     },
-    
+
     secondary: {
       light: colors.text.secondary,
       dark: colors.dark.text.secondary,
-      className: 'text-[#6B6760] dark:text-[#A8A299]',
+      className: 'text-muted-foreground dark:text-[#A8A299]',
     },
-    
+
     muted: {
       light: colors.text.muted,
       dark: colors.dark.text.muted,
-      className: 'text-[#9B9891] dark:text-[#6B6760]',
+      className: 'text-muted-foreground dark:text-muted-foreground',
     },
   },
 } as const;
@@ -340,4 +343,3 @@ export type ColorKey = keyof typeof colors.brand;
 export type ExtendedColorKey = keyof typeof colors.extended;
 export type SpacingKey = keyof typeof spacing.section;
 export type TypographySizeKey = keyof typeof typography.sizes;
-

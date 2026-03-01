@@ -84,10 +84,10 @@ export function ReflectionJournal() {
         <div className="bg-[#7A9278]/10 p-4 rounded-full mb-4">
           <BookOpen className="h-8 w-8 text-[#7A9278]" />
         </div>
-        <h3 className="text-lg font-medium text-[#2D3330] dark:text-[#E8E6DD]">
+        <h3 className="text-lg font-medium text-foreground dark:text-[#E8E6DD]">
           Your Journal is Empty
         </h3>
-        <p className="text-sm text-[#6B6760] dark:text-[#C9C2B8] max-w-xs mt-2">
+        <p className="text-sm text-muted-foreground dark:text-[#C9C2B8] max-w-xs mt-2">
           Reflections help you process your journey. Start by writing your first entry using the
           button above.
         </p>
@@ -111,10 +111,10 @@ export function ReflectionJournal() {
           return (
             <Card
               key={reflection.id}
-              className="overflow-hidden border border-[#E8E6DD] dark:border-[#3C332C] bg-white dark:bg-[#2F2823]"
+              className="overflow-hidden border border-proofound-stone dark:border-[#3C332C] bg-white dark:bg-[#2F2823]"
             >
               <div
-                className="flex items-center justify-between p-4 cursor-pointer hover:bg-[#F7F6F1] dark:hover:bg-[#3A332E] transition-colors"
+                className="flex items-center justify-between p-4 cursor-pointer hover:bg-japandi-bg dark:hover:bg-[#3A332E] transition-colors"
                 onClick={() => toggleExpand(reflection.id)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
@@ -128,8 +128,8 @@ export function ReflectionJournal() {
                 aria-label={isExpanded ? 'Collapse reflection' : 'Expand reflection'}
               >
                 <div className="flex items-center gap-4">
-                  <div className="flex flex-col items-center min-w-[60px] border-r border-[#E8E6DD] dark:border-[#3C332C] pr-4">
-                    <span className="text-2xl font-bold text-[#1C4D3A] dark:text-[#E2EDD9]">
+                  <div className="flex flex-col items-center min-w-[60px] border-r border-proofound-stone dark:border-[#3C332C] pr-4">
+                    <span className="text-2xl font-bold text-proofound-forest dark:text-[#E2EDD9]">
                       {format(date, 'dd')}
                     </span>
                     <span className="overline mb-0 border-none outline-none">
@@ -139,25 +139,25 @@ export function ReflectionJournal() {
 
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium text-[#2D3330] dark:text-[#E8E6DD]">
+                      <span className="text-sm font-medium text-foreground dark:text-[#E8E6DD]">
                         {format(date, 'h:mm a')}
                       </span>
                       {reflection.milestoneType && (
                         <Badge
                           variant="secondary"
-                          className="text-[10px] bg-[#EEF1EA] text-[#1C4D3A] dark:bg-[#3F473B] dark:text-[#D8E8D0]"
+                          className="text-[10px] bg-proofound-forest/5 text-proofound-forest dark:bg-[#3F473B] dark:text-[#D8E8D0]"
                         >
                           {reflection.milestoneType}
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm text-[#6B6760] dark:text-[#C9C2B8] line-clamp-1">
+                    <p className="text-sm text-muted-foreground dark:text-[#C9C2B8] line-clamp-1">
                       {reflection.reflectionText}
                     </p>
                   </div>
                 </div>
 
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-[#6B6760]">
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
                   {isExpanded ? (
                     <ChevronUp className="h-4 w-4" />
                   ) : (
@@ -168,7 +168,7 @@ export function ReflectionJournal() {
 
               {isExpanded && (
                 <div className="p-4 pt-0 animate-in slide-in-from-top-2">
-                  <div className="mt-2 p-4 bg-[#FDFCFA] dark:bg-[#2A2520] rounded-lg text-sm leading-relaxed text-[#2D3330] dark:text-[#E8E6DD] whitespace-pre-wrap font-serif">
+                  <div className="mt-2 p-4 bg-[#FDFCFA] dark:bg-[#2A2520] rounded-lg text-sm leading-relaxed text-foreground dark:text-[#E8E6DD] whitespace-pre-wrap font-serif">
                     {reflection.reflectionText}
                   </div>
                 </div>

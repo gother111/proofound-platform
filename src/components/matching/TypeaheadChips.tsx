@@ -126,7 +126,7 @@ export function TypeaheadChips({
               key={option.key}
               type="button"
               onClick={() => handleSelect(option.key)}
-              className="w-full px-3 py-2 text-left text-sm hover:bg-[#E8E6DD] transition-colors"
+              className="w-full px-3 py-2 text-left text-sm hover:bg-proofound-stone transition-colors"
             >
               {option.label}
             </button>

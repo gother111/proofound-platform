@@ -51,10 +51,10 @@ export function ExpertiseDepthWidget() {
 
   if (isLoading) {
     return (
-      <div className="text-sm text-[#6B6760]">
+      <div className="text-sm text-muted-foreground">
         <p>Your skill proficiency levels</p>
         <div className="mt-4 flex items-center justify-center">
-          <Loader2 className="h-4 w-4 text-[#1C4D3A] animate-spin" />
+          <Loader2 className="h-4 w-4 text-proofound-forest animate-spin" />
         </div>
       </div>
     );
@@ -62,11 +62,14 @@ export function ExpertiseDepthWidget() {
 
   if (error) {
     return (
-      <div className="text-sm text-[#6B6760]">
+      <div className="text-sm text-muted-foreground">
         <p>Your skill proficiency levels</p>
         <div className="mt-4">
           <p className="text-xs text-red-600">Failed to load stats</p>
-          <button onClick={fetchStats} className="text-xs text-[#1C4D3A] hover:underline mt-1">
+          <button
+            onClick={fetchStats}
+            className="text-xs text-proofound-forest hover:underline mt-1"
+          >
             Retry
           </button>
         </div>
@@ -76,7 +79,7 @@ export function ExpertiseDepthWidget() {
 
   if (!stats) {
     return (
-      <div className="text-sm text-[#6B6760]">
+      <div className="text-sm text-muted-foreground">
         <p>Your skill proficiency levels</p>
         <div className="mt-4">
           <p className="text-xs text-muted-foreground">No data available</p>
@@ -88,7 +91,7 @@ export function ExpertiseDepthWidget() {
   const radialData = [{ name: 'Progress', value: stats.totalL4Skills, fill: '#1C4D3A' }];
 
   return (
-    <div className="text-sm text-[#6B6760]">
+    <div className="text-sm text-muted-foreground">
       <p>Your skill proficiency levels</p>
       <div className="mt-4 space-y-3">
         <div className="flex items-center gap-6">
@@ -102,20 +105,31 @@ export function ExpertiseDepthWidget() {
                 startAngle={90}
                 endAngle={-270}
               >
+                <defs>
+                  <linearGradient id="primaryGradient" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="#1C4D3A" />
+                    <stop offset="100%" stopColor="#2A7458" />
+                  </linearGradient>
+                </defs>
                 <PolarAngleAxis
                   type="number"
                   domain={[0, stats.activationThreshold > 0 ? stats.activationThreshold : 1]}
                   angleAxisId={0}
                   tick={false}
                 />
-                <RadialBar background={{ fill: '#F5F4F0' }} dataKey="value" cornerRadius={4} />
+                <RadialBar
+                  background={{ fill: '#F5F4F0' }}
+                  dataKey="value"
+                  cornerRadius={4}
+                  fill="url(#primaryGradient)"
+                />
               </RadialBarChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-xl font-bold text-[#2D3330] leading-none">
+              <span className="text-xl font-bold text-foreground leading-none">
                 {stats.totalL4Skills}
               </span>
-              <span className="text-[10px] text-[#6B6760] mt-1">
+              <span className="text-[10px] text-muted-foreground mt-1">
                 / {stats.activationThreshold} target
               </span>
             </div>
@@ -123,14 +137,14 @@ export function ExpertiseDepthWidget() {
 
           <div className="flex-1">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-semibold text-[#2D3330]">Skills Progress</span>
+              <span className="text-xs font-semibold text-foreground">Skills Progress</span>
             </div>
             {stats.totalL4Skills < stats.activationThreshold ? (
-              <p className="text-xs text-[#6B6760]">
+              <p className="text-xs text-muted-foreground">
                 {stats.activationThreshold - stats.totalL4Skills} more to reach activation threshold
               </p>
             ) : (
-              <p className="text-xs text-[#1C4D3A] font-medium flex items-center gap-1">
+              <p className="text-xs text-proofound-forest font-medium flex items-center gap-1">
                 <svg
                   width="12"
                   height="12"
@@ -151,19 +165,19 @@ export function ExpertiseDepthWidget() {
         </div>
 
         {(stats.skillsWithProofs > 0 || stats.skillsWithVerifications > 0) && (
-          <div className="pt-3 border-t border-[#E8E6DD] space-y-2">
+          <div className="pt-3 border-t border-proofound-stone space-y-2">
             {stats.skillsWithProofs > 0 && (
               <div className="flex items-center justify-between text-xs">
-                <span className="text-[#6B6760]">With Proofs</span>
-                <span className="font-semibold text-[#2D3330] bg-[#F7F6F1] px-2 py-0.5 rounded-full">
+                <span className="text-muted-foreground">With Proofs</span>
+                <span className="font-semibold text-foreground bg-japandi-bg px-2 py-0.5 rounded-full">
                   {stats.skillsWithProofs}
                 </span>
               </div>
             )}
             {stats.skillsWithVerifications > 0 && (
               <div className="flex items-center justify-between text-xs">
-                <span className="text-[#6B6760]">Verified</span>
-                <span className="font-semibold text-[#2D3330] bg-[#F7F6F1] px-2 py-0.5 rounded-full">
+                <span className="text-muted-foreground">Verified</span>
+                <span className="font-semibold text-foreground bg-japandi-bg px-2 py-0.5 rounded-full">
                   {stats.skillsWithVerifications}
                 </span>
               </div>

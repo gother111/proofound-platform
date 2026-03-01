@@ -12,7 +12,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Calendar, Clock, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -111,30 +111,49 @@ export function ScheduleInterviewModal({
 
   // Calculate date constraints (7 days from match agreement)
   const minDate = new Date();
-  const maxDate = new Date(matchAgreedAt);
-  maxDate.setDate(maxDate.getDate() + 7);
+  const maxDate = useMemo(() => {
+    const max = new Date(matchAgreedAt);
+    max.setDate(max.getDate() + 7);
+    return max;
+  }, [matchAgreedAt]);
 
   // Generate available dates (next 7 days from match agreement, but not in the past)
-  const today = new Date();
-  const startDate = today > matchAgreedAt ? today : matchAgreedAt;
-  const availableDates: Date[] = [];
-  for (let i = 0; i < 7; i++) {
-    const date = new Date(startDate);
-    date.setDate(date.getDate() + i);
-    if (date <= maxDate) {
-      availableDates.push(date);
+  const availableDates = useMemo(() => {
+    const today = new Date();
+    const startDate = today > matchAgreedAt ? today : matchAgreedAt;
+    const dates: Date[] = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(startDate);
+      date.setDate(date.getDate() + i);
+      if (date <= maxDate) {
+        dates.push(date);
+      }
     }
-  }
+    return dates;
+  }, [matchAgreedAt, maxDate]);
 
   // Generate time slots (9am - 5pm in 30-minute increments)
-  const timeSlots: string[] = [];
-  for (let hour = 9; hour <= 16; hour++) {
-    for (let minute of [0, 30]) {
-      if (hour === 16 && minute === 30) break; // Stop at 5:00 PM
-      const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-      timeSlots.push(timeStr);
+  const timeSlots = useMemo(() => {
+    const slots: string[] = [];
+    for (let hour = 9; hour <= 16; hour++) {
+      for (let minute of [0, 30]) {
+        if (hour === 16 && minute === 30) break; // Stop at 5:00 PM
+        const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        slots.push(timeStr);
+      }
     }
-  }
+    return slots;
+  }, []);
+
+  // Preselect first valid slots to avoid an empty invalid state on open.
+  useEffect(() => {
+    if (!selectedDate && availableDates.length > 0) {
+      setSelectedDate(availableDates[0].toISOString().split('T')[0]);
+    }
+    if (!selectedTime && timeSlots.length > 0) {
+      setSelectedTime(timeSlots[0]);
+    }
+  }, [availableDates, selectedDate, selectedTime, timeSlots]);
 
   const handleSubmit = async () => {
     setError(null);
@@ -277,7 +296,7 @@ export function ScheduleInterviewModal({
             </SelectItem>
           </SelectContent>
         </Select>
-        <p className="text-xs text-[#6B6760]">
+        <p className="text-xs text-muted-foreground">
           {platform === 'manual'
             ? 'Manual mode works with any valid meeting link (Zoom, Google Meet, Teams, and others).'
             : 'Connected mode creates the meeting from your linked provider account automatically.'}

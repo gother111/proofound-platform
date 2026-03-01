@@ -282,7 +282,7 @@ export default async function PortfolioPage({
                 variant="ghost"
                 size="sm"
                 asChild
-                className="px-0 text-[#6B6760] hover:text-[#2D3330]"
+                className="px-0 text-muted-foreground hover:text-foreground"
               >
                 <Link href={returnPath} className="inline-flex items-center gap-1.5">
                   <ArrowLeft className="h-4 w-4" />
@@ -292,11 +292,11 @@ export default async function PortfolioPage({
             </div>
           ) : null}
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-2.5 text-sm text-[#2D3330]">
+            <div className="flex items-center gap-2.5 text-sm text-foreground">
               <Logo size="sm" />
               <span className="font-medium">Proofound public profile</span>
               {!viewerIsOwner ? (
-                <Badge variant="outline" className="border-[#D9D5CC] text-[#6B6760]">
+                <Badge variant="outline" className="border-[#D9D5CC] text-muted-foreground">
                   Public viewer mode
                 </Badge>
               ) : (
@@ -332,11 +332,11 @@ export default async function PortfolioPage({
                   {displayName[0]?.toUpperCase() || 'P'}
                 </div>
                 <div className="space-y-1">
-                  <h1 className="text-2xl font-semibold tracking-tight text-[#2D3330]">
+                  <h1 className="text-2xl font-semibold tracking-tight text-foreground">
                     {displayName}
                   </h1>
-                  <p className="text-sm text-[#2D3330]">{headline}</p>
-                  <p className="text-sm text-[#6B6760]">
+                  <p className="text-sm text-foreground">{headline}</p>
+                  <p className="text-sm text-muted-foreground">
                     {locationLine || (viewerIsOwner ? 'Location not set yet' : 'Location hidden')}
                   </p>
                 </div>
@@ -365,14 +365,14 @@ export default async function PortfolioPage({
                 ) : null}
               </div>
 
-              <p className="text-sm text-[#6B6760]">
+              <p className="text-sm text-muted-foreground">
                 {bio || 'I build meaningful outcomes with proof you can open, review, and verify.'}
               </p>
             </div>
 
             {!viewerIsOwner ? (
               <div className="flex w-full flex-col gap-2 lg:w-auto lg:min-w-[220px]">
-                <Button asChild className="bg-[#1C4D3A] text-white hover:bg-[#163d2f]">
+                <Button asChild className="bg-proofound-forest text-white hover:bg-[#163d2f]">
                   <Link href={collaborationHref}>Request collaboration</Link>
                 </Button>
                 {!(visibility.contact && visibility.workEmail && individual?.work_email) ? (
@@ -380,7 +380,7 @@ export default async function PortfolioPage({
                     <Link href={requestContactHref}>Request contact</Link>
                   </Button>
                 ) : null}
-                <p className="text-xs text-[#6B6760]">
+                <p className="text-xs text-muted-foreground">
                   Contact details may be hidden. Use request actions to engage.
                 </p>
               </div>
@@ -392,7 +392,7 @@ export default async function PortfolioPage({
           <div className="space-y-4">
             <PublicProfileSection title="Proof-based summary">
               {bio ? (
-                <p className="whitespace-pre-line text-sm leading-6 text-[#2D3330]">{bio}</p>
+                <p className="whitespace-pre-line text-sm leading-6 text-foreground">{bio}</p>
               ) : (
                 <PublicProfileEmptyState
                   message="A detailed proof-based summary has not been published yet."
@@ -404,7 +404,7 @@ export default async function PortfolioPage({
             <PublicProfileSection
               title="Featured proofs"
               right={
-                <span className="text-xs text-[#6B6760]">
+                <span className="text-xs text-muted-foreground">
                   Finalized verifications with evidence.
                 </span>
               }
@@ -418,21 +418,21 @@ export default async function PortfolioPage({
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <h3 className="text-base font-semibold text-[#2D3330]">{proof.title}</h3>
-                          <p className="text-sm text-[#6B6760]">
+                          <h3 className="text-base font-semibold text-foreground">{proof.title}</h3>
+                          <p className="text-sm text-muted-foreground">
                             {proof.role} {proof.timeframe ? `• ${proof.timeframe}` : ''}
                           </p>
                         </div>
-                        <Badge variant="outline" className="border-[#D9D5CC] text-[#6B6760]">
+                        <Badge variant="outline" className="border-[#D9D5CC] text-muted-foreground">
                           {proof.verifiedBy}
                         </Badge>
                       </div>
 
                       {proof.outcomes.length > 0 ? (
-                        <ul className="space-y-1 text-sm text-[#2D3330]">
+                        <ul className="space-y-1 text-sm text-foreground">
                           {proof.outcomes.map((outcome) => (
                             <li key={`${proof.id}-${outcome}`} className="flex gap-2">
-                              <span className="mt-1 text-[#1C4D3A]">•</span>
+                              <span className="mt-1 text-proofound-forest">•</span>
                               <span>{outcome}</span>
                             </li>
                           ))}
@@ -447,7 +447,7 @@ export default async function PortfolioPage({
                               href={item.href}
                               target="_blank"
                               rel="noreferrer"
-                              className="inline-flex items-center gap-1 rounded-full border border-[#D9D5CC] px-2.5 py-1 text-[#2D3330] hover:border-[#1C4D3A]/50 hover:text-[#1C4D3A]"
+                              className="inline-flex items-center gap-1 rounded-full border border-[#D9D5CC] px-2.5 py-1 text-foreground hover:border-proofound-forest/50 hover:text-proofound-forest"
                             >
                               {item.label}
                               <ExternalLink className="h-3.5 w-3.5" />
@@ -457,14 +457,14 @@ export default async function PortfolioPage({
                       ) : null}
 
                       <div className="flex items-center justify-between border-t border-[#EFECE5] pt-2">
-                        <span className="text-xs text-[#6B6760]">
+                        <span className="text-xs text-muted-foreground">
                           Audit log available on request
                         </span>
                         <a
                           href={proof.proofPackHref}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-xs font-semibold text-[#1C4D3A] hover:text-[#143829]"
+                          className="text-xs font-semibold text-proofound-forest hover:text-[#143829]"
                         >
                           Open proof pack
                         </a>
@@ -500,7 +500,7 @@ export default async function PortfolioPage({
           <div className="space-y-4">
             <PublicProfileSection title="My next challenge">
               {hasOpenToData(matchingProfile) ? (
-                <div className="space-y-2 text-sm text-[#2D3330]">
+                <div className="space-y-2 text-sm text-foreground">
                   <OpenToRow
                     label="Roles"
                     value={
@@ -542,12 +542,12 @@ export default async function PortfolioPage({
                   <TabsTrigger value="vision">Vision</TabsTrigger>
                 </TabsList>
                 <TabsContent value="mission" className="mt-3">
-                  <p className="whitespace-pre-line text-sm leading-6 text-[#2D3330]">
+                  <p className="whitespace-pre-line text-sm leading-6 text-foreground">
                     {ownerMission || 'Mission is private in this view.'}
                   </p>
                 </TabsContent>
                 <TabsContent value="vision" className="mt-3">
-                  <p className="whitespace-pre-line text-sm leading-6 text-[#2D3330]">
+                  <p className="whitespace-pre-line text-sm leading-6 text-foreground">
                     {ownerVision || 'Vision is private in this view.'}
                   </p>
                 </TabsContent>
@@ -576,7 +576,7 @@ export default async function PortfolioPage({
                 {visibility.contact && visibility.workEmail && individual?.work_email ? (
                   <ContactPill href={`mailto:${individual.work_email}`} label="Work email" />
                 ) : (
-                  <p className="rounded-xl border border-white/40 bg-white/40 px-3 py-2 text-[#6B6760] shadow-sm">
+                  <p className="rounded-xl border border-white/40 bg-white/40 px-3 py-2 text-muted-foreground shadow-sm">
                     Contact hidden
                   </p>
                 )}
@@ -768,7 +768,7 @@ function StatusChip({
       className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs ${
         tone === 'positive'
           ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-          : 'border-[#D9D5CC] bg-[#F7F6F1] text-[#6B6760]'
+          : 'border-[#D9D5CC] bg-japandi-bg text-muted-foreground'
       }`}
     >
       {tone === 'positive' ? (
@@ -784,15 +784,17 @@ function StatusChip({
 function OpenToRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-white/40 bg-white/40 px-3 py-2 shadow-sm transition-colors hover:bg-white/60">
-      <p className="text-xs font-semibold uppercase tracking-[0.06em] text-[#6B6760]">{label}</p>
-      <p className="text-sm text-[#2D3330]">{value}</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+        {label}
+      </p>
+      <p className="text-sm text-foreground">{value}</p>
     </div>
   );
 }
 
 function TagPill({ label }: { label: string }) {
   return (
-    <span className="rounded-full border border-white/40 bg-white/40 px-3 py-1 text-sm text-[#2D3330] shadow-sm transition-colors hover:bg-white/60">
+    <span className="rounded-full border border-white/40 bg-white/40 px-3 py-1 text-sm text-foreground shadow-sm transition-colors hover:bg-white/60">
       {label}
     </span>
   );
@@ -804,7 +806,7 @@ function ContactPill({ href, label, icon }: { href: string; label: string; icon?
       href={href}
       target={href.startsWith('http') ? '_blank' : undefined}
       rel="noreferrer"
-      className="flex items-center gap-2 rounded-full border border-white/40 bg-white/40 px-3 py-1 text-[#2D3330] shadow-sm transition-colors hover:bg-white/60 hover:text-[#1C4D3A]"
+      className="flex items-center gap-2 rounded-full border border-white/40 bg-white/40 px-3 py-1 text-foreground shadow-sm transition-colors hover:bg-white/60 hover:text-proofound-forest"
     >
       {icon ?? <CalendarClock className="h-4 w-4" />}
       {label}

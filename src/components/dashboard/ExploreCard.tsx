@@ -58,7 +58,7 @@ export function ExploreCard({ persona = 'individual', orgRef, initialData }: Exp
         className="p-4 border lg:col-span-3"
         style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}
       >
-        <p className="text-sm text-[#6B6760]">Loading actionable insights...</p>
+        <p className="text-sm text-muted-foreground">Loading actionable insights...</p>
       </Card>
     );
   }
@@ -79,7 +79,7 @@ export function ExploreCard({ persona = 'individual', orgRef, initialData }: Exp
             <AlertTriangle className="w-3 h-3" /> Market activity low
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1 text-[11px] text-[#1C4D3A]">
+          <span className="inline-flex items-center gap-1 text-[11px] text-proofound-forest">
             <TrendingUp className="w-3 h-3" /> Active market
           </span>
         )}
@@ -100,10 +100,10 @@ export function ExploreCard({ persona = 'individual', orgRef, initialData }: Exp
               <Link
                 key={action.id}
                 href={action.actionUrl}
-                className="block rounded-lg border border-[#E8E6DD] px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
+                className="block rounded-lg border border-proofound-stone px-3 py-2 hover:border-proofound-forest hover:bg-japandi-bg"
               >
-                <p className="text-sm font-medium text-[#2D3330]">{action.title}</p>
-                <p className="text-xs text-[#6B6760] mt-1">{action.description}</p>
+                <p className="text-sm font-medium text-foreground">{action.title}</p>
+                <p className="text-xs text-muted-foreground mt-1">{action.description}</p>
               </Link>
             ))}
           </div>
@@ -114,10 +114,10 @@ export function ExploreCard({ persona = 'individual', orgRef, initialData }: Exp
             <Link
               key={action.id}
               href={action.actionUrl}
-              className="block rounded-lg border border-[#E8E6DD] px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
+              className="block rounded-lg border border-proofound-stone px-3 py-2 hover:border-proofound-forest hover:bg-japandi-bg"
             >
-              <p className="text-sm font-medium text-[#2D3330]">{action.title}</p>
-              <p className="text-xs text-[#6B6760] mt-1">{action.description}</p>
+              <p className="text-sm font-medium text-foreground">{action.title}</p>
+              <p className="text-xs text-muted-foreground mt-1">{action.description}</p>
             </Link>
           ))}
         </div>

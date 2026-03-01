@@ -26,7 +26,7 @@ function InvalidEmbedState() {
   return (
     <PublicProfileShell compact={true} maxWidthClassName="max-w-3xl">
       <PublicProfileSection title="Shared profile status">
-        <p className="text-sm text-[#6B6760]">This shared profile snippet is unavailable.</p>
+        <p className="text-sm text-muted-foreground">This shared profile snippet is unavailable.</p>
       </PublicProfileSection>
     </PublicProfileShell>
   );

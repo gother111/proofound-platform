@@ -79,13 +79,13 @@ export function PACScoreExplainer({
         {/* Overall PAC Score */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-[#2D3330]">Overall PAC Score</span>
+            <span className="text-sm font-medium text-foreground">Overall PAC Score</span>
             <span className="text-2xl font-semibold" style={{ color: '#1C4D3A' }}>
               {pacPercent}%
             </span>
           </div>
           <Progress value={pacPercent} className="h-2" />
-          <p className="text-xs text-[#6B6760] mt-2">
+          <p className="text-xs text-muted-foreground mt-2">
             Measures how well your purpose aligns with this opportunity
           </p>
         </div>
@@ -94,11 +94,11 @@ export function PACScoreExplainer({
         <div>
           <div className="flex items-center gap-2 mb-3">
             <Heart className="w-4 h-4" style={{ color: '#C76B4A' }} />
-            <h4 className="font-medium text-sm text-[#2D3330]">Values Alignment</h4>
+            <h4 className="font-medium text-sm text-foreground">Values Alignment</h4>
           </div>
 
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-[#6B6760]">Overlap</span>
+            <span className="text-xs text-muted-foreground">Overlap</span>
             <span className="text-sm font-semibold" style={{ color: '#C76B4A' }}>
               {valuesPercent}%
             </span>
@@ -107,25 +107,25 @@ export function PACScoreExplainer({
 
           {sharedValues.length > 0 ? (
             <div>
-              <p className="text-xs text-[#6B6760] mb-2">Shared values:</p>
+              <p className="text-xs text-muted-foreground mb-2">Shared values:</p>
               <div className="flex flex-wrap gap-1.5">
                 {sharedValues.map((value, idx) => (
                   <Badge
                     key={idx}
                     variant="secondary"
-                    className="text-xs bg-[#C76B4A]/10 text-[#C76B4A] border-[#C76B4A]/20"
+                    className="text-xs bg-proofound-terracotta/10 text-proofound-terracotta border-[#C76B4A]/20"
                   >
                     <CheckCircle2 className="w-3 h-3 mr-1" />
                     {value}
                   </Badge>
                 ))}
               </div>
-              <p className="text-xs text-[#6B6760] mt-2">
+              <p className="text-xs text-muted-foreground mt-2">
                 {sharedValues.length} of {totalValues} values in common
               </p>
             </div>
           ) : (
-            <p className="text-xs text-[#6B6760]">No values overlap data available</p>
+            <p className="text-xs text-muted-foreground">No values overlap data available</p>
           )}
         </div>
 
@@ -133,11 +133,11 @@ export function PACScoreExplainer({
         <div>
           <div className="flex items-center gap-2 mb-3">
             <Target className="w-4 h-4" style={{ color: '#1C4D3A' }} />
-            <h4 className="font-medium text-sm text-[#2D3330]">Causes Alignment</h4>
+            <h4 className="font-medium text-sm text-foreground">Causes Alignment</h4>
           </div>
 
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-[#6B6760]">Overlap</span>
+            <span className="text-xs text-muted-foreground">Overlap</span>
             <span className="text-sm font-semibold" style={{ color: '#1C4D3A' }}>
               {causesPercent}%
             </span>
@@ -146,31 +146,31 @@ export function PACScoreExplainer({
 
           {sharedCauses.length > 0 ? (
             <div>
-              <p className="text-xs text-[#6B6760] mb-2">Shared causes:</p>
+              <p className="text-xs text-muted-foreground mb-2">Shared causes:</p>
               <div className="flex flex-wrap gap-1.5">
                 {sharedCauses.map((cause, idx) => (
                   <Badge
                     key={idx}
                     variant="secondary"
-                    className="text-xs bg-[#1C4D3A]/10 text-[#1C4D3A] border-[#1C4D3A]/20"
+                    className="text-xs bg-proofound-forest/10 text-proofound-forest border-proofound-forest/20"
                   >
                     <CheckCircle2 className="w-3 h-3 mr-1" />
                     {cause}
                   </Badge>
                 ))}
               </div>
-              <p className="text-xs text-[#6B6760] mt-2">
+              <p className="text-xs text-muted-foreground mt-2">
                 {sharedCauses.length} of {totalCauses} causes in common
               </p>
             </div>
           ) : (
-            <p className="text-xs text-[#6B6760]">No causes overlap data available</p>
+            <p className="text-xs text-muted-foreground">No causes overlap data available</p>
           )}
         </div>
 
         {/* Explanation */}
-        <div className="bg-[#F7F6F1] rounded-lg p-4 border border-[#E8E6DD]">
-          <p className="text-xs leading-relaxed text-[#2D3330]">
+        <div className="bg-japandi-bg rounded-lg p-4 border border-proofound-stone">
+          <p className="text-xs leading-relaxed text-foreground">
             <strong className="font-semibold">How PAC is calculated:</strong>
             <br />
             PAC uses <em>Jaccard similarity</em> to measure the overlap between your values and

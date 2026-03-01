@@ -3,6 +3,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { ScheduleInterviewModal } from '@/components/interviews/ScheduleInterviewModal';
 
+const scheduleInterviewMock = vi.fn();
+
+vi.mock('@/app/actions/interviews', () => ({
+  scheduleInterview: (...args: any[]) => scheduleInterviewMock(...args),
+}));
+
+vi.mock('@/hooks/use-media-query', () => ({
+  useMediaQuery: () => true,
+}));
+
 vi.mock('@/components/ui/button', () => ({
   Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
 }));
@@ -70,8 +80,15 @@ vi.mock('@/components/ui/select', () => {
 });
 
 describe('ScheduleInterviewModal', () => {
+  const getPathname = (input: string | URL | Request) => {
+    const url =
+      typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+    return url.startsWith('http') ? new URL(url).pathname : url;
+  };
+
   beforeEach(() => {
     vi.useRealTimers();
+    scheduleInterviewMock.mockReset();
   });
 
   afterEach(() => {
@@ -79,14 +96,22 @@ describe('ScheduleInterviewModal', () => {
   });
 
   it('submits manual scheduling with manualMeetingLink when no provider is connected', async () => {
-    let requestBody: Record<string, unknown> | null = null;
+    let statusCallCount = 0;
+    scheduleInterviewMock.mockResolvedValue({
+      interview: {
+        id: 'interview_manual_1',
+        scheduledAt: new Date().toISOString(),
+        meetingUrl: 'https://example.com/manual-room',
+      },
+    });
 
     vi.stubGlobal(
       'fetch',
-      vi.fn(async (input: string | URL, init?: RequestInit) => {
-        const url = typeof input === 'string' ? input : input.toString();
+      vi.fn(async (input: string | URL) => {
+        const pathname = getPathname(input as string | URL | Request);
 
-        if (url === '/api/integrations/video/status') {
+        if (pathname === '/api/integrations/video/status') {
+          statusCallCount += 1;
           return {
             ok: true,
             json: async () => ({
@@ -96,21 +121,7 @@ describe('ScheduleInterviewModal', () => {
           };
         }
 
-        if (url === '/api/interviews/schedule') {
-          requestBody = JSON.parse(String(init?.body ?? '{}'));
-          return {
-            ok: true,
-            json: async () => ({
-              interview: {
-                id: 'interview_manual_1',
-                scheduledAt: new Date().toISOString(),
-                meetingUrl: 'https://example.com/manual-room',
-              },
-            }),
-          };
-        }
-
-        return { ok: true, json: async () => ({}) };
+        throw new Error(`Unexpected route: ${pathname}`);
       })
     );
 
@@ -125,96 +136,37 @@ describe('ScheduleInterviewModal', () => {
       />
     );
 
-    const selects = await screen.findAllByTestId('mock-select');
-    const dateSelect = selects[0] as HTMLSelectElement;
-    const timeSelect = selects[1] as HTMLSelectElement;
-    const dateValue = dateSelect.options[0].value;
-    const timeValue = timeSelect.options[0].value;
-
-    fireEvent.change(dateSelect, { target: { value: dateValue } });
-    fireEvent.change(timeSelect, { target: { value: timeValue } });
-
     fireEvent.change(screen.getByLabelText(/meeting link/i), {
       target: { value: 'https://example.com/manual-room' },
     });
 
     fireEvent.click(screen.getByRole('button', { name: /schedule interview/i }));
 
-    await waitFor(() => expect(requestBody).not.toBeNull());
-    expect(requestBody?.platform).toBe('manual');
-    expect(requestBody?.manualMeetingLink).toBe('https://example.com/manual-room');
+    await waitFor(() => expect(scheduleInterviewMock).toHaveBeenCalledTimes(1));
+    expect(scheduleInterviewMock.mock.calls[0][0]).toMatchObject({
+      matchId: '6e704a5a-a89e-43cc-9f71-d1f29fd7f3dd',
+      platform: 'manual',
+      manualMeetingLink: 'https://example.com/manual-room',
+    });
     expect(onScheduled).toHaveBeenCalledTimes(1);
+    expect(statusCallCount).toBe(1);
   });
 
   it('submits google_meet payload when Google provider is connected', async () => {
-    let requestBody: Record<string, unknown> | null = null;
+    scheduleInterviewMock.mockResolvedValue({
+      interview: {
+        id: 'interview_google_1',
+        scheduledAt: new Date().toISOString(),
+        meetingUrl: 'https://meet.google.com/test-link',
+      },
+    });
 
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (input: string | URL, init?: RequestInit) => {
-        const url = typeof input === 'string' ? input : input.toString();
-
-        if (url === '/api/integrations/video/status') {
-          return {
-            ok: true,
-            json: async () => ({
-              zoom: { connected: false },
-              google: { connected: true },
-            }),
-          };
-        }
-
-        if (url === '/api/interviews/schedule') {
-          requestBody = JSON.parse(String(init?.body ?? '{}'));
-          return {
-            ok: true,
-            json: async () => ({
-              interview: {
-                id: 'interview_google_1',
-                scheduledAt: new Date().toISOString(),
-                meetingUrl: 'https://meet.google.com/test-link',
-              },
-            }),
-          };
-        }
-
-        return { ok: true, json: async () => ({}) };
-      })
-    );
-
-    render(
-      <ScheduleInterviewModal
-        isOpen
-        onClose={vi.fn()}
-        matchId="6e704a5a-a89e-43cc-9f71-d1f29fd7f3dd"
-        matchAgreedAt={new Date()}
-      />
-    );
-
-    const selects = await screen.findAllByTestId('mock-select');
-    const dateSelect = selects[0] as HTMLSelectElement;
-    const timeSelect = selects[1] as HTMLSelectElement;
-    const platformSelect = selects[2] as HTMLSelectElement;
-
-    await waitFor(() => expect(platformSelect.value).toBe('google_meet'));
-
-    fireEvent.change(dateSelect, { target: { value: dateSelect.options[0].value } });
-    fireEvent.change(timeSelect, { target: { value: timeSelect.options[0].value } });
-
-    fireEvent.click(screen.getByRole('button', { name: /schedule interview/i }));
-
-    await waitFor(() => expect(requestBody).not.toBeNull());
-    expect(requestBody?.platform).toBe('google_meet');
-    expect(requestBody?.manualMeetingLink).toBeUndefined();
-  });
-
-  it('renders backend actionable message when schedule API returns message + code', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async (input: string | URL) => {
-        const url = typeof input === 'string' ? input : input.toString();
+        const pathname = getPathname(input as string | URL | Request);
 
-        if (url === '/api/integrations/video/status') {
+        if (pathname === '/api/integrations/video/status') {
           return {
             ok: true,
             json: async () => ({
@@ -224,18 +176,7 @@ describe('ScheduleInterviewModal', () => {
           };
         }
 
-        if (url === '/api/interviews/schedule') {
-          return {
-            ok: false,
-            json: async () => ({
-              error: 'Failed to create Google meeting',
-              code: 'GOOGLE_RECONNECT_REQUIRED',
-              message: 'Reconnect Google Calendar in Settings > Integrations and retry.',
-            }),
-          };
-        }
-
-        return { ok: true, json: async () => ({}) };
+        throw new Error(`Unexpected route: ${pathname}`);
       })
     );
 
@@ -248,12 +189,65 @@ describe('ScheduleInterviewModal', () => {
       />
     );
 
-    const selects = await screen.findAllByTestId('mock-select');
-    const dateSelect = selects[0] as HTMLSelectElement;
-    const timeSelect = selects[1] as HTMLSelectElement;
+    await waitFor(() =>
+      expect(
+        screen.getByText(
+          'Connected mode creates the meeting from your linked provider account automatically.'
+        )
+      ).toBeInTheDocument()
+    );
 
-    fireEvent.change(dateSelect, { target: { value: dateSelect.options[0].value } });
-    fireEvent.change(timeSelect, { target: { value: timeSelect.options[0].value } });
+    fireEvent.click(screen.getByRole('button', { name: /schedule interview/i }));
+
+    await waitFor(() => expect(scheduleInterviewMock).toHaveBeenCalledTimes(1));
+    expect(scheduleInterviewMock.mock.calls[0][0]).toMatchObject({
+      matchId: '6e704a5a-a89e-43cc-9f71-d1f29fd7f3dd',
+      platform: 'google_meet',
+    });
+    expect(scheduleInterviewMock.mock.calls[0][0].manualMeetingLink).toBeUndefined();
+  });
+
+  it('renders backend actionable message when schedule API returns message + code', async () => {
+    scheduleInterviewMock.mockRejectedValue(
+      new Error('Reconnect Google Calendar in Settings > Integrations and retry.')
+    );
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string | URL) => {
+        const pathname = getPathname(input as string | URL | Request);
+
+        if (pathname === '/api/integrations/video/status') {
+          return {
+            ok: true,
+            json: async () => ({
+              zoom: { connected: false },
+              google: { connected: true },
+            }),
+          };
+        }
+
+        throw new Error(`Unexpected route: ${pathname}`);
+      })
+    );
+
+    render(
+      <ScheduleInterviewModal
+        isOpen
+        onClose={vi.fn()}
+        matchId="6e704a5a-a89e-43cc-9f71-d1f29fd7f3dd"
+        matchAgreedAt={new Date()}
+      />
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(
+          'Connected mode creates the meeting from your linked provider account automatically.'
+        )
+      ).toBeInTheDocument()
+    );
+
     fireEvent.click(screen.getByRole('button', { name: /schedule interview/i }));
 
     await waitFor(() =>

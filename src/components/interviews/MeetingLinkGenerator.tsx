@@ -136,7 +136,7 @@ export function MeetingLinkGenerator({ interviewId, onLinkGenerated }: MeetingLi
   if (isLoading) {
     return (
       <Card variant="bento" className="rounded-2xl">
-        <CardContent className="py-8 text-center text-[#6B6760] dark:text-muted-foreground">
+        <CardContent className="py-8 text-center text-muted-foreground dark:text-muted-foreground">
           Loading integrations...
         </CardContent>
       </Card>
@@ -158,26 +158,26 @@ export function MeetingLinkGenerator({ interviewId, onLinkGenerated }: MeetingLi
 
         <CardContent className="space-y-4">
           {/* Zoom Integration */}
-          <div className="p-4 border border-[#E8E6DD] dark:border-border rounded-lg">
+          <div className="p-4 border border-proofound-stone dark:border-border rounded-lg">
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
                   <Video className="w-5 h-5 text-blue-600 dark:text-blue-300" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-[#2D3330] dark:text-foreground">Zoom</h3>
+                  <h3 className="font-semibold text-foreground dark:text-foreground">Zoom</h3>
                   {zoomIntegration?.connected ? (
                     <div className="flex items-center gap-2 text-sm">
                       <CheckCircle2 className="w-4 h-4 text-green-600" />
                       <span className="text-green-600 dark:text-green-400">Connected</span>
                       {zoomIntegration.email && (
-                        <span className="text-[#6B6760] dark:text-muted-foreground">
+                        <span className="text-muted-foreground dark:text-muted-foreground">
                           • {zoomIntegration.email}
                         </span>
                       )}
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2 text-sm text-[#6B6760] dark:text-muted-foreground">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground dark:text-muted-foreground">
                       <AlertCircle className="w-4 h-4" />
                       Not connected
                     </div>
@@ -210,32 +210,34 @@ export function MeetingLinkGenerator({ interviewId, onLinkGenerated }: MeetingLi
               )}
             </div>
 
-            <p className="text-xs text-[#6B6760] dark:text-muted-foreground">
+            <p className="text-xs text-muted-foreground dark:text-muted-foreground">
               Automatically create Zoom meetings for interviews with calendar integration
             </p>
           </div>
 
           {/* Google Meet Integration */}
-          <div className="p-4 border border-[#E8E6DD] dark:border-border rounded-lg">
+          <div className="p-4 border border-proofound-stone dark:border-border rounded-lg">
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-red-100 dark:bg-red-900 rounded-lg flex items-center justify-center">
                   <Calendar className="w-5 h-5 text-red-600 dark:text-red-300" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-[#2D3330] dark:text-foreground">Google Meet</h3>
+                  <h3 className="font-semibold text-foreground dark:text-foreground">
+                    Google Meet
+                  </h3>
                   {googleIntegration?.connected ? (
                     <div className="flex items-center gap-2 text-sm">
                       <CheckCircle2 className="w-4 h-4 text-green-600" />
                       <span className="text-green-600 dark:text-green-400">Connected</span>
                       {googleIntegration.email && (
-                        <span className="text-[#6B6760] dark:text-muted-foreground">
+                        <span className="text-muted-foreground dark:text-muted-foreground">
                           • {googleIntegration.email}
                         </span>
                       )}
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2 text-sm text-[#6B6760] dark:text-muted-foreground">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground dark:text-muted-foreground">
                       <AlertCircle className="w-4 h-4" />
                       Not connected
                     </div>
@@ -268,7 +270,7 @@ export function MeetingLinkGenerator({ interviewId, onLinkGenerated }: MeetingLi
               )}
             </div>
 
-            <p className="text-xs text-[#6B6760] dark:text-muted-foreground">
+            <p className="text-xs text-muted-foreground dark:text-muted-foreground">
               Create Google Meet links and add to Google Calendar automatically
             </p>
           </div>
@@ -318,7 +320,7 @@ export function MeetingLinkGenerator({ interviewId, onLinkGenerated }: MeetingLi
           <CardTitle className="text-lg font-['Crimson_Pro']">Benefits</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2 text-sm text-[#6B6760] dark:text-muted-foreground">
+          <div className="space-y-2 text-sm text-muted-foreground dark:text-muted-foreground">
             <p>
               • <strong>Automatic link generation:</strong> Create meeting links with one click
             </p>

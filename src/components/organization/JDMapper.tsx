@@ -107,9 +107,9 @@ export function JDMapper({ onSkillsSelected }: JDMapperProps) {
   };
 
   const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 0.9) return 'text-[#1C4D3A] bg-[#E8F5E1]';
-    if (confidence >= 0.75) return 'text-[#C76B4A] bg-[#FFF4E6]';
-    return 'text-[#6B6760] bg-[#F7F6F1]';
+    if (confidence >= 0.9) return 'text-proofound-forest bg-proofound-success-tint';
+    if (confidence >= 0.75) return 'text-proofound-terracotta bg-[#FFF4E6]';
+    return 'text-muted-foreground bg-japandi-bg';
   };
 
   return (
@@ -118,10 +118,10 @@ export function JDMapper({ onSkillsSelected }: JDMapperProps) {
       <Card className="p-6">
         <div className="mb-4">
           <div className="flex items-center gap-2 mb-2">
-            <FileText className="w-5 h-5 text-[#1C4D3A]" />
-            <h3 className="text-lg font-semibold text-[#2D3330]">Paste Job Description</h3>
+            <FileText className="w-5 h-5 text-proofound-forest" />
+            <h3 className="text-lg font-semibold text-foreground">Paste Job Description</h3>
           </div>
-          <p className="text-sm text-[#6B6760]">
+          <p className="text-sm text-muted-foreground">
             Paste a job description and we'll automatically extract and map skills to our skill
             taxonomy
           </p>
@@ -143,11 +143,11 @@ We're looking for a Senior Python Developer with 5+ years of experience building
         />
 
         <div className="flex items-center justify-between">
-          <span className="text-xs text-[#6B6760]">{jdText.length} / 10,000 characters</span>
+          <span className="text-xs text-muted-foreground">{jdText.length} / 10,000 characters</span>
           <Button
             onClick={handleParse}
             disabled={isProcessing || jdText.length < 50}
-            className="bg-[#1C4D3A] text-white"
+            className="bg-proofound-forest text-white"
           >
             {isProcessing ? (
               <>
@@ -168,10 +168,10 @@ We're looking for a Senior Python Developer with 5+ years of experience building
       {suggestions.length > 0 && (
         <Card className="p-6">
           <div className="mb-4">
-            <h3 className="text-lg font-semibold text-[#2D3330] mb-2">
+            <h3 className="text-lg font-semibold text-foreground mb-2">
               Suggested Skills ({selectedSkills.size} of {suggestions.length} selected)
             </h3>
-            <p className="text-sm text-[#6B6760]">
+            <p className="text-sm text-muted-foreground">
               Click on skills to select/deselect. Review the "why" explanation for each mapping.
             </p>
           </div>
@@ -193,21 +193,21 @@ We're looking for a Senior Python Developer with 5+ years of experience building
                   }}
                   className={`w-full text-left p-4 rounded-lg border-2 cursor-pointer transition-all ${
                     isSelected
-                      ? 'border-[#1C4D3A] bg-[#E8F5E1]'
-                      : 'border-[#E8E6DD] bg-white hover:border-[#1C4D3A]/30'
+                      ? 'border-proofound-forest bg-proofound-success-tint'
+                      : 'border-proofound-stone bg-white hover:border-proofound-forest/30'
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex-shrink-0 mt-1">
                       {isSelected ? (
-                        <CheckCircle2 className="w-5 h-5 text-[#1C4D3A]" />
+                        <CheckCircle2 className="w-5 h-5 text-proofound-forest" />
                       ) : (
-                        <div className="w-5 h-5 rounded-full border-2 border-[#E8E6DD]" />
+                        <div className="w-5 h-5 rounded-full border-2 border-proofound-stone" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2">
-                        <h4 className="font-semibold text-[#2D3330]">{suggestion.l4_name}</h4>
+                        <h4 className="font-semibold text-foreground">{suggestion.l4_name}</h4>
                         <Badge
                           variant="secondary"
                           className={`text-xs ${getConfidenceColor(suggestion.confidence)}`}
@@ -216,18 +216,20 @@ We're looking for a Senior Python Developer with 5+ years of experience building
                         </Badge>
                       </div>
 
-                      <div className="bg-[#F7F6F1] rounded-lg p-3 mb-2">
+                      <div className="bg-japandi-bg rounded-lg p-3 mb-2">
                         <div className="flex items-start gap-2">
-                          <Info className="w-4 h-4 text-[#6B6760] flex-shrink-0 mt-0.5" />
+                          <Info className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                           <div className="flex-1">
-                            <p className="text-sm font-semibold text-[#2D3330] mb-1">Why mapped:</p>
-                            <p className="text-sm text-[#6B6760]">{suggestion.why}</p>
+                            <p className="text-sm font-semibold text-foreground mb-1">
+                              Why mapped:
+                            </p>
+                            <p className="text-sm text-muted-foreground">{suggestion.why}</p>
                           </div>
                         </div>
                       </div>
 
                       {suggestion.source_text && (
-                        <div className="text-xs text-[#6B6760]">
+                        <div className="text-xs text-muted-foreground">
                           <span className="font-semibold">Source:</span> "{suggestion.source_text}"
                         </div>
                       )}
@@ -238,7 +240,7 @@ We're looking for a Senior Python Developer with 5+ years of experience building
             })}
           </div>
 
-          <div className="flex items-center justify-between pt-4 border-t border-[#E8E6DD]">
+          <div className="flex items-center justify-between pt-4 border-t border-proofound-stone">
             <Button
               variant="ghost"
               onClick={() => {
@@ -252,7 +254,7 @@ We're looking for a Senior Python Developer with 5+ years of experience building
             <Button
               onClick={handleAddSkills}
               disabled={selectedSkills.size === 0}
-              className="bg-[#1C4D3A] text-white"
+              className="bg-proofound-forest text-white"
             >
               <CheckCircle2 className="w-4 h-4 mr-2" />
               Add {selectedSkills.size} {selectedSkills.size === 1 ? 'Skill' : 'Skills'}

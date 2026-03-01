@@ -15,7 +15,7 @@ export function AdminLayoutClient({ children, adminUser }: AdminLayoutClientProp
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#F7F6F1]">
+    <div className="min-h-screen bg-japandi-bg">
       {/* Admin Sidebar */}
       <AdminSidebar
         adminEmail={adminUser.email}

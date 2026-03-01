@@ -46,7 +46,7 @@ export function OrgReadinessCard({ orgRef, initialData }: OrgReadinessCardProps)
   if (loading || !data) {
     return (
       <Card className="p-4" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
-        <p className="text-sm text-[#6B6760]">Loading readiness insights...</p>
+        <p className="text-sm text-muted-foreground">Loading readiness insights...</p>
       </Card>
     );
   }
@@ -55,11 +55,11 @@ export function OrgReadinessCard({ orgRef, initialData }: OrgReadinessCardProps)
     <Card className="p-4 space-y-4" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
-          <h3 className="text-lg font-semibold text-[#2D3330] inline-flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-[#1C4D3A]" />
+          <h3 className="text-lg font-semibold text-foreground inline-flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-proofound-forest" />
             Assignment Readiness
           </h3>
-          <p className="text-sm text-[#6B6760]">
+          <p className="text-sm text-muted-foreground">
             {data.marketActivityLow
               ? 'Candidate volume is currently low. Improve readiness to increase conversion as volume grows.'
               : 'Your pipeline has activity. Tighten readiness checks to improve shortlist quality.'}
@@ -72,9 +72,9 @@ export function OrgReadinessCard({ orgRef, initialData }: OrgReadinessCardProps)
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
         {data.scoreBreakdown.map((item) => (
-          <div key={item.key} className="rounded-lg border border-[#E8E6DD] bg-white p-3">
-            <p className="text-xs text-[#6B6760]">{item.label}</p>
-            <p className="text-lg font-semibold text-[#2D3330]">
+          <div key={item.key} className="rounded-lg border border-proofound-stone bg-white p-3">
+            <p className="text-xs text-muted-foreground">{item.label}</p>
+            <p className="text-lg font-semibold text-foreground">
               {item.score}/{item.maxScore}
             </p>
           </div>
@@ -82,15 +82,18 @@ export function OrgReadinessCard({ orgRef, initialData }: OrgReadinessCardProps)
       </div>
 
       <div>
-        <p className="text-sm font-semibold text-[#2D3330] mb-2">Talent Availability Insight</p>
+        <p className="text-sm font-semibold text-foreground mb-2">Talent Availability Insight</p>
         {data.talentAvailabilityInsights.length === 0 ? (
-          <p className="text-xs text-[#6B6760]">No active assignment skill demand yet.</p>
+          <p className="text-xs text-muted-foreground">No active assignment skill demand yet.</p>
         ) : (
           <div className="space-y-2">
             {data.talentAvailabilityInsights.slice(0, 4).map((item) => (
-              <div key={item.skillCode} className="rounded-lg border border-[#E8E6DD] p-2 text-xs">
-                <p className="text-[#2D3330] font-medium">{item.skillName}</p>
-                <p className="text-[#6B6760]">
+              <div
+                key={item.skillCode}
+                className="rounded-lg border border-proofound-stone p-2 text-xs"
+              >
+                <p className="text-foreground font-medium">{item.skillName}</p>
+                <p className="text-muted-foreground">
                   Required by {item.requiredByAssignments} assignment(s) • {item.availableProfiles}{' '}
                   profile(s) available • {item.signal}
                 </p>
@@ -101,10 +104,10 @@ export function OrgReadinessCard({ orgRef, initialData }: OrgReadinessCardProps)
       </div>
 
       <div>
-        <p className="text-sm font-semibold text-[#2D3330] mb-2">Next Best Org Actions</p>
+        <p className="text-sm font-semibold text-foreground mb-2">Next Best Org Actions</p>
         {data.topActions.length === 0 ? (
-          <div className="text-xs text-[#6B6760] inline-flex items-center gap-2">
-            <CheckCircle2 className="w-3.5 h-3.5 text-[#1C4D3A]" />
+          <div className="text-xs text-muted-foreground inline-flex items-center gap-2">
+            <CheckCircle2 className="w-3.5 h-3.5 text-proofound-forest" />
             No urgent actions.
           </div>
         ) : (
@@ -113,10 +116,10 @@ export function OrgReadinessCard({ orgRef, initialData }: OrgReadinessCardProps)
               <Link
                 key={action.id}
                 href={action.actionUrl}
-                className="block rounded-lg border border-[#E8E6DD] p-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
+                className="block rounded-lg border border-proofound-stone p-2 hover:border-proofound-forest hover:bg-japandi-bg"
               >
-                <p className="text-sm font-medium text-[#2D3330]">{action.title}</p>
-                <p className="text-xs text-[#6B6760] mt-1">{action.description}</p>
+                <p className="text-sm font-medium text-foreground">{action.title}</p>
+                <p className="text-xs text-muted-foreground mt-1">{action.description}</p>
               </Link>
             ))}
           </div>
@@ -126,7 +129,7 @@ export function OrgReadinessCard({ orgRef, initialData }: OrgReadinessCardProps)
       <div className="pt-1">
         <Link
           href={`/app/o/${orgRef}/assignments`}
-          className="inline-flex items-center gap-1 text-sm text-[#1C4D3A] hover:underline"
+          className="inline-flex items-center gap-1 text-sm text-proofound-forest hover:underline"
         >
           Open assignments <ArrowRight className="w-4 h-4" />
         </Link>

@@ -165,7 +165,7 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
 
         <div className="space-y-6">
           {/* User Profile Section */}
-          <div className="flex items-start gap-4 p-4 bg-[#F7F6F1] rounded-lg">
+          <div className="flex items-start gap-4 p-4 bg-japandi-bg rounded-lg">
             <Avatar className="w-16 h-16 flex-shrink-0">
               {verification.userAvatar ? (
                 <Image
@@ -176,15 +176,17 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-[#E8E6DD] flex items-center justify-center text-[#6B6760] text-2xl font-semibold">
+                <div className="w-full h-full bg-proofound-stone flex items-center justify-center text-muted-foreground text-2xl font-semibold">
                   {verification.userName.charAt(0).toUpperCase()}
                 </div>
               )}
             </Avatar>
             <div className="flex-1">
-              <h3 className="text-xl font-semibold text-[#2D3330] mb-1">{verification.userName}</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-1">
+                {verification.userName}
+              </h3>
               {verification.userEmail && (
-                <p className="text-sm text-[#6B6760] mb-3">{verification.userEmail}</p>
+                <p className="text-sm text-muted-foreground mb-3">{verification.userEmail}</p>
               )}
               {verification.linkedinUrl ? (
                 <a
@@ -198,7 +200,7 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
                   <ExternalLink className="w-3 h-3" />
                 </a>
               ) : (
-                <p className="inline-flex items-center gap-2 text-sm text-[#6B6760]">
+                <p className="inline-flex items-center gap-2 text-sm text-muted-foreground">
                   <Linkedin className="w-4 h-4" />
                   LinkedIn profile URL unavailable
                 </p>
@@ -208,7 +210,7 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
 
           {/* Confidence Score */}
           <div className="space-y-3">
-            <h4 className="font-semibold text-[#2D3330]">Automated Confidence Score</h4>
+            <h4 className="font-semibold text-foreground">Automated Confidence Score</h4>
             <div className="flex items-center gap-3">
               {getConfidenceBadge(verification.confidence)}
               {verification.hasIdentityVerification && (
@@ -230,7 +232,7 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
                 </Badge>
               )}
             </div>
-            <p className="text-sm text-[#6B6760]">
+            <p className="text-sm text-muted-foreground">
               {verification.confidence >= 80
                 ? 'High confidence - Profile shows strong trust signals. Consider quick approval.'
                 : verification.confidence >= 50
@@ -241,10 +243,10 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
 
           {/* Detailed Signals */}
           <div className="space-y-4">
-            <h4 className="font-semibold text-[#2D3330]">Detected Trust Signals</h4>
+            <h4 className="font-semibold text-foreground">Detected Trust Signals</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-300">
               {/* Verification Badge */}
-              <div className="flex items-start gap-3 p-4 border border-[#E8E6DD] rounded-lg transition-all duration-200 hover:shadow-md hover:border-[#D0CEC5]">
+              <div className="flex items-start gap-3 p-4 border border-proofound-stone rounded-lg transition-all duration-200 hover:shadow-md hover:border-[#D0CEC5]">
                 <div
                   className={`p-2 rounded-full ${
                     verification.hasIdentityVerification ? 'bg-green-100' : 'bg-gray-100'
@@ -257,23 +259,23 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
                   )}
                 </div>
                 <div>
-                  <p className="font-medium text-sm text-[#2D3330]">
+                  <p className="font-medium text-sm text-foreground">
                     LinkedIn Identity Verification
                   </p>
-                  <p className="text-xs text-[#6B6760]">
+                  <p className="text-xs text-muted-foreground">
                     {verification.hasIdentityVerification ? 'Detected' : 'Not detected'}
                   </p>
                 </div>
               </div>
 
               {/* Connection Count */}
-              <div className="flex items-start gap-3 p-4 border border-[#E8E6DD] rounded-lg transition-all duration-200 hover:shadow-md hover:border-[#D0CEC5]">
+              <div className="flex items-start gap-3 p-4 border border-proofound-stone rounded-lg transition-all duration-200 hover:shadow-md hover:border-[#D0CEC5]">
                 <div className="p-2 bg-blue-100 rounded-full">
                   <Users className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <p className="font-medium text-sm text-[#2D3330]">Connections</p>
-                  <p className="text-xs text-[#6B6760]">
+                  <p className="font-medium text-sm text-foreground">Connections</p>
+                  <p className="text-xs text-muted-foreground">
                     {verification.signals.connectionCount
                       ? `${verification.signals.connectionCount.toLocaleString()} connections`
                       : 'Not available'}
@@ -288,38 +290,38 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
               </div>
 
               {/* Profile Completeness */}
-              <div className="flex items-start gap-3 p-4 border border-[#E8E6DD] rounded-lg transition-all duration-200 hover:shadow-md hover:border-[#D0CEC5]">
+              <div className="flex items-start gap-3 p-4 border border-proofound-stone rounded-lg transition-all duration-200 hover:shadow-md hover:border-[#D0CEC5]">
                 <div className="p-2 bg-purple-100 rounded-full">
                   <TrendingUp className="w-5 h-5 text-purple-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-medium text-sm text-[#2D3330] mb-2">Profile Completeness</p>
+                  <p className="font-medium text-sm text-foreground mb-2">Profile Completeness</p>
                   <Progress value={verification.signals.profileCompleteness} className="h-2 mb-1" />
-                  <p className="text-xs text-[#6B6760]">
+                  <p className="text-xs text-muted-foreground">
                     {verification.signals.profileCompleteness}% complete
                   </p>
                 </div>
               </div>
 
               {/* Account Age */}
-              <div className="flex items-start gap-3 p-4 border border-[#E8E6DD] rounded-lg transition-all duration-200 hover:shadow-md hover:border-[#D0CEC5]">
+              <div className="flex items-start gap-3 p-4 border border-proofound-stone rounded-lg transition-all duration-200 hover:shadow-md hover:border-[#D0CEC5]">
                 <div className="p-2 bg-amber-100 rounded-full">
                   <Calendar className="w-5 h-5 text-amber-600" />
                 </div>
                 <div>
-                  <p className="font-medium text-sm text-[#2D3330]">Account Age</p>
+                  <p className="font-medium text-sm text-foreground">Account Age</p>
                   <p className={`text-xs font-medium ${accountAge.color}`}>{accountAge.label}</p>
                 </div>
               </div>
 
               {/* Experience Count */}
-              <div className="flex items-start gap-3 p-4 border border-[#E8E6DD] rounded-lg transition-all duration-200 hover:shadow-md hover:border-[#D0CEC5]">
+              <div className="flex items-start gap-3 p-4 border border-proofound-stone rounded-lg transition-all duration-200 hover:shadow-md hover:border-[#D0CEC5]">
                 <div className="p-2 bg-indigo-100 rounded-full">
                   <Briefcase className="w-5 h-5 text-indigo-600" />
                 </div>
                 <div>
-                  <p className="font-medium text-sm text-[#2D3330]">Work Experience</p>
-                  <p className="text-xs text-[#6B6760]">
+                  <p className="font-medium text-sm text-foreground">Work Experience</p>
+                  <p className="text-xs text-muted-foreground">
                     {verification.signals.experienceCount} position
                     {verification.signals.experienceCount !== 1 ? 's' : ''} listed
                   </p>
@@ -327,7 +329,7 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
               </div>
 
               {/* Profile Photo */}
-              <div className="flex items-start gap-3 p-4 border border-[#E8E6DD] rounded-lg transition-all duration-200 hover:shadow-md hover:border-[#D0CEC5]">
+              <div className="flex items-start gap-3 p-4 border border-proofound-stone rounded-lg transition-all duration-200 hover:shadow-md hover:border-[#D0CEC5]">
                 <div
                   className={`p-2 rounded-full ${
                     verification.signals.hasProfilePhoto ? 'bg-green-100' : 'bg-gray-100'
@@ -340,8 +342,8 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
                   )}
                 </div>
                 <div>
-                  <p className="font-medium text-sm text-[#2D3330]">Profile Photo</p>
-                  <p className="text-xs text-[#6B6760]">
+                  <p className="font-medium text-sm text-foreground">Profile Photo</p>
+                  <p className="text-xs text-muted-foreground">
                     {verification.signals.hasProfilePhoto ? 'Present' : 'Not detected'}
                   </p>
                 </div>
@@ -368,8 +370,8 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
 
           {/* Admin Notes */}
           <div className="space-y-2">
-            <label htmlFor="admin-notes" className="font-semibold text-[#2D3330]">
-              Admin Notes <span className="text-[#9B9891] font-normal">(Optional)</span>
+            <label htmlFor="admin-notes" className="font-semibold text-foreground">
+              Admin Notes <span className="text-muted-foreground font-normal">(Optional)</span>
             </label>
             <Textarea
               id="admin-notes"
@@ -380,11 +382,13 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
               maxLength={500}
               disabled={processing}
             />
-            <p className="text-xs text-[#9B9891] text-right">{notes.length}/500 characters</p>
+            <p className="text-xs text-muted-foreground text-right">
+              {notes.length}/500 characters
+            </p>
           </div>
 
-          <div className="rounded-lg border border-[#E8E6DD] p-4 space-y-2">
-            <p className="font-semibold text-[#2D3330]">Identity Verification Decision</p>
+          <div className="rounded-lg border border-proofound-stone p-4 space-y-2">
+            <p className="font-semibold text-foreground">Identity Verification Decision</p>
             <label className="flex items-start gap-2 text-sm text-[#4B4A44]">
               <input
                 type="checkbox"

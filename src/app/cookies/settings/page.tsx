@@ -33,7 +33,7 @@ export default async function CookieSettingsPage({
   const returnTo = returnToParam || '/';
 
   return (
-    <div className="min-h-screen bg-[#F7F6F1]">
+    <div className="min-h-screen bg-japandi-bg">
       {/* Header */}
       <header className="border-b bg-white">
         <div className="container mx-auto px-4 py-4">

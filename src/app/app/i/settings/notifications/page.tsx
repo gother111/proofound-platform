@@ -149,7 +149,7 @@ export default function NotificationPreferencesPage() {
     return (
       <AppSurface>
         <div className="max-w-4xl mx-auto w-full">
-          <p className="text-[#6B6760]">Loading preferences...</p>
+          <p className="text-muted-foreground">Loading preferences...</p>
         </div>
       </AppSurface>
     );
@@ -161,8 +161,8 @@ export default function NotificationPreferencesPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-[#2D3330]">Notification Settings</h1>
-            <p className="text-[#6B6760] mt-1">Manage how you receive notifications</p>
+            <h1 className="text-3xl font-bold text-foreground">Notification Settings</h1>
+            <p className="text-muted-foreground mt-1">Manage how you receive notifications</p>
           </div>
           {hasChanges && (
             <Button onClick={handleSave} disabled={isSaving}>
@@ -174,7 +174,7 @@ export default function NotificationPreferencesPage() {
 
         {/* Info Card */}
         <Card className="p-6 bg-blue-50 border-blue-200">
-          <p className="text-sm text-[#2D3330]">
+          <p className="text-sm text-foreground">
             Choose how you want to be notified for each type of activity. You can enable or disable
             in-app and email notifications independently.
           </p>
@@ -184,16 +184,16 @@ export default function NotificationPreferencesPage() {
         <Card className="p-6">
           <div className="space-y-4">
             <div>
-              <h3 className="font-semibold text-[#2D3330]">Weekly Digest</h3>
-              <p className="text-sm text-[#6B6760] mt-1">
+              <h3 className="font-semibold text-foreground">Weekly Digest</h3>
+              <p className="text-sm text-muted-foreground mt-1">
                 Receive one low-noise weekly recap with progress, top actions, and real activity
                 updates.
               </p>
             </div>
 
-            <div className="flex items-center justify-between space-x-4 p-3 bg-[#F7F6F1] rounded-lg">
+            <div className="flex items-center justify-between space-x-4 p-3 bg-japandi-bg rounded-lg">
               <div className="flex items-center space-x-3">
-                <Mail className="h-4 w-4 text-[#6B6760]" />
+                <Mail className="h-4 w-4 text-muted-foreground" />
                 <Label htmlFor="emailWeeklyDigest" className="cursor-pointer">
                   Weekly digest email
                 </Label>
@@ -214,15 +214,15 @@ export default function NotificationPreferencesPage() {
               <div key={type.id}>
                 <div className="space-y-4">
                   <div>
-                    <h3 className="font-semibold text-[#2D3330]">{type.label}</h3>
-                    <p className="text-sm text-[#6B6760] mt-1">{type.description}</p>
+                    <h3 className="font-semibold text-foreground">{type.label}</h3>
+                    <p className="text-sm text-muted-foreground mt-1">{type.description}</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 ml-4">
                     {/* In-App Toggle */}
-                    <div className="flex items-center justify-between space-x-4 p-3 bg-[#F7F6F1] rounded-lg">
+                    <div className="flex items-center justify-between space-x-4 p-3 bg-japandi-bg rounded-lg">
                       <div className="flex items-center space-x-3">
-                        <Bell className="h-4 w-4 text-[#6B6760]" />
+                        <Bell className="h-4 w-4 text-muted-foreground" />
                         <Label htmlFor={`inApp${type.id}`} className="cursor-pointer">
                           In-App
                         </Label>
@@ -237,9 +237,9 @@ export default function NotificationPreferencesPage() {
                     </div>
 
                     {/* Email Toggle */}
-                    <div className="flex items-center justify-between space-x-4 p-3 bg-[#F7F6F1] rounded-lg">
+                    <div className="flex items-center justify-between space-x-4 p-3 bg-japandi-bg rounded-lg">
                       <div className="flex items-center space-x-3">
-                        <Mail className="h-4 w-4 text-[#6B6760]" />
+                        <Mail className="h-4 w-4 text-muted-foreground" />
                         <Label htmlFor={`email${type.id}`} className="cursor-pointer">
                           Email
                         </Label>

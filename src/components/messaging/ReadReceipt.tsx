@@ -19,11 +19,11 @@ export function ReadReceipt({ status, timestamp }: ReadReceiptProps) {
       case 'sending':
         return <Clock className="w-3 h-3 text-[#A8B69D]" />;
       case 'sent':
-        return <Check className="w-3 h-3 text-[#6B6760]" />;
+        return <Check className="w-3 h-3 text-muted-foreground" />;
       case 'delivered':
-        return <CheckCheck className="w-3 h-3 text-[#6B6760]" />;
+        return <CheckCheck className="w-3 h-3 text-muted-foreground" />;
       case 'read':
-        return <CheckCheck className="w-3 h-3 text-[#1C4D3A]" />;
+        return <CheckCheck className="w-3 h-3 text-proofound-forest" />;
       default:
         return null;
     }
@@ -50,10 +50,9 @@ export function ReadReceipt({ status, timestamp }: ReadReceiptProps) {
   };
 
   return (
-    <div className="flex items-center gap-1 text-xs text-[#6B6760]">
+    <div className="flex items-center gap-1 text-xs text-muted-foreground">
       {getIcon()}
       <span className="sr-only">{getLabel()}</span>
     </div>
   );
 }
-

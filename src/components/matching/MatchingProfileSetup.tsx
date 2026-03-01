@@ -165,11 +165,11 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
         </p>
       </div>
 
-      <div className="mb-6 rounded-lg border border-[#E5E3DA] bg-[#F7F6F1] p-4">
+      <div className="mb-6 rounded-lg border border-proofound-stone bg-japandi-bg p-4">
         <div className="flex items-start gap-3">
-          <BookOpen className="mt-0.5 h-5 w-5 text-[#1C4D3A]" />
+          <BookOpen className="mt-0.5 h-5 w-5 text-proofound-forest" />
           <div className="space-y-2">
-            <p className="text-sm text-[#2D3330]">
+            <p className="text-sm text-foreground">
               Skills come from Expertise Atlas. Add or refresh skills and proofs there.
             </p>
             <Button
@@ -186,19 +186,19 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
       </div>
 
       <div className="space-y-6">
-        <section className="rounded-lg border border-[#E5E3DA] bg-white p-4 space-y-4">
-          <h3 className="text-lg font-medium text-[#2D3330]">Focus</h3>
+        <section className="rounded-lg border border-proofound-stone bg-white p-4 space-y-4">
+          <h3 className="text-lg font-medium text-foreground">Focus</h3>
           <FocusAreasSection
             profile={{ desiredRoles, desiredIndustries, orgTypes }}
             onChange={handleFocusChange}
           />
         </section>
 
-        <section className="rounded-lg border border-[#E5E3DA] bg-white p-4 space-y-3">
-          <h3 className="text-lg font-medium text-[#2D3330]">Weights</h3>
+        <section className="rounded-lg border border-proofound-stone bg-white p-4 space-y-3">
+          <h3 className="text-lg font-medium text-foreground">Weights</h3>
           <div className="flex items-center justify-between text-sm">
-            <span className="font-medium text-[#2D3330]">Skills-first</span>
-            <span className="font-medium text-[#2D3330]">Mission-first</span>
+            <span className="font-medium text-foreground">Skills-first</span>
+            <span className="font-medium text-foreground">Mission-first</span>
           </div>
           <Slider
             value={[weightBias]}
@@ -208,21 +208,21 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
             step={1}
             aria-label="Mission vs skills weighting"
           />
-          <p className="text-xs text-[#6B6760]">
+          <p className="text-xs text-muted-foreground">
             Current emphasis:{' '}
             {weightBias < 40 ? 'Skills-first' : weightBias > 60 ? 'Mission-first' : 'Balanced'} ({' '}
             {weightBias}%)
           </p>
         </section>
 
-        <section className="rounded-lg border border-[#E5E3DA] bg-white p-4 space-y-4">
-          <h3 className="text-lg font-medium text-[#2D3330]">Work Preferences</h3>
+        <section className="rounded-lg border border-proofound-stone bg-white p-4 space-y-4">
+          <h3 className="text-lg font-medium text-foreground">Work Preferences</h3>
 
           <LocationInput value={location} onChange={setLocation} />
 
           <div>
             <Label>Hours per Week</Label>
-            <p className="mb-2 text-xs text-[#6B6760]">Desired range (minimum to maximum)</p>
+            <p className="mb-2 text-xs text-muted-foreground">Desired range (minimum to maximum)</p>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label htmlFor="hours-min" className="text-xs" style={{ color: '#6B6760' }}>

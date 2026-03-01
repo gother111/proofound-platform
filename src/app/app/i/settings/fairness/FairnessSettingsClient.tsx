@@ -52,7 +52,7 @@ export function FairnessSettingsClient() {
     return (
       <AppSurface>
         <div className="flex items-center justify-center">
-          <div className="text-[#6B6760]">Loading fairness settings...</div>
+          <div className="text-muted-foreground">Loading fairness settings...</div>
         </div>
       </AppSurface>
     );
@@ -62,8 +62,8 @@ export function FairnessSettingsClient() {
     <AppSurface>
       <div className="mx-auto max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-semibold text-[#2D3330] mb-2">Fairness & Diversity</h1>
-          <p className="text-[#6B6760]">
+          <h1 className="text-3xl font-semibold text-foreground mb-2">Fairness & Diversity</h1>
+          <p className="text-muted-foreground">
             Help promote fair hiring practices by opting into demographic analytics
           </p>
         </div>

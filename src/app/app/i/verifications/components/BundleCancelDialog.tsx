@@ -216,7 +216,7 @@ export function BundleCancelDialog({
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="rounded-lg border bg-[#F7F6F1] p-3 text-sm">
+            <div className="rounded-lg border bg-japandi-bg p-3 text-sm">
               <p>
                 <span className="font-medium">Verifier:</span> {bundleRequest.verifier_email}
               </p>
@@ -238,7 +238,7 @@ export function BundleCancelDialog({
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className="font-medium text-sm text-[#2D3330] truncate">
+                        <p className="font-medium text-sm text-foreground truncate">
                           {item.display_label}
                         </p>
                         <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
@@ -278,7 +278,7 @@ export function BundleCancelDialog({
             type="button"
             onClick={() => void handleCancelSelected()}
             disabled={saving || selectedPendingIds.length === 0 || !hasPendingItems}
-            className="bg-[#C76B4A] text-white hover:bg-[#8B4A36]"
+            className="bg-proofound-terracotta text-white hover:bg-[#8B4A36]"
           >
             {saving ? (
               <>

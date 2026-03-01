@@ -95,7 +95,7 @@ export function DashboardFilters({ filters, onFilterChange }: DashboardFiltersPr
                 ${
                   filters.l1Domains.includes(option.id)
                     ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-background hover:bg-muted border-input text-[#2D3330] dark:text-[#E8DCC4]'
+                    : 'bg-background hover:bg-muted border-input text-foreground dark:text-[#E8DCC4]'
                 }
               `}
               title={option.fullName}
@@ -119,7 +119,7 @@ export function DashboardFilters({ filters, onFilterChange }: DashboardFiltersPr
                 ${
                   filters.status === option.value
                     ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-background hover:bg-muted border-input text-[#2D3330] dark:text-[#E8DCC4]'
+                    : 'bg-background hover:bg-muted border-input text-foreground dark:text-[#E8DCC4]'
                 }
               `}
             >
@@ -142,7 +142,7 @@ export function DashboardFilters({ filters, onFilterChange }: DashboardFiltersPr
                 ${
                   filters.recency === option.value
                     ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-background hover:bg-muted border-input text-[#2D3330] dark:text-[#E8DCC4]'
+                    : 'bg-background hover:bg-muted border-input text-foreground dark:text-[#E8DCC4]'
                 }
               `}
             >

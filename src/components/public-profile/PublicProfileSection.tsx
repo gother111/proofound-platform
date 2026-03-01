@@ -20,7 +20,7 @@ export function PublicProfileSection({
   return (
     <Card variant="bento" className={cn('overflow-hidden', className)}>
       <header className="flex items-center justify-between gap-3 border-b border-[#ECEAE3]/50 px-3 py-2.5 sm:px-4">
-        <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B6760]">
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
           {title}
         </h2>
         {right}

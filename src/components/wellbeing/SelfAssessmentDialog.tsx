@@ -233,7 +233,7 @@ export function SelfAssessmentDialog({
               <h3 className="font-semibold text-lg">Recommended Next Steps</h3>
               <div className="space-y-2">
                 <div className="flex items-start gap-2">
-                  <div className="w-6 h-6 rounded-full bg-[#1C4D3A] text-white flex items-center justify-center text-sm flex-shrink-0">
+                  <div className="w-6 h-6 rounded-full bg-proofound-forest text-white flex items-center justify-center text-sm flex-shrink-0">
                     1
                   </div>
                   <p className="text-sm">
@@ -241,7 +241,7 @@ export function SelfAssessmentDialog({
                   </p>
                 </div>
                 <div className="flex items-start gap-2">
-                  <div className="w-6 h-6 rounded-full bg-[#1C4D3A] text-white flex items-center justify-center text-sm flex-shrink-0">
+                  <div className="w-6 h-6 rounded-full bg-proofound-forest text-white flex items-center justify-center text-sm flex-shrink-0">
                     2
                   </div>
                   <p className="text-sm">
@@ -250,7 +250,7 @@ export function SelfAssessmentDialog({
                 </div>
                 {severity.level !== 'Low Strain' && (
                   <div className="flex items-start gap-2">
-                    <div className="w-6 h-6 rounded-full bg-[#1C4D3A] text-white flex items-center justify-center text-sm flex-shrink-0">
+                    <div className="w-6 h-6 rounded-full bg-proofound-forest text-white flex items-center justify-center text-sm flex-shrink-0">
                       3
                     </div>
                     <p className="text-sm">
@@ -263,7 +263,7 @@ export function SelfAssessmentDialog({
           </div>
 
           <DialogFooter>
-            <Button onClick={handleClose} className="bg-[#1C4D3A] text-white">
+            <Button onClick={handleClose} className="bg-proofound-forest text-white">
               Done
             </Button>
           </DialogFooter>
@@ -294,13 +294,13 @@ export function SelfAssessmentDialog({
           {/* Questions */}
           <div className="space-y-6">
             {questions.map((question, index) => (
-              <Card key={question.id} className="border-[#E8E6DD] dark:border-border">
+              <Card key={question.id} className="border-proofound-stone dark:border-border">
                 <CardContent className="pt-6">
                   <div className="mb-4">
                     <Badge variant="outline" className="mb-2">
                       Question {index + 1} of {questions.length}
                     </Badge>
-                    <p className="text-[#2D3330] dark:text-foreground font-medium">
+                    <p className="text-foreground dark:text-foreground font-medium">
                       {question.text}
                     </p>
                   </div>
@@ -313,7 +313,7 @@ export function SelfAssessmentDialog({
                       {RESPONSE_OPTIONS.map((option) => (
                         <div
                           key={option.value}
-                          className="flex items-center space-x-2 p-3 rounded-lg border border-[#E8E6DD] dark:border-border hover:bg-[#F7F6F1] dark:hover:bg-background/50 cursor-pointer"
+                          className="flex items-center space-x-2 p-3 rounded-lg border border-proofound-stone dark:border-border hover:bg-japandi-bg dark:hover:bg-background/50 cursor-pointer"
                         >
                           <RadioGroupItem
                             value={option.value.toString()}
@@ -325,7 +325,7 @@ export function SelfAssessmentDialog({
                           >
                             {option.label}
                           </Label>
-                          <span className="text-sm text-[#6B6760] dark:text-muted-foreground">
+                          <span className="text-sm text-muted-foreground dark:text-muted-foreground">
                             {option.value} {option.value === 1 ? 'point' : 'points'}
                           </span>
                         </div>
@@ -338,7 +338,7 @@ export function SelfAssessmentDialog({
           </div>
 
           {/* Progress */}
-          <div className="flex items-center gap-2 text-sm text-[#6B6760] dark:text-muted-foreground">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground dark:text-muted-foreground">
             <TrendingUp className="w-4 h-4" />
             <span>
               {Object.keys(responses).length} of {questions.length} questions answered
@@ -353,7 +353,7 @@ export function SelfAssessmentDialog({
           <Button
             onClick={handleSubmit}
             disabled={!allQuestionsAnswered || isSubmitting}
-            className="bg-[#1C4D3A] text-white"
+            className="bg-proofound-forest text-white"
           >
             {isSubmitting ? 'Submitting...' : 'Save Check-in'}
           </Button>

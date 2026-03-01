@@ -169,7 +169,7 @@ function ZenHubContent() {
     return (
       <AppSurface>
         <div className="mx-auto max-w-4xl">
-          <h1 className="mb-6 font-serif text-3xl text-[#2D3330] dark:text-[#E8E6DD]">Zen Hub</h1>
+          <h1 className="mb-6 font-serif text-3xl text-foreground dark:text-[#E8E6DD]">Zen Hub</h1>
           <PrivacyBanner onOptIn={handleOptIn} />
         </div>
       </AppSurface>
@@ -182,10 +182,10 @@ function ZenHubContent() {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="font-serif text-3xl font-medium text-[#2D3330] dark:text-[#E8E6DD]">
+            <h1 className="font-serif text-3xl font-medium text-foreground dark:text-[#E8E6DD]">
               Zen Hub
             </h1>
-            <p className="text-[#6B6760] dark:text-[#C9C2B8]">
+            <p className="text-muted-foreground dark:text-[#C9C2B8]">
               Your private center for calm and clarity.
             </p>
           </div>
@@ -204,7 +204,7 @@ function ZenHubContent() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <TabsList className="bg-[#EEF1EA] dark:bg-[#3F473B] p-1">
+          <TabsList className="bg-proofound-forest/5 dark:bg-[#3F473B] p-1">
             <TabsTrigger
               value="checkin"
               className="data-[state=active]:bg-white dark:data-[state=active]:bg-[#2F2823]"
@@ -246,19 +246,19 @@ function ZenHubContent() {
           {/* CHECK-IN TAB */}
           <TabsContent value="checkin" className="space-y-8 animate-in fade-in duration-500">
             {milestoneSuggestion && (
-              <Card className="p-4 border-[#E8E6DD] bg-white/70 dark:bg-[#2F2823]/70">
+              <Card className="p-4 border-proofound-stone bg-white/70 dark:bg-[#2F2823]/70">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-[#2D3330] dark:text-[#E8E6DD]">
+                    <p className="text-sm font-semibold text-foreground dark:text-[#E8E6DD]">
                       Recent update detected
                     </p>
-                    <p className="text-sm text-[#6B6760] dark:text-[#C9C2B8]">
+                    <p className="text-sm text-muted-foreground dark:text-[#C9C2B8]">
                       Log a quick check-in after your recent {milestoneSuggestion}.
                     </p>
                   </div>
                   <Button
                     onClick={() => handleOpenCheckIn(milestoneSuggestion)}
-                    className="bg-[#1C4D3A] text-white"
+                    className="bg-proofound-forest text-white"
                   >
                     Log check-in
                   </Button>
@@ -270,14 +270,14 @@ function ZenHubContent() {
 
             <div className="grid gap-8 md:grid-cols-2">
               <div className="space-y-4">
-                <h3 className="font-serif text-xl text-[#2D3330] dark:text-[#E8E6DD]">
+                <h3 className="font-serif text-xl text-foreground dark:text-[#E8E6DD]">
                   Quick Reset
                 </h3>
                 <GuidedBreathing />
               </div>
 
               <div className="space-y-4">
-                <h3 className="font-serif text-xl text-[#2D3330] dark:text-[#E8E6DD]">
+                <h3 className="font-serif text-xl text-foreground dark:text-[#E8E6DD]">
                   Recommended for You
                 </h3>
                 <div className="space-y-4">
@@ -308,7 +308,9 @@ function ZenHubContent() {
                   onClick={() => setActiveFilter(filter)}
                   size="sm"
                   className={
-                    activeFilter === filter ? 'bg-[#1C4D3A] text-white' : 'border-[#E8E6DD]'
+                    activeFilter === filter
+                      ? 'bg-proofound-forest text-white'
+                      : 'border-proofound-stone'
                   }
                 >
                   {filter}
@@ -326,33 +328,33 @@ function ZenHubContent() {
               ))}
             </div>
 
-            <div className="pt-8 border-t border-[#E8E6DD] dark:border-[#3C332C]">
-              <h3 className="font-serif text-xl mb-4 text-[#2D3330] dark:text-[#E8E6DD] flex items-center gap-2">
+            <div className="pt-8 border-t border-proofound-stone dark:border-[#3C332C]">
+              <h3 className="font-serif text-xl mb-4 text-foreground dark:text-[#E8E6DD] flex items-center gap-2">
                 <MapPin className="h-5 w-5" /> Local Gatherings
               </h3>
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {localGatherings.map((gathering) => (
                   <Card
                     key={gathering.id}
-                    className="p-4 bg-white/50 dark:bg-[#2F2823]/50 border border-[#E8E6DD] dark:border-[#3C332C]"
+                    className="p-4 bg-white/50 dark:bg-[#2F2823]/50 border border-proofound-stone dark:border-[#3C332C]"
                   >
                     <div className="text-xs font-bold uppercase tracking-wider text-[#7A9278] mb-1">
                       {gathering.location}
                     </div>
-                    <h4 className="font-medium text-[#2D3330] dark:text-[#E8E6DD]">
+                    <h4 className="font-medium text-foreground dark:text-[#E8E6DD]">
                       {gathering.title}
                     </h4>
-                    <p className="text-sm text-[#6B6760] dark:text-[#C9C2B8] mt-1">
+                    <p className="text-sm text-muted-foreground dark:text-[#C9C2B8] mt-1">
                       {gathering.when}
                     </p>
                     <div className="mt-4 flex justify-between items-center">
-                      <span className="text-xs text-[#6B6760]">
+                      <span className="text-xs text-muted-foreground">
                         {gathering.spotsRemaining} spots left
                       </span>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-[#1C4D3A] hover:text-[#1C4D3A] hover:bg-[#EEF1EA]"
+                        className="text-proofound-forest hover:text-proofound-forest hover:bg-proofound-forest/5"
                       >
                         RSVP
                       </Button>
@@ -360,22 +362,22 @@ function ZenHubContent() {
                   </Card>
                 ))}
               </div>
-              <p className="text-xs text-center mt-4 text-[#6B6760] dark:text-[#C9C2B8]">
+              <p className="text-xs text-center mt-4 text-muted-foreground dark:text-[#C9C2B8]">
                 <Info className="h-3 w-3 inline mr-1" />
                 {locationConsentCopy.prompt} {locationConsentCopy.clearAction} ·{' '}
                 {locationConsentCopy.fallback}
               </p>
             </div>
 
-            <div className="pt-8 border-t border-[#E8E6DD] dark:border-[#3C332C]">
-              <h3 className="font-serif text-xl mb-4 text-[#2D3330] dark:text-[#E8E6DD] flex items-center gap-2">
+            <div className="pt-8 border-t border-proofound-stone dark:border-[#3C332C]">
+              <h3 className="font-serif text-xl mb-4 text-foreground dark:text-[#E8E6DD] flex items-center gap-2">
                 External Resources
               </h3>
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {externalResources.map((resource) => (
                   <Card
                     key={resource.id}
-                    className="p-4 bg-white/50 dark:bg-[#2F2823]/50 border border-[#E8E6DD] dark:border-[#3C332C]"
+                    className="p-4 bg-white/50 dark:bg-[#2F2823]/50 border border-proofound-stone dark:border-[#3C332C]"
                   >
                     <div className="flex items-center justify-between">
                       <div className="text-xs font-bold uppercase tracking-wider text-[#7A9278] mb-1">
@@ -385,10 +387,10 @@ function ZenHubContent() {
                         {resource.cost}
                       </Badge>
                     </div>
-                    <h4 className="font-medium text-[#2D3330] dark:text-[#E8E6DD]">
+                    <h4 className="font-medium text-foreground dark:text-[#E8E6DD]">
                       {resource.title}
                     </h4>
-                    <p className="text-sm text-[#6B6760] dark:text-[#C9C2B8] mt-2">
+                    <p className="text-sm text-muted-foreground dark:text-[#C9C2B8] mt-2">
                       {resource.description}
                     </p>
                     {resource.safetyNote && (
@@ -400,7 +402,7 @@ function ZenHubContent() {
                       asChild
                       variant="ghost"
                       size="sm"
-                      className="mt-3 text-[#1C4D3A] hover:text-[#1C4D3A] hover:bg-[#EEF1EA]"
+                      className="mt-3 text-proofound-forest hover:text-proofound-forest hover:bg-proofound-forest/5"
                     >
                       <a href={resource.url} target="_blank" rel="noreferrer">
                         Open external link
@@ -415,12 +417,12 @@ function ZenHubContent() {
           {/* JOURNAL TAB */}
           <TabsContent value="journal" className="space-y-6 animate-in fade-in duration-500">
             <div className="flex justify-between items-center">
-              <h3 className="font-serif text-xl text-[#2D3330] dark:text-[#E8E6DD]">
+              <h3 className="font-serif text-xl text-foreground dark:text-[#E8E6DD]">
                 Your Reflections
               </h3>
               <Button
                 onClick={() => setShowReflectionDialog(true)}
-                className="bg-[#1C4D3A] text-white"
+                className="bg-proofound-forest text-white"
               >
                 New Entry
               </Button>
@@ -431,7 +433,9 @@ function ZenHubContent() {
           {/* ASSESSMENTS TAB */}
           <TabsContent value="assessments" className="space-y-6 animate-in fade-in duration-500">
             <div className="space-y-2">
-              <h3 className="font-serif text-xl text-[#2D3330] dark:text-[#E8E6DD]">Assessments</h3>
+              <h3 className="font-serif text-xl text-foreground dark:text-[#E8E6DD]">
+                Assessments
+              </h3>
               <p className="text-sm text-muted-foreground">
                 Quick, non-diagnostic check-ins to spot trends. Results stay private to you.
               </p>
@@ -440,14 +444,14 @@ function ZenHubContent() {
               {assessments.map((assessment) => (
                 <Card
                   key={assessment.id}
-                  className="p-4 bg-white/70 dark:bg-[#2F2823]/70 border border-[#E8E6DD] dark:border-[#3C332C]"
+                  className="p-4 bg-white/70 dark:bg-[#2F2823]/70 border border-proofound-stone dark:border-[#3C332C]"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <h4 className="font-medium text-[#2D3330] dark:text-[#E8E6DD]">
+                      <h4 className="font-medium text-foreground dark:text-[#E8E6DD]">
                         {assessment.name}
                       </h4>
-                      <p className="text-xs text-[#6B6760] dark:text-[#C9C2B8]">
+                      <p className="text-xs text-muted-foreground dark:text-[#C9C2B8]">
                         {assessment.duration}
                       </p>
                     </div>
@@ -456,7 +460,7 @@ function ZenHubContent() {
                     </Badge>
                   </div>
                   <p className="mt-2 text-sm text-muted-foreground">{assessment.resultScale}</p>
-                  <p className="mt-2 text-xs text-[#6B6760] dark:text-[#C9C2B8]">
+                  <p className="mt-2 text-xs text-muted-foreground dark:text-[#C9C2B8]">
                     {assessment.disclaimer}
                   </p>
                   <Button

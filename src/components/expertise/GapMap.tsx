@@ -188,17 +188,17 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white/90 backdrop-blur-sm p-3 rounded-xl border border-[#E8E6DD] shadow-sm">
-          <p className="text-xs font-semibold text-[#2D3330] mb-2">{data.subject}</p>
+        <div className="bg-white/90 backdrop-blur-sm p-3 rounded-xl border border-proofound-stone shadow-sm">
+          <p className="text-xs font-semibold text-foreground mb-2">{data.subject}</p>
           <div className="flex items-center gap-2 text-xs mb-1">
-            <div className="w-2 h-2 rounded-full bg-[#1C4D3A]" />
-            <span className="text-[#6B6760] font-medium">Currently:</span>
-            <span className="text-[#2D3330] font-bold">L{data.Current}</span>
+            <div className="w-2 h-2 rounded-full bg-proofound-forest" />
+            <span className="text-muted-foreground font-medium">Currently:</span>
+            <span className="text-foreground font-bold">L{data.Current}</span>
           </div>
           <div className="flex items-center gap-2 text-xs">
-            <div className="w-2 h-2 rounded-full bg-[#C76B4A]" />
-            <span className="text-[#6B6760] font-medium">Target:</span>
-            <span className="text-[#2D3330] font-bold">L{data.Target}</span>
+            <div className="w-2 h-2 rounded-full bg-proofound-terracotta" />
+            <span className="text-muted-foreground font-medium">Target:</span>
+            <span className="text-foreground font-bold">L{data.Target}</span>
           </div>
         </div>
       );

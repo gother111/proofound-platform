@@ -13,7 +13,7 @@ function themeWrapper(theme: PublicSnippetViewModel['theme']): string {
   if (theme === 'dark') {
     return 'bg-[#1E2421]';
   }
-  return 'bg-[#F7F6F1]';
+  return 'bg-japandi-bg';
 }
 
 export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetViewProps) {
@@ -21,8 +21,8 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
     return (
       <PublicProfileShell compact={compact} maxWidthClassName={compact ? 'max-w-2xl' : 'max-w-4xl'}>
         <PublicProfileSection title="Public profile status">
-          <p className="text-sm font-semibold text-[#2D3330]">Profile is currently hidden</p>
-          <p className="mt-1 text-sm text-[#6B6760]">
+          <p className="text-sm font-semibold text-foreground">Profile is currently hidden</p>
+          <p className="mt-1 text-sm text-muted-foreground">
             The owner enabled privacy mode and this public snapshot is unavailable right now.
           </p>
         </PublicProfileSection>
@@ -50,13 +50,13 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-semibold text-[#2D3330]">{viewModel.title}</h1>
-                <span className="rounded-full border border-[#D9D5CC] bg-[#F7F6F1] px-2.5 py-1 text-xs capitalize text-[#2D3330]">
+                <h1 className="text-2xl font-semibold text-foreground">{viewModel.title}</h1>
+                <span className="rounded-full border border-[#D9D5CC] bg-japandi-bg px-2.5 py-1 text-xs capitalize text-foreground">
                   {viewModel.profileType}
                 </span>
               </div>
               {viewModel.subtitle ? (
-                <p className="text-sm text-[#6B6760]">{viewModel.subtitle}</p>
+                <p className="text-sm text-muted-foreground">{viewModel.subtitle}</p>
               ) : null}
             </div>
             {viewModel.avatarImage ? (
@@ -67,11 +67,11 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
                 height={64}
                 sizes="64px"
                 unoptimized
-                className="h-16 w-16 rounded-xl border border-[#E8E6DD] object-cover"
+                className="h-16 w-16 rounded-xl border border-proofound-stone object-cover"
               />
             ) : null}
           </div>
-          <div className="flex flex-wrap items-center gap-3 text-xs text-[#6B6760]">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
             {viewModel.location ? (
               <span className="inline-flex items-center gap-1">
                 <MapPin className="h-3.5 w-3.5" />
@@ -83,7 +83,7 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
                 href={viewModel.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 hover:text-[#1C4D3A]"
+                className="inline-flex items-center gap-1 hover:text-proofound-forest"
               >
                 <Globe className="h-3.5 w-3.5" />
                 Website
@@ -103,10 +103,10 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
     >
       {!viewModel.hasVisibleFields ? (
         <PublicProfileSection title="Public visibility">
-          <p className="text-sm font-medium text-[#2D3330]">
+          <p className="text-sm font-medium text-foreground">
             Nothing is publicly visible in this shared profile yet.
           </p>
-          <p className="mt-1 text-sm text-[#6B6760]">
+          <p className="mt-1 text-sm text-muted-foreground">
             The owner can enable more sections from profile sharing settings.
           </p>
         </PublicProfileSection>
@@ -114,7 +114,7 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
         <div className="space-y-4">
           {viewModel.about ? (
             <PublicProfileSection title="Profile narrative">
-              <p className="whitespace-pre-line text-sm leading-6 text-[#2D3330]">
+              <p className="whitespace-pre-line text-sm leading-6 text-foreground">
                 {viewModel.about}
               </p>
             </PublicProfileSection>
@@ -125,17 +125,17 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
               {skills.length > 0 ? (
                 <PublicProfileSection
                   title="Skills snapshot"
-                  right={<Sparkles className="h-4 w-4 text-[#6B6760]" />}
+                  right={<Sparkles className="h-4 w-4 text-muted-foreground" />}
                 >
                   <div className="space-y-2">
                     {skills.map((skill) => (
                       <div
                         key={skill.id}
-                        className="flex items-center justify-between text-sm text-[#2D3330]"
+                        className="flex items-center justify-between text-sm text-foreground"
                       >
                         <span>{skill.name}</span>
                         {typeof skill.level === 'number' ? (
-                          <span className="rounded-full border border-[#D9D5CC] bg-[#F7F6F1] px-2 py-0.5 text-xs">
+                          <span className="rounded-full border border-[#D9D5CC] bg-japandi-bg px-2 py-0.5 text-xs">
                             L{skill.level}
                           </span>
                         ) : null}
@@ -148,17 +148,17 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
               {experiences.length > 0 ? (
                 <PublicProfileSection
                   title="Experience"
-                  right={<Briefcase className="h-4 w-4 text-[#6B6760]" />}
+                  right={<Briefcase className="h-4 w-4 text-muted-foreground" />}
                 >
                   <div className="space-y-2.5">
                     {experiences.map((entry) => (
                       <div key={entry.id} className="text-sm">
-                        <p className="font-medium text-[#2D3330]">{entry.title}</p>
+                        <p className="font-medium text-foreground">{entry.title}</p>
                         {entry.orgDescription ? (
-                          <p className="text-[#6B6760]">{entry.orgDescription}</p>
+                          <p className="text-muted-foreground">{entry.orgDescription}</p>
                         ) : null}
                         {entry.duration ? (
-                          <p className="text-xs text-[#6B6760]">{entry.duration}</p>
+                          <p className="text-xs text-muted-foreground">{entry.duration}</p>
                         ) : null}
                       </div>
                     ))}
@@ -169,15 +169,15 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
               {education.length > 0 ? (
                 <PublicProfileSection
                   title="Education"
-                  right={<GraduationCap className="h-4 w-4 text-[#6B6760]" />}
+                  right={<GraduationCap className="h-4 w-4 text-muted-foreground" />}
                 >
                   <div className="space-y-2.5">
                     {education.map((entry) => (
                       <div key={entry.id} className="text-sm">
-                        <p className="font-medium text-[#2D3330]">{entry.degree}</p>
-                        <p className="text-[#6B6760]">{entry.institution}</p>
+                        <p className="font-medium text-foreground">{entry.degree}</p>
+                        <p className="text-muted-foreground">{entry.institution}</p>
                         {entry.duration ? (
-                          <p className="text-xs text-[#6B6760]">{entry.duration}</p>
+                          <p className="text-xs text-muted-foreground">{entry.duration}</p>
                         ) : null}
                       </div>
                     ))}
@@ -192,12 +192,14 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
               <div className="space-y-3">
                 {values.length > 0 ? (
                   <div>
-                    <p className="mb-1 text-xs uppercase tracking-wide text-[#6B6760]">Values</p>
+                    <p className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">
+                      Values
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       {values.map((value) => (
                         <span
                           key={value}
-                          className="rounded-full border border-[#D9D5CC] bg-[#F7F6F1] px-2.5 py-1 text-xs text-[#2D3330]"
+                          className="rounded-full border border-[#D9D5CC] bg-japandi-bg px-2.5 py-1 text-xs text-foreground"
                         >
                           {value}
                         </span>
@@ -207,12 +209,14 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
                 ) : null}
                 {causes.length > 0 ? (
                   <div>
-                    <p className="mb-1 text-xs uppercase tracking-wide text-[#6B6760]">Causes</p>
+                    <p className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">
+                      Causes
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       {causes.map((cause) => (
                         <span
                           key={cause}
-                          className="rounded-full border border-[#D9D5CC] bg-[#F7F6F1] px-2.5 py-1 text-xs text-[#2D3330]"
+                          className="rounded-full border border-[#D9D5CC] bg-japandi-bg px-2.5 py-1 text-xs text-foreground"
                         >
                           {cause}
                         </span>
@@ -222,12 +226,12 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
                 ) : null}
                 {culture.length > 0 ? (
                   <div>
-                    <p className="mb-1 text-xs uppercase tracking-wide text-[#6B6760]">
+                    <p className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">
                       Work culture
                     </p>
                     <div className="space-y-1">
                       {culture.map((item) => (
-                        <p key={item} className="text-sm capitalize text-[#2D3330]">
+                        <p key={item} className="text-sm capitalize text-foreground">
                           {item}
                         </p>
                       ))}
@@ -241,32 +245,32 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
           {impactEntries.length > 0 ? (
             <PublicProfileSection
               title="Impact"
-              right={<Target className="h-4 w-4 text-[#6B6760]" />}
+              right={<Target className="h-4 w-4 text-muted-foreground" />}
             >
               <div className="space-y-3">
                 {impactEntries.map((entry) => (
                   <div
                     key={entry.id}
-                    className="space-y-1.5 border-b border-[#E8E6DD] pb-3 last:border-b-0 last:pb-0"
+                    className="space-y-1.5 border-b border-proofound-stone pb-3 last:border-b-0 last:pb-0"
                   >
                     <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                      <p className="text-sm font-medium text-[#2D3330]">{entry.title}</p>
+                      <p className="text-sm font-medium text-foreground">{entry.title}</p>
                       {entry.timeframe ? (
-                        <p className="text-xs text-[#6B6760]">{entry.timeframe}</p>
+                        <p className="text-xs text-muted-foreground">{entry.timeframe}</p>
                       ) : null}
                     </div>
                     {entry.description ? (
-                      <p className="text-sm text-[#2D3330]">{entry.description}</p>
+                      <p className="text-sm text-foreground">{entry.description}</p>
                     ) : null}
                     {entry.metrics.length > 0 ? (
                       <div className="grid gap-2 sm:grid-cols-3">
                         {entry.metrics.map((metric) => (
                           <div
                             key={`${entry.id}-${metric.name}`}
-                            className="rounded-md border border-[#E8E6DD] bg-white px-2.5 py-2"
+                            className="rounded-md border border-proofound-stone bg-white px-2.5 py-2"
                           >
-                            <p className="text-xs text-[#6B6760]">{metric.name}</p>
-                            <p className="text-sm font-medium text-[#2D3330]">
+                            <p className="text-xs text-muted-foreground">{metric.name}</p>
+                            <p className="text-sm font-medium text-foreground">
                               {metric.value}
                               {metric.unit ? ` ${metric.unit}` : ''}
                             </p>

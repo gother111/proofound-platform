@@ -249,7 +249,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F7F6F1] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-japandi-bg flex items-center justify-center p-6">
         <p className="text-sm text-slate-600">Loading invitation...</p>
       </div>
     );
@@ -257,7 +257,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
 
   if (error && !invite) {
     return (
-      <div className="min-h-screen bg-[#F7F6F1] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-japandi-bg flex items-center justify-center p-6">
         <Card className="max-w-xl w-full">
           <CardHeader>
             <CardTitle>Invitation unavailable</CardTitle>
@@ -293,7 +293,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
     : `${organization.displayName} invited ${invite.maskedEmail} to submit a Proof Card.`;
 
   return (
-    <div className="min-h-screen bg-[#F7F6F1] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-japandi-bg flex items-center justify-center p-6">
       <Card className="max-w-2xl w-full">
         <CardHeader className="space-y-2">
           <div className="flex items-center gap-2">

@@ -76,10 +76,12 @@ export function FairnessNoteCard({ orgSlug }: FairnessNoteCardProps) {
       <div className="flex items-start justify-between mb-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <BarChart3 className="w-5 h-5 text-[#6B6760]" />
-            <h3 className="text-lg font-semibold text-[#2D3330]">Fairness Gap Analysis</h3>
+            <BarChart3 className="w-5 h-5 text-muted-foreground" />
+            <h3 className="text-lg font-semibold text-foreground">Fairness Gap Analysis</h3>
           </div>
-          <p className="text-sm text-[#6B6760]">Monitoring hiring equity across demographics</p>
+          <p className="text-sm text-muted-foreground">
+            Monitoring hiring equity across demographics
+          </p>
         </div>
 
         <Button
@@ -95,19 +97,21 @@ export function FairnessNoteCard({ orgSlug }: FairnessNoteCardProps) {
       </div>
 
       {isLoading ? (
-        <div className="py-8 flex items-center justify-center text-sm text-[#6B6760]">
+        <div className="py-8 flex items-center justify-center text-sm text-muted-foreground">
           Analyzing fairness data...
         </div>
       ) : error ? (
         <div className="py-8 flex flex-col items-center justify-center">
-          <AlertCircle className="w-8 h-8 text-[#C76B4A] mb-2" />
-          <p className="text-sm text-[#6B6760]">{error}</p>
+          <AlertCircle className="w-8 h-8 text-proofound-terracotta mb-2" />
+          <p className="text-sm text-muted-foreground">{error}</p>
         </div>
       ) : !data?.hasData ? (
         <div className="py-8 flex flex-col items-center justify-center">
-          <BarChart3 className="w-8 h-8 text-[#6B6760] opacity-50 mb-2" />
-          <p className="text-sm text-[#6B6760] font-medium">Insufficient Data</p>
-          <p className="text-xs text-[#6B6760] mt-1">Analysis requires more hiring activity</p>
+          <BarChart3 className="w-8 h-8 text-muted-foreground opacity-50 mb-2" />
+          <p className="text-sm text-muted-foreground font-medium">Insufficient Data</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Analysis requires more hiring activity
+          </p>
         </div>
       ) : (
         <>
@@ -116,35 +120,38 @@ export function FairnessNoteCard({ orgSlug }: FairnessNoteCardProps) {
             className={`flex items-start gap-3 p-4 rounded-lg mb-4 ${
               data.hasSignificantGaps
                 ? 'bg-[#FFF4E6] border border-[#C76B4A]/20'
-                : 'bg-[#E8F5E1] border border-[#1C4D3A]/20'
+                : 'bg-proofound-success-tint border border-proofound-forest/20'
             }`}
           >
             {data.hasSignificantGaps ? (
-              <AlertCircle className="w-5 h-5 text-[#C76B4A] flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-5 h-5 text-proofound-terracotta flex-shrink-0 mt-0.5" />
             ) : (
-              <CheckCircle2 className="w-5 h-5 text-[#1C4D3A] flex-shrink-0 mt-0.5" />
+              <CheckCircle2 className="w-5 h-5 text-proofound-forest flex-shrink-0 mt-0.5" />
             )}
             <div className="flex-1">
               <p
                 className={`text-sm font-semibold mb-1 ${
-                  data.hasSignificantGaps ? 'text-[#C76B4A]' : 'text-[#1C4D3A]'
+                  data.hasSignificantGaps ? 'text-proofound-terracotta' : 'text-proofound-forest'
                 }`}
               >
                 {data.hasSignificantGaps ? 'Review Recommended' : 'All Clear'}
               </p>
-              <p className="text-sm text-[#2D3330]">{data.message}</p>
+              <p className="text-sm text-foreground">{data.message}</p>
             </div>
           </div>
 
           {/* Findings summary */}
           {data.findings && data.findings.length > 0 && (
             <div className="mb-4">
-              <h4 className="text-sm font-semibold text-[#2D3330] mb-2">Key Findings</h4>
+              <h4 className="text-sm font-semibold text-foreground mb-2">Key Findings</h4>
               <div className="space-y-2">
                 {data.findings.slice(0, 3).map((finding: any, index: number) => (
-                  <div key={index} className="p-3 bg-[#F7F6F1] rounded-lg border border-[#E8E6DD]">
+                  <div
+                    key={index}
+                    className="p-3 bg-japandi-bg rounded-lg border border-proofound-stone"
+                  >
                     {finding.type === 'insufficient_data' ? (
-                      <p className="text-sm text-[#6B6760]">{finding.message}</p>
+                      <p className="text-sm text-muted-foreground">{finding.message}</p>
                     ) : (
                       <>
                         <div className="flex items-center gap-2 mb-1">
@@ -152,23 +159,23 @@ export function FairnessNoteCard({ orgSlug }: FairnessNoteCardProps) {
                             variant="secondary"
                             className={
                               finding.type === 'negative_gap'
-                                ? 'bg-[#C76B4A]/10 text-[#C76B4A]'
-                                : 'bg-[#1C4D3A]/10 text-[#1C4D3A]'
+                                ? 'bg-proofound-terracotta/10 text-proofound-terracotta'
+                                : 'bg-proofound-forest/10 text-proofound-forest'
                             }
                           >
                             {finding.type === 'negative_gap' ? 'Gap Detected' : 'Positive Trend'}
                           </Badge>
-                          <span className="text-xs text-[#6B6760]">
+                          <span className="text-xs text-muted-foreground">
                             Sample: {finding.sampleSize}
                           </span>
                         </div>
-                        <p className="text-sm text-[#2D3330]">
+                        <p className="text-sm text-foreground">
                           <strong>
                             {finding.cohort.role || 'Unknown'} / {finding.cohort.seniority || 'All'}{' '}
                             / {finding.cohort.geography || 'Global'}
                           </strong>
                         </p>
-                        <p className="text-xs text-[#6B6760] mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           Median TTSC: {finding.medianTTSC}d (
                           {finding.deviationPercent > 0 ? '+' : ''}
                           {finding.deviationPercent}% vs global)
@@ -184,17 +191,17 @@ export function FairnessNoteCard({ orgSlug }: FairnessNoteCardProps) {
           {/* Recommendations */}
           {data.recommendations && data.recommendations.length > 0 && (
             <div className="mb-4">
-              <h4 className="text-sm font-semibold text-[#2D3330] mb-2">Recommended Actions</h4>
+              <h4 className="text-sm font-semibold text-foreground mb-2">Recommended Actions</h4>
               <ul className="space-y-2">
                 {data.recommendations.slice(0, 2).map((rec: any, index: number) => (
                   <li
                     key={index}
-                    className="flex items-start gap-2 text-sm text-[#2D3330] p-2 bg-[#FFF4E6] rounded"
+                    className="flex items-start gap-2 text-sm text-foreground p-2 bg-[#FFF4E6] rounded"
                   >
-                    <span className="text-[#C76B4A] font-bold">•</span>
+                    <span className="text-proofound-terracotta font-bold">•</span>
                     <div className="flex-1">
                       <p className="font-medium">{rec.action}</p>
-                      <p className="text-xs text-[#6B6760] mt-0.5">{rec.details}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{rec.details}</p>
                     </div>
                   </li>
                 ))}
@@ -203,11 +210,14 @@ export function FairnessNoteCard({ orgSlug }: FairnessNoteCardProps) {
           )}
 
           {/* Metadata footer */}
-          <div className="flex items-center justify-between text-xs text-[#6B6760] border-t border-[#E8E6DD] pt-3">
+          <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-proofound-stone pt-3">
             <div className="flex items-center gap-4">
               <span>{data.cohortCount || data.cohortsAnalyzed} cohorts analyzed</span>
               {data.isRealtime && (
-                <Badge variant="secondary" className="bg-[#E8F5E1] text-[#1C4D3A]">
+                <Badge
+                  variant="secondary"
+                  className="bg-proofound-success-tint text-proofound-forest"
+                >
                   Real-time
                 </Badge>
               )}

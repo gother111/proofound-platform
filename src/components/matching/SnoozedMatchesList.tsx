@@ -137,14 +137,14 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
     return (
       <Card variant="bento" className="p-12 text-center">
         <Clock className="h-16 w-16 mx-auto mb-4 text-[#A8B69D]" />
-        <h3 className="text-lg font-semibold text-[#2D3330] mb-2">No Snoozed Matches</h3>
-        <p className="text-sm text-[#6B6760] mb-6">
+        <h3 className="text-lg font-semibold text-foreground mb-2">No Snoozed Matches</h3>
+        <p className="text-sm text-muted-foreground mb-6">
           Matches you snooze will appear here until they're unsnoozed or the snooze period ends.
         </p>
         <Button
           variant="outline"
           onClick={() => (window.location.href = '/app/i/matching')}
-          className="border-[#1C4D3A] text-[#1C4D3A]"
+          className="border-proofound-forest text-proofound-forest"
         >
           View All Matches
         </Button>
@@ -179,21 +179,21 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
                 )}
 
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-[#2D3330] mb-1">
+                  <h3 className="text-lg font-semibold text-foreground mb-1">
                     {match.assignment.title}
                   </h3>
-                  <p className="text-sm text-[#6B6760] mb-2">{match.organization.name}</p>
+                  <p className="text-sm text-muted-foreground mb-2">{match.organization.name}</p>
 
                   {/* Match Score */}
                   <div className="flex items-center gap-3 mb-3">
                     <Badge
                       variant="secondary"
-                      className="bg-[#1C4D3A]/10 text-[#1C4D3A] border-[#1C4D3A]/20"
+                      className="bg-proofound-forest/10 text-proofound-forest border-proofound-forest/20"
                     >
                       {Math.round(match.matchScore * 100)}% Match
                     </Badge>
 
-                    <div className="flex items-center gap-1.5 text-xs text-[#6B6760]">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Clock className="w-3.5 h-3.5" />
                       {formatSnoozeEnd(match.snoozedUntil)}
                     </div>
@@ -201,7 +201,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
 
                   {/* Description */}
                   {match.assignment.description && (
-                    <p className="text-sm text-[#6B6760] line-clamp-2">
+                    <p className="text-sm text-muted-foreground line-clamp-2">
                       {match.assignment.description}
                     </p>
                   )}
@@ -215,7 +215,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
                 size="sm"
                 onClick={() => handleUnsnooze(match.id)}
                 disabled={unsnoozing === match.id}
-                className="bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
+                className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
               >
                 <Bell className="w-3.5 h-3.5 mr-1.5" />
                 {unsnoozing === match.id ? 'Unsnoozing...' : 'Unsnooze'}
@@ -224,7 +224,7 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
                 size="sm"
                 variant="outline"
                 onClick={() => (window.location.href = `/app/i/matching/${match.assignment.id}`)}
-                className="border-[#D8D2C8] text-[#6B6760]"
+                className="border-border text-muted-foreground"
               >
                 View Details
               </Button>
@@ -232,8 +232,8 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
           </div>
 
           {/* Snooze End Date */}
-          <div className="mt-4 pt-4 border-t border-[#E8E6DD]">
-            <div className="flex items-center gap-2 text-xs text-[#6B6760]">
+          <div className="mt-4 pt-4 border-t border-proofound-stone">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Calendar className="w-3.5 h-3.5" />
               <span>
                 Will automatically reappear on{' '}

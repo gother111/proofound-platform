@@ -257,7 +257,7 @@ export function ProfileActivationCard({ useMockData, initialData }: ProfileActiv
       <CardHeader className="flex flex-row items-start justify-between space-y-0">
         <div className="min-w-0 space-y-1">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Target className="h-5 w-5 text-[#1C4D3A]" />
+            <Target className="h-5 w-5 text-proofound-forest" />
             Get match-ready in 4 quick steps
           </CardTitle>
           <p className="text-sm text-muted-foreground">
@@ -279,7 +279,7 @@ export function ProfileActivationCard({ useMockData, initialData }: ProfileActiv
         </div>
 
         <div className="space-y-2">
-          <p className="text-xs font-medium text-[#2D3330]">Tier progress</p>
+          <p className="text-xs font-medium text-foreground">Tier progress</p>
           {stats?.featureFlags?.activationTiering !== false ? (
             <div className="space-y-1">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -318,15 +318,15 @@ export function ProfileActivationCard({ useMockData, initialData }: ProfileActiv
         </div>
 
         <div className="space-y-2">
-          <p className="text-xs font-medium text-[#2D3330]">Next steps</p>
+          <p className="text-xs font-medium text-foreground">Next steps</p>
           {nextStepActions.map((action) => (
             <Link
               key={action.id}
               href={action.actionUrl}
-              className="flex items-center justify-between rounded-lg border border-[#E8E6DD] px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1] text-sm"
+              className="flex items-center justify-between rounded-lg border border-proofound-stone px-3 py-2 hover:border-proofound-forest hover:bg-japandi-bg text-sm"
             >
-              <span className="text-[#2D3330]">{action.title}</span>
-              <ArrowRight className="h-4 w-4 text-[#9B9891]" />
+              <span className="text-foreground">{action.title}</span>
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
             </Link>
           ))}
           {loading && (
@@ -342,7 +342,11 @@ export function ProfileActivationCard({ useMockData, initialData }: ProfileActiv
           Private by default; shared only when you opt in.
         </div>
 
-        <Button className="w-full bg-[#1C4D3A] hover:bg-[#1A4634]" size="sm" asChild>
+        <Button
+          className="w-full bg-proofound-forest hover:bg-proofound-forest/90"
+          size="sm"
+          asChild
+        >
           <Link href="/app/i/profile">Open profile</Link>
         </Button>
       </CardContent>

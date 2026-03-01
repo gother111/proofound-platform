@@ -39,7 +39,7 @@ export const riskStates = [
   {
     id: 'calm',
     label: 'Calm & Steady',
-    tone: 'bg-[#1C4D3A] text-white',
+    tone: 'bg-proofound-forest text-white',
     description: 'Clear to focus · light check-ins only',
   },
   {
@@ -279,7 +279,8 @@ export const reflectionPrompts: ReflectionPrompt[] = [
   // UI: show after milestones like rejection/interview/offer; store privately.
   {
     trigger: 'rejection',
-    prompt: 'What felt outside your control, and what one thing could you try differently next time?',
+    prompt:
+      'What felt outside your control, and what one thing could you try differently next time?',
   },
   {
     trigger: 'rejection',

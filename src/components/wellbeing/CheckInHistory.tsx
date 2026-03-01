@@ -196,7 +196,7 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
     return (
       <Card className="border-proofound-stone dark:border-border rounded-2xl">
         <CardContent className="py-8">
-          <p className="text-center text-[#6B6760] dark:text-muted-foreground">
+          <p className="text-center text-muted-foreground dark:text-muted-foreground">
             Loading check-in history...
           </p>
         </CardContent>
@@ -221,7 +221,7 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
             size="sm"
             onClick={handleExportCSV}
             disabled={isExporting || filteredCheckIns.length === 0}
-            className="border-[#1C4D3A] text-[#1C4D3A] hover:bg-[#1C4D3A]/5"
+            className="border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5"
           >
             <Download className="w-4 h-4 mr-2" />
             {isExporting ? 'Exporting...' : 'Export CSV'}
@@ -231,10 +231,10 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
 
       <CardContent className="space-y-4">
         {/* Filters */}
-        <div className="flex flex-wrap gap-3 items-center p-4 bg-[#F7F6F1] dark:bg-background/50 rounded-lg border border-[#E8E6DD] dark:border-border">
+        <div className="flex flex-wrap gap-3 items-center p-4 bg-japandi-bg dark:bg-background/50 rounded-lg border border-proofound-stone dark:border-border">
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-[#6B6760]" />
-            <span className="text-sm font-medium text-[#2D3330] dark:text-foreground">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-foreground dark:text-foreground">
               Filters:
             </span>
           </div>
@@ -242,7 +242,7 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
           {/* Date Range Filter */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="border-[#E8E6DD]">
+              <Button variant="outline" size="sm" className="border-proofound-stone">
                 <CalendarIcon className="w-4 h-4 mr-2" />
                 {dateRange.from ? (
                   dateRange.to ? (
@@ -275,7 +275,11 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
                 variant={stressFilter === level ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setStressFilter(level)}
-                className={stressFilter === level ? 'bg-[#1C4D3A] text-white' : 'border-[#E8E6DD]'}
+                className={
+                  stressFilter === level
+                    ? 'bg-proofound-forest text-white'
+                    : 'border-proofound-stone'
+                }
               >
                 {level.charAt(0).toUpperCase() + level.slice(1)}
               </Button>
@@ -291,18 +295,20 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
 
         {/* Stats Summary */}
         {filteredCheckIns.length > 0 && (
-          <div className="grid grid-cols-3 gap-4 p-4 bg-white dark:bg-background border border-[#E8E6DD] dark:border-border rounded-lg">
+          <div className="grid grid-cols-3 gap-4 p-4 bg-white dark:bg-background border border-proofound-stone dark:border-border rounded-lg">
             <div className="text-center">
-              <p className="text-sm text-[#6B6760] dark:text-muted-foreground mb-1">
+              <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-1">
                 Total Check-Ins
               </p>
-              <p className="text-2xl font-semibold text-[#2D3330] dark:text-foreground">
+              <p className="text-2xl font-semibold text-foreground dark:text-foreground">
                 {filteredCheckIns.length}
               </p>
             </div>
-            <div className="text-center border-x border-[#E8E6DD] dark:border-border">
-              <p className="text-sm text-[#6B6760] dark:text-muted-foreground mb-1">Avg Stress</p>
-              <p className="text-2xl font-semibold text-[#2D3330] dark:text-foreground">
+            <div className="text-center border-x border-proofound-stone dark:border-border">
+              <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-1">
+                Avg Stress
+              </p>
+              <p className="text-2xl font-semibold text-foreground dark:text-foreground">
                 {(
                   filteredCheckIns.reduce((sum, c) => sum + c.stressLevel, 0) /
                   filteredCheckIns.length
@@ -310,8 +316,10 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
               </p>
             </div>
             <div className="text-center">
-              <p className="text-sm text-[#6B6760] dark:text-muted-foreground mb-1">Avg Control</p>
-              <p className="text-2xl font-semibold text-[#2D3330] dark:text-foreground">
+              <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-1">
+                Avg Control
+              </p>
+              <p className="text-2xl font-semibold text-foreground dark:text-foreground">
                 {(
                   filteredCheckIns.reduce((sum, c) => sum + c.controlLevel, 0) /
                   filteredCheckIns.length
@@ -325,7 +333,7 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
         <div className="space-y-3">
           {filteredCheckIns.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-[#6B6760] dark:text-muted-foreground">
+              <p className="text-muted-foreground dark:text-muted-foreground">
                 {checkIns.length === 0
                   ? 'No check-ins yet. Complete your first check-in to start tracking.'
                   : 'No check-ins match your filters. Try adjusting your search.'}
@@ -337,14 +345,14 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
               return (
                 <div
                   key={checkIn.id}
-                  className="p-4 bg-white dark:bg-background border border-[#E8E6DD] dark:border-border rounded-lg hover:shadow-sm transition-shadow"
+                  className="p-4 bg-white dark:bg-background border border-proofound-stone dark:border-border rounded-lg hover:shadow-sm transition-shadow"
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <p className="text-sm font-medium text-[#2D3330] dark:text-foreground">
+                      <p className="text-sm font-medium text-foreground dark:text-foreground">
                         {format(new Date(checkIn.createdAt), 'MMMM d, yyyy')}
                       </p>
-                      <p className="text-xs text-[#6B6760] dark:text-muted-foreground">
+                      <p className="text-xs text-muted-foreground dark:text-muted-foreground">
                         {format(new Date(checkIn.createdAt), 'h:mm a')}
                       </p>
                     </div>
@@ -356,34 +364,34 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
 
                   <div className="flex gap-4 mb-2">
                     <div>
-                      <p className="text-xs text-[#6B6760] dark:text-muted-foreground">
+                      <p className="text-xs text-muted-foreground dark:text-muted-foreground">
                         Stress Level
                       </p>
                       <div className="flex items-center gap-2">
-                        <div className="w-24 h-2 bg-[#E8E6DD] dark:bg-border rounded-full overflow-hidden">
+                        <div className="w-24 h-2 bg-proofound-stone dark:bg-border rounded-full overflow-hidden">
                           <div
                             className="h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500"
                             style={{ width: `${(checkIn.stressLevel / 5) * 100}%` }}
                           />
                         </div>
-                        <span className="text-sm font-medium text-[#2D3330] dark:text-foreground">
+                        <span className="text-sm font-medium text-foreground dark:text-foreground">
                           {checkIn.stressLevel}/5
                         </span>
                       </div>
                     </div>
 
                     <div>
-                      <p className="text-xs text-[#6B6760] dark:text-muted-foreground">
+                      <p className="text-xs text-muted-foreground dark:text-muted-foreground">
                         Control Level
                       </p>
                       <div className="flex items-center gap-2">
-                        <div className="w-24 h-2 bg-[#E8E6DD] dark:bg-border rounded-full overflow-hidden">
+                        <div className="w-24 h-2 bg-proofound-stone dark:bg-border rounded-full overflow-hidden">
                           <div
                             className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"
                             style={{ width: `${(checkIn.controlLevel / 5) * 100}%` }}
                           />
                         </div>
-                        <span className="text-sm font-medium text-[#2D3330] dark:text-foreground">
+                        <span className="text-sm font-medium text-foreground dark:text-foreground">
                           {checkIn.controlLevel}/5
                         </span>
                       </div>
@@ -391,8 +399,10 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
                   </div>
 
                   {checkIn.notes && (
-                    <div className="mt-3 pt-3 border-t border-[#E8E6DD] dark:border-border">
-                      <p className="text-sm text-[#2D3330] dark:text-foreground">{checkIn.notes}</p>
+                    <div className="mt-3 pt-3 border-t border-proofound-stone dark:border-border">
+                      <p className="text-sm text-foreground dark:text-foreground">
+                        {checkIn.notes}
+                      </p>
                     </div>
                   )}
                 </div>

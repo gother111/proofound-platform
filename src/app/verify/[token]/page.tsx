@@ -250,8 +250,8 @@ export default function VerifySkillPage() {
       <div className="min-h-screen bg-gradient-to-br from-[#F7F6F1] to-[#E5E3DA] flex items-center justify-center p-4">
         <Card className="w-full max-w-lg">
           <CardContent className="pt-12 pb-12 text-center">
-            <Loader2 className="h-12 w-12 animate-spin text-[#1C4D3A] mx-auto mb-4" />
-            <p className="text-[#6B6760]">Loading verification request...</p>
+            <Loader2 className="h-12 w-12 animate-spin text-proofound-forest mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading verification request...</p>
           </CardContent>
         </Card>
       </div>
@@ -263,9 +263,9 @@ export default function VerifySkillPage() {
       <div className="min-h-screen bg-gradient-to-br from-[#F7F6F1] to-[#E5E3DA] flex items-center justify-center p-4">
         <Card className="w-full max-w-lg">
           <CardContent className="pt-12 pb-12 text-center">
-            <AlertCircle className="h-12 w-12 text-[#C76B4A] mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-[#2D3330] mb-2">Unable to Load Request</h2>
-            <p className="text-[#6B6760] mb-6">{error}</p>
+            <AlertCircle className="h-12 w-12 text-proofound-terracotta mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-foreground mb-2">Unable to Load Request</h2>
+            <p className="text-muted-foreground mb-6">{error}</p>
             <Button variant="outline" onClick={() => router.push('/')}>
               Go to Homepage
             </Button>
@@ -327,8 +327,8 @@ export default function VerifySkillPage() {
         <Card className="w-full max-w-lg">
           <CardContent className={`pt-12 pb-12 text-center ${config.bgColor} rounded-lg`}>
             <Icon className={`h-16 w-16 ${config.color} mx-auto mb-4`} />
-            <h2 className="text-xl font-semibold text-[#2D3330] mb-2">{config.title}</h2>
-            <p className="text-[#6B6760]">{config.message}</p>
+            <h2 className="text-xl font-semibold text-foreground mb-2">{config.title}</h2>
+            <p className="text-muted-foreground">{config.message}</p>
           </CardContent>
         </Card>
       </div>
@@ -343,17 +343,17 @@ export default function VerifySkillPage() {
             {submittedAction === 'accepted' ? (
               <>
                 <CheckCircle2 className="h-16 w-16 text-green-600 mx-auto mb-4" />
-                <h2 className="text-2xl font-semibold text-[#2D3330] mb-2">Thank You!</h2>
-                <p className="text-[#6B6760] mb-4">
+                <h2 className="text-2xl font-semibold text-foreground mb-2">Thank You!</h2>
+                <p className="text-muted-foreground mb-4">
                   You've successfully submitted verification for{' '}
                   <strong>{data.requester_name}</strong>.
                 </p>
               </>
             ) : (
               <>
-                <XCircle className="h-16 w-16 text-[#C76B4A] mx-auto mb-4" />
-                <h2 className="text-2xl font-semibold text-[#2D3330] mb-2">Response Recorded</h2>
-                <p className="text-[#6B6760]">
+                <XCircle className="h-16 w-16 text-proofound-terracotta mx-auto mb-4" />
+                <h2 className="text-2xl font-semibold text-foreground mb-2">Response Recorded</h2>
+                <p className="text-muted-foreground">
                   You've declined this verification request. The requester has been notified.
                 </p>
               </>
@@ -384,13 +384,13 @@ export default function VerifySkillPage() {
         </CardHeader>
 
         <CardContent className="pt-6 space-y-6">
-          <div className="flex items-center gap-4 p-4 bg-[#F7F6F1] rounded-lg">
-            <div className="h-12 w-12 rounded-full bg-[#1C4D3A] text-white flex items-center justify-center text-lg font-semibold">
+          <div className="flex items-center gap-4 p-4 bg-japandi-bg rounded-lg">
+            <div className="h-12 w-12 rounded-full bg-proofound-forest text-white flex items-center justify-center text-lg font-semibold">
               {data.requester_name?.[0]?.toUpperCase() || '?'}
             </div>
             <div>
-              <p className="font-semibold text-[#2D3330]">{data.requester_name}</p>
-              <p className="text-sm text-[#6B6760]">is requesting your verification</p>
+              <p className="font-semibold text-foreground">{data.requester_name}</p>
+              <p className="text-sm text-muted-foreground">is requesting your verification</p>
             </div>
           </div>
 
@@ -403,23 +403,27 @@ export default function VerifySkillPage() {
               )}
 
               <div className="space-y-2">
-                <p className="text-sm font-medium text-[#6B6760]">Why you&apos;re receiving this</p>
-                <div className="p-3 bg-[#F7F6F1] rounded-lg text-sm text-[#2D3330]">
+                <p className="text-sm font-medium text-muted-foreground">
+                  Why you&apos;re receiving this
+                </p>
+                <div className="p-3 bg-japandi-bg rounded-lg text-sm text-foreground">
                   {data.why_you_are_receiving_this ||
                     `${data.requester_name} asked you to verify this impact story.`}
                 </div>
               </div>
 
-              <p className="text-sm font-medium text-[#6B6760]">Impact story</p>
-              <div className="p-4 border-l-4 border-[#1C4D3A] bg-white rounded-r-lg">
-                <p className="font-semibold text-lg text-[#1C4D3A]">{data.story_title}</p>
+              <p className="text-sm font-medium text-muted-foreground">Impact story</p>
+              <div className="p-4 border-l-4 border-proofound-forest bg-white rounded-r-lg">
+                <p className="font-semibold text-lg text-proofound-forest">{data.story_title}</p>
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm font-medium text-[#6B6760]">Claims to confirm</p>
+                <p className="text-sm font-medium text-muted-foreground">Claims to confirm</p>
                 <div className="space-y-2 rounded-lg border p-3 bg-white">
                   {getImpactClaims(data).length === 0 ? (
-                    <p className="text-sm text-[#6B6760]">No claims available on this request.</p>
+                    <p className="text-sm text-muted-foreground">
+                      No claims available on this request.
+                    </p>
                   ) : (
                     getImpactClaims(data).map((claim) => (
                       <div key={claim.id} className="flex items-start gap-2">
@@ -451,41 +455,41 @@ export default function VerifySkillPage() {
               )}
 
               <div className="space-y-3">
-                <p className="text-sm font-medium text-[#6B6760]">Skill to verify</p>
-                <div className="p-4 border-l-4 border-[#1C4D3A] bg-white rounded-r-lg">
-                  <p className="font-semibold text-lg text-[#1C4D3A]">{data.skill_name}</p>
+                <p className="text-sm font-medium text-muted-foreground">Skill to verify</p>
+                <div className="p-4 border-l-4 border-proofound-forest bg-white rounded-r-lg">
+                  <p className="font-semibold text-lg text-proofound-forest">{data.skill_name}</p>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm font-medium text-[#6B6760]">Your Relationship</p>
-                <Badge variant="outline" className="text-[#1C4D3A] border-[#1C4D3A]">
+                <p className="text-sm font-medium text-muted-foreground">Your Relationship</p>
+                <Badge variant="outline" className="text-proofound-forest border-proofound-forest">
                   {getSourceLabel(data.verifier_source || 'peer')}
                 </Badge>
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm font-medium text-[#6B6760]">Supporting proof(s)</p>
+                <p className="text-sm font-medium text-muted-foreground">Supporting proof(s)</p>
                 {Array.isArray(data.proofs) && data.proofs.length > 0 ? (
                   <div className="space-y-2 rounded-lg border p-3 bg-white">
                     {data.proofs.map((proof) => (
                       <div
                         key={proof.id}
-                        className="rounded-md border border-[#E8E6DD] px-3 py-2 space-y-2"
+                        className="rounded-md border border-proofound-stone px-3 py-2 space-y-2"
                       >
                         <div className="flex items-start justify-between gap-3">
-                          <p className="text-sm font-medium text-[#2D3330]">{proof.title}</p>
+                          <p className="text-sm font-medium text-foreground">{proof.title}</p>
                           <Badge variant="outline" className="text-xs whitespace-nowrap">
                             {skillProofTypeLabel(proof.proof_type)}
                           </Badge>
                         </div>
 
                         {proof.description && (
-                          <p className="text-xs text-[#6B6760]">{proof.description}</p>
+                          <p className="text-xs text-muted-foreground">{proof.description}</p>
                         )}
 
                         {(proof.issued_date || proof.expires_date) && (
-                          <p className="text-xs text-[#6B6760]">
+                          <p className="text-xs text-muted-foreground">
                             {proof.issued_date
                               ? `Issued: ${new Date(proof.issued_date).toLocaleDateString()}`
                               : ''}
@@ -501,7 +505,7 @@ export default function VerifySkillPage() {
                           <img
                             src={proof.url}
                             alt={`Proof image: ${proof.title}`}
-                            className="max-h-40 rounded border border-[#E8E6DD]"
+                            className="max-h-40 rounded border border-proofound-stone"
                           />
                         )}
 
@@ -510,7 +514,7 @@ export default function VerifySkillPage() {
                             href={proof.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-[#1C4D3A] hover:underline"
+                            className="text-xs text-proofound-forest hover:underline"
                           >
                             Open proof
                           </a>
@@ -519,8 +523,8 @@ export default function VerifySkillPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="rounded-lg border border-dashed border-[#E8E6DD] bg-white p-3">
-                    <p className="text-sm text-[#6B6760]">
+                  <div className="rounded-lg border border-dashed border-proofound-stone bg-white p-3">
+                    <p className="text-sm text-muted-foreground">
                       No supporting proofs were attached to this request.
                     </p>
                   </div>
@@ -531,10 +535,10 @@ export default function VerifySkillPage() {
 
           {data.message && (
             <div className="space-y-2">
-              <p className="text-sm font-medium text-[#6B6760]">
+              <p className="text-sm font-medium text-muted-foreground">
                 Message from {data.requester_name}
               </p>
-              <div className="p-3 bg-[#F7F6F1] rounded-lg italic text-[#2D3330]">
+              <div className="p-3 bg-japandi-bg rounded-lg italic text-foreground">
                 &ldquo;{data.message}&rdquo;
               </div>
             </div>
@@ -548,7 +552,7 @@ export default function VerifySkillPage() {
           )}
 
           <div className="space-y-2">
-            <label htmlFor="response-message" className="text-sm font-medium text-[#6B6760]">
+            <label htmlFor="response-message" className="text-sm font-medium text-muted-foreground">
               Add a note (optional)
             </label>
             <Textarea
@@ -564,11 +568,13 @@ export default function VerifySkillPage() {
           {error && <p className="text-sm text-red-600">{error}</p>}
 
           {authRequired && (
-            <div className="flex flex-col gap-2 rounded-lg border border-[#1C4D3A]/20 bg-[#F7F6F1] p-3">
-              <p className="text-sm text-[#2D3330]">Sign in with the verifier email to continue.</p>
+            <div className="flex flex-col gap-2 rounded-lg border border-proofound-forest/20 bg-japandi-bg p-3">
+              <p className="text-sm text-foreground">
+                Sign in with the verifier email to continue.
+              </p>
               <Button
                 variant="outline"
-                className="w-fit border-[#1C4D3A] text-[#1C4D3A]"
+                className="w-fit border-proofound-forest text-proofound-forest"
                 onClick={() => router.push(`/login?next=${encodeURIComponent(`/verify/${token}`)}`)}
               >
                 Sign In to Continue
@@ -576,7 +582,7 @@ export default function VerifySkillPage() {
             </div>
           )}
 
-          <p className="text-xs text-[#6B6760] text-center">
+          <p className="text-xs text-muted-foreground text-center">
             This request expires on {new Date(data.expires_at || '').toLocaleDateString()}
           </p>
         </CardContent>
@@ -584,7 +590,7 @@ export default function VerifySkillPage() {
         <CardFooter className="flex gap-3 border-t pt-6">
           <Button
             variant="outline"
-            className="flex-1 border-[#C76B4A] text-[#C76B4A] hover:bg-[#FFF0F0]"
+            className="flex-1 border-[#C76B4A] text-proofound-terracotta hover:bg-[#FFF0F0]"
             onClick={() => handleSubmit('decline')}
             disabled={submitting}
           >
@@ -596,7 +602,7 @@ export default function VerifySkillPage() {
             Decline
           </Button>
           <Button
-            className="flex-1 bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
+            className="flex-1 bg-proofound-forest text-white hover:bg-proofound-forest/90"
             onClick={() => handleSubmit('accept')}
             disabled={submitting}
           >

@@ -108,7 +108,7 @@ export function DemographicOptIn({ userId, initialData = {}, onSave }: Demograph
   };
 
   return (
-    <Card variant="bento" className="border-[#E8E6DD]">
+    <Card variant="bento" className="border-proofound-stone">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
@@ -159,13 +159,13 @@ export function DemographicOptIn({ userId, initialData = {}, onSave }: Demograph
         </div>
 
         {/* Opt-In Checkbox */}
-        <div className="flex items-start gap-3 p-4 rounded-lg border border-[#E8E6DD]">
+        <div className="flex items-start gap-3 p-4 rounded-lg border border-proofound-stone">
           <Checkbox id="opt-in" checked={optedIn} onCheckedChange={handleOptInChange} />
           <div className="flex-1">
-            <Label htmlFor="opt-in" className="text-sm font-medium cursor-pointer text-[#2D3330]">
+            <Label htmlFor="opt-in" className="text-sm font-medium cursor-pointer text-foreground">
               Yes, I want to contribute to fairness analytics
             </Label>
-            <p className="text-xs text-[#6B6760] mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               By opting in, you help organizations identify and reduce bias in their hiring
               processes. Your data is aggregated with others and cannot be traced back to you.
             </p>
@@ -174,15 +174,17 @@ export function DemographicOptIn({ userId, initialData = {}, onSave }: Demograph
 
         {/* Demographic Fields (only shown if opted in) */}
         {optedIn && (
-          <div className="space-y-4 p-4 bg-[#F7F6F1] rounded-lg">
-            <p className="text-sm font-medium text-[#2D3330]">Demographic Information (Optional)</p>
-            <p className="text-xs text-[#6B6760]">
+          <div className="space-y-4 p-4 bg-japandi-bg rounded-lg">
+            <p className="text-sm font-medium text-foreground">
+              Demographic Information (Optional)
+            </p>
+            <p className="text-xs text-muted-foreground">
               All fields are optional. You can skip any question.
             </p>
 
             {/* Gender */}
             <div className="space-y-2">
-              <Label htmlFor="gender" className="text-sm text-[#2D3330]">
+              <Label htmlFor="gender" className="text-sm text-foreground">
                 Gender
               </Label>
               <Select
@@ -207,7 +209,7 @@ export function DemographicOptIn({ userId, initialData = {}, onSave }: Demograph
 
             {/* Ethnicity */}
             <div className="space-y-2">
-              <Label htmlFor="ethnicity" className="text-sm text-[#2D3330]">
+              <Label htmlFor="ethnicity" className="text-sm text-foreground">
                 Ethnicity/Race
               </Label>
               <Select
@@ -232,7 +234,7 @@ export function DemographicOptIn({ userId, initialData = {}, onSave }: Demograph
 
             {/* Age Range */}
             <div className="space-y-2">
-              <Label htmlFor="ageRange" className="text-sm text-[#2D3330]">
+              <Label htmlFor="ageRange" className="text-sm text-foreground">
                 Age Range
               </Label>
               <Select
@@ -258,13 +260,13 @@ export function DemographicOptIn({ userId, initialData = {}, onSave }: Demograph
             {/* Disability Status */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Label htmlFor="disability" className="text-sm text-[#2D3330]">
+                <Label htmlFor="disability" className="text-sm text-foreground">
                   Disability Status
                 </Label>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button className="text-[#6B6760]">
+                      <button className="text-muted-foreground">
                         <Info className="h-3.5 w-3.5" />
                       </button>
                     </TooltipTrigger>
@@ -298,7 +300,7 @@ export function DemographicOptIn({ userId, initialData = {}, onSave }: Demograph
 
             {/* Veteran Status */}
             <div className="space-y-2">
-              <Label htmlFor="veteranStatus" className="text-sm text-[#2D3330]">
+              <Label htmlFor="veteranStatus" className="text-sm text-foreground">
                 Veteran Status
               </Label>
               <Select
@@ -324,21 +326,21 @@ export function DemographicOptIn({ userId, initialData = {}, onSave }: Demograph
         )}
 
         {/* Save Button */}
-        <div className="flex items-center justify-between pt-4 border-t border-[#E8E6DD]">
-          <p className="text-xs text-[#6B6760]">
+        <div className="flex items-center justify-between pt-4 border-t border-proofound-stone">
+          <p className="text-xs text-muted-foreground">
             {hasChanges ? 'You have unsaved changes' : 'All changes saved'}
           </p>
           <Button
             onClick={handleSave}
             disabled={!hasChanges || saving}
-            className="bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
+            className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
           >
             {saving ? 'Saving...' : 'Save Preferences'}
           </Button>
         </div>
 
         {/* Legal Notice */}
-        <div className="text-xs text-[#6B6760] pt-3 border-t border-[#E8E6DD]">
+        <div className="text-xs text-muted-foreground pt-3 border-t border-proofound-stone">
           <p>
             <strong>Legal Notice:</strong> This information is collected for statistical analysis
             only and is never used for hiring decisions. Organizations cannot see your individual

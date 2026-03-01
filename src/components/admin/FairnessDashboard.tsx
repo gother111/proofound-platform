@@ -139,7 +139,7 @@ export function FairnessDashboard() {
 
   if (isLoading) {
     return (
-      <div className="text-center py-8 text-[#6B6760] dark:text-muted-foreground">
+      <div className="text-center py-8 text-muted-foreground dark:text-muted-foreground">
         Loading fairness metrics...
       </div>
     );
@@ -149,9 +149,7 @@ export function FairnessDashboard() {
   const criticalIssues = metrics.filter((m) => m.status === 'critical').length;
   const warnings = metrics.filter((m) => m.status === 'warning').length;
   const healthyMetrics = metrics.filter((m) => m.status === 'good').length;
-  const overallScore = metrics.length > 0
-    ? (healthyMetrics / metrics.length) * 100
-    : 0;
+  const overallScore = metrics.length > 0 ? (healthyMetrics / metrics.length) * 100 : 0;
 
   return (
     <div className="space-y-6">
@@ -196,7 +194,12 @@ export function FairnessDashboard() {
           <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium">Overall Fairness Score</span>
-              <Badge variant="outline" className={getStatusColor(overallScore >= 80 ? 'good' : overallScore >= 60 ? 'warning' : 'critical')}>
+              <Badge
+                variant="outline"
+                className={getStatusColor(
+                  overallScore >= 80 ? 'good' : overallScore >= 60 ? 'warning' : 'critical'
+                )}
+              >
                 {overallScore.toFixed(0)}%
               </Badge>
             </div>
@@ -207,15 +210,21 @@ export function FairnessDashboard() {
           <div className="grid grid-cols-3 gap-4">
             <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-900">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-medium text-green-700 dark:text-green-300">Healthy</span>
+                <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                  Healthy
+                </span>
                 <CheckCircle2 className="w-4 h-4 text-green-600" />
               </div>
-              <p className="text-2xl font-bold text-green-900 dark:text-green-100">{healthyMetrics}</p>
+              <p className="text-2xl font-bold text-green-900 dark:text-green-100">
+                {healthyMetrics}
+              </p>
             </div>
 
             <div className="p-4 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg border border-yellow-200 dark:border-yellow-900">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-medium text-yellow-700 dark:text-yellow-300">Warnings</span>
+                <span className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
+                  Warnings
+                </span>
                 <AlertTriangle className="w-4 h-4 text-yellow-600" />
               </div>
               <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">{warnings}</p>
@@ -237,8 +246,11 @@ export function FairnessDashboard() {
         <Alert className="border-red-300 bg-red-50">
           <AlertTriangle className="h-4 w-4 text-red-600" />
           <AlertDescription>
-            <strong>{criticalIssues} critical fairness issue{criticalIssues !== 1 ? 's' : ''} detected!</strong>
-            {' '}Immediate action required to ensure equitable outcomes. Review the metrics below and implement recommended interventions.
+            <strong>
+              {criticalIssues} critical fairness issue{criticalIssues !== 1 ? 's' : ''} detected!
+            </strong>{' '}
+            Immediate action required to ensure equitable outcomes. Review the metrics below and
+            implement recommended interventions.
           </AlertDescription>
         </Alert>
       )}
@@ -273,12 +285,12 @@ export function FairnessDashboard() {
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <p className="font-medium text-[#2D3330] dark:text-foreground">
+                            <p className="font-medium text-foreground dark:text-foreground">
                               {metric.metric}
                             </p>
                             {getTrendIcon(metric.trend)}
                           </div>
-                          <p className="text-sm text-[#6B6760] dark:text-muted-foreground">
+                          <p className="text-sm text-muted-foreground dark:text-muted-foreground">
                             Current: {metric.value.toFixed(1)}% | Benchmark: {metric.benchmark}%
                           </p>
                         </div>
@@ -286,10 +298,7 @@ export function FairnessDashboard() {
                           {metric.status.toUpperCase()}
                         </Badge>
                       </div>
-                      <Progress
-                        value={(metric.value / metric.benchmark) * 100}
-                        className="h-2"
-                      />
+                      <Progress value={(metric.value / metric.benchmark) * 100} className="h-2" />
                     </div>
                   ))}
               </div>
@@ -304,8 +313,9 @@ export function FairnessDashboard() {
               <CardTitle>Hiring Funnel Conversion Rates</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-[#6B6760]">
-                Track conversion rates at each stage of the hiring process to identify potential bias points.
+              <p className="text-sm text-muted-foreground">
+                Track conversion rates at each stage of the hiring process to identify potential
+                bias points.
               </p>
             </CardContent>
           </Card>
@@ -320,7 +330,7 @@ export function FairnessDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-[#6B6760]">
+              <p className="text-sm text-muted-foreground">
                 Monitor pay equity across roles, experience levels, and demographic groups.
               </p>
             </CardContent>
@@ -336,7 +346,7 @@ export function FairnessDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-[#6B6760]">
+              <p className="text-sm text-muted-foreground">
                 Analyze match distribution across regions to ensure equitable access.
               </p>
             </CardContent>
@@ -358,18 +368,18 @@ export function FairnessDashboard() {
               {gapAnalyses.map((analysis, index) => (
                 <div
                   key={index}
-                  className="p-4 bg-[#F7F6F1] dark:bg-background/50 rounded-lg border border-[#E8E6DD] dark:border-border"
+                  className="p-4 bg-japandi-bg dark:bg-background/50 rounded-lg border border-proofound-stone dark:border-border"
                 >
                   <div className="flex items-start gap-3">
                     <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
                     <div className="flex-1">
-                      <p className="font-medium text-[#2D3330] dark:text-foreground mb-1">
+                      <p className="font-medium text-foreground dark:text-foreground mb-1">
                         {analysis.dimension}
                       </p>
-                      <p className="text-sm text-[#6B6760] dark:text-muted-foreground mb-2">
+                      <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-2">
                         Gap detected: {analysis.gap.toFixed(1)}% disparity
                       </p>
-                      <p className="text-sm text-[#2D3330] dark:text-foreground mb-2">
+                      <p className="text-sm text-foreground dark:text-foreground mb-2">
                         <strong>Affected groups:</strong> {analysis.affectedGroups.join(', ')}
                       </p>
                       <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded border border-blue-200 dark:border-blue-900">
@@ -389,14 +399,14 @@ export function FairnessDashboard() {
       {/* Compliance Note */}
       <Card className="border-proofound-stone dark:border-border rounded-2xl">
         <CardContent className="pt-6">
-          <div className="text-sm text-[#6B6760] dark:text-muted-foreground space-y-2">
+          <div className="text-sm text-muted-foreground dark:text-muted-foreground space-y-2">
             <p>
-              <strong>Privacy & Compliance:</strong> All demographic data is collected with explicit consent, 
-              stored securely, and used only for aggregate fairness analysis. Individual data is never 
-              shared or used for ranking.
+              <strong>Privacy & Compliance:</strong> All demographic data is collected with explicit
+              consent, stored securely, and used only for aggregate fairness analysis. Individual
+              data is never shared or used for ranking.
             </p>
             <p>
-              <strong>Methodology:</strong> Fairness metrics use industry-standard statistical tests 
+              <strong>Methodology:</strong> Fairness metrics use industry-standard statistical tests
               (chi-square, t-tests) with significance thresholds aligned to EEOC guidelines.
             </p>
           </div>
@@ -405,4 +415,3 @@ export function FairnessDashboard() {
     </div>
   );
 }
-

@@ -470,10 +470,10 @@ export function MatchingOrganizationView({
                       key={action.id}
                       type="button"
                       onClick={() => router.push(action.actionUrl)}
-                      className="rounded-lg border border-[#E8E6DD] bg-white px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
+                      className="rounded-lg border border-proofound-stone bg-white px-3 py-2 hover:border-proofound-forest hover:bg-japandi-bg"
                     >
-                      <p className="text-sm font-medium text-[#2D3330]">{action.title}</p>
-                      <p className="text-xs text-[#6B6760]">{action.description}</p>
+                      <p className="text-sm font-medium text-foreground">{action.title}</p>
+                      <p className="text-xs text-muted-foreground">{action.description}</p>
                     </button>
                   ))}
                 </div>
@@ -537,12 +537,12 @@ export function MatchingOrganizationView({
                 <Card key={testMatch.matchId} className="p-4 space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="text-sm font-medium text-[#2D3330]">
+                      <p className="text-sm font-medium text-foreground">
                         {testMatch.candidateDisplayName ||
                           testMatch.candidateHandle ||
                           'Test candidate'}
                       </p>
-                      <p className="text-xs text-[#6B6760]">
+                      <p className="text-xs text-muted-foreground">
                         Assignment: {testMatch.assignmentRole || 'Untitled'}
                       </p>
                     </div>

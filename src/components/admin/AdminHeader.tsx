@@ -121,7 +121,7 @@ export function AdminHeader({ adminEmail, adminRole, collapsed, setCollapsed }: 
           >
             <Avatar className="h-8 w-8 border">
               <AvatarImage alt={adminEmail || 'Admin'} />
-              <AvatarFallback className="bg-[#1C4D3A] text-white">
+              <AvatarFallback className="bg-proofound-forest text-white">
                 {(adminEmail || 'A').charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>

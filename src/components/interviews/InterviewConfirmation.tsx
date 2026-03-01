@@ -67,8 +67,8 @@ export function InterviewConfirmation({
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
           <CheckCircle className="w-8 h-8 text-green-600" />
         </div>
-        <h2 className="text-2xl font-bold text-[#2D3330] mb-2">Interview Scheduled!</h2>
-        <p className="text-[#6B6760]">
+        <h2 className="text-2xl font-bold text-foreground mb-2">Interview Scheduled!</h2>
+        <p className="text-muted-foreground">
           Your interview with {candidateName} has been successfully scheduled.
         </p>
       </div>
@@ -79,11 +79,11 @@ export function InterviewConfirmation({
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Date & Time */}
-          <div className="flex items-start gap-3 p-3 bg-[#F7F6F1] rounded-lg">
-            <Calendar className="w-5 h-5 text-[#1C4D3A] flex-shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 p-3 bg-japandi-bg rounded-lg">
+            <Calendar className="w-5 h-5 text-proofound-forest flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-[#2D3330]">Date & Time</p>
-              <p className="text-sm text-[#6B6760]">
+              <p className="text-sm font-medium text-foreground">Date & Time</p>
+              <p className="text-sm text-muted-foreground">
                 {scheduledDate.toLocaleDateString('en-US', {
                   weekday: 'long',
                   year: 'numeric',
@@ -91,7 +91,7 @@ export function InterviewConfirmation({
                   day: 'numeric',
                 })}
               </p>
-              <p className="text-sm text-[#6B6760]">
+              <p className="text-sm text-muted-foreground">
                 {scheduledDate.toLocaleTimeString('en-US', {
                   hour: '2-digit',
                   minute: '2-digit',
@@ -102,31 +102,31 @@ export function InterviewConfirmation({
           </div>
 
           {/* Duration */}
-          <div className="flex items-start gap-3 p-3 bg-[#F7F6F1] rounded-lg">
-            <Clock className="w-5 h-5 text-[#1C4D3A] flex-shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 p-3 bg-japandi-bg rounded-lg">
+            <Clock className="w-5 h-5 text-proofound-forest flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-[#2D3330]">Duration</p>
-              <p className="text-sm text-[#6B6760]">{interview.duration_minutes} minutes</p>
+              <p className="text-sm font-medium text-foreground">Duration</p>
+              <p className="text-sm text-muted-foreground">{interview.duration_minutes} minutes</p>
             </div>
           </div>
 
           {/* Platform */}
-          <div className="flex items-start gap-3 p-3 bg-[#F7F6F1] rounded-lg">
-            <Video className="w-5 h-5 text-[#1C4D3A] flex-shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 p-3 bg-japandi-bg rounded-lg">
+            <Video className="w-5 h-5 text-proofound-forest flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-[#2D3330]">Platform</p>
-              <p className="text-sm text-[#6B6760] capitalize">
+              <p className="text-sm font-medium text-foreground">Platform</p>
+              <p className="text-sm text-muted-foreground capitalize">
                 {interview.platform === 'google_meet' ? 'Google Meet' : 'Zoom'}
               </p>
             </div>
           </div>
 
           {/* Meeting Link */}
-          <div className="p-4 border-2 border-[#1C4D3A] rounded-lg bg-[#E8F5E1]">
+          <div className="p-4 border-2 border-proofound-forest rounded-lg bg-proofound-success-tint">
             <div className="flex items-start justify-between gap-3 mb-2">
               <div>
-                <p className="text-sm font-semibold text-[#1C4D3A] mb-1">Meeting Link</p>
-                <p className="text-xs text-[#6B6760] break-all">{interview.meeting_link}</p>
+                <p className="text-sm font-semibold text-proofound-forest mb-1">Meeting Link</p>
+                <p className="text-xs text-muted-foreground break-all">{interview.meeting_link}</p>
               </div>
             </div>
             <div className="flex gap-2">
@@ -147,7 +147,7 @@ export function InterviewConfirmation({
           </div>
 
           {/* Meeting ID */}
-          <div className="text-sm text-[#6B6760]">
+          <div className="text-sm text-muted-foreground">
             <p>
               Meeting ID: <span className="font-mono">{interview.meeting_id}</span>
             </p>
@@ -163,38 +163,38 @@ export function InterviewConfirmation({
         <CardContent>
           <div className="space-y-3">
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#1C4D3A] text-white flex items-center justify-center text-sm font-semibold">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-proofound-forest text-white flex items-center justify-center text-sm font-semibold">
                 1
               </div>
               <div>
-                <p className="text-sm font-medium text-[#2D3330]">
+                <p className="text-sm font-medium text-foreground">
                   Calendar invites have been sent
                 </p>
-                <p className="text-xs text-[#6B6760]">
+                <p className="text-xs text-muted-foreground">
                   Check your email for the calendar invite with meeting details
                 </p>
               </div>
             </div>
 
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#1C4D3A] text-white flex items-center justify-center text-sm font-semibold">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-proofound-forest text-white flex items-center justify-center text-sm font-semibold">
                 2
               </div>
               <div>
-                <p className="text-sm font-medium text-[#2D3330]">Prepare for the interview</p>
-                <p className="text-xs text-[#6B6760]">
+                <p className="text-sm font-medium text-foreground">Prepare for the interview</p>
+                <p className="text-xs text-muted-foreground">
                   Review the candidate's profile and prepare your questions
                 </p>
               </div>
             </div>
 
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#1C4D3A] text-white flex items-center justify-center text-sm font-semibold">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-proofound-forest text-white flex items-center justify-center text-sm font-semibold">
                 3
               </div>
               <div>
-                <p className="text-sm font-medium text-[#2D3330]">Join at the scheduled time</p>
-                <p className="text-xs text-[#6B6760]">
+                <p className="text-sm font-medium text-foreground">Join at the scheduled time</p>
+                <p className="text-xs text-muted-foreground">
                   Use the meeting link above or click the link in your calendar
                 </p>
               </div>
@@ -217,7 +217,7 @@ export function InterviewConfirmation({
           Download .ics
         </Button>
         {onClose && (
-          <Button onClick={onClose} className="bg-[#1C4D3A] text-white">
+          <Button onClick={onClose} className="bg-proofound-forest text-white">
             Done
           </Button>
         )}

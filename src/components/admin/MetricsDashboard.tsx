@@ -121,8 +121,8 @@ export function MetricsDashboard() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-[#1C4D3A]" />
-          <p className="text-[#6B6760]">Loading metrics...</p>
+          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-proofound-forest" />
+          <p className="text-muted-foreground">Loading metrics...</p>
         </div>
       </div>
     );
@@ -131,8 +131,8 @@ export function MetricsDashboard() {
   if (!metrics) {
     return (
       <div className="text-center py-12">
-        <AlertCircle className="w-12 h-12 mx-auto mb-4 text-[#C76B4A]" />
-        <p className="text-[#2D3330] font-medium">Failed to load metrics</p>
+        <AlertCircle className="w-12 h-12 mx-auto mb-4 text-proofound-terracotta" />
+        <p className="text-foreground font-medium">Failed to load metrics</p>
         <Button onClick={fetchMetrics} className="mt-4">
           Retry
         </Button>
@@ -145,8 +145,8 @@ export function MetricsDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-[#2D3330]">Platform Metrics</h2>
-          <p className="text-sm text-[#6B6760] mt-1">
+          <h2 className="text-2xl font-bold text-foreground">Platform Metrics</h2>
+          <p className="text-sm text-muted-foreground mt-1">
             Real-time performance metrics and KPIs
             {lastUpdated && ` • Last updated: ${lastUpdated.toLocaleTimeString()}`}
           </p>
@@ -216,7 +216,7 @@ export function MetricsDashboard() {
             <div className="flex items-start justify-between">
               <div>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Heart className="w-5 h-5 text-[#C76B4A]" />
+                  <Heart className="w-5 h-5 text-proofound-terracotta" />
                   PAC Lift
                 </CardTitle>
                 <CardDescription>Purpose-Alignment Contribution Impact</CardDescription>
@@ -232,32 +232,38 @@ export function MetricsDashboard() {
           <CardContent>
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <p className="text-sm text-[#6B6760] mb-1">With PAC</p>
-                <p className="text-2xl font-bold text-[#2D3330]">
+                <p className="text-sm text-muted-foreground mb-1">With PAC</p>
+                <p className="text-2xl font-bold text-foreground">
                   {metrics.pacLift.withPAC.toFixed(1)}%
                 </p>
-                <p className="text-xs text-[#6B6760]">n={metrics.pacLift.sampleSize.withPAC}</p>
+                <p className="text-xs text-muted-foreground">
+                  n={metrics.pacLift.sampleSize.withPAC}
+                </p>
               </div>
               <div>
-                <p className="text-sm text-[#6B6760] mb-1">Without PAC</p>
-                <p className="text-2xl font-bold text-[#2D3330]">
+                <p className="text-sm text-muted-foreground mb-1">Without PAC</p>
+                <p className="text-2xl font-bold text-foreground">
                   {metrics.pacLift.withoutPAC.toFixed(1)}%
                 </p>
-                <p className="text-xs text-[#6B6760]">n={metrics.pacLift.sampleSize.withoutPAC}</p>
+                <p className="text-xs text-muted-foreground">
+                  n={metrics.pacLift.sampleSize.withoutPAC}
+                </p>
               </div>
               <div>
-                <p className="text-sm text-[#6B6760] mb-1">Lift</p>
+                <p className="text-sm text-muted-foreground mb-1">Lift</p>
                 <div className="flex items-center gap-2">
-                  <p className="text-2xl font-bold text-[#1C4D3A]">
+                  <p className="text-2xl font-bold text-proofound-forest">
                     +{metrics.pacLift.lift.toFixed(1)}%
                   </p>
                   {metrics.pacLift.lift >= metrics.pacLift.targetLift ? (
                     <TrendingUp className="w-5 h-5 text-green-600" />
                   ) : (
-                    <TrendingDown className="w-5 h-5 text-[#C76B4A]" />
+                    <TrendingDown className="w-5 h-5 text-proofound-terracotta" />
                   )}
                 </div>
-                <p className="text-xs text-[#6B6760]">Target: ≥{metrics.pacLift.targetLift}%</p>
+                <p className="text-xs text-muted-foreground">
+                  Target: ≥{metrics.pacLift.targetLift}%
+                </p>
               </div>
             </div>
           </CardContent>
@@ -282,7 +288,7 @@ export function MetricsDashboard() {
           <div className="flex items-start justify-between">
             <div>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Heart className="w-5 h-5 text-[#C76B4A]" />
+                <Heart className="w-5 h-5 text-proofound-terracotta" />
                 Well-Being Delta
               </CardTitle>
               <CardDescription>Change in user well-being over time</CardDescription>
@@ -298,18 +304,20 @@ export function MetricsDashboard() {
         <CardContent>
           <div className="grid grid-cols-3 gap-6">
             <div>
-              <p className="text-sm text-[#6B6760] mb-2">Average Delta</p>
-              <p className="text-3xl font-bold text-[#2D3330]">
+              <p className="text-sm text-muted-foreground mb-2">Average Delta</p>
+              <p className="text-3xl font-bold text-foreground">
                 {metrics.wellBeingDelta.averageDelta >= 0 ? '+' : ''}
                 {metrics.wellBeingDelta.averageDelta.toFixed(2)}
               </p>
-              <p className="text-xs text-[#6B6760] mt-1">n={metrics.wellBeingDelta.sampleSize}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                n={metrics.wellBeingDelta.sampleSize}
+              </p>
             </div>
             <div>
-              <p className="text-sm text-[#6B6760] mb-2">Users Improved</p>
+              <p className="text-sm text-muted-foreground mb-2">Users Improved</p>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <p className="text-3xl font-bold text-[#1C4D3A]">
+                  <p className="text-3xl font-bold text-proofound-forest">
                     {metrics.wellBeingDelta.positiveChange.toFixed(0)}%
                   </p>
                   {metrics.wellBeingDelta.positiveChange >= metrics.wellBeingDelta.target ? (
@@ -322,9 +330,11 @@ export function MetricsDashboard() {
               </div>
             </div>
             <div>
-              <p className="text-sm text-[#6B6760] mb-2">Target</p>
-              <p className="text-3xl font-bold text-[#6B6760]">≥{metrics.wellBeingDelta.target}%</p>
-              <p className="text-xs text-[#6B6760] mt-1">of users show improvement</p>
+              <p className="text-sm text-muted-foreground mb-2">Target</p>
+              <p className="text-3xl font-bold text-muted-foreground">
+                ≥{metrics.wellBeingDelta.target}%
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">of users show improvement</p>
             </div>
           </div>
         </CardContent>
@@ -342,8 +352,8 @@ export function MetricsDashboard() {
               )}
             </div>
             <div>
-              <h3 className="font-semibold text-[#2D3330] mb-1">Platform Health Summary</h3>
-              <p className="text-sm text-[#6B6760]">
+              <h3 className="font-semibold text-foreground mb-1">Platform Health Summary</h3>
+              <p className="text-sm text-muted-foreground">
                 {Object.values(metrics).filter((m: any) => m.onTrack).length} of 6 key metrics on
                 track.{' '}
                 {Object.values(metrics).some((m: any) => !m.onTrack) &&
@@ -392,7 +402,9 @@ function MetricCard({
           variant={onTrack ? 'default' : 'destructive'}
           className={cn(
             'text-[10px] px-1.5 py-0 h-5 font-medium',
-            onTrack ? 'bg-green-100 text-green-700 hover:bg-green-100 border-green-200' : 'bg-red-100 text-red-700 hover:bg-red-100 border-red-200'
+            onTrack
+              ? 'bg-green-100 text-green-700 hover:bg-green-100 border-green-200'
+              : 'bg-red-100 text-red-700 hover:bg-red-100 border-red-200'
           )}
         >
           {onTrack ? 'On Track' : 'Off Track'}
@@ -402,19 +414,17 @@ function MetricCard({
         <div className="space-y-3">
           <div>
             <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-bold tracking-tight text-foreground">
-                {value}
-              </span>
+              <span className="text-2xl font-bold tracking-tight text-foreground">{value}</span>
               <span className="text-sm font-normal text-muted-foreground">{unit}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {subtitle}
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
           </div>
 
           <div className="pt-3 border-t border-border/50">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Target: ≤{target} {unit}</span>
+              <span className="text-muted-foreground">
+                Target: ≤{target} {unit}
+              </span>
               <span className="text-muted-foreground">n={sampleSize}</span>
             </div>
 

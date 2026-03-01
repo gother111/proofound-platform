@@ -86,14 +86,17 @@ export function FieldVisibilityControl({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Label htmlFor={`visibility-${fieldName}`} className="text-sm font-medium text-[#2D3330]">
+          <Label
+            htmlFor={`visibility-${fieldName}`}
+            className="text-sm font-medium text-foreground"
+          >
             {fieldLabel}
           </Label>
           {description && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Info className="h-4 w-4 text-[#9B9891] cursor-help" />
+                  <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs">
                   <p className="text-sm">{description}</p>
@@ -120,7 +123,7 @@ export function FieldVisibilityControl({
                     <OptionIcon className={`h-4 w-4 mt-0.5 ${option.color}`} />
                     <div className="space-y-0.5">
                       <div className="font-medium">{option.label}</div>
-                      <div className="text-xs text-[#6B6760]">{option.description}</div>
+                      <div className="text-xs text-muted-foreground">{option.description}</div>
                     </div>
                   </div>
                 </SelectItem>

@@ -315,13 +315,13 @@ export function AssignmentBuilderV2({ onComplete, onCancel }: AssignmentBuilderV
         <p className="text-muted-foreground">
           Basic mode publishes faster with fewer required inputs. Advanced mode keeps full controls.
         </p>
-        <div className="mt-4 inline-flex rounded-md border border-[#E8E6DD] p-1">
+        <div className="mt-4 inline-flex rounded-md border border-proofound-stone p-1">
           <button
             type="button"
             className={`rounded px-3 py-1 text-sm ${
               builderMode === 'basic'
-                ? 'bg-[#1C4D3A] text-white'
-                : 'text-[#2D3330] hover:bg-[#F7F6F1]'
+                ? 'bg-proofound-forest text-white'
+                : 'text-foreground hover:bg-japandi-bg'
             }`}
             onClick={() => {
               setBuilderMode('basic');
@@ -334,8 +334,8 @@ export function AssignmentBuilderV2({ onComplete, onCancel }: AssignmentBuilderV
             type="button"
             className={`rounded px-3 py-1 text-sm ${
               builderMode === 'advanced'
-                ? 'bg-[#1C4D3A] text-white'
-                : 'text-[#2D3330] hover:bg-[#F7F6F1]'
+                ? 'bg-proofound-forest text-white'
+                : 'text-foreground hover:bg-japandi-bg'
             }`}
             onClick={() => setBuilderMode('advanced')}
           >

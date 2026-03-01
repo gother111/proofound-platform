@@ -10,6 +10,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { WhileAwayCard } from './WhileAwayCard';
 import { GoalsCard } from './GoalsCard';
 import { TasksCard } from './TasksCard';
@@ -473,11 +474,14 @@ export function DraggableDashboard({
   if (visibleWidgets.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 bg-white rounded-lg border border-gray-200">
-        <p className="text-lg font-medium text-[#2D3330] mb-2">No dashboard widgets configured</p>
-        <p className="text-sm text-[#6B6760] text-center mb-4">
+        <p className="text-lg font-medium text-foreground mb-2">No dashboard widgets configured</p>
+        <p className="text-sm text-muted-foreground text-center mb-4">
           Customize your dashboard to see the information that matters most to you
         </p>
-        <Button onClick={() => setEditMode(true)} className="bg-[#1C4D3A] hover:bg-[#1C4D3A]/90">
+        <Button
+          onClick={() => setEditMode(true)}
+          className="bg-proofound-forest hover:bg-proofound-forest/90"
+        >
           <Settings2 className="w-4 h-4 mr-2" />
           Configure Dashboard
         </Button>
@@ -490,7 +494,7 @@ export function DraggableDashboard({
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-[#6B6760]">
+          <p className="text-sm text-muted-foreground">
             Install @dnd-kit packages to enable drag-and-drop customization
           </p>
         </div>
@@ -503,13 +507,24 @@ export function DraggableDashboard({
     );
   }
 
+  // Framer Motion Variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
   return (
     <div className="space-y-4">
       {/* Edit Controls */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           {editMode && (
-            <p className="text-sm text-[#6B6760]">
+            <p className="text-sm text-muted-foreground">
               Drag widgets to reorder • {layout.filter((w) => w.visible).length} widgets shown
             </p>
           )}
@@ -519,7 +534,7 @@ export function DraggableDashboard({
             <>
               {/* Preset Selector */}
               <Select onValueChange={handleApplyPreset}>
-                <SelectTrigger className="w-[160px] h-8 text-sm border-[#D8D2C8]">
+                <SelectTrigger className="w-[160px] h-8 text-sm border-border">
                   <SelectValue placeholder="Quick presets..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -537,7 +552,7 @@ export function DraggableDashboard({
                 variant="outline"
                 size="sm"
                 onClick={() => setIsWidgetPickerOpen(true)}
-                className="border-[#D8D2C8] text-[#6B6760]"
+                className="border-border text-muted-foreground"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Widgets
@@ -546,7 +561,7 @@ export function DraggableDashboard({
                 variant="outline"
                 size="sm"
                 onClick={handleReset}
-                className="border-[#D8D2C8] text-[#6B6760]"
+                className="border-border text-muted-foreground"
               >
                 <RotateCcw className="h-4 w-4 mr-2" />
                 Reset
@@ -555,7 +570,7 @@ export function DraggableDashboard({
                 size="sm"
                 onClick={handleSave}
                 disabled={saving}
-                className="bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
+                className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
               >
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? 'Saving...' : 'Save Layout'}
@@ -568,8 +583,8 @@ export function DraggableDashboard({
             onClick={() => setEditMode(!editMode)}
             className={
               editMode
-                ? 'border-[#D8D2C8] text-[#6B6760]'
-                : 'bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]'
+                ? 'border-border text-muted-foreground'
+                : 'bg-proofound-forest text-white hover:bg-proofound-forest/90'
             }
           >
             <Settings2 className="h-4 w-4 mr-2" />
@@ -584,7 +599,12 @@ export function DraggableDashboard({
           items={visibleWidgets.map((w) => w.widgetId)}
           strategy={verticalListSortingStrategy}
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 grid-flow-dense auto-rows-min">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 grid-flow-dense auto-rows-min"
+          >
             {(() => {
               // Smart Layout Algorithm
               // Calculate optimal positions and sizes to eliminate gaps
@@ -623,10 +643,6 @@ export function DraggableDashboard({
                   const remainingInRow = 3 - currentColumn;
                   // If it fits, expand to fill. If it wrapped (currentColumn=0), it takes full width (3)
                   if (remainingInRow > 0) {
-                    // If the widget is naturally smaller than remaining space, expand it
-                    // If naturally larger (shouldn't happen if we wrapped logic correctly above), clamp it?
-                    // Actually, if we just wrapped, currentColumn is 0. remaining is 3.
-                    // If we didn't wrap, currentColumn is e.g. 2. remaining is 1.
                     colSpan = remainingInRow;
                   }
                 }
@@ -665,7 +681,7 @@ export function DraggableDashboard({
                 );
               });
             })()}
-          </div>
+          </motion.div>
         </SortableContext>
       </DndContext>
 
@@ -767,14 +783,29 @@ function SortableItem({
   };
 
   return (
-    <div
+    <motion.div
+      id={`widget-${id}`}
       ref={setNodeRef}
       style={style}
+      variants={{
+        hidden: { opacity: 0, y: 10 },
+        show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } },
+      }}
+      animate={
+        isDragging
+          ? {
+              scale: 1.02,
+              rotate: 1,
+              zIndex: 50,
+              boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+            }
+          : { scale: 1, rotate: 0, zIndex: 1, boxShadow: 'none' }
+      }
       {...(editMode ? attributes : {})}
       {...(editMode ? listeners : {})}
       className={`${className || ''} ${editMode ? 'ring-2 ring-[#1C4D3A] ring-offset-2 rounded-lg' : ''}`}
     >
       {children}
-    </div>
+    </motion.div>
   );
 }

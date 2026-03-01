@@ -79,7 +79,7 @@ export default async function OrganizationHomePage({
                     : 'Your day-1 win is live: a clean public organization portfolio link. Next, create your first assignment when ready.'}
                 </p>
                 <Link href={`/app/o/${slug}/portfolio`}>
-                  <Button className="text-sm mt-1 bg-white text-[#1C4D3A] hover:bg-[#F7F6F1] min-h-[44px]">
+                  <Button className="text-sm mt-1 bg-white text-proofound-forest hover:bg-japandi-bg min-h-[44px]">
                     Open public portfolio
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>

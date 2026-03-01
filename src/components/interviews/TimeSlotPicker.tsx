@@ -69,15 +69,15 @@ export function TimeSlotPicker({
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Calendar */}
       <div>
-        <h4 className="text-sm font-medium text-[#2D3330] mb-3">Select Date</h4>
+        <h4 className="text-sm font-medium text-foreground mb-3">Select Date</h4>
         <Calendar
           mode="single"
           selected={selectedDate || undefined}
           onSelect={(date) => date && onSelectDate(date)}
           disabled={(date) => date < minDate || date > maxDate}
-          className="rounded-lg border border-[#E8E6DD]"
+          className="rounded-lg border border-proofound-stone"
         />
-        <div className="mt-3 text-xs text-[#6B6760]">
+        <div className="mt-3 text-xs text-muted-foreground">
           <p>
             Available: {minDate.toLocaleDateString()} - {maxDate.toLocaleDateString()}
           </p>
@@ -86,10 +86,10 @@ export function TimeSlotPicker({
 
       {/* Time Slots */}
       <div>
-        <h4 className="text-sm font-medium text-[#2D3330] mb-3">Select Time</h4>
+        <h4 className="text-sm font-medium text-foreground mb-3">Select Time</h4>
         {!selectedDate ? (
-          <div className="flex items-center justify-center h-64 border border-[#E8E6DD] rounded-lg bg-[#F7F6F1]">
-            <p className="text-sm text-[#6B6760]">Select a date first</p>
+          <div className="flex items-center justify-center h-64 border border-proofound-stone rounded-lg bg-japandi-bg">
+            <p className="text-sm text-muted-foreground">Select a date first</p>
           </div>
         ) : (
           <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
@@ -106,9 +106,9 @@ export function TimeSlotPicker({
                   disabled={!available}
                   className={`w-full justify-between ${
                     isSelected
-                      ? 'bg-[#1C4D3A] text-white'
+                      ? 'bg-proofound-forest text-white'
                       : available
-                        ? 'hover:border-[#1C4D3A] hover:bg-[#E8F5E1]'
+                        ? 'hover:border-proofound-forest hover:bg-proofound-success-tint'
                         : 'opacity-50 cursor-not-allowed'
                   }`}
                 >

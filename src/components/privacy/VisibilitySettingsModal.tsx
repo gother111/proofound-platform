@@ -38,7 +38,7 @@ export function VisibilitySettingsModal({
       <FieldVisibilityControls userId={currentUserId} />
     ) : (
       <div className="flex items-center justify-center py-8">
-        <p className="text-[#6B6760]">Loading...</p>
+        <p className="text-muted-foreground">Loading...</p>
       </div>
     );
 

@@ -269,7 +269,7 @@ export function PrivacySettings({ userId: _userId, currentProfile }: PrivacySett
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-[#1C4D3A]" />
+              <Shield className="h-5 w-5 text-proofound-forest" />
               <CardTitle>Privacy Settings</CardTitle>
             </div>
             <Button onClick={handleSave} disabled={isSaving}>
@@ -316,7 +316,7 @@ export function PrivacySettings({ userId: _userId, currentProfile }: PrivacySett
                   onChange={(value) => handleFieldVisibilityChange('causes', value)}
                   description="Social and environmental causes you care about"
                 />
-                <div className="border-t border-[#E8E6DD] my-4" />
+                <div className="border-t border-proofound-stone my-4" />
                 <FieldVisibilityControl
                   fieldName="location"
                   fieldLabel="Location"
@@ -358,7 +358,7 @@ export function PrivacySettings({ userId: _userId, currentProfile }: PrivacySett
             {/* Preview Tab */}
             <TabsContent value="preview" className="space-y-4 mt-6">
               <div className="flex items-center justify-between mb-4">
-                <p className="text-sm text-[#6B6760]">
+                <p className="text-sm text-muted-foreground">
                   See how your profile appears to organizations
                 </p>
                 <Tabs
@@ -403,33 +403,33 @@ export function PrivacySettings({ userId: _userId, currentProfile }: PrivacySett
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Eye className="h-5 w-5 text-[#1C4D3A]" />
+              <Eye className="h-5 w-5 text-proofound-forest" />
               <CardTitle>What others can see</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-              <div className="rounded-md border border-[#E8E6DD] p-3">
-                <p className="font-medium text-[#2D3330]">Public</p>
-                <p className="text-[#6B6760]">
+              <div className="rounded-md border border-proofound-stone p-3">
+                <p className="font-medium text-foreground">Public</p>
+                <p className="text-muted-foreground">
                   {visibilitySummary.public.join(', ') || 'Nothing yet'}
                 </p>
               </div>
-              <div className="rounded-md border border-[#E8E6DD] p-3">
-                <p className="font-medium text-[#2D3330]">Network-only</p>
-                <p className="text-[#6B6760]">
+              <div className="rounded-md border border-proofound-stone p-3">
+                <p className="font-medium text-foreground">Network-only</p>
+                <p className="text-muted-foreground">
                   {visibilitySummary.network_only.join(', ') || 'Nothing yet'}
                 </p>
               </div>
-              <div className="rounded-md border border-[#E8E6DD] p-3">
-                <p className="font-medium text-[#2D3330]">Match-only</p>
-                <p className="text-[#6B6760]">
+              <div className="rounded-md border border-proofound-stone p-3">
+                <p className="font-medium text-foreground">Match-only</p>
+                <p className="text-muted-foreground">
                   {visibilitySummary.match_only.join(', ') || 'Nothing yet'}
                 </p>
               </div>
-              <div className="rounded-md border border-[#E8E6DD] p-3">
-                <p className="font-medium text-[#2D3330]">Private</p>
-                <p className="text-[#6B6760]">
+              <div className="rounded-md border border-proofound-stone p-3">
+                <p className="font-medium text-foreground">Private</p>
+                <p className="text-muted-foreground">
                   {visibilitySummary.private.join(', ') || 'Nothing yet'}
                 </p>
               </div>

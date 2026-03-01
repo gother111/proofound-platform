@@ -311,26 +311,28 @@ export default function MatchingPage() {
 
     return (
       <div className="mb-6 space-y-3">
-        <h2 className="text-lg font-semibold text-[#2D3330] dark:text-[#E8DCC4]">Test matches</h2>
+        <h2 className="text-lg font-semibold text-foreground dark:text-[#E8DCC4]">Test matches</h2>
         {isTestMatchesLoading ? (
-          <div className="rounded-lg border border-[#E8E6DD] bg-white px-4 py-3">
-            <p className="text-sm text-[#6B6760]">Loading test matches...</p>
+          <div className="rounded-lg border border-proofound-stone bg-white px-4 py-3">
+            <p className="text-sm text-muted-foreground">Loading test matches...</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {testMatches.map((testMatch) => (
               <div
                 key={testMatch.matchId}
-                className="rounded-lg border border-[#E8E6DD] bg-white px-4 py-3 space-y-2"
+                className="rounded-lg border border-proofound-stone bg-white px-4 py-3 space-y-2"
               >
-                <p className="text-sm font-medium text-[#2D3330]">
+                <p className="text-sm font-medium text-foreground">
                   {testMatch.assignmentRole || 'Untitled assignment'}
                 </p>
-                <p className="text-xs text-[#6B6760]">Organization: {testMatch.orgDisplayName}</p>
+                <p className="text-xs text-muted-foreground">
+                  Organization: {testMatch.orgDisplayName}
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {testMatch.conversationId ? (
                     <button
-                      className="rounded-md border border-[#E8E6DD] px-3 py-1.5 text-xs hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
+                      className="rounded-md border border-proofound-stone px-3 py-1.5 text-xs hover:border-proofound-forest hover:bg-japandi-bg"
                       onClick={() =>
                         router.push(`/app/i/messages?conversation=${testMatch.conversationId}`)
                       }
@@ -339,7 +341,7 @@ export default function MatchingPage() {
                     </button>
                   ) : null}
                   <button
-                    className="rounded-md border border-[#E8E6DD] px-3 py-1.5 text-xs hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
+                    className="rounded-md border border-proofound-stone px-3 py-1.5 text-xs hover:border-proofound-forest hover:bg-japandi-bg"
                     onClick={() => router.push('/app/i/matching')}
                   >
                     Open matching
@@ -401,7 +403,7 @@ export default function MatchingPage() {
       {renderTestMatchesSection()}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
-          <h1 className="text-2xl font-semibold text-[#2D3330] dark:text-[#E8DCC4]">Matching</h1>
+          <h1 className="text-2xl font-semibold text-foreground dark:text-[#E8DCC4]">Matching</h1>
           <div className="flex items-center gap-2">
             {!blockedState ? (
               <EnhancedMatchFilters
@@ -419,7 +421,7 @@ export default function MatchingPage() {
             </button>
           </div>
         </div>
-        <p className="text-sm text-[#6B6760] dark:text-[#8A8174]">
+        <p className="text-sm text-muted-foreground dark:text-[#8A8174]">
           {blockedState
             ? 'Complete the required matchability steps to unlock personalized opportunities.'
             : `${filteredMatches.length} opportunit${filteredMatches.length === 1 ? 'y' : 'ies'} aligned with your skills and values`}
@@ -427,9 +429,9 @@ export default function MatchingPage() {
       </div>
 
       {blockedState ? (
-        <div className="rounded-xl border border-[#E8E6DD] bg-[#F7F6F1] p-5">
-          <h2 className="text-lg font-semibold text-[#2D3330]">Profile setup required</h2>
-          <p className="mt-1 text-sm text-[#6B6760]">{blockedState.message}</p>
+        <div className="rounded-xl border border-proofound-stone bg-japandi-bg p-5">
+          <h2 className="text-lg font-semibold text-foreground">Profile setup required</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{blockedState.message}</p>
 
           <div className="mt-4 space-y-2">
             {Object.values(blockedState.eligibility.criteria)
@@ -437,10 +439,10 @@ export default function MatchingPage() {
               .map((criterion) => (
                 <div
                   key={criterion.id}
-                  className="rounded-md border border-[#E8E6DD] bg-white px-3 py-2"
+                  className="rounded-md border border-proofound-stone bg-white px-3 py-2"
                 >
-                  <p className="text-sm font-medium text-[#2D3330]">{criterion.label}</p>
-                  <p className="text-xs text-[#6B6760]">{criterion.detail}</p>
+                  <p className="text-sm font-medium text-foreground">{criterion.label}</p>
+                  <p className="text-xs text-muted-foreground">{criterion.detail}</p>
                 </div>
               ))}
           </div>
@@ -451,10 +453,10 @@ export default function MatchingPage() {
                 <button
                   key={action.id}
                   onClick={() => router.push(action.actionUrl)}
-                  className="rounded-lg border border-[#E8E6DD] px-3 py-2 text-left hover:border-[#1C4D3A] hover:bg-white"
+                  className="rounded-lg border border-proofound-stone px-3 py-2 text-left hover:border-proofound-forest hover:bg-white"
                 >
-                  <p className="text-sm font-medium text-[#2D3330]">{action.title}</p>
-                  <p className="text-xs text-[#6B6760]">{action.description}</p>
+                  <p className="text-sm font-medium text-foreground">{action.title}</p>
+                  <p className="text-xs text-muted-foreground">{action.description}</p>
                 </button>
               ))}
             </div>
@@ -474,10 +476,10 @@ export default function MatchingPage() {
                 <button
                   key={action.id}
                   onClick={() => router.push(action.actionUrl)}
-                  className="w-full rounded-lg border border-[#E8E6DD] px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
+                  className="w-full rounded-lg border border-proofound-stone px-3 py-2 hover:border-proofound-forest hover:bg-japandi-bg"
                 >
-                  <p className="text-sm font-medium text-[#2D3330]">{action.title}</p>
-                  <p className="text-xs text-[#6B6760]">{action.description}</p>
+                  <p className="text-sm font-medium text-foreground">{action.title}</p>
+                  <p className="text-xs text-muted-foreground">{action.description}</p>
                 </button>
               ))}
             </div>
@@ -565,7 +567,7 @@ export default function MatchingPage() {
         <div className="mt-8">
           <button
             onClick={() => setShowManageHiddenSnoozed((prev) => !prev)}
-            className="text-sm text-[#1C4D3A] underline flex items-center gap-2"
+            className="text-sm text-proofound-forest underline flex items-center gap-2"
           >
             {showManageHiddenSnoozed
               ? 'Hide snoozed/hidden manager'

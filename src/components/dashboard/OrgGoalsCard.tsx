@@ -213,7 +213,7 @@ export function OrgGoalsCard({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs border-[#D8D2C8]"
+                className="h-7 text-xs border-border"
                 style={{ color: '#1C4D3A' }}
               >
                 View Profile

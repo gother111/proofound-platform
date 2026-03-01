@@ -107,7 +107,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       // Success state
       hasSuccess && 'border-success focus-visible:ring-success focus-visible:border-success',
       // Dark mode
-      'dark:border-[#D4C4A8]/10 dark:bg-[#2C3244] dark:text-[#E8DCC4] dark:placeholder:text-[#6B6760] dark:focus-visible:ring-[#D4C4A8]',
+      'dark:border-[#D4C4A8]/10 dark:bg-[#2C3244] dark:text-[#E8DCC4] dark:placeholder:text-muted-foreground dark:focus-visible:ring-[#D4C4A8]',
       className
     );
 

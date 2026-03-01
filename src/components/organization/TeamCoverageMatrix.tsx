@@ -97,13 +97,13 @@ export function TeamCoverageMatrix({ organizationId }: TeamCoverageMatrixProps) 
   const getCoverageColor = (coverage: number) => {
     if (coverage === 0) return 'bg-[#FEE]'; // Red
     if (coverage === 1) return 'bg-[#FFF4E6]'; // Yellow
-    return 'bg-[#E8F5E1]'; // Green
+    return 'bg-proofound-success-tint'; // Green
   };
 
   const getCoverageIcon = (coverage: number) => {
     if (coverage === 0) return <AlertTriangle className="w-3.5 h-3.5 text-[#D93F3F]" />;
-    if (coverage === 1) return <AlertCircle className="w-3.5 h-3.5 text-[#C76B4A]" />;
-    return <CheckCircle2 className="w-3.5 h-3.5 text-[#1C4D3A]" />;
+    if (coverage === 1) return <AlertCircle className="w-3.5 h-3.5 text-proofound-terracotta" />;
+    return <CheckCircle2 className="w-3.5 h-3.5 text-proofound-forest" />;
   };
 
   // Filter skills based on selected filter
@@ -120,10 +120,10 @@ export function TeamCoverageMatrix({ organizationId }: TeamCoverageMatrixProps) 
         <div className="flex items-start justify-between mb-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Users className="w-6 h-6 text-[#1C4D3A]" />
-              <h2 className="text-2xl font-bold text-[#2D3330]">Team Coverage Matrix</h2>
+              <Users className="w-6 h-6 text-proofound-forest" />
+              <h2 className="text-2xl font-bold text-foreground">Team Coverage Matrix</h2>
             </div>
-            <p className="text-sm text-[#6B6760]">
+            <p className="text-sm text-muted-foreground">
               Visualize skill coverage across your team to identify gaps and single points of
               failure
             </p>
@@ -136,34 +136,34 @@ export function TeamCoverageMatrix({ organizationId }: TeamCoverageMatrixProps) 
 
         {stats && (
           <div className="grid grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-[#F7F6F1] rounded-lg">
-              <p className="text-2xl font-bold text-[#2D3330]">{stats.totalMembers}</p>
-              <p className="text-xs text-[#6B6760]">Team Members</p>
+            <div className="text-center p-4 bg-japandi-bg rounded-lg">
+              <p className="text-2xl font-bold text-foreground">{stats.totalMembers}</p>
+              <p className="text-xs text-muted-foreground">Team Members</p>
             </div>
             <div className="text-center p-4 bg-[#FEE] rounded-lg">
               <p className="text-2xl font-bold text-[#D93F3F]">{stats.noCoverage}</p>
-              <p className="text-xs text-[#6B6760]">No Coverage</p>
+              <p className="text-xs text-muted-foreground">No Coverage</p>
             </div>
             <div className="text-center p-4 bg-[#FFF4E6] rounded-lg">
-              <p className="text-2xl font-bold text-[#C76B4A]">{stats.singleCoverage}</p>
-              <p className="text-xs text-[#6B6760]">Single Point</p>
+              <p className="text-2xl font-bold text-proofound-terracotta">{stats.singleCoverage}</p>
+              <p className="text-xs text-muted-foreground">Single Point</p>
             </div>
-            <div className="text-center p-4 bg-[#E8F5E1] rounded-lg">
-              <p className="text-2xl font-bold text-[#1C4D3A]">{stats.multipleCoverage}</p>
-              <p className="text-xs text-[#6B6760]">Good Coverage</p>
+            <div className="text-center p-4 bg-proofound-success-tint rounded-lg">
+              <p className="text-2xl font-bold text-proofound-forest">{stats.multipleCoverage}</p>
+              <p className="text-xs text-muted-foreground">Good Coverage</p>
             </div>
           </div>
         )}
 
         {/* Filter buttons */}
         <div className="flex items-center gap-2 mt-6">
-          <Filter className="w-4 h-4 text-[#6B6760]" />
-          <span className="text-sm text-[#6B6760]">Show:</span>
+          <Filter className="w-4 h-4 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">Show:</span>
           <Button
             size="sm"
             variant={filter === 'all' ? 'default' : 'outline'}
             onClick={() => setFilter('all')}
-            className={filter === 'all' ? 'bg-[#1C4D3A] text-white' : ''}
+            className={filter === 'all' ? 'bg-proofound-forest text-white' : ''}
           >
             All Skills
           </Button>
@@ -179,7 +179,7 @@ export function TeamCoverageMatrix({ organizationId }: TeamCoverageMatrixProps) 
             size="sm"
             variant={filter === 'single' ? 'default' : 'outline'}
             onClick={() => setFilter('single')}
-            className={filter === 'single' ? 'bg-[#C76B4A] text-white' : ''}
+            className={filter === 'single' ? 'bg-proofound-terracotta text-white' : ''}
           >
             Single Points
           </Button>
@@ -188,20 +188,20 @@ export function TeamCoverageMatrix({ organizationId }: TeamCoverageMatrixProps) 
 
       {/* Matrix */}
       {isLoading ? (
-        <div className="py-12 flex items-center justify-center text-sm text-[#6B6760]">
+        <div className="py-12 flex items-center justify-center text-sm text-muted-foreground">
           Loading team coverage...
         </div>
       ) : filteredSkills.length === 0 ? (
         <Card className="p-8 text-center">
-          <CheckCircle2 className="w-12 h-12 text-[#1C4D3A] mx-auto mb-3" />
-          <p className="text-[#2D3330] font-medium">
+          <CheckCircle2 className="w-12 h-12 text-proofound-forest mx-auto mb-3" />
+          <p className="text-foreground font-medium">
             {filter === 'gaps'
               ? 'No coverage gaps!'
               : filter === 'single'
                 ? 'No single points of failure!'
                 : 'No skills tracked yet'}
           </p>
-          <p className="text-sm text-[#6B6760] mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             {filter === 'all'
               ? 'Add team members with skills to see coverage'
               : 'Your team has good skill redundancy'}
@@ -211,15 +211,15 @@ export function TeamCoverageMatrix({ organizationId }: TeamCoverageMatrixProps) 
         <Card className="p-6 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#E8E6DD]">
-                <th className="text-left p-3 font-semibold text-[#2D3330]">Skill</th>
-                <th className="text-left p-3 font-semibold text-[#2D3330]">Category</th>
-                <th className="text-center p-3 font-semibold text-[#2D3330]">Coverage</th>
+              <tr className="border-b border-proofound-stone">
+                <th className="text-left p-3 font-semibold text-foreground">Skill</th>
+                <th className="text-left p-3 font-semibold text-foreground">Category</th>
+                <th className="text-center p-3 font-semibold text-foreground">Coverage</th>
                 {members.map((member) => (
                   <th key={member.id} className="text-center p-3 min-w-[80px]">
-                    <div className="font-semibold text-[#2D3330] truncate">{member.name}</div>
+                    <div className="font-semibold text-foreground truncate">{member.name}</div>
                     {member.role && (
-                      <div className="text-xs text-[#6B6760] font-normal truncate">
+                      <div className="text-xs text-muted-foreground font-normal truncate">
                         {member.role}
                       </div>
                     )}
@@ -229,9 +229,12 @@ export function TeamCoverageMatrix({ organizationId }: TeamCoverageMatrixProps) 
             </thead>
             <tbody>
               {filteredSkills.map((skill) => (
-                <tr key={skill.l4_id} className="border-b border-[#E8E6DD] hover:bg-[#F7F6F1]">
+                <tr
+                  key={skill.l4_id}
+                  className="border-b border-proofound-stone hover:bg-japandi-bg"
+                >
                   <td className="p-3">
-                    <span className="font-medium text-[#2D3330]">{skill.l4_name}</span>
+                    <span className="font-medium text-foreground">{skill.l4_name}</span>
                   </td>
                   <td className="p-3">
                     <Badge variant="secondary" className="text-xs">
@@ -243,13 +246,13 @@ export function TeamCoverageMatrix({ organizationId }: TeamCoverageMatrixProps) 
                       className={`flex items-center justify-center gap-2 py-1 px-3 rounded-full ${getCoverageColor(skill.coverage)}`}
                     >
                       {getCoverageIcon(skill.coverage)}
-                      <span className="font-semibold text-[#2D3330]">{skill.coverage}</span>
+                      <span className="font-semibold text-foreground">{skill.coverage}</span>
                     </div>
                   </td>
                   {members.map((member) => (
                     <td key={member.id} className="p-3 text-center">
                       {skill.members.includes(member.id) && (
-                        <CheckCircle2 className="w-5 h-5 text-[#1C4D3A] mx-auto" />
+                        <CheckCircle2 className="w-5 h-5 text-proofound-forest mx-auto" />
                       )}
                     </td>
                   ))}

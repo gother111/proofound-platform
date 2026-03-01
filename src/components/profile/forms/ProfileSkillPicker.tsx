@@ -97,7 +97,7 @@ export function ProfileSkillPicker({
                 onClick={() => toggleSkill(skill)}
               >
                 <span className="truncate">{skill}</span>
-                {isSelected ? <Check className="h-4 w-4 text-[#1C4D3A]" /> : null}
+                {isSelected ? <Check className="h-4 w-4 text-proofound-forest" /> : null}
               </Button>
             );
           })

@@ -42,21 +42,21 @@ export function DashboardTile({
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center justify-between p-3 bg-white border border-[#E8E6DD] rounded-lg hover:border-[#1C4D3A] transition-colors"
+      className="flex items-center justify-between p-3 bg-white border border-proofound-stone rounded-lg hover:border-proofound-forest transition-colors"
     >
       <div className="flex items-center gap-3 flex-1">
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab active:cursor-grabbing text-[#9B9891] hover:text-[#2D3330]"
+          className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground"
           aria-label="Drag to reorder"
         >
           <GripVertical className="h-5 w-5" />
         </button>
         <span className="text-2xl">{icon}</span>
         <div className="flex-1">
-          <p className="text-sm font-medium text-[#2D3330]">{title}</p>
-          <p className="text-xs text-[#9B9891]">{description}</p>
+          <p className="text-sm font-medium text-foreground">{title}</p>
+          <p className="text-xs text-muted-foreground">{description}</p>
         </div>
       </div>
       <div className="flex items-center gap-2">
@@ -68,7 +68,7 @@ export function DashboardTile({
         {visible ? (
           <Eye className="h-4 w-4 text-green-600" />
         ) : (
-          <EyeOff className="h-4 w-4 text-[#9B9891]" />
+          <EyeOff className="h-4 w-4 text-muted-foreground" />
         )}
       </div>
     </div>

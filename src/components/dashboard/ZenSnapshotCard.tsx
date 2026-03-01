@@ -64,7 +64,7 @@ export function ZenSnapshotCard({ useMockData }: ZenSnapshotCardProps) {
       <CardHeader className="flex flex-row items-start justify-between space-y-0">
         <div className="min-w-0 space-y-1">
           <CardTitle className="text-lg flex items-center gap-2">
-            <HeartPulse className="h-5 w-5 text-[#1C4D3A]" />
+            <HeartPulse className="h-5 w-5 text-proofound-forest" />
             Zen Snapshot
           </CardTitle>
           <p className="text-sm text-muted-foreground">
@@ -74,18 +74,18 @@ export function ZenSnapshotCard({ useMockData }: ZenSnapshotCardProps) {
         <Badge className={`${DASHBOARD_STATUS_CHIP_CLASS} ${badge.tone}`}>{badge.text}</Badge>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="rounded-lg border border-[#E8E6DD] p-3 flex items-center justify-between">
+        <div className="rounded-lg border border-proofound-stone p-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Activity className="h-4 w-4 text-[#1C4D3A]" />
-            <p className="text-sm text-[#2D3330]">Latest check-in</p>
+            <Activity className="h-4 w-4 text-proofound-forest" />
+            <p className="text-sm text-foreground">Latest check-in</p>
           </div>
-          <p className="text-xl font-semibold text-[#2D3330]">
+          <p className="text-xl font-semibold text-foreground">
             {loading ? '—' : (lastScore ?? '—')}
           </p>
         </div>
 
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Shield className="h-4 w-4 text-[#9B9891]" />
+          <Shield className="h-4 w-4 text-muted-foreground" />
           Stored privately; not used in matching or visibility.
         </div>
 
@@ -93,12 +93,16 @@ export function ZenSnapshotCard({ useMockData }: ZenSnapshotCardProps) {
           <Button
             variant="outline"
             size="sm"
-            className="border-[#1C4D3A] text-[#1C4D3A] hover:bg-[#EEF1EA]"
+            className="border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5"
             asChild
           >
             <Link href="/app/i/zen">Open Zen Hub</Link>
           </Button>
-          <Button size="sm" className="bg-[#1C4D3A] hover:bg-[#163D2E] text-white" asChild>
+          <Button
+            size="sm"
+            className="bg-proofound-forest hover:bg-proofound-forest/90 text-white"
+            asChild
+          >
             <Link href="/app/i/zen?tab=assessments">
               <SmilePlus className="h-4 w-4 mr-2" />
               Take check-in

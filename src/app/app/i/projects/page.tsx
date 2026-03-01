@@ -131,7 +131,7 @@ export default function ProjectsPage() {
     return (
       <AppSurface>
         <div className="space-y-6">
-          <div className="h-8 w-48 bg-[#E8E6DD] dark:bg-[#2C3244] rounded animate-pulse" />
+          <div className="h-8 w-48 bg-proofound-stone dark:bg-[#2C3244] rounded animate-pulse" />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
               <div key={i} className="h-48 bg-gray-200 rounded-lg animate-pulse" />
@@ -148,15 +148,15 @@ export default function ProjectsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-[#2D3330]">Projects</h1>
-            <p className="text-sm text-[#6B6760]">
+            <h1 className="text-2xl font-bold text-foreground">Projects</h1>
+            <p className="text-sm text-muted-foreground">
               Track your work and link skills to build your Expertise Atlas
             </p>
           </div>
 
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-[#1C4D3A] hover:bg-[#2D5F4A]">
+              <Button className="bg-proofound-forest hover:bg-proofound-forest/90">
                 <Plus className="h-4 w-4 mr-2" />
                 Create Project
               </Button>
@@ -219,7 +219,7 @@ export default function ProjectsPage() {
               variant="ghost"
               size="sm"
               onClick={() => setViewMode('grid')}
-              className={cn(viewMode === 'grid' && 'bg-[#EEF1EA]')}
+              className={cn(viewMode === 'grid' && 'bg-proofound-forest/5')}
             >
               <LayoutGrid className="h-4 w-4" />
             </Button>
@@ -227,7 +227,7 @@ export default function ProjectsPage() {
               variant="ghost"
               size="sm"
               onClick={() => setViewMode('list')}
-              className={cn(viewMode === 'list' && 'bg-[#EEF1EA]')}
+              className={cn(viewMode === 'list' && 'bg-proofound-forest/5')}
             >
               <ListIcon className="h-4 w-4" />
             </Button>
@@ -237,17 +237,17 @@ export default function ProjectsPage() {
         {/* Project Cards */}
         {sortedProjects.length === 0 ? (
           <Card className="p-12 text-center space-y-4">
-            <Briefcase className="h-16 w-16 mx-auto text-[#6B6760] opacity-50" />
+            <Briefcase className="h-16 w-16 mx-auto text-muted-foreground opacity-50" />
             <div className="space-y-2">
-              <p className="text-lg font-medium text-[#2D3330]">No projects yet</p>
-              <p className="text-sm text-[#6B6760] max-w-md mx-auto">
+              <p className="text-lg font-medium text-foreground">No projects yet</p>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
                 Add your first project to start building your Expertise Atlas. Link skills to your
                 work and track your impact.
               </p>
             </div>
             <Button
               onClick={() => setIsCreateDialogOpen(true)}
-              className="bg-[#1C4D3A] hover:bg-[#2D5F4A]"
+              className="bg-proofound-forest hover:bg-proofound-forest/90"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Your First Project
@@ -273,13 +273,15 @@ export default function ProjectsPage() {
                     {/* Header */}
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <div className="p-2 bg-[#EEF1EA] rounded-lg">
-                          <Icon className="h-5 w-5 text-[#1C4D3A]" />
+                        <div className="p-2 bg-proofound-forest/5 rounded-lg">
+                          <Icon className="h-5 w-5 text-proofound-forest" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-[#2D3330] truncate">{project.title}</h3>
+                          <h3 className="font-semibold text-foreground truncate">
+                            {project.title}
+                          </h3>
                           {project.organization && (
-                            <p className="text-sm text-[#6B6760] truncate">
+                            <p className="text-sm text-muted-foreground truncate">
                               {project.organization}
                             </p>
                           )}
@@ -294,27 +296,31 @@ export default function ProjectsPage() {
                     </div>
 
                     {/* Date Range */}
-                    <div className="text-sm text-[#6B6760]">
+                    <div className="text-sm text-muted-foreground">
                       {format(new Date(project.startDate), 'MMM yyyy')} -{' '}
                       {project.endDate ? format(new Date(project.endDate), 'MMM yyyy') : 'Present'}
                     </div>
 
                     {/* Description */}
                     {project.description && (
-                      <p className="text-sm text-[#6B6760] line-clamp-2">{project.description}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {project.description}
+                      </p>
                     )}
 
                     {/* Skills and Outcomes */}
-                    <div className="flex items-center gap-3 text-xs text-[#6B6760]">
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
                       {project.skillsCount !== undefined && (
                         <div className="flex items-center gap-1">
-                          <span className="font-medium text-[#1C4D3A]">{project.skillsCount}</span>
+                          <span className="font-medium text-proofound-forest">
+                            {project.skillsCount}
+                          </span>
                           <span>skills</span>
                         </div>
                       )}
                       {project.outcomes && project.outcomes.length > 0 && (
                         <div className="flex items-center gap-1">
-                          <span className="font-medium text-[#1C4D3A]">
+                          <span className="font-medium text-proofound-forest">
                             {project.outcomes.length}
                           </span>
                           <span>outcomes</span>
@@ -323,7 +329,10 @@ export default function ProjectsPage() {
                     </div>
 
                     {/* Type Badge */}
-                    <Badge variant="outline" className="text-xs border-[#7A9278] text-[#1C4D3A]">
+                    <Badge
+                      variant="outline"
+                      className="text-xs border-[#7A9278] text-proofound-forest"
+                    >
                       {PROJECT_TYPE_LABELS[project.type]}
                     </Badge>
                   </div>

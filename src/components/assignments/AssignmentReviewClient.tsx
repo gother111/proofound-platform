@@ -122,13 +122,13 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F6F1] p-6">
+    <div className="min-h-screen bg-japandi-bg p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-[#2D3330]">Review Assignment</h1>
-            <p className="text-[#6B6760]">Review all details before publishing</p>
+            <h1 className="text-3xl font-bold text-foreground">Review Assignment</h1>
+            <p className="text-muted-foreground">Review all details before publishing</p>
           </div>
           <div className="flex gap-3">
             <Button
@@ -141,7 +141,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
             <Button
               onClick={handlePublish}
               disabled={isPublishing}
-              className="bg-[#1C4D3A] hover:bg-[#2D5F4A]"
+              className="bg-proofound-forest hover:bg-proofound-forest/90"
             >
               {isPublishing ? 'Publishing...' : 'Publish Assignment'}
               <ChevronRight className="h-4 w-4 ml-2" />
@@ -152,24 +152,24 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
         {/* Business Value */}
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-full bg-[#1C4D3A] text-white flex items-center justify-center font-semibold">
+            <div className="w-8 h-8 rounded-full bg-proofound-forest text-white flex items-center justify-center font-semibold">
               1
             </div>
-            <h2 className="text-xl font-semibold text-[#2D3330]">Business Value</h2>
+            <h2 className="text-xl font-semibold text-foreground">Business Value</h2>
           </div>
           <div className="space-y-3 ml-10">
             <div>
-              <p className="text-sm text-[#6B6760]">Role</p>
-              <p className="font-medium text-[#2D3330]">{assignment.role}</p>
+              <p className="text-sm text-muted-foreground">Role</p>
+              <p className="font-medium text-foreground">{assignment.role}</p>
             </div>
             <div>
-              <p className="text-sm text-[#6B6760]">Business Value</p>
-              <p className="text-[#2D3330]">{assignment.businessValue}</p>
+              <p className="text-sm text-muted-foreground">Business Value</p>
+              <p className="text-foreground">{assignment.businessValue}</p>
             </div>
             {assignment.expectedImpact && (
               <div>
-                <p className="text-sm text-[#6B6760]">Expected Impact</p>
-                <p className="text-[#2D3330]">{assignment.expectedImpact}</p>
+                <p className="text-sm text-muted-foreground">Expected Impact</p>
+                <p className="text-foreground">{assignment.expectedImpact}</p>
               </div>
             )}
           </div>
@@ -178,20 +178,20 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
         {/* Target Outcomes */}
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-full bg-[#1C4D3A] text-white flex items-center justify-center font-semibold">
+            <div className="w-8 h-8 rounded-full bg-proofound-forest text-white flex items-center justify-center font-semibold">
               2
             </div>
-            <h2 className="text-xl font-semibold text-[#2D3330]">Target Outcomes</h2>
+            <h2 className="text-xl font-semibold text-foreground">Target Outcomes</h2>
           </div>
           <div className="ml-10">
             {assignment.outcomes && assignment.outcomes.length > 0 ? (
               <div className="space-y-3">
                 {assignment.outcomes.map((outcome: any, index: number) => (
-                  <div key={index} className="flex items-center gap-3 p-3 bg-[#F7F6F1] rounded-lg">
-                    <Check className="h-5 w-5 text-[#1C4D3A]" />
+                  <div key={index} className="flex items-center gap-3 p-3 bg-japandi-bg rounded-lg">
+                    <Check className="h-5 w-5 text-proofound-forest" />
                     <div className="flex-1">
-                      <p className="font-medium text-[#2D3330]">{outcome.metric}</p>
-                      <p className="text-sm text-[#6B6760]">
+                      <p className="font-medium text-foreground">{outcome.metric}</p>
+                      <p className="text-sm text-muted-foreground">
                         Target: {outcome.target} • Timeframe: {outcome.timeframe}
                       </p>
                     </div>
@@ -199,7 +199,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
                 ))}
               </div>
             ) : (
-              <p className="text-[#6B6760]">No outcomes defined</p>
+              <p className="text-muted-foreground">No outcomes defined</p>
             )}
           </div>
         </Card>
@@ -207,19 +207,19 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
         {/* Weight Matrix */}
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-full bg-[#1C4D3A] text-white flex items-center justify-center font-semibold">
+            <div className="w-8 h-8 rounded-full bg-proofound-forest text-white flex items-center justify-center font-semibold">
               3
             </div>
-            <h2 className="text-xl font-semibold text-[#2D3330]">Weight Matrix</h2>
+            <h2 className="text-xl font-semibold text-foreground">Weight Matrix</h2>
           </div>
           <div className="ml-10 space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-[#6B6760]">Mission/Purpose Fit</span>
-              <span className="font-semibold text-[#2D3330]">{assignment.missionWeight}%</span>
+              <span className="text-muted-foreground">Mission/Purpose Fit</span>
+              <span className="font-semibold text-foreground">{assignment.missionWeight}%</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[#6B6760]">Expertise Depth</span>
-              <span className="font-semibold text-[#2D3330]">{assignment.expertiseWeight}%</span>
+              <span className="text-muted-foreground">Expertise Depth</span>
+              <span className="font-semibold text-foreground">{assignment.expertiseWeight}%</span>
             </div>
           </div>
         </Card>
@@ -227,17 +227,17 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
         {/* Practical Details */}
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-full bg-[#1C4D3A] text-white flex items-center justify-center font-semibold">
+            <div className="w-8 h-8 rounded-full bg-proofound-forest text-white flex items-center justify-center font-semibold">
               4
             </div>
-            <h2 className="text-xl font-semibold text-[#2D3330]">Practical Details</h2>
+            <h2 className="text-xl font-semibold text-foreground">Practical Details</h2>
           </div>
           <div className="ml-10 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               {assignment.compensationMin != null && assignment.compensationMax != null && (
                 <div>
-                  <p className="text-sm text-[#6B6760]">Compensation Range</p>
-                  <p className="font-medium text-[#2D3330]">
+                  <p className="text-sm text-muted-foreground">Compensation Range</p>
+                  <p className="font-medium text-foreground">
                     {assignment.currency} {assignment.compensationMin.toLocaleString()} -{' '}
                     {assignment.compensationMax.toLocaleString()}
                   </p>
@@ -245,8 +245,8 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
               )}
               {assignment.location && (
                 <div>
-                  <p className="text-sm text-[#6B6760]">Location</p>
-                  <p className="font-medium text-[#2D3330]">{assignment.location}</p>
+                  <p className="text-sm text-muted-foreground">Location</p>
+                  <p className="font-medium text-foreground">{assignment.location}</p>
                 </div>
               )}
             </div>
@@ -254,10 +254,14 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
             {/* Verification Gates */}
             {assignment.verificationGates && assignment.verificationGates.length > 0 && (
               <div className="pt-4 border-t">
-                <p className="text-sm text-[#6B6760] mb-2">Verification Requirements</p>
+                <p className="text-sm text-muted-foreground mb-2">Verification Requirements</p>
                 <div className="flex flex-wrap gap-2">
                   {assignment.verificationGates.map((gate) => (
-                    <Badge key={gate} variant="secondary" className="bg-[#E8E6DD] text-[#2D3330]">
+                    <Badge
+                      key={gate}
+                      variant="secondary"
+                      className="bg-proofound-stone text-foreground"
+                    >
                       {VERIFICATION_GATE_LABELS[gate] || gate}
                     </Badge>
                   ))}
@@ -270,22 +274,26 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
         {/* Required Skills */}
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-full bg-[#1C4D3A] text-white flex items-center justify-center font-semibold">
+            <div className="w-8 h-8 rounded-full bg-proofound-forest text-white flex items-center justify-center font-semibold">
               5
             </div>
-            <h2 className="text-xl font-semibold text-[#2D3330]">Required Skills</h2>
+            <h2 className="text-xl font-semibold text-foreground">Required Skills</h2>
           </div>
           <div className="ml-10">
             {assignment.requiredSkills && assignment.requiredSkills.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {assignment.requiredSkills.map((skill: any, index: number) => (
-                  <Badge key={index} variant="outline" className="border-[#7A9278] text-[#1C4D3A]">
+                  <Badge
+                    key={index}
+                    variant="outline"
+                    className="border-[#7A9278] text-proofound-forest"
+                  >
                     {getSkillDisplayLabel(skill)} (Level {skill.level}/5)
                   </Badge>
                 ))}
               </div>
             ) : (
-              <p className="text-[#6B6760]">No required skills defined</p>
+              <p className="text-muted-foreground">No required skills defined</p>
             )}
           </div>
         </Card>

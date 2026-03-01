@@ -435,7 +435,10 @@ export default function OrganizationInterviewsPage() {
 
             <div className="space-y-4 py-2">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[#2D3330]" htmlFor="edit-interview-date">
+                <label
+                  className="text-sm font-medium text-foreground"
+                  htmlFor="edit-interview-date"
+                >
                   Date
                 </label>
                 <input
@@ -448,7 +451,10 @@ export default function OrganizationInterviewsPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[#2D3330]" htmlFor="edit-interview-time">
+                <label
+                  className="text-sm font-medium text-foreground"
+                  htmlFor="edit-interview-time"
+                >
                   Time
                 </label>
                 <input
@@ -462,7 +468,7 @@ export default function OrganizationInterviewsPage() {
 
               <div className="space-y-2">
                 <label
-                  className="text-sm font-medium text-[#2D3330]"
+                  className="text-sm font-medium text-foreground"
                   htmlFor="edit-interview-reason"
                 >
                   Reason (optional)

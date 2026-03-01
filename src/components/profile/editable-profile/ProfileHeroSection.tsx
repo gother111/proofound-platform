@@ -1,4 +1,6 @@
 import { Calendar, Edit3, Eye, EyeOff, MapPin, Share2 } from 'lucide-react';
+import { FastAverageColor } from 'fast-average-color';
+import { useEffect, useState } from 'react';
 
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { CoverUpload } from '@/components/profile/CoverUpload';
@@ -30,6 +32,24 @@ export function ProfileHeroSection({
   onShare,
   onUpdateBasicInfo,
 }: ProfileHeroSectionProps) {
+  const [dominantColor, setDominantColor] = useState<string>('rgba(122, 146, 120, 0.15)');
+
+  useEffect(() => {
+    if (profile.basicInfo.avatar) {
+      const fac = new FastAverageColor();
+      // Use a timeout or handle CORS if it's an external URL.
+      // fast-average-color handles Base64 naturally.
+      fac
+        .getColorAsync(profile.basicInfo.avatar, { ignoredColor: [255, 255, 255, 255, 20] }) // ignore pure white
+        .then((color) => {
+          setDominantColor(`rgba(${color.value[0]}, ${color.value[1]}, ${color.value[2]}, 0.15)`);
+        })
+        .catch((e) => {
+          console.warn('Failed to extract average color', e);
+        });
+    }
+  }, [profile.basicInfo.avatar]);
+
   return (
     <div className="relative">
       <CoverUpload
@@ -37,7 +57,13 @@ export function ProfileHeroSection({
         onUpload={(base64) => onUpdateBasicInfo({ coverImage: base64 })}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Ambient Glow */}
+      <div
+        className="absolute top-[150px] left-1/2 -translate-x-1/2 w-full max-w-4xl h-[400px] blur-[120px] pointer-events-none z-0 transition-colors duration-1000 rounded-full"
+        style={{ backgroundColor: dominantColor }}
+      />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="relative -mt-16 mb-8">
           <Card className="p-6 md:p-8 border border-white/40 dark:border-stone-800/50 shadow-[0_8px_30px_rgb(0,0,0,0.06)] bg-white/70 dark:bg-stone-900/60 backdrop-blur-md rounded-3xl overflow-hidden relative">
             <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#7A9278] via-[#E0D5C7] to-[#C9A57B]" />

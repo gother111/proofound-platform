@@ -212,7 +212,7 @@ export function AssignmentWizard({ organizationId }: { organizationId: string })
         <CardContent className="pt-6">
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <h2 className="text-lg font-semibold text-[#2D3330] dark:text-foreground">
+              <h2 className="text-lg font-semibold text-foreground dark:text-foreground">
                 Create Assignment
               </h2>
               <Badge variant="outline">
@@ -228,10 +228,10 @@ export function AssignmentWizard({ organizationId }: { organizationId: string })
                     key={step.id}
                     className={`flex items-center gap-1 ${
                       step.id === currentStep
-                        ? 'text-[#1C4D3A] font-semibold'
+                        ? 'text-proofound-forest font-semibold'
                         : step.id < currentStep
                           ? 'text-green-600'
-                          : 'text-[#6B6760]'
+                          : 'text-muted-foreground'
                     }`}
                   >
                     {step.id < currentStep ? (
@@ -325,7 +325,7 @@ export function AssignmentWizard({ organizationId }: { organizationId: string })
             <div className="space-y-4">
               <div>
                 <Label>Required Skills</Label>
-                <p className="text-sm text-[#6B6760] dark:text-muted-foreground mb-2">
+                <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-2">
                   Add the essential skills for this role
                 </p>
                 {/* Simplified - in production, use a proper skill selector component */}
@@ -334,7 +334,7 @@ export function AssignmentWizard({ organizationId }: { organizationId: string })
 
               <div>
                 <Label>Nice-to-Have Skills</Label>
-                <p className="text-sm text-[#6B6760] dark:text-muted-foreground mb-2">
+                <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-2">
                   Optional skills that would be beneficial
                 </p>
                 <Input placeholder="e.g., GraphQL, Docker, AWS" />
@@ -358,7 +358,7 @@ export function AssignmentWizard({ organizationId }: { organizationId: string })
             <div className="space-y-4">
               <div>
                 <Label>Organizational Values</Label>
-                <p className="text-sm text-[#6B6760] dark:text-muted-foreground mb-2">
+                <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-2">
                   Select values that align with this role
                 </p>
                 <div className="grid grid-cols-2 gap-2">
@@ -483,28 +483,30 @@ export function AssignmentWizard({ organizationId }: { organizationId: string })
           {/* Step 5: Review */}
           {currentStep === 5 && (
             <div className="space-y-6">
-              <div className="p-4 bg-[#F7F6F1] dark:bg-background/50 rounded-lg border border-[#E8E6DD] dark:border-border">
-                <h3 className="font-semibold text-[#2D3330] dark:text-foreground mb-4">
+              <div className="p-4 bg-japandi-bg dark:bg-background/50 rounded-lg border border-proofound-stone dark:border-border">
+                <h3 className="font-semibold text-foreground dark:text-foreground mb-4">
                   Role Summary
                 </h3>
                 <dl className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <dt className="text-[#6B6760] dark:text-muted-foreground">Title:</dt>
+                    <dt className="text-muted-foreground dark:text-muted-foreground">Title:</dt>
                     <dd className="font-medium">{data.role || 'Not specified'}</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-[#6B6760] dark:text-muted-foreground">Type:</dt>
+                    <dt className="text-muted-foreground dark:text-muted-foreground">Type:</dt>
                     <dd className="font-medium capitalize">{data.employmentType}</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-[#6B6760] dark:text-muted-foreground">Location:</dt>
+                    <dt className="text-muted-foreground dark:text-muted-foreground">Location:</dt>
                     <dd className="font-medium capitalize">
                       {data.location} ({data.locationMode})
                     </dd>
                   </div>
                   {data.compensationMin > 0 && (
                     <div className="flex justify-between">
-                      <dt className="text-[#6B6760] dark:text-muted-foreground">Compensation:</dt>
+                      <dt className="text-muted-foreground dark:text-muted-foreground">
+                        Compensation:
+                      </dt>
                       <dd className="font-medium">
                         {data.compensationCurrency} {data.compensationMin} - {data.compensationMax}
                       </dd>
@@ -513,7 +515,7 @@ export function AssignmentWizard({ organizationId }: { organizationId: string })
                 </dl>
               </div>
 
-              <div className="text-sm text-[#6B6760] dark:text-muted-foreground">
+              <div className="text-sm text-muted-foreground dark:text-muted-foreground">
                 <p>✓ All required fields completed</p>
                 <p>✓ Ready to publish or save as draft</p>
               </div>
@@ -536,7 +538,7 @@ export function AssignmentWizard({ organizationId }: { organizationId: string })
           </Button>
 
           {currentStep < STEPS.length ? (
-            <Button onClick={handleNext} className="bg-[#1C4D3A] text-white">
+            <Button onClick={handleNext} className="bg-proofound-forest text-white">
               Next
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
@@ -544,7 +546,7 @@ export function AssignmentWizard({ organizationId }: { organizationId: string })
             <Button
               onClick={handlePublish}
               disabled={isSaving || !data.role || !data.description}
-              className="bg-[#1C4D3A] text-white"
+              className="bg-proofound-forest text-white"
             >
               <CheckCircle2 className="w-4 h-4 mr-2" />
               {isSaving ? 'Publishing...' : 'Publish Assignment'}

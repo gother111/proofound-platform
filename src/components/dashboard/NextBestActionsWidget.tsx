@@ -142,7 +142,7 @@ export function NextBestActionsWidget({
       <Card variant="bento">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Sparkles className="h-5 w-5 text-[#1C4D3A]" />
+            <Sparkles className="h-5 w-5 text-proofound-forest" />
             Next Best Actions
           </CardTitle>
         </CardHeader>
@@ -156,7 +156,7 @@ export function NextBestActionsWidget({
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="w-full text-left p-3 rounded-lg border border-[#E8E6DD] flex items-start gap-3"
+                  className="w-full text-left p-3 rounded-lg border border-proofound-stone flex items-start gap-3"
                 >
                   <Skeleton className="w-5 h-5 rounded-full shrink-0" />
                   <div className="flex-1 space-y-2">
@@ -192,7 +192,7 @@ export function NextBestActionsWidget({
       <CardHeader className="space-y-4">
         <div className="flex items-center justify-between">
           <CardTitle className="min-w-0 flex items-center gap-2 text-lg">
-            <Sparkles className="h-5 w-5 text-[#1C4D3A]" />
+            <Sparkles className="h-5 w-5 text-proofound-forest" />
             Next Best Actions
           </CardTitle>
           <Badge variant="outline" className={`${DASHBOARD_STATUS_CHIP_CLASS} ${status.color}`}>
@@ -203,12 +203,12 @@ export function NextBestActionsWidget({
         {/* Profile Completeness */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-[#6B6760]">Profile Completeness</span>
-            <span className="font-semibold text-[#2D3330]">{percentage}%</span>
+            <span className="text-muted-foreground">Profile Completeness</span>
+            <span className="font-semibold text-foreground">{percentage}%</span>
           </div>
           <Progress value={percentage} className="h-2" />
           {percentage < 60 && (
-            <p className="text-xs text-[#6B6760]">
+            <p className="text-xs text-muted-foreground">
               Reach 60% to become matchable and start receiving opportunities
             </p>
           )}
@@ -219,8 +219,8 @@ export function NextBestActionsWidget({
         {topActions.length === 0 ? (
           <div className="text-center py-8">
             <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-3" />
-            <p className="text-sm font-medium text-[#2D3330] mb-1">Profile Complete!</p>
-            <p className="text-xs text-[#6B6760]">
+            <p className="text-sm font-medium text-foreground mb-1">Profile Complete!</p>
+            <p className="text-xs text-muted-foreground">
               Great job! Your profile is optimized for matching.
             </p>
           </div>
@@ -231,22 +231,24 @@ export function NextBestActionsWidget({
                 key={action.id}
                 onClick={() => router.push(action.actionUrl)}
                 onMouseUp={() => onActionClick?.(action.id)}
-                className="w-full text-left p-3 rounded-lg border border-[#E8E6DD] hover:border-[#1C4D3A] hover:bg-[#F7F6F1] transition-all group"
+                className="w-full text-left p-3 rounded-lg border border-proofound-stone hover:border-proofound-forest hover:bg-japandi-bg transition-all group"
               >
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 mt-1">
                     {action.completed ? (
                       <CheckCircle2 className="h-5 w-5 text-green-500" />
                     ) : (
-                      <div className="w-5 h-5 rounded-full border-2 border-[#1C4D3A] flex items-center justify-center">
-                        <span className="text-xs font-semibold text-[#1C4D3A]">{index + 1}</span>
+                      <div className="w-5 h-5 rounded-full border-2 border-proofound-forest flex items-center justify-center">
+                        <span className="text-xs font-semibold text-proofound-forest">
+                          {index + 1}
+                        </span>
                       </div>
                     )}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium text-[#2D3330] group-hover:text-[#1C4D3A]">
+                      <span className="text-sm font-medium text-foreground group-hover:text-proofound-forest">
                         {action.title}
                       </span>
                       {action.priority === 'high' && (
@@ -258,11 +260,11 @@ export function NextBestActionsWidget({
                         </Badge>
                       )}
                     </div>
-                    <p className="text-xs text-[#6B6760]">{action.description}</p>
+                    <p className="text-xs text-muted-foreground">{action.description}</p>
                   </div>
 
                   <div className="flex-shrink-0">
-                    <ArrowRight className="h-4 w-4 text-[#A8B69D] group-hover:text-[#1C4D3A] transition-colors" />
+                    <ArrowRight className="h-4 w-4 text-[#A8B69D] group-hover:text-proofound-forest transition-colors" />
                   </div>
                 </div>
               </button>
@@ -273,7 +275,7 @@ export function NextBestActionsWidget({
                 variant="ghost"
                 size="sm"
                 onClick={() => router.push('/app/i/profile')}
-                className="w-full text-[#1C4D3A] hover:bg-[#EEF1EA]"
+                className="w-full text-proofound-forest hover:bg-proofound-forest/5"
               >
                 View All {actions.length} Actions
                 <ArrowRight className="h-4 w-4 ml-2" />

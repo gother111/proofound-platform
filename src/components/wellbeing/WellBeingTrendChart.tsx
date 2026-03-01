@@ -40,7 +40,7 @@ export function WellBeingTrendChart({ trend }: WellBeingTrendChartProps) {
 
   if (normalizedTrend.length === 0) {
     return (
-      <div className="bg-white rounded-3xl border border-[#E8E6DD] p-6 text-center">
+      <div className="bg-white rounded-3xl border border-proofound-stone p-6 text-center">
         <h3
           className="font-semibold mb-3 font-['Crimson_Pro'] text-lg"
           style={{ color: '#2D3330' }}
@@ -62,13 +62,13 @@ export function WellBeingTrendChart({ trend }: WellBeingTrendChartProps) {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white/80 backdrop-blur-md p-3 rounded-xl border border-[#E8E6DD] shadow-sm">
-          <p className="text-xs font-semibold text-[#2D3330] mb-2">{formatWeekLabel(label)}</p>
+        <div className="bg-white/80 backdrop-blur-md p-3 rounded-xl border border-proofound-stone shadow-sm">
+          <p className="text-xs font-semibold text-foreground mb-2">{formatWeekLabel(label)}</p>
           {payload.map((entry: any, index: number) => (
             <div key={index} className="flex items-center gap-2 text-xs mb-1">
               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-              <span className="text-[#6B6760] font-medium">{entry.name}:</span>
-              <span className="text-[#2D3330] font-bold">{Number(entry.value).toFixed(1)}</span>
+              <span className="text-muted-foreground font-medium">{entry.name}:</span>
+              <span className="text-foreground font-bold">{Number(entry.value).toFixed(1)}</span>
             </div>
           ))}
         </div>
@@ -78,7 +78,7 @@ export function WellBeingTrendChart({ trend }: WellBeingTrendChartProps) {
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-[#E8E6DD] p-6">
+    <div className="bg-white rounded-3xl border border-proofound-stone p-6">
       {/* Header */}
       <div className="mb-6">
         <h3
@@ -122,7 +122,9 @@ export function WellBeingTrendChart({ trend }: WellBeingTrendChartProps) {
               verticalAlign="bottom"
               height={36}
               iconType="circle"
-              formatter={(value) => <span className="text-xs text-[#6B6760] ml-1">{value}</span>}
+              formatter={(value) => (
+                <span className="text-xs text-muted-foreground ml-1">{value}</span>
+              )}
               wrapperStyle={{ paddingTop: '20px' }}
             />
             <Line

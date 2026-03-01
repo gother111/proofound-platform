@@ -66,11 +66,11 @@ export function NextActionsCard({ organizationId }: NextActionsCardProps) {
       case 'critical':
         return <AlertTriangle className="w-4 h-4 text-[#D93F3F]" />;
       case 'high':
-        return <AlertCircle className="w-4 h-4 text-[#C76B4A]" />;
+        return <AlertCircle className="w-4 h-4 text-proofound-terracotta" />;
       case 'medium':
-        return <Info className="w-4 h-4 text-[#1C4D3A]" />;
+        return <Info className="w-4 h-4 text-proofound-forest" />;
       default:
-        return <Info className="w-4 h-4 text-[#6B6760]" />;
+        return <Info className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
@@ -79,11 +79,11 @@ export function NextActionsCard({ organizationId }: NextActionsCardProps) {
       case 'critical':
         return 'bg-[#FEE] text-[#D93F3F] border-[#D93F3F]/20';
       case 'high':
-        return 'bg-[#FFF4E6] text-[#C76B4A] border-[#C76B4A]/20';
+        return 'bg-[#FFF4E6] text-proofound-terracotta border-[#C76B4A]/20';
       case 'medium':
-        return 'bg-[#E8F5E1] text-[#1C4D3A] border-[#1C4D3A]/20';
+        return 'bg-proofound-success-tint text-proofound-forest border-proofound-forest/20';
       default:
-        return 'bg-[#F7F6F1] text-[#6B6760] border-[#6B6760]/20';
+        return 'bg-japandi-bg text-muted-foreground border-[#6B6760]/20';
     }
   };
 
@@ -102,10 +102,10 @@ export function NextActionsCard({ organizationId }: NextActionsCardProps) {
       <div className="flex items-start justify-between mb-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Zap className="w-5 h-5 text-[#1C4D3A]" />
-            <h3 className="text-lg font-semibold text-[#2D3330]">Next Actions</h3>
+            <Zap className="w-5 h-5 text-proofound-forest" />
+            <h3 className="text-lg font-semibold text-foreground">Next Actions</h3>
           </div>
-          <p className="text-sm text-[#6B6760]">
+          <p className="text-sm text-muted-foreground">
             Intelligent recommendations to improve your hiring outcomes
           </p>
         </div>
@@ -123,14 +123,14 @@ export function NextActionsCard({ organizationId }: NextActionsCardProps) {
       </div>
 
       {isLoading ? (
-        <div className="py-8 flex items-center justify-center text-sm text-[#6B6760]">
+        <div className="py-8 flex items-center justify-center text-sm text-muted-foreground">
           Analyzing your hiring pipeline...
         </div>
       ) : actions.length === 0 ? (
         <div className="py-8 flex flex-col items-center justify-center">
-          <CheckCircle2 className="w-8 h-8 text-[#1C4D3A] mb-2" />
-          <p className="text-sm text-[#2D3330] font-medium">All caught up!</p>
-          <p className="text-xs text-[#6B6760] mt-1">
+          <CheckCircle2 className="w-8 h-8 text-proofound-forest mb-2" />
+          <p className="text-sm text-foreground font-medium">All caught up!</p>
+          <p className="text-xs text-muted-foreground mt-1">
             No immediate actions needed. We'll notify you if anything requires attention.
           </p>
         </div>
@@ -145,15 +145,15 @@ export function NextActionsCard({ organizationId }: NextActionsCardProps) {
                 <div className="flex-shrink-0 mt-0.5">{getPriorityIcon(action.priority)}</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h4 className="text-sm font-semibold text-[#2D3330]">{action.title}</h4>
+                    <h4 className="text-sm font-semibold text-foreground">{action.title}</h4>
                     <Badge
                       variant="secondary"
-                      className="text-xs bg-white/50 text-[#6B6760] border-0"
+                      className="text-xs bg-white/50 text-muted-foreground border-0"
                     >
                       {getCategoryLabel(action.category)}
                     </Badge>
                   </div>
-                  <p className="text-sm text-[#2D3330] mb-3">{action.description}</p>
+                  <p className="text-sm text-foreground mb-3">{action.description}</p>
                   {action.actionUrl ? (
                     <Link href={action.actionUrl}>
                       <Button size="sm" variant="ghost" className="h-8 px-3 text-xs font-medium">
@@ -175,8 +175,8 @@ export function NextActionsCard({ organizationId }: NextActionsCardProps) {
       )}
 
       {actions.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-[#E8E6DD]">
-          <p className="text-xs text-[#6B6760] text-center">
+        <div className="mt-4 pt-4 border-t border-proofound-stone">
+          <p className="text-xs text-muted-foreground text-center">
             Showing top {actions.length} {actions.length === 1 ? 'action' : 'actions'} based on your
             recent hiring activity
           </p>

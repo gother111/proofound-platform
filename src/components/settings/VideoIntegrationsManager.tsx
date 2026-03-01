@@ -152,7 +152,9 @@ export function VideoIntegrationsManager({
 
   if (loading) {
     return (
-      <div className={variant === 'standalone' ? 'py-12 text-center text-[#6B6760]' : 'py-4'}>
+      <div
+        className={variant === 'standalone' ? 'py-12 text-center text-muted-foreground' : 'py-4'}
+      >
         <span className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
           Loading integrations...
         </span>
@@ -162,7 +164,7 @@ export function VideoIntegrationsManager({
 
   const content = (
     <div className="space-y-4">
-      <Card variant="bento" className="border-[#E8E6DD] dark:border-border">
+      <Card variant="bento" className="border-proofound-stone dark:border-border">
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
@@ -190,10 +192,10 @@ export function VideoIntegrationsManager({
         <CardContent className="space-y-4">
           {byProvider.zoom?.connected ? (
             <>
-              <p className="text-sm text-[#6B6760] dark:text-muted-foreground">
+              <p className="text-sm text-muted-foreground dark:text-muted-foreground">
                 Connected since {formatConnectedDate(byProvider.zoom.connectedAt)}
               </p>
-              <p className="text-xs text-[#6B6760] dark:text-muted-foreground">
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground">
                 Proofound will create Zoom meetings from your connected Zoom account when you host
                 interviews. Participants join using the generated meeting link.
               </p>
@@ -228,7 +230,7 @@ export function VideoIntegrationsManager({
         </CardContent>
       </Card>
 
-      <Card variant="bento" className="border-[#E8E6DD] dark:border-border">
+      <Card variant="bento" className="border-proofound-stone dark:border-border">
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
@@ -258,10 +260,10 @@ export function VideoIntegrationsManager({
         <CardContent className="space-y-4">
           {byProvider.google?.connected ? (
             <>
-              <p className="text-sm text-[#6B6760] dark:text-muted-foreground">
+              <p className="text-sm text-muted-foreground dark:text-muted-foreground">
                 Connected since {formatConnectedDate(byProvider.google.connectedAt)}
               </p>
-              <p className="text-xs text-[#6B6760] dark:text-muted-foreground">
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground">
                 Proofound will create Google Meet meetings from your connected Google account when
                 you host interviews. Participants join using the generated meeting link.
               </p>
@@ -306,11 +308,11 @@ export function VideoIntegrationsManager({
 
   if (variant === 'standalone') {
     return (
-      <div className="min-h-screen bg-[#F7F6F1]">
+      <div className="min-h-screen bg-japandi-bg">
         <div className="mx-auto max-w-4xl px-6 py-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-semibold text-[#2D3330] mb-2">Integrations</h1>
-            <p className="text-[#6B6760]">
+            <h1 className="text-3xl font-semibold text-foreground mb-2">Integrations</h1>
+            <p className="text-muted-foreground">
               Connect video calling platforms for interview scheduling
             </p>
           </div>

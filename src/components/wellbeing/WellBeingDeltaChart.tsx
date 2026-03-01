@@ -119,16 +119,16 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
   // Empty state
   if (!deltaData || !deltaData.hasBaseline) {
     return (
-      <Card className="border-[#E8E6DD] rounded-3xl">
+      <Card className="border-proofound-stone rounded-3xl">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-lg font-['Crimson_Pro']">Well-Being Delta</CardTitle>
-              <CardDescription className="text-[#6B6760]">
+              <CardDescription className="text-muted-foreground">
                 Track how your well-being changes over time
               </CardDescription>
             </div>
-            <Lock className="w-5 h-5 text-[#6B6760]" />
+            <Lock className="w-5 h-5 text-muted-foreground" />
           </div>
         </CardHeader>
         <CardContent>
@@ -162,18 +162,18 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
               <circle cx="10" cy="40" r="4" fill="#DC2626" opacity="0.8" />
               <circle cx="110" cy="50" r="4" fill="#DC2626" opacity="0.8" />
             </svg>
-            <h3 className="text-lg font-medium text-[#2D3330] mb-2 font-['Crimson_Pro']">
+            <h3 className="text-lg font-medium text-foreground mb-2 font-['Crimson_Pro']">
               Establish Your Baseline
             </h3>
-            <p className="text-sm text-[#6B6760] max-w-xs mx-auto mb-2">
+            <p className="text-sm text-muted-foreground max-w-xs mx-auto mb-2">
               Complete at least 2 check-ins to track how your well-being trends over time.
             </p>
           </div>
 
-          <div className="mt-4 p-5 bg-[#F7F6F1] rounded-2xl border border-[#E8E6DD]">
+          <div className="mt-4 p-5 bg-japandi-bg rounded-2xl border border-proofound-stone">
             <div className="flex items-start gap-2">
-              <Lock className="w-4 h-4 text-[#1C4D3A] flex-shrink-0 mt-0.5" />
-              <div className="text-xs leading-relaxed text-[#2D3330]">
+              <Lock className="w-4 h-4 text-proofound-forest flex-shrink-0 mt-0.5" />
+              <div className="text-xs leading-relaxed text-foreground">
                 <strong className="font-semibold">Private & Safe:</strong> Your well-being data is
                 completely private and never used in matching or ranking. It's solely for your own
                 insight and reflection.
@@ -194,12 +194,12 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   return (
-    <Card className="border-[#E8E6DD] rounded-3xl">
+    <Card className="border-proofound-stone rounded-3xl">
       <CardHeader>
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <CardTitle className="text-lg font-['Crimson_Pro']">Well-Being Delta</CardTitle>
-            <Lock className="w-4 h-4 text-[#6B6760]" />
+            <Lock className="w-4 h-4 text-muted-foreground" />
           </div>
 
           {/* Period Toggle */}
@@ -210,8 +210,8 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
               onClick={() => setSelectedPeriod(14)}
               className={
                 selectedPeriod === 14
-                  ? 'bg-[#1C4D3A] text-white'
-                  : 'border-[#E8E6DD] text-[#6B6760]'
+                  ? 'bg-proofound-forest text-white'
+                  : 'border-proofound-stone text-muted-foreground'
               }
             >
               14 days
@@ -222,8 +222,8 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
               onClick={() => setSelectedPeriod(30)}
               className={
                 selectedPeriod === 30
-                  ? 'bg-[#1C4D3A] text-white'
-                  : 'border-[#E8E6DD] text-[#6B6760]'
+                  ? 'bg-proofound-forest text-white'
+                  : 'border-proofound-stone text-muted-foreground'
               }
             >
               30 days
@@ -231,7 +231,7 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
           </div>
         </div>
 
-        <CardDescription className="text-[#6B6760]">
+        <CardDescription className="text-muted-foreground">
           {deltaData.checkinsCount} check-ins • {selectedPeriod}-day comparison to baseline
         </CardDescription>
       </CardHeader>
@@ -240,9 +240,9 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
         {/* Delta Summary Cards */}
         <div className="grid grid-cols-2 gap-4">
           {/* Stress Delta */}
-          <div className="p-4 rounded-lg bg-gradient-to-br from-[#F7F6F1] to-white border border-[#E8E6DD]">
+          <div className="p-4 rounded-lg bg-gradient-to-br from-[#F7F6F1] to-white border border-proofound-stone">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-medium text-[#2D3330]">Stress</span>
+              <span className="text-sm font-medium text-foreground">Stress</span>
               {getDeltaIcon(deltaData.stressDelta)}
             </div>
             <div className="flex items-baseline gap-2 mb-2">
@@ -263,7 +263,7 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
                 {getDeltaText(deltaData.stressDelta)}
               </Badge>
             </div>
-            <p className="text-xs text-[#6B6760]">
+            <p className="text-xs text-muted-foreground">
               {deltaData.stressDelta > 0
                 ? 'Less stress ↓'
                 : deltaData.stressDelta < 0
@@ -273,9 +273,9 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
           </div>
 
           {/* Control Delta */}
-          <div className="p-4 rounded-lg bg-gradient-to-br from-[#F7F6F1] to-white border border-[#E8E6DD]">
+          <div className="p-4 rounded-lg bg-gradient-to-br from-[#F7F6F1] to-white border border-proofound-stone">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-medium text-[#2D3330]">Control</span>
+              <span className="text-sm font-medium text-foreground">Control</span>
               {getDeltaIcon(deltaData.controlDelta)}
             </div>
             <div className="flex items-baseline gap-2 mb-2">
@@ -296,7 +296,7 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
                 {getDeltaText(deltaData.controlDelta)}
               </Badge>
             </div>
-            <p className="text-xs text-[#6B6760]">
+            <p className="text-xs text-muted-foreground">
               {deltaData.controlDelta > 0
                 ? 'More control ↑'
                 : deltaData.controlDelta < 0
@@ -308,9 +308,9 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
 
         {/* Trend Chart */}
         {recentCheckIns.length > 0 && (
-          <div className="space-y-4 pt-4 border-t border-[#E8E6DD]">
-            <h4 className="text-sm font-medium text-[#2D3330]">Trend Over Time</h4>
-            <div className="h-[220px] w-full bg-white rounded-2xl border border-[#E8E6DD] p-4">
+          <div className="space-y-4 pt-4 border-t border-proofound-stone">
+            <h4 className="text-sm font-medium text-foreground">Trend Over Time</h4>
+            <div className="h-[220px] w-full bg-white rounded-2xl border border-proofound-stone p-4">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                   data={recentCheckIns}
@@ -340,8 +340,8 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
                     content={({ active, payload, label }: any) => {
                       if (active && payload && payload.length) {
                         return (
-                          <div className="bg-white/90 backdrop-blur-sm p-3 rounded-xl border border-[#E8E6DD] shadow-sm">
-                            <p className="text-xs font-semibold text-[#2D3330] mb-2">
+                          <div className="bg-white/90 backdrop-blur-sm p-3 rounded-xl border border-proofound-stone shadow-sm">
+                            <p className="text-xs font-semibold text-foreground mb-2">
                               {new Date(label).toLocaleDateString('en-US', {
                                 month: 'short',
                                 day: 'numeric',
@@ -353,8 +353,10 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
                                   className="w-2 h-2 rounded-full"
                                   style={{ backgroundColor: entry.color }}
                                 />
-                                <span className="text-[#6B6760] font-medium">{entry.name}:</span>
-                                <span className="text-[#2D3330] font-bold">
+                                <span className="text-muted-foreground font-medium">
+                                  {entry.name}:
+                                </span>
+                                <span className="text-foreground font-bold">
                                   {Number(entry.value).toFixed(1)}
                                 </span>
                               </div>
@@ -371,7 +373,7 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
                     height={36}
                     iconType="circle"
                     formatter={(value) => (
-                      <span className="text-xs text-[#6B6760] ml-1">{value}</span>
+                      <span className="text-xs text-muted-foreground ml-1">{value}</span>
                     )}
                     wrapperStyle={{ paddingTop: '10px' }}
                   />
@@ -400,8 +402,8 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
         )}
 
         {/* Interpretation Help */}
-        <div className="p-4 bg-[#F7F6F1] rounded-2xl border border-[#E8E6DD]">
-          <p className="text-xs leading-relaxed text-[#2D3330]">
+        <div className="p-4 bg-japandi-bg rounded-2xl border border-proofound-stone">
+          <p className="text-xs leading-relaxed text-foreground">
             <strong className="font-semibold">How to read this:</strong> Positive deltas mean
             improvement from your baseline. Lower stress (↓) and higher control (↑) are healthier.
             The chart shows your recent check-ins to help you spot patterns.

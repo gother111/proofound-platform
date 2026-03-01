@@ -4,6 +4,12 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import OrganizationInterviewsPage from '@/app/app/o/[slug]/interviews/page';
 
+const getInterviewsMock = vi.fn();
+
+vi.mock('@/app/actions/interviews', () => ({
+  getInterviews: (...args: any[]) => getInterviewsMock(...args),
+}));
+
 vi.mock('@/components/ui/v2/AppSurface', () => ({
   AppSurface: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
@@ -34,12 +40,29 @@ vi.mock('sonner', () => ({
 describe('organization interviews page actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    getInterviewsMock.mockReset();
   });
 
   it('shows edit/cancel actions and calls edit + cancel APIs with refresh', async () => {
     const upcomingInterviewAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-    let scheduleLoads = 0;
     const fetchCalls: Array<{ url: string; init?: RequestInit }> = [];
+
+    getInterviewsMock.mockImplementation(async () => ({
+      interviews: [
+        {
+          id: 'interview-1',
+          matchId: 'match-1',
+          scheduledAt: upcomingInterviewAt,
+          duration: 30,
+          platform: 'zoom',
+          meetingUrl: 'https://zoom.us/j/example',
+          status: 'scheduled',
+          candidateName: 'Candidate',
+          assignmentTitle: 'Engineer',
+          matchAgreedAt: new Date().toISOString(),
+        },
+      ],
+    }));
 
     vi.stubGlobal(
       'confirm',
@@ -55,29 +78,6 @@ describe('organization interviews page actions', () => {
       vi.fn(async (input: string | URL, init?: RequestInit) => {
         const url = typeof input === 'string' ? input : input.toString();
         fetchCalls.push({ url, init });
-
-        if (url === '/api/interviews/schedule') {
-          scheduleLoads += 1;
-          return {
-            ok: true,
-            json: async () => ({
-              interviews: [
-                {
-                  id: 'interview-1',
-                  matchId: 'match-1',
-                  scheduledAt: upcomingInterviewAt,
-                  duration: 30,
-                  platform: 'zoom',
-                  meetingUrl: 'https://zoom.us/j/example',
-                  status: 'scheduled',
-                  candidateName: 'Candidate',
-                  assignmentTitle: 'Engineer',
-                  matchAgreedAt: new Date().toISOString(),
-                },
-              ],
-            }),
-          };
-        }
 
         if (url === '/api/interviews/edit') {
           return {
@@ -125,7 +125,7 @@ describe('organization interviews page actions', () => {
     });
 
     await waitFor(() => {
-      expect(scheduleLoads).toBeGreaterThanOrEqual(3);
+      expect(getInterviewsMock.mock.calls.length).toBeGreaterThanOrEqual(3);
     });
   });
 });

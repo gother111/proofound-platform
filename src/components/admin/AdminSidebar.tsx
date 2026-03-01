@@ -100,7 +100,7 @@ export function AdminSidebar({
       <div className="flex h-16 items-center justify-between border-b border-white/10 px-4 shrink-0">
         {(!collapsed || mobile) && (
           <div className="flex items-center gap-2">
-            <Shield className="h-6 w-6 text-[#1C4D3A] fill-current text-green-400" />
+            <Shield className="h-6 w-6 text-proofound-forest fill-current text-green-400" />
             <span className="font-semibold text-lg tracking-tight">Admin</span>
           </div>
         )}
@@ -129,7 +129,7 @@ export function AdminSidebar({
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 min-h-11 transition-all duration-200 group',
                 active
-                  ? 'bg-[#1C4D3A] text-white shadow-sm'
+                  ? 'bg-proofound-forest text-white shadow-sm'
                   : 'text-white/70 hover:bg-white/10 hover:text-white'
               )}
               title={collapsed && !mobile ? item.title : undefined}

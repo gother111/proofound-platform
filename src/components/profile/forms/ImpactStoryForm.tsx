@@ -1177,7 +1177,7 @@ export function ImpactStoryForm({
                   className={`text-xs rounded-md border p-2 ${
                     verificationStatus === 'failed'
                       ? 'text-amber-800 bg-amber-50 border-amber-200'
-                      : 'text-[#1C4D3A] bg-[#EEF6F2] border-[#B8D8C8]'
+                      : 'text-proofound-forest bg-[#EEF6F2] border-[#B8D8C8]'
                   }`}
                 >
                   {verificationFeedbackMessage || 'Verification request status updated.'}

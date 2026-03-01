@@ -346,7 +346,7 @@ export function CustomVerificationRequestDialog({ open, onOpenChange, onCreated 
               <Badge variant="outline">{selectedCount} selected</Badge>
             </div>
 
-            <div className="rounded-lg border border-[#E8E6DD] bg-[#F7F6F1] p-3 space-y-3 max-h-[320px] overflow-y-auto">
+            <div className="rounded-lg border border-proofound-stone bg-japandi-bg p-3 space-y-3 max-h-[320px] overflow-y-auto">
               {loadingArtifacts ? (
                 <div
                   className="py-10 flex items-center justify-center gap-2"
@@ -382,7 +382,7 @@ export function CustomVerificationRequestDialog({ open, onOpenChange, onCreated 
                           return (
                             <label
                               key={key}
-                              className="flex items-start gap-3 rounded-md border border-[#E8E6DD] bg-white p-2.5 cursor-pointer"
+                              className="flex items-start gap-3 rounded-md border border-proofound-stone bg-white p-2.5 cursor-pointer"
                             >
                               <Checkbox
                                 checked={checked}

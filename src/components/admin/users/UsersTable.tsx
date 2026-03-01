@@ -175,7 +175,7 @@ export function UsersTable() {
                           src={user.avatarUrl || undefined}
                           alt={user.displayName || 'User'}
                         />
-                        <AvatarFallback className="bg-[#1C4D3A] text-white text-xs">
+                        <AvatarFallback className="bg-proofound-forest text-white text-xs">
                           {getInitials(user.displayName)}
                         </AvatarFallback>
                       </Avatar>

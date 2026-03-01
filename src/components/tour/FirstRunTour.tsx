@@ -339,17 +339,17 @@ export function FirstRunTour({ onComplete, onSkip, basePath = '/app/i' }: FirstR
           <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-8 space-y-6 animate-in fade-in zoom-in duration-300">
             {/* Icon */}
             <div className="flex justify-center">
-              <div className="w-16 h-16 rounded-full bg-[#E8F5E1] flex items-center justify-center">
-                <StepIcon className="w-8 h-8 text-[#1C4D3A]" />
+              <div className="w-16 h-16 rounded-full bg-proofound-success-tint flex items-center justify-center">
+                <StepIcon className="w-8 h-8 text-proofound-forest" />
               </div>
             </div>
 
             {/* Header */}
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-['Crimson_Pro'] font-semibold text-[#2D3330]">
+              <h2 className="text-2xl font-['Crimson_Pro'] font-semibold text-foreground">
                 {step.title}
               </h2>
-              <p className="text-base leading-relaxed text-[#6B6760]">{step.description}</p>
+              <p className="text-base leading-relaxed text-muted-foreground">{step.description}</p>
             </div>
 
             {/* Progress */}
@@ -366,7 +366,7 @@ export function FirstRunTour({ onComplete, onSkip, basePath = '/app/i' }: FirstR
             </div>
 
             {/* Step counter */}
-            <div className="text-center text-sm text-[#6B6760]">
+            <div className="text-center text-sm text-muted-foreground">
               Step {currentStep + 1} of {steps.length}
             </div>
 
@@ -374,7 +374,7 @@ export function FirstRunTour({ onComplete, onSkip, basePath = '/app/i' }: FirstR
             <div className="flex items-center justify-between pt-4">
               <button
                 onClick={handleSkip}
-                className="text-sm text-[#6B6760] hover:text-[#2D3330] transition-colors"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 Skip tour
               </button>
@@ -389,7 +389,7 @@ export function FirstRunTour({ onComplete, onSkip, basePath = '/app/i' }: FirstR
                 <Button
                   size="default"
                   onClick={handleActionButton}
-                  className="bg-[#1C4D3A] hover:bg-[#163D2E] text-white"
+                  className="bg-proofound-forest hover:bg-proofound-forest/90 text-white"
                 >
                   {isLastStep ? 'Get Started' : 'Next'}
                   <ArrowRight className="w-4 h-4 ml-2" />
@@ -398,7 +398,7 @@ export function FirstRunTour({ onComplete, onSkip, basePath = '/app/i' }: FirstR
             </div>
 
             {/* Keyboard hints */}
-            <div className="text-xs text-center text-[#6B6760] pt-2 space-x-4">
+            <div className="text-xs text-center text-muted-foreground pt-2 space-x-4">
               <span>← → Navigate</span>
               <span>ESC Skip</span>
             </div>
@@ -446,7 +446,7 @@ export function FirstRunTour({ onComplete, onSkip, basePath = '/app/i' }: FirstR
           {/* Close button */}
           <button
             onClick={handleSkip}
-            className="absolute top-3 right-3 text-[#6B6760] hover:text-[#2D3330] transition-colors"
+            className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
             aria-label="Close tour"
           >
             <X className="w-5 h-5" />
@@ -455,16 +455,16 @@ export function FirstRunTour({ onComplete, onSkip, basePath = '/app/i' }: FirstR
           {/* Content */}
           <div className="space-y-4 pr-6">
             {/* Icon */}
-            <div className="w-12 h-12 rounded-full bg-[#E8F5E1] flex items-center justify-center">
-              <StepIcon className="w-6 h-6 text-[#1C4D3A]" />
+            <div className="w-12 h-12 rounded-full bg-proofound-success-tint flex items-center justify-center">
+              <StepIcon className="w-6 h-6 text-proofound-forest" />
             </div>
 
             {/* Title & Description */}
             <div className="space-y-2">
-              <h3 className="font-['Crimson_Pro'] font-semibold text-lg text-[#2D3330]">
+              <h3 className="font-['Crimson_Pro'] font-semibold text-lg text-foreground">
                 {step.title}
               </h3>
-              <p className="text-sm leading-relaxed text-[#6B6760]">{step.description}</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">{step.description}</p>
             </div>
 
             {/* Progress dots */}
@@ -494,7 +494,7 @@ export function FirstRunTour({ onComplete, onSkip, basePath = '/app/i' }: FirstR
               <Button
                 size="sm"
                 onClick={handleNext}
-                className="bg-[#1C4D3A] hover:bg-[#163D2E] text-white"
+                className="bg-proofound-forest hover:bg-proofound-forest/90 text-white"
               >
                 {isLastStep ? 'Done' : 'Next'}
                 <ArrowRight className="w-4 h-4 ml-1" />
@@ -502,7 +502,7 @@ export function FirstRunTour({ onComplete, onSkip, basePath = '/app/i' }: FirstR
             </div>
 
             {/* Step counter */}
-            <div className="text-xs text-center text-[#6B6760] pt-1">
+            <div className="text-xs text-center text-muted-foreground pt-1">
               Step {currentStep + 1} of {steps.length}
             </div>
           </div>

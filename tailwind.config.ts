@@ -48,6 +48,8 @@ const config: Config = {
           sand: '#E0D5C7',
           bamboo: '#6B7F5F',
         },
+        // V3 semantic tokens
+        'proofound-success-tint': '#E8F5E1',
         // shadcn/ui semantic tokens
         'japandi-bg': '#F7F6F1',
         'japandi-sage': '#8A9A5B',
@@ -114,7 +116,16 @@ const config: Config = {
         display: brandTokens.typography.fontFamilies.display.split(','),
         sans: brandTokens.typography.fontFamilies.body.split(','),
       },
-      fontSize: brandTokens.typography.fontSizes,
+      fontSize: {
+        ...brandTokens.typography.fontSizes,
+        // Fluid scales for headings
+        h1: 'clamp(2.5rem, 5vw + 1rem, 4.5rem)', // 40px to 72px
+        h2: 'clamp(2rem, 4vw + 1rem, 3.5rem)', // 32px to 56px
+        h3: 'clamp(1.5rem, 3vw + 0.5rem, 2.5rem)', // 24px to 40px
+        h4: 'clamp(1.25rem, 2vw + 0.5rem, 1.75rem)', // 20px to 28px
+        // Fluid scales for body text to maintain reading comfort
+        'body-lg': 'clamp(1.125rem, 1vw + 0.875rem, 1.25rem)', // 18px to 20px
+      },
       fontWeight: {
         normal: brandTokens.typography.fontWeights.regular,
         medium: brandTokens.typography.fontWeights.medium,
@@ -163,7 +174,16 @@ const config: Config = {
       },
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [
+    require('tailwindcss-animate'),
+    function ({ addUtilities }: any) {
+      addUtilities({
+        '.hanging-punctuation': {
+          'hanging-punctuation': 'first last',
+        },
+      });
+    },
+  ],
 };
 
 export default config;

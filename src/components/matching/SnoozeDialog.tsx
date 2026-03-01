@@ -92,7 +92,7 @@ export function SnoozeDialog({
       <div className="px-4 md:px-0">
         <DialogHeader className="md:px-0 text-left">
           <DialogTitle className="flex items-center gap-2">
-            <BellOff className="w-5 h-5 text-[#6B6760]" />
+            <BellOff className="w-5 h-5 text-muted-foreground" />
             Snooze This Match
           </DialogTitle>
           <DialogDescription>
@@ -109,22 +109,22 @@ export function SnoozeDialog({
             onClick={() => setSelectedWeeks(duration.weeks)}
             className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
               selectedWeeks === duration.weeks
-                ? 'border-[#1C4D3A] bg-[#E8F5E1]'
-                : 'border-[#E8E6DD] bg-white hover:border-[#1C4D3A]/30'
+                ? 'border-proofound-forest bg-proofound-success-tint'
+                : 'border-proofound-stone bg-white hover:border-proofound-forest/30'
             }`}
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   {duration.weeks === 1 ? (
-                    <Clock className="w-4 h-4 text-[#1C4D3A]" />
+                    <Clock className="w-4 h-4 text-proofound-forest" />
                   ) : (
-                    <Calendar className="w-4 h-4 text-[#1C4D3A]" />
+                    <Calendar className="w-4 h-4 text-proofound-forest" />
                   )}
-                  <span className="font-medium text-[#2D3330]">{duration.label}</span>
+                  <span className="font-medium text-foreground">{duration.label}</span>
                 </div>
-                <p className="text-sm text-[#6B6760]">{duration.description}</p>
-                <p className="text-xs text-[#6B6760] mt-1">
+                <p className="text-sm text-muted-foreground">{duration.description}</p>
+                <p className="text-xs text-muted-foreground mt-1">
                   Returns:{' '}
                   {new Date(
                     Date.now() + duration.weeks * 7 * 24 * 60 * 60 * 1000
@@ -132,7 +132,7 @@ export function SnoozeDialog({
                 </p>
               </div>
               {selectedWeeks === duration.weeks && (
-                <div className="w-5 h-5 rounded-full bg-[#1C4D3A] flex items-center justify-center flex-shrink-0">
+                <div className="w-5 h-5 rounded-full bg-proofound-forest flex items-center justify-center flex-shrink-0">
                   <svg
                     className="w-3 h-3 text-white"
                     fill="none"
@@ -152,8 +152,8 @@ export function SnoozeDialog({
       </div>
 
       <div className="px-4 md:px-0 pb-4 md:pb-0">
-        <div className="bg-[#F7F6F1] rounded-lg p-3 border border-[#E8E6DD] mb-4">
-          <p className="text-xs leading-relaxed text-[#2D3330]">
+        <div className="bg-japandi-bg rounded-lg p-3 border border-proofound-stone mb-4">
+          <p className="text-xs leading-relaxed text-foreground">
             <strong className="font-semibold">Note:</strong> You can view and manage snoozed matches
             from your Matching preferences. Snoozed matches won't affect your overall match score.
           </p>
@@ -171,7 +171,7 @@ export function SnoozeDialog({
           <Button
             onClick={handleSnooze}
             disabled={isSubmitting}
-            className="bg-[#1C4D3A] text-white w-full sm:w-auto"
+            className="bg-proofound-forest text-white w-full sm:w-auto"
           >
             {isSubmitting
               ? 'Snoozing...'

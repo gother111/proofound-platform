@@ -32,7 +32,7 @@ function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>)
   return (
     <div
       className={cn(
-        'animate-pulse rounded-md bg-[#E8E6DD] dark:bg-[#2C3244]',
+        'animate-pulse rounded-md bg-proofound-stone dark:bg-[#2C3244]',
         // Shimmer effect for normal motion preferences
         'motion-safe:animate-shimmer',
         className
@@ -70,7 +70,7 @@ function SkeletonText({ lines = 3 }: { lines?: number }) {
  */
 function SkeletonCard() {
   return (
-    <div className="rounded-lg border border-[#E8E6DD] bg-white p-6 dark:border-[#D4C4A8]/10 dark:bg-[#252834]">
+    <div className="rounded-lg border border-proofound-stone bg-white p-6 dark:border-[#D4C4A8]/10 dark:bg-[#252834]">
       <div className="flex items-start space-x-4">
         {/* Avatar */}
         <Skeleton className="h-12 w-12 rounded-full" />

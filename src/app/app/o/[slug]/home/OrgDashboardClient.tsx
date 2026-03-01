@@ -397,7 +397,7 @@ export function OrgDashboardClient({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {editMode && (
-              <p className="text-sm text-[#6B6760]">{visibleWidgets.length} widgets shown</p>
+              <p className="text-sm text-muted-foreground">{visibleWidgets.length} widgets shown</p>
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -405,7 +405,7 @@ export function OrgDashboardClient({
               <>
                 {/* Preset Selector */}
                 <Select onValueChange={handleApplyPreset}>
-                  <SelectTrigger className="w-[160px] h-8 text-sm border-[#D8D2C8]">
+                  <SelectTrigger className="w-[160px] h-8 text-sm border-border">
                     <SelectValue placeholder="Quick presets..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -425,7 +425,7 @@ export function OrgDashboardClient({
                   variant="outline"
                   size="sm"
                   onClick={() => setIsWidgetPickerOpen(true)}
-                  className="border-[#D8D2C8] text-[#6B6760]"
+                  className="border-border text-muted-foreground"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Widgets
@@ -434,7 +434,7 @@ export function OrgDashboardClient({
                   variant="outline"
                   size="sm"
                   onClick={handleReset}
-                  className="border-[#D8D2C8] text-[#6B6760]"
+                  className="border-border text-muted-foreground"
                 >
                   <RotateCcw className="h-4 w-4 mr-2" />
                   Reset
@@ -443,7 +443,7 @@ export function OrgDashboardClient({
                   size="sm"
                   onClick={handleSave}
                   disabled={saving}
-                  className="bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
+                  className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   {saving ? 'Saving...' : 'Save Layout'}
@@ -456,8 +456,8 @@ export function OrgDashboardClient({
               onClick={() => setEditMode(!editMode)}
               className={
                 editMode
-                  ? 'border-[#D8D2C8] text-[#6B6760]'
-                  : 'bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]'
+                  ? 'border-border text-muted-foreground'
+                  : 'bg-proofound-forest text-white hover:bg-proofound-forest/90'
               }
             >
               <Settings2 className="h-4 w-4 mr-2" />
@@ -481,14 +481,16 @@ export function OrgDashboardClient({
 
       {visibleWidgets.length === 0 && (
         <div className="flex flex-col items-center justify-center py-12 px-4 bg-white rounded-lg border border-gray-200">
-          <p className="text-lg font-medium text-[#2D3330] mb-2">No dashboard widgets configured</p>
-          <p className="text-sm text-[#6B6760] text-center mb-4">
+          <p className="text-lg font-medium text-foreground mb-2">
+            No dashboard widgets configured
+          </p>
+          <p className="text-sm text-muted-foreground text-center mb-4">
             Customize your organization dashboard to see the information that matters most
           </p>
           {canCustomize && (
             <Button
               onClick={() => setEditMode(true)}
-              className="bg-[#1C4D3A] hover:bg-[#1C4D3A]/90"
+              className="bg-proofound-forest hover:bg-proofound-forest/90"
             >
               <Settings2 className="w-4 h-4 mr-2" />
               Configure Dashboard

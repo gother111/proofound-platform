@@ -212,23 +212,23 @@ export function LinkedInImportModal({
 
             {/* Import Mode Selection */}
             <div>
-              <Label className="text-[#2D3330] mb-3 block">Choose import method</Label>
+              <Label className="text-foreground mb-3 block">Choose import method</Label>
               <RadioGroup value={importMode} onValueChange={(v) => setImportMode(v as any)}>
                 <div className="space-y-3">
-                  <div className="flex items-start space-x-3 p-4 rounded-lg border border-[#E5E3DA] hover:bg-[#F7F6F1]">
+                  <div className="flex items-start space-x-3 p-4 rounded-lg border border-proofound-stone hover:bg-japandi-bg">
                     <RadioGroupItem value="review" id="mode-review" className="mt-1" />
                     <Label htmlFor="mode-review" className="flex-1 cursor-pointer">
-                      <div className="font-medium text-[#2D3330]">Review each skill</div>
-                      <div className="text-sm text-[#6B6760] mt-1">
+                      <div className="font-medium text-foreground">Review each skill</div>
+                      <div className="text-sm text-muted-foreground mt-1">
                         See matched skills and choose which ones to import
                       </div>
                     </Label>
                   </div>
-                  <div className="flex items-start space-x-3 p-4 rounded-lg border border-[#E5E3DA] hover:bg-[#F7F6F1]">
+                  <div className="flex items-start space-x-3 p-4 rounded-lg border border-proofound-stone hover:bg-japandi-bg">
                     <RadioGroupItem value="auto" id="mode-auto" className="mt-1" />
                     <Label htmlFor="mode-auto" className="flex-1 cursor-pointer">
-                      <div className="font-medium text-[#2D3330]">Import all automatically</div>
-                      <div className="text-sm text-[#6B6760] mt-1">
+                      <div className="font-medium text-foreground">Import all automatically</div>
+                      <div className="text-sm text-muted-foreground mt-1">
                         Quickly add all matched skills (you can edit them later)
                       </div>
                     </Label>
@@ -258,11 +258,11 @@ export function LinkedInImportModal({
         {step === 'suggestions' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-[#6B6760]">
+              <p className="text-sm text-muted-foreground">
                 Found {suggestions.length} skill{suggestions.length !== 1 ? 's' : ''} from LinkedIn
               </p>
               {importMode === 'review' && (
-                <p className="text-sm text-[#6B6760]">{selectedSkills.size} selected</p>
+                <p className="text-sm text-muted-foreground">{selectedSkills.size} selected</p>
               )}
             </div>
 
@@ -278,8 +278,10 @@ export function LinkedInImportModal({
                   <Card
                     key={idx}
                     className={`p-4 transition-colors ${
-                      importMode === 'review' && hasMatch ? 'cursor-pointer hover:bg-[#F7F6F1]' : ''
-                    } ${isSelected ? 'border-[#1C4D3A] bg-[#EEF1EA]' : 'border-[#E5E3DA]'}`}
+                      importMode === 'review' && hasMatch
+                        ? 'cursor-pointer hover:bg-japandi-bg'
+                        : ''
+                    } ${isSelected ? 'border-proofound-forest bg-proofound-forest/5' : 'border-proofound-stone'}`}
                     onClick={() => {
                       if (importMode === 'review' && hasMatch && suggestion.matchedSkill) {
                         toggleSkillSelection(suggestion.matchedSkill.code);
@@ -290,7 +292,7 @@ export function LinkedInImportModal({
                       <div className="flex-1">
                         {/* LinkedIn Skill Name */}
                         <div className="flex items-center gap-2 mb-2">
-                          <h4 className="font-medium text-[#2D3330]">
+                          <h4 className="font-medium text-foreground">
                             {suggestion.linkedInSkillName}
                           </h4>
                           {hasMatch && getConfidenceBadge(suggestion.confidence)}
@@ -300,13 +302,13 @@ export function LinkedInImportModal({
                         {hasMatch && suggestion.matchedSkill ? (
                           <div className="space-y-2">
                             <div className="flex items-center gap-2 text-sm">
-                              <ChevronRight className="h-4 w-4 text-[#6B6760]" />
-                              <span className="text-[#1C4D3A] font-medium">
+                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-proofound-forest font-medium">
                                 {suggestion.matchedSkill.nameI18n.en}
                               </span>
                             </div>
                             {suggestion.matchedSkill.descriptionI18n?.en && (
-                              <p className="text-xs text-[#6B6760] ml-6 line-clamp-2">
+                              <p className="text-xs text-muted-foreground ml-6 line-clamp-2">
                                 {suggestion.matchedSkill.descriptionI18n.en}
                               </p>
                             )}
@@ -314,7 +316,7 @@ export function LinkedInImportModal({
                             {(suggestion.matchedSkill.l1 ||
                               suggestion.matchedSkill.l2 ||
                               suggestion.matchedSkill.l3) && (
-                              <div className="flex items-center gap-1 text-xs text-[#6B6760] ml-6">
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground ml-6">
                                 {suggestion.matchedSkill.l1?.nameI18n?.en}
                                 {suggestion.matchedSkill.l2 && (
                                   <>
@@ -332,7 +334,9 @@ export function LinkedInImportModal({
                             )}
                           </div>
                         ) : (
-                          <p className="text-sm text-[#6B6760]">No match found in taxonomy</p>
+                          <p className="text-sm text-muted-foreground">
+                            No match found in taxonomy
+                          </p>
                         )}
                       </div>
 
@@ -340,11 +344,11 @@ export function LinkedInImportModal({
                       {importMode === 'review' && hasMatch && (
                         <div className="flex-shrink-0">
                           {isSelected ? (
-                            <div className="p-1 bg-[#1C4D3A] text-white rounded">
+                            <div className="p-1 bg-proofound-forest text-white rounded">
                               <Check className="h-4 w-4" />
                             </div>
                           ) : (
-                            <div className="p-1 border border-[#E5E3DA] rounded">
+                            <div className="p-1 border border-proofound-stone rounded">
                               <div className="h-4 w-4" />
                             </div>
                           )}
@@ -357,14 +361,14 @@ export function LinkedInImportModal({
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3 justify-end pt-4 border-t border-[#E5E3DA]">
+            <div className="flex gap-3 justify-end pt-4 border-t border-proofound-stone">
               <Button variant="outline" onClick={() => setStep('init')}>
                 Back
               </Button>
               <Button
                 onClick={handleImport}
                 disabled={importMode === 'review' && selectedSkills.size === 0}
-                className="bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
+                className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
               >
                 Import {importMode === 'review' ? `${selectedSkills.size} ` : ''}
                 Skill{importMode === 'auto' || selectedSkills.size !== 1 ? 's' : ''}
@@ -376,9 +380,9 @@ export function LinkedInImportModal({
         {/* Importing Step */}
         {step === 'importing' && (
           <div className="py-8 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1C4D3A] mx-auto mb-4"></div>
-            <p className="text-[#2D3330] font-medium">Importing skills...</p>
-            <p className="text-sm text-[#6B6760] mt-1">This may take a moment</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-proofound-forest mx-auto mb-4"></div>
+            <p className="text-foreground font-medium">Importing skills...</p>
+            <p className="text-sm text-muted-foreground mt-1">This may take a moment</p>
           </div>
         )}
       </DialogContent>

@@ -78,10 +78,10 @@ export function PACBadge({
         <TooltipContent className="max-w-xs">
           <div className="space-y-2">
             <p className="font-semibold">{UI_VOCABULARY.pacLabel}</p>
-            <p className="text-sm text-[#6B6760]">
+            <p className="text-sm text-muted-foreground">
               {UI_VOCABULARY.pacTooltip} A higher score indicates stronger purpose alignment.
             </p>
-            <div className="pt-2 border-t border-[#E8E6DD] text-xs space-y-1">
+            <div className="pt-2 border-t border-proofound-stone text-xs space-y-1">
               <p>
                 <strong>Score:</strong> {pacScore}/100
               </p>

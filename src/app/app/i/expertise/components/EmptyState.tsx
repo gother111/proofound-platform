@@ -17,22 +17,22 @@ export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
 
   return (
     <div className="min-h-[600px] flex items-center justify-center px-6 py-12">
-      <Card className="max-w-2xl w-full border border-[#D8D2C8] bg-white/90 p-12 shadow-sm">
+      <Card className="max-w-2xl w-full border border-border bg-white/90 p-12 shadow-sm">
         <div className="flex flex-col items-center text-center">
           {/* Icon */}
           <div className="flex justify-center mb-6">
-            <div className="rounded-full bg-[#EEF1EA] p-6">
-              <Sparkles className="h-12 w-12 text-[#1C4D3A]" />
+            <div className="rounded-full bg-proofound-forest/5 p-6">
+              <Sparkles className="h-12 w-12 text-proofound-forest" />
             </div>
           </div>
 
           {/* Heading */}
-          <h2 className="text-2xl font-semibold text-[#2D3330] mb-3 text-center">
+          <h2 className="text-2xl font-semibold text-foreground mb-3 text-center">
             Your Expertise Atlas is empty
           </h2>
 
           {/* Description */}
-          <p className="text-[#6B6760] mb-8 max-w-lg text-center">
+          <p className="text-muted-foreground mb-8 max-w-lg text-center">
             Add your first 3 skills to unlock charts and matching. Import from your CV/resume,
             choose from over 18,000 curated skills, or create your own.
           </p>
@@ -43,7 +43,7 @@ export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
               <Button
                 size="lg"
                 onClick={onImportCV}
-                className="flex items-center justify-center bg-[#1C4D3A] text-white hover:bg-[#2D5F4A] w-full sm:w-auto"
+                className="flex items-center justify-center bg-proofound-forest text-white hover:bg-proofound-forest/90 w-full sm:w-auto"
               >
                 <span className="flex items-center">
                   <FileText className="mr-2 h-5 w-5" />
@@ -57,8 +57,8 @@ export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
               variant={onImportCV ? 'outline' : 'default'}
               className={`flex items-center justify-center w-full sm:w-auto ${
                 onImportCV
-                  ? 'border-[#1C4D3A] text-[#1C4D3A] hover:bg-[#EEF1EA]'
-                  : 'bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]'
+                  ? 'border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5'
+                  : 'bg-proofound-forest text-white hover:bg-proofound-forest/90'
               }`}
             >
               <span className="flex items-center">
@@ -69,7 +69,7 @@ export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
             <Button
               size="lg"
               variant="outline"
-              className="flex items-center justify-center border-[#1C4D3A] text-[#1C4D3A] hover:bg-[#EEF1EA] w-full sm:w-auto"
+              className="flex items-center justify-center border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5 w-full sm:w-auto"
             >
               <span className="flex items-center">
                 <BookOpen className="mr-2 h-5 w-5" />
@@ -90,17 +90,17 @@ export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
                   }
                   router.push(action.actionUrl);
                 }}
-                className="w-full rounded-lg border border-[#E8E6DD] bg-white px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
+                className="w-full rounded-lg border border-proofound-stone bg-white px-3 py-2 hover:border-proofound-forest hover:bg-japandi-bg"
               >
-                <p className="text-sm font-medium text-[#2D3330]">{action.title}</p>
-                <p className="text-xs text-[#6B6760]">{action.description}</p>
+                <p className="text-sm font-medium text-foreground">{action.title}</p>
+                <p className="text-xs text-muted-foreground">{action.description}</p>
               </button>
             ))}
           </div>
 
           {/* Info Pills */}
-          <div className="mt-8 flex flex-wrap gap-3 justify-center items-center text-xs text-[#1C4D3A]">
-            <span className="flex items-center gap-2 rounded-full bg-[#EEF1EA] px-4 py-2">
+          <div className="mt-8 flex flex-wrap gap-3 justify-center items-center text-xs text-proofound-forest">
+            <span className="flex items-center gap-2 rounded-full bg-proofound-forest/5 px-4 py-2">
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
@@ -111,7 +111,7 @@ export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
               </svg>
               18,000+ curated skills
             </span>
-            <span className="flex items-center gap-2 rounded-full bg-[#EEF1EA] px-4 py-2">
+            <span className="flex items-center gap-2 rounded-full bg-proofound-forest/5 px-4 py-2">
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
@@ -122,7 +122,7 @@ export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
               </svg>
               Attach proofs & verifications
             </span>
-            <span className="flex items-center gap-2 rounded-full bg-[#EEF1EA] px-4 py-2">
+            <span className="flex items-center gap-2 rounded-full bg-proofound-forest/5 px-4 py-2">
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"

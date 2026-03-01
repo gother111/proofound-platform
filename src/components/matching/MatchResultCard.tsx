@@ -13,6 +13,7 @@ import { VerificationGatesWarning } from './VerificationGatesWarning';
 import { RankDisplay } from './RankDisplay';
 import { ConsentToShareDialog } from './ConsentToShareDialog';
 import { apiFetch } from '@/lib/api/fetch';
+import { motion } from 'framer-motion';
 
 interface MatchResultCardProps {
   result: {
@@ -169,304 +170,306 @@ export function MatchResultCard({
   };
 
   return (
-    <Card variant="bento" className="p-4">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          {isOrgView ? (
-            <h4 className="text-base font-medium mb-1">
-              {variant === 'revealed' ? 'John Doe' : 'Candidate Match'}
-            </h4>
-          ) : (
-            <h4 className="text-base font-medium mb-1">
-              {result.assignment?.role || 'Opportunity Match'}
-            </h4>
-          )}
-
-          {/* Match score */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium" style={{ color: '#1C4D3A' }}>
-              {scorePercent}% Match
-            </span>
-            {variant === 'blind' ? (
-              <EyeOff className="w-3 h-3" style={{ color: '#6B6760' }} />
+    <motion.div layoutId={`match-card-${result.id}`} className="block h-full">
+      <Card variant="bento" className="p-4 h-full">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1">
+            {isOrgView ? (
+              <h4 className="text-base font-medium mb-1">
+                {variant === 'revealed' ? 'John Doe' : 'Candidate Match'}
+              </h4>
             ) : (
-              <Eye className="w-3 h-3" style={{ color: '#1C4D3A' }} />
+              <h4 className="text-base font-medium mb-1">
+                {result.assignment?.role || 'Opportunity Match'}
+              </h4>
             )}
-          </div>
 
-          {/* Match Explainer - Full detailed breakdown */}
-          {result.id && (
-            <div className="mt-2">
-              {matchExplanation ? (
-                <>
-                  <MatchExplainerModal
-                    matchId={matchExplanation.matchId}
-                    compositeScore={matchExplanation.compositeScore}
-                    rank={matchExplanation.rank}
-                    totalCandidates={matchExplanation.totalCandidates}
-                    rankBand={matchExplanation.rankBand}
-                    subscores={matchExplanation.subscores}
-                    skillsMatch={matchExplanation.skillsMatch}
-                    pac={matchExplanation.pac}
-                    constraints={matchExplanation.constraints}
-                  />
-                  {/* Rank Display - Show candidate's ranking */}
-                  {matchExplanation.rank && matchExplanation.totalCandidates && !isOrgView && (
-                    <div className="mt-2">
-                      <RankDisplay
-                        rank={matchExplanation.rank}
-                        totalCandidates={matchExplanation.totalCandidates}
-                        score={matchExplanation.compositeScore}
-                        topPercentile={Math.round(
-                          (matchExplanation.rank / matchExplanation.totalCandidates) * 100
-                        )}
-                        variant="compact"
-                      />
-                    </div>
-                  )}
-                  {!matchExplanation.rank && matchExplanation.rankBand && !isOrgView && (
-                    <div className="mt-2 text-xs font-medium text-[#1C4D3A]">
-                      Ranking band: {matchExplanation.rankBand}
-                    </div>
-                  )}
-                </>
+            {/* Match score */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium" style={{ color: '#1C4D3A' }}>
+                {scorePercent}% Match
+              </span>
+              {variant === 'blind' ? (
+                <EyeOff className="w-3 h-3" style={{ color: '#6B6760' }} />
               ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs gap-1.5 text-[#1C4D3A] hover:bg-[#1C4D3A]/5"
-                  onClick={fetchMatchExplanation}
-                  disabled={isLoadingExplanation}
-                >
-                  {isLoadingExplanation ? (
-                    <>
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                      Loading...
-                    </>
-                  ) : (
-                    'Why this match?'
-                  )}
-                </Button>
+                <Eye className="w-3 h-3" style={{ color: '#1C4D3A' }} />
               )}
             </div>
-          )}
 
-          {/* Fallback PAC Explainer if no match ID */}
-          {!result.id &&
-            result.subscores &&
-            (result.subscores.pac || result.subscores.values || result.subscores.causes) && (
+            {/* Match Explainer - Full detailed breakdown */}
+            {result.id && (
               <div className="mt-2">
-                <PACScoreExplainer
-                  pacScore={result.subscores.pac || result.score}
-                  valuesOverlap={result.subscores.values || 0}
-                  causesOverlap={result.subscores.causes || 0}
-                  sharedValues={data?.valuesTags || []}
-                  sharedCauses={data?.causeTags || []}
-                  totalValues={data?.valuesTags?.length || 0}
-                  totalCauses={data?.causeTags?.length || 0}
-                />
+                {matchExplanation ? (
+                  <>
+                    <MatchExplainerModal
+                      matchId={matchExplanation.matchId}
+                      compositeScore={matchExplanation.compositeScore}
+                      rank={matchExplanation.rank}
+                      totalCandidates={matchExplanation.totalCandidates}
+                      rankBand={matchExplanation.rankBand}
+                      subscores={matchExplanation.subscores}
+                      skillsMatch={matchExplanation.skillsMatch}
+                      pac={matchExplanation.pac}
+                      constraints={matchExplanation.constraints}
+                    />
+                    {/* Rank Display - Show candidate's ranking */}
+                    {matchExplanation.rank && matchExplanation.totalCandidates && !isOrgView && (
+                      <div className="mt-2">
+                        <RankDisplay
+                          rank={matchExplanation.rank}
+                          totalCandidates={matchExplanation.totalCandidates}
+                          score={matchExplanation.compositeScore}
+                          topPercentile={Math.round(
+                            (matchExplanation.rank / matchExplanation.totalCandidates) * 100
+                          )}
+                          variant="compact"
+                        />
+                      </div>
+                    )}
+                    {!matchExplanation.rank && matchExplanation.rankBand && !isOrgView && (
+                      <div className="mt-2 text-xs font-medium text-proofound-forest">
+                        Ranking band: {matchExplanation.rankBand}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs gap-1.5 text-proofound-forest hover:bg-proofound-forest/5"
+                    onClick={fetchMatchExplanation}
+                    disabled={isLoadingExplanation}
+                  >
+                    {isLoadingExplanation ? (
+                      <>
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      'Why this match?'
+                    )}
+                  </Button>
+                )}
               </div>
             )}
-        </div>
-      </div>
 
-      {/* Top Skills */}
-      {topSkills.length > 0 && (
-        <div className="mb-3">
-          <div className="flex flex-wrap gap-1">
-            {topSkills.map((skill) => (
-              <Badge
-                key={skill.id}
-                variant="secondary"
-                className="text-xs px-2 py-0.5"
-                style={{ backgroundColor: '#E8E6DD' }}
-              >
-                {skill.label} L{skill.level}
-              </Badge>
-            ))}
+            {/* Fallback PAC Explainer if no match ID */}
+            {!result.id &&
+              result.subscores &&
+              (result.subscores.pac || result.subscores.values || result.subscores.causes) && (
+                <div className="mt-2">
+                  <PACScoreExplainer
+                    pacScore={result.subscores.pac || result.score}
+                    valuesOverlap={result.subscores.values || 0}
+                    causesOverlap={result.subscores.causes || 0}
+                    sharedValues={data?.valuesTags || []}
+                    sharedCauses={data?.causeTags || []}
+                    totalValues={data?.valuesTags?.length || 0}
+                    totalCauses={data?.causeTags?.length || 0}
+                  />
+                </div>
+              )}
           </div>
         </div>
-      )}
 
-      {/* Values/Causes */}
-      {(data?.valuesTags || data?.valuesRequired) && (
-        <div className="mb-3">
-          <div className="flex flex-wrap gap-1">
-            {(data.valuesTags || data.valuesRequired || []).slice(0, 3).map((tag: string) => (
-              <Badge
-                key={tag}
-                variant="outline"
-                className="text-xs px-2 py-0.5"
-                style={{ borderColor: '#7A9278', color: '#1C4D3A' }}
-              >
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Key details */}
-      <div className="space-y-2 mb-3 text-xs" style={{ color: '#6B6760' }}>
-        {/* Location */}
-        {(data?.workMode || data?.locationMode) && (
-          <div className="flex items-center gap-2">
-            <MapPin className="w-3 h-3" />
-            <span>
-              {data.workMode || data.locationMode}
-              {data.country && variant === 'revealed' && ` • ${data.country}`}
-              {data.country && variant === 'blind' && ' • Region hidden'}
-            </span>
-          </div>
-        )}
-
-        {/* Hours */}
-        {(data?.hoursMin || data?.hoursMax) && (
-          <div className="flex items-center gap-2">
-            <Clock className="w-3 h-3" />
-            <span>
-              {data.hoursMin}-{data.hoursMax} hrs/week
-            </span>
-          </div>
-        )}
-
-        {/* Compensation */}
-        {(data?.compMin || data?.compMax || result.subscores?.compensation !== undefined) && (
-          <div className="flex items-center gap-2">
-            <DollarSign className="w-3 h-3" />
-            <span>
-              {showExactCompensation && (data?.compMin || data?.compMax)
-                ? `${data.currency} ${data.compMin?.toLocaleString()}-${data.compMax?.toLocaleString()}`
-                : 'Compensation overlap only'}
-            </span>
-          </div>
-        )}
-
-        {/* Verifications (generic in blind mode) */}
-        {variant === 'blind' && (
-          <div className="flex items-center gap-2">
-            <Shield className="w-3 h-3" />
-            <span>Verified profile</span>
-          </div>
-        )}
-      </div>
-
-      {/* Contribution breakdown */}
-      <div className="mb-4">
-        <p className="text-xs mb-2" style={{ color: '#6B6760' }}>
-          Match breakdown:
-        </p>
-        <div className="space-y-1">
-          {contributions.map(([key, value]) => (
-            <div key={key} className="flex items-center gap-2">
-              <span className="text-xs w-20 capitalize" style={{ color: '#6B6760' }}>
-                {key}:
-              </span>
-              <Progress
-                value={value * 100}
-                className="h-1.5 flex-1"
-                style={{ backgroundColor: '#E8E6DD' }}
-              />
-              <span className="text-xs w-10 text-right">{Math.round(value * 100)}%</span>
+        {/* Top Skills */}
+        {topSkills.length > 0 && (
+          <div className="mb-3">
+            <div className="flex flex-wrap gap-1">
+              {topSkills.map((skill) => (
+                <Badge
+                  key={skill.id}
+                  variant="secondary"
+                  className="text-xs px-2 py-0.5"
+                  style={{ backgroundColor: '#E8E6DD' }}
+                >
+                  {skill.label} L{skill.level}
+                </Badge>
+              ))}
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
+        )}
 
-      {/* Actions */}
-      {variant === 'blind' && (
-        <div className="space-y-2">
-          <div className="flex gap-2">
+        {/* Values/Causes */}
+        {(data?.valuesTags || data?.valuesRequired) && (
+          <div className="mb-3">
+            <div className="flex flex-wrap gap-1">
+              {(data.valuesTags || data.valuesRequired || []).slice(0, 3).map((tag: string) => (
+                <Badge
+                  key={tag}
+                  variant="outline"
+                  className="text-xs px-2 py-0.5"
+                  style={{ borderColor: '#7A9278', color: '#1C4D3A' }}
+                >
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Key details */}
+        <div className="space-y-2 mb-3 text-xs" style={{ color: '#6B6760' }}>
+          {/* Location */}
+          {(data?.workMode || data?.locationMode) && (
+            <div className="flex items-center gap-2">
+              <MapPin className="w-3 h-3" />
+              <span>
+                {data.workMode || data.locationMode}
+                {data.country && variant === 'revealed' && ` • ${data.country}`}
+                {data.country && variant === 'blind' && ' • Region hidden'}
+              </span>
+            </div>
+          )}
+
+          {/* Hours */}
+          {(data?.hoursMin || data?.hoursMax) && (
+            <div className="flex items-center gap-2">
+              <Clock className="w-3 h-3" />
+              <span>
+                {data.hoursMin}-{data.hoursMax} hrs/week
+              </span>
+            </div>
+          )}
+
+          {/* Compensation */}
+          {(data?.compMin || data?.compMax || result.subscores?.compensation !== undefined) && (
+            <div className="flex items-center gap-2">
+              <DollarSign className="w-3 h-3" />
+              <span>
+                {showExactCompensation && (data?.compMin || data?.compMax)
+                  ? `${data.currency} ${data.compMin?.toLocaleString()}-${data.compMax?.toLocaleString()}`
+                  : 'Compensation overlap only'}
+              </span>
+            </div>
+          )}
+
+          {/* Verifications (generic in blind mode) */}
+          {variant === 'blind' && (
+            <div className="flex items-center gap-2">
+              <Shield className="w-3 h-3" />
+              <span>Verified profile</span>
+            </div>
+          )}
+        </div>
+
+        {/* Contribution breakdown */}
+        <div className="mb-4">
+          <p className="text-xs mb-2" style={{ color: '#6B6760' }}>
+            Match breakdown:
+          </p>
+          <div className="space-y-1">
+            {contributions.map(([key, value]) => (
+              <div key={key} className="flex items-center gap-2">
+                <span className="text-xs w-20 capitalize" style={{ color: '#6B6760' }}>
+                  {key}:
+                </span>
+                <Progress
+                  value={value * 100}
+                  className="h-1.5 flex-1"
+                  style={{ backgroundColor: '#E8E6DD' }}
+                />
+                <span className="text-xs w-10 text-right">{Math.round(value * 100)}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Actions */}
+        {variant === 'blind' && (
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={handleInterested}
+                style={{ backgroundColor: '#1C4D3A' }}
+                className="flex-1"
+              >
+                Interested
+              </Button>
+              <Button size="sm" variant="outline" onClick={onHide}>
+                Hide
+              </Button>
+            </div>
             <Button
               size="sm"
-              onClick={handleInterested}
-              style={{ backgroundColor: '#1C4D3A' }}
-              className="flex-1"
+              variant="ghost"
+              onClick={() => {
+                if (result.id) {
+                  setIsSnoozeDialogOpen(true);
+                }
+              }}
+              disabled={!result.id}
+              title={!result.id ? 'Snooze becomes available once this match is saved' : undefined}
+              className="w-full text-xs text-muted-foreground hover:bg-japandi-bg"
             >
-              Interested
-            </Button>
-            <Button size="sm" variant="outline" onClick={onHide}>
-              Hide
+              <BellOff className="w-3.5 h-3.5 mr-1.5" />
+              Snooze
             </Button>
           </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => {
-              if (result.id) {
-                setIsSnoozeDialogOpen(true);
-              }
-            }}
-            disabled={!result.id}
-            title={!result.id ? 'Snooze becomes available once this match is saved' : undefined}
-            className="w-full text-xs text-[#6B6760] hover:bg-[#F7F6F1]"
-          >
-            <BellOff className="w-3.5 h-3.5 mr-1.5" />
-            Snooze
-          </Button>
-        </div>
-      )}
+        )}
 
-      {variant === 'revealed' && (
-        <div>
-          <Button size="sm" className="w-full" style={{ backgroundColor: '#1C4D3A' }}>
-            View Full Profile
-          </Button>
-        </div>
-      )}
+        {variant === 'revealed' && (
+          <div>
+            <Button size="sm" className="w-full" style={{ backgroundColor: '#1C4D3A' }}>
+              View Full Profile
+            </Button>
+          </div>
+        )}
 
-      {/* Gaps (if any) */}
-      {result.gaps && result.gaps.length > 0 && (
-        <div className="mt-3 pt-3 border-t" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
-          <p className="text-xs mb-1" style={{ color: '#C76B4A' }}>
-            Skill gaps:
-          </p>
-          {result.gaps.slice(0, 2).map((gap) => (
-            <p key={gap.id} className="text-xs" style={{ color: '#6B6760' }}>
-              {gap.id}: Needs L{gap.required}, has L{gap.have}
+        {/* Gaps (if any) */}
+        {result.gaps && result.gaps.length > 0 && (
+          <div className="mt-3 pt-3 border-t" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+            <p className="text-xs mb-1" style={{ color: '#C76B4A' }}>
+              Skill gaps:
             </p>
-          ))}
-        </div>
-      )}
+            {result.gaps.slice(0, 2).map((gap) => (
+              <p key={gap.id} className="text-xs" style={{ color: '#6B6760' }}>
+                {gap.id}: Needs L{gap.required}, has L{gap.have}
+              </p>
+            ))}
+          </div>
+        )}
 
-      {/* Snooze Dialog */}
-      {result.id && (
-        <SnoozeDialog
-          open={isSnoozeDialogOpen}
-          onOpenChange={setIsSnoozeDialogOpen}
-          matchId={result.id}
-          assignmentTitle={result.assignment?.role || 'This opportunity'}
-          onSnoozed={() => {
-            // Refresh matches list or remove from current view
-            if (onHide) onHide();
-          }}
-        />
-      )}
+        {/* Snooze Dialog */}
+        {result.id && (
+          <SnoozeDialog
+            open={isSnoozeDialogOpen}
+            onOpenChange={setIsSnoozeDialogOpen}
+            matchId={result.id}
+            assignmentTitle={result.assignment?.role || 'This opportunity'}
+            onSnoozed={() => {
+              // Refresh matches list or remove from current view
+              if (onHide) onHide();
+            }}
+          />
+        )}
 
-      {/* Verification Gates Warning */}
-      {gateCheckResult && (
-        <VerificationGatesWarning
-          open={showGatesWarning}
-          onOpenChange={setShowGatesWarning}
-          unmetGates={gateCheckResult.unmetGates || []}
-          userVerifications={gateCheckResult.userVerifications || []}
-          assignmentTitle={result.assignment?.role || 'this role'}
-        />
-      )}
+        {/* Verification Gates Warning */}
+        {gateCheckResult && (
+          <VerificationGatesWarning
+            open={showGatesWarning}
+            onOpenChange={setShowGatesWarning}
+            unmetGates={gateCheckResult.unmetGates || []}
+            userVerifications={gateCheckResult.userVerifications || []}
+            assignmentTitle={result.assignment?.role || 'this role'}
+          />
+        )}
 
-      {/* Consent to Share Dialog */}
-      {visibleFieldsData && (
-        <ConsentToShareDialog
-          isOpen={isConsentDialogOpen}
-          onClose={() => setIsConsentDialogOpen(false)}
-          matchId={result.id || ''}
-          organizationName={visibleFieldsData.organizationName}
-          assignmentRole={visibleFieldsData.assignmentRole}
-          visibleFields={visibleFieldsData.visibleFields || []}
-          onConsent={handleConsentGiven}
-        />
-      )}
-    </Card>
+        {/* Consent to Share Dialog */}
+        {visibleFieldsData && (
+          <ConsentToShareDialog
+            isOpen={isConsentDialogOpen}
+            onClose={() => setIsConsentDialogOpen(false)}
+            matchId={result.id || ''}
+            organizationName={visibleFieldsData.organizationName}
+            assignmentRole={visibleFieldsData.assignmentRole}
+            visibleFields={visibleFieldsData.visibleFields || []}
+            onConsent={handleConsentGiven}
+          />
+        )}
+      </Card>
+    </motion.div>
   );
 }

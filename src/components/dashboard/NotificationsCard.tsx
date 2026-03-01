@@ -90,7 +90,7 @@ export function NotificationsCard({ useMockData, onVisibilityChange }: Notificat
       <CardHeader className="flex flex-row items-start justify-between space-y-0">
         <div className="min-w-0 space-y-1">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Bell className="h-5 w-5 text-[#1C4D3A]" />
+            <Bell className="h-5 w-5 text-proofound-forest" />
             Inbox
           </CardTitle>
           <p className="text-sm text-muted-foreground">Latest unread updates and reminders.</p>
@@ -113,15 +113,15 @@ export function NotificationsCard({ useMockData, onVisibilityChange }: Notificat
               <Link
                 key={item.id}
                 href={item.actionUrl || '/app/i/home'}
-                className="block rounded-lg border border-[#E8E6DD] px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
+                className="block rounded-lg border border-proofound-stone px-3 py-2 hover:border-proofound-forest hover:bg-japandi-bg"
               >
-                <p className="text-sm font-medium text-[#2D3330]">{item.title}</p>
+                <p className="text-sm font-medium text-foreground">{item.title}</p>
                 <p className="text-xs text-muted-foreground">{item.message}</p>
               </Link>
             ))}
 
           {!loading && items.length === 0 && (
-            <div className="rounded-lg border border-dashed border-[#E8E6DD] px-3 py-6 text-center text-sm text-muted-foreground">
+            <div className="rounded-lg border border-dashed border-proofound-stone px-3 py-6 text-center text-sm text-muted-foreground">
               No unread notifications. You’re all caught up.
             </div>
           )}
@@ -130,7 +130,7 @@ export function NotificationsCard({ useMockData, onVisibilityChange }: Notificat
         <Button
           variant="outline"
           size="sm"
-          className="w-full border-[#1C4D3A] text-[#1C4D3A] hover:bg-[#EEF1EA]"
+          className="w-full border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5"
           asChild
         >
           <Link href="/app/i/notifications">

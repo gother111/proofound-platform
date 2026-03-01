@@ -77,21 +77,40 @@ describe('MatchingPage blocked state', () => {
       ],
     };
 
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ profile: { id: 'user-1' } }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ topActions: [] }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => blockedPayload,
-      });
+    const fetchMock = vi.fn(async (input: string | URL, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input.toString();
+
+      if (url === '/api/matching-profile') {
+        return {
+          ok: true,
+          json: async () => ({ profile: { id: 'user-1' } }),
+        };
+      }
+
+      if (url === '/api/individual/readiness') {
+        return {
+          ok: true,
+          json: async () => ({ topActions: [] }),
+        };
+      }
+
+      if (url === '/api/match/test') {
+        return {
+          ok: true,
+          json: async () => ({ items: [] }),
+        };
+      }
+
+      if (url === '/api/match/profile' && init?.method === 'POST') {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => blockedPayload,
+        };
+      }
+
+      throw new Error(`Unexpected fetch URL: ${url}`);
+    });
 
     (global as any).fetch = fetchMock;
 

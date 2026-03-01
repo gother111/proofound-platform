@@ -144,7 +144,7 @@ export function MessageThread({
     const length = messageText.length;
     if (length > MAX_MESSAGE_LENGTH) return 'text-red-600';
     if (length > MAX_MESSAGE_LENGTH * 0.9) return 'text-amber-600';
-    return 'text-[#6B6760]';
+    return 'text-muted-foreground';
   };
 
   return (
@@ -158,7 +158,7 @@ export function MessageThread({
                 type="button"
                 onClick={onBack}
                 aria-label="Back to conversations"
-                className="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-lg border border-[#D8D2C8] text-[#2D3330] hover:bg-[#F7F6F1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1C4D3A] focus-visible:ring-offset-2"
+                className="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-lg border border-border text-foreground hover:bg-japandi-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1C4D3A] focus-visible:ring-offset-2"
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
@@ -167,14 +167,14 @@ export function MessageThread({
               {stage === 'revealed' && otherPartyAvatar ? (
                 <AvatarImage src={otherPartyAvatar} alt={displayName} />
               ) : null}
-              <AvatarFallback className="bg-[#1C4D3A] text-white">
+              <AvatarFallback className="bg-proofound-forest text-white">
                 {getInitials(displayName)}
               </AvatarFallback>
             </Avatar>
             <div>
-              <div className="font-semibold text-[#2D3330]">{displayName}</div>
+              <div className="font-semibold text-foreground">{displayName}</div>
               {stage === 'masked' && (
-                <Badge variant="outline" className="text-xs border-[#7A9278] text-[#1C4D3A]">
+                <Badge variant="outline" className="text-xs border-[#7A9278] text-proofound-forest">
                   Identity revealed after introduction
                 </Badge>
               )}
@@ -184,7 +184,7 @@ export function MessageThread({
 
         {/* Messages */}
         <motion.div
-          className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#F7F6F1]"
+          className="flex-1 overflow-y-auto p-4 space-y-4 bg-japandi-bg"
           initial="hidden"
           animate="visible"
           variants={{
@@ -197,14 +197,29 @@ export function MessageThread({
         >
           {messages.length === 0 && (
             <motion.div
-              className="text-center py-12 space-y-2"
+              className="flex flex-col items-center justify-center text-center py-16 space-y-4"
               variants={{
                 hidden: { opacity: 0, y: 10 },
                 visible: { opacity: 1, y: 0 },
               }}
             >
-              <p className="text-sm text-[#6B6760]">No messages yet</p>
-              <p className="text-xs text-[#6B6760]">Start the conversation below</p>
+              <div className="relative w-16 h-16 flex items-center justify-center">
+                <svg
+                  className="absolute inset-0 w-full h-full text-proofound-forest/20 animate-breathe"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+              </div>
+              <div className="space-y-1">
+                <p className="text-base font-medium text-foreground">No messages yet</p>
+                <p className="text-sm text-muted-foreground">Say hello to start the conversation</p>
+              </div>
             </motion.div>
           )}
 
@@ -229,7 +244,7 @@ export function MessageThread({
                       {stage === 'revealed' && otherPartyAvatar ? (
                         <AvatarImage src={otherPartyAvatar} alt={displayName} />
                       ) : null}
-                      <AvatarFallback className="bg-[#1C4D3A] text-white text-xs">
+                      <AvatarFallback className="bg-proofound-forest text-white text-xs">
                         {getInitials(displayName)}
                       </AvatarFallback>
                     </Avatar>
@@ -245,8 +260,8 @@ export function MessageThread({
                       className={cn(
                         'rounded-2xl px-4 py-2 break-words',
                         isOwnMessage
-                          ? 'bg-[#1C4D3A] text-white rounded-br-sm'
-                          : 'bg-white border border-[#D8D2C8] text-[#2D3330] rounded-bl-sm'
+                          ? 'bg-proofound-forest text-white rounded-br-sm'
+                          : 'bg-white border border-border text-foreground rounded-bl-sm'
                       )}
                     >
                       <p className="text-sm whitespace-pre-wrap">{message.content}</p>
@@ -254,7 +269,7 @@ export function MessageThread({
 
                     {/* Timestamp and read receipt */}
                     <div className="flex items-center gap-1 px-2">
-                      <span className="text-xs text-[#6B6760]">
+                      <span className="text-xs text-muted-foreground">
                         {format(new Date(message.sentAt), 'HH:mm')}
                       </span>
                       {isOwnMessage && (
@@ -278,35 +293,7 @@ export function MessageThread({
             })}
           </AnimatePresence>
 
-          {/* Typing indicator */}
-          {isTyping && (
-            <div className="flex gap-2 items-center">
-              <Avatar className="h-8 w-8">
-                {stage === 'revealed' && otherPartyAvatar ? (
-                  <AvatarImage src={otherPartyAvatar} alt={displayName} />
-                ) : null}
-                <AvatarFallback className="bg-[#1C4D3A] text-white text-xs">
-                  {getInitials(displayName)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="bg-white border border-[#D8D2C8] rounded-2xl rounded-bl-sm px-4 py-2">
-                <div className="flex gap-1">
-                  <span
-                    className="w-2 h-2 bg-[#6B6760] rounded-full animate-bounce"
-                    style={{ animationDelay: '0ms' }}
-                  />
-                  <span
-                    className="w-2 h-2 bg-[#6B6760] rounded-full animate-bounce"
-                    style={{ animationDelay: '150ms' }}
-                  />
-                  <span
-                    className="w-2 h-2 bg-[#6B6760] rounded-full animate-bounce"
-                    style={{ animationDelay: '300ms' }}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Removed raw redundant typing indicator block here. Replaced exclusively by the core TypingIndicator below. */}
 
           {/* Typing Indicator */}
           {isTyping && <TypingIndicator isTyping={true} displayName={displayName} />}
@@ -335,7 +322,7 @@ export function MessageThread({
                 disabled={
                   !messageText.trim() || isSending || messageText.length > MAX_MESSAGE_LENGTH
                 }
-                className="bg-[#1C4D3A] hover:bg-[#2D5F4A] h-auto px-4"
+                className="bg-proofound-forest hover:bg-proofound-forest/90 h-auto px-4"
               >
                 {isSending ? (
                   <Loader2 className="h-5 w-5 animate-spin" />
@@ -346,7 +333,7 @@ export function MessageThread({
             </div>
 
             <div className="flex items-center justify-between text-xs">
-              <span className="text-[#6B6760]">
+              <span className="text-muted-foreground">
                 🔒 Text-only messaging for privacy and security • Paste/drop disabled • Press Enter
                 to send
               </span>

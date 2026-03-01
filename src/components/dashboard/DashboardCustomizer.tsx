@@ -226,7 +226,7 @@ export function DashboardCustomizer({ userId, onClose }: DashboardCustomizerProp
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 bg-transparent">
         <GlassCard className="col-span-1 md:col-span-12">
           <CardContent className="pt-6">
-            <p className="text-center text-[#6B6760]">Loading dashboard layout...</p>
+            <p className="text-center text-muted-foreground">Loading dashboard layout...</p>
           </CardContent>
         </GlassCard>
       </div>
@@ -243,7 +243,7 @@ export function DashboardCustomizer({ userId, onClose }: DashboardCustomizerProp
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Settings className="h-5 w-5 text-[#1C4D3A]" />
+              <Settings className="h-5 w-5 text-proofound-forest" />
               <CardTitle>Customize Your Dashboard</CardTitle>
             </div>
             <div className="flex items-center gap-2">
@@ -272,7 +272,7 @@ export function DashboardCustomizer({ userId, onClose }: DashboardCustomizerProp
         <GlassCard className="col-span-1 md:col-span-8 border-primary/20 bg-primary/5">
           <CardHeader className="shrink-0 pb-4 border-b bg-background/50 backdrop-blur-sm">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-[#2D3330] flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                 <Eye className="h-4 w-4 text-primary" /> Active Widgets
               </h3>
               <Badge variant="secondary">{visibleWidgets.length} active</Badge>
@@ -310,7 +310,7 @@ export function DashboardCustomizer({ userId, onClose }: DashboardCustomizerProp
                   </SortableContext>
                 </DndContext>
               ) : (
-                <p className="text-sm text-[#9B9891] text-center py-4">
+                <p className="text-sm text-muted-foreground text-center py-4">
                   No active widgets. Add some from the available widgets below.
                 </p>
               )}
@@ -339,15 +339,17 @@ export function DashboardCustomizer({ userId, onClose }: DashboardCustomizerProp
                           return (
                             <div
                               key={widget.widgetId}
-                              className="flex items-center justify-between p-3 bg-[#F5F4F0] rounded-lg"
+                              className="flex items-center justify-between p-3 bg-japandi-bg rounded-lg"
                             >
                               <div className="flex items-center gap-3">
                                 <span className="text-2xl">{widgetDef?.icon || '📦'}</span>
                                 <div>
-                                  <p className="text-sm font-medium text-[#2D3330]">
+                                  <p className="text-sm font-medium text-foreground">
                                     {widgetDef?.name || widget.widgetId}
                                   </p>
-                                  <p className="text-xs text-[#9B9891]">{widgetDef?.description}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {widgetDef?.description}
+                                  </p>
                                 </div>
                               </div>
                               <Button
@@ -364,21 +366,25 @@ export function DashboardCustomizer({ userId, onClose }: DashboardCustomizerProp
                     </div>
                   )}
 
-                  <div className="space-y-3 pt-4 border-t border-[#E8E6DD]">
-                    <h3 className="text-sm font-semibold text-[#2D3330]">Library</h3>
+                  <div className="space-y-3 pt-4 border-t border-proofound-stone">
+                    <h3 className="text-sm font-semibold text-foreground">Library</h3>
                     <div className="grid grid-cols-1 gap-3">
                       {AVAILABLE_WIDGETS.filter(
                         (widgetDef) => !widgets.find((w) => w.widgetId === widgetDef.id)
                       ).map((widgetDef) => (
                         <div
                           key={widgetDef.id}
-                          className="flex items-center justify-between p-3 border border-[#E8E6DD] rounded-lg hover:border-[#1C4D3A] transition-colors"
+                          className="flex items-center justify-between p-3 border border-proofound-stone rounded-lg hover:border-proofound-forest transition-colors"
                         >
                           <div className="flex items-center gap-3">
                             <span className="text-2xl">{widgetDef.icon}</span>
                             <div>
-                              <p className="text-sm font-medium text-[#2D3330]">{widgetDef.name}</p>
-                              <p className="text-xs text-[#9B9891]">{widgetDef.description}</p>
+                              <p className="text-sm font-medium text-foreground">
+                                {widgetDef.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {widgetDef.description}
+                              </p>
                             </div>
                           </div>
                           <Button

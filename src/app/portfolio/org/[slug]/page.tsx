@@ -163,12 +163,12 @@ export default async function OrganizationPortfolioPage({
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-2">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1C4D3A] text-white">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest text-white">
                   <Building2 className="h-5 w-5" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-semibold text-[#2D3330]">
+                    <h1 className="text-2xl font-semibold text-foreground">
                       {organization.display_name}
                     </h1>
                     {organization.verified ? (
@@ -178,10 +178,10 @@ export default async function OrganizationPortfolioPage({
                       </Badge>
                     ) : null}
                   </div>
-                  <p className="text-sm text-[#6B6760]">Public organization portfolio</p>
+                  <p className="text-sm text-muted-foreground">Public organization portfolio</p>
                 </div>
               </div>
-              <p className="text-sm text-[#2D3330]">
+              <p className="text-sm text-foreground">
                 {organization.tagline ||
                   'Purpose-led organization profile and active opportunities.'}
               </p>
@@ -201,7 +201,7 @@ export default async function OrganizationPortfolioPage({
                   href={organization.website}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-md border border-[#D9D5CC] bg-[#FCFBF8] px-3 py-2 text-sm text-[#2D3330] hover:border-[#1C4D3A]/40 hover:text-[#1C4D3A]"
+                  className="inline-flex items-center gap-2 rounded-md border border-[#D9D5CC] bg-[#FCFBF8] px-3 py-2 text-sm text-foreground hover:border-proofound-forest/40 hover:text-proofound-forest"
                 >
                   <Globe2 className="h-4 w-4" />
                   Website
@@ -222,15 +222,15 @@ export default async function OrganizationPortfolioPage({
         <div className="space-y-4">
           <PublicProfileSection title="Organization">
             <div className="space-y-2">
-              <p className="text-sm text-[#2D3330]">
+              <p className="text-sm text-foreground">
                 {organization.display_name || 'Organization profile'}
               </p>
               {organization.tagline ? (
-                <p className="text-sm text-[#6B6760]">{organization.tagline}</p>
+                <p className="text-sm text-muted-foreground">{organization.tagline}</p>
               ) : null}
               <div className="flex flex-wrap gap-2">
                 {organization.type ? (
-                  <span className="rounded-full border border-[#D9D5CC] bg-[#F7F6F1] px-2.5 py-1 text-xs text-[#2D3330] capitalize">
+                  <span className="rounded-full border border-[#D9D5CC] bg-japandi-bg px-2.5 py-1 text-xs text-foreground capitalize">
                     {organization.type}
                   </span>
                 ) : null}
@@ -244,7 +244,7 @@ export default async function OrganizationPortfolioPage({
           </PublicProfileSection>
 
           <PublicProfileSection title="Mission">
-            <p className="whitespace-pre-line text-sm leading-6 text-[#2D3330]">
+            <p className="whitespace-pre-line text-sm leading-6 text-foreground">
               {organization.mission || 'Mission statement is not published yet.'}
             </p>
           </PublicProfileSection>
@@ -252,37 +252,41 @@ export default async function OrganizationPortfolioPage({
           <PublicProfileSection title="Values & causes">
             <div className="space-y-3">
               <div>
-                <p className="mb-1.5 text-xs uppercase tracking-wide text-[#6B6760]">Values</p>
+                <p className="mb-1.5 text-xs uppercase tracking-wide text-muted-foreground">
+                  Values
+                </p>
                 {values.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {values.map((value) => (
                       <span
                         key={value}
-                        className="rounded-full border border-[#D9D5CC] bg-[#F7F6F1] px-2.5 py-1 text-xs text-[#2D3330]"
+                        className="rounded-full border border-[#D9D5CC] bg-japandi-bg px-2.5 py-1 text-xs text-foreground"
                       >
                         {value}
                       </span>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-[#6B6760]">No public values listed yet.</p>
+                  <p className="text-sm text-muted-foreground">No public values listed yet.</p>
                 )}
               </div>
               <div>
-                <p className="mb-1.5 text-xs uppercase tracking-wide text-[#6B6760]">Causes</p>
+                <p className="mb-1.5 text-xs uppercase tracking-wide text-muted-foreground">
+                  Causes
+                </p>
                 {causes.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {causes.map((cause) => (
                       <span
                         key={cause}
-                        className="rounded-full border border-[#D9D5CC] bg-[#F7F6F1] px-2.5 py-1 text-xs text-[#2D3330]"
+                        className="rounded-full border border-[#D9D5CC] bg-japandi-bg px-2.5 py-1 text-xs text-foreground"
                       >
                         {cause}
                       </span>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-[#6B6760]">No public causes listed yet.</p>
+                  <p className="text-sm text-muted-foreground">No public causes listed yet.</p>
                 )}
               </div>
             </div>
@@ -295,35 +299,35 @@ export default async function OrganizationPortfolioPage({
               <SummaryItem
                 label="Active assignments"
                 value={activeAssignments}
-                icon={<Briefcase className="h-4 w-4 text-[#1C4D3A]" />}
+                icon={<Briefcase className="h-4 w-4 text-proofound-forest" />}
               />
               <SummaryItem
                 label="Team members"
                 value={teamMembers}
-                icon={<Users className="h-4 w-4 text-[#1C4D3A]" />}
+                icon={<Users className="h-4 w-4 text-proofound-forest" />}
               />
               <SummaryItem
                 label="Organization type"
                 value={organization.type || 'not specified'}
-                icon={<Building2 className="h-4 w-4 text-[#1C4D3A]" />}
+                icon={<Building2 className="h-4 w-4 text-proofound-forest" />}
               />
             </div>
           </PublicProfileSection>
 
           <PublicProfileSection title="Links">
             <div className="space-y-2 text-sm">
-              <p className="break-all text-[#2D3330]">{shareUrl}</p>
+              <p className="break-all text-foreground">{shareUrl}</p>
               {organization.website ? (
                 <a
                   href={organization.website}
                   target="_blank"
                   rel="noreferrer"
-                  className="break-all text-[#1C4D3A] hover:underline"
+                  className="break-all text-proofound-forest hover:underline"
                 >
                   {organization.website}
                 </a>
               ) : (
-                <p className="text-[#6B6760]">No public website listed.</p>
+                <p className="text-muted-foreground">No public website listed.</p>
               )}
             </div>
           </PublicProfileSection>
@@ -343,12 +347,12 @@ function SummaryItem({
   icon: ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-md border border-[#E8E6DD] bg-white px-3 py-2">
+    <div className="flex items-center justify-between gap-3 rounded-md border border-proofound-stone bg-white px-3 py-2">
       <div className="flex items-center gap-2">
         {icon}
-        <span className="text-sm text-[#2D3330]">{label}</span>
+        <span className="text-sm text-foreground">{label}</span>
       </div>
-      <span className="rounded-full bg-[#F7F6F1] px-2.5 py-0.5 text-sm font-semibold text-[#2D3330]">
+      <span className="rounded-full bg-japandi-bg px-2.5 py-0.5 text-sm font-semibold text-foreground">
         {value}
       </span>
     </div>

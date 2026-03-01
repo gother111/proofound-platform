@@ -57,10 +57,10 @@ export default function FairnessAnalyticsPage({ params }: { params: Promise<{ sl
       <div className="container mx-auto w-full max-w-4xl">
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <BarChart3 className="w-8 h-8 text-[#1C4D3A]" />
-            <h1 className="text-3xl font-bold text-[#2D3330]">Fairness Gap Analysis</h1>
+            <BarChart3 className="w-8 h-8 text-proofound-forest" />
+            <h1 className="text-3xl font-bold text-foreground">Fairness Gap Analysis</h1>
           </div>
-          <p className="text-[#6B6760]">
+          <p className="text-muted-foreground">
             Generate comprehensive fairness reports to monitor hiring equity across demographics
           </p>
         </div>
@@ -70,10 +70,10 @@ export default function FairnessAnalyticsPage({ params }: { params: Promise<{ sl
           <Card className="p-6">
             <div className="flex items-start justify-between mb-6">
               <div>
-                <h2 className="text-xl font-semibold text-[#2D3330] mb-2">
+                <h2 className="text-xl font-semibold text-foreground mb-2">
                   Generate Fairness Report
                 </h2>
-                <p className="text-sm text-[#6B6760]">
+                <p className="text-sm text-muted-foreground">
                   Analyze hiring outcomes across role families, seniority levels, and geographic
                   regions to identify potential fairness gaps. Reports cover the last 30 days of
                   hiring activity.
@@ -81,23 +81,23 @@ export default function FairnessAnalyticsPage({ params }: { params: Promise<{ sl
               </div>
             </div>
 
-            <div className="bg-[#F7F6F1] rounded-lg p-4 mb-6 border border-[#E8E6DD]">
-              <h3 className="text-sm font-semibold text-[#2D3330] mb-2">What's Included:</h3>
-              <ul className="space-y-1 text-sm text-[#6B6760]">
+            <div className="bg-japandi-bg rounded-lg p-4 mb-6 border border-proofound-stone">
+              <h3 className="text-sm font-semibold text-foreground mb-2">What's Included:</h3>
+              <ul className="space-y-1 text-sm text-muted-foreground">
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#1C4D3A]" />
+                  <CheckCircle2 className="w-4 h-4 text-proofound-forest" />
                   Time-to-Contract (TTSC) analysis by demographic cohorts
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#1C4D3A]" />
+                  <CheckCircle2 className="w-4 h-4 text-proofound-forest" />
                   Statistical significance testing (p &lt; 0.05)
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#1C4D3A]" />
+                  <CheckCircle2 className="w-4 h-4 text-proofound-forest" />
                   Actionable recommendations for addressing gaps
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#1C4D3A]" />
+                  <CheckCircle2 className="w-4 h-4 text-proofound-forest" />
                   Percentile distributions (P25, P50, P75)
                 </li>
               </ul>
@@ -106,7 +106,7 @@ export default function FairnessAnalyticsPage({ params }: { params: Promise<{ sl
             <Button
               onClick={handleGenerateReport}
               disabled={isGenerating}
-              className="w-full bg-[#1C4D3A] text-white hover:bg-[#1C4D3A]/90"
+              className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90"
               size="lg"
             >
               {isGenerating ? (
@@ -123,18 +123,21 @@ export default function FairnessAnalyticsPage({ params }: { params: Promise<{ sl
             </Button>
 
             {lastReport && (
-              <div className="mt-4 p-4 bg-[#E8F5E1] rounded-lg border border-[#1C4D3A]/20">
+              <div className="mt-4 p-4 bg-proofound-success-tint rounded-lg border border-proofound-forest/20">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-[#1C4D3A] mb-1">
+                    <p className="text-sm font-semibold text-proofound-forest mb-1">
                       Report Generated Successfully
                     </p>
-                    <p className="text-sm text-[#2D3330]">
+                    <p className="text-sm text-foreground">
                       Analyzed {lastReport.cohortsAnalyzed} cohorts • {lastReport.findings}{' '}
                       {lastReport.findings === 1 ? 'finding' : 'findings'}
                     </p>
                     {lastReport.hasSignificantGaps && (
-                      <Badge variant="secondary" className="mt-2 bg-[#C76B4A]/10 text-[#C76B4A]">
+                      <Badge
+                        variant="secondary"
+                        className="mt-2 bg-proofound-terracotta/10 text-proofound-terracotta"
+                      >
                         Gaps Detected - Review Recommended
                       </Badge>
                     )}
@@ -148,12 +151,12 @@ export default function FairnessAnalyticsPage({ params }: { params: Promise<{ sl
           <div className="grid md:grid-cols-2 gap-4">
             <Card className="p-5">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-lg bg-[#E8F5E1] flex items-center justify-center flex-shrink-0">
-                  <AlertCircle className="w-5 h-5 text-[#1C4D3A]" />
+                <div className="w-10 h-10 rounded-lg bg-proofound-success-tint flex items-center justify-center flex-shrink-0">
+                  <AlertCircle className="w-5 h-5 text-proofound-forest" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-[#2D3330] mb-1">Significance Threshold</h3>
-                  <p className="text-sm text-[#6B6760]">
+                  <h3 className="font-semibold text-foreground mb-1">Significance Threshold</h3>
+                  <p className="text-sm text-muted-foreground">
                     Gaps are flagged if a cohort's median TTSC deviates by &gt;20% from the global
                     median with at least 10 samples.
                   </p>
@@ -164,11 +167,11 @@ export default function FairnessAnalyticsPage({ params }: { params: Promise<{ sl
             <Card className="p-5">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-lg bg-[#FFF4E6] flex items-center justify-center flex-shrink-0">
-                  <FileText className="w-5 h-5 text-[#C76B4A]" />
+                  <FileText className="w-5 h-5 text-proofound-terracotta" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-[#2D3330] mb-1">Data Privacy</h3>
-                  <p className="text-sm text-[#6B6760]">
+                  <h3 className="font-semibold text-foreground mb-1">Data Privacy</h3>
+                  <p className="text-sm text-muted-foreground">
                     All cohort analysis is aggregated and anonymized. Individual candidate data is
                     never included in fairness reports.
                   </p>
@@ -178,16 +181,16 @@ export default function FairnessAnalyticsPage({ params }: { params: Promise<{ sl
           </div>
 
           {/* Automated Reports Info */}
-          <Card className="p-6 bg-gradient-to-br from-[#F7F6F1] to-white border-[#E8E6DD]">
-            <h3 className="font-semibold text-[#2D3330] mb-3 flex items-center gap-2">
-              <RefreshCw className="w-5 h-5 text-[#6B6760]" />
+          <Card className="p-6 bg-gradient-to-br from-[#F7F6F1] to-white border-proofound-stone">
+            <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+              <RefreshCw className="w-5 h-5 text-muted-foreground" />
               Automated Daily Analysis
             </h3>
-            <p className="text-sm text-[#6B6760] mb-4">
+            <p className="text-sm text-muted-foreground mb-4">
               Fairness gap analysis runs automatically every day at 2 AM UTC (analyzing the last 7
               days). You can view the latest automated analysis on your organization dashboard.
             </p>
-            <p className="text-xs text-[#6B6760]">
+            <p className="text-xs text-muted-foreground">
               Manual reports provide more comprehensive analysis (30 days, additional demographics)
               compared to the daily automated analysis.
             </p>

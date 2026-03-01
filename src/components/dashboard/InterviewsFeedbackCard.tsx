@@ -102,7 +102,7 @@ export function InterviewsFeedbackCard({
       <CardHeader className="flex flex-row items-start justify-between space-y-0">
         <div className="min-w-0 space-y-1">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Clock4 className="h-5 w-5 text-[#1C4D3A]" />
+            <Clock4 className="h-5 w-5 text-proofound-forest" />
             Interviews & Feedback
           </CardTitle>
           <p className="text-sm text-muted-foreground">Keep 7d interviews & 48h feedback moving.</p>
@@ -113,21 +113,21 @@ export function InterviewsFeedbackCard({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-3 gap-3 text-center">
-          <div className="rounded-lg border border-[#E8E6DD] p-3">
+          <div className="rounded-lg border border-proofound-stone p-3">
             <p className="text-xs text-muted-foreground">Scheduled</p>
-            <p className="text-2xl font-semibold text-[#2D3330]">
+            <p className="text-2xl font-semibold text-foreground">
               {loading ? '—' : counts.upcoming}
             </p>
           </div>
-          <div className="rounded-lg border border-[#E8E6DD] p-3">
+          <div className="rounded-lg border border-proofound-stone p-3">
             <p className="text-xs text-muted-foreground">Feedback due</p>
-            <p className="text-2xl font-semibold text-[#2D3330]">
+            <p className="text-2xl font-semibold text-foreground">
               {loading ? '—' : counts.pendingFeedback}
             </p>
           </div>
-          <div className="rounded-lg border border-[#E8E6DD] p-3">
+          <div className="rounded-lg border border-proofound-stone p-3">
             <p className="text-xs text-muted-foreground">Breaches</p>
-            <p className="text-2xl font-semibold text-[#2D3330]">
+            <p className="text-2xl font-semibold text-foreground">
               {loading ? '—' : counts.breaching}
             </p>
           </div>
@@ -136,19 +136,19 @@ export function InterviewsFeedbackCard({
         <div className="space-y-2">
           <Link
             href="/app/i/matching"
-            className="flex items-center justify-between rounded-lg border border-[#E8E6DD] px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1] text-sm"
+            className="flex items-center justify-between rounded-lg border border-proofound-stone px-3 py-2 hover:border-proofound-forest hover:bg-japandi-bg text-sm"
             onClick={() => onActionClick?.('schedule-interview')}
           >
-            <span className="text-[#2D3330]">Schedule next interview</span>
-            <AlarmClock className="h-4 w-4 text-[#9B9891]" />
+            <span className="text-foreground">Schedule next interview</span>
+            <AlarmClock className="h-4 w-4 text-muted-foreground" />
           </Link>
           <Link
             href="/app/i/matching?tab=feedback"
-            className="flex items-center justify-between rounded-lg border border-[#E8E6DD] px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1] text-sm"
+            className="flex items-center justify-between rounded-lg border border-proofound-stone px-3 py-2 hover:border-proofound-forest hover:bg-japandi-bg text-sm"
             onClick={() => onActionClick?.('send-feedback')}
           >
-            <span className="text-[#2D3330]">Send interview feedback</span>
-            <MessageSquare className="h-4 w-4 text-[#9B9891]" />
+            <span className="text-foreground">Send interview feedback</span>
+            <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </Link>
         </div>
 
@@ -160,7 +160,7 @@ export function InterviewsFeedbackCard({
         <Button
           variant="outline"
           size="sm"
-          className="w-full border-[#1C4D3A] text-[#1C4D3A] hover:bg-[#EEF1EA]"
+          className="w-full border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5"
           asChild
           onClick={() => onActionClick?.('view-feedback')}
         >

@@ -120,8 +120,8 @@ export function FairnessReportView({ initialReports = [] }: FairnessReportViewPr
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-[#2D3330]">Fairness Reports</h2>
-          <p className="text-sm text-[#6B6760] mt-1">
+          <h2 className="text-2xl font-bold text-foreground">Fairness Reports</h2>
+          <p className="text-sm text-muted-foreground mt-1">
             Automated fairness gap analysis across demographic segments
           </p>
         </div>
@@ -130,7 +130,7 @@ export function FairnessReportView({ initialReports = [] }: FairnessReportViewPr
             <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button onClick={generateReport} disabled={isGenerating} className="bg-[#1C4D3A]">
+          <Button onClick={generateReport} disabled={isGenerating} className="bg-proofound-forest">
             {isGenerating ? 'Generating...' : 'Generate New Report'}
           </Button>
         </div>
@@ -147,7 +147,7 @@ export function FairnessReportView({ initialReports = [] }: FairnessReportViewPr
           <CardContent>
             <div className="space-y-2">
               {reports.length === 0 ? (
-                <p className="text-sm text-[#6B6760]">No reports generated yet</p>
+                <p className="text-sm text-muted-foreground">No reports generated yet</p>
               ) : (
                 reports.map((report: any) => (
                   <button
@@ -155,12 +155,12 @@ export function FairnessReportView({ initialReports = [] }: FairnessReportViewPr
                     onClick={() => setSelectedReport(report)}
                     className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
                       selectedReport?.id === report.id
-                        ? 'border-[#1C4D3A] bg-[#E8F5E1]'
-                        : 'border-[#E8E6DD] bg-white hover:border-[#1C4D3A]/30'
+                        ? 'border-proofound-forest bg-proofound-success-tint'
+                        : 'border-proofound-stone bg-white hover:border-proofound-forest/30'
                     }`}
                   >
-                    <div className="font-medium text-[#2D3330]">{report.releaseVersion}</div>
-                    <div className="text-xs text-[#6B6760] mt-0.5">
+                    <div className="font-medium text-foreground">{report.releaseVersion}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
                       {new Date(report.createdAt).toLocaleDateString()}
                     </div>
                     {report.metricsJson?.segments && (
@@ -212,9 +212,9 @@ export function FairnessReportView({ initialReports = [] }: FairnessReportViewPr
           </CardHeader>
           <CardContent>
             {!selectedReport ? (
-              <p className="text-sm text-[#6B6760]">Select a report to view details</p>
+              <p className="text-sm text-muted-foreground">Select a report to view details</p>
             ) : !analysis ? (
-              <p className="text-sm text-[#6B6760]">Report data unavailable</p>
+              <p className="text-sm text-muted-foreground">Report data unavailable</p>
             ) : (
               <Tabs defaultValue="summary">
                 <TabsList className="grid w-full grid-cols-3">
@@ -254,27 +254,27 @@ export function FairnessReportView({ initialReports = [] }: FairnessReportViewPr
 
                   {/* Overall Metrics */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="p-3 border border-[#E8E6DD] rounded-lg">
-                      <p className="text-xs text-[#6B6760] mb-1">Total Matches</p>
-                      <p className="text-2xl font-bold text-[#2D3330]">
+                    <div className="p-3 border border-proofound-stone rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">Total Matches</p>
+                      <p className="text-2xl font-bold text-foreground">
                         {analysis.overallMetrics.totalMatches.toLocaleString()}
                       </p>
                     </div>
-                    <div className="p-3 border border-[#E8E6DD] rounded-lg">
-                      <p className="text-xs text-[#6B6760] mb-1">Introductions</p>
-                      <p className="text-2xl font-bold text-[#2D3330]">
+                    <div className="p-3 border border-proofound-stone rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">Introductions</p>
+                      <p className="text-2xl font-bold text-foreground">
                         {analysis.overallMetrics.totalIntroductions.toLocaleString()}
                       </p>
                     </div>
-                    <div className="p-3 border border-[#E8E6DD] rounded-lg">
-                      <p className="text-xs text-[#6B6760] mb-1">Interviews</p>
-                      <p className="text-2xl font-bold text-[#2D3330]">
+                    <div className="p-3 border border-proofound-stone rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">Interviews</p>
+                      <p className="text-2xl font-bold text-foreground">
                         {analysis.overallMetrics.totalInterviews.toLocaleString()}
                       </p>
                     </div>
-                    <div className="p-3 border border-[#E8E6DD] rounded-lg">
-                      <p className="text-xs text-[#6B6760] mb-1">Contracts</p>
-                      <p className="text-2xl font-bold text-[#2D3330]">
+                    <div className="p-3 border border-proofound-stone rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">Contracts</p>
+                      <p className="text-2xl font-bold text-foreground">
                         {analysis.overallMetrics.totalContracts.toLocaleString()}
                       </p>
                     </div>
@@ -284,7 +284,7 @@ export function FairnessReportView({ initialReports = [] }: FairnessReportViewPr
                 {/* Segments Tab */}
                 <TabsContent value="segments" className="space-y-4">
                   {analysis.segments.length === 0 ? (
-                    <p className="text-sm text-[#6B6760]">
+                    <p className="text-sm text-muted-foreground">
                       No segment data available (insufficient opt-in participation)
                     </p>
                   ) : (
@@ -317,7 +317,9 @@ export function FairnessReportView({ initialReports = [] }: FairnessReportViewPr
                                 </span>
                               </div>
                             </TableCell>
-                            <TableCell className="text-[#6B6760]">{seg.sampleSize}</TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {seg.sampleSize}
+                            </TableCell>
                             <TableCell>
                               {seg.significant ? (
                                 <Badge variant="destructive">
@@ -337,19 +339,19 @@ export function FairnessReportView({ initialReports = [] }: FairnessReportViewPr
                 {/* Recommendations Tab */}
                 <TabsContent value="recommendations" className="space-y-3">
                   {analysis.recommendations.length === 0 ? (
-                    <p className="text-sm text-[#6B6760]">No actions required</p>
+                    <p className="text-sm text-muted-foreground">No actions required</p>
                   ) : (
                     <div className="space-y-2">
                       {analysis.recommendations.map((rec, idx) => (
                         <div
                           key={idx}
-                          className="p-3 border border-[#E8E6DD] rounded-lg bg-[#F7F6F1]"
+                          className="p-3 border border-proofound-stone rounded-lg bg-japandi-bg"
                         >
                           <div className="flex items-start gap-2">
-                            <span className="font-semibold text-[#1C4D3A] flex-shrink-0">
+                            <span className="font-semibold text-proofound-forest flex-shrink-0">
                               {idx + 1}.
                             </span>
-                            <p className="text-sm text-[#2D3330]">{rec}</p>
+                            <p className="text-sm text-foreground">{rec}</p>
                           </div>
                         </div>
                       ))}

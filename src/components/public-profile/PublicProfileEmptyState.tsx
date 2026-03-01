@@ -17,7 +17,7 @@ export function PublicProfileEmptyState({
   example,
 }: PublicProfileEmptyStateProps) {
   return (
-    <div className="rounded-lg border border-dashed border-[#D9D5CC] bg-[#F7F6F1] px-3 py-3.5 text-sm text-[#6B6760]">
+    <div className="rounded-lg border border-dashed border-[#D9D5CC] bg-japandi-bg px-3 py-3.5 text-sm text-muted-foreground">
       <p>{message}</p>
       {actions.length > 0 ? (
         <div className="mt-2 flex flex-wrap gap-2">
@@ -25,7 +25,7 @@ export function PublicProfileEmptyState({
             <Link
               key={`${action.label}-${action.href}`}
               href={action.href}
-              className="rounded-full border border-[#D9D5CC] bg-white px-3 py-1 text-xs font-medium text-[#2D3330] hover:border-[#1C4D3A]/45 hover:text-[#1C4D3A]"
+              className="rounded-full border border-[#D9D5CC] bg-white px-3 py-1 text-xs font-medium text-foreground hover:border-proofound-forest/45 hover:text-proofound-forest"
             >
               {action.label}
             </Link>

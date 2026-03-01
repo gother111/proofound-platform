@@ -51,14 +51,14 @@ export function RedactModeToggle({ enabled, onChange, showLabel = true }: Redact
         {enabled ? (
           <EyeOff className="h-4 w-4 text-amber-600" />
         ) : (
-          <Eye className="h-4 w-4 text-[#6B6760]" />
+          <Eye className="h-4 w-4 text-muted-foreground" />
         )}
         {showLabel && (
           <div className="space-y-0.5">
-            <Label htmlFor="redact-mode" className="text-sm font-medium text-[#2D3330]">
+            <Label htmlFor="redact-mode" className="text-sm font-medium text-foreground">
               Redact Mode
             </Label>
-            <p className="text-xs text-[#6B6760]">
+            <p className="text-xs text-muted-foreground">
               {enabled ? 'Sensitive information is hidden' : 'All information is visible'}
             </p>
           </div>

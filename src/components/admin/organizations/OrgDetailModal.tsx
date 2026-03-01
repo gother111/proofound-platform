@@ -120,7 +120,7 @@ export function OrgDetailModal({ org, open, onClose, onOrgUpdated }: OrgDetailMo
                   src={org.logoUrl || undefined}
                   alt={org.displayName || 'Organization'}
                 />
-                <AvatarFallback className="bg-[#1C4D3A] text-white">
+                <AvatarFallback className="bg-proofound-forest text-white">
                   {getInitials(org.displayName)}
                 </AvatarFallback>
               </Avatar>
@@ -231,11 +231,11 @@ export function OrgDetailModal({ org, open, onClose, onOrgUpdated }: OrgDetailMo
               </h3>
 
               {org.mission && (
-                <div className="bg-[#E8F5E1] p-3 rounded-lg border border-[#1C4D3A]/20">
+                <div className="bg-proofound-success-tint p-3 rounded-lg border border-proofound-forest/20">
                   <div className="flex items-start gap-2">
-                    <Target className="h-4 w-4 text-[#1C4D3A] mt-0.5" />
+                    <Target className="h-4 w-4 text-proofound-forest mt-0.5" />
                     <div>
-                      <p className="text-xs text-[#1C4D3A] font-medium mb-1">Mission</p>
+                      <p className="text-xs text-proofound-forest font-medium mb-1">Mission</p>
                       <p className="text-sm">{org.mission}</p>
                     </div>
                   </div>
@@ -277,7 +277,6 @@ export function OrgDetailModal({ org, open, onClose, onOrgUpdated }: OrgDetailMo
                     Legal Name: {org.legalName || 'N/A'}
                   </span>
                 </div>
-
               </div>
             </div>
 

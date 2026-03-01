@@ -78,8 +78,8 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <Activity className="h-8 w-8 text-[#6B6760] animate-spin mx-auto mb-2" />
-          <p className="text-[#6B6760]">Loading dashboard...</p>
+          <Activity className="h-8 w-8 text-muted-foreground animate-spin mx-auto mb-2" />
+          <p className="text-muted-foreground">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -88,7 +88,7 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
   if (!overview) {
     return (
       <div className="text-center py-12">
-        <p className="text-[#6B6760]">Failed to load dashboard data</p>
+        <p className="text-muted-foreground">Failed to load dashboard data</p>
       </div>
     );
   }
@@ -190,21 +190,21 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
         <Card>
           <CardContent className="pt-6">
             <div className="space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-[#E8E6DD]">
-                <span className="text-sm text-[#6B6760]">Active Users (7d)</span>
-                <span className="text-lg font-semibold text-[#2D3330]">
+              <div className="flex items-center justify-between pb-2 border-b border-proofound-stone">
+                <span className="text-sm text-muted-foreground">Active Users (7d)</span>
+                <span className="text-lg font-semibold text-foreground">
                   {safeToLocaleString(overview.users.activeLastWeek)}
                 </span>
               </div>
-              <div className="flex items-center justify-between pb-2 border-b border-[#E8E6DD]">
-                <span className="text-sm text-[#6B6760]">Active Assignments</span>
-                <span className="text-lg font-semibold text-[#2D3330]">
+              <div className="flex items-center justify-between pb-2 border-b border-proofound-stone">
+                <span className="text-sm text-muted-foreground">Active Assignments</span>
+                <span className="text-lg font-semibold text-foreground">
                   {safeToLocaleString(overview.assignments.active)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-[#6B6760]">Conversion Rate</span>
-                <span className="text-lg font-semibold text-[#2D3330]">
+                <span className="text-sm text-muted-foreground">Conversion Rate</span>
+                <span className="text-lg font-semibold text-foreground">
                   {safePercentage(overview.contracts.total, overview.matches.total)}%
                 </span>
               </div>
@@ -220,24 +220,26 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
             <div className="space-y-2">
               <Link
                 href="/admin/users"
-                className="block w-full text-left p-3 rounded-lg border border-[#E8E6DD] hover:bg-[#F5F4F0] transition-colors"
+                className="block w-full text-left p-3 rounded-lg border border-proofound-stone hover:bg-japandi-bg transition-colors"
               >
-                <p className="font-medium text-sm text-[#2D3330]">View All Users</p>
-                <p className="text-xs text-[#9B9891]">Manage user accounts and permissions</p>
+                <p className="font-medium text-sm text-foreground">View All Users</p>
+                <p className="text-xs text-muted-foreground">
+                  Manage user accounts and permissions
+                </p>
               </Link>
               <Link
                 href="/admin/organizations"
-                className="block w-full text-left p-3 rounded-lg border border-[#E8E6DD] hover:bg-[#F5F4F0] transition-colors"
+                className="block w-full text-left p-3 rounded-lg border border-proofound-stone hover:bg-japandi-bg transition-colors"
               >
-                <p className="font-medium text-sm text-[#2D3330]">View Organizations</p>
-                <p className="text-xs text-[#9B9891]">Browse and manage organizations</p>
+                <p className="font-medium text-sm text-foreground">View Organizations</p>
+                <p className="text-xs text-muted-foreground">Browse and manage organizations</p>
               </Link>
               <Link
                 href="/admin/audit"
-                className="block w-full text-left p-3 rounded-lg border border-[#E8E6DD] hover:bg-[#F5F4F0] transition-colors"
+                className="block w-full text-left p-3 rounded-lg border border-proofound-stone hover:bg-japandi-bg transition-colors"
               >
-                <p className="font-medium text-sm text-[#2D3330]">Audit Log</p>
-                <p className="text-xs text-[#9B9891]">Review admin actions and changes</p>
+                <p className="font-medium text-sm text-foreground">Audit Log</p>
+                <p className="text-xs text-muted-foreground">Review admin actions and changes</p>
               </Link>
             </div>
           </CardContent>
@@ -253,7 +255,7 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
       {/* Fairness Monitoring */}
       {adminUser.platformRole === 'super_admin' && (
         <div>
-          <h2 className="text-xl font-semibold text-[#2D3330] mb-4">Fairness Monitoring</h2>
+          <h2 className="text-xl font-semibold text-foreground mb-4">Fairness Monitoring</h2>
           <FairnessNoteDashboard />
         </div>
       )}

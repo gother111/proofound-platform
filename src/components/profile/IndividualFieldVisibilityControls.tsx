@@ -217,7 +217,7 @@ export function IndividualFieldVisibilityControls({
   };
 
   return (
-    <Card className="border-[#E8E6DD]">
+    <Card className="border-proofound-stone">
       <CardHeader>
         <CardTitle className="text-xl">Field Visibility</CardTitle>
         <CardDescription>
@@ -226,15 +226,15 @@ export function IndividualFieldVisibilityControls({
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Visibility Level Legend */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 p-4 bg-[#F7F6F1] rounded-lg">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 p-4 bg-japandi-bg rounded-lg">
           {VISIBILITY_OPTIONS.map((option) => {
             const Icon = option.icon;
             return (
               <div key={option.value} className="flex items-start gap-2">
                 <Icon className={`h-4 w-4 ${option.color} mt-0.5 flex-shrink-0`} />
                 <div>
-                  <div className="text-xs font-medium text-[#2D3330]">{option.label}</div>
-                  <div className="text-xs text-[#6B6760]">{option.description}</div>
+                  <div className="text-xs font-medium text-foreground">{option.label}</div>
+                  <div className="text-xs text-muted-foreground">{option.description}</div>
                 </div>
               </div>
             );
@@ -248,24 +248,27 @@ export function IndividualFieldVisibilityControls({
             return (
               <div
                 key={field.key}
-                className="flex items-center justify-between gap-4 p-3 rounded-lg border border-[#E8E6DD] hover:bg-[#F7F6F1] transition-colors"
+                className="flex items-center justify-between gap-4 p-3 rounded-lg border border-proofound-stone hover:bg-japandi-bg transition-colors"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <Label
                       htmlFor={field.key}
-                      className="text-sm font-medium text-[#2D3330] cursor-pointer"
+                      className="text-sm font-medium text-foreground cursor-pointer"
                     >
                       {field.label}
                     </Label>
                     {getVisibilityIcon(currentVisibility)}
                     {field.recommended === currentVisibility && (
-                      <Badge variant="secondary" className="text-xs bg-[#EEF1EA] text-[#1C4D3A]">
+                      <Badge
+                        variant="secondary"
+                        className="text-xs bg-proofound-forest/5 text-proofound-forest"
+                      >
                         Recommended
                       </Badge>
                     )}
                   </div>
-                  <p className="text-xs text-[#6B6760]">{field.description}</p>
+                  <p className="text-xs text-muted-foreground">{field.description}</p>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -300,7 +303,7 @@ export function IndividualFieldVisibilityControls({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <Info className="h-4 w-4 text-[#6B6760]" />
+                          <Info className="h-4 w-4 text-muted-foreground" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent side="left" className="max-w-xs">
@@ -322,14 +325,14 @@ export function IndividualFieldVisibilityControls({
         </div>
 
         {/* Save Button */}
-        <div className="flex items-center justify-between pt-4 border-t border-[#E8E6DD]">
-          <p className="text-xs text-[#6B6760]">
+        <div className="flex items-center justify-between pt-4 border-t border-proofound-stone">
+          <p className="text-xs text-muted-foreground">
             {hasChanges ? 'You have unsaved changes' : 'All changes saved'}
           </p>
           <Button
             onClick={handleSave}
             disabled={!hasChanges || saving}
-            className="bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
+            className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
           >
             {saving ? 'Saving...' : 'Save Privacy Settings'}
           </Button>

@@ -89,12 +89,12 @@ export function MatchScoreBreakdown({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white/90 backdrop-blur-sm p-3 rounded-xl border border-[#E8E6DD] shadow-sm">
-          <p className="text-xs font-semibold text-[#2D3330] mb-2">{data.subject}</p>
+        <div className="bg-white/90 backdrop-blur-sm p-3 rounded-xl border border-proofound-stone shadow-sm">
+          <p className="text-xs font-semibold text-foreground mb-2">{data.subject}</p>
           <div className="flex items-center gap-2 text-xs">
-            <div className="w-2 h-2 rounded-full bg-[#1C4D3A]" />
-            <span className="text-[#6B6760] font-medium">Score:</span>
-            <span className="text-[#2D3330] font-bold">{data.score.toFixed(0)}</span>
+            <div className="w-2 h-2 rounded-full bg-proofound-forest" />
+            <span className="text-muted-foreground font-medium">Score:</span>
+            <span className="text-foreground font-bold">{data.score.toFixed(0)}</span>
           </div>
         </div>
       );
@@ -108,8 +108,10 @@ export function MatchScoreBreakdown({
         <CardTitle className="flex items-center justify-between">
           <span>Match Score Breakdown</span>
           <div className="flex items-center gap-2">
-            <span className="text-3xl font-bold text-[#1C4D3A]">{overallScore.toFixed(0)}</span>
-            <span className="text-sm text-[#6B6760]">/ 100</span>
+            <span className="text-3xl font-bold text-proofound-forest">
+              {overallScore.toFixed(0)}
+            </span>
+            <span className="text-sm text-muted-foreground">/ 100</span>
           </div>
         </CardTitle>
       </CardHeader>
@@ -117,8 +119,8 @@ export function MatchScoreBreakdown({
         {/* Overall Match Bar */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-[#2D3330]">Overall Match</span>
-            <span className="text-sm text-[#6B6760]">{overallScore.toFixed(1)}%</span>
+            <span className="text-sm font-medium text-foreground">Overall Match</span>
+            <span className="text-sm text-muted-foreground">{overallScore.toFixed(1)}%</span>
           </div>
           <Progress value={overallScore} className="h-3" />
         </div>
@@ -126,7 +128,7 @@ export function MatchScoreBreakdown({
         {/* Subscores */}
         {showDetails && (
           <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-[#2D3330] pt-4 border-t border-[#E8E6DD]">
+            <h4 className="text-sm font-semibold text-foreground pt-4 border-t border-proofound-stone">
               Match Profile Shape
             </h4>
             <div className="h-[220px] w-full mb-6">
@@ -147,7 +149,7 @@ export function MatchScoreBreakdown({
               </ResponsiveContainer>
             </div>
 
-            <h4 className="text-sm font-semibold text-[#2D3330] pt-2 border-t border-[#E8E6DD]">
+            <h4 className="text-sm font-semibold text-foreground pt-2 border-t border-proofound-stone">
               Score Components
             </h4>
             {subscoreItems.map((item) => {
@@ -157,12 +159,12 @@ export function MatchScoreBreakdown({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Icon className={`h-4 w-4 ${item.color}`} />
-                      <span className="text-sm font-medium text-[#2D3330]">{item.label}</span>
+                      <span className="text-sm font-medium text-foreground">{item.label}</span>
                     </div>
-                    <span className="text-sm text-[#6B6760]">{item.score.toFixed(0)}</span>
+                    <span className="text-sm text-muted-foreground">{item.score.toFixed(0)}</span>
                   </div>
                   <Progress value={item.score} className="h-2" />
-                  <p className="text-xs text-[#9B9891]">{item.description}</p>
+                  <p className="text-xs text-muted-foreground">{item.description}</p>
                 </div>
               );
             })}
@@ -171,14 +173,14 @@ export function MatchScoreBreakdown({
 
         {/* PAC Badge */}
         {purposeAlignment > 0 && (
-          <div className="pt-4 border-t border-[#E8E6DD]">
+          <div className="pt-4 border-t border-proofound-stone">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-[#2D3330]">
+              <span className="text-sm font-medium text-foreground">
                 Purpose-Alignment Contribution
               </span>
               <PACBadge pacScore={purposeAlignment} showTooltip />
             </div>
-            <p className="text-xs text-[#9B9891] mt-2">
+            <p className="text-xs text-muted-foreground mt-2">
               {purposeAlignment >= 71
                 ? 'This organization strongly aligns with your values and causes.'
                 : purposeAlignment >= 31

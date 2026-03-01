@@ -168,10 +168,10 @@ export function BrowseModePanel({
                   onClick={() => onNavigateToStep(itemStep)}
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-[#1C4D3A] text-white'
+                      ? 'bg-proofound-forest text-white'
                       : isCompleted
                         ? 'bg-[#7A9278] text-white'
-                        : 'bg-[#E5E3DA] text-[#6B6760]'
+                        : 'bg-[#E5E3DA] text-muted-foreground'
                   } ${
                     isReachable
                       ? 'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1C4D3A] focus-visible:ring-offset-2'
@@ -189,7 +189,7 @@ export function BrowseModePanel({
             );
           })}
         </div>
-        <div className="flex justify-between text-xs text-[#6B6760] mt-2">
+        <div className="flex justify-between text-xs text-muted-foreground mt-2">
           {stepMeta.map(({ label }) => (
             <span key={label}>{label}</span>
           ))}
@@ -202,10 +202,12 @@ export function BrowseModePanel({
             type="button"
             data-testid="browse-location-domain"
             onClick={() => onNavigateToStep(1)}
-            className="inline-flex items-center gap-1 rounded-full border border-[#D8D3C8] bg-white px-2.5 py-1 text-left transition-colors hover:bg-[#F7F6F1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1C4D3A] focus-visible:ring-offset-2"
+            className="inline-flex items-center gap-1 rounded-full border border-[#D8D3C8] bg-white px-2.5 py-1 text-left transition-colors hover:bg-japandi-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1C4D3A] focus-visible:ring-offset-2"
           >
-            <span className="font-medium text-[#2D3330]">Domain</span>
-            <span className="text-[#6B6760]">{selectedL1?.nameI18n?.en || 'Not selected'}</span>
+            <span className="font-medium text-foreground">Domain</span>
+            <span className="text-muted-foreground">
+              {selectedL1?.nameI18n?.en || 'Not selected'}
+            </span>
           </button>
           <ChevronRight className="h-3.5 w-3.5 text-[#8B867A]" aria-hidden />
           <button
@@ -215,12 +217,14 @@ export function BrowseModePanel({
             onClick={() => onNavigateToStep(2)}
             className={`inline-flex items-center gap-1 rounded-full border border-[#D8D3C8] bg-white px-2.5 py-1 text-left transition-colors ${
               canNavigateToStep(2)
-                ? 'hover:bg-[#F7F6F1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1C4D3A] focus-visible:ring-offset-2'
+                ? 'hover:bg-japandi-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1C4D3A] focus-visible:ring-offset-2'
                 : 'cursor-not-allowed opacity-70'
             }`}
           >
-            <span className="font-medium text-[#2D3330]">Category</span>
-            <span className="text-[#6B6760]">{selectedL2?.nameI18n?.en || 'Not selected'}</span>
+            <span className="font-medium text-foreground">Category</span>
+            <span className="text-muted-foreground">
+              {selectedL2?.nameI18n?.en || 'Not selected'}
+            </span>
           </button>
           <ChevronRight className="h-3.5 w-3.5 text-[#8B867A]" aria-hidden />
           <button
@@ -230,12 +234,14 @@ export function BrowseModePanel({
             onClick={() => onNavigateToStep(3)}
             className={`inline-flex items-center gap-1 rounded-full border border-[#D8D3C8] bg-white px-2.5 py-1 text-left transition-colors ${
               canNavigateToStep(3)
-                ? 'hover:bg-[#F7F6F1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1C4D3A] focus-visible:ring-offset-2'
+                ? 'hover:bg-japandi-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1C4D3A] focus-visible:ring-offset-2'
                 : 'cursor-not-allowed opacity-70'
             }`}
           >
-            <span className="font-medium text-[#2D3330]">Subcategory</span>
-            <span className="text-[#6B6760]">{selectedL3?.nameI18n?.en || 'Not selected'}</span>
+            <span className="font-medium text-foreground">Subcategory</span>
+            <span className="text-muted-foreground">
+              {selectedL3?.nameI18n?.en || 'Not selected'}
+            </span>
           </button>
         </div>
       </div>
@@ -243,20 +249,20 @@ export function BrowseModePanel({
       {step === 1 && (
         <div className="space-y-4">
           <div>
-            <h3 className="text-lg font-medium text-[#2D3330] mb-2">Step 1: Choose Domain</h3>
-            <p className="text-sm text-[#6B6760] mb-4">
+            <h3 className="text-lg font-medium text-foreground mb-2">Step 1: Choose Domain</h3>
+            <p className="text-sm text-muted-foreground mb-4">
               Select the top-level domain that best fits your skill. Pick the closest match; you can
               refine wording later.
             </p>
           </div>
 
           {domainsLoading ? (
-            <div className="flex items-center justify-center gap-2 py-8 text-[#6B6760]">
+            <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
               <span>Loading domains...</span>
             </div>
           ) : loadedDomains.length === 0 ? (
-            <div className="text-center py-8 text-[#6B6760]">
+            <div className="text-center py-8 text-muted-foreground">
               No domains available. Please try again later.
             </div>
           ) : (
@@ -276,7 +282,7 @@ export function BrowseModePanel({
                           {domain.nameI18n?.en || 'Unknown'}
                         </h4>
                         {domain.descriptionI18n?.en && (
-                          <p className="text-sm text-[#6B6760] mt-1">
+                          <p className="text-sm text-muted-foreground mt-1">
                             {domain.descriptionI18n?.en}
                           </p>
                         )}
@@ -294,43 +300,48 @@ export function BrowseModePanel({
       {step === 2 && (
         <div className="space-y-4">
           <div>
-            <Button variant="ghost" size="sm" onClick={handleBack} className="mb-2 text-[#1C4D3A]">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBack}
+              className="mb-2 text-proofound-forest"
+            >
               ← Back to Domains
             </Button>
-            <h3 className="text-lg font-medium text-[#2D3330] mb-2">Step 2: Choose Category</h3>
-            <p className="text-sm text-[#6B6760] mb-4">
+            <h3 className="text-lg font-medium text-foreground mb-2">Step 2: Choose Category</h3>
+            <p className="text-sm text-muted-foreground mb-4">
               Select a category within <strong>{selectedL1?.nameI18n?.en || 'Unknown'}</strong>. If
               you can&apos;t find the exact wording, choose the nearest synonym.
             </p>
           </div>
 
           {l2Loading ? (
-            <div className="flex items-center justify-center gap-2 py-8 text-[#6B6760]">
+            <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
               <span>Loading categories...</span>
             </div>
           ) : l2Categories.length === 0 ? (
-            <div className="text-center py-8 text-[#6B6760]">No categories found.</div>
+            <div className="text-center py-8 text-muted-foreground">No categories found.</div>
           ) : (
             <div className="space-y-2 max-h-[500px] overflow-y-auto">
               {l2Categories.map((category) => (
                 <Card
                   key={category.subcatId}
-                  className="p-4 hover:bg-[#F7F6F1] transition-colors cursor-pointer border border-[#E5E3DA]"
+                  className="p-4 hover:bg-japandi-bg transition-colors cursor-pointer border border-proofound-stone"
                   onClick={() => handleL2Select(category)}
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-medium text-[#2D3330]">
+                      <h4 className="font-medium text-foreground">
                         {category.nameI18n?.en || 'Unknown'}
                       </h4>
                       {category.descriptionI18n?.en && (
-                        <p className="text-sm text-[#6B6760] mt-1">
+                        <p className="text-sm text-muted-foreground mt-1">
                           {category.descriptionI18n?.en}
                         </p>
                       )}
                     </div>
-                    <ChevronRight className="h-5 w-5 text-[#6B6760]" />
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
                   </div>
                 </Card>
               ))}
@@ -342,11 +353,16 @@ export function BrowseModePanel({
       {step === 3 && (
         <div className="space-y-4">
           <div>
-            <Button variant="ghost" size="sm" onClick={handleBack} className="mb-2 text-[#1C4D3A]">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBack}
+              className="mb-2 text-proofound-forest"
+            >
               ← Back to Categories
             </Button>
-            <h3 className="text-lg font-medium text-[#2D3330] mb-2">Step 3: Choose Subcategory</h3>
-            <p className="text-sm text-[#6B6760] mb-4">
+            <h3 className="text-lg font-medium text-foreground mb-2">Step 3: Choose Subcategory</h3>
+            <p className="text-sm text-muted-foreground mb-4">
               Select a subcategory within{' '}
               <strong>
                 {selectedL1?.nameI18n?.en || 'Not selected'} {'->'}{' '}
@@ -357,32 +373,32 @@ export function BrowseModePanel({
           </div>
 
           {l3Loading ? (
-            <div className="flex items-center justify-center gap-2 py-8 text-[#6B6760]">
+            <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
               <span>Loading subcategories...</span>
             </div>
           ) : l3Subcategories.length === 0 ? (
-            <div className="text-center py-8 text-[#6B6760]">No subcategories found.</div>
+            <div className="text-center py-8 text-muted-foreground">No subcategories found.</div>
           ) : (
             <div className="space-y-2 max-h-[500px] overflow-y-auto">
               {l3Subcategories.map((subcategory) => (
                 <Card
                   key={subcategory.l3Id}
-                  className="p-4 hover:bg-[#F7F6F1] transition-colors cursor-pointer border border-[#E5E3DA]"
+                  className="p-4 hover:bg-japandi-bg transition-colors cursor-pointer border border-proofound-stone"
                   onClick={() => handleL3Select(subcategory)}
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-medium text-[#2D3330]">
+                      <h4 className="font-medium text-foreground">
                         {subcategory.nameI18n?.en || 'Unknown'}
                       </h4>
                       {subcategory.descriptionI18n?.en && (
-                        <p className="text-sm text-[#6B6760] mt-1">
+                        <p className="text-sm text-muted-foreground mt-1">
                           {subcategory.descriptionI18n?.en}
                         </p>
                       )}
                     </div>
-                    <ChevronRight className="h-5 w-5 text-[#6B6760]" />
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
                   </div>
                 </Card>
               ))}
@@ -394,21 +410,26 @@ export function BrowseModePanel({
       {step === 4 && (
         <div className="space-y-6">
           <div>
-            <Button variant="ghost" size="sm" onClick={handleBack} className="mb-2 text-[#1C4D3A]">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBack}
+              className="mb-2 text-proofound-forest"
+            >
               ← Back to Subcategories
             </Button>
-            <h3 className="text-lg font-medium text-[#2D3330] mb-2">Step 4: Skill Details</h3>
-            <p className="text-sm text-[#6B6760] mb-4">
+            <h3 className="text-lg font-medium text-foreground mb-2">Step 4: Skill Details</h3>
+            <p className="text-sm text-muted-foreground mb-4">
               Fill in the details for your skill. Your current location is shown above.
             </p>
           </div>
 
           <div className="relative">
-            <Label htmlFor="skill-name" className="text-[#2D3330]">
+            <Label htmlFor="skill-name" className="text-foreground">
               Skill Name *
             </Label>
             <div className="relative mt-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6B6760]" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="skill-name"
                 type="text"
@@ -422,14 +443,14 @@ export function BrowseModePanel({
                 className="pl-10"
               />
             </div>
-            <p className="text-xs text-[#6B6760] mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Tip: try synonyms or common terms. We&apos;ll match close wording to the Atlas skill.
             </p>
 
             {showL4Dropdown && l4Search && (
-              <div className="absolute z-50 w-full mt-1 bg-white border border-[#E5E3DA] rounded-lg shadow-lg max-h-[300px] overflow-y-auto">
+              <div className="absolute z-50 w-full mt-1 bg-white border border-proofound-stone rounded-lg shadow-lg max-h-[300px] overflow-y-auto">
                 {l4Loading ? (
-                  <div className="flex items-center justify-center gap-2 p-4 text-[#6B6760]">
+                  <div className="flex items-center justify-center gap-2 p-4 text-muted-foreground">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     <span>Loading skills...</span>
                   </div>
@@ -447,7 +468,7 @@ export function BrowseModePanel({
                           <button
                             key={skill.code}
                             type="button"
-                            className="w-full text-left p-3 hover:bg-[#F7F6F1] cursor-pointer border-b border-[#E5E3DA] last:border-b-0"
+                            className="w-full text-left p-3 hover:bg-japandi-bg cursor-pointer border-b border-proofound-stone last:border-b-0"
                             onClick={() => {
                               setSelectedL4(skill);
                               setL4Name(skill.nameI18n?.en || '');
@@ -455,9 +476,9 @@ export function BrowseModePanel({
                               setShowL4Dropdown(false);
                             }}
                           >
-                            <div className="font-medium text-[#2D3330]">{skill.nameI18n?.en}</div>
+                            <div className="font-medium text-foreground">{skill.nameI18n?.en}</div>
                             {skill.descriptionI18n?.en && (
-                              <div className="text-xs text-[#6B6760] mt-1">
+                              <div className="text-xs text-muted-foreground mt-1">
                                 {skill.descriptionI18n?.en}
                               </div>
                             )}
@@ -465,7 +486,7 @@ export function BrowseModePanel({
                         ))}
                       </>
                     ) : (
-                      <div className="p-4 text-center text-[#6B6760]">
+                      <div className="p-4 text-center text-muted-foreground">
                         <p className="mb-2">No matching skills found</p>
                         <p className="text-sm">
                           You can continue with &ldquo;{l4Search}&rdquo; as a custom skill
@@ -482,7 +503,7 @@ export function BrowseModePanel({
                 <Badge variant="secondary" className="bg-[#7A9278] text-white">
                   From Atlas
                 </Badge>
-                <span className="text-sm text-[#6B6760]">{selectedL4.nameI18n?.en}</span>
+                <span className="text-sm text-muted-foreground">{selectedL4.nameI18n?.en}</span>
               </div>
             )}
 
@@ -496,7 +517,7 @@ export function BrowseModePanel({
           </div>
 
           <div>
-            <Label className="text-[#2D3330] mb-3 block">Proficiency Level *</Label>
+            <Label className="text-foreground mb-3 block">Proficiency Level *</Label>
             <RadioGroup
               value={level.toString()}
               onValueChange={(val) => setLevel(parseInt(val, 10))}
@@ -504,12 +525,12 @@ export function BrowseModePanel({
               {LEVEL_LABELS.map((entry) => (
                 <div
                   key={entry.value}
-                  className="flex items-center space-x-3 mb-2 p-3 rounded-lg border border-[#E5E3DA] hover:bg-[#F7F6F1] transition-colors"
+                  className="flex items-center space-x-3 mb-2 p-3 rounded-lg border border-proofound-stone hover:bg-japandi-bg transition-colors"
                 >
                   <RadioGroupItem value={entry.value.toString()} id={`level-${entry.value}`} />
                   <Label htmlFor={`level-${entry.value}`} className="flex-1 cursor-pointer">
-                    <div className="font-medium text-[#2D3330]">{entry.label}</div>
-                    <div className="text-sm text-[#6B6760]">{entry.description}</div>
+                    <div className="font-medium text-foreground">{entry.label}</div>
+                    <div className="text-sm text-muted-foreground">{entry.description}</div>
                   </Label>
                 </div>
               ))}
@@ -517,7 +538,7 @@ export function BrowseModePanel({
           </div>
 
           <div>
-            <Label htmlFor="last-used" className="text-[#2D3330]">
+            <Label htmlFor="last-used" className="text-foreground">
               Last Used (Optional)
             </Label>
             <Input
@@ -527,12 +548,12 @@ export function BrowseModePanel({
               onChange={(e) => setLastUsedDate(e.target.value)}
               className="mt-1"
             />
-            <p className="text-xs text-[#6B6760] mt-1">When did you last use this skill?</p>
+            <p className="text-xs text-muted-foreground mt-1">When did you last use this skill?</p>
           </div>
 
-          <div className="border-t border-[#E5E3DA] pt-6">
-            <h4 className="font-medium text-[#2D3330] mb-3">Add Proof (Optional)</h4>
-            <div className="flex items-center gap-2 text-xs text-[#6B6760] mb-2">
+          <div className="border-t border-proofound-stone pt-6">
+            <h4 className="font-medium text-foreground mb-3">Add Proof (Optional)</h4>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
               <Lock className="h-3.5 w-3.5" />
               Proofs default to <strong className="ml-1">match-only</strong>; you can change
               visibility later.
@@ -558,7 +579,7 @@ export function BrowseModePanel({
               </div>
 
               <div>
-                <Label htmlFor="proof-url" className="text-[#2D3330]">
+                <Label htmlFor="proof-url" className="text-foreground">
                   Proof URL {proofSource === 'document' ? '(Optional)' : ''}
                 </Label>
                 <Input
@@ -569,14 +590,14 @@ export function BrowseModePanel({
                   onChange={(e) => setProofUrl(e.target.value)}
                   className="mt-1"
                 />
-                <p className="text-xs text-[#6B6760] mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Up to {MAX_PROOFS_PER_SKILL} proofs can be attached per skill.
                 </p>
               </div>
 
               {proofSource === 'document' && (
                 <div>
-                  <Label htmlFor="proof-document" className="text-[#2D3330]">
+                  <Label htmlFor="proof-document" className="text-foreground">
                     Upload document
                   </Label>
                   <Input
@@ -586,26 +607,26 @@ export function BrowseModePanel({
                     onChange={(event) => onProofFileSelected(event.target.files?.[0] || null)}
                     className="mt-1"
                   />
-                  <p className="text-xs text-[#6B6760] mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Accepted: {PROOF_ALLOWED_EXTENSIONS_LABEL}. Max size:{' '}
                     {MAX_PROOF_UPLOAD_SIZE_BYTES / (1024 * 1024)}MB.
                   </p>
                   {proofUploading && (
-                    <p className="text-xs text-[#6B6760] mt-1">Uploading document...</p>
+                    <p className="text-xs text-muted-foreground mt-1">Uploading document...</p>
                   )}
                   {proofFilePath && !proofUploading && (
-                    <p className="text-xs text-[#6B6760] mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       Uploaded: {proofFileName || 'Document'}
                     </p>
                   )}
                   {proofUploadError && (
-                    <p className="text-xs text-[#C76B4A] mt-1">{proofUploadError}</p>
+                    <p className="text-xs text-proofound-terracotta mt-1">{proofUploadError}</p>
                   )}
                 </div>
               )}
 
               <div>
-                <Label htmlFor="proof-notes" className="text-[#2D3330]">
+                <Label htmlFor="proof-notes" className="text-foreground">
                   Notes
                 </Label>
                 <Textarea
@@ -618,7 +639,7 @@ export function BrowseModePanel({
                 />
               </div>
               <div>
-                <Label htmlFor="proof-issued-date" className="text-[#2D3330]">
+                <Label htmlFor="proof-issued-date" className="text-foreground">
                   Issued Date (Optional)
                 </Label>
                 <Input
@@ -630,7 +651,7 @@ export function BrowseModePanel({
                 />
               </div>
               <div>
-                <Label htmlFor="proof-expires-date" className="text-[#2D3330]">
+                <Label htmlFor="proof-expires-date" className="text-foreground">
                   Expiration Date (Optional)
                 </Label>
                 <Input
@@ -641,21 +662,21 @@ export function BrowseModePanel({
                   onChange={(e) => setProofExpiresDate(e.target.value)}
                   className="mt-1"
                 />
-                <p className="text-xs text-[#6B6760] mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Leave empty when the proof does not expire.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="border-t border-[#E5E3DA] pt-6">
+          <div className="border-t border-proofound-stone pt-6">
             <div className="flex items-center gap-2 mb-3">
               <Checkbox
                 id="request-verification-on-add"
                 checked={requestVerification}
                 onCheckedChange={(checked) => setRequestVerification(Boolean(checked))}
               />
-              <Label htmlFor="request-verification-on-add" className="text-[#2D3330]">
+              <Label htmlFor="request-verification-on-add" className="text-foreground">
                 Send verification request after save (optional)
               </Label>
             </div>
@@ -663,7 +684,7 @@ export function BrowseModePanel({
             {requestVerification && (
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="verification-email" className="text-[#2D3330]">
+                  <Label htmlFor="verification-email" className="text-foreground">
                     Verifier Email
                   </Label>
                   <Input
@@ -676,7 +697,7 @@ export function BrowseModePanel({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="verification-source" className="text-[#2D3330]">
+                  <Label htmlFor="verification-source" className="text-foreground">
                     Relationship
                   </Label>
                   <select
@@ -685,7 +706,7 @@ export function BrowseModePanel({
                     onChange={(event) =>
                       setVerificationSource(event.target.value as SkillVerificationSource)
                     }
-                    className="mt-1 w-full px-3 py-2 border border-[#E5E3DA] rounded-md"
+                    className="mt-1 w-full px-3 py-2 border border-proofound-stone rounded-md"
                   >
                     <option value="peer">Peer / Colleague</option>
                     <option value="manager">Manager / Supervisor</option>
@@ -693,7 +714,7 @@ export function BrowseModePanel({
                   </select>
                 </div>
                 <div>
-                  <Label htmlFor="verification-message" className="text-[#2D3330]">
+                  <Label htmlFor="verification-message" className="text-foreground">
                     Message (Optional)
                   </Label>
                   <Textarea
@@ -709,19 +730,19 @@ export function BrowseModePanel({
             )}
           </div>
 
-          <div className="flex gap-3 pt-4 border-t border-[#E5E3DA]">
+          <div className="flex gap-3 pt-4 border-t border-proofound-stone">
             <Button
               variant="outline"
               onClick={() => handleSave(true)}
               disabled={!l4Search || saving}
-              className="flex-1 border-[#1C4D3A] text-[#1C4D3A] hover:bg-[#EEF1EA]"
+              className="flex-1 border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5"
             >
               Save & Add Another
             </Button>
             <Button
               onClick={() => handleSave(false)}
               disabled={!l4Search || saving}
-              className="flex-1 bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
+              className="flex-1 bg-proofound-forest text-white hover:bg-proofound-forest/90"
             >
               {saving ? (
                 <>

@@ -56,7 +56,7 @@ export function PrivacySettingsClient() {
     return (
       <AppSurface>
         <div className="flex items-center justify-center">
-          <div className="text-[#6B6760]">Loading privacy settings...</div>
+          <div className="text-muted-foreground">Loading privacy settings...</div>
         </div>
       </AppSurface>
     );
@@ -66,8 +66,8 @@ export function PrivacySettingsClient() {
     <AppSurface>
       <div className="mx-auto max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-semibold text-[#2D3330] mb-2">Privacy Settings</h1>
-          <p className="text-[#6B6760]">Control who can see your profile information</p>
+          <h1 className="text-3xl font-semibold text-foreground mb-2">Privacy Settings</h1>
+          <p className="text-muted-foreground">Control who can see your profile information</p>
         </div>
 
         <div className="space-y-6">

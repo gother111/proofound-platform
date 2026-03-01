@@ -221,7 +221,7 @@ export function EmptyOrganizationProfileView({
             {/* Ownership & Control - Empty State */}
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-4">
-                <UserCog className="w-5 h-5 text-[#C76B4A]" />
+                <UserCog className="w-5 h-5 text-proofound-terracotta" />
                 <h3>Ownership & Control Structure</h3>
                 <Badge variant="outline" className="text-xs gap-1">
                   <Info className="w-3 h-3" />
@@ -236,8 +236,8 @@ export function EmptyOrganizationProfileView({
               <Card className="p-8 border-2 border-dashed border-muted-foreground/20 hover:border-[#C76B4A]/40 transition-colors cursor-pointer">
                 <div className="text-center space-y-4">
                   <div className="flex justify-center">
-                    <div className="w-16 h-16 rounded-full bg-[#C76B4A]/10 flex items-center justify-center">
-                      <UserCog className="w-8 h-8 text-[#C76B4A]/60" />
+                    <div className="w-16 h-16 rounded-full bg-proofound-terracotta/10 flex items-center justify-center">
+                      <UserCog className="w-8 h-8 text-proofound-terracotta/60" />
                     </div>
                   </div>
                   <div>
@@ -247,7 +247,7 @@ export function EmptyOrganizationProfileView({
                       decision-making power
                     </p>
                   </div>
-                  <Button className="rounded-full bg-[#C76B4A] hover:bg-[#C76B4A]/90">
+                  <Button className="rounded-full bg-proofound-terracotta hover:bg-proofound-terracotta/90">
                     <Plus className="w-4 h-4 mr-2" />
                     Add Owner/Controller
                   </Button>
@@ -319,7 +319,7 @@ export function EmptyOrganizationProfileView({
             {/* Core Values - Empty */}
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <Heart className="w-6 h-6 text-[#C76B4A]" />
+                <Heart className="w-6 h-6 text-proofound-terracotta" />
                 <h3>Core Values</h3>
               </div>
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
@@ -471,7 +471,7 @@ export function EmptyOrganizationProfileView({
               <div className="text-center space-y-6">
                 <div className="flex justify-center">
                   <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#C76B4A]/10 to-[#7A9278]/10 flex items-center justify-center">
-                    <Layers className="w-16 h-16 text-[#C76B4A]/60" />
+                    <Layers className="w-16 h-16 text-proofound-terracotta/60" />
                   </div>
                 </div>
 

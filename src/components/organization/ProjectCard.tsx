@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreVertical, Edit2, Trash2, Calendar, CheckCircle2, Target } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface OrganizationProject {
   id: string;
@@ -59,87 +60,86 @@ export function ProjectCard({ project, canEdit, onEdit, onDelete }: ProjectCardP
   };
 
   return (
-    <Card className="border-proofound-stone dark:border-border hover:shadow-md transition-shadow">
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex-1 space-y-2">
-            <div className="flex items-start gap-3">
-              <CardTitle className="text-lg">{project.title}</CardTitle>
-              {project.isVerified && (
-                <Badge variant="outline" className="bg-green-50 border-green-300 text-green-700">
-                  <CheckCircle2 className="h-3 w-3 mr-1" />
-                  Verified
+    <motion.div layoutId={`project-card-${project.id}`} className="h-full">
+      <Card className="border-proofound-stone dark:border-border hover:shadow-md transition-shadow h-full">
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div className="flex-1 space-y-2">
+              <div className="flex items-start gap-3">
+                <CardTitle className="text-lg">{project.title}</CardTitle>
+                {project.isVerified && (
+                  <Badge variant="outline" className="bg-green-50 border-green-300 text-green-700">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    Verified
+                  </Badge>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="outline" className={STATUS_COLORS[project.status]}>
+                  {STATUS_LABELS[project.status]}
                 </Badge>
-              )}
+                <Badge variant="outline" className="text-xs">
+                  <Calendar className="h-3 w-3 mr-1" />
+                  {formatDate(project.startDate)}
+                  {project.endDate && ` - ${formatDate(project.endDate)}`}
+                </Badge>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Badge
-                variant="outline"
-                className={STATUS_COLORS[project.status]}
-              >
-                {STATUS_LABELS[project.status]}
-              </Badge>
-              <Badge variant="outline" className="text-xs">
-                <Calendar className="h-3 w-3 mr-1" />
-                {formatDate(project.startDate)}
-                {project.endDate && ` - ${formatDate(project.endDate)}`}
-              </Badge>
-            </div>
+            {canEdit && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => onEdit(project)}>
+                    <Edit2 className="h-4 w-4 mr-2" />
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => onDelete(project.id)}
+                    className="text-red-600 focus:text-red-600"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
-          {canEdit && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onEdit(project)}>
-                  <Edit2 className="h-4 w-4 mr-2" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => onDelete(project.id)}
-                  className="text-red-600 focus:text-red-600"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          <div>
+            <p className="text-sm">{project.description}</p>
+          </div>
+
+          {project.outcomes && (
+            <div className="p-3 rounded-lg bg-muted/30 border border-muted-foreground/10">
+              <p className="text-xs font-medium text-muted-foreground mb-1">Outcomes</p>
+              <p className="text-sm">{project.outcomes}</p>
+            </div>
           )}
-        </div>
-      </CardHeader>
 
-      <CardContent className="space-y-4">
-        <div>
-          <p className="text-sm">{project.description}</p>
-        </div>
+          {project.impactCreated && (
+            <div className="p-3 rounded-lg bg-proofound-forest/5 border border-proofound-forest/20">
+              <p className="text-xs font-medium text-proofound-forest mb-1 flex items-center gap-1">
+                <Target className="h-3 w-3" />
+                Impact Created
+              </p>
+              <p className="text-sm">{project.impactCreated}</p>
+            </div>
+          )}
 
-        {project.outcomes && (
-          <div className="p-3 rounded-lg bg-muted/30 border border-muted-foreground/10">
-            <p className="text-xs font-medium text-muted-foreground mb-1">Outcomes</p>
-            <p className="text-sm">{project.outcomes}</p>
-          </div>
-        )}
-
-        {project.impactCreated && (
-          <div className="p-3 rounded-lg bg-proofound-forest/5 border border-proofound-forest/20">
-            <p className="text-xs font-medium text-proofound-forest mb-1 flex items-center gap-1">
-              <Target className="h-3 w-3" />
-              Impact Created
-            </p>
-            <p className="text-sm">{project.impactCreated}</p>
-          </div>
-        )}
-
-        {project.businessValue && (
-          <div className="p-3 rounded-lg bg-muted/30 border border-muted-foreground/10">
-            <p className="text-xs font-medium text-muted-foreground mb-1">Business Value</p>
-            <p className="text-sm">{project.businessValue}</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          {project.businessValue && (
+            <div className="p-3 rounded-lg bg-muted/30 border border-muted-foreground/10">
+              <p className="text-xs font-medium text-muted-foreground mb-1">Business Value</p>
+              <p className="text-sm">{project.businessValue}</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }

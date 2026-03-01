@@ -52,7 +52,7 @@ export function MoodResponsiveContainer({ children }: MoodResponsiveContainerPro
             ? 'bg-[#FDF2F2] dark:bg-[#2F2020]' // Rose tint for support
             : mood === 'focus'
               ? 'bg-[#FFFBF0] dark:bg-[#2F2A20]' // Amber tint for focus
-              : 'bg-[#F7F6F1] dark:bg-[#2A2520]' // Sage/Neutral for calm
+              : 'bg-japandi-bg dark:bg-[#2A2520]' // Sage/Neutral for calm
         }`}
       >
         {children}

@@ -75,7 +75,14 @@ const SUS_QUESTIONS = [
   },
 ];
 
-export function SUSDialog({ open, onOpenChange, userId, trigger, onCompleted, onSkip }: SUSDialogProps) {
+export function SUSDialog({
+  open,
+  onOpenChange,
+  userId,
+  trigger,
+  onCompleted,
+  onSkip,
+}: SUSDialogProps) {
   const [responses, setResponses] = useState<Record<number, number>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -208,10 +215,12 @@ export function SUSDialog({ open, onOpenChange, userId, trigger, onCompleted, on
           {/* Progress */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-[#2D3330]">
+              <span className="text-sm font-medium text-foreground">
                 Question {currentQuestion} of {SUS_QUESTIONS.length}
               </span>
-              <span className="text-sm text-[#6B6760]">{Math.round(progress)}% complete</span>
+              <span className="text-sm text-muted-foreground">
+                {Math.round(progress)}% complete
+              </span>
             </div>
             <Progress value={progress} className="h-2" />
           </div>
@@ -229,21 +238,23 @@ export function SUSDialog({ open, onOpenChange, userId, trigger, onCompleted, on
                 key={question.id}
                 className={`p-4 rounded-lg border-2 transition-all ${
                   isCurrentQuestion
-                    ? 'border-[#1C4D3A] bg-[#E8F5E1]'
+                    ? 'border-proofound-forest bg-proofound-success-tint'
                     : hasAnswered
-                      ? 'border-[#E8E6DD] bg-[#F7F6F1]'
-                      : 'border-[#E8E6DD] bg-white'
+                      ? 'border-proofound-stone bg-japandi-bg'
+                      : 'border-proofound-stone bg-white'
                 }`}
               >
                 <div className="flex items-start gap-3 mb-3">
                   <div
                     className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-                      hasAnswered ? 'bg-[#1C4D3A] text-white' : 'bg-[#E8E6DD] text-[#6B6760]'
+                      hasAnswered
+                        ? 'bg-proofound-forest text-white'
+                        : 'bg-proofound-stone text-muted-foreground'
                     }`}
                   >
                     {question.id}
                   </div>
-                  <p className="text-sm text-[#2D3330] flex-1">{question.text}</p>
+                  <p className="text-sm text-foreground flex-1">{question.text}</p>
                 </div>
 
                 <RadioGroup
@@ -307,7 +318,7 @@ export function SUSDialog({ open, onOpenChange, userId, trigger, onCompleted, on
             <Button
               onClick={handleSubmit}
               disabled={!isComplete || isSubmitting}
-              className="bg-[#1C4D3A] text-white"
+              className="bg-proofound-forest text-white"
             >
               {isSubmitting ? 'Submitting...' : 'Submit Survey'}
             </Button>

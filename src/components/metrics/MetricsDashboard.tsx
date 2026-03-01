@@ -110,8 +110,8 @@ export function MetricsDashboard() {
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center justify-center py-12">
-            <Activity className="h-8 w-8 text-[#6B6760] animate-spin" />
-            <span className="ml-2 text-[#6B6760]">Loading metrics...</span>
+            <Activity className="h-8 w-8 text-muted-foreground animate-spin" />
+            <span className="ml-2 text-muted-foreground">Loading metrics...</span>
           </div>
         </CardContent>
       </Card>
@@ -122,7 +122,9 @@ export function MetricsDashboard() {
     return (
       <Card>
         <CardContent className="pt-6">
-          <div className="text-center py-12 text-[#6B6760]">No metrics data available yet</div>
+          <div className="text-center py-12 text-muted-foreground">
+            No metrics data available yet
+          </div>
         </CardContent>
       </Card>
     );
@@ -152,10 +154,10 @@ export function MetricsDashboard() {
         <div className="flex items-start justify-between mb-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Icon className="h-5 w-5 text-[#1C4D3A]" />
-              <h3 className="font-semibold text-[#2D3330]">{title}</h3>
+              <Icon className="h-5 w-5 text-proofound-forest" />
+              <h3 className="font-semibold text-foreground">{title}</h3>
             </div>
-            <p className="text-xs text-[#9B9891]">{description}</p>
+            <p className="text-xs text-muted-foreground">{description}</p>
           </div>
           {value !== null && (
             <div
@@ -171,13 +173,13 @@ export function MetricsDashboard() {
         <div className="space-y-3">
           <div>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-[#2D3330]">
+              <span className="text-3xl font-bold text-foreground">
                 {value !== null ? value.toFixed(value < 10 ? 1 : 0) : '—'}
               </span>
-              <span className="text-sm text-[#6B6760]">{unit}</span>
+              <span className="text-sm text-muted-foreground">{unit}</span>
             </div>
             <div className="flex items-center gap-1 mt-1">
-              <span className="text-xs text-[#9B9891]">
+              <span className="text-xs text-muted-foreground">
                 Target: {target}
                 {unit}
               </span>
@@ -190,9 +192,9 @@ export function MetricsDashboard() {
             </div>
           </div>
 
-          <div className="pt-2 border-t border-[#E8E6DD]">
-            <p className="text-xs text-[#9B9891]">
-              Sample size: <span className="font-medium text-[#2D3330]">{count}</span>
+          <div className="pt-2 border-t border-proofound-stone">
+            <p className="text-xs text-muted-foreground">
+              Sample size: <span className="font-medium text-foreground">{count}</span>
               {value === null && ' (insufficient data)'}
             </p>
           </div>
@@ -205,13 +207,13 @@ export function MetricsDashboard() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-[#2D3330]">Core Metrics (PRD Part 2)</h2>
-          <p className="text-sm text-[#6B6760] mt-1">
+          <h2 className="text-2xl font-bold text-foreground">Core Metrics (PRD Part 2)</h2>
+          <p className="text-sm text-muted-foreground mt-1">
             North Star Metric and success indicators per Product Requirements
           </p>
         </div>
         {lastUpdated && (
-          <div className="text-xs text-[#9B9891]">
+          <div className="text-xs text-muted-foreground">
             Last updated: {lastUpdated.toLocaleTimeString()}
           </div>
         )}
@@ -219,7 +221,7 @@ export function MetricsDashboard() {
 
       {/* North Star Metric - TTSC */}
       <div>
-        <h3 className="text-lg font-semibold text-[#2D3330] mb-3 flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-amber-500" />
           North Star Metric
         </h3>
@@ -237,7 +239,7 @@ export function MetricsDashboard() {
 
       {/* Outcome Metrics */}
       <div>
-        <h3 className="text-lg font-semibold text-[#2D3330] mb-3">Outcome Metrics</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-3">Outcome Metrics</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <MetricCard
             title="TTFQI"
@@ -276,7 +278,7 @@ export function MetricsDashboard() {
 
       {/* Quality Metrics */}
       <div>
-        <h3 className="text-lg font-semibold text-[#2D3330] mb-3">Quality Metrics</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-3">Quality Metrics</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <MetricCard
             title="SUS Score"
@@ -310,15 +312,15 @@ export function MetricsDashboard() {
         <CardContent>
           <div className="space-y-3 text-sm">
             <div>
-              <span className="font-medium text-[#2D3330]">P75 Values:</span>
-              <ul className="mt-1 space-y-1 text-[#6B6760] ml-4">
+              <span className="font-medium text-foreground">P75 Values:</span>
+              <ul className="mt-1 space-y-1 text-muted-foreground ml-4">
                 <li>• TTSC P75: {metrics.ttsc.p75?.toFixed(0) || '—'} days</li>
                 <li>• TTFQI P75: {metrics.ttfqi.p75?.toFixed(0) || '—'} hours</li>
                 <li>• TTV P75: {metrics.ttv.p75?.toFixed(0) || '—'} days</li>
               </ul>
             </div>
-            <div className="pt-3 border-t border-[#E8E6DD]">
-              <p className="text-xs text-[#9B9891]">
+            <div className="pt-3 border-t border-proofound-stone">
+              <p className="text-xs text-muted-foreground">
                 <strong>Note:</strong> Metrics are calculated from analytics events and cached for 1
                 hour. All targets are defined in PRD Part 2: Goals & Success Metrics.
               </p>

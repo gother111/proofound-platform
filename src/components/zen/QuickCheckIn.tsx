@@ -24,9 +24,8 @@ export function QuickCheckIn() {
     stress >= 4 ? 'support' : stress === 3 ? 'focus' : ('calm' as RiskState);
 
   const microPractice =
-    zenPractices.find(
-      (p) => p.isMicro && p.recommendedFor?.includes(derivedMood)
-    ) || zenPractices.find((p) => p.isMicro);
+    zenPractices.find((p) => p.isMicro && p.recommendedFor?.includes(derivedMood)) ||
+    zenPractices.find((p) => p.isMicro);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -69,10 +68,10 @@ export function QuickCheckIn() {
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#7A9278] text-white shadow-lg">
           <CheckCircle2 className="h-8 w-8" />
         </div>
-        <h3 className="text-2xl font-serif font-medium text-[#1C4D3A] dark:text-[#E2EDD9]">
+        <h3 className="text-2xl font-serif font-medium text-proofound-forest dark:text-[#E2EDD9]">
           Check-in received
         </h3>
-        <p className="mt-2 text-[#6B6760] dark:text-[#C9C2B8]">
+        <p className="mt-2 text-muted-foreground dark:text-[#C9C2B8]">
           Take a deep breath. We've adjusted your space to match your needs.
         </p>
       </Card>
@@ -92,7 +91,7 @@ export function QuickCheckIn() {
       />
 
       <div className="relative z-10">
-        <h2 className="mb-6 text-center font-serif text-3xl text-[#2D3330] dark:text-[#E8E6DD]">
+        <h2 className="mb-6 text-center font-serif text-3xl text-foreground dark:text-[#E8E6DD]">
           How are you feeling right now?
         </h2>
         <p className="mb-4 text-center text-sm text-muted-foreground">
@@ -104,20 +103,24 @@ export function QuickCheckIn() {
             <div className="flex justify-between">
               <label
                 htmlFor="stress-slider"
-                className="text-sm font-medium text-[#6B6760] dark:text-[#C9C2B8]"
+                className="text-sm font-medium text-muted-foreground dark:text-[#C9C2B8]"
               >
                 Stress Level
               </label>
               <span
                 className={`text-sm font-medium ${
-                  stress > 3 ? 'text-rose-600' : stress === 3 ? 'text-amber-600' : 'text-[#1C4D3A]'
+                  stress > 3
+                    ? 'text-rose-600'
+                    : stress === 3
+                      ? 'text-amber-600'
+                      : 'text-proofound-forest'
                 }`}
               >
                 {stressLabel?.label || 'Moderate'}
               </span>
             </div>
             <div className="flex items-center gap-4">
-              <Zap className="h-4 w-4 text-[#6B6760]" />
+              <Zap className="h-4 w-4 text-muted-foreground" />
               <Slider
                 id="stress-slider"
                 value={[stress]}
@@ -127,7 +130,7 @@ export function QuickCheckIn() {
                 step={1}
                 className="flex-1 cursor-pointer"
               />
-              <AlertCircle className="h-4 w-4 text-[#6B6760]" />
+              <AlertCircle className="h-4 w-4 text-muted-foreground" />
             </div>
             {stressLabel?.description && (
               <p className="text-xs text-muted-foreground">{stressLabel.description}</p>
@@ -138,11 +141,11 @@ export function QuickCheckIn() {
             <div className="flex justify-between">
               <label
                 htmlFor="control-slider"
-                className="text-sm font-medium text-[#6B6760] dark:text-[#C9C2B8]"
+                className="text-sm font-medium text-muted-foreground dark:text-[#C9C2B8]"
               >
                 Sense of Control
               </label>
-              <span className="text-sm font-medium text-[#1C4D3A] dark:text-[#E2EDD9]">
+              <span className="text-sm font-medium text-proofound-forest dark:text-[#E2EDD9]">
                 {controlLabel?.label || 'Moderate'}
               </span>
             </div>
@@ -169,7 +172,7 @@ export function QuickCheckIn() {
               <div className="flex items-start gap-3">
                 <Sparkles className="h-5 w-5 text-[#7A9278]" />
                 <div className="space-y-1">
-                  <p className="text-sm font-semibold text-[#2D3330] dark:text-[#E8E6DD]">
+                  <p className="text-sm font-semibold text-foreground dark:text-[#E8E6DD]">
                     {zenCheckInConfig.quickPracticePrompt}
                   </p>
                   <p className="text-sm text-muted-foreground">
@@ -178,7 +181,7 @@ export function QuickCheckIn() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="text-[#1C4D3A] px-0"
+                    className="text-proofound-forest px-0"
                     onClick={() => toast.success(`Started ${microPractice.title}`)}
                   >
                     Start now
@@ -198,7 +201,7 @@ export function QuickCheckIn() {
                   ? 'bg-rose-600 hover:bg-rose-700'
                   : stress === 3
                     ? 'bg-amber-600 hover:bg-amber-700'
-                    : 'bg-[#1C4D3A] hover:bg-[#163E2F]'
+                    : 'bg-proofound-forest hover:bg-proofound-forest/90'
               } text-white shadow-md hover:shadow-lg`}
             >
               {isSubmitting ? 'Saving...' : 'Log Check-in'}

@@ -822,21 +822,21 @@ export default function AssignmentBuilderPage() {
           <Card className="p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-semibold text-[#2D3330]">Assignment builder mode</p>
-                <p className="text-xs text-[#6B6760]">
+                <p className="text-sm font-semibold text-foreground">Assignment builder mode</p>
+                <p className="text-xs text-muted-foreground">
                   {advancedModeUnlocked
                     ? 'Switch between Basic and Advanced any time.'
                     : 'You are in Basic mode. Enable Advanced mode only when you need extra control.'}
                 </p>
               </div>
               {advancedModeUnlocked ? (
-                <div className="inline-flex rounded-md border border-[#E8E6DD] bg-white p-1">
+                <div className="inline-flex rounded-md border border-proofound-stone bg-white p-1">
                   <button
                     type="button"
                     className={`rounded px-3 py-1 text-sm ${
                       builderMode === 'basic'
-                        ? 'bg-[#1C4D3A] text-white'
-                        : 'text-[#2D3330] hover:bg-[#F7F6F1]'
+                        ? 'bg-proofound-forest text-white'
+                        : 'text-foreground hover:bg-japandi-bg'
                     }`}
                     onClick={handleSwitchToBasicMode}
                   >
@@ -846,8 +846,8 @@ export default function AssignmentBuilderPage() {
                     type="button"
                     className={`rounded px-3 py-1 text-sm ${
                       builderMode === 'advanced'
-                        ? 'bg-[#1C4D3A] text-white'
-                        : 'text-[#2D3330] hover:bg-[#F7F6F1]'
+                        ? 'bg-proofound-forest text-white'
+                        : 'text-foreground hover:bg-japandi-bg'
                     }`}
                     onClick={handleEnableAdvancedMode}
                   >
@@ -858,7 +858,7 @@ export default function AssignmentBuilderPage() {
                 <button
                   type="button"
                   data-testid="advanced-mode-opt-in"
-                  className="rounded-md border border-[#1C4D3A]/30 px-3 py-1.5 text-sm font-medium text-[#1C4D3A] hover:bg-[#EAF1ED]"
+                  className="rounded-md border border-proofound-forest/30 px-3 py-1.5 text-sm font-medium text-proofound-forest hover:bg-[#EAF1ED]"
                   onClick={handleEnableAdvancedMode}
                 >
                   Need extra control? Enable Advanced mode
@@ -876,7 +876,7 @@ export default function AssignmentBuilderPage() {
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
                     currentStep === step.id
-                      ? 'bg-[#1C4D3A] text-white'
+                      ? 'bg-proofound-forest text-white'
                       : currentStep > step.id
                         ? 'bg-[#7A9278] text-white'
                         : 'bg-gray-200 text-gray-600'
@@ -885,8 +885,8 @@ export default function AssignmentBuilderPage() {
                   {step.id}
                 </div>
                 <div className="mt-2 text-center">
-                  <p className="text-xs font-medium text-[#2D3330]">{step.name}</p>
-                  <p className="text-xs text-[#6B6760]">{step.description}</p>
+                  <p className="text-xs font-medium text-foreground">{step.name}</p>
+                  <p className="text-xs text-muted-foreground">{step.description}</p>
                 </div>
               </div>
               {index < activeSteps.length - 1 && (
@@ -931,7 +931,7 @@ export default function AssignmentBuilderPage() {
         </Card>
 
         {/* Help Text */}
-        <div className="text-center text-sm text-[#6B6760]">
+        <div className="text-center text-sm text-muted-foreground">
           <p>
             Your progress is automatically saved every 30 seconds
             {lastSaved && (

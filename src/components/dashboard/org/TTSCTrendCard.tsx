@@ -84,8 +84,8 @@ export function TTSCTrendCard({ orgSlug, groupBy = 'week' }: TTSCTrendCardProps)
 
   // Determine status color
   const getStatusColor = (days: number) => {
-    if (days <= 30) return 'text-[#1C4D3A] bg-[#E8F5E1]'; // Green - Good
-    if (days <= 45) return 'text-[#C76B4A] bg-[#FFF4E6]'; // Terracotta - Warning
+    if (days <= 30) return 'text-proofound-forest bg-proofound-success-tint'; // Green - Good
+    if (days <= 45) return 'text-proofound-terracotta bg-[#FFF4E6]'; // Terracotta - Warning
     return 'text-[#D93F3F] bg-[#FEE]'; // Red - Poor
   };
 
@@ -105,17 +105,17 @@ export function TTSCTrendCard({ orgSlug, groupBy = 'week' }: TTSCTrendCardProps)
     const CustomTooltip = ({ active, payload, label }: any) => {
       if (active && payload && payload.length) {
         return (
-          <div className="bg-white/90 backdrop-blur-sm p-3 rounded-xl border border-[#E8E6DD] shadow-sm">
-            <p className="text-xs font-semibold text-[#2D3330] mb-2">{formatPeriodLabel(label)}</p>
+          <div className="bg-white/90 backdrop-blur-sm p-3 rounded-xl border border-proofound-stone shadow-sm">
+            <p className="text-xs font-semibold text-foreground mb-2">{formatPeriodLabel(label)}</p>
             <div className="flex items-center gap-2 text-xs mb-1">
               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#1C4D3A' }} />
-              <span className="text-[#6B6760] font-medium">Median TTSC:</span>
-              <span className="text-[#2D3330] font-bold">{payload[0].value}d</span>
+              <span className="text-muted-foreground font-medium">Median TTSC:</span>
+              <span className="text-foreground font-bold">{payload[0].value}d</span>
             </div>
             <div className="flex items-center gap-2 text-xs">
               <div className="w-4 h-0 border-t border-dashed border-[#6B6760]" />
-              <span className="text-[#6B6760] font-medium">Target:</span>
-              <span className="text-[#2D3330] font-bold">{target}d</span>
+              <span className="text-muted-foreground font-medium">Target:</span>
+              <span className="text-foreground font-bold">{target}d</span>
             </div>
           </div>
         );
@@ -177,25 +177,27 @@ export function TTSCTrendCard({ orgSlug, groupBy = 'week' }: TTSCTrendCardProps)
   };
 
   return (
-    <Card className="p-6 border-[#E8E6DD] rounded-3xl">
+    <Card className="p-6 border-proofound-stone rounded-3xl">
       <div className="flex items-start justify-between mb-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Calendar className="w-5 h-5 text-[#6B6760]" />
-            <h3 className="text-lg font-semibold text-[#2D3330] font-['Crimson_Pro']">
+            <Calendar className="w-5 h-5 text-muted-foreground" />
+            <h3 className="text-lg font-semibold text-foreground font-['Crimson_Pro']">
               Time-to-Contract
             </h3>
           </div>
-          <p className="text-sm text-[#6B6760]">Median days from activation to signed contract</p>
+          <p className="text-sm text-muted-foreground">
+            Median days from activation to signed contract
+          </p>
         </div>
 
         {/* Time period selector */}
-        <div className="flex gap-1 bg-[#F7F6F1] rounded-lg p-1 border border-[#E8E6DD]">
+        <div className="flex gap-1 bg-japandi-bg rounded-lg p-1 border border-proofound-stone">
           <Button
             size="sm"
             variant="ghost"
             onClick={() => setSelectedGroupBy('week')}
-            className={`text-xs ${selectedGroupBy === 'week' ? 'bg-white shadow-sm' : 'text-[#6B6760]'}`}
+            className={`text-xs ${selectedGroupBy === 'week' ? 'bg-white shadow-sm' : 'text-muted-foreground'}`}
           >
             Week
           </Button>
@@ -203,7 +205,7 @@ export function TTSCTrendCard({ orgSlug, groupBy = 'week' }: TTSCTrendCardProps)
             size="sm"
             variant="ghost"
             onClick={() => setSelectedGroupBy('month')}
-            className={`text-xs ${selectedGroupBy === 'month' ? 'bg-white shadow-sm' : 'text-[#6B6760]'}`}
+            className={`text-xs ${selectedGroupBy === 'month' ? 'bg-white shadow-sm' : 'text-muted-foreground'}`}
           >
             Month
           </Button>
@@ -211,41 +213,48 @@ export function TTSCTrendCard({ orgSlug, groupBy = 'week' }: TTSCTrendCardProps)
       </div>
 
       {isLoading ? (
-        <div className="h-32 flex items-center justify-center text-sm text-[#6B6760]">
+        <div className="h-32 flex items-center justify-center text-sm text-muted-foreground">
           Loading trends...
         </div>
       ) : trends.length === 0 ? (
         <div className="py-10 flex flex-col items-center text-center">
           <svg
-            width="120"
-            height="80"
-            viewBox="0 0 120 80"
+            width="160"
+            height="100"
+            viewBox="0 0 160 100"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className="mb-4 opacity-60"
+            className="mb-6 opacity-40 animate-breathe"
           >
             <path
-              d="M20 60 L 40 40 L 70 50 L 100 20"
-              stroke="#1C4D3A"
-              strokeWidth="2"
+              d="M10 80C30 80 40 50 60 50C80 50 90 70 110 70C130 70 140 30 150 30"
+              stroke="url(#emptyGradient)"
+              strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeDasharray="4 4"
-              opacity="0.4"
+              fill="none"
             />
-            <circle cx="100" cy="20" r="4" fill="#C76B4A" opacity="0.8" />
             <path
-              d="M10 20 L 110 20"
-              stroke="#6B6760"
-              strokeWidth="1"
-              strokeDasharray="2 2"
+              d="M10 80C30 80 40 50 60 50C80 50 90 70 110 70C130 70 140 30 150 30 L150 100 L10 100 Z"
+              fill="url(#emptyAreaGradient)"
               opacity="0.3"
             />
+            <defs>
+              <linearGradient id="emptyGradient" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#E8E6DD" />
+                <stop offset="50%" stopColor="#1C4D3A" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#E8E6DD" />
+              </linearGradient>
+              <linearGradient id="emptyAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#1C4D3A" stopOpacity="0.2" />
+                <stop offset="100%" stopColor="#1C4D3A" stopOpacity="0" />
+              </linearGradient>
+            </defs>
           </svg>
-          <h3 className="text-lg font-semibold text-[#2D3330] mb-2 font-['Crimson_Pro']">
+          <h3 className="text-lg font-semibold text-foreground mb-2 font-['Crimson_Pro']">
             Awaiting Contract Data
           </h3>
-          <p className="text-sm text-[#6B6760] max-w-xs mx-auto">
+          <p className="text-sm text-muted-foreground max-w-xs mx-auto">
             Trends will appear here as soon as time-to-contract metrics are recorded.
           </p>
         </div>
@@ -265,12 +274,12 @@ export function TTSCTrendCard({ orgSlug, groupBy = 'week' }: TTSCTrendCardProps)
             {trend && (
               <div className="flex items-center gap-1.5">
                 {trend.isImproving ? (
-                  <TrendingDown className="w-4 h-4 text-[#1C4D3A]" />
+                  <TrendingDown className="w-4 h-4 text-proofound-forest" />
                 ) : (
-                  <TrendingUp className="w-4 h-4 text-[#C76B4A]" />
+                  <TrendingUp className="w-4 h-4 text-proofound-terracotta" />
                 )}
                 <span
-                  className={`text-sm font-medium ${trend.isImproving ? 'text-[#1C4D3A]' : 'text-[#C76B4A]'}`}
+                  className={`text-sm font-medium ${trend.isImproving ? 'text-proofound-forest' : 'text-proofound-terracotta'}`}
                 >
                   {trend.isImproving ? '↓' : '↑'} {trend.change}d ({trend.percentage}%)
                 </span>
@@ -282,10 +291,10 @@ export function TTSCTrendCard({ orgSlug, groupBy = 'week' }: TTSCTrendCardProps)
           <div className="mb-4">{renderChart()}</div>
 
           {/* Legend */}
-          <div className="flex items-center justify-between text-xs text-[#6B6760] border-t border-[#E8E6DD] pt-3">
+          <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-proofound-stone pt-3">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-[#1C4D3A]" />
+                <div className="w-3 h-3 rounded-full bg-proofound-forest" />
                 <span>Median TTSC</span>
               </div>
               <div className="flex items-center gap-1.5">

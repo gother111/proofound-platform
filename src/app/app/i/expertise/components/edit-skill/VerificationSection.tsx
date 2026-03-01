@@ -38,14 +38,16 @@ export function VerificationSection({
     <div>
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="font-medium text-[#2D3330]">Verification</h3>
-          <p className="text-sm text-[#6B6760]">Request verification from peers or managers</p>
+          <h3 className="font-medium text-foreground">Verification</h3>
+          <p className="text-sm text-muted-foreground">
+            Request verification from peers or managers
+          </p>
         </div>
         <Button
           variant="outline"
           size="sm"
           onClick={() => setShowRequestVerification(!showRequestVerification)}
-          className="border-[#1C4D3A] text-[#1C4D3A] hover:bg-[#EEF1EA]"
+          className="border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5"
         >
           <CheckCircle2 className="h-4 w-4 mr-1" />
           Request Verification
@@ -53,10 +55,10 @@ export function VerificationSection({
       </div>
 
       {showRequestVerification && (
-        <Card className="p-4 mb-4 border-[#E5E3DA]">
+        <Card className="p-4 mb-4 border-proofound-stone">
           <div className="space-y-3">
             <div>
-              <Label htmlFor="verifier-email" className="text-[#2D3330]">
+              <Label htmlFor="verifier-email" className="text-foreground">
                 Verifier Email
               </Label>
               <Input
@@ -74,7 +76,7 @@ export function VerificationSection({
               />
             </div>
             <div>
-              <Label htmlFor="verifier-source" className="text-[#2D3330]">
+              <Label htmlFor="verifier-source" className="text-foreground">
                 Relationship
               </Label>
               <select
@@ -86,7 +88,7 @@ export function VerificationSection({
                     verifierSource: e.target.value as VerificationDraft['verifierSource'],
                   })
                 }
-                className="mt-1 w-full px-3 py-2 border border-[#E5E3DA] rounded-md"
+                className="mt-1 w-full px-3 py-2 border border-proofound-stone rounded-md"
               >
                 <option value="peer">Peer / Colleague</option>
                 <option value="manager">Manager / Supervisor</option>
@@ -94,7 +96,7 @@ export function VerificationSection({
               </select>
             </div>
             <div>
-              <Label htmlFor="verification-message" className="text-[#2D3330]">
+              <Label htmlFor="verification-message" className="text-foreground">
                 Message (Optional)
               </Label>
               <Textarea
@@ -115,7 +117,7 @@ export function VerificationSection({
               <Button
                 onClick={onRequestVerification}
                 disabled={!newVerificationRequest.verifierEmail || requestingVerification}
-                className="bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
+                className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
               >
                 {requestingVerification ? (
                   <>
@@ -135,21 +137,21 @@ export function VerificationSection({
       )}
 
       {loadingVerifications ? (
-        <div className="flex items-center justify-center gap-2 py-6 border border-dashed border-[#E5E3DA] rounded-lg">
-          <Loader2 className="h-5 w-5 animate-spin text-[#6B6760]" />
-          <p className="text-sm text-[#6B6760]">Loading verification requests...</p>
+        <div className="flex items-center justify-center gap-2 py-6 border border-dashed border-proofound-stone rounded-lg">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Loading verification requests...</p>
         </div>
       ) : verificationRequests.length === 0 ? (
-        <div className="text-center py-6 border border-dashed border-[#E5E3DA] rounded-lg">
-          <CheckCircle2 className="h-8 w-8 text-[#6B6760] mx-auto mb-2" />
-          <p className="text-sm text-[#6B6760]">
+        <div className="text-center py-6 border border-dashed border-proofound-stone rounded-lg">
+          <CheckCircle2 className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">
             No verification requests yet. Request verification to boost credibility.
           </p>
         </div>
       ) : (
         <div className="space-y-2">
           {verificationRequests.map((request) => (
-            <Card key={request.id} className="p-3 border-[#E5E3DA]">
+            <Card key={request.id} className="p-3 border-proofound-stone">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
@@ -169,15 +171,15 @@ export function VerificationSection({
                       {request.verifier_source}
                     </Badge>
                   </div>
-                  <p className="text-sm text-[#2D3330] font-medium">{request.verifier_email}</p>
+                  <p className="text-sm text-foreground font-medium">{request.verifier_email}</p>
                   {request.message && (
-                    <p className="text-sm text-[#6B6760] mt-1">{request.message}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{request.message}</p>
                   )}
-                  <p className="text-xs text-[#6B6760] mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Requested: {new Date(request.created_at).toLocaleDateString()}
                   </p>
                   {request.responded_at && (
-                    <p className="text-xs text-[#6B6760]">
+                    <p className="text-xs text-muted-foreground">
                       Responded: {new Date(request.responded_at).toLocaleDateString()}
                     </p>
                   )}
@@ -190,7 +192,7 @@ export function VerificationSection({
                     onClick={() => onDeleteVerificationRequest(request)}
                     disabled={deletingVerificationId === request.id}
                     aria-label={`Delete verification request for ${request.verifier_email}`}
-                    className="text-[#C76B4A] hover:text-[#8B4A36] hover:bg-[#FFF0F0]"
+                    className="text-proofound-terracotta hover:text-[#8B4A36] hover:bg-[#FFF0F0]"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

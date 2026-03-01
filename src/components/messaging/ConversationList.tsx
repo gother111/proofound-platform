@@ -88,7 +88,7 @@ export function ConversationList({
     return (
       <div className="border-r h-full overflow-y-auto">
         <div className="p-4 border-b">
-          <h2 className="font-semibold text-[#2D3330]">Messages</h2>
+          <h2 className="font-semibold text-foreground">Messages</h2>
         </div>
         <div className="divide-y">
           {[1, 2, 3].map((i) => (
@@ -111,9 +111,9 @@ export function ConversationList({
     <div className="border-r h-full overflow-y-auto bg-white">
       {/* Header with search */}
       <div className="p-4 border-b bg-white sticky top-0 z-10">
-        <h2 className="font-semibold text-[#2D3330] mb-3">Messages</h2>
+        <h2 className="font-semibold text-foreground mb-3">Messages</h2>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#6B6760]" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="text"
             placeholder="Search conversations..."
@@ -128,15 +128,15 @@ export function ConversationList({
       <div className="divide-y">
         {filteredConversations.length === 0 && !searchQuery && (
           <div className="p-8 text-center space-y-2">
-            <User className="h-12 w-12 mx-auto text-[#6B6760] opacity-50" />
-            <p className="text-sm text-[#6B6760]">No conversations yet</p>
-            <p className="text-xs text-[#6B6760]">Start matching to begin conversations</p>
+            <User className="h-12 w-12 mx-auto text-muted-foreground opacity-50" />
+            <p className="text-sm text-muted-foreground">No conversations yet</p>
+            <p className="text-xs text-muted-foreground">Start matching to begin conversations</p>
           </div>
         )}
 
         {filteredConversations.length === 0 && searchQuery && (
           <div className="p-8 text-center">
-            <p className="text-sm text-[#6B6760]">
+            <p className="text-sm text-muted-foreground">
               No conversations match &apos;{searchQuery}&apos;
             </p>
           </div>
@@ -147,8 +147,8 @@ export function ConversationList({
             key={conversation.id}
             onClick={() => onSelect(conversation.id)}
             className={cn(
-              'w-full p-4 text-left hover:bg-[#F7F6F1] transition-colors',
-              selectedId === conversation.id && 'bg-[#EEF1EA] hover:bg-[#EEF1EA]'
+              'w-full p-4 text-left hover:bg-japandi-bg transition-colors',
+              selectedId === conversation.id && 'bg-proofound-forest/5 hover:bg-proofound-forest/5'
             )}
           >
             <div className="flex items-start gap-3">
@@ -160,7 +160,7 @@ export function ConversationList({
                     alt={conversation.otherPartyName}
                   />
                 ) : null}
-                <AvatarFallback className="bg-[#1C4D3A] text-white">
+                <AvatarFallback className="bg-proofound-forest text-white">
                   {getInitials(getDisplayName(conversation))}
                 </AvatarFallback>
               </Avatar>
@@ -169,11 +169,11 @@ export function ConversationList({
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2 mb-1">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-[#2D3330] truncate">
+                    <h3 className="font-medium text-foreground truncate">
                       {getDisplayName(conversation)}
                     </h3>
                     {conversation.assignmentTitle && (
-                      <p className="text-xs text-[#6B6760] truncate">
+                      <p className="text-xs text-muted-foreground truncate">
                         Re: {conversation.assignmentTitle}
                       </p>
                     )}
@@ -190,16 +190,19 @@ export function ConversationList({
                   </div>
                 </div>
 
-                <p className="text-sm text-[#6B6760] line-clamp-2 mb-1">
+                <p className="text-sm text-muted-foreground line-clamp-2 mb-1">
                   {truncateMessage(conversation.lastMessage)}
                 </p>
 
-                <p className="text-xs text-[#6B6760]">
+                <p className="text-xs text-muted-foreground">
                   {formatTimestamp(conversation.lastMessageAt)}
                 </p>
 
                 {conversation.stage === 'masked' && (
-                  <Badge variant="outline" className="mt-2 text-xs border-[#7A9278] text-[#1C4D3A]">
+                  <Badge
+                    variant="outline"
+                    className="mt-2 text-xs border-[#7A9278] text-proofound-forest"
+                  >
                     Identity revealed after introduction
                   </Badge>
                 )}

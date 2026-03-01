@@ -28,7 +28,7 @@ function SignupSubmitButton({ children }: { children: React.ReactNode }) {
     <Button
       data-testid="signup-submit"
       type="submit"
-      className="w-full rounded-xl bg-proofound-forest py-[14px] text-[15px] font-semibold tracking-[0.01em] text-white shadow-sm transition-all hover:-translate-y-[1px] hover:bg-[#2D5D4A] hover:shadow-md disabled:bg-[#E8E6DD] disabled:text-[#2D3330]/40"
+      className="w-full rounded-xl bg-proofound-forest py-[14px] text-[15px] font-semibold tracking-[0.01em] text-white shadow-sm transition-all hover:-translate-y-[1px] hover:bg-[#2D5D4A] hover:shadow-md disabled:bg-proofound-stone disabled:text-foreground/40"
       size="lg"
       disabled={pending}
     >
@@ -110,7 +110,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
 
   if (state.success) {
     return (
-      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F7F6F1] px-6 py-16 text-[#2D3330]">
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-japandi-bg px-6 py-16 text-foreground">
         <div className="pointer-events-none absolute inset-0 opacity-60">
           <NetworkBackground />
         </div>
@@ -122,7 +122,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
           className="relative z-10 w-full max-w-md px-4"
           data-testid="signup-success"
         >
-          <Card className="mx-auto rounded-[24px] border border-[#E8E6DD] bg-white/95 p-10 text-center shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
+          <Card className="mx-auto rounded-[24px] border border-proofound-stone bg-white/95 p-10 text-center shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -135,7 +135,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
             >
               <CheckCircle2 className="h-8 w-8 text-white" />
             </motion.div>
-            <h2 className="font-display text-2xl font-semibold tracking-tight text-[#2D3330]">
+            <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">
               Check your email
             </h2>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
@@ -156,7 +156,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
             <Button
               onClick={() => router.push('/login')}
               variant="outline"
-              className={`mt-6 border-[#E8E6DD] ${
+              className={`mt-6 border-proofound-stone ${
                 accountType === 'organization'
                   ? 'text-proofound-terracotta hover:border-proofound-terracotta hover:bg-proofound-terracotta/5'
                   : 'text-proofound-forest hover:border-proofound-forest hover:bg-proofound-forest/5'
@@ -171,7 +171,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F7F6F1] px-6 py-16 text-[#2D3330]">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-japandi-bg px-6 py-16 text-foreground">
       <div className="pointer-events-none absolute inset-0 opacity-60">
         <NetworkBackground />
       </div>
@@ -198,7 +198,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
         className="relative z-10 w-full max-w-md px-4"
         data-testid="signup-form-shell"
       >
-        <Card className="mx-auto rounded-[24px] border border-[#E8E6DD] bg-white/95 p-10 shadow-[0_4px_24px_rgba(29,51,48,0.08)] backdrop-blur">
+        <Card className="mx-auto rounded-[24px] border border-proofound-stone bg-white/95 p-10 shadow-[0_4px_24px_rgba(29,51,48,0.08)] backdrop-blur">
           {/* Logo/Title */}
           <div className="text-center mb-8">
             <motion.div
@@ -221,7 +221,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                 )}
               </div>
             </motion.div>
-            <h1 className="font-display text-[28px] font-semibold leading-9 tracking-[-0.01em] text-[#2D3330]">
+            <h1 className="font-display text-[28px] font-semibold leading-9 tracking-[-0.01em] text-foreground">
               Create your {accountType} account
             </h1>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
@@ -258,7 +258,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
             <div className="space-y-2">
               <Label
                 htmlFor="email"
-                className="flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.08em] text-[#2D3330]"
+                className="flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.08em] text-foreground"
               >
                 <Mail
                   className={`h-4 w-4 ${accountType === 'organization' ? 'text-proofound-terracotta' : 'text-proofound-forest'}`}
@@ -281,7 +281,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className={`h-11 rounded-xl border border-[#E8E6DD] bg-white pl-12 pr-4 text-[15px] text-[#2D3330] transition-all focus-visible:border-2 focus-visible:px-[43px] focus-visible:ring-[3px] ${
+                  className={`h-11 rounded-xl border border-proofound-stone bg-white pl-12 pr-4 text-[15px] text-foreground transition-all focus-visible:border-2 focus-visible:px-[43px] focus-visible:ring-[3px] ${
                     accountType === 'organization'
                       ? 'focus-visible:border-proofound-terracotta focus-visible:ring-proofound-terracotta/10'
                       : 'focus-visible:border-proofound-forest focus-visible:ring-proofound-forest/10'
@@ -293,7 +293,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
             <div className="space-y-2">
               <Label
                 htmlFor="password"
-                className="flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.08em] text-[#2D3330]"
+                className="flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.08em] text-foreground"
               >
                 <Lock
                   className={`h-4 w-4 ${accountType === 'organization' ? 'text-proofound-terracotta' : 'text-proofound-forest'}`}
@@ -313,7 +313,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={8}
-                  className={`h-11 rounded-xl border border-[#E8E6DD] bg-white pl-12 pr-12 text-[15px] text-[#2D3330] transition-all focus-visible:border-2 focus-visible:px-[43px] focus-visible:ring-[3px] ${
+                  className={`h-11 rounded-xl border border-proofound-stone bg-white pl-12 pr-12 text-[15px] text-foreground transition-all focus-visible:border-2 focus-visible:px-[43px] focus-visible:ring-[3px] ${
                     accountType === 'organization'
                       ? 'focus-visible:border-proofound-terracotta focus-visible:ring-proofound-terracotta/10'
                       : 'focus-visible:border-proofound-forest focus-visible:ring-proofound-forest/10'
@@ -333,7 +333,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
             <div className="space-y-2">
               <Label
                 htmlFor="confirm-password"
-                className="flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.08em] text-[#2D3330]"
+                className="flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.08em] text-foreground"
               >
                 <Lock
                   className={`h-4 w-4 ${accountType === 'organization' ? 'text-proofound-terracotta' : 'text-proofound-forest'}`}
@@ -352,7 +352,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={8}
-                className={`h-11 rounded-xl border border-[#E8E6DD] bg-white px-4 text-[15px] text-[#2D3330] transition-all focus-visible:border-2 focus-visible:px-[15px] focus-visible:ring-[3px] ${
+                className={`h-11 rounded-xl border border-proofound-stone bg-white px-4 text-[15px] text-foreground transition-all focus-visible:border-2 focus-visible:px-[15px] focus-visible:ring-[3px] ${
                   accountType === 'organization'
                     ? 'focus-visible:border-proofound-terracotta focus-visible:ring-proofound-terracotta/10'
                     : 'focus-visible:border-proofound-forest focus-visible:ring-proofound-forest/10'
@@ -370,13 +370,13 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                   checked={gdprConsent}
                   onChange={(e) => setGdprConsent(e.target.checked)}
                   required
-                  className={`mt-0.5 h-5 w-5 cursor-pointer rounded border-[#E8E6DD] transition-colors ${
+                  className={`mt-0.5 h-5 w-5 cursor-pointer rounded border-proofound-stone transition-colors ${
                     accountType === 'organization'
                       ? 'text-proofound-terracotta focus:ring-proofound-terracotta/20'
                       : 'text-proofound-forest focus:ring-proofound-forest/20'
                   }`}
                 />
-                <span className="text-sm leading-5 text-[#2D3330]">
+                <span className="text-sm leading-5 text-foreground">
                   I agree to the{' '}
                   <a
                     href="/privacy"
@@ -414,7 +414,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                   data-testid="marketing-opt-in"
                   checked={marketingOptIn}
                   onChange={(e) => setMarketingOptIn(e.target.checked)}
-                  className={`mt-0.5 h-5 w-5 cursor-pointer rounded border-[#E8E6DD] transition-colors ${
+                  className={`mt-0.5 h-5 w-5 cursor-pointer rounded border-proofound-stone transition-colors ${
                     accountType === 'organization'
                       ? 'text-proofound-terracotta focus:ring-proofound-terracotta/20'
                       : 'text-proofound-forest focus:ring-proofound-forest/20'
@@ -433,7 +433,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
 
           {/* Divider */}
           <div className="relative my-6">
-            <Separator className="bg-[#E8E6DD]" />
+            <Separator className="bg-proofound-stone" />
             <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-center overline">
               Or continue with
             </span>

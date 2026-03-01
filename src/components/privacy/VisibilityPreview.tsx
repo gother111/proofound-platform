@@ -73,7 +73,7 @@ export function VisibilityPreview({ fields, viewMode }: VisibilityPreviewProps) 
       <CardContent className="space-y-6">
         {/* Visible Fields */}
         <div className="space-y-3">
-          <h4 className="text-sm font-semibold text-[#2D3330] flex items-center gap-2">
+          <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
             <Eye className="h-4 w-4 text-green-600" />
             Visible Information ({visibleFields.length})
           </h4>
@@ -81,28 +81,30 @@ export function VisibilityPreview({ fields, viewMode }: VisibilityPreviewProps) 
             <div className="space-y-2 pl-6">
               {visibleFields.map((field) => (
                 <div key={field.name} className="text-sm">
-                  <span className="font-medium text-[#6B6760]">{field.label}:</span>{' '}
-                  <span className="text-[#2D3330]">
-                    {field.value || <span className="italic text-[#9B9891]">Not set</span>}
+                  <span className="font-medium text-muted-foreground">{field.label}:</span>{' '}
+                  <span className="text-foreground">
+                    {field.value || <span className="italic text-muted-foreground">Not set</span>}
                   </span>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-[#9B9891] pl-6">No fields are visible in this view.</p>
+            <p className="text-sm text-muted-foreground pl-6">
+              No fields are visible in this view.
+            </p>
           )}
         </div>
 
         {/* Hidden Fields */}
         {hiddenFields.length > 0 && (
-          <div className="space-y-3 pt-3 border-t border-[#E8E6DD]">
-            <h4 className="text-sm font-semibold text-[#2D3330] flex items-center gap-2">
+          <div className="space-y-3 pt-3 border-t border-proofound-stone">
+            <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
               <EyeOff className="h-4 w-4 text-amber-600" />
               Hidden Information ({hiddenFields.length})
             </h4>
             <div className="space-y-1 pl-6">
               {hiddenFields.map((field) => (
-                <div key={field.name} className="text-sm text-[#9B9891]">
+                <div key={field.name} className="text-sm text-muted-foreground">
                   <span className="font-medium">{field.label}</span>
                   {field.visibility === 'network_only' && viewMode === 'public' && (
                     <span className="text-xs ml-2">(shown in trusted network views)</span>

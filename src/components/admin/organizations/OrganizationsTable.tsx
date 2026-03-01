@@ -186,7 +186,7 @@ export function OrganizationsTable() {
                           src={org.logoUrl || undefined}
                           alt={org.displayName || 'Organization'}
                         />
-                        <AvatarFallback className="bg-[#1C4D3A] text-white text-xs">
+                        <AvatarFallback className="bg-proofound-forest text-white text-xs">
                           {getInitials(org.displayName)}
                         </AvatarFallback>
                       </Avatar>

@@ -74,9 +74,15 @@ function InvalidSnippetState() {
   return (
     <PublicProfileShell maxWidthClassName="max-w-3xl">
       <PublicProfileSection title="Shared profile status">
-        <p className="text-base font-semibold text-[#2D3330]">This shared profile is unavailable</p>
-        <p className="mt-1 text-sm text-[#6B6760]">The link may be expired, deleted, or invalid.</p>
-        <p className="text-sm text-[#6B6760]">Ask the owner to generate a new sharing link.</p>
+        <p className="text-base font-semibold text-foreground">
+          This shared profile is unavailable
+        </p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          The link may be expired, deleted, or invalid.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Ask the owner to generate a new sharing link.
+        </p>
       </PublicProfileSection>
     </PublicProfileShell>
   );

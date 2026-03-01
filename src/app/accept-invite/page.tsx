@@ -17,7 +17,7 @@ export default async function AcceptInvitePage({ searchParams }: AcceptInvitePag
 
   if (!token) {
     return (
-      <div className="min-h-screen bg-[#F7F6F1] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-japandi-bg flex items-center justify-center p-6">
         <Card className="max-w-lg w-full">
           <CardHeader>
             <CardTitle>Invite link is invalid</CardTitle>
@@ -42,7 +42,7 @@ export default async function AcceptInvitePage({ searchParams }: AcceptInvitePag
 
   if (!invitation?.orgSlug) {
     return (
-      <div className="min-h-screen bg-[#F7F6F1] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-japandi-bg flex items-center justify-center p-6">
         <Card className="max-w-lg w-full">
           <CardHeader>
             <CardTitle>Invite link is unavailable</CardTitle>

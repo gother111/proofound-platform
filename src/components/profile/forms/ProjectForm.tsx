@@ -208,7 +208,7 @@ export function ProjectForm({ onSuccess, onCancel, initialData, projectId }: Pro
           maxLength={1000}
           {...register('description')}
         />
-        <p className="text-xs text-[#6B6760] text-right">
+        <p className="text-xs text-muted-foreground text-right">
           {watch('description')?.length || 0}/1000
         </p>
       </div>
@@ -218,7 +218,11 @@ export function ProjectForm({ onSuccess, onCancel, initialData, projectId }: Pro
         <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </Button>
-        <Button type="submit" disabled={isSubmitting} className="bg-[#1C4D3A] hover:bg-[#2D5F4A]">
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="bg-proofound-forest hover:bg-proofound-forest/90"
+        >
           {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
           {projectId ? 'Update Project' : 'Create Project'}
         </Button>

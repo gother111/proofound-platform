@@ -622,7 +622,7 @@ export function ExpertiseAtlasClient({
 
                 {/* L1 Grid */}
                 <div>
-                  <h2 className="text-2xl font-semibold text-[#2D3330] mb-4">Skill Domains</h2>
+                  <h2 className="text-2xl font-semibold text-foreground mb-4">Skill Domains</h2>
                   <L1Grid
                     domains={domains}
                     onDomainClick={handleDomainClick}
@@ -648,7 +648,7 @@ export function ExpertiseAtlasClient({
                 {/* L4 Skills Grid (when L3 is selected) */}
                 {selectedL3 && l4Skills.length > 0 && (
                   <div className="mt-8">
-                    <h2 className="text-xl font-semibold text-[#2D3330] mb-4">
+                    <h2 className="text-xl font-semibold text-foreground mb-4">
                       Skills in {selectedL3?.nameI18n?.en || 'Unknown'}
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -675,10 +675,10 @@ export function ExpertiseAtlasClient({
           <TabsContent value="import-cv">
             <div className="space-y-6">
               <div className="bg-white rounded-lg p-6 shadow-sm border">
-                <h2 className="text-2xl font-semibold text-[#2D3330] mb-4">
+                <h2 className="text-2xl font-semibold text-foreground mb-4">
                   Import Skills from CV/Resume
                 </h2>
-                <p className="text-[#6B6760] mb-6">
+                <p className="text-muted-foreground mb-6">
                   Paste your CV, resume, or job description to automatically extract and suggest
                   relevant skills.
                 </p>

@@ -106,7 +106,7 @@ export function VideoProviderSelector({
   if (isCheckingStatus) {
     return (
       <div className="text-center py-8">
-        <p className="text-sm text-[#6B6760]">Checking video provider connections...</p>
+        <p className="text-sm text-muted-foreground">Checking video provider connections...</p>
       </div>
     );
   }
@@ -119,8 +119,8 @@ export function VideoProviderSelector({
           key={provider.id}
           className={`p-4 cursor-pointer transition-all ${
             selectedProvider === provider.id
-              ? 'border-2 border-[#1C4D3A] bg-[#E8F5E1]'
-              : 'border-2 border-[#E8E6DD] hover:border-[#1C4D3A]/30'
+              ? 'border-2 border-proofound-forest bg-proofound-success-tint'
+              : 'border-2 border-proofound-stone hover:border-proofound-forest/30'
           }`}
           onClick={() => provider.connected && onSelectProvider(provider.id)}
         >
@@ -128,21 +128,23 @@ export function VideoProviderSelector({
             <div className="flex items-start gap-3 flex-1">
               <div
                 className={`flex-shrink-0 ${
-                  selectedProvider === provider.id ? 'text-[#1C4D3A]' : 'text-[#6B6760]'
+                  selectedProvider === provider.id
+                    ? 'text-proofound-forest'
+                    : 'text-muted-foreground'
                 }`}
               >
                 {provider.icon}
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-semibold text-[#2D3330]">{provider.name}</h4>
+                  <h4 className="font-semibold text-foreground">{provider.name}</h4>
                   {provider.connected ? (
                     <CheckCircle className="w-4 h-4 text-green-600" />
                   ) : (
                     <AlertCircle className="w-4 h-4 text-amber-600" />
                   )}
                 </div>
-                <p className="text-sm text-[#6B6760] mb-2">{provider.description}</p>
+                <p className="text-sm text-muted-foreground mb-2">{provider.description}</p>
 
                 {!provider.connected && (
                   <Button
@@ -170,7 +172,7 @@ export function VideoProviderSelector({
 
             {selectedProvider === provider.id && (
               <div className="flex-shrink-0 ml-3">
-                <div className="w-6 h-6 rounded-full bg-[#1C4D3A] flex items-center justify-center">
+                <div className="w-6 h-6 rounded-full bg-proofound-forest flex items-center justify-center">
                   <CheckCircle className="w-4 h-4 text-white" />
                 </div>
               </div>

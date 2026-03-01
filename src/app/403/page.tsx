@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export default function ForbiddenPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F7F6F1]">
+    <div className="min-h-screen flex items-center justify-center bg-japandi-bg">
       <div className="max-w-md w-full mx-auto px-4 text-center">
         <div className="mb-6 flex justify-center">
           <div className="p-4 bg-red-100 rounded-full">
@@ -14,10 +14,10 @@ export default function ForbiddenPage() {
           </div>
         </div>
 
-        <h1 className="text-4xl font-bold text-[#2D3330] mb-4">403</h1>
-        <h2 className="text-2xl font-semibold text-[#2D3330] mb-4">Access Forbidden</h2>
+        <h1 className="text-4xl font-bold text-foreground mb-4">403</h1>
+        <h2 className="text-2xl font-semibold text-foreground mb-4">Access Forbidden</h2>
 
-        <p className="text-[#6B6760] mb-8">
+        <p className="text-muted-foreground mb-8">
           You don&apos;t have permission to access this page. This area is restricted to authorized
           personnel only.
         </p>
@@ -33,7 +33,7 @@ export default function ForbiddenPage() {
           </Link>
         </div>
 
-        <p className="mt-8 text-sm text-[#9B9891]">
+        <p className="mt-8 text-sm text-muted-foreground">
           If you believe you should have access to this page, please contact your administrator.
         </p>
       </div>

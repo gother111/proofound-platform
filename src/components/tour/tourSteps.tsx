@@ -35,12 +35,12 @@ export const individualTourSteps: Step[] = [
     target: 'body',
     content: (
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-[#2D3330]">Welcome to Proofound! 👋</h2>
-        <p className="text-sm text-[#6B6760]">
+        <h2 className="text-lg font-semibold text-foreground">Welcome to Proofound! 👋</h2>
+        <p className="text-sm text-muted-foreground">
           Your day-1 goal is to publish a clean public portfolio link and share it immediately. This
           quick tour takes about 2 minutes.
         </p>
-        <p className="text-xs text-[#9B9891]">
+        <p className="text-xs text-muted-foreground">
           You can skip this tour anytime by pressing ESC, or replay it later from Settings.
         </p>
       </div>
@@ -52,8 +52,8 @@ export const individualTourSteps: Step[] = [
     target: '[data-tour="left-nav"]',
     content: (
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-[#2D3330]">Your Navigation</h3>
-        <p className="text-sm text-[#6B6760]">
+        <h3 className="text-base font-semibold text-foreground">Your Navigation</h3>
+        <p className="text-sm text-muted-foreground">
           This sidebar is your home base. It helps you move between different sections of Proofound.
         </p>
       </div>
@@ -65,8 +65,8 @@ export const individualTourSteps: Step[] = [
     target: '[data-tour="dashboard"]',
     content: (
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-[#2D3330]">Your Dashboard</h3>
-        <p className="text-sm text-[#6B6760]">
+        <h3 className="text-base font-semibold text-foreground">Your Dashboard</h3>
+        <p className="text-sm text-muted-foreground">
           Your dashboard shows key stats and actions. You can customize what appears here later.
         </p>
       </div>
@@ -78,12 +78,12 @@ export const individualTourSteps: Step[] = [
     target: '[data-tour="profile-link"]',
     content: (
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-[#2D3330]">Your Profile</h3>
-        <p className="text-sm text-[#6B6760]">
+        <h3 className="text-base font-semibold text-foreground">Your Profile</h3>
+        <p className="text-sm text-muted-foreground">
           This is where you'll build your professional identity. Add your mission, vision, and
           values to stand out to organizations that share your purpose.
         </p>
-        <p className="text-xs text-[#9B9891] pt-2 border-t border-[#E8E6DD]">
+        <p className="text-xs text-muted-foreground pt-2 border-t border-proofound-stone">
           <strong>Tip:</strong> Start here first! A complete profile helps you get better matches.
         </p>
       </div>
@@ -95,8 +95,8 @@ export const individualTourSteps: Step[] = [
     target: '[data-tour="portfolio-link"]',
     content: (
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-[#2D3330]">Public Portfolio</h3>
-        <p className="text-sm text-[#6B6760]">
+        <h3 className="text-base font-semibold text-foreground">Public Portfolio</h3>
+        <p className="text-sm text-muted-foreground">
           This is your clean, proof-based link. Copy it and share it right away. Matching remains
           available as a secondary step after your portfolio is live.
         </p>
@@ -109,12 +109,12 @@ export const individualTourSteps: Step[] = [
     target: '[data-tour="expertise-link"]',
     content: (
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-[#2D3330]">Expertise Hub</h3>
-        <p className="text-sm text-[#6B6760]">
+        <h3 className="text-base font-semibold text-foreground">Expertise Hub</h3>
+        <p className="text-sm text-muted-foreground">
           Add your skills in Expertise Atlas. The more specific your skills and proof, the better
           your matches will be.
         </p>
-        <p className="text-xs text-[#9B9891] pt-2 border-t border-[#E8E6DD]">
+        <p className="text-xs text-muted-foreground pt-2 border-t border-proofound-stone">
           <strong>Tip:</strong> Add concrete skill examples with proof (for example, "React Hooks"
           instead of only "JavaScript").
         </p>
@@ -127,12 +127,12 @@ export const individualTourSteps: Step[] = [
     target: '[data-tour="matching-link"]',
     content: (
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-[#2D3330]">Matching Profile</h3>
-        <p className="text-sm text-[#6B6760]">
+        <h3 className="text-base font-semibold text-foreground">Matching Profile</h3>
+        <p className="text-sm text-muted-foreground">
           Set your preferences for work: availability, compensation, location, and more. This helps
           us find assignments that fit your life.
         </p>
-        <p className="text-xs text-[#9B9891] pt-2 border-t border-[#E8E6DD]">
+        <p className="text-xs text-muted-foreground pt-2 border-t border-proofound-stone">
           <strong>Privacy first:</strong> Organizations only see what you choose to share.
         </p>
       </div>
@@ -144,12 +144,12 @@ export const individualTourSteps: Step[] = [
     target: '[data-tour="zen-link"]',
     content: (
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-[#2D3330]">Zen Hub (Well-Being)</h3>
-        <p className="text-sm text-[#6B6760]">
+        <h3 className="text-base font-semibold text-foreground">Zen Hub (Well-Being)</h3>
+        <p className="text-sm text-muted-foreground">
           Job searching can be stressful. Zen Hub offers optional well-being check-ins and resources
           to support you.
         </p>
-        <p className="text-xs text-[#9B9891] pt-2 border-t border-[#E8E6DD]">
+        <p className="text-xs text-muted-foreground pt-2 border-t border-proofound-stone">
           <strong>100% optional:</strong> All check-ins are private and never shared with
           organizations.
         </p>
@@ -162,8 +162,8 @@ export const individualTourSteps: Step[] = [
     target: '[data-tour="settings-link"]',
     content: (
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-[#2D3330]">Settings</h3>
-        <p className="text-sm text-[#6B6760]">
+        <h3 className="text-base font-semibold text-foreground">Settings</h3>
+        <p className="text-sm text-muted-foreground">
           Control your privacy, notifications, and account settings. You can also replay this tour
           anytime from here.
         </p>
@@ -176,16 +176,16 @@ export const individualTourSteps: Step[] = [
     target: 'body',
     content: (
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-[#2D3330]">You're all set! 🎉</h2>
-        <p className="text-sm text-[#6B6760]">
+        <h2 className="text-lg font-semibold text-foreground">You're all set! 🎉</h2>
+        <p className="text-sm text-muted-foreground">
           Start with your <strong>Public Portfolio</strong>: publish, copy, and share your link.
           Then strengthen it with Profile and Expertise details.
         </p>
-        <div className="pt-3 border-t border-[#E8E6DD]">
-          <p className="text-xs text-[#9B9891]">
+        <div className="pt-3 border-t border-proofound-stone">
+          <p className="text-xs text-muted-foreground">
             <strong>Next steps:</strong>
           </p>
-          <ul className="text-xs text-[#9B9891] list-disc list-inside space-y-1 mt-1">
+          <ul className="text-xs text-muted-foreground list-disc list-inside space-y-1 mt-1">
             <li>Share your Public Portfolio link</li>
             <li>Complete your Profile (mission, vision, values)</li>
             <li>Add at least 3 skills to unlock Lite activation</li>
@@ -208,8 +208,8 @@ export const organizationTourSteps: Step[] = [
     target: 'body',
     content: (
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-[#2D3330]">Welcome to Proofound! 👋</h2>
-        <p className="text-sm text-[#6B6760]">
+        <h2 className="text-lg font-semibold text-foreground">Welcome to Proofound! 👋</h2>
+        <p className="text-sm text-muted-foreground">
           Your first win is to publish a clean organization portfolio link that your team can share
           today. This tour takes about 2 minutes.
         </p>
@@ -222,8 +222,8 @@ export const organizationTourSteps: Step[] = [
     target: '[data-tour="left-nav"]',
     content: (
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-[#2D3330]">Organization Navigation</h3>
-        <p className="text-sm text-[#6B6760]">
+        <h3 className="text-base font-semibold text-foreground">Organization Navigation</h3>
+        <p className="text-sm text-muted-foreground">
           Your sidebar helps you manage assignments, review candidates, and track team activity.
         </p>
       </div>
@@ -235,8 +235,8 @@ export const organizationTourSteps: Step[] = [
     target: '[data-tour="portfolio-link"]',
     content: (
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-[#2D3330]">Public Portfolio</h3>
-        <p className="text-sm text-[#6B6760]">
+        <h3 className="text-base font-semibold text-foreground">Public Portfolio</h3>
+        <p className="text-sm text-muted-foreground">
           Publish your organization proof portfolio and share it externally right away. Matching and
           hiring workflows stay available after this first step.
         </p>
@@ -249,8 +249,8 @@ export const organizationTourSteps: Step[] = [
     target: '[data-tour="assignments"]',
     content: (
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-[#2D3330]">Assignments</h3>
-        <p className="text-sm text-[#6B6760]">
+        <h3 className="text-base font-semibold text-foreground">Assignments</h3>
+        <p className="text-sm text-muted-foreground">
           Create and manage role assignments. Define requirements, and our matching system will find
           qualified candidates who align with your organization's mission and{' '}
           {UI_VOCABULARY.pacLabel.toLowerCase()}.
@@ -264,8 +264,8 @@ export const organizationTourSteps: Step[] = [
     target: '[data-tour="candidates"]',
     content: (
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-[#2D3330]">Candidates</h3>
-        <p className="text-sm text-[#6B6760]">
+        <h3 className="text-base font-semibold text-foreground">Candidates</h3>
+        <p className="text-sm text-muted-foreground">
           Review matched candidates, see their qualifications, and track the hiring process.
         </p>
       </div>
@@ -277,8 +277,8 @@ export const organizationTourSteps: Step[] = [
     target: '[data-tour="org-profile"]',
     content: (
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-[#2D3330]">Organization Profile</h3>
-        <p className="text-sm text-[#6B6760]">
+        <h3 className="text-base font-semibold text-foreground">Organization Profile</h3>
+        <p className="text-sm text-muted-foreground">
           Share your mission, values, and causes. This helps attract candidates who are aligned with
           your organization's purpose.
         </p>
@@ -291,8 +291,8 @@ export const organizationTourSteps: Step[] = [
     target: 'body',
     content: (
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-[#2D3330]">Ready to find great talent! 🎉</h2>
-        <p className="text-sm text-[#6B6760]">
+        <h2 className="text-lg font-semibold text-foreground">Ready to find great talent! 🎉</h2>
+        <p className="text-sm text-muted-foreground">
           Start by sharing your public portfolio link, then create your first{' '}
           <strong>Assignment</strong> to define what you're looking for.
         </p>

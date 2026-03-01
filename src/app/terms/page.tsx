@@ -21,14 +21,14 @@ export default function TermsOfServicePage() {
   const version = POLICY_VERSIONS.tos;
 
   return (
-    <div className="relative min-h-screen bg-[#F7F6F1] text-[#2D3330]">
+    <div className="relative min-h-screen bg-japandi-bg text-foreground">
       <div className="pointer-events-none absolute inset-0 opacity-60">
         <NetworkBackground />
       </div>
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(28,77,58,0.08),transparent_55%),radial-gradient(circle_at_85%_80%,rgba(199,107,74,0.07),transparent_65%)]" />
 
       <div className="relative z-10">
-        <header className="border-b border-[#E8E6DD] bg-white/80 backdrop-blur-sm">
+        <header className="border-b border-proofound-stone bg-white/80 backdrop-blur-sm">
           <div className="mx-auto max-w-4xl px-6 py-6">
             <Link
               href="/"
@@ -45,7 +45,7 @@ export default function TermsOfServicePage() {
             <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-proofound-terracotta shadow-[0_8px_18px_rgba(199,107,74,0.32)]">
               <FileText className="h-8 w-8 text-white" />
             </div>
-            <h1 className="font-display text-[40px] font-semibold leading-[48px] tracking-[-0.02em] text-[#2D3330]">
+            <h1 className="font-display text-[40px] font-semibold leading-[48px] tracking-[-0.02em] text-foreground">
               Terms of Service
             </h1>
             <p className="mt-4 text-sm text-[#2D333099]">
@@ -53,10 +53,10 @@ export default function TermsOfServicePage() {
             </p>
           </div>
 
-          <Card className="rounded-2xl border border-[#E8E6DD] bg-white p-10 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
+          <Card className="rounded-2xl border border-proofound-stone bg-white p-10 shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
             <div className="space-y-8 text-[#2D3330CC]">
               <section>
-                <h2 className="font-display text-2xl font-semibold text-[#2D3330]">
+                <h2 className="font-display text-2xl font-semibold text-foreground">
                   1. Acceptance and Eligibility
                 </h2>
                 <p className="mt-3 leading-7">
@@ -66,7 +66,7 @@ export default function TermsOfServicePage() {
               </section>
 
               <section>
-                <h2 className="font-display text-2xl font-semibold text-[#2D3330]">
+                <h2 className="font-display text-2xl font-semibold text-foreground">
                   2. Service Scope
                 </h2>
                 <p className="mt-3 leading-7">
@@ -76,7 +76,7 @@ export default function TermsOfServicePage() {
               </section>
 
               <section>
-                <h2 className="font-display text-2xl font-semibold text-[#2D3330]">
+                <h2 className="font-display text-2xl font-semibold text-foreground">
                   3. Acceptable Use
                 </h2>
                 <ul className="mt-3 list-disc space-y-2 pl-6 leading-7">
@@ -88,7 +88,7 @@ export default function TermsOfServicePage() {
               </section>
 
               <section>
-                <h2 className="font-display text-2xl font-semibold text-[#2D3330]">
+                <h2 className="font-display text-2xl font-semibold text-foreground">
                   4. Moderation and Enforcement
                 </h2>
                 <p className="mt-3 leading-7">
@@ -98,7 +98,7 @@ export default function TermsOfServicePage() {
               </section>
 
               <section>
-                <h2 className="font-display text-2xl font-semibold text-[#2D3330]">
+                <h2 className="font-display text-2xl font-semibold text-foreground">
                   5. Account Deletion
                 </h2>
                 <p className="mt-3 leading-7">
@@ -108,7 +108,7 @@ export default function TermsOfServicePage() {
               </section>
 
               <section>
-                <h2 className="font-display text-2xl font-semibold text-[#2D3330]">
+                <h2 className="font-display text-2xl font-semibold text-foreground">
                   6. Liability and Availability
                 </h2>
                 <p className="mt-3 leading-7">
@@ -118,7 +118,7 @@ export default function TermsOfServicePage() {
               </section>
 
               <section>
-                <h2 className="font-display text-2xl font-semibold text-[#2D3330]">7. Changes</h2>
+                <h2 className="font-display text-2xl font-semibold text-foreground">7. Changes</h2>
                 <p className="mt-3 leading-7">
                   We may update these Terms. Material changes are published with a new version and
                   effective date.
@@ -126,7 +126,7 @@ export default function TermsOfServicePage() {
               </section>
 
               <section>
-                <h2 className="font-display text-2xl font-semibold text-[#2D3330]">8. Contact</h2>
+                <h2 className="font-display text-2xl font-semibold text-foreground">8. Contact</h2>
                 <p className="mt-3 leading-7">
                   For legal questions, contact{' '}
                   <a
@@ -140,7 +140,7 @@ export default function TermsOfServicePage() {
               </section>
 
               <section>
-                <h2 className="font-display text-2xl font-semibold text-[#2D3330]">
+                <h2 className="font-display text-2xl font-semibold text-foreground">
                   9. Intellectual Property and Content Rights
                 </h2>
                 <p className="mt-3 leading-7">
@@ -152,7 +152,7 @@ export default function TermsOfServicePage() {
               </section>
 
               <section>
-                <h2 className="font-display text-2xl font-semibold text-[#2D3330]">
+                <h2 className="font-display text-2xl font-semibold text-foreground">
                   10. Dispute Handling and Governing Terms
                 </h2>
                 <p className="mt-3 leading-7">
@@ -164,7 +164,7 @@ export default function TermsOfServicePage() {
               </section>
 
               <section>
-                <h2 className="font-display text-2xl font-semibold text-[#2D3330]">
+                <h2 className="font-display text-2xl font-semibold text-foreground">
                   11. Service Continuity and Incident Handling
                 </h2>
                 <p className="mt-3 leading-7">
@@ -176,7 +176,7 @@ export default function TermsOfServicePage() {
               </section>
 
               <section>
-                <h2 className="font-display text-2xl font-semibold text-[#2D3330]">
+                <h2 className="font-display text-2xl font-semibold text-foreground">
                   12. Interpretation and Priority
                 </h2>
                 <p className="mt-3 leading-7">
@@ -193,7 +193,7 @@ export default function TermsOfServicePage() {
             <Button
               asChild
               variant="outline"
-              className="border-[#E8E6DD] text-[#2D3330] hover:border-proofound-terracotta hover:bg-proofound-terracotta/5"
+              className="border-proofound-stone text-foreground hover:border-proofound-terracotta hover:bg-proofound-terracotta/5"
             >
               <Link href="/privacy">View Privacy Policy</Link>
             </Button>
@@ -203,14 +203,14 @@ export default function TermsOfServicePage() {
             <Button
               asChild
               variant="outline"
-              className="border-[#E8E6DD] text-[#2D3330] hover:border-proofound-terracotta hover:bg-proofound-terracotta/5"
+              className="border-proofound-stone text-foreground hover:border-proofound-terracotta hover:bg-proofound-terracotta/5"
             >
               <Link href="/support">Visit Support</Link>
             </Button>
           </div>
         </main>
 
-        <footer className="border-t border-[#E8E6DD] bg-white/80 backdrop-blur-sm">
+        <footer className="border-t border-proofound-stone bg-white/80 backdrop-blur-sm">
           <div className="mx-auto max-w-4xl px-6 py-8 text-center">
             <p className="text-sm text-[#2D333099]">
               © {new Date().getFullYear()} Proofound. All rights reserved.

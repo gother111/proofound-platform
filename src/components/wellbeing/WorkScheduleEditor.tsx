@@ -176,7 +176,7 @@ export function WorkScheduleEditor({ userId }: WorkScheduleEditorProps) {
     return (
       <Card className="border-proofound-stone dark:border-border rounded-2xl">
         <CardContent className="py-8">
-          <p className="text-center text-[#6B6760] dark:text-muted-foreground">
+          <p className="text-center text-muted-foreground dark:text-muted-foreground">
             Loading work schedule...
           </p>
         </CardContent>
@@ -199,7 +199,7 @@ export function WorkScheduleEditor({ userId }: WorkScheduleEditorProps) {
           <Button
             onClick={handleSave}
             disabled={!hasUnsavedChanges || isSaving}
-            className="bg-[#1C4D3A] text-white"
+            className="bg-proofound-forest text-white"
           >
             <Save className="w-4 h-4 mr-2" />
             {isSaving ? 'Saving...' : 'Save Schedule'}
@@ -215,7 +215,7 @@ export function WorkScheduleEditor({ userId }: WorkScheduleEditorProps) {
               <div>
                 <p className="text-sm font-medium mb-1">Total Weekly Hours</p>
                 <p className="text-4xl font-bold">{totalHours.toFixed(1)}</p>
-                <p className="text-sm text-[#6B6760] dark:text-muted-foreground mt-1">
+                <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-1">
                   Average: {getAverageHoursPerDay()} hours/day
                 </p>
               </div>
@@ -231,7 +231,7 @@ export function WorkScheduleEditor({ userId }: WorkScheduleEditorProps) {
             </div>
 
             <div className="space-y-2">
-              <div className="flex justify-between text-xs text-[#6B6760] dark:text-muted-foreground">
+              <div className="flex justify-between text-xs text-muted-foreground dark:text-muted-foreground">
                 <span>0h</span>
                 <span>{BURNOUT_THRESHOLDS.safe}h (Safe)</span>
                 <span>{BURNOUT_THRESHOLDS.warning}h (Warning)</span>
@@ -295,7 +295,7 @@ export function WorkScheduleEditor({ userId }: WorkScheduleEditorProps) {
 
         {/* Daily Hours Input */}
         <div className="space-y-3">
-          <h3 className="font-semibold text-[#2D3330] dark:text-foreground flex items-center gap-2">
+          <h3 className="font-semibold text-foreground dark:text-foreground flex items-center gap-2">
             <Clock className="w-4 h-4" />
             Daily Work Hours
           </h3>
@@ -304,7 +304,7 @@ export function WorkScheduleEditor({ userId }: WorkScheduleEditorProps) {
               <div key={key} className="flex items-center gap-3">
                 <Label
                   htmlFor={key}
-                  className="w-28 text-sm font-medium text-[#2D3330] dark:text-foreground"
+                  className="w-28 text-sm font-medium text-foreground dark:text-foreground"
                 >
                   {label}
                 </Label>
@@ -320,7 +320,9 @@ export function WorkScheduleEditor({ userId }: WorkScheduleEditorProps) {
                     className="w-24"
                     placeholder="0"
                   />
-                  <span className="text-sm text-[#6B6760] dark:text-muted-foreground">hours</span>
+                  <span className="text-sm text-muted-foreground dark:text-muted-foreground">
+                    hours
+                  </span>
                 </div>
               </div>
             ))}
@@ -329,7 +331,7 @@ export function WorkScheduleEditor({ userId }: WorkScheduleEditorProps) {
 
         {/* Quick Templates */}
         <div className="space-y-3">
-          <h3 className="font-semibold text-[#2D3330] dark:text-foreground">Quick Templates</h3>
+          <h3 className="font-semibold text-foreground dark:text-foreground">Quick Templates</h3>
           <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
@@ -389,7 +391,7 @@ export function WorkScheduleEditor({ userId }: WorkScheduleEditorProps) {
         </div>
 
         {/* Research Citation */}
-        <div className="text-xs text-[#6B6760] dark:text-muted-foreground p-3 bg-[#F7F6F1] dark:bg-background/50 rounded-lg border border-[#E8E6DD] dark:border-border">
+        <div className="text-xs text-muted-foreground dark:text-muted-foreground p-3 bg-japandi-bg dark:bg-background/50 rounded-lg border border-proofound-stone dark:border-border">
           <p>
             <strong>Evidence-based thresholds:</strong> Based on burnoutDefaults (soft{' '}
             {BURNOUT_THRESHOLDS.safe}h, hard {BURNOUT_THRESHOLDS.warning}h). Quiet hours:{' '}

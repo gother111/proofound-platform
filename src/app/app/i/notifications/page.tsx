@@ -110,8 +110,8 @@ export default function NotificationsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-[#2D3330]">Notifications</h1>
-            <p className="text-[#6B6760] mt-1">Stay updated with your activity</p>
+            <h1 className="text-3xl font-bold text-foreground">Notifications</h1>
+            <p className="text-muted-foreground mt-1">Stay updated with your activity</p>
           </div>
           <Button variant="outline" onClick={() => router.push('/app/i/settings/notifications')}>
             <Settings className="h-4 w-4 mr-2" />
@@ -124,7 +124,7 @@ export default function NotificationsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-[#6B6760]" />
+                <Filter className="h-4 w-4 text-muted-foreground" />
                 <Select value={filter} onValueChange={(value: any) => setFilter(value)}>
                   <SelectTrigger className="w-[150px]">
                     <SelectValue />
@@ -152,16 +152,16 @@ export default function NotificationsPage() {
         {/* Notifications List */}
         {isLoading && offset === 0 ? (
           <div className="flex items-center justify-center h-64">
-            <p className="text-[#6B6760]">Loading notifications...</p>
+            <p className="text-muted-foreground">Loading notifications...</p>
           </div>
         ) : notifications.length === 0 ? (
           <Card className="p-12">
             <div className="flex flex-col items-center justify-center text-center">
-              <div className="w-16 h-16 rounded-full bg-[#E8E6DD] flex items-center justify-center mb-4">
-                <Bell className="h-8 w-8 text-[#6B6760]" />
+              <div className="w-16 h-16 rounded-full bg-proofound-stone flex items-center justify-center mb-4">
+                <Bell className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="text-xl font-semibold text-[#2D3330] mb-2">No notifications yet</h3>
-              <p className="text-[#6B6760] max-w-md">
+              <h3 className="text-xl font-semibold text-foreground mb-2">No notifications yet</h3>
+              <p className="text-muted-foreground max-w-md">
                 We'll notify you when something important happens, like new matches, messages, or
                 verification requests.
               </p>
@@ -190,15 +190,15 @@ export default function NotificationsPage() {
                       <div className="flex-1">
                         <p
                           className={cn(
-                            'text-base font-medium text-[#2D3330]',
+                            'text-base font-medium text-foreground',
                             !notification.read && 'font-semibold'
                           )}
                         >
                           {notification.title}
                         </p>
-                        <p className="text-sm text-[#6B6760] mt-1">{notification.message}</p>
+                        <p className="text-sm text-muted-foreground mt-1">{notification.message}</p>
                         <div className="flex items-center gap-3 mt-2">
-                          <p className="text-xs text-[#6B6760]">
+                          <p className="text-xs text-muted-foreground">
                             {formatDistanceToNow(new Date(notification.createdAt), {
                               addSuffix: true,
                             })}

@@ -22,7 +22,7 @@ export function TypingIndicator({ isTyping, displayName = 'Someone' }: TypingInd
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 10 }}
-        className="flex items-center gap-2 px-4 py-2 text-xs text-[#6B6760]"
+        className="flex items-center gap-2 px-4 py-2 text-xs text-muted-foreground"
       >
         <div className="flex gap-1">
           <motion.div
@@ -67,4 +67,3 @@ export function TypingIndicator({ isTyping, displayName = 'Someone' }: TypingInd
     </AnimatePresence>
   );
 }
-

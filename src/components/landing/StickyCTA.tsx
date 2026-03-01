@@ -36,7 +36,7 @@ export function StickyCTA() {
           <Button
             size="lg"
             onClick={scrollToSignup}
-            className="shadow-2xl text-lg px-8 py-6 bg-[#1C4D3A] hover:bg-[#2D5D4A] text-white rounded-full"
+            className="shadow-2xl text-lg px-8 py-6 bg-proofound-forest hover:bg-[#2D5D4A] text-white rounded-full"
           >
             Join the Waitlist
             <ArrowRight className="w-5 h-5 ml-2" />

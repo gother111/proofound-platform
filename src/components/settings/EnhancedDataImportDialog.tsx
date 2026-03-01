@@ -255,14 +255,14 @@ export function EnhancedDataImportDialog({ open, onOpenChange }: EnhancedDataImp
               {/* Upload Area */}
               <label
                 htmlFor="file-upload"
-                className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer bg-[#F7F6F1] dark:bg-background/50 hover:bg-[#E8E6DD] dark:hover:bg-background border-[#D8D2C8] dark:border-border"
+                className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer bg-japandi-bg dark:bg-background/50 hover:bg-proofound-stone dark:hover:bg-background border-border dark:border-border"
               >
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <Upload className="w-12 h-12 mb-4 text-[#6B6760]" />
-                  <p className="mb-2 text-sm text-[#2D3330] dark:text-foreground">
+                  <Upload className="w-12 h-12 mb-4 text-muted-foreground" />
+                  <p className="mb-2 text-sm text-foreground dark:text-foreground">
                     <span className="font-semibold">Click to upload</span> or drag and drop
                   </p>
-                  <p className="text-xs text-[#6B6760] dark:text-muted-foreground">
+                  <p className="text-xs text-muted-foreground dark:text-muted-foreground">
                     JSON files only (MAX. 10MB)
                   </p>
                 </div>
@@ -341,7 +341,7 @@ export function EnhancedDataImportDialog({ open, onOpenChange }: EnhancedDataImp
                     <div className="grid grid-cols-2 gap-4">
                       {Object.entries(validationResult.summary).map(([key, count]) => (
                         <div key={key} className="flex items-center justify-between">
-                          <span className="text-sm text-[#6B6760] dark:text-muted-foreground capitalize">
+                          <span className="text-sm text-muted-foreground dark:text-muted-foreground capitalize">
                             {key}
                           </span>
                           <Badge variant="outline">{count}</Badge>
@@ -365,23 +365,23 @@ export function EnhancedDataImportDialog({ open, onOpenChange }: EnhancedDataImp
                       onValueChange={(val) => setImportMode(val as 'replace' | 'merge')}
                     >
                       <div className="space-y-3">
-                        <div className="flex items-start space-x-2 p-3 border rounded-lg hover:bg-[#F7F6F1] dark:hover:bg-background/50">
+                        <div className="flex items-start space-x-2 p-3 border rounded-lg hover:bg-japandi-bg dark:hover:bg-background/50">
                           <RadioGroupItem value="merge" id="merge" />
                           <Label htmlFor="merge" className="flex-1 cursor-pointer">
                             <div className="font-medium">Merge (Recommended)</div>
-                            <p className="text-xs text-[#6B6760] dark:text-muted-foreground">
+                            <p className="text-xs text-muted-foreground dark:text-muted-foreground">
                               Keep existing data and add new items. Existing items with the same ID
                               will be updated.
                             </p>
                           </Label>
                         </div>
-                        <div className="flex items-start space-x-2 p-3 border rounded-lg hover:bg-[#F7F6F1] dark:hover:bg-background/50">
+                        <div className="flex items-start space-x-2 p-3 border rounded-lg hover:bg-japandi-bg dark:hover:bg-background/50">
                           <RadioGroupItem value="replace" id="replace" />
                           <Label htmlFor="replace" className="flex-1 cursor-pointer">
                             <div className="font-medium text-red-600 dark:text-red-400">
                               Replace All
                             </div>
-                            <p className="text-xs text-[#6B6760] dark:text-muted-foreground">
+                            <p className="text-xs text-muted-foreground dark:text-muted-foreground">
                               Delete all existing data and replace with imported data. This cannot
                               be undone.
                             </p>
@@ -401,7 +401,7 @@ export function EnhancedDataImportDialog({ open, onOpenChange }: EnhancedDataImp
               <Button
                 onClick={handleImport}
                 disabled={!validationResult.valid || isProcessing}
-                className="bg-[#1C4D3A] text-white"
+                className="bg-proofound-forest text-white"
               >
                 {isProcessing ? 'Importing...' : `Import Data (${importMode})`}
               </Button>
@@ -415,8 +415,8 @@ export function EnhancedDataImportDialog({ open, onOpenChange }: EnhancedDataImp
               <DialogTitle className="text-2xl font-['Crimson_Pro']">Importing...</DialogTitle>
             </DialogHeader>
             <div className="flex flex-col items-center justify-center py-12">
-              <RefreshCw className="w-12 h-12 animate-spin text-[#1C4D3A] mb-4" />
-              <p className="text-[#6B6760] dark:text-muted-foreground">
+              <RefreshCw className="w-12 h-12 animate-spin text-proofound-forest mb-4" />
+              <p className="text-muted-foreground dark:text-muted-foreground">
                 Please wait while we import your data...
               </p>
             </div>

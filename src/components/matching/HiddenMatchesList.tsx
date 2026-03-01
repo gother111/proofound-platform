@@ -113,10 +113,10 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
     return (
       <Card variant="bento" className="p-4 border">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-medium text-[#2D3330]">Hidden</h3>
-          <Loader2 className="w-4 h-4 animate-spin text-[#1C4D3A]" />
+          <h3 className="text-sm font-medium text-foreground">Hidden</h3>
+          <Loader2 className="w-4 h-4 animate-spin text-proofound-forest" />
         </div>
-        <p className="text-xs text-[#6B6760]">Loading hidden matches…</p>
+        <p className="text-xs text-muted-foreground">Loading hidden matches…</p>
       </Card>
     );
   }
@@ -140,10 +140,10 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
     return (
       <Card variant="bento" className="p-4 border">
         <div className="flex items-center gap-2 mb-1">
-          <EyeOff className="w-4 h-4 text-[#6B6760]" />
-          <h3 className="text-sm font-medium text-[#2D3330]">Hidden</h3>
+          <EyeOff className="w-4 h-4 text-muted-foreground" />
+          <h3 className="text-sm font-medium text-foreground">Hidden</h3>
         </div>
-        <p className="text-xs text-[#6B6760]">No hidden matches right now.</p>
+        <p className="text-xs text-muted-foreground">No hidden matches right now.</p>
       </Card>
     );
   }
@@ -151,8 +151,8 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
   return (
     <Card variant="bento" className="p-4 border">
       <div className="flex items-center gap-2 mb-3">
-        <EyeOff className="w-4 h-4 text-[#6B6760]" />
-        <h3 className="text-sm font-medium text-[#2D3330]">Hidden</h3>
+        <EyeOff className="w-4 h-4 text-muted-foreground" />
+        <h3 className="text-sm font-medium text-foreground">Hidden</h3>
         <Badge className="text-xs" variant="secondary">
           {hidden.length}
         </Badge>
@@ -167,13 +167,15 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-[#2D3330] truncate">
+                <p className="text-sm font-medium text-foreground truncate">
                   {match.assignment.title || 'Opportunity'}
                 </p>
                 {match.organization?.name && (
-                  <p className="text-xs text-[#6B6760] truncate">{match.organization.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {match.organization.name}
+                  </p>
                 )}
-                <p className="text-xs text-[#6B6760]">
+                <p className="text-xs text-muted-foreground">
                   {match.assignment.locationMode || 'Flexible'}
                   {match.assignment.country ? ` • ${match.assignment.country}` : ''}
                 </p>
@@ -204,7 +206,7 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
               </Button>
               <a
                 href={`/app/i/matching/${match.assignmentId}`}
-                className="text-xs text-[#1C4D3A] hover:underline flex items-center gap-1"
+                className="text-xs text-proofound-forest hover:underline flex items-center gap-1"
               >
                 <Eye className="w-3 h-3" />
                 View

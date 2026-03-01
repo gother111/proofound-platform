@@ -56,8 +56,8 @@ export function ProofsSection({
     <div>
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="font-medium text-[#2D3330]">Proofs</h3>
-          <p className="text-sm text-[#6B6760]">
+          <h3 className="font-medium text-foreground">Proofs</h3>
+          <p className="text-sm text-muted-foreground">
             Add evidence to strengthen credibility ({proofs.length}/{MAX_PROOFS_PER_SKILL})
           </p>
         </div>
@@ -69,23 +69,23 @@ export function ProofsSection({
             setShowAddProof(!showAddProof);
           }}
           disabled={isProofLimitReached}
-          className="border-[#1C4D3A] text-[#1C4D3A] hover:bg-[#EEF1EA]"
+          className="border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5"
         >
           <Plus className="h-4 w-4 mr-1" />
           Add Proof
         </Button>
       </div>
       {isProofLimitReached && (
-        <p className="text-xs text-[#6B6760] mb-3">
+        <p className="text-xs text-muted-foreground mb-3">
           You have reached the maximum of {MAX_PROOFS_PER_SKILL} proofs for this skill.
         </p>
       )}
 
       {showAddProof && !isProofLimitReached && (
-        <Card className="p-4 mb-4 border-[#E5E3DA]">
+        <Card className="p-4 mb-4 border-proofound-stone">
           <div className="space-y-3">
             <div>
-              <Label htmlFor="proof-type" className="text-[#2D3330]">
+              <Label htmlFor="proof-type" className="text-foreground">
                 Type
               </Label>
               <select
@@ -97,7 +97,7 @@ export function ProofsSection({
                     proofType: e.target.value as ProofDraft['proofType'],
                   })
                 }
-                className="mt-1 w-full px-3 py-2 border border-[#E5E3DA] rounded-md"
+                className="mt-1 w-full px-3 py-2 border border-proofound-stone rounded-md"
               >
                 <option value="project">Project</option>
                 <option value="certification">Certification</option>
@@ -108,7 +108,7 @@ export function ProofsSection({
               </select>
             </div>
             <div>
-              <Label htmlFor="proof-title" className="text-[#2D3330]">
+              <Label htmlFor="proof-title" className="text-foreground">
                 Title
               </Label>
               <Input
@@ -119,12 +119,12 @@ export function ProofsSection({
                 onChange={(e) => setNewProof({ ...newProof, title: e.target.value })}
                 className="mt-1"
               />
-              <p className="text-xs text-[#6B6760] mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Provide a title or URL. If title is empty, we will derive one from the URL.
               </p>
             </div>
             <div>
-              <Label htmlFor="proof-url" className="text-[#2D3330]">
+              <Label htmlFor="proof-url" className="text-foreground">
                 URL {newProof.proofType === 'document' ? '(Optional)' : ''}
               </Label>
               <Input
@@ -138,7 +138,7 @@ export function ProofsSection({
             </div>
             {newProof.proofType === 'document' && (
               <div>
-                <Label htmlFor="proof-file" className="text-[#2D3330]">
+                <Label htmlFor="proof-file" className="text-foreground">
                   Upload Document
                 </Label>
                 <Input
@@ -148,23 +148,23 @@ export function ProofsSection({
                   onChange={(event) => onProofFileSelected(event.target.files?.[0] || null)}
                   className="mt-1"
                 />
-                <p className="text-xs text-[#6B6760] mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Accepted: {PROOF_ALLOWED_EXTENSIONS_LABEL}. Max size:{' '}
                   {MAX_PROOF_UPLOAD_SIZE_BYTES / (1024 * 1024)}MB.
                 </p>
                 {proofUploading && (
-                  <p className="text-xs text-[#6B6760] mt-1">Uploading document...</p>
+                  <p className="text-xs text-muted-foreground mt-1">Uploading document...</p>
                 )}
                 {proofUploadName && !proofUploading && (
-                  <p className="text-xs text-[#6B6760] mt-1">Uploaded: {proofUploadName}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Uploaded: {proofUploadName}</p>
                 )}
                 {proofUploadError && (
-                  <p className="text-xs text-[#C76B4A] mt-1">{proofUploadError}</p>
+                  <p className="text-xs text-proofound-terracotta mt-1">{proofUploadError}</p>
                 )}
               </div>
             )}
             <div>
-              <Label htmlFor="proof-date" className="text-[#2D3330]">
+              <Label htmlFor="proof-date" className="text-foreground">
                 Issued Date (Optional)
               </Label>
               <Input
@@ -176,7 +176,7 @@ export function ProofsSection({
               />
             </div>
             <div>
-              <Label htmlFor="proof-expires-date" className="text-[#2D3330]">
+              <Label htmlFor="proof-expires-date" className="text-foreground">
                 Expiration Date (Optional)
               </Label>
               <Input
@@ -187,12 +187,12 @@ export function ProofsSection({
                 onChange={(e) => setNewProof({ ...newProof, expiresDate: e.target.value })}
                 className="mt-1"
               />
-              <p className="text-xs text-[#6B6760] mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Leave empty for proofs that do not expire.
               </p>
             </div>
             <div>
-              <Label htmlFor="proof-description" className="text-[#2D3330]">
+              <Label htmlFor="proof-description" className="text-foreground">
                 Description (Optional)
               </Label>
               <Textarea
@@ -213,7 +213,7 @@ export function ProofsSection({
                   proofUploading ||
                   isProofLimitReached
                 }
-                className="bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
+                className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
               >
                 {addingProof ? (
                   <>
@@ -233,14 +233,14 @@ export function ProofsSection({
       )}
 
       {loadingProofs ? (
-        <div className="flex items-center justify-center gap-2 py-6 border border-dashed border-[#E5E3DA] rounded-lg">
-          <Loader2 className="h-5 w-5 animate-spin text-[#6B6760]" />
-          <p className="text-sm text-[#6B6760]">Loading proofs...</p>
+        <div className="flex items-center justify-center gap-2 py-6 border border-dashed border-proofound-stone rounded-lg">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Loading proofs...</p>
         </div>
       ) : proofs.length === 0 ? (
-        <div className="text-center py-6 border border-dashed border-[#E5E3DA] rounded-lg">
-          <FileText className="h-8 w-8 text-[#6B6760] mx-auto mb-2" />
-          <p className="text-sm text-[#6B6760]">
+        <div className="text-center py-6 border border-dashed border-proofound-stone rounded-lg">
+          <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">
             No proofs added yet. Add your first proof to boost credibility.
           </p>
           <div className="mt-4 grid grid-cols-1 gap-2 text-left">
@@ -255,10 +255,10 @@ export function ProofsSection({
                   }
                   router.push(action.actionUrl);
                 }}
-                className="rounded-lg border border-[#E8E6DD] bg-white px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
+                className="rounded-lg border border-proofound-stone bg-white px-3 py-2 hover:border-proofound-forest hover:bg-japandi-bg"
               >
-                <p className="text-sm font-medium text-[#2D3330]">{action.title}</p>
-                <p className="text-xs text-[#6B6760]">{action.description}</p>
+                <p className="text-sm font-medium text-foreground">{action.title}</p>
+                <p className="text-xs text-muted-foreground">{action.description}</p>
               </button>
             ))}
           </div>
@@ -266,7 +266,7 @@ export function ProofsSection({
       ) : (
         <div className="space-y-2">
           {proofs.map((proof) => (
-            <Card key={proof.id} className="p-3 border-[#E5E3DA]">
+            <Card key={proof.id} className="p-3 border-proofound-stone">
               {(() => {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
@@ -285,7 +285,7 @@ export function ProofsSection({
                         <Badge variant="outline" className="text-xs capitalize">
                           {proof.proof_type}
                         </Badge>
-                        <h4 className="font-medium text-[#2D3330]">{proof.title}</h4>
+                        <h4 className="font-medium text-foreground">{proof.title}</h4>
                         {isExpired && (
                           <Badge className="bg-[#FFF0F0] text-[#8B4A36] border border-[#F5D6CD]">
                             Expired
@@ -297,24 +297,24 @@ export function ProofsSection({
                           href={proof.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-[#1C4D3A] hover:underline"
+                          className="text-sm text-proofound-forest hover:underline"
                         >
                           {proof.url}
                         </a>
                       )}
                       {proof.file_path && (
-                        <p className="text-xs text-[#6B6760] mt-1">Document attached</p>
+                        <p className="text-xs text-muted-foreground mt-1">Document attached</p>
                       )}
                       {proof.description && (
-                        <p className="text-sm text-[#6B6760] mt-1">{proof.description}</p>
+                        <p className="text-sm text-muted-foreground mt-1">{proof.description}</p>
                       )}
                       {proof.issued_date && (
-                        <p className="text-xs text-[#6B6760] mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           Issued: {new Date(proof.issued_date).toLocaleDateString()}
                         </p>
                       )}
                       {proof.expires_date && (
-                        <p className="text-xs text-[#6B6760] mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           Expires: {new Date(proof.expires_date).toLocaleDateString()}
                         </p>
                       )}
@@ -324,7 +324,7 @@ export function ProofsSection({
                       size="sm"
                       onClick={() => onDeleteProof(proof.id)}
                       aria-label={`Remove proof ${proof.title}`}
-                      className="text-[#C76B4A] hover:text-[#8B4A36] hover:bg-[#FFF0F0]"
+                      className="text-proofound-terracotta hover:text-[#8B4A36] hover:bg-[#FFF0F0]"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

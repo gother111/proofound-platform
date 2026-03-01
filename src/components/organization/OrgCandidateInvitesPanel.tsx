@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -212,10 +213,34 @@ export function OrgCandidateInvitesPanel({ orgId }: OrgCandidateInvitesPanelProp
           <p className="text-sm text-neutral-dark-600">Loading invited candidates...</p>
         </Card>
       ) : filteredInvites.length === 0 ? (
-        <Card className="p-6">
-          <p className="text-sm text-neutral-dark-600">
-            No invited candidates found for the current filter.
-          </p>
+        <Card className="p-12 flex flex-col items-center justify-center text-center space-y-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center justify-center space-y-3"
+          >
+            <div className="relative w-12 h-12 flex items-center justify-center">
+              <svg
+                className="absolute inset-0 w-full h-full text-muted-foreground/30 animate-pulse"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 8v4" />
+                <path d="M12 16h.01" />
+              </svg>
+            </div>
+            <div className="space-y-1">
+              <p className="text-base font-medium">No candidates found</p>
+              <p className="text-sm text-muted-foreground">
+                There are no candidates matching the current filter.
+              </p>
+            </div>
+          </motion.div>
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-3">

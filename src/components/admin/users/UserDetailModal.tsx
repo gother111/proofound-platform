@@ -153,7 +153,7 @@ export function UserDetailModal({ user, open, onClose, onUserUpdated }: UserDeta
             <DialogTitle className="flex items-center gap-3">
               <Avatar className="h-12 w-12">
                 <AvatarImage src={user.avatarUrl || undefined} alt={user.displayName || 'User'} />
-                <AvatarFallback className="bg-[#1C4D3A] text-white">
+                <AvatarFallback className="bg-proofound-forest text-white">
                   {getInitials(user.displayName)}
                 </AvatarFallback>
               </Avatar>

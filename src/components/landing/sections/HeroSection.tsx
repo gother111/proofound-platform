@@ -85,7 +85,7 @@ export function HeroSection({
                   ? { duration: 0 }
                   : { duration: 1.4, ease: [0.22, 1, 0.36, 1], delay: 0.1 }
               }
-              className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-serif text-foreground leading-[0.95] tracking-tight mb-6"
+              className="text-h1 font-serif text-foreground leading-[0.95] tracking-tight mb-6 hanging-punctuation"
             >
               Proofound
             </motion.h1>
@@ -97,7 +97,7 @@ export function HeroSection({
                   ? { duration: 0 }
                   : { duration: 1.4, ease: [0.22, 1, 0.36, 1], delay: 0.25 }
               }
-              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-sans text-foreground leading-tight text-balance"
+              className="text-h3 font-sans text-foreground leading-tight text-balance"
             >
               Publish your public proof portfolio on day 1
             </motion.h2>
@@ -111,7 +111,7 @@ export function HeroSection({
                 ? { duration: 0 }
                 : { duration: 1.2, delay: 0.45, ease: [0.22, 1, 0.36, 1] }
             }
-            className="text-lg md:text-xl text-muted-foreground max-w-xl leading-relaxed font-sans"
+            className="text-body-lg text-muted-foreground max-w-xl leading-relaxed font-sans"
           >
             Get a clean, shareable portfolio link today. Then layer on matching, hiring, and
             collaboration workflows as you grow.

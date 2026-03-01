@@ -38,29 +38,122 @@ interface FieldConfig {
 
 const PROFILE_FIELDS: FieldConfig[] = [
   // Basic Info
-  { name: 'displayName', label: 'Display Name', description: 'Your public name', category: 'basic', defaultVisibility: 'public' },
-  { name: 'headline', label: 'Headline', description: 'Professional tagline', category: 'basic', defaultVisibility: 'public' },
-  { name: 'bio', label: 'Bio', description: 'About yourself', category: 'basic', defaultVisibility: 'public' },
-  { name: 'avatarUrl', label: 'Profile Photo', description: 'Your profile picture', category: 'basic', defaultVisibility: 'public' },
-  { name: 'location', label: 'Location', description: 'City/region', category: 'basic', defaultVisibility: 'network', sensitive: true },
-  
+  {
+    name: 'displayName',
+    label: 'Display Name',
+    description: 'Your public name',
+    category: 'basic',
+    defaultVisibility: 'public',
+  },
+  {
+    name: 'headline',
+    label: 'Headline',
+    description: 'Professional tagline',
+    category: 'basic',
+    defaultVisibility: 'public',
+  },
+  {
+    name: 'bio',
+    label: 'Bio',
+    description: 'About yourself',
+    category: 'basic',
+    defaultVisibility: 'public',
+  },
+  {
+    name: 'avatarUrl',
+    label: 'Profile Photo',
+    description: 'Your profile picture',
+    category: 'basic',
+    defaultVisibility: 'public',
+  },
+  {
+    name: 'location',
+    label: 'Location',
+    description: 'City/region',
+    category: 'basic',
+    defaultVisibility: 'network',
+    sensitive: true,
+  },
+
   // Contact Info
-  { name: 'workEmail', label: 'Work Email', description: 'Professional email address', category: 'contact', defaultVisibility: 'private', sensitive: true },
-  { name: 'linkedinProfileUrl', label: 'LinkedIn URL', description: 'Your LinkedIn profile', category: 'contact', defaultVisibility: 'network' },
-  
+  {
+    name: 'workEmail',
+    label: 'Work Email',
+    description: 'Professional email address',
+    category: 'contact',
+    defaultVisibility: 'private',
+    sensitive: true,
+  },
+  {
+    name: 'linkedinProfileUrl',
+    label: 'LinkedIn URL',
+    description: 'Your LinkedIn profile',
+    category: 'contact',
+    defaultVisibility: 'network',
+  },
+
   // Professional
-  { name: 'skills', label: 'Skills', description: 'Your skill set', category: 'professional', defaultVisibility: 'public' },
-  { name: 'mission', label: 'Mission', description: 'Your purpose statement', category: 'professional', defaultVisibility: 'public' },
-  { name: 'vision', label: 'Vision', description: 'Your aspirations', category: 'professional', defaultVisibility: 'public' },
-  { name: 'values', label: 'Values', description: 'Core values', category: 'professional', defaultVisibility: 'public' },
-  { name: 'causes', label: 'Causes', description: 'Causes you support', category: 'professional', defaultVisibility: 'public' },
-  
+  {
+    name: 'skills',
+    label: 'Skills',
+    description: 'Your skill set',
+    category: 'professional',
+    defaultVisibility: 'public',
+  },
+  {
+    name: 'mission',
+    label: 'Mission',
+    description: 'Your purpose statement',
+    category: 'professional',
+    defaultVisibility: 'public',
+  },
+  {
+    name: 'vision',
+    label: 'Vision',
+    description: 'Your aspirations',
+    category: 'professional',
+    defaultVisibility: 'public',
+  },
+  {
+    name: 'values',
+    label: 'Values',
+    description: 'Core values',
+    category: 'professional',
+    defaultVisibility: 'public',
+  },
+  {
+    name: 'causes',
+    label: 'Causes',
+    description: 'Causes you support',
+    category: 'professional',
+    defaultVisibility: 'public',
+  },
+
   // Sensitive
-  { name: 'workEmailOrgId', label: 'Organization Affiliation', description: 'Your current employer', category: 'sensitive', defaultVisibility: 'private', sensitive: true },
-  { name: 'verificationStatus', label: 'Verification Status', description: 'Identity verification state', category: 'sensitive', defaultVisibility: 'network', sensitive: true },
+  {
+    name: 'workEmailOrgId',
+    label: 'Organization Affiliation',
+    description: 'Your current employer',
+    category: 'sensitive',
+    defaultVisibility: 'private',
+    sensitive: true,
+  },
+  {
+    name: 'verificationStatus',
+    label: 'Verification Status',
+    description: 'Identity verification state',
+    category: 'sensitive',
+    defaultVisibility: 'network',
+    sensitive: true,
+  },
 ];
 
-const VISIBILITY_OPTIONS: Array<{ value: VisibilityLevel; label: string; description: string; icon: any }> = [
+const VISIBILITY_OPTIONS: Array<{
+  value: VisibilityLevel;
+  label: string;
+  description: string;
+  icon: any;
+}> = [
   { value: 'public', label: 'Public', description: 'Visible to everyone', icon: Globe },
   { value: 'network', label: 'Network', description: 'Visible to connections only', icon: Users },
   { value: 'private', label: 'Private', description: 'Visible to matched orgs', icon: Lock },
@@ -158,7 +251,11 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
     if (redactMode && PROFILE_FIELDS.find((f) => f.name === fieldName)?.sensitive) {
       return 'hidden';
     }
-    return fieldVisibility[fieldName] || PROFILE_FIELDS.find((f) => f.name === fieldName)?.defaultVisibility || 'network';
+    return (
+      fieldVisibility[fieldName] ||
+      PROFILE_FIELDS.find((f) => f.name === fieldName)?.defaultVisibility ||
+      'network'
+    );
   };
 
   const getVisibilityIcon = (level: VisibilityLevel) => {
@@ -166,13 +263,19 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
     return option ? <option.icon className="w-4 h-4" /> : <Eye className="w-4 h-4" />;
   };
 
-  const groupedFields = PROFILE_FIELDS.reduce((acc, field) => {
-    if (!acc[field.category]) acc[field.category] = [];
-    acc[field.category].push(field);
-    return acc;
-  }, {} as Record<string, FieldConfig[]>);
+  const groupedFields = PROFILE_FIELDS.reduce(
+    (acc, field) => {
+      if (!acc[field.category]) acc[field.category] = [];
+      acc[field.category].push(field);
+      return acc;
+    },
+    {} as Record<string, FieldConfig[]>
+  );
 
-  const isFieldVisible = (fieldName: string, audience: 'public' | 'network' | 'matched'): boolean => {
+  const isFieldVisible = (
+    fieldName: string,
+    audience: 'public' | 'network' | 'matched'
+  ): boolean => {
     const visibility = getFieldVisibility(fieldName);
     if (visibility === 'hidden') return false;
     if (visibility === 'public') return true;
@@ -182,7 +285,11 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
   };
 
   if (isLoading) {
-    return <Card className="p-6"><p className="text-center text-[#6B6760]">Loading privacy settings...</p></Card>;
+    return (
+      <Card className="p-6">
+        <p className="text-center text-muted-foreground">Loading privacy settings...</p>
+      </Card>
+    );
   }
 
   return (
@@ -195,11 +302,13 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
               <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground flex items-center gap-2">
                 <EyeOff className="w-5 h-5" />
                 Redact Mode
-                <Badge variant="secondary" className="ml-2 bg-[#D97706] text-white">Quick Hide</Badge>
+                <Badge variant="secondary" className="ml-2 bg-[#D97706] text-white">
+                  Quick Hide
+                </Badge>
               </CardTitle>
               <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground mt-2">
-                Instantly hide all sensitive information (location, email, org affiliation) with one toggle.
-                Perfect for when you need to share your profile publicly.
+                Instantly hide all sensitive information (location, email, org affiliation) with one
+                toggle. Perfect for when you need to share your profile publicly.
               </CardDescription>
             </div>
             <Switch
@@ -214,7 +323,8 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
             <div className="flex items-start gap-2 p-3 bg-[#FEF3C7] dark:bg-yellow-950/30 rounded-lg border border-[#FCD34D]">
               <AlertTriangle className="w-5 h-5 text-[#D97706] flex-shrink-0 mt-0.5" />
               <p className="text-sm text-[#92400E] dark:text-yellow-200">
-                <strong>Redact Mode Active:</strong> Sensitive fields are now hidden. You can still customize individual field visibility below.
+                <strong>Redact Mode Active:</strong> Sensitive fields are now hidden. You can still
+                customize individual field visibility below.
               </p>
             </div>
           </CardContent>
@@ -242,33 +352,36 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
             <TabsContent value="settings" className="space-y-6 mt-6">
               {Object.entries(groupedFields).map(([category, fields]) => (
                 <div key={category}>
-                  <h3 className="text-sm font-semibold text-[#2D3330] dark:text-foreground mb-3 capitalize">
+                  <h3 className="text-sm font-semibold text-foreground dark:text-foreground mb-3 capitalize">
                     {category} Information
                   </h3>
                   <div className="space-y-3">
                     {fields.map((field) => {
                       const visibility = getFieldVisibility(field.name);
                       const isRedacted = redactMode && field.sensitive;
-                      
+
                       return (
                         <div
                           key={field.name}
                           className={`flex items-center justify-between p-3 rounded-lg border ${
                             isRedacted
                               ? 'bg-[#FEF3C7] dark:bg-yellow-950/20 border-[#FCD34D]'
-                              : 'bg-white dark:bg-background border-[#E8E6DD] dark:border-border'
+                              : 'bg-white dark:bg-background border-proofound-stone dark:border-border'
                           }`}
                         >
                           <div className="flex-1">
                             <Label className="text-sm font-medium flex items-center gap-2">
                               {field.label}
                               {field.sensitive && (
-                                <Badge variant="outline" className="text-xs border-[#D97706] text-[#D97706]">
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs border-[#D97706] text-[#D97706]"
+                                >
                                   Sensitive
                                 </Badge>
                               )}
                             </Label>
-                            <p className="text-xs text-[#6B6760] dark:text-muted-foreground mt-1">
+                            <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">
                               {field.description}
                             </p>
                           </div>
@@ -294,7 +407,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
                                     <option.icon className="w-4 h-4 mt-0.5" />
                                     <div>
                                       <div className="font-medium">{option.label}</div>
-                                      <div className="text-xs text-[#6B6760]">
+                                      <div className="text-xs text-muted-foreground">
                                         {option.description}
                                       </div>
                                     </div>
@@ -320,7 +433,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
                     variant={activePreview === audience ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setActivePreview(audience)}
-                    className={activePreview === audience ? 'bg-[#1C4D3A] text-white' : ''}
+                    className={activePreview === audience ? 'bg-proofound-forest text-white' : ''}
                   >
                     {audience === 'public' && <Globe className="w-4 h-4 mr-2" />}
                     {audience === 'network' && <Users className="w-4 h-4 mr-2" />}
@@ -330,8 +443,8 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
                 ))}
               </div>
 
-              <div className="border border-[#E8E6DD] dark:border-border rounded-lg p-4 bg-[#F7F6F1] dark:bg-background/50">
-                <h4 className="text-sm font-semibold text-[#2D3330] dark:text-foreground mb-3">
+              <div className="border border-proofound-stone dark:border-border rounded-lg p-4 bg-japandi-bg dark:bg-background/50">
+                <h4 className="text-sm font-semibold text-foreground dark:text-foreground mb-3">
                   Visible to {activePreview} audience:
                 </h4>
                 <div className="space-y-2">
@@ -342,14 +455,14 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
                         key={field.name}
                         className={`flex items-center gap-2 text-sm ${
                           visible
-                            ? 'text-[#2D3330] dark:text-foreground'
-                            : 'text-[#6B6760] dark:text-muted-foreground line-through'
+                            ? 'text-foreground dark:text-foreground'
+                            : 'text-muted-foreground dark:text-muted-foreground line-through'
                         }`}
                       >
                         {visible ? (
                           <CheckCircle2 className="w-4 h-4 text-green-600" />
                         ) : (
-                          <EyeOff className="w-4 h-4 text-[#6B6760]" />
+                          <EyeOff className="w-4 h-4 text-muted-foreground" />
                         )}
                         {field.label}
                       </div>
@@ -367,15 +480,10 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
         <Button variant="outline" onClick={handleResetToDefaults}>
           Reset to Defaults
         </Button>
-        <Button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="bg-[#1C4D3A] text-white"
-        >
+        <Button onClick={handleSave} disabled={isSaving} className="bg-proofound-forest text-white">
           {isSaving ? 'Saving...' : 'Save Privacy Settings'}
         </Button>
       </div>
     </div>
   );
 }
-

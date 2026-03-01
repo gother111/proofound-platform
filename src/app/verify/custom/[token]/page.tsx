@@ -131,8 +131,8 @@ export default function VerifyCustomRequestPage() {
       <div className="min-h-screen bg-gradient-to-br from-[#F7F6F1] to-[#E5E3DA] flex items-center justify-center p-4">
         <Card className="w-full max-w-xl">
           <CardContent className="pt-12 pb-12 text-center">
-            <Loader2 className="h-12 w-12 animate-spin text-[#1C4D3A] mx-auto mb-4" />
-            <p className="text-[#6B6760]">Loading verification request...</p>
+            <Loader2 className="h-12 w-12 animate-spin text-proofound-forest mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading verification request...</p>
           </CardContent>
         </Card>
       </div>
@@ -144,9 +144,9 @@ export default function VerifyCustomRequestPage() {
       <div className="min-h-screen bg-gradient-to-br from-[#F7F6F1] to-[#E5E3DA] flex items-center justify-center p-4">
         <Card className="w-full max-w-xl">
           <CardContent className="pt-12 pb-12 text-center">
-            <AlertCircle className="h-12 w-12 text-[#C76B4A] mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-[#2D3330] mb-2">Unable to Load Request</h2>
-            <p className="text-[#6B6760] mb-6">{error}</p>
+            <AlertCircle className="h-12 w-12 text-proofound-terracotta mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-foreground mb-2">Unable to Load Request</h2>
+            <p className="text-muted-foreground mb-6">{error}</p>
             <Button variant="outline" onClick={() => router.push('/')}>
               Go to Homepage
             </Button>
@@ -190,8 +190,8 @@ export default function VerifyCustomRequestPage() {
         <Card className="w-full max-w-xl">
           <CardContent className={`pt-12 pb-12 text-center ${config.bgColor} rounded-lg`}>
             <Icon className={`h-16 w-16 ${config.color} mx-auto mb-4`} />
-            <h2 className="text-xl font-semibold text-[#2D3330] mb-2">{config.title}</h2>
-            <p className="text-[#6B6760]">{config.message}</p>
+            <h2 className="text-xl font-semibold text-foreground mb-2">{config.title}</h2>
+            <p className="text-muted-foreground">{config.message}</p>
           </CardContent>
         </Card>
       </div>
@@ -206,20 +206,20 @@ export default function VerifyCustomRequestPage() {
             {submittedAction === 'accepted' ? (
               <>
                 <CheckCircle2 className="h-16 w-16 text-green-600 mx-auto mb-4" />
-                <h2 className="text-2xl font-semibold text-[#2D3330] mb-2">Thank You!</h2>
-                <p className="text-[#6B6760] mb-4">
+                <h2 className="text-2xl font-semibold text-foreground mb-2">Thank You!</h2>
+                <p className="text-muted-foreground mb-4">
                   You've verified <strong>{data?.requester_name}</strong>'s selected profile
                   artifacts.
                 </p>
-                <p className="text-sm text-[#6B6760]">
+                <p className="text-sm text-muted-foreground">
                   Your response helps strengthen trust and credibility on Proofound.
                 </p>
               </>
             ) : (
               <>
-                <XCircle className="h-16 w-16 text-[#C76B4A] mx-auto mb-4" />
-                <h2 className="text-2xl font-semibold text-[#2D3330] mb-2">Response Recorded</h2>
-                <p className="text-[#6B6760]">
+                <XCircle className="h-16 w-16 text-proofound-terracotta mx-auto mb-4" />
+                <h2 className="text-2xl font-semibold text-foreground mb-2">Response Recorded</h2>
+                <p className="text-muted-foreground">
                   You've declined this verification request. The requester has been notified.
                 </p>
               </>
@@ -242,32 +242,32 @@ export default function VerifyCustomRequestPage() {
         </CardHeader>
 
         <CardContent className="pt-6 space-y-5">
-          <div className="flex items-center gap-4 p-4 bg-[#F7F6F1] rounded-lg">
-            <div className="h-12 w-12 rounded-full bg-[#1C4D3A] text-white flex items-center justify-center text-lg font-semibold">
+          <div className="flex items-center gap-4 p-4 bg-japandi-bg rounded-lg">
+            <div className="h-12 w-12 rounded-full bg-proofound-forest text-white flex items-center justify-center text-lg font-semibold">
               {data?.requester_name?.[0]?.toUpperCase() || '?'}
             </div>
             <div>
-              <p className="font-semibold text-[#2D3330]">{data?.requester_name}</p>
-              <p className="text-sm text-[#6B6760]">is requesting your verification</p>
+              <p className="font-semibold text-foreground">{data?.requester_name}</p>
+              <p className="text-sm text-muted-foreground">is requesting your verification</p>
             </div>
           </div>
 
           <div>
-            <p className="text-sm font-medium text-[#6B6760] mb-2">Your Relationship</p>
-            <Badge variant="outline" className="text-[#1C4D3A] border-[#1C4D3A]">
+            <p className="text-sm font-medium text-muted-foreground mb-2">Your Relationship</p>
+            <Badge variant="outline" className="text-proofound-forest border-proofound-forest">
               {relationshipDisplayLabel(data?.relationship || 'peer')}
             </Badge>
           </div>
 
           <div>
-            <p className="text-sm font-medium text-[#6B6760] mb-2">Artifacts to Verify</p>
+            <p className="text-sm font-medium text-muted-foreground mb-2">Artifacts to Verify</p>
             <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
               {data?.items?.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-md border border-[#E8E6DD] bg-white px-3 py-2 flex items-start justify-between gap-3"
+                  className="rounded-md border border-proofound-stone bg-white px-3 py-2 flex items-start justify-between gap-3"
                 >
-                  <p className="text-sm text-[#2D3330]">{item.display_label}</p>
+                  <p className="text-sm text-foreground">{item.display_label}</p>
                   <Badge variant="outline" className="text-xs whitespace-nowrap">
                     {artifactTypeLabel(item.artifact_type)}
                   </Badge>
@@ -278,17 +278,20 @@ export default function VerifyCustomRequestPage() {
 
           {data?.message && (
             <div>
-              <p className="text-sm font-medium text-[#6B6760] mb-2">
+              <p className="text-sm font-medium text-muted-foreground mb-2">
                 Message from {data.requester_name}
               </p>
-              <div className="p-3 bg-[#F7F6F1] rounded-lg italic text-[#2D3330]">
+              <div className="p-3 bg-japandi-bg rounded-lg italic text-foreground">
                 &ldquo;{data.message}&rdquo;
               </div>
             </div>
           )}
 
           <div>
-            <label htmlFor="custom-response-message" className="text-sm font-medium text-[#6B6760]">
+            <label
+              htmlFor="custom-response-message"
+              className="text-sm font-medium text-muted-foreground"
+            >
               Add a note (optional)
             </label>
             <Textarea
@@ -301,7 +304,7 @@ export default function VerifyCustomRequestPage() {
             />
           </div>
 
-          <p className="text-xs text-[#6B6760] text-center">
+          <p className="text-xs text-muted-foreground text-center">
             This request expires on {new Date(data?.expires_at || '').toLocaleDateString()}
           </p>
         </CardContent>
@@ -309,7 +312,7 @@ export default function VerifyCustomRequestPage() {
         <CardFooter className="flex gap-3 border-t pt-6">
           <Button
             variant="outline"
-            className="flex-1 border-[#C76B4A] text-[#C76B4A] hover:bg-[#FFF0F0]"
+            className="flex-1 border-[#C76B4A] text-proofound-terracotta hover:bg-[#FFF0F0]"
             onClick={() => handleSubmit('decline')}
             disabled={submitting}
           >
@@ -321,7 +324,7 @@ export default function VerifyCustomRequestPage() {
             Decline
           </Button>
           <Button
-            className="flex-1 bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
+            className="flex-1 bg-proofound-forest text-white hover:bg-proofound-forest/90"
             onClick={() => handleSubmit('accept')}
             disabled={submitting}
           >

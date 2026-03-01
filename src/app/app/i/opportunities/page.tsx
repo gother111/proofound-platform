@@ -118,7 +118,7 @@ export default function OpportunitiesPage() {
     return (
       <AppSurface>
         <div className="space-y-6">
-          <div className="h-8 w-48 bg-[#E8E6DD] dark:bg-[#2C3244] rounded animate-pulse" />
+          <div className="h-8 w-48 bg-proofound-stone dark:bg-[#2C3244] rounded animate-pulse" />
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="h-48 bg-gray-200 rounded-lg animate-pulse" />
@@ -134,8 +134,8 @@ export default function OpportunitiesPage() {
       <div className="space-y-6 max-w-5xl mx-auto">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-[#2D3330]">Opportunities</h1>
-          <p className="text-sm text-[#6B6760]">
+          <h1 className="text-2xl font-bold text-foreground">Opportunities</h1>
+          <p className="text-sm text-muted-foreground">
             Assignments matched to your profile based on skills, values, and practical fit
           </p>
         </div>
@@ -181,17 +181,17 @@ export default function OpportunitiesPage() {
         {/* Opportunities List */}
         {sortedOpportunities.length === 0 ? (
           <Card className="p-12 text-center space-y-4">
-            <Briefcase className="h-16 w-16 mx-auto text-[#6B6760] opacity-50" />
+            <Briefcase className="h-16 w-16 mx-auto text-muted-foreground opacity-50" />
             <div className="space-y-2">
-              <p className="text-lg font-medium text-[#2D3330]">No opportunities yet</p>
-              <p className="text-sm text-[#6B6760] max-w-md mx-auto">
+              <p className="text-lg font-medium text-foreground">No opportunities yet</p>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
                 Complete your profile and add your skills to get matched with relevant
                 opportunities.
               </p>
             </div>
             <Button
               onClick={() => (window.location.href = '/app/i/profile')}
-              className="bg-[#1C4D3A] hover:bg-[#2D5F4A]"
+              className="bg-proofound-forest hover:bg-proofound-forest/90"
             >
               Complete Profile
             </Button>
@@ -205,7 +205,7 @@ export default function OpportunitiesPage() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-xl font-semibold text-[#2D3330] truncate">
+                        <h3 className="text-xl font-semibold text-foreground truncate">
                           {opp.assignmentTitle}
                         </h3>
                         <Badge
@@ -221,7 +221,7 @@ export default function OpportunitiesPage() {
                           {opp.matchScore}% Match
                         </Badge>
                       </div>
-                      <p className="text-[#6B6760]">
+                      <p className="text-muted-foreground">
                         {opp.organizationMasked
                           ? 'Organization (revealed after introduction)'
                           : opp.organizationName}
@@ -236,7 +236,7 @@ export default function OpportunitiesPage() {
                   </div>
 
                   {/* Details */}
-                  <div className="flex flex-wrap gap-4 text-sm text-[#6B6760]">
+                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                     {opp.location && (
                       <div className="flex items-center gap-1">
                         <MapPin className="h-4 w-4" />
@@ -271,7 +271,7 @@ export default function OpportunitiesPage() {
                     <div>
                       <button
                         onClick={() => setExpandedId(expandedId === opp.id ? null : opp.id)}
-                        className="flex items-center gap-2 text-sm font-medium text-[#1C4D3A] hover:text-[#2D5F4A]"
+                        className="flex items-center gap-2 text-sm font-medium text-proofound-forest hover:text-[#2D5F4A]"
                       >
                         Why this match?
                         {expandedId === opp.id ? (
@@ -281,7 +281,7 @@ export default function OpportunitiesPage() {
                         )}
                       </button>
                       {expandedId === opp.id && (
-                        <p className="mt-2 text-sm text-[#6B6760] pl-4 border-l-2 border-[#7A9278]">
+                        <p className="mt-2 text-sm text-muted-foreground pl-4 border-l-2 border-[#7A9278]">
                           {opp.whyMatch}
                         </p>
                       )}
@@ -293,7 +293,7 @@ export default function OpportunitiesPage() {
                     <div className="flex items-center gap-3 pt-4 border-t">
                       <Button
                         onClick={() => handleAction(opp.id, 'interested')}
-                        className="flex-1 bg-[#1C4D3A] hover:bg-[#2D5F4A]"
+                        className="flex-1 bg-proofound-forest hover:bg-proofound-forest/90"
                       >
                         <ThumbsUp className="h-4 w-4 mr-2" />
                         Express Interest
@@ -313,7 +313,7 @@ export default function OpportunitiesPage() {
                     </div>
                   ) : (
                     <div className="pt-4 border-t">
-                      <Badge variant="outline" className="text-[#1C4D3A]">
+                      <Badge variant="outline" className="text-proofound-forest">
                         Status: {opp.status}
                       </Badge>
                     </div>

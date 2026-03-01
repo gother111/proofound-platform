@@ -263,7 +263,7 @@ export function ImpactTab({
                           href={artifact.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-[#1C4D3A] underline underline-offset-2"
+                          className="text-proofound-forest underline underline-offset-2"
                         >
                           {artifact.title}
                         </a>{' '}

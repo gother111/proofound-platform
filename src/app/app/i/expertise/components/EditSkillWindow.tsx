@@ -594,17 +594,17 @@ export function EditSkillWindow({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-semibold text-[#2D3330]">Edit Skill</DialogTitle>
-            <DialogDescription className="text-[#6B6760]">
+            <DialogTitle className="text-2xl font-semibold text-foreground">Edit Skill</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Update your skill details, add proofs, and request verification.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 py-4">
             <div>
-              <Label className="text-[#2D3330] font-medium">Skill</Label>
-              <div className="mt-2 p-3 bg-[#F7F6F1] rounded-md border border-[#E5E3DA]">
-                <p className="font-medium text-[#2D3330]">{skillName}</p>
+              <Label className="text-foreground font-medium">Skill</Label>
+              <div className="mt-2 p-3 bg-japandi-bg rounded-md border border-proofound-stone">
+                <p className="font-medium text-foreground">{skillName}</p>
                 {skill.taxonomy?.tags && skill.taxonomy.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-2">
                     {skill.taxonomy.tags.map((tag) => (
@@ -618,7 +618,7 @@ export function EditSkillWindow({
             </div>
 
             <div>
-              <Label className="text-[#2D3330] mb-3 block font-medium">Proficiency Level</Label>
+              <Label className="text-foreground mb-3 block font-medium">Proficiency Level</Label>
               <RadioGroup
                 value={level.toString()}
                 onValueChange={(val: string) => setLevel(parseInt(val, 10))}
@@ -626,15 +626,15 @@ export function EditSkillWindow({
                 {LEVEL_LABELS.map((entry) => (
                   <div
                     key={entry.value}
-                    className="flex items-center space-x-3 mb-2 p-3 rounded-lg border border-[#E5E3DA] hover:bg-[#F7F6F1] transition-colors"
+                    className="flex items-center space-x-3 mb-2 p-3 rounded-lg border border-proofound-stone hover:bg-japandi-bg transition-colors"
                   >
                     <RadioGroupItem
                       value={entry.value.toString()}
                       id={`edit-level-${entry.value}`}
                     />
                     <Label htmlFor={`edit-level-${entry.value}`} className="flex-1 cursor-pointer">
-                      <div className="font-medium text-[#2D3330]">{entry.label}</div>
-                      <div className="text-sm text-[#6B6760]">{entry.description}</div>
+                      <div className="font-medium text-foreground">{entry.label}</div>
+                      <div className="text-sm text-muted-foreground">{entry.description}</div>
                     </Label>
                   </div>
                 ))}
@@ -642,7 +642,7 @@ export function EditSkillWindow({
             </div>
 
             <div>
-              <Label htmlFor="edit-last-used" className="text-[#2D3330] font-medium">
+              <Label htmlFor="edit-last-used" className="text-foreground font-medium">
                 Last Used
               </Label>
               <Input
@@ -652,7 +652,9 @@ export function EditSkillWindow({
                 onChange={(e) => setLastUsedDate(e.target.value)}
                 className="mt-2"
               />
-              <p className="text-xs text-[#6B6760] mt-1">When did you last use this skill?</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                When did you last use this skill?
+              </p>
             </div>
 
             <Separator />
@@ -698,7 +700,7 @@ export function EditSkillWindow({
               <Button
                 variant="outline"
                 onClick={() => setShowDeleteConfirm(true)}
-                className="border-[#C76B4A] text-[#C76B4A] hover:bg-[#FFF0F0]"
+                className="border-[#C76B4A] text-proofound-terracotta hover:bg-[#FFF0F0]"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete Skill
@@ -710,7 +712,7 @@ export function EditSkillWindow({
                 <Button
                   onClick={handleSave}
                   disabled={saving}
-                  className="bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
+                  className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
                 >
                   {saving ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />

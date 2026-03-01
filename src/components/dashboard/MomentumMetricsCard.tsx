@@ -91,7 +91,7 @@ export function MomentumMetricsCard({ useMockData, initialData }: MomentumMetric
       <CardHeader className="flex flex-row items-start justify-between space-y-0">
         <div className="min-w-0 space-y-1">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Gauge className="h-5 w-5 text-[#1C4D3A]" />
+            <Gauge className="h-5 w-5 text-proofound-forest" />
             Momentum Metrics
           </CardTitle>
           <p className="text-sm text-muted-foreground">Core PRD metrics: TTFQI, TTV, TTSC.</p>
@@ -105,16 +105,16 @@ export function MomentumMetricsCard({ useMockData, initialData }: MomentumMetric
           {metrics.map((metric) => (
             <div
               key={metric.metric}
-              className="flex items-center justify-between rounded-lg border border-[#E8E6DD] px-3 py-2"
+              className="flex items-center justify-between rounded-lg border border-proofound-stone px-3 py-2"
             >
               <div>
-                <p className="text-sm font-medium text-[#2D3330]">{metric.metric}</p>
+                <p className="text-sm font-medium text-foreground">{metric.metric}</p>
                 <p className="text-xs text-muted-foreground">
                   Target ≤ {metric.target} {metric.unit}
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-lg font-semibold text-[#2D3330]">
+                <span className="text-lg font-semibold text-foreground">
                   {loading ? '—' : metric.value}
                   <span className="text-xs text-muted-foreground ml-1">{metric.unit}</span>
                 </span>
@@ -133,10 +133,10 @@ export function MomentumMetricsCard({ useMockData, initialData }: MomentumMetric
 
         <Link
           href="/app/i/home"
-          className="flex items-center justify-between rounded-lg border border-[#E8E6DD] px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1] text-sm"
+          className="flex items-center justify-between rounded-lg border border-proofound-stone px-3 py-2 hover:border-proofound-forest hover:bg-japandi-bg text-sm"
         >
-          <span className="text-[#2D3330]">View analytics dashboard</span>
-          <TrendingUp className="h-4 w-4 text-[#9B9891]" />
+          <span className="text-foreground">View analytics dashboard</span>
+          <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </Link>
 
         <p className="text-xs text-muted-foreground">
@@ -145,7 +145,7 @@ export function MomentumMetricsCard({ useMockData, initialData }: MomentumMetric
 
         <Link
           href="/app/i/home"
-          className="flex items-center justify-center gap-2 text-xs text-[#1C4D3A] font-medium hover:underline"
+          className="flex items-center justify-center gap-2 text-xs text-proofound-forest font-medium hover:underline"
         >
           Refresh metrics
           <ArrowRight className="h-3 w-3" />

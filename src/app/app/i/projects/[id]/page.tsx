@@ -104,8 +104,8 @@ export default function ProjectDetailPage() {
     return (
       <AppSurface>
         <div className="space-y-6 max-w-5xl mx-auto">
-          <div className="h-8 w-48 bg-[#E8E6DD] dark:bg-[#2C3244] rounded animate-pulse" />
-          <div className="h-64 bg-[#E8E6DD] dark:bg-[#2C3244] rounded-lg animate-pulse" />
+          <div className="h-8 w-48 bg-proofound-stone dark:bg-[#2C3244] rounded animate-pulse" />
+          <div className="h-64 bg-proofound-stone dark:bg-[#2C3244] rounded-lg animate-pulse" />
         </div>
       </AppSurface>
     );
@@ -115,7 +115,7 @@ export default function ProjectDetailPage() {
     return (
       <AppSurface>
         <div className="max-w-5xl mx-auto">
-          <p className="text-[#6B6760]">Project not found</p>
+          <p className="text-muted-foreground">Project not found</p>
         </div>
       </AppSurface>
     );
@@ -153,11 +153,13 @@ export default function ProjectDetailPage() {
             {/* Title and Status */}
             <div className="flex items-start justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-[#2D3330]">{project.title}</h1>
+                <h1 className="text-3xl font-bold text-foreground">{project.title}</h1>
                 {project.organization && (
-                  <p className="text-lg text-[#6B6760] mt-1">{project.organization}</p>
+                  <p className="text-lg text-muted-foreground mt-1">{project.organization}</p>
                 )}
-                {project.role && <p className="text-sm text-[#6B6760] mt-1">{project.role}</p>}
+                {project.role && (
+                  <p className="text-sm text-muted-foreground mt-1">{project.role}</p>
+                )}
               </div>
               <Badge variant="outline" className={STATUS_COLORS[project.status]}>
                 {project.status}
@@ -165,7 +167,7 @@ export default function ProjectDetailPage() {
             </div>
 
             {/* Date Range */}
-            <div className="flex items-center gap-2 text-[#6B6760]">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <span>
                 {format(new Date(project.startDate), 'MMMM yyyy')} -{' '}
                 {project.endDate ? format(new Date(project.endDate), 'MMMM yyyy') : 'Present'}
@@ -175,14 +177,14 @@ export default function ProjectDetailPage() {
             {/* Description */}
             {project.description && (
               <div className="prose max-w-none">
-                <h3 className="text-lg font-semibold text-[#2D3330] mb-2">Description</h3>
-                <p className="text-[#6B6760] whitespace-pre-wrap">{project.description}</p>
+                <h3 className="text-lg font-semibold text-foreground mb-2">Description</h3>
+                <p className="text-muted-foreground whitespace-pre-wrap">{project.description}</p>
               </div>
             )}
 
             {/* TODO: Add tabs for Skills, Outcomes, Artifacts, Verification */}
             <div className="pt-6 border-t">
-              <p className="text-sm text-[#6B6760]">
+              <p className="text-sm text-muted-foreground">
                 Skills, outcomes, and artifacts features coming soon. For now, you can edit the
                 basic project details.
               </p>

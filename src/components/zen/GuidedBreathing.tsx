@@ -109,7 +109,7 @@ export function GuidedBreathing() {
           }}
         />
         <div
-          className="absolute rounded-full bg-[#1C4D3A] shadow-lg transition-all [transition-duration:4000ms] ease-in-out flex items-center justify-center"
+          className="absolute rounded-full bg-proofound-forest shadow-lg transition-all [transition-duration:4000ms] ease-in-out flex items-center justify-center"
           style={{
             width: '40%',
             height: '40%',
@@ -126,12 +126,12 @@ export function GuidedBreathing() {
       </div>
 
       <div className="space-y-4">
-        <div className="text-2xl font-serif font-medium text-[#2D3330] dark:text-[#E8E6DD]">
+        <div className="text-2xl font-serif font-medium text-foreground dark:text-[#E8E6DD]">
           {isActive ? formatTime(timeLeft) : 'Box Breathing'}
         </div>
 
         {!isActive && (
-          <p className="text-sm text-[#6B6760] dark:text-[#C9C2B8] max-w-xs mx-auto">
+          <p className="text-sm text-muted-foreground dark:text-[#C9C2B8] max-w-xs mx-auto">
             4-4-4-4 pattern to calm the nervous system. Follow the circle's rhythm.
           </p>
         )}
@@ -141,7 +141,7 @@ export function GuidedBreathing() {
             <Button
               onClick={startSession}
               size="lg"
-              className="bg-[#1C4D3A] hover:bg-[#163E2F] text-white min-w-[140px]"
+              className="bg-proofound-forest hover:bg-proofound-forest/90 text-white min-w-[140px]"
             >
               <Play className="mr-2 h-4 w-4" /> Start
             </Button>
