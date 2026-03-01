@@ -75,7 +75,9 @@ export function ProfileHeroSection({
 
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <h1 className="text-3xl font-display font-semibold">{profile.basicInfo.name}</h1>
+                  <h1 className="text-3xl font-display font-semibold hidden sm:block">
+                    {profile.basicInfo.name}
+                  </h1>
                   <Button
                     variant="ghost"
                     size="sm"

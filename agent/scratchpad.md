@@ -2671,3 +2671,10 @@ Worked:
 - **Improvements next time**: Leveraging React Context for global UI overlays (like Spotlight) early simplifies props passing when triggers need to exist deep within page content.
 - **Commands run + outcomes**: `npm run typecheck` - passed and validated UI changes.
 - **Open TODOs / follow-ups**: Ensure all elements tracked by the spotlight onboarding tour adapt well under extreme resize conditions.
+
+### 2026-03-01T15:15:00Z - Audit Duplicate UI
+
+- **Task Summary**: Audited and removed duplicate UI components specifically the 'Customize' dashboard button from the global nav and the profile name on mobile layouts.
+- **What worked**: Removing TopBar clutter for context-specific dashboards, adjusting mobile responsive CSS for headers.
+- **Commands run**: `npm run lint`, `npm run typecheck`, E2E tests executing.
+- **Follow-ups**: Verify on smaller viewports manually.

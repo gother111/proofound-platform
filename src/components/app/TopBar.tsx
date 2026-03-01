@@ -14,7 +14,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { signOut } from '@/actions/auth';
-import { CustomizeModal } from '@/components/dashboard/CustomizeModal';
 import { Logo } from '@/components/brand/Logo';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { getRouteMeta } from '@/lib/ui/v2/routeMeta';
@@ -41,18 +40,11 @@ interface TopBarProps {
 }
 
 export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
-  const [customizeOpen, setCustomizeOpen] = useState(false);
   const pathname = usePathname();
   const isDashboardTab = pathname?.includes('/home') ?? false;
 
   // V2 Feature Flag
   const isV2 = process.env.NEXT_PUBLIC_UI_REFACTOR_V2 === 'true';
-
-  useEffect(() => {
-    if (!isDashboardTab && customizeOpen) {
-      setCustomizeOpen(false);
-    }
-  }, [isDashboardTab, customizeOpen]);
 
   // V2 uses the centralized metadata map, otherwise fallback to old hardcoded text
   const getPageTitle = () => {
@@ -123,25 +115,9 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
           </h1>
         </div>
 
-        {/* Right: Notification Bell + Customize + Avatar */}
+        {/* Right: Notification Bell + Avatar */}
         <div className="flex items-center gap-2 md:gap-3">
           <NotificationBell />
-          {isDashboardTab && (
-            /* Hide customize button on mobile for space */
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCustomizeOpen(true)}
-              className={cn(
-                'text-xs h-8 focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 hidden md:flex',
-                isV2
-                  ? 'border-proofound-stone/40 hover:bg-proofound-stone/20'
-                  : 'border-proofound-stone/60'
-              )}
-            >
-              Customize
-            </Button>
-          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
@@ -179,8 +155,6 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
           </DropdownMenu>
         </div>
       </header>
-
-      {isDashboardTab && <CustomizeModal open={customizeOpen} onOpenChange={setCustomizeOpen} />}
     </>
   );
 }
