@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const DEFAULT_PROXY_TIMEOUT_MS = 10000;
+const PROXY_UNAVAILABLE_CODE = 'CV_IMPORT_PROXY_UNAVAILABLE';
+type EndpointPath = '/wizard-suggest' | '/suggest';
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -39,13 +41,67 @@ function resolveContentType(request: NextRequest): string | null {
   return contentType && contentType.trim().length > 0 ? contentType : null;
 }
 
+function resolveGenericErrorLabel(endpointPath: EndpointPath): string {
+  return endpointPath === '/wizard-suggest'
+    ? 'Failed to process CV wizard suggestions'
+    : 'Failed to process CV documents';
+}
+
+function buildUnavailableResponse(
+  endpointPath: EndpointPath,
+  message: string,
+  status = 503
+): NextResponse {
+  return NextResponse.json(
+    {
+      error: resolveGenericErrorLabel(endpointPath),
+      message,
+      code: PROXY_UNAVAILABLE_CODE,
+    },
+    { status }
+  );
+}
+
+function hasCsrfFailure(payload: unknown): boolean {
+  if (!payload || typeof payload !== 'object') {
+    return false;
+  }
+
+  const record = payload as Record<string, unknown>;
+  const error = typeof record.error === 'string' ? record.error.toLowerCase() : '';
+  const message = typeof record.message === 'string' ? record.message.toLowerCase() : '';
+
+  return (
+    error.includes('csrf validation failed') ||
+    message.includes('invalid or missing csrf token') ||
+    message.includes('csrf')
+  );
+}
+
+function resolveTargetUrl(
+  request: NextRequest,
+  baseUrl: string,
+  endpointPath: EndpointPath
+): string {
+  const targetUrl = new URL('/api/python/cv_import', `${baseUrl}/`);
+  targetUrl.searchParams.set('endpoint', endpointPath.replace(/^\//, ''));
+
+  request.nextUrl.searchParams.forEach((value, key) => {
+    if (key !== 'endpoint') {
+      targetUrl.searchParams.append(key, value);
+    }
+  });
+
+  return targetUrl.toString();
+}
+
 export async function proxyCvRequestToPython(
   request: NextRequest,
-  endpointPath: '/wizard-suggest' | '/suggest',
+  endpointPath: EndpointPath,
   timeoutMs = DEFAULT_PROXY_TIMEOUT_MS
 ): Promise<NextResponse> {
   const baseUrl = resolveBaseUrl(request);
-  const targetUrl = `${baseUrl}/api/python/cv_import${endpointPath}${request.nextUrl.search}`;
+  const targetUrl = resolveTargetUrl(request, baseUrl, endpointPath);
 
   const bodyBuffer = await request.arrayBuffer();
   const contentType = resolveContentType(request);
@@ -56,6 +112,16 @@ export async function proxyCvRequestToPython(
 
   if (contentType) {
     headers['content-type'] = contentType;
+  }
+
+  const csrfToken = request.headers.get('x-csrf-token');
+  if (csrfToken && csrfToken.trim().length > 0) {
+    headers['x-csrf-token'] = csrfToken;
+  }
+
+  const cookieHeader = request.headers.get('cookie');
+  if (cookieHeader && cookieHeader.trim().length > 0) {
+    headers['cookie'] = cookieHeader;
   }
 
   const internalSecret = process.env.CV_IMPORT_PROXY_INTERNAL_SECRET?.trim();
@@ -76,28 +142,42 @@ export async function proxyCvRequestToPython(
   const rawText = await response.text();
 
   if (!rawText) {
-    return NextResponse.json(
-      {
-        error:
-          endpointPath === '/wizard-suggest'
-            ? 'Failed to process CV wizard suggestions'
-            : 'Failed to process CV documents',
-        message: 'Python CV service returned an empty response.',
-      },
-      { status: 502 }
+    return buildUnavailableResponse(
+      endpointPath,
+      'Python CV service returned an empty response.',
+      502
     );
   }
 
   try {
     const jsonPayload = JSON.parse(rawText);
+
+    if (response.status === 404) {
+      return buildUnavailableResponse(
+        endpointPath,
+        'Python CV service route is unavailable. Falling back is recommended.'
+      );
+    }
+
+    if (response.status === 403 && hasCsrfFailure(jsonPayload)) {
+      return buildUnavailableResponse(
+        endpointPath,
+        'Python CV service rejected internal CSRF context. Falling back is recommended.'
+      );
+    }
+
     return NextResponse.json(jsonPayload, { status: response.status });
   } catch {
+    if (response.status === 404 || response.status >= 500) {
+      return buildUnavailableResponse(
+        endpointPath,
+        'Python CV service returned a non-JSON error response. Falling back is recommended.'
+      );
+    }
+
     return NextResponse.json(
       {
-        error:
-          endpointPath === '/wizard-suggest'
-            ? 'Failed to process CV wizard suggestions'
-            : 'Failed to process CV documents',
+        error: resolveGenericErrorLabel(endpointPath),
         message: rawText,
       },
       { status: response.status >= 400 ? response.status : 502 }

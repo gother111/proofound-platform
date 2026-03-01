@@ -16,6 +16,7 @@ const DEFAULT_LIMITS: CvImportLimits = {
 };
 
 const DEFAULT_SERVER_TIMEOUT_MS = 6000;
+type CvImportEngineMode = 'auto' | 'typescript' | 'python';
 
 function parsePositiveInt(value: string | undefined, fallback: number): number {
   if (!value) {
@@ -46,6 +47,59 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   });
 }
 
+function resolveEngineMode(request: NextRequest): CvImportEngineMode {
+  const queryMode = request.nextUrl.searchParams.get('engine')?.trim().toLowerCase();
+  if (queryMode === 'python' || queryMode === 'typescript' || queryMode === 'auto') {
+    return queryMode;
+  }
+
+  const rawMode = process.env.CV_IMPORT_ENGINE_MODE?.trim().toLowerCase();
+  if (rawMode === 'python' || rawMode === 'typescript' || rawMode === 'auto') {
+    return rawMode;
+  }
+  return 'auto';
+}
+
+function shouldProxyToPython(contentType: string, mode: CvImportEngineMode): boolean {
+  if (contentType.startsWith('multipart/form-data')) {
+    return true;
+  }
+  if (mode === 'python') {
+    return true;
+  }
+  if (mode === 'typescript') {
+    return false;
+  }
+  return process.env.CV_IMPORT_FORCE_PYTHON === 'true';
+}
+
+async function attachEngineMetadata(
+  response: NextResponse,
+  mode: CvImportEngineMode,
+  engineUsed: 'python' | 'typescript'
+): Promise<NextResponse> {
+  try {
+    const payload = await response.json();
+    if (payload && typeof payload === 'object') {
+      const withMetadata = payload as Record<string, unknown>;
+      const existingMetadata =
+        withMetadata.metadata && typeof withMetadata.metadata === 'object'
+          ? (withMetadata.metadata as Record<string, unknown>)
+          : {};
+
+      withMetadata.metadata = {
+        ...existingMetadata,
+        engine_mode: mode,
+        engine_used: engineUsed,
+      };
+      return NextResponse.json(withMetadata, { status: response.status });
+    }
+  } catch {
+    // Preserve original response when body is not JSON.
+  }
+  return response;
+}
+
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const {
@@ -62,13 +116,13 @@ export async function POST(request: NextRequest) {
       DEFAULT_SERVER_TIMEOUT_MS
     );
     const contentType = request.headers.get('content-type') || '';
-    const shouldProxyToPython =
-      contentType.startsWith('multipart/form-data') ||
-      process.env.CV_IMPORT_FORCE_PYTHON === 'true';
+    const engineMode = resolveEngineMode(request);
+    const proxyToPython = shouldProxyToPython(contentType, engineMode);
 
-    if (shouldProxyToPython) {
+    if (proxyToPython) {
       try {
-        return await proxyCvRequestToPython(request, '/suggest', timeoutMs);
+        const response = await proxyCvRequestToPython(request, '/suggest', timeoutMs);
+        return await attachEngineMetadata(response, engineMode, 'python');
       } catch (error) {
         if (error instanceof Error && error.message.includes('timed out')) {
           return NextResponse.json(
@@ -117,7 +171,16 @@ export async function POST(request: NextRequest) {
       timeoutMs
     );
 
-    return NextResponse.json(response);
+    const responseWithEngine = {
+      ...response,
+      metadata: {
+        ...response.metadata,
+        engine_mode: engineMode,
+        engine_used: 'typescript' as const,
+      },
+    };
+
+    return NextResponse.json(responseWithEngine);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

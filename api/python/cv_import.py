@@ -421,3 +421,28 @@ async def suggest(request: Request):
             },
             status_code=500,
         )
+
+
+def _resolve_dispatch_endpoint(request: Request) -> str | None:
+    endpoint = request.query_params.get("endpoint", "").strip().lower()
+    if endpoint in {"wizard-suggest", "suggest"}:
+        return endpoint
+    return None
+
+
+@app.post("/")
+@app.post("/api/python/cv_import")
+async def dispatch_import(request: Request):
+    endpoint = _resolve_dispatch_endpoint(request)
+    if endpoint == "wizard-suggest":
+        return await wizard_suggest(request)
+    if endpoint == "suggest":
+        return await suggest(request)
+
+    return JSONResponse(
+        {
+            "error": "Invalid endpoint parameter",
+            "message": "Use endpoint=wizard-suggest or endpoint=suggest.",
+        },
+        status_code=400,
+    )

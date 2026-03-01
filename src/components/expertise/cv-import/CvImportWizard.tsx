@@ -5,6 +5,10 @@ import { Download, Search, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { apiFetch } from '@/lib/api/fetch';
+import {
+  extractPdfTextFromFile,
+  normalizePdfParseError,
+} from '@/lib/expertise/pdf-client-extractor';
 import { LANGUAGE_OPTIONS, CEFR_LEVELS } from '@/lib/taxonomy/data';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -189,6 +193,7 @@ const GENERIC_BACKEND_ERRORS = new Set([
   'Failed to process CV wizard suggestions',
   'Failed to process CV documents',
 ]);
+const PROXY_UNAVAILABLE_CODE = 'CV_IMPORT_PROXY_UNAVAILABLE';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -240,6 +245,62 @@ async function readErrorMessage(response: Response, fallback: string): Promise<s
   }
 
   return fallback;
+}
+
+function isClientFallbackEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_CV_IMPORT_CLIENT_FALLBACK_ENABLED !== 'false';
+}
+
+function isProxyUnavailableError(payload: unknown): boolean {
+  if (!isRecord(payload)) {
+    return false;
+  }
+
+  return payload.code === PROXY_UNAVAILABLE_CODE;
+}
+
+async function buildTypescriptFallbackPayload(documents: ParsedDocumentState[]): Promise<{
+  documents: Array<{
+    document_id: string;
+    file_name: string;
+    text: string;
+    context: 'cv';
+  }>;
+}> {
+  const fallbackDocuments: Array<{
+    document_id: string;
+    file_name: string;
+    text: string;
+    context: 'cv';
+  }> = [];
+
+  for (const document of documents) {
+    if (!document.file) {
+      continue;
+    }
+
+    try {
+      const text = await extractPdfTextFromFile(document.file);
+      if (!text) {
+        throw new Error('No text could be extracted. OCR is not supported in V1.');
+      }
+
+      fallbackDocuments.push({
+        document_id: document.document_id,
+        file_name: document.file_name,
+        text,
+        context: 'cv',
+      });
+    } catch (error) {
+      throw new Error(normalizePdfParseError(error));
+    }
+  }
+
+  if (fallbackDocuments.length === 0) {
+    throw new Error('Upload at least one PDF before analyzing.');
+  }
+
+  return { documents: fallbackDocuments };
 }
 
 function normalizeScore(value: unknown, fallback = 0): number {
@@ -735,7 +796,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     setIsAnalyzing(true);
 
     try {
-      const response = await apiFetch('/api/expertise/cv-import/wizard-suggest', {
+      let response = await apiFetch('/api/expertise/cv-import/wizard-suggest', {
         method: 'POST',
         body: (() => {
           const formData = new FormData();
@@ -748,6 +809,23 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
           return formData;
         })(),
       });
+
+      if (!response.ok && isClientFallbackEnabled()) {
+        const failurePayload = await readJsonSafely(response);
+
+        if (isProxyUnavailableError(failurePayload)) {
+          console.warn(
+            '[cv-import] wizard suggest proxy unavailable, retrying with typescript engine'
+          );
+
+          const fallbackPayload = await buildTypescriptFallbackPayload(readyDocuments);
+          response = await apiFetch('/api/expertise/cv-import/wizard-suggest?engine=typescript', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(fallbackPayload),
+          });
+        }
+      }
 
       if (!response.ok) {
         throw new Error(await readErrorMessage(response, 'Failed to analyze uploaded PDFs'));

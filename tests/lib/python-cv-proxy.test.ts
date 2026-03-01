@@ -1,0 +1,76 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { NextRequest } from 'next/server';
+
+import { proxyCvRequestToPython } from '@/lib/expertise/python-cv-proxy';
+
+describe('python-cv-proxy', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('builds endpoint query URL and forwards csrf context headers', async () => {
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+
+    const request = new NextRequest('http://localhost/api/expertise/cv-import/wizard-suggest?a=1', {
+      method: 'POST',
+      body: JSON.stringify({ documents: [] }),
+      headers: {
+        'content-type': 'application/json',
+        'x-csrf-token': 'csrf-token-value',
+        cookie: 'csrf_token=csrf-token-value; sb-auth-token=session-value',
+      },
+    });
+
+    const response = await proxyCvRequestToPython(request, '/wizard-suggest');
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+    const [targetUrl, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
+    const headers = init.headers as Record<string, string>;
+
+    expect(targetUrl).toContain('/api/python/cv_import?endpoint=wizard-suggest');
+    expect(targetUrl).toContain('a=1');
+    expect(headers['x-csrf-token']).toBe('csrf-token-value');
+    expect(headers.cookie).toContain('csrf_token=csrf-token-value');
+  });
+
+  it('maps python csrf 403 failures to proxy unavailable response', async () => {
+    vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          error: 'CSRF validation failed',
+          message: 'Invalid or missing CSRF token',
+        }),
+        {
+          status: 403,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+
+    const request = new NextRequest('http://localhost/api/expertise/cv-import/wizard-suggest', {
+      method: 'POST',
+      body: JSON.stringify({ documents: [] }),
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const response = await proxyCvRequestToPython(request, '/wizard-suggest');
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.error).toBe('Failed to process CV wizard suggestions');
+    expect(body.code).toBe('CV_IMPORT_PROXY_UNAVAILABLE');
+  });
+});
