@@ -144,7 +144,13 @@ def _validate_proxy_secret(request: Request) -> JSONResponse | None:
 async def _parse_multipart_documents(
     request: Request, *, default_context: str, limits: ImportLimits
 ) -> tuple[list[dict[str, str]], list[dict[str, Any]]]:
-    form = await request.form()
+    try:
+        form = await request.form()
+    except UnicodeDecodeError as exc:
+        raise ValueError(
+            "Upload metadata contains unsupported characters. Rename the PDF file using Latin letters/numbers and retry."
+        ) from exc
+
     files = form.getlist("files")
     document_ids = form.getlist("document_ids")
     contexts = form.getlist("contexts")

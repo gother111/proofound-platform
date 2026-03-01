@@ -341,6 +341,20 @@ function normalizeScore(value: unknown, fallback = 0): number {
   return Math.max(0, Math.min(1, value));
 }
 
+function sanitizeMultipartFilename(fileName: string): string {
+  const normalized = fileName.normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+  const [basePart, ...extParts] = normalized.split('.');
+  const ext = extParts.length > 0 ? `.${extParts.join('.')}` : '';
+  const safeBase = (basePart || 'upload')
+    .replace(/[^a-zA-Z0-9._-]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^[_\-.]+|[_\-.]+$/g, '')
+    .slice(0, 120);
+  const safeExt = ext.replace(/[^a-zA-Z0-9.]+/g, '').slice(0, 16);
+  const finalBase = safeBase.length > 0 ? safeBase : 'upload';
+  return `${finalBase}${safeExt || '.pdf'}`;
+}
+
 function normalizeMetadata(value: unknown): ApiMetadata {
   if (!isRecord(value)) {
     return DEFAULT_METADATA;
@@ -934,7 +948,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
           const formData = new FormData();
           for (const document of readyDocuments) {
             if (!document.file) continue;
-            formData.append('files', document.file, document.file_name);
+            formData.append('files', document.file, sanitizeMultipartFilename(document.file_name));
             formData.append('document_ids', document.document_id);
             formData.append('contexts', 'cv');
           }
