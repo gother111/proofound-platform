@@ -775,7 +775,7 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
     setIsAnalyzing(true);
 
     try {
-      const response = await apiFetch('/api/expertise/cv-import/suggest', {
+      const response = await apiFetch('/api/expertise/cv-import/suggest?engine=gemini', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

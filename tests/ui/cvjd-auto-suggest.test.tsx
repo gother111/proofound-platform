@@ -118,13 +118,13 @@ describe('CVJDAutoSuggest', () => {
 
     await waitFor(() => {
       expect(apiFetchMock).toHaveBeenCalledWith(
-        '/api/expertise/cv-import/wizard-suggest',
+        '/api/expertise/cv-import/wizard-suggest?engine=gemini',
         expect.objectContaining({ method: 'POST' })
       );
     });
 
     const suggestCall = apiFetchMock.mock.calls.find(
-      ([url]) => url === '/api/expertise/cv-import/wizard-suggest'
+      ([url]) => url === '/api/expertise/cv-import/wizard-suggest?engine=gemini'
     );
     expect(suggestCall).toBeDefined();
     const body = suggestCall?.[1]?.body;
@@ -179,13 +179,13 @@ describe('CVJDAutoSuggest', () => {
 
     await waitFor(() => {
       expect(apiFetchMock).toHaveBeenCalledWith(
-        '/api/expertise/cv-import/suggest',
+        '/api/expertise/cv-import/suggest?engine=gemini',
         expect.objectContaining({ method: 'POST' })
       );
     });
 
     const suggestCall = apiFetchMock.mock.calls.find(
-      ([url]) => url === '/api/expertise/cv-import/suggest'
+      ([url]) => url === '/api/expertise/cv-import/suggest?engine=gemini'
     );
     expect(suggestCall).toBeDefined();
 
@@ -239,13 +239,13 @@ describe('CVJDAutoSuggest', () => {
 
     await waitFor(() => {
       expect(apiFetchMock).toHaveBeenCalledWith(
-        '/api/expertise/cv-import/suggest',
+        '/api/expertise/cv-import/suggest?engine=gemini',
         expect.objectContaining({ method: 'POST' })
       );
     });
 
     const suggestCall = apiFetchMock.mock.calls.find(
-      ([url]) => url === '/api/expertise/cv-import/suggest'
+      ([url]) => url === '/api/expertise/cv-import/suggest?engine=gemini'
     );
     expect(suggestCall).toBeDefined();
 
