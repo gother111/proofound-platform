@@ -18,13 +18,9 @@ import {
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { MetricStrip } from '@/components/ui/v2/MetricStrip';
 import { StatTileModel } from '@/lib/ui/v2/types';
-import {
-  getIndGoalsData,
-  getIndSkillGapsData,
-  getIndProfileCompletenessData,
-  getIndInterviewsData,
-  getIndMomentumData,
-} from '@/lib/dashboard/indDataFetchers';
+import { Suspense } from 'react';
+import { SuspendedDashboardClient } from './SuspendedDashboardClient';
+import { WidgetGridSkeleton } from '@/components/dashboard/WidgetGridSkeleton';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,23 +44,7 @@ export default async function IndividualHomePage() {
     };
   }
 
-  // Fetch initial data for dashboard widgets
-  const [goalsData, skillGapsData, completenessData, interviewsData, momentumData] =
-    await Promise.all([
-      getIndGoalsData(user.id).catch(() => null),
-      getIndSkillGapsData(user.id).catch(() => null),
-      getIndProfileCompletenessData(user.id).catch(() => null),
-      getIndInterviewsData(user.id).catch(() => null),
-      getIndMomentumData(user.id).catch(() => null),
-    ]);
-
-  const initialWidgetData = {
-    goals: goalsData,
-    skillGaps: skillGapsData,
-    profileCompleteness: completenessData,
-    interviews: interviewsData,
-    momentum: momentumData,
-  };
+  // Data fetching for dashboard widgets is now handled by SuspendedDashboardClient
 
   const userName = user.displayName || user.handle || 'there';
   const firstName = userName.split(' ')[0];
@@ -189,7 +169,9 @@ export default async function IndividualHomePage() {
 
       <ReadinessSprintPanel />
 
-      <DashboardClient initialData={initialWidgetData} />
+      <Suspense fallback={<WidgetGridSkeleton />}>
+        <SuspendedDashboardClient userId={user.id} />
+      </Suspense>
     </AppSurface>
   );
 }

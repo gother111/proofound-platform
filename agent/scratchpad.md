@@ -2625,3 +2625,21 @@ Open TODOs / follow-ups:
 - Improvements next time: Further centralize typography header weights inside the theme provider rather than component-level explicit classes where applicable.
 - Commands run + outcomes: `npm run build && npm run lint` - verified perfectly without errors.
 - Open TODOs / follow-ups: Monitor user engagement on the new empty state Call-to-Actions.
+
+## 2026-02-28: Platform Redesign Phase 2
+
+- **Task**: Converted structural Modals into responsive Drawers (Dialog on Desktop, Drawer on Mobile) within Matching, Profiles, Settings, and Scheduling.
+- **What worked**: Standardizing the `useMediaQuery('(min-width: 768px)')` approach alongside Shadcn UI Dialogs and Vaul Drawers worked seamlessly for `SnoozeDialog`, `MatchExplainerModal`, `PACScoreExplainer`, and `MatchingOrganizationView`.
+- **What failed**: Occasional missing wrapper `<div>` imports or incorrect fragment tag pairings (`<></>`) resulted in brief compilation errors which were quickly fixed.
+- **Improvements next time**: Always extract repeating Modal headers and footers to constant variable arrow functions inside the component to deduplicate Desktop and Mobile JSX blocks.
+- **Outcome**: Phase 2 of the major UI modernization plan is marked complete.
+- **Open TODOs**: Proceed with Phase 3 (State Management & Server Component Migration).
+
+## 2026-03-01: Platform Redesign Phase 4
+
+- **Task**: Skeleton Redesign & Streaming UI for Dashboards.
+- **What worked**: Extracting the widget data fetching from the main `page.tsx` into asynchronous Server Component wrappers (`SuspendedDashboardClient` and `SuspendedOrgDashboardClient`) and wrapping them in `<Suspense>` boundaries.
+- **What failed**: Encountered minor linting issues due to unused imports left over from extracting the data fetching logic. These were quickly resolved using AST/regex-aware replacements.
+- **Improvements next time**: Always be mindful to clean up unused imports from the parent component when extracting logic into new child components.
+- **Outcome**: Phase 4 is complete. The dashboard UI now streams in, significantly improving perceived performance (TTFB and LCP).
+- **Open TODOs**: N/A

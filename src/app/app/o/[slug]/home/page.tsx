@@ -11,17 +11,11 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Briefcase, Users, Target, TrendingUp, ArrowRight, Building2 } from 'lucide-react';
-import { OrgDashboardClient } from './OrgDashboardClient';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
-import {
-  getOrgDashboardMetrics,
-  getOrgGoalsData,
-  getOrgProjectsData,
-  getOrgTeamData,
-  getOrgReadinessData,
-  getOrgMomentumData,
-  getOrgUpdatesData,
-} from '@/lib/dashboard/orgDataFetchers';
+import { Suspense } from 'react';
+import { WidgetGridSkeleton } from '@/components/dashboard/WidgetGridSkeleton';
+import { SuspendedOrgDashboardClient } from './SuspendedOrgDashboardClient';
+import { getOrgDashboardMetrics } from '@/lib/dashboard/orgDataFetchers';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,8 +34,8 @@ export default async function OrganizationHomePage({
 
   const { org, membership } = result;
 
-  // Fetch all dashboard data concurrently on the server
-  let dashboardData: any = {};
+  // Fetch dashboard metrics for the KPI grid immediately
+  let dashboardMetrics: any = null;
   let metrics = {
     activeAssignments: 0,
     totalMatches: 0,
@@ -50,42 +44,16 @@ export default async function OrganizationHomePage({
   };
 
   try {
-    const [
-      dashboardMetrics,
-      goalsData,
-      projectsData,
-      teamDataResult,
-      readinessData,
-      momentumData,
-      updatesData,
-    ] = await Promise.all([
-      getOrgDashboardMetrics(org.id, user.id),
-      getOrgGoalsData(org.id),
-      getOrgProjectsData(org.id),
-      getOrgTeamData(org.id),
-      getOrgReadinessData(org.id, user.id),
-      getOrgMomentumData(user.id, slug),
-      getOrgUpdatesData(user.id, slug),
-    ]);
-
-    dashboardData = {
-      pipeline: dashboardMetrics?.pipeline || null,
-      goals: goalsData,
-      projects: projectsData,
-      team: teamDataResult,
-      readiness: readinessData,
-      momentum: momentumData,
-      updates: updatesData,
-    };
+    dashboardMetrics = await getOrgDashboardMetrics(org.id, user.id);
 
     metrics = {
-      activeAssignments: dashboardData.pipeline?.openAssignments || 0,
-      totalMatches: dashboardData.pipeline?.matches?.totalMatches || 0,
-      teamMembers: dashboardData.team?.stats?.total || 0,
-      shortlists: dashboardData.pipeline?.shortlists || 0,
+      activeAssignments: dashboardMetrics?.pipeline?.openAssignments || 0,
+      totalMatches: dashboardMetrics?.pipeline?.matches?.totalMatches || 0,
+      teamMembers: 0, // Fetched inside SuspendedOrgDashboardClient
+      shortlists: dashboardMetrics?.pipeline?.shortlists || 0,
     };
   } catch (error) {
-    console.error('Failed to fetch org dashboard data:', error);
+    console.error('Failed to fetch org dashboard metrics:', error);
   }
 
   return (
@@ -184,12 +152,15 @@ export default async function OrganizationHomePage({
           </section>
 
           {/* Customizable Dashboard */}
-          <OrgDashboardClient
-            orgSlug={slug}
-            orgId={org.id}
-            userRole={membership.role}
-            initialData={dashboardData}
-          />
+          <Suspense fallback={<WidgetGridSkeleton />}>
+            <SuspendedOrgDashboardClient
+              orgId={org.id}
+              orgSlug={slug}
+              userId={user.id}
+              userRole={membership.role}
+              dashboardMetricsPipeline={dashboardMetrics?.pipeline || null}
+            />
+          </Suspense>
         </div>
       </div>
     </AppSurface>

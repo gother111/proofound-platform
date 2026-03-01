@@ -2361,3 +2361,10 @@ Open risks/TODO:
 - **Why**: To provide a more mobile-friendly, ergonomic bottom-sheet experience for users on small screens while retaining standard dialogues for desktop, aligning closely with modern UI paradigms.
 - **How to verify**: Resize viewport to <768px and trigger any of the matching/profile modals. Ensure they animate from the bottom as a Drawer.
 - **Open risks / TODO**: Phase 3 and 4 remain to migrate to Server Components/Actions and add streaming UI.
+
+### Phase 4: Skeleton Redesign & Streaming UI
+
+- **What changed**: Integrated React Suspense boundaries into the Individual and Organization Dashboard home pages (`/app/app/i/home/page.tsx` and `/app/app/o/[slug]/home/page.tsx`). Created `WidgetGridSkeleton` for loading states and `SuspendedDashboardClient` / `SuspendedOrgDashboardClient` to handle concurrent server-side data fetching for widgets.
+- **Why**: To prevent slow widget data queries (e.g. goals, projects, match readiness) from blocking the initial page render. This allows the Hero section and KPI strip to load instantly, while the widget grid streams in.
+- **How to verify**: Load the dashboard pages on a simulated slow network. The hero section should appear immediately, while the widget area shows a pulsing skeleton grid until data resolves.
+- **Open risks / TODO**: Ensure all widgets handle missing or null `initialData` gracefully if a fetch fails within the suspended boundaries.
