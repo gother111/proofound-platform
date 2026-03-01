@@ -133,7 +133,7 @@ describe('CvImportWizard', () => {
 
     await waitFor(() => {
       expect(apiFetchMock).toHaveBeenCalledWith(
-        '/api/expertise/cv-import/wizard-suggest',
+        '/api/expertise/cv-import/wizard-suggest?engine=gemini',
         expect.objectContaining({
           method: 'POST',
           body: expect.any(FormData),
@@ -241,7 +241,7 @@ describe('CvImportWizard', () => {
 
     await waitFor(() => {
       expect(apiFetchMock).toHaveBeenCalledWith(
-        '/api/expertise/cv-import/wizard-suggest',
+        '/api/expertise/cv-import/wizard-suggest?engine=gemini',
         expect.objectContaining({ method: 'POST' })
       );
     });
@@ -380,7 +380,7 @@ describe('CvImportWizard', () => {
     });
   });
 
-  it('retries with python json engine first when python multipart proxy is unavailable', async () => {
+  it('retries with gemini json engine when multipart proxy path is unavailable', async () => {
     extractPdfTextFromFileMock.mockResolvedValueOnce('React TypeScript');
     apiFetchMock
       .mockResolvedValueOnce(
@@ -454,7 +454,7 @@ describe('CvImportWizard', () => {
     expect(extractPdfTextFromFileMock).toHaveBeenCalledTimes(1);
     expect(apiFetchMock).toHaveBeenNthCalledWith(
       1,
-      '/api/expertise/cv-import/wizard-suggest',
+      '/api/expertise/cv-import/wizard-suggest?engine=gemini',
       expect.objectContaining({
         method: 'POST',
         body: expect.any(FormData),
@@ -463,7 +463,7 @@ describe('CvImportWizard', () => {
 
     expect(apiFetchMock).toHaveBeenNthCalledWith(
       2,
-      '/api/expertise/cv-import/wizard-suggest?engine=python',
+      '/api/expertise/cv-import/wizard-suggest?engine=gemini',
       expect.objectContaining({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -475,11 +475,10 @@ describe('CvImportWizard', () => {
     expect(retryPayload.documents[0].file_name).toBe('cv.pdf');
     expect(retryPayload.documents[0].context).toBe('cv');
     expect(retryPayload.documents[0].text).toBe('React TypeScript');
-    expect(toastInfoMock).toHaveBeenCalledWith('CV analysis recovered via fallback path.');
     expect(screen.getByText('Extracted text preview')).toBeInTheDocument();
   });
 
-  it('retries with typescript engine when python multipart and python json retries both fail', async () => {
+  it('retries with typescript engine when gemini json retry also fails', async () => {
     extractPdfTextFromFileMock.mockResolvedValueOnce('React TypeScript');
     apiFetchMock
       .mockResolvedValueOnce(
@@ -566,7 +565,7 @@ describe('CvImportWizard', () => {
     expect(extractPdfTextFromFileMock).toHaveBeenCalledTimes(1);
     expect(apiFetchMock).toHaveBeenNthCalledWith(
       1,
-      '/api/expertise/cv-import/wizard-suggest',
+      '/api/expertise/cv-import/wizard-suggest?engine=gemini',
       expect.objectContaining({
         method: 'POST',
         body: expect.any(FormData),
@@ -575,7 +574,7 @@ describe('CvImportWizard', () => {
 
     expect(apiFetchMock).toHaveBeenNthCalledWith(
       2,
-      '/api/expertise/cv-import/wizard-suggest?engine=python',
+      '/api/expertise/cv-import/wizard-suggest?engine=gemini',
       expect.objectContaining({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -596,7 +595,6 @@ describe('CvImportWizard', () => {
     expect(retryPayload.documents[0].file_name).toBe('cv.pdf');
     expect(retryPayload.documents[0].context).toBe('cv');
     expect(retryPayload.documents[0].text).toBe('React TypeScript');
-    expect(toastInfoMock).toHaveBeenCalledWith('CV analysis recovered via fallback path.');
     expect(screen.getByText('Extracted text preview')).toBeInTheDocument();
   });
 

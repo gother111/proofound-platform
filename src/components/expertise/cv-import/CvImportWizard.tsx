@@ -928,7 +928,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
 
     try {
       let fallbackStageUsed: ApiFallbackStage | null = null;
-      let response = await apiFetch('/api/expertise/cv-import/wizard-suggest', {
+      let response = await apiFetch('/api/expertise/cv-import/wizard-suggest?engine=gemini', {
         method: 'POST',
         body: (() => {
           const formData = new FormData();
@@ -947,12 +947,12 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
 
         if (isProxyRetryableError(failurePayload)) {
           console.warn(
-            '[cv-import] wizard suggest proxy retryable failure, retrying with json extraction payload'
+            '[cv-import] wizard suggest proxy retryable failure, retrying with gemini json payload'
           );
 
           const fallbackPayload = await buildTextFallbackPayload(readyDocuments);
 
-          response = await apiFetch('/api/expertise/cv-import/wizard-suggest?engine=python', {
+          response = await apiFetch('/api/expertise/cv-import/wizard-suggest?engine=gemini', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(fallbackPayload),
