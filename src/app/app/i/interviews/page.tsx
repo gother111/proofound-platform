@@ -10,10 +10,10 @@
 import { useState, useEffect } from 'react';
 import { Calendar, Clock, Video, ExternalLink, CalendarPlus, Download } from 'lucide-react';
 import { ScheduleInterviewButton } from '@/components/interviews/ScheduleInterviewButton';
-import { SkeletonCard } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { getInterviews as getInterviewsAction } from '@/app/actions/interviews';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
+import { CardListSkeleton, PageIntroSkeleton } from '@/components/skeletons/CoreLoadingPrimitives';
 import {
   buildGoogleCalendarUrl,
   downloadInterviewIcs,
@@ -86,16 +86,9 @@ export default function InterviewsPage() {
   if (isLoading) {
     return (
       <AppSurface>
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-8">
-            <div className="h-8 w-48 bg-proofound-stone dark:bg-[#2C3244] rounded animate-pulse mb-2" />
-            <div className="h-4 w-64 bg-proofound-stone dark:bg-[#2C3244] rounded animate-pulse" />
-          </div>
-          <div className="space-y-4">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
-          </div>
+        <div className="max-w-4xl mx-auto space-y-6">
+          <PageIntroSkeleton showAction={false} />
+          <CardListSkeleton count={3} />
         </div>
       </AppSurface>
     );

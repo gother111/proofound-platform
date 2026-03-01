@@ -38,6 +38,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { sanitizeLayout } from '@/lib/dashboard/layout';
+import { WidgetGridSkeleton } from '@/components/dashboard/WidgetGridSkeleton';
 
 interface OrgDashboardClientProps {
   orgSlug: string;
@@ -376,13 +377,7 @@ export function OrgDashboardClient({
   };
 
   if (loading) {
-    return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="animate-pulse bg-white rounded-lg h-64 border border-gray-200" />
-        ))}
-      </div>
-    );
+    return <WidgetGridSkeleton variant="organizationDashboard" />;
   }
 
   const visibleWidgets = layout.filter((w) => w.visible && widgetVisibility[w.widgetId] !== false);

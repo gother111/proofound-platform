@@ -54,6 +54,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { WidgetGridSkeleton } from './WidgetGridSkeleton';
 
 // Try to import dnd-kit packages, fallback to null if not installed
 let DndContext: any = null;
@@ -455,16 +456,7 @@ export function DraggableDashboard({
   };
 
   if (loading) {
-    return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div
-            key={i}
-            className="animate-pulse bg-white rounded-lg h-64 border border-gray-200"
-          ></div>
-        ))}
-      </div>
-    );
+    return <WidgetGridSkeleton variant="individualDashboard" />;
   }
 
   // Filter to only show visible widgets

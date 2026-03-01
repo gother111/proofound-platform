@@ -47,26 +47,44 @@ export function DashboardClient({ initialLayout, initialData }: DashboardClientP
   const { startTour } = useSpotlight();
 
   const handleStartTour = () => {
-    startTour([
+    const candidateSteps = [
       {
-        id: 'widget-profileCompleteness',
-        title: 'Profile Completeness',
+        id: 'widget-profile-activation',
+        title: 'Profile Activation',
         description:
-          'Track how complete your profile is. A complete profile gives you a better chance to match with top organizations.',
+          'Track your profile activation tier and complete the key requirements to unlock stronger matching.',
       },
       {
-        id: 'widget-skillGaps',
-        title: 'Skill Gaps & Opportunities',
+        id: 'widget-matching-readiness',
+        title: 'Matching Readiness',
         description:
-          'See the skills you are missing for roles you are interested in. Address these to improve your match rank.',
+          'Close priority skill and preference gaps to increase fit and improve your ranking.',
       },
       {
-        id: 'widget-momentum',
+        id: 'widget-momentum-metrics',
         title: 'Momentum',
         description:
           'Check your recent activity and progress. Keep the momentum going to stay visible!',
       },
-    ]);
+    ];
+
+    const availableSteps = candidateSteps.filter((step) => document.getElementById(step.id));
+    if (availableSteps.length > 0) {
+      startTour(availableSteps);
+      return;
+    }
+
+    // Fallback for customized layouts that hide the preferred widgets.
+    const fallbackTarget = document.getElementById('main-content');
+    if (fallbackTarget) {
+      startTour([
+        {
+          id: 'main-content',
+          title: 'Dashboard',
+          description: 'This is your personalized dashboard workspace.',
+        },
+      ]);
+    }
   };
 
   const handleErrorFallback = (_message: string) => {

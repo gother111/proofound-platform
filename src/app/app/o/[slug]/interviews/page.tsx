@@ -37,6 +37,7 @@ import {
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { getInterviews as getInterviewsAction } from '@/app/actions/interviews';
 import { toast } from 'sonner';
+import { CardListSkeleton, PageIntroSkeleton } from '@/components/skeletons/CoreLoadingPrimitives';
 
 export const dynamic = 'force-dynamic';
 
@@ -227,11 +228,9 @@ export default function OrganizationInterviewsPage() {
   if (isLoading) {
     return (
       <AppSurface>
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-semibold mb-6" style={{ color: '#2D3330' }}>
-            Interviews
-          </h1>
-          <p className="text-gray-600">Loading...</p>
+        <div className="max-w-4xl mx-auto space-y-6">
+          <PageIntroSkeleton showAction={false} />
+          <CardListSkeleton count={3} />
         </div>
       </AppSurface>
     );

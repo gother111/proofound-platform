@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { ProjectForm } from '@/components/profile/forms/ProjectForm';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { format } from 'date-fns';
+import { CardListSkeleton, PageIntroSkeleton } from '@/components/skeletons/CoreLoadingPrimitives';
 
 export const dynamic = 'force-dynamic';
 
@@ -104,8 +105,8 @@ export default function ProjectDetailPage() {
     return (
       <AppSurface>
         <div className="space-y-6 max-w-5xl mx-auto">
-          <div className="h-8 w-48 bg-proofound-stone dark:bg-[#2C3244] rounded animate-pulse" />
-          <div className="h-64 bg-proofound-stone dark:bg-[#2C3244] rounded-lg animate-pulse" />
+          <PageIntroSkeleton showAction={false} />
+          <CardListSkeleton count={1} />
         </div>
       </AppSurface>
     );

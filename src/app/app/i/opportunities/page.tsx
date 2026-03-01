@@ -31,6 +31,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { CardListSkeleton, PageIntroSkeleton } from '@/components/skeletons/CoreLoadingPrimitives';
 
 export const dynamic = 'force-dynamic';
 
@@ -117,13 +118,9 @@ export default function OpportunitiesPage() {
   if (isLoading) {
     return (
       <AppSurface>
-        <div className="space-y-6">
-          <div className="h-8 w-48 bg-proofound-stone dark:bg-[#2C3244] rounded animate-pulse" />
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-48 bg-gray-200 rounded-lg animate-pulse" />
-            ))}
-          </div>
+        <div className="space-y-6 max-w-5xl mx-auto">
+          <PageIntroSkeleton showAction={false} />
+          <CardListSkeleton count={3} />
         </div>
       </AppSurface>
     );

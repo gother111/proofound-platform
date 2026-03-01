@@ -39,6 +39,10 @@ import { MailPlus, Plus, Settings } from 'lucide-react';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { apiFetch } from '@/lib/api/fetch';
 import { getOrganizationRecoveryActions } from '@/lib/ui/recovery-actions';
+import {
+  CardGridSkeleton,
+  CenteredStatusSkeleton,
+} from '@/components/skeletons/CoreLoadingPrimitives';
 
 interface Assignment {
   id: string;
@@ -453,9 +457,11 @@ export function MatchingOrganizationView({
             </div>
 
             {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <p>Loading matches...</p>
-              </div>
+              <CardGridSkeleton
+                count={4}
+                columnsClassName="grid grid-cols-1 md:grid-cols-2 gap-4"
+                tileClassName="min-h-[220px]"
+              />
             ) : matches.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-lg mb-2" style={{ color: '#2D3330' }}>
@@ -523,7 +529,7 @@ export function MatchingOrganizationView({
 
           {isTestMatchesLoading ? (
             <Card className="p-4">
-              <p className="text-sm text-muted-foreground">Loading test matches...</p>
+              <CenteredStatusSkeleton containerClassName="min-h-[80px]" />
             </Card>
           ) : testMatches.length === 0 ? (
             <Card className="p-4">

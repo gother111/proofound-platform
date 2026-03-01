@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { cn } from '@/lib/utils';
+import { CardListSkeleton } from '@/components/skeletons/CoreLoadingPrimitives';
 
 export const dynamic = 'force-dynamic';
 
@@ -151,9 +152,7 @@ export default function NotificationsPage() {
 
         {/* Notifications List */}
         {isLoading && offset === 0 ? (
-          <div className="flex items-center justify-center h-64">
-            <p className="text-muted-foreground">Loading notifications...</p>
-          </div>
+          <CardListSkeleton count={4} itemClassName="p-4" />
         ) : notifications.length === 0 ? (
           <Card className="p-12">
             <div className="flex flex-col items-center justify-center text-center">

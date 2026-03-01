@@ -6,10 +6,14 @@ import { IndividualMatchingEmpty } from '@/components/matching/IndividualMatchin
 import { MatchingProfileSetup } from '@/components/matching/MatchingProfileSetup';
 import { MatchResultCard } from '@/components/matching/MatchResultCard';
 import { EnhancedMatchFilters } from '@/components/matching/EnhancedMatchFilters';
-import { SkeletonCard } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { SnoozedMatchesList } from '@/components/matching/SnoozedMatchesList';
 import { HiddenMatchesList } from '@/components/matching/HiddenMatchesList';
+import {
+  CardGridSkeleton,
+  CenteredStatusSkeleton,
+  PageIntroSkeleton,
+} from '@/components/skeletons/CoreLoadingPrimitives';
 
 export const dynamic = 'force-dynamic';
 
@@ -314,7 +318,7 @@ export default function MatchingPage() {
         <h2 className="text-lg font-semibold text-foreground dark:text-[#E8DCC4]">Test matches</h2>
         {isTestMatchesLoading ? (
           <div className="rounded-lg border border-proofound-stone bg-white px-4 py-3">
-            <p className="text-sm text-muted-foreground">Loading test matches...</p>
+            <CenteredStatusSkeleton containerClassName="min-h-[64px]" />
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -359,14 +363,13 @@ export default function MatchingPage() {
     return (
       <div className="max-w-5xl mx-auto px-4 py-6">
         <div className="mb-6">
-          <div className="h-8 w-48 bg-proofound-stone dark:bg-[#2C3244] rounded animate-pulse mb-2" />
-          <div className="h-4 w-64 bg-proofound-stone dark:bg-[#2C3244] rounded animate-pulse" />
+          <PageIntroSkeleton showAction={false} />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <SkeletonCard key={i} />
-          ))}
-        </div>
+        <CardGridSkeleton
+          count={6}
+          columnsClassName="grid grid-cols-1 md:grid-cols-2 gap-4"
+          tileClassName="min-h-[220px]"
+        />
       </div>
     );
   }

@@ -152,7 +152,7 @@ export default async function OrganizationHomePage({
           </section>
 
           {/* Customizable Dashboard */}
-          <Suspense fallback={<WidgetGridSkeleton />}>
+          <Suspense fallback={<WidgetGridSkeleton variant="organizationDashboard" />}>
             <SuspendedOrgDashboardClient
               orgId={org.id}
               orgSlug={slug}

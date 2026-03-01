@@ -169,7 +169,7 @@ export default async function IndividualHomePage() {
 
       <ReadinessSprintPanel />
 
-      <Suspense fallback={<WidgetGridSkeleton />}>
+      <Suspense fallback={<WidgetGridSkeleton variant="individualDashboard" />}>
         <SuspendedDashboardClient userId={user.id} />
       </Suspense>
     </AppSurface>

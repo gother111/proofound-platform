@@ -39,6 +39,7 @@ import {
 import { ProjectForm } from '@/components/profile/forms/ProjectForm';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { CardGridSkeleton, PageIntroSkeleton } from '@/components/skeletons/CoreLoadingPrimitives';
 
 export const dynamic = 'force-dynamic';
 
@@ -130,13 +131,9 @@ export default function ProjectsPage() {
   if (isLoading) {
     return (
       <AppSurface>
-        <div className="space-y-6">
-          <div className="h-8 w-48 bg-proofound-stone dark:bg-[#2C3244] rounded animate-pulse" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-48 bg-gray-200 rounded-lg animate-pulse" />
-            ))}
-          </div>
+        <div className="space-y-6 max-w-5xl mx-auto">
+          <PageIntroSkeleton />
+          <CardGridSkeleton count={3} tileClassName="min-h-[220px]" />
         </div>
       </AppSurface>
     );
