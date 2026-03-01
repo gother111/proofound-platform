@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const DEFAULT_PROXY_TIMEOUT_MS = 10000;
 const PROXY_UNAVAILABLE_CODE = 'CV_IMPORT_PROXY_UNAVAILABLE';
 const PROXY_TIMEOUT_CODE = 'CV_IMPORT_PROXY_TIMEOUT';
-type EndpointPath = '/wizard-suggest' | '/suggest';
+type EndpointPath = '/wizard-suggest' | '/suggest' | '/extract';
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -43,6 +43,9 @@ function resolveContentType(request: NextRequest): string | null {
 }
 
 function resolveGenericErrorLabel(endpointPath: EndpointPath): string {
+  if (endpointPath === '/extract') {
+    return 'Failed to extract CV text';
+  }
   return endpointPath === '/wizard-suggest'
     ? 'Failed to process CV wizard suggestions'
     : 'Failed to process CV documents';
@@ -105,14 +108,15 @@ export async function proxyCvRequestToPython(
   const baseUrl = resolveBaseUrl(request);
   const targetUrl = resolveTargetUrl(request, baseUrl, endpointPath);
 
-  const bodyBuffer = await request.arrayBuffer();
   const contentType = resolveContentType(request);
+  const isMultipart = Boolean(contentType?.startsWith('multipart/form-data'));
+  const body: BodyInit | null = isMultipart ? request.body : await request.arrayBuffer();
 
   const headers: Record<string, string> = {
     accept: 'application/json',
   };
 
-  if (contentType) {
+  if (contentType && !isMultipart) {
     headers['content-type'] = contentType;
   }
 
@@ -133,15 +137,18 @@ export async function proxyCvRequestToPython(
 
   let response: Response;
   try {
-    response = await withTimeout(
-      fetch(targetUrl, {
-        method: 'POST',
-        headers,
-        body: bodyBuffer,
-        cache: 'no-store',
-      }),
-      timeoutMs
-    );
+    const fetchInit: RequestInit & { duplex?: 'half' } = {
+      method: 'POST',
+      headers,
+      body: body ?? undefined,
+      cache: 'no-store',
+    };
+
+    if (isMultipart && body) {
+      fetchInit.duplex = 'half';
+    }
+
+    response = await withTimeout(fetch(targetUrl, fetchInit), timeoutMs);
   } catch (error) {
     if (error instanceof Error && error.message.includes('timed out')) {
       return buildUnavailableResponse(

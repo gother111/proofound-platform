@@ -17,6 +17,31 @@ SKILLS_HEADING_RE = re.compile(
 SECTION_HEADING_RE = re.compile(r"^[A-Za-z][A-Za-z\s/&-]{2,60}:?$")
 
 SPLIT_RE = re.compile(r"\s*(?:,|;|\||/|\\u2022|\u2022|\band\b|\bor\b)\s*", re.IGNORECASE)
+DATE_LIKE_RE = re.compile(
+    r"\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)?\s*\d{4}\b|(?:\b\d{4}\s*[-–]\s*(?:present|current|\d{4}))|(?:\d+\s*(?:years?|months?))",
+    re.IGNORECASE,
+)
+VERB_HEAVY_RE = re.compile(
+    r"\b(built|designed|led|delivered|implemented|optimized|coordinated|improved|managed)\b",
+    re.IGNORECASE,
+)
+STOP_SECTION_HEADINGS = {
+    "summary",
+    "profile",
+    "experience",
+    "work experience",
+    "professional experience",
+    "employment",
+    "projects",
+    "project highlights",
+    "education",
+    "certifications",
+    "languages",
+    "achievements",
+    "publications",
+    "volunteering",
+    "references",
+}
 
 STOPWORDS = {
     "the",
@@ -126,6 +151,15 @@ def _is_valid_candidate(value: str) -> bool:
     if len(normalized) <= 1:
         return False
 
+    if DATE_LIKE_RE.search(value):
+        return False
+
+    if len(tokens) > 4 and VERB_HEAVY_RE.search(normalized):
+        return False
+
+    if len(tokens) == 1 and tokens[0] in {"ci", "cd"}:
+        return False
+
     return True
 
 
@@ -188,6 +222,10 @@ def _extract_skill_section_lines(lines: list[str]) -> list[str]:
                     continue
 
                 if SECTION_HEADING_RE.match(candidate) and not SKILLS_HEADING_RE.search(candidate):
+                    break
+
+                normalized_heading = normalize_token(candidate.rstrip(":"))
+                if normalized_heading in STOP_SECTION_HEADINGS:
                     break
 
                 section_lines.append(candidate)

@@ -151,6 +151,9 @@ export const CvImportDocumentResultSchema = z.object({
   document_id: z.string(),
   file_name: z.string(),
   context: CvImportContextSchema,
+  parsed_text: z.string().default(''),
+  parse_error: z.string().optional().nullable(),
+  parse_error_code: z.string().optional().nullable(),
   candidate_count: z.number().int().min(0),
   candidates: z.array(CvImportCandidateSchema),
 });
@@ -160,15 +163,36 @@ export const CvImportSuggestResponseSchema = z.object({
   metadata: z.object({
     semantic_used: z.boolean(),
     semantic_fallback_triggered: z.boolean(),
+    fallback_stage: z
+      .enum([
+        'none',
+        'python_multipart_failed',
+        'python_json_retry',
+        'typescript_retry',
+        'candidate_only',
+      ])
+      .optional(),
+    candidate_only_fallback_triggered: z.boolean().optional(),
+    match_dependency_error_code: z.string().optional(),
     unmapped_candidates_count: z.number().int().min(0),
     limits: z.object({
       max_documents: z.number().int().positive(),
       max_chars_per_document: z.number().int().positive(),
       max_total_chars: z.number().int().positive(),
     }),
+    ai_provider: z.literal('gemini').optional(),
+    ai_model: z.string().optional().nullable(),
+    ai_key_slot: z.enum(['primary', 'secondary']).optional().nullable(),
+    ai_fallback_reason: z.string().optional().nullable(),
+    cost_ore: z.number().int().min(0).optional(),
+    currency: z.literal('SEK').optional(),
+    idempotency_key: z.string().optional(),
+    engine_mode: z.enum(['auto', 'typescript', 'python', 'gemini']).optional(),
+    engine_used: z.enum(['python', 'typescript', 'gemini']).optional(),
   }),
 });
 
+export type CvImportContext = z.infer<typeof CvImportContextSchema>;
 export type CvImportSuggestRequest = z.infer<typeof CvImportSuggestRequestSchema>;
 export type CvImportSuggestResponse = z.infer<typeof CvImportSuggestResponseSchema>;
 export type CvImportCandidate = z.infer<typeof CvImportCandidateSchema>;
@@ -191,6 +215,7 @@ interface SuggestionOptions {
 interface SuggestionRuntimeState {
   semanticUsed: boolean;
   semanticFallbackTriggered: boolean;
+  matchDependencyErrorCode?: string;
   candidateEmbeddings: Map<string, number[]>;
 }
 
@@ -204,6 +229,8 @@ interface TaxonomySkill {
 
 interface TaxonomyCache {
   loadedAt: number;
+  semanticCapable: boolean;
+  matchDependencyErrorCode?: string;
   skills: TaxonomySkill[];
   byName: Map<string, TaxonomySkill[]>;
   byAlias: Map<string, TaxonomySkill[]>;
@@ -540,9 +567,43 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMessage: st
   });
 }
 
-async function loadTaxonomy(): Promise<TaxonomyCache> {
-  if (taxonomyCache && Date.now() - taxonomyCache.loadedAt < TAXONOMY_CACHE_TTL_MS) {
-    return taxonomyCache;
+function isEmbeddingDependencyError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const message = error.message.toLowerCase();
+  const indicators = [
+    'embedding',
+    'vector',
+    'pgvector',
+    'operator does not exist',
+    'undefined function',
+    'column',
+    'does not exist',
+  ];
+
+  return indicators.some((indicator) => message.includes(indicator));
+}
+
+async function queryTaxonomyRows(includeEmbedding: boolean) {
+  if (includeEmbedding) {
+    const rows = await db
+      .select({
+        code: skillsTaxonomy.code,
+        nameI18n: skillsTaxonomy.nameI18n,
+        aliasesI18n: skillsTaxonomy.aliasesI18n,
+        embedding: skillsTaxonomy.embedding,
+      })
+      .from(skillsTaxonomy)
+      .where(and(eq(skillsTaxonomy.status, 'active')));
+
+    return rows.map((row) => ({
+      code: row.code,
+      nameI18n: row.nameI18n,
+      aliasesI18n: row.aliasesI18n,
+      embedding: row.embedding,
+    }));
   }
 
   const rows = await db
@@ -550,10 +611,43 @@ async function loadTaxonomy(): Promise<TaxonomyCache> {
       code: skillsTaxonomy.code,
       nameI18n: skillsTaxonomy.nameI18n,
       aliasesI18n: skillsTaxonomy.aliasesI18n,
-      embedding: skillsTaxonomy.embedding,
     })
     .from(skillsTaxonomy)
     .where(and(eq(skillsTaxonomy.status, 'active')));
+
+  return rows.map((row) => ({
+    code: row.code,
+    nameI18n: row.nameI18n,
+    aliasesI18n: row.aliasesI18n,
+    embedding: undefined,
+  }));
+}
+
+async function loadTaxonomy(): Promise<TaxonomyCache> {
+  if (taxonomyCache && Date.now() - taxonomyCache.loadedAt < TAXONOMY_CACHE_TTL_MS) {
+    return taxonomyCache;
+  }
+
+  let rows: Array<{
+    code: string;
+    nameI18n: unknown;
+    aliasesI18n: unknown;
+    embedding?: unknown;
+  }> = [];
+  let semanticCapable = true;
+  let matchDependencyErrorCode: string | undefined;
+
+  try {
+    rows = await queryTaxonomyRows(true);
+  } catch (error) {
+    if (!isEmbeddingDependencyError(error)) {
+      throw error;
+    }
+
+    semanticCapable = false;
+    matchDependencyErrorCode = 'TAXONOMY_EMBEDDING_UNAVAILABLE';
+    rows = await queryTaxonomyRows(false);
+  }
 
   const skills: TaxonomySkill[] = rows
     .map((row) => {
@@ -566,7 +660,8 @@ async function loadTaxonomy(): Promise<TaxonomyCache> {
       const normalizedAliases = parseAliases(row.aliasesI18n)
         .map((alias) => normalizeText(alias))
         .filter(Boolean);
-      const embedding = Array.isArray(row.embedding) ? (row.embedding as number[]) : null;
+      const embedding =
+        semanticCapable && Array.isArray(row.embedding) ? (row.embedding as number[]) : null;
 
       return {
         skillId: row.code,
@@ -595,6 +690,8 @@ async function loadTaxonomy(): Promise<TaxonomyCache> {
 
   taxonomyCache = {
     loadedAt: Date.now(),
+    semanticCapable,
+    matchDependencyErrorCode,
     skills,
     byName,
     byAlias,
@@ -867,10 +964,12 @@ export async function suggestSkillsForDocuments(
   };
 
   const taxonomy = await loadTaxonomy();
+  const effectiveSemanticEnabled = resolvedOptions.semanticEnabled && taxonomy.semanticCapable;
 
   const runtimeState: SuggestionRuntimeState = {
     semanticUsed: false,
-    semanticFallbackTriggered: false,
+    semanticFallbackTriggered: resolvedOptions.semanticEnabled && !taxonomy.semanticCapable,
+    matchDependencyErrorCode: taxonomy.matchDependencyErrorCode,
     candidateEmbeddings: new Map<string, number[]>(),
   };
 
@@ -888,7 +987,10 @@ export async function suggestSkillsForDocuments(
       const suggestions = await matchCandidate(
         candidate.raw_skill_text,
         taxonomy,
-        resolvedOptions,
+        {
+          ...resolvedOptions,
+          semanticEnabled: effectiveSemanticEnabled,
+        },
         runtimeState
       );
 
@@ -913,6 +1015,9 @@ export async function suggestSkillsForDocuments(
       document_id: document.document_id,
       file_name: document.file_name,
       context: document.context,
+      parsed_text: document.text,
+      parse_error: null,
+      parse_error_code: null,
       candidate_count: candidates.length,
       candidates,
     });
@@ -923,6 +1028,9 @@ export async function suggestSkillsForDocuments(
     metadata: {
       semantic_used: runtimeState.semanticUsed,
       semantic_fallback_triggered: runtimeState.semanticFallbackTriggered,
+      fallback_stage: 'none',
+      candidate_only_fallback_triggered: false,
+      match_dependency_error_code: runtimeState.matchDependencyErrorCode,
       unmapped_candidates_count: unmappedCandidatesCount,
       limits: {
         max_documents: limits.maxDocuments,

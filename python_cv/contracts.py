@@ -107,6 +107,7 @@ class WizardDocumentOut(BaseModel):
     context: Literal["cv"] = "cv"
     parsed_text: str = ""
     parse_error: str | None = None
+    parse_error_code: str | None = None
     work_experiences: list[WorkExperienceOut]
     learning_experiences: list[LearningExperienceOut]
     volunteering: list[VolunteeringOut]
@@ -125,6 +126,7 @@ class SuggestDocumentOut(BaseModel):
     context: Literal["cv", "jd", "general"]
     parsed_text: str = ""
     parse_error: str | None = None
+    parse_error_code: str | None = None
     candidate_count: int
     candidates: list[SkillCandidateOut]
 

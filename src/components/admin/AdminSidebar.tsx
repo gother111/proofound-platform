@@ -12,6 +12,7 @@ import {
   Activity,
   Scale,
   BadgeCheck,
+  Wallet,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -57,6 +58,12 @@ const navItems = [
     href: '/admin/performance',
     icon: Activity,
     description: 'SLA & monitoring',
+  },
+  {
+    title: 'AI Spend',
+    href: '/admin/ai-spend',
+    icon: Wallet,
+    description: 'Gemini budgets & usage',
   },
   {
     title: 'Fairness',

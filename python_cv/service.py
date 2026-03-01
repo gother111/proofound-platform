@@ -108,6 +108,7 @@ def process_wizard_documents(
                 "context": "cv",
                 "parsed_text": document_text,
                 "parse_error": source.get("parse_error"),
+                "parse_error_code": source.get("parse_error_code"),
                 "work_experiences": entities["work_experiences"],
                 "learning_experiences": entities["learning_experiences"],
                 "volunteering": entities["volunteering"],
@@ -153,6 +154,7 @@ def process_skill_documents(
                 "context": source.get("context", "cv"),
                 "parsed_text": document_text,
                 "parse_error": source.get("parse_error"),
+                "parse_error_code": source.get("parse_error_code"),
                 "candidate_count": len(matched),
                 "candidates": [_serialize_candidate(item) for item in matched],
             }

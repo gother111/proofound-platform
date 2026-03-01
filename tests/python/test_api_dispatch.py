@@ -33,9 +33,13 @@ def test_dispatch_routes_wizard_suggest_endpoint(monkeypatch):
 
     async def fake_suggest(_request):
         return JSONResponse({"handler": "suggest"})
+    
+    async def fake_extract(_request):
+        return JSONResponse({"handler": "extract"})
 
     monkeypatch.setattr(cv_import, "wizard_suggest", fake_wizard_suggest)
     monkeypatch.setattr(cv_import, "suggest", fake_suggest)
+    monkeypatch.setattr(cv_import, "extract", fake_extract)
 
     response = asyncio.run(cv_import.dispatch_import(_make_request("wizard-suggest")))
 
@@ -49,9 +53,13 @@ def test_dispatch_routes_suggest_endpoint(monkeypatch):
 
     async def fake_suggest(_request):
         return JSONResponse({"handler": "suggest"})
+    
+    async def fake_extract(_request):
+        return JSONResponse({"handler": "extract"})
 
     monkeypatch.setattr(cv_import, "wizard_suggest", fake_wizard_suggest)
     monkeypatch.setattr(cv_import, "suggest", fake_suggest)
+    monkeypatch.setattr(cv_import, "extract", fake_extract)
 
     response = asyncio.run(cv_import.dispatch_import(_make_request("suggest")))
 
@@ -59,10 +67,30 @@ def test_dispatch_routes_suggest_endpoint(monkeypatch):
     assert response.body == b'{"handler":"suggest"}'
 
 
+def test_dispatch_routes_extract_endpoint(monkeypatch):
+    async def fake_wizard_suggest(_request):
+        return JSONResponse({"handler": "wizard"})
+
+    async def fake_suggest(_request):
+        return JSONResponse({"handler": "suggest"})
+
+    async def fake_extract(_request):
+        return JSONResponse({"handler": "extract"})
+
+    monkeypatch.setattr(cv_import, "wizard_suggest", fake_wizard_suggest)
+    monkeypatch.setattr(cv_import, "suggest", fake_suggest)
+    monkeypatch.setattr(cv_import, "extract", fake_extract)
+
+    response = asyncio.run(cv_import.dispatch_import(_make_request("extract")))
+
+    assert response.status_code == 200
+    assert response.body == b'{"handler":"extract"}'
+
+
 def test_dispatch_rejects_invalid_endpoint():
     response = asyncio.run(cv_import.dispatch_import(_make_request("unknown")))
 
     assert response.status_code == 400
     assert response.body == (
-        b'{"error":"Invalid endpoint parameter","message":"Use endpoint=wizard-suggest or endpoint=suggest."}'
+        b'{"error":"Invalid endpoint parameter","message":"Use endpoint=wizard-suggest, endpoint=suggest, or endpoint=extract."}'
     )

@@ -9,6 +9,11 @@ import {
   extractPdfTextFromFile,
   normalizePdfParseError,
 } from '@/lib/expertise/pdf-client-extractor';
+import {
+  extractPdfTextWithOcr,
+  isOcrClientEnabled,
+  resolveOcrClientLimits,
+} from '@/lib/expertise/ocr-client';
 import { LANGUAGE_OPTIONS, CEFR_LEVELS } from '@/lib/taxonomy/data';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -33,6 +38,12 @@ type CandidateCategory =
   | 'other';
 
 type MatchMethod = 'exact' | 'synonym' | 'fuzzy' | 'semantic';
+type ApiFallbackStage =
+  | 'none'
+  | 'python_multipart_failed'
+  | 'python_json_retry'
+  | 'typescript_retry'
+  | 'candidate_only';
 
 type WizardStep = 'work' | 'learning' | 'volunteering' | 'languages' | 'skills';
 
@@ -102,6 +113,7 @@ interface ApiDocumentResult {
   context: 'cv';
   parsed_text: string;
   parse_error: string | undefined;
+  parse_error_code: string | undefined;
   work_experiences: ApiWorkExperience[];
   learning_experiences: ApiLearningExperience[];
   volunteering: ApiVolunteering[];
@@ -112,6 +124,9 @@ interface ApiDocumentResult {
 interface ApiMetadata {
   semantic_used: boolean;
   semantic_fallback_triggered: boolean;
+  fallback_stage: ApiFallbackStage;
+  candidate_only_fallback_triggered: boolean;
+  match_dependency_error_code?: string;
   unmapped_candidates_count: number;
   limits: {
     max_documents: number;
@@ -156,6 +171,7 @@ interface ParsedDocumentState {
   file?: File;
   parsed_text: string;
   parse_error?: string;
+  parse_error_code?: string;
   work_experiences: WorkState[];
   learning_experiences: LearningState[];
   volunteering: VolunteeringState[];
@@ -181,6 +197,9 @@ const STEPS: Array<{ id: WizardStep; label: string }> = [
 const DEFAULT_METADATA: ApiMetadata = {
   semantic_used: false,
   semantic_fallback_triggered: false,
+  fallback_stage: 'none',
+  candidate_only_fallback_triggered: false,
+  match_dependency_error_code: undefined,
   unmapped_candidates_count: 0,
   limits: {
     max_documents: 5,
@@ -194,6 +213,7 @@ const GENERIC_BACKEND_ERRORS = new Set([
   'Failed to process CV documents',
 ]);
 const PROXY_RETRYABLE_CODES = new Set(['CV_IMPORT_PROXY_UNAVAILABLE', 'CV_IMPORT_PROXY_TIMEOUT']);
+const OCR_RETRYABLE_PARSE_CODES = new Set(['PDF_EMPTY_TEXT']);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -259,7 +279,7 @@ function isProxyRetryableError(payload: unknown): boolean {
   return typeof payload.code === 'string' && PROXY_RETRYABLE_CODES.has(payload.code);
 }
 
-async function buildTypescriptFallbackPayload(documents: ParsedDocumentState[]): Promise<{
+async function buildTextFallbackPayload(documents: ParsedDocumentState[]): Promise<{
   documents: Array<{
     document_id: string;
     file_name: string;
@@ -282,7 +302,7 @@ async function buildTypescriptFallbackPayload(documents: ParsedDocumentState[]):
     try {
       const text = await extractPdfTextFromFile(document.file);
       if (!text) {
-        throw new Error('No text could be extracted. OCR is not supported in V1.');
+        throw new Error('No text could be extracted from the PDF.');
       }
 
       fallbackDocuments.push({
@@ -303,6 +323,16 @@ async function buildTypescriptFallbackPayload(documents: ParsedDocumentState[]):
   return { documents: fallbackDocuments };
 }
 
+function isFallbackStage(value: unknown): value is ApiFallbackStage {
+  return (
+    value === 'none' ||
+    value === 'python_multipart_failed' ||
+    value === 'python_json_retry' ||
+    value === 'typescript_retry' ||
+    value === 'candidate_only'
+  );
+}
+
 function normalizeScore(value: unknown, fallback = 0): number {
   if (typeof value !== 'number' || Number.isNaN(value)) {
     return fallback;
@@ -321,6 +351,15 @@ function normalizeMetadata(value: unknown): ApiMetadata {
   return {
     semantic_used: Boolean(value.semantic_used),
     semantic_fallback_triggered: Boolean(value.semantic_fallback_triggered),
+    fallback_stage: isFallbackStage(value.fallback_stage)
+      ? value.fallback_stage
+      : DEFAULT_METADATA.fallback_stage,
+    candidate_only_fallback_triggered: Boolean(value.candidate_only_fallback_triggered),
+    match_dependency_error_code:
+      typeof value.match_dependency_error_code === 'string' &&
+      value.match_dependency_error_code.trim().length > 0
+        ? value.match_dependency_error_code.trim()
+        : undefined,
     unmapped_candidates_count:
       typeof value.unmapped_candidates_count === 'number'
         ? Math.max(0, Math.floor(value.unmapped_candidates_count))
@@ -368,6 +407,10 @@ function normalizeSuggestResponse(value: unknown): ApiSuggestResponse | null {
       const parseError =
         typeof document.parse_error === 'string' && document.parse_error.trim().length > 0
           ? document.parse_error.trim()
+          : undefined;
+      const parseErrorCode =
+        typeof document.parse_error_code === 'string' && document.parse_error_code.trim().length > 0
+          ? document.parse_error_code.trim()
           : undefined;
 
       const normalizeEvidence = (candidate: unknown): string[] =>
@@ -627,6 +670,7 @@ function normalizeSuggestResponse(value: unknown): ApiSuggestResponse | null {
         file_name: fileName,
         parsed_text: parsedText,
         parse_error: parseError,
+        parse_error_code: parseErrorCode,
         context: 'cv' as const,
         work_experiences: workExperiences,
         learning_experiences: learningExperiences,
@@ -640,6 +684,92 @@ function normalizeSuggestResponse(value: unknown): ApiSuggestResponse | null {
   return {
     documents,
     metadata: normalizeMetadata(value.metadata),
+  };
+}
+
+function shouldRetryWithOcr(document: ApiDocumentResult): boolean {
+  return (
+    typeof document.parse_error === 'string' &&
+    document.parse_error.length > 0 &&
+    typeof document.parse_error_code === 'string' &&
+    OCR_RETRYABLE_PARSE_CODES.has(document.parse_error_code)
+  );
+}
+
+async function retryOcrDocuments(params: {
+  payload: ApiSuggestResponse;
+  sourceById: Map<string, ParsedDocumentState>;
+}): Promise<{ payload: ApiSuggestResponse; ocrAttempted: number; ocrFailed: number }> {
+  if (!isOcrClientEnabled()) {
+    return { payload: params.payload, ocrAttempted: 0, ocrFailed: 0 };
+  }
+
+  const ocrInputs: Array<{
+    document_id: string;
+    file_name: string;
+    text: string;
+    context: 'cv';
+  }> = [];
+  let ocrFailed = 0;
+
+  for (const document of params.payload.documents) {
+    if (!shouldRetryWithOcr(document)) {
+      continue;
+    }
+
+    const source = params.sourceById.get(document.document_id);
+    if (!source?.file) {
+      continue;
+    }
+
+    try {
+      const extracted = await extractPdfTextWithOcr(source.file);
+      ocrInputs.push({
+        document_id: document.document_id,
+        file_name: document.file_name,
+        text: extracted.text,
+        context: 'cv',
+      });
+    } catch (error) {
+      ocrFailed += 1;
+      console.warn('[cv-import] OCR fallback failed', {
+        documentId: document.document_id,
+        error: error instanceof Error ? error.message : 'Unknown OCR error',
+      });
+    }
+  }
+
+  if (ocrInputs.length === 0) {
+    return { payload: params.payload, ocrAttempted: 0, ocrFailed };
+  }
+
+  const ocrResponse = await apiFetch('/api/expertise/cv-import/wizard-suggest?engine=gemini', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ documents: ocrInputs }),
+  });
+
+  if (!ocrResponse.ok) {
+    throw new Error(await readErrorMessage(ocrResponse, 'OCR retry failed'));
+  }
+
+  const ocrPayload = normalizeSuggestResponse(await readJsonSafely(ocrResponse));
+  if (!ocrPayload) {
+    throw new Error('OCR retry returned invalid response format.');
+  }
+
+  const byId = new Map(ocrPayload.documents.map((document) => [document.document_id, document]));
+  const mergedDocuments = params.payload.documents.map(
+    (document) => byId.get(document.document_id) || document
+  );
+
+  return {
+    payload: {
+      ...params.payload,
+      documents: mergedDocuments,
+    },
+    ocrAttempted: ocrInputs.length,
+    ocrFailed,
   };
 }
 
@@ -764,6 +894,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         file_name: file.name,
         file,
         parsed_text: '',
+        parse_error_code: undefined,
         work_experiences: [],
         learning_experiences: [],
         volunteering: [],
@@ -796,6 +927,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     setIsAnalyzing(true);
 
     try {
+      let fallbackStageUsed: ApiFallbackStage | null = null;
       let response = await apiFetch('/api/expertise/cv-import/wizard-suggest', {
         method: 'POST',
         body: (() => {
@@ -815,15 +947,32 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
 
         if (isProxyRetryableError(failurePayload)) {
           console.warn(
-            '[cv-import] wizard suggest proxy retryable failure, retrying with typescript engine'
+            '[cv-import] wizard suggest proxy retryable failure, retrying with json extraction payload'
           );
 
-          const fallbackPayload = await buildTypescriptFallbackPayload(readyDocuments);
-          response = await apiFetch('/api/expertise/cv-import/wizard-suggest?engine=typescript', {
+          const fallbackPayload = await buildTextFallbackPayload(readyDocuments);
+
+          response = await apiFetch('/api/expertise/cv-import/wizard-suggest?engine=python', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(fallbackPayload),
           });
+          fallbackStageUsed = 'python_json_retry';
+
+          if (!response.ok) {
+            const pythonFailurePayload = await readJsonSafely(response);
+            if (isProxyRetryableError(pythonFailurePayload)) {
+              response = await apiFetch(
+                '/api/expertise/cv-import/wizard-suggest?engine=typescript',
+                {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(fallbackPayload),
+                }
+              );
+              fallbackStageUsed = 'typescript_retry';
+            }
+          }
         }
       }
 
@@ -831,16 +980,52 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         throw new Error(await readErrorMessage(response, 'Failed to analyze uploaded PDFs'));
       }
 
-      const payload = normalizeSuggestResponse(await readJsonSafely(response));
+      let payload = normalizeSuggestResponse(await readJsonSafely(response));
       if (!payload) {
         throw new Error('Invalid response format from CV analysis service');
       }
 
-      setApiMetadata(payload.metadata);
+      if (fallbackStageUsed && payload.metadata.fallback_stage === 'none') {
+        payload = {
+          ...payload,
+          metadata: {
+            ...payload.metadata,
+            fallback_stage: fallbackStageUsed,
+          },
+        };
+      }
 
       const sourceById = new Map(
         readyDocuments.map((document) => [document.document_id, document])
       );
+
+      if (isOcrClientEnabled()) {
+        const {
+          payload: mergedPayload,
+          ocrAttempted,
+          ocrFailed,
+        } = await retryOcrDocuments({
+          payload,
+          sourceById,
+        });
+        payload = mergedPayload;
+
+        if (ocrAttempted > 0) {
+          if (ocrFailed > 0) {
+            toast.info(
+              'OCR succeeded for some scanned PDFs. Upload a clearer text-based PDF for documents that still failed.'
+            );
+          } else {
+            toast.success('OCR fallback extracted text from scanned PDF documents.');
+          }
+        } else if (ocrFailed > 0) {
+          toast.error(
+            'OCR fallback could not extract readable text. Upload a better text-based PDF.'
+          );
+        }
+      }
+
+      setApiMetadata(payload.metadata);
 
       const analyzedDocuments = payload.documents.map((document) => {
         const source = sourceById.get(document.document_id);
@@ -851,6 +1036,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
           file: source?.file,
           parsed_text: document.parsed_text || source?.parsed_text || '',
           parse_error: document.parse_error || source?.parse_error,
+          parse_error_code: document.parse_error_code || source?.parse_error_code,
           work_experiences: document.work_experiences.map((entry) => ({
             ...entry,
             approved: true,
@@ -886,10 +1072,15 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         (count, document) => count + document.skill_candidates.length,
         0
       );
+      if (fallbackStageUsed) {
+        toast.info('CV analysis recovered via fallback path.');
+      }
       if (payload.metadata.semantic_fallback_triggered && totalSkillCandidates === 0) {
         toast.info(
           'Skill suggestions are temporarily unavailable, but core CV entities were extracted.'
         );
+      } else if (payload.metadata.candidate_only_fallback_triggered && totalSkillCandidates > 0) {
+        toast.info('Showing candidate-only skills while taxonomy matching recovers.');
       }
 
       toast.success(
@@ -1128,6 +1319,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
   };
 
   const canAnalyze = documents.some((document) => Boolean(document.file) && !document.parse_error);
+  const ocrEnabled = isOcrClientEnabled();
+  const ocrLimits = ocrEnabled ? resolveOcrClientLimits() : null;
 
   const stepTabs = (
     <div className="flex flex-wrap gap-2">
@@ -1164,7 +1357,9 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
               disabled={isParsing || isAnalyzing || isApplying}
             />
             <p className="text-xs text-muted-foreground">
-              Text-based PDFs only. OCR is not supported in V1.
+              {ocrEnabled && ocrLimits
+                ? `Text-based PDFs are recommended. OCR fallback is enabled for scanned PDFs up to ${ocrLimits.maxPages} pages and ${Math.round(ocrLimits.maxFileSizeBytes / (1024 * 1024))}MB.`
+                : 'Text-based PDFs only. Enable OCR fallback to process scanned PDFs.'}
             </p>
           </div>
 

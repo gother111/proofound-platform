@@ -171,4 +171,63 @@ describe('cv-import-suggest service', () => {
       true
     );
   });
+
+  it('retries taxonomy load without embedding when vector dependency is unavailable', async () => {
+    let queryAttempts = 0;
+    mockSelect.mockImplementation((selection: unknown) => ({
+      from: () => ({
+        where: async () => {
+          queryAttempts += 1;
+          if (
+            queryAttempts === 1 &&
+            selection &&
+            typeof selection === 'object' &&
+            'embedding' in (selection as Record<string, unknown>)
+          ) {
+            throw new Error('column "embedding" does not exist');
+          }
+
+          return taxonomyRows.map(({ code, nameI18n, aliasesI18n }) => ({
+            code,
+            nameI18n,
+            aliasesI18n,
+          }));
+        },
+      }),
+    }));
+
+    mockExtractSkillPhrases.mockReturnValue({
+      phrases: [{ text: 'React', type: 'skill', confidence: 0.88 }],
+    });
+
+    const { suggestSkillsForDocuments } = await import('@/lib/expertise/cv-import-suggest');
+
+    const response = await suggestSkillsForDocuments(
+      {
+        documents: [
+          {
+            document_id: 'doc-4',
+            file_name: 'cv.pdf',
+            text: 'Built and shipped React dashboards for enterprise teams.',
+            context: 'cv',
+          },
+        ],
+      },
+      {
+        maxDocuments: 5,
+        maxCharsPerDocument: 10000,
+        maxTotalChars: 20000,
+      },
+      {
+        semanticEnabled: true,
+        fuzzyThreshold: 0.4,
+      }
+    );
+
+    expect(queryAttempts).toBe(2);
+    expect(response.documents[0].candidates[0]?.suggestions[0]?.skill_id).toBe('skill_react');
+    expect(response.metadata.semantic_fallback_triggered).toBe(true);
+    expect(response.metadata.match_dependency_error_code).toBe('TAXONOMY_EMBEDDING_UNAVAILABLE');
+    expect(response.metadata.candidate_only_fallback_triggered).toBe(false);
+  });
 });

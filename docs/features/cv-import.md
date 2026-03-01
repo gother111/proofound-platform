@@ -2,7 +2,7 @@
 
 ## Overview
 
-The CV Import feature allows users to automatically extract and add skills to their Expertise Atlas by pasting their CV/resume text. The system uses text analysis to identify potential skills from the user's CV and matches them against the skills taxonomy database.
+The CV Import feature allows users to extract and add skills to their Expertise Atlas from pasted text and uploaded PDFs. The runtime now supports a cost-controlled Gemini extraction path with deterministic fallback, per-key monthly SEK budgets, request-level usage logging, and optional client OCR fallback for scanned PDFs.
 
 ## User Flow
 
@@ -19,9 +19,9 @@ Choose the type of text you're pasting:
 - **Job Description**: For job posting text
 - **General Text**: For any other skill-related text
 
-### Step 3: Paste Text
+### Step 3: Paste Text or Upload PDF
 
-Paste your CV, resume, or job description text into the textarea.
+Paste your CV, resume, or job description text, or upload PDF documents in the CV Import Wizard flow.
 
 ### Step 4: Analyze
 
@@ -137,7 +137,44 @@ Analyzes text and returns skill suggestions.
 }
 ```
 
-**Algorithm**:
+**Current Runtime Modes**:
+
+- `engine=auto` (default) - deterministic JSON path, Python for multipart.
+- `engine=typescript` - deterministic TypeScript path.
+- `engine=python` - Python path for JSON and multipart.
+- `engine=gemini` - Gemini extraction with deterministic fallback.
+
+**Gemini-enabled Endpoints**:
+
+- `POST /api/expertise/cv-import/suggest`
+- `POST /api/expertise/cv-import/wizard-suggest`
+- `POST /api/expertise/auto-suggest`
+
+**Gemini Request Controls**:
+
+- `x-idempotency-key` (optional) for idempotent replay and no double charging on retries.
+- `x-request-id` is accepted and echoed back for observability.
+
+**Response Metadata Additions**:
+
+- `engine_mode`: `auto | typescript | python | gemini`
+- `engine_used`: `typescript | python | gemini`
+- `ai_provider`: `gemini` when Gemini path is used
+- `ai_model`: resolved Gemini model (or `null` on deterministic fallback)
+- `ai_key_slot`: `primary | secondary` (or `null` on fallback)
+- `ai_fallback_reason`: reason when deterministic fallback is used
+- `cost_ore`: request cost in ore
+- `currency`: `SEK`
+
+**Stable Error Codes**:
+
+- `CV_IMPORT_BUDGET_EXCEEDED`
+- `CV_IMPORT_GEMINI_QUOTA_EXCEEDED`
+- `CV_IMPORT_GEMINI_INVALID_JSON`
+- `CV_IMPORT_OCR_FAILED`
+- `CV_IMPORT_RATE_LIMIT_EXCEEDED`
+
+**Deterministic Fallback Algorithm**:
 
 1. **Tokenization**: Split text into words and filter out common words
 2. **Pattern Matching**: Extract multi-word skill patterns (e.g., "project management")
@@ -301,32 +338,25 @@ npm run test:e2e -- cv-import
 
 ## Known Limitations
 
-1. **Language Support**: Currently only supports English text analysis
-2. **Fuzzy Matching**: Limited to substring matching (no Levenshtein distance)
-3. **Context Intelligence**: Basic context weighting (more sophisticated NLP possible)
-4. **Duplicate Detection**: Relies on exact skill_code matching
-5. **Skill Level Detection**: Always defaults to level 2 (Competent) - doesn't infer from CV
+1. **OCR Cost and CPU**: OCR fallback runs in-browser and can be slow on low-end devices.
+2. **OCR Scope**: OCR fallback is only attempted for parse failures (for example `PDF_EMPTY_TEXT`) and only when explicitly enabled.
+3. **Upload Guardrails**: Default parser limits are strict (`5MB`, `4` pages) to control latency and spend.
+4. **Budget Enforcement**: Conservative reservation can block near-limit requests even if final token usage would have fit.
+5. **Language Quality Variance**: Non-English CVs can still reduce mapping quality depending on taxonomy coverage.
 
 ## Future Enhancements
 
-### Short Term (Next Sprint)
+### Near Term
 
-- [ ] Add support for file upload (PDF, DOCX)
-- [ ] Improve skill level detection from context (e.g., "expert in", "proficient in")
-- [ ] Add experience duration extraction (e.g., "5 years of React")
+- [ ] Improve budget reservation estimation to reduce false budget blocks near monthly cap.
+- [ ] Add richer admin charting for key-slot failover rates and invalid JSON retries.
+- [ ] Add OCR quality diagnostics per document page for clearer user guidance.
 
-### Medium Term (Q1 2026)
+### Mid Term
 
-- [ ] AI-powered skill extraction using GPT-4
-- [ ] Multi-language support (Spanish, French, German)
-- [ ] Skills clustering (suggest related skills)
-- [ ] Confidence explanation ("Why we matched this")
-
-### Long Term (Q2-Q3 2026)
-
-- [ ] Resume parsing with structure detection
-- [ ] Skill verification suggestions based on CV context
-- [ ] Learning path recommendations based on imported skills
+- [ ] Add richer evidence linking between extracted candidates and source text spans.
+- [ ] Expand document support beyond PDF while preserving current privacy guarantees.
+- [ ] Add adaptive per-user throttling based on abuse signals.
 
 ## Troubleshooting
 
@@ -442,10 +472,10 @@ logger.info('CV import completed', {
 
 ## API Rate Limits
 
-Current limits (configurable):
+Current limits (configurable via env):
 
-- Auto-suggest: 30 requests per minute per user
-- Add skill: 60 requests per minute per user
+- CV import suggest routes: `CV_IMPORT_USER_RATE_LIMIT_MAX` requests per `CV_IMPORT_USER_RATE_LIMIT_WINDOW_SECONDS` per user and route.
+- Add skill route: global API limiter defaults still apply.
 
 ## Support & Contact
 
@@ -457,6 +487,6 @@ For issues or questions:
 
 ---
 
-**Last Updated**: November 5, 2025  
-**Version**: 1.0  
+**Last Updated**: March 1, 2026  
+**Version**: 2.0  
 **Maintainers**: Expertise Atlas Team

@@ -515,7 +515,7 @@ MATCHING_FEATURE_ENABLED=true
 
 ### CV_IMPORT_ENGINE_MODE
 
-**Purpose**: Controls which engine handles CV import JSON requests.
+**Purpose**: Controls which engine handles CV import suggest requests.
 
 **Format**:
 
@@ -528,8 +528,155 @@ CV_IMPORT_ENGINE_MODE=auto
 - `auto` - JSON uses TypeScript path, multipart uses Python path.
 - `typescript` - Force JSON through TypeScript path (multipart still Python-only).
 - `python` - Force JSON and multipart through Python path.
+- `gemini` - JSON uses Gemini extraction with deterministic fallback; multipart first runs Python `extract` then Gemini.
 
 **Default**: `auto`
+
+---
+
+### CV_IMPORT_GEMINI_PRIMARY_API_KEY / CV_IMPORT_GEMINI_SECONDARY_API_KEY
+
+**Purpose**: Server-only Gemini API keys used with budget slots (`primary`, `secondary`).
+
+**Format**:
+
+```env
+CV_IMPORT_GEMINI_PRIMARY_API_KEY=AIza...
+CV_IMPORT_GEMINI_SECONDARY_API_KEY=AIza...
+```
+
+**Notes**:
+
+- Stored only in server environments (for example Vercel server env vars).
+- Never exposed to the browser.
+- If one slot is missing, only configured slots are used.
+
+---
+
+### CV_IMPORT_GEMINI_PRIMARY_MONTHLY_BUDGET_SEK / CV_IMPORT_GEMINI_SECONDARY_MONTHLY_BUDGET_SEK
+
+**Purpose**: Monthly spend caps in SEK per key slot.
+
+**Format**:
+
+```env
+CV_IMPORT_GEMINI_PRIMARY_MONTHLY_BUDGET_SEK=85
+CV_IMPORT_GEMINI_SECONDARY_MONTHLY_BUDGET_SEK=85
+```
+
+**Default**:
+
+- Primary: `85`
+- Secondary: `85`
+
+---
+
+### CV_IMPORT_GEMINI_USD_TO_SEK_RATE
+
+**Purpose**: Fixed FX conversion rate used to convert Gemini USD pricing to SEK.
+
+**Format**:
+
+```env
+CV_IMPORT_GEMINI_USD_TO_SEK_RATE=10.5
+```
+
+**Default**: `10.5`
+
+---
+
+### CV_IMPORT_GEMINI_MODEL_DEFAULT / CV_IMPORT_GEMINI_MODEL_FALLBACK
+
+**Purpose**: Model policy for extraction and schema-quality retry.
+
+**Format**:
+
+```env
+CV_IMPORT_GEMINI_MODEL_DEFAULT=gemini-2.5-flash-lite
+CV_IMPORT_GEMINI_MODEL_FALLBACK=gemini-2.5-flash
+```
+
+**Default**:
+
+- Default model: `gemini-2.5-flash-lite`
+- Fallback model: `gemini-2.5-flash`
+
+---
+
+### CV_IMPORT_GEMINI_MAX_OUTPUT_TOKENS
+
+**Purpose**: Output token cap for Gemini structured extraction responses.
+
+**Format**:
+
+```env
+CV_IMPORT_GEMINI_MAX_OUTPUT_TOKENS=1400
+```
+
+**Default**: `1400`
+
+---
+
+### CV_IMPORT_MAX_FILE_SIZE_MB / CV_IMPORT_MAX_PDF_PAGES
+
+**Purpose**: Global CV import upload guardrails applied by Python extraction.
+
+**Format**:
+
+```env
+CV_IMPORT_MAX_FILE_SIZE_MB=5
+CV_IMPORT_MAX_PDF_PAGES=4
+```
+
+**Default**:
+
+- Max file size: `5` MB
+- Max pages: `4`
+
+---
+
+### NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED
+
+**Purpose**: Enables client-side OCR fallback for scanned PDFs when backend extraction returns `PDF_EMPTY_TEXT`.
+
+**Format**:
+
+```env
+NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED=false
+```
+
+**Values**:
+
+- `true` - Enable OCR retry in CV Import Wizard.
+- `false` - Disable OCR fallback and prompt for a text-based PDF.
+
+**Default**: `false`
+
+---
+
+### OCR Client Limits and Timeouts
+
+**Purpose**: Controls browser OCR execution bounds.
+
+**Format**:
+
+```env
+NEXT_PUBLIC_CV_IMPORT_OCR_MAX_FILE_SIZE_MB=5
+NEXT_PUBLIC_CV_IMPORT_OCR_MAX_PAGES=4
+NEXT_PUBLIC_CV_IMPORT_OCR_PAGE_TIMEOUT_MS=8000
+NEXT_PUBLIC_CV_IMPORT_OCR_TIMEOUT_MS=25000
+NEXT_PUBLIC_CV_IMPORT_OCR_RENDER_SCALE=2
+NEXT_PUBLIC_CV_IMPORT_OCR_LANGUAGE=eng
+```
+
+**Defaults**:
+
+- File size: `5` MB
+- Pages: `4`
+- Per-page timeout: `8000` ms
+- Total timeout: `25000` ms
+- Render scale: `2`
+- OCR language: `eng`
 
 ---
 
@@ -933,18 +1080,20 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
 ## Feature → Variable Matrix
 
-| Feature                 | Required Variables                                                                                                                             |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Database**            | `DATABASE_URL`                                                                                                                                 |
-| **Authentication**      | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`                                                       |
-| **Email Sending**       | `RESEND_API_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_SITE_URL`, `LINKEDIN_VERIFICATION_ADMIN_EMAILS` (or `PLATFORM_ADMIN_EMAILS`)                      |
-| **Cron Jobs**           | `CRON_SECRET`, `NEXT_PUBLIC_SITE_URL`, `SUPABASE_SERVICE_ROLE_KEY`                                                                             |
-| **File Uploads**        | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`                                                                                    |
-| **Matching System**     | `DATABASE_URL`, `MATCHING_FEATURE_ENABLED` (optional), `MATCHING_TWO_STAGE_ENABLED`, `MATCHING_NEAR_SCAN_LIMIT`                                |
-| **Matching Refresh**    | `MATCHING_REFRESH_QUEUE_ENABLED`, `MATCHING_REFRESH_WORKER_BATCH_SIZE`, `MATCHING_REFRESH_WORKER_CONCURRENCY`, `MATCHING_REFRESH_MAX_ATTEMPTS` |
-| **CV Import Engine**    | `CV_IMPORT_ENGINE_MODE`                                                                                                                        |
-| **Performance Budgets** | `PERF_API_P95_BUDGET_MS`                                                                                                                       |
-| **Real-time Messaging** | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`                                                                                    |
+| Feature                 | Required Variables                                                                                                                                                                                                                                                                                                      |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Database**            | `DATABASE_URL`                                                                                                                                                                                                                                                                                                          |
+| **Authentication**      | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`                                                                                                                                                                                                                                |
+| **Email Sending**       | `RESEND_API_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_SITE_URL`, `LINKEDIN_VERIFICATION_ADMIN_EMAILS` (or `PLATFORM_ADMIN_EMAILS`)                                                                                                                                                                                               |
+| **Cron Jobs**           | `CRON_SECRET`, `NEXT_PUBLIC_SITE_URL`, `SUPABASE_SERVICE_ROLE_KEY`                                                                                                                                                                                                                                                      |
+| **File Uploads**        | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`                                                                                                                                                                                                                                                             |
+| **Matching System**     | `DATABASE_URL`, `MATCHING_FEATURE_ENABLED` (optional), `MATCHING_TWO_STAGE_ENABLED`, `MATCHING_NEAR_SCAN_LIMIT`                                                                                                                                                                                                         |
+| **Matching Refresh**    | `MATCHING_REFRESH_QUEUE_ENABLED`, `MATCHING_REFRESH_WORKER_BATCH_SIZE`, `MATCHING_REFRESH_WORKER_CONCURRENCY`, `MATCHING_REFRESH_MAX_ATTEMPTS`                                                                                                                                                                          |
+| **CV Import Engine**    | `CV_IMPORT_ENGINE_MODE`, `CV_IMPORT_MAX_FILE_SIZE_MB`, `CV_IMPORT_MAX_PDF_PAGES`                                                                                                                                                                                                                                        |
+| **CV Import Gemini**    | `CV_IMPORT_GEMINI_PRIMARY_API_KEY`, `CV_IMPORT_GEMINI_SECONDARY_API_KEY`, `CV_IMPORT_GEMINI_PRIMARY_MONTHLY_BUDGET_SEK`, `CV_IMPORT_GEMINI_SECONDARY_MONTHLY_BUDGET_SEK`, `CV_IMPORT_GEMINI_USD_TO_SEK_RATE`, `CV_IMPORT_GEMINI_MODEL_DEFAULT`, `CV_IMPORT_GEMINI_MODEL_FALLBACK`, `CV_IMPORT_GEMINI_MAX_OUTPUT_TOKENS` |
+| **CV Import OCR**       | `NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED`, `NEXT_PUBLIC_CV_IMPORT_OCR_MAX_FILE_SIZE_MB`, `NEXT_PUBLIC_CV_IMPORT_OCR_MAX_PAGES`, `NEXT_PUBLIC_CV_IMPORT_OCR_PAGE_TIMEOUT_MS`, `NEXT_PUBLIC_CV_IMPORT_OCR_TIMEOUT_MS`                                                                                                           |
+| **Performance Budgets** | `PERF_API_P95_BUDGET_MS`                                                                                                                                                                                                                                                                                                |
+| **Real-time Messaging** | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`                                                                                                                                                                                                                                                             |
 
 ---
 
@@ -980,6 +1129,21 @@ Use this checklist when setting up a new environment:
 - [ ] `NEXT_PUBLIC_APP_ENV` - App environment
 - [ ] `MATCHING_FEATURE_ENABLED` - Toggle matching
 - [ ] `CV_IMPORT_ENGINE_MODE` - CV import runtime selection
+- [ ] `CV_IMPORT_MAX_FILE_SIZE_MB` - Upload file size cap for CV parsing
+- [ ] `CV_IMPORT_MAX_PDF_PAGES` - Upload page cap for CV parsing
+- [ ] `CV_IMPORT_GEMINI_PRIMARY_API_KEY` - Primary Gemini key
+- [ ] `CV_IMPORT_GEMINI_SECONDARY_API_KEY` - Secondary Gemini key
+- [ ] `CV_IMPORT_GEMINI_PRIMARY_MONTHLY_BUDGET_SEK` - Monthly SEK cap for primary slot
+- [ ] `CV_IMPORT_GEMINI_SECONDARY_MONTHLY_BUDGET_SEK` - Monthly SEK cap for secondary slot
+- [ ] `CV_IMPORT_GEMINI_USD_TO_SEK_RATE` - Fixed FX conversion for cost ledger
+- [ ] `CV_IMPORT_GEMINI_MODEL_DEFAULT` - Primary Gemini model
+- [ ] `CV_IMPORT_GEMINI_MODEL_FALLBACK` - Retry Gemini model
+- [ ] `CV_IMPORT_GEMINI_MAX_OUTPUT_TOKENS` - Gemini output cap
+- [ ] `NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED` - Enable browser OCR fallback
+- [ ] `NEXT_PUBLIC_CV_IMPORT_OCR_MAX_FILE_SIZE_MB` - OCR file-size cap
+- [ ] `NEXT_PUBLIC_CV_IMPORT_OCR_MAX_PAGES` - OCR page cap
+- [ ] `NEXT_PUBLIC_CV_IMPORT_OCR_PAGE_TIMEOUT_MS` - OCR per-page timeout
+- [ ] `NEXT_PUBLIC_CV_IMPORT_OCR_TIMEOUT_MS` - OCR total timeout
 - [ ] `MATCHING_TWO_STAGE_ENABLED` - ANN-hybrid matching toggle
 - [ ] `MATCHING_NEAR_SCAN_LIMIT` - Near-match scan cap
 - [ ] `MATCHING_REFRESH_QUEUE_ENABLED` - Refresh queue toggle

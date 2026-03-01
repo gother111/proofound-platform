@@ -1,14 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { createClient } from '@/lib/supabase/server';
-import { suggestWizardForDocuments } from '@/lib/expertise/cv-import-wizard-extractor';
+import {
+  createRequestId,
+  enforceCvImportUserRateLimit,
+  jsonWithRequestId,
+  resolveCvImportEngineMode,
+  shouldProxyToPython,
+  withRequestId,
+} from '@/lib/expertise/cv-import-runtime';
+import { updateUsageLog } from '@/lib/expertise/gemini/budget-ledger';
+import type { CvImportEngineMode } from '@/lib/expertise/gemini/config';
+import {
+  GeminiSuggestError,
+  suggestSkillsWithGemini,
+  type GeminiSourceDocument,
+} from '@/lib/expertise/gemini/skill-extractor';
 import { proxyCvRequestToPython } from '@/lib/expertise/python-cv-proxy';
+import { suggestWizardForDocuments } from '@/lib/expertise/cv-import-wizard-extractor';
 import {
   CvImportWizardSuggestRequestSchema,
   type CvImportWizardSuggestRequest,
+  type CvImportWizardSuggestResponse,
 } from '@/lib/expertise/cv-import-wizard-types';
-import type { CvImportLimits } from '@/lib/expertise/cv-import-suggest';
+import type { CvImportLimits, CvImportSuggestResponse } from '@/lib/expertise/cv-import-suggest';
+import { createClient } from '@/lib/supabase/server';
 
 const DEFAULT_LIMITS: CvImportLimits = {
   maxDocuments: 5,
@@ -20,7 +36,31 @@ const DEFAULT_SERVER_TIMEOUT_MS = 15000;
 const GENERIC_WIZARD_ERROR = 'Failed to process CV wizard suggestions';
 const WIZARD_DEPENDENCY_UNAVAILABLE_CODE = 'WIZARD_DEPENDENCY_UNAVAILABLE';
 const WIZARD_PROCESSING_FAILED_CODE = 'WIZARD_PROCESSING_FAILED';
-type CvImportEngineMode = 'auto' | 'typescript' | 'python';
+
+type EngineUsed = 'python' | 'typescript' | 'gemini';
+
+type ExtractDocument = {
+  document_id: string;
+  file_name: string;
+  context: 'cv' | 'jd' | 'general';
+  parsed_text: string;
+  parse_error?: string | null;
+  parse_error_code?: string | null;
+};
+
+const ExtractResponseSchema = z.object({
+  documents: z.array(
+    z.object({
+      document_id: z.string().min(1),
+      file_name: z.string().min(1),
+      context: z.enum(['cv', 'jd', 'general']).default('cv'),
+      parsed_text: z.string().default(''),
+      parse_error: z.string().nullable().optional(),
+      parse_error_code: z.string().nullable().optional(),
+    })
+  ),
+  metadata: z.unknown().optional(),
+});
 
 function parsePositiveInt(value: string | undefined, fallback: number): number {
   if (!value) {
@@ -51,57 +91,172 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   });
 }
 
-function resolveEngineMode(request: NextRequest): CvImportEngineMode {
-  const queryMode = request.nextUrl.searchParams.get('engine')?.trim().toLowerCase();
-  if (queryMode === 'python' || queryMode === 'typescript' || queryMode === 'auto') {
-    return queryMode;
+function normalizeSuggestionsLimit(value: number | undefined): number | undefined {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return undefined;
   }
-
-  const rawMode = process.env.CV_IMPORT_ENGINE_MODE?.trim().toLowerCase();
-  if (rawMode === 'python' || rawMode === 'typescript' || rawMode === 'auto') {
-    return rawMode;
-  }
-  return 'auto';
+  return Math.max(5, Math.min(10, Math.floor(value)));
 }
 
-function shouldProxyToPython(contentType: string, mode: CvImportEngineMode): boolean {
-  if (contentType.startsWith('multipart/form-data')) {
-    return true;
+function resolveSuggestionsLimitFromQuery(request: NextRequest): number | undefined {
+  const raw = request.nextUrl.searchParams.get('suggestions_limit');
+  if (!raw) {
+    return undefined;
   }
-  if (mode === 'python') {
-    return true;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed)) {
+    return undefined;
   }
-  if (mode === 'typescript') {
-    return false;
-  }
-  return process.env.CV_IMPORT_FORCE_PYTHON === 'true';
+  return normalizeSuggestionsLimit(parsed);
+}
+
+function defaultMetadata(limits: CvImportLimits): CvImportWizardSuggestResponse['metadata'] {
+  return {
+    semantic_used: false,
+    semantic_fallback_triggered: false,
+    unmapped_candidates_count: 0,
+    limits: {
+      max_documents: limits.maxDocuments,
+      max_chars_per_document: limits.maxCharsPerDocument,
+      max_total_chars: limits.maxTotalChars,
+    },
+  };
+}
+
+function decorateMetadata(
+  payload: CvImportWizardSuggestResponse,
+  mode: CvImportEngineMode,
+  engineUsed: EngineUsed
+): CvImportWizardSuggestResponse {
+  return {
+    ...payload,
+    metadata: {
+      ...payload.metadata,
+      engine_mode: mode,
+      engine_used: engineUsed,
+    },
+  };
 }
 
 async function attachEngineMetadata(
   response: NextResponse,
+  requestId: string,
   mode: CvImportEngineMode,
-  engineUsed: 'python' | 'typescript'
-): Promise<NextResponse> {
+  engineUsed: EngineUsed
+) {
   try {
     const payload = await response.json();
     if (payload && typeof payload === 'object') {
-      const withMetadata = payload as Record<string, unknown>;
-      const existingMetadata =
-        withMetadata.metadata && typeof withMetadata.metadata === 'object'
-          ? (withMetadata.metadata as Record<string, unknown>)
+      const record = payload as Record<string, unknown>;
+      const metadata =
+        record.metadata && typeof record.metadata === 'object'
+          ? (record.metadata as Record<string, unknown>)
           : {};
 
-      withMetadata.metadata = {
-        ...existingMetadata,
-        engine_mode: mode,
-        engine_used: engineUsed,
+      const next = {
+        ...record,
+        metadata: {
+          ...metadata,
+          engine_mode: mode,
+          engine_used: engineUsed,
+        },
       };
-      return NextResponse.json(withMetadata, { status: response.status });
+
+      return jsonWithRequestId(requestId, next, response.status);
     }
   } catch {
-    // Preserve original response when body is not JSON.
+    // Keep original body as-is when non-JSON.
   }
-  return response;
+
+  return withRequestId(response, requestId);
+}
+
+function normalizeWizardErrorDocument(
+  document: ExtractDocument
+): CvImportWizardSuggestResponse['documents'][number] {
+  const parseError =
+    typeof document.parse_error === 'string' && document.parse_error.trim().length > 0
+      ? document.parse_error.trim()
+      : 'No extractable text found in document.';
+
+  return {
+    document_id: document.document_id,
+    file_name: document.file_name,
+    context: 'cv',
+    parsed_text: '',
+    parse_error: parseError,
+    parse_error_code: document.parse_error_code || 'PDF_EMPTY_TEXT',
+    work_experiences: [],
+    learning_experiences: [],
+    volunteering: [],
+    languages: [],
+    skill_candidates: [],
+  };
+}
+
+function buildGeminiSourceDocument(document: ExtractDocument): GeminiSourceDocument {
+  return {
+    document_id: document.document_id,
+    file_name: document.file_name,
+    context: document.context,
+    text: document.parsed_text,
+    parse_error:
+      typeof document.parse_error === 'string' && document.parse_error.trim().length > 0
+        ? document.parse_error.trim()
+        : undefined,
+    parse_error_code:
+      typeof document.parse_error_code === 'string' && document.parse_error_code.trim().length > 0
+        ? document.parse_error_code
+        : undefined,
+  };
+}
+
+function mergeWizardDocuments(params: {
+  sourceOrder: Array<{ document_id: string; file_name: string; context: 'cv' | 'jd' | 'general' }>;
+  failedDocuments: ExtractDocument[];
+  wizardEntities: CvImportWizardSuggestResponse;
+  geminiSkills: CvImportSuggestResponse;
+}): CvImportWizardSuggestResponse['documents'] {
+  const failedByDocumentId = new Map(
+    params.failedDocuments.map((document) => [document.document_id, document])
+  );
+  const entitiesByDocumentId = new Map(
+    params.wizardEntities.documents.map((document) => [document.document_id, document])
+  );
+  const skillsByDocumentId = new Map(
+    params.geminiSkills.documents.map((document) => [document.document_id, document])
+  );
+
+  return params.sourceOrder.map((sourceDocument) => {
+    const failed = failedByDocumentId.get(sourceDocument.document_id);
+    if (failed) {
+      return normalizeWizardErrorDocument(failed);
+    }
+
+    const entities = entitiesByDocumentId.get(sourceDocument.document_id);
+    const skills = skillsByDocumentId.get(sourceDocument.document_id);
+
+    if (!entities) {
+      return {
+        document_id: sourceDocument.document_id,
+        file_name: sourceDocument.file_name,
+        context: 'cv',
+        parsed_text: '',
+        parse_error: 'Document could not be analyzed.',
+        parse_error_code: 'CV_IMPORT_ANALYSIS_FAILED',
+        work_experiences: [],
+        learning_experiences: [],
+        volunteering: [],
+        languages: [],
+        skill_candidates: skills?.candidates || [],
+      };
+    }
+
+    return {
+      ...entities,
+      skill_candidates: skills?.candidates || entities.skill_candidates,
+    };
+  });
 }
 
 function isDependencyUnavailableError(error: Error): boolean {
@@ -126,14 +281,80 @@ function isDependencyUnavailableError(error: Error): boolean {
   return dependencyIndicators.some((indicator) => message.includes(indicator));
 }
 
+function isBudgetBlockingError(error: GeminiSuggestError): boolean {
+  return error.code === 'CV_IMPORT_BUDGET_EXCEEDED' || error.code === 'CV_IMPORT_BUDGET_DISABLED';
+}
+
+function buildGeminiFallbackMetadata(
+  metadata: CvImportWizardSuggestResponse['metadata'],
+  fallbackReason: string
+): CvImportWizardSuggestResponse['metadata'] {
+  return {
+    ...metadata,
+    ai_provider: 'gemini',
+    ai_model: null,
+    ai_key_slot: null,
+    ai_fallback_reason: fallbackReason,
+    cost_ore: 0,
+    currency: 'SEK',
+  };
+}
+
+async function markFallbackSuccess(
+  error: GeminiSuggestError,
+  payload: CvImportWizardSuggestResponse
+) {
+  if (!error.logId) {
+    return;
+  }
+
+  try {
+    await updateUsageLog(error.logId, {
+      status: 'fallback_success',
+      errorCode: error.code,
+      errorMessage: error.message,
+      responsePayload: payload,
+      metadata: {
+        deterministic_fallback: true,
+        fallback_reason: error.fallbackReason,
+      },
+    });
+  } catch {
+    // Non-blocking logging update.
+  }
+}
+
 export async function POST(request: NextRequest) {
+  const requestId = createRequestId(request);
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return jsonWithRequestId(requestId, { error: 'Unauthorized' }, 401);
+  }
+
+  const rateLimitResult = enforceCvImportUserRateLimit({
+    userId: user.id,
+    route: '/api/expertise/cv-import/wizard-suggest',
+  });
+
+  if (!rateLimitResult.allowed) {
+    return jsonWithRequestId(
+      requestId,
+      {
+        error: 'Too many requests',
+        message: 'Rate limit exceeded. Please try again later.',
+        code: 'CV_IMPORT_RATE_LIMIT_EXCEEDED',
+        retry_after_seconds: rateLimitResult.retryAfterSeconds,
+      },
+      429,
+      {
+        'Retry-After': String(rateLimitResult.retryAfterSeconds),
+      }
+    );
   }
 
   try {
@@ -142,38 +363,36 @@ export async function POST(request: NextRequest) {
       DEFAULT_SERVER_TIMEOUT_MS
     );
     const contentType = request.headers.get('content-type') || '';
-    const engineMode = resolveEngineMode(request);
+    const engineMode = resolveCvImportEngineMode(request);
     const proxyToPython = shouldProxyToPython(contentType, engineMode);
 
     if (proxyToPython) {
       try {
         const response = await proxyCvRequestToPython(request, '/wizard-suggest', timeoutMs);
-        return await attachEngineMetadata(response, engineMode, 'python');
+        return await attachEngineMetadata(response, requestId, engineMode, 'python');
       } catch (error) {
         if (error instanceof Error && error.message.includes('timed out')) {
-          return NextResponse.json(
+          return jsonWithRequestId(
+            requestId,
             {
               error: 'CV wizard processing timed out',
               message: 'Try fewer documents or shorter CV content.',
             },
-            { status: 408 }
+            408
           );
         }
 
-        return NextResponse.json(
+        return jsonWithRequestId(
+          requestId,
           {
             error: GENERIC_WIZARD_ERROR,
             message: 'Python CV service is temporarily unavailable. Please retry shortly.',
             code: WIZARD_DEPENDENCY_UNAVAILABLE_CODE,
           },
-          { status: 503 }
+          503
         );
       }
     }
-
-    const payload = CvImportWizardSuggestRequestSchema.parse(
-      (await request.json()) as CvImportWizardSuggestRequest
-    );
 
     const limits: CvImportLimits = {
       maxDocuments: parsePositiveInt(
@@ -192,27 +411,231 @@ export async function POST(request: NextRequest) {
 
     const semanticEnabled = process.env.CV_IMPORT_SEMANTIC_ENABLED !== 'false';
 
-    const response = await withTimeout(
-      suggestWizardForDocuments(payload, limits, {
-        semanticEnabled,
-        suggestionsLimit: payload.suggestions_limit,
-      }),
+    let sourceDocuments: ExtractDocument[] = [];
+    let failedDocuments: ExtractDocument[] = [];
+    let suggestionsLimit: number | undefined;
+
+    if (contentType.startsWith('multipart/form-data') && engineMode === 'gemini') {
+      const extractResponse = await proxyCvRequestToPython(request, '/extract', timeoutMs);
+      if (!extractResponse.ok) {
+        return await attachEngineMetadata(extractResponse, requestId, engineMode, 'gemini');
+      }
+
+      const extractPayload = ExtractResponseSchema.parse(await extractResponse.json());
+
+      sourceDocuments = extractPayload.documents.map((document) => ({
+        document_id: document.document_id,
+        file_name: document.file_name,
+        context: document.context,
+        parsed_text: document.parsed_text,
+        parse_error: document.parse_error,
+        parse_error_code: document.parse_error_code,
+      }));
+
+      failedDocuments = sourceDocuments.filter(
+        (document) =>
+          (typeof document.parse_error === 'string' && document.parse_error.trim().length > 0) ||
+          document.parsed_text.trim().length === 0
+      );
+      sourceDocuments = sourceDocuments.filter(
+        (document) =>
+          (!document.parse_error || document.parse_error.trim().length === 0) &&
+          document.parsed_text.trim().length > 0
+      );
+
+      suggestionsLimit = resolveSuggestionsLimitFromQuery(request);
+    } else {
+      const payload = CvImportWizardSuggestRequestSchema.parse(
+        (await request.json()) as CvImportWizardSuggestRequest
+      );
+      sourceDocuments = payload.documents.map((document) => ({
+        document_id: document.document_id,
+        file_name: document.file_name,
+        context: document.context,
+        parsed_text: document.text,
+      }));
+      suggestionsLimit = normalizeSuggestionsLimit(payload.suggestions_limit);
+    }
+
+    const sourceOrder = [...sourceDocuments, ...failedDocuments].map((document) => ({
+      document_id: document.document_id,
+      file_name: document.file_name,
+      context: document.context,
+    }));
+
+    if (engineMode === 'gemini') {
+      if (sourceDocuments.length === 0) {
+        const noTextPayload: CvImportWizardSuggestResponse = {
+          documents: failedDocuments.map((document) => normalizeWizardErrorDocument(document)),
+          metadata: {
+            ...defaultMetadata(limits),
+            ai_provider: 'gemini',
+            ai_model: null,
+            ai_key_slot: null,
+            ai_fallback_reason: 'no_extractable_text',
+            cost_ore: 0,
+            currency: 'SEK',
+          },
+        };
+
+        return jsonWithRequestId(
+          requestId,
+          decorateMetadata(noTextPayload, engineMode, 'gemini'),
+          200
+        );
+      }
+
+      const wizardEntities = await withTimeout(
+        suggestWizardForDocuments(
+          {
+            documents: sourceDocuments.map((document) => ({
+              document_id: document.document_id,
+              file_name: document.file_name,
+              text: document.parsed_text,
+              context: 'cv',
+            })),
+            suggestions_limit: suggestionsLimit,
+          },
+          limits,
+          {
+            semanticEnabled,
+            suggestionsLimit,
+            skillSuggestionMode: 'disabled',
+          }
+        ),
+        timeoutMs
+      );
+
+      const geminiInput = sourceDocuments.map((document) => buildGeminiSourceDocument(document));
+
+      try {
+        const geminiSkills = await withTimeout(
+          suggestSkillsWithGemini({
+            requestId,
+            userId: user.id,
+            route: '/api/expertise/cv-import/wizard-suggest',
+            documents: geminiInput,
+            suggestionsLimit,
+            idempotencyKeyHeader: request.headers.get('x-idempotency-key'),
+          }),
+          timeoutMs
+        );
+
+        const mergedPayload: CvImportWizardSuggestResponse = {
+          ...wizardEntities,
+          documents: mergeWizardDocuments({
+            sourceOrder,
+            failedDocuments,
+            wizardEntities,
+            geminiSkills: geminiSkills.response,
+          }),
+          metadata: {
+            ...wizardEntities.metadata,
+            ...(geminiSkills.response.metadata as Record<string, unknown>),
+          } as CvImportWizardSuggestResponse['metadata'],
+        };
+
+        return jsonWithRequestId(
+          requestId,
+          decorateMetadata(mergedPayload, engineMode, 'gemini'),
+          200
+        );
+      } catch (error) {
+        if (error instanceof GeminiSuggestError && isBudgetBlockingError(error)) {
+          return jsonWithRequestId(
+            requestId,
+            {
+              error: 'CV import budget exceeded',
+              message: error.message,
+              code: 'CV_IMPORT_BUDGET_EXCEEDED',
+            },
+            error.status
+          );
+        }
+
+        const deterministicFallback = await withTimeout(
+          suggestWizardForDocuments(
+            {
+              documents: sourceDocuments.map((document) => ({
+                document_id: document.document_id,
+                file_name: document.file_name,
+                text: document.parsed_text,
+                context: 'cv',
+              })),
+              suggestions_limit: suggestionsLimit,
+            },
+            limits,
+            {
+              semanticEnabled,
+              suggestionsLimit,
+            }
+          ),
+          timeoutMs
+        );
+
+        const fallbackReason =
+          error instanceof GeminiSuggestError ? error.fallbackReason : 'model_error';
+
+        const mergedFallbackPayload: CvImportWizardSuggestResponse = {
+          ...deterministicFallback,
+          documents: mergeWizardDocuments({
+            sourceOrder,
+            failedDocuments,
+            wizardEntities: deterministicFallback,
+            geminiSkills: {
+              documents: deterministicFallback.documents.map((document) => ({
+                document_id: document.document_id,
+                file_name: document.file_name,
+                context: document.context,
+                parsed_text: document.parsed_text,
+                parse_error: document.parse_error,
+                parse_error_code: document.parse_error_code,
+                candidate_count: document.skill_candidates.length,
+                candidates: document.skill_candidates,
+              })),
+              metadata: deterministicFallback.metadata,
+            },
+          }),
+          metadata: buildGeminiFallbackMetadata(deterministicFallback.metadata, fallbackReason),
+        };
+
+        if (error instanceof GeminiSuggestError) {
+          await markFallbackSuccess(error, mergedFallbackPayload);
+        }
+
+        return jsonWithRequestId(
+          requestId,
+          decorateMetadata(mergedFallbackPayload, engineMode, 'typescript'),
+          200
+        );
+      }
+    }
+
+    const payload = await withTimeout(
+      suggestWizardForDocuments(
+        {
+          documents: sourceDocuments.map((document) => ({
+            document_id: document.document_id,
+            file_name: document.file_name,
+            text: document.parsed_text,
+            context: 'cv',
+          })),
+          suggestions_limit: suggestionsLimit,
+        },
+        limits,
+        {
+          semanticEnabled,
+          suggestionsLimit,
+        }
+      ),
       timeoutMs
     );
 
-    const responseWithEngine = {
-      ...response,
-      metadata: {
-        ...response.metadata,
-        engine_mode: engineMode,
-        engine_used: 'typescript' as const,
-      },
-    };
-
-    return NextResponse.json(responseWithEngine);
+    return jsonWithRequestId(requestId, decorateMetadata(payload, engineMode, 'typescript'), 200);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
+      return jsonWithRequestId(
+        requestId,
         {
           error: 'Invalid request payload',
           details: error.issues.map((issue) => ({
@@ -220,49 +643,52 @@ export async function POST(request: NextRequest) {
             message: issue.message,
           })),
         },
-        { status: 400 }
+        400
       );
     }
 
     if (error instanceof Error && error.message.includes('Too many documents')) {
-      return NextResponse.json({ error: error.message }, { status: 413 });
+      return jsonWithRequestId(requestId, { error: error.message }, 413);
     }
 
     if (error instanceof Error && error.message.includes('exceeds max size')) {
-      return NextResponse.json({ error: error.message }, { status: 413 });
+      return jsonWithRequestId(requestId, { error: error.message }, 413);
     }
 
     if (error instanceof Error && error.message.includes('Total payload too large')) {
-      return NextResponse.json({ error: error.message }, { status: 413 });
+      return jsonWithRequestId(requestId, { error: error.message }, 413);
     }
 
     if (error instanceof Error && error.message.includes('timed out')) {
-      return NextResponse.json(
+      return jsonWithRequestId(
+        requestId,
         {
           error: 'CV wizard processing timed out',
           message: 'Try fewer documents or shorter CV content.',
         },
-        { status: 408 }
+        408
       );
     }
 
     if (error instanceof Error && error.message.includes('CV context')) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      return jsonWithRequestId(requestId, { error: error.message }, 400);
     }
 
     if (error instanceof Error && isDependencyUnavailableError(error)) {
-      return NextResponse.json(
+      return jsonWithRequestId(
+        requestId,
         {
           error: GENERIC_WIZARD_ERROR,
           message:
             'CV wizard dependencies are temporarily unavailable. Please retry in a few minutes.',
           code: WIZARD_DEPENDENCY_UNAVAILABLE_CODE,
         },
-        { status: 503 }
+        503
       );
     }
 
-    return NextResponse.json(
+    return jsonWithRequestId(
+      requestId,
       {
         error: GENERIC_WIZARD_ERROR,
         message:
@@ -271,7 +697,7 @@ export async function POST(request: NextRequest) {
             : 'CV wizard processing failed due to an unknown error. Please retry.',
         code: WIZARD_PROCESSING_FAILED_CODE,
       },
-      { status: 500 }
+      500
     );
   }
 }

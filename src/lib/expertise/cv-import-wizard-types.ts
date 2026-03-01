@@ -67,6 +67,9 @@ export const CvImportWizardSuggestDocumentResultSchema = z.object({
   document_id: z.string(),
   file_name: z.string(),
   context: CvImportWizardContextSchema,
+  parsed_text: z.string().default(''),
+  parse_error: z.string().optional().nullable(),
+  parse_error_code: z.string().optional().nullable(),
   work_experiences: z.array(CvImportWizardWorkExperienceSchema),
   learning_experiences: z.array(CvImportWizardLearningExperienceSchema),
   volunteering: z.array(CvImportWizardVolunteeringSchema),
@@ -77,12 +80,32 @@ export const CvImportWizardSuggestDocumentResultSchema = z.object({
 export const CvImportWizardMetadataSchema = z.object({
   semantic_used: z.boolean(),
   semantic_fallback_triggered: z.boolean(),
+  fallback_stage: z
+    .enum([
+      'none',
+      'python_multipart_failed',
+      'python_json_retry',
+      'typescript_retry',
+      'candidate_only',
+    ])
+    .optional(),
+  candidate_only_fallback_triggered: z.boolean().optional(),
+  match_dependency_error_code: z.string().optional(),
   unmapped_candidates_count: z.number().int().min(0),
   limits: z.object({
     max_documents: z.number().int().positive(),
     max_chars_per_document: z.number().int().positive(),
     max_total_chars: z.number().int().positive(),
   }),
+  ai_provider: z.literal('gemini').optional(),
+  ai_model: z.string().optional().nullable(),
+  ai_key_slot: z.enum(['primary', 'secondary']).optional().nullable(),
+  ai_fallback_reason: z.string().optional().nullable(),
+  cost_ore: z.number().int().min(0).optional(),
+  currency: z.literal('SEK').optional(),
+  idempotency_key: z.string().optional(),
+  engine_mode: z.enum(['auto', 'typescript', 'python', 'gemini']).optional(),
+  engine_used: z.enum(['python', 'typescript', 'gemini']).optional(),
 });
 
 export const CvImportWizardSuggestResponseSchema = z.object({

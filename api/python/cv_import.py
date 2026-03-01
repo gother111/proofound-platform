@@ -17,6 +17,7 @@ app = FastAPI(title="Proofound Python CV Import")
 
 GENERIC_WIZARD_ERROR = "Failed to process CV wizard suggestions"
 GENERIC_SUGGEST_ERROR = "Failed to process CV documents"
+GENERIC_EXTRACT_ERROR = "Failed to extract CV text"
 
 ERROR_CODE_PDF_PARSE_FAILED = "PDF_PARSE_FAILED"
 ERROR_CODE_PDF_EMPTY_TEXT = "PDF_EMPTY_TEXT"
@@ -110,6 +111,24 @@ def _skill_error_document(
     }
 
 
+def _extract_result_document(
+    document_id: str,
+    file_name: str,
+    context: str,
+    parsed_text: str,
+    parse_error: str | None = None,
+    parse_error_code: str | None = None,
+) -> dict[str, Any]:
+    return {
+        "document_id": document_id,
+        "file_name": file_name,
+        "context": context,
+        "parsed_text": parsed_text,
+        "parse_error": parse_error,
+        "parse_error_code": parse_error_code,
+    }
+
+
 def _validate_proxy_secret(request: Request) -> JSONResponse | None:
     expected_secret = os.environ.get("CV_IMPORT_PROXY_INTERNAL_SECRET", "").strip()
     if not expected_secret:
@@ -133,8 +152,8 @@ async def _parse_multipart_documents(
     if len(files) > limits.max_documents:
         raise ValueError(f"Too many documents. Maximum allowed is {limits.max_documents}.")
 
-    max_file_size_bytes = _env_int("CV_IMPORT_MAX_FILE_SIZE_MB", 8) * 1024 * 1024
-    max_pdf_pages = _env_int("CV_IMPORT_MAX_PDF_PAGES", 50)
+    max_file_size_bytes = _env_int("CV_IMPORT_MAX_FILE_SIZE_MB", 5) * 1024 * 1024
+    max_pdf_pages = _env_int("CV_IMPORT_MAX_PDF_PAGES", 4)
     max_extracted_chars = _env_int("CV_IMPORT_MAX_CHARS_PER_DOCUMENT", 30000)
 
     parsed_documents: list[dict[str, str]] = []
@@ -423,9 +442,91 @@ async def suggest(request: Request):
         )
 
 
+@app.post("/extract")
+async def extract(request: Request):
+    limits = _load_limits()
+    content_type = request.headers.get("content-type", "")
+    unauthorized = _validate_proxy_secret(request)
+    if unauthorized:
+        return unauthorized
+
+    try:
+        documents: list[dict[str, Any]] = []
+        if content_type.startswith("multipart/form-data"):
+            parsed_documents, failed_documents = await _parse_multipart_documents(
+                request,
+                default_context="cv",
+                limits=limits,
+            )
+
+            documents.extend(
+                [
+                    _extract_result_document(
+                        document_id=item["document_id"],
+                        file_name=item["file_name"],
+                        context=item.get("context", "cv"),
+                        parsed_text=item["text"],
+                    )
+                    for item in parsed_documents
+                ]
+            )
+            documents.extend(
+                [
+                    _extract_result_document(
+                        document_id=item["document_id"],
+                        file_name=item["file_name"],
+                        context=item.get("context", "cv"),
+                        parsed_text="",
+                        parse_error=item["parse_error"],
+                        parse_error_code=item.get("parse_error_code"),
+                    )
+                    for item in failed_documents
+                ]
+            )
+        else:
+            parsed_documents, _suggestions_limit = await _parse_json_documents(request)
+            documents.extend(
+                [
+                    _extract_result_document(
+                        document_id=item["document_id"],
+                        file_name=item["file_name"],
+                        context=item.get("context", "cv"),
+                        parsed_text=item["text"],
+                    )
+                    for item in parsed_documents
+                ]
+            )
+
+        return JSONResponse(
+            {
+                "documents": documents,
+                "metadata": _metadata(limits, 0),
+            }
+        )
+    except ValueError as exc:
+        message = str(exc)
+        status = (
+            413 if "max size" in message or "payload" in message or "Too many documents" in message else 400
+        )
+        return JSONResponse({"error": message}, status_code=status)
+    except ValidationError as exc:
+        return JSONResponse({"error": "Invalid request payload", "message": str(exc)}, status_code=400)
+    except json.JSONDecodeError:
+        return JSONResponse({"error": "Invalid request payload"}, status_code=400)
+    except Exception as exc:  # pragma: no cover
+        return JSONResponse(
+            {
+                "error": GENERIC_EXTRACT_ERROR,
+                "message": f"CV extraction failed: {exc}",
+                "code": ERROR_CODE_MATCHING_FAILED,
+            },
+            status_code=500,
+        )
+
+
 def _resolve_dispatch_endpoint(request: Request) -> str | None:
     endpoint = request.query_params.get("endpoint", "").strip().lower()
-    if endpoint in {"wizard-suggest", "suggest"}:
+    if endpoint in {"wizard-suggest", "suggest", "extract"}:
         return endpoint
     return None
 
@@ -438,11 +539,13 @@ async def dispatch_import(request: Request):
         return await wizard_suggest(request)
     if endpoint == "suggest":
         return await suggest(request)
+    if endpoint == "extract":
+        return await extract(request)
 
     return JSONResponse(
         {
             "error": "Invalid endpoint parameter",
-            "message": "Use endpoint=wizard-suggest or endpoint=suggest.",
+            "message": "Use endpoint=wizard-suggest, endpoint=suggest, or endpoint=extract.",
         },
         status_code=400,
     )

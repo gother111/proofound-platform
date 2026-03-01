@@ -988,6 +988,100 @@ export const matchingRefreshJobs = pgTable(
   })
 );
 
+// CV import AI monthly budgets (Gemini primary/secondary key slots)
+export const cvImportAiBudgets = pgTable(
+  'cv_import_ai_budgets',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    provider: text('provider', { enum: ['gemini'] })
+      .default('gemini')
+      .notNull(),
+    keySlot: text('key_slot', { enum: ['primary', 'secondary'] }).notNull(),
+    monthStart: date('month_start').notNull(),
+    currency: text('currency').default('SEK').notNull(),
+    monthlyLimitOre: integer('monthly_limit_ore').notNull(),
+    spentOre: integer('spent_ore').default(0).notNull(),
+    reservedOre: integer('reserved_ore').default(0).notNull(),
+    status: text('status', { enum: ['active', 'exhausted', 'disabled'] })
+      .default('active')
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    providerSlotMonthUnique: unique().on(table.provider, table.keySlot, table.monthStart),
+    monthStartIdx: index('idx_cv_import_ai_budgets_month_start').on(table.monthStart),
+    providerSlotStatusIdx: index('idx_cv_import_ai_budgets_provider_slot').on(
+      table.provider,
+      table.keySlot,
+      table.status
+    ),
+  })
+);
+
+// CV import AI usage/cost logs (with idempotency replay support)
+export const cvImportAiUsageLogs = pgTable(
+  'cv_import_ai_usage_logs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    requestId: text('request_id').notNull(),
+    idempotencyKey: text('idempotency_key').notNull(),
+    userId: uuid('user_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    route: text('route').notNull(),
+    status: text('status', {
+      enum: [
+        'in_progress',
+        'success',
+        'fallback_success',
+        'budget_blocked',
+        'quota_failover',
+        'invalid_json',
+        'model_error',
+        'ocr_failed',
+        'failed',
+      ],
+    })
+      .default('in_progress')
+      .notNull(),
+    provider: text('provider', { enum: ['gemini'] })
+      .default('gemini')
+      .notNull(),
+    keySlot: text('key_slot', { enum: ['primary', 'secondary'] }),
+    model: text('model'),
+    promptTokens: integer('prompt_tokens'),
+    outputTokens: integer('output_tokens'),
+    totalTokens: integer('total_tokens'),
+    costOre: integer('cost_ore').default(0).notNull(),
+    reservedOre: integer('reserved_ore').default(0).notNull(),
+    currency: text('currency').default('SEK').notNull(),
+    errorCode: text('error_code'),
+    errorMessage: text('error_message'),
+    latencyMs: integer('latency_ms'),
+    responsePayload: jsonb('response_payload'),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    userRouteIdempotencyUnique: unique().on(table.userId, table.route, table.idempotencyKey),
+    createdAtIdx: index('idx_cv_import_ai_usage_logs_created_at').on(table.createdAt),
+    userCreatedAtIdx: index('idx_cv_import_ai_usage_logs_user_created_at').on(
+      table.userId,
+      table.createdAt
+    ),
+    routeStatusIdx: index('idx_cv_import_ai_usage_logs_route_status').on(
+      table.route,
+      table.status,
+      table.createdAt
+    ),
+    keySlotIdx: index('idx_cv_import_ai_usage_logs_key_slot').on(table.keySlot, table.createdAt),
+  })
+);
+
 // Match interest - tracks "Interested" actions for mutual reveal
 export const matchInterest = pgTable(
   'match_interest',
@@ -2356,6 +2450,10 @@ export type MatchingProfile = typeof matchingProfiles.$inferSelect;
 export type InsertMatchingProfile = typeof matchingProfiles.$inferInsert;
 export type MatchingRefreshJob = typeof matchingRefreshJobs.$inferSelect;
 export type InsertMatchingRefreshJob = typeof matchingRefreshJobs.$inferInsert;
+export type CvImportAiBudget = typeof cvImportAiBudgets.$inferSelect;
+export type InsertCvImportAiBudget = typeof cvImportAiBudgets.$inferInsert;
+export type CvImportAiUsageLog = typeof cvImportAiUsageLogs.$inferSelect;
+export type InsertCvImportAiUsageLog = typeof cvImportAiUsageLogs.$inferInsert;
 export type Skill = typeof skills.$inferSelect;
 export type InsertSkill = typeof skills.$inferInsert;
 export type Assignment = typeof assignments.$inferSelect;

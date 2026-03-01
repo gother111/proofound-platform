@@ -7,8 +7,10 @@ import {
 import {
   suggestSkillsForDocuments,
   type CvImportLimits,
+  type CvImportCandidate,
   type CvImportSuggestResponse,
 } from '@/lib/expertise/cv-import-suggest';
+import { extractSkillPhrases } from '@/lib/ai/nlp-extractor';
 import {
   CvImportWizardSuggestRequestSchema,
   CvImportWizardSuggestResponseSchema,
@@ -34,6 +36,7 @@ interface BlockSlice {
 interface WizardSuggestOptions {
   semanticEnabled?: boolean;
   suggestionsLimit?: number;
+  skillSuggestionMode?: 'deterministic' | 'disabled';
 }
 
 const MAX_ITEMS_PER_ENTITY = 10;
@@ -97,6 +100,82 @@ const LANGUAGE_SYNONYMS: Record<string, string[]> = {
   nl: ['dutch'],
   pl: ['polish'],
 };
+
+const FALLBACK_MAX_SKILL_CANDIDATES = 40;
+const FALLBACK_STOPWORDS = new Set([
+  'and',
+  'or',
+  'the',
+  'a',
+  'an',
+  'with',
+  'for',
+  'in',
+  'of',
+  'to',
+  'using',
+  'experience',
+  'skills',
+  'knowledge',
+]);
+const FALLBACK_LANGUAGE_KEYWORDS = new Set([
+  'english',
+  'swedish',
+  'spanish',
+  'german',
+  'french',
+  'italian',
+  'portuguese',
+  'arabic',
+  'hindi',
+  'mandarin',
+  'japanese',
+  'korean',
+]);
+const FALLBACK_SOFT_SKILL_KEYWORDS = new Set([
+  'communication',
+  'leadership',
+  'collaboration',
+  'teamwork',
+  'problem solving',
+  'critical thinking',
+  'stakeholder management',
+]);
+const FALLBACK_CERTIFICATION_KEYWORDS = ['certification', 'certified', 'certificate', 'iso', 'pmp'];
+const FALLBACK_TOOL_KEYWORDS = [
+  'jira',
+  'figma',
+  'docker',
+  'kubernetes',
+  'aws',
+  'azure',
+  'gcp',
+  'github',
+  'gitlab',
+  'jenkins',
+  'tableau',
+  'power bi',
+  'excel',
+  'salesforce',
+  'sap',
+  'notion',
+  'slack',
+  'postgresql',
+  'mysql',
+  'mongodb',
+  'redis',
+  'react',
+  'typescript',
+  'python',
+  'java',
+  'node',
+  'next.js',
+  'nextjs',
+];
+const FALLBACK_DATE_PATTERN =
+  /\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)?\s*\d{4}\b|(?:\b\d{4}\s*[-–]\s*(?:present|current|\d{4}))|(?:\d+\s*(?:years?|months?))/i;
+const FALLBACK_SENTENCE_VERB_PATTERN =
+  /\b(built|designed|led|delivered|implemented|optimized|coordinated|improved|managed)\b/i;
 
 function normalizeSpace(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
@@ -528,7 +607,222 @@ function extractWizardEntities(text: string) {
   };
 }
 
+function normalizeFallbackText(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9+.#/\-\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function splitFallbackCandidateText(rawText: string): string[] {
+  const normalized = normalizeSpace(rawText);
+  if (!normalized) {
+    return [];
+  }
+
+  return normalized
+    .split(/\s*(?:,|;|\||\band\b|\bor\b)\s*/gi)
+    .map((entry) => normalizeSpace(entry))
+    .filter(Boolean);
+}
+
+function inferFallbackCategory(rawText: string): CvImportCandidate['category'] {
+  const normalized = normalizeFallbackText(rawText);
+
+  if (FALLBACK_LANGUAGE_KEYWORDS.has(normalized)) {
+    return 'languages';
+  }
+
+  if (FALLBACK_SOFT_SKILL_KEYWORDS.has(normalized)) {
+    return 'soft_skills';
+  }
+
+  if (FALLBACK_CERTIFICATION_KEYWORDS.some((keyword) => normalized.includes(keyword))) {
+    return 'certifications';
+  }
+
+  if (FALLBACK_TOOL_KEYWORDS.some((keyword) => normalized.includes(keyword))) {
+    return 'tools_technologies';
+  }
+
+  if (normalized.includes('engineering') || normalized.includes('development')) {
+    return 'technical';
+  }
+
+  return 'other';
+}
+
+function isValidFallbackCandidate(rawText: string): boolean {
+  const normalized = normalizeFallbackText(rawText);
+  if (!normalized || normalized.length < 2 || normalized.length > 80) {
+    return false;
+  }
+
+  const tokens = normalized.split(' ').filter(Boolean);
+  if (tokens.length === 0 || tokens.length > 8) {
+    return false;
+  }
+
+  if (tokens.every((token) => FALLBACK_STOPWORDS.has(token))) {
+    return false;
+  }
+
+  if (FALLBACK_DATE_PATTERN.test(normalized)) {
+    return false;
+  }
+
+  if (tokens.length > 4 && FALLBACK_SENTENCE_VERB_PATTERN.test(normalized)) {
+    return false;
+  }
+
+  return /[a-z]/i.test(normalized);
+}
+
+function buildFallbackEvidence(text: string, rawText: string, context?: string): string[] {
+  const contextSnippet = normalizeSpace((context || '').replace(/^\.{3}|\.\.\.$/g, ''));
+  if (contextSnippet.length > 0) {
+    return [contextSnippet.slice(0, 260)];
+  }
+
+  const escaped = rawText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = new RegExp(escaped, 'i').exec(text);
+  if (!match || typeof match.index !== 'number') {
+    return [];
+  }
+
+  const snippetStart = Math.max(0, match.index - EVIDENCE_CONTEXT_WINDOW);
+  const snippetEnd = Math.min(text.length, match.index + match[0].length + EVIDENCE_CONTEXT_WINDOW);
+  const snippet = normalizeSpace(text.slice(snippetStart, snippetEnd));
+
+  return snippet.length > 0 ? [snippet] : [];
+}
+
+function buildCandidateOnlyRows(
+  text: string
+): CvImportSuggestResponse['documents'][number]['candidates'] {
+  const extraction = extractSkillPhrases(text);
+  const candidateMap = new Map<
+    string,
+    CvImportSuggestResponse['documents'][number]['candidates'][number]
+  >();
+
+  for (const phrase of extraction.phrases) {
+    if (phrase.type !== 'skill' && phrase.type !== 'experience') {
+      continue;
+    }
+
+    const phraseCandidates = splitFallbackCandidateText(phrase.text);
+    for (const phraseCandidate of phraseCandidates) {
+      if (!isValidFallbackCandidate(phraseCandidate)) {
+        continue;
+      }
+
+      const normalized = normalizeFallbackText(phraseCandidate);
+      const evidenceSnippets = buildFallbackEvidence(text, phraseCandidate, phrase.context);
+      if (evidenceSnippets.length === 0) {
+        continue;
+      }
+
+      const confidence =
+        typeof phrase.confidence === 'number'
+          ? Math.max(0.35, Math.min(0.92, phrase.confidence))
+          : 0.5;
+
+      const existing = candidateMap.get(normalized);
+      if (!existing || confidence > existing.confidence) {
+        candidateMap.set(normalized, {
+          candidate_id: `fallback-${candidateMap.size + 1}`,
+          raw_skill_text: phraseCandidate,
+          category: inferFallbackCategory(phraseCandidate),
+          evidence_snippets: evidenceSnippets.slice(0, 3),
+          confidence,
+          suggestions: [],
+          unmapped_candidate: true,
+        });
+      }
+    }
+  }
+
+  return Array.from(candidateMap.values())
+    .sort((left, right) => right.confidence - left.confidence)
+    .slice(0, FALLBACK_MAX_SKILL_CANDIDATES)
+    .map((candidate, index) => ({
+      ...candidate,
+      candidate_id: `fallback-${index + 1}`,
+    }));
+}
+
+function buildSkillDependencyErrorCode(error: unknown): string {
+  if (!(error instanceof Error)) {
+    return 'SKILL_MATCHING_UNAVAILABLE';
+  }
+
+  const message = error.message.toLowerCase();
+  if (message.includes('embedding') || message.includes('vector') || message.includes('pgvector')) {
+    return 'TAXONOMY_EMBEDDING_UNAVAILABLE';
+  }
+
+  if (
+    message.includes('skills_taxonomy') ||
+    message.includes('relation') ||
+    message.includes('column') ||
+    message.includes('database')
+  ) {
+    return 'SKILL_MATCH_DEPENDENCY_UNAVAILABLE';
+  }
+
+  return 'SKILL_MATCHING_UNAVAILABLE';
+}
+
 function buildSkillSuggestionFallback(
+  input: CvImportWizardSuggestRequest,
+  limits: CvImportLimits,
+  dependencyErrorCode: string = 'SKILL_MATCHING_UNAVAILABLE'
+): CvImportSuggestResponse {
+  const documents = input.documents.map((document) => {
+    const candidates = buildCandidateOnlyRows(document.text);
+    return {
+      document_id: document.document_id,
+      file_name: document.file_name,
+      context: document.context,
+      parsed_text: document.text,
+      parse_error: null,
+      parse_error_code: null,
+      candidate_count: candidates.length,
+      candidates,
+    };
+  });
+
+  const unmappedCandidatesCount = documents.reduce(
+    (count, document) =>
+      count +
+      document.candidates.reduce(
+        (candidateCount, candidate) => candidateCount + (candidate.unmapped_candidate ? 1 : 0),
+        0
+      ),
+    0
+  );
+
+  return {
+    documents,
+    metadata: {
+      semantic_used: false,
+      semantic_fallback_triggered: true,
+      fallback_stage: 'candidate_only',
+      candidate_only_fallback_triggered: true,
+      match_dependency_error_code: dependencyErrorCode,
+      unmapped_candidates_count: unmappedCandidatesCount,
+      limits: {
+        max_documents: limits.maxDocuments,
+        max_chars_per_document: limits.maxCharsPerDocument,
+        max_total_chars: limits.maxTotalChars,
+      },
+    },
+  };
+}
+
+function buildDisabledSkillSuggestionResponse(
   input: CvImportWizardSuggestRequest,
   limits: CvImportLimits
 ): CvImportSuggestResponse {
@@ -537,12 +831,17 @@ function buildSkillSuggestionFallback(
       document_id: document.document_id,
       file_name: document.file_name,
       context: document.context,
+      parsed_text: document.text,
+      parse_error: null,
+      parse_error_code: null,
       candidate_count: 0,
       candidates: [],
     })),
     metadata: {
       semantic_used: false,
-      semantic_fallback_triggered: true,
+      semantic_fallback_triggered: false,
+      fallback_stage: 'none',
+      candidate_only_fallback_triggered: false,
       unmapped_candidates_count: 0,
       limits: {
         max_documents: limits.maxDocuments,
@@ -566,26 +865,35 @@ export async function suggestWizardForDocuments(
     }
   }
 
+  const skillSuggestionMode = options.skillSuggestionMode ?? 'deterministic';
   let skillResponse: CvImportSuggestResponse;
 
-  try {
-    skillResponse = await suggestSkillsForDocuments(
-      {
-        documents: parsedInput.documents,
-        suggestions_limit: options.suggestionsLimit,
-      },
-      limits,
-      {
-        semanticEnabled: options.semanticEnabled,
-        suggestionsLimit: options.suggestionsLimit,
-      }
-    );
-  } catch (error) {
-    console.error(
-      '[cv-import-wizard] skill suggestion dependency failed; continuing without skill candidates',
-      error
-    );
-    skillResponse = buildSkillSuggestionFallback(parsedInput, limits);
+  if (skillSuggestionMode === 'disabled') {
+    skillResponse = buildDisabledSkillSuggestionResponse(parsedInput, limits);
+  } else {
+    try {
+      skillResponse = await suggestSkillsForDocuments(
+        {
+          documents: parsedInput.documents,
+          suggestions_limit: options.suggestionsLimit,
+        },
+        limits,
+        {
+          semanticEnabled: options.semanticEnabled,
+          suggestionsLimit: options.suggestionsLimit,
+        }
+      );
+    } catch (error) {
+      console.error(
+        '[cv-import-wizard] skill suggestion dependency failed; continuing without skill candidates',
+        error
+      );
+      skillResponse = buildSkillSuggestionFallback(
+        parsedInput,
+        limits,
+        buildSkillDependencyErrorCode(error)
+      );
+    }
   }
 
   const skillResultById = new Map(
@@ -600,6 +908,9 @@ export async function suggestWizardForDocuments(
       document_id: document.document_id,
       file_name: document.file_name,
       context: document.context,
+      parsed_text: document.text,
+      parse_error: null,
+      parse_error_code: null,
       work_experiences: extracted.work_experiences,
       learning_experiences: extracted.learning_experiences,
       volunteering: extracted.volunteering,

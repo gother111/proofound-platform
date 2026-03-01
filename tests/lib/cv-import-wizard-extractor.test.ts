@@ -190,7 +190,17 @@ describe('cv-import wizard extractor', () => {
 
     const document = response.documents[0];
     expect(document.work_experiences.length).toBeGreaterThan(0);
-    expect(document.skill_candidates).toHaveLength(0);
+    expect(document.skill_candidates.length).toBeGreaterThan(0);
+    expect(
+      document.skill_candidates.every(
+        (candidate) => candidate.suggestions.length === 0 && candidate.unmapped_candidate
+      )
+    ).toBe(true);
     expect(response.metadata.semantic_fallback_triggered).toBe(true);
+    expect(response.metadata.candidate_only_fallback_triggered).toBe(true);
+    expect(response.metadata.fallback_stage).toBe('candidate_only');
+    expect(response.metadata.match_dependency_error_code).toBe(
+      'SKILL_MATCH_DEPENDENCY_UNAVAILABLE'
+    );
   });
 });

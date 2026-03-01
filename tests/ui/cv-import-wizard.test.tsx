@@ -9,6 +9,9 @@ const toastSuccessMock = vi.fn();
 const toastErrorMock = vi.fn();
 const toastInfoMock = vi.fn();
 const extractPdfTextFromFileMock = vi.fn();
+const extractPdfTextWithOcrMock = vi.fn();
+const isOcrClientEnabledMock = vi.fn();
+const resolveOcrClientLimitsMock = vi.fn();
 const normalizePdfParseErrorMock = vi.fn((error: unknown) =>
   error instanceof Error ? error.message : 'Failed to parse PDF'
 );
@@ -30,14 +33,32 @@ vi.mock('@/lib/expertise/pdf-client-extractor', () => ({
   normalizePdfParseError: (...args: any[]) => normalizePdfParseErrorMock(...args),
 }));
 
+vi.mock('@/lib/expertise/ocr-client', () => ({
+  extractPdfTextWithOcr: (...args: any[]) => extractPdfTextWithOcrMock(...args),
+  isOcrClientEnabled: (...args: any[]) => isOcrClientEnabledMock(...args),
+  resolveOcrClientLimits: (...args: any[]) => resolveOcrClientLimitsMock(...args),
+}));
+
 describe('CvImportWizard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     extractPdfTextFromFileMock.mockReset();
+    extractPdfTextWithOcrMock.mockReset();
+    isOcrClientEnabledMock.mockReset();
+    resolveOcrClientLimitsMock.mockReset();
     normalizePdfParseErrorMock.mockReset();
     normalizePdfParseErrorMock.mockImplementation((error: unknown) =>
       error instanceof Error ? error.message : 'Failed to parse PDF'
     );
+    isOcrClientEnabledMock.mockReturnValue(false);
+    resolveOcrClientLimitsMock.mockReturnValue({
+      maxPages: 4,
+      maxFileSizeBytes: 5 * 1024 * 1024,
+      pageTimeoutMs: 8000,
+      totalTimeoutMs: 25000,
+      renderScale: 2,
+      language: 'eng',
+    });
   });
 
   it('uploads and analyzes CV PDFs through wizard suggest route', async () => {
@@ -359,7 +380,7 @@ describe('CvImportWizard', () => {
     });
   });
 
-  it('retries with typescript engine when python proxy is unavailable', async () => {
+  it('retries with python json engine first when python multipart proxy is unavailable', async () => {
     extractPdfTextFromFileMock.mockResolvedValueOnce('React TypeScript');
     apiFetchMock
       .mockResolvedValueOnce(
@@ -442,7 +463,7 @@ describe('CvImportWizard', () => {
 
     expect(apiFetchMock).toHaveBeenNthCalledWith(
       2,
-      '/api/expertise/cv-import/wizard-suggest?engine=typescript',
+      '/api/expertise/cv-import/wizard-suggest?engine=python',
       expect.objectContaining({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -454,12 +475,26 @@ describe('CvImportWizard', () => {
     expect(retryPayload.documents[0].file_name).toBe('cv.pdf');
     expect(retryPayload.documents[0].context).toBe('cv');
     expect(retryPayload.documents[0].text).toBe('React TypeScript');
+    expect(toastInfoMock).toHaveBeenCalledWith('CV analysis recovered via fallback path.');
     expect(screen.getByText('Extracted text preview')).toBeInTheDocument();
   });
 
-  it('retries with typescript engine when python proxy times out', async () => {
+  it('retries with typescript engine when python multipart and python json retries both fail', async () => {
     extractPdfTextFromFileMock.mockResolvedValueOnce('React TypeScript');
     apiFetchMock
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            error: 'Failed to process CV wizard suggestions',
+            message: 'Python CV service timed out. Falling back is recommended.',
+            code: 'CV_IMPORT_PROXY_TIMEOUT',
+          }),
+          {
+            status: 504,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        )
+      )
       .mockResolvedValueOnce(
         new Response(
           JSON.stringify({
@@ -525,7 +560,7 @@ describe('CvImportWizard', () => {
     fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
 
     await waitFor(() => {
-      expect(apiFetchMock).toHaveBeenCalledTimes(2);
+      expect(apiFetchMock).toHaveBeenCalledTimes(3);
     });
 
     expect(extractPdfTextFromFileMock).toHaveBeenCalledTimes(1);
@@ -540,6 +575,15 @@ describe('CvImportWizard', () => {
 
     expect(apiFetchMock).toHaveBeenNthCalledWith(
       2,
+      '/api/expertise/cv-import/wizard-suggest?engine=python',
+      expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+
+    expect(apiFetchMock).toHaveBeenNthCalledWith(
+      3,
       '/api/expertise/cv-import/wizard-suggest?engine=typescript',
       expect.objectContaining({
         method: 'POST',
@@ -547,11 +591,12 @@ describe('CvImportWizard', () => {
       })
     );
 
-    const retryPayload = JSON.parse(String(apiFetchMock.mock.calls[1]?.[1]?.body || '{}'));
+    const retryPayload = JSON.parse(String(apiFetchMock.mock.calls[2]?.[1]?.body || '{}'));
     expect(retryPayload.documents[0].document_id).toMatch(/cv\.pdf/);
     expect(retryPayload.documents[0].file_name).toBe('cv.pdf');
     expect(retryPayload.documents[0].context).toBe('cv');
     expect(retryPayload.documents[0].text).toBe('React TypeScript');
+    expect(toastInfoMock).toHaveBeenCalledWith('CV analysis recovered via fallback path.');
     expect(screen.getByText('Extracted text preview')).toBeInTheDocument();
   });
 
@@ -585,6 +630,10 @@ describe('CvImportWizard', () => {
       },
     });
 
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
+    });
+
     fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
 
     await waitFor(() => {
@@ -596,17 +645,155 @@ describe('CvImportWizard', () => {
     expect(apiFetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('renders backend parse_error message when server-side parser fails for a document', async () => {
-    apiFetchMock.mockResolvedValueOnce(
-      new Response(
+  it('runs OCR retry for PDF_EMPTY_TEXT documents when OCR is enabled', async () => {
+    isOcrClientEnabledMock.mockReturnValue(true);
+    extractPdfTextWithOcrMock.mockResolvedValueOnce({
+      text: 'OCR extracted text',
+      pagesProcessed: 1,
+    });
+
+    apiFetchMock
+      .mockImplementationOnce(async (_url: string, init?: RequestInit) => {
+        const formData = init?.body as FormData;
+        const requestDocumentId = String(formData.getAll('document_ids')[0] || 'doc-1');
+
+        return new Response(
+          JSON.stringify({
+            documents: [
+              {
+                document_id: requestDocumentId,
+                file_name: 'cv-scan.pdf',
+                context: 'cv',
+                parsed_text: '',
+                parse_error: 'No extractable text found in document.',
+                parse_error_code: 'PDF_EMPTY_TEXT',
+                work_experiences: [],
+                learning_experiences: [],
+                volunteering: [],
+                languages: [],
+                skill_candidates: [],
+              },
+            ],
+            metadata: {
+              semantic_used: false,
+              semantic_fallback_triggered: false,
+              unmapped_candidates_count: 0,
+              limits: {
+                max_documents: 5,
+                max_chars_per_document: 30000,
+                max_total_chars: 90000,
+              },
+            },
+          }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      })
+      .mockImplementationOnce(async (_url: string, init?: RequestInit) => {
+        const parsed = JSON.parse(String(init?.body || '{}')) as {
+          documents?: Array<{ document_id?: string }>;
+        };
+        const requestDocumentId = parsed.documents?.[0]?.document_id || 'doc-1';
+
+        return new Response(
+          JSON.stringify({
+            documents: [
+              {
+                document_id: requestDocumentId,
+                file_name: 'cv-scan.pdf',
+                context: 'cv',
+                parsed_text: 'OCR extracted text',
+                parse_error: null,
+                parse_error_code: null,
+                work_experiences: [],
+                learning_experiences: [],
+                volunteering: [],
+                languages: [],
+                skill_candidates: [],
+              },
+            ],
+            metadata: {
+              semantic_used: false,
+              semantic_fallback_triggered: false,
+              unmapped_candidates_count: 0,
+              limits: {
+                max_documents: 5,
+                max_chars_per_document: 30000,
+                max_total_chars: 90000,
+              },
+            },
+          }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      });
+
+    render(<CvImportWizard />);
+
+    const uploadInput = screen.getByTestId('cv-upload');
+    const file = new File(['dummy'], 'cv-scan.pdf', { type: 'application/pdf' });
+
+    fireEvent.change(uploadInput, {
+      target: {
+        files: [file],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
+
+    await waitFor(() => {
+      expect(apiFetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    expect(apiFetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/expertise/cv-import/wizard-suggest?engine=gemini',
+      expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    expect(extractPdfTextWithOcrMock).toHaveBeenCalledTimes(1);
+    expect(toastSuccessMock).toHaveBeenCalledWith(
+      'OCR fallback extracted text from scanned PDF documents.'
+    );
+
+    const retryPayload = JSON.parse(String(apiFetchMock.mock.calls[1]?.[1]?.body || '{}'));
+    expect(retryPayload.documents).toEqual([
+      expect.objectContaining({
+        file_name: 'cv-scan.pdf',
+        context: 'cv',
+        text: 'OCR extracted text',
+      }),
+    ]);
+  });
+
+  it('shows OCR failure guidance when OCR cannot recover scanned PDFs', async () => {
+    isOcrClientEnabledMock.mockReturnValue(true);
+    extractPdfTextWithOcrMock.mockRejectedValueOnce(new Error('OCR timeout'));
+
+    apiFetchMock.mockImplementationOnce(async (_url: string, init?: RequestInit) => {
+      const formData = init?.body as FormData;
+      const requestDocumentId = String(formData.getAll('document_ids')[0] || 'doc-1');
+
+      return new Response(
         JSON.stringify({
           documents: [
             {
-              document_id: 'doc-1',
-              file_name: 'cv-init-error.pdf',
+              document_id: requestDocumentId,
+              file_name: 'cv-scan.pdf',
               context: 'cv',
               parsed_text: '',
-              parse_error: 'PDF parser could not start. Please refresh and re-upload the file.',
+              parse_error: 'No extractable text found in document.',
+              parse_error_code: 'PDF_EMPTY_TEXT',
               work_experiences: [],
               learning_experiences: [],
               volunteering: [],
@@ -629,8 +816,75 @@ describe('CvImportWizard', () => {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
         }
-      )
-    );
+      );
+    });
+
+    render(<CvImportWizard />);
+
+    const uploadInput = screen.getByTestId('cv-upload');
+    const file = new File(['dummy'], 'cv-scan.pdf', { type: 'application/pdf' });
+
+    fireEvent.change(uploadInput, {
+      target: {
+        files: [file],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
+
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalledWith(
+        'OCR fallback could not extract readable text. Upload a better text-based PDF.'
+      );
+    });
+
+    expect(apiFetchMock).toHaveBeenCalledTimes(1);
+    expect(extractPdfTextWithOcrMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders backend parse_error message when server-side parser fails for a document', async () => {
+    apiFetchMock.mockImplementationOnce(async (_url: string, init?: RequestInit) => {
+      const formData = init?.body as FormData;
+      const requestDocumentId = String(formData.getAll('document_ids')[0] || 'doc-1');
+
+      return new Response(
+        JSON.stringify({
+          documents: [
+            {
+              document_id: requestDocumentId,
+              file_name: 'cv-init-error.pdf',
+              context: 'cv',
+              parsed_text: '',
+              parse_error: 'PDF parser could not start. Please refresh and re-upload the file.',
+              parse_error_code: 'PDF_EMPTY_TEXT',
+              work_experiences: [],
+              learning_experiences: [],
+              volunteering: [],
+              languages: [],
+              skill_candidates: [],
+            },
+          ],
+          metadata: {
+            semantic_used: false,
+            semantic_fallback_triggered: false,
+            unmapped_candidates_count: 0,
+            limits: {
+              max_documents: 5,
+              max_chars_per_document: 30000,
+              max_total_chars: 90000,
+            },
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    });
 
     render(<CvImportWizard />);
 
@@ -641,6 +895,10 @@ describe('CvImportWizard', () => {
       target: {
         files: [file],
       },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
     });
 
     fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
