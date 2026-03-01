@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CVJDAutoSuggest } from '@/components/expertise/CVJDAutoSuggest';
@@ -25,6 +25,7 @@ describe('CVJDAutoSuggest', () => {
   const originalFlag = process.env.NEXT_PUBLIC_CV_IMPORT_V2;
 
   beforeEach(() => {
+    vi.useRealTimers();
     vi.clearAllMocks();
     delete process.env.NEXT_PUBLIC_CV_IMPORT_V2;
   });
@@ -193,6 +194,84 @@ describe('CVJDAutoSuggest', () => {
     expect(requestPayload.documents).toHaveLength(1);
     expect(requestPayload.documents[0].context).toBe('jd');
     expect(requestPayload.documents[0].text).toContain('React TypeScript');
+  });
+
+  it('shows staged progress and auto-collapses completion for text analysis', async () => {
+    vi.useFakeTimers();
+    try {
+      let resolveRequest: ((value: Response) => void) | null = null;
+      apiFetchMock.mockImplementationOnce(
+        () =>
+          new Promise<Response>((resolve) => {
+            resolveRequest = resolve;
+          })
+      );
+
+      render(<CVJDAutoSuggest />);
+
+      fireEvent.click(screen.getByRole('button', { name: /job description/i }));
+
+      const textInput = screen.getByTestId('context-text-input');
+      fireEvent.change(textInput, {
+        target: { value: 'Need React TypeScript and stakeholder communication skills.' },
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: /analyze text/i }));
+
+      expect(screen.getByText('Submitting text to extraction service...')).toBeInTheDocument();
+      expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '35');
+
+      expect(resolveRequest).toBeTruthy();
+      await act(async () => {
+        resolveRequest?.(
+          new Response(
+            JSON.stringify({
+              documents: [
+                {
+                  document_id: 'jd-1',
+                  file_name: 'job-description.txt',
+                  context: 'jd',
+                  candidate_count: 0,
+                  candidates: [],
+                },
+              ],
+              metadata: {
+                semantic_used: false,
+                semantic_fallback_triggered: false,
+                unmapped_candidates_count: 0,
+                limits: {
+                  max_documents: 5,
+                  max_chars_per_document: 30000,
+                  max_total_chars: 90000,
+                },
+              },
+            }),
+            {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            }
+          )
+        );
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      expect(
+        screen.getByText('Extraction completed. Review and approve the results below.')
+      ).toBeInTheDocument();
+      expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '100');
+
+      await act(async () => {
+        vi.advanceTimersByTime(4000);
+        await Promise.resolve();
+      });
+
+      expect(
+        screen.queryByText('Extraction completed. Review and approve the results below.')
+      ).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('analyzes pasted general text via cv-import engine', async () => {

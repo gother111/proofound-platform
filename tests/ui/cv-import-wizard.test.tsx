@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CvImportWizard } from '@/components/expertise/cv-import/CvImportWizard';
@@ -41,6 +41,7 @@ vi.mock('@/lib/expertise/ocr-client', () => ({
 
 describe('CvImportWizard', () => {
   beforeEach(() => {
+    vi.useRealTimers();
     vi.clearAllMocks();
     extractPdfTextFromFileMock.mockReset();
     extractPdfTextWithOcrMock.mockReset();
@@ -143,6 +144,95 @@ describe('CvImportWizard', () => {
 
     expect(screen.getByRole('button', { name: /1\. Work Experiences/i })).toBeInTheDocument();
     expect(screen.getByDisplayValue('Senior Engineer')).toBeInTheDocument();
+  });
+
+  it('shows staged progress and auto-collapses completion after 4 seconds', async () => {
+    vi.useFakeTimers();
+    try {
+      let resolveRequest: ((value: Response) => void) | null = null;
+      apiFetchMock.mockImplementationOnce(
+        () =>
+          new Promise<Response>((resolve) => {
+            resolveRequest = resolve;
+          })
+      );
+
+      render(<CvImportWizard />);
+
+      const uploadInput = screen.getByTestId('cv-upload');
+      const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
+
+      fireEvent.change(uploadInput, {
+        target: {
+          files: [file],
+        },
+      });
+
+      const analyzeButton = screen.getByRole('button', { name: /Analyze Uploaded PDFs/i });
+      expect(analyzeButton).toBeEnabled();
+
+      fireEvent.click(analyzeButton);
+
+      expect(screen.getByText('Submitting files to extraction service...')).toBeInTheDocument();
+      expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '25');
+
+      expect(resolveRequest).toBeTruthy();
+      await act(async () => {
+        resolveRequest?.(
+          new Response(
+            JSON.stringify({
+              documents: [
+                {
+                  document_id: 'doc-1',
+                  file_name: 'cv.pdf',
+                  context: 'cv',
+                  parsed_text: 'React TypeScript',
+                  parse_error: null,
+                  parse_error_code: null,
+                  work_experiences: [],
+                  learning_experiences: [],
+                  volunteering: [],
+                  languages: [],
+                  skill_candidates: [],
+                },
+              ],
+              metadata: {
+                semantic_used: false,
+                semantic_fallback_triggered: false,
+                unmapped_candidates_count: 0,
+                limits: {
+                  max_documents: 5,
+                  max_chars_per_document: 30000,
+                  max_total_chars: 90000,
+                },
+              },
+            }),
+            {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            }
+          )
+        );
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      expect(
+        screen.getByText('Extraction completed. Review and approve the results below.')
+      ).toBeInTheDocument();
+      expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '100');
+
+      await act(async () => {
+        vi.advanceTimersByTime(4000);
+        await Promise.resolve();
+      });
+
+      expect(
+        screen.queryByText('Extraction completed. Review and approve the results below.')
+      ).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('applies approved wizard selections via wizard-apply route', async () => {

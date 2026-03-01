@@ -1,10 +1,17 @@
 'use client';
 
-import { useMemo, useState, type ChangeEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { Download, Search, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { apiFetch } from '@/lib/api/fetch';
+import {
+  ANALYZE_PROGRESS_AUTO_COLLAPSE_MS,
+  AnalyzeProgressPanel,
+  type AnalyzeProgressPhase,
+  type AnalyzeProgressState,
+  createIdleAnalyzeProgressState,
+} from '@/components/expertise/cv-import/AnalyzeProgressPanel';
 import {
   extractPdfTextFromFile,
   normalizePdfParseError,
@@ -858,7 +865,11 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
   const [apiMetadata, setApiMetadata] = useState<ApiMetadata | null>(null);
+  const [analyzeProgress, setAnalyzeProgress] = useState<AnalyzeProgressState>(
+    createIdleAnalyzeProgressState
+  );
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const progressResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentStep = STEPS[currentStepIndex]?.id || 'work';
 
@@ -882,6 +893,59 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       )
     );
   };
+
+  const clearProgressResetTimer = () => {
+    if (progressResetTimerRef.current !== null) {
+      clearTimeout(progressResetTimerRef.current);
+      progressResetTimerRef.current = null;
+    }
+  };
+
+  const setRunningProgress = (phase: AnalyzeProgressPhase, percent: number, message: string) => {
+    setAnalyzeProgress((previous) => ({
+      status: 'running',
+      phase,
+      percent,
+      message,
+      startedAt: previous.startedAt ?? Date.now(),
+      completedAt: undefined,
+    }));
+  };
+
+  const setCompletedProgress = (message: string) => {
+    const completedAt = Date.now();
+    setAnalyzeProgress((previous) => ({
+      ...previous,
+      status: 'completed',
+      percent: 100,
+      message,
+      completedAt,
+    }));
+    clearProgressResetTimer();
+    progressResetTimerRef.current = setTimeout(() => {
+      setAnalyzeProgress(createIdleAnalyzeProgressState());
+      progressResetTimerRef.current = null;
+    }, ANALYZE_PROGRESS_AUTO_COLLAPSE_MS);
+  };
+
+  const setFailedProgress = (message: string) => {
+    setAnalyzeProgress((previous) => ({
+      ...previous,
+      status: 'failed',
+      message,
+      completedAt: Date.now(),
+    }));
+  };
+
+  useEffect(
+    () => () => {
+      if (progressResetTimerRef.current !== null) {
+        clearTimeout(progressResetTimerRef.current);
+        progressResetTimerRef.current = null;
+      }
+    },
+    []
+  );
 
   const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const fileList = Array.from(event.target.files || []);
@@ -919,6 +983,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       setDocuments(parsedDocuments);
       setApiMetadata(null);
       setCurrentStepIndex(0);
+      clearProgressResetTimer();
+      setAnalyzeProgress(createIdleAnalyzeProgressState());
 
       if (parsedDocuments.length > 0) {
         toast.success(
@@ -939,21 +1005,31 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     }
 
     setIsAnalyzing(true);
+    clearProgressResetTimer();
+    setAnalyzeProgress({
+      status: 'running',
+      phase: 'preparing',
+      percent: 10,
+      message: 'Preparing documents for analysis...',
+      startedAt: Date.now(),
+      completedAt: undefined,
+    });
 
     try {
+      const formData = new FormData();
+      for (const document of readyDocuments) {
+        if (!document.file) continue;
+        formData.append('files', document.file, sanitizeMultipartFilename(document.file_name));
+        formData.append('document_ids', document.document_id);
+        formData.append('contexts', 'cv');
+      }
+
+      setRunningProgress('submitting', 25, 'Submitting files to extraction service...');
+
       let fallbackStageUsed: ApiFallbackStage | null = null;
       let response = await apiFetch('/api/expertise/cv-import/wizard-suggest?engine=gemini', {
         method: 'POST',
-        body: (() => {
-          const formData = new FormData();
-          for (const document of readyDocuments) {
-            if (!document.file) continue;
-            formData.append('files', document.file, sanitizeMultipartFilename(document.file_name));
-            formData.append('document_ids', document.document_id);
-            formData.append('contexts', 'cv');
-          }
-          return formData;
-        })(),
+        body: formData,
       });
 
       if (!response.ok && isClientFallbackEnabled()) {
@@ -965,6 +1041,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
           );
 
           const fallbackPayload = await buildTextFallbackPayload(readyDocuments);
+          setRunningProgress('extracting', 45, 'Retrying extraction with fallback service...');
 
           response = await apiFetch('/api/expertise/cv-import/wizard-suggest?engine=gemini', {
             method: 'POST',
@@ -976,6 +1053,11 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
           if (!response.ok) {
             const pythonFailurePayload = await readJsonSafely(response);
             if (isProxyRetryableError(pythonFailurePayload)) {
+              setRunningProgress(
+                'extracting',
+                48,
+                'Retrying extraction with deterministic fallback service...'
+              );
               response = await apiFetch(
                 '/api/expertise/cv-import/wizard-suggest?engine=typescript',
                 {
@@ -993,6 +1075,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       if (!response.ok) {
         throw new Error(await readErrorMessage(response, 'Failed to analyze uploaded PDFs'));
       }
+
+      setRunningProgress('extracting', 55, 'Extracting skills and experience...');
 
       let payload = normalizeSuggestResponse(await readJsonSafely(response));
       if (!payload) {
@@ -1014,6 +1098,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       );
 
       if (isOcrClientEnabled()) {
+        setRunningProgress('extracting', 60, 'Running OCR fallback for scanned PDFs...');
         const {
           payload: mergedPayload,
           ocrAttempted,
@@ -1039,6 +1124,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         }
       }
 
+      setRunningProgress('mapping', 78, 'Matching to taxonomy...');
       setApiMetadata(payload.metadata);
 
       const analyzedDocuments = payload.documents.map((document) => {
@@ -1079,6 +1165,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         };
       });
 
+      setRunningProgress('finalizing', 92, 'Finalizing results...');
       setDocuments(analyzedDocuments);
       setCurrentStepIndex(0);
 
@@ -1097,10 +1184,12 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         toast.info('Showing candidate-only skills while taxonomy matching recovers.');
       }
 
+      setCompletedProgress('Extraction completed. Review and approve the results below.');
       toast.success(
         `Analyzed ${payload.documents.length} document${payload.documents.length > 1 ? 's' : ''}.`
       );
     } catch (error) {
+      setFailedProgress('Analysis failed. Please try again.');
       toast.error(error instanceof Error ? error.message : 'Failed to analyze uploaded PDFs');
     } finally {
       setIsAnalyzing(false);
@@ -1387,6 +1476,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                 : `Apply Approved (${approvedSkillIds.length}) to Profile`}
             </Button>
           </div>
+
+          <AnalyzeProgressPanel progress={analyzeProgress} />
 
           {apiMetadata && (
             <div className="rounded-lg border p-3 text-sm">

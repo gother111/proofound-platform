@@ -1,10 +1,17 @@
 'use client';
 
-import { useMemo, useState, type ChangeEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { Briefcase, Download, FileText, Search, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { apiFetch } from '@/lib/api/fetch';
+import {
+  ANALYZE_PROGRESS_AUTO_COLLAPSE_MS,
+  AnalyzeProgressPanel,
+  type AnalyzeProgressPhase,
+  type AnalyzeProgressState,
+  createIdleAnalyzeProgressState,
+} from '@/components/expertise/cv-import/AnalyzeProgressPanel';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -644,6 +651,10 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [apiMetadata, setApiMetadata] = useState<ApiSuggestResponse['metadata'] | null>(null);
+  const [analyzeProgress, setAnalyzeProgress] = useState<AnalyzeProgressState>(
+    createIdleAnalyzeProgressState
+  );
+  const progressResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isPdfContext = context === 'cv';
 
   const approvedSkillIdsCombined = useMemo(() => {
@@ -679,7 +690,62 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
     );
   };
 
+  const clearProgressResetTimer = () => {
+    if (progressResetTimerRef.current !== null) {
+      clearTimeout(progressResetTimerRef.current);
+      progressResetTimerRef.current = null;
+    }
+  };
+
+  const setRunningProgress = (phase: AnalyzeProgressPhase, percent: number, message: string) => {
+    setAnalyzeProgress((previous) => ({
+      status: 'running',
+      phase,
+      percent,
+      message,
+      startedAt: previous.startedAt ?? Date.now(),
+      completedAt: undefined,
+    }));
+  };
+
+  const setCompletedProgress = (message: string) => {
+    setAnalyzeProgress((previous) => ({
+      ...previous,
+      status: 'completed',
+      percent: 100,
+      message,
+      completedAt: Date.now(),
+    }));
+
+    clearProgressResetTimer();
+    progressResetTimerRef.current = setTimeout(() => {
+      setAnalyzeProgress(createIdleAnalyzeProgressState());
+      progressResetTimerRef.current = null;
+    }, ANALYZE_PROGRESS_AUTO_COLLAPSE_MS);
+  };
+
+  const setFailedProgress = (message: string) => {
+    setAnalyzeProgress((previous) => ({
+      ...previous,
+      status: 'failed',
+      message,
+      completedAt: Date.now(),
+    }));
+  };
+
+  useEffect(
+    () => () => {
+      if (progressResetTimerRef.current !== null) {
+        clearTimeout(progressResetTimerRef.current);
+        progressResetTimerRef.current = null;
+      }
+    },
+    []
+  );
+
   const switchContext = (nextContext: ImportContext) => {
+    clearProgressResetTimer();
+    setAnalyzeProgress(createIdleAnalyzeProgressState());
     setContext(nextContext);
     setDocuments([]);
     setManualText('');
@@ -773,8 +839,18 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
     ];
 
     setIsAnalyzing(true);
+    clearProgressResetTimer();
+    setAnalyzeProgress({
+      status: 'running',
+      phase: 'preparing',
+      percent: 15,
+      message: 'Preparing documents for analysis...',
+      startedAt: Date.now(),
+      completedAt: undefined,
+    });
 
     try {
+      setRunningProgress('submitting', 35, 'Submitting text to extraction service...');
       const response = await apiFetch('/api/expertise/cv-import/suggest?engine=gemini', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -787,11 +863,13 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
         throw new Error(await readErrorMessage(response, 'Failed to analyze uploaded documents'));
       }
 
+      setRunningProgress('extracting', 65, 'Extracting skills and experience...');
       const payload = normalizeApiSuggestResponse(await readJsonSafely(response));
       if (!payload) {
         throw new Error('Invalid response format from CV analysis service');
       }
 
+      setRunningProgress('mapping', 85, 'Matching to taxonomy...');
       setApiMetadata(payload.metadata);
 
       const requestStateById = new Map(
@@ -819,12 +897,15 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
         };
       });
 
+      setRunningProgress('finalizing', 92, 'Finalizing results...');
       setDocuments(analyzedDocuments);
+      setCompletedProgress('Extraction completed. Review and approve the results below.');
 
       toast.success(
         `Analyzed ${payload.documents.length} document${payload.documents.length > 1 ? 's' : ''}.`
       );
     } catch (error) {
+      setFailedProgress('Analysis failed. Please try again.');
       toast.error(error instanceof Error ? error.message : 'Failed to analyze CV files');
     } finally {
       setIsAnalyzing(false);
@@ -1060,6 +1141,8 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
                 : `Add Approved (${approvedSkillIdsCombined.length}) to Profile`}
             </Button>
           </div>
+
+          <AnalyzeProgressPanel progress={analyzeProgress} />
 
           {apiMetadata && (
             <div className="rounded-lg border p-3 text-sm">
