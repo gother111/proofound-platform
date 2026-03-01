@@ -26,7 +26,8 @@ interface InterviewCardProps {
     id: string;
     scheduledAt: Date | string;
     durationMinutes: number;
-    platform: 'zoom' | 'google_meet';
+    platform: 'zoom' | 'google_meet' | 'manual';
+    manualMeetingProvider?: 'teams' | 'zoom' | 'google_meet' | 'other' | null;
     meetingLink: string;
     status: 'scheduled' | 'completed' | 'cancelled' | 'no_show';
     rescheduled: boolean;
@@ -81,6 +82,21 @@ export function InterviewCard({ interview, onCancel, onReschedule }: InterviewCa
   };
 
   const handleAddToCalendar = () => {
+    const meetingProviderLabel =
+      interview.platform === 'manual'
+        ? interview.manualMeetingProvider === 'teams'
+          ? 'Microsoft Teams'
+          : interview.manualMeetingProvider === 'zoom'
+            ? 'Zoom'
+            : interview.manualMeetingProvider === 'google_meet'
+              ? 'Google Meet'
+              : interview.manualMeetingProvider === 'other'
+                ? 'Other'
+                : 'Manual'
+        : interview.platform === 'zoom'
+          ? 'Zoom'
+          : 'Google Meet';
+
     // Generate ICS file for calendar
     const endDate = new Date(scheduledDate);
     endDate.setMinutes(endDate.getMinutes() + interview.durationMinutes);
@@ -92,7 +108,7 @@ DTSTART:${scheduledDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z
 DTEND:${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z
 SUMMARY:Interview on Proofound
 DESCRIPTION:Join: ${interview.meetingLink}
-LOCATION:${interview.platform === 'zoom' ? 'Zoom' : 'Google Meet'}
+LOCATION:${meetingProviderLabel}
 END:VEVENT
 END:VCALENDAR`;
 
@@ -119,7 +135,19 @@ END:VCALENDAR`;
   };
 
   const getPlatformIcon = () => {
-    return interview.platform === 'zoom' ? 'Zoom' : 'Google Meet';
+    if (interview.platform === 'google_meet') {
+      return 'Google Meet';
+    }
+
+    if (interview.platform === 'manual') {
+      if (interview.manualMeetingProvider === 'teams') return 'Manual (Teams)';
+      if (interview.manualMeetingProvider === 'zoom') return 'Manual (Zoom)';
+      if (interview.manualMeetingProvider === 'google_meet') return 'Manual (Google Meet)';
+      if (interview.manualMeetingProvider === 'other') return 'Manual (Other)';
+      return 'Manual';
+    }
+
+    return 'Zoom';
   };
 
   return (

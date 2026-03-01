@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireApiAuthContext } from '@/lib/auth';
-import { getZoomAuthUrl } from '@/lib/video/zoom';
 import { getGoogleAuthUrl } from '@/lib/video/google-meet';
 import { randomBytes } from 'crypto';
 
@@ -20,7 +19,6 @@ export async function GET(
     if (!authContext) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const { user } = authContext;
     const { provider } = await params;
 
     // Generate state for CSRF protection
@@ -30,19 +28,14 @@ export async function GET(
 
     switch (provider) {
       case 'zoom':
-        try {
-          authUrl = getZoomAuthUrl(state);
-        } catch (error) {
-          return NextResponse.json(
-            {
-              error: 'Zoom OAuth not configured',
-              message: error instanceof Error ? error.message : 'Unknown error',
-              setupGuide: 'See OAUTH_SETUP_GUIDE.md for setup instructions',
-            },
-            { status: 503 }
-          );
-        }
-        break;
+        return NextResponse.json(
+          {
+            error: 'Zoom integration is coming soon',
+            code: 'ZOOM_COMING_SOON',
+            message: 'Zoom is temporarily unavailable. Please use Google Meet or manual links.',
+          },
+          { status: 400 }
+        );
 
       case 'google':
         try {

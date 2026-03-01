@@ -9,6 +9,10 @@ export type InterviewPlatform = (typeof INTERVIEW_PLATFORM_VALUES)[number];
 export type NormalizedInterviewPlatform = Exclude<InterviewPlatform, 'google'>;
 export const InterviewPlatformSchema = z.enum(INTERVIEW_PLATFORM_VALUES);
 
+export const MANUAL_MEETING_PROVIDER_VALUES = ['teams', 'zoom', 'google_meet', 'other'] as const;
+export type ManualMeetingProvider = (typeof MANUAL_MEETING_PROVIDER_VALUES)[number];
+export const ManualMeetingProviderSchema = z.enum(MANUAL_MEETING_PROVIDER_VALUES);
+
 export const PROFILE_VISIBILITY_LEVEL_VALUES = [
   'public',
   'network_only',

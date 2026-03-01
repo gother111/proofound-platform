@@ -114,7 +114,7 @@ export default async function OrganizationSettingsPage({
                 Integrations
               </p>
               <p className="text-xs mt-1 text-proofound-charcoal/70 dark:text-muted-foreground">
-                Connect Zoom or Google Meet for interviews.
+                Connect Google Meet for interviews. Zoom is coming soon.
               </p>
             </Link>
           </CardContent>

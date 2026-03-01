@@ -27,7 +27,8 @@ interface InterviewConfirmationProps {
     id: string;
     scheduled_at: string;
     duration_minutes: number;
-    platform: 'zoom' | 'google_meet';
+    platform: 'zoom' | 'google_meet' | 'manual';
+    manual_meeting_provider?: 'teams' | 'zoom' | 'google_meet' | 'other' | null;
     meeting_link: string;
     meeting_id: string;
   };
@@ -40,6 +41,36 @@ export function InterviewConfirmation({
   candidateName,
   onClose,
 }: InterviewConfirmationProps) {
+  const getMeetingProviderLabel = () => {
+    const provider = interview.manual_meeting_provider;
+
+    if (interview.platform === 'manual') {
+      if (provider === 'teams') return 'Manual (Microsoft Teams)';
+      if (provider === 'zoom') return 'Manual (Zoom)';
+      if (provider === 'google_meet') return 'Manual (Google Meet)';
+      if (provider === 'other') return 'Manual (Other)';
+      return 'Manual';
+    }
+
+    if (interview.platform === 'google_meet') {
+      return 'Google Meet';
+    }
+
+    return 'Zoom';
+  };
+
+  const getMeetingProviderDescription = () => {
+    if (interview.platform !== 'manual') {
+      return interview.platform === 'google_meet' ? 'Google Meet' : 'Zoom';
+    }
+
+    if (interview.manual_meeting_provider === 'teams') return 'Microsoft Teams';
+    if (interview.manual_meeting_provider === 'zoom') return 'Zoom';
+    if (interview.manual_meeting_provider === 'google_meet') return 'Google Meet';
+    if (interview.manual_meeting_provider === 'other') return 'Other provider';
+    return 'Manual provider';
+  };
+
   const scheduledDate = new Date(interview.scheduled_at);
 
   const copyMeetingLink = () => {
@@ -115,9 +146,7 @@ export function InterviewConfirmation({
             <Video className="w-5 h-5 text-proofound-forest flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-medium text-foreground">Platform</p>
-              <p className="text-sm text-muted-foreground capitalize">
-                {interview.platform === 'google_meet' ? 'Google Meet' : 'Zoom'}
-              </p>
+              <p className="text-sm text-muted-foreground capitalize">{getMeetingProviderLabel()}</p>
             </div>
           </div>
 
@@ -233,6 +262,21 @@ function generateICS(
   interview: InterviewConfirmationProps['interview'],
   candidateName: string
 ): string {
+  const providerLabel =
+    interview.platform === 'manual'
+      ? interview.manual_meeting_provider === 'teams'
+        ? 'Microsoft Teams'
+        : interview.manual_meeting_provider === 'zoom'
+          ? 'Zoom'
+          : interview.manual_meeting_provider === 'google_meet'
+            ? 'Google Meet'
+            : interview.manual_meeting_provider === 'other'
+              ? 'Other provider'
+              : 'Manual provider'
+      : interview.platform === 'google_meet'
+        ? 'Google Meet'
+        : 'Zoom';
+
   const start = new Date(interview.scheduled_at);
   const end = new Date(start.getTime() + interview.duration_minutes * 60000);
 
@@ -250,7 +294,7 @@ function generateICS(
     `DTSTART:${formatDate(start)}`,
     `DTEND:${formatDate(end)}`,
     `SUMMARY:Interview with ${candidateName}`,
-    `DESCRIPTION:30-minute interview via ${interview.platform === 'google_meet' ? 'Google Meet' : 'Zoom'}\\n\\nMeeting Link: ${interview.meeting_link}\\n\\nMeeting ID: ${interview.meeting_id}`,
+    `DESCRIPTION:30-minute interview via ${providerLabel}\\n\\nMeeting Link: ${interview.meeting_link}\\n\\nMeeting ID: ${interview.meeting_id}`,
     `LOCATION:${interview.meeting_link}`,
     'STATUS:CONFIRMED',
     'BEGIN:VALARM',

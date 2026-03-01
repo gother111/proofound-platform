@@ -13,7 +13,9 @@ import { scheduleInterview as scheduleInterviewAction } from '@/app/actions/inte
 export interface InterviewScheduleData {
   matchId: string;
   scheduledAt: Date;
-  platform: 'zoom' | 'google_meet';
+  platform: 'google_meet' | 'manual';
+  manualMeetingLink?: string;
+  manualMeetingProvider?: 'teams' | 'zoom' | 'google_meet' | 'other';
   participantUserIds: string[];
   timezone?: string;
   durationMinutes?: number;
@@ -24,7 +26,8 @@ export interface Interview {
   match_id: string;
   scheduled_at: string;
   duration_minutes: number;
-  platform: 'zoom' | 'google_meet';
+  platform: 'zoom' | 'google_meet' | 'manual';
+  manual_meeting_provider?: 'teams' | 'zoom' | 'google_meet' | 'other' | null;
   meeting_link: string;
   meeting_id: string;
   status: 'scheduled' | 'completed' | 'cancelled';
@@ -66,9 +69,6 @@ export function useInterviewScheduling(options: UseInterviewSchedulingOptions = 
   const [error, setError] = useState<Error | null>(null);
   const activePolicy = INTERVIEW_POLICY_PRESETS[options.policyPreset || 'startup'];
 
-  /**
-   * Schedule a new interview
-   */
   const scheduleInterview = useCallback(
     async (data: InterviewScheduleData): Promise<Interview | null> => {
       setIsScheduling(true);
@@ -83,6 +83,12 @@ export function useInterviewScheduling(options: UseInterviewSchedulingOptions = 
           timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
           policyPreset: options.policyPreset || 'startup',
           durationMinutes: data.durationMinutes ?? 30,
+          ...(data.platform === 'manual'
+            ? {
+                manualMeetingLink: data.manualMeetingLink,
+                manualMeetingProvider: data.manualMeetingProvider,
+              }
+            : {}),
         });
 
         if (!result.success) {
@@ -99,13 +105,13 @@ export function useInterviewScheduling(options: UseInterviewSchedulingOptions = 
 
         return interview;
       } catch (err) {
-        const error = err instanceof Error ? err : new Error('Unknown error');
-        setError(error);
+        const hookError = err instanceof Error ? err : new Error('Unknown error');
+        setError(hookError);
 
         if (options.onError) {
-          options.onError(error);
+          options.onError(hookError);
         } else {
-          toast.error(error.message);
+          toast.error(hookError.message);
         }
 
         return null;
@@ -116,9 +122,6 @@ export function useInterviewScheduling(options: UseInterviewSchedulingOptions = 
     [options]
   );
 
-  /**
-   * Reschedule an existing interview
-   */
   const rescheduleInterview = useCallback(
     async (interviewId: string, newScheduledAt: Date): Promise<boolean> => {
       setIsRescheduling(true);
@@ -147,13 +150,13 @@ export function useInterviewScheduling(options: UseInterviewSchedulingOptions = 
 
         return true;
       } catch (err) {
-        const error = err instanceof Error ? err : new Error('Unknown error');
-        setError(error);
+        const hookError = err instanceof Error ? err : new Error('Unknown error');
+        setError(hookError);
 
         if (options.onError) {
-          options.onError(error);
+          options.onError(hookError);
         } else {
-          toast.error(error.message);
+          toast.error(hookError.message);
         }
 
         return false;
@@ -164,9 +167,6 @@ export function useInterviewScheduling(options: UseInterviewSchedulingOptions = 
     [options]
   );
 
-  /**
-   * Cancel an interview
-   */
   const cancelInterview = useCallback(
     async (interviewId: string, reason?: string): Promise<boolean> => {
       setIsCancelling(true);
@@ -189,13 +189,13 @@ export function useInterviewScheduling(options: UseInterviewSchedulingOptions = 
 
         return true;
       } catch (err) {
-        const error = err instanceof Error ? err : new Error('Unknown error');
-        setError(error);
+        const hookError = err instanceof Error ? err : new Error('Unknown error');
+        setError(hookError);
 
         if (options.onError) {
-          options.onError(error);
+          options.onError(hookError);
         } else {
-          toast.error(error.message);
+          toast.error(hookError.message);
         }
 
         return false;
@@ -206,9 +206,6 @@ export function useInterviewScheduling(options: UseInterviewSchedulingOptions = 
     [options]
   );
 
-  /**
-   * Validate scheduling window (7 days from match acceptance)
-   */
   const validateSchedulingWindow = useCallback(
     (scheduledAt: Date, matchAcceptedAt: Date): { valid: boolean; error?: string } => {
       const now = new Date();
@@ -234,9 +231,6 @@ export function useInterviewScheduling(options: UseInterviewSchedulingOptions = 
     [activePolicy.scheduleWithinDays]
   );
 
-  /**
-   * Validate interview duration (max 30 minutes)
-   */
   const validateDuration = useCallback(
     (durationMinutes: number): { valid: boolean; error?: string } => {
       if (durationMinutes <= 0) {
@@ -258,26 +252,18 @@ export function useInterviewScheduling(options: UseInterviewSchedulingOptions = 
     [activePolicy.maxDurationMinutes]
   );
 
-  /**
-   * Check if interview can be rescheduled
-   */
   const canReschedule = useCallback((interview: Interview): boolean => {
     return interview.can_reschedule && interview.rescheduled_count < 1;
   }, []);
 
   return {
-    // State
     isScheduling,
     isRescheduling,
     isCancelling,
     error,
-
-    // Actions
     scheduleInterview,
     rescheduleInterview,
     cancelInterview,
-
-    // Validation
     validateSchedulingWindow,
     validateDuration,
     canReschedule,

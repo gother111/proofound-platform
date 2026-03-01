@@ -15,15 +15,14 @@ import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 
 interface VideoProviderSelectorProps {
-  selectedProvider: 'zoom' | 'google_meet' | null;
-  onSelectProvider: (provider: 'zoom' | 'google_meet') => void;
+  selectedProvider: 'google_meet' | null;
+  onSelectProvider: (provider: 'google_meet') => void;
 }
 
 export function VideoProviderSelector({
   selectedProvider,
   onSelectProvider,
 }: VideoProviderSelectorProps) {
-  const [zoomConnected, setZoomConnected] = useState(false);
   const [googleConnected, setGoogleConnected] = useState(false);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
 
@@ -36,7 +35,6 @@ export function VideoProviderSelector({
       const response = await fetch('/api/integrations/video/status');
       if (response.ok) {
         const data = await response.json();
-        setZoomConnected(data.zoom?.connected || false);
         setGoogleConnected(data.google?.connected || false);
       }
     } catch (error) {
@@ -46,16 +44,13 @@ export function VideoProviderSelector({
     }
   };
 
-  const handleConnect = async (provider: 'zoom' | 'google_meet') => {
+  const handleConnect = async (provider: 'google_meet') => {
     // Open OAuth flow in popup
     const width = 600;
     const height = 700;
     const left = window.screen.width / 2 - width / 2;
     const top = window.screen.height / 2 - height / 2;
-    const connectPath =
-      provider === 'google_meet'
-        ? '/api/integrations/google/connect'
-        : '/api/integrations/zoom/connect';
+    const connectPath = '/api/integrations/google/connect';
 
     const popup = window.open(
       connectPath,
@@ -81,8 +76,9 @@ export function VideoProviderSelector({
     {
       id: 'zoom' as const,
       name: 'Zoom',
-      description: 'Industry-standard video conferencing',
-      connected: zoomConnected,
+      description: 'Coming soon',
+      connected: false,
+      disabled: true,
       icon: (
         <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
           <path d="M4 6h6v6H4zm10 0h6v6h-6zM4 16h6v6H4zm10 0h6v6h-6z" />
@@ -94,6 +90,7 @@ export function VideoProviderSelector({
       name: 'Google Meet',
       description: "Google's video conferencing solution",
       connected: googleConnected,
+      disabled: false,
       icon: (
         <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
           <path d="M15 10l5-3v10l-5-3v-4z" />
@@ -122,7 +119,9 @@ export function VideoProviderSelector({
               ? 'border-2 border-proofound-forest bg-proofound-success-tint'
               : 'border-2 border-proofound-stone hover:border-proofound-forest/30'
           }`}
-          onClick={() => provider.connected && onSelectProvider(provider.id)}
+          onClick={() =>
+            provider.id === 'google_meet' && provider.connected && onSelectProvider(provider.id)
+          }
         >
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3 flex-1">
@@ -146,19 +145,26 @@ export function VideoProviderSelector({
                 </div>
                 <p className="text-sm text-muted-foreground mb-2">{provider.description}</p>
 
-                {!provider.connected && (
+                {!provider.connected && !provider.disabled && (
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleConnect(provider.id);
+                      handleConnect('google_meet');
                     }}
                     className="text-xs"
                   >
                     <ExternalLink className="w-3 h-3 mr-1.5" />
                     Connect {provider.name}
                   </Button>
+                )}
+
+                {provider.disabled && (
+                  <div className="flex items-center gap-1.5 text-xs text-amber-700">
+                    <AlertCircle className="w-3 h-3" />
+                    <span>Coming soon</span>
+                  </div>
                 )}
 
                 {provider.connected && (
@@ -181,11 +187,11 @@ export function VideoProviderSelector({
         </Card>
       ))}
 
-      {!zoomConnected && !googleConnected && (
+      {!googleConnected && (
         <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
           <p className="text-sm text-amber-800">
-            <strong>Note:</strong> You need to connect at least one video platform to schedule
-            interviews. Click "Connect" above to authenticate.
+            <strong>Note:</strong> Connect Google Meet to auto-generate links, or schedule with a
+            manual meeting link.
           </p>
         </div>
       )}

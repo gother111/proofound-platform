@@ -2215,6 +2215,9 @@ export const interviews = pgTable('interviews', {
   scheduledAt: timestamp('scheduled_at').notNull(),
   duration: integer('duration').default(30).notNull(), // minutes
   platform: text('platform', { enum: ['zoom', 'google'] }).notNull(),
+  manualMeetingProvider: text('manual_meeting_provider', {
+    enum: ['teams', 'zoom', 'google_meet', 'other'],
+  }),
   meetingId: text('meeting_id').notNull(), // External meeting/event ID
   meetingUrl: text('meeting_url').notNull(),
   timezone: text('timezone').default('UTC'),

@@ -63,7 +63,7 @@ export function InterviewScheduler({
   defaultPolicyPreset = 'startup',
 }: InterviewSchedulerProps) {
   const [currentStep, setCurrentStep] = useState<Step>('provider');
-  const [provider, setProvider] = useState<'zoom' | 'google_meet' | null>(null);
+  const [provider, setProvider] = useState<'google_meet' | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [policyPreset, setPolicyPreset] = useState<
@@ -386,7 +386,7 @@ export function InterviewScheduler({
                   <div className="flex items-center gap-2">
                     <Video className="w-4 h-4 text-proofound-forest" />
                     <p className="font-medium text-foreground capitalize">
-                      {provider === 'google_meet' ? 'Google Meet' : 'Zoom'}
+                      {provider === 'google_meet' ? 'Google Meet' : 'Not selected'}
                     </p>
                   </div>
                 </div>

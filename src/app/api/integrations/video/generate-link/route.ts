@@ -7,7 +7,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { createZoomMeeting, refreshZoomToken } from '@/lib/integrations/zoom';
 import { createGoogleMeet, refreshGoogleToken } from '@/lib/integrations/google-meet';
 import { log } from '@/lib/log';
 import { z } from 'zod';
@@ -50,8 +49,18 @@ export async function POST(req: NextRequest) {
     const { provider, interviewId, title, duration, startTime, timezone, attendeeEmails } =
       validationResult.data;
 
-    // Map provider to database provider name
-    const dbProvider = provider === 'google' ? 'google_meet' : 'zoom';
+    if (provider === 'zoom') {
+      return NextResponse.json(
+        {
+          error: 'Zoom integration is coming soon',
+          code: 'ZOOM_COMING_SOON',
+          message: 'Zoom is temporarily unavailable. Please use Google Meet or manual links.',
+        },
+        { status: 400 }
+      );
+    }
+
+    const dbProvider = 'google_meet';
 
     // Fetch user's video integration
     const { data: integration, error: integrationError } = await supabase
@@ -69,9 +78,9 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json(
         {
-          error: `${provider === 'zoom' ? 'Zoom' : 'Google Meet'} not connected`,
+          error: 'Google Meet not connected',
           code: 'NO_INTEGRATION',
-          message: `Please connect your ${provider === 'zoom' ? 'Zoom' : 'Google'} account first in Settings > Integrations.`,
+          message: 'Please connect your Google account first in Settings > Integrations.',
         },
         { status: 400 }
       );
@@ -91,7 +100,8 @@ export async function POST(req: NextRequest) {
           {
             error: 'Token expired',
             code: 'TOKEN_EXPIRED',
-            message: `Your ${provider === 'zoom' ? 'Zoom' : 'Google'} connection has expired. Please reconnect in Settings > Integrations.`,
+            message:
+              'Your Google connection has expired. Please reconnect in Settings > Integrations.',
           },
           { status: 400 }
         );
@@ -99,35 +109,18 @@ export async function POST(req: NextRequest) {
 
       try {
         log.info('video.generate.refreshing_token', { userId: user.id, provider });
+        const newTokens = await refreshGoogleToken(integration.refresh_token);
+        accessToken = newTokens.access_token;
 
-        if (provider === 'zoom') {
-          const newTokens = await refreshZoomToken(integration.refresh_token);
-          accessToken = newTokens.access_token;
-
-          // Update stored tokens
-          await supabase
-            .from('user_video_integrations')
-            .update({
-              access_token: newTokens.access_token,
-              refresh_token: newTokens.refresh_token,
-              token_expiry: new Date(Date.now() + newTokens.expires_in * 1000).toISOString(),
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', integration.id);
-        } else {
-          const newTokens = await refreshGoogleToken(integration.refresh_token);
-          accessToken = newTokens.access_token;
-
-          // Update stored token
-          await supabase
-            .from('user_video_integrations')
-            .update({
-              access_token: newTokens.access_token,
-              token_expiry: new Date(Date.now() + newTokens.expires_in * 1000).toISOString(),
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', integration.id);
-        }
+        // Update stored token
+        await supabase
+          .from('user_video_integrations')
+          .update({
+            access_token: newTokens.access_token,
+            token_expiry: new Date(Date.now() + newTokens.expires_in * 1000).toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', integration.id);
       } catch (refreshError) {
         log.error('video.generate.token_refresh_failed', {
           userId: user.id,
@@ -139,7 +132,8 @@ export async function POST(req: NextRequest) {
           {
             error: 'Token refresh failed',
             code: 'TOKEN_REFRESH_FAILED',
-            message: `Failed to refresh your ${provider === 'zoom' ? 'Zoom' : 'Google'} token. Please reconnect in Settings > Integrations.`,
+            message:
+              'Failed to refresh your Google token. Please reconnect in Settings > Integrations.',
           },
           { status: 400 }
         );
@@ -154,44 +148,24 @@ export async function POST(req: NextRequest) {
     const meetingStartTime = startTime || new Date(Date.now() + 30 * 60 * 1000).toISOString();
 
     try {
-      if (provider === 'zoom') {
-        const meeting = await createZoomMeeting(accessToken, {
-          topic: title,
-          start_time: meetingStartTime,
-          duration: duration,
-          timezone: timezone,
-          agenda: interviewId
-            ? `Interview session via Proofound (ID: ${interviewId})`
-            : 'Interview session via Proofound',
-        });
+      const meeting = await createGoogleMeet(accessToken, {
+        summary: title,
+        start_time: meetingStartTime,
+        duration: duration,
+        timezone: timezone,
+        description: interviewId
+          ? `Interview session via Proofound (ID: ${interviewId})`
+          : 'Interview session via Proofound',
+        attendees: attendeeEmails,
+      });
 
-        meetingLink = meeting.join_url;
-        meetingId = meeting.id;
+      meetingLink = meeting.hangoutLink;
+      meetingId = meeting.id;
 
-        log.info('video.generate.zoom.success', {
-          userId: user.id,
-          meetingId: meeting.id,
-        });
-      } else {
-        const meeting = await createGoogleMeet(accessToken, {
-          summary: title,
-          start_time: meetingStartTime,
-          duration: duration,
-          timezone: timezone,
-          description: interviewId
-            ? `Interview session via Proofound (ID: ${interviewId})`
-            : 'Interview session via Proofound',
-          attendees: attendeeEmails,
-        });
-
-        meetingLink = meeting.hangoutLink;
-        meetingId = meeting.id;
-
-        log.info('video.generate.google.success', {
-          userId: user.id,
-          eventId: meeting.id,
-        });
-      }
+      log.info('video.generate.google.success', {
+        userId: user.id,
+        eventId: meeting.id,
+      });
     } catch (apiError) {
       log.error('video.generate.api_failed', {
         userId: user.id,
@@ -206,7 +180,7 @@ export async function POST(req: NextRequest) {
           message:
             apiError instanceof Error
               ? apiError.message
-              : `Failed to create ${provider === 'zoom' ? 'Zoom' : 'Google Meet'} meeting. Please try again.`,
+              : 'Failed to create Google Meet meeting. Please try again.',
         },
         { status: 500 }
       );

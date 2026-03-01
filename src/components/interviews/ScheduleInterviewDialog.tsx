@@ -1,13 +1,6 @@
 /**
  * Schedule Interview Dialog
- * Implements PRD Gap 1: UI for scheduling interviews with Zoom/Google Meet
- *
- * Features:
- * - Platform selection (Zoom/Google Meet)
- * - Date/time picker with timezone
- * - 30-minute fixed duration (PRD requirement)
- * - 7-day window validation (PRD requirement)
- * - Auto-generates meeting link
+ * Implements PRD Gap 1: UI for scheduling interviews with Google Meet/manual links
  */
 
 'use client';
@@ -35,7 +28,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Calendar as CalendarIcon, Video, Clock, Users } from 'lucide-react';
+import { Video, Clock, Users } from 'lucide-react';
+import { scheduleInterview } from '@/app/actions/interviews';
 
 interface ScheduleInterviewDialogProps {
   open: boolean;
@@ -45,7 +39,7 @@ interface ScheduleInterviewDialogProps {
   participantNames: string[];
 }
 
-import { scheduleInterview } from '@/app/actions/interviews';
+type ManualMeetingProvider = 'teams' | 'zoom' | 'google_meet' | 'other';
 
 export function ScheduleInterviewDialog({
   open,
@@ -55,13 +49,16 @@ export function ScheduleInterviewDialog({
   participantNames,
 }: ScheduleInterviewDialogProps) {
   const router = useRouter();
-  const [platform, setPlatform] = useState<'zoom' | 'google_meet' | 'manual'>('manual');
+  const [platform, setPlatform] = useState<'google_meet' | 'manual'>('manual');
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [timeHour, setTimeHour] = useState('14');
   const [timeMinute, setTimeMinute] = useState('00');
   const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [notes, setNotes] = useState('');
   const [manualMeetingLink, setManualMeetingLink] = useState('');
+  const [manualMeetingProvider, setManualMeetingProvider] = useState<ManualMeetingProvider | ''>(
+    ''
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSchedule = async () => {
@@ -70,11 +67,9 @@ export function ScheduleInterviewDialog({
       return;
     }
 
-    // Combine date and time
     const scheduledDateTime = new Date(selectedDate);
-    scheduledDateTime.setHours(parseInt(timeHour), parseInt(timeMinute), 0, 0);
+    scheduledDateTime.setHours(parseInt(timeHour, 10), parseInt(timeMinute, 10), 0, 0);
 
-    // Validate within 7 days (PRD requirement)
     const now = new Date();
     const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
@@ -88,21 +83,31 @@ export function ScheduleInterviewDialog({
       return;
     }
 
-    setIsSubmitting(true);
-
-    // Validate manual link if platform is manual
-    if (platform === 'manual' && !manualMeetingLink) {
+    if (platform === 'manual' && !manualMeetingLink.trim()) {
       toast.error('Please provide a meeting link');
       return;
     }
+
+    if (platform === 'manual' && !manualMeetingProvider) {
+      toast.error('Please select the meeting provider');
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
       await scheduleInterview({
         matchId: applicationId,
         scheduledAt: scheduledDateTime.toISOString(),
         platform,
+        participantUserIds: participantIds,
         timezone,
-        ...(platform === 'manual' && { manualMeetingLink }),
+        ...(platform === 'manual'
+          ? {
+              manualMeetingLink: manualMeetingLink.trim(),
+              manualMeetingProvider,
+            }
+          : {}),
       });
 
       toast.success('Interview scheduled successfully!');
@@ -116,7 +121,6 @@ export function ScheduleInterviewDialog({
     }
   };
 
-  // Calculate max date (7 days from now per PRD)
   const maxDate = new Date();
   maxDate.setDate(maxDate.getDate() + 7);
 
@@ -126,16 +130,14 @@ export function ScheduleInterviewDialog({
         <DialogHeader>
           <DialogTitle>Schedule Interview</DialogTitle>
           <DialogDescription>
-            Schedule a 30-minute interview with the candidate. Meeting link will be generated
-            automatically.
+            Schedule a 30-minute interview with the candidate using Google Meet or a manual link.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Platform Selection */}
           <div className="space-y-2">
             <Label htmlFor="platform">Platform</Label>
-            <Select value={platform} onValueChange={(v: any) => setPlatform(v)}>
+            <Select value={platform} onValueChange={(v: 'google_meet' | 'manual') => setPlatform(v)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -144,12 +146,6 @@ export function ScheduleInterviewDialog({
                   <div className="flex items-center gap-2">
                     <Video className="w-4 h-4" />
                     Manual (provide your own link)
-                  </div>
-                </SelectItem>
-                <SelectItem value="zoom">
-                  <div className="flex items-center gap-2">
-                    <Video className="w-4 h-4" />
-                    Zoom (auto-generate)
                   </div>
                 </SelectItem>
                 <SelectItem value="google_meet">
@@ -162,14 +158,27 @@ export function ScheduleInterviewDialog({
             </Select>
             <p className="text-sm text-muted-foreground">
               {platform === 'manual' && 'Provide your own Zoom, Google Meet, or Teams link'}
-              {platform === 'zoom' && 'Requires Zoom account connection'}
               {platform === 'google_meet' && 'Requires Google Calendar connection'}
             </p>
           </div>
 
-          {/* Manual Meeting Link Input */}
           {platform === 'manual' && (
             <div className="space-y-2">
+              <Label htmlFor="manualMeetingProvider">Manual Link Provider</Label>
+              <Select
+                value={manualMeetingProvider || undefined}
+                onValueChange={(value: ManualMeetingProvider) => setManualMeetingProvider(value)}
+              >
+                <SelectTrigger id="manualMeetingProvider">
+                  <SelectValue placeholder="Select provider" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="teams">Microsoft Teams</SelectItem>
+                  <SelectItem value="zoom">Zoom</SelectItem>
+                  <SelectItem value="google_meet">Google Meet</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
               <Label htmlFor="meetingLink">Meeting Link</Label>
               <Input
                 id="meetingLink"
@@ -184,7 +193,6 @@ export function ScheduleInterviewDialog({
             </div>
           )}
 
-          {/* Date Selection */}
           <div className="space-y-2">
             <Label>Date (within 7 days)</Label>
             <Calendar
@@ -196,7 +204,6 @@ export function ScheduleInterviewDialog({
             />
           </div>
 
-          {/* Time Selection */}
           <div className="space-y-2">
             <Label>Time</Label>
             <div className="flex gap-2 items-center">
@@ -233,7 +240,6 @@ export function ScheduleInterviewDialog({
             </div>
           </div>
 
-          {/* Participants */}
           <div className="space-y-2">
             <Label>Participants</Label>
             <div className="flex items-center gap-2 text-sm">
@@ -242,7 +248,6 @@ export function ScheduleInterviewDialog({
             </div>
           </div>
 
-          {/* Notes */}
           <div className="space-y-2">
             <Label htmlFor="notes">Notes (optional)</Label>
             <Textarea

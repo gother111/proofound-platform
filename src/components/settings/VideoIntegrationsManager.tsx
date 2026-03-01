@@ -173,31 +173,30 @@ export function VideoIntegrationsManager({
               </div>
               <div>
                 <CardTitle className="text-lg">Zoom</CardTitle>
-                <CardDescription>Create Zoom links automatically when scheduling</CardDescription>
+                <CardDescription>Zoom automation is temporarily unavailable</CardDescription>
               </div>
             </div>
-            {byProvider.zoom?.connected ? (
-              <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                <CheckCircle2 className="w-3 h-3 mr-1" />
-                Connected
-              </Badge>
-            ) : (
-              <Badge variant="secondary" className="bg-muted text-muted-foreground border-border">
-                <XCircle className="w-3 h-3 mr-1" />
-                Not Connected
-              </Badge>
-            )}
+            <Badge variant="secondary" className="bg-amber-100 text-amber-900 border-amber-200">
+              Coming Soon
+            </Badge>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-900">
+                Zoom interview automation is paused while we stabilize provider connectivity.
+                Schedule with Google Meet integration or use a manual meeting link.
+              </p>
+            </div>
+          </div>
+
           {byProvider.zoom?.connected ? (
             <>
-              <p className="text-sm text-muted-foreground dark:text-muted-foreground">
-                Connected since {formatConnectedDate(byProvider.zoom.connectedAt)}
-              </p>
-              <p className="text-xs text-muted-foreground dark:text-muted-foreground">
-                Proofound will create Zoom meetings from your connected Zoom account when you host
-                interviews. Participants join using the generated meeting link.
+              <p className="text-sm text-[#6B6760] dark:text-muted-foreground">
+                Previously connected since {formatConnectedDate(byProvider.zoom.connectedAt)}.
+                Existing links remain valid, but new Zoom automation is paused.
               </p>
               <Button
                 variant="outline"
@@ -208,24 +207,10 @@ export function VideoIntegrationsManager({
               </Button>
             </>
           ) : (
-            <>
-              <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
-                <div className="flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-amber-900">
-                    Optional integration. If not connected, you can still schedule interviews using
-                    a manual meeting link.
-                  </p>
-                </div>
-              </div>
-              <Button
-                onClick={() => handleConnect('zoom')}
-                disabled={connecting === 'zoom'}
-                className="bg-blue-600 text-white hover:bg-blue-700"
-              >
-                {connecting === 'zoom' ? 'Connecting...' : 'Connect Zoom'}
-              </Button>
-            </>
+            <p className="text-xs text-[#6B6760] dark:text-muted-foreground">
+              Zoom connection is disabled for now. We will re-enable this once OAuth stability is
+              restored.
+            </p>
           )}
         </CardContent>
       </Card>

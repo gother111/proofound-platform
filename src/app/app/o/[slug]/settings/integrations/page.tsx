@@ -32,8 +32,8 @@ export default async function OrganizationIntegrationsSettingsPage({
             Integrations Settings
           </h1>
           <p className="text-proofound-charcoal/70 dark:text-muted-foreground">
-            Connect Zoom and Google Meet so interview scheduling can create meeting links
-            automatically.
+            Connect Google Meet so interview scheduling can create meeting links automatically. Zoom
+            is currently marked as coming soon.
           </p>
         </div>
 

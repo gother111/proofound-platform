@@ -215,9 +215,54 @@ describe('POST /api/interviews/schedule', () => {
         integrationDeleteEqUser,
         integrationDeleteEqProvider,
         integrationUpdate,
+        interviewsInsert,
       },
     };
   }
+
+  it('rejects zoom scheduling while zoom is paused as coming soon', async () => {
+    const { supabase } = createSupabaseMock({
+      interviewsForMatch: [{ id: 'interview-cancelled', status: 'cancelled' }],
+    });
+    vi.mocked(createClient).mockResolvedValue(supabase);
+
+    const response = await POST(
+      createScheduleRequest({
+        platform: 'zoom',
+      })
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual(
+      expect.objectContaining({
+        code: 'ZOOM_COMING_SOON',
+      })
+    );
+  });
+
+  it('rejects manual scheduling when manualMeetingProvider is missing', async () => {
+    const { supabase } = createSupabaseMock({
+      interviewsForMatch: [{ id: 'interview-cancelled', status: 'cancelled' }],
+    });
+    vi.mocked(createClient).mockResolvedValue(supabase);
+
+    const response = await POST(
+      createScheduleRequest({
+        platform: 'manual',
+        manualMeetingLink: 'https://example.com/manual-room',
+      })
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual(
+      expect.objectContaining({
+        error: 'Invalid request data',
+      })
+    );
+    expect(JSON.stringify(payload.details)).toContain('manualMeetingProvider');
+  });
 
   it('returns reconnect-required payload and auto-disconnects when refresh fails with invalid_grant', async () => {
     vi.mocked(refreshGoogleToken).mockRejectedValue({
@@ -327,7 +372,7 @@ describe('POST /api/interviews/schedule', () => {
   });
 
   it('allows scheduling when only cancelled interviews exist (regression guard)', async () => {
-    const { supabase } = createSupabaseMock({
+    const { supabase, spies } = createSupabaseMock({
       interviewsForMatch: [{ id: 'interview-cancelled', status: 'cancelled' }],
     });
     vi.mocked(createClient).mockResolvedValue(supabase);
@@ -336,6 +381,7 @@ describe('POST /api/interviews/schedule', () => {
       createScheduleRequest({
         platform: 'manual',
         manualMeetingLink: 'https://example.com/manual-room',
+        manualMeetingProvider: 'teams',
       })
     );
 
@@ -348,6 +394,11 @@ describe('POST /api/interviews/schedule', () => {
     expect(postInterviewUpdateMessageBestEffort).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'scheduled',
+      })
+    );
+    expect(spies.interviewsInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        manual_meeting_provider: 'teams',
       })
     );
   });

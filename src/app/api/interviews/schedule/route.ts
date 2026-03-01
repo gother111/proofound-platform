@@ -11,7 +11,11 @@ import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { getRows } from '@/lib/db/rows';
 import { isActiveOrgMember } from '@/lib/api/auth';
-import { InterviewPlatformSchema, normalizeInterviewPlatform } from '@/lib/contracts/domain';
+import {
+  InterviewPlatformSchema,
+  ManualMeetingProviderSchema,
+  normalizeInterviewPlatform,
+} from '@/lib/contracts/domain';
 import { postInterviewUpdateMessageBestEffort } from '@/lib/interviews/messaging';
 import { classifyGoogleScheduleError } from '@/lib/interviews/schedule-errors';
 import { log } from '@/lib/log';
@@ -136,6 +140,7 @@ export async function GET(request: NextRequest) {
       duration: interview.duration_minutes ?? interview.duration ?? 30,
       platform: interview.platform,
       meetingUrl: interview.meeting_link ?? interview.meeting_url ?? 'pending',
+      manualMeetingProvider: interview.manual_meeting_provider ?? null,
       status: interview.status,
       matchAgreedAt: interview.match_agreed_at ?? null,
       candidateName: interview.candidate_name || 'Candidate',
@@ -153,19 +158,35 @@ export async function GET(request: NextRequest) {
   }
 }
 
-const ScheduleInterviewSchema = z.object({
-  matchId: z.string().uuid(),
-  scheduledAt: z.string().datetime(),
-  platform: InterviewPlatformSchema,
-  participantUserIds: z.array(z.string().uuid()).optional().default([]),
-  timezone: z.string().optional().default('UTC'),
-  policyPreset: z
-    .enum(['startup', 'enterprise', 'volunteer', 'advanced'])
-    .optional()
-    .default('startup'),
-  durationMinutes: z.number().int().min(15).max(90).optional(),
-  manualMeetingLink: z.string().url().optional(),
-});
+const ScheduleInterviewSchema = z
+  .object({
+    matchId: z.string().uuid(),
+    scheduledAt: z.string().datetime(),
+    platform: InterviewPlatformSchema,
+    participantUserIds: z.array(z.string().uuid()).optional().default([]),
+    timezone: z.string().optional().default('UTC'),
+    policyPreset: z
+      .enum(['startup', 'enterprise', 'volunteer', 'advanced'])
+      .optional()
+      .default('startup'),
+    durationMinutes: z.number().int().min(15).max(90).optional(),
+    manualMeetingLink: z.string().url().optional(),
+    manualMeetingProvider: ManualMeetingProviderSchema.optional(),
+  })
+  .superRefine((value, ctx) => {
+    const normalizedPlatform = normalizeInterviewPlatform(value.platform);
+    if (normalizedPlatform !== 'manual') {
+      return;
+    }
+
+    if (!value.manualMeetingProvider) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['manualMeetingProvider'],
+        message: 'Manual meeting provider is required when using manual platform',
+      });
+    }
+  });
 
 const INTERVIEW_POLICY_PRESETS = {
   startup: {
@@ -389,6 +410,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (normalizedPlatform === 'zoom') {
+      return NextResponse.json(
+        {
+          error: 'Zoom integration is coming soon. Use Google Meet or manual meeting link.',
+          code: 'ZOOM_COMING_SOON',
+          message:
+            'Zoom integration is temporarily unavailable. Please select Google Meet or use manual link scheduling.',
+        },
+        { status: 400 }
+      );
+    }
+
     // 4. Handle meeting link based on platform.
     let meetingLink = '';
     let meetingId = '';
@@ -403,7 +436,7 @@ export async function POST(request: NextRequest) {
       meetingLink = data.manualMeetingLink;
       meetingId = `manual-${Date.now()}`;
     } else {
-      const provider = normalizedPlatform === 'google_meet' ? 'google_meet' : 'zoom';
+      const provider: 'google_meet' = 'google_meet';
       scheduleFailureContext.provider = provider;
       scheduleFailureContext.step = 'integration_lookup';
 
@@ -417,7 +450,8 @@ export async function POST(request: NextRequest) {
       if (integrationError || !videoIntegration) {
         return NextResponse.json(
           {
-            error: `${data.platform === 'zoom' ? 'Zoom' : 'Google Meet'} not connected. Please connect your account first, or use "manual" to provide your own meeting link.`,
+            error:
+              'Google Meet not connected. Please connect your account first, or use "manual" to provide your own meeting link.',
           },
           { status: 400 }
         );
@@ -425,10 +459,10 @@ export async function POST(request: NextRequest) {
 
       let accessToken = videoIntegration.access_token;
       if (new Date(videoIntegration.token_expiry) < new Date()) {
-        if (normalizedPlatform === 'zoom') {
-          scheduleFailureContext.step = 'token_refresh';
-          const { refreshZoomToken } = await import('@/lib/integrations/zoom');
-          const newTokens = await refreshZoomToken(videoIntegration.refresh_token);
+        scheduleFailureContext.step = 'token_refresh';
+        try {
+          const { refreshGoogleToken } = await import('@/lib/integrations/google-meet');
+          const newTokens = await refreshGoogleToken(videoIntegration.refresh_token);
           accessToken = newTokens.access_token;
 
           await supabase
@@ -438,99 +472,69 @@ export async function POST(request: NextRequest) {
               token_expiry: new Date(Date.now() + newTokens.expires_in * 1000).toISOString(),
             })
             .eq('user_id', user.id)
-            .eq('provider', 'zoom');
-        } else {
-          scheduleFailureContext.step = 'token_refresh';
-          try {
-            const { refreshGoogleToken } = await import('@/lib/integrations/google-meet');
-            const newTokens = await refreshGoogleToken(videoIntegration.refresh_token);
-            accessToken = newTokens.access_token;
-
-            await supabase
-              .from('user_video_integrations')
-              .update({
-                access_token: newTokens.access_token,
-                token_expiry: new Date(Date.now() + newTokens.expires_in * 1000).toISOString(),
-              })
-              .eq('user_id', user.id)
-              .eq('provider', 'google_meet');
-          } catch (refreshError) {
-            const knownFailureResponse = await handleKnownGoogleFailure({
-              supabase,
-              userId: user.id,
-              matchId: data.matchId,
-              step: 'token_refresh',
-              error: refreshError,
-            });
-
-            if (knownFailureResponse) {
-              return knownFailureResponse;
-            }
-
-            throw refreshError;
-          }
-        }
-      }
-
-      if (normalizedPlatform === 'zoom') {
-        scheduleFailureContext.step = 'meeting_create';
-        const { createZoomMeeting } = await import('@/lib/integrations/zoom');
-        const meeting = await createZoomMeeting(accessToken, {
-          topic: `Interview - ${match.role || 'Proofound Match'}`,
-          start_time: data.scheduledAt,
-          duration: durationMinutes,
-          timezone: data.timezone,
-          agenda: 'Interview session via Proofound',
-        });
-        meetingLink = meeting.join_url;
-        meetingId = meeting.id;
-      } else {
-        const { createGoogleMeet } = await import('@/lib/integrations/google-meet');
-
-        const participantSet = new Set<string>([
-          match.profile_id,
-          user.id,
-          ...data.participantUserIds,
-        ]);
-        const participantEmails: string[] = [];
-
-        for (const participantId of participantSet) {
-          const { data: profile } = await supabase.auth.admin.getUserById(participantId);
-          if (profile.user?.email) {
-            participantEmails.push(profile.user.email);
-          }
-        }
-
-        scheduleFailureContext.step = 'meeting_create';
-        let meeting: Awaited<ReturnType<typeof createGoogleMeet>>;
-        try {
-          meeting = await createGoogleMeet(accessToken, {
-            summary: `Interview - ${match.role || 'Proofound Match'}`,
-            start_time: data.scheduledAt,
-            duration: durationMinutes,
-            timezone: data.timezone,
-            description: 'Interview session via Proofound',
-            attendees: participantEmails,
-          });
-        } catch (meetingError) {
+            .eq('provider', 'google_meet');
+        } catch (refreshError) {
           const knownFailureResponse = await handleKnownGoogleFailure({
             supabase,
             userId: user.id,
             matchId: data.matchId,
-            step: 'meeting_create',
-            error: meetingError,
+            step: 'token_refresh',
+            error: refreshError,
           });
 
           if (knownFailureResponse) {
             return knownFailureResponse;
           }
 
-          throw meetingError;
+          throw refreshError;
+        }
+      }
+
+      const { createGoogleMeet } = await import('@/lib/integrations/google-meet');
+
+      const participantSet = new Set<string>([
+        match.profile_id,
+        user.id,
+        ...data.participantUserIds,
+      ]);
+      const participantEmails: string[] = [];
+
+      for (const participantId of participantSet) {
+        const { data: profile } = await supabase.auth.admin.getUserById(participantId);
+        if (profile.user?.email) {
+          participantEmails.push(profile.user.email);
+        }
+      }
+
+      scheduleFailureContext.step = 'meeting_create';
+      let meeting: Awaited<ReturnType<typeof createGoogleMeet>>;
+      try {
+        meeting = await createGoogleMeet(accessToken, {
+          summary: `Interview - ${match.role || 'Proofound Match'}`,
+          start_time: data.scheduledAt,
+          duration: durationMinutes,
+          timezone: data.timezone,
+          description: 'Interview session via Proofound',
+          attendees: participantEmails,
+        });
+      } catch (meetingError) {
+        const knownFailureResponse = await handleKnownGoogleFailure({
+          supabase,
+          userId: user.id,
+          matchId: data.matchId,
+          step: 'meeting_create',
+          error: meetingError,
+        });
+
+        if (knownFailureResponse) {
+          return knownFailureResponse;
         }
 
-        meetingLink = meeting.hangoutLink;
-        meetingId = meeting.id;
+        throw meetingError;
       }
+
+      meetingLink = meeting.hangoutLink;
+      meetingId = meeting.id;
     }
 
     // 5. Create interview record.
@@ -557,6 +561,8 @@ export async function POST(request: NextRequest) {
       ...baseInterviewInsert,
       duration_minutes: durationMinutes,
       meeting_link: meetingLink,
+      manual_meeting_provider:
+        normalizedPlatform === 'manual' ? (data.manualMeetingProvider ?? null) : null,
     };
     scheduleFailureContext.step = 'interview_insert';
 
@@ -609,6 +615,7 @@ export async function POST(request: NextRequest) {
         case 'timezone':
         case 'host_user_id':
         case 'participant_user_ids':
+        case 'manual_meeting_provider':
           delete insertPayload[missingColumn];
           continue;
         default:

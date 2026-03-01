@@ -7,7 +7,7 @@
  * - Must be within 7 days of match acceptance
  * - Only 1 reschedule allowed
  *
- * Integrates with Zoom and Google Meet.
+ * Integrates with Google Meet and manual meeting links.
  */
 
 'use client';
@@ -49,6 +49,8 @@ interface ScheduleInterviewModalProps {
   onScheduled?: (interview: { id: string; scheduledAt: string; meetingUrl: string }) => void;
 }
 
+type ManualMeetingProvider = 'teams' | 'zoom' | 'google_meet' | 'other';
+
 export function ScheduleInterviewModal({
   isOpen,
   onClose,
@@ -60,8 +62,11 @@ export function ScheduleInterviewModal({
   const isDesktop = useMediaQuery('(min-width: 768px)');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
-  const [platform, setPlatform] = useState<'zoom' | 'google_meet' | 'manual'>('manual');
+  const [platform, setPlatform] = useState<'google_meet' | 'manual'>('manual');
   const [manualMeetingLink, setManualMeetingLink] = useState('');
+  const [manualMeetingProvider, setManualMeetingProvider] = useState<ManualMeetingProvider | ''>(
+    ''
+  );
   const [providerConnections, setProviderConnections] = useState({ zoom: false, google: false });
   const [timezone, setTimezone] = useState(
     Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
@@ -70,7 +75,7 @@ export function ScheduleInterviewModal({
   const [error, setError] = useState<string | null>(null);
 
   const isReschedule = existingInterviewsCount > 0;
-  const canReschedule = existingInterviewsCount < 1; // Only 1 reschedule allowed
+  const canReschedule = existingInterviewsCount < 1;
 
   useEffect(() => {
     let active = true;
@@ -83,21 +88,16 @@ export function ScheduleInterviewModal({
         const data = await response.json();
         if (!active) return;
 
-        const zoomConnected = data.zoom?.connected === true;
         const googleConnected = data.google?.connected === true;
 
-        setProviderConnections({ zoom: zoomConnected, google: googleConnected });
+        setProviderConnections({ zoom: data.zoom?.connected === true, google: googleConnected });
 
-        // Keep manual as low-friction default when no provider is connected.
-        if (!zoomConnected && !googleConnected) {
+        if (!googleConnected) {
           setPlatform('manual');
           return;
         }
 
-        setPlatform((current) => {
-          if (current !== 'manual') return current;
-          return zoomConnected ? 'zoom' : 'google_meet';
-        });
+        setPlatform('google_meet');
       } catch (statusError) {
         console.error('Failed to load provider status:', statusError);
       }
@@ -109,15 +109,12 @@ export function ScheduleInterviewModal({
     };
   }, []);
 
-  // Calculate date constraints (7 days from match agreement)
-  const minDate = new Date();
   const maxDate = useMemo(() => {
     const max = new Date(matchAgreedAt);
     max.setDate(max.getDate() + 7);
     return max;
   }, [matchAgreedAt]);
 
-  // Generate available dates (next 7 days from match agreement, but not in the past)
   const availableDates = useMemo(() => {
     const today = new Date();
     const startDate = today > matchAgreedAt ? today : matchAgreedAt;
@@ -132,12 +129,11 @@ export function ScheduleInterviewModal({
     return dates;
   }, [matchAgreedAt, maxDate]);
 
-  // Generate time slots (9am - 5pm in 30-minute increments)
   const timeSlots = useMemo(() => {
     const slots: string[] = [];
     for (let hour = 9; hour <= 16; hour++) {
-      for (let minute of [0, 30]) {
-        if (hour === 16 && minute === 30) break; // Stop at 5:00 PM
+      for (const minute of [0, 30]) {
+        if (hour === 16 && minute === 30) break;
         const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
         slots.push(timeStr);
       }
@@ -145,7 +141,6 @@ export function ScheduleInterviewModal({
     return slots;
   }, []);
 
-  // Preselect first valid slots to avoid an empty invalid state on open.
   useEffect(() => {
     if (!selectedDate && availableDates.length > 0) {
       setSelectedDate(availableDates[0].toISOString().split('T')[0]);
@@ -174,6 +169,11 @@ export function ScheduleInterviewModal({
         return;
       }
 
+      if (!manualMeetingProvider) {
+        setError('Please select the meeting provider when using manual mode');
+        return;
+      }
+
       try {
         new URL(manualMeetingLink.trim());
       } catch {
@@ -185,7 +185,6 @@ export function ScheduleInterviewModal({
     setIsSubmitting(true);
 
     try {
-      // Combine date and time
       const startTime = new Date(`${selectedDate}T${selectedTime}:00`);
 
       const data = await scheduleInterview({
@@ -193,10 +192,14 @@ export function ScheduleInterviewModal({
         scheduledAt: startTime.toISOString(),
         platform,
         timezone,
-        ...(platform === 'manual' ? { manualMeetingLink: manualMeetingLink.trim() } : {}),
+        ...(platform === 'manual'
+          ? {
+              manualMeetingLink: manualMeetingLink.trim(),
+              manualMeetingProvider,
+            }
+          : {}),
       });
 
-      // Success!
       if (onScheduled) {
         const meetingUrl =
           data?.interview?.meetingUrl ??
@@ -220,7 +223,6 @@ export function ScheduleInterviewModal({
 
   const FormBody = () => (
     <div className="space-y-4 py-4 px-4 md:px-0">
-      {/* Date Picker */}
       <div className="space-y-2">
         <Label htmlFor="interview-date">
           <Calendar className="w-4 h-4 inline mr-2" />
@@ -244,7 +246,6 @@ export function ScheduleInterviewModal({
         </Select>
       </div>
 
-      {/* Time Picker */}
       <div className="space-y-2">
         <Label htmlFor="interview-time">
           <Clock className="w-4 h-4 inline mr-2" />
@@ -264,7 +265,6 @@ export function ScheduleInterviewModal({
         </Select>
       </div>
 
-      {/* Duration (Fixed at 30 min) */}
       <div className="space-y-2">
         <Label>Duration</Label>
         <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-foreground">
@@ -272,39 +272,46 @@ export function ScheduleInterviewModal({
         </div>
       </div>
 
-      {/* Platform Selector */}
       <div className="space-y-2">
         <Label htmlFor="platform">
           <Video className="w-4 h-4 inline mr-2" />
           Video Platform
         </Label>
-        <Select
-          value={platform}
-          onValueChange={(val) => setPlatform(val as 'zoom' | 'google_meet' | 'manual')}
-        >
+        <Select value={platform} onValueChange={(val) => setPlatform(val as 'google_meet' | 'manual')}>
           <SelectTrigger id="platform">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="manual">Manual link (no integration required)</SelectItem>
-            <SelectItem value="zoom" disabled={!providerConnections.zoom}>
-              Zoom {providerConnections.zoom ? '(connected)' : '(connect in Settings first)'}
-            </SelectItem>
             <SelectItem value="google_meet" disabled={!providerConnections.google}>
-              Google Meet{' '}
-              {providerConnections.google ? '(connected)' : '(connect in Settings first)'}
+              Google Meet {providerConnections.google ? '(connected)' : '(connect in Settings first)'}
             </SelectItem>
           </SelectContent>
         </Select>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-[#6B6760]">
           {platform === 'manual'
-            ? 'Manual mode works with any valid meeting link (Zoom, Google Meet, Teams, and others).'
-            : 'Connected mode creates the meeting from your linked provider account automatically.'}
+            ? 'Manual mode works with any valid meeting link. Select which provider the link belongs to.'
+            : 'Connected mode creates the meeting from your linked Google provider account automatically.'}
         </p>
       </div>
 
       {platform === 'manual' && (
         <div className="space-y-2">
+          <Label htmlFor="manualMeetingProvider">Manual Link Provider</Label>
+          <Select
+            value={manualMeetingProvider || undefined}
+            onValueChange={(value) => setManualMeetingProvider(value as ManualMeetingProvider)}
+          >
+            <SelectTrigger id="manualMeetingProvider">
+              <SelectValue placeholder="Select provider" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="teams">Microsoft Teams</SelectItem>
+              <SelectItem value="zoom">Zoom</SelectItem>
+              <SelectItem value="google_meet">Google Meet</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
           <Label htmlFor="manualMeetingLink">Meeting Link</Label>
           <input
             id="manualMeetingLink"
@@ -317,14 +324,12 @@ export function ScheduleInterviewModal({
         </div>
       )}
 
-      {/* Error Message */}
       {error && (
         <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
           {error}
         </div>
       )}
 
-      {/* Reschedule Warning */}
       {isReschedule && !canReschedule && (
         <div className="rounded-md border border-warning/40 bg-warning/15 p-3 text-sm text-proofound-charcoal">
           ⚠️ You have already rescheduled this interview once. No further reschedules allowed.
@@ -344,34 +349,19 @@ export function ScheduleInterviewModal({
     </div>
   );
 
-  const TitleAndDescription = () => (
-    <>
-      <div className="font-semibold text-lg">
-        {isReschedule ? 'Reschedule Interview' : 'Schedule Interview'}
-      </div>
-      <div className="text-sm text-muted-foreground">
-        {isReschedule
-          ? `You can reschedule this interview ${canReschedule ? 'once' : '(limit reached)'}.`
-          : 'Schedule a 30-minute video interview. Must be within 7 days of match acceptance.'}
-      </div>
-    </>
-  );
+  const title = isReschedule ? 'Reschedule Interview' : 'Schedule Interview';
+  const description = isReschedule
+    ? `You can reschedule this interview ${canReschedule ? 'once' : '(limit reached)'}.`
+    : 'Schedule a 30-minute video interview. Must be within 7 days of match acceptance.';
 
   if (isDesktop) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>
-              {isReschedule ? 'Reschedule Interview' : 'Schedule Interview'}
-            </DialogTitle>
-            <DialogDescription>
-              {isReschedule
-                ? `You can reschedule this interview ${canReschedule ? 'once' : '(limit reached)'}.`
-                : 'Schedule a 30-minute video interview. Must be within 7 days of match acceptance.'}
-            </DialogDescription>
+            <DialogTitle>{title}</DialogTitle>
+            <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
-
           <FormBody />
           <FormActions />
         </DialogContent>
@@ -383,7 +373,8 @@ export function ScheduleInterviewModal({
     <Drawer open={isOpen} onOpenChange={onClose}>
       <DrawerContent>
         <DrawerHeader className="text-left">
-          <TitleAndDescription />
+          <DrawerTitle>{title}</DrawerTitle>
+          <DrawerDescription>{description}</DrawerDescription>
         </DrawerHeader>
         <div className="max-h-[60vh] overflow-y-auto">
           <FormBody />

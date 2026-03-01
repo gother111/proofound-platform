@@ -7,13 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireApiAuthContext } from '@/lib/auth';
-import { getZoomAuthUrl } from '@/lib/integrations/zoom';
 import { log } from '@/lib/log';
-import { randomBytes } from 'crypto';
-import {
-  resolveIntegrationReturnPath,
-  resolveOAuthRedirectUri,
-} from '@/lib/integrations/oauth-helpers';
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,41 +16,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { user } = authContext;
-    const returnTo = resolveIntegrationReturnPath(request.nextUrl.searchParams.get('returnTo'));
 
-    // Get redirect URI
-    const redirectUri = resolveOAuthRedirectUri(
-      request,
-      process.env.ZOOM_REDIRECT_URI,
-      '/api/integrations/zoom/callback',
-      { preferRequestOrigin: true }
+    log.info('zoom.oauth.blocked.coming_soon', { userId: user.id });
+
+    return NextResponse.json(
+      {
+        error: 'Zoom integration is coming soon',
+        code: 'ZOOM_COMING_SOON',
+        message: 'Zoom is temporarily unavailable. Please use Google Meet or manual links.',
+      },
+      { status: 400 }
     );
-
-    // CSRF protection: tie `state` to an httpOnly cookie (10 min window)
-    const state = randomBytes(32).toString('hex');
-
-    // Generate Zoom auth URL
-    const authUrl = getZoomAuthUrl(redirectUri, state);
-
-    log.info('zoom.oauth.initiated', { userId: user.id });
-
-    // Redirect to Zoom OAuth
-    const res = NextResponse.redirect(authUrl);
-    res.cookies.set('zoom_oauth_state', state, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 10 * 60,
-      path: '/',
-    });
-    res.cookies.set('zoom_oauth_return_to', returnTo, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 10 * 60,
-      path: '/',
-    });
-    return res;
   } catch (error) {
     log.error('zoom.oauth.connect.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',

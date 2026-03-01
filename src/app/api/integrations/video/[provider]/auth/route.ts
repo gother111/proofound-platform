@@ -26,8 +26,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ prov
       return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
     }
 
-    const authPath =
-      provider === 'zoom' ? '/api/integrations/zoom/connect' : '/api/integrations/google/connect';
+    if (provider === 'zoom') {
+      return NextResponse.json(
+        {
+          error: 'Zoom integration is coming soon',
+          code: 'ZOOM_COMING_SOON',
+          message: 'Zoom is temporarily unavailable. Please use Google Meet or manual links.',
+        },
+        { status: 400 }
+      );
+    }
+
+    const authPath = '/api/integrations/google/connect';
     const returnTo = resolveIntegrationReturnPath(req.nextUrl.searchParams.get('returnTo'));
     const query = new URLSearchParams({ returnTo }).toString();
 
