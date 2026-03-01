@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CvImportWizard } from '@/components/expertise/cv-import/CvImportWizard';
 
 const apiFetchMock = vi.fn();
-const pdfGetDocumentMock = vi.fn();
+const extractPdfTextFromFileMock = vi.fn();
 const toastSuccessMock = vi.fn();
 const toastErrorMock = vi.fn();
 const toastInfoMock = vi.fn();
@@ -22,24 +22,24 @@ vi.mock('sonner', () => ({
   },
 }));
 
-vi.mock('pdfjs-dist/webpack.mjs', () => ({
-  getDocument: (...args: any[]) => pdfGetDocumentMock(...args),
-}));
+vi.mock('@/lib/expertise/pdf-client-extractor', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/expertise/pdf-client-extractor')>(
+    '@/lib/expertise/pdf-client-extractor'
+  );
+
+  return {
+    ...actual,
+    extractPdfTextFromFile: (...args: any[]) => extractPdfTextFromFileMock(...args),
+  };
+});
 
 describe('CvImportWizard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    pdfGetDocumentMock.mockReturnValue({
-      promise: Promise.resolve({
-        numPages: 1,
-        getPage: async () => ({
-          getTextContent: async () => ({
-            items: [{ str: 'Experience\nSenior Engineer at Acme\nLanguages\nEnglish Native' }],
-          }),
-        }),
-      }),
-    });
+    extractPdfTextFromFileMock.mockResolvedValue(
+      'Experience\nSenior Engineer at Acme\nLanguages\nEnglish Native'
+    );
   });
 
   it('uploads and analyzes CV PDFs through wizard suggest route', async () => {
@@ -110,7 +110,7 @@ describe('CvImportWizard', () => {
     });
 
     await waitFor(() => {
-      expect(pdfGetDocumentMock).toHaveBeenCalledTimes(1);
+      expect(extractPdfTextFromFileMock).toHaveBeenCalledTimes(1);
     });
 
     await waitFor(() => {
@@ -222,7 +222,7 @@ describe('CvImportWizard', () => {
     });
 
     await waitFor(() => {
-      expect(pdfGetDocumentMock).toHaveBeenCalledTimes(1);
+      expect(extractPdfTextFromFileMock).toHaveBeenCalledTimes(1);
     });
 
     await waitFor(() => {
@@ -379,9 +379,9 @@ describe('CvImportWizard', () => {
   });
 
   it('shows parser-init friendly message when getDocument path fails', async () => {
-    pdfGetDocumentMock.mockImplementationOnce(() => {
-      throw new Error("Cannot read properties of undefined (reading 'getDocument')");
-    });
+    extractPdfTextFromFileMock.mockRejectedValueOnce(
+      new Error("Cannot read properties of undefined (reading 'getDocument')")
+    );
 
     render(<CvImportWizard />);
 

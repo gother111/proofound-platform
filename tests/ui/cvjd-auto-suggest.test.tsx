@@ -8,7 +8,7 @@ const apiFetchMock = vi.fn();
 const toastSuccessMock = vi.fn();
 const toastInfoMock = vi.fn();
 const toastErrorMock = vi.fn();
-const pdfGetDocumentMock = vi.fn();
+const extractPdfTextFromFileMock = vi.fn();
 
 vi.mock('@/lib/api/fetch', () => ({
   apiFetch: (...args: any[]) => apiFetchMock(...args),
@@ -22,9 +22,16 @@ vi.mock('sonner', () => ({
   },
 }));
 
-vi.mock('pdfjs-dist/webpack.mjs', () => ({
-  getDocument: (...args: any[]) => pdfGetDocumentMock(...args),
-}));
+vi.mock('@/lib/expertise/pdf-client-extractor', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/expertise/pdf-client-extractor')>(
+    '@/lib/expertise/pdf-client-extractor'
+  );
+
+  return {
+    ...actual,
+    extractPdfTextFromFile: (...args: any[]) => extractPdfTextFromFileMock(...args),
+  };
+});
 
 describe('CVJDAutoSuggest', () => {
   const originalFlag = process.env.NEXT_PUBLIC_CV_IMPORT_V2;
@@ -32,16 +39,7 @@ describe('CVJDAutoSuggest', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     delete process.env.NEXT_PUBLIC_CV_IMPORT_V2;
-    pdfGetDocumentMock.mockReturnValue({
-      promise: Promise.resolve({
-        numPages: 1,
-        getPage: async () => ({
-          getTextContent: async () => ({
-            items: [{ str: 'React TypeScript' }],
-          }),
-        }),
-      }),
-    });
+    extractPdfTextFromFileMock.mockResolvedValue('React TypeScript');
   });
 
   afterEach(() => {
@@ -135,7 +133,7 @@ describe('CVJDAutoSuggest', () => {
     });
 
     await waitFor(() => {
-      expect(pdfGetDocumentMock).toHaveBeenCalledTimes(2);
+      expect(extractPdfTextFromFileMock).toHaveBeenCalledTimes(2);
     });
 
     const analyzeButton = screen.getByRole('button', { name: /Analyze Uploaded PDFs/i });
@@ -281,9 +279,9 @@ describe('CVJDAutoSuggest', () => {
   });
 
   it('shows friendly parse error when pdf worker initialization fails', async () => {
-    pdfGetDocumentMock.mockImplementationOnce(() => {
-      throw new Error('No "GlobalWorkerOptions.workerSrc" specified.');
-    });
+    extractPdfTextFromFileMock.mockRejectedValueOnce(
+      new Error('No "GlobalWorkerOptions.workerSrc" specified.')
+    );
 
     render(<CVJDAutoSuggest />);
 
@@ -307,9 +305,9 @@ describe('CVJDAutoSuggest', () => {
   });
 
   it('shows friendly parse error when parser module fails to initialize getDocument', async () => {
-    pdfGetDocumentMock.mockImplementationOnce(() => {
-      throw new Error("Cannot read properties of undefined (reading 'getDocument')");
-    });
+    extractPdfTextFromFileMock.mockRejectedValueOnce(
+      new Error("Cannot read properties of undefined (reading 'getDocument')")
+    );
 
     render(<CVJDAutoSuggest />);
 

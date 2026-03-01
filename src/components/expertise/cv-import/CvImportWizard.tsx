@@ -5,6 +5,10 @@ import { Download, Search, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { apiFetch } from '@/lib/api/fetch';
+import {
+  extractPdfTextFromFile,
+  normalizePdfParseError,
+} from '@/lib/expertise/pdf-client-extractor';
 import { LANGUAGE_OPTIONS, CEFR_LEVELS } from '@/lib/taxonomy/data';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -236,68 +240,6 @@ async function readErrorMessage(response: Response, fallback: string): Promise<s
   }
 
   return fallback;
-}
-
-function normalizePdfParseError(error: unknown): string {
-  if (!(error instanceof Error)) {
-    return 'Failed to parse PDF';
-  }
-
-  if (
-    error.message.includes('GlobalWorkerOptions.workerSrc') ||
-    error.message.includes('getDocument') ||
-    error.message.includes('PDF parser initialization failed')
-  ) {
-    return 'PDF parser could not start. Please refresh and re-upload the file.';
-  }
-
-  return error.message;
-}
-
-async function extractPdfText(file: File): Promise<string> {
-  const pdfjsEntrypoints = ['pdfjs-dist/webpack.mjs', 'pdfjs-dist/build/pdf.mjs'] as const;
-  let getDocument: unknown = null;
-
-  for (const entrypoint of pdfjsEntrypoints) {
-    try {
-      const pdfjsModule = await import(entrypoint);
-      getDocument =
-        (pdfjsModule as { getDocument?: unknown }).getDocument ||
-        ((pdfjsModule as { default?: { getDocument?: unknown } }).default?.getDocument ?? null);
-      if (typeof getDocument === 'function') {
-        break;
-      }
-    } catch {
-      // Try the next known entrypoint.
-    }
-  }
-
-  if (typeof getDocument !== 'function') {
-    throw new Error('PDF parser initialization failed');
-  }
-
-  const buffer = await file.arrayBuffer();
-  const document = await (getDocument as any)({
-    data: new Uint8Array(buffer),
-  }).promise;
-
-  const pageTexts: string[] = [];
-
-  for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
-    const page = await document.getPage(pageNumber);
-    const textContent = await page.getTextContent();
-    const text = (textContent.items as Array<{ str?: string }>)
-      .map((item) => item.str || '')
-      .join(' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    if (text.length > 0) {
-      pageTexts.push(text);
-    }
-  }
-
-  return pageTexts.join('\n').trim();
 }
 
 function normalizeScore(value: unknown, fallback = 0): number {
@@ -752,7 +694,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         const documentId = `${Date.now()}-${file.name}-${Math.random().toString(36).slice(2, 8)}`;
 
         try {
-          const text = await extractPdfText(file);
+          const text = await extractPdfTextFromFile(file);
 
           if (!text.trim()) {
             parsedDocuments.push({
