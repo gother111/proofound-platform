@@ -39,9 +39,10 @@ describe('apiFetch', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
 
     // First call should be to csrf-token endpoint
-    expect(fetchMock.mock.calls[0][0]).toContain('/api/csrf-token');
+    expect(String(fetchMock.mock.calls[0][0])).toContain('/api/csrf-token?ts=');
     const csrfInit = fetchMock.mock.calls[0][1] as RequestInit;
     expect(csrfInit.credentials).toBe('include');
+    expect(csrfInit.cache).toBe('no-store');
 
     // Second call should carry the header
     const secondCallInit = fetchMock.mock.calls[1][1] as RequestInit;
@@ -65,7 +66,7 @@ describe('apiFetch', () => {
 
     // Only token endpoint fetch should run. Protected endpoint fetch should not be attempted.
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock.mock.calls[0][0]).toBe('/api/csrf-token');
+    expect(String(fetchMock.mock.calls[0][0])).toContain('/api/csrf-token?ts=');
   });
 
   it('retries once after CSRF 403 with refreshed token', async () => {
@@ -93,6 +94,8 @@ describe('apiFetch', () => {
 
     expect(response.status).toBe(200);
     expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect(String(fetchMock.mock.calls[0][0])).toContain('/api/csrf-token?ts=');
+    expect(String(fetchMock.mock.calls[2][0])).toContain('/api/csrf-token?ts=');
 
     const firstProtectedHeaders = new Headers(fetchMock.mock.calls[1][1]?.headers as HeadersInit);
     expect(firstProtectedHeaders.get('x-csrf-token')).toBe('stale-token');

@@ -58,9 +58,15 @@ async function fetchCsrfToken(originKey: string, forceRefresh = false): Promise<
 
   const tokenPromise = (async () => {
     try {
-      const res = await fetch('/api/csrf-token', {
+      const tokenUrl = `/api/csrf-token?ts=${Date.now()}`;
+      const res = await fetch(tokenUrl, {
         method: 'GET',
         credentials: 'include',
+        cache: 'no-store',
+        headers: {
+          'cache-control': 'no-store',
+          pragma: 'no-cache',
+        },
       });
       if (!res.ok) {
         console.warn('Failed to fetch CSRF token', res.status);

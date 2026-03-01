@@ -14,9 +14,18 @@ export async function GET(request: NextRequest) {
   const token = getOrGenerateCSRFToken(request);
 
   // Create response with token
-  const response = NextResponse.json({
-    token,
-  });
+  const response = NextResponse.json(
+    {
+      token,
+    },
+    {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        Pragma: 'no-cache',
+        Expires: '0',
+      },
+    }
+  );
 
   // Set token in httpOnly cookie
   setCSRFTokenCookie(response, token);
