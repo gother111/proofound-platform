@@ -30,7 +30,7 @@ import {
   DrawerDescription,
 } from '@/components/ui/drawer';
 import { Label } from '@/components/ui/label';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { useResponsiveModalMode } from '@/hooks/use-responsive-modal-mode';
 import {
   Select,
   SelectContent,
@@ -59,7 +59,7 @@ export function ScheduleInterviewModal({
   existingInterviewsCount = 0,
   onScheduled,
 }: ScheduleInterviewModalProps) {
-  const isDesktop = useMediaQuery('(min-width: 768px)');
+  const isDesktop = useResponsiveModalMode(isOpen);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [platform, setPlatform] = useState<'google_meet' | 'manual'>('manual');

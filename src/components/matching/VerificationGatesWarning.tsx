@@ -28,7 +28,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { useResponsiveModalMode } from '@/hooks/use-responsive-modal-mode';
 import { AlertCircle, CheckCircle, Shield, ExternalLink } from 'lucide-react';
 import { getGateDescription, getGateActionLink } from '@/lib/verification/gates-utils';
 import type { VerificationGate, VerificationStatus } from '@/lib/verification/gates-utils';
@@ -55,7 +55,7 @@ export function VerificationGatesWarning({
     window.open(link, '_blank');
   };
 
-  const isDesktop = useMediaQuery('(min-width: 768px)');
+  const isDesktop = useResponsiveModalMode(open);
 
   const ModalContentHeader = () => (
     <div className="px-4 md:px-0">

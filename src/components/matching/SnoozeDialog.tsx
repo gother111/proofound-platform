@@ -24,7 +24,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { useResponsiveModalMode } from '@/hooks/use-responsive-modal-mode';
 import { Button } from '@/components/ui/button';
 import { BellOff, Calendar, Clock } from 'lucide-react';
 import { toast } from 'sonner';
@@ -53,7 +53,7 @@ export function SnoozeDialog({
 }: SnoozeDialogProps) {
   const [selectedWeeks, setSelectedWeeks] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const isDesktop = useMediaQuery('(min-width: 768px)');
+  const isDesktop = useResponsiveModalMode(open);
 
   const handleSnooze = async () => {
     setIsSubmitting(true);

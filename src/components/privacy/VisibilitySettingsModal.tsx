@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { useResponsiveModalMode } from '@/hooks/use-responsive-modal-mode';
 import { FieldVisibilityControls } from './FieldVisibilityControls';
 import { apiFetch } from '@/lib/api/fetch';
 
@@ -18,7 +18,7 @@ export function VisibilitySettingsModal({
   onOpenChange,
   userId,
 }: VisibilitySettingsModalProps) {
-  const isDesktop = useMediaQuery('(min-width: 768px)');
+  const isDesktop = useResponsiveModalMode(open);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {

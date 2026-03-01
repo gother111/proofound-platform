@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { useResponsiveModalMode } from '@/hooks/use-responsive-modal-mode';
 
 interface CustomizeModalProps {
   open: boolean;
@@ -50,7 +50,7 @@ const widgetOptions = [
 
 export function CustomizeModal({ open, onOpenChange }: CustomizeModalProps) {
   const { toast } = useToast();
-  const isDesktop = useMediaQuery('(min-width: 768px)');
+  const isDesktop = useResponsiveModalMode(open);
   const [widgets, setWidgets] = useState<WidgetState>({
     goals: true,
     tasks: true,

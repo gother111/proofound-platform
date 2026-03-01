@@ -25,7 +25,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { useResponsiveModalMode } from '@/hooks/use-responsive-modal-mode';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -61,7 +61,7 @@ export function ConsentToShareDialog({
   const [hasReadTerms, setHasReadTerms] = useState(false);
   const [understands, setUnderstands] = useState(false);
   const { toast } = useToast();
-  const isDesktop = useMediaQuery('(min-width: 768px)');
+  const isDesktop = useResponsiveModalMode(isOpen);
 
   // Reset state when dialog opens
   useEffect(() => {

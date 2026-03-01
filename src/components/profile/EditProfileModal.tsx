@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { BasicInfo } from '@/types/profile';
 import { FormErrorBoundary } from '@/components/ErrorBoundary';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { useResponsiveModalMode } from '@/hooks/use-responsive-modal-mode';
 
 interface EditProfileModalProps {
   open: boolean;
@@ -30,22 +30,26 @@ interface EditProfileModalProps {
 }
 
 export function EditProfileModal({ open, onOpenChange, basicInfo, onSave }: EditProfileModalProps) {
-  const isDesktop = useMediaQuery('(min-width: 768px)');
+  const isDesktop = useResponsiveModalMode(open);
   const [name, setName] = useState(basicInfo.name);
   const [tagline, setTagline] = useState(basicInfo.tagline || '');
   const [location, setLocation] = useState(basicInfo.location || '');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const wasOpenRef = useRef(open);
 
-  // Reset form when modal opens
+  // Reset form only on the open edge so parent rerenders don't clobber in-progress input.
   useEffect(() => {
-    if (open) {
-      console.log('DEBUG: EditProfileModal opened', basicInfo);
+    const openedNow = open && !wasOpenRef.current;
+
+    if (openedNow) {
       setName(basicInfo.name);
       setTagline(basicInfo.tagline || '');
       setLocation(basicInfo.location || '');
       setErrors({});
     }
-  }, [open, basicInfo]);
+
+    wasOpenRef.current = open;
+  }, [open, basicInfo.name, basicInfo.tagline, basicInfo.location]);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};

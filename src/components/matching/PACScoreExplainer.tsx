@@ -22,7 +22,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '@/components/ui/drawer';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { useResponsiveModalMode } from '@/hooks/use-responsive-modal-mode';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Info, Heart, Target, CheckCircle2 } from 'lucide-react';
@@ -64,7 +64,7 @@ export function PACScoreExplainer({
     </Button>
   );
 
-  const isDesktop = useMediaQuery('(min-width: 768px)');
+  const isDesktop = useResponsiveModalMode(open);
 
   const ModalContentBody = () => (
     <>

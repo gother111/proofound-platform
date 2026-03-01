@@ -29,7 +29,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { useResponsiveModalMode } from '@/hooks/use-responsive-modal-mode';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MatchResultCard } from './MatchResultCard';
@@ -97,7 +97,7 @@ export function MatchingOrganizationView({
   const [testInviteEmail, setTestInviteEmail] = useState('');
   const [testInviteAssignmentId, setTestInviteAssignmentId] = useState(assignments[0]?.id || '');
   const [isSubmittingTestInvite, setIsSubmittingTestInvite] = useState(false);
-  const isDesktop = useMediaQuery('(min-width: 768px)');
+  const isDesktop = useResponsiveModalMode(isInitiateTestOpen);
 
   const currentAssignment = assignments.find((a) => a.id === selectedAssignment);
   const currentOrgId = currentAssignment?.orgId || assignments[0]?.orgId || null;

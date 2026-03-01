@@ -41,7 +41,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { generateEmbedCodeFromUrl, generateShareText } from '@/lib/profile/snippet-generator';
 import { apiFetch } from '@/lib/api/fetch';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { useResponsiveModalMode } from '@/hooks/use-responsive-modal-mode';
 
 type ProfileType = 'individual' | 'organization';
 
@@ -125,7 +125,7 @@ export function ShareProfileDialog({
   profileType = 'individual',
   orgId,
 }: ShareProfileDialogProps) {
-  const isDesktop = useMediaQuery('(min-width: 768px)');
+  const isDesktop = useResponsiveModalMode(isOpen);
   const [fields, setFields] = useState<Record<string, boolean | number>>(
     getDefaultFields(profileType)
   );
