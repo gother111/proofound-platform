@@ -56,3 +56,4 @@ supabase/.temp/
 # python
 __pycache__/
 *.pyc
+.venv311/
