@@ -172,6 +172,42 @@ describe('cv-import wizard suggest route', () => {
     fetchSpy.mockRestore();
   });
 
+  it('returns structured 504 timeout code when python proxy times out', async () => {
+    (createClient as any).mockResolvedValue({
+      auth: {
+        getUser: async () => ({ data: { user: { id: 'user-1' } } }),
+      },
+    });
+
+    const fetchSpy = vi
+      .spyOn(global, 'fetch')
+      .mockRejectedValueOnce(new Error('Request timed out'));
+
+    const formData = new FormData();
+    formData.append('files', new File(['dummy'], 'cv.pdf', { type: 'application/pdf' }));
+    formData.append('document_ids', 'doc-1');
+    formData.append('contexts', 'cv');
+
+    const request = new NextRequest('http://localhost/api/expertise/cv-import/wizard-suggest', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data; boundary=----vitest',
+      },
+    });
+
+    const response = await POST(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(504);
+    expect(body.error).toBe('Failed to process CV wizard suggestions');
+    expect(body.code).toBe('CV_IMPORT_PROXY_TIMEOUT');
+    expect(body.message).toContain('timed out');
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(suggestWizardForDocuments).not.toHaveBeenCalled();
+    fetchSpy.mockRestore();
+  });
+
   it('routes JSON payloads to python engine when engine mode is python', async () => {
     process.env.CV_IMPORT_ENGINE_MODE = 'python';
     (createClient as any).mockResolvedValue({

@@ -193,7 +193,7 @@ const GENERIC_BACKEND_ERRORS = new Set([
   'Failed to process CV wizard suggestions',
   'Failed to process CV documents',
 ]);
-const PROXY_UNAVAILABLE_CODE = 'CV_IMPORT_PROXY_UNAVAILABLE';
+const PROXY_RETRYABLE_CODES = new Set(['CV_IMPORT_PROXY_UNAVAILABLE', 'CV_IMPORT_PROXY_TIMEOUT']);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -251,12 +251,12 @@ function isClientFallbackEnabled(): boolean {
   return process.env.NEXT_PUBLIC_CV_IMPORT_CLIENT_FALLBACK_ENABLED !== 'false';
 }
 
-function isProxyUnavailableError(payload: unknown): boolean {
+function isProxyRetryableError(payload: unknown): boolean {
   if (!isRecord(payload)) {
     return false;
   }
 
-  return payload.code === PROXY_UNAVAILABLE_CODE;
+  return typeof payload.code === 'string' && PROXY_RETRYABLE_CODES.has(payload.code);
 }
 
 async function buildTypescriptFallbackPayload(documents: ParsedDocumentState[]): Promise<{
@@ -813,9 +813,9 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       if (!response.ok && isClientFallbackEnabled()) {
         const failurePayload = await readJsonSafely(response);
 
-        if (isProxyUnavailableError(failurePayload)) {
+        if (isProxyRetryableError(failurePayload)) {
           console.warn(
-            '[cv-import] wizard suggest proxy unavailable, retrying with typescript engine'
+            '[cv-import] wizard suggest proxy retryable failure, retrying with typescript engine'
           );
 
           const fallbackPayload = await buildTypescriptFallbackPayload(readyDocuments);

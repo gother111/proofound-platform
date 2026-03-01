@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const DEFAULT_PROXY_TIMEOUT_MS = 10000;
 const PROXY_UNAVAILABLE_CODE = 'CV_IMPORT_PROXY_UNAVAILABLE';
+const PROXY_TIMEOUT_CODE = 'CV_IMPORT_PROXY_TIMEOUT';
 type EndpointPath = '/wizard-suggest' | '/suggest';
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
@@ -50,13 +51,14 @@ function resolveGenericErrorLabel(endpointPath: EndpointPath): string {
 function buildUnavailableResponse(
   endpointPath: EndpointPath,
   message: string,
-  status = 503
+  status = 503,
+  code = PROXY_UNAVAILABLE_CODE
 ): NextResponse {
   return NextResponse.json(
     {
       error: resolveGenericErrorLabel(endpointPath),
       message,
-      code: PROXY_UNAVAILABLE_CODE,
+      code,
     },
     { status }
   );
@@ -129,15 +131,28 @@ export async function proxyCvRequestToPython(
     headers['x-cv-proxy-secret'] = internalSecret;
   }
 
-  const response = await withTimeout(
-    fetch(targetUrl, {
-      method: 'POST',
-      headers,
-      body: bodyBuffer,
-      cache: 'no-store',
-    }),
-    timeoutMs
-  );
+  let response: Response;
+  try {
+    response = await withTimeout(
+      fetch(targetUrl, {
+        method: 'POST',
+        headers,
+        body: bodyBuffer,
+        cache: 'no-store',
+      }),
+      timeoutMs
+    );
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('timed out')) {
+      return buildUnavailableResponse(
+        endpointPath,
+        'Python CV service timed out. Falling back is recommended.',
+        504,
+        PROXY_TIMEOUT_CODE
+      );
+    }
+    throw error;
+  }
 
   const rawText = await response.text();
 

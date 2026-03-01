@@ -457,6 +457,104 @@ describe('CvImportWizard', () => {
     expect(screen.getByText('Extracted text preview')).toBeInTheDocument();
   });
 
+  it('retries with typescript engine when python proxy times out', async () => {
+    extractPdfTextFromFileMock.mockResolvedValueOnce('React TypeScript');
+    apiFetchMock
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            error: 'Failed to process CV wizard suggestions',
+            message: 'Python CV service timed out. Falling back is recommended.',
+            code: 'CV_IMPORT_PROXY_TIMEOUT',
+          }),
+          {
+            status: 504,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            documents: [
+              {
+                document_id: 'doc-1',
+                file_name: 'cv.pdf',
+                context: 'cv',
+                parsed_text: 'React TypeScript',
+                work_experiences: [],
+                learning_experiences: [],
+                volunteering: [],
+                languages: [],
+                skill_candidates: [],
+              },
+            ],
+            metadata: {
+              semantic_used: false,
+              semantic_fallback_triggered: false,
+              unmapped_candidates_count: 0,
+              limits: {
+                max_documents: 5,
+                max_chars_per_document: 30000,
+                max_total_chars: 90000,
+              },
+            },
+          }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        )
+      );
+
+    render(<CvImportWizard />);
+
+    const uploadInput = screen.getByTestId('cv-upload');
+    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
+
+    fireEvent.change(uploadInput, {
+      target: {
+        files: [file],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
+
+    await waitFor(() => {
+      expect(apiFetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    expect(extractPdfTextFromFileMock).toHaveBeenCalledTimes(1);
+    expect(apiFetchMock).toHaveBeenNthCalledWith(
+      1,
+      '/api/expertise/cv-import/wizard-suggest',
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.any(FormData),
+      })
+    );
+
+    expect(apiFetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/expertise/cv-import/wizard-suggest?engine=typescript',
+      expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+
+    const retryPayload = JSON.parse(String(apiFetchMock.mock.calls[1]?.[1]?.body || '{}'));
+    expect(retryPayload.documents[0].document_id).toMatch(/cv\.pdf/);
+    expect(retryPayload.documents[0].file_name).toBe('cv.pdf');
+    expect(retryPayload.documents[0].context).toBe('cv');
+    expect(retryPayload.documents[0].text).toBe('React TypeScript');
+    expect(screen.getByText('Extracted text preview')).toBeInTheDocument();
+  });
+
   it('shows friendly parser message when fallback extraction cannot initialize parser', async () => {
     extractPdfTextFromFileMock.mockRejectedValueOnce(new Error('PDF parser initialization failed'));
     normalizePdfParseErrorMock.mockReturnValueOnce(
