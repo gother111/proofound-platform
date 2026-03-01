@@ -165,7 +165,7 @@ export function DataBreakdown({ userId }: DataBreakdownProps) {
       render: (skillsData: any) => (
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-4 text-center">
-            <div className="bg-proofound-parchment dark:bg-slate-800 rounded-lg p-3">
+            <div className="bg-proofound-parchment dark:bg-muted rounded-lg p-3">
               <p className="text-2xl font-bold text-proofound-forest">{skillsData.totalSkills}</p>
               <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground">
                 Total Skills
@@ -197,7 +197,7 @@ export function DataBreakdown({ userId }: DataBreakdownProps) {
                 {skillsData.skills.slice(0, 5).map((skill: any, index: number) => (
                   <div
                     key={index}
-                    className="flex justify-between items-center p-2 bg-proofound-parchment dark:bg-slate-800 rounded"
+                    className="flex justify-between items-center p-2 bg-proofound-parchment dark:bg-muted rounded"
                   >
                     <span className="text-sm">{skill.skillId}</span>
                     <span className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground">
@@ -219,25 +219,25 @@ export function DataBreakdown({ userId }: DataBreakdownProps) {
       render: (workData: any) => (
         <div className="space-y-4">
           <div className="grid grid-cols-4 gap-4">
-            <div className="text-center p-3 bg-proofound-parchment dark:bg-slate-800 rounded-lg">
+            <div className="text-center p-3 bg-proofound-parchment dark:bg-muted rounded-lg">
               <p className="text-xl font-bold">{workData.totalProjects}</p>
               <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground">
                 Projects
               </p>
             </div>
-            <div className="text-center p-3 bg-proofound-parchment dark:bg-slate-800 rounded-lg">
+            <div className="text-center p-3 bg-proofound-parchment dark:bg-muted rounded-lg">
               <p className="text-xl font-bold">{workData.totalExperiences}</p>
               <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground">
                 Experiences
               </p>
             </div>
-            <div className="text-center p-3 bg-proofound-parchment dark:bg-slate-800 rounded-lg">
+            <div className="text-center p-3 bg-proofound-parchment dark:bg-muted rounded-lg">
               <p className="text-xl font-bold">{workData.education.length}</p>
               <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground">
                 Education
               </p>
             </div>
-            <div className="text-center p-3 bg-proofound-parchment dark:bg-slate-800 rounded-lg">
+            <div className="text-center p-3 bg-proofound-parchment dark:bg-muted rounded-lg">
               <p className="text-xl font-bold">{workData.volunteering.length}</p>
               <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground">
                 Volunteering
@@ -255,7 +255,7 @@ export function DataBreakdown({ userId }: DataBreakdownProps) {
       render: (matchData: any) => (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4 text-center">
-            <div className="bg-proofound-parchment dark:bg-slate-800 rounded-lg p-3">
+            <div className="bg-proofound-parchment dark:bg-muted rounded-lg p-3">
               <p className="text-2xl font-bold text-proofound-forest">{matchData.totalMatches}</p>
               <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground">
                 Total Matches
@@ -280,13 +280,13 @@ export function DataBreakdown({ userId }: DataBreakdownProps) {
       data: data.analytics,
       render: (analyticsData: any) => (
         <div className="space-y-4">
-          <div className="bg-blue-50 dark:bg-slate-800 border border-blue-200 dark:border-blue-900 rounded-lg p-4">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <p className="text-xs text-blue-800 dark:text-blue-300">
               ℹ️ All analytics data is pseudonymized. IP addresses and user agents are hashed
               (SHA-256) before storage, making them irreversible and GDPR-compliant.
             </p>
           </div>
-          <div className="text-center p-4 bg-proofound-parchment dark:bg-slate-800 rounded-lg">
+          <div className="text-center p-4 bg-proofound-parchment dark:bg-muted rounded-lg">
             <p className="text-3xl font-bold text-proofound-forest">{analyticsData.totalEvents}</p>
             <p className="text-sm text-proofound-charcoal/60 dark:text-muted-foreground mt-1">
               Total Events Tracked
@@ -318,7 +318,7 @@ export function DataBreakdown({ userId }: DataBreakdownProps) {
             className="border-proofound-stone dark:border-border rounded-xl overflow-hidden"
           >
             <button onClick={() => toggleSection(section.id)} className="w-full text-left">
-              <CardHeader className="hover:bg-proofound-parchment/50 dark:hover:bg-slate-800/50 transition-colors">
+              <CardHeader className="hover:bg-muted/50 transition-colors">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <CardTitle className="text-lg font-['Crimson_Pro'] flex items-center">

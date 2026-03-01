@@ -245,7 +245,11 @@ export function AdminVerificationDashboard() {
         <Badge className="bg-amber-500 hover:bg-amber-600 text-white">{confidence}% Medium</Badge>
       );
     } else {
-      return <Badge className="bg-gray-500 hover:bg-gray-600 text-white">{confidence}% Low</Badge>;
+      return (
+        <Badge className="bg-muted hover:bg-muted/80 text-muted-foreground">
+          {confidence}% Low
+        </Badge>
+      );
     }
   };
 
@@ -481,7 +485,7 @@ export function AdminVerificationDashboard() {
 
       {/* Tabs */}
       <Tabs value={selectedTab} onValueChange={(v) => setSelectedTab(v as any)} className="w-full">
-        <TabsList className="w-full justify-start mb-6 bg-white border border-proofound-stone transition-all duration-300">
+        <TabsList className="w-full justify-start mb-6 bg-background border border-border transition-all duration-300">
           <TabsTrigger value="all" className="gap-2 transition-all duration-200">
             All
             {stats && (

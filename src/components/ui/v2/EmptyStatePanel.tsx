@@ -18,7 +18,7 @@ export function EmptyStatePanel({
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center text-center border-dashed font-medium w-full transition-all duration-300 glass-panel hover:bg-white/70 dark:hover:bg-[#1A1D2E]/80',
+        'flex flex-col items-center justify-center text-center border-dashed font-medium w-full transition-all duration-300 glass-panel hover:bg-white/70 dark:hover:bg-background/90',
         compact ? 'py-8 px-4 rounded-2xl' : 'py-16 px-6 rounded-3xl',
         className
       )}

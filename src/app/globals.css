@@ -154,6 +154,25 @@
       sans-serif;
   }
 
+  /* Premium Custom Scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full hover:bg-muted-foreground/50 transition-colors;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+  }
+
   /* Display text uses Crimson Pro */
   h1,
   h2,
@@ -194,14 +213,7 @@
     @apply font-semibold tracking-tight;
   }
 
-  /* 
-   * Focus Visible Styles - Accessibility Critical
-   * All interactive elements receive a visible focus indicator for keyboard navigation
-   * Ring color matches primary brand color for consistency
-   */
-  *:focus-visible {
-    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
-  }
+  /* Focus styles are handled strictly at the component level per design system guidelines */
 
   /*
    * Reduced Motion Support - Accessibility Critical
@@ -346,11 +358,11 @@
   }
 
   .glass-panel {
-    @apply bg-white/60 backdrop-blur-md border border-proofound-stone/30 shadow-sm dark:bg-[#1A1D2E]/60 dark:border-white/10;
+    @apply bg-white/60 backdrop-blur-md border border-proofound-stone/30 shadow-sm dark:bg-background/80 dark:border-border;
   }
 
   .glass-panel-heavy {
-    @apply bg-white/50 backdrop-blur-xl border border-proofound-stone/60 shadow-sm transition-all duration-300 transform-gpu dark:bg-[#252834]/50 dark:border-white/10;
+    @apply bg-white/50 backdrop-blur-xl border border-proofound-stone/60 shadow-sm transition-all duration-300 transform-gpu dark:bg-card/80 dark:border-border;
   }
 
   .card-flat {

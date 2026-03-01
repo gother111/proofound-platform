@@ -147,7 +147,7 @@ export function NotificationDropdown({
       ref={dropdownRef}
       data-testid="notifications-dropdown"
       className={cn(
-        'z-50 flex flex-col rounded-lg border border-gray-200 bg-white shadow-lg',
+        'z-50 flex flex-col rounded-lg border border-border bg-background shadow-lg dark:shadow-none',
         isMobile ? 'fixed inset-x-2 top-16 overflow-hidden' : 'absolute right-0 top-12 w-96'
       )}
       style={isMobile ? { bottom: 'calc(5.5rem + env(safe-area-inset-bottom))' } : undefined}
@@ -193,13 +193,13 @@ export function NotificationDropdown({
       <ScrollArea className={cn('min-h-0', isMobile ? 'flex-1' : 'h-[400px]')}>
         {isLoading ? (
           <div className="flex items-center justify-center h-32">
-            <p className="text-sm text-gray-500">Loading...</p>
+            <p className="text-sm text-muted-foreground">Loading...</p>
           </div>
         ) : notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-32 px-4 text-center">
-            <Bell className="h-8 w-8 text-gray-400 mb-2" />
-            <p className="text-sm text-gray-500">No notifications yet</p>
-            <p className="text-xs text-gray-400 mt-1">
+            <Bell className="h-8 w-8 text-muted-foreground mb-2" />
+            <p className="text-sm text-muted-foreground">No notifications yet</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">
               We'll notify you when something important happens
             </p>
           </div>
@@ -210,8 +210,8 @@ export function NotificationDropdown({
                 key={notification.id}
                 onClick={() => handleNotificationClick(notification)}
                 className={cn(
-                  'w-full text-left p-4 hover:bg-gray-50 transition-colors',
-                  !notification.read && 'bg-blue-50'
+                  'w-full text-left p-4 hover:bg-muted/50 transition-colors',
+                  !notification.read && 'bg-blue-50 dark:bg-blue-900/10'
                 )}
               >
                 <div className="flex items-start gap-3">
@@ -225,10 +225,10 @@ export function NotificationDropdown({
                     <p className={cn('text-sm font-medium', !notification.read && 'font-semibold')}>
                       {notification.title}
                     </p>
-                    <p className="text-sm text-gray-600 mt-0.5 line-clamp-2">
+                    <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">
                       {notification.message}
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-muted-foreground/70 mt-1">
                       {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
                     </p>
                   </div>

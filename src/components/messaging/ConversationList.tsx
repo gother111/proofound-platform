@@ -94,10 +94,10 @@ export function ConversationList({
           {[1, 2, 3].map((i) => (
             <div key={i} className="p-4 animate-pulse">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-gray-200" />
+                <div className="w-10 h-10 rounded-full bg-muted" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4" />
-                  <div className="h-3 bg-gray-200 rounded w-1/2" />
+                  <div className="h-4 bg-muted rounded w-3/4" />
+                  <div className="h-3 bg-muted rounded w-1/2" />
                 </div>
               </div>
             </div>
@@ -108,9 +108,9 @@ export function ConversationList({
   }
 
   return (
-    <div className="border-r h-full overflow-y-auto bg-white">
+    <div className="border-r h-full overflow-y-auto bg-background">
       {/* Header with search */}
-      <div className="p-4 border-b bg-white sticky top-0 z-10">
+      <div className="p-4 border-b bg-background sticky top-0 z-10">
         <h2 className="font-semibold text-foreground mb-3">Messages</h2>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />

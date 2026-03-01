@@ -54,8 +54,8 @@ interface ContentReport {
 const priorityColors = {
   critical: 'bg-red-600',
   high: 'bg-orange-500',
-  medium: 'bg-yellow-500',
-  low: 'bg-gray-400',
+  medium: 'bg-yellow-500 hover:bg-yellow-600 text-white border-none',
+  low: 'bg-muted hover:bg-muted/80 text-foreground border-none',
 };
 
 const reasonLabels: Record<string, string> = {

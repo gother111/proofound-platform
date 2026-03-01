@@ -182,7 +182,7 @@ export function VideoIntegrationsManager({
                 Connected
               </Badge>
             ) : (
-              <Badge variant="secondary" className="bg-gray-100 text-gray-800 border-gray-200">
+              <Badge variant="secondary" className="bg-muted text-muted-foreground border-border">
                 <XCircle className="w-3 h-3 mr-1" />
                 Not Connected
               </Badge>
@@ -250,7 +250,7 @@ export function VideoIntegrationsManager({
                 Connected
               </Badge>
             ) : (
-              <Badge variant="secondary" className="bg-gray-100 text-gray-800 border-gray-200">
+              <Badge variant="secondary" className="bg-muted text-muted-foreground border-border">
                 <XCircle className="w-3 h-3 mr-1" />
                 Not Connected
               </Badge>

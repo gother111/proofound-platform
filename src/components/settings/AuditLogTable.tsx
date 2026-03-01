@@ -180,7 +180,7 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
           ) : (
             <div className="space-y-2">
               {/* Table Header */}
-              <div className="grid grid-cols-12 gap-4 px-4 py-2 bg-proofound-parchment dark:bg-slate-800 rounded-lg text-sm font-medium text-proofound-charcoal/70 dark:text-muted-foreground">
+              <div className="grid grid-cols-12 gap-4 px-4 py-2 bg-proofound-parchment dark:bg-muted rounded-lg text-sm font-medium text-proofound-charcoal/70 dark:text-muted-foreground">
                 <div className="col-span-3">Date & Time</div>
                 <div className="col-span-4">Action</div>
                 <div className="col-span-3">IP Hash</div>
@@ -191,7 +191,7 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
               {data.events.map((event) => (
                 <div
                   key={event.id}
-                  className="grid grid-cols-12 gap-4 px-4 py-3 border border-proofound-stone dark:border-border rounded-lg hover:bg-proofound-parchment/50 dark:hover:bg-slate-800/50 transition-colors"
+                  className="grid grid-cols-12 gap-4 px-4 py-3 border border-proofound-stone dark:border-border rounded-lg hover:bg-muted/50 transition-colors"
                 >
                   <div className="col-span-3 text-sm text-proofound-charcoal dark:text-foreground">
                     {formatTimestamp(event.timestamp)}
@@ -227,7 +227,7 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
           )}
 
           {/* Privacy Note */}
-          <div className="mt-6 bg-blue-50 dark:bg-slate-800 border border-blue-200 dark:border-blue-900 rounded-lg p-4">
+          <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <p className="text-xs text-blue-800 dark:text-blue-300">
               ℹ️ All IP addresses shown are hashed (SHA-256) and abbreviated for privacy. Full IP
               addresses are never stored.

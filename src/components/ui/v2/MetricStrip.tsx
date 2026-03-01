@@ -19,7 +19,7 @@ export function MetricStrip({ metrics, className, ...props }: MetricStripProps) 
       {metrics.map((metric) => (
         <div
           key={metric.id}
-          className="glass-panel p-5 rounded-2xl flex flex-col gap-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:bg-white/70 dark:hover:bg-[#1A1D2E]/80"
+          className="glass-panel p-5 rounded-2xl flex flex-col gap-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:bg-white/70 dark:hover:bg-background/90"
         >
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-medium text-muted-foreground">{metric.title}</h4>

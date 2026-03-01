@@ -176,7 +176,7 @@ export function PasswordChangeForm() {
               <span className="text-proofound-charcoal/70">Password strength:</span>
               <span className="font-medium">{passwordStrength.label}</span>
             </div>
-            <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
               <div
                 className={`h-full transition-all duration-300 ${passwordStrength.color}`}
                 style={{ width: `${(passwordStrength.score / 5) * 100}%` }}

@@ -101,7 +101,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-white dark:bg-slate-800 border border-proofound-stone dark:border-border">
+          <TabsList className="bg-white dark:bg-card border border-proofound-stone dark:border-border">
             <TabsTrigger value="account">Account</TabsTrigger>
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="integrations">Integrations</TabsTrigger>

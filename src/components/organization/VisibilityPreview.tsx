@@ -61,7 +61,7 @@ function getVisibleFields(settings: VisibilitySettings, viewerLevel: string): st
 
 export function VisibilityPreview({ settings }: VisibilityPreviewProps) {
   return (
-    <Card className="border-black/5 dark:border-white/5 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300">
+    <Card className="border-border rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300">
       <CardHeader>
         <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground flex items-center gap-2">
           <Eye className="h-5 w-5" />
@@ -110,7 +110,7 @@ export function VisibilityPreview({ settings }: VisibilityPreviewProps) {
                         className={`flex items-center justify-between p-3 rounded-lg border ${
                           isVisible
                             ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-900/30'
-                            : 'bg-gray-50 dark:bg-gray-900/10 border-gray-200 dark:border-gray-900/30 opacity-50'
+                            : 'bg-muted/50 border-border opacity-50'
                         }`}
                       >
                         <div className="flex items-center gap-3">

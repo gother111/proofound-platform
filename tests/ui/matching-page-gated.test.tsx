@@ -35,9 +35,13 @@ vi.mock('@/components/matching/HiddenMatchesList', () => ({
   HiddenMatchesList: () => <div>hidden</div>,
 }));
 
-vi.mock('@/components/ui/skeleton', () => ({
-  SkeletonCard: () => <div>skeleton</div>,
-}));
+vi.mock('@/components/ui/skeleton', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/components/ui/skeleton')>();
+  return {
+    ...actual,
+    SkeletonCard: () => <div>skeleton</div>,
+  };
+});
 
 vi.mock('sonner', () => ({
   toast: {

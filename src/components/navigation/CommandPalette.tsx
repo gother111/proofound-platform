@@ -60,7 +60,7 @@ export function CommandPalette() {
         aria-label="Command palette"
       >
         <Command
-          className="flex h-full w-full flex-col overflow-hidden rounded-xl bg-white shadow-2xl border border-gray-200"
+          className="flex h-full w-full flex-col overflow-hidden rounded-xl bg-background shadow-2xl border border-border"
           loop
         >
           <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
@@ -111,7 +111,7 @@ export function CommandPalette() {
               </Command.Item>
             </Command.Group>
 
-            <Command.Separator className="-mx-2 my-1 h-px bg-gray-100" />
+            <Command.Separator className="-mx-2 my-1 h-px bg-border" />
 
             <Command.Group
               heading="Actions"
@@ -126,7 +126,7 @@ export function CommandPalette() {
               </Command.Item>
             </Command.Group>
 
-            <Command.Separator className="-mx-2 my-1 h-px bg-gray-100" />
+            <Command.Separator className="-mx-2 my-1 h-px bg-border" />
 
             <Command.Group
               heading="Settings"

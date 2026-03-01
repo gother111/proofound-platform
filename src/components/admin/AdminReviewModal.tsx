@@ -131,7 +131,7 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
       );
     } else {
       return (
-        <Badge className="bg-gray-500 hover:bg-gray-600 text-white text-lg px-4 py-2">
+        <Badge className="bg-muted hover:bg-muted/80 text-foreground text-lg px-4 py-2 border-none">
           {confidence}% - Low Confidence
         </Badge>
       );
@@ -145,9 +145,9 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
       case 'medium':
         return { label: 'Moderate Age Account', color: 'text-amber-600' };
       case 'new':
-        return { label: 'New Account', color: 'text-gray-600' };
+        return { label: 'New Account', color: 'text-muted-foreground' };
       default:
-        return { label: 'Unknown', color: 'text-gray-600' };
+        return { label: 'Unknown', color: 'text-muted-foreground' };
     }
   };
 
@@ -249,13 +249,15 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
               <div className="flex items-start gap-3 p-4 border border-proofound-stone rounded-lg transition-all duration-200 hover:shadow-md hover:border-[#D0CEC5]">
                 <div
                   className={`p-2 rounded-full ${
-                    verification.hasIdentityVerification ? 'bg-green-100' : 'bg-gray-100'
+                    verification.hasIdentityVerification
+                      ? 'bg-green-100 dark:bg-green-900/20'
+                      : 'bg-muted'
                   }`}
                 >
                   {verification.hasIdentityVerification ? (
-                    <CheckCircle2 className="w-5 h-5 text-green-600" />
+                    <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
                   ) : (
-                    <XCircle className="w-5 h-5 text-gray-600" />
+                    <XCircle className="w-5 h-5 text-muted-foreground" />
                   )}
                 </div>
                 <div>
@@ -332,13 +334,15 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
               <div className="flex items-start gap-3 p-4 border border-proofound-stone rounded-lg transition-all duration-200 hover:shadow-md hover:border-[#D0CEC5]">
                 <div
                   className={`p-2 rounded-full ${
-                    verification.signals.hasProfilePhoto ? 'bg-green-100' : 'bg-gray-100'
+                    verification.signals.hasProfilePhoto
+                      ? 'bg-green-100 dark:bg-green-900/20'
+                      : 'bg-muted'
                   }`}
                 >
                   {verification.signals.hasProfilePhoto ? (
-                    <Camera className="w-5 h-5 text-green-600" />
+                    <Camera className="w-5 h-5 text-green-600 dark:text-green-400" />
                   ) : (
-                    <Camera className="w-5 h-5 text-gray-600" />
+                    <Camera className="w-5 h-5 text-muted-foreground" />
                   )}
                 </div>
                 <div>

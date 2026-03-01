@@ -148,7 +148,7 @@ export function PolicyAssistant() {
         <Button
           onClick={() => setIsOpen(true)}
           size="lg"
-          className="rounded-full h-14 w-14 shadow-lg"
+          className="rounded-full h-14 w-14 shadow-lg dark:shadow-none"
         >
           <MessageCircle className="h-6 w-6" />
         </Button>
@@ -157,7 +157,7 @@ export function PolicyAssistant() {
   }
 
   return (
-    <Card className="fixed bottom-6 right-6 z-50 w-96 shadow-2xl">
+    <Card className="fixed bottom-6 right-6 z-50 w-96 shadow-2xl dark:shadow-none">
       <CardHeader className="pb-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -187,7 +187,7 @@ export function PolicyAssistant() {
                 <Sparkles className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium">Welcome!</p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     I can help explain our privacy policy, terms of service, and data practices in
                     plain language. Try asking a question below or choose from common questions.
                   </p>
@@ -197,14 +197,12 @@ export function PolicyAssistant() {
               {/* Common Questions */}
               {commonQuestions.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                    Common Questions:
-                  </p>
+                  <p className="text-xs font-medium text-muted-foreground">Common Questions:</p>
                   {commonQuestions.slice(0, 5).map((q, index) => (
                     <button
                       key={index}
                       onClick={() => handleAskQuestion(q.question)}
-                      className="w-full text-left p-2 text-xs rounded border hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                      className="w-full text-left p-2 text-xs rounded border hover:bg-muted/50 transition-colors"
                       disabled={isLoading}
                     >
                       {q.question}
@@ -229,9 +227,7 @@ export function PolicyAssistant() {
                   <div className={`flex-1 space-y-2 ${message.type === 'user' ? 'items-end' : ''}`}>
                     <div
                       className={`rounded-lg p-3 text-sm ${
-                        message.type === 'user'
-                          ? 'bg-blue-600 text-white ml-8'
-                          : 'bg-gray-100 dark:bg-gray-800 mr-8'
+                        message.type === 'user' ? 'bg-blue-600 text-white ml-8' : 'bg-muted mr-8'
                       }`}
                     >
                       {message.content}
@@ -240,14 +236,12 @@ export function PolicyAssistant() {
                     {/* Key Points */}
                     {message.keyPoints && message.keyPoints.length > 0 && (
                       <div className="mr-8 space-y-1">
-                        <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                          Key Points:
-                        </p>
+                        <p className="text-xs font-medium text-muted-foreground">Key Points:</p>
                         <ul className="space-y-1">
                           {message.keyPoints.map((point, index) => (
                             <li
                               key={index}
-                              className="text-xs text-gray-600 dark:text-gray-400 flex items-start gap-2"
+                              className="text-xs text-muted-foreground flex items-start gap-2"
                             >
                               <span className="text-blue-600 dark:text-blue-400 mt-0.5">•</span>
                               {point}
@@ -270,7 +264,7 @@ export function PolicyAssistant() {
                   </div>
 
                   {message.type === 'user' && (
-                    <div className="flex-shrink-0 h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                    <div className="flex-shrink-0 h-8 w-8 rounded-full bg-muted flex items-center justify-center">
                       <span className="text-sm font-medium">You</span>
                     </div>
                   )}
@@ -283,8 +277,8 @@ export function PolicyAssistant() {
                     <Loader2 className="h-4 w-4 text-blue-600 dark:text-blue-400 animate-spin" />
                   </div>
                   <div className="flex-1">
-                    <div className="rounded-lg p-3 bg-gray-100 dark:bg-gray-800 mr-8">
-                      <p className="text-sm text-gray-500">Thinking...</p>
+                    <div className="rounded-lg p-3 bg-muted mr-8">
+                      <p className="text-sm text-muted-foreground">Thinking...</p>
                     </div>
                   </div>
                 </div>
@@ -307,7 +301,7 @@ export function PolicyAssistant() {
               <Send className="h-4 w-4" />
             </Button>
           </form>
-          <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+          <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
             <Info className="h-3 w-3" />
             Powered by AI. May not be 100% accurate.
           </p>

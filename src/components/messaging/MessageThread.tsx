@@ -149,9 +149,9 @@ export function MessageThread({
 
   return (
     <DataErrorBoundary onRetry={() => window.location.reload()}>
-      <div className="flex flex-col h-full min-h-0 w-full min-w-0 bg-white">
+      <div className="flex flex-col h-full min-h-0 w-full min-w-0 bg-background">
         {/* Header */}
-        <div className="p-4 border-b bg-white sticky top-0 z-10">
+        <div className="p-4 border-b bg-background sticky top-0 z-10">
           <div className="flex items-center gap-3">
             {onBack && (
               <button
@@ -261,7 +261,7 @@ export function MessageThread({
                         'rounded-2xl px-4 py-2 break-words',
                         isOwnMessage
                           ? 'bg-proofound-forest text-white rounded-br-sm'
-                          : 'bg-white border border-border text-foreground rounded-bl-sm'
+                          : 'bg-background border border-border text-foreground rounded-bl-sm'
                       )}
                     >
                       <p className="text-sm whitespace-pre-wrap">{message.content}</p>
@@ -302,7 +302,7 @@ export function MessageThread({
         </motion.div>
 
         {/* Compose */}
-        <div className="p-4 border-t bg-white">
+        <div className="p-4 border-t bg-background">
           <div className="space-y-2">
             <div className="flex gap-2">
               <Textarea

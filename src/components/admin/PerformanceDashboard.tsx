@@ -99,7 +99,7 @@ export function PerformanceDashboard() {
 
   const getRatingColor = (metric: WebVitalMetric) => {
     const info = METRIC_INFO[metric.metric_name as keyof typeof METRIC_INFO];
-    if (!info) return 'text-gray-600';
+    if (!info) return 'text-muted-foreground';
 
     if (metric.metric_name === 'CLS') {
       return metric.p75 <= info.threshold ? 'text-green-600' : 'text-red-600';
@@ -134,7 +134,7 @@ export function PerformanceDashboard() {
       <Card>
         <CardContent className="py-12">
           <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
           </div>
         </CardContent>
       </Card>
@@ -147,7 +147,7 @@ export function PerformanceDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Performance Monitoring</h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Core Web Vitals and dashboard load times
           </p>
         </div>
@@ -193,13 +193,11 @@ export function PerformanceDashboard() {
               <CardContent className="space-y-3">
                 {/* Main Metric */}
                 <div>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                    75th Percentile (P75)
-                  </p>
+                  <p className="text-xs text-muted-foreground mb-1">75th Percentile (P75)</p>
                   <p className={`text-2xl font-bold ${getRatingColor(metric)}`}>
                     {formatValue(metric.metric_name, metric.p75)}
                   </p>
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     Target: {formatValue(metric.metric_name, info.threshold)}
                   </p>
                 </div>
@@ -207,15 +205,15 @@ export function PerformanceDashboard() {
                 {/* Distribution */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-600 dark:text-gray-400">P50</span>
+                    <span className="text-muted-foreground">P50</span>
                     <span className="font-mono">{formatValue(metric.metric_name, metric.p50)}</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-600 dark:text-gray-400">P95</span>
+                    <span className="text-muted-foreground">P95</span>
                     <span className="font-mono">{formatValue(metric.metric_name, metric.p95)}</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-600 dark:text-gray-400">Samples</span>
+                    <span className="text-muted-foreground">Samples</span>
                     <span className="font-mono">{metric.sample_count.toLocaleString()}</span>
                   </div>
                 </div>
@@ -224,17 +222,17 @@ export function PerformanceDashboard() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-xs">
                     <div className="w-2 h-2 rounded-full bg-green-600" />
-                    <span className="text-gray-600 dark:text-gray-400">Good:</span>
+                    <span className="text-muted-foreground">Good:</span>
                     <span className="font-mono">{metric.good_count}</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs">
                     <div className="w-2 h-2 rounded-full bg-yellow-600" />
-                    <span className="text-gray-600 dark:text-gray-400">Needs Work:</span>
+                    <span className="text-muted-foreground">Needs Work:</span>
                     <span className="font-mono">{metric.needs_improvement_count}</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs">
                     <div className="w-2 h-2 rounded-full bg-red-600" />
-                    <span className="text-gray-600 dark:text-gray-400">Poor:</span>
+                    <span className="text-muted-foreground">Poor:</span>
                     <span className="font-mono">{metric.poor_count}</span>
                   </div>
                 </div>
@@ -265,7 +263,7 @@ export function PerformanceDashboard() {
                   }).length
                 }
               </p>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">≥75% good ratings</p>
+              <p className="text-xs text-muted-foreground mt-1">≥75% good ratings</p>
             </div>
 
             <div className="rounded-lg border p-4">
@@ -281,7 +279,7 @@ export function PerformanceDashboard() {
                   }).length
                 }
               </p>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">50-75% good ratings</p>
+              <p className="text-xs text-muted-foreground mt-1">50-75% good ratings</p>
             </div>
 
             <div className="rounded-lg border p-4">
@@ -297,7 +295,7 @@ export function PerformanceDashboard() {
                   }).length
                 }
               </p>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">&lt;50% good ratings</p>
+              <p className="text-xs text-muted-foreground mt-1">&lt;50% good ratings</p>
             </div>
           </div>
         </CardContent>

@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { apiFetch } from '@/lib/api/fetch';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import { RespondDialog } from './components/RespondDialog';
 import { CustomVerificationRequestDialog } from './components/CustomVerificationRequestDialog';
 import { BundleCancelDialog } from './components/BundleCancelDialog';
@@ -373,17 +374,17 @@ export function VerificationsClient({
     return labels[level] || 'Unknown';
   };
 
-  const getStatusStyle = (status: VerificationRequest['status']) => {
+  const getStatusClasses = (status: VerificationRequest['status']) => {
     if (status === 'pending') {
-      return { border: '#F59E0B', text: '#F59E0B', bg: '#FEF3C7' };
+      return 'border-amber-500 text-amber-500 bg-amber-100 dark:bg-amber-500/10';
     }
     if (status === 'accepted') {
-      return { border: '#10B981', text: '#10B981', bg: '#D1FAE5' };
+      return 'border-emerald-500 text-emerald-500 bg-emerald-100 dark:bg-emerald-500/10';
     }
     if (status === 'declined' || status === 'failed') {
-      return { border: '#EF4444', text: '#EF4444', bg: '#FEE2E2' };
+      return 'border-destructive text-destructive bg-destructive/10';
     }
-    return { border: '#9CA3AF', text: '#6B7470', bg: '#F3F4F6' };
+    return 'border-muted-foreground text-muted-foreground bg-muted';
   };
 
   const formatDate = (dateStr: string): string => {
@@ -401,15 +402,7 @@ export function VerificationsClient({
   };
 
   const renderStatusBadge = (request: VerificationRequest) => (
-    <Badge
-      variant="outline"
-      className="capitalize"
-      style={{
-        borderColor: getStatusStyle(request.status).border,
-        color: getStatusStyle(request.status).text,
-        backgroundColor: getStatusStyle(request.status).bg,
-      }}
-    >
+    <Badge variant="outline" className={cn('capitalize', getStatusClasses(request.status))}>
       {request.status === 'pending' && <Clock className="w-3 h-3 mr-1" />}
       {request.status === 'accepted' && <CheckCircle2 className="w-3 h-3 mr-1" />}
       {request.status === 'declined' && <XCircle className="w-3 h-3 mr-1" />}
@@ -425,12 +418,7 @@ export function VerificationsClient({
     return (
       <Badge
         variant="outline"
-        className="capitalize"
-        style={{
-          borderColor: '#1C4D3A',
-          color: '#1C4D3A',
-          backgroundColor: '#E8F5E9',
-        }}
+        className="capitalize border-proofound-forest text-proofound-forest bg-proofound-forest/10 dark:border-primary dark:text-primary dark:bg-primary/10"
       >
         {request.verifier_source === 'peer' && <User className="w-3 h-3 mr-1" />}
         {request.verifier_source === 'manager' && <Briefcase className="w-3 h-3 mr-1" />}
@@ -443,20 +431,17 @@ export function VerificationsClient({
   const renderIncomingRequestCard = (request: VerificationRequest) => (
     <Card variant="bento" key={`${request.request_type}-${request.id}`} className="p-6">
       <div className="flex gap-4">
-        <div
-          className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: '#E8E6DD', color: '#2D3330' }}
-        >
+        <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-proofound-stone text-proofound-charcoal dark:bg-muted dark:text-foreground">
           <span className="text-sm font-medium">{getRequesterInitials(request)}</span>
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-4 mb-3">
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-base mb-1" style={{ color: '#2D3330' }}>
+              <h3 className="font-semibold text-base mb-1 text-proofound-charcoal dark:text-foreground">
                 {getRequesterName(request)}
               </h3>
-              <p className="text-sm" style={{ color: '#6B7470' }}>
+              <p className="text-sm text-muted-foreground">
                 {request.request_type === 'impact_story'
                   ? 'wants you to verify their impact story'
                   : 'wants you to verify their skill'}
@@ -468,57 +453,47 @@ export function VerificationsClient({
             </div>
           </div>
 
-          <div className="mb-3 p-3 rounded-lg" style={{ backgroundColor: '#F7F6F1' }}>
+          <div className="mb-3 p-3 rounded-lg bg-proofound-parchment dark:bg-muted/50">
             <div className="flex items-center gap-2 mb-1">
-              <ShieldCheck className="w-4 h-4" style={{ color: '#1C4D3A' }} />
-              <span className="font-medium text-sm" style={{ color: '#2D3330' }}>
+              <ShieldCheck className="w-4 h-4 text-proofound-forest dark:text-primary" />
+              <span className="font-medium text-sm text-proofound-charcoal dark:text-foreground">
                 {getRequestSubject(request)}
               </span>
             </div>
             {getBreadcrumb(request) && (
-              <p className="text-xs ml-6" style={{ color: '#6B7470' }}>
-                {getBreadcrumb(request)}
-              </p>
+              <p className="text-xs ml-6 text-muted-foreground">{getBreadcrumb(request)}</p>
             )}
             {request.request_type === 'skill' && request.skills?.competency_level && (
-              <p className="text-xs ml-6 mt-1" style={{ color: '#6B7470' }}>
+              <p className="text-xs ml-6 mt-1 text-muted-foreground">
                 Competency: {getCompetencyLabel(request.skills.competency_level)}
               </p>
             )}
             {request.request_type === 'impact_story' && request.verifier_relationship && (
-              <p className="text-xs ml-6 mt-1" style={{ color: '#6B7470' }}>
+              <p className="text-xs ml-6 mt-1 text-muted-foreground">
                 Relationship: {request.verifier_relationship}
               </p>
             )}
           </div>
 
           {request.message && (
-            <div
-              className="mb-3 p-3 rounded border"
-              style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}
-            >
-              <p className="text-sm" style={{ color: '#2D3330' }}>
+            <div className="mb-3 p-3 rounded border border-proofound-stone/60 dark:border-border">
+              <p className="text-sm text-proofound-charcoal dark:text-foreground">
                 &ldquo;{request.message}&rdquo;
               </p>
             </div>
           )}
 
           {request.response_message && (
-            <div
-              className="mb-3 p-3 rounded border"
-              style={{ borderColor: 'rgba(232, 230, 221, 0.6)', backgroundColor: '#F7F6F1' }}
-            >
-              <p className="text-xs font-medium mb-1" style={{ color: '#6B7470' }}>
-                Your response:
-              </p>
-              <p className="text-sm" style={{ color: '#2D3330' }}>
+            <div className="mb-3 p-3 rounded border border-proofound-stone/60 bg-proofound-parchment dark:border-border dark:bg-muted/50">
+              <p className="text-xs font-medium mb-1 text-muted-foreground">Your response:</p>
+              <p className="text-sm text-proofound-charcoal dark:text-foreground">
                 &ldquo;{request.response_message}&rdquo;
               </p>
             </div>
           )}
 
           <div className="flex items-center justify-between gap-4 mt-4">
-            <p className="text-xs" style={{ color: '#6B7470' }}>
+            <p className="text-xs text-muted-foreground">
               Requested {formatDate(request.created_at)}
               {request.responded_at && ` • Responded ${formatDate(request.responded_at)}`}
             </p>
@@ -529,11 +504,7 @@ export function VerificationsClient({
                   size="sm"
                   variant="outline"
                   onClick={() => handleRespond(request, 'decline')}
-                  style={{
-                    borderColor: '#EF4444',
-                    color: '#EF4444',
-                  }}
-                  className="hover:bg-red-50"
+                  className="border-destructive text-destructive hover:bg-destructive/10 dark:hover:bg-destructive/20"
                 >
                   <XCircle className="w-4 h-4 mr-1" />
                   Decline
@@ -541,11 +512,7 @@ export function VerificationsClient({
                 <Button
                   size="sm"
                   onClick={() => handleRespond(request, 'accept')}
-                  style={{
-                    backgroundColor: '#1C4D3A',
-                    color: '#F7F6F1',
-                  }}
-                  className="hover:opacity-90"
+                  className="bg-proofound-forest text-white hover:bg-proofound-forest/90 dark:bg-primary dark:text-primary-foreground hover:opacity-90"
                 >
                   <CheckCircle2 className="w-4 h-4 mr-1" />
                   Accept
@@ -553,7 +520,7 @@ export function VerificationsClient({
               </div>
             )}
             {request.request_type === 'impact_story' && request.status === 'pending' && (
-              <p className="text-xs" style={{ color: '#6B7470' }}>
+              <p className="text-xs text-muted-foreground">
                 Respond using the verification link that was sent to your email.
               </p>
             )}
@@ -567,14 +534,11 @@ export function VerificationsClient({
     <Card variant="bento" key={`${request.request_type}-${request.id}`} className="p-6">
       <div className="flex items-start justify-between gap-4 mb-3">
         <div className="flex-1 min-w-0">
-          <h3
-            className="font-semibold text-base mb-1 flex items-center gap-2"
-            style={{ color: '#2D3330' }}
-          >
+          <h3 className="font-semibold text-base mb-1 flex items-center gap-2 text-proofound-charcoal dark:text-foreground">
             <Mail className="w-4 h-4" />
             {request.verifier_email}
           </h3>
-          <p className="text-sm" style={{ color: '#6B7470' }}>
+          <p className="text-sm text-muted-foreground">
             {request.request_type === 'impact_story'
               ? 'Impact story verification request sent'
               : 'Verification request sent'}
@@ -586,55 +550,43 @@ export function VerificationsClient({
         </div>
       </div>
 
-      <div className="mb-3 p-3 rounded-lg" style={{ backgroundColor: '#F7F6F1' }}>
+      <div className="mb-3 p-3 rounded-lg bg-proofound-parchment dark:bg-muted/50">
         <div className="flex items-center gap-2 mb-1">
-          <ShieldCheck className="w-4 h-4" style={{ color: '#1C4D3A' }} />
-          <span className="font-medium text-sm" style={{ color: '#2D3330' }}>
+          <ShieldCheck className="w-4 h-4 text-proofound-forest dark:text-primary" />
+          <span className="font-medium text-sm text-proofound-charcoal dark:text-foreground">
             {getRequestSubject(request)}
           </span>
         </div>
         {getBreadcrumb(request) && (
-          <p className="text-xs ml-6" style={{ color: '#6B7470' }}>
-            {getBreadcrumb(request)}
-          </p>
+          <p className="text-xs ml-6 text-muted-foreground">{getBreadcrumb(request)}</p>
         )}
         {request.request_type === 'impact_story' && request.verifier_relationship && (
-          <p className="text-xs ml-6 mt-1" style={{ color: '#6B7470' }}>
+          <p className="text-xs ml-6 mt-1 text-muted-foreground">
             Relationship: {request.verifier_relationship}
           </p>
         )}
       </div>
 
       {request.message && (
-        <div
-          className="mb-3 p-3 rounded border"
-          style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}
-        >
-          <p className="text-xs font-medium mb-1" style={{ color: '#6B7470' }}>
-            Your message:
-          </p>
-          <p className="text-sm" style={{ color: '#2D3330' }}>
+        <div className="mb-3 p-3 rounded border border-proofound-stone/60 dark:border-border">
+          <p className="text-xs font-medium mb-1 text-muted-foreground">Your message:</p>
+          <p className="text-sm text-proofound-charcoal dark:text-foreground">
             &ldquo;{request.message}&rdquo;
           </p>
         </div>
       )}
 
       {request.response_message && (
-        <div
-          className="mb-3 p-3 rounded border"
-          style={{ borderColor: 'rgba(232, 230, 221, 0.6)', backgroundColor: '#F7F6F1' }}
-        >
-          <p className="text-xs font-medium mb-1" style={{ color: '#6B7470' }}>
-            Verifier response:
-          </p>
-          <p className="text-sm" style={{ color: '#2D3330' }}>
+        <div className="mb-3 p-3 rounded border border-proofound-stone/60 bg-proofound-parchment dark:border-border dark:bg-muted/50">
+          <p className="text-xs font-medium mb-1 text-muted-foreground">Verifier response:</p>
+          <p className="text-sm text-proofound-charcoal dark:text-foreground">
             &ldquo;{request.response_message}&rdquo;
           </p>
         </div>
       )}
 
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs" style={{ color: '#6B7470' }}>
+        <p className="text-xs text-muted-foreground">
           Sent {formatDate(request.created_at)}
           {request.responded_at && ` • Responded ${formatDate(request.responded_at)}`}
         </p>
@@ -687,16 +639,13 @@ export function VerificationsClient({
 
     return (
       <div className="flex flex-col items-center justify-center py-16 px-4">
-        <div
-          className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
-          style={{ backgroundColor: '#E8E6DD' }}
-        >
-          <ShieldCheck className="w-8 h-8" style={{ color: '#6B7470' }} />
+        <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-proofound-stone dark:bg-muted">
+          <ShieldCheck className="w-8 h-8 text-muted-foreground" />
         </div>
-        <h3 className="text-lg font-semibold mb-2" style={{ color: '#2D3330' }}>
+        <h3 className="text-lg font-semibold mb-2 text-proofound-charcoal dark:text-foreground">
           No {status} {modeText} requests
         </h3>
-        <p className="text-sm text-center max-w-sm" style={{ color: '#6B7470' }}>
+        <p className="text-sm text-center max-w-sm text-muted-foreground">
           {mode === 'incoming'
             ? 'You do not have verification requests in this view yet.'
             : 'You have not sent verification requests in this view yet.'}
@@ -717,11 +666,12 @@ export function VerificationsClient({
               {label}
               {filteredCount > 0 && (
                 <span
-                  className="ml-2 px-2 py-0.5 rounded-full text-xs font-medium"
-                  style={{
-                    backgroundColor: status === 'pending' ? '#F59E0B' : '#E8E6DD',
-                    color: status === 'pending' ? '#FFF' : '#2D3330',
-                  }}
+                  className={cn(
+                    'ml-2 px-2 py-0.5 rounded-full text-xs font-medium',
+                    status === 'pending'
+                      ? 'bg-amber-500 text-white dark:bg-amber-500/10 dark:text-amber-500'
+                      : 'bg-proofound-stone text-proofound-charcoal dark:bg-muted dark:text-foreground'
+                  )}
                 >
                   {filteredCount}
                 </span>
@@ -751,17 +701,16 @@ export function VerificationsClient({
       <div className="max-w-5xl mx-auto">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2" style={{ color: '#2D3330' }}>
+            <h1 className="text-3xl font-bold mb-2 text-proofound-charcoal dark:text-foreground">
               Verification Requests
             </h1>
-            <p className="text-base" style={{ color: '#6B7470' }}>
+            <p className="text-base text-muted-foreground">
               Track requests sent by you and review incoming verification requests
             </p>
           </div>
           <Button
             onClick={() => setCustomDialogOpen(true)}
-            style={{ backgroundColor: '#1C4D3A', color: '#F7F6F1' }}
-            className="hover:opacity-90 w-full md:w-auto"
+            className="bg-proofound-forest text-white hover:bg-proofound-forest/90 dark:bg-primary dark:text-primary-foreground hover:opacity-90 w-full md:w-auto"
           >
             <Send className="w-4 h-4 mr-2" />
             Custom verification request
@@ -773,10 +722,7 @@ export function VerificationsClient({
             <TabsTrigger value="incoming" className="relative">
               Incoming
               {incomingRequests.length > 0 && (
-                <span
-                  className="ml-2 px-2 py-0.5 rounded-full text-xs font-medium"
-                  style={{ backgroundColor: '#F59E0B', color: '#FFF' }}
-                >
+                <span className="ml-2 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500 text-white dark:bg-amber-500/10 dark:text-amber-500">
                   {incomingRequests.length}
                 </span>
               )}
@@ -784,10 +730,7 @@ export function VerificationsClient({
             <TabsTrigger value="sent" className="relative">
               Sent
               {sentRequests.length > 0 && (
-                <span
-                  className="ml-2 px-2 py-0.5 rounded-full text-xs font-medium"
-                  style={{ backgroundColor: '#E8E6DD', color: '#2D3330' }}
-                >
+                <span className="ml-2 px-2 py-0.5 rounded-full text-xs font-medium bg-proofound-stone text-proofound-charcoal dark:bg-muted dark:text-foreground">
                   {sentRequests.length}
                 </span>
               )}

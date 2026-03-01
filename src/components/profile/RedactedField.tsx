@@ -33,8 +33,8 @@ export function RedactedField({
 
     return (
       <div className={`flex items-center gap-2 ${className}`}>
-        <Lock className="w-4 h-4 text-gray-400" />
-        <span className="text-sm text-gray-500 italic">
+        <Lock className="w-4 h-4 text-muted-foreground" />
+        <span className="text-sm text-muted-foreground italic">
           {redactionReason ? messages[redactionReason] : 'Hidden'}
         </span>
       </div>
@@ -44,7 +44,7 @@ export function RedactedField({
   if (!value) {
     return (
       <div className={`flex items-center gap-2 ${className}`}>
-        <span className="text-sm text-gray-400 italic">{fallbackText}</span>
+        <span className="text-sm text-muted-foreground italic">{fallbackText}</span>
       </div>
     );
   }
@@ -66,11 +66,11 @@ export function RedactedText({
   fallback?: string;
 }) {
   if (!isVisible) {
-    return <span className="text-gray-400 italic">{fallback}</span>;
+    return <span className="text-muted-foreground italic">{fallback}</span>;
   }
 
   if (!value) {
-    return <span className="text-gray-400 italic">—</span>;
+    return <span className="text-muted-foreground italic">—</span>;
   }
 
   return <span>{value}</span>;
@@ -105,7 +105,7 @@ export function VisibilityBadge({
     private: {
       icon: Lock,
       label: 'Private',
-      color: 'bg-gray-100 text-gray-700',
+      color: 'bg-muted text-muted-foreground',
     },
   };
 
@@ -114,9 +114,7 @@ export function VisibilityBadge({
   const sizeClasses = size === 'sm' ? 'text-xs px-2 py-0.5' : 'text-sm px-3 py-1';
 
   return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full ${config.color} ${sizeClasses}`}
-    >
+    <span className={`inline-flex items-center gap-1 rounded-full ${config.color} ${sizeClasses}`}>
       <Icon className={size === 'sm' ? 'w-3 h-3' : 'w-4 h-4'} />
       {config.label}
     </span>
