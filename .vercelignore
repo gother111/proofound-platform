@@ -1,0 +1,10 @@
+.git
+.next
+node_modules
+.venv
+.venv311
+pyproject.toml
+uv.lock
+output
+playwright-report
+test-results
