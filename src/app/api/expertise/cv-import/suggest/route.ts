@@ -32,6 +32,11 @@ const DEFAULT_LIMITS: CvImportLimits = {
 };
 
 const DEFAULT_SERVER_TIMEOUT_MS = 6000;
+const GENERIC_SUGGEST_ERROR = 'Failed to process CV documents';
+const UPLOAD_METADATA_ENCODING_ERROR_MESSAGE =
+  'Upload metadata contains unsupported characters. Please rename the PDF and retry.';
+const UTF8_CODEC_ERROR_PATTERN =
+  /utf-8['"]?\s+codec\s+can'?t\s+decode\s+byte|can't decode byte.*utf-8|invalid continuation byte/i;
 
 type EngineUsed = 'python' | 'typescript' | 'gemini';
 
@@ -117,6 +122,25 @@ function defaultMetadata(limits: CvImportLimits): CvImportSuggestResponse['metad
       max_total_chars: limits.maxTotalChars,
     },
   };
+}
+
+function containsUtf8CodecError(value: string): boolean {
+  return UTF8_CODEC_ERROR_PATTERN.test(value.toLowerCase());
+}
+
+function sanitizeCodecErrorRecord(record: Record<string, unknown>): Record<string, unknown> {
+  let changed = false;
+  const next: Record<string, unknown> = { ...record };
+
+  for (const key of ['error', 'message', 'detail']) {
+    const current = record[key];
+    if (typeof current === 'string' && containsUtf8CodecError(current)) {
+      next[key] = UPLOAD_METADATA_ENCODING_ERROR_MESSAGE;
+      changed = true;
+    }
+  }
+
+  return changed ? next : record;
 }
 
 function decorateMetadata(
@@ -214,9 +238,9 @@ async function attachEngineMetadata(
   engineUsed: EngineUsed
 ): Promise<NextResponse> {
   try {
-    const payload = await response.json();
+    const payload = await response.clone().json();
     if (payload && typeof payload === 'object') {
-      const record = payload as Record<string, unknown>;
+      const record = sanitizeCodecErrorRecord(payload as Record<string, unknown>);
       const metadata =
         record.metadata && typeof record.metadata === 'object'
           ? (record.metadata as Record<string, unknown>)
@@ -234,7 +258,25 @@ async function attachEngineMetadata(
       return jsonWithRequestId(requestId, next, response.status);
     }
   } catch {
-    // Keep original response body if it is not JSON.
+    try {
+      const textPayload = await response.clone().text();
+      if (textPayload.trim().length > 0 && containsUtf8CodecError(textPayload)) {
+        return jsonWithRequestId(
+          requestId,
+          {
+            error: GENERIC_SUGGEST_ERROR,
+            message: UPLOAD_METADATA_ENCODING_ERROR_MESSAGE,
+            metadata: {
+              engine_mode: mode,
+              engine_used: engineUsed,
+            },
+          },
+          response.status >= 400 ? response.status : 502
+        );
+      }
+    } catch {
+      // Keep original response body if text parsing fails.
+    }
   }
 
   return withRequestId(response, requestId);
@@ -341,7 +383,7 @@ export async function POST(request: NextRequest) {
         return jsonWithRequestId(
           requestId,
           {
-            error: 'Failed to process CV documents',
+            error: GENERIC_SUGGEST_ERROR,
             message: 'Python CV service is temporarily unavailable. Please retry shortly.',
             code: 'CV_IMPORT_DEPENDENCY_UNAVAILABLE',
           },
@@ -591,7 +633,7 @@ export async function POST(request: NextRequest) {
     return jsonWithRequestId(
       requestId,
       {
-        error: 'Failed to process CV documents',
+        error: GENERIC_SUGGEST_ERROR,
         message: error instanceof Error ? error.message : 'Unknown error',
       },
       500

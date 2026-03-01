@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from typing import Any
 
 from fastapi import FastAPI, Request
@@ -23,6 +24,9 @@ ERROR_CODE_PDF_PARSE_FAILED = "PDF_PARSE_FAILED"
 ERROR_CODE_PDF_EMPTY_TEXT = "PDF_EMPTY_TEXT"
 ERROR_CODE_SKILL_DB_UNAVAILABLE = "SKILL_DB_UNAVAILABLE"
 ERROR_CODE_MATCHING_FAILED = "MATCHING_FAILED"
+UPLOAD_METADATA_ENCODING_ERROR_MESSAGE = (
+    "Upload metadata contains unsupported characters. Please rename the PDF and retry."
+)
 
 
 def _env_int(name: str, fallback: int) -> int:
@@ -141,15 +145,74 @@ def _validate_proxy_secret(request: Request) -> JSONResponse | None:
     return None
 
 
+def _contains_utf8_decode_error(exc: BaseException | None) -> bool:
+    if exc is None:
+        return False
+
+    stack: list[BaseException] = [exc]
+    seen: set[int] = set()
+
+    while stack:
+        current = stack.pop()
+        current_id = id(current)
+        if current_id in seen:
+            continue
+        seen.add(current_id)
+
+        if isinstance(current, UnicodeDecodeError):
+            return True
+
+        message = str(current).lower()
+        if "utf-8" in message and "can't decode byte" in message:
+            return True
+        if "invalid continuation byte" in message and "utf-8" in message:
+            return True
+
+        cause = getattr(current, "__cause__", None)
+        if isinstance(cause, BaseException):
+            stack.append(cause)
+
+        context = getattr(current, "__context__", None)
+        if isinstance(context, BaseException):
+            stack.append(context)
+
+        nested = getattr(current, "exceptions", None)
+        if isinstance(nested, (list, tuple)):
+            for nested_exc in nested:
+                if isinstance(nested_exc, BaseException):
+                    stack.append(nested_exc)
+
+    return False
+
+
+def _sanitize_document_id(raw_value: Any, idx: int) -> str:
+    text = str(raw_value).strip() if raw_value is not None else ""
+    if not text:
+        return f"doc-{idx}"
+
+    safe_chars: list[str] = []
+    for char in text:
+        if char.isascii() and (char.isalnum() or char in {"-", "_"}):
+            safe_chars.append(char)
+        else:
+            safe_chars.append("-")
+
+    normalized = re.sub(r"-{2,}", "-", "".join(safe_chars)).strip("-_")
+    if not normalized:
+        return f"doc-{idx}"
+
+    return normalized[:128]
+
+
 async def _parse_multipart_documents(
     request: Request, *, default_context: str, limits: ImportLimits
 ) -> tuple[list[dict[str, str]], list[dict[str, Any]]]:
     try:
         form = await request.form()
-    except UnicodeDecodeError as exc:
-        raise ValueError(
-            "Upload metadata contains unsupported characters. Rename the PDF file using Latin letters/numbers and retry."
-        ) from exc
+    except Exception as exc:  # pragma: no cover - parser exceptions vary across runtime versions
+        if _contains_utf8_decode_error(exc):
+            raise ValueError(UPLOAD_METADATA_ENCODING_ERROR_MESSAGE) from exc
+        raise
 
     files = form.getlist("files")
     document_ids = form.getlist("document_ids")
@@ -167,11 +230,8 @@ async def _parse_multipart_documents(
 
     for idx, upload in enumerate(files, start=1):
         file_name = getattr(upload, "filename", None) or f"upload-{idx}.pdf"
-        document_id = (
-            str(document_ids[idx - 1]).strip()
-            if idx - 1 < len(document_ids) and str(document_ids[idx - 1]).strip()
-            else f"doc-{idx}"
-        )
+        raw_document_id = document_ids[idx - 1] if idx - 1 < len(document_ids) else None
+        document_id = _sanitize_document_id(raw_document_id, idx)
         context = _safe_context(contexts[idx - 1] if idx - 1 < len(contexts) else default_context, default_context)
 
         content_type = getattr(upload, "content_type", None) or ""

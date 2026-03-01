@@ -146,6 +146,74 @@ describe('CvImportWizard', () => {
     expect(screen.getByDisplayValue('Senior Engineer')).toBeInTheDocument();
   });
 
+  it('uses ASCII-safe multipart document IDs for non-ASCII filenames', async () => {
+    apiFetchMock.mockImplementationOnce(async (_url: string, init?: RequestInit) => {
+      const formData = init?.body as FormData;
+      const requestDocumentId = String(formData.getAll('document_ids')[0] || 'doc-1');
+
+      return new Response(
+        JSON.stringify({
+          documents: [
+            {
+              document_id: requestDocumentId,
+              file_name: 'CV_Äндрей.pdf',
+              context: 'cv',
+              parsed_text: 'React',
+              parse_error: null,
+              parse_error_code: null,
+              work_experiences: [],
+              learning_experiences: [],
+              volunteering: [],
+              languages: [],
+              skill_candidates: [],
+            },
+          ],
+          metadata: {
+            semantic_used: false,
+            semantic_fallback_triggered: false,
+            unmapped_candidates_count: 0,
+            limits: {
+              max_documents: 5,
+              max_chars_per_document: 30000,
+              max_total_chars: 90000,
+            },
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    });
+
+    render(<CvImportWizard />);
+
+    const uploadInput = screen.getByTestId('cv-upload');
+    const file = new File(['dummy'], 'CV_Äндрей.pdf', { type: 'application/pdf' });
+
+    fireEvent.change(uploadInput, {
+      target: {
+        files: [file],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
+
+    await waitFor(() => {
+      expect(apiFetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    const multipartBody = apiFetchMock.mock.calls[0]?.[1]?.body as FormData;
+    const requestDocumentId = String(multipartBody.getAll('document_ids')[0] || '');
+    expect(requestDocumentId).toMatch(/^[A-Za-z0-9_-]+$/);
+    expect(requestDocumentId).not.toContain('Ä');
+    expect(requestDocumentId).not.toContain('ндрей');
+  });
+
   it('shows staged progress and auto-collapses completion after 4 seconds', async () => {
     vi.useFakeTimers();
     try {
@@ -560,8 +628,11 @@ describe('CvImportWizard', () => {
       })
     );
 
+    const multipartBody = apiFetchMock.mock.calls[0]?.[1]?.body as FormData;
+    const requestDocumentId = String(multipartBody.getAll('document_ids')[0] || '');
     const retryPayload = JSON.parse(String(apiFetchMock.mock.calls[1]?.[1]?.body || '{}'));
-    expect(retryPayload.documents[0].document_id).toMatch(/cv\.pdf/);
+    expect(requestDocumentId).toMatch(/^[A-Za-z0-9_-]+$/);
+    expect(retryPayload.documents[0].document_id).toBe(requestDocumentId);
     expect(retryPayload.documents[0].file_name).toBe('cv.pdf');
     expect(retryPayload.documents[0].context).toBe('cv');
     expect(retryPayload.documents[0].text).toBe('React TypeScript');
@@ -680,8 +751,11 @@ describe('CvImportWizard', () => {
       })
     );
 
+    const multipartBody = apiFetchMock.mock.calls[0]?.[1]?.body as FormData;
+    const requestDocumentId = String(multipartBody.getAll('document_ids')[0] || '');
     const retryPayload = JSON.parse(String(apiFetchMock.mock.calls[2]?.[1]?.body || '{}'));
-    expect(retryPayload.documents[0].document_id).toMatch(/cv\.pdf/);
+    expect(requestDocumentId).toMatch(/^[A-Za-z0-9_-]+$/);
+    expect(retryPayload.documents[0].document_id).toBe(requestDocumentId);
     expect(retryPayload.documents[0].file_name).toBe('cv.pdf');
     expect(retryPayload.documents[0].context).toBe('cv');
     expect(retryPayload.documents[0].text).toBe('React TypeScript');

@@ -3,6 +3,10 @@ import { NextRequest, NextResponse } from 'next/server';
 const DEFAULT_PROXY_TIMEOUT_MS = 10000;
 const PROXY_UNAVAILABLE_CODE = 'CV_IMPORT_PROXY_UNAVAILABLE';
 const PROXY_TIMEOUT_CODE = 'CV_IMPORT_PROXY_TIMEOUT';
+const UPLOAD_METADATA_ENCODING_ERROR_MESSAGE =
+  'Upload metadata contains unsupported characters. Please rename the PDF and retry.';
+const UTF8_CODEC_ERROR_PATTERN =
+  /utf-8['"]?\s+codec\s+can'?t\s+decode\s+byte|can't decode byte.*utf-8|invalid continuation byte/i;
 type EndpointPath = '/wizard-suggest' | '/suggest' | '/extract';
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
@@ -49,6 +53,34 @@ function resolveGenericErrorLabel(endpointPath: EndpointPath): string {
   return endpointPath === '/wizard-suggest'
     ? 'Failed to process CV wizard suggestions'
     : 'Failed to process CV documents';
+}
+
+function containsUtf8CodecError(value: string): boolean {
+  return UTF8_CODEC_ERROR_PATTERN.test(value.toLowerCase());
+}
+
+function normalizeCodecErrorPayload(payload: unknown): unknown {
+  if (!payload || typeof payload !== 'object') {
+    return payload;
+  }
+
+  const record = payload as Record<string, unknown>;
+  let changed = false;
+  const next: Record<string, unknown> = { ...record };
+
+  for (const key of ['error', 'message', 'detail']) {
+    const value = record[key];
+    if (typeof value === 'string' && containsUtf8CodecError(value)) {
+      next[key] = UPLOAD_METADATA_ENCODING_ERROR_MESSAGE;
+      changed = true;
+    }
+  }
+
+  if (!changed) {
+    return payload;
+  }
+
+  return next;
 }
 
 function buildUnavailableResponse(
@@ -172,7 +204,7 @@ export async function proxyCvRequestToPython(
   }
 
   try {
-    const jsonPayload = JSON.parse(rawText);
+    const jsonPayload = normalizeCodecErrorPayload(JSON.parse(rawText));
 
     if (response.status === 404) {
       return buildUnavailableResponse(
@@ -190,6 +222,16 @@ export async function proxyCvRequestToPython(
 
     return NextResponse.json(jsonPayload, { status: response.status });
   } catch {
+    if (containsUtf8CodecError(rawText)) {
+      return NextResponse.json(
+        {
+          error: resolveGenericErrorLabel(endpointPath),
+          message: UPLOAD_METADATA_ENCODING_ERROR_MESSAGE,
+        },
+        { status: response.status >= 400 ? response.status : 502 }
+      );
+    }
+
     if (response.status === 404 || response.status >= 500) {
       return buildUnavailableResponse(
         endpointPath,

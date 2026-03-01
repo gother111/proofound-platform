@@ -193,6 +193,12 @@ interface CvImportWizardProps {
   }) => void;
 }
 
+interface AnalyzeDocumentDescriptor {
+  localId: string;
+  requestId: string;
+  document: ParsedDocumentState;
+}
+
 const STEPS: Array<{ id: WizardStep; label: string }> = [
   { id: 'work', label: 'Work Experiences' },
   { id: 'learning', label: 'Learning Experiences' },
@@ -346,6 +352,42 @@ function normalizeScore(value: unknown, fallback = 0): number {
   }
 
   return Math.max(0, Math.min(1, value));
+}
+
+function createSafeDocumentId(index: number): string {
+  const timestampPart = Date.now().toString(36);
+  const randomPart = Math.random().toString(36).slice(2, 10);
+  return `doc_${timestampPart}_${index.toString(36)}_${randomPart}`;
+}
+
+function isSafeDocumentId(value: string): boolean {
+  return /^[A-Za-z0-9_-]{1,128}$/.test(value);
+}
+
+function buildAnalyzeDocumentDescriptors(
+  documents: ParsedDocumentState[]
+): AnalyzeDocumentDescriptor[] {
+  const usedIds = new Set<string>();
+
+  return documents.map((document, index) => {
+    const localId = document.document_id;
+    let requestId = localId.trim();
+
+    if (!isSafeDocumentId(requestId) || usedIds.has(requestId)) {
+      requestId = createSafeDocumentId(index);
+      while (usedIds.has(requestId)) {
+        requestId = createSafeDocumentId(index);
+      }
+    }
+
+    usedIds.add(requestId);
+
+    return {
+      localId,
+      requestId,
+      document,
+    };
+  });
 }
 
 function sanitizeMultipartFilename(fileName: string): string {
@@ -719,7 +761,7 @@ function shouldRetryWithOcr(document: ApiDocumentResult): boolean {
 
 async function retryOcrDocuments(params: {
   payload: ApiSuggestResponse;
-  sourceById: Map<string, ParsedDocumentState>;
+  sourceByRequestId: Map<string, ParsedDocumentState>;
 }): Promise<{ payload: ApiSuggestResponse; ocrAttempted: number; ocrFailed: number }> {
   if (!isOcrClientEnabled()) {
     return { payload: params.payload, ocrAttempted: 0, ocrFailed: 0 };
@@ -738,7 +780,7 @@ async function retryOcrDocuments(params: {
       continue;
     }
 
-    const source = params.sourceById.get(document.document_id);
+    const source = params.sourceByRequestId.get(document.document_id);
     if (!source?.file) {
       continue;
     }
@@ -967,8 +1009,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     setIsParsing(true);
 
     try {
-      const parsedDocuments: ParsedDocumentState[] = pdfFiles.map((file) => ({
-        document_id: `${Date.now()}-${file.name}-${Math.random().toString(36).slice(2, 8)}`,
+      const parsedDocuments: ParsedDocumentState[] = pdfFiles.map((file, index) => ({
+        document_id: createSafeDocumentId(index),
         file_name: file.name,
         file,
         parsed_text: '',
@@ -1016,11 +1058,20 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     });
 
     try {
+      const analyzeDocuments = buildAnalyzeDocumentDescriptors(readyDocuments);
+      const sourceByRequestId = new Map(
+        analyzeDocuments.map((descriptor) => [descriptor.requestId, descriptor.document])
+      );
+
       const formData = new FormData();
-      for (const document of readyDocuments) {
-        if (!document.file) continue;
-        formData.append('files', document.file, sanitizeMultipartFilename(document.file_name));
-        formData.append('document_ids', document.document_id);
+      for (const descriptor of analyzeDocuments) {
+        if (!descriptor.document.file) continue;
+        formData.append(
+          'files',
+          descriptor.document.file,
+          sanitizeMultipartFilename(descriptor.document.file_name)
+        );
+        formData.append('document_ids', descriptor.requestId);
         formData.append('contexts', 'cv');
       }
 
@@ -1040,7 +1091,12 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
             '[cv-import] wizard suggest proxy retryable failure, retrying with gemini json payload'
           );
 
-          const fallbackPayload = await buildTextFallbackPayload(readyDocuments);
+          const fallbackPayload = await buildTextFallbackPayload(
+            analyzeDocuments.map((descriptor) => ({
+              ...descriptor.document,
+              document_id: descriptor.requestId,
+            }))
+          );
           setRunningProgress('extracting', 45, 'Retrying extraction with fallback service...');
 
           response = await apiFetch('/api/expertise/cv-import/wizard-suggest?engine=gemini', {
@@ -1093,10 +1149,6 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         };
       }
 
-      const sourceById = new Map(
-        readyDocuments.map((document) => [document.document_id, document])
-      );
-
       if (isOcrClientEnabled()) {
         setRunningProgress('extracting', 60, 'Running OCR fallback for scanned PDFs...');
         const {
@@ -1105,7 +1157,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
           ocrFailed,
         } = await retryOcrDocuments({
           payload,
-          sourceById,
+          sourceByRequestId,
         });
         payload = mergedPayload;
 
@@ -1128,7 +1180,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       setApiMetadata(payload.metadata);
 
       const analyzedDocuments = payload.documents.map((document) => {
-        const source = sourceById.get(document.document_id);
+        const source = sourceByRequestId.get(document.document_id);
 
         return {
           document_id: document.document_id,

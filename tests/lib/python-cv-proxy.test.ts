@@ -73,4 +73,62 @@ describe('python-cv-proxy', () => {
     expect(body.error).toBe('Failed to process CV wizard suggestions');
     expect(body.code).toBe('CV_IMPORT_PROXY_UNAVAILABLE');
   });
+
+  it('normalizes upstream utf-8 codec errors from JSON payloads', async () => {
+    vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          error: 'Failed to process CV documents',
+          message:
+            "'utf-8' codec can't decode byte 0xc4 in position 177: invalid continuation byte",
+        }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+
+    const request = new NextRequest('http://localhost/api/expertise/cv-import/suggest', {
+      method: 'POST',
+      body: JSON.stringify({ documents: [] }),
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const response = await proxyCvRequestToPython(request, '/suggest');
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.message).toBe(
+      'Upload metadata contains unsupported characters. Please rename the PDF and retry.'
+    );
+    expect(String(body.message).toLowerCase()).not.toContain('utf-8');
+  });
+
+  it('normalizes upstream utf-8 codec errors from non-JSON payloads', async () => {
+    vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+      new Response(
+        "'utf-8' codec can't decode byte 0xc4 in position 177: invalid continuation byte",
+        {
+          status: 500,
+          headers: { 'Content-Type': 'text/plain' },
+        }
+      )
+    );
+
+    const request = new NextRequest('http://localhost/api/expertise/cv-import/suggest', {
+      method: 'POST',
+      body: JSON.stringify({ documents: [] }),
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const response = await proxyCvRequestToPython(request, '/suggest');
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body.error).toBe('Failed to process CV documents');
+    expect(body.message).toBe(
+      'Upload metadata contains unsupported characters. Please rename the PDF and retry.'
+    );
+  });
 });

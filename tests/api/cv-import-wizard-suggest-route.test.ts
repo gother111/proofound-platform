@@ -172,6 +172,51 @@ describe('cv-import wizard suggest route', () => {
     fetchSpy.mockRestore();
   });
 
+  it('returns friendly upload metadata message when upstream proxy reports utf-8 codec errors', async () => {
+    process.env.CV_IMPORT_ENGINE_MODE = 'python';
+    (createClient as any).mockResolvedValue({
+      auth: {
+        getUser: async () => ({ data: { user: { id: 'user-1' } } }),
+      },
+    });
+
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          error: 'Failed to process CV wizard suggestions',
+          message:
+            "'utf-8' codec can't decode byte 0xc4 in position 177: invalid continuation byte",
+        }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      )
+    );
+
+    const request = new NextRequest('http://localhost/api/expertise/cv-import/wizard-suggest', {
+      method: 'POST',
+      body: JSON.stringify({
+        documents: [
+          {
+            document_id: 'doc-1',
+            file_name: 'cv.pdf',
+            text: 'React TypeScript',
+            context: 'cv',
+          },
+        ],
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const response = await POST(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.message).toBe(
+      'Upload metadata contains unsupported characters. Please rename the PDF and retry.'
+    );
+    expect(String(body.message).toLowerCase()).not.toContain('utf-8');
+    fetchSpy.mockRestore();
+  });
+
   it('returns structured 504 timeout code when python proxy times out', async () => {
     (createClient as any).mockResolvedValue({
       auth: {
