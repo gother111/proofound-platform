@@ -1,6 +1,6 @@
 /**
  * Assignment Builder - Step 4: Practicals
- * 
+ *
  * Define budget, location, timing, and availability
  */
 
@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
+import { CityCountryAutocompleteFields } from '@/components/location/CityCountryAutocompleteFields';
 import {
   Select,
   SelectContent,
@@ -43,15 +44,36 @@ const DURATION_OPTIONS = [
 ];
 
 const VERIFICATION_GATES = [
-  { id: 'identity', label: 'Identity Verification', description: 'Government ID verification (Veriff)' },
-  { id: 'work_email', label: 'Work Email Verification', description: 'Verify corporate email domain' },
-  { id: 'linkedin', label: 'LinkedIn Profile Verification', description: 'Verify professional profile' },
-  { id: 'background_check', label: 'Background Check', description: 'Criminal background screening' },
+  {
+    id: 'identity',
+    label: 'Identity Verification',
+    description: 'Government ID verification (Veriff)',
+  },
+  {
+    id: 'work_email',
+    label: 'Work Email Verification',
+    description: 'Verify corporate email domain',
+  },
+  {
+    id: 'linkedin',
+    label: 'LinkedIn Profile Verification',
+    description: 'Verify professional profile',
+  },
+  {
+    id: 'background_check',
+    label: 'Background Check',
+    description: 'Criminal background screening',
+  },
   { id: 'education', label: 'Education Verification', description: 'Verify degree/certifications' },
 ];
 
 export function Step4Practicals({ form, onNext, onBack }: Step4Props) {
-  const { register, watch, setValue, formState: { errors } } = form;
+  const {
+    register,
+    watch,
+    setValue,
+    formState: { errors },
+  } = form;
 
   const compMin = watch('compMin') || 0;
   const compMax = watch('compMax') || 0;
@@ -60,6 +82,8 @@ export function Step4Practicals({ form, onNext, onBack }: Step4Props) {
   const hoursMax = watch('hoursMax') || 40;
   const duration = watch('duration') || '12mo';
   const locationMode = watch('locationMode') || watch('workModePreference') || 'hybrid';
+  const city = watch('city') || '';
+  const country = watch('country') || '';
   const verificationGates = watch('verificationGates') || [];
 
   const isValid = compMin > 0 && compMax > compMin;
@@ -67,7 +91,10 @@ export function Step4Practicals({ form, onNext, onBack }: Step4Props) {
   const toggleVerificationGate = (gateId: string) => {
     const current = verificationGates || [];
     if (current.includes(gateId)) {
-      setValue('verificationGates', current.filter((id: string) => id !== gateId));
+      setValue(
+        'verificationGates',
+        current.filter((id: string) => id !== gateId)
+      );
     } else {
       setValue('verificationGates', [...current, gateId]);
     }
@@ -81,9 +108,7 @@ export function Step4Practicals({ form, onNext, onBack }: Step4Props) {
           <h2 className="text-2xl font-bold">Step 4: Practicals</h2>
           <span className="text-sm text-muted-foreground">Step 4 of 5</span>
         </div>
-        <p className="text-muted-foreground">
-          Budget, location, timing, and availability
-        </p>
+        <p className="text-muted-foreground">Budget, location, timing, and availability</p>
         <Progress value={80} className="mt-4" />
       </div>
 
@@ -94,7 +119,9 @@ export function Step4Practicals({ form, onNext, onBack }: Step4Props) {
         </Label>
         <div className="grid grid-cols-[1fr,1fr,auto] gap-4">
           <div className="space-y-2">
-            <Label htmlFor="compMin" className="text-sm">Minimum</Label>
+            <Label htmlFor="compMin" className="text-sm">
+              Minimum
+            </Label>
             <Input
               id="compMin"
               type="number"
@@ -107,7 +134,9 @@ export function Step4Practicals({ form, onNext, onBack }: Step4Props) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="compMax" className="text-sm">Maximum</Label>
+            <Label htmlFor="compMax" className="text-sm">
+              Maximum
+            </Label>
             <Input
               id="compMax"
               type="number"
@@ -115,13 +144,14 @@ export function Step4Practicals({ form, onNext, onBack }: Step4Props) {
               {...register('compMax', {
                 required: 'Maximum salary is required',
                 valueAsNumber: true,
-                validate: (value) =>
-                  value > compMin || 'Maximum must be greater than minimum',
+                validate: (value) => value > compMin || 'Maximum must be greater than minimum',
               })}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="currency" className="text-sm">Currency</Label>
+            <Label htmlFor="currency" className="text-sm">
+              Currency
+            </Label>
             <Select value={currency} onValueChange={(value) => setValue('currency', value)}>
               <SelectTrigger id="currency" className="w-[100px]">
                 <SelectValue />
@@ -189,43 +219,34 @@ export function Step4Practicals({ form, onNext, onBack }: Step4Props) {
 
       {/* City & Country (conditional on location mode) */}
       {locationMode !== 'remote' && (
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="city">City</Label>
-            <Input
-              id="city"
-              placeholder="e.g., San Francisco"
-              {...register('city')}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="country">Country</Label>
-            <Input
-              id="country"
-              placeholder="e.g., USA"
-              {...register('country')}
-            />
-          </div>
-        </div>
+        <CityCountryAutocompleteFields
+          city={city}
+          country={country}
+          cityOptional
+          onCityChange={(value) =>
+            setValue('city', value, {
+              shouldDirty: true,
+              shouldTouch: true,
+            })
+          }
+          onCountryChange={(value) =>
+            setValue('country', value, {
+              shouldDirty: true,
+              shouldTouch: true,
+            })
+          }
+        />
       )}
 
       {/* Start Date Range */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="startEarliest">Start Date (Earliest)</Label>
-          <Input
-            id="startEarliest"
-            type="date"
-            {...register('startEarliest')}
-          />
+          <Input id="startEarliest" type="date" {...register('startEarliest')} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="startLatest">Start Date (Latest)</Label>
-          <Input
-            id="startLatest"
-            type="date"
-            {...register('startLatest')}
-          />
+          <Input id="startLatest" type="date" {...register('startLatest')} />
         </div>
       </div>
 
@@ -266,22 +287,18 @@ export function Step4Practicals({ form, onNext, onBack }: Step4Props) {
                 onCheckedChange={() => toggleVerificationGate(gate.id)}
               />
               <div className="flex-1">
-                <Label
-                  htmlFor={gate.id}
-                  className="font-medium cursor-pointer"
-                >
+                <Label htmlFor={gate.id} className="font-medium cursor-pointer">
                   {gate.label}
                 </Label>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  {gate.description}
-                </p>
+                <p className="text-sm text-muted-foreground mt-0.5">{gate.description}</p>
               </div>
             </div>
           ))}
         </div>
         {verificationGates.length > 0 && (
           <p className="text-sm text-primary font-medium">
-            {verificationGates.length} verification gate{verificationGates.length > 1 ? 's' : ''} selected
+            {verificationGates.length} verification gate{verificationGates.length > 1 ? 's' : ''}{' '}
+            selected
           </p>
         )}
       </div>

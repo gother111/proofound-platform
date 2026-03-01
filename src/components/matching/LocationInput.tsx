@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { CityCountryAutocompleteFields } from '@/components/location/CityCountryAutocompleteFields';
 
 export interface LocationPreference {
   workMode: 'remote' | 'onsite' | 'hybrid' | '';
@@ -53,27 +54,13 @@ export function LocationInput({ value, onChange }: LocationInputProps) {
       {/* Country and City (only for onsite/hybrid) */}
       {needsLocation && (
         <>
-          <div>
-            <Label htmlFor="country">Country</Label>
-            <Input
-              id="country"
-              type="text"
-              value={value.country || ''}
-              onChange={(e) => onChange({ ...value, country: e.target.value })}
-              placeholder="e.g., United States, Sweden, etc."
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="city">City (Optional)</Label>
-            <Input
-              id="city"
-              type="text"
-              value={value.city || ''}
-              onChange={(e) => onChange({ ...value, city: e.target.value })}
-              placeholder="e.g., Stockholm, San Francisco, etc."
-            />
-          </div>
+          <CityCountryAutocompleteFields
+            city={value.city || ''}
+            country={value.country || ''}
+            cityOptional
+            onCityChange={(city) => onChange({ ...value, city })}
+            onCountryChange={(country) => onChange({ ...value, country })}
+          />
 
           {value.workMode === 'onsite' && (
             <div>
