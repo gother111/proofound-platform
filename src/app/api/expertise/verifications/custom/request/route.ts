@@ -330,7 +330,7 @@ export async function POST(request: NextRequest) {
 
       const { data: acceptedSkillRequests, error: acceptedSkillRequestsError } = await supabase
         .from('skill_verification_requests')
-        .select('skill_id')
+        .select('skill_id, integrity_status')
         .eq('requester_profile_id', user.id)
         .eq('status', 'accepted')
         .in('skill_id', groupedArtifacts.skill);
@@ -347,7 +347,9 @@ export async function POST(request: NextRequest) {
       }
 
       const alreadyVerifiedSkillIds = new Set(
-        (acceptedSkillRequests || []).map((requestRow) => requestRow.skill_id)
+        (acceptedSkillRequests || [])
+          .filter((requestRow) => (requestRow.integrity_status || 'clear') === 'clear')
+          .map((requestRow) => requestRow.skill_id)
       );
 
       if (alreadyVerifiedSkillIds.size > 0) {

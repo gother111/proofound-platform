@@ -281,7 +281,7 @@ export async function GET() {
     if (skillIds.length > 0) {
       const { data: acceptedRequests, error: acceptedError } = await supabase
         .from('skill_verification_requests')
-        .select('skill_id')
+        .select('skill_id, integrity_status')
         .eq('requester_profile_id', user.id)
         .eq('status', 'accepted')
         .in('skill_id', skillIds);
@@ -290,7 +290,8 @@ export async function GET() {
         console.error('Failed to load accepted skill verification requests:', acceptedError);
       } else {
         for (const request of acceptedRequests || []) {
-          if (request.skill_id) {
+          const integrityStatus = request.integrity_status || 'clear';
+          if (request.skill_id && integrityStatus === 'clear') {
             acceptedSkillIds.add(request.skill_id);
           }
         }
