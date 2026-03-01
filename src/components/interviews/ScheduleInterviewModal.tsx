@@ -186,18 +186,20 @@ export function ScheduleInterviewModal({
 
     try {
       const startTime = new Date(`${selectedDate}T${selectedTime}:00`);
+      const manualPayload =
+        platform === 'manual'
+          ? {
+              manualMeetingLink: manualMeetingLink.trim(),
+              manualMeetingProvider: manualMeetingProvider as ManualMeetingProvider,
+            }
+          : {};
 
       const data = await scheduleInterview({
         matchId,
         scheduledAt: startTime.toISOString(),
         platform,
         timezone,
-        ...(platform === 'manual'
-          ? {
-              manualMeetingLink: manualMeetingLink.trim(),
-              manualMeetingProvider,
-            }
-          : {}),
+        ...manualPayload,
       });
 
       if (onScheduled) {
@@ -277,14 +279,18 @@ export function ScheduleInterviewModal({
           <Video className="w-4 h-4 inline mr-2" />
           Video Platform
         </Label>
-        <Select value={platform} onValueChange={(val) => setPlatform(val as 'google_meet' | 'manual')}>
+        <Select
+          value={platform}
+          onValueChange={(val) => setPlatform(val as 'google_meet' | 'manual')}
+        >
           <SelectTrigger id="platform">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="manual">Manual link (no integration required)</SelectItem>
             <SelectItem value="google_meet" disabled={!providerConnections.google}>
-              Google Meet {providerConnections.google ? '(connected)' : '(connect in Settings first)'}
+              Google Meet{' '}
+              {providerConnections.google ? '(connected)' : '(connect in Settings first)'}
             </SelectItem>
           </SelectContent>
         </Select>

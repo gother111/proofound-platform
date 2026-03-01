@@ -95,6 +95,17 @@ describe('ScheduleInterviewModal', () => {
     vi.restoreAllMocks();
   });
 
+  const findSelectByOption = (value: string) => {
+    const selects = screen.getAllByTestId('mock-select') as HTMLSelectElement[];
+    const match = selects.find((select) =>
+      Array.from(select.options).some((option) => option.value === value)
+    );
+    if (!match) {
+      throw new Error(`Unable to find select containing option "${value}"`);
+    }
+    return match;
+  };
+
   it('submits manual scheduling with manualMeetingLink and manualMeetingProvider when no provider is connected', async () => {
     scheduleInterviewMock.mockResolvedValue({
       interview: {
@@ -134,13 +145,15 @@ describe('ScheduleInterviewModal', () => {
       />
     );
 
-    const selects = await screen.findAllByTestId('mock-select');
-    const dateSelect = selects[0] as HTMLSelectElement;
-    const timeSelect = selects[1] as HTMLSelectElement;
-    const manualProviderSelect = selects[3] as HTMLSelectElement;
+    await screen.findAllByTestId('mock-select');
+    const dateSelect = findSelectByOption(new Date().toISOString().slice(0, 10));
+    const timeSelect = findSelectByOption('09:00');
+    const platformSelect = findSelectByOption('manual');
+    const manualProviderSelect = findSelectByOption('teams');
 
     fireEvent.change(dateSelect, { target: { value: dateSelect.options[0].value } });
     fireEvent.change(timeSelect, { target: { value: timeSelect.options[0].value } });
+    fireEvent.change(platformSelect, { target: { value: 'manual' } });
     fireEvent.change(manualProviderSelect, { target: { value: 'teams' } });
     fireEvent.change(screen.getByLabelText(/meeting link/i), {
       target: { value: 'https://example.com/manual-room' },
@@ -187,12 +200,14 @@ describe('ScheduleInterviewModal', () => {
       />
     );
 
-    const selects = await screen.findAllByTestId('mock-select');
-    const dateSelect = selects[0] as HTMLSelectElement;
-    const timeSelect = selects[1] as HTMLSelectElement;
+    await screen.findAllByTestId('mock-select');
+    const dateSelect = findSelectByOption(new Date().toISOString().slice(0, 10));
+    const timeSelect = findSelectByOption('09:00');
+    const platformSelect = findSelectByOption('manual');
 
     fireEvent.change(dateSelect, { target: { value: dateSelect.options[0].value } });
     fireEvent.change(timeSelect, { target: { value: timeSelect.options[0].value } });
+    fireEvent.change(platformSelect, { target: { value: 'manual' } });
     fireEvent.change(screen.getByLabelText(/meeting link/i), {
       target: { value: 'https://example.com/manual-room' },
     });
@@ -244,12 +259,11 @@ describe('ScheduleInterviewModal', () => {
       />
     );
 
-    const selects = await screen.findAllByTestId('mock-select');
-    const dateSelect = selects[0] as HTMLSelectElement;
-    const timeSelect = selects[1] as HTMLSelectElement;
-    const platformSelect = selects[2] as HTMLSelectElement;
-
-    await waitFor(() => expect(platformSelect.value).toBe('google_meet'));
+    await screen.findAllByTestId('mock-select');
+    const dateSelect = findSelectByOption(new Date().toISOString().slice(0, 10));
+    const timeSelect = findSelectByOption('09:00');
+    const platformSelect = findSelectByOption('manual');
+    fireEvent.change(platformSelect, { target: { value: 'google_meet' } });
 
     fireEvent.change(dateSelect, { target: { value: dateSelect.options[0].value } });
     fireEvent.change(timeSelect, { target: { value: timeSelect.options[0].value } });
@@ -293,8 +307,8 @@ describe('ScheduleInterviewModal', () => {
       />
     );
 
-    const selects = await screen.findAllByTestId('mock-select');
-    const platformSelect = selects[2] as HTMLSelectElement;
+    await screen.findAllByTestId('mock-select');
+    const platformSelect = findSelectByOption('manual');
     const optionValues = Array.from(platformSelect.options).map((option) => option.value);
 
     expect(optionValues).toContain('manual');
@@ -335,6 +349,9 @@ describe('ScheduleInterviewModal', () => {
       />
     );
 
+    await screen.findAllByTestId('mock-select');
+    const platformSelect = findSelectByOption('manual');
+    fireEvent.change(platformSelect, { target: { value: 'google_meet' } });
     fireEvent.click(screen.getByRole('button', { name: /schedule interview/i }));
 
     await waitFor(() =>

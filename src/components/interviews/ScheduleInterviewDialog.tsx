@@ -96,18 +96,21 @@ export function ScheduleInterviewDialog({
     setIsSubmitting(true);
 
     try {
+      const manualPayload =
+        platform === 'manual'
+          ? {
+              manualMeetingLink: manualMeetingLink.trim(),
+              manualMeetingProvider: manualMeetingProvider as ManualMeetingProvider,
+            }
+          : {};
+
       await scheduleInterview({
         matchId: applicationId,
         scheduledAt: scheduledDateTime.toISOString(),
         platform,
         participantUserIds: participantIds,
         timezone,
-        ...(platform === 'manual'
-          ? {
-              manualMeetingLink: manualMeetingLink.trim(),
-              manualMeetingProvider,
-            }
-          : {}),
+        ...manualPayload,
       });
 
       toast.success('Interview scheduled successfully!');
@@ -137,7 +140,10 @@ export function ScheduleInterviewDialog({
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="platform">Platform</Label>
-            <Select value={platform} onValueChange={(v: 'google_meet' | 'manual') => setPlatform(v)}>
+            <Select
+              value={platform}
+              onValueChange={(v: 'google_meet' | 'manual') => setPlatform(v)}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
