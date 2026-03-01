@@ -5,10 +5,6 @@ import { Briefcase, Download, FileText, Search, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { apiFetch } from '@/lib/api/fetch';
-import {
-  extractPdfTextFromFile,
-  normalizePdfParseError,
-} from '@/lib/expertise/pdf-client-extractor';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -81,6 +77,7 @@ interface CandidateState extends ApiCandidate {
   manual_search_query: string;
   manual_options: ApiSuggestion[];
   manual_loading: boolean;
+  show_all_suggestions: boolean;
 }
 
 interface ParsedDocumentState {
@@ -644,7 +641,6 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
   const [context, setContext] = useState<ImportContext>('cv');
   const [manualText, setManualText] = useState('');
   const [documents, setDocuments] = useState<ParsedDocumentState[]>([]);
-  const [isParsing, setIsParsing] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [apiMetadata, setApiMetadata] = useState<ApiSuggestResponse['metadata'] | null>(null);
@@ -749,131 +745,32 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
     );
   }
 
-  const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    const fileList = Array.from(event.target.files || []);
-
-    if (fileList.length === 0) {
-      return;
-    }
-
-    const pdfFiles = fileList.filter((file) => file.type === 'application/pdf');
-
-    if (pdfFiles.length !== fileList.length) {
-      toast.error('Only PDF files are supported in V1.');
-    }
-
-    if (pdfFiles.length === 0) {
-      return;
-    }
-
-    setIsParsing(true);
-
-    try {
-      const parsedDocuments: ParsedDocumentState[] = [];
-
-      for (const file of pdfFiles) {
-        const documentId = `${Date.now()}-${file.name}-${Math.random().toString(36).slice(2, 8)}`;
-
-        try {
-          const text = await extractPdfTextFromFile(file);
-
-          if (!text.trim()) {
-            parsedDocuments.push({
-              document_id: documentId,
-              file_name: file.name,
-              context,
-              parsed_text: '',
-              parse_error: 'No text could be extracted. OCR is not supported in V1.',
-              candidates: [],
-            });
-            continue;
-          }
-
-          parsedDocuments.push({
-            document_id: documentId,
-            file_name: file.name,
-            context,
-            parsed_text: text,
-            candidates: [],
-          });
-        } catch (error) {
-          parsedDocuments.push({
-            document_id: documentId,
-            file_name: file.name,
-            context,
-            parsed_text: '',
-            parse_error: normalizePdfParseError(error),
-            candidates: [],
-          });
-        }
-      }
-
-      setDocuments(parsedDocuments);
-      setApiMetadata(null);
-
-      const successCount = parsedDocuments.filter((document) => !document.parse_error).length;
-      if (successCount > 0) {
-        toast.success(`Parsed ${successCount} PDF${successCount > 1 ? 's' : ''}.`);
-      }
-    } finally {
-      setIsParsing(false);
-    }
-  };
-
   const handleAnalyze = async () => {
-    const readyDocuments = documents.filter(
-      (document) => !document.parse_error && document.parsed_text.trim()
-    );
     const textInput = manualText.trim();
-
-    let requestDocuments: Array<{
-      document_id: string;
-      file_name: string;
-      text: string;
-      context: ImportContext;
-    }> = [];
-    let requestDocumentStates: ParsedDocumentState[] = [];
-
-    if (isPdfContext) {
-      if (readyDocuments.length === 0) {
-        toast.error('Upload at least one text-based PDF before analyzing.');
-        return;
-      }
-
-      requestDocuments = readyDocuments.map((document) => ({
-        document_id: document.document_id,
-        file_name: document.file_name,
-        text: document.parsed_text,
-        context: document.context,
-      }));
-      requestDocumentStates = readyDocuments;
-    } else {
-      if (!textInput) {
-        toast.error('Paste text before analyzing.');
-        return;
-      }
-
-      const documentId = `${context}-${Date.now()}`;
-      const fileName = context === 'jd' ? 'job-description.txt' : 'general-text.txt';
-
-      requestDocuments = [
-        {
-          document_id: documentId,
-          file_name: fileName,
-          text: textInput,
-          context,
-        },
-      ];
-      requestDocumentStates = [
-        {
-          document_id: documentId,
-          file_name: fileName,
-          context,
-          parsed_text: textInput,
-          candidates: [],
-        },
-      ];
+    if (!textInput) {
+      toast.error('Paste text before analyzing.');
+      return;
     }
+
+    const documentId = `${context}-${Date.now()}`;
+    const fileName = context === 'jd' ? 'job-description.txt' : 'general-text.txt';
+    const requestDocuments = [
+      {
+        document_id: documentId,
+        file_name: fileName,
+        text: textInput,
+        context,
+      },
+    ];
+    const requestDocumentStates: ParsedDocumentState[] = [
+      {
+        document_id: documentId,
+        file_name: fileName,
+        context,
+        parsed_text: textInput,
+        candidates: [],
+      },
+    ];
 
     setIsAnalyzing(true);
 
@@ -917,16 +814,12 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
             manual_search_query: candidate.raw_skill_text,
             manual_options: [],
             manual_loading: false,
+            show_all_suggestions: false,
           })),
         };
       });
 
-      if (isPdfContext) {
-        const parseErrorDocuments = documents.filter((document) => Boolean(document.parse_error));
-        setDocuments([...parseErrorDocuments, ...analyzedDocuments]);
-      } else {
-        setDocuments(analyzedDocuments);
-      }
+      setDocuments(analyzedDocuments);
 
       toast.success(
         `Analyzed ${payload.documents.length} document${payload.documents.length > 1 ? 's' : ''}.`
@@ -1140,54 +1033,23 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
             </Button>
           </div>
 
-          {isPdfContext ? (
-            <div className="space-y-2">
-              <Input
-                data-testid="cv-upload"
-                type="file"
-                accept="application/pdf"
-                multiple
-                onChange={handleUpload}
-                disabled={isParsing || isAnalyzing}
-              />
-              <p className="text-xs text-muted-foreground">
-                Text-based PDFs only. OCR is not supported in V1.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <Textarea
-                data-testid="context-text-input"
-                rows={8}
-                value={manualText}
-                onChange={(event) => setManualText(event.target.value)}
-                placeholder={getContextTextPlaceholder(context)}
-                disabled={isAnalyzing}
-              />
-              <p className="text-xs text-muted-foreground">
-                Text is processed in-memory and sent to the local suggestion engine only.
-              </p>
-            </div>
-          )}
+          <div className="space-y-2">
+            <Textarea
+              data-testid="context-text-input"
+              rows={8}
+              value={manualText}
+              onChange={(event) => setManualText(event.target.value)}
+              placeholder={getContextTextPlaceholder(context)}
+              disabled={isAnalyzing}
+            />
+            <p className="text-xs text-muted-foreground">
+              Text is processed in-memory and sent to the local suggestion engine only.
+            </p>
+          </div>
 
           <div className="flex flex-wrap gap-2">
-            <Button
-              onClick={handleAnalyze}
-              disabled={
-                isParsing ||
-                isAnalyzing ||
-                (isPdfContext
-                  ? !documents.some(
-                      (document) => !document.parse_error && document.parsed_text.trim()
-                    )
-                  : !manualText.trim())
-              }
-            >
-              {isAnalyzing
-                ? 'Analyzing...'
-                : isPdfContext
-                  ? 'Analyze Uploaded PDFs'
-                  : 'Analyze Text'}
+            <Button onClick={handleAnalyze} disabled={isAnalyzing || !manualText.trim()}>
+              {isAnalyzing ? 'Analyzing...' : 'Analyze Text'}
             </Button>
             <Button
               onClick={addApprovedSkillsToProfile}
@@ -1256,9 +1118,17 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
                     </TableHeader>
                     <TableBody>
                       {document.candidates.map((candidate) => {
+                        const visibleAutoSuggestions = candidate.suggestions.slice(
+                          0,
+                          candidate.show_all_suggestions ? 20 : 5
+                        );
+                        const selectedFallbackSuggestions = candidate.suggestions.filter((option) =>
+                          candidate.selected_skill_ids.includes(option.skill_id)
+                        );
                         const optionMap = new Map<string, ApiSuggestion>();
                         for (const option of [
-                          ...candidate.suggestions,
+                          ...visibleAutoSuggestions,
+                          ...selectedFallbackSuggestions,
                           ...candidate.manual_options,
                         ]) {
                           optionMap.set(option.skill_id, option);
@@ -1360,6 +1230,27 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
                                 ))}
                               </select>
 
+                              {candidate.suggestions.length > 5 && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() =>
+                                    updateCandidate(
+                                      document.document_id,
+                                      candidate.candidate_id,
+                                      (current) => ({
+                                        ...current,
+                                        show_all_suggestions: !current.show_all_suggestions,
+                                      })
+                                    )
+                                  }
+                                >
+                                  {candidate.show_all_suggestions
+                                    ? 'Show fewer suggestions'
+                                    : 'Show more suggestions'}
+                                </Button>
+                              )}
+
                               <div className="flex items-center gap-2">
                                 <Input
                                   value={candidate.manual_search_query}
@@ -1413,9 +1304,7 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
       {documents.length === 0 && (
         <Card>
           <CardContent className="pt-6 text-sm text-muted-foreground">
-            {isPdfContext
-              ? 'Upload one or more CV PDFs to begin extraction and mapping.'
-              : 'Paste text and run analysis to begin extraction and mapping.'}
+            Paste text and run analysis to begin extraction and mapping.
           </CardContent>
         </Card>
       )}

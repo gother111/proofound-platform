@@ -1,0 +1,8 @@
+fastapi==0.115.6
+pydantic==2.10.3
+python-multipart==0.0.20
+pdfplumber==0.11.5
+rapidfuzz==3.14.1
+pandas==2.2.3
+psycopg[binary]==3.2.3
+pytest==8.3.4

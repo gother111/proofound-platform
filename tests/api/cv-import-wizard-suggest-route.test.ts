@@ -25,6 +25,7 @@ describe('cv-import wizard suggest route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     delete process.env.CV_IMPORT_SERVER_TIMEOUT_MS;
+    delete process.env.CV_IMPORT_FORCE_PYTHON;
   });
 
   afterEach(() => {
@@ -106,6 +107,51 @@ describe('cv-import wizard suggest route', () => {
     expect(response.status).toBe(200);
     expect(body.documents).toHaveLength(1);
     expect(suggestWizardForDocuments).toHaveBeenCalledTimes(1);
+  });
+
+  it('proxies multipart payloads to python runtime endpoint', async () => {
+    (createClient as any).mockResolvedValue({
+      auth: {
+        getUser: async () => ({ data: { user: { id: 'user-1' } } }),
+      },
+    });
+
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          documents: [],
+          metadata: {
+            semantic_used: false,
+            semantic_fallback_triggered: false,
+            unmapped_candidates_count: 0,
+            limits: {
+              max_documents: 5,
+              max_chars_per_document: 30000,
+              max_total_chars: 90000,
+            },
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      )
+    );
+
+    const formData = new FormData();
+    formData.append('files', new File(['dummy'], 'cv.pdf', { type: 'application/pdf' }));
+    formData.append('document_ids', 'doc-1');
+    formData.append('contexts', 'cv');
+
+    const request = new NextRequest('http://localhost/api/expertise/cv-import/wizard-suggest', {
+      method: 'POST',
+      body: formData,
+      headers: { 'Content-Type': 'multipart/form-data; boundary=----vitest' },
+    });
+
+    const response = await POST(request);
+
+    expect(response.status).toBe(200);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(suggestWizardForDocuments).not.toHaveBeenCalled();
+    fetchSpy.mockRestore();
   });
 
   it('returns timeout response when wizard processing exceeds budget', async () => {

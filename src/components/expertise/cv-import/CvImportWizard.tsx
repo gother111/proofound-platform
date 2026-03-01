@@ -5,10 +5,6 @@ import { Download, Search, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { apiFetch } from '@/lib/api/fetch';
-import {
-  extractPdfTextFromFile,
-  normalizePdfParseError,
-} from '@/lib/expertise/pdf-client-extractor';
 import { LANGUAGE_OPTIONS, CEFR_LEVELS } from '@/lib/taxonomy/data';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -100,6 +96,8 @@ interface ApiDocumentResult {
   document_id: string;
   file_name: string;
   context: 'cv';
+  parsed_text: string;
+  parse_error: string | undefined;
   work_experiences: ApiWorkExperience[];
   learning_experiences: ApiLearningExperience[];
   volunteering: ApiVolunteering[];
@@ -145,11 +143,13 @@ interface SkillState extends ApiSkillCandidate {
   manual_search_query: string;
   manual_options: ApiSuggestion[];
   manual_loading: boolean;
+  show_all_suggestions: boolean;
 }
 
 interface ParsedDocumentState {
   document_id: string;
   file_name: string;
+  file?: File;
   parsed_text: string;
   parse_error?: string;
   work_experiences: WorkState[];
@@ -286,7 +286,7 @@ function normalizeSuggestResponse(value: unknown): ApiSuggestResponse | null {
     return null;
   }
 
-  const documents: ApiDocumentResult[] = value.documents
+  const documents = value.documents
     .map((document, docIndex) => {
       if (!isRecord(document)) {
         return null;
@@ -300,6 +300,14 @@ function normalizeSuggestResponse(value: unknown): ApiSuggestResponse | null {
         typeof document.file_name === 'string' && document.file_name.trim().length > 0
           ? document.file_name
           : `${documentId}.pdf`;
+      const parsedText =
+        typeof document.parsed_text === 'string' && document.parsed_text.trim().length > 0
+          ? document.parsed_text
+          : '';
+      const parseError =
+        typeof document.parse_error === 'string' && document.parse_error.trim().length > 0
+          ? document.parse_error.trim()
+          : undefined;
 
       const normalizeEvidence = (candidate: unknown): string[] =>
         Array.isArray(candidate)
@@ -556,6 +564,8 @@ function normalizeSuggestResponse(value: unknown): ApiSuggestResponse | null {
       return {
         document_id: documentId,
         file_name: fileName,
+        parsed_text: parsedText,
+        parse_error: parseError,
         context: 'cv' as const,
         work_experiences: workExperiences,
         learning_experiences: learningExperiences,
@@ -688,61 +698,26 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     setIsParsing(true);
 
     try {
-      const parsedDocuments: ParsedDocumentState[] = [];
-
-      for (const file of pdfFiles) {
-        const documentId = `${Date.now()}-${file.name}-${Math.random().toString(36).slice(2, 8)}`;
-
-        try {
-          const text = await extractPdfTextFromFile(file);
-
-          if (!text.trim()) {
-            parsedDocuments.push({
-              document_id: documentId,
-              file_name: file.name,
-              parsed_text: '',
-              parse_error: 'No text could be extracted. OCR is not supported in V1.',
-              work_experiences: [],
-              learning_experiences: [],
-              volunteering: [],
-              languages: [],
-              skill_candidates: [],
-            });
-            continue;
-          }
-
-          parsedDocuments.push({
-            document_id: documentId,
-            file_name: file.name,
-            parsed_text: text,
-            work_experiences: [],
-            learning_experiences: [],
-            volunteering: [],
-            languages: [],
-            skill_candidates: [],
-          });
-        } catch (error) {
-          parsedDocuments.push({
-            document_id: documentId,
-            file_name: file.name,
-            parsed_text: '',
-            parse_error: normalizePdfParseError(error),
-            work_experiences: [],
-            learning_experiences: [],
-            volunteering: [],
-            languages: [],
-            skill_candidates: [],
-          });
-        }
-      }
+      const parsedDocuments: ParsedDocumentState[] = pdfFiles.map((file) => ({
+        document_id: `${Date.now()}-${file.name}-${Math.random().toString(36).slice(2, 8)}`,
+        file_name: file.name,
+        file,
+        parsed_text: '',
+        work_experiences: [],
+        learning_experiences: [],
+        volunteering: [],
+        languages: [],
+        skill_candidates: [],
+      }));
 
       setDocuments(parsedDocuments);
       setApiMetadata(null);
       setCurrentStepIndex(0);
 
-      const successCount = parsedDocuments.filter((document) => !document.parse_error).length;
-      if (successCount > 0) {
-        toast.success(`Parsed ${successCount} PDF${successCount > 1 ? 's' : ''}.`);
+      if (parsedDocuments.length > 0) {
+        toast.success(
+          `Queued ${parsedDocuments.length} PDF${parsedDocuments.length > 1 ? 's' : ''} for analysis.`
+        );
       }
     } finally {
       setIsParsing(false);
@@ -750,12 +725,10 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
   };
 
   const handleAnalyze = async () => {
-    const readyDocuments = documents.filter(
-      (document) => !document.parse_error && document.parsed_text.trim()
-    );
+    const readyDocuments = documents.filter((document) => document.file && !document.parse_error);
 
     if (readyDocuments.length === 0) {
-      toast.error('Upload at least one text-based PDF before analyzing.');
+      toast.error('Upload at least one PDF before analyzing.');
       return;
     }
 
@@ -764,15 +737,16 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     try {
       const response = await apiFetch('/api/expertise/cv-import/wizard-suggest', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          documents: readyDocuments.map((document) => ({
-            document_id: document.document_id,
-            file_name: document.file_name,
-            text: document.parsed_text,
-            context: 'cv',
-          })),
-        }),
+        body: (() => {
+          const formData = new FormData();
+          for (const document of readyDocuments) {
+            if (!document.file) continue;
+            formData.append('files', document.file, document.file_name);
+            formData.append('document_ids', document.document_id);
+            formData.append('contexts', 'cv');
+          }
+          return formData;
+        })(),
       });
 
       if (!response.ok) {
@@ -796,8 +770,9 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         return {
           document_id: document.document_id,
           file_name: document.file_name,
-          parsed_text: source?.parsed_text || '',
-          parse_error: source?.parse_error,
+          file: source?.file,
+          parsed_text: document.parsed_text || source?.parsed_text || '',
+          parse_error: document.parse_error || source?.parse_error,
           work_experiences: document.work_experiences.map((entry) => ({
             ...entry,
             approved: true,
@@ -821,12 +796,12 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
             manual_search_query: candidate.raw_skill_text,
             manual_options: [],
             manual_loading: false,
+            show_all_suggestions: false,
           })),
         };
       });
 
-      const parseErrorDocuments = documents.filter((document) => Boolean(document.parse_error));
-      setDocuments([...parseErrorDocuments, ...analyzedDocuments]);
+      setDocuments(analyzedDocuments);
       setCurrentStepIndex(0);
 
       const totalSkillCandidates = payload.documents.reduce(
@@ -1074,9 +1049,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     }
   };
 
-  const canAnalyze = documents.some(
-    (document) => !document.parse_error && document.parsed_text.trim()
-  );
+  const canAnalyze = documents.some((document) => Boolean(document.file) && !document.parse_error);
 
   const stepTabs = (
     <div className="flex flex-wrap gap-2">
@@ -1653,9 +1626,17 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                       </TableHeader>
                       <TableBody>
                         {document.skill_candidates.map((candidate) => {
+                          const visibleAutoSuggestions = candidate.suggestions.slice(
+                            0,
+                            candidate.show_all_suggestions ? 20 : 5
+                          );
+                          const selectedFallbackSuggestions = candidate.suggestions.filter(
+                            (option) => candidate.selected_skill_ids.includes(option.skill_id)
+                          );
                           const optionMap = new Map<string, ApiSuggestion>();
                           for (const option of [
-                            ...candidate.suggestions,
+                            ...visibleAutoSuggestions,
+                            ...selectedFallbackSuggestions,
                             ...candidate.manual_options,
                           ]) {
                             optionMap.set(option.skill_id, option);
@@ -1769,6 +1750,30 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                                     </option>
                                   ))}
                                 </select>
+
+                                {candidate.suggestions.length > 5 && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() =>
+                                      updateDocument(document.document_id, (current) => ({
+                                        ...current,
+                                        skill_candidates: current.skill_candidates.map((item) =>
+                                          item.candidate_id === candidate.candidate_id
+                                            ? {
+                                                ...item,
+                                                show_all_suggestions: !item.show_all_suggestions,
+                                              }
+                                            : item
+                                        ),
+                                      }))
+                                    }
+                                  >
+                                    {candidate.show_all_suggestions
+                                      ? 'Show fewer suggestions'
+                                      : 'Show more suggestions'}
+                                  </Button>
+                                )}
 
                                 <div className="flex items-center gap-2">
                                   <Input

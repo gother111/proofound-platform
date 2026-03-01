@@ -8,7 +8,6 @@ const apiFetchMock = vi.fn();
 const toastSuccessMock = vi.fn();
 const toastInfoMock = vi.fn();
 const toastErrorMock = vi.fn();
-const extractPdfTextFromFileMock = vi.fn();
 
 vi.mock('@/lib/api/fetch', () => ({
   apiFetch: (...args: any[]) => apiFetchMock(...args),
@@ -22,24 +21,12 @@ vi.mock('sonner', () => ({
   },
 }));
 
-vi.mock('@/lib/expertise/pdf-client-extractor', async () => {
-  const actual = await vi.importActual<typeof import('@/lib/expertise/pdf-client-extractor')>(
-    '@/lib/expertise/pdf-client-extractor'
-  );
-
-  return {
-    ...actual,
-    extractPdfTextFromFile: (...args: any[]) => extractPdfTextFromFileMock(...args),
-  };
-});
-
 describe('CVJDAutoSuggest', () => {
   const originalFlag = process.env.NEXT_PUBLIC_CV_IMPORT_V2;
 
   beforeEach(() => {
     vi.clearAllMocks();
     delete process.env.NEXT_PUBLIC_CV_IMPORT_V2;
-    extractPdfTextFromFileMock.mockResolvedValue('React TypeScript');
   });
 
   afterEach(() => {
@@ -119,21 +106,11 @@ describe('CVJDAutoSuggest', () => {
     const uploadInput = screen.getByTestId('cv-upload');
     const fileOne = new File(['dummy-one'], 'cv-1.pdf', { type: 'application/pdf' });
     const fileTwo = new File(['dummy-two'], 'cv-2.pdf', { type: 'application/pdf' });
-    Object.defineProperty(fileOne, 'arrayBuffer', {
-      value: async () => new TextEncoder().encode('dummy-one').buffer,
-    });
-    Object.defineProperty(fileTwo, 'arrayBuffer', {
-      value: async () => new TextEncoder().encode('dummy-two').buffer,
-    });
 
     fireEvent.change(uploadInput, {
       target: {
         files: [fileOne, fileTwo],
       },
-    });
-
-    await waitFor(() => {
-      expect(extractPdfTextFromFileMock).toHaveBeenCalledTimes(2);
     });
 
     const analyzeButton = screen.getByRole('button', { name: /Analyze Uploaded PDFs/i });
@@ -150,11 +127,11 @@ describe('CVJDAutoSuggest', () => {
       ([url]) => url === '/api/expertise/cv-import/wizard-suggest'
     );
     expect(suggestCall).toBeDefined();
-
-    const requestPayload = JSON.parse(String(suggestCall?.[1]?.body || '{}'));
-    expect(requestPayload.documents).toHaveLength(2);
-    expect(requestPayload.documents[0].text).toContain('React TypeScript');
-    expect(requestPayload.documents[1].text).toContain('React TypeScript');
+    const body = suggestCall?.[1]?.body;
+    expect(body).toBeInstanceOf(FormData);
+    const formData = body as FormData;
+    expect(formData.getAll('files')).toHaveLength(2);
+    expect(formData.getAll('document_ids')).toHaveLength(2);
   });
 
   it('analyzes pasted job-description text via cv-import engine', async () => {
@@ -276,58 +253,6 @@ describe('CVJDAutoSuggest', () => {
     expect(requestPayload.documents).toHaveLength(1);
     expect(requestPayload.documents[0].context).toBe('general');
     expect(requestPayload.documents[0].text).toContain('Docker');
-  });
-
-  it('shows friendly parse error when pdf worker initialization fails', async () => {
-    extractPdfTextFromFileMock.mockRejectedValueOnce(
-      new Error('No "GlobalWorkerOptions.workerSrc" specified.')
-    );
-
-    render(<CVJDAutoSuggest />);
-
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy-one'], 'cv-error.pdf', { type: 'application/pdf' });
-    Object.defineProperty(file, 'arrayBuffer', {
-      value: async () => new TextEncoder().encode('dummy-one').buffer,
-    });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
-    });
-
-    await waitFor(() => {
-      expect(
-        screen.getByText('PDF parser could not start. Please refresh and re-upload the file.')
-      ).toBeInTheDocument();
-    });
-  });
-
-  it('shows friendly parse error when parser module fails to initialize getDocument', async () => {
-    extractPdfTextFromFileMock.mockRejectedValueOnce(
-      new Error("Cannot read properties of undefined (reading 'getDocument')")
-    );
-
-    render(<CVJDAutoSuggest />);
-
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy-one'], 'cv-init-error.pdf', { type: 'application/pdf' });
-    Object.defineProperty(file, 'arrayBuffer', {
-      value: async () => new TextEncoder().encode('dummy-one').buffer,
-    });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
-    });
-
-    await waitFor(() => {
-      expect(
-        screen.getByText('PDF parser could not start. Please refresh and re-upload the file.')
-      ).toBeInTheDocument();
-    });
   });
 
   it('shows controlled error when cv-import analysis returns malformed payload', async () => {

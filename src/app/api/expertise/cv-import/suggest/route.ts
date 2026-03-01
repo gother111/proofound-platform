@@ -7,6 +7,7 @@ import {
   suggestSkillsForDocuments,
   type CvImportLimits,
 } from '@/lib/expertise/cv-import-suggest';
+import { proxyCvRequestToPython } from '@/lib/expertise/python-cv-proxy';
 
 const DEFAULT_LIMITS: CvImportLimits = {
   maxDocuments: 5,
@@ -56,6 +57,40 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const timeoutMs = parsePositiveInt(
+      process.env.CV_IMPORT_SERVER_TIMEOUT_MS,
+      DEFAULT_SERVER_TIMEOUT_MS
+    );
+    const contentType = request.headers.get('content-type') || '';
+    const shouldProxyToPython =
+      contentType.startsWith('multipart/form-data') ||
+      process.env.CV_IMPORT_FORCE_PYTHON === 'true';
+
+    if (shouldProxyToPython) {
+      try {
+        return await proxyCvRequestToPython(request, '/suggest', timeoutMs);
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('timed out')) {
+          return NextResponse.json(
+            {
+              error: 'CV import processing timed out',
+              message: 'Try fewer documents or shorter CV content.',
+            },
+            { status: 408 }
+          );
+        }
+
+        return NextResponse.json(
+          {
+            error: 'Failed to process CV documents',
+            message: 'Python CV service is temporarily unavailable. Please retry shortly.',
+            code: 'CV_IMPORT_DEPENDENCY_UNAVAILABLE',
+          },
+          { status: 503 }
+        );
+      }
+    }
+
     const payload = CvImportSuggestRequestSchema.parse(await request.json());
 
     const limits: CvImportLimits = {
@@ -74,10 +109,6 @@ export async function POST(request: NextRequest) {
     };
 
     const semanticEnabled = process.env.CV_IMPORT_SEMANTIC_ENABLED !== 'false';
-    const timeoutMs = parsePositiveInt(
-      process.env.CV_IMPORT_SERVER_TIMEOUT_MS,
-      DEFAULT_SERVER_TIMEOUT_MS
-    );
 
     const response = await withTimeout(
       suggestSkillsForDocuments(payload, limits, {

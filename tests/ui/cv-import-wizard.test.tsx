@@ -5,7 +5,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CvImportWizard } from '@/components/expertise/cv-import/CvImportWizard';
 
 const apiFetchMock = vi.fn();
-const extractPdfTextFromFileMock = vi.fn();
 const toastSuccessMock = vi.fn();
 const toastErrorMock = vi.fn();
 const toastInfoMock = vi.fn();
@@ -22,24 +21,9 @@ vi.mock('sonner', () => ({
   },
 }));
 
-vi.mock('@/lib/expertise/pdf-client-extractor', async () => {
-  const actual = await vi.importActual<typeof import('@/lib/expertise/pdf-client-extractor')>(
-    '@/lib/expertise/pdf-client-extractor'
-  );
-
-  return {
-    ...actual,
-    extractPdfTextFromFile: (...args: any[]) => extractPdfTextFromFileMock(...args),
-  };
-});
-
 describe('CvImportWizard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-
-    extractPdfTextFromFileMock.mockResolvedValue(
-      'Experience\nSenior Engineer at Acme\nLanguages\nEnglish Native'
-    );
   });
 
   it('uploads and analyzes CV PDFs through wizard suggest route', async () => {
@@ -99,18 +83,11 @@ describe('CvImportWizard', () => {
 
     const uploadInput = screen.getByTestId('cv-upload');
     const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-    Object.defineProperty(file, 'arrayBuffer', {
-      value: async () => new TextEncoder().encode('dummy').buffer,
-    });
 
     fireEvent.change(uploadInput, {
       target: {
         files: [file],
       },
-    });
-
-    await waitFor(() => {
-      expect(extractPdfTextFromFileMock).toHaveBeenCalledTimes(1);
     });
 
     await waitFor(() => {
@@ -122,7 +99,10 @@ describe('CvImportWizard', () => {
     await waitFor(() => {
       expect(apiFetchMock).toHaveBeenCalledWith(
         '/api/expertise/cv-import/wizard-suggest',
-        expect.objectContaining({ method: 'POST' })
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.any(FormData),
+        })
       );
     });
 
@@ -211,18 +191,11 @@ describe('CvImportWizard', () => {
 
     const uploadInput = screen.getByTestId('cv-upload');
     const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-    Object.defineProperty(file, 'arrayBuffer', {
-      value: async () => new TextEncoder().encode('dummy').buffer,
-    });
 
     fireEvent.change(uploadInput, {
       target: {
         files: [file],
       },
-    });
-
-    await waitFor(() => {
-      expect(extractPdfTextFromFileMock).toHaveBeenCalledTimes(1);
     });
 
     await waitFor(() => {
@@ -312,9 +285,6 @@ describe('CvImportWizard', () => {
 
     const uploadInput = screen.getByTestId('cv-upload');
     const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-    Object.defineProperty(file, 'arrayBuffer', {
-      value: async () => new TextEncoder().encode('dummy').buffer,
-    });
 
     fireEvent.change(uploadInput, {
       target: {
@@ -355,9 +325,6 @@ describe('CvImportWizard', () => {
 
     const uploadInput = screen.getByTestId('cv-upload');
     const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-    Object.defineProperty(file, 'arrayBuffer', {
-      value: async () => new TextEncoder().encode('dummy').buffer,
-    });
 
     fireEvent.change(uploadInput, {
       target: {
@@ -378,24 +345,54 @@ describe('CvImportWizard', () => {
     });
   });
 
-  it('shows parser-init friendly message when getDocument path fails', async () => {
-    extractPdfTextFromFileMock.mockRejectedValueOnce(
-      new Error("Cannot read properties of undefined (reading 'getDocument')")
+  it('renders backend parse_error message when server-side parser fails for a document', async () => {
+    apiFetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          documents: [
+            {
+              document_id: 'doc-1',
+              file_name: 'cv-init-error.pdf',
+              context: 'cv',
+              parsed_text: '',
+              parse_error: 'PDF parser could not start. Please refresh and re-upload the file.',
+              work_experiences: [],
+              learning_experiences: [],
+              volunteering: [],
+              languages: [],
+              skill_candidates: [],
+            },
+          ],
+          metadata: {
+            semantic_used: false,
+            semantic_fallback_triggered: false,
+            unmapped_candidates_count: 0,
+            limits: {
+              max_documents: 5,
+              max_chars_per_document: 30000,
+              max_total_chars: 90000,
+            },
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
     );
 
     render(<CvImportWizard />);
 
     const uploadInput = screen.getByTestId('cv-upload');
     const file = new File(['dummy'], 'cv-init-error.pdf', { type: 'application/pdf' });
-    Object.defineProperty(file, 'arrayBuffer', {
-      value: async () => new TextEncoder().encode('dummy').buffer,
-    });
 
     fireEvent.change(uploadInput, {
       target: {
         files: [file],
       },
     });
+
+    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
 
     await waitFor(() => {
       expect(
