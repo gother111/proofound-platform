@@ -35,6 +35,23 @@ import {
 import { toAnnualCompensationRange } from '@/lib/matching/compensation';
 
 export const dynamic = 'force-dynamic';
+const DEFAULT_NEAR_MATCH_SCAN_LIMIT = 300;
+const MIN_NEAR_MATCH_SCAN_LIMIT = 50;
+const MAX_NEAR_MATCH_SCAN_LIMIT = 500;
+
+function resolveNearMatchScanLimit(): number {
+  const raw = process.env.MATCHING_NEAR_SCAN_LIMIT?.trim();
+  if (!raw) {
+    return DEFAULT_NEAR_MATCH_SCAN_LIMIT;
+  }
+
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed)) {
+    return DEFAULT_NEAR_MATCH_SCAN_LIMIT;
+  }
+
+  return Math.max(MIN_NEAR_MATCH_SCAN_LIMIT, Math.min(MAX_NEAR_MATCH_SCAN_LIMIT, parsed));
+}
 
 // Validation schema
 const NearMatchRequestSchema = z.object({
@@ -183,9 +200,12 @@ export async function POST(request: NextRequest) {
           ? normalizeWeights(profile.weights as Record<string, number>)
           : getPreset('balanced');
 
-    // Fetch all active assignments
+    const assignmentScanLimit = resolveNearMatchScanLimit();
+
+    // Fetch active assignments with bounded scan limit
     const activeAssignments = await db.query.assignments.findMany({
       where: eq(assignments.status, 'active'),
+      limit: assignmentScanLimit,
     });
     const orgIds = Array.from(
       new Set(activeAssignments.map((assignment) => assignment.orgId).filter(Boolean))
@@ -371,6 +391,7 @@ export async function POST(request: NextRequest) {
       poolSize: activeAssignments.length,
       resultCount: topK.length,
       threshold,
+      assignmentScanLimit,
       durationMs: duration,
     });
 
@@ -380,6 +401,7 @@ export async function POST(request: NextRequest) {
         total: results.length,
         returned: topK.length,
         threshold,
+        assignmentScanLimit,
         durationMs: duration,
         weights: weights,
         message:

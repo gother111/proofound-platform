@@ -12,6 +12,14 @@
       "schedule": "0 2 * * *"
     },
     {
+      "path": "/api/cron/refresh-matches",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/refresh-matches-worker",
+      "schedule": "*/10 * * * *"
+    },
+    {
       "path": "/api/cron/decision-reminders",
       "schedule": "0 10 * * *"
     }

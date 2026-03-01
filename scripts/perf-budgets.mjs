@@ -19,6 +19,8 @@ import { performance } from 'node:perf_hooks';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 const TARGET_PAGE = `${BASE_URL}/`;
+const parsedApiBudget = Number.parseInt(process.env.PERF_API_P95_BUDGET_MS || '1500', 10);
+const apiP95Budget = Number.isFinite(parsedApiBudget) && parsedApiBudget > 0 ? parsedApiBudget : 1500;
 
 const BUDGETS = {
   tti: {
@@ -30,7 +32,7 @@ const BUDGETS = {
     mobile: 6500,
   },
   cls: 0.95,
-  apiP95: 1500,
+  apiP95: apiP95Budget,
 };
 
 async function runLighthouse(url, formFactor) {

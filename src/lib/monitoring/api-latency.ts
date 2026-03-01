@@ -4,6 +4,7 @@
  *
  * Tracks API endpoint latency to ensure ≤ 1.5s (P95) per PRD requirement
  */
+import { emitAnalyticsEventAsync } from '@/lib/analytics/events';
 
 interface APILatencyLog {
   path: string;
@@ -19,28 +20,20 @@ interface APILatencyLog {
  */
 export async function logAPILatency(data: APILatencyLog): Promise<void> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL;
-    if (!baseUrl) {
-      // Without a base URL we can't log; avoid throwing in middleware/cron contexts
-      return;
-    }
-
-    // Store in analytics for aggregation
-    await fetch(new URL('/api/analytics/events', baseUrl).toString(), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        event: 'api_latency',
-        properties: {
-          path: data.path,
-          method: data.method,
-          duration_ms: data.duration,
-          status: data.status,
-          request_id: data.requestId,
-          meets_target: data.duration <= 1500, // PRD requirement: P95 ≤ 1.5s
-        },
-        timestamp: new Date().toISOString(),
-      }),
+    emitAnalyticsEventAsync({
+      eventType: 'api_latency',
+      entityType: 'api',
+      entityId: data.path,
+      properties: {
+        path: data.path,
+        method: data.method,
+        duration_ms: data.duration,
+        // Keep legacy key for historical compatibility in existing SQL queries.
+        duration: data.duration,
+        status: data.status,
+        request_id: data.requestId,
+        meets_target: data.duration <= 1500, // PRD requirement: P95 ≤ 1.5s
+      },
     });
   } catch (error) {
     // Don't throw - latency logging should not break requests

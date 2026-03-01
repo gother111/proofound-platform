@@ -40,6 +40,20 @@ describe('/api/monitoring/perf-status', () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
+  it('filters null analytics durations before percentile calculation', async () => {
+    mockSelectRows([{ duration: null }, { duration: 200 }, { duration: 800 }]);
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+
+    const response = await GET(new Request('https://example.com/api/monitoring/perf-status'));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.source).toBe('analytics_events');
+    expect(body.sampleCount).toBe(2);
+    expect(body.p95).toBeCloseTo(770, 10);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
   it('falls back to health probe when no analytics events are available', async () => {
     mockSelectRows([{ duration: null }]);
     const fetchSpy = vi

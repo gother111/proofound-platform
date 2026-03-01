@@ -32,6 +32,18 @@ export interface PerformanceBreach {
   description: string;
 }
 
+function resolveApiLatencyP95Threshold(): number {
+  const raw = process.env.PERF_API_P95_BUDGET_MS?.trim();
+  if (!raw) {
+    return 1500;
+  }
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return 1500;
+  }
+  return parsed;
+}
+
 /**
  * Check performance health over the last 24 hours
  * Returns status and any SLA breaches
@@ -39,6 +51,7 @@ export interface PerformanceBreach {
 export async function checkPerformanceHealth(): Promise<PerformanceHealthStatus> {
   const now = new Date();
   const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const apiLatencyThresholdMs = resolveApiLatencyP95Threshold();
 
   try {
     // Get performance metrics from analytics events
@@ -62,14 +75,14 @@ export async function checkPerformanceHealth(): Promise<PerformanceHealthStatus>
       });
     }
 
-    // API Latency SLA: ≤500ms P95
-    if (apiLatencyMetrics !== null && apiLatencyMetrics > 500) {
+    // API Latency SLA: configurable, default ≤1500ms P95
+    if (apiLatencyMetrics !== null && apiLatencyMetrics > apiLatencyThresholdMs) {
       breaches.push({
         metric: 'api_latency_p95',
         value: apiLatencyMetrics,
-        threshold: 500,
-        severity: apiLatencyMetrics > 1000 ? 'critical' : 'warning',
-        description: `API latency P95 (${Math.round(apiLatencyMetrics)}ms) exceeds target (500ms)`,
+        threshold: apiLatencyThresholdMs,
+        severity: apiLatencyMetrics > apiLatencyThresholdMs * 1.5 ? 'critical' : 'warning',
+        description: `API latency P95 (${Math.round(apiLatencyMetrics)}ms) exceeds target (${apiLatencyThresholdMs}ms)`,
       });
     }
 
@@ -144,13 +157,21 @@ async function getPageLoadP95(startDate: Date, endDate: Date): Promise<number | 
   try {
     const result = await db.execute(sql`
       SELECT 
-        PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY (properties->>'duration')::float) as p95
+        PERCENTILE_CONT(0.95) WITHIN GROUP (
+          ORDER BY COALESCE(
+            NULLIF(properties->>'duration_ms', '')::float,
+            NULLIF(properties->>'duration', '')::float
+          )
+        ) as p95
       FROM ${analyticsEvents}
       WHERE event_type = 'performance_metric'
         AND properties->>'metric' = 'page_load'
         AND occurred_at >= ${startDate.toISOString()}
         AND occurred_at <= ${endDate.toISOString()}
-        AND (properties->>'duration')::float IS NOT NULL
+        AND COALESCE(
+          NULLIF(properties->>'duration_ms', '')::float,
+          NULLIF(properties->>'duration', '')::float
+        ) IS NOT NULL
     `);
 
     const rows = getRows(result) as any[];
@@ -170,13 +191,24 @@ async function getAPILatencyP95(startDate: Date, endDate: Date): Promise<number 
   try {
     const result = await db.execute(sql`
       SELECT 
-        PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY (properties->>'duration')::float) as p95
+        PERCENTILE_CONT(0.95) WITHIN GROUP (
+          ORDER BY COALESCE(
+            NULLIF(properties->>'duration_ms', '')::float,
+            NULLIF(properties->>'duration', '')::float
+          )
+        ) as p95
       FROM ${analyticsEvents}
-      WHERE event_type = 'performance_metric'
-        AND properties->>'metric' = 'api_latency'
+      WHERE (
+          event_type = 'api_latency'
+          OR (event_type = 'performance_metric' AND properties->>'metric' = 'api_latency')
+          OR (event_type = 'custom' AND properties->>'legacy_event_type' = 'api_latency')
+        )
         AND occurred_at >= ${startDate.toISOString()}
         AND occurred_at <= ${endDate.toISOString()}
-        AND (properties->>'duration')::float IS NOT NULL
+        AND COALESCE(
+          NULLIF(properties->>'duration_ms', '')::float,
+          NULLIF(properties->>'duration', '')::float
+        ) IS NOT NULL
     `);
 
     const rows = getRows(result) as any[];
@@ -233,6 +265,7 @@ async function getErrorRate(startDate: Date, endDate: Date): Promise<number | nu
  */
 export async function sendPerformanceAlert(status: PerformanceHealthStatus): Promise<void> {
   const alertEmail = process.env.ALERT_EMAIL || process.env.ADMIN_EMAIL;
+  const apiLatencyThresholdMs = resolveApiLatencyP95Threshold();
 
   if (!alertEmail) {
     log.warn('performance.alert.no_email_configured', {
@@ -257,7 +290,7 @@ export async function sendPerformanceAlert(status: PerformanceHealthStatus): Pro
     const metricsReport = `
 Current Metrics (24h):
 - Page Load P95: ${status.metrics.pageLoadP95 ? `${Math.round(status.metrics.pageLoadP95)}ms` : 'N/A'} (Target: ≤2000ms)
-- API Latency P95: ${status.metrics.apiLatencyP95 ? `${Math.round(status.metrics.apiLatencyP95)}ms` : 'N/A'} (Target: ≤500ms)
+- API Latency P95: ${status.metrics.apiLatencyP95 ? `${Math.round(status.metrics.apiLatencyP95)}ms` : 'N/A'} (Target: ≤${apiLatencyThresholdMs}ms)
 - Error Rate: ${status.metrics.errorRate ? `${status.metrics.errorRate.toFixed(2)}%` : 'N/A'} (Target: <1%)
 `;
 

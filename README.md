@@ -279,10 +279,19 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
 - Routes and schedules (UTC):
   - `/api/cron/process-deletions` — 02:00 (permanent deletes after grace period)
   - `/api/cron/send-deletion-reminders` — 01:00 (7-day reminder emails)
-  - `/api/cron/refresh-matches` — 02:00 (refresh matching profiles)
+  - `/api/cron/refresh-matches` — 03:00 (enqueue match refresh jobs)
+  - `/api/cron/refresh-matches-worker` — every 10 minutes (drain queued refresh jobs)
 - Env requirements:
   - `CRON_SECRET` (for inbound cron calls)
-  - `SUPABASE_SERVICE_ROLE_KEY` (needed by `refresh-matches` when it POSTs internally to `/api/core/matching/profile`)
+  - `SUPABASE_SERVICE_ROLE_KEY` (required for queue worker + matching internals)
+  - `MATCHING_REFRESH_QUEUE_ENABLED` (default `true`)
+  - `MATCHING_REFRESH_WORKER_BATCH_SIZE` (default `25`)
+  - `MATCHING_REFRESH_WORKER_CONCURRENCY` (default `4`)
+  - `MATCHING_REFRESH_MAX_ATTEMPTS` (default `3`)
+  - `MATCHING_TWO_STAGE_ENABLED` (default `true`)
+  - `MATCHING_NEAR_SCAN_LIMIT` (default `300`)
+  - `CV_IMPORT_ENGINE_MODE` (default `auto`)
+  - `PERF_API_P95_BUDGET_MS` (default `1500`)
 - Observability/optional routes (if scheduled via cron-job.org):
   - `/api/cron/fairness-note` — weekly (e.g., Sun 03:00) writes to `fairnessNotes`
   - `/api/cron/fairness-report` — weekly (e.g., Sun 03:30) writes to `fairnessReports` (skips if already exists for release)
@@ -297,6 +306,7 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
 - Manual test (example):
   ```bash
   curl -i -H "Authorization: Bearer $CRON_SECRET" https://proofound.io/api/cron/refresh-matches
+  curl -i -H "Authorization: Bearer $CRON_SECRET" https://proofound.io/api/cron/refresh-matches-worker
   ```
 - If using cron-job.org: set Method GET, the same URL, and the header `Authorization: Bearer $CRON_SECRET`. Use its notifications/logs for external monitoring.
 

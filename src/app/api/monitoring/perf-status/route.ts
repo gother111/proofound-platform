@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { performance } from 'node:perf_hooks';
 import { db } from '@/db';
 import { analyticsEvents } from '@/db/schema';
-import { and, eq, gte, sql } from 'drizzle-orm';
+import { and, gte, sql } from 'drizzle-orm';
 import { calculatePercentile, getPerformanceStatus } from '@/lib/monitoring/api-latency';
 
 export const dynamic = 'force-dynamic';
@@ -66,11 +66,23 @@ export async function GET(request: Request) {
     try {
       const rows = await db
         .select({
-          duration: sql<number>`(properties ->> 'duration_ms')::float`,
+          duration: sql<number>`
+            COALESCE(
+              NULLIF(properties ->> 'duration_ms', '')::float,
+              NULLIF(properties ->> 'duration', '')::float
+            )
+          `,
         })
         .from(analyticsEvents)
         .where(
-          and(eq(analyticsEvents.eventType, 'api_latency'), gte(analyticsEvents.createdAt, since))
+          and(
+            gte(analyticsEvents.createdAt, since),
+            sql`(
+              ${analyticsEvents.eventType} = 'api_latency'
+              OR (${analyticsEvents.eventType} = 'performance_metric' AND ${analyticsEvents.properties} ->> 'metric' = 'api_latency')
+              OR (${analyticsEvents.eventType} = 'custom' AND ${analyticsEvents.properties} ->> 'legacy_event_type' = 'api_latency')
+            )`
+          )
         );
 
       durations = rows

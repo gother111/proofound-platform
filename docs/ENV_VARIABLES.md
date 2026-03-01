@@ -328,6 +328,7 @@ CRON_SECRET=K7x9mP2nQ4vL8wR6yT3zC5bN1aM0hF
 - `/api/cron/send-deletion-reminders`
 - `/api/cron/process-deletions`
 - `/api/cron/refresh-matches`
+- `/api/cron/refresh-matches-worker`
 
 **How to Generate**:
 
@@ -509,6 +510,134 @@ MATCHING_FEATURE_ENABLED=true
 - Match notifications
 
 **Default**: `true`
+
+---
+
+### CV_IMPORT_ENGINE_MODE
+
+**Purpose**: Controls which engine handles CV import JSON requests.
+
+**Format**:
+
+```env
+CV_IMPORT_ENGINE_MODE=auto
+```
+
+**Values**:
+
+- `auto` - JSON uses TypeScript path, multipart uses Python path.
+- `typescript` - Force JSON through TypeScript path (multipart still Python-only).
+- `python` - Force JSON and multipart through Python path.
+
+**Default**: `auto`
+
+---
+
+### MATCHING_TWO_STAGE_ENABLED
+
+**Purpose**: Enables ANN-hybrid assignment retrieval for `/api/core/matching/profile`.
+
+**Format**:
+
+```env
+MATCHING_TWO_STAGE_ENABLED=true
+```
+
+**Values**:
+
+- `true` - Enable ANN-hybrid retrieval (default).
+- `false` - Disable ANN stage and use full-scan retrieval.
+
+**Default**: `true`
+
+---
+
+### MATCHING_NEAR_SCAN_LIMIT
+
+**Purpose**: Caps active-assignment scan size for `/api/core/matching/near-matches`.
+
+**Format**:
+
+```env
+MATCHING_NEAR_SCAN_LIMIT=300
+```
+
+**Default**: `300` (clamped internally to safe min/max).
+
+---
+
+### MATCHING_REFRESH_QUEUE_ENABLED
+
+**Purpose**: Toggles durable queue mode for match refresh cron/worker.
+
+**Format**:
+
+```env
+MATCHING_REFRESH_QUEUE_ENABLED=true
+```
+
+**Values**:
+
+- `true` - `/api/cron/refresh-matches` enqueues jobs and worker drains them.
+- `false` - Queue processing is skipped.
+
+**Default**: `true`
+
+---
+
+### MATCHING_REFRESH_WORKER_BATCH_SIZE
+
+**Purpose**: Max jobs claimed per worker run.
+
+**Format**:
+
+```env
+MATCHING_REFRESH_WORKER_BATCH_SIZE=25
+```
+
+**Default**: `25`
+
+---
+
+### MATCHING_REFRESH_WORKER_CONCURRENCY
+
+**Purpose**: Parallel job-processing concurrency within one worker run.
+
+**Format**:
+
+```env
+MATCHING_REFRESH_WORKER_CONCURRENCY=4
+```
+
+**Default**: `4`
+
+---
+
+### MATCHING_REFRESH_MAX_ATTEMPTS
+
+**Purpose**: Max retry attempts for one refresh job before marking failed.
+
+**Format**:
+
+```env
+MATCHING_REFRESH_MAX_ATTEMPTS=3
+```
+
+**Default**: `3`
+
+---
+
+### PERF_API_P95_BUDGET_MS
+
+**Purpose**: Unified API latency p95 budget for health checks and CI perf budgets.
+
+**Format**:
+
+```env
+PERF_API_P95_BUDGET_MS=1500
+```
+
+**Default**: `1500`
 
 ---
 
@@ -804,15 +933,18 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
 ## Feature → Variable Matrix
 
-| Feature                 | Required Variables                                                                                                        |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| **Database**            | `DATABASE_URL`                                                                                                            |
-| **Authentication**      | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`                                  |
-| **Email Sending**       | `RESEND_API_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_SITE_URL`, `LINKEDIN_VERIFICATION_ADMIN_EMAILS` (or `PLATFORM_ADMIN_EMAILS`) |
-| **Cron Jobs**           | `CRON_SECRET`, `NEXT_PUBLIC_SITE_URL`, `SUPABASE_SERVICE_ROLE_KEY`                                                        |
-| **File Uploads**        | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`                                                               |
-| **Matching System**     | `DATABASE_URL`, `MATCHING_FEATURE_ENABLED` (optional)                                                                     |
-| **Real-time Messaging** | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`                                                               |
+| Feature                 | Required Variables                                                                                                                             |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Database**            | `DATABASE_URL`                                                                                                                                 |
+| **Authentication**      | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`                                                       |
+| **Email Sending**       | `RESEND_API_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_SITE_URL`, `LINKEDIN_VERIFICATION_ADMIN_EMAILS` (or `PLATFORM_ADMIN_EMAILS`)                      |
+| **Cron Jobs**           | `CRON_SECRET`, `NEXT_PUBLIC_SITE_URL`, `SUPABASE_SERVICE_ROLE_KEY`                                                                             |
+| **File Uploads**        | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`                                                                                    |
+| **Matching System**     | `DATABASE_URL`, `MATCHING_FEATURE_ENABLED` (optional), `MATCHING_TWO_STAGE_ENABLED`, `MATCHING_NEAR_SCAN_LIMIT`                                |
+| **Matching Refresh**    | `MATCHING_REFRESH_QUEUE_ENABLED`, `MATCHING_REFRESH_WORKER_BATCH_SIZE`, `MATCHING_REFRESH_WORKER_CONCURRENCY`, `MATCHING_REFRESH_MAX_ATTEMPTS` |
+| **CV Import Engine**    | `CV_IMPORT_ENGINE_MODE`                                                                                                                        |
+| **Performance Budgets** | `PERF_API_P95_BUDGET_MS`                                                                                                                       |
+| **Real-time Messaging** | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`                                                                                    |
 
 ---
 
@@ -847,6 +979,14 @@ Use this checklist when setting up a new environment:
 - [ ] `NODE_ENV` - Environment identifier
 - [ ] `NEXT_PUBLIC_APP_ENV` - App environment
 - [ ] `MATCHING_FEATURE_ENABLED` - Toggle matching
+- [ ] `CV_IMPORT_ENGINE_MODE` - CV import runtime selection
+- [ ] `MATCHING_TWO_STAGE_ENABLED` - ANN-hybrid matching toggle
+- [ ] `MATCHING_NEAR_SCAN_LIMIT` - Near-match scan cap
+- [ ] `MATCHING_REFRESH_QUEUE_ENABLED` - Refresh queue toggle
+- [ ] `MATCHING_REFRESH_WORKER_BATCH_SIZE` - Worker claim batch size
+- [ ] `MATCHING_REFRESH_WORKER_CONCURRENCY` - Worker concurrency
+- [ ] `MATCHING_REFRESH_MAX_ATTEMPTS` - Worker retry cap
+- [ ] `PERF_API_P95_BUDGET_MS` - API p95 threshold
 - [ ] `RATE_LIMIT_WINDOW_SECONDS` - Rate limit window
 - [ ] `RATE_LIMIT_MAX` - Rate limit max requests
 

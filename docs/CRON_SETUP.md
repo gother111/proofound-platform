@@ -2,11 +2,12 @@
 
 > **✅ STATUS: CRON JOBS CONFIGURED**
 >
-> All 3 cron jobs are currently active in cron-job.org:
+> All 4 cron jobs are currently active in cron-job.org:
 >
 > - ✅ Send Deletion Reminders (Daily at 1:00 AM UTC)
 > - ✅ Process Deletions (Daily at 2:00 AM UTC)
-> - ✅ Refresh Matches (Daily at 2:00 AM UTC)
+> - ✅ Refresh Matches Enqueue (Daily at 3:00 AM UTC)
+> - ✅ Refresh Matches Worker (Every 10 minutes)
 >
 > This guide is for reference and troubleshooting. Skip to [Monitoring & Maintenance](#monitoring--maintenance) if jobs are already set up.
 
@@ -21,6 +22,7 @@ Proofound needs scheduled tasks to run automatically:
 1. **Send Deletion Reminders** - Notify users 7 days before account deletion
 2. **Process Account Deletions** - Anonymize accounts after 30-day grace period
 3. **Refresh Matches** - Update matching recommendations for users
+4. **Refresh Matches Worker** - Drain queued refresh jobs with retries and leasing
 
 ## Cost Comparison
 
@@ -123,7 +125,7 @@ While not required, creating an account gives you:
 
 ## Step 4: Create Cron Jobs
 
-You need to create **3 cron jobs**. Here's how:
+You need to create **4 cron jobs**. Here's how:
 
 ### Job 1: Send Deletion Reminders
 
@@ -193,7 +195,7 @@ This job anonymizes accounts after 30-day grace period.
 
 ```
 Minute: 0
-Hour: 2
+Hour: 3
 Day: *
 Month: *
 Weekday: *
@@ -203,7 +205,7 @@ Runs at 2:00 AM UTC (1 hour after deletion reminders).
 
 ---
 
-### Job 3: Refresh Matches
+### Job 3: Refresh Matches (Enqueue)
 
 This job updates matching recommendations for users.
 
@@ -214,11 +216,11 @@ This job updates matching recommendations for users.
 
 | Field               | Value                                                     |
 | ------------------- | --------------------------------------------------------- |
-| **Title**           | `Proofound - Refresh Matches`                             |
+| **Title**           | `Proofound - Refresh Matches (Enqueue)`                   |
 | **URL**             | `https://your-domain.vercel.app/api/cron/refresh-matches` |
-| **Schedule**        | Every day at **2:00 AM UTC**                              |
+| **Schedule**        | Every day at **3:00 AM UTC**                              |
 | **Request Method**  | `GET`                                                     |
-| **Request Timeout** | `300 seconds` (5 minutes)                                 |
+| **Request Timeout** | `60 seconds`                                              |
 
 3. Add HTTP Header:
    - **Header Name**: `Authorization`
@@ -230,13 +232,38 @@ This job updates matching recommendations for users.
 
 ```
 Minute: 0
-Hour: 2
+Hour: 3
 Day: *
 Month: *
 Weekday: *
 ```
 
-⚠️ **Note**: This job processes 100 profiles per run and may take 1-5 minutes.
+⚠️ **Note**: This job only enqueues work for the queue worker.
+
+---
+
+### Job 4: Refresh Matches Worker
+
+This job drains queued refresh work and retries failed jobs with backoff.
+
+**Configuration:**
+
+1. Create new cron job
+2. Fill in:
+
+| Field               | Value                                                            |
+| ------------------- | ---------------------------------------------------------------- |
+| **Title**           | `Proofound - Refresh Matches Worker`                             |
+| **URL**             | `https://your-domain.vercel.app/api/cron/refresh-matches-worker` |
+| **Schedule**        | Every **10 minutes**                                             |
+| **Request Method**  | `GET`                                                            |
+| **Request Timeout** | `300 seconds`                                                    |
+
+3. Add HTTP Header:
+   - **Header Name**: `Authorization`
+   - **Header Value**: `Bearer your_cron_secret_here`
+
+4. Click **"Create"**
 
 ---
 
@@ -262,6 +289,10 @@ curl -X GET http://localhost:3000/api/cron/process-deletions \
 
 # Test 3: Refresh Matches
 curl -X GET http://localhost:3000/api/cron/refresh-matches \
+  -H "Authorization: Bearer your_cron_secret_here"
+
+# Test 4: Refresh Matches Worker
+curl -X GET http://localhost:3000/api/cron/refresh-matches-worker \
   -H "Authorization: Bearer your_cron_secret_here"
 ```
 
@@ -633,6 +664,7 @@ Your cron jobs are configured to hit:
 - `https://proofound.io/api/cron/send-deletion-reminders`
 - `https://proofound.io/api/cron/process-deletions`
 - `https://proofound.io/api/cron/refresh-matches`
+- `https://proofound.io/api/cron/refresh-matches-worker`
 
 ---
 
@@ -657,9 +689,13 @@ openssl rand -base64 32
 # Test endpoint locally
 curl -X GET http://localhost:3000/api/cron/refresh-matches \
   -H "Authorization: Bearer YOUR_SECRET"
+curl -X GET http://localhost:3000/api/cron/refresh-matches-worker \
+  -H "Authorization: Bearer YOUR_SECRET"
 
 # Test endpoint in production
 curl -X GET https://your-domain.vercel.app/api/cron/refresh-matches \
+  -H "Authorization: Bearer YOUR_SECRET"
+curl -X GET https://your-domain.vercel.app/api/cron/refresh-matches-worker \
   -H "Authorization: Bearer YOUR_SECRET"
 ```
 
@@ -668,6 +704,7 @@ curl -X GET https://your-domain.vercel.app/api/cron/refresh-matches \
 - Deletion Reminders: `https://your-domain.vercel.app/api/cron/send-deletion-reminders`
 - Process Deletions: `https://your-domain.vercel.app/api/cron/process-deletions`
 - Refresh Matches: `https://your-domain.vercel.app/api/cron/refresh-matches`
+- Refresh Matches Worker: `https://your-domain.vercel.app/api/cron/refresh-matches-worker`
 
 **Authorization Header:**
 

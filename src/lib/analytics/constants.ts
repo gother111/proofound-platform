@@ -108,6 +108,7 @@ export const EventType = {
   REDACT_MODE_TOGGLED: 'redact_mode_toggled',
   PRIVACY_SETTINGS_UPDATED: 'privacy_settings_updated',
   // Performance and diagnostics
+  API_LATENCY: 'api_latency',
   PERFORMANCE_METRIC: 'performance_metric',
   PAGE_VIEW: 'page',
   API_EVENT: 'api',
@@ -398,6 +399,7 @@ export function getEventDisplayName(eventType: EventTypeValue): string {
     [EventType.VISIBILITY_CHANGED]: 'Visibility Changed',
     [EventType.REDACT_MODE_TOGGLED]: 'Redact Mode Toggled',
     [EventType.PRIVACY_SETTINGS_UPDATED]: 'Privacy Settings Updated',
+    [EventType.API_LATENCY]: 'API Latency',
     [EventType.PERFORMANCE_METRIC]: 'Performance Metric',
     [EventType.PAGE_VIEW]: 'Page View',
     [EventType.API_EVENT]: 'API Event',

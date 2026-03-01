@@ -953,6 +953,41 @@ export const matches = pgTable(
   })
 );
 
+// Durable queue for background match refresh processing
+export const matchingRefreshJobs = pgTable(
+  'matching_refresh_jobs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    profileId: uuid('profile_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    status: text('status', {
+      enum: ['pending', 'leased', 'completed', 'failed'],
+    })
+      .default('pending')
+      .notNull(),
+    attempts: integer('attempts').default(0).notNull(),
+    maxAttempts: integer('max_attempts').default(3).notNull(),
+    nextRunAt: timestamp('next_run_at', { withTimezone: true }).defaultNow().notNull(),
+    leaseExpiresAt: timestamp('lease_expires_at', { withTimezone: true }),
+    lastError: text('last_error'),
+    source: text('source').default('cron').notNull(),
+    payload: jsonb('payload')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    statusNextRunIdx: index('matching_refresh_jobs_status_next_run_idx').on(
+      table.status,
+      table.nextRunAt
+    ),
+    profileIdIdx: index('matching_refresh_jobs_profile_id_idx').on(table.profileId),
+  })
+);
+
 // Match interest - tracks "Interested" actions for mutual reveal
 export const matchInterest = pgTable(
   'match_interest',
@@ -2319,6 +2354,8 @@ export type FeatureFlag = typeof featureFlags.$inferSelect;
 // Matching system types
 export type MatchingProfile = typeof matchingProfiles.$inferSelect;
 export type InsertMatchingProfile = typeof matchingProfiles.$inferInsert;
+export type MatchingRefreshJob = typeof matchingRefreshJobs.$inferSelect;
+export type InsertMatchingRefreshJob = typeof matchingRefreshJobs.$inferInsert;
 export type Skill = typeof skills.$inferSelect;
 export type InsertSkill = typeof skills.$inferInsert;
 export type Assignment = typeof assignments.$inferSelect;

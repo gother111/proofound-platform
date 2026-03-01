@@ -10,7 +10,7 @@ import {
   skills,
   skillsTaxonomy,
 } from '@/db/schema';
-import { eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, notInArray, sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { scrubDisallowedFields } from '@/lib/core/matching/firewall';
 import { getOrSet, CACHE_KEYS, CACHE_TTL } from '@/lib/cache';
@@ -35,7 +35,10 @@ import {
   type LocationMode,
 } from '@/lib/core/matching/scorers';
 import { getPreset, normalizeWeights, type PresetKey } from '@/lib/core/matching/presets';
-import { batchGetMissionVisionScoresForProfile } from '@/lib/matching/semantic';
+import {
+  annRetrieveSimilarAssignments,
+  batchGetMissionVisionScoresForProfile,
+} from '@/lib/matching/semantic';
 import { isTrustedInternalRequest, requireApiAuth } from '@/lib/api/auth';
 import { evaluateIndividualMatchability, toNotMatchablePayload } from '@/lib/matching/eligibility';
 import { calculateFocusBoost } from '@/lib/core/matching/focus';
@@ -51,12 +54,27 @@ export const dynamic = 'force-dynamic';
 const DEFAULT_ASSIGNMENT_SCAN_MULTIPLIER = 10;
 const MIN_ASSIGNMENT_SCAN_LIMIT = 50;
 const MAX_ASSIGNMENT_SCAN_LIMIT = 500;
+type CandidatePoolSource = 'full_scan' | 'ann_hybrid';
 
 function resolveAssignmentScanLimit(k: number): number {
   return Math.min(
     MAX_ASSIGNMENT_SCAN_LIMIT,
     Math.max(MIN_ASSIGNMENT_SCAN_LIMIT, k * DEFAULT_ASSIGNMENT_SCAN_MULTIPLIER)
   );
+}
+
+function resolveTwoStageEnabled(requestedSemanticFlag: boolean): boolean {
+  if (requestedSemanticFlag) {
+    return true;
+  }
+  const raw = process.env.MATCHING_TWO_STAGE_ENABLED?.trim().toLowerCase();
+  if (raw === 'true') {
+    return true;
+  }
+  if (raw === 'false') {
+    return false;
+  }
+  return true;
 }
 
 // Validation schemas
@@ -151,6 +169,7 @@ export async function POST(request: NextRequest) {
 
     const { mode, k = 20, useSemanticMatching = false } = validatedData;
     const assignmentScanLimit = resolveAssignmentScanLimit(k);
+    const twoStageEnabled = resolveTwoStageEnabled(useSemanticMatching);
 
     const eligibility = await evaluateIndividualMatchability(user.id);
     if (!eligibility.eligible) {
@@ -262,35 +281,101 @@ export async function POST(request: NextRequest) {
           : getPreset('balanced');
 
     // Fetch active assignments with a safe column subset (skip columns that may not exist in older DBs)
-    const activeAssignments = await db
-      .select({
-        id: assignments.id,
-        orgId: assignments.orgId,
-        role: assignments.role,
-        description: assignments.description,
-        status: assignments.status,
-        valuesRequired: assignments.valuesRequired,
-        causeTags: assignments.causeTags,
-        mustHaveSkills: assignments.mustHaveSkills,
-        niceToHaveSkills: assignments.niceToHaveSkills,
-        minLanguage: assignments.minLanguage,
-        locationMode: assignments.locationMode,
-        country: assignments.country,
-        compMin: assignments.compMin,
-        compMax: assignments.compMax,
-        currency: assignments.currency,
-        hoursMin: assignments.hoursMin,
-        hoursMax: assignments.hoursMax,
-        startEarliest: assignments.startEarliest,
-        startLatest: assignments.startLatest,
-        verificationGates: assignments.verificationGates,
-        weights: assignments.weights,
-        canSponsorVisa: assignments.canSponsorVisa,
-        sponsorshipCountries: assignments.sponsorshipCountries,
-      })
-      .from(assignments)
-      .where(eq(assignments.status, 'active'))
-      .limit(assignmentScanLimit);
+    const assignmentSelect = {
+      id: assignments.id,
+      orgId: assignments.orgId,
+      role: assignments.role,
+      description: assignments.description,
+      status: assignments.status,
+      valuesRequired: assignments.valuesRequired,
+      causeTags: assignments.causeTags,
+      mustHaveSkills: assignments.mustHaveSkills,
+      niceToHaveSkills: assignments.niceToHaveSkills,
+      minLanguage: assignments.minLanguage,
+      locationMode: assignments.locationMode,
+      country: assignments.country,
+      compMin: assignments.compMin,
+      compMax: assignments.compMax,
+      currency: assignments.currency,
+      hoursMin: assignments.hoursMin,
+      hoursMax: assignments.hoursMax,
+      startEarliest: assignments.startEarliest,
+      startLatest: assignments.startLatest,
+      verificationGates: assignments.verificationGates,
+      weights: assignments.weights,
+      canSponsorVisa: assignments.canSponsorVisa,
+      sponsorshipCountries: assignments.sponsorshipCountries,
+    };
+
+    let activeAssignments: Array<{
+      id: string;
+      orgId: string;
+      role: string;
+      description: string | null;
+      status: 'draft' | 'active' | 'paused' | 'closed';
+      valuesRequired: string[] | null;
+      causeTags: string[] | null;
+      mustHaveSkills: unknown;
+      niceToHaveSkills: unknown;
+      minLanguage: unknown;
+      locationMode: string | null;
+      country: string | null;
+      compMin: number | null;
+      compMax: number | null;
+      currency: string | null;
+      hoursMin: number | null;
+      hoursMax: number | null;
+      startEarliest: string | Date | null;
+      startLatest: string | Date | null;
+      verificationGates: string[] | null;
+      weights: unknown;
+      canSponsorVisa: boolean | null;
+      sponsorshipCountries: string[] | null;
+    }> = [];
+    let candidatePoolSource: CandidatePoolSource = 'full_scan';
+
+    if (twoStageEnabled) {
+      const annMatches = await annRetrieveSimilarAssignments(user.id, assignmentScanLimit);
+      const annAssignmentIds = Array.from(new Set(annMatches.map((match) => match.id)));
+
+      if (annAssignmentIds.length > 0) {
+        candidatePoolSource = 'ann_hybrid';
+        const annAssignments = await db
+          .select(assignmentSelect)
+          .from(assignments)
+          .where(and(eq(assignments.status, 'active'), inArray(assignments.id, annAssignmentIds)));
+
+        const annOrder = new Map(annAssignmentIds.map((id, index) => [id, index]));
+        annAssignments.sort((a, b) => (annOrder.get(a.id) ?? 0) - (annOrder.get(b.id) ?? 0));
+
+        activeAssignments = annAssignments.slice(0, assignmentScanLimit);
+
+        const remaining = assignmentScanLimit - activeAssignments.length;
+        if (remaining > 0) {
+          const existingIds = activeAssignments.map((assignment) => assignment.id);
+          const fallbackAssignments = await db
+            .select(assignmentSelect)
+            .from(assignments)
+            .where(
+              existingIds.length > 0
+                ? and(eq(assignments.status, 'active'), notInArray(assignments.id, existingIds))
+                : eq(assignments.status, 'active')
+            )
+            .limit(remaining);
+
+          activeAssignments = [...activeAssignments, ...fallbackAssignments];
+        }
+      }
+    }
+
+    if (activeAssignments.length === 0) {
+      activeAssignments = await db
+        .select(assignmentSelect)
+        .from(assignments)
+        .where(eq(assignments.status, 'active'))
+        .limit(assignmentScanLimit);
+      candidatePoolSource = 'full_scan';
+    }
 
     const matrixRows = activeAssignments.length
       ? await db.query.assignmentExpertiseMatrix.findMany({
@@ -554,37 +639,34 @@ export async function POST(request: NextRequest) {
     const topK = results.slice(0, k);
 
     // Ensure returned matches exist in DB and capture their IDs
-    const upsertedMatches = await Promise.all(
-      topK.map(async (match) => {
-        const vectorPayload = {
-          subscores: match.subscores,
-          contributions: match.contributions,
-          gaps: match.gaps,
-          missing: match.missing,
-        };
+    const upsertPayload = topK.map((match) => ({
+      assignmentId: match.assignmentId,
+      profileId: user.id,
+      score: match.score.toString(),
+      vector: {
+        subscores: match.subscores,
+        contributions: match.contributions,
+        gaps: match.gaps,
+        missing: match.missing,
+      },
+      weights,
+    }));
 
-        const [row] = await db
-          .insert(matches)
-          .values({
-            assignmentId: match.assignmentId,
-            profileId: user.id,
-            score: match.score.toString(),
-            vector: vectorPayload,
-            weights,
-          })
-          .onConflictDoUpdate({
-            target: [matches.assignmentId, matches.profileId],
-            set: {
-              score: match.score.toString(),
-              vector: vectorPayload,
-              weights,
-            },
-          })
-          .returning({ id: matches.id, assignmentId: matches.assignmentId });
-
-        return row;
-      })
-    );
+    const upsertedMatches =
+      upsertPayload.length > 0
+        ? await db
+            .insert(matches)
+            .values(upsertPayload)
+            .onConflictDoUpdate({
+              target: [matches.assignmentId, matches.profileId],
+              set: {
+                score: sql`excluded.score`,
+                vector: sql`excluded.vector`,
+                weights: sql`excluded.weights`,
+              },
+            })
+            .returning({ id: matches.id, assignmentId: matches.assignmentId })
+        : [];
 
     // Merge returned IDs into response payload
     upsertedMatches.forEach((row) => {
@@ -636,6 +718,8 @@ export async function POST(request: NextRequest) {
       resultCount: topK.length,
       durationMs: duration,
       assignmentScanLimit,
+      candidatePoolSource,
+      twoStageEnabled,
     });
 
     return NextResponse.json({
@@ -645,6 +729,9 @@ export async function POST(request: NextRequest) {
         returned: topKWithIds.length,
         durationMs: duration,
         weights: weights,
+        candidatePoolSource,
+        candidatePoolSize: activeAssignments.length,
+        twoStageEnabled,
         eligibility: {
           tier: eligibility.tier,
           nextTierTarget: eligibility.nextTierTarget,
