@@ -176,7 +176,10 @@ describe('createImpactStory verification email path', () => {
       to: 'verifier@example.com',
       subject: `${BASE_STORY.title} verification request on Proofound`,
     });
-    expect(sentArgs?.[0].html).toMatch(/https?:\/\/[^"'\\s]+\/verify\/[a-f0-9]{64}/);
+    const verificationUrl = sentArgs?.[0].html.match(
+      /https?:\/\/[^"']+\/verify\/[a-f0-9]{64}/
+    )?.[0];
+    expect(verificationUrl).toBeDefined();
 
     expect(updateCalls).toHaveLength(1);
     expect(updateCalls[0]).toMatchObject({
