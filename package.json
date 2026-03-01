@@ -47,7 +47,7 @@
     "test:privacy:coverage": "vitest run --coverage --config vitest.supabase.config.ts tests/privacy",
     "test:privacy:extended": "vitest run --config vitest.supabase.config.ts tests/privacy/rls-policies-extended.test.ts",
     "seed:prd-supabase": "tsx scripts/seed-prd-flows.ts",
-    "prepare": "husky install",
+    "prepare": "node ./scripts/prepare-husky.mjs",
     "perf:budgets": "node ./scripts/perf-budgets.mjs",
     "go:no-go": "node ./scripts/go-no-go-check.mjs",
     "gates:mvp:strict": "node ./scripts/run-mvp-strict-gates.mjs",

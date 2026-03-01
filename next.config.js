@@ -3,7 +3,8 @@ import createNextIntlPlugin from 'next-intl/plugin';
 import { withSentryConfig } from '@sentry/nextjs';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
-const skipBuildValidation = process.env.NEXT_SKIP_BUILD_VALIDATION === '1';
+const isVercelBuild = process.env.VERCEL === '1' || Boolean(process.env.VERCEL_ENV);
+const skipBuildValidation = process.env.NEXT_SKIP_BUILD_VALIDATION === '1' || isVercelBuild;
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -19,6 +20,9 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
+    // Reduce peak memory usage on Vercel builds where container RAM is limited.
+    webpackBuildWorker: isVercelBuild,
+    webpackMemoryOptimizations: isVercelBuild,
   },
   // Silence multiple-lockfile root inference; set explicit tracing root to this app.
   // Use process.cwd() so it works both locally and on Vercel (no absolute machine path).
