@@ -32,7 +32,9 @@ import { WellBeingTrendChart } from '@/components/wellbeing/WellBeingTrendChart'
 import { CheckInHistory } from '@/components/wellbeing/CheckInHistory';
 import { WorkScheduleEditor } from '@/components/wellbeing/WorkScheduleEditor';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 import { createClient } from '@/lib/supabase/client';
+import { setWellbeingOptIn } from '@/lib/wellbeing/client';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,7 +66,7 @@ function ZenHubContent() {
   useEffect(() => {
     const fetchOptInStatus = async () => {
       try {
-        const response = await fetch('/api/wellbeing/opt-in');
+        const response = await apiFetch('/api/wellbeing/opt-in');
         if (response.ok) {
           const data = await response.json();
           setOptInStatus(data);
@@ -131,17 +133,16 @@ function ZenHubContent() {
 
   const handleOptIn = async () => {
     try {
-      const response = await fetch('/api/wellbeing/opt-in', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ optedIn: true, privacyBannerAcknowledged: true }),
+      const response = await setWellbeingOptIn({
+        optedIn: true,
+        privacyBannerAcknowledged: true,
       });
       if (response.ok) {
         // The POST response has a different format, so set the expected structure
         setOptInStatus({ optedIn: true, privacyBannerAcknowledged: true });
         toast.success('Welcome to Zen Hub');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to enable Zen Hub');
     }
   };

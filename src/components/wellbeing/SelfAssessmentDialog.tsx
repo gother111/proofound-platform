@@ -24,6 +24,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { AlertTriangle, CheckCircle2, Info, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
+import { saveSelfAssessment } from '@/lib/wellbeing/client';
 
 interface SelfAssessmentDialogProps {
   open: boolean;
@@ -114,15 +115,11 @@ export function SelfAssessmentDialog({
 
     setIsSubmitting(true);
     try {
-      const response = await fetch('/api/wellbeing/self-assessment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          assessmentType: type,
-          score,
-          severity: severity.level,
-          responses,
-        }),
+      const response = await saveSelfAssessment({
+        assessmentType: type,
+        score,
+        severity: severity.level,
+        responses,
       });
 
       if (!response.ok) {

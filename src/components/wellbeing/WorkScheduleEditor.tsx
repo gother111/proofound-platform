@@ -17,7 +17,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { AlertTriangle, CheckCircle2, Clock, Save, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 import { burnoutDefaults } from '@/data/zen';
+import { saveWorkSchedule } from '@/lib/wellbeing/client';
 
 interface WorkSchedule {
   monday: number;
@@ -70,7 +72,7 @@ export function WorkScheduleEditor({ userId }: WorkScheduleEditorProps) {
   const fetchSchedule = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/wellbeing/work-schedule');
+      const response = await apiFetch('/api/wellbeing/work-schedule');
       if (response.ok) {
         const data = await response.json();
         if (data.schedule) {
@@ -98,11 +100,7 @@ export function WorkScheduleEditor({ userId }: WorkScheduleEditorProps) {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const response = await fetch('/api/wellbeing/work-schedule', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ schedule }),
-      });
+      const response = await saveWorkSchedule({ schedule });
 
       if (!response.ok) {
         throw new Error('Failed to save schedule');
