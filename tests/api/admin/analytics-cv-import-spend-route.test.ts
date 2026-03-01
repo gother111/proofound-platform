@@ -79,6 +79,26 @@ describe('GET /api/admin/analytics/cv-import-spend', () => {
             count: 2,
           },
         ],
+      })
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            avg_mapped_ratio: 0.72,
+            avg_evidence_valid_ratio: 0.9,
+            avg_skills_per_document: 6.4,
+            avg_cost_per_mapped_skill_ore: 24,
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            day: '2026-02-28',
+            mapped_ratio: 0.72,
+            evidence_valid_ratio: 0.9,
+            avg_skills_per_document: 6.4,
+          },
+        ],
       });
 
     const whereMock = vi.fn().mockResolvedValue([
@@ -113,6 +133,20 @@ describe('GET /api/admin/analytics/cv-import-spend', () => {
       {
         failure_code: 'CV_IMPORT_GEMINI_INVALID_JSON',
         count: 2,
+      },
+    ]);
+    expect(payload.quality_kpis).toEqual({
+      avg_mapped_ratio: 0.72,
+      avg_evidence_valid_ratio: 0.9,
+      avg_skills_per_document: 6.4,
+      avg_cost_per_mapped_skill_ore: 24,
+    });
+    expect(payload.per_day_quality).toEqual([
+      {
+        day: '2026-02-28',
+        mapped_ratio: 0.72,
+        evidence_valid_ratio: 0.9,
+        avg_skills_per_document: 6.4,
       },
     ]);
     expect(payload.key_slot_budgets).toHaveLength(2);

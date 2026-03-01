@@ -231,6 +231,7 @@ export async function POST(request: NextRequest) {
     }
 
     const suggestions = buildLegacySuggestions(suggestionResponse);
+    const quality = suggestionResponse.metadata.quality;
 
     return jsonWithRequestId(requestId, {
       success: true,
@@ -252,6 +253,12 @@ export async function POST(request: NextRequest) {
         ai_fallback_reason: suggestionResponse.metadata.ai_fallback_reason,
         cost_ore: suggestionResponse.metadata.cost_ore,
         currency: suggestionResponse.metadata.currency,
+        quality,
+        mapped_ratio: quality?.mapped_ratio,
+        evidence_valid_ratio: quality?.evidence_valid_ratio,
+        high_confidence_count: quality?.high_confidence_count,
+        confidence_tiers: quality?.confidence_tiers,
+        cost_per_mapped_skill_ore: quality?.cost_per_mapped_skill_ore,
         engine_mode: engineMode,
         engine_used: method === 'gemini' ? 'gemini' : 'typescript',
       },

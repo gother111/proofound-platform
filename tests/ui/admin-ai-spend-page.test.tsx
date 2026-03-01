@@ -80,6 +80,20 @@ describe('Admin AI spend page', () => {
             count: 1,
           },
         ],
+        quality_kpis: {
+          avg_mapped_ratio: 0.72,
+          avg_evidence_valid_ratio: 0.91,
+          avg_skills_per_document: 6.4,
+          avg_cost_per_mapped_skill_ore: 24,
+        },
+        per_day_quality: [
+          {
+            day: '2026-02-28',
+            mapped_ratio: 0.72,
+            evidence_valid_ratio: 0.91,
+            avg_skills_per_document: 6.4,
+          },
+        ],
       }),
     });
 
@@ -93,6 +107,8 @@ describe('Admin AI spend page', () => {
     expect(screen.getAllByText('1.50 SEK').length).toBeGreaterThan(0);
     expect(screen.getByText('User One')).toBeInTheDocument();
     expect(screen.getByText('Top failure: CV_IMPORT_GEMINI_INVALID_JSON (1)')).toBeInTheDocument();
+    expect(screen.getAllByText('72%').length).toBeGreaterThan(0);
+    expect(screen.getByText('Quality KPIs')).toBeInTheDocument();
   });
 
   it('renders backend error message when analytics loading fails', async () => {

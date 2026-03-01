@@ -104,6 +104,20 @@ export const CvImportWizardMetadataSchema = z.object({
   cost_ore: z.number().int().min(0).optional(),
   currency: z.literal('SEK').optional(),
   idempotency_key: z.string().optional(),
+  quality: z
+    .object({
+      mapped_ratio: z.number().min(0).max(1),
+      evidence_valid_ratio: z.number().min(0).max(1),
+      high_confidence_count: z.number().int().min(0),
+      confidence_tiers: z.object({
+        high: z.number().int().min(0),
+        medium: z.number().int().min(0),
+        low: z.number().int().min(0),
+      }),
+      avg_skills_per_document: z.number().min(0),
+      cost_per_mapped_skill_ore: z.number().int().min(0).optional(),
+    })
+    .optional(),
   engine_mode: z.enum(['auto', 'typescript', 'python', 'gemini']).optional(),
   engine_used: z.enum(['python', 'typescript', 'gemini']).optional(),
 });

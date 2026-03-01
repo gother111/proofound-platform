@@ -6,13 +6,8 @@
  * without external API calls.
  */
 
-import { pipeline, type FeatureExtractionPipeline, env } from '@xenova/transformers';
+import type { FeatureExtractionPipeline } from '@xenova/transformers';
 import { log } from '@/lib/log';
-
-// Configure transformers.js for server-side usage
-// Disable local model checking in development to always use cache
-env.allowLocalModels = false;
-env.useBrowserCache = false;
 
 // Model configuration
 const MODEL_NAME = 'Xenova/all-MiniLM-L6-v2';
@@ -22,6 +17,20 @@ const EMBEDDING_DIMENSION = 384; // all-MiniLM-L6-v2 outputs 384-dim vectors
 let embeddingPipeline: FeatureExtractionPipeline | null = null;
 let isLoading = false;
 let loadPromise: Promise<FeatureExtractionPipeline> | null = null;
+let transformersModulePromise: Promise<typeof import('@xenova/transformers')> | null = null;
+
+async function getTransformersModule(): Promise<typeof import('@xenova/transformers')> {
+  if (!transformersModulePromise) {
+    transformersModulePromise = import('@xenova/transformers');
+  }
+
+  const mod = await transformersModulePromise;
+  // Configure transformers.js for server-side usage.
+  // Keep this lazy to avoid loading native bindings at module evaluation time in test/CI.
+  mod.env.allowLocalModels = false;
+  mod.env.useBrowserCache = false;
+  return mod;
+}
 
 /**
  * Initialize the embedding pipeline (singleton pattern)
@@ -45,6 +54,8 @@ async function getEmbeddingPipeline(): Promise<FeatureExtractionPipeline> {
     try {
       log.info('embedding.model.loading', { model: MODEL_NAME });
       const startTime = Date.now();
+
+      const { pipeline } = await getTransformersModule();
 
       // Load the feature-extraction pipeline
       const loaded = await pipeline('feature-extraction', MODEL_NAME, {

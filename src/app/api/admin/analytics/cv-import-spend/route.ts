@@ -28,6 +28,20 @@ type FailureRow = {
   count: number | string;
 };
 
+type QualityRow = {
+  avg_mapped_ratio: number | string | null;
+  avg_evidence_valid_ratio: number | string | null;
+  avg_skills_per_document: number | string | null;
+  avg_cost_per_mapped_skill_ore: number | string | null;
+};
+
+type PerDayQualityRow = {
+  day: string;
+  mapped_ratio: number | string | null;
+  evidence_valid_ratio: number | string | null;
+  avg_skills_per_document: number | string | null;
+};
+
 type BudgetRow = {
   key_slot: 'primary' | 'secondary';
   month_start: string;
@@ -57,6 +71,24 @@ function parseDays(value: string | null): number {
   return Math.max(1, Math.min(90, Math.floor(parsed)));
 }
 
+function asFloat(value: unknown): number {
+  if (typeof value === 'number') {
+    return value;
+  }
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  return 0;
+}
+
+function clamp01(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.max(0, Math.min(1, value));
+}
+
 export async function GET(request: NextRequest) {
   try {
     const adminUser = await requirePlatformAdminJson();
@@ -69,7 +101,14 @@ export async function GET(request: NextRequest) {
     const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
     const monthStart = resolveStockholmMonthStart(now);
 
-    const [perDayResult, perUserResult, failureResult, budgetResult] = await Promise.all([
+    const [
+      perDayResult,
+      perUserResult,
+      failureResult,
+      qualityResult,
+      perDayQualityResult,
+      budgetResult,
+    ] = await Promise.all([
       db.execute(sql`
         SELECT
           to_char((created_at AT TIME ZONE 'Europe/Stockholm')::date, 'YYYY-MM-DD') AS day,
@@ -101,6 +140,28 @@ export async function GET(request: NextRequest) {
           AND status NOT IN ('success', 'fallback_success', 'in_progress')
         GROUP BY 1
         ORDER BY count DESC
+      `),
+      db.execute(sql`
+        SELECT
+          AVG(NULLIF(l.response_payload->'metadata'->'quality'->>'mapped_ratio', '')::numeric)::float8 AS avg_mapped_ratio,
+          AVG(NULLIF(l.response_payload->'metadata'->'quality'->>'evidence_valid_ratio', '')::numeric)::float8 AS avg_evidence_valid_ratio,
+          AVG(NULLIF(l.response_payload->'metadata'->'quality'->>'avg_skills_per_document', '')::numeric)::float8 AS avg_skills_per_document,
+          AVG(NULLIF(l.response_payload->'metadata'->'quality'->>'cost_per_mapped_skill_ore', '')::numeric)::float8 AS avg_cost_per_mapped_skill_ore
+        FROM public.cv_import_ai_usage_logs l
+        WHERE l.created_at >= ${startDate}
+          AND l.status IN ('success', 'fallback_success')
+      `),
+      db.execute(sql`
+        SELECT
+          to_char((l.created_at AT TIME ZONE 'Europe/Stockholm')::date, 'YYYY-MM-DD') AS day,
+          AVG(NULLIF(l.response_payload->'metadata'->'quality'->>'mapped_ratio', '')::numeric)::float8 AS mapped_ratio,
+          AVG(NULLIF(l.response_payload->'metadata'->'quality'->>'evidence_valid_ratio', '')::numeric)::float8 AS evidence_valid_ratio,
+          AVG(NULLIF(l.response_payload->'metadata'->'quality'->>'avg_skills_per_document', '')::numeric)::float8 AS avg_skills_per_document
+        FROM public.cv_import_ai_usage_logs l
+        WHERE l.created_at >= ${startDate}
+          AND l.status IN ('success', 'fallback_success')
+        GROUP BY 1
+        ORDER BY 1 DESC
       `),
       db
         .select({
@@ -134,6 +195,22 @@ export async function GET(request: NextRequest) {
     const failureBreakdown = (getRows(failureResult) as FailureRow[]).map((row) => ({
       failure_code: row.failure_code || 'unknown',
       count: asInt(row.count),
+    }));
+    const [qualityRow] = getRows(qualityResult) as QualityRow[];
+    const qualityKpis = {
+      avg_mapped_ratio: clamp01(asFloat(qualityRow?.avg_mapped_ratio)),
+      avg_evidence_valid_ratio: clamp01(asFloat(qualityRow?.avg_evidence_valid_ratio)),
+      avg_skills_per_document: Number(asFloat(qualityRow?.avg_skills_per_document).toFixed(2)),
+      avg_cost_per_mapped_skill_ore: Math.max(
+        0,
+        Math.round(asFloat(qualityRow?.avg_cost_per_mapped_skill_ore))
+      ),
+    };
+    const perDayQuality = (getRows(perDayQualityResult) as PerDayQualityRow[]).map((row) => ({
+      day: row.day,
+      mapped_ratio: clamp01(asFloat(row.mapped_ratio)),
+      evidence_valid_ratio: clamp01(asFloat(row.evidence_valid_ratio)),
+      avg_skills_per_document: Number(asFloat(row.avg_skills_per_document).toFixed(2)),
     }));
 
     const budgetRows = budgetResult as BudgetRow[];
@@ -178,6 +255,8 @@ export async function GET(request: NextRequest) {
       top_users: perUser.slice(0, 10),
       key_slot_budgets: keySlotBudgets,
       failure_breakdown: failureBreakdown,
+      quality_kpis: qualityKpis,
+      per_day_quality: perDayQuality,
       generated_at: now.toISOString(),
     });
   } catch (error) {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TopBar } from '@/components/app/TopBar';
 
@@ -21,26 +21,21 @@ vi.mock('@/components/brand/Logo', () => ({
   Logo: () => <div data-testid="logo" />,
 }));
 
-vi.mock('@/components/dashboard/CustomizeModal', () => ({
-  CustomizeModal: ({ open }: { open: boolean }) => (
-    <div data-testid="customize-modal-state">{open ? 'open' : 'closed'}</div>
-  ),
-}));
-
-describe('TopBar customize visibility', () => {
+describe('TopBar header actions', () => {
   beforeEach(() => {
     mockPathname = '/app/i/home';
   });
 
-  it('shows Customize button on individual dashboard route', () => {
+  it('renders profile menu trigger on individual dashboard route', () => {
     mockPathname = '/app/i/home';
 
     render(<TopBar userName="Alex Doe" userInitials="AD" />);
 
-    expect(screen.getByRole('button', { name: 'Customize' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /open profile menu/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Customize' })).not.toBeInTheDocument();
   });
 
-  it('hides Customize button on individual non-dashboard route', () => {
+  it('does not render Customize button on individual non-dashboard route', () => {
     mockPathname = '/app/i/profile';
 
     render(<TopBar userName="Alex Doe" userInitials="AD" />);
@@ -48,15 +43,16 @@ describe('TopBar customize visibility', () => {
     expect(screen.queryByRole('button', { name: 'Customize' })).not.toBeInTheDocument();
   });
 
-  it('shows Customize button on org dashboard route', () => {
+  it('renders profile menu trigger on org dashboard route', () => {
     mockPathname = '/app/o/acme/home';
 
     render(<TopBar userName="Acme" userInitials="AC" />);
 
-    expect(screen.getByRole('button', { name: 'Customize' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /open profile menu/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Customize' })).not.toBeInTheDocument();
   });
 
-  it('hides Customize button on org non-dashboard route', () => {
+  it('does not render Customize button on org non-dashboard route', () => {
     mockPathname = '/app/o/acme/settings';
 
     render(<TopBar userName="Acme" userInitials="AC" />);
@@ -64,19 +60,20 @@ describe('TopBar customize visibility', () => {
     expect(screen.queryByRole('button', { name: 'Customize' })).not.toBeInTheDocument();
   });
 
-  it('resets open customize modal when navigating away from dashboard', () => {
+  it('updates title based on route meta when navigating', () => {
     mockPathname = '/app/i/home';
     const { rerender } = render(<TopBar userName="Alex Doe" userInitials="AD" />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Customize' }));
-    expect(screen.getByTestId('customize-modal-state')).toHaveTextContent('open');
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Customize' })).not.toBeInTheDocument();
 
     mockPathname = '/app/i/profile';
     rerender(<TopBar userName="Alex Doe" userInitials="AD" />);
-    expect(screen.queryByTestId('customize-modal-state')).not.toBeInTheDocument();
+    expect(screen.getByText('Profile')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Customize' })).not.toBeInTheDocument();
 
     mockPathname = '/app/i/home';
     rerender(<TopBar userName="Alex Doe" userInitials="AD" />);
-    expect(screen.getByTestId('customize-modal-state')).toHaveTextContent('closed');
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Customize' })).not.toBeInTheDocument();
   });
 });

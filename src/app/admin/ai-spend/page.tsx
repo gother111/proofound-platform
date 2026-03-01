@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { AlertCircle, CreditCard, Loader2, Users } from 'lucide-react';
+import { AlertCircle, CreditCard, Loader2, Target, Users } from 'lucide-react';
 
 import { apiFetch } from '@/lib/api/fetch';
 import { Badge } from '@/components/ui/badge';
@@ -58,6 +58,18 @@ type SpendPayload = {
     failure_code: string;
     count: number;
   }>;
+  quality_kpis: {
+    avg_mapped_ratio: number;
+    avg_evidence_valid_ratio: number;
+    avg_skills_per_document: number;
+    avg_cost_per_mapped_skill_ore: number;
+  };
+  per_day_quality: Array<{
+    day: string;
+    mapped_ratio: number;
+    evidence_valid_ratio: number;
+    avg_skills_per_document: number;
+  }>;
 };
 
 function formatSekFromOre(ore: number): string {
@@ -70,6 +82,10 @@ function statusVariant(
   if (status === 'active') return 'default';
   if (status === 'exhausted') return 'destructive';
   return 'secondary';
+}
+
+function formatPercent(value: number): string {
+  return `${Math.round(value * 100)}%`;
 }
 
 export default function AdminAiSpendPage() {
@@ -132,7 +148,7 @@ export default function AdminAiSpendPage() {
 
       {!loading && !error && data && (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm text-muted-foreground">Total Spend (30d)</CardTitle>
@@ -157,6 +173,29 @@ export default function AdminAiSpendPage() {
               <CardContent className="flex items-center justify-between">
                 <p className="text-2xl font-semibold">{data.totals.unique_users}</p>
                 <Users className="h-5 w-5 text-muted-foreground" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm text-muted-foreground">Avg Mapped Ratio</CardTitle>
+              </CardHeader>
+              <CardContent className="flex items-center justify-between">
+                <p className="text-2xl font-semibold">
+                  {formatPercent(data.quality_kpis.avg_mapped_ratio)}
+                </p>
+                <Target className="h-5 w-5 text-muted-foreground" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm text-muted-foreground">
+                  Cost Per Mapped Skill
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-semibold">
+                  {formatSekFromOre(data.quality_kpis.avg_cost_per_mapped_skill_ore)}
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -236,6 +275,67 @@ export default function AdminAiSpendPage() {
                       <TableCell>{formatSekFromOre(day.cost_ore)}</TableCell>
                     </TableRow>
                   ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Quality KPIs</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="rounded border px-3 py-2">
+                  <p className="text-xs text-muted-foreground">Mapped ratio</p>
+                  <p className="text-lg font-medium">
+                    {formatPercent(data.quality_kpis.avg_mapped_ratio)}
+                  </p>
+                </div>
+                <div className="rounded border px-3 py-2">
+                  <p className="text-xs text-muted-foreground">Evidence valid ratio</p>
+                  <p className="text-lg font-medium">
+                    {formatPercent(data.quality_kpis.avg_evidence_valid_ratio)}
+                  </p>
+                </div>
+                <div className="rounded border px-3 py-2">
+                  <p className="text-xs text-muted-foreground">Avg skills / document</p>
+                  <p className="text-lg font-medium">{data.quality_kpis.avg_skills_per_document}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Quality Per Day</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Mapped Ratio</TableHead>
+                    <TableHead>Evidence Ratio</TableHead>
+                    <TableHead>Skills / Document</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.per_day_quality.map((day) => (
+                    <TableRow key={day.day}>
+                      <TableCell>{day.day}</TableCell>
+                      <TableCell>{formatPercent(day.mapped_ratio)}</TableCell>
+                      <TableCell>{formatPercent(day.evidence_valid_ratio)}</TableCell>
+                      <TableCell>{day.avg_skills_per_document}</TableCell>
+                    </TableRow>
+                  ))}
+                  {data.per_day_quality.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-muted-foreground">
+                        No quality telemetry available in the selected period.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </CardContent>

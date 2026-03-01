@@ -19,11 +19,12 @@ import {
 } from '@/lib/expertise/gemini/client';
 import {
   resolveConfiguredKeySlots,
+  resolveGeminiAdaptiveMaxOutputTokens,
   resolveGeminiApiKey,
-  resolveGeminiMaxOutputTokens,
   resolveGeminiModelDefault,
   resolveGeminiModelFallback,
   resolveGeminiTemperature,
+  resolveGeminiTaxonomyGuidedEnabled,
   resolveGeminiTimeoutMs,
   type GeminiKeySlot,
 } from '@/lib/expertise/gemini/config';
@@ -33,6 +34,11 @@ import {
   GeminiDocumentsExtractionSchema,
   type GeminiSkillCandidate,
 } from '@/lib/expertise/gemini/schemas';
+import { rerankGeminiCandidates } from '@/lib/expertise/gemini/reranker';
+import {
+  buildTaxonomyShortlistsForDocuments,
+  type TaxonomyShortlistSkill,
+} from '@/lib/expertise/gemini/taxonomy-shortlist';
 import { mapGeminiCandidatesToCvImportCandidates } from '@/lib/expertise/gemini/taxonomy-mapper';
 import { log } from '@/lib/log';
 
@@ -71,13 +77,36 @@ function trimModelName(value: string): string {
   return value.trim().toLowerCase();
 }
 
-function buildGeminiPrompt(documents: GeminiSourceDocument[]): string {
-  const renderedDocuments = documents
+function renderShortlistForPrompt(shortlist: TaxonomyShortlistSkill[] | undefined): string {
+  if (!shortlist || shortlist.length === 0) {
+    return 'Shortlist: []';
+  }
+
+  const compact = shortlist.slice(0, 120).map((entry) => ({
+    skill_id: entry.skill_id,
+    skill_name: entry.skill_name,
+    aliases: entry.aliases.slice(0, 4),
+    category: entry.category,
+  }));
+
+  return `Taxonomy shortlist:\n${JSON.stringify(compact)}`;
+}
+
+function buildGeminiPrompt(params: {
+  documents: GeminiSourceDocument[];
+  shortlistByDocument: Map<string, TaxonomyShortlistSkill[]>;
+  taxonomyGuided: boolean;
+}): string {
+  const renderedDocuments = params.documents
     .map((document) => {
       const text = document.text.slice(0, 30000);
+      const shortlistSection = params.taxonomyGuided
+        ? renderShortlistForPrompt(params.shortlistByDocument.get(document.document_id))
+        : 'Taxonomy shortlist: []';
       return [
         `Document ID: ${document.document_id}`,
         `Context: ${document.context}`,
+        shortlistSection,
         'Text:',
         text,
       ].join('\n');
@@ -89,10 +118,13 @@ function buildGeminiPrompt(documents: GeminiSourceDocument[]): string {
     'Return JSON only. Do not include markdown.',
     'Rules:',
     '- Return each document from the input by document_id.',
-    '- Include only concrete skills/tools/technologies/languages/certifications/soft skills present in text.',
+    '- Include only concrete skills/tools/technologies/languages/certifications/soft skills present in text with explicit evidence.',
     '- Do not invent skills.',
     '- confidence must be between 0 and 1.',
-    '- evidence_snippets must be short verbatim snippets from the input text.',
+    '- evidence_snippets must be short verbatim snippets from the input text, no paraphrases.',
+    '- If taxonomy shortlist is provided, prefer selecting relevant canonical skills in taxonomy_candidates.',
+    '- taxonomy_candidates must include up to 3 best skill_id + skill_name matches with confidence per candidate.',
+    '- If uncertain about taxonomy mapping, keep taxonomy_candidates empty and keep low confidence.',
     '',
     renderedDocuments,
   ].join('\n');
@@ -153,6 +185,7 @@ async function extractSkillCandidates(params: {
   apiKey: string;
   prompt: string;
   requestId: string;
+  maxOutputTokens: number;
 }): Promise<{
   extracted: z.infer<typeof GeminiDocumentsExtractionSchema>;
   usage: { promptTokenCount: number; candidatesTokenCount: number; totalTokenCount: number };
@@ -163,7 +196,7 @@ async function extractSkillCandidates(params: {
     model: params.model,
     prompt: params.prompt,
     responseJsonSchema: GEMINI_DOCUMENTS_EXTRACTION_JSON_SCHEMA,
-    maxOutputTokens: resolveGeminiMaxOutputTokens(),
+    maxOutputTokens: params.maxOutputTokens,
     temperature: resolveGeminiTemperature(),
     timeoutMs: resolveGeminiTimeoutMs(),
     requestId: params.requestId,
@@ -224,6 +257,30 @@ export class GeminiSuggestError extends Error {
     this.logId = details?.logId;
     this.idempotencyKey = details?.idempotencyKey;
   }
+}
+
+type QualityMetadata = {
+  mapped_ratio: number;
+  evidence_valid_ratio: number;
+  high_confidence_count: number;
+  confidence_tiers: {
+    high: number;
+    medium: number;
+    low: number;
+  };
+  avg_skills_per_document: number;
+  cost_per_mapped_skill_ore?: number;
+};
+
+function clamp(value: number, min = 0, max = 1): number {
+  return Math.max(min, Math.min(max, value));
+}
+
+function safeDivide(numerator: number, denominator: number): number {
+  if (!Number.isFinite(numerator) || !Number.isFinite(denominator) || denominator <= 0) {
+    return 0;
+  }
+  return numerator / denominator;
 }
 
 export async function suggestSkillsWithGemini(params: {
@@ -287,11 +344,24 @@ export async function suggestSkillsWithGemini(params: {
 
   let lastError: unknown = null;
   let quotaFailoverCount = 0;
-  const prompt = buildGeminiPrompt(params.documents);
+  const aggregateChars = params.documents.reduce((sum, document) => sum + document.text.length, 0);
+  const adaptiveMaxOutputTokens = resolveGeminiAdaptiveMaxOutputTokens(aggregateChars);
+  const taxonomyGuided = resolveGeminiTaxonomyGuidedEnabled();
+  const shortlistByDocument = taxonomyGuided
+    ? await buildTaxonomyShortlistsForDocuments({
+        documents: params.documents,
+        suggestionsLimit,
+      })
+    : new Map<string, TaxonomyShortlistSkill[]>();
+  const prompt = buildGeminiPrompt({
+    documents: params.documents,
+    shortlistByDocument,
+    taxonomyGuided,
+  });
   const estimatedReservation = estimateReservationCostOre({
     model: resolveGeminiModelDefault(),
-    aggregateTextChars: params.documents.reduce((sum, document) => sum + document.text.length, 0),
-    maxOutputTokens: resolveGeminiMaxOutputTokens(),
+    aggregateTextChars: aggregateChars,
+    maxOutputTokens: adaptiveMaxOutputTokens,
   });
 
   for (const keySlot of keySlots) {
@@ -335,6 +405,7 @@ export async function suggestSkillsWithGemini(params: {
           apiKey,
           prompt,
           requestId: params.requestId,
+          maxOutputTokens: adaptiveMaxOutputTokens,
         });
       } catch (error) {
         if (
@@ -347,6 +418,7 @@ export async function suggestSkillsWithGemini(params: {
             apiKey,
             prompt,
             requestId: params.requestId,
+            maxOutputTokens: adaptiveMaxOutputTokens,
           });
         } else {
           throw error;
@@ -358,16 +430,40 @@ export async function suggestSkillsWithGemini(params: {
       );
 
       const responseDocuments = [] as CvImportSuggestResponse['documents'];
+      let totalInputCandidates = 0;
+      let totalFinalCandidates = 0;
+      let totalMappedCandidates = 0;
+      let totalHighConfidenceCount = 0;
+      const aggregatedTiers = { high: 0, medium: 0, low: 0 };
+      let analyzedDocuments = 0;
+
       for (const document of params.documents) {
         const extractedSkills = (byDocumentId.get(document.document_id) ||
           []) as GeminiSkillCandidate[];
-        const mappedCandidates = document.parse_error
-          ? []
-          : await mapGeminiCandidatesToCvImportCandidates({
-              documentId: document.document_id,
-              extractedSkills,
-              suggestionsLimit,
-            });
+        const mappedCandidates =
+          document.parse_error || document.text.trim().length === 0
+            ? []
+            : await mapGeminiCandidatesToCvImportCandidates({
+                documentId: document.document_id,
+                extractedSkills,
+                suggestionsLimit,
+                taxonomyShortlist: shortlistByDocument.get(document.document_id) || [],
+              });
+
+        const reranked = rerankGeminiCandidates({
+          text: document.text,
+          candidates: mappedCandidates,
+        });
+        totalInputCandidates += reranked.metrics.inputCandidateCount;
+        totalFinalCandidates += reranked.metrics.candidateCount;
+        totalMappedCandidates += reranked.metrics.mappedCount;
+        totalHighConfidenceCount += reranked.metrics.highConfidenceCount;
+        aggregatedTiers.high += reranked.metrics.confidenceTiers.high;
+        aggregatedTiers.medium += reranked.metrics.confidenceTiers.medium;
+        aggregatedTiers.low += reranked.metrics.confidenceTiers.low;
+        if (!document.parse_error && document.text.trim().length > 0) {
+          analyzedDocuments += 1;
+        }
 
         responseDocuments.push({
           document_id: document.document_id,
@@ -376,8 +472,8 @@ export async function suggestSkillsWithGemini(params: {
           parsed_text: document.parse_error ? '' : document.text,
           parse_error: document.parse_error || null,
           parse_error_code: document.parse_error_code || null,
-          candidate_count: mappedCandidates.length,
-          candidates: mappedCandidates,
+          candidate_count: reranked.candidates.length,
+          candidates: reranked.candidates,
         });
       }
 
@@ -403,6 +499,21 @@ export async function suggestSkillsWithGemini(params: {
 
       const aiFallbackReason =
         quotaFailoverCount > 0 ? 'quota_failover' : usedFallbackModel ? 'model_retry' : null;
+      const quality: QualityMetadata = {
+        mapped_ratio: clamp(safeDivide(totalMappedCandidates, totalFinalCandidates || 1)),
+        evidence_valid_ratio: clamp(safeDivide(totalFinalCandidates, totalInputCandidates || 1)),
+        high_confidence_count: totalHighConfidenceCount,
+        confidence_tiers: aggregatedTiers,
+        avg_skills_per_document: Number(
+          safeDivide(totalFinalCandidates, Math.max(1, analyzedDocuments)).toFixed(2)
+        ),
+      };
+      if (totalMappedCandidates > 0) {
+        quality.cost_per_mapped_skill_ore = Math.max(
+          0,
+          Math.round(actualCostOre / totalMappedCandidates)
+        );
+      }
 
       const payload: GeminiSuggestSuccess['response'] = {
         documents: responseDocuments,
@@ -428,6 +539,7 @@ export async function suggestSkillsWithGemini(params: {
           cost_ore: actualCostOre,
           currency: 'SEK',
           idempotency_key: idempotencyKey,
+          quality,
         },
       };
 
@@ -447,6 +559,9 @@ export async function suggestSkillsWithGemini(params: {
           suggestions_limit: suggestionsLimit,
           quota_failovers: quotaFailoverCount,
           model_fallback_used: usedFallbackModel,
+          taxonomy_guided: taxonomyGuided,
+          adaptive_max_output_tokens: adaptiveMaxOutputTokens,
+          quality,
         },
       });
 

@@ -30,29 +30,24 @@ describe('VideoProviderSelector connect routing', () => {
     toastErrorMock.mockReset();
   });
 
-  it('uses canonical provider connect routes', async () => {
+  it('uses canonical provider connect routes and keeps zoom disabled', async () => {
     const openMock = vi.spyOn(window, 'open').mockImplementation(() => null);
 
     render(<VideoProviderSelector selectedProvider={null} onSelectProvider={vi.fn()} />);
 
-    const zoomButton = await screen.findByRole('button', { name: /connect zoom/i });
+    expect(screen.queryByRole('button', { name: /connect zoom/i })).not.toBeInTheDocument();
+    const comingSoonLabels = await screen.findAllByText(/coming soon/i);
+    expect(comingSoonLabels.length).toBeGreaterThan(0);
     const googleButton = await screen.findByRole('button', { name: /connect google meet/i });
 
-    fireEvent.click(zoomButton);
     fireEvent.click(googleButton);
 
     expect(openMock).toHaveBeenNthCalledWith(
       1,
-      '/api/integrations/zoom/connect',
-      'oauth',
-      expect.stringContaining('width=600')
-    );
-    expect(openMock).toHaveBeenNthCalledWith(
-      2,
       '/api/integrations/google/connect',
       'oauth',
       expect.stringContaining('width=600')
     );
-    expect(toastErrorMock).toHaveBeenCalledTimes(2);
+    expect(toastErrorMock).toHaveBeenCalledTimes(1);
   });
 });

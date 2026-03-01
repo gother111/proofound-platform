@@ -58,12 +58,11 @@ describe('zoom integration oauth redirect resolution', () => {
       new NextRequest('https://preview.proofound.io/api/integrations/zoom/connect')
     );
 
-    expect(response.status).toBeGreaterThanOrEqual(300);
-    expect(response.status).toBeLessThan(400);
-    expect(getZoomAuthUrlMock).toHaveBeenCalledTimes(1);
-    expect(getZoomAuthUrlMock.mock.calls[0][0]).toBe(
-      'https://preview.proofound.io/api/integrations/zoom/callback'
-    );
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      code: 'ZOOM_COMING_SOON',
+    });
+    expect(getZoomAuthUrlMock).not.toHaveBeenCalled();
   });
 
   it('uses absolute ZOOM_REDIRECT_URI as-is in connect route', async () => {
@@ -74,12 +73,11 @@ describe('zoom integration oauth redirect resolution', () => {
       new NextRequest('https://preview.proofound.io/api/integrations/zoom/connect')
     );
 
-    expect(response.status).toBeGreaterThanOrEqual(300);
-    expect(response.status).toBeLessThan(400);
-    expect(getZoomAuthUrlMock).toHaveBeenCalledTimes(1);
-    expect(getZoomAuthUrlMock.mock.calls[0][0]).toBe(
-      'https://proofound.io/api/integrations/zoom/callback'
-    );
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      code: 'ZOOM_COMING_SOON',
+    });
+    expect(getZoomAuthUrlMock).not.toHaveBeenCalled();
   });
 
   it('uses same resolved redirect uri in callback token exchange', async () => {

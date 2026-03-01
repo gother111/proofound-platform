@@ -49,7 +49,24 @@ describe('video integrations auth route', () => {
     expect(response.status).toBe(400);
   });
 
-  it('returns provider auth url with sanitized returnTo', async () => {
+  it('returns provider auth url with sanitized returnTo for google', async () => {
+    const response = await GET(
+      new NextRequest(
+        'http://localhost/api/integrations/video/google/auth?returnTo=%2Fapp%2Fo%2Facme%2Fsettings%2Fintegrations'
+      ),
+      {
+        params: Promise.resolve({ provider: 'google' }),
+      }
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      authUrl:
+        '/api/integrations/google/connect?returnTo=%2Fapp%2Fo%2Facme%2Fsettings%2Fintegrations',
+    });
+  });
+
+  it('returns coming soon for zoom provider', async () => {
     const response = await GET(
       new NextRequest(
         'http://localhost/api/integrations/video/zoom/auth?returnTo=%2Fapp%2Fo%2Facme%2Fsettings%2Fintegrations'
@@ -59,10 +76,9 @@ describe('video integrations auth route', () => {
       }
     );
 
-    expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({
-      authUrl:
-        '/api/integrations/zoom/connect?returnTo=%2Fapp%2Fo%2Facme%2Fsettings%2Fintegrations',
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      code: 'ZOOM_COMING_SOON',
     });
   });
 
