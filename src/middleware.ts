@@ -168,6 +168,16 @@ export async function middleware(request: NextRequest) {
         return csrfError;
       }
 
+      // `/api/csrf-token` route is the canonical source for CSRF token issuance.
+      // Avoid issuing a second token in middleware to prevent token mismatch races.
+      if (pathname === '/api/csrf-token') {
+        const response = NextResponse.next();
+        response.headers.set('x-request-id', requestId);
+        attachRateLimitHeaders(response);
+        applySecurityHeaders(response, request);
+        return response;
+      }
+
       const csrfToken = getOrGenerateCSRFToken(request);
       const response = NextResponse.next();
       response.headers.set('x-request-id', requestId);
