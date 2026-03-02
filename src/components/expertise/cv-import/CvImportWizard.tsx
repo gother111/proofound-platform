@@ -17,6 +17,7 @@ import {
   ImportActionBanner,
   type ImportActionSummary,
 } from '@/components/expertise/cv-import/ImportActionBanner';
+import { resolveInitialSkillSelectionState } from '@/components/expertise/cv-import/initial-selection';
 import { SkillReviewPanel } from '@/components/expertise/cv-import/SkillReviewPanel';
 import { EventType } from '@/lib/analytics/constants';
 import {
@@ -1331,16 +1332,19 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
             ...entry,
             approved: true,
           })),
-          skill_candidates: document.skill_candidates.map((candidate) => ({
-            ...candidate,
-            approved: true,
-            selected_skill_ids: candidate.suggestions.slice(0, 1).map((option) => option.skill_id),
-            manual_search_query: candidate.raw_skill_text,
-            manual_options: [],
-            manual_loading: false,
-            show_all_suggestions: false,
-            already_in_profile: Boolean(candidate.already_in_profile),
-          })),
+          skill_candidates: document.skill_candidates.map((candidate) => {
+            const initialSelection = resolveInitialSkillSelectionState(candidate);
+            return {
+              ...candidate,
+              approved: initialSelection.approved,
+              selected_skill_ids: initialSelection.selectedSkillIds,
+              manual_search_query: candidate.raw_skill_text,
+              manual_options: [],
+              manual_loading: false,
+              show_all_suggestions: false,
+              already_in_profile: Boolean(candidate.already_in_profile),
+            };
+          }),
         };
       });
 
@@ -1496,6 +1500,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
           ...entry,
           manual_options: manualOptions,
           selected_skill_ids: nextSelected,
+          approved: true,
           already_in_profile: false,
           unmapped_candidate: nextSelected.length === 0,
         };
@@ -1959,6 +1964,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                             ? {
                                 ...item,
                                 selected_skill_ids: selectedSkillIds,
+                                approved: selectedSkillIds.length > 0 ? true : item.approved,
                                 already_in_profile:
                                   selectedSkillIds.length > 0 ? false : item.already_in_profile,
                                 unmapped_candidate:

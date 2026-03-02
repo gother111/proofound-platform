@@ -43,6 +43,8 @@ const MONTH_TOKEN_TO_NUMBER: Record<string, number> = {
   dec: 12,
   december: 12,
 };
+const DURATION_SEPARATOR_PATTERN = '(?:-|–|—|to)';
+const SLASH_MONTH_PATTERN = '(?:0?[1-9]|1[0-2])';
 
 function normalizeIsoDate(value?: string | null): string | null {
   if (!value) {
@@ -106,7 +108,7 @@ function formatYearMonth({ year, month }: { year: number; month: number }): stri
 
 function isPresentToken(value: string): boolean {
   const normalized = value.trim().toLowerCase();
-  return normalized === 'present' || normalized === 'current';
+  return normalized === 'present' || normalized === 'current' || normalized === 'now';
 }
 
 function parseMonthYearTokenToIsoDate(value: string): string | null {
@@ -121,6 +123,34 @@ function parseMonthYearTokenToIsoDate(value: string): string | null {
   }
 
   return `${match[2]}-${String(monthNumber).padStart(2, '0')}-01`;
+}
+
+function parseMonthSlashYearToIsoDate(value: string): string | null {
+  const match = value.trim().match(new RegExp(`^(${SLASH_MONTH_PATTERN})/(\\d{4})$`));
+  if (!match) {
+    return null;
+  }
+
+  const month = Number.parseInt(match[1], 10);
+  if (!Number.isInteger(month) || month < 1 || month > 12) {
+    return null;
+  }
+
+  return `${match[2]}-${String(month).padStart(2, '0')}-01`;
+}
+
+function parseYearSlashMonthToIsoDate(value: string): string | null {
+  const match = value.trim().match(new RegExp(`^(\\d{4})/(${SLASH_MONTH_PATTERN})$`));
+  if (!match) {
+    return null;
+  }
+
+  const month = Number.parseInt(match[2], 10);
+  if (!Number.isInteger(month) || month < 1 || month > 12) {
+    return null;
+  }
+
+  return `${match[1]}-${String(month).padStart(2, '0')}-01`;
 }
 
 export function monthInputToIsoDate(value?: string | null): string | null {
@@ -217,8 +247,63 @@ export function parseLegacyDurationToTimeline(
     return { startDate, endDate };
   }
 
+  const monthSlashYearMatch = trimmed.match(
+    new RegExp(
+      `^(${SLASH_MONTH_PATTERN}/\\d{4})\\s*${DURATION_SEPARATOR_PATTERN}\\s*(${SLASH_MONTH_PATTERN}/\\d{4}|present|current|now)$`,
+      'i'
+    )
+  );
+  if (monthSlashYearMatch) {
+    const startDate = parseMonthSlashYearToIsoDate(monthSlashYearMatch[1]);
+    const endToken = monthSlashYearMatch[2];
+    const endDate = isPresentToken(endToken) ? null : parseMonthSlashYearToIsoDate(endToken);
+
+    if (!startDate) {
+      return null;
+    }
+
+    if (endDate) {
+      const startYearMonth = toYearMonth(startDate);
+      const endYearMonth = toYearMonth(endDate);
+      if (!startYearMonth || !endYearMonth || compareYearMonth(endYearMonth, startYearMonth) < 0) {
+        return null;
+      }
+    }
+
+    return { startDate, endDate };
+  }
+
+  const yearSlashMonthMatch = trimmed.match(
+    new RegExp(
+      `^(\\d{4}/${SLASH_MONTH_PATTERN})\\s*${DURATION_SEPARATOR_PATTERN}\\s*(\\d{4}/${SLASH_MONTH_PATTERN}|present|current|now)$`,
+      'i'
+    )
+  );
+  if (yearSlashMonthMatch) {
+    const startDate = parseYearSlashMonthToIsoDate(yearSlashMonthMatch[1]);
+    const endToken = yearSlashMonthMatch[2];
+    const endDate = isPresentToken(endToken) ? null : parseYearSlashMonthToIsoDate(endToken);
+
+    if (!startDate) {
+      return null;
+    }
+
+    if (endDate) {
+      const startYearMonth = toYearMonth(startDate);
+      const endYearMonth = toYearMonth(endDate);
+      if (!startYearMonth || !endYearMonth || compareYearMonth(endYearMonth, startYearMonth) < 0) {
+        return null;
+      }
+    }
+
+    return { startDate, endDate };
+  }
+
   const monthTokenMatch = trimmed.match(
-    /^([A-Za-z]{3,9}\s+\d{4})\s*-\s*([A-Za-z]{3,9}\s+\d{4}|present|current)$/i
+    new RegExp(
+      `^([A-Za-z]{3,9}\\s+\\d{4})\\s*${DURATION_SEPARATOR_PATTERN}\\s*([A-Za-z]{3,9}\\s+\\d{4}|present|current|now)$`,
+      'i'
+    )
   );
   if (monthTokenMatch) {
     const startDate = parseMonthYearTokenToIsoDate(monthTokenMatch[1]);
@@ -228,6 +313,25 @@ export function parseLegacyDurationToTimeline(
     if (!startDate) {
       return null;
     }
+
+    if (endDate) {
+      const startYearMonth = toYearMonth(startDate);
+      const endYearMonth = toYearMonth(endDate);
+      if (!startYearMonth || !endYearMonth || compareYearMonth(endYearMonth, startYearMonth) < 0) {
+        return null;
+      }
+    }
+
+    return { startDate, endDate };
+  }
+
+  const yearRangeMatch = trimmed.match(
+    new RegExp(`^(\\d{4})\\s*${DURATION_SEPARATOR_PATTERN}\\s*(\\d{4}|present|current|now)$`, 'i')
+  );
+  if (yearRangeMatch) {
+    const startDate = `${yearRangeMatch[1]}-01-01`;
+    const endToken = yearRangeMatch[2];
+    const endDate = isPresentToken(endToken) ? null : `${endToken}-01-01`;
 
     if (endDate) {
       const startYearMonth = toYearMonth(startDate);

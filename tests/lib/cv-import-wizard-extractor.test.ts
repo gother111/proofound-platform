@@ -126,6 +126,62 @@ describe('cv-import wizard extractor', () => {
     expect(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']).toContain(swedish?.level);
   });
 
+  it('extracts compact work headers and split inline learning entries with mixed date formats', async () => {
+    const { suggestWizardForDocuments } = await import(
+      '@/lib/expertise/cv-import-wizard-extractor'
+    );
+
+    const response = await suggestWizardForDocuments(
+      {
+        documents: [
+          {
+            document_id: 'doc-1',
+            file_name: 'cv.pdf',
+            context: 'cv',
+            text: [
+              'Experience',
+              'Nordic Systems - Senior Product Engineer 04/2023 - 09/2025 • Stockholm',
+              'Led platform delivery across multiple product teams.',
+              '',
+              'Education',
+              'KTH Royal Institute of Technology — BSc Computer Engineering — 2015 - 2018',
+              'Stockholm University — MSc Data Science — April 2019 to September 2021',
+              '',
+              'Languages',
+              'English - Fluent',
+            ].join('\n'),
+          },
+        ],
+      },
+      {
+        maxDocuments: 5,
+        maxCharsPerDocument: 30000,
+        maxTotalChars: 90000,
+      },
+      {
+        semanticEnabled: false,
+      }
+    );
+
+    const document = response.documents[0];
+    expect(document.work_experiences[0]?.title).toContain('Senior Product Engineer');
+    expect(document.work_experiences[0]?.organization).toContain('Nordic Systems');
+    expect(document.work_experiences[0]?.duration).toContain('04/2023 - 09/2025');
+
+    expect(document.learning_experiences.length).toBeGreaterThanOrEqual(2);
+
+    const kth = document.learning_experiences.find((entry) =>
+      entry.institution.includes('KTH Royal Institute of Technology')
+    );
+    const su = document.learning_experiences.find((entry) =>
+      entry.institution.includes('Stockholm University')
+    );
+
+    expect(kth?.degree).toContain('BSc Computer Engineering');
+    expect(su?.degree).toContain('MSc Data Science');
+    expect(su?.duration).toContain('April 2019 to September 2021');
+  });
+
   it('rejects non-cv context for wizard suggest route', async () => {
     const { suggestWizardForDocuments } = await import(
       '@/lib/expertise/cv-import-wizard-extractor'

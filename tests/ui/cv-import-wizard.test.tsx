@@ -446,6 +446,82 @@ describe('CvImportWizard', () => {
     }
   });
 
+  it('does not preselect fuzzy-only matches by default', async () => {
+    apiFetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          documents: [
+            {
+              document_id: 'doc-1',
+              file_name: 'cv.pdf',
+              context: 'cv',
+              work_experiences: [],
+              learning_experiences: [],
+              volunteering: [],
+              languages: [],
+              skill_candidates: [
+                {
+                  candidate_id: 'candidate-1',
+                  raw_skill_text: 'React-ish frontend stack',
+                  category: 'technical',
+                  evidence_snippets: ['Built modern frontend stack'],
+                  confidence: 0.91,
+                  suggestions: [
+                    {
+                      skill_id: 'skill_react',
+                      skill_name: 'React',
+                      match_method: 'fuzzy',
+                      score: 0.98,
+                    },
+                  ],
+                  unmapped_candidate: true,
+                },
+              ],
+            },
+          ],
+          metadata: {
+            semantic_used: false,
+            semantic_fallback_triggered: false,
+            unmapped_candidates_count: 1,
+            limits: {
+              max_documents: 5,
+              max_chars_per_document: 30000,
+              max_total_chars: 90000,
+            },
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+
+    render(<CvImportWizard />);
+
+    const uploadInput = screen.getByTestId('cv-upload');
+    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
+
+    fireEvent.change(uploadInput, {
+      target: {
+        files: [file],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Apply Recommended Skills/i })).toBeDisabled();
+    });
+
+    expect(screen.getByText('0/1 selected')).toBeInTheDocument();
+    expect(screen.getByText('Needs mapping. Select at least one Atlas skill.')).toBeInTheDocument();
+  });
+
   it('shows partial-success info when skill suggestions are unavailable but extraction succeeds', async () => {
     apiFetchMock.mockResolvedValueOnce(
       new Response(

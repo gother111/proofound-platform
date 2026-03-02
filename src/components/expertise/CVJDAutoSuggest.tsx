@@ -12,6 +12,7 @@ import {
   type AnalyzeProgressState,
   createIdleAnalyzeProgressState,
 } from '@/components/expertise/cv-import/AnalyzeProgressPanel';
+import { resolveInitialSkillSelectionState } from '@/components/expertise/cv-import/initial-selection';
 import { SkillReviewPanel } from '@/components/expertise/cv-import/SkillReviewPanel';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -921,16 +922,19 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
           context: result.context,
           parsed_text: source?.parsed_text || '',
           parse_error: source?.parse_error,
-          candidates: result.candidates.map((candidate) => ({
-            ...candidate,
-            approved: true,
-            selected_skill_ids: candidate.suggestions.slice(0, 1).map((skill) => skill.skill_id),
-            manual_search_query: candidate.raw_skill_text,
-            manual_options: [],
-            manual_loading: false,
-            show_all_suggestions: false,
-            already_in_profile: Boolean(candidate.already_in_profile),
-          })),
+          candidates: result.candidates.map((candidate) => {
+            const initialSelection = resolveInitialSkillSelectionState(candidate);
+            return {
+              ...candidate,
+              approved: initialSelection.approved,
+              selected_skill_ids: initialSelection.selectedSkillIds,
+              manual_search_query: candidate.raw_skill_text,
+              manual_options: [],
+              manual_loading: false,
+              show_all_suggestions: false,
+              already_in_profile: Boolean(candidate.already_in_profile),
+            };
+          }),
         };
       });
 
@@ -1043,6 +1047,7 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
         ...current,
         manual_options: manualOptions,
         selected_skill_ids: selectedSkillIds,
+        approved: true,
         already_in_profile: false,
         unmapped_candidate: selectedSkillIds.length === 0,
       };
@@ -1326,6 +1331,7 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
                       updateCandidate(document.document_id, candidateId, (current) => ({
                         ...current,
                         selected_skill_ids: selectedSkillIds,
+                        approved: selectedSkillIds.length > 0 ? true : current.approved,
                         already_in_profile:
                           selectedSkillIds.length > 0 ? false : current.already_in_profile,
                         unmapped_candidate:

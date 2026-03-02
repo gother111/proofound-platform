@@ -68,13 +68,27 @@ const SECTION_HEADING_PATTERNS: Record<SectionType, RegExp[]> = {
   languages: [/\blanguages?\b/i, /\blanguage\s+skills\b/i],
 };
 
-const DATE_RANGE_PATTERN =
-  /(\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)?\s*\d{4}\s*[-–]\s*(?:present|current|now|(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)?\s*\d{4})\b)|(\b\d{4}\s*[-–]\s*(?:present|current|\d{4})\b)/i;
+const MONTH_TOKEN_PATTERN_SOURCE =
+  '(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)';
+const DATE_RANGE_SEPARATOR_PATTERN_SOURCE = '(?:-|–|—|to)';
+const DATE_RANGE_PATTERN = new RegExp(
+  [
+    `\\b${MONTH_TOKEN_PATTERN_SOURCE}\\s+\\d{4}\\s*${DATE_RANGE_SEPARATOR_PATTERN_SOURCE}\\s*(?:${MONTH_TOKEN_PATTERN_SOURCE}\\s+\\d{4}|present|current|now)\\b`,
+    `\\b(?:0?[1-9]|1[0-2])\\/\\d{4}\\s*${DATE_RANGE_SEPARATOR_PATTERN_SOURCE}\\s*(?:(?:0?[1-9]|1[0-2])\\/\\d{4}|present|current|now)\\b`,
+    `\\b\\d{4}\\/(?:0?[1-9]|1[0-2])\\s*${DATE_RANGE_SEPARATOR_PATTERN_SOURCE}\\s*(?:\\d{4}\\/(?:0?[1-9]|1[0-2])|present|current|now)\\b`,
+    `\\b\\d{4}(?:-\\d{2}(?:-\\d{2})?)?\\s*${DATE_RANGE_SEPARATOR_PATTERN_SOURCE}\\s*(?:\\d{4}(?:-\\d{2}(?:-\\d{2})?)?|present|current|now)\\b`,
+  ].join('|'),
+  'i'
+);
 
 const INSTITUTION_PATTERN =
   /\b(university|college|school|institute|academy|polytechnic|bootcamp|faculty)\b/i;
 const DEGREE_PATTERN =
   /\b(bachelor|master|phd|doctorate|diploma|certificate|bootcamp|course|mba|msc|bsc|ba)\b/i;
+const ROLE_KEYWORD_PATTERN =
+  /\b(engineer|developer|manager|lead|head|director|intern|consultant|analyst|architect|designer|specialist|coordinator|officer|scientist|researcher|teacher|professor)\b/i;
+const ORGANIZATION_KEYWORD_PATTERN =
+  /\b(university|college|school|institute|academy|polytechnic|inc|llc|ltd|corp|company|group|agency|bank|foundation|hospital|studio|labs?)\b/i;
 
 const CEFR_RANK: Record<CEFRLevel, number> = {
   A1: 1,
@@ -320,16 +334,99 @@ function splitFirstLine(blockText: string): string {
   return normalizeSpace(firstLine || '');
 }
 
-function parseRoleAndOrganization(firstLine: string): { title: string; organization: string } {
-  const dashMatch = firstLine.match(/^([^|]{2,120})\s+[|–-]\s+(.{2,160})$/);
-  if (dashMatch) {
+function stripInlineDateRanges(value: string): string {
+  return normalizeSpace(value.replace(new RegExp(DATE_RANGE_PATTERN.source, 'gi'), ' '));
+}
+
+function sanitizeRoleOrganizationLine(value: string): string {
+  let sanitized = normalizeSpace(value.replace(/^[-•*]\s*/, ''));
+  sanitized = stripInlineDateRanges(sanitized);
+  sanitized = sanitized.replace(/\s+[•·▪]\s+.*$/, '');
+  sanitized = sanitized.replace(/\s*(?:\||-|–|—|,)\s*$/, '');
+  return normalizeSpace(sanitized);
+}
+
+function scoreRoleText(value: string): number {
+  const normalized = normalizeSpace(value);
+  if (!normalized) {
+    return 0;
+  }
+
+  let score = 0;
+  if (ROLE_KEYWORD_PATTERN.test(normalized)) {
+    score += 2;
+  }
+  if (/\b(senior|junior|principal|staff|lead|head|chief|assistant)\b/i.test(normalized)) {
+    score += 1;
+  }
+  if (normalized.split(/\s+/).length <= 7) {
+    score += 0.25;
+  }
+  return score;
+}
+
+function scoreOrganizationText(value: string): number {
+  const normalized = normalizeSpace(value);
+  if (!normalized) {
+    return 0;
+  }
+
+  let score = 0;
+  if (ORGANIZATION_KEYWORD_PATTERN.test(normalized)) {
+    score += 2;
+  }
+  if (/\b(inc\.?|llc|ltd\.?|corp\.?|co\.?|gmbh|ab|oy|plc)\b/i.test(normalized)) {
+    score += 1.5;
+  }
+  if (/^[A-Z0-9&.,'’\-\s]{2,}$/.test(normalized) && !ROLE_KEYWORD_PATTERN.test(normalized)) {
+    score += 0.5;
+  }
+  return score;
+}
+
+function parseRoleOrganizationPair(
+  leftRaw: string,
+  rightRaw: string
+): { title: string; organization: string } {
+  const left = normalizeSpace(leftRaw);
+  const right = normalizeSpace(rightRaw);
+
+  const leftRoleScore = scoreRoleText(left);
+  const rightRoleScore = scoreRoleText(right);
+  const leftOrganizationScore = scoreOrganizationText(left);
+  const rightOrganizationScore = scoreOrganizationText(right);
+
+  const preferLeftAsTitle = leftRoleScore + rightOrganizationScore;
+  const preferRightAsTitle = rightRoleScore + leftOrganizationScore;
+
+  if (preferRightAsTitle > preferLeftAsTitle + 0.5) {
     return {
-      title: normalizeSpace(dashMatch[1]),
-      organization: normalizeSpace(dashMatch[2]),
+      title: right,
+      organization: left,
     };
   }
 
-  const atMatch = firstLine.match(/^(.+?)\s+(?:at|@)\s+(.+)$/i);
+  return {
+    title: left,
+    organization: right,
+  };
+}
+
+function parseRoleAndOrganization(firstLine: string): { title: string; organization: string } {
+  const cleaned = sanitizeRoleOrganizationLine(firstLine);
+  if (!cleaned) {
+    return {
+      title: 'Imported Experience',
+      organization: 'Organization not specified',
+    };
+  }
+
+  const dashMatch = cleaned.match(/^(.{2,120}?)\s+(?:\||–|-|—)\s+(.{2,160})$/);
+  if (dashMatch) {
+    return parseRoleOrganizationPair(dashMatch[1], dashMatch[2]);
+  }
+
+  const atMatch = cleaned.match(/^(.+?)\s+(?:at|@)\s+(.+)$/i);
   if (atMatch) {
     return {
       title: normalizeSpace(atMatch[1]),
@@ -337,16 +434,13 @@ function parseRoleAndOrganization(firstLine: string): { title: string; organizat
     };
   }
 
-  const commaMatch = firstLine.match(/^([^,]{2,120}),\s*(.{2,120})$/);
+  const commaMatch = cleaned.match(/^([^,]{2,120}),\s*(.{2,120})$/);
   if (commaMatch) {
-    return {
-      title: normalizeSpace(commaMatch[1]),
-      organization: normalizeSpace(commaMatch[2]),
-    };
+    return parseRoleOrganizationPair(commaMatch[1], commaMatch[2]);
   }
 
   return {
-    title: firstLine.slice(0, 120) || 'Imported Experience',
+    title: cleaned.slice(0, 120) || 'Imported Experience',
     organization: 'Organization not specified',
   };
 }
@@ -380,6 +474,116 @@ function clipDisplayText(value: string, maxChars = SUMMARY_MAX_CHARS): string {
     return normalized;
   }
   return `${normalized.slice(0, maxChars - 1).trimEnd()}…`;
+}
+
+function splitLearningBlockLines(blockText: string): string[] {
+  const lines = splitBlockContentLines(blockText);
+  return lines.flatMap((line) => {
+    if (!/[•·▪]/.test(line)) {
+      return [line];
+    }
+
+    const parts = line
+      .split(/\s+[•·▪]\s+/)
+      .map((part) => normalizeSpace(part))
+      .filter(Boolean);
+
+    return parts.length > 0 ? parts : [line];
+  });
+}
+
+function shouldStartNewLearningEntry(current: string[], nextLine: string): boolean {
+  if (current.length === 0) {
+    return false;
+  }
+
+  const currentHasDate = current.some((line) => isLikelyDateLine(line));
+  const currentHasInstitution = current.some((line) => INSTITUTION_PATTERN.test(line));
+  const currentHasDegree = current.some((line) => DEGREE_PATTERN.test(line));
+
+  const nextHasDate = isLikelyDateLine(nextLine);
+  const nextHasInstitution = INSTITUTION_PATTERN.test(nextLine);
+  const nextHasDegree = DEGREE_PATTERN.test(nextLine);
+
+  if (nextHasDate && currentHasDate && current.length >= 2) {
+    return true;
+  }
+
+  if (nextHasInstitution && (currentHasDate || currentHasDegree || currentHasInstitution)) {
+    return true;
+  }
+
+  if (nextHasDegree && currentHasDegree && current.length >= 2) {
+    return true;
+  }
+
+  return false;
+}
+
+function splitLearningEntries(blockText: string): string[][] {
+  const lines = splitLearningBlockLines(blockText);
+  if (lines.length === 0) {
+    return [];
+  }
+
+  const entries: string[][] = [];
+  let current: string[] = [];
+
+  for (const line of lines) {
+    if (shouldStartNewLearningEntry(current, line)) {
+      entries.push(current);
+      current = [line];
+      continue;
+    }
+
+    current.push(line);
+  }
+
+  if (current.length > 0) {
+    entries.push(current);
+  }
+
+  return entries;
+}
+
+function parseInstitutionAndDegreeFromLine(
+  line: string
+): { institution: string; degree: string } | null {
+  const cleaned = sanitizeRoleOrganizationLine(line);
+  if (!cleaned) {
+    return null;
+  }
+
+  const separatorMatch = cleaned.match(/^(.+?)\s+(?:\||–|-|—)\s+(.+)$/);
+  if (!separatorMatch) {
+    return null;
+  }
+
+  const left = normalizeSpace(separatorMatch[1]);
+  const right = normalizeSpace(separatorMatch[2]);
+
+  if (!left || !right) {
+    return null;
+  }
+
+  if (INSTITUTION_PATTERN.test(left) || DEGREE_PATTERN.test(right)) {
+    return {
+      institution: left,
+      degree: right,
+    };
+  }
+
+  if (INSTITUTION_PATTERN.test(right) || DEGREE_PATTERN.test(left)) {
+    return {
+      institution: right,
+      degree: left,
+    };
+  }
+
+  return {
+    institution: left,
+    degree: right,
+  };
 }
 
 function buildConciseSummaryFromBlock(text: string, fallback: string): string {
@@ -463,25 +667,41 @@ function extractLearningExperiences(
 ) {
   const blocks = extractBlocks(lines, sections.learning || null);
 
-  return blocks
+  const learningEntries = blocks.flatMap((block) => {
+    const entries = splitLearningEntries(block.text);
+    if (entries.length === 0) {
+      return [{ lines: splitBlockContentLines(block.text), block }];
+    }
+
+    return entries.map((entryLines) => ({
+      lines: entryLines,
+      block,
+    }));
+  });
+
+  return learningEntries
     .slice(0, MAX_ITEMS_PER_ENTITY)
     .reduce<
       CvImportWizardSuggestResponse['documents'][number]['learning_experiences']
-    >((acc, block, index) => {
-      const firstLine = splitFirstLine(block.text);
+    >((acc, entry, index) => {
+      const linesInBlock = entry.lines;
+      const firstLine = linesInBlock[0] || '';
       if (!firstLine) {
         return acc;
       }
 
-      const linesInBlock = splitBlockContentLines(block.text);
-
+      const inlineParsed = parseInstitutionAndDegreeFromLine(firstLine);
       const institutionLine =
-        linesInBlock.find((line) => INSTITUTION_PATTERN.test(line)) || firstLine;
+        inlineParsed?.institution ||
+        linesInBlock.find((line) => INSTITUTION_PATTERN.test(line)) ||
+        linesInBlock.find((line) => !DEGREE_PATTERN.test(line) && !isLikelyDateLine(line)) ||
+        firstLine;
       const degreeLine =
-        linesInBlock.find((line) => DEGREE_PATTERN.test(line)) ||
+        inlineParsed?.degree ||
+        linesInBlock.find((line) => DEGREE_PATTERN.test(line) && line !== institutionLine) ||
         linesInBlock.find((line, lineIndex) => lineIndex > 0 && line.length > 5) ||
         firstLine;
-      const duration = extractDuration(block.text);
+      const duration = extractDuration(linesInBlock.join(' '));
       const detailLines = linesInBlock.filter(
         (line) =>
           line !== institutionLine &&
@@ -502,7 +722,7 @@ function extractLearningExperiences(
         detailLines[1] ||
         '';
 
-      const evidenceSnippets = buildEvidenceSnippet(text, block.start, block.end);
+      const evidenceSnippets = buildEvidenceSnippet(text, entry.block.start, entry.block.end);
       if (evidenceSnippets.length === 0) {
         return acc;
       }

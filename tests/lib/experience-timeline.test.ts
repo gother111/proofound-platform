@@ -35,6 +35,31 @@ describe('experience timeline helpers', () => {
       startDate: '2024-01-01',
       endDate: '2024-07-01',
     });
+
+    expect(parseLegacyDurationToTimeline('04/2023 - 09/2025')).toEqual({
+      startDate: '2023-04-01',
+      endDate: '2025-09-01',
+    });
+
+    expect(parseLegacyDurationToTimeline('2023/04 - 2025/09')).toEqual({
+      startDate: '2023-04-01',
+      endDate: '2025-09-01',
+    });
+
+    expect(parseLegacyDurationToTimeline('April 2023 to September 2025')).toEqual({
+      startDate: '2023-04-01',
+      endDate: '2025-09-01',
+    });
+
+    expect(parseLegacyDurationToTimeline('2021 — Present')).toEqual({
+      startDate: '2021-01-01',
+      endDate: null,
+    });
+
+    expect(parseLegacyDurationToTimeline('2019 — 2021')).toEqual({
+      startDate: '2019-01-01',
+      endDate: '2021-01-01',
+    });
   });
 
   it('preserves legacy duration when parsing fails', () => {
