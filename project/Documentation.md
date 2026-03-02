@@ -1,3 +1,23 @@
+## 2026-03-02: Mobile UI/UX Audit and V3 Characteristics Refactor
+
+What changed:
+
+- Made Card, Button, and DashboardGrid components fully responsive with tuned mobile padding, gaps, and touch targets (>= 40px).
+- Replaced the marketing page's legacy dropdown menu with a native V3 bottom `Sheet` component.
+- Stacked complex card headers vertically on mobile devices to prevent layout truncation.
+
+Why:
+
+- To adhere to V3 mobile-first premium standards and ensure minimum accessibility touch target guidelines (WCAG) are met.
+
+How to verify:
+
+- Inspect the `/` marketing header and any `/app` dashboard grid on a mobile viewport to confirm updated spacing and the new bottom sheet navigation.
+
+Open risks/TODO:
+
+- Confirm no specific dashboard widget relied strictly on standard padding assumptions for bounded charts.
+
 ## 2026-03-01: UX/UI V1 Standards Enhancements (Sprint 1)
 
 What changed:
