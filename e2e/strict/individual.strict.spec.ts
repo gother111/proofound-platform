@@ -119,7 +119,7 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
     const completenessPayload = (await completenessResponse.json()) as { percentage?: number };
     expect(typeof completenessPayload.percentage).toBe('number');
 
-    const addSkillResponse = await apiPostJson(page.request, '/api/expertise/user-skills', {
+    let addSkillResponse = await apiPostJson(page.request, '/api/expertise/user-skills', {
       cat_id: 1,
       subcat_id: 1,
       l3_id: 1,
@@ -128,6 +128,19 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
       relevance: 'current',
       months_experience: 24,
     });
+
+    if (addSkillResponse.status() === 403) {
+      await page.goto('/app/i/profile');
+      addSkillResponse = await apiPostJson(page.request, '/api/expertise/user-skills', {
+        cat_id: 1,
+        subcat_id: 1,
+        l3_id: 1,
+        custom_skill_name: 'Strict Contract Skill',
+        level: 4,
+        relevance: 'current',
+        months_experience: 24,
+      });
+    }
 
     expect([201, 409]).toContain(addSkillResponse.status());
 
@@ -312,6 +325,7 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
       platform: 'manual',
       participantUserIds: [individualUser.id, orgUser.id],
       manualMeetingLink: 'https://meet.google.com/strict-individual-manual',
+      manualMeetingProvider: 'google_meet',
     });
 
     const scheduleInterviewRaw = await scheduleInterviewResponse.text();
