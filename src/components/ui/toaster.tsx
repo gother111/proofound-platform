@@ -27,7 +27,7 @@ export function Toaster() {
           </Toast>
         );
       })}
-      <ToastViewport />
+      <ToastViewport className="sm:bottom-0 bottom-16 gap-2" />
     </ToastProvider>
   );
 }
