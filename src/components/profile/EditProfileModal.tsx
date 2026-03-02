@@ -18,6 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { LocationAutocompleteField } from '@/components/location/LocationAutocompleteField';
 import { BasicInfo } from '@/types/profile';
 import { FormErrorBoundary } from '@/components/ErrorBoundary';
 import { useResponsiveModalMode } from '@/hooks/use-responsive-modal-mode';
@@ -142,20 +143,17 @@ export function EditProfileModal({ open, onOpenChange, basicInfo, onSave }: Edit
         </div>
 
         {/* Location */}
-        <div className="space-y-2">
-          <Label htmlFor="location">Location</Label>
-          <Input
-            id="location"
-            value={location}
-            onChange={(e) => {
-              setLocation(e.target.value);
-              setErrors((prev) => ({ ...prev, location: '' }));
-            }}
-            placeholder="City, Country"
-            className={errors.location ? 'border-red-500' : ''}
-          />
-          {errors.location && <p className="text-xs text-red-500">{errors.location}</p>}
-        </div>
+        <LocationAutocompleteField
+          label="Location"
+          value={location}
+          maxLength={100}
+          placeholder="Type a city"
+          error={errors.location || null}
+          onChange={(nextValue) => {
+            setLocation(nextValue);
+            setErrors((prev) => ({ ...prev, location: '' }));
+          }}
+        />
       </div>
     </FormErrorBoundary>
   );

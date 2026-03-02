@@ -73,6 +73,22 @@ vi.mock('@/components/ui/drawer', () => ({
   DrawerFooter: ({ children }: any) => <div>{children}</div>,
 }));
 
+vi.mock('@/components/location/LocationAutocompleteField', () => ({
+  LocationAutocompleteField: ({ label, value, onChange, error, maxLength, placeholder }: any) => (
+    <div>
+      <label htmlFor="mock-location-field">{label}</label>
+      <input
+        id="mock-location-field"
+        value={value}
+        maxLength={maxLength}
+        placeholder={placeholder}
+        onChange={(event) => onChange(event.target.value)}
+      />
+      {error ? <p>{error}</p> : null}
+    </div>
+  ),
+}));
+
 const baseBasicInfo = {
   name: 'Jane Doe',
   tagline: '',
@@ -210,5 +226,42 @@ describe('EditProfileModal', () => {
     });
 
     expect(screen.queryByTestId('dialog-root')).not.toBeInTheDocument();
+  });
+
+  it('saves selected location string as single location value', async () => {
+    mediaMatches = true;
+    installMatchMediaMock();
+
+    const onOpenChange = vi.fn();
+    const onSave = vi.fn(async () => {});
+
+    render(
+      <EditProfileModal
+        open={true}
+        onOpenChange={onOpenChange}
+        basicInfo={baseBasicInfo}
+        onSave={onSave}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('dialog-root')).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/Location/i), {
+      target: { value: 'Stockholm, Sweden' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
+
+    await waitFor(() => {
+      expect(onSave).toHaveBeenCalledWith(
+        expect.objectContaining({
+          location: 'Stockholm, Sweden',
+        })
+      );
+    });
+
+    expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 });
