@@ -636,10 +636,10 @@ CV_IMPORT_GEMINI_MODEL_FALLBACK=gemini-2.5-flash
 **Format**:
 
 ```env
-CV_IMPORT_GEMINI_MAX_OUTPUT_TOKENS=1400
+CV_IMPORT_GEMINI_MAX_OUTPUT_TOKENS=1600
 ```
 
-**Default**: `1400`
+**Default**: `1600`
 
 ---
 
@@ -650,10 +650,10 @@ CV_IMPORT_GEMINI_MAX_OUTPUT_TOKENS=1400
 **Format**:
 
 ```env
-CV_IMPORT_GEMINI_SHORT_TEXT_MAX_OUTPUT_TOKENS=900
+CV_IMPORT_GEMINI_SHORT_TEXT_MAX_OUTPUT_TOKENS=1000
 ```
 
-**Default**: `900`
+**Default**: `1000`
 
 ---
 
@@ -735,6 +735,25 @@ CV_IMPORT_MAX_PDF_PAGES=4
 
 - Max file size: `5` MB
 - Max pages: `4`
+
+---
+
+### NEXT_PUBLIC_CV_IMPORT_REVIEW_V3
+
+**Purpose**: Enables the V3 skills-first CV review UX (apply-first banner, match picker, and collapsed non-skill sections).
+
+**Format**:
+
+```env
+NEXT_PUBLIC_CV_IMPORT_REVIEW_V3=true
+```
+
+**Values**:
+
+- `true` - Use V3 review UX (recommended).
+- `false` - Keep legacy review UX.
+
+**Default**: `true`
 
 ---
 
@@ -1194,7 +1213,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 | **Matching Refresh**    | `MATCHING_REFRESH_QUEUE_ENABLED`, `MATCHING_REFRESH_WORKER_BATCH_SIZE`, `MATCHING_REFRESH_WORKER_CONCURRENCY`, `MATCHING_REFRESH_MAX_ATTEMPTS`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | **CV Import Engine**    | `CV_IMPORT_ENGINE_MODE`, `CV_IMPORT_WIZARD_TIMEOUT_MS`, `CV_IMPORT_SERVER_TIMEOUT_MS`, `CV_IMPORT_MAX_FILE_SIZE_MB`, `CV_IMPORT_MAX_PDF_PAGES`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | **CV Import Gemini**    | `CV_IMPORT_GEMINI_PRIMARY_API_KEY`, `CV_IMPORT_GEMINI_SECONDARY_API_KEY`, `CV_IMPORT_GEMINI_PRIMARY_MONTHLY_BUDGET_SEK`, `CV_IMPORT_GEMINI_SECONDARY_MONTHLY_BUDGET_SEK`, `CV_IMPORT_GEMINI_USD_TO_SEK_RATE`, `CV_IMPORT_GEMINI_MODEL_DEFAULT`, `CV_IMPORT_GEMINI_MODEL_FALLBACK`, `CV_IMPORT_GEMINI_MAX_OUTPUT_TOKENS`, `CV_IMPORT_GEMINI_SHORT_TEXT_MAX_OUTPUT_TOKENS`, `CV_IMPORT_GEMINI_TAXONOMY_GUIDED`, `CV_IMPORT_GEMINI_SHORTLIST_MAX_ENTRIES`, `CV_IMPORT_GEMINI_SHORTLIST_MAX_TOKENS`, `CV_IMPORT_GEMINI_SHORTLIST_SEED_LIMIT`, `CV_IMPORT_GEMINI_SHORTLIST_CONCURRENCY`, `CV_IMPORT_GEMINI_SHORTLIST_QUERY_TIMEOUT_MS`, `CV_IMPORT_GEMINI_SHORTLIST_DOCUMENT_TIMEOUT_MS`, `CV_IMPORT_GEMINI_SHORTLIST_CACHE_TTL_MS`, `CV_IMPORT_GEMINI_TAXONOMY_VERSION` |
-| **CV Import OCR**       | `NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED`, `NEXT_PUBLIC_CV_IMPORT_OCR_MAX_FILE_SIZE_MB`, `NEXT_PUBLIC_CV_IMPORT_OCR_MAX_PAGES`, `NEXT_PUBLIC_CV_IMPORT_OCR_PAGE_TIMEOUT_MS`, `NEXT_PUBLIC_CV_IMPORT_OCR_TIMEOUT_MS`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **CV Import OCR**       | `NEXT_PUBLIC_CV_IMPORT_REVIEW_V3`, `NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED`, `NEXT_PUBLIC_CV_IMPORT_OCR_MAX_FILE_SIZE_MB`, `NEXT_PUBLIC_CV_IMPORT_OCR_MAX_PAGES`, `NEXT_PUBLIC_CV_IMPORT_OCR_PAGE_TIMEOUT_MS`, `NEXT_PUBLIC_CV_IMPORT_OCR_TIMEOUT_MS`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | **Performance Budgets** | `PERF_API_P95_BUDGET_MS`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | **Real-time Messaging** | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 
@@ -1254,6 +1273,7 @@ Use this checklist when setting up a new environment:
 - [ ] `CV_IMPORT_GEMINI_SHORTLIST_DOCUMENT_TIMEOUT_MS` - Per-document shortlist budget
 - [ ] `CV_IMPORT_GEMINI_SHORTLIST_CACHE_TTL_MS` - In-memory shortlist cache TTL
 - [ ] `CV_IMPORT_GEMINI_TAXONOMY_VERSION` - Taxonomy cache-key version anchor
+- [ ] `NEXT_PUBLIC_CV_IMPORT_REVIEW_V3` - Enable V3 skills-first review UX
 - [ ] `NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED` - Enable browser OCR fallback
 - [ ] `NEXT_PUBLIC_CV_IMPORT_OCR_MAX_FILE_SIZE_MB` - OCR file-size cap
 - [ ] `NEXT_PUBLIC_CV_IMPORT_OCR_MAX_PAGES` - OCR page cap

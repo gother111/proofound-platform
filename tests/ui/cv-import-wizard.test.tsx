@@ -143,7 +143,15 @@ describe('CvImportWizard', () => {
       );
     });
 
-    expect(screen.getByRole('button', { name: /1\. Work Experiences/i })).toBeInTheDocument();
+    expect(screen.getByText('Skills to review')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Skills are ready to apply. Use "Review All Extracted Sections" to edit work, learning, volunteering, and languages before full apply.'
+      )
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Review All Extracted Sections/i }));
+
     expect(screen.getByDisplayValue('Senior Engineer')).toBeInTheDocument();
   });
 
@@ -305,130 +313,137 @@ describe('CvImportWizard', () => {
   });
 
   it('applies approved wizard selections via wizard-apply route', async () => {
-    apiFetchMock
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            documents: [
-              {
-                document_id: 'doc-1',
-                file_name: 'cv.pdf',
-                context: 'cv',
-                work_experiences: [],
-                learning_experiences: [],
-                volunteering: [],
-                languages: [],
-                skill_candidates: [
-                  {
-                    candidate_id: 'candidate-1',
-                    raw_skill_text: 'React',
-                    category: 'technical',
-                    evidence_snippets: ['Built React products'],
-                    confidence: 0.88,
-                    suggestions: [
-                      {
-                        skill_id: 'skill_react',
-                        skill_name: 'React',
-                        match_method: 'exact',
-                        score: 0.99,
-                      },
-                    ],
-                    unmapped_candidate: false,
-                  },
-                ],
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    try {
+      apiFetchMock
+        .mockResolvedValueOnce(
+          new Response(
+            JSON.stringify({
+              documents: [
+                {
+                  document_id: 'doc-1',
+                  file_name: 'cv.pdf',
+                  context: 'cv',
+                  work_experiences: [],
+                  learning_experiences: [],
+                  volunteering: [],
+                  languages: [],
+                  skill_candidates: [
+                    {
+                      candidate_id: 'candidate-1',
+                      raw_skill_text: 'React',
+                      category: 'technical',
+                      evidence_snippets: ['Built React products'],
+                      confidence: 0.88,
+                      suggestions: [
+                        {
+                          skill_id: 'skill_react',
+                          skill_name: 'React',
+                          match_method: 'exact',
+                          score: 0.99,
+                        },
+                      ],
+                      unmapped_candidate: false,
+                    },
+                  ],
+                },
+              ],
+              metadata: {
+                semantic_used: false,
+                semantic_fallback_triggered: false,
+                unmapped_candidates_count: 0,
+                limits: {
+                  max_documents: 5,
+                  max_chars_per_document: 30000,
+                  max_total_chars: 90000,
+                },
               },
-            ],
-            metadata: {
-              semantic_used: false,
-              semantic_fallback_triggered: false,
-              unmapped_candidates_count: 0,
-              limits: {
-                max_documents: 5,
-                max_chars_per_document: 30000,
-                max_total_chars: 90000,
+            }),
+            {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            }
+          )
+        )
+        .mockResolvedValueOnce(
+          new Response(
+            JSON.stringify({
+              imported_counts: {
+                skills: 1,
+                work_experiences: 0,
+                learning_experiences: 0,
+                volunteering: 0,
+                languages: 0,
               },
-            },
-          }),
-          {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        )
-      )
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            imported_counts: {
-              skills: 1,
-              work_experiences: 0,
-              learning_experiences: 0,
-              volunteering: 0,
-              languages: 0,
-            },
-            skipped_counts: {
-              skills: 0,
-              work_experiences: 0,
-              learning_experiences: 0,
-              volunteering: 0,
-              languages: 0,
-            },
-            warnings: [],
-          }),
-          {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        )
+              skipped_counts: {
+                skills: 0,
+                work_experiences: 0,
+                learning_experiences: 0,
+                volunteering: 0,
+                languages: 0,
+              },
+              warnings: [],
+            }),
+            {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            }
+          )
+        );
+
+      render(<CvImportWizard />);
+
+      const uploadInput = screen.getByTestId('cv-upload');
+      const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
+
+      fireEvent.change(uploadInput, {
+        target: {
+          files: [file],
+        },
+      });
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
+
+      await waitFor(() => {
+        expect(apiFetchMock).toHaveBeenCalledWith(
+          '/api/expertise/cv-import/wizard-suggest?engine=gemini',
+          expect.objectContaining({ method: 'POST' })
+        );
+      });
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Apply Recommended Skills/i })).toBeEnabled();
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: /Apply Recommended Skills/i }));
+
+      await waitFor(() => {
+        expect(confirmSpy).toHaveBeenCalledWith('Apply 1 skill to your profile now?');
+      });
+
+      await waitFor(() => {
+        expect(apiFetchMock).toHaveBeenCalledWith(
+          '/api/expertise/cv-import/wizard-apply',
+          expect.objectContaining({ method: 'POST' })
+        );
+      });
+
+      const applyCall = apiFetchMock.mock.calls.find(
+        ([url]) => url === '/api/expertise/cv-import/wizard-apply'
       );
 
-    render(<CvImportWizard />);
+      expect(applyCall).toBeDefined();
 
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
-
-    await waitFor(() => {
-      expect(apiFetchMock).toHaveBeenCalledWith(
-        '/api/expertise/cv-import/wizard-suggest?engine=gemini',
-        expect.objectContaining({ method: 'POST' })
-      );
-    });
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: /Apply Approved \(1\) to Profile/i })
-      ).toBeEnabled();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Apply Approved \(1\) to Profile/i }));
-
-    await waitFor(() => {
-      expect(apiFetchMock).toHaveBeenCalledWith(
-        '/api/expertise/cv-import/wizard-apply',
-        expect.objectContaining({ method: 'POST' })
-      );
-    });
-
-    const applyCall = apiFetchMock.mock.calls.find(
-      ([url]) => url === '/api/expertise/cv-import/wizard-apply'
-    );
-
-    expect(applyCall).toBeDefined();
-
-    const requestPayload = JSON.parse(String(applyCall?.[1]?.body || '{}'));
-    expect(requestPayload.documents).toHaveLength(1);
-    expect(requestPayload.documents[0].skill_ids).toContain('skill_react');
+      const requestPayload = JSON.parse(String(applyCall?.[1]?.body || '{}'));
+      expect(requestPayload.documents).toHaveLength(1);
+      expect(requestPayload.documents[0].skill_ids).toContain('skill_react');
+    } finally {
+      confirmSpy.mockRestore();
+    }
   });
 
   it('shows partial-success info when skill suggestions are unavailable but extraction succeeds', async () => {

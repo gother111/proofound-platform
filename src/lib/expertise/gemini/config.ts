@@ -7,8 +7,8 @@ export const GEMINI_CURRENCY = 'SEK';
 
 const DEFAULT_TIMEOUT_MS = 12000;
 const DEFAULT_TEMPERATURE = 0;
-const DEFAULT_MAX_OUTPUT_TOKENS = 1400;
-const DEFAULT_SHORT_TEXT_MAX_OUTPUT_TOKENS = 900;
+const DEFAULT_MAX_OUTPUT_TOKENS = 1600;
+const DEFAULT_SHORT_TEXT_MAX_OUTPUT_TOKENS = 1000;
 const DEFAULT_PRIMARY_BUDGET_SEK = 85;
 const DEFAULT_SECONDARY_BUDGET_SEK = 85;
 const DEFAULT_USD_TO_SEK_RATE = 10.5;
@@ -93,7 +93,7 @@ export function resolveGeminiAdaptiveMaxOutputTokens(aggregateChars: number): nu
   }
 
   if (aggregateChars <= 14000) {
-    return Math.min(hardCap, Math.max(shortTextCap, Math.round(hardCap * 0.85)));
+    return Math.min(hardCap, Math.max(shortTextCap, Math.round(hardCap * 0.9)));
   }
 
   return hardCap;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
-import { Download, Search, Sparkles } from 'lucide-react';
+import { Download, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { apiFetch } from '@/lib/api/fetch';
@@ -12,6 +12,13 @@ import {
   type AnalyzeProgressState,
   createIdleAnalyzeProgressState,
 } from '@/components/expertise/cv-import/AnalyzeProgressPanel';
+import { EntitySummaryCard } from '@/components/expertise/cv-import/EntitySummaryCard';
+import {
+  ImportActionBanner,
+  type ImportActionSummary,
+} from '@/components/expertise/cv-import/ImportActionBanner';
+import { SkillReviewPanel } from '@/components/expertise/cv-import/SkillReviewPanel';
+import { EventType } from '@/lib/analytics/constants';
 import {
   extractPdfTextFromFile,
   normalizePdfParseError,
@@ -26,14 +33,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 
 type CandidateCategory =
@@ -51,8 +50,6 @@ type ApiFallbackStage =
   | 'python_json_retry'
   | 'typescript_retry'
   | 'candidate_only';
-
-type WizardStep = 'work' | 'learning' | 'volunteering' | 'languages' | 'skills';
 
 interface ApiSuggestion {
   skill_id: string;
@@ -135,6 +132,12 @@ interface ApiMetadata {
   candidate_only_fallback_triggered: boolean;
   match_dependency_error_code?: string;
   unmapped_candidates_count: number;
+  ai_model?: string | null;
+  ai_key_slot?: 'primary' | 'secondary' | null;
+  ai_fallback_reason?: string | null;
+  cost_ore?: number;
+  engine_mode?: 'auto' | 'typescript' | 'python' | 'gemini';
+  engine_used?: 'python' | 'typescript' | 'gemini';
   limits: {
     max_documents: number;
     max_chars_per_document: number;
@@ -170,6 +173,7 @@ interface SkillState extends ApiSkillCandidate {
   manual_options: ApiSuggestion[];
   manual_loading: boolean;
   show_all_suggestions: boolean;
+  manual_last_search_at?: string;
 }
 
 interface ParsedDocumentState {
@@ -198,14 +202,6 @@ interface AnalyzeDocumentDescriptor {
   requestId: string;
   document: ParsedDocumentState;
 }
-
-const STEPS: Array<{ id: WizardStep; label: string }> = [
-  { id: 'work', label: 'Work Experiences' },
-  { id: 'learning', label: 'Learning Experiences' },
-  { id: 'volunteering', label: 'Volunteering' },
-  { id: 'languages', label: 'Languages' },
-  { id: 'skills', label: 'Skills' },
-];
 
 const DEFAULT_METADATA: ApiMetadata = {
   semantic_used: false,
@@ -473,6 +469,30 @@ function normalizeMetadata(value: unknown): ApiMetadata {
       typeof value.unmapped_candidates_count === 'number'
         ? Math.max(0, Math.floor(value.unmapped_candidates_count))
         : 0,
+    ai_model: typeof value.ai_model === 'string' ? value.ai_model : null,
+    ai_key_slot:
+      value.ai_key_slot === 'primary' || value.ai_key_slot === 'secondary'
+        ? value.ai_key_slot
+        : null,
+    ai_fallback_reason:
+      typeof value.ai_fallback_reason === 'string' ? value.ai_fallback_reason : null,
+    cost_ore:
+      typeof value.cost_ore === 'number' && Number.isFinite(value.cost_ore)
+        ? value.cost_ore
+        : undefined,
+    engine_mode:
+      value.engine_mode === 'auto' ||
+      value.engine_mode === 'typescript' ||
+      value.engine_mode === 'python' ||
+      value.engine_mode === 'gemini'
+        ? value.engine_mode
+        : undefined,
+    engine_used:
+      value.engine_used === 'python' ||
+      value.engine_used === 'typescript' ||
+      value.engine_used === 'gemini'
+        ? value.engine_used
+        : undefined,
     limits: {
       max_documents:
         typeof limits.max_documents === 'number'
@@ -939,27 +959,59 @@ function downloadCsv(filename: string, rows: Array<Array<string | number>>) {
   URL.revokeObjectURL(url);
 }
 
-function formatCategory(value: CandidateCategory): string {
-  return value.replace(/_/g, ' ');
+function formatRelativeTimeLabel(dateIso: string | undefined): string | undefined {
+  if (!dateIso) {
+    return undefined;
+  }
+
+  const value = new Date(dateIso);
+  if (Number.isNaN(value.getTime())) {
+    return undefined;
+  }
+
+  return `Last searched ${value.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  })}`;
 }
 
-function parseMultiSelect(event: ChangeEvent<HTMLSelectElement>): string[] {
-  return Array.from(event.target.selectedOptions).map((option) => option.value);
+async function trackCvImportUiEvent(action: string, properties?: Record<string, unknown>) {
+  try {
+    await apiFetch('/api/analytics/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        eventType: EventType.CUSTOM_EVENT,
+        entityType: 'cv_import_review',
+        entityId: action,
+        properties: {
+          action,
+          ...(properties || {}),
+        },
+      }),
+    });
+  } catch {
+    // Analytics should never block UX.
+  }
 }
 
 export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
+  const reviewV3Enabled = process.env.NEXT_PUBLIC_CV_IMPORT_REVIEW_V3 !== 'false';
   const [documents, setDocuments] = useState<ParsedDocumentState[]>([]);
   const [isParsing, setIsParsing] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
   const [apiMetadata, setApiMetadata] = useState<ApiMetadata | null>(null);
+  const [showAdvancedDiagnostics, setShowAdvancedDiagnostics] = useState(false);
+  const [reviewAllSections, setReviewAllSections] = useState(false);
+  const [openSkillPicker, setOpenSkillPicker] = useState<{
+    documentId: string;
+    candidateId: string;
+  } | null>(null);
   const [analyzeProgress, setAnalyzeProgress] = useState<AnalyzeProgressState>(
     createIdleAnalyzeProgressState
   );
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const progressResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const currentStep = STEPS[currentStepIndex]?.id || 'work';
 
   const approvedSkillIds = useMemo(() => {
     const selected = new Set<string>();
@@ -1070,7 +1122,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
 
       setDocuments(parsedDocuments);
       setApiMetadata(null);
-      setCurrentStepIndex(0);
+      setReviewAllSections(false);
+      setOpenSkillPicker(null);
       clearProgressResetTimer();
       setAnalyzeProgress(createIdleAnalyzeProgressState());
 
@@ -1290,7 +1343,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
 
       setRunningProgress('finalizing', 92, 'Finalizing results...');
       setDocuments(analyzedDocuments);
-      setCurrentStepIndex(0);
+      setReviewAllSections(false);
+      setOpenSkillPicker(null);
 
       const totalSkillCandidates = payload.documents.reduce(
         (count, document) => count + document.skill_candidates.length,
@@ -1378,14 +1432,27 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         ...document,
         skill_candidates: document.skill_candidates.map((entry) =>
           entry.candidate_id === candidateId
-            ? { ...entry, manual_loading: false, manual_options: mappedOptions }
+            ? {
+                ...entry,
+                manual_loading: false,
+                manual_options: mappedOptions,
+                manual_last_search_at: new Date().toISOString(),
+              }
             : entry
         ),
       }));
 
       if (mappedOptions.length === 0) {
         toast.info('No taxonomy matches found for manual mapping.');
+      } else {
+        toast.success(
+          `${mappedOptions.length} Atlas ${mappedOptions.length === 1 ? 'match' : 'matches'} found.`
+        );
       }
+
+      void trackCvImportUiEvent('cv_review_find_opened', {
+        result_count: mappedOptions.length,
+      });
     } catch (error) {
       updateDocument(documentId, (document) => ({
         ...document,
@@ -1397,6 +1464,78 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       toast.error(error instanceof Error ? error.message : 'Failed to search taxonomy');
     }
   };
+
+  const selectAtlasMatch = (
+    documentId: string,
+    candidateId: string,
+    option: ApiSuggestion,
+    mode: 'select' | 'replace'
+  ) => {
+    updateDocument(documentId, (document) => ({
+      ...document,
+      skill_candidates: document.skill_candidates.map((entry) => {
+        if (entry.candidate_id !== candidateId) {
+          return entry;
+        }
+
+        const manualOptions = entry.manual_options.some(
+          (manual) => manual.skill_id === option.skill_id
+        )
+          ? entry.manual_options
+          : [option, ...entry.manual_options].slice(0, 10);
+
+        const nextSelected =
+          mode === 'replace'
+            ? [option.skill_id]
+            : Array.from(new Set([...entry.selected_skill_ids, option.skill_id]));
+
+        return {
+          ...entry,
+          manual_options: manualOptions,
+          selected_skill_ids: nextSelected,
+        };
+      }),
+    }));
+
+    void trackCvImportUiEvent('cv_review_match_selected', {
+      mode,
+      match_method: option.match_method,
+    });
+  };
+
+  const reviewSummary: ImportActionSummary = useMemo(() => {
+    let skillsNeedingMapping = 0;
+    let workCount = 0;
+    let learningCount = 0;
+    let volunteeringCount = 0;
+    let languageCount = 0;
+
+    for (const document of documents) {
+      workCount += document.work_experiences.filter((entry) => entry.approved).length;
+      learningCount += document.learning_experiences.filter((entry) => entry.approved).length;
+      volunteeringCount += document.volunteering.filter((entry) => entry.approved).length;
+      languageCount += document.languages.filter((entry) => entry.approved).length;
+
+      for (const candidate of document.skill_candidates) {
+        if (
+          candidate.approved &&
+          candidate.unmapped_candidate &&
+          candidate.selected_skill_ids.length === 0
+        ) {
+          skillsNeedingMapping += 1;
+        }
+      }
+    }
+
+    return {
+      skillsSelected: approvedSkillIds.length,
+      skillsNeedingMapping,
+      workCount,
+      learningCount,
+      volunteeringCount,
+      languageCount,
+    };
+  }, [documents, approvedSkillIds]);
 
   const exportDocument = (document: ParsedDocumentState) => {
     const skillIds = collectApprovedSkillIds(document);
@@ -1466,7 +1605,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     downloadCsv(`${safeName}-wizard-export.csv`, csvRows);
   };
 
-  const applyApproved = async () => {
+  const applyApproved = async (scope: 'all' | 'skills_only' = 'all') => {
     const readyDocuments = documents.filter((document) => !document.parse_error);
 
     if (readyDocuments.length === 0) {
@@ -1477,10 +1616,16 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     const payloadDocuments = readyDocuments.map((document) => ({
       document_id: document.document_id,
       file_name: document.file_name,
-      work_experiences: document.work_experiences.filter((entry) => entry.approved),
-      learning_experiences: document.learning_experiences.filter((entry) => entry.approved),
-      volunteering: document.volunteering.filter((entry) => entry.approved),
-      languages: document.languages.filter((entry) => entry.approved),
+      work_experiences:
+        scope === 'skills_only' ? [] : document.work_experiences.filter((entry) => entry.approved),
+      learning_experiences:
+        scope === 'skills_only'
+          ? []
+          : document.learning_experiences.filter((entry) => entry.approved),
+      volunteering:
+        scope === 'skills_only' ? [] : document.volunteering.filter((entry) => entry.approved),
+      languages:
+        scope === 'skills_only' ? [] : document.languages.filter((entry) => entry.approved),
       skill_ids: collectApprovedSkillIds(document),
     }));
 
@@ -1496,6 +1641,42 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     if (!hasAnySelection) {
       toast.error('No approved items selected.');
       return;
+    }
+
+    const totalWork = payloadDocuments.reduce(
+      (count, document) => count + document.work_experiences.length,
+      0
+    );
+    const totalLearning = payloadDocuments.reduce(
+      (count, document) => count + document.learning_experiences.length,
+      0
+    );
+    const totalVolunteering = payloadDocuments.reduce(
+      (count, document) => count + document.volunteering.length,
+      0
+    );
+    const totalLanguages = payloadDocuments.reduce(
+      (count, document) => count + document.languages.length,
+      0
+    );
+    const totalSkills = payloadDocuments.reduce(
+      (count, document) => count + document.skill_ids.length,
+      0
+    );
+
+    const confirmLabel =
+      scope === 'skills_only'
+        ? `Apply ${totalSkills} skill${totalSkills === 1 ? '' : 's'} to your profile now?`
+        : `Apply import updates now?\n\nSkills: ${totalSkills}\nWork experiences: ${totalWork}\nLearning experiences: ${totalLearning}\nVolunteering entries: ${totalVolunteering}\nLanguages: ${totalLanguages}`;
+
+    if (typeof window !== 'undefined' && !window.confirm(confirmLabel)) {
+      return;
+    }
+
+    if (reviewSummary.skillsNeedingMapping > 0) {
+      void trackCvImportUiEvent('cv_review_unmapped_remaining', {
+        remaining: reviewSummary.skillsNeedingMapping,
+      });
     }
 
     setIsApplying(true);
@@ -1524,6 +1705,12 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       ];
 
       toast.success(`Imported: ${summary.join(', ')}.`);
+      void trackCvImportUiEvent(
+        scope === 'skills_only' ? 'cv_apply_quick_used' : 'cv_apply_full_review_used',
+        {
+          skill_count: Number(importedCounts.skills || 0),
+        }
+      );
 
       const combinedSkillIds = Array.from(
         new Set(payloadDocuments.flatMap((document) => document.skill_ids))
@@ -1547,21 +1734,15 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
   const canAnalyze = documents.some((document) => Boolean(document.file) && !document.parse_error);
   const ocrEnabled = isOcrClientEnabled();
   const ocrLimits = ocrEnabled ? resolveOcrClientLimits() : null;
-
-  const stepTabs = (
-    <div className="flex flex-wrap gap-2">
-      {STEPS.map((step, index) => (
-        <Button
-          key={step.id}
-          size="sm"
-          variant={index === currentStepIndex ? 'default' : 'outline'}
-          onClick={() => setCurrentStepIndex(index)}
-        >
-          {index + 1}. {step.label}
-        </Button>
-      ))}
-    </div>
-  );
+  const canApplyApproved = documents.some((document) => {
+    const hasSkillSelection = collectApprovedSkillIds(document).length > 0;
+    const hasEntities =
+      document.work_experiences.some((entry) => entry.approved) ||
+      document.learning_experiences.some((entry) => entry.approved) ||
+      document.volunteering.some((entry) => entry.approved) ||
+      document.languages.some((entry) => entry.approved);
+    return hasSkillSelection || hasEntities;
+  });
 
   return (
     <div className="space-y-6">
@@ -1593,16 +1774,21 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
             <Button onClick={handleAnalyze} disabled={!canAnalyze || isParsing || isAnalyzing}>
               {isAnalyzing ? 'Analyzing...' : 'Analyze Uploaded PDFs'}
             </Button>
-            <Button onClick={applyApproved} disabled={isApplying || documents.length === 0}>
-              {isApplying
-                ? 'Applying...'
-                : `Apply Approved (${approvedSkillIds.length}) to Profile`}
-            </Button>
+            {!reviewV3Enabled && (
+              <Button
+                onClick={() => applyApproved('all')}
+                disabled={isApplying || !canApplyApproved}
+              >
+                {isApplying
+                  ? 'Applying...'
+                  : `Apply Approved (${approvedSkillIds.length}) to Profile`}
+              </Button>
+            )}
           </div>
 
           <AnalyzeProgressPanel progress={analyzeProgress} />
 
-          {apiMetadata && (
+          {apiMetadata && !reviewV3Enabled && (
             <div className="rounded-lg border p-3 text-sm">
               <p>Semantic used: {apiMetadata.semantic_used ? 'yes' : 'no'}</p>
               <p>
@@ -1612,10 +1798,53 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
               <p>Unmapped candidates: {apiMetadata.unmapped_candidates_count}</p>
             </div>
           )}
+
+          {apiMetadata && reviewV3Enabled && (
+            <div className="rounded-lg border p-3 text-sm">
+              <button
+                type="button"
+                className="text-left text-sm font-medium text-proofound-forest hover:underline"
+                onClick={() => setShowAdvancedDiagnostics((previous) => !previous)}
+              >
+                {showAdvancedDiagnostics ? 'Hide advanced diagnostics' : 'Advanced diagnostics'}
+              </button>
+              {showAdvancedDiagnostics && (
+                <div className="mt-2 space-y-1 text-muted-foreground">
+                  <p>Semantic matching used: {apiMetadata.semantic_used ? 'yes' : 'no'}</p>
+                  <p>
+                    Semantic fallback triggered:{' '}
+                    {apiMetadata.semantic_fallback_triggered ? 'yes' : 'no'}
+                  </p>
+                  <p>Needs mapping: {apiMetadata.unmapped_candidates_count}</p>
+                  {apiMetadata.fallback_stage && (
+                    <p>Fallback stage: {apiMetadata.fallback_stage}</p>
+                  )}
+                  {apiMetadata.engine_used && <p>Engine used: {apiMetadata.engine_used}</p>}
+                  {apiMetadata.ai_model && <p>Model: {apiMetadata.ai_model}</p>}
+                  {typeof apiMetadata.cost_ore === 'number' && (
+                    <p>Cost: {(apiMetadata.cost_ore / 100).toFixed(2)} SEK</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {documents.length > 0 && stepTabs}
+      {reviewV3Enabled && documents.length > 0 && (
+        <ImportActionBanner
+          summary={reviewSummary}
+          isApplying={isApplying}
+          applyDisabled={!canApplyApproved || approvedSkillIds.length === 0}
+          onApplyRecommended={() => applyApproved('skills_only')}
+          onReviewAll={() => {
+            setReviewAllSections(true);
+            void trackCvImportUiEvent('cv_review_unmapped_remaining', {
+              remaining: reviewSummary.skillsNeedingMapping,
+            });
+          }}
+        />
+      )}
 
       {documents.map((document) => (
         <Card key={document.document_id}>
@@ -1653,23 +1882,133 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                   </pre>
                 </details>
 
-                {currentStep === 'work' && (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Approve</TableHead>
-                          <TableHead>Title</TableHead>
-                          <TableHead>Organization</TableHead>
-                          <TableHead>Duration</TableHead>
-                          <TableHead>Summary</TableHead>
-                          <TableHead>Evidence</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-foreground">Skills to review</p>
+                    <Badge variant="secondary">
+                      {document.skill_candidates.filter((candidate) => candidate.approved).length}/
+                      {document.skill_candidates.length} selected
+                    </Badge>
+                  </div>
+
+                  <SkillReviewPanel
+                    candidates={document.skill_candidates.map((candidate) => ({
+                      ...candidate,
+                      manual_last_search_at: formatRelativeTimeLabel(
+                        candidate.manual_last_search_at
+                      ),
+                    }))}
+                    openPickerId={
+                      openSkillPicker?.documentId === document.document_id
+                        ? openSkillPicker.candidateId
+                        : null
+                    }
+                    onOpenPicker={(candidateId) =>
+                      setOpenSkillPicker(
+                        candidateId
+                          ? {
+                              documentId: document.document_id,
+                              candidateId,
+                            }
+                          : null
+                      )
+                    }
+                    onToggleApproved={(candidateId, checked) => {
+                      updateDocument(document.document_id, (current) => ({
+                        ...current,
+                        skill_candidates: current.skill_candidates.map((item) =>
+                          item.candidate_id === candidateId ? { ...item, approved: checked } : item
+                        ),
+                      }));
+                    }}
+                    onRawSkillChange={(candidateId, value) => {
+                      updateDocument(document.document_id, (current) => ({
+                        ...current,
+                        skill_candidates: current.skill_candidates.map((item) =>
+                          item.candidate_id === candidateId
+                            ? {
+                                ...item,
+                                raw_skill_text: value,
+                                manual_search_query: value,
+                              }
+                            : item
+                        ),
+                      }));
+                    }}
+                    onCategoryChange={(candidateId, value) => {
+                      updateDocument(document.document_id, (current) => ({
+                        ...current,
+                        skill_candidates: current.skill_candidates.map((item) =>
+                          item.candidate_id === candidateId
+                            ? { ...item, category: value as CandidateCategory }
+                            : item
+                        ),
+                      }));
+                    }}
+                    onSelectSkillIds={(candidateId, selectedSkillIds) => {
+                      updateDocument(document.document_id, (current) => ({
+                        ...current,
+                        skill_candidates: current.skill_candidates.map((item) =>
+                          item.candidate_id === candidateId
+                            ? { ...item, selected_skill_ids: selectedSkillIds }
+                            : item
+                        ),
+                      }));
+                    }}
+                    onManualQueryChange={(candidateId, value) => {
+                      updateDocument(document.document_id, (current) => ({
+                        ...current,
+                        skill_candidates: current.skill_candidates.map((item) =>
+                          item.candidate_id === candidateId
+                            ? { ...item, manual_search_query: value }
+                            : item
+                        ),
+                      }));
+                    }}
+                    onToggleSuggestions={(candidateId) => {
+                      updateDocument(document.document_id, (current) => ({
+                        ...current,
+                        skill_candidates: current.skill_candidates.map((item) =>
+                          item.candidate_id === candidateId
+                            ? {
+                                ...item,
+                                show_all_suggestions: !item.show_all_suggestions,
+                              }
+                            : item
+                        ),
+                      }));
+                    }}
+                    onFind={(candidateId) =>
+                      searchManualMappings(document.document_id, candidateId)
+                    }
+                    onSelectMatch={(candidateId, option) =>
+                      selectAtlasMatch(document.document_id, candidateId, option, 'select')
+                    }
+                    onReplaceMatch={(candidateId, option) =>
+                      selectAtlasMatch(document.document_id, candidateId, option, 'replace')
+                    }
+                  />
+                </div>
+
+                {(reviewAllSections || !reviewV3Enabled) && (
+                  <div className="space-y-4">
+                    <EntitySummaryCard
+                      title="Work Experiences"
+                      totalCount={document.work_experiences.length}
+                      approvedCount={
+                        document.work_experiences.filter((entry) => entry.approved).length
+                      }
+                      summary="Review title, organization, duration, and concise summary before import."
+                    >
+                      <div className="space-y-3">
+                        {document.work_experiences.length === 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            No work experiences extracted.
+                          </p>
+                        )}
                         {document.work_experiences.map((entry) => (
-                          <TableRow key={entry.item_id}>
-                            <TableCell>
+                          <div key={entry.item_id} className="rounded-md border p-3 space-y-3">
+                            <label className="flex items-center gap-2 text-sm font-medium">
                               <input
                                 type="checkbox"
                                 checked={entry.approved}
@@ -1684,8 +2023,9 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                                   }));
                                 }}
                               />
-                            </TableCell>
-                            <TableCell>
+                              Include this work entry
+                            </label>
+                            <div className="grid gap-2 md:grid-cols-3">
                               <Input
                                 value={entry.title}
                                 onChange={(event) => {
@@ -1698,9 +2038,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                                     ),
                                   }));
                                 }}
+                                placeholder="Role title"
                               />
-                            </TableCell>
-                            <TableCell>
                               <Input
                                 value={entry.organization}
                                 onChange={(event) => {
@@ -1713,9 +2052,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                                     ),
                                   }));
                                 }}
+                                placeholder="Organization"
                               />
-                            </TableCell>
-                            <TableCell>
                               <Input
                                 value={entry.duration}
                                 onChange={(event) => {
@@ -1728,56 +2066,51 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                                     ),
                                   }));
                                 }}
+                                placeholder="Duration"
                               />
-                            </TableCell>
-                            <TableCell>
-                              <Textarea
-                                rows={2}
-                                value={entry.summary}
-                                onChange={(event) => {
-                                  updateDocument(document.document_id, (current) => ({
-                                    ...current,
-                                    work_experiences: current.work_experiences.map((item) =>
-                                      item.item_id === entry.item_id
-                                        ? { ...item, summary: event.target.value }
-                                        : item
-                                    ),
-                                  }));
-                                }}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <ul className="list-disc pl-4 text-xs">
-                                {entry.evidence_snippets.map((snippet, index) => (
-                                  <li key={`${entry.item_id}-${index}`}>{snippet}</li>
-                                ))}
-                              </ul>
-                            </TableCell>
-                          </TableRow>
+                            </div>
+                            <Textarea
+                              rows={2}
+                              value={entry.summary}
+                              onChange={(event) => {
+                                updateDocument(document.document_id, (current) => ({
+                                  ...current,
+                                  work_experiences: current.work_experiences.map((item) =>
+                                    item.item_id === entry.item_id
+                                      ? { ...item, summary: event.target.value }
+                                      : item
+                                  ),
+                                }));
+                              }}
+                              placeholder="Concise summary"
+                            />
+                            <ul className="list-disc pl-4 text-xs text-muted-foreground">
+                              {entry.evidence_snippets.map((snippet, index) => (
+                                <li key={`${entry.item_id}-${index}`}>{snippet}</li>
+                              ))}
+                            </ul>
+                          </div>
                         ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
+                      </div>
+                    </EntitySummaryCard>
 
-                {currentStep === 'learning' && (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Approve</TableHead>
-                          <TableHead>Institution</TableHead>
-                          <TableHead>Degree</TableHead>
-                          <TableHead>Duration</TableHead>
-                          <TableHead>Skills</TableHead>
-                          <TableHead>Projects</TableHead>
-                          <TableHead>Evidence</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
+                    <EntitySummaryCard
+                      title="Learning Experiences"
+                      totalCount={document.learning_experiences.length}
+                      approvedCount={
+                        document.learning_experiences.filter((entry) => entry.approved).length
+                      }
+                      summary="Review institution, degree, dates, and important skills/projects."
+                    >
+                      <div className="space-y-3">
+                        {document.learning_experiences.length === 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            No learning experiences extracted.
+                          </p>
+                        )}
                         {document.learning_experiences.map((entry) => (
-                          <TableRow key={entry.item_id}>
-                            <TableCell>
+                          <div key={entry.item_id} className="rounded-md border p-3 space-y-3">
+                            <label className="flex items-center gap-2 text-sm font-medium">
                               <input
                                 type="checkbox"
                                 checked={entry.approved}
@@ -1793,8 +2126,9 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                                   }));
                                 }}
                               />
-                            </TableCell>
-                            <TableCell>
+                              Include this learning entry
+                            </label>
+                            <div className="grid gap-2 md:grid-cols-3">
                               <Input
                                 value={entry.institution}
                                 onChange={(event) => {
@@ -1808,9 +2142,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                                     ),
                                   }));
                                 }}
+                                placeholder="Institution"
                               />
-                            </TableCell>
-                            <TableCell>
                               <Input
                                 value={entry.degree}
                                 onChange={(event) => {
@@ -1824,9 +2157,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                                     ),
                                   }));
                                 }}
+                                placeholder="Degree"
                               />
-                            </TableCell>
-                            <TableCell>
                               <Input
                                 value={entry.duration}
                                 onChange={(event) => {
@@ -1840,9 +2172,10 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                                     ),
                                   }));
                                 }}
+                                placeholder="Duration"
                               />
-                            </TableCell>
-                            <TableCell>
+                            </div>
+                            <div className="grid gap-2 md:grid-cols-2">
                               <Textarea
                                 rows={2}
                                 value={entry.skills}
@@ -1857,9 +2190,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                                     ),
                                   }));
                                 }}
+                                placeholder="Relevant skills"
                               />
-                            </TableCell>
-                            <TableCell>
                               <Textarea
                                 rows={2}
                                 value={entry.projects}
@@ -1874,40 +2206,34 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                                     ),
                                   }));
                                 }}
+                                placeholder="Projects or outcomes"
                               />
-                            </TableCell>
-                            <TableCell>
-                              <ul className="list-disc pl-4 text-xs">
-                                {entry.evidence_snippets.map((snippet, index) => (
-                                  <li key={`${entry.item_id}-${index}`}>{snippet}</li>
-                                ))}
-                              </ul>
-                            </TableCell>
-                          </TableRow>
+                            </div>
+                            <ul className="list-disc pl-4 text-xs text-muted-foreground">
+                              {entry.evidence_snippets.map((snippet, index) => (
+                                <li key={`${entry.item_id}-${index}`}>{snippet}</li>
+                              ))}
+                            </ul>
+                          </div>
                         ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
+                      </div>
+                    </EntitySummaryCard>
 
-                {currentStep === 'volunteering' && (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Approve</TableHead>
-                          <TableHead>Title</TableHead>
-                          <TableHead>Organization</TableHead>
-                          <TableHead>Duration</TableHead>
-                          <TableHead>Cause</TableHead>
-                          <TableHead>Impact</TableHead>
-                          <TableHead>Evidence</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
+                    <EntitySummaryCard
+                      title="Volunteering"
+                      totalCount={document.volunteering.length}
+                      approvedCount={document.volunteering.filter((entry) => entry.approved).length}
+                      summary="Review cause, impact, and contribution details."
+                    >
+                      <div className="space-y-3">
+                        {document.volunteering.length === 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            No volunteering entries extracted.
+                          </p>
+                        )}
                         {document.volunteering.map((entry) => (
-                          <TableRow key={entry.item_id}>
-                            <TableCell>
+                          <div key={entry.item_id} className="rounded-md border p-3 space-y-3">
+                            <label className="flex items-center gap-2 text-sm font-medium">
                               <input
                                 type="checkbox"
                                 checked={entry.approved}
@@ -1922,8 +2248,9 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                                   }));
                                 }}
                               />
-                            </TableCell>
-                            <TableCell>
+                              Include this volunteering entry
+                            </label>
+                            <div className="grid gap-2 md:grid-cols-3">
                               <Input
                                 value={entry.title}
                                 onChange={(event) => {
@@ -1936,9 +2263,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                                     ),
                                   }));
                                 }}
+                                placeholder="Role title"
                               />
-                            </TableCell>
-                            <TableCell>
                               <Input
                                 value={entry.organization}
                                 onChange={(event) => {
@@ -1951,9 +2277,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                                     ),
                                   }));
                                 }}
+                                placeholder="Organization"
                               />
-                            </TableCell>
-                            <TableCell>
                               <Input
                                 value={entry.duration}
                                 onChange={(event) => {
@@ -1966,9 +2291,10 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                                     ),
                                   }));
                                 }}
+                                placeholder="Duration"
                               />
-                            </TableCell>
-                            <TableCell>
+                            </div>
+                            <div className="grid gap-2 md:grid-cols-2">
                               <Textarea
                                 rows={2}
                                 value={entry.cause}
@@ -1982,9 +2308,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                                     ),
                                   }));
                                 }}
+                                placeholder="Cause"
                               />
-                            </TableCell>
-                            <TableCell>
                               <Textarea
                                 rows={2}
                                 value={entry.impact}
@@ -1998,38 +2323,62 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                                     ),
                                   }));
                                 }}
+                                placeholder="Impact"
                               />
-                            </TableCell>
-                            <TableCell>
-                              <ul className="list-disc pl-4 text-xs">
-                                {entry.evidence_snippets.map((snippet, index) => (
-                                  <li key={`${entry.item_id}-${index}`}>{snippet}</li>
-                                ))}
-                              </ul>
-                            </TableCell>
-                          </TableRow>
+                              <Textarea
+                                rows={2}
+                                value={entry.skills_deployed}
+                                onChange={(event) => {
+                                  updateDocument(document.document_id, (current) => ({
+                                    ...current,
+                                    volunteering: current.volunteering.map((item) =>
+                                      item.item_id === entry.item_id
+                                        ? { ...item, skills_deployed: event.target.value }
+                                        : item
+                                    ),
+                                  }));
+                                }}
+                                placeholder="Skills deployed"
+                              />
+                              <Textarea
+                                rows={2}
+                                value={entry.personal_why}
+                                onChange={(event) => {
+                                  updateDocument(document.document_id, (current) => ({
+                                    ...current,
+                                    volunteering: current.volunteering.map((item) =>
+                                      item.item_id === entry.item_id
+                                        ? { ...item, personal_why: event.target.value }
+                                        : item
+                                    ),
+                                  }));
+                                }}
+                                placeholder="Personal motivation"
+                              />
+                            </div>
+                            <ul className="list-disc pl-4 text-xs text-muted-foreground">
+                              {entry.evidence_snippets.map((snippet, index) => (
+                                <li key={`${entry.item_id}-${index}`}>{snippet}</li>
+                              ))}
+                            </ul>
+                          </div>
                         ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
+                      </div>
+                    </EntitySummaryCard>
 
-                {currentStep === 'languages' && (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Approve</TableHead>
-                          <TableHead>Language</TableHead>
-                          <TableHead>Code</TableHead>
-                          <TableHead>CEFR</TableHead>
-                          <TableHead>Evidence</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
+                    <EntitySummaryCard
+                      title="Languages"
+                      totalCount={document.languages.length}
+                      approvedCount={document.languages.filter((entry) => entry.approved).length}
+                      summary="Confirm language and CEFR level."
+                    >
+                      <div className="space-y-3">
+                        {document.languages.length === 0 && (
+                          <p className="text-xs text-muted-foreground">No languages extracted.</p>
+                        )}
                         {document.languages.map((entry) => (
-                          <TableRow key={entry.item_id}>
-                            <TableCell>
+                          <div key={entry.item_id} className="rounded-md border p-3 space-y-3">
+                            <label className="flex items-center gap-2 text-sm font-medium">
                               <input
                                 type="checkbox"
                                 checked={entry.approved}
@@ -2044,8 +2393,9 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                                   }));
                                 }}
                               />
-                            </TableCell>
-                            <TableCell>
+                              Include this language entry
+                            </label>
+                            <div className="grid gap-2 md:grid-cols-3">
                               <select
                                 className="rounded border px-2 py-1 text-sm"
                                 value={entry.language_code}
@@ -2074,9 +2424,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                                   </option>
                                 ))}
                               </select>
-                            </TableCell>
-                            <TableCell>{entry.language_code}</TableCell>
-                            <TableCell>
+                              <Input value={entry.language_name} readOnly />
                               <select
                                 className="rounded border px-2 py-1 text-sm"
                                 value={entry.level}
@@ -2097,229 +2445,24 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                                   </option>
                                 ))}
                               </select>
-                            </TableCell>
-                            <TableCell>
-                              <ul className="list-disc pl-4 text-xs">
-                                {entry.evidence_snippets.map((snippet, index) => (
-                                  <li key={`${entry.item_id}-${index}`}>{snippet}</li>
-                                ))}
-                              </ul>
-                            </TableCell>
-                          </TableRow>
+                            </div>
+                            <ul className="list-disc pl-4 text-xs text-muted-foreground">
+                              {entry.evidence_snippets.map((snippet, index) => (
+                                <li key={`${entry.item_id}-${index}`}>{snippet}</li>
+                              ))}
+                            </ul>
+                          </div>
                         ))}
-                      </TableBody>
-                    </Table>
+                      </div>
+                    </EntitySummaryCard>
                   </div>
                 )}
 
-                {currentStep === 'skills' && (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Approve</TableHead>
-                          <TableHead>Candidate</TableHead>
-                          <TableHead>Category</TableHead>
-                          <TableHead>Confidence</TableHead>
-                          <TableHead>Evidence</TableHead>
-                          <TableHead>Mapped skill_ids</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {document.skill_candidates.map((candidate) => {
-                          const visibleAutoSuggestions = candidate.suggestions.slice(
-                            0,
-                            candidate.show_all_suggestions ? 20 : 5
-                          );
-                          const selectedFallbackSuggestions = candidate.suggestions.filter(
-                            (option) => candidate.selected_skill_ids.includes(option.skill_id)
-                          );
-                          const optionMap = new Map<string, ApiSuggestion>();
-                          for (const option of [
-                            ...visibleAutoSuggestions,
-                            ...selectedFallbackSuggestions,
-                            ...candidate.manual_options,
-                          ]) {
-                            optionMap.set(option.skill_id, option);
-                          }
-
-                          const options = Array.from(optionMap.values());
-
-                          return (
-                            <TableRow key={candidate.candidate_id}>
-                              <TableCell>
-                                <input
-                                  type="checkbox"
-                                  checked={candidate.approved}
-                                  onChange={(event) => {
-                                    updateDocument(document.document_id, (current) => ({
-                                      ...current,
-                                      skill_candidates: current.skill_candidates.map((item) =>
-                                        item.candidate_id === candidate.candidate_id
-                                          ? { ...item, approved: event.target.checked }
-                                          : item
-                                      ),
-                                    }));
-                                  }}
-                                />
-                              </TableCell>
-                              <TableCell className="min-w-[220px]">
-                                <Textarea
-                                  value={candidate.raw_skill_text}
-                                  rows={2}
-                                  onChange={(event) => {
-                                    updateDocument(document.document_id, (current) => ({
-                                      ...current,
-                                      skill_candidates: current.skill_candidates.map((item) =>
-                                        item.candidate_id === candidate.candidate_id
-                                          ? {
-                                              ...item,
-                                              raw_skill_text: event.target.value,
-                                              manual_search_query: event.target.value,
-                                            }
-                                          : item
-                                      ),
-                                    }));
-                                  }}
-                                />
-                              </TableCell>
-                              <TableCell>
-                                <select
-                                  className="rounded border px-2 py-1 text-sm"
-                                  value={candidate.category}
-                                  onChange={(event) => {
-                                    updateDocument(document.document_id, (current) => ({
-                                      ...current,
-                                      skill_candidates: current.skill_candidates.map((item) =>
-                                        item.candidate_id === candidate.candidate_id
-                                          ? {
-                                              ...item,
-                                              category: event.target.value as CandidateCategory,
-                                            }
-                                          : item
-                                      ),
-                                    }));
-                                  }}
-                                >
-                                  {[
-                                    'technical',
-                                    'soft_skills',
-                                    'tools_technologies',
-                                    'languages',
-                                    'certifications',
-                                    'other',
-                                  ].map((option) => (
-                                    <option key={option} value={option}>
-                                      {formatCategory(option as CandidateCategory)}
-                                    </option>
-                                  ))}
-                                </select>
-                              </TableCell>
-                              <TableCell>
-                                <Badge variant="secondary">
-                                  {Math.round(candidate.confidence * 100)}%
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="min-w-[260px]">
-                                <ul className="list-disc pl-4 text-xs">
-                                  {candidate.evidence_snippets.map((snippet, index) => (
-                                    <li key={`${candidate.candidate_id}-${index}`}>{snippet}</li>
-                                  ))}
-                                </ul>
-                              </TableCell>
-                              <TableCell className="min-w-[280px] space-y-2">
-                                <select
-                                  multiple
-                                  className="h-28 w-full rounded border px-2 py-1 text-xs"
-                                  value={candidate.selected_skill_ids}
-                                  onChange={(event) => {
-                                    const selectedSkillIds = parseMultiSelect(event);
-                                    updateDocument(document.document_id, (current) => ({
-                                      ...current,
-                                      skill_candidates: current.skill_candidates.map((item) =>
-                                        item.candidate_id === candidate.candidate_id
-                                          ? { ...item, selected_skill_ids: selectedSkillIds }
-                                          : item
-                                      ),
-                                    }));
-                                  }}
-                                >
-                                  {options.map((option) => (
-                                    <option key={option.skill_id} value={option.skill_id}>
-                                      {option.skill_id} · {option.skill_name} ({option.match_method}
-                                      : {(option.score * 100).toFixed(0)}%)
-                                    </option>
-                                  ))}
-                                </select>
-
-                                {candidate.suggestions.length > 5 && (
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() =>
-                                      updateDocument(document.document_id, (current) => ({
-                                        ...current,
-                                        skill_candidates: current.skill_candidates.map((item) =>
-                                          item.candidate_id === candidate.candidate_id
-                                            ? {
-                                                ...item,
-                                                show_all_suggestions: !item.show_all_suggestions,
-                                              }
-                                            : item
-                                        ),
-                                      }))
-                                    }
-                                  >
-                                    {candidate.show_all_suggestions
-                                      ? 'Show fewer suggestions'
-                                      : 'Show more suggestions'}
-                                  </Button>
-                                )}
-
-                                <div className="flex items-center gap-2">
-                                  <Input
-                                    value={candidate.manual_search_query}
-                                    onChange={(event) => {
-                                      updateDocument(document.document_id, (current) => ({
-                                        ...current,
-                                        skill_candidates: current.skill_candidates.map((item) =>
-                                          item.candidate_id === candidate.candidate_id
-                                            ? { ...item, manual_search_query: event.target.value }
-                                            : item
-                                        ),
-                                      }));
-                                    }}
-                                    placeholder="Search taxonomy for manual mapping"
-                                  />
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() =>
-                                      searchManualMappings(
-                                        document.document_id,
-                                        candidate.candidate_id
-                                      )
-                                    }
-                                    disabled={candidate.manual_loading}
-                                  >
-                                    <Search className="mr-2 h-4 w-4" />
-                                    {candidate.manual_loading ? '...' : 'Find'}
-                                  </Button>
-                                </div>
-
-                                {candidate.unmapped_candidate &&
-                                  candidate.selected_skill_ids.length === 0 && (
-                                    <p className="text-xs text-amber-700">
-                                      Unmapped candidate. Select at least one taxonomy skill_id.
-                                    </p>
-                                  )}
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
+                {reviewV3Enabled && !reviewAllSections && (
+                  <p className="text-xs text-muted-foreground">
+                    Skills are ready to apply. Use &quot;Review All Extracted Sections&quot; to edit
+                    work, learning, volunteering, and languages before full apply.
+                  </p>
                 )}
               </>
             )}

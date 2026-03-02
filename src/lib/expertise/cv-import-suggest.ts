@@ -199,6 +199,7 @@ export const CvImportSuggestResponseSchema = z.object({
     quality: z
       .object({
         mapped_ratio: z.number().min(0).max(1),
+        skills_mapped_after_rerank: z.number().int().min(0).optional(),
         evidence_valid_ratio: z.number().min(0).max(1),
         high_confidence_count: z.number().int().min(0),
         confidence_tiers: z.object({
@@ -208,6 +209,13 @@ export const CvImportSuggestResponseSchema = z.object({
         }),
         avg_skills_per_document: z.number().min(0),
         cost_per_mapped_skill_ore: z.number().int().min(0).optional(),
+      })
+      .optional(),
+    review_hints: z
+      .object({
+        skills_first: z.boolean().optional(),
+        recommended_action: z.string().optional(),
+        quick_apply_label: z.string().optional(),
       })
       .optional(),
     engine_mode: z.enum(['auto', 'typescript', 'python', 'gemini']).optional(),

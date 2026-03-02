@@ -41,6 +41,8 @@ interface WizardSuggestOptions {
 
 const MAX_ITEMS_PER_ENTITY = 10;
 const EVIDENCE_CONTEXT_WINDOW = 80;
+const EVIDENCE_MAX_CHARS = 180;
+const SUMMARY_MAX_CHARS = 220;
 
 const SECTION_HEADING_PATTERNS: Record<SectionType, RegExp[]> = {
   work: [
@@ -310,7 +312,7 @@ function buildEvidenceSnippet(text: string, start: number, end: number): string[
     return [];
   }
 
-  return [snippet];
+  return [snippet.slice(0, EVIDENCE_MAX_CHARS)];
 }
 
 function splitFirstLine(blockText: string): string {
@@ -319,6 +321,14 @@ function splitFirstLine(blockText: string): string {
 }
 
 function parseRoleAndOrganization(firstLine: string): { title: string; organization: string } {
+  const dashMatch = firstLine.match(/^([^|]{2,120})\s+[|–-]\s+(.{2,160})$/);
+  if (dashMatch) {
+    return {
+      title: normalizeSpace(dashMatch[1]),
+      organization: normalizeSpace(dashMatch[2]),
+    };
+  }
+
   const atMatch = firstLine.match(/^(.+?)\s+(?:at|@)\s+(.+)$/i);
   if (atMatch) {
     return {
@@ -350,13 +360,46 @@ function extractDuration(text: string): string {
   return 'Duration not specified';
 }
 
-function summarizeBlock(text: string, fallback: string): string {
+function splitBlockContentLines(text: string): string[] {
+  return text
+    .split(/\r?\n/)
+    .map((line) => normalizeSpace(line.replace(/^[-•]\s*/g, '')))
+    .filter(Boolean);
+}
+
+function isLikelyDateLine(line: string): boolean {
+  return DATE_RANGE_PATTERN.test(line);
+}
+
+function clipDisplayText(value: string, maxChars = SUMMARY_MAX_CHARS): string {
+  const normalized = normalizeSpace(value);
+  if (!normalized) {
+    return '';
+  }
+  if (normalized.length <= maxChars) {
+    return normalized;
+  }
+  return `${normalized.slice(0, maxChars - 1).trimEnd()}…`;
+}
+
+function buildConciseSummaryFromBlock(text: string, fallback: string): string {
   const normalized = normalizeSpace(text.replace(/^[-•]\s*/gm, ''));
   if (!normalized) {
-    return fallback;
+    return clipDisplayText(fallback);
   }
 
-  return normalized.slice(0, 1000);
+  const lines = splitBlockContentLines(normalized);
+  const sentenceLikeLine =
+    lines.find(
+      (line) =>
+        line.length >= 24 &&
+        !isLikelyDateLine(line) &&
+        /\b(built|designed|led|delivered|implemented|optimized|improved|managed|launched)\b/i.test(
+          line
+        )
+    ) || lines.find((line) => line.length >= 24 && !isLikelyDateLine(line));
+
+  return clipDisplayText(sentenceLikeLine || normalized || fallback);
 }
 
 function extractWorkExperiences(
@@ -378,8 +421,21 @@ function extractWorkExperiences(
       }
 
       const parsed = parseRoleAndOrganization(firstLine);
-      const duration = extractDuration(block.text);
-      const summary = summarizeBlock(block.text, firstLine);
+      const blockLines = splitBlockContentLines(block.text);
+      const detailLines = blockLines.filter(
+        (line, lineIndex) => lineIndex > 0 && !isLikelyDateLine(line)
+      );
+      const durationSource = blockLines.slice(0, 3).join(' ');
+      const duration = extractDuration(durationSource || block.text);
+      const summarySeed =
+        detailLines.find((line) =>
+          /\b(built|designed|led|delivered|implemented|optimized|improved|managed|launched)\b/i.test(
+            line
+          )
+        ) ||
+        detailLines[0] ||
+        firstLine;
+      const summary = buildConciseSummaryFromBlock(summarySeed, firstLine);
       const evidenceSnippets = buildEvidenceSnippet(text, block.start, block.end);
 
       if (evidenceSnippets.length === 0) {
@@ -417,28 +473,47 @@ function extractLearningExperiences(
         return acc;
       }
 
-      const normalizedBlock = normalizeSpace(block.text);
-      const linesInBlock = block.text.split(/\r?\n/).map((line) => normalizeSpace(line));
+      const linesInBlock = splitBlockContentLines(block.text);
 
       const institutionLine =
         linesInBlock.find((line) => INSTITUTION_PATTERN.test(line)) || firstLine;
-      const degreeLine = linesInBlock.find((line) => DEGREE_PATTERN.test(line)) || firstLine;
+      const degreeLine =
+        linesInBlock.find((line) => DEGREE_PATTERN.test(line)) ||
+        linesInBlock.find((line, lineIndex) => lineIndex > 0 && line.length > 5) ||
+        firstLine;
       const duration = extractDuration(block.text);
+      const detailLines = linesInBlock.filter(
+        (line) =>
+          line !== institutionLine &&
+          line !== degreeLine &&
+          !isLikelyDateLine(line) &&
+          line.length > 4
+      );
+      const skillsLine =
+        detailLines.find((line) =>
+          /\b(skill|technology|tool|coursework|focus|specialization|stack)\b/i.test(line)
+        ) ||
+        detailLines[0] ||
+        '';
+      const projectsLine =
+        detailLines.find((line) =>
+          /\b(project|thesis|capstone|research|assignment|portfolio)\b/i.test(line)
+        ) ||
+        detailLines[1] ||
+        '';
 
       const evidenceSnippets = buildEvidenceSnippet(text, block.start, block.end);
       if (evidenceSnippets.length === 0) {
         return acc;
       }
 
-      const summary = summarizeBlock(normalizedBlock, firstLine);
-
       acc.push({
         item_id: `learning-${index}`,
-        institution: institutionLine.slice(0, 200),
-        degree: degreeLine.slice(0, 200),
+        institution: clipDisplayText(institutionLine, 180) || 'Institution not specified',
+        degree: clipDisplayText(degreeLine, 180) || 'Degree not specified',
         duration,
-        skills: summary.slice(0, 500),
-        projects: summary.slice(0, 500),
+        skills: clipDisplayText(skillsLine, 220) || 'Not specified',
+        projects: clipDisplayText(projectsLine, 220) || 'Not specified',
         evidence_snippets: evidenceSnippets,
         confidence: duration === 'Duration not specified' ? 0.6 : 0.74,
       });
@@ -466,7 +541,38 @@ function extractVolunteering(
 
       const parsed = parseRoleAndOrganization(firstLine);
       const duration = extractDuration(block.text);
-      const summary = summarizeBlock(block.text, firstLine);
+      const blockLines = splitBlockContentLines(block.text);
+      const detailLines = blockLines.filter(
+        (line, lineIndex) => lineIndex > 0 && !isLikelyDateLine(line)
+      );
+      const causeLine =
+        detailLines.find((line) =>
+          /\b(cause|community|charity|nonprofit|mission|support|youth|education|health|environment)\b/i.test(
+            line
+          )
+        ) ||
+        detailLines[0] ||
+        '';
+      const impactLine =
+        detailLines.find((line) =>
+          /\b(built|delivered|helped|improved|coordinated|organized|raised|launched|mentored)\b/i.test(
+            line
+          )
+        ) ||
+        detailLines[1] ||
+        '';
+      const skillsLine =
+        detailLines.find((line) =>
+          /\b(skill|tool|technology|mentoring|teaching|leadership|analysis|development)\b/i.test(
+            line
+          )
+        ) ||
+        detailLines[2] ||
+        '';
+      const whyLine =
+        detailLines.find((line) =>
+          /\b(why|because|motivated|passion|care|believe|purpose)\b/i.test(line)
+        ) || '';
       const evidenceSnippets = buildEvidenceSnippet(text, block.start, block.end);
 
       if (evidenceSnippets.length === 0) {
@@ -475,13 +581,13 @@ function extractVolunteering(
 
       acc.push({
         item_id: `volunteering-${index}`,
-        title: parsed.title,
-        organization: parsed.organization,
+        title: clipDisplayText(parsed.title, 140) || 'Volunteer',
+        organization: clipDisplayText(parsed.organization, 160) || 'Organization not specified',
         duration,
-        cause: summary.slice(0, 280),
-        impact: summary.slice(0, 500),
-        skills_deployed: summary.slice(0, 500),
-        personal_why: summary.slice(0, 500),
+        cause: clipDisplayText(causeLine, 220) || 'Not specified',
+        impact: clipDisplayText(impactLine, 220) || 'Not specified',
+        skills_deployed: clipDisplayText(skillsLine, 220) || 'Not specified',
+        personal_why: clipDisplayText(whyLine, 220) || 'Not specified',
         evidence_snippets: evidenceSnippets,
         confidence: duration === 'Duration not specified' ? 0.58 : 0.72,
       });
@@ -682,7 +788,7 @@ function isValidFallbackCandidate(rawText: string): boolean {
 function buildFallbackEvidence(text: string, rawText: string, context?: string): string[] {
   const contextSnippet = normalizeSpace((context || '').replace(/^\.{3}|\.\.\.$/g, ''));
   if (contextSnippet.length > 0) {
-    return [contextSnippet.slice(0, 260)];
+    return [contextSnippet.slice(0, EVIDENCE_MAX_CHARS)];
   }
 
   const escaped = rawText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -695,7 +801,7 @@ function buildFallbackEvidence(text: string, rawText: string, context?: string):
   const snippetEnd = Math.min(text.length, match.index + match[0].length + EVIDENCE_CONTEXT_WINDOW);
   const snippet = normalizeSpace(text.slice(snippetStart, snippetEnd));
 
-  return snippet.length > 0 ? [snippet] : [];
+  return snippet.length > 0 ? [snippet.slice(0, EVIDENCE_MAX_CHARS)] : [];
 }
 
 function buildCandidateOnlyRows(

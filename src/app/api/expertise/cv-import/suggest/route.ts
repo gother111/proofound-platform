@@ -164,6 +164,19 @@ function decorateMetadata(
   };
 }
 
+function attachReviewHintsMetadata(
+  metadata: CvImportSuggestResponse['metadata']
+): CvImportSuggestResponse['metadata'] {
+  return {
+    ...metadata,
+    review_hints: {
+      skills_first: true,
+      recommended_action: 'Review Atlas skill suggestions and apply approved skills.',
+      quick_apply_label: 'Apply recommended skills',
+    },
+  };
+}
+
 function normalizeErrorDocument(
   document: ExtractDocument
 ): CvImportSuggestResponse['documents'][number] {
@@ -484,7 +497,14 @@ export async function POST(request: NextRequest) {
 
         return jsonWithRequestId(
           requestId,
-          decorateMetadata(noTextPayload, engineMode, 'gemini'),
+          decorateMetadata(
+            {
+              ...noTextPayload,
+              metadata: attachReviewHintsMetadata(noTextPayload.metadata),
+            },
+            engineMode,
+            'gemini'
+          ),
           200
         );
       }
@@ -515,7 +535,14 @@ export async function POST(request: NextRequest) {
 
         return jsonWithRequestId(
           requestId,
-          decorateMetadata(mergedPayload, engineMode, 'gemini'),
+          decorateMetadata(
+            {
+              ...mergedPayload,
+              metadata: attachReviewHintsMetadata(mergedPayload.metadata),
+            },
+            engineMode,
+            'gemini'
+          ),
           200
         );
       } catch (error) {
@@ -570,7 +597,14 @@ export async function POST(request: NextRequest) {
 
         return jsonWithRequestId(
           requestId,
-          decorateMetadata(mergedFallbackPayload, engineMode, 'typescript'),
+          decorateMetadata(
+            {
+              ...mergedFallbackPayload,
+              metadata: attachReviewHintsMetadata(mergedFallbackPayload.metadata),
+            },
+            engineMode,
+            'typescript'
+          ),
           200
         );
       }
@@ -598,7 +632,14 @@ export async function POST(request: NextRequest) {
 
     return jsonWithRequestId(
       requestId,
-      decorateMetadata(deterministic, engineMode, 'typescript'),
+      decorateMetadata(
+        {
+          ...deterministic,
+          metadata: attachReviewHintsMetadata(deterministic.metadata),
+        },
+        engineMode,
+        'typescript'
+      ),
       200
     );
   } catch (error) {

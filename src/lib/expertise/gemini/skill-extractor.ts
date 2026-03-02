@@ -98,7 +98,7 @@ function buildGeminiPrompt(params: {
   taxonomyGuided: boolean;
   suggestionsLimit: number;
 }): string {
-  const maxSkillsPerDocument = Math.max(12, Math.min(24, params.suggestionsLimit * 2));
+  const maxSkillsPerDocument = Math.max(14, Math.min(30, params.suggestionsLimit * 3));
   const renderedDocuments = params.documents
     .map((document) => {
       const text = document.text.slice(0, 30000);
@@ -123,13 +123,15 @@ function buildGeminiPrompt(params: {
     '- Return one item per detected skill in a flat skills array.',
     '- Each skill item must include: document_id, raw_skill_text.',
     `- Return at most ${maxSkillsPerDocument} skills per document.`,
-    '- Do not repeat duplicates or near-duplicate aliases.',
+    '- Do not repeat duplicates or near-duplicate aliases (for example React.js vs React).',
     '- category is optional and should be one of: technical, soft_skills, tools_technologies, languages, certifications, other.',
     '- confidence is optional and must be between 0 and 1 when provided.',
-    '- evidence_snippet is optional but should be short (max 120 chars) and verbatim.',
+    '- raw_skill_text should be concise and specific (max 60 chars) with no trailing punctuation.',
+    '- evidence_snippet is optional but should be short (max 120 chars), verbatim, and contain the same skill mention.',
     '- taxonomy_candidate_skill_ids is optional and may include up to 3 skill IDs from the shortlist.',
     '- Use document_id values exactly as provided in input.',
     '- Include only concrete skills/tools/technologies/languages/certifications/soft skills present in text with explicit evidence.',
+    '- Exclude generic role phrases, company names, and location names.',
     '- Do not invent skills.',
     '- If uncertain about taxonomy mapping, keep taxonomy_candidate_skill_ids empty.',
     '',
@@ -339,6 +341,7 @@ export class GeminiSuggestError extends Error {
 
 type QualityMetadata = {
   mapped_ratio: number;
+  skills_mapped_after_rerank: number;
   evidence_valid_ratio: number;
   high_confidence_count: number;
   confidence_tiers: {
@@ -601,6 +604,7 @@ export async function suggestSkillsWithGemini(params: {
         quotaFailoverCount > 0 ? 'quota_failover' : usedFallbackModel ? 'model_retry' : null;
       const quality: QualityMetadata = {
         mapped_ratio: clamp(safeDivide(totalMappedCandidates, totalFinalCandidates || 1)),
+        skills_mapped_after_rerank: totalMappedCandidates,
         evidence_valid_ratio: clamp(safeDivide(totalFinalCandidates, totalInputCandidates || 1)),
         high_confidence_count: totalHighConfidenceCount,
         confidence_tiers: aggregatedTiers,

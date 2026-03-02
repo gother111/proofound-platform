@@ -385,6 +385,20 @@ function mergeTimingMetadata(
   };
 }
 
+function attachReviewHintsMetadata(
+  metadata: CvImportWizardSuggestResponse['metadata']
+): CvImportWizardSuggestResponse['metadata'] {
+  return {
+    ...metadata,
+    review_hints: {
+      skills_first: true,
+      recommended_action:
+        'Review suggested Atlas skills first, then expand work, learning, volunteering, and languages if needed.',
+      quick_apply_label: 'Apply recommended skills',
+    },
+  };
+}
+
 async function markFallbackSuccess(
   error: GeminiSuggestError,
   payload: CvImportWizardSuggestResponse
@@ -574,7 +588,14 @@ export async function POST(request: NextRequest) {
 
         return jsonWithRequestId(
           requestId,
-          decorateMetadata(timedNoTextPayload, engineMode, 'gemini'),
+          decorateMetadata(
+            {
+              ...timedNoTextPayload,
+              metadata: attachReviewHintsMetadata(timedNoTextPayload.metadata),
+            },
+            engineMode,
+            'gemini'
+          ),
           200
         );
       }
@@ -638,7 +659,14 @@ export async function POST(request: NextRequest) {
 
         return jsonWithRequestId(
           requestId,
-          decorateMetadata(timedPayload, engineMode, 'gemini'),
+          decorateMetadata(
+            {
+              ...timedPayload,
+              metadata: attachReviewHintsMetadata(timedPayload.metadata),
+            },
+            engineMode,
+            'gemini'
+          ),
           200
         );
       } catch (error) {
@@ -693,7 +721,14 @@ export async function POST(request: NextRequest) {
 
         return jsonWithRequestId(
           requestId,
-          decorateMetadata(timedFallbackPayload, engineMode, 'typescript'),
+          decorateMetadata(
+            {
+              ...timedFallbackPayload,
+              metadata: attachReviewHintsMetadata(timedFallbackPayload.metadata),
+            },
+            engineMode,
+            'typescript'
+          ),
           200
         );
       }
@@ -729,7 +764,14 @@ export async function POST(request: NextRequest) {
 
     return jsonWithRequestId(
       requestId,
-      decorateMetadata(timedPayload, engineMode, 'typescript'),
+      decorateMetadata(
+        {
+          ...timedPayload,
+          metadata: attachReviewHintsMetadata(timedPayload.metadata),
+        },
+        engineMode,
+        'typescript'
+      ),
       200
     );
   } catch (error) {

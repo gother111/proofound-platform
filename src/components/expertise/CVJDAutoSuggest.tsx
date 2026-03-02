@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
-import { Briefcase, Download, FileText, Search, Sparkles } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Briefcase, Download, FileText, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { apiFetch } from '@/lib/api/fetch';
@@ -12,18 +12,10 @@ import {
   type AnalyzeProgressState,
   createIdleAnalyzeProgressState,
 } from '@/components/expertise/cv-import/AnalyzeProgressPanel';
+import { SkillReviewPanel } from '@/components/expertise/cv-import/SkillReviewPanel';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { CvImportWizard } from '@/components/expertise/cv-import/CvImportWizard';
 
@@ -70,6 +62,12 @@ interface ApiSuggestResponse {
     semantic_used: boolean;
     semantic_fallback_triggered: boolean;
     unmapped_candidates_count: number;
+    ai_model?: string | null;
+    ai_key_slot?: 'primary' | 'secondary' | null;
+    ai_fallback_reason?: string | null;
+    cost_ore?: number;
+    engine_mode?: 'auto' | 'typescript' | 'python' | 'gemini';
+    engine_used?: 'python' | 'typescript' | 'gemini';
     limits: {
       max_documents: number;
       max_chars_per_document: number;
@@ -85,6 +83,7 @@ interface CandidateState extends ApiCandidate {
   manual_options: ApiSuggestion[];
   manual_loading: boolean;
   show_all_suggestions: boolean;
+  manual_last_search_at?: string;
 }
 
 interface ParsedDocumentState {
@@ -122,6 +121,10 @@ const DEFAULT_API_METADATA: ApiSuggestResponse['metadata'] = {
   semantic_used: false,
   semantic_fallback_triggered: false,
   unmapped_candidates_count: 0,
+  ai_model: null,
+  ai_key_slot: null,
+  ai_fallback_reason: null,
+  cost_ore: undefined,
   limits: DEFAULT_IMPORT_LIMITS,
 };
 
@@ -130,21 +133,20 @@ const GENERIC_BACKEND_ERRORS = new Set([
   'Failed to process CV documents',
 ]);
 
-const CATEGORY_OPTIONS: CandidateCategory[] = [
-  'technical',
-  'soft_skills',
-  'tools_technologies',
-  'languages',
-  'certifications',
-  'other',
-];
+function formatRelativeTimeLabel(dateIso: string | undefined): string | undefined {
+  if (!dateIso) {
+    return undefined;
+  }
 
-function formatCategory(value: CandidateCategory): string {
-  return value.replace(/_/g, ' ');
-}
+  const value = new Date(dateIso);
+  if (Number.isNaN(value.getTime())) {
+    return undefined;
+  }
 
-function parseMultiSelect(event: ChangeEvent<HTMLSelectElement>): string[] {
-  return Array.from(event.target.selectedOptions).map((option) => option.value);
+  return `Last searched ${value.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  })}`;
 }
 
 function toSkillMap(candidates: CandidateState[]): Map<string, string> {
@@ -341,6 +343,30 @@ function normalizeApiMetadata(value: unknown): ApiSuggestResponse['metadata'] {
       Number.isFinite(value.unmapped_candidates_count)
         ? Math.max(0, Math.floor(value.unmapped_candidates_count))
         : 0,
+    ai_model: typeof value.ai_model === 'string' ? value.ai_model : null,
+    ai_key_slot:
+      value.ai_key_slot === 'primary' || value.ai_key_slot === 'secondary'
+        ? value.ai_key_slot
+        : null,
+    ai_fallback_reason:
+      typeof value.ai_fallback_reason === 'string' ? value.ai_fallback_reason : null,
+    cost_ore:
+      typeof value.cost_ore === 'number' && Number.isFinite(value.cost_ore)
+        ? value.cost_ore
+        : undefined,
+    engine_mode:
+      value.engine_mode === 'auto' ||
+      value.engine_mode === 'typescript' ||
+      value.engine_mode === 'python' ||
+      value.engine_mode === 'gemini'
+        ? value.engine_mode
+        : undefined,
+    engine_used:
+      value.engine_used === 'python' ||
+      value.engine_used === 'typescript' ||
+      value.engine_used === 'gemini'
+        ? value.engine_used
+        : undefined,
     limits: {
       max_documents: maxDocuments,
       max_chars_per_document: maxCharsPerDocument,
@@ -651,6 +677,11 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [apiMetadata, setApiMetadata] = useState<ApiSuggestResponse['metadata'] | null>(null);
+  const [showAdvancedDiagnostics, setShowAdvancedDiagnostics] = useState(false);
+  const [openSkillPicker, setOpenSkillPicker] = useState<{
+    documentId: string;
+    candidateId: string;
+  } | null>(null);
   const [analyzeProgress, setAnalyzeProgress] = useState<AnalyzeProgressState>(
     createIdleAnalyzeProgressState
   );
@@ -750,6 +781,8 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
     setDocuments([]);
     setManualText('');
     setApiMetadata(null);
+    setShowAdvancedDiagnostics(false);
+    setOpenSkillPicker(null);
   };
 
   const handleWizardApplyComplete = (payload: {
@@ -840,6 +873,7 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
 
     setIsAnalyzing(true);
     clearProgressResetTimer();
+    setOpenSkillPicker(null);
     setAnalyzeProgress({
       status: 'running',
       phase: 'preparing',
@@ -899,6 +933,7 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
 
       setRunningProgress('finalizing', 92, 'Finalizing results...');
       setDocuments(analyzedDocuments);
+      setOpenSkillPicker(null);
       setCompletedProgress('Extraction completed. Review and approve the results below.');
 
       toast.success(
@@ -965,10 +1000,15 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
         ...current,
         manual_loading: false,
         manual_options: mappedOptions,
+        manual_last_search_at: new Date().toISOString(),
       }));
 
       if (mappedOptions.length === 0) {
         toast.info('No taxonomy matches found for manual mapping.');
+      } else {
+        toast.success(
+          `${mappedOptions.length} Atlas ${mappedOptions.length === 1 ? 'match' : 'matches'} found.`
+        );
       }
     } catch (error) {
       updateCandidate(documentId, candidateId, (current) => ({
@@ -977,6 +1017,31 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
       }));
       toast.error(error instanceof Error ? error.message : 'Failed to search taxonomy');
     }
+  };
+
+  const selectAtlasMatch = (
+    documentId: string,
+    candidateId: string,
+    option: ApiSuggestion,
+    mode: 'select' | 'replace'
+  ) => {
+    updateCandidate(documentId, candidateId, (current) => {
+      const manualOptions = current.manual_options.some(
+        (manual) => manual.skill_id === option.skill_id
+      )
+        ? current.manual_options
+        : [option, ...current.manual_options].slice(0, 10);
+      const selectedSkillIds =
+        mode === 'replace'
+          ? [option.skill_id]
+          : Array.from(new Set([...current.selected_skill_ids, option.skill_id]));
+
+      return {
+        ...current,
+        manual_options: manualOptions,
+        selected_skill_ids: selectedSkillIds,
+      };
+    });
   };
 
   const exportDocument = (document: ParsedDocumentState) => {
@@ -1146,12 +1211,28 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
 
           {apiMetadata && (
             <div className="rounded-lg border p-3 text-sm">
-              <p>Semantic used: {apiMetadata.semantic_used ? 'yes' : 'no'}</p>
-              <p>
-                Semantic fallback triggered:{' '}
-                {apiMetadata.semantic_fallback_triggered ? 'yes' : 'no'}
-              </p>
-              <p>Unmapped candidates: {apiMetadata.unmapped_candidates_count}</p>
+              <button
+                type="button"
+                className="text-left text-sm font-medium text-proofound-forest hover:underline"
+                onClick={() => setShowAdvancedDiagnostics((previous) => !previous)}
+              >
+                {showAdvancedDiagnostics ? 'Hide advanced diagnostics' : 'Advanced diagnostics'}
+              </button>
+              {showAdvancedDiagnostics && (
+                <div className="mt-2 space-y-1 text-muted-foreground">
+                  <p>Semantic matching used: {apiMetadata.semantic_used ? 'yes' : 'no'}</p>
+                  <p>
+                    Semantic fallback triggered:{' '}
+                    {apiMetadata.semantic_fallback_triggered ? 'yes' : 'no'}
+                  </p>
+                  <p>Needs mapping: {apiMetadata.unmapped_candidates_count}</p>
+                  {apiMetadata.engine_used && <p>Engine used: {apiMetadata.engine_used}</p>}
+                  {apiMetadata.ai_model && <p>Model: {apiMetadata.ai_model}</p>}
+                  {typeof apiMetadata.cost_ore === 'number' && (
+                    <p>Cost: {(apiMetadata.cost_ore / 100).toFixed(2)} SEK</p>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </CardContent>
@@ -1187,196 +1268,83 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
                   </pre>
                 </details>
 
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Approve</TableHead>
-                        <TableHead>Candidate</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Confidence</TableHead>
-                        <TableHead>Evidence</TableHead>
-                        <TableHead>Mapped skill_ids</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {document.candidates.map((candidate) => {
-                        const visibleAutoSuggestions = candidate.suggestions.slice(
-                          0,
-                          candidate.show_all_suggestions ? 20 : 5
-                        );
-                        const selectedFallbackSuggestions = candidate.suggestions.filter((option) =>
-                          candidate.selected_skill_ids.includes(option.skill_id)
-                        );
-                        const optionMap = new Map<string, ApiSuggestion>();
-                        for (const option of [
-                          ...visibleAutoSuggestions,
-                          ...selectedFallbackSuggestions,
-                          ...candidate.manual_options,
-                        ]) {
-                          optionMap.set(option.skill_id, option);
-                        }
-
-                        const options = Array.from(optionMap.values());
-
-                        return (
-                          <TableRow key={candidate.candidate_id}>
-                            <TableCell>
-                              <input
-                                type="checkbox"
-                                checked={candidate.approved}
-                                onChange={(event) => {
-                                  updateCandidate(
-                                    document.document_id,
-                                    candidate.candidate_id,
-                                    (current) => ({
-                                      ...current,
-                                      approved: event.target.checked,
-                                    })
-                                  );
-                                }}
-                              />
-                            </TableCell>
-                            <TableCell className="min-w-[220px]">
-                              <Textarea
-                                value={candidate.raw_skill_text}
-                                onChange={(event) => {
-                                  updateCandidate(
-                                    document.document_id,
-                                    candidate.candidate_id,
-                                    (current) => ({
-                                      ...current,
-                                      raw_skill_text: event.target.value,
-                                      manual_search_query: event.target.value,
-                                    })
-                                  );
-                                }}
-                                rows={2}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <select
-                                className="rounded border px-2 py-1 text-sm"
-                                value={candidate.category}
-                                onChange={(event) => {
-                                  updateCandidate(
-                                    document.document_id,
-                                    candidate.candidate_id,
-                                    (current) => ({
-                                      ...current,
-                                      category: event.target.value as CandidateCategory,
-                                    })
-                                  );
-                                }}
-                              >
-                                {CATEGORY_OPTIONS.map((option) => (
-                                  <option key={option} value={option}>
-                                    {formatCategory(option)}
-                                  </option>
-                                ))}
-                              </select>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="secondary">
-                                {Math.round(candidate.confidence * 100)}%
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="min-w-[280px]">
-                              <ul className="list-disc pl-4 text-xs">
-                                {candidate.evidence_snippets.map((snippet, index) => (
-                                  <li key={`${candidate.candidate_id}-${index}`}>{snippet}</li>
-                                ))}
-                              </ul>
-                            </TableCell>
-                            <TableCell className="min-w-[280px] space-y-2">
-                              <select
-                                multiple
-                                className="h-28 w-full rounded border px-2 py-1 text-xs"
-                                value={candidate.selected_skill_ids}
-                                onChange={(event) => {
-                                  const selectedSkillIds = parseMultiSelect(event);
-                                  updateCandidate(
-                                    document.document_id,
-                                    candidate.candidate_id,
-                                    (current) => ({
-                                      ...current,
-                                      selected_skill_ids: selectedSkillIds,
-                                    })
-                                  );
-                                }}
-                              >
-                                {options.map((option) => (
-                                  <option key={option.skill_id} value={option.skill_id}>
-                                    {option.skill_id} · {option.skill_name} ({option.match_method}:{' '}
-                                    {(option.score * 100).toFixed(0)}%)
-                                  </option>
-                                ))}
-                              </select>
-
-                              {candidate.suggestions.length > 5 && (
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() =>
-                                    updateCandidate(
-                                      document.document_id,
-                                      candidate.candidate_id,
-                                      (current) => ({
-                                        ...current,
-                                        show_all_suggestions: !current.show_all_suggestions,
-                                      })
-                                    )
-                                  }
-                                >
-                                  {candidate.show_all_suggestions
-                                    ? 'Show fewer suggestions'
-                                    : 'Show more suggestions'}
-                                </Button>
-                              )}
-
-                              <div className="flex items-center gap-2">
-                                <Input
-                                  value={candidate.manual_search_query}
-                                  onChange={(event) => {
-                                    updateCandidate(
-                                      document.document_id,
-                                      candidate.candidate_id,
-                                      (current) => ({
-                                        ...current,
-                                        manual_search_query: event.target.value,
-                                      })
-                                    );
-                                  }}
-                                  placeholder="Search taxonomy for manual mapping"
-                                />
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() =>
-                                    searchManualMappings(
-                                      document.document_id,
-                                      candidate.candidate_id
-                                    )
-                                  }
-                                  disabled={candidate.manual_loading}
-                                >
-                                  <Search className="mr-2 h-4 w-4" />
-                                  {candidate.manual_loading ? '...' : 'Find'}
-                                </Button>
-                              </div>
-
-                              {candidate.unmapped_candidate &&
-                                candidate.selected_skill_ids.length === 0 && (
-                                  <p className="text-xs text-amber-700">
-                                    Unmapped candidate. Select at least one taxonomy skill_id.
-                                  </p>
-                                )}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-foreground">Skills to review</p>
+                    <Badge variant="secondary">
+                      {document.candidates.filter((candidate) => candidate.approved).length}/
+                      {document.candidates.length} selected
+                    </Badge>
+                  </div>
+                  <SkillReviewPanel
+                    candidates={document.candidates.map((candidate) => ({
+                      ...candidate,
+                      manual_last_search_at: formatRelativeTimeLabel(
+                        candidate.manual_last_search_at
+                      ),
+                    }))}
+                    openPickerId={
+                      openSkillPicker?.documentId === document.document_id
+                        ? openSkillPicker.candidateId
+                        : null
+                    }
+                    onOpenPicker={(candidateId) =>
+                      setOpenSkillPicker(
+                        candidateId
+                          ? {
+                              documentId: document.document_id,
+                              candidateId,
+                            }
+                          : null
+                      )
+                    }
+                    onToggleApproved={(candidateId, checked) => {
+                      updateCandidate(document.document_id, candidateId, (current) => ({
+                        ...current,
+                        approved: checked,
+                      }));
+                    }}
+                    onRawSkillChange={(candidateId, value) => {
+                      updateCandidate(document.document_id, candidateId, (current) => ({
+                        ...current,
+                        raw_skill_text: value,
+                        manual_search_query: value,
+                      }));
+                    }}
+                    onCategoryChange={(candidateId, value) => {
+                      updateCandidate(document.document_id, candidateId, (current) => ({
+                        ...current,
+                        category: value,
+                      }));
+                    }}
+                    onSelectSkillIds={(candidateId, selectedSkillIds) => {
+                      updateCandidate(document.document_id, candidateId, (current) => ({
+                        ...current,
+                        selected_skill_ids: selectedSkillIds,
+                      }));
+                    }}
+                    onManualQueryChange={(candidateId, value) => {
+                      updateCandidate(document.document_id, candidateId, (current) => ({
+                        ...current,
+                        manual_search_query: value,
+                      }));
+                    }}
+                    onToggleSuggestions={(candidateId) => {
+                      updateCandidate(document.document_id, candidateId, (current) => ({
+                        ...current,
+                        show_all_suggestions: !current.show_all_suggestions,
+                      }));
+                    }}
+                    onFind={(candidateId) =>
+                      searchManualMappings(document.document_id, candidateId)
+                    }
+                    onSelectMatch={(candidateId, option) =>
+                      selectAtlasMatch(document.document_id, candidateId, option, 'select')
+                    }
+                    onReplaceMatch={(candidateId, option) =>
+                      selectAtlasMatch(document.document_id, candidateId, option, 'replace')
+                    }
+                  />
                 </div>
               </>
             )}
