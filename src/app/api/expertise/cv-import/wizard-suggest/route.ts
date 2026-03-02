@@ -70,6 +70,11 @@ const ExtractResponseSchema = z.object({
   metadata: z.unknown().optional(),
 });
 
+type RouteTimings = {
+  extractMs?: number;
+  totalMs: number;
+};
+
 function parsePositiveInt(value: string | undefined, fallback: number): number {
   if (!value) {
     return fallback;
@@ -357,8 +362,26 @@ function buildGeminiFallbackMetadata(
     ai_model: null,
     ai_key_slot: null,
     ai_fallback_reason: fallbackReason,
+    ai_schema_mode: 'flat_skills_v1',
     cost_ore: 0,
     currency: 'SEK',
+  };
+}
+
+function mergeTimingMetadata(
+  metadata: CvImportWizardSuggestResponse['metadata'],
+  timings: RouteTimings
+): CvImportWizardSuggestResponse['metadata'] {
+  const existing = metadata.timings || {};
+  return {
+    ...metadata,
+    timings: {
+      ...existing,
+      ...(typeof timings.extractMs === 'number'
+        ? { extract_ms: Math.max(0, timings.extractMs) }
+        : {}),
+      total_ms: Math.max(0, timings.totalMs),
+    },
   };
 }
 
@@ -388,6 +411,7 @@ async function markFallbackSuccess(
 
 export async function POST(request: NextRequest) {
   const requestId = createRequestId(request);
+  const routeStartedAt = Date.now();
 
   const supabase = await createClient();
   const {
@@ -474,12 +498,15 @@ export async function POST(request: NextRequest) {
     let sourceDocuments: ExtractDocument[] = [];
     let failedDocuments: ExtractDocument[] = [];
     let suggestionsLimit: number | undefined;
+    let extractDurationMs = 0;
 
     if (contentType.startsWith('multipart/form-data') && engineMode === 'gemini') {
+      const extractStartedAt = Date.now();
       const extractResponse = await proxyCvRequestToPython(request, '/extract', timeoutMs);
       if (!extractResponse.ok) {
         return await attachEngineMetadata(extractResponse, requestId, engineMode, 'gemini');
       }
+      extractDurationMs = Date.now() - extractStartedAt;
 
       const extractPayload = ExtractResponseSchema.parse(await extractResponse.json());
 
@@ -537,10 +564,17 @@ export async function POST(request: NextRequest) {
             currency: 'SEK',
           },
         };
+        const timedNoTextPayload: CvImportWizardSuggestResponse = {
+          ...noTextPayload,
+          metadata: mergeTimingMetadata(noTextPayload.metadata, {
+            extractMs: extractDurationMs,
+            totalMs: Date.now() - routeStartedAt,
+          }),
+        };
 
         return jsonWithRequestId(
           requestId,
-          decorateMetadata(noTextPayload, engineMode, 'gemini'),
+          decorateMetadata(timedNoTextPayload, engineMode, 'gemini'),
           200
         );
       }
@@ -594,10 +628,17 @@ export async function POST(request: NextRequest) {
             ...(geminiSkills.response.metadata as Record<string, unknown>),
           } as CvImportWizardSuggestResponse['metadata'],
         };
+        const timedPayload: CvImportWizardSuggestResponse = {
+          ...mergedPayload,
+          metadata: mergeTimingMetadata(mergedPayload.metadata, {
+            extractMs: extractDurationMs,
+            totalMs: Date.now() - routeStartedAt,
+          }),
+        };
 
         return jsonWithRequestId(
           requestId,
-          decorateMetadata(mergedPayload, engineMode, 'gemini'),
+          decorateMetadata(timedPayload, engineMode, 'gemini'),
           200
         );
       } catch (error) {
@@ -613,37 +654,17 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        const deterministicFallback = await withTimeout(
-          suggestWizardForDocuments(
-            {
-              documents: sourceDocuments.map((document) => ({
-                document_id: document.document_id,
-                file_name: document.file_name,
-                text: document.parsed_text,
-                context: 'cv',
-              })),
-              suggestions_limit: suggestionsLimit,
-            },
-            limits,
-            {
-              semanticEnabled,
-              suggestionsLimit,
-            }
-          ),
-          timeoutMs
-        );
-
         const fallbackReason =
           error instanceof GeminiSuggestError ? error.fallbackReason : 'model_error';
 
         const mergedFallbackPayload: CvImportWizardSuggestResponse = {
-          ...deterministicFallback,
+          ...wizardEntities,
           documents: mergeWizardDocuments({
             sourceOrder,
             failedDocuments,
-            wizardEntities: deterministicFallback,
+            wizardEntities,
             geminiSkills: {
-              documents: deterministicFallback.documents.map((document) => ({
+              documents: wizardEntities.documents.map((document) => ({
                 document_id: document.document_id,
                 file_name: document.file_name,
                 context: document.context,
@@ -653,19 +674,26 @@ export async function POST(request: NextRequest) {
                 candidate_count: document.skill_candidates.length,
                 candidates: document.skill_candidates,
               })),
-              metadata: deterministicFallback.metadata,
+              metadata: wizardEntities.metadata,
             },
           }),
-          metadata: buildGeminiFallbackMetadata(deterministicFallback.metadata, fallbackReason),
+          metadata: buildGeminiFallbackMetadata(wizardEntities.metadata, fallbackReason),
+        };
+        const timedFallbackPayload: CvImportWizardSuggestResponse = {
+          ...mergedFallbackPayload,
+          metadata: mergeTimingMetadata(mergedFallbackPayload.metadata, {
+            extractMs: extractDurationMs,
+            totalMs: Date.now() - routeStartedAt,
+          }),
         };
 
         if (error instanceof GeminiSuggestError) {
-          await markFallbackSuccess(error, mergedFallbackPayload);
+          await markFallbackSuccess(error, timedFallbackPayload);
         }
 
         return jsonWithRequestId(
           requestId,
-          decorateMetadata(mergedFallbackPayload, engineMode, 'typescript'),
+          decorateMetadata(timedFallbackPayload, engineMode, 'typescript'),
           200
         );
       }
@@ -691,7 +719,19 @@ export async function POST(request: NextRequest) {
       timeoutMs
     );
 
-    return jsonWithRequestId(requestId, decorateMetadata(payload, engineMode, 'typescript'), 200);
+    const timedPayload: CvImportWizardSuggestResponse = {
+      ...payload,
+      metadata: mergeTimingMetadata(payload.metadata, {
+        extractMs: extractDurationMs,
+        totalMs: Date.now() - routeStartedAt,
+      }),
+    };
+
+    return jsonWithRequestId(
+      requestId,
+      decorateMetadata(timedPayload, engineMode, 'typescript'),
+      200
+    );
   } catch (error) {
     if (error instanceof z.ZodError) {
       return jsonWithRequestId(

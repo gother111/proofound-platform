@@ -285,10 +285,6 @@ async function readErrorMessage(response: Response, fallback: string): Promise<s
   return fallback;
 }
 
-function isClientFallbackEnabled(): boolean {
-  return process.env.NEXT_PUBLIC_CV_IMPORT_CLIENT_FALLBACK_ENABLED !== 'false';
-}
-
 function isProxyRetryableError(payload: unknown): boolean {
   if (!isRecord(payload)) {
     return false;
@@ -1135,7 +1131,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         body: formData,
       });
 
-      if (!response.ok && isClientFallbackEnabled()) {
+      if (!response.ok) {
         const failurePayload = await readJsonSafely(response);
         const timeoutFailure = isWizardTimeoutFailure(failurePayload, response.status);
         const metadataInvalidFailure = isMultipartMetadataInvalidError(failurePayload);

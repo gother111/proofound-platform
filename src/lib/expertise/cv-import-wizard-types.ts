@@ -101,9 +101,18 @@ export const CvImportWizardMetadataSchema = z.object({
   ai_model: z.string().optional().nullable(),
   ai_key_slot: z.enum(['primary', 'secondary']).optional().nullable(),
   ai_fallback_reason: z.string().optional().nullable(),
+  ai_schema_mode: z.string().optional(),
   cost_ore: z.number().int().min(0).optional(),
   currency: z.literal('SEK').optional(),
   idempotency_key: z.string().optional(),
+  timings: z
+    .object({
+      extract_ms: z.number().int().min(0).optional(),
+      shortlist_ms: z.number().int().min(0).optional(),
+      gemini_ms: z.number().int().min(0).optional(),
+      total_ms: z.number().int().min(0).optional(),
+    })
+    .optional(),
   quality: z
     .object({
       mapped_ratio: z.number().min(0).max(1),

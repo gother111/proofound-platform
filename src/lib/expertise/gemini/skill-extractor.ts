@@ -96,7 +96,9 @@ function buildGeminiPrompt(params: {
   documents: GeminiSourceDocument[];
   shortlistByDocument: Map<string, TaxonomyShortlistSkill[]>;
   taxonomyGuided: boolean;
+  suggestionsLimit: number;
 }): string {
+  const maxSkillsPerDocument = Math.max(12, Math.min(24, params.suggestionsLimit * 2));
   const renderedDocuments = params.documents
     .map((document) => {
       const text = document.text.slice(0, 30000);
@@ -117,14 +119,19 @@ function buildGeminiPrompt(params: {
     'Extract skill candidates for each document.',
     'Return JSON only. Do not include markdown.',
     'Rules:',
-    '- Return each document from the input by document_id.',
+    '- Output format is { "skills": [ ... ] }.',
+    '- Return one item per detected skill in a flat skills array.',
+    '- Each skill item must include: document_id, raw_skill_text.',
+    `- Return at most ${maxSkillsPerDocument} skills per document.`,
+    '- Do not repeat duplicates or near-duplicate aliases.',
+    '- category is optional and should be one of: technical, soft_skills, tools_technologies, languages, certifications, other.',
+    '- confidence is optional and must be between 0 and 1 when provided.',
+    '- evidence_snippet is optional but should be short (max 120 chars) and verbatim.',
+    '- taxonomy_candidate_skill_ids is optional and may include up to 3 skill IDs from the shortlist.',
+    '- Use document_id values exactly as provided in input.',
     '- Include only concrete skills/tools/technologies/languages/certifications/soft skills present in text with explicit evidence.',
     '- Do not invent skills.',
-    '- confidence must be between 0 and 1.',
-    '- evidence_snippets must be short verbatim snippets from the input text, no paraphrases.',
-    '- If taxonomy shortlist is provided, prefer selecting relevant canonical skills in taxonomy_candidates.',
-    '- taxonomy_candidates must include up to 3 best skill_id + skill_name matches with confidence per candidate.',
-    '- If uncertain about taxonomy mapping, keep taxonomy_candidates empty and keep low confidence.',
+    '- If uncertain about taxonomy mapping, keep taxonomy_candidate_skill_ids empty.',
     '',
     renderedDocuments,
   ].join('\n');
@@ -180,6 +187,13 @@ function shouldRetryWithFallbackModel(error: unknown): boolean {
   return false;
 }
 
+function isInvalidJsonLikeError(error: unknown): boolean {
+  if (error instanceof z.ZodError) {
+    return true;
+  }
+  return error instanceof GeminiClientError && error.code === 'invalid_json';
+}
+
 async function extractSkillCandidates(params: {
   model: string;
   apiKey: string;
@@ -210,6 +224,69 @@ async function extractSkillCandidates(params: {
   };
 }
 
+function groupSkillsByDocument(params: {
+  extracted: z.infer<typeof GeminiDocumentsExtractionSchema>;
+  documentIds: Set<string>;
+}): Map<string, GeminiSkillCandidate[]> {
+  const normalizeCategory = (value: string): GeminiSkillCandidate['category'] => {
+    const normalized = value.trim().toLowerCase();
+    if (
+      normalized === 'technical' ||
+      normalized === 'soft_skills' ||
+      normalized === 'tools_technologies' ||
+      normalized === 'languages' ||
+      normalized === 'certifications' ||
+      normalized === 'other'
+    ) {
+      return normalized;
+    }
+    return 'other';
+  };
+
+  const normalizeEvidence = (value: GeminiSkillCandidate['evidence_snippet']): string => {
+    if (typeof value === 'string') {
+      return value.trim();
+    }
+    if (Array.isArray(value)) {
+      for (const entry of value) {
+        const snippet = typeof entry === 'string' ? entry.trim() : '';
+        if (snippet.length > 0) {
+          return snippet;
+        }
+      }
+    }
+    return '';
+  };
+
+  const byDocumentId = new Map<string, GeminiSkillCandidate[]>();
+  for (const skill of params.extracted.skills) {
+    const documentId = skill.document_id.trim();
+    const rawSkillText = skill.raw_skill_text.trim();
+    if (!params.documentIds.has(documentId) || rawSkillText.length === 0) {
+      continue;
+    }
+
+    const evidenceSnippet = normalizeEvidence(skill.evidence_snippet);
+    const normalizedSkill: GeminiSkillCandidate = {
+      ...skill,
+      document_id: documentId,
+      raw_skill_text: rawSkillText,
+      category: normalizeCategory(skill.category),
+      confidence: clamp(skill.confidence),
+      evidence_snippet: evidenceSnippet.length > 0 ? evidenceSnippet : rawSkillText,
+      taxonomy_candidate_skill_ids: (skill.taxonomy_candidate_skill_ids || [])
+        .map((value) => value.trim())
+        .filter((value) => value.length > 0)
+        .slice(0, 3),
+    };
+
+    const current = byDocumentId.get(documentId) || [];
+    current.push(normalizedSkill);
+    byDocumentId.set(documentId, current);
+  }
+  return byDocumentId;
+}
+
 export type GeminiSourceDocument = {
   document_id: string;
   file_name: string;
@@ -229,6 +306,7 @@ export type GeminiSuggestSuccess = {
       cost_ore: number;
       currency: 'SEK';
       idempotency_key: string;
+      ai_schema_mode: 'flat_skills_v1';
     };
   };
   idempotencyKey: string;
@@ -357,12 +435,14 @@ export async function suggestSkillsWithGemini(params: {
     documents: params.documents,
     shortlistByDocument,
     taxonomyGuided,
+    suggestionsLimit,
   });
   const estimatedReservation = estimateReservationCostOre({
     model: resolveGeminiModelDefault(),
     aggregateTextChars: aggregateChars,
     maxOutputTokens: adaptiveMaxOutputTokens,
   });
+  const shortlistDurationMs = Date.now() - startedAt;
 
   for (const keySlot of keySlots) {
     const apiKey = resolveGeminiApiKey(keySlot);
@@ -397,37 +477,55 @@ export async function suggestSkillsWithGemini(params: {
       const fallbackModel = resolveGeminiModelFallback();
       const defaultModel = resolveGeminiModelDefault();
       let usedFallbackModel = false;
+      const geminiStartedAt = Date.now();
       let extraction: Awaited<ReturnType<typeof extractSkillCandidates>>;
+      const boostedMaxOutputTokens = Math.min(
+        3200,
+        Math.max(adaptiveMaxOutputTokens + 400, adaptiveMaxOutputTokens * 2)
+      );
+
+      const extractWithRetries = async (model: string) => {
+        try {
+          return await extractSkillCandidates({
+            model,
+            apiKey,
+            prompt,
+            requestId: params.requestId,
+            maxOutputTokens: adaptiveMaxOutputTokens,
+          });
+        } catch (error) {
+          if (!isInvalidJsonLikeError(error) || boostedMaxOutputTokens <= adaptiveMaxOutputTokens) {
+            throw error;
+          }
+
+          return await extractSkillCandidates({
+            model,
+            apiKey,
+            prompt,
+            requestId: params.requestId,
+            maxOutputTokens: boostedMaxOutputTokens,
+          });
+        }
+      };
 
       try {
-        extraction = await extractSkillCandidates({
-          model: defaultModel,
-          apiKey,
-          prompt,
-          requestId: params.requestId,
-          maxOutputTokens: adaptiveMaxOutputTokens,
-        });
+        extraction = await extractWithRetries(defaultModel);
       } catch (error) {
         if (
           trimModelName(fallbackModel) !== trimModelName(defaultModel) &&
           shouldRetryWithFallbackModel(error)
         ) {
           usedFallbackModel = true;
-          extraction = await extractSkillCandidates({
-            model: fallbackModel,
-            apiKey,
-            prompt,
-            requestId: params.requestId,
-            maxOutputTokens: adaptiveMaxOutputTokens,
-          });
+          extraction = await extractWithRetries(fallbackModel);
         } else {
           throw error;
         }
       }
 
-      const byDocumentId = new Map(
-        extraction.extracted.documents.map((document) => [document.document_id, document.skills])
-      );
+      const byDocumentId = groupSkillsByDocument({
+        extracted: extraction.extracted,
+        documentIds: new Set(params.documents.map((document) => document.document_id)),
+      });
 
       const responseDocuments = [] as CvImportSuggestResponse['documents'];
       let totalInputCandidates = 0;
@@ -491,6 +589,8 @@ export async function suggestSkillsWithGemini(params: {
         promptTokens,
         outputTokens,
       });
+      const geminiDurationMs = Date.now() - geminiStartedAt;
+      const totalDurationMs = Date.now() - startedAt;
       await finalizeBudgetReservation({
         reservation: reservationResult.reservation,
         actualCostOre,
@@ -539,6 +639,12 @@ export async function suggestSkillsWithGemini(params: {
           cost_ore: actualCostOre,
           currency: 'SEK',
           idempotency_key: idempotencyKey,
+          ai_schema_mode: 'flat_skills_v1',
+          timings: {
+            shortlist_ms: shortlistDurationMs,
+            gemini_ms: geminiDurationMs,
+            total_ms: totalDurationMs,
+          },
           quality,
         },
       };
@@ -561,6 +667,11 @@ export async function suggestSkillsWithGemini(params: {
           model_fallback_used: usedFallbackModel,
           taxonomy_guided: taxonomyGuided,
           adaptive_max_output_tokens: adaptiveMaxOutputTokens,
+          timings: {
+            shortlist_ms: shortlistDurationMs,
+            gemini_ms: geminiDurationMs,
+            total_ms: totalDurationMs,
+          },
           quality,
         },
       });
@@ -610,6 +721,10 @@ export async function suggestSkillsWithGemini(params: {
       documents_count: params.documents.length,
       suggestions_limit: suggestionsLimit,
       quota_failovers: quotaFailoverCount,
+      timings: {
+        shortlist_ms: shortlistDurationMs,
+        total_ms: Date.now() - startedAt,
+      },
     },
   });
 

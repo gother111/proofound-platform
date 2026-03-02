@@ -57,6 +57,50 @@ function isQuotaError(status: number, message: string): boolean {
   );
 }
 
+function parseJsonLenient(rawText: string): unknown | null {
+  const direct = rawText.trim();
+  if (!direct) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(direct);
+  } catch {
+    // Continue with fallback strategies.
+  }
+
+  const fencedMatch = direct.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (fencedMatch && fencedMatch[1]) {
+    try {
+      return JSON.parse(fencedMatch[1].trim());
+    } catch {
+      // Continue with bracket extraction.
+    }
+  }
+
+  const firstObjectStart = direct.indexOf('{');
+  const lastObjectEnd = direct.lastIndexOf('}');
+  if (firstObjectStart >= 0 && lastObjectEnd > firstObjectStart) {
+    try {
+      return JSON.parse(direct.slice(firstObjectStart, lastObjectEnd + 1));
+    } catch {
+      // Ignore and try array extraction.
+    }
+  }
+
+  const firstArrayStart = direct.indexOf('[');
+  const lastArrayEnd = direct.lastIndexOf(']');
+  if (firstArrayStart >= 0 && lastArrayEnd > firstArrayStart) {
+    try {
+      return JSON.parse(direct.slice(firstArrayStart, lastArrayEnd + 1));
+    } catch {
+      // Ignore and return null.
+    }
+  }
+
+  return null;
+}
+
 async function parseErrorMessage(response: Response): Promise<string> {
   const fallback = `Gemini request failed with status ${response.status}`;
   try {
@@ -161,10 +205,8 @@ export async function callGeminiStructuredJson(params: {
       throw new GeminiClientError('Gemini returned no JSON content.', 'model_error', 502, false);
     }
 
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(rawText);
-    } catch {
+    const parsed = parseJsonLenient(rawText);
+    if (parsed === null) {
       throw new GeminiClientError('Gemini returned invalid JSON.', 'invalid_json', 502, false);
     }
 

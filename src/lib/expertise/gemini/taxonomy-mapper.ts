@@ -38,6 +38,21 @@ function normalizeRawSkill(value: string): string {
     .trim();
 }
 
+function normalizeCandidateCategory(value: string): CvImportCandidate['category'] {
+  const normalized = value.trim().toLowerCase();
+  if (
+    normalized === 'technical' ||
+    normalized === 'soft_skills' ||
+    normalized === 'tools_technologies' ||
+    normalized === 'languages' ||
+    normalized === 'certifications' ||
+    normalized === 'other'
+  ) {
+    return normalized;
+  }
+  return 'other';
+}
+
 function tokenOverlap(raw: string, label: string): number {
   const rawTokens = new Set(normalizeRawSkill(raw).split(' ').filter(Boolean));
   const labelTokens = new Set(normalizeRawSkill(label).split(' ').filter(Boolean));
@@ -269,15 +284,28 @@ function shortlistHintSuggestions(params: {
     .slice(0, params.suggestionsLimit);
 }
 
-function geminiHintSuggestions(skill: GeminiSkillCandidate) {
-  const hints = skill.taxonomy_candidates || [];
+function geminiHintSuggestions(params: {
+  skill: GeminiSkillCandidate;
+  shortlist: TaxonomyShortlistSkill[];
+}) {
+  const hints = params.skill.taxonomy_candidate_skill_ids || [];
+  if (hints.length === 0) {
+    return [];
+  }
+
+  const shortlistById = new Map(params.shortlist.map((entry) => [entry.skill_id, entry]));
+
   return hints
-    .map((hint) => ({
-      skillId: hint.skill_id,
-      skillName: hint.skill_name,
-      matchMethod: 'semantic' as const,
-      score: clamp(hint.confidence),
-    }))
+    .map((skillId, index) => {
+      const shortlistEntry = shortlistById.get(skillId);
+      const decay = Math.max(0, 0.82 - index * 0.08);
+      return {
+        skillId,
+        skillName: shortlistEntry?.skill_name || skillId,
+        matchMethod: 'semantic' as const,
+        score: clamp(decay),
+      };
+    })
     .sort((a, b) => b.score - a.score);
 }
 
@@ -319,17 +347,23 @@ export async function mapGeminiCandidatesToCvImportCandidates(params: {
       shortlist: params.taxonomyShortlist || [],
       suggestionsLimit: params.suggestionsLimit,
     });
-    const hintSuggestions = geminiHintSuggestions(skill);
+    const hintSuggestions = geminiHintSuggestions({
+      skill,
+      shortlist: params.taxonomyShortlist || [],
+    });
     const suggestions = mergeSuggestions(
       [...dbSuggestions, ...shortlistSuggestions, ...hintSuggestions],
       params.suggestionsLimit
     );
-    const evidenceSnippets = normalizeEvidenceSnippets(skill.evidence_snippets);
+    const rawEvidence = Array.isArray(skill.evidence_snippet)
+      ? skill.evidence_snippet
+      : [skill.evidence_snippet];
+    const evidenceSnippets = normalizeEvidenceSnippets(rawEvidence);
 
     candidates.push({
       candidate_id: `${params.documentId}::gemini-${index}`,
       raw_skill_text: skill.raw_skill_text.trim(),
-      category: skill.category,
+      category: normalizeCandidateCategory(skill.category),
       evidence_snippets:
         evidenceSnippets.length > 0 ? evidenceSnippets : [skill.raw_skill_text.trim()],
       confidence: clamp(skill.confidence),

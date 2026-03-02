@@ -16,7 +16,10 @@ const DEFAULT_MODEL = 'gemini-2.5-flash-lite';
 const DEFAULT_FALLBACK_MODEL = 'gemini-2.5-flash';
 const DEFAULT_TAXONOMY_SHORTLIST_MAX_ENTRIES = 120;
 const DEFAULT_TAXONOMY_SHORTLIST_MAX_TOKENS = 1200;
-const DEFAULT_TAXONOMY_SHORTLIST_SEED_LIMIT = 40;
+const DEFAULT_TAXONOMY_SHORTLIST_SEED_LIMIT = 8;
+const DEFAULT_TAXONOMY_SHORTLIST_CONCURRENCY = 4;
+const DEFAULT_TAXONOMY_SHORTLIST_QUERY_TIMEOUT_MS = 1500;
+const DEFAULT_TAXONOMY_SHORTLIST_DOCUMENT_TIMEOUT_MS = 8000;
 const DEFAULT_TAXONOMY_SHORTLIST_CACHE_TTL_MS = 10 * 60 * 1000;
 const DEFAULT_TAXONOMY_VERSION = 'v1';
 
@@ -172,6 +175,27 @@ export function resolveGeminiTaxonomyShortlistSeedLimit(): number {
   return parseInteger(
     process.env.CV_IMPORT_GEMINI_SHORTLIST_SEED_LIMIT,
     DEFAULT_TAXONOMY_SHORTLIST_SEED_LIMIT
+  );
+}
+
+export function resolveGeminiTaxonomyShortlistConcurrency(): number {
+  return parseInteger(
+    process.env.CV_IMPORT_GEMINI_SHORTLIST_CONCURRENCY,
+    DEFAULT_TAXONOMY_SHORTLIST_CONCURRENCY
+  );
+}
+
+export function resolveGeminiTaxonomyShortlistQueryTimeoutMs(): number {
+  return parseInteger(
+    process.env.CV_IMPORT_GEMINI_SHORTLIST_QUERY_TIMEOUT_MS,
+    DEFAULT_TAXONOMY_SHORTLIST_QUERY_TIMEOUT_MS
+  );
+}
+
+export function resolveGeminiTaxonomyShortlistDocumentTimeoutMs(): number {
+  return parseInteger(
+    process.env.CV_IMPORT_GEMINI_SHORTLIST_DOCUMENT_TIMEOUT_MS,
+    DEFAULT_TAXONOMY_SHORTLIST_DOCUMENT_TIMEOUT_MS
   );
 }
 

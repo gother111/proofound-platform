@@ -52,6 +52,7 @@ describe('CvImportWizard', () => {
       error instanceof Error ? error.message : 'Failed to parse PDF'
     );
     isOcrClientEnabledMock.mockReturnValue(false);
+    delete process.env.NEXT_PUBLIC_CV_IMPORT_CLIENT_FALLBACK_ENABLED;
     resolveOcrClientLimitsMock.mockReturnValue({
       maxPages: 4,
       maxFileSizeBytes: 5 * 1024 * 1024,
@@ -639,7 +640,8 @@ describe('CvImportWizard', () => {
     expect(screen.getByText('Extracted text preview')).toBeInTheDocument();
   });
 
-  it('auto-retries with gemini json payload on multipart metadata parse failures', async () => {
+  it('auto-retries with gemini json payload on multipart metadata parse failures even when client fallback flag is false', async () => {
+    process.env.NEXT_PUBLIC_CV_IMPORT_CLIENT_FALLBACK_ENABLED = 'false';
     extractPdfTextFromFileMock.mockResolvedValueOnce('React TypeScript');
     apiFetchMock
       .mockResolvedValueOnce(
@@ -721,6 +723,7 @@ describe('CvImportWizard', () => {
     expect(toastErrorMock).not.toHaveBeenCalledWith(
       'Upload metadata contains unsupported characters. Please rename the PDF and retry.'
     );
+    delete process.env.NEXT_PUBLIC_CV_IMPORT_CLIENT_FALLBACK_ENABLED;
   });
 
   it('auto-retries with deterministic fallback when wizard request times out', async () => {

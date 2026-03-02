@@ -303,6 +303,7 @@ function buildGeminiFallbackMetadata(
     ai_model: null,
     ai_key_slot: null,
     ai_fallback_reason: fallbackReason,
+    ai_schema_mode: 'flat_skills_v1',
     cost_ore: 0,
     currency: 'SEK',
   };

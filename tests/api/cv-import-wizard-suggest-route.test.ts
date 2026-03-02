@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server';
 import { POST } from '@/app/api/expertise/cv-import/wizard-suggest/route';
 import { createClient } from '@/lib/supabase/server';
 import { suggestWizardForDocuments } from '@/lib/expertise/cv-import-wizard-extractor';
+import { suggestSkillsWithGemini } from '@/lib/expertise/gemini/skill-extractor';
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
@@ -11,6 +12,22 @@ vi.mock('@/lib/supabase/server', () => ({
 
 vi.mock('@/lib/expertise/cv-import-wizard-extractor', () => ({
   suggestWizardForDocuments: vi.fn(),
+}));
+
+vi.mock('@/lib/expertise/gemini/skill-extractor', () => ({
+  suggestSkillsWithGemini: vi.fn(),
+  GeminiSuggestError: class GeminiSuggestError extends Error {
+    code: string;
+    status: number;
+    fallbackReason: string;
+
+    constructor(message: string, code: string, status: number, fallbackReason: string) {
+      super(message);
+      this.code = code;
+      this.status = status;
+      this.fallbackReason = fallbackReason;
+    }
+  },
 }));
 
 vi.mock('@/lib/expertise/cv-import-wizard-types', () => ({
@@ -512,5 +529,84 @@ describe('cv-import wizard suggest route', () => {
     expect(body.error).toBe('Failed to process CV wizard suggestions');
     expect(body.code).toBe('WIZARD_PROCESSING_FAILED');
     expect(body.message).toContain('unexpected parser branch');
+  });
+
+  it('reuses deterministic baseline when gemini overlay fails in gemini mode', async () => {
+    (createClient as any).mockResolvedValue({
+      auth: {
+        getUser: async () => ({ data: { user: { id: 'user-1' } } }),
+      },
+    });
+
+    (suggestWizardForDocuments as any).mockResolvedValue({
+      documents: [
+        {
+          document_id: 'doc-1',
+          file_name: 'cv.pdf',
+          context: 'cv',
+          parsed_text: 'React TypeScript',
+          work_experiences: [],
+          learning_experiences: [],
+          volunteering: [],
+          languages: [],
+          skill_candidates: [
+            {
+              candidate_id: 'candidate-1',
+              raw_skill_text: 'React',
+              category: 'technical',
+              evidence_snippets: ['React TypeScript'],
+              confidence: 0.7,
+              suggestions: [],
+              unmapped_candidate: true,
+            },
+          ],
+        },
+      ],
+      metadata: {
+        semantic_used: false,
+        semantic_fallback_triggered: false,
+        unmapped_candidates_count: 0,
+        limits: {
+          max_documents: 5,
+          max_chars_per_document: 30000,
+          max_total_chars: 90000,
+        },
+      },
+    });
+
+    (suggestSkillsWithGemini as any).mockRejectedValueOnce(
+      new Error('schema depth exceeded for structured output')
+    );
+
+    const request = new NextRequest(
+      'http://localhost/api/expertise/cv-import/wizard-suggest?engine=gemini',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          documents: [
+            {
+              document_id: 'doc-1',
+              file_name: 'cv.pdf',
+              text: 'React TypeScript',
+              context: 'cv',
+            },
+          ],
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+
+    const response = await POST(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.metadata.engine_mode).toBe('gemini');
+    expect(body.metadata.engine_used).toBe('typescript');
+    expect(body.metadata.ai_provider).toBe('gemini');
+    expect(body.metadata.ai_fallback_reason).toBe('model_error');
+    expect(body.metadata.timings.total_ms).toBeTypeOf('number');
+    expect(body.documents[0].skill_candidates).toHaveLength(1);
+    expect(suggestWizardForDocuments).toHaveBeenCalledTimes(1);
+    expect(suggestSkillsWithGemini).toHaveBeenCalledTimes(1);
   });
 });

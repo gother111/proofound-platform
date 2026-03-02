@@ -6,9 +6,12 @@ import { skillsCategories } from '@/db/schema';
 import { getRows } from '@/lib/db/rows';
 import { extractSkillPhrases } from '@/lib/ai/nlp-extractor';
 import {
+  resolveGeminiTaxonomyShortlistConcurrency,
   resolveGeminiTaxonomyShortlistCacheTtlMs,
+  resolveGeminiTaxonomyShortlistDocumentTimeoutMs,
   resolveGeminiTaxonomyShortlistMaxEntries,
   resolveGeminiTaxonomyShortlistMaxTokens,
+  resolveGeminiTaxonomyShortlistQueryTimeoutMs,
   resolveGeminiTaxonomyShortlistSeedLimit,
   resolveGeminiTaxonomyVersion,
 } from '@/lib/expertise/gemini/config';
@@ -73,6 +76,24 @@ const SEED_STOPWORDS = new Set([
 ]);
 
 const shortlistCache = new Map<string, { expiresAt: number; value: TaxonomyShortlistSkill[] }>();
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error('taxonomy shortlist query timed out')),
+      timeoutMs
+    );
+    promise
+      .then((value) => {
+        clearTimeout(timer);
+        resolve(value);
+      })
+      .catch((error) => {
+        clearTimeout(timer);
+        reject(error);
+      });
+  });
+}
 
 function asNumber(value: unknown): number {
   if (typeof value === 'number') {
@@ -221,6 +242,21 @@ async function searchTaxonomyForSeed(
   return getRows(result) as SearchSkillShortlistRow[];
 }
 
+async function searchTaxonomyForSeedWithGuards(params: {
+  seed: string;
+  resultLimit: number;
+  timeoutMs: number;
+}): Promise<SearchSkillShortlistRow[]> {
+  try {
+    return await withTimeout(
+      searchTaxonomyForSeed(params.seed, params.resultLimit),
+      params.timeoutMs
+    );
+  } catch {
+    return [];
+  }
+}
+
 function parseAliases(value: unknown): string[] {
   if (!value) {
     return [];
@@ -338,9 +374,35 @@ async function buildShortlistForDocument(params: {
   }
 
   const perSeedLimit = Math.max(4, Math.min(10, params.suggestionsLimit));
-  const searchResults = await Promise.all(
-    seeds.map((seed) => searchTaxonomyForSeed(seed, perSeedLimit))
-  );
+  const perSeedTimeoutMs = resolveGeminiTaxonomyShortlistQueryTimeoutMs();
+  const documentTimeoutMs = resolveGeminiTaxonomyShortlistDocumentTimeoutMs();
+  const maxConcurrency = Math.max(1, resolveGeminiTaxonomyShortlistConcurrency());
+  const deadlineMs = now + documentTimeoutMs;
+  const searchResults: SearchSkillShortlistRow[][] = Array.from({ length: seeds.length }, () => []);
+
+  let seedIndex = 0;
+  const workers = Array.from({ length: Math.min(maxConcurrency, seeds.length) }, async () => {
+    while (seedIndex < seeds.length) {
+      const currentIndex = seedIndex;
+      seedIndex += 1;
+      const seed = seeds[currentIndex];
+
+      if (!seed) {
+        continue;
+      }
+
+      if (Date.now() >= deadlineMs) {
+        break;
+      }
+
+      searchResults[currentIndex] = await searchTaxonomyForSeedWithGuards({
+        seed,
+        resultLimit: perSeedLimit,
+        timeoutMs: perSeedTimeoutMs,
+      });
+    }
+  });
+  await Promise.all(workers);
 
   const bySkillId = new Map<
     string,
@@ -355,6 +417,9 @@ async function buildShortlistForDocument(params: {
   >();
 
   for (let index = 0; index < seeds.length; index += 1) {
+    if (Date.now() >= deadlineMs) {
+      break;
+    }
     const seed = seeds[index];
     const rows = searchResults[index] || [];
 
