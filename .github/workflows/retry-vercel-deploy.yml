@@ -17,7 +17,7 @@ concurrency:
 jobs:
   retry-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -44,14 +44,38 @@ jobs:
           echo "Repo SHA: ${{ steps.repo.outputs.sha }}"
           echo "Live SHA: ${{ steps.live.outputs.sha }}"
 
-      - name: Trigger production deploy hook
+      - name: Trigger production deploy
         if: steps.repo.outputs.sha != steps.live.outputs.sha
         env:
           VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          if [ -z "${VERCEL_DEPLOY_HOOK_URL}" ]; then
-            echo "VERCEL_DEPLOY_HOOK_URL secret is missing."
+          if [ -n "${VERCEL_DEPLOY_HOOK_URL}" ]; then
+            echo "Triggering production deploy hook."
+            curl -fsS -X POST "$VERCEL_DEPLOY_HOOK_URL"
+            exit 0
+          fi
+
+          if [ -z "${VERCEL_TOKEN}" ] || [ -z "${VERCEL_ORG_ID}" ] || [ -z "${VERCEL_PROJECT_ID}" ]; then
+            echo "Missing Vercel deploy credentials. Set either VERCEL_DEPLOY_HOOK_URL or VERCEL_TOKEN + VERCEL_ORG_ID + VERCEL_PROJECT_ID."
             exit 1
           fi
-          curl -fsS -X POST "$VERCEL_DEPLOY_HOOK_URL"
 
+          echo "Deploy hook secret not set. Falling back to Vercel CLI deploy with retries."
+          attempts=0
+          max_attempts=3
+          while [ "$attempts" -lt "$max_attempts" ]; do
+            attempts=$((attempts + 1))
+            echo "Vercel deploy attempt ${attempts}/${max_attempts}"
+            if npx vercel@latest deploy --prod --yes --token "${VERCEL_TOKEN}"; then
+              exit 0
+            fi
+            sleep_seconds=$((attempts * 30))
+            echo "Deploy attempt ${attempts} failed. Waiting ${sleep_seconds}s before retry."
+            sleep "${sleep_seconds}"
+          done
+
+          echo "All Vercel deploy attempts failed."
+          exit 1
