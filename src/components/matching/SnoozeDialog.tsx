@@ -87,7 +87,7 @@ export function SnoozeDialog({
     }
   };
 
-  const ModalContentBody = () => (
+  const renderModalContentBody = () => (
     <>
       <div className="px-4 md:px-0">
         <DialogHeader className="md:px-0 text-left">
@@ -185,9 +185,7 @@ export function SnoozeDialog({
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md">
-          <ModalContentBody />
-        </DialogContent>
+        <DialogContent className="max-w-md">{renderModalContentBody()}</DialogContent>
       </Dialog>
     );
   }
@@ -196,7 +194,7 @@ export function SnoozeDialog({
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
         <div className="mx-auto w-full max-w-sm overflow-y-auto pb-6">
-          <ModalContentBody />
+          {renderModalContentBody()}
         </div>
       </DrawerContent>
     </Drawer>

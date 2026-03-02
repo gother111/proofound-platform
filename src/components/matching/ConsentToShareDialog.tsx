@@ -110,7 +110,7 @@ export function ConsentToShareDialog({
   const visibleFieldsCount = visibleFields.filter((f) => !f.isRedacted).length;
   const redactedFieldsCount = visibleFields.filter((f) => f.isRedacted).length;
 
-  const ModalContentHeader = () => (
+  const renderModalContentHeader = () => (
     <div className="px-4 md:px-0">
       <DialogHeader className="md:px-0 text-left">
         <DialogTitle className="flex items-center gap-2">
@@ -125,7 +125,7 @@ export function ConsentToShareDialog({
     </div>
   );
 
-  const ModalContentBody = () => (
+  const renderModalContentBody = () => (
     <div className="space-y-6 px-4 md:px-0">
       {/* Privacy Notice */}
       <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-4">
@@ -233,7 +233,7 @@ export function ConsentToShareDialog({
     </div>
   );
 
-  const ConsentControls = () => (
+  const renderConsentControls = () => (
     <div className="px-4 md:px-0 pb-4 md:pb-0">
       <div className="space-y-3 pt-4 border-t mb-4">
         <div className="flex items-start gap-3">
@@ -290,11 +290,9 @@ export function ConsentToShareDialog({
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-2xl max-h-[90vh]">
-          <ModalContentHeader />
-          <ScrollArea className="max-h-[50vh] pr-4 mt-4">
-            <ModalContentBody />
-          </ScrollArea>
-          <ConsentControls />
+          {renderModalContentHeader()}
+          <ScrollArea className="max-h-[50vh] pr-4 mt-4">{renderModalContentBody()}</ScrollArea>
+          {renderConsentControls()}
         </DialogContent>
       </Dialog>
     );
@@ -304,9 +302,9 @@ export function ConsentToShareDialog({
     <Drawer open={isOpen} onOpenChange={onClose}>
       <DrawerContent>
         <div className="mx-auto w-full max-w-2xl overflow-y-auto max-h-[90vh] pb-6 flex flex-col gap-4 mt-4">
-          <ModalContentHeader />
-          <ModalContentBody />
-          <ConsentControls />
+          {renderModalContentHeader()}
+          {renderModalContentBody()}
+          {renderConsentControls()}
         </div>
       </DrawerContent>
     </Drawer>

@@ -278,7 +278,7 @@ export function MatchingOrganizationView({
     }
   };
 
-  const InitiateTestModalContentBody = () => (
+  const renderInitiateTestModalContentBody = () => (
     <div className="px-4 md:px-0">
       <DialogHeader className="md:px-0 text-left">
         <DialogTitle>Initiate test</DialogTitle>
@@ -318,7 +318,7 @@ export function MatchingOrganizationView({
     </div>
   );
 
-  const InitiateTestModalFooter = () => (
+  const renderInitiateTestModalFooter = () => (
     <div className="px-4 md:px-0 pb-4 md:pb-0">
       <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
         <Button
@@ -344,8 +344,8 @@ export function MatchingOrganizationView({
       return (
         <Dialog open={isInitiateTestOpen} onOpenChange={setIsInitiateTestOpen}>
           <DialogContent className="sm:max-w-[500px]">
-            <InitiateTestModalContentBody />
-            <InitiateTestModalFooter />
+            {renderInitiateTestModalContentBody()}
+            {renderInitiateTestModalFooter()}
           </DialogContent>
         </Dialog>
       );
@@ -354,8 +354,8 @@ export function MatchingOrganizationView({
       <Drawer open={isInitiateTestOpen} onOpenChange={setIsInitiateTestOpen}>
         <DrawerContent>
           <div className="mx-auto w-full max-w-sm overflow-y-auto pb-6">
-            <InitiateTestModalContentBody />
-            <InitiateTestModalFooter />
+            {renderInitiateTestModalContentBody()}
+            {renderInitiateTestModalFooter()}
           </div>
         </DrawerContent>
       </Drawer>

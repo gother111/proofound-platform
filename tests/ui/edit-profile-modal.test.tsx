@@ -40,6 +40,19 @@ function setMediaMatches(next: boolean) {
   mediaListeners.forEach((listener) => listener(event));
 }
 
+function typeContinuously(field: HTMLInputElement | HTMLTextAreaElement, text: string) {
+  field.focus();
+  expect(document.activeElement).toBe(field);
+
+  let value = '';
+  for (const character of text) {
+    value += character;
+    fireEvent.change(field, { target: { value } });
+    expect(field).toHaveValue(value);
+    expect(document.activeElement).toBe(field);
+  }
+}
+
 vi.mock('@/components/ui/dialog', () => ({
   Dialog: ({ open, children }: any) =>
     open ? <div data-testid="dialog-root">{children}</div> : null,
@@ -111,6 +124,40 @@ describe('EditProfileModal', () => {
     );
 
     expect(screen.getByLabelText(/Tagline/i)).toHaveValue('Focused on meaningful impact');
+  });
+
+  it('supports uninterrupted typing across name, tagline, and location fields', async () => {
+    mediaMatches = true;
+    installMatchMediaMock();
+
+    const onOpenChange = vi.fn();
+    const onSave = vi.fn();
+
+    render(
+      <EditProfileModal
+        open={true}
+        onOpenChange={onOpenChange}
+        basicInfo={baseBasicInfo}
+        onSave={onSave}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('dialog-root')).toBeInTheDocument();
+    });
+
+    const nameField = screen.getByLabelText(/^Name/i) as HTMLInputElement;
+    const taglineField = screen.getByLabelText(/Tagline/i) as HTMLTextAreaElement;
+    const locationField = screen.getByLabelText(/Location/i) as HTMLInputElement;
+
+    fireEvent.change(nameField, { target: { value: '' } });
+    typeContinuously(nameField, 'Yurii Bakurov');
+
+    fireEvent.change(taglineField, { target: { value: '' } });
+    typeContinuously(taglineField, 'Focused on meaningful impact');
+
+    fireEvent.change(locationField, { target: { value: '' } });
+    typeContinuously(locationField, 'Stockholm, Sweden');
   });
 
   it('locks modal surface mode while open and updates on next open', async () => {

@@ -88,7 +88,7 @@ export function CustomizeModal({ open, onOpenChange }: CustomizeModalProps) {
     onOpenChange(false);
   };
 
-  const ContentForm = () => (
+  const renderContentForm = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {widgetOptions.map((widget) => (
         <div
@@ -124,9 +124,7 @@ export function CustomizeModal({ open, onOpenChange }: CustomizeModalProps) {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            <ContentForm />
-          </div>
+          <div className="space-y-4 py-4">{renderContentForm()}</div>
 
           <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
@@ -150,9 +148,7 @@ export function CustomizeModal({ open, onOpenChange }: CustomizeModalProps) {
             Select which widgets you want to see on your dashboard
           </DrawerDescription>
         </DrawerHeader>
-        <div className="px-4 py-2 max-h-[60vh] overflow-y-auto">
-          <ContentForm />
-        </div>
+        <div className="px-4 py-2 max-h-[60vh] overflow-y-auto">{renderContentForm()}</div>
         <DrawerFooter className="pt-2">
           <Button onClick={handleSave} style={{ backgroundColor: '#1C4D3A', color: '#F7F6F1' }}>
             Save Changes

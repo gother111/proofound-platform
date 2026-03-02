@@ -33,14 +33,13 @@ export function VisibilitySettingsModal({
     }
   }, [open, userId]);
 
-  const ContentBody = () =>
-    currentUserId ? (
-      <FieldVisibilityControls userId={currentUserId} />
-    ) : (
-      <div className="flex items-center justify-center py-8">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
+  const contentBody = currentUserId ? (
+    <FieldVisibilityControls userId={currentUserId} />
+  ) : (
+    <div className="flex items-center justify-center py-8">
+      <p className="text-muted-foreground">Loading...</p>
+    </div>
+  );
 
   if (isDesktop) {
     return (
@@ -51,7 +50,7 @@ export function VisibilitySettingsModal({
               Field-Level Privacy Controls
             </DialogTitle>
           </DialogHeader>
-          <ContentBody />
+          {contentBody}
         </DialogContent>
       </Dialog>
     );
@@ -65,9 +64,7 @@ export function VisibilitySettingsModal({
             Field-Level Privacy Controls
           </DrawerTitle>
         </DrawerHeader>
-        <div className="max-h-[70vh] overflow-y-auto px-4 pb-4">
-          <ContentBody />
-        </div>
+        <div className="max-h-[70vh] overflow-y-auto px-4 pb-4">{contentBody}</div>
       </DrawerContent>
     </Drawer>
   );

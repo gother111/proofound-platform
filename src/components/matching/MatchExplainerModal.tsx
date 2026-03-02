@@ -156,7 +156,7 @@ export function MatchExplainerModal({
 
   const isDesktop = useResponsiveModalMode(open);
 
-  const ModalContentBody = () => (
+  const renderModalContentBody = () => (
     <motion.div
       layoutId={matchId ? `match-card-${matchId}` : undefined}
       className="bg-background sm:rounded-xl shadow-lg border-0 sm:border p-0 sm:p-2 sm:m-1 h-full w-full flex flex-col"
@@ -516,7 +516,7 @@ export function MatchExplainerModal({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-transparent border-none shadow-none p-0 sm:max-w-2xl [&>button]:right-6 [&>button]:top-6 [&>button]:text-muted-foreground [&>button]:z-50 [&>button]:bg-background/50 [&>button]:backdrop-blur-sm [&>button]:rounded-full [&>button]:p-1.5 [&>button]:hover:bg-background">
-          <ModalContentBody />
+          {renderModalContentBody()}
         </DialogContent>
       </Dialog>
     );
@@ -527,7 +527,7 @@ export function MatchExplainerModal({
       <DrawerTrigger asChild>{trigger || defaultTrigger}</DrawerTrigger>
       <DrawerContent className="max-h-[90vh] bg-transparent border-none p-0 pt-4">
         <div className="overflow-y-auto w-full h-full rounded-t-xl overflow-hidden shadow-2xl mt-4">
-          <ModalContentBody />
+          {renderModalContentBody()}
         </div>
       </DrawerContent>
     </Drawer>

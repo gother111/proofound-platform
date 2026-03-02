@@ -226,7 +226,7 @@ export function ShareProfileDialog({
   const shareTexts = generateShareText({ name: userName, headline: userHeadline });
   const embedCode = generatedSnippet ? generateEmbedCodeFromUrl(generatedSnippet.url, format) : '';
 
-  const DialogContentBody = () => (
+  const renderDialogContentBody = () => (
     <>
       {!generatedSnippet ? (
         <div className="space-y-6">
@@ -427,7 +427,7 @@ export function ShareProfileDialog({
     </>
   );
 
-  const TitleAndDescription = () => (
+  const titleAndDescription = (
     <>
       <div className="flex items-center gap-2">
         <Share2 className="h-5 w-5" />
@@ -459,7 +459,7 @@ export function ShareProfileDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <DialogContentBody />
+          {renderDialogContentBody()}
 
           <DialogFooter>
             {!generatedSnippet ? (
@@ -485,12 +485,8 @@ export function ShareProfileDialog({
   return (
     <Drawer open={isOpen} onOpenChange={onClose}>
       <DrawerContent>
-        <DrawerHeader className="text-left">
-          <TitleAndDescription />
-        </DrawerHeader>
-        <div className="max-h-[70vh] overflow-y-auto px-4 pb-4">
-          <DialogContentBody />
-        </div>
+        <DrawerHeader className="text-left">{titleAndDescription}</DrawerHeader>
+        <div className="max-h-[70vh] overflow-y-auto px-4 pb-4">{renderDialogContentBody()}</div>
         <DrawerFooter className="pt-2">
           {!generatedSnippet ? (
             <>

@@ -88,7 +88,7 @@ export function EditProfileModal({ open, onOpenChange, basicInfo, onSave }: Edit
 
   const taglineCharsLeft = 200 - tagline.length;
 
-  const FormContent = () => (
+  const formContent = (
     <FormErrorBoundary>
       <div className="space-y-4 py-4 px-4 md:px-0">
         {/* Name */}
@@ -170,7 +170,7 @@ export function EditProfileModal({ open, onOpenChange, basicInfo, onSave }: Edit
               <DialogDescription>Update your basic information</DialogDescription>
             </DialogHeader>
 
-            <FormContent />
+            {formContent}
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
@@ -192,9 +192,7 @@ export function EditProfileModal({ open, onOpenChange, basicInfo, onSave }: Edit
             <DrawerTitle>Edit Profile</DrawerTitle>
             <DrawerDescription>Update your basic information</DrawerDescription>
           </DrawerHeader>
-          <div className="max-h-[60vh] overflow-y-auto">
-            <FormContent />
-          </div>
+          <div className="max-h-[60vh] overflow-y-auto">{formContent}</div>
           <DrawerFooter className="pt-2">
             <Button type="submit">Save Changes</Button>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

@@ -66,7 +66,7 @@ export function PACScoreExplainer({
 
   const isDesktop = useResponsiveModalMode(open);
 
-  const ModalContentBody = () => (
+  const renderModalContentBody = () => (
     <>
       <div className="space-y-6 py-4 px-4 md:px-0">
         <DialogHeader className="md:px-0 px-2 text-left">
@@ -196,9 +196,7 @@ export function PACScoreExplainer({
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
-        <DialogContent className="max-w-lg p-6">
-          <ModalContentBody />
-        </DialogContent>
+        <DialogContent className="max-w-lg p-6">{renderModalContentBody()}</DialogContent>
       </Dialog>
     );
   }
@@ -207,9 +205,7 @@ export function PACScoreExplainer({
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>{trigger || defaultTrigger}</DrawerTrigger>
       <DrawerContent>
-        <div className="overflow-y-auto w-full">
-          <ModalContentBody />
-        </div>
+        <div className="overflow-y-auto w-full">{renderModalContentBody()}</div>
       </DrawerContent>
     </Drawer>
   );

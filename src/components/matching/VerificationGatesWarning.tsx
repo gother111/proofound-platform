@@ -57,7 +57,7 @@ export function VerificationGatesWarning({
 
   const isDesktop = useResponsiveModalMode(open);
 
-  const ModalContentHeader = () => (
+  const renderModalContentHeader = () => (
     <div className="px-4 md:px-0">
       <DialogHeader className="md:px-0 text-left">
         <DialogTitle className="flex items-center gap-2">
@@ -71,7 +71,7 @@ export function VerificationGatesWarning({
     </div>
   );
 
-  const ModalContentBody = () => (
+  const renderModalContentBody = () => (
     <div className="space-y-4 py-4 px-4 md:px-0">
       {/* Unmet Gates */}
       <div>
@@ -152,7 +152,7 @@ export function VerificationGatesWarning({
     </div>
   );
 
-  const ModalFooter = () => (
+  const renderModalFooter = () => (
     <div className="px-4 md:px-0 pb-4 md:pb-0">
       <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
         <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
@@ -176,9 +176,9 @@ export function VerificationGatesWarning({
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-2xl">
-          <ModalContentHeader />
-          <ModalContentBody />
-          <ModalFooter />
+          {renderModalContentHeader()}
+          {renderModalContentBody()}
+          {renderModalFooter()}
         </DialogContent>
       </Dialog>
     );
@@ -188,9 +188,9 @@ export function VerificationGatesWarning({
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
         <div className="mx-auto w-full max-w-2xl overflow-y-auto max-h-[90vh] pb-6 flex flex-col mt-4">
-          <ModalContentHeader />
-          <ModalContentBody />
-          <ModalFooter />
+          {renderModalContentHeader()}
+          {renderModalContentBody()}
+          {renderModalFooter()}
         </div>
       </DrawerContent>
     </Drawer>

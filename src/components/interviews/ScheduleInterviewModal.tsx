@@ -223,7 +223,7 @@ export function ScheduleInterviewModal({
     }
   };
 
-  const FormBody = () => (
+  const renderFormBody = () => (
     <div className="space-y-4 py-4 px-4 md:px-0">
       <div className="space-y-2">
         <Label htmlFor="interview-date">
@@ -344,7 +344,7 @@ export function ScheduleInterviewModal({
     </div>
   );
 
-  const FormActions = () => (
+  const renderFormActions = () => (
     <div className="flex items-center justify-end gap-2 px-4 pb-4 pt-2 md:px-0 md:pb-0 md:pt-0">
       <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
         Cancel
@@ -368,8 +368,8 @@ export function ScheduleInterviewModal({
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
-          <FormBody />
-          <FormActions />
+          {renderFormBody()}
+          {renderFormActions()}
         </DialogContent>
       </Dialog>
     );
@@ -382,10 +382,8 @@ export function ScheduleInterviewModal({
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription>{description}</DrawerDescription>
         </DrawerHeader>
-        <div className="max-h-[60vh] overflow-y-auto">
-          <FormBody />
-        </div>
-        <FormActions />
+        <div className="max-h-[60vh] overflow-y-auto">{renderFormBody()}</div>
+        {renderFormActions()}
       </DrawerContent>
     </Drawer>
   );

@@ -14,6 +14,10 @@ vi.mock('@/lib/api/fetch', () => ({
   apiFetch: (...args: any[]) => apiFetchMock(...args),
 }));
 
+vi.mock('@/hooks/use-responsive-modal-mode', () => ({
+  useResponsiveModalMode: () => true,
+}));
+
 vi.mock('@/components/ui/dialog', () => ({
   Dialog: ({ open, children }: any) => (open ? <div>{children}</div> : null),
   DialogContent: ({ children }: any) => <div>{children}</div>,
@@ -100,5 +104,31 @@ describe('ShareProfileDialog', () => {
     expect(embedTextarea).not.toBeNull();
     expect(embedTextarea?.value).toContain('https://proofound.io/p/token123/embed');
     expect(embedTextarea?.value).not.toContain('proofound.com');
+  });
+
+  it('allows continuous typing in expiration input without focus loss', () => {
+    render(
+      <ShareProfileDialog
+        isOpen={true}
+        onClose={() => {}}
+        userName="Jane Doe"
+        userHeadline="Impact Builder"
+      />
+    );
+
+    const expirationInput = screen.getByPlaceholderText(
+      /Days until link expires/i
+    ) as HTMLInputElement;
+
+    expirationInput.focus();
+    expect(document.activeElement).toBe(expirationInput);
+
+    fireEvent.change(expirationInput, { target: { value: '3' } });
+    expect(expirationInput).toHaveValue(3);
+    expect(document.activeElement).toBe(expirationInput);
+
+    fireEvent.change(expirationInput, { target: { value: '30' } });
+    expect(expirationInput).toHaveValue(30);
+    expect(document.activeElement).toBe(expirationInput);
   });
 });

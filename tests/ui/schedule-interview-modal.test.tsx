@@ -106,6 +106,19 @@ describe('ScheduleInterviewModal', () => {
     return match;
   };
 
+  const typeContinuously = (field: HTMLInputElement, text: string) => {
+    field.focus();
+    expect(document.activeElement).toBe(field);
+
+    let value = '';
+    for (const character of text) {
+      value += character;
+      fireEvent.change(field, { target: { value } });
+      expect(field).toHaveValue(value);
+      expect(document.activeElement).toBe(field);
+    }
+  };
+
   it('submits manual scheduling with manualMeetingLink and manualMeetingProvider when no provider is connected', async () => {
     scheduleInterviewMock.mockResolvedValue({
       interview: {
@@ -220,6 +233,43 @@ describe('ScheduleInterviewModal', () => {
       ).toBeInTheDocument()
     );
     expect(scheduleInterviewMock).not.toHaveBeenCalled();
+  });
+
+  it('allows continuous typing in manual meeting link input without focus loss', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string | URL) => {
+        const pathname = getPathname(input as string | URL | Request);
+
+        if (pathname === '/api/integrations/video/status') {
+          return {
+            ok: true,
+            json: async () => ({
+              zoom: { connected: false },
+              google: { connected: false },
+            }),
+          };
+        }
+
+        throw new Error(`Unexpected route: ${pathname}`);
+      })
+    );
+
+    render(
+      <ScheduleInterviewModal
+        isOpen
+        onClose={vi.fn()}
+        matchId="6e704a5a-a89e-43cc-9f71-d1f29fd7f3dd"
+        matchAgreedAt={new Date()}
+      />
+    );
+
+    await screen.findAllByTestId('mock-select');
+    const platformSelect = findSelectByOption('manual');
+    fireEvent.change(platformSelect, { target: { value: 'manual' } });
+
+    const meetingLinkInput = screen.getByLabelText(/meeting link/i) as HTMLInputElement;
+    typeContinuously(meetingLinkInput, 'https://example.com/manual-room');
   });
 
   it('submits google_meet payload when Google provider is connected', async () => {
