@@ -15,7 +15,7 @@ export function DashboardGrid({
   return (
     <div
       className={cn(
-        'grid gap-6',
+        'grid gap-4 md:gap-6',
         // Responsive columns can be overridden via className, but default to 1 col spanning to 2/3 on larger screens if needed
         className
       )}
