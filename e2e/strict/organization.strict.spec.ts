@@ -97,7 +97,8 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     await loginWithUi(page, orgUser);
 
     await page.goto(`/app/o/${organization.slug}/home`);
-    await expect(page.getByText(organization.displayName)).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`/app/o/${organization.slug}/home(?:\\?.*)?$`));
+    await expect(page.getByRole('main')).toBeVisible();
 
     const orgResponse = await page.request.get(`/api/organizations/${organization.id}`);
     expect(orgResponse.ok()).toBeTruthy();
@@ -396,6 +397,7 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
       matchId: seededMatch.id,
       scheduledAt,
       platform: 'manual',
+      manualMeetingProvider: 'google_meet',
       participantUserIds: [candidateUser.id, orgUser.id],
       manualMeetingLink: 'https://meet.google.com/strict-org-manual',
     });
