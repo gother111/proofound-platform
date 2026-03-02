@@ -547,7 +547,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     // Determine overall verification status
     const hasAccepted = requests?.some(
-      (r) => r.status === 'accepted' && (r.integrity_status || 'clear') === 'clear'
+      (r) => r.status === 'accepted' && r.integrity_status === 'clear'
     );
     const verification_status = hasAccepted ? 'verified' : 'pending';
 

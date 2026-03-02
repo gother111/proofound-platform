@@ -65,7 +65,8 @@ export async function GET() {
       .where(
         and(
           eq(skillVerificationRequests.requesterProfileId, user.id),
-          eq(skillVerificationRequests.status, 'accepted')
+          eq(skillVerificationRequests.status, 'accepted'),
+          eq(skillVerificationRequests.integrityStatus, 'clear')
         )
       );
 

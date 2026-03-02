@@ -290,8 +290,7 @@ export async function GET() {
         console.error('Failed to load accepted skill verification requests:', acceptedError);
       } else {
         for (const request of acceptedRequests || []) {
-          const integrityStatus = request.integrity_status || 'clear';
-          if (request.skill_id && integrityStatus === 'clear') {
+          if (request.skill_id && request.integrity_status === 'clear') {
             acceptedSkillIds.add(request.skill_id);
           }
         }

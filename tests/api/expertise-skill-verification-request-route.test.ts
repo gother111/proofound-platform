@@ -15,7 +15,7 @@ vi.mock('@/lib/analytics/events', () => ({
 
 import { requireApiAuthContext } from '@/lib/auth';
 import { sendEmail } from '@/lib/email/sender';
-import { POST } from '@/app/api/expertise/user-skills/[id]/verification-request/route';
+import { GET, POST } from '@/app/api/expertise/user-skills/[id]/verification-request/route';
 
 const params = { params: Promise.resolve({ id: 'skill-1' }) };
 
@@ -135,6 +135,45 @@ function createSupabaseMock(options?: {
   };
 
   return { supabase, inserts, verificationRequestsQuery, precheckCallCount: () => precheckCalls };
+}
+
+function createSupabaseGetMock(options?: {
+  skillProfileId?: string;
+  requests?: Array<{ status: string; integrity_status?: string | null }>;
+}) {
+  const skillsQuery = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    single: vi.fn().mockResolvedValue({
+      data: {
+        id: 'skill-1',
+        profile_id: options?.skillProfileId ?? 'user-1',
+      },
+      error: null,
+    }),
+  };
+
+  const verificationRequestsQuery = {
+    select: vi.fn().mockImplementation(() => {
+      const builder: any = {};
+      builder.eq = vi.fn().mockReturnValue(builder);
+      builder.order = vi.fn().mockResolvedValue({
+        data: options?.requests ?? [],
+        error: null,
+      });
+      return builder;
+    }),
+  };
+
+  const supabase = {
+    from: vi.fn((table: string) => {
+      if (table === 'skills') return skillsQuery;
+      if (table === 'skill_verification_requests') return verificationRequestsQuery;
+      throw new Error(`Unexpected table ${table}`);
+    }),
+  };
+
+  return { supabase };
 }
 
 describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
@@ -417,5 +456,77 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
     expect(inserts).toHaveLength(1);
     expect(precheckCallCount()).toBe(2);
     expect(sendEmail).not.toHaveBeenCalled();
+  });
+});
+
+describe('GET /api/expertise/user-skills/[id]/verification-request', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns verified when at least one accepted request is integrity clear', async () => {
+    const { supabase } = createSupabaseGetMock({
+      requests: [
+        { status: 'accepted', integrity_status: 'flagged' },
+        { status: 'accepted', integrity_status: 'clear' },
+      ],
+    });
+
+    (requireApiAuthContext as any).mockResolvedValue({
+      user: { id: 'user-1' },
+      supabase,
+    });
+
+    const response = await GET(
+      new NextRequest('http://localhost/api/expertise/user-skills/skill-1/verification-request'),
+      params
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      verification_status: 'verified',
+    });
+  });
+
+  it('returns pending when accepted requests are integrity flagged', async () => {
+    const { supabase } = createSupabaseGetMock({
+      requests: [{ status: 'accepted', integrity_status: 'flagged' }],
+    });
+
+    (requireApiAuthContext as any).mockResolvedValue({
+      user: { id: 'user-1' },
+      supabase,
+    });
+
+    const response = await GET(
+      new NextRequest('http://localhost/api/expertise/user-skills/skill-1/verification-request'),
+      params
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      verification_status: 'pending',
+    });
+  });
+
+  it('returns pending when accepted requests have null integrity status', async () => {
+    const { supabase } = createSupabaseGetMock({
+      requests: [{ status: 'accepted', integrity_status: null }],
+    });
+
+    (requireApiAuthContext as any).mockResolvedValue({
+      user: { id: 'user-1' },
+      supabase,
+    });
+
+    const response = await GET(
+      new NextRequest('http://localhost/api/expertise/user-skills/skill-1/verification-request'),
+      params
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      verification_status: 'pending',
+    });
   });
 });

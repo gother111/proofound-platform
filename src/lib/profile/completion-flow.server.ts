@@ -45,7 +45,8 @@ export async function getIndividualProfileCompletionState(
         .where(
           and(
             eq(skillVerificationRequests.requesterProfileId, userId),
-            eq(skillVerificationRequests.status, 'accepted')
+            eq(skillVerificationRequests.status, 'accepted'),
+            eq(skillVerificationRequests.integrityStatus, 'clear')
           )
         ),
     ]);

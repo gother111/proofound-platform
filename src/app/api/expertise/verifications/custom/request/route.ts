@@ -348,7 +348,7 @@ export async function POST(request: NextRequest) {
 
       const alreadyVerifiedSkillIds = new Set(
         (acceptedSkillRequests || [])
-          .filter((requestRow) => (requestRow.integrity_status || 'clear') === 'clear')
+          .filter((requestRow) => requestRow.integrity_status === 'clear')
           .map((requestRow) => requestRow.skill_id)
       );
 

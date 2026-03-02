@@ -54,7 +54,7 @@ export async function getIndividualReadiness(userId: string): Promise<Individual
     db
       .select({
         pending: sql<number>`count(${skillVerificationRequests.id}) filter (where ${skillVerificationRequests.status} = 'pending')::int`,
-        accepted: sql<number>`count(${skillVerificationRequests.id}) filter (where ${skillVerificationRequests.status} = 'accepted')::int`,
+        accepted: sql<number>`count(${skillVerificationRequests.id}) filter (where ${skillVerificationRequests.status} = 'accepted' and ${skillVerificationRequests.integrityStatus} = 'clear')::int`,
       })
       .from(skillVerificationRequests)
       .where(eq(skillVerificationRequests.requesterProfileId, userId)),
