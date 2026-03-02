@@ -1,10 +1,6 @@
 name: Retry Vercel Deploy Until Synced
 
 on:
-  push:
-    branches: [master]
-  schedule:
-    - cron: "*/30 * * * *"
   workflow_dispatch:
 
 permissions:

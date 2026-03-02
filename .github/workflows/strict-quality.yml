@@ -1,10 +1,6 @@
 name: Strict Quality
 
 on:
-  push:
-    branches: [master]
-  schedule:
-    - cron: '20 4 * * *'
   workflow_dispatch:
 
 concurrency:
