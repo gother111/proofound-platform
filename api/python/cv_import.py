@@ -24,6 +24,7 @@ ERROR_CODE_PDF_PARSE_FAILED = "PDF_PARSE_FAILED"
 ERROR_CODE_PDF_EMPTY_TEXT = "PDF_EMPTY_TEXT"
 ERROR_CODE_SKILL_DB_UNAVAILABLE = "SKILL_DB_UNAVAILABLE"
 ERROR_CODE_MATCHING_FAILED = "MATCHING_FAILED"
+ERROR_CODE_MULTIPART_METADATA_INVALID = "CV_IMPORT_MULTIPART_METADATA_INVALID"
 UPLOAD_METADATA_ENCODING_ERROR_MESSAGE = (
     "Upload metadata contains unsupported characters. Please rename the PDF and retry."
 )
@@ -325,6 +326,13 @@ def _metadata(limits: ImportLimits, unmapped_count: int = 0) -> dict[str, Any]:
     }
 
 
+def _value_error_payload(message: str) -> dict[str, str]:
+    payload: dict[str, str] = {"error": message}
+    if message == UPLOAD_METADATA_ENCODING_ERROR_MESSAGE:
+        payload["code"] = ERROR_CODE_MULTIPART_METADATA_INVALID
+    return payload
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -402,7 +410,7 @@ async def wizard_suggest(request: Request):
     except ValueError as exc:
         message = str(exc)
         status = 413 if "max size" in message or "payload" in message or "Too many documents" in message else 400
-        return JSONResponse({"error": message}, status_code=status)
+        return JSONResponse(_value_error_payload(message), status_code=status)
     except ValidationError as exc:
         return JSONResponse({"error": "Invalid request payload", "message": str(exc)}, status_code=400)
     except json.JSONDecodeError:
@@ -492,7 +500,7 @@ async def suggest(request: Request):
     except ValueError as exc:
         message = str(exc)
         status = 413 if "max size" in message or "payload" in message or "Too many documents" in message else 400
-        return JSONResponse({"error": message}, status_code=status)
+        return JSONResponse(_value_error_payload(message), status_code=status)
     except ValidationError as exc:
         return JSONResponse({"error": "Invalid request payload", "message": str(exc)}, status_code=400)
     except json.JSONDecodeError:
@@ -574,7 +582,7 @@ async def extract(request: Request):
         status = (
             413 if "max size" in message or "payload" in message or "Too many documents" in message else 400
         )
-        return JSONResponse({"error": message}, status_code=status)
+        return JSONResponse(_value_error_payload(message), status_code=status)
     except ValidationError as exc:
         return JSONResponse({"error": "Invalid request payload", "message": str(exc)}, status_code=400)
     except json.JSONDecodeError:

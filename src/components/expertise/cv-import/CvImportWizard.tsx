@@ -225,6 +225,9 @@ const GENERIC_BACKEND_ERRORS = new Set([
   'Failed to process CV wizard suggestions',
   'Failed to process CV documents',
 ]);
+const MULTIPART_METADATA_INVALID_CODE = 'CV_IMPORT_MULTIPART_METADATA_INVALID';
+const UPLOAD_METADATA_ENCODING_ERROR_MESSAGE =
+  'Upload metadata contains unsupported characters. Please rename the PDF and retry.';
 const PROXY_RETRYABLE_CODES = new Set(['CV_IMPORT_PROXY_UNAVAILABLE', 'CV_IMPORT_PROXY_TIMEOUT']);
 const OCR_RETRYABLE_PARSE_CODES = new Set(['PDF_EMPTY_TEXT']);
 
@@ -290,6 +293,28 @@ function isProxyRetryableError(payload: unknown): boolean {
   }
 
   return typeof payload.code === 'string' && PROXY_RETRYABLE_CODES.has(payload.code);
+}
+
+function isMultipartMetadataInvalidError(payload: unknown): boolean {
+  if (!isRecord(payload)) {
+    return false;
+  }
+
+  if (payload.code === MULTIPART_METADATA_INVALID_CODE) {
+    return true;
+  }
+
+  for (const key of ['error', 'message', 'detail']) {
+    const value = payload[key];
+    if (
+      typeof value === 'string' &&
+      value.trim().toLowerCase() === UPLOAD_METADATA_ENCODING_ERROR_MESSAGE.toLowerCase()
+    ) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 async function buildTextFallbackPayload(documents: ParsedDocumentState[]): Promise<{
@@ -1078,6 +1103,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       setRunningProgress('submitting', 25, 'Submitting files to extraction service...');
 
       let fallbackStageUsed: ApiFallbackStage | null = null;
+      let metadataFallbackTriggered = false;
       let response = await apiFetch('/api/expertise/cv-import/wizard-suggest?engine=gemini', {
         method: 'POST',
         body: formData,
@@ -1085,10 +1111,13 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
 
       if (!response.ok && isClientFallbackEnabled()) {
         const failurePayload = await readJsonSafely(response);
+        const metadataInvalidFailure = isMultipartMetadataInvalidError(failurePayload);
 
-        if (isProxyRetryableError(failurePayload)) {
+        if (isProxyRetryableError(failurePayload) || metadataInvalidFailure) {
+          metadataFallbackTriggered = metadataInvalidFailure;
+
           console.warn(
-            '[cv-import] wizard suggest proxy retryable failure, retrying with gemini json payload'
+            '[cv-import] wizard suggest multipart request failed, retrying with gemini json payload'
           );
 
           const fallbackPayload = await buildTextFallbackPayload(
@@ -1225,7 +1254,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         (count, document) => count + document.skill_candidates.length,
         0
       );
-      if (fallbackStageUsed) {
+      if (fallbackStageUsed && !metadataFallbackTriggered) {
         toast.info('CV analysis recovered via fallback path.');
       }
       if (payload.metadata.semantic_fallback_triggered && totalSkillCandidates === 0) {

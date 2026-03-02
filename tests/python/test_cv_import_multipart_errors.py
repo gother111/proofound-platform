@@ -29,6 +29,7 @@ def test_multipart_utf8_decode_errors_are_normalized(handler):
 
     assert response.status_code == 400
     assert payload["error"] == cv_import.UPLOAD_METADATA_ENCODING_ERROR_MESSAGE
+    assert payload["code"] == cv_import.ERROR_CODE_MULTIPART_METADATA_INVALID
     assert "utf-8" not in payload["error"].lower()
 
 
@@ -45,4 +46,5 @@ def test_multipart_wrapped_utf8_decode_errors_are_normalized(handler):
 
     assert response.status_code == 400
     assert payload["error"] == cv_import.UPLOAD_METADATA_ENCODING_ERROR_MESSAGE
+    assert payload["code"] == cv_import.ERROR_CODE_MULTIPART_METADATA_INVALID
     assert "invalid continuation byte" not in payload["error"].lower()

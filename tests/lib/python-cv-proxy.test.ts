@@ -46,6 +46,35 @@ describe('python-cv-proxy', () => {
     expect(headers.cookie).toContain('csrf_token=csrf-token-value');
   });
 
+  it('forwards multipart content-type boundary to python runtime', async () => {
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+
+    const multipartContentType = 'multipart/form-data; boundary=----vitest-boundary';
+    const request = new NextRequest('http://localhost/api/expertise/cv-import/wizard-suggest', {
+      method: 'POST',
+      body: '--dummy multipart body--',
+      headers: {
+        'content-type': multipartContentType,
+      },
+    });
+
+    const response = await proxyCvRequestToPython(request, '/wizard-suggest');
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+    const [, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
+    const headers = init.headers as Record<string, string>;
+    expect(headers['content-type']).toBe(multipartContentType);
+  });
+
   it('maps python csrf 403 failures to proxy unavailable response', async () => {
     vi.spyOn(global, 'fetch').mockResolvedValueOnce(
       new Response(
@@ -102,6 +131,7 @@ describe('python-cv-proxy', () => {
     expect(body.message).toBe(
       'Upload metadata contains unsupported characters. Please rename the PDF and retry.'
     );
+    expect(body.code).toBe('CV_IMPORT_MULTIPART_METADATA_INVALID');
     expect(String(body.message).toLowerCase()).not.toContain('utf-8');
   });
 
@@ -130,5 +160,6 @@ describe('python-cv-proxy', () => {
     expect(body.message).toBe(
       'Upload metadata contains unsupported characters. Please rename the PDF and retry.'
     );
+    expect(body.code).toBe('CV_IMPORT_MULTIPART_METADATA_INVALID');
   });
 });

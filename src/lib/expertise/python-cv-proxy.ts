@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const DEFAULT_PROXY_TIMEOUT_MS = 10000;
 const PROXY_UNAVAILABLE_CODE = 'CV_IMPORT_PROXY_UNAVAILABLE';
 const PROXY_TIMEOUT_CODE = 'CV_IMPORT_PROXY_TIMEOUT';
+const MULTIPART_METADATA_INVALID_CODE = 'CV_IMPORT_MULTIPART_METADATA_INVALID';
 const UPLOAD_METADATA_ENCODING_ERROR_MESSAGE =
   'Upload metadata contains unsupported characters. Please rename the PDF and retry.';
 const UTF8_CODEC_ERROR_PATTERN =
@@ -80,6 +81,7 @@ function normalizeCodecErrorPayload(payload: unknown): unknown {
     return payload;
   }
 
+  next.code = MULTIPART_METADATA_INVALID_CODE;
   return next;
 }
 
@@ -148,7 +150,7 @@ export async function proxyCvRequestToPython(
     accept: 'application/json',
   };
 
-  if (contentType && !isMultipart) {
+  if (contentType) {
     headers['content-type'] = contentType;
   }
 
@@ -227,6 +229,7 @@ export async function proxyCvRequestToPython(
         {
           error: resolveGenericErrorLabel(endpointPath),
           message: UPLOAD_METADATA_ENCODING_ERROR_MESSAGE,
+          code: MULTIPART_METADATA_INVALID_CODE,
         },
         { status: response.status >= 400 ? response.status : 502 }
       );

@@ -36,6 +36,7 @@ const DEFAULT_SERVER_TIMEOUT_MS = 15000;
 const GENERIC_WIZARD_ERROR = 'Failed to process CV wizard suggestions';
 const WIZARD_DEPENDENCY_UNAVAILABLE_CODE = 'WIZARD_DEPENDENCY_UNAVAILABLE';
 const WIZARD_PROCESSING_FAILED_CODE = 'WIZARD_PROCESSING_FAILED';
+const MULTIPART_METADATA_INVALID_CODE = 'CV_IMPORT_MULTIPART_METADATA_INVALID';
 const UPLOAD_METADATA_ENCODING_ERROR_MESSAGE =
   'Upload metadata contains unsupported characters. Please rename the PDF and retry.';
 const UTF8_CODEC_ERROR_PATTERN =
@@ -143,6 +144,10 @@ function sanitizeCodecErrorRecord(record: Record<string, unknown>): Record<strin
     }
   }
 
+  if (changed) {
+    next.code = MULTIPART_METADATA_INVALID_CODE;
+  }
+
   return changed ? next : record;
 }
 
@@ -196,6 +201,7 @@ async function attachEngineMetadata(
           {
             error: GENERIC_WIZARD_ERROR,
             message: UPLOAD_METADATA_ENCODING_ERROR_MESSAGE,
+            code: MULTIPART_METADATA_INVALID_CODE,
             metadata: {
               engine_mode: mode,
               engine_used: engineUsed,

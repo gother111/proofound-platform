@@ -33,6 +33,7 @@ const DEFAULT_LIMITS: CvImportLimits = {
 
 const DEFAULT_SERVER_TIMEOUT_MS = 6000;
 const GENERIC_SUGGEST_ERROR = 'Failed to process CV documents';
+const MULTIPART_METADATA_INVALID_CODE = 'CV_IMPORT_MULTIPART_METADATA_INVALID';
 const UPLOAD_METADATA_ENCODING_ERROR_MESSAGE =
   'Upload metadata contains unsupported characters. Please rename the PDF and retry.';
 const UTF8_CODEC_ERROR_PATTERN =
@@ -138,6 +139,10 @@ function sanitizeCodecErrorRecord(record: Record<string, unknown>): Record<strin
       next[key] = UPLOAD_METADATA_ENCODING_ERROR_MESSAGE;
       changed = true;
     }
+  }
+
+  if (changed) {
+    next.code = MULTIPART_METADATA_INVALID_CODE;
   }
 
   return changed ? next : record;
@@ -266,6 +271,7 @@ async function attachEngineMetadata(
           {
             error: GENERIC_SUGGEST_ERROR,
             message: UPLOAD_METADATA_ENCODING_ERROR_MESSAGE,
+            code: MULTIPART_METADATA_INVALID_CODE,
             metadata: {
               engine_mode: mode,
               engine_used: engineUsed,

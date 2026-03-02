@@ -211,6 +211,7 @@ describe('cv-import suggest route', () => {
     expect(body.message).toBe(
       'Upload metadata contains unsupported characters. Please rename the PDF and retry.'
     );
+    expect(body.code).toBe('CV_IMPORT_MULTIPART_METADATA_INVALID');
     expect(String(body.message).toLowerCase()).not.toContain('utf-8');
     fetchSpy.mockRestore();
   });

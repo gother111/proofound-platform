@@ -639,6 +639,90 @@ describe('CvImportWizard', () => {
     expect(screen.getByText('Extracted text preview')).toBeInTheDocument();
   });
 
+  it('auto-retries with gemini json payload on multipart metadata parse failures', async () => {
+    extractPdfTextFromFileMock.mockResolvedValueOnce('React TypeScript');
+    apiFetchMock
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            error:
+              'Upload metadata contains unsupported characters. Please rename the PDF and retry.',
+            code: 'CV_IMPORT_MULTIPART_METADATA_INVALID',
+          }),
+          {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            documents: [
+              {
+                document_id: 'doc-1',
+                file_name: 'cv.pdf',
+                context: 'cv',
+                parsed_text: 'React TypeScript',
+                work_experiences: [],
+                learning_experiences: [],
+                volunteering: [],
+                languages: [],
+                skill_candidates: [],
+              },
+            ],
+            metadata: {
+              semantic_used: false,
+              semantic_fallback_triggered: false,
+              unmapped_candidates_count: 0,
+              limits: {
+                max_documents: 5,
+                max_chars_per_document: 30000,
+                max_total_chars: 90000,
+              },
+            },
+          }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        )
+      );
+
+    render(<CvImportWizard />);
+
+    const uploadInput = screen.getByTestId('cv-upload');
+    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
+
+    fireEvent.change(uploadInput, {
+      target: {
+        files: [file],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
+
+    await waitFor(() => {
+      expect(apiFetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    const multipartBody = apiFetchMock.mock.calls[0]?.[1]?.body as FormData;
+    const requestDocumentId = String(multipartBody.getAll('document_ids')[0] || '');
+    const retryPayload = JSON.parse(String(apiFetchMock.mock.calls[1]?.[1]?.body || '{}'));
+    expect(requestDocumentId).toMatch(/^[A-Za-z0-9_-]+$/);
+    expect(retryPayload.documents[0].document_id).toBe(requestDocumentId);
+    expect(retryPayload.documents[0].file_name).toBe('cv.pdf');
+    expect(retryPayload.documents[0].context).toBe('cv');
+    expect(retryPayload.documents[0].text).toBe('React TypeScript');
+    expect(toastErrorMock).not.toHaveBeenCalledWith(
+      'Upload metadata contains unsupported characters. Please rename the PDF and retry.'
+    );
+  });
+
   it('retries with typescript engine when gemini json retry also fails', async () => {
     extractPdfTextFromFileMock.mockResolvedValueOnce('React TypeScript');
     apiFetchMock
