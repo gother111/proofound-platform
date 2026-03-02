@@ -21,11 +21,13 @@ vi.mock('@/lib/expertise/cv-import-wizard-types', () => ({
 
 describe('cv-import wizard suggest route', () => {
   const originalTimeout = process.env.CV_IMPORT_SERVER_TIMEOUT_MS;
+  const originalWizardTimeout = process.env.CV_IMPORT_WIZARD_TIMEOUT_MS;
   const originalMode = process.env.CV_IMPORT_ENGINE_MODE;
 
   beforeEach(() => {
     vi.clearAllMocks();
     delete process.env.CV_IMPORT_SERVER_TIMEOUT_MS;
+    delete process.env.CV_IMPORT_WIZARD_TIMEOUT_MS;
     delete process.env.CV_IMPORT_FORCE_PYTHON;
     delete process.env.CV_IMPORT_ENGINE_MODE;
   });
@@ -35,6 +37,11 @@ describe('cv-import wizard suggest route', () => {
       delete process.env.CV_IMPORT_SERVER_TIMEOUT_MS;
     } else {
       process.env.CV_IMPORT_SERVER_TIMEOUT_MS = originalTimeout;
+    }
+    if (originalWizardTimeout === undefined) {
+      delete process.env.CV_IMPORT_WIZARD_TIMEOUT_MS;
+    } else {
+      process.env.CV_IMPORT_WIZARD_TIMEOUT_MS = originalWizardTimeout;
     }
     if (originalMode === undefined) {
       delete process.env.CV_IMPORT_ENGINE_MODE;
@@ -396,6 +403,47 @@ describe('cv-import wizard suggest route', () => {
 
     expect(response.status).toBe(408);
     expect(body.error).toBe('CV wizard processing timed out');
+    expect(body.code).toBe('CV_IMPORT_WIZARD_TIMEOUT');
+  });
+
+  it('prefers CV_IMPORT_WIZARD_TIMEOUT_MS over CV_IMPORT_SERVER_TIMEOUT_MS', async () => {
+    process.env.CV_IMPORT_SERVER_TIMEOUT_MS = '60000';
+    process.env.CV_IMPORT_WIZARD_TIMEOUT_MS = '1';
+
+    (createClient as any).mockResolvedValue({
+      auth: {
+        getUser: async () => ({ data: { user: { id: 'user-1' } } }),
+      },
+    });
+
+    (suggestWizardForDocuments as any).mockImplementation(
+      () =>
+        new Promise(() => {
+          // unresolved on purpose
+        })
+    );
+
+    const request = new NextRequest('http://localhost/api/expertise/cv-import/wizard-suggest', {
+      method: 'POST',
+      body: JSON.stringify({
+        documents: [
+          {
+            document_id: 'doc-1',
+            file_name: 'cv.pdf',
+            text: 'React TypeScript',
+            context: 'cv',
+          },
+        ],
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const response = await POST(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(408);
+    expect(body.error).toBe('CV wizard processing timed out');
+    expect(body.code).toBe('CV_IMPORT_WIZARD_TIMEOUT');
   });
 
   it('returns 503 with dependency code when taxonomy dependency is unavailable', async () => {

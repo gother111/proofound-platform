@@ -33,6 +33,7 @@ const DEFAULT_LIMITS: CvImportLimits = {
 
 const DEFAULT_SERVER_TIMEOUT_MS = 6000;
 const GENERIC_SUGGEST_ERROR = 'Failed to process CV documents';
+const SUGGEST_TIMEOUT_CODE = 'CV_IMPORT_SUGGEST_TIMEOUT';
 const MULTIPART_METADATA_INVALID_CODE = 'CV_IMPORT_MULTIPART_METADATA_INVALID';
 const UPLOAD_METADATA_ENCODING_ERROR_MESSAGE =
   'Upload metadata contains unsupported characters. Please rename the PDF and retry.';
@@ -381,6 +382,7 @@ export async function POST(request: NextRequest) {
             {
               error: 'CV import processing timed out',
               message: 'Try fewer documents or shorter CV content.',
+              code: SUGGEST_TIMEOUT_CODE,
             },
             408
           );
@@ -631,6 +633,7 @@ export async function POST(request: NextRequest) {
         {
           error: 'CV import processing timed out',
           message: 'Try fewer documents or shorter CV content.',
+          code: SUGGEST_TIMEOUT_CODE,
         },
         408
       );

@@ -26,16 +26,19 @@ import {
 import type { CvImportLimits, CvImportSuggestResponse } from '@/lib/expertise/cv-import-suggest';
 import { createClient } from '@/lib/supabase/server';
 
+export const maxDuration = 60;
+
 const DEFAULT_LIMITS: CvImportLimits = {
   maxDocuments: 5,
   maxCharsPerDocument: 30000,
   maxTotalChars: 90000,
 };
 
-const DEFAULT_SERVER_TIMEOUT_MS = 15000;
+const DEFAULT_WIZARD_TIMEOUT_MS = 45000;
 const GENERIC_WIZARD_ERROR = 'Failed to process CV wizard suggestions';
 const WIZARD_DEPENDENCY_UNAVAILABLE_CODE = 'WIZARD_DEPENDENCY_UNAVAILABLE';
 const WIZARD_PROCESSING_FAILED_CODE = 'WIZARD_PROCESSING_FAILED';
+const WIZARD_TIMEOUT_CODE = 'CV_IMPORT_WIZARD_TIMEOUT';
 const MULTIPART_METADATA_INVALID_CODE = 'CV_IMPORT_MULTIPART_METADATA_INVALID';
 const UPLOAD_METADATA_ENCODING_ERROR_MESSAGE =
   'Upload metadata contains unsupported characters. Please rename the PDF and retry.';
@@ -78,6 +81,18 @@ function parsePositiveInt(value: string | undefined, fallback: number): number {
   }
 
   return Math.floor(parsed);
+}
+
+function resolveWizardTimeoutMs(): number {
+  const wizardTimeoutRaw = process.env.CV_IMPORT_WIZARD_TIMEOUT_MS;
+  if (wizardTimeoutRaw && wizardTimeoutRaw.trim().length > 0) {
+    const parsed = Number(wizardTimeoutRaw);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return Math.floor(parsed);
+    }
+  }
+
+  return parsePositiveInt(process.env.CV_IMPORT_SERVER_TIMEOUT_MS, DEFAULT_WIZARD_TIMEOUT_MS);
 }
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
@@ -405,10 +420,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const timeoutMs = parsePositiveInt(
-      process.env.CV_IMPORT_SERVER_TIMEOUT_MS,
-      DEFAULT_SERVER_TIMEOUT_MS
-    );
+    const timeoutMs = resolveWizardTimeoutMs();
     const contentType = request.headers.get('content-type') || '';
     const engineMode = resolveCvImportEngineMode(request);
     const proxyToPython = shouldProxyToPython(contentType, engineMode);
@@ -424,6 +436,7 @@ export async function POST(request: NextRequest) {
             {
               error: 'CV wizard processing timed out',
               message: 'Try fewer documents or shorter CV content.',
+              code: WIZARD_TIMEOUT_CODE,
             },
             408
           );
@@ -712,6 +725,7 @@ export async function POST(request: NextRequest) {
         {
           error: 'CV wizard processing timed out',
           message: 'Try fewer documents or shorter CV content.',
+          code: WIZARD_TIMEOUT_CODE,
         },
         408
       );

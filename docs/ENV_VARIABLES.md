@@ -534,6 +534,32 @@ CV_IMPORT_ENGINE_MODE=auto
 
 ---
 
+### CV_IMPORT_WIZARD_TIMEOUT_MS / CV_IMPORT_SERVER_TIMEOUT_MS
+
+**Purpose**: Controls CV wizard request timeout budgets.
+
+**Format**:
+
+```env
+CV_IMPORT_WIZARD_TIMEOUT_MS=45000
+CV_IMPORT_SERVER_TIMEOUT_MS=15000
+```
+
+**Behavior**:
+
+- Wizard route timeout resolution precedence:
+  1. `CV_IMPORT_WIZARD_TIMEOUT_MS`
+  2. `CV_IMPORT_SERVER_TIMEOUT_MS`
+  3. hard default `45000`
+- `CV_IMPORT_SERVER_TIMEOUT_MS` remains a global fallback for non-wizard CV routes.
+
+**Default**:
+
+- Wizard route effective default: `45000` ms
+- Server fallback default: `15000` ms
+
+---
+
 ### CV_IMPORT_GEMINI_PRIMARY_API_KEY / CV_IMPORT_GEMINI_SECONDARY_API_KEY
 
 **Purpose**: Server-only Gemini API keys used with budget slots (`primary`, `secondary`).
@@ -1160,7 +1186,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 | **File Uploads**        | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | **Matching System**     | `DATABASE_URL`, `MATCHING_FEATURE_ENABLED` (optional), `MATCHING_TWO_STAGE_ENABLED`, `MATCHING_NEAR_SCAN_LIMIT`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | **Matching Refresh**    | `MATCHING_REFRESH_QUEUE_ENABLED`, `MATCHING_REFRESH_WORKER_BATCH_SIZE`, `MATCHING_REFRESH_WORKER_CONCURRENCY`, `MATCHING_REFRESH_MAX_ATTEMPTS`                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| **CV Import Engine**    | `CV_IMPORT_ENGINE_MODE`, `CV_IMPORT_MAX_FILE_SIZE_MB`, `CV_IMPORT_MAX_PDF_PAGES`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **CV Import Engine**    | `CV_IMPORT_ENGINE_MODE`, `CV_IMPORT_WIZARD_TIMEOUT_MS`, `CV_IMPORT_SERVER_TIMEOUT_MS`, `CV_IMPORT_MAX_FILE_SIZE_MB`, `CV_IMPORT_MAX_PDF_PAGES`                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | **CV Import Gemini**    | `CV_IMPORT_GEMINI_PRIMARY_API_KEY`, `CV_IMPORT_GEMINI_SECONDARY_API_KEY`, `CV_IMPORT_GEMINI_PRIMARY_MONTHLY_BUDGET_SEK`, `CV_IMPORT_GEMINI_SECONDARY_MONTHLY_BUDGET_SEK`, `CV_IMPORT_GEMINI_USD_TO_SEK_RATE`, `CV_IMPORT_GEMINI_MODEL_DEFAULT`, `CV_IMPORT_GEMINI_MODEL_FALLBACK`, `CV_IMPORT_GEMINI_MAX_OUTPUT_TOKENS`, `CV_IMPORT_GEMINI_SHORT_TEXT_MAX_OUTPUT_TOKENS`, `CV_IMPORT_GEMINI_TAXONOMY_GUIDED`, `CV_IMPORT_GEMINI_SHORTLIST_MAX_ENTRIES`, `CV_IMPORT_GEMINI_SHORTLIST_MAX_TOKENS`, `CV_IMPORT_GEMINI_SHORTLIST_SEED_LIMIT`, `CV_IMPORT_GEMINI_SHORTLIST_CACHE_TTL_MS`, `CV_IMPORT_GEMINI_TAXONOMY_VERSION` |
 | **CV Import OCR**       | `NEXT_PUBLIC_CV_IMPORT_OCR_ENABLED`, `NEXT_PUBLIC_CV_IMPORT_OCR_MAX_FILE_SIZE_MB`, `NEXT_PUBLIC_CV_IMPORT_OCR_MAX_PAGES`, `NEXT_PUBLIC_CV_IMPORT_OCR_PAGE_TIMEOUT_MS`, `NEXT_PUBLIC_CV_IMPORT_OCR_TIMEOUT_MS`                                                                                                                                                                                                                                                                                                                                                                                                            |
 | **Performance Budgets** | `PERF_API_P95_BUDGET_MS`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
@@ -1200,6 +1226,8 @@ Use this checklist when setting up a new environment:
 - [ ] `NEXT_PUBLIC_APP_ENV` - App environment
 - [ ] `MATCHING_FEATURE_ENABLED` - Toggle matching
 - [ ] `CV_IMPORT_ENGINE_MODE` - CV import runtime selection
+- [ ] `CV_IMPORT_WIZARD_TIMEOUT_MS` - Wizard timeout override for CV analyze
+- [ ] `CV_IMPORT_SERVER_TIMEOUT_MS` - Global fallback timeout for CV routes
 - [ ] `CV_IMPORT_MAX_FILE_SIZE_MB` - Upload file size cap for CV parsing
 - [ ] `CV_IMPORT_MAX_PDF_PAGES` - Upload page cap for CV parsing
 - [ ] `CV_IMPORT_GEMINI_PRIMARY_API_KEY` - Primary Gemini key

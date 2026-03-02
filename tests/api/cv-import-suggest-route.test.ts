@@ -364,5 +364,6 @@ describe('cv-import suggest route', () => {
 
     expect(response.status).toBe(408);
     expect(body.error).toBe('CV import processing timed out');
+    expect(body.code).toBe('CV_IMPORT_SUGGEST_TIMEOUT');
   });
 });

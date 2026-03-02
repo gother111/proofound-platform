@@ -225,6 +225,8 @@ const GENERIC_BACKEND_ERRORS = new Set([
   'Failed to process CV wizard suggestions',
   'Failed to process CV documents',
 ]);
+const WIZARD_TIMEOUT_CODE = 'CV_IMPORT_WIZARD_TIMEOUT';
+const WIZARD_TIMEOUT_ERROR = 'cv wizard processing timed out';
 const MULTIPART_METADATA_INVALID_CODE = 'CV_IMPORT_MULTIPART_METADATA_INVALID';
 const UPLOAD_METADATA_ENCODING_ERROR_MESSAGE =
   'Upload metadata contains unsupported characters. Please rename the PDF and retry.';
@@ -310,6 +312,29 @@ function isMultipartMetadataInvalidError(payload: unknown): boolean {
       typeof value === 'string' &&
       value.trim().toLowerCase() === UPLOAD_METADATA_ENCODING_ERROR_MESSAGE.toLowerCase()
     ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function isWizardTimeoutFailure(payload: unknown, status: number): boolean {
+  if (status === 408) {
+    return true;
+  }
+
+  if (!isRecord(payload)) {
+    return false;
+  }
+
+  if (payload.code === WIZARD_TIMEOUT_CODE) {
+    return true;
+  }
+
+  for (const key of ['error', 'message']) {
+    const value = payload[key];
+    if (typeof value === 'string' && value.trim().toLowerCase() === WIZARD_TIMEOUT_ERROR) {
       return true;
     }
   }
@@ -1104,6 +1129,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
 
       let fallbackStageUsed: ApiFallbackStage | null = null;
       let metadataFallbackTriggered = false;
+      let timeoutFallbackTriggered = false;
       let response = await apiFetch('/api/expertise/cv-import/wizard-suggest?engine=gemini', {
         method: 'POST',
         body: formData,
@@ -1111,9 +1137,29 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
 
       if (!response.ok && isClientFallbackEnabled()) {
         const failurePayload = await readJsonSafely(response);
+        const timeoutFailure = isWizardTimeoutFailure(failurePayload, response.status);
         const metadataInvalidFailure = isMultipartMetadataInvalidError(failurePayload);
 
-        if (isProxyRetryableError(failurePayload) || metadataInvalidFailure) {
+        if (timeoutFailure) {
+          timeoutFallbackTriggered = true;
+          const fallbackPayload = await buildTextFallbackPayload(
+            analyzeDocuments.map((descriptor) => ({
+              ...descriptor.document,
+              document_id: descriptor.requestId,
+            }))
+          );
+          setRunningProgress(
+            'extracting',
+            45,
+            'Retrying extraction with deterministic fallback service...'
+          );
+          response = await apiFetch('/api/expertise/cv-import/wizard-suggest?engine=typescript', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(fallbackPayload),
+          });
+          fallbackStageUsed = 'typescript_retry';
+        } else if (isProxyRetryableError(failurePayload) || metadataInvalidFailure) {
           metadataFallbackTriggered = metadataInvalidFailure;
 
           console.warn(
@@ -1254,7 +1300,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         (count, document) => count + document.skill_candidates.length,
         0
       );
-      if (fallbackStageUsed && !metadataFallbackTriggered) {
+      if (fallbackStageUsed && !metadataFallbackTriggered && !timeoutFallbackTriggered) {
         toast.info('CV analysis recovered via fallback path.');
       }
       if (payload.metadata.semantic_fallback_triggered && totalSkillCandidates === 0) {
