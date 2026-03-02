@@ -43,6 +43,7 @@ export interface SkillReviewCandidate {
   manual_options: SkillMatchOption[];
   show_all_suggestions: boolean;
   unmapped_candidate: boolean;
+  already_in_profile?: boolean;
   manual_last_search_at?: string;
 }
 
@@ -185,6 +186,10 @@ export function SkillReviewPanel({
                 </TableCell>
 
                 <TableCell className="min-w-[340px] space-y-2">
+                  {candidate.already_in_profile && (
+                    <Badge variant="outline">Already in profile</Badge>
+                  )}
+
                   <select
                     multiple
                     className="h-28 w-full rounded border px-2 py-1 text-xs"
@@ -247,11 +252,13 @@ export function SkillReviewPanel({
                     onClose={() => onOpenPicker(null)}
                   />
 
-                  {candidate.unmapped_candidate && candidate.selected_skill_ids.length === 0 && (
-                    <p className="text-xs text-amber-700">
-                      Needs mapping. Select at least one Atlas skill.
-                    </p>
-                  )}
+                  {candidate.unmapped_candidate &&
+                    !candidate.already_in_profile &&
+                    candidate.selected_skill_ids.length === 0 && (
+                      <p className="text-xs text-amber-700">
+                        Needs mapping. Select at least one Atlas skill.
+                      </p>
+                    )}
                 </TableCell>
               </TableRow>
             );

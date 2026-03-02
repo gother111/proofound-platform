@@ -514,6 +514,77 @@ describe('CvImportWizard', () => {
     });
   });
 
+  it('renders already-in-profile tag and skips needs-mapping warning for duplicate-only candidates', async () => {
+    apiFetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          documents: [
+            {
+              document_id: 'doc-1',
+              file_name: 'cv.pdf',
+              context: 'cv',
+              work_experiences: [],
+              learning_experiences: [],
+              volunteering: [],
+              languages: [],
+              skill_candidates: [
+                {
+                  candidate_id: 'candidate-1',
+                  raw_skill_text: 'React',
+                  category: 'technical',
+                  evidence_snippets: ['Built React products'],
+                  confidence: 0.9,
+                  suggestions: [],
+                  unmapped_candidate: false,
+                  already_in_profile: true,
+                },
+              ],
+            },
+          ],
+          metadata: {
+            semantic_used: false,
+            semantic_fallback_triggered: false,
+            unmapped_candidates_count: 0,
+            limits: {
+              max_documents: 5,
+              max_chars_per_document: 30000,
+              max_total_chars: 90000,
+            },
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+
+    render(<CvImportWizard />);
+
+    const uploadInput = screen.getByTestId('cv-upload');
+    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
+
+    fireEvent.change(uploadInput, {
+      target: {
+        files: [file],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Already in profile')).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByText('Needs mapping. Select at least one Atlas skill.')
+    ).not.toBeInTheDocument();
+  });
+
   it('shows detailed backend message when wizard suggest returns generic wrapper error', async () => {
     apiFetchMock.mockResolvedValueOnce(
       new Response(

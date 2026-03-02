@@ -9,12 +9,47 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }));
 
-vi.mock('@/lib/expertise/cv-import-suggest', () => ({
-  CvImportSuggestRequestSchema: {
-    parse: (value: unknown) => value,
-  },
-  suggestSkillsForDocuments: vi.fn(),
-}));
+vi.mock('@/lib/expertise/cv-import-suggest', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/expertise/cv-import-suggest')>();
+  return {
+    ...actual,
+    CvImportSuggestRequestSchema: {
+      parse: (value: unknown) => value,
+    },
+    suggestSkillsForDocuments: vi.fn(),
+  };
+});
+
+function createAuthenticatedSupabaseMock(userId = 'user-1', existingSkillIds: string[] = []) {
+  return {
+    auth: {
+      getUser: async () => ({
+        data: {
+          user: {
+            id: userId,
+          },
+        },
+      }),
+    },
+    from: (table: string) => {
+      if (table !== 'skills') {
+        throw new Error(`Unexpected table: ${table}`);
+      }
+
+      return {
+        select: () => ({
+          eq: async (_column: string, _value: string) => ({
+            data: existingSkillIds.map((skillId) => ({
+              skill_id: skillId,
+              skill_code: skillId,
+            })),
+            error: null,
+          }),
+        }),
+      };
+    },
+  };
+}
 
 describe('cv-import suggest route', () => {
   const originalTimeout = process.env.CV_IMPORT_SERVER_TIMEOUT_MS;
@@ -59,17 +94,7 @@ describe('cv-import suggest route', () => {
   });
 
   it('returns structured response for authenticated users', async () => {
-    (createClient as any).mockResolvedValue({
-      auth: {
-        getUser: async () => ({
-          data: {
-            user: {
-              id: 'user-1',
-            },
-          },
-        }),
-      },
-    });
+    (createClient as any).mockResolvedValue(createAuthenticatedSupabaseMock('user-1'));
 
     (suggestSkillsForDocuments as any).mockResolvedValue({
       documents: [],
@@ -111,17 +136,7 @@ describe('cv-import suggest route', () => {
   });
 
   it('proxies multipart payloads to python runtime endpoint', async () => {
-    (createClient as any).mockResolvedValue({
-      auth: {
-        getUser: async () => ({
-          data: {
-            user: {
-              id: 'user-1',
-            },
-          },
-        }),
-      },
-    });
+    (createClient as any).mockResolvedValue(createAuthenticatedSupabaseMock('user-1'));
 
     const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
       new Response(
@@ -172,11 +187,7 @@ describe('cv-import suggest route', () => {
 
   it('returns friendly upload metadata message when upstream proxy reports utf-8 codec errors', async () => {
     process.env.CV_IMPORT_ENGINE_MODE = 'python';
-    (createClient as any).mockResolvedValue({
-      auth: {
-        getUser: async () => ({ data: { user: { id: 'user-1' } } }),
-      },
-    });
+    (createClient as any).mockResolvedValue(createAuthenticatedSupabaseMock('user-1'));
 
     const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
       new Response(
@@ -218,11 +229,7 @@ describe('cv-import suggest route', () => {
 
   it('routes JSON payloads to python engine when engine mode is python', async () => {
     process.env.CV_IMPORT_ENGINE_MODE = 'python';
-    (createClient as any).mockResolvedValue({
-      auth: {
-        getUser: async () => ({ data: { user: { id: 'user-1' } } }),
-      },
-    });
+    (createClient as any).mockResolvedValue(createAuthenticatedSupabaseMock('user-1'));
 
     const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
       new Response(
@@ -271,11 +278,7 @@ describe('cv-import suggest route', () => {
 
   it('honors engine=typescript override even when mode is python', async () => {
     process.env.CV_IMPORT_ENGINE_MODE = 'python';
-    (createClient as any).mockResolvedValue({
-      auth: {
-        getUser: async () => ({ data: { user: { id: 'user-1' } } }),
-      },
-    });
+    (createClient as any).mockResolvedValue(createAuthenticatedSupabaseMock('user-1'));
 
     (suggestSkillsForDocuments as any).mockResolvedValue({
       documents: [],
@@ -325,17 +328,7 @@ describe('cv-import suggest route', () => {
   it('returns timeout response when processing exceeds budget', async () => {
     process.env.CV_IMPORT_SERVER_TIMEOUT_MS = '1';
 
-    (createClient as any).mockResolvedValue({
-      auth: {
-        getUser: async () => ({
-          data: {
-            user: {
-              id: 'user-1',
-            },
-          },
-        }),
-      },
-    });
+    (createClient as any).mockResolvedValue(createAuthenticatedSupabaseMock('user-1'));
 
     (suggestSkillsForDocuments as any).mockImplementation(
       () =>
@@ -365,5 +358,77 @@ describe('cv-import suggest route', () => {
     expect(response.status).toBe(408);
     expect(body.error).toBe('CV import processing timed out');
     expect(body.code).toBe('CV_IMPORT_SUGGEST_TIMEOUT');
+  });
+
+  it('tags duplicate-only candidates as already_in_profile', async () => {
+    (createClient as any).mockResolvedValue(
+      createAuthenticatedSupabaseMock('user-1', ['skill_react'])
+    );
+
+    (suggestSkillsForDocuments as any).mockResolvedValue({
+      documents: [
+        {
+          document_id: 'doc-1',
+          file_name: 'cv.pdf',
+          context: 'cv',
+          parsed_text: 'React TypeScript',
+          parse_error: null,
+          parse_error_code: null,
+          candidate_count: 1,
+          candidates: [
+            {
+              candidate_id: 'candidate-1',
+              raw_skill_text: 'React',
+              category: 'technical',
+              evidence_snippets: ['Built React apps'],
+              confidence: 0.9,
+              suggestions: [
+                {
+                  skill_id: 'skill_react',
+                  skill_name: 'React',
+                  match_method: 'exact',
+                  score: 1,
+                },
+              ],
+              unmapped_candidate: false,
+            },
+          ],
+        },
+      ],
+      metadata: {
+        semantic_used: false,
+        semantic_fallback_triggered: false,
+        unmapped_candidates_count: 0,
+        limits: {
+          max_documents: 5,
+          max_chars_per_document: 30000,
+          max_total_chars: 90000,
+        },
+      },
+    });
+
+    const request = new NextRequest('http://localhost/api/expertise/cv-import/suggest', {
+      method: 'POST',
+      body: JSON.stringify({
+        documents: [
+          {
+            document_id: 'doc-1',
+            file_name: 'cv.pdf',
+            text: 'React TypeScript',
+            context: 'cv',
+          },
+        ],
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const response = await POST(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.documents[0].candidates[0].suggestions).toEqual([]);
+    expect(body.documents[0].candidates[0].already_in_profile).toBe(true);
+    expect(body.documents[0].candidates[0].unmapped_candidate).toBe(false);
+    expect(body.metadata.unmapped_candidates_count).toBe(0);
   });
 });

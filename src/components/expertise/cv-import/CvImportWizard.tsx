@@ -66,6 +66,7 @@ interface ApiSkillCandidate {
   confidence: number;
   suggestions: ApiSuggestion[];
   unmapped_candidate: boolean;
+  already_in_profile?: boolean;
 }
 
 interface ApiWorkExperience {
@@ -515,8 +516,8 @@ function normalizeSuggestResponse(value: unknown): ApiSuggestResponse | null {
     return null;
   }
 
-  const documents = value.documents
-    .map((document, docIndex) => {
+  const documents: ApiDocumentResult[] = value.documents
+    .map((document, docIndex): ApiDocumentResult | null => {
       if (!isRecord(document)) {
         return null;
       }
@@ -712,7 +713,7 @@ function normalizeSuggestResponse(value: unknown): ApiSuggestResponse | null {
 
       const skillCandidates = Array.isArray(document.skill_candidates)
         ? document.skill_candidates
-            .map((candidate, index) => {
+            .map((candidate, index): ApiSkillCandidate | null => {
               if (!isRecord(candidate)) {
                 return null;
               }
@@ -743,7 +744,7 @@ function normalizeSuggestResponse(value: unknown): ApiSuggestResponse | null {
 
               const suggestions = Array.isArray(candidate.suggestions)
                 ? candidate.suggestions
-                    .map((suggestion) => {
+                    .map((suggestion): ApiSuggestion | null => {
                       if (!isRecord(suggestion)) {
                         return null;
                       }
@@ -789,6 +790,7 @@ function normalizeSuggestResponse(value: unknown): ApiSuggestResponse | null {
                   typeof candidate.unmapped_candidate === 'boolean'
                     ? candidate.unmapped_candidate
                     : suggestions.length === 0,
+                already_in_profile: Boolean(candidate.already_in_profile),
               };
             })
             .filter((entry): entry is ApiSkillCandidate => Boolean(entry))
@@ -1337,6 +1339,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
             manual_options: [],
             manual_loading: false,
             show_all_suggestions: false,
+            already_in_profile: Boolean(candidate.already_in_profile),
           })),
         };
       });
@@ -1493,6 +1496,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
           ...entry,
           manual_options: manualOptions,
           selected_skill_ids: nextSelected,
+          already_in_profile: false,
+          unmapped_candidate: nextSelected.length === 0,
         };
       }),
     }));
@@ -1520,6 +1525,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         if (
           candidate.approved &&
           candidate.unmapped_candidate &&
+          !candidate.already_in_profile &&
           candidate.selected_skill_ids.length === 0
         ) {
           skillsNeedingMapping += 1;
@@ -1950,7 +1956,14 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                         ...current,
                         skill_candidates: current.skill_candidates.map((item) =>
                           item.candidate_id === candidateId
-                            ? { ...item, selected_skill_ids: selectedSkillIds }
+                            ? {
+                                ...item,
+                                selected_skill_ids: selectedSkillIds,
+                                already_in_profile:
+                                  selectedSkillIds.length > 0 ? false : item.already_in_profile,
+                                unmapped_candidate:
+                                  selectedSkillIds.length > 0 ? false : item.unmapped_candidate,
+                              }
                             : item
                         ),
                       }));

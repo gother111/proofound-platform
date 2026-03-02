@@ -16,6 +16,11 @@ import {
   suggestSkillsWithGemini,
   type GeminiSourceDocument,
 } from '@/lib/expertise/gemini/skill-extractor';
+import {
+  filterExistingSkillsFromWizardSuggestResponse,
+  loadExistingSkillIdsForProfile,
+  maybeFilterExistingSkillsFromWizardSuggestPayload,
+} from '@/lib/expertise/cv-import-existing-skills-filter';
 import { proxyCvRequestToPython } from '@/lib/expertise/python-cv-proxy';
 import { suggestWizardForDocuments } from '@/lib/expertise/cv-import-wizard-extractor';
 import {
@@ -190,7 +195,8 @@ async function attachEngineMetadata(
   response: NextResponse,
   requestId: string,
   mode: CvImportEngineMode,
-  engineUsed: EngineUsed
+  engineUsed: EngineUsed,
+  existingSkillIds: ReadonlySet<string>
 ) {
   try {
     const payload = await response.clone().json();
@@ -210,7 +216,8 @@ async function attachEngineMetadata(
         },
       };
 
-      return jsonWithRequestId(requestId, next, response.status);
+      const deduped = maybeFilterExistingSkillsFromWizardSuggestPayload(next, existingSkillIds);
+      return jsonWithRequestId(requestId, deduped, response.status);
     }
   } catch {
     try {
@@ -459,6 +466,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const timeoutMs = resolveWizardTimeoutMs();
+    const existingSkillIds = await loadExistingSkillIdsForProfile(supabase, user.id);
     const contentType = request.headers.get('content-type') || '';
     const engineMode = resolveCvImportEngineMode(request);
     const proxyToPython = shouldProxyToPython(contentType, engineMode);
@@ -466,7 +474,13 @@ export async function POST(request: NextRequest) {
     if (proxyToPython) {
       try {
         const response = await proxyCvRequestToPython(request, '/wizard-suggest', timeoutMs);
-        return await attachEngineMetadata(response, requestId, engineMode, 'python');
+        return await attachEngineMetadata(
+          response,
+          requestId,
+          engineMode,
+          'python',
+          existingSkillIds
+        );
       } catch (error) {
         if (error instanceof Error && error.message.includes('timed out')) {
           return jsonWithRequestId(
@@ -518,7 +532,13 @@ export async function POST(request: NextRequest) {
       const extractStartedAt = Date.now();
       const extractResponse = await proxyCvRequestToPython(request, '/extract', timeoutMs);
       if (!extractResponse.ok) {
-        return await attachEngineMetadata(extractResponse, requestId, engineMode, 'gemini');
+        return await attachEngineMetadata(
+          extractResponse,
+          requestId,
+          engineMode,
+          'gemini',
+          existingSkillIds
+        );
       }
       extractDurationMs = Date.now() - extractStartedAt;
 
@@ -585,13 +605,17 @@ export async function POST(request: NextRequest) {
             totalMs: Date.now() - routeStartedAt,
           }),
         };
+        const filteredNoTextPayload = filterExistingSkillsFromWizardSuggestResponse(
+          timedNoTextPayload,
+          existingSkillIds
+        );
 
         return jsonWithRequestId(
           requestId,
           decorateMetadata(
             {
-              ...timedNoTextPayload,
-              metadata: attachReviewHintsMetadata(timedNoTextPayload.metadata),
+              ...filteredNoTextPayload,
+              metadata: attachReviewHintsMetadata(filteredNoTextPayload.metadata),
             },
             engineMode,
             'gemini'
@@ -656,13 +680,17 @@ export async function POST(request: NextRequest) {
             totalMs: Date.now() - routeStartedAt,
           }),
         };
+        const filteredTimedPayload = filterExistingSkillsFromWizardSuggestResponse(
+          timedPayload,
+          existingSkillIds
+        );
 
         return jsonWithRequestId(
           requestId,
           decorateMetadata(
             {
-              ...timedPayload,
-              metadata: attachReviewHintsMetadata(timedPayload.metadata),
+              ...filteredTimedPayload,
+              metadata: attachReviewHintsMetadata(filteredTimedPayload.metadata),
             },
             engineMode,
             'gemini'
@@ -714,17 +742,21 @@ export async function POST(request: NextRequest) {
             totalMs: Date.now() - routeStartedAt,
           }),
         };
+        const filteredTimedFallbackPayload = filterExistingSkillsFromWizardSuggestResponse(
+          timedFallbackPayload,
+          existingSkillIds
+        );
 
         if (error instanceof GeminiSuggestError) {
-          await markFallbackSuccess(error, timedFallbackPayload);
+          await markFallbackSuccess(error, filteredTimedFallbackPayload);
         }
 
         return jsonWithRequestId(
           requestId,
           decorateMetadata(
             {
-              ...timedFallbackPayload,
-              metadata: attachReviewHintsMetadata(timedFallbackPayload.metadata),
+              ...filteredTimedFallbackPayload,
+              metadata: attachReviewHintsMetadata(filteredTimedFallbackPayload.metadata),
             },
             engineMode,
             'typescript'
@@ -761,13 +793,17 @@ export async function POST(request: NextRequest) {
         totalMs: Date.now() - routeStartedAt,
       }),
     };
+    const filteredTimedPayload = filterExistingSkillsFromWizardSuggestResponse(
+      timedPayload,
+      existingSkillIds
+    );
 
     return jsonWithRequestId(
       requestId,
       decorateMetadata(
         {
-          ...timedPayload,
-          metadata: attachReviewHintsMetadata(timedPayload.metadata),
+          ...filteredTimedPayload,
+          metadata: attachReviewHintsMetadata(filteredTimedPayload.metadata),
         },
         engineMode,
         'typescript'

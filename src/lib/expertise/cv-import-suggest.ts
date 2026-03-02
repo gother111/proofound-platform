@@ -145,6 +145,7 @@ export const CvImportCandidateSchema = z.object({
   confidence: z.number().min(0).max(1),
   suggestions: z.array(CvImportSuggestionSchema),
   unmapped_candidate: z.boolean(),
+  already_in_profile: z.boolean().optional(),
 });
 
 export const CvImportDocumentResultSchema = z.object({

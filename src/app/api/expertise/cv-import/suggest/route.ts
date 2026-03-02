@@ -22,6 +22,11 @@ import {
   suggestSkillsWithGemini,
   type GeminiSourceDocument,
 } from '@/lib/expertise/gemini/skill-extractor';
+import {
+  filterExistingSkillsFromSuggestResponse,
+  loadExistingSkillIdsForProfile,
+  maybeFilterExistingSkillsFromSuggestPayload,
+} from '@/lib/expertise/cv-import-existing-skills-filter';
 import { proxyCvRequestToPython } from '@/lib/expertise/python-cv-proxy';
 import { createClient } from '@/lib/supabase/server';
 
@@ -254,7 +259,8 @@ async function attachEngineMetadata(
   response: NextResponse,
   requestId: string,
   mode: CvImportEngineMode,
-  engineUsed: EngineUsed
+  engineUsed: EngineUsed,
+  existingSkillIds: ReadonlySet<string>
 ): Promise<NextResponse> {
   try {
     const payload = await response.clone().json();
@@ -274,7 +280,8 @@ async function attachEngineMetadata(
         },
       };
 
-      return jsonWithRequestId(requestId, next, response.status);
+      const deduped = maybeFilterExistingSkillsFromSuggestPayload(next, existingSkillIds);
+      return jsonWithRequestId(requestId, deduped, response.status);
     }
   } catch {
     try {
@@ -381,6 +388,7 @@ export async function POST(request: NextRequest) {
       process.env.CV_IMPORT_SERVER_TIMEOUT_MS,
       DEFAULT_SERVER_TIMEOUT_MS
     );
+    const existingSkillIds = await loadExistingSkillIdsForProfile(supabase, user.id);
     const contentType = request.headers.get('content-type') || '';
     const engineMode = resolveCvImportEngineMode(request);
     const proxyToPython = shouldProxyToPython(contentType, engineMode);
@@ -388,7 +396,13 @@ export async function POST(request: NextRequest) {
     if (proxyToPython) {
       try {
         const response = await proxyCvRequestToPython(request, '/suggest', timeoutMs);
-        return await attachEngineMetadata(response, requestId, engineMode, 'python');
+        return await attachEngineMetadata(
+          response,
+          requestId,
+          engineMode,
+          'python',
+          existingSkillIds
+        );
       } catch (error) {
         if (error instanceof Error && error.message.includes('timed out')) {
           return jsonWithRequestId(
@@ -438,7 +452,13 @@ export async function POST(request: NextRequest) {
     if (contentType.startsWith('multipart/form-data') && engineMode === 'gemini') {
       const extractResponse = await proxyCvRequestToPython(request, '/extract', timeoutMs);
       if (!extractResponse.ok) {
-        return await attachEngineMetadata(extractResponse, requestId, engineMode, 'gemini');
+        return await attachEngineMetadata(
+          extractResponse,
+          requestId,
+          engineMode,
+          'gemini',
+          existingSkillIds
+        );
       }
       const extractPayload = ExtractResponseSchema.parse(await extractResponse.json());
 
@@ -494,13 +514,17 @@ export async function POST(request: NextRequest) {
             currency: 'SEK',
           },
         };
+        const filteredNoTextPayload = filterExistingSkillsFromSuggestResponse(
+          noTextPayload,
+          existingSkillIds
+        );
 
         return jsonWithRequestId(
           requestId,
           decorateMetadata(
             {
-              ...noTextPayload,
-              metadata: attachReviewHintsMetadata(noTextPayload.metadata),
+              ...filteredNoTextPayload,
+              metadata: attachReviewHintsMetadata(filteredNoTextPayload.metadata),
             },
             engineMode,
             'gemini'
@@ -532,13 +556,17 @@ export async function POST(request: NextRequest) {
             failedDocuments,
           }),
         };
+        const filteredMergedPayload = filterExistingSkillsFromSuggestResponse(
+          mergedPayload,
+          existingSkillIds
+        );
 
         return jsonWithRequestId(
           requestId,
           decorateMetadata(
             {
-              ...mergedPayload,
-              metadata: attachReviewHintsMetadata(mergedPayload.metadata),
+              ...filteredMergedPayload,
+              metadata: attachReviewHintsMetadata(filteredMergedPayload.metadata),
             },
             engineMode,
             'gemini'
@@ -590,17 +618,21 @@ export async function POST(request: NextRequest) {
           }),
           metadata: buildGeminiFallbackMetadata(deterministic.metadata, fallbackReason),
         };
+        const filteredFallbackPayload = filterExistingSkillsFromSuggestResponse(
+          mergedFallbackPayload,
+          existingSkillIds
+        );
 
         if (error instanceof GeminiSuggestError) {
-          await markFallbackSuccess(error, mergedFallbackPayload);
+          await markFallbackSuccess(error, filteredFallbackPayload);
         }
 
         return jsonWithRequestId(
           requestId,
           decorateMetadata(
             {
-              ...mergedFallbackPayload,
-              metadata: attachReviewHintsMetadata(mergedFallbackPayload.metadata),
+              ...filteredFallbackPayload,
+              metadata: attachReviewHintsMetadata(filteredFallbackPayload.metadata),
             },
             engineMode,
             'typescript'
@@ -629,13 +661,17 @@ export async function POST(request: NextRequest) {
       ),
       timeoutMs
     );
+    const filteredDeterministic = filterExistingSkillsFromSuggestResponse(
+      deterministic,
+      existingSkillIds
+    );
 
     return jsonWithRequestId(
       requestId,
       decorateMetadata(
         {
-          ...deterministic,
-          metadata: attachReviewHintsMetadata(deterministic.metadata),
+          ...filteredDeterministic,
+          metadata: attachReviewHintsMetadata(filteredDeterministic.metadata),
         },
         engineMode,
         'typescript'

@@ -46,6 +46,7 @@ interface ApiCandidate {
   confidence: number;
   suggestions: ApiSuggestion[];
   unmapped_candidate: boolean;
+  already_in_profile?: boolean;
 }
 
 interface ApiDocumentResult {
@@ -381,7 +382,7 @@ function normalizeApiSuggestResponse(value: unknown): ApiSuggestResponse | null 
   }
 
   const documents: ApiDocumentResult[] = value.documents
-    .map((document, documentIndex) => {
+    .map((document, documentIndex): ApiDocumentResult | null => {
       if (!isRecord(document)) {
         return null;
       }
@@ -398,7 +399,7 @@ function normalizeApiSuggestResponse(value: unknown): ApiSuggestResponse | null 
 
       const candidatesRaw = Array.isArray(document.candidates) ? document.candidates : [];
       const candidates: ApiCandidate[] = candidatesRaw
-        .map((candidate, candidateIndex) => {
+        .map((candidate, candidateIndex): ApiCandidate | null => {
           if (!isRecord(candidate)) {
             return null;
           }
@@ -426,7 +427,7 @@ function normalizeApiSuggestResponse(value: unknown): ApiSuggestResponse | null 
 
           const suggestions = Array.isArray(candidate.suggestions)
             ? candidate.suggestions
-                .map((suggestion) => {
+                .map((suggestion): ApiSuggestion | null => {
                   if (!isRecord(suggestion)) {
                     return null;
                   }
@@ -470,6 +471,7 @@ function normalizeApiSuggestResponse(value: unknown): ApiSuggestResponse | null 
               typeof candidate.unmapped_candidate === 'boolean'
                 ? candidate.unmapped_candidate
                 : suggestions.length === 0,
+            already_in_profile: Boolean(candidate.already_in_profile),
           };
         })
         .filter((candidate): candidate is ApiCandidate => Boolean(candidate));
@@ -927,6 +929,7 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
             manual_options: [],
             manual_loading: false,
             show_all_suggestions: false,
+            already_in_profile: Boolean(candidate.already_in_profile),
           })),
         };
       });
@@ -1040,6 +1043,8 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
         ...current,
         manual_options: manualOptions,
         selected_skill_ids: selectedSkillIds,
+        already_in_profile: false,
+        unmapped_candidate: selectedSkillIds.length === 0,
       };
     });
   };
@@ -1321,6 +1326,10 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
                       updateCandidate(document.document_id, candidateId, (current) => ({
                         ...current,
                         selected_skill_ids: selectedSkillIds,
+                        already_in_profile:
+                          selectedSkillIds.length > 0 ? false : current.already_in_profile,
+                        unmapped_candidate:
+                          selectedSkillIds.length > 0 ? false : current.unmapped_candidate,
                       }));
                     }}
                     onManualQueryChange={(candidateId, value) => {
