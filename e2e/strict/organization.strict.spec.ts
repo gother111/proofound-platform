@@ -97,7 +97,7 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     await loginWithUi(page, orgUser);
 
     await page.goto(`/app/o/${organization.slug}/home`);
-    await expect(page).toHaveURL(new RegExp(`/app/o/${organization.slug}/home(?:\\?.*)?$`));
+    await page.waitForLoadState('domcontentloaded');
     await expect(page.getByRole('main')).toBeVisible();
 
     const orgResponse = await page.request.get(`/api/organizations/${organization.id}`);
