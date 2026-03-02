@@ -3,7 +3,7 @@
     "api/python/cv_import.py": {
       "maxDuration": 60,
       "includeFiles": "python_cv/data/skills_db.json",
-      "excludeFiles": "{.next/**,node_modules/**,.venv/**,.venv311/**,data/**,artifacts/**,docs/**,e2e/**,tests/**,output/**,playwright-report/**,test-results/**,project/**,agent/**}"
+      "excludeFiles": "{.next/**,node_modules/**,.venv/**,.venv311/**,data/**,artifacts/**,docs/**,e2e/**,tests/**,output/**,playwright-report/**,test-results/**,project/**,agent/**,src/**,scripts/**,supabase/**,emails/**,.github/**,drizzle/**,migrations/**,public/**,*.md,*.png,*.jpg,*.jpeg,*.sql}"
     }
   },
   "crons": [
