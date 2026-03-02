@@ -3,8 +3,21 @@
 import { existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 
-if (!existsSync('.git')) {
-  console.log('Skipping husky install: .git directory not found.');
+function isInsideGitWorkTree() {
+  const result = spawnSync('git', ['rev-parse', '--is-inside-work-tree'], {
+    stdio: 'pipe',
+    encoding: 'utf8',
+  });
+
+  if (result.status !== 0) {
+    return false;
+  }
+
+  return result.stdout.trim() === 'true';
+}
+
+if (!existsSync('.git') || !isInsideGitWorkTree()) {
+  console.log('Skipping husky install: not a valid git worktree.');
   process.exit(0);
 }
 
