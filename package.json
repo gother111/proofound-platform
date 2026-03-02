@@ -56,6 +56,8 @@
     "docs:freshness": "node ./scripts/docs-freshness-check.mjs",
     "log:session": "node ./scripts/new-session-log.mjs session",
     "log:change": "node ./scripts/new-session-log.mjs change",
+    "accounts:sweep:dry-run": "node ./scripts/sweep-test-accounts.mjs --mode dry-run",
+    "accounts:sweep:apply": "node ./scripts/sweep-test-accounts.mjs --mode apply",
     "test:smoke:gap-service": "tsx scripts/smoke-skill-gaps.ts",
     "test:smoke:learning": "tsx scripts/smoke-learning-provider.ts",
     "test:taxonomy:coverage": "tsx scripts/check-taxonomy-coverage.ts",

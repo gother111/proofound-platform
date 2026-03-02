@@ -1,0 +1,12 @@
+{
+  "ticket": "PRO-126",
+  "generatedAt": "2026-03-02T20:26:48.090Z",
+  "dryRunDirectory": "/absolute/path/to/artifacts/account-sweep/<timestamp>__dry-run",
+  "notes": "Fill approved IDs only after review. Candidate IDs are listed in the dry-run files.",
+  "candidateDeleteAuthCount": 0,
+  "candidateDeleteOrphanCount": 0,
+  "approveDeleteAuthUserIds": [],
+  "approveDeleteOrphanProfileIds": [],
+  "approvedBy": "",
+  "approvedAt": ""
+}
