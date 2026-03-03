@@ -618,13 +618,13 @@ CV_IMPORT_GEMINI_USD_TO_SEK_RATE=10.5
 **Format**:
 
 ```env
-CV_IMPORT_GEMINI_MODEL_DEFAULT=gemini-2.5-flash-lite
+CV_IMPORT_GEMINI_MODEL_DEFAULT=gemini-3.1-flash-lite
 CV_IMPORT_GEMINI_MODEL_FALLBACK=gemini-2.5-flash
 ```
 
 **Default**:
 
-- Default model: `gemini-2.5-flash-lite`
+- Default model: `gemini-3.1-flash-lite`
 - Fallback model: `gemini-2.5-flash`
 
 ---

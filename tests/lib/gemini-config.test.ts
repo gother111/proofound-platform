@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import {
   resolveGeminiAdaptiveMaxOutputTokens,
+  resolveGeminiModelDefault,
   resolveGeminiTaxonomyShortlistDocumentTimeoutMs,
   resolveGeminiTaxonomyShortlistQueryTimeoutMs,
   resolveGeminiTaxonomyShortlistSeedLimit,
@@ -12,6 +13,7 @@ describe('gemini config helpers', () => {
   const originalMax = process.env.CV_IMPORT_GEMINI_MAX_OUTPUT_TOKENS;
   const originalShort = process.env.CV_IMPORT_GEMINI_SHORT_TEXT_MAX_OUTPUT_TOKENS;
   const originalGuided = process.env.CV_IMPORT_GEMINI_TAXONOMY_GUIDED;
+  const originalDefaultModel = process.env.CV_IMPORT_GEMINI_MODEL_DEFAULT;
   const originalSeedLimit = process.env.CV_IMPORT_GEMINI_SHORTLIST_SEED_LIMIT;
   const originalSeedTimeout = process.env.CV_IMPORT_GEMINI_SHORTLIST_QUERY_TIMEOUT_MS;
   const originalDocumentTimeout = process.env.CV_IMPORT_GEMINI_SHORTLIST_DOCUMENT_TIMEOUT_MS;
@@ -33,6 +35,12 @@ describe('gemini config helpers', () => {
       delete process.env.CV_IMPORT_GEMINI_TAXONOMY_GUIDED;
     } else {
       process.env.CV_IMPORT_GEMINI_TAXONOMY_GUIDED = originalGuided;
+    }
+
+    if (originalDefaultModel === undefined) {
+      delete process.env.CV_IMPORT_GEMINI_MODEL_DEFAULT;
+    } else {
+      process.env.CV_IMPORT_GEMINI_MODEL_DEFAULT = originalDefaultModel;
     }
 
     if (originalSeedLimit === undefined) {
@@ -59,7 +67,7 @@ describe('gemini config helpers', () => {
     process.env.CV_IMPORT_GEMINI_SHORT_TEXT_MAX_OUTPUT_TOKENS = '700';
 
     expect(resolveGeminiAdaptiveMaxOutputTokens(3000)).toBe(700);
-    expect(resolveGeminiAdaptiveMaxOutputTokens(10000)).toBe(1190);
+    expect(resolveGeminiAdaptiveMaxOutputTokens(10000)).toBe(1260);
     expect(resolveGeminiAdaptiveMaxOutputTokens(25000)).toBe(1400);
   });
 
@@ -69,6 +77,11 @@ describe('gemini config helpers', () => {
 
     process.env.CV_IMPORT_GEMINI_TAXONOMY_GUIDED = 'false';
     expect(resolveGeminiTaxonomyGuidedEnabled()).toBe(false);
+  });
+
+  it('uses gemini-3.1-flash-lite as default model when env override is unset', () => {
+    delete process.env.CV_IMPORT_GEMINI_MODEL_DEFAULT;
+    expect(resolveGeminiModelDefault()).toBe('gemini-3.1-flash-lite');
   });
 
   it('uses conservative shortlist defaults and parses explicit timeout/seed overrides', () => {

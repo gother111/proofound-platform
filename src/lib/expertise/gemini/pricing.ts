@@ -5,12 +5,14 @@ type GeminiTokenPricingUsd = {
   outputPerMillion: number;
 };
 
-const DEFAULT_MODEL_PRICING_USD: Record<string, GeminiTokenPricingUsd> = {
-  'gemini-2.5-flash-lite': {
+type GeminiPricingFamily = 'flash-lite' | 'flash';
+
+const DEFAULT_FAMILY_PRICING_USD: Record<GeminiPricingFamily, GeminiTokenPricingUsd> = {
+  'flash-lite': {
     inputPerMillion: 0.1,
     outputPerMillion: 0.4,
   },
-  'gemini-2.5-flash': {
+  flash: {
     inputPerMillion: 0.3,
     outputPerMillion: 2.5,
   },
@@ -31,45 +33,50 @@ function normalizeModel(model: string): string {
   return model.trim().toLowerCase();
 }
 
-function resolvePricingOverride(model: string): GeminiTokenPricingUsd | null {
+function resolvePricingFamily(model: string): GeminiPricingFamily | null {
   const normalized = normalizeModel(model);
-  if (normalized === 'gemini-2.5-flash-lite') {
-    return {
-      inputPerMillion: parsePositiveNumber(
-        process.env.CV_IMPORT_GEMINI_FLASH_LITE_INPUT_USD_PER_MILLION,
-        DEFAULT_MODEL_PRICING_USD[normalized].inputPerMillion
-      ),
-      outputPerMillion: parsePositiveNumber(
-        process.env.CV_IMPORT_GEMINI_FLASH_LITE_OUTPUT_USD_PER_MILLION,
-        DEFAULT_MODEL_PRICING_USD[normalized].outputPerMillion
-      ),
-    };
+  if (normalized.includes('flash-lite')) {
+    return 'flash-lite';
   }
-
-  if (normalized === 'gemini-2.5-flash') {
-    return {
-      inputPerMillion: parsePositiveNumber(
-        process.env.CV_IMPORT_GEMINI_FLASH_INPUT_USD_PER_MILLION,
-        DEFAULT_MODEL_PRICING_USD[normalized].inputPerMillion
-      ),
-      outputPerMillion: parsePositiveNumber(
-        process.env.CV_IMPORT_GEMINI_FLASH_OUTPUT_USD_PER_MILLION,
-        DEFAULT_MODEL_PRICING_USD[normalized].outputPerMillion
-      ),
-    };
+  if (normalized.includes('flash')) {
+    return 'flash';
   }
-
   return null;
 }
 
-export function resolveModelPricingUsd(model: string): GeminiTokenPricingUsd {
-  const normalized = normalizeModel(model);
-  const override = resolvePricingOverride(normalized);
-  if (override) {
-    return override;
+function resolvePricingOverride(family: GeminiPricingFamily): GeminiTokenPricingUsd {
+  if (family === 'flash-lite') {
+    return {
+      inputPerMillion: parsePositiveNumber(
+        process.env.CV_IMPORT_GEMINI_FLASH_LITE_INPUT_USD_PER_MILLION,
+        DEFAULT_FAMILY_PRICING_USD[family].inputPerMillion
+      ),
+      outputPerMillion: parsePositiveNumber(
+        process.env.CV_IMPORT_GEMINI_FLASH_LITE_OUTPUT_USD_PER_MILLION,
+        DEFAULT_FAMILY_PRICING_USD[family].outputPerMillion
+      ),
+    };
   }
 
-  return DEFAULT_MODEL_PRICING_USD[normalized] || DEFAULT_MODEL_PRICING_USD['gemini-2.5-flash'];
+  return {
+    inputPerMillion: parsePositiveNumber(
+      process.env.CV_IMPORT_GEMINI_FLASH_INPUT_USD_PER_MILLION,
+      DEFAULT_FAMILY_PRICING_USD[family].inputPerMillion
+    ),
+    outputPerMillion: parsePositiveNumber(
+      process.env.CV_IMPORT_GEMINI_FLASH_OUTPUT_USD_PER_MILLION,
+      DEFAULT_FAMILY_PRICING_USD[family].outputPerMillion
+    ),
+  };
+}
+
+export function resolveModelPricingUsd(model: string): GeminiTokenPricingUsd {
+  const family = resolvePricingFamily(model);
+  if (family) {
+    return resolvePricingOverride(family);
+  }
+
+  return DEFAULT_FAMILY_PRICING_USD.flash;
 }
 
 export function computeGeminiCostOre(params: {

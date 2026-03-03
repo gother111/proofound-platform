@@ -163,7 +163,7 @@ describe('POST /api/expertise/auto-suggest', () => {
       metadata: {
         ...buildSuggestPayload().metadata,
         ai_provider: 'gemini' as const,
-        ai_model: 'gemini-2.5-flash-lite',
+        ai_model: 'gemini-3.1-flash-lite',
         ai_key_slot: 'primary' as const,
         ai_fallback_reason: null,
         cost_ore: 12,
