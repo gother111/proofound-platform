@@ -17,19 +17,23 @@ export interface ImportActionSummary {
 
 interface ImportActionBannerProps {
   summary: ImportActionSummary;
-  onApplyRecommended: () => void;
-  onReviewAll: () => void;
+  onApplyReviewed: () => void;
+  onApplySkillsOnly: () => void;
+  onExpandAll: () => void;
   isApplying?: boolean;
   applyDisabled?: boolean;
+  applySkillsOnlyDisabled?: boolean;
   className?: string;
 }
 
 export function ImportActionBanner({
   summary,
-  onApplyRecommended,
-  onReviewAll,
+  onApplyReviewed,
+  onApplySkillsOnly,
+  onExpandAll,
   isApplying = false,
   applyDisabled = false,
+  applySkillsOnlyDisabled = false,
   className,
 }: ImportActionBannerProps) {
   return (
@@ -46,7 +50,7 @@ export function ImportActionBanner({
             Analysis summary and next step
           </p>
           <p className="text-sm text-muted-foreground">
-            Apply recommended skills now, or review all extracted sections before applying.
+            Finish review and apply all approved entries, or apply approved skills only.
           </p>
           <div className="flex flex-wrap gap-2 pt-1">
             <Badge variant="secondary">Skills selected: {summary.skillsSelected}</Badge>
@@ -60,16 +64,24 @@ export function ImportActionBanner({
 
         <div className="flex flex-wrap gap-2">
           <Button
-            onClick={onApplyRecommended}
+            onClick={onApplyReviewed}
             disabled={applyDisabled || isApplying}
             className="min-w-[210px]"
           >
             <CheckCircle2 className="mr-2 h-4 w-4" />
-            {isApplying ? 'Applying...' : 'Apply Recommended Skills'}
+            {isApplying ? 'Applying...' : 'Finish Review & Apply'}
           </Button>
-          <Button variant="outline" onClick={onReviewAll} className="min-w-[200px]">
+          <Button
+            variant="outline"
+            onClick={onApplySkillsOnly}
+            className="min-w-[180px]"
+            disabled={applySkillsOnlyDisabled || isApplying}
+          >
+            Apply skills only
+          </Button>
+          <Button variant="outline" onClick={onExpandAll} className="min-w-[200px]">
             <ListChecks className="mr-2 h-4 w-4" />
-            Review All Extracted Sections
+            Expand all sections
           </Button>
         </div>
       </div>

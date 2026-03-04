@@ -1,9 +1,15 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+
+type StatusBadge = {
+  label: string;
+  variant?: 'secondary' | 'outline' | 'destructive';
+};
 
 interface EntitySummaryCardProps {
   title: string;
@@ -12,6 +18,8 @@ interface EntitySummaryCardProps {
   summary: string;
   children: React.ReactNode;
   defaultOpen?: boolean;
+  expandSignal?: number;
+  statusBadges?: StatusBadge[];
   className?: string;
 }
 
@@ -22,16 +30,43 @@ export function EntitySummaryCard({
   summary,
   children,
   defaultOpen = false,
+  expandSignal,
+  statusBadges = [],
   className,
 }: EntitySummaryCardProps) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  useEffect(() => {
+    if (defaultOpen) {
+      setIsOpen(true);
+    }
+  }, [defaultOpen]);
+
+  useEffect(() => {
+    if (typeof expandSignal === 'number') {
+      setIsOpen(true);
+    }
+  }, [expandSignal]);
+
   return (
-    <details className={cn('group rounded-lg border bg-background', className)} open={defaultOpen}>
+    <details
+      className={cn('group rounded-lg border bg-background', className)}
+      open={isOpen}
+      onToggle={(event) => {
+        setIsOpen((event.currentTarget as HTMLDetailsElement).open);
+      }}
+    >
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
         <div className="space-y-1">
           <p className="text-sm font-semibold text-foreground">{title}</p>
           <p className="text-xs text-muted-foreground">{summary}</p>
         </div>
         <div className="flex items-center gap-2">
+          {statusBadges.map((badge) => (
+            <Badge key={badge.label} variant={badge.variant || 'outline'}>
+              {badge.label}
+            </Badge>
+          ))}
           <Badge variant="secondary">
             {approvedCount}/{totalCount} approved
           </Badge>

@@ -978,6 +978,19 @@ function formatRelativeTimeLabel(dateIso: string | undefined): string | undefine
   })}`;
 }
 
+function buildSectionStatusBadges(totalCount: number, hasParseWarning: boolean) {
+  const badges: Array<{ label: string; variant?: 'secondary' | 'outline' | 'destructive' }> = [];
+  if (totalCount > 0) {
+    badges.push({ label: `Loaded ${totalCount} ${totalCount === 1 ? 'entry' : 'entries'}` });
+  } else {
+    badges.push({ label: 'No entries found', variant: 'outline' });
+  }
+  if (hasParseWarning) {
+    badges.push({ label: 'Has parse warnings', variant: 'destructive' });
+  }
+  return badges;
+}
+
 async function trackCvImportUiEvent(action: string, properties?: Record<string, unknown>) {
   try {
     await apiFetch('/api/analytics/track', {
@@ -1006,7 +1019,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
   const [isApplying, setIsApplying] = useState(false);
   const [apiMetadata, setApiMetadata] = useState<ApiMetadata | null>(null);
   const [showAdvancedDiagnostics, setShowAdvancedDiagnostics] = useState(false);
-  const [reviewAllSections, setReviewAllSections] = useState(false);
+  const [sectionExpandSignal, setSectionExpandSignal] = useState(0);
   const [openSkillPicker, setOpenSkillPicker] = useState<{
     documentId: string;
     candidateId: string;
@@ -1125,7 +1138,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
 
       setDocuments(parsedDocuments);
       setApiMetadata(null);
-      setReviewAllSections(false);
+      setSectionExpandSignal(0);
       setOpenSkillPicker(null);
       clearProgressResetTimer();
       setAnalyzeProgress(createIdleAnalyzeProgressState());
@@ -1350,7 +1363,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
 
       setRunningProgress('finalizing', 92, 'Finalizing results...');
       setDocuments(analyzedDocuments);
-      setReviewAllSections(false);
+      setSectionExpandSignal(0);
       setOpenSkillPicker(null);
 
       const totalSkillCandidates = payload.documents.reduce(
@@ -1675,10 +1688,9 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       0
     );
 
-    const confirmLabel =
-      scope === 'skills_only'
-        ? `Apply ${totalSkills} skill${totalSkills === 1 ? '' : 's'} to your profile now?`
-        : `Apply import updates now?\n\nSkills: ${totalSkills}\nWork experiences: ${totalWork}\nLearning experiences: ${totalLearning}\nVolunteering entries: ${totalVolunteering}\nLanguages: ${totalLanguages}`;
+    const confirmTitle =
+      scope === 'skills_only' ? 'Apply skills only now?' : 'Finish review and apply now?';
+    const confirmLabel = `${confirmTitle}\n\nSkills approved: ${totalSkills}\nWork approved: ${totalWork}\nLearning approved: ${totalLearning}\nVolunteering approved: ${totalVolunteering}\nLanguages approved: ${totalLanguages}`;
 
     if (typeof window !== 'undefined' && !window.confirm(confirmLabel)) {
       return;
@@ -1754,6 +1766,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       document.languages.some((entry) => entry.approved);
     return hasSkillSelection || hasEntities;
   });
+  const canApplySkillsOnly = approvedSkillIds.length > 0;
 
   return (
     <div className="space-y-6">
@@ -1846,10 +1859,12 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         <ImportActionBanner
           summary={reviewSummary}
           isApplying={isApplying}
-          applyDisabled={!canApplyApproved || approvedSkillIds.length === 0}
-          onApplyRecommended={() => applyApproved('skills_only')}
-          onReviewAll={() => {
-            setReviewAllSections(true);
+          applyDisabled={!canApplyApproved}
+          applySkillsOnlyDisabled={!canApplySkillsOnly}
+          onApplyReviewed={() => applyApproved('all')}
+          onApplySkillsOnly={() => applyApproved('skills_only')}
+          onExpandAll={() => {
+            setSectionExpandSignal((previous) => previous + 1);
             void trackCvImportUiEvent('cv_review_unmapped_remaining', {
               remaining: reviewSummary.skillsNeedingMapping,
             });
@@ -1857,159 +1872,179 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         />
       )}
 
-      {documents.map((document) => (
-        <Card key={document.document_id}>
-          <CardHeader>
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <CardTitle className="text-lg">{document.file_name}</CardTitle>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => exportDocument(document)}
-                disabled={
-                  collectApprovedSkillIds(document).length === 0 &&
-                  document.work_experiences.every((entry) => !entry.approved) &&
-                  document.learning_experiences.every((entry) => !entry.approved) &&
-                  document.volunteering.every((entry) => !entry.approved) &&
-                  document.languages.every((entry) => !entry.approved)
-                }
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Export This CV
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {document.parse_error ? (
-              <p className="text-sm text-red-600">{document.parse_error}</p>
-            ) : (
-              <>
-                <details className="rounded-md border p-3">
-                  <summary className="cursor-pointer text-sm font-medium">
-                    Extracted text preview
-                  </summary>
-                  <pre className="mt-3 max-h-56 overflow-auto whitespace-pre-wrap text-xs text-muted-foreground">
-                    {document.parsed_text}
-                  </pre>
-                </details>
+      {documents.map((document) => {
+        const hasParseWarning = Boolean(document.parse_error_code);
+        const workStatusBadges = buildSectionStatusBadges(
+          document.work_experiences.length,
+          hasParseWarning
+        );
+        const learningStatusBadges = buildSectionStatusBadges(
+          document.learning_experiences.length,
+          hasParseWarning
+        );
+        const volunteeringStatusBadges = buildSectionStatusBadges(
+          document.volunteering.length,
+          hasParseWarning
+        );
+        const languageStatusBadges = buildSectionStatusBadges(
+          document.languages.length,
+          hasParseWarning
+        );
 
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold text-foreground">Skills to review</p>
-                    <Badge variant="secondary">
-                      {document.skill_candidates.filter((candidate) => candidate.approved).length}/
-                      {document.skill_candidates.length} selected
-                    </Badge>
+        return (
+          <Card key={document.document_id}>
+            <CardHeader>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <CardTitle className="text-lg">{document.file_name}</CardTitle>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => exportDocument(document)}
+                  disabled={
+                    collectApprovedSkillIds(document).length === 0 &&
+                    document.work_experiences.every((entry) => !entry.approved) &&
+                    document.learning_experiences.every((entry) => !entry.approved) &&
+                    document.volunteering.every((entry) => !entry.approved) &&
+                    document.languages.every((entry) => !entry.approved)
+                  }
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Export This CV
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {document.parse_error ? (
+                <p className="text-sm text-red-600">{document.parse_error}</p>
+              ) : (
+                <>
+                  <details className="rounded-md border p-3">
+                    <summary className="cursor-pointer text-sm font-medium">
+                      Extracted text preview
+                    </summary>
+                    <pre className="mt-3 max-h-56 overflow-auto whitespace-pre-wrap text-xs text-muted-foreground">
+                      {document.parsed_text}
+                    </pre>
+                  </details>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-foreground">Skills to review</p>
+                      <Badge variant="secondary">
+                        {document.skill_candidates.filter((candidate) => candidate.approved).length}
+                        /{document.skill_candidates.length} selected
+                      </Badge>
+                    </div>
+
+                    <SkillReviewPanel
+                      candidates={document.skill_candidates.map((candidate) => ({
+                        ...candidate,
+                        manual_last_search_at: formatRelativeTimeLabel(
+                          candidate.manual_last_search_at
+                        ),
+                      }))}
+                      openPickerId={
+                        openSkillPicker?.documentId === document.document_id
+                          ? openSkillPicker.candidateId
+                          : null
+                      }
+                      onOpenPicker={(candidateId) =>
+                        setOpenSkillPicker(
+                          candidateId
+                            ? {
+                                documentId: document.document_id,
+                                candidateId,
+                              }
+                            : null
+                        )
+                      }
+                      onToggleApproved={(candidateId, checked) => {
+                        updateDocument(document.document_id, (current) => ({
+                          ...current,
+                          skill_candidates: current.skill_candidates.map((item) =>
+                            item.candidate_id === candidateId
+                              ? { ...item, approved: checked }
+                              : item
+                          ),
+                        }));
+                      }}
+                      onRawSkillChange={(candidateId, value) => {
+                        updateDocument(document.document_id, (current) => ({
+                          ...current,
+                          skill_candidates: current.skill_candidates.map((item) =>
+                            item.candidate_id === candidateId
+                              ? {
+                                  ...item,
+                                  raw_skill_text: value,
+                                  manual_search_query: value,
+                                }
+                              : item
+                          ),
+                        }));
+                      }}
+                      onCategoryChange={(candidateId, value) => {
+                        updateDocument(document.document_id, (current) => ({
+                          ...current,
+                          skill_candidates: current.skill_candidates.map((item) =>
+                            item.candidate_id === candidateId
+                              ? { ...item, category: value as CandidateCategory }
+                              : item
+                          ),
+                        }));
+                      }}
+                      onSelectSkillIds={(candidateId, selectedSkillIds) => {
+                        updateDocument(document.document_id, (current) => ({
+                          ...current,
+                          skill_candidates: current.skill_candidates.map((item) =>
+                            item.candidate_id === candidateId
+                              ? {
+                                  ...item,
+                                  selected_skill_ids: selectedSkillIds,
+                                  approved: selectedSkillIds.length > 0 ? true : item.approved,
+                                  already_in_profile:
+                                    selectedSkillIds.length > 0 ? false : item.already_in_profile,
+                                  unmapped_candidate:
+                                    selectedSkillIds.length > 0 ? false : item.unmapped_candidate,
+                                }
+                              : item
+                          ),
+                        }));
+                      }}
+                      onManualQueryChange={(candidateId, value) => {
+                        updateDocument(document.document_id, (current) => ({
+                          ...current,
+                          skill_candidates: current.skill_candidates.map((item) =>
+                            item.candidate_id === candidateId
+                              ? { ...item, manual_search_query: value }
+                              : item
+                          ),
+                        }));
+                      }}
+                      onToggleSuggestions={(candidateId) => {
+                        updateDocument(document.document_id, (current) => ({
+                          ...current,
+                          skill_candidates: current.skill_candidates.map((item) =>
+                            item.candidate_id === candidateId
+                              ? {
+                                  ...item,
+                                  show_all_suggestions: !item.show_all_suggestions,
+                                }
+                              : item
+                          ),
+                        }));
+                      }}
+                      onFind={(candidateId) =>
+                        searchManualMappings(document.document_id, candidateId)
+                      }
+                      onSelectMatch={(candidateId, option) =>
+                        selectAtlasMatch(document.document_id, candidateId, option, 'select')
+                      }
+                      onReplaceMatch={(candidateId, option) =>
+                        selectAtlasMatch(document.document_id, candidateId, option, 'replace')
+                      }
+                    />
                   </div>
 
-                  <SkillReviewPanel
-                    candidates={document.skill_candidates.map((candidate) => ({
-                      ...candidate,
-                      manual_last_search_at: formatRelativeTimeLabel(
-                        candidate.manual_last_search_at
-                      ),
-                    }))}
-                    openPickerId={
-                      openSkillPicker?.documentId === document.document_id
-                        ? openSkillPicker.candidateId
-                        : null
-                    }
-                    onOpenPicker={(candidateId) =>
-                      setOpenSkillPicker(
-                        candidateId
-                          ? {
-                              documentId: document.document_id,
-                              candidateId,
-                            }
-                          : null
-                      )
-                    }
-                    onToggleApproved={(candidateId, checked) => {
-                      updateDocument(document.document_id, (current) => ({
-                        ...current,
-                        skill_candidates: current.skill_candidates.map((item) =>
-                          item.candidate_id === candidateId ? { ...item, approved: checked } : item
-                        ),
-                      }));
-                    }}
-                    onRawSkillChange={(candidateId, value) => {
-                      updateDocument(document.document_id, (current) => ({
-                        ...current,
-                        skill_candidates: current.skill_candidates.map((item) =>
-                          item.candidate_id === candidateId
-                            ? {
-                                ...item,
-                                raw_skill_text: value,
-                                manual_search_query: value,
-                              }
-                            : item
-                        ),
-                      }));
-                    }}
-                    onCategoryChange={(candidateId, value) => {
-                      updateDocument(document.document_id, (current) => ({
-                        ...current,
-                        skill_candidates: current.skill_candidates.map((item) =>
-                          item.candidate_id === candidateId
-                            ? { ...item, category: value as CandidateCategory }
-                            : item
-                        ),
-                      }));
-                    }}
-                    onSelectSkillIds={(candidateId, selectedSkillIds) => {
-                      updateDocument(document.document_id, (current) => ({
-                        ...current,
-                        skill_candidates: current.skill_candidates.map((item) =>
-                          item.candidate_id === candidateId
-                            ? {
-                                ...item,
-                                selected_skill_ids: selectedSkillIds,
-                                approved: selectedSkillIds.length > 0 ? true : item.approved,
-                                already_in_profile:
-                                  selectedSkillIds.length > 0 ? false : item.already_in_profile,
-                                unmapped_candidate:
-                                  selectedSkillIds.length > 0 ? false : item.unmapped_candidate,
-                              }
-                            : item
-                        ),
-                      }));
-                    }}
-                    onManualQueryChange={(candidateId, value) => {
-                      updateDocument(document.document_id, (current) => ({
-                        ...current,
-                        skill_candidates: current.skill_candidates.map((item) =>
-                          item.candidate_id === candidateId
-                            ? { ...item, manual_search_query: value }
-                            : item
-                        ),
-                      }));
-                    }}
-                    onToggleSuggestions={(candidateId) => {
-                      updateDocument(document.document_id, (current) => ({
-                        ...current,
-                        skill_candidates: current.skill_candidates.map((item) =>
-                          item.candidate_id === candidateId
-                            ? {
-                                ...item,
-                                show_all_suggestions: !item.show_all_suggestions,
-                              }
-                            : item
-                        ),
-                      }));
-                    }}
-                    onFind={(candidateId) =>
-                      searchManualMappings(document.document_id, candidateId)
-                    }
-                    onSelectMatch={(candidateId, option) =>
-                      selectAtlasMatch(document.document_id, candidateId, option, 'select')
-                    }
-                    onReplaceMatch={(candidateId, option) =>
-                      selectAtlasMatch(document.document_id, candidateId, option, 'replace')
-                    }
-                  />
-                </div>
-
-                {(reviewAllSections || !reviewV3Enabled) && (
                   <div className="space-y-4">
                     <EntitySummaryCard
                       title="Work Experiences"
@@ -2017,6 +2052,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                       approvedCount={
                         document.work_experiences.filter((entry) => entry.approved).length
                       }
+                      statusBadges={workStatusBadges}
+                      expandSignal={sectionExpandSignal}
                       summary="Review title, organization, duration, and concise summary before import."
                     >
                       <div className="space-y-3">
@@ -2119,6 +2156,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                       approvedCount={
                         document.learning_experiences.filter((entry) => entry.approved).length
                       }
+                      statusBadges={learningStatusBadges}
+                      expandSignal={sectionExpandSignal}
                       summary="Review institution, degree, dates, and important skills/projects."
                     >
                       <div className="space-y-3">
@@ -2242,6 +2281,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                       title="Volunteering"
                       totalCount={document.volunteering.length}
                       approvedCount={document.volunteering.filter((entry) => entry.approved).length}
+                      statusBadges={volunteeringStatusBadges}
+                      expandSignal={sectionExpandSignal}
                       summary="Review cause, impact, and contribution details."
                     >
                       <div className="space-y-3">
@@ -2389,6 +2430,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                       title="Languages"
                       totalCount={document.languages.length}
                       approvedCount={document.languages.filter((entry) => entry.approved).length}
+                      statusBadges={languageStatusBadges}
+                      expandSignal={sectionExpandSignal}
                       summary="Confirm language and CEFR level."
                     >
                       <div className="space-y-3">
@@ -2475,19 +2518,12 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                       </div>
                     </EntitySummaryCard>
                   </div>
-                )}
-
-                {reviewV3Enabled && !reviewAllSections && (
-                  <p className="text-xs text-muted-foreground">
-                    Skills are ready to apply. Use &quot;Review All Extracted Sections&quot; to edit
-                    work, learning, volunteering, and languages before full apply.
-                  </p>
-                )}
-              </>
-            )}
-          </CardContent>
-        </Card>
-      ))}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })}
 
       {documents.length === 0 && (
         <Card>

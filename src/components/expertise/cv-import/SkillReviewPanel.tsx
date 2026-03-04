@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Search, X } from 'lucide-react';
+import { Check, ChevronDown, Search, X } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -60,10 +60,6 @@ type ReviewStatus = {
   reason: string;
 };
 
-function formatCategory(value: CandidateCategory): string {
-  return value.replace(/_/g, ' ');
-}
-
 function confidencePercent(value: number): number {
   if (!Number.isFinite(value)) {
     return 0;
@@ -111,6 +107,28 @@ function removeSelectedSkillId(selectedSkillIds: string[], skillId: string): str
   return selectedSkillIds.filter((id) => id !== skillId);
 }
 
+function pickReplacementSuggestion(candidate: SkillReviewCandidate): SkillMatchOption | null {
+  if (candidate.suggestions.length === 0) {
+    return null;
+  }
+
+  return (
+    candidate.suggestions.find(
+      (option) => !candidate.selected_skill_ids.includes(option.skill_id)
+    ) || candidate.suggestions[0]
+  );
+}
+
+function toggleId(current: Set<string>, id: string): Set<string> {
+  const next = new Set(current);
+  if (next.has(id)) {
+    next.delete(id);
+  } else {
+    next.add(id);
+  }
+  return next;
+}
+
 export function SkillReviewPanel({
   candidates,
   openPickerId,
@@ -125,10 +143,14 @@ export function SkillReviewPanel({
   onSelectMatch,
   onReplaceMatch,
 }: SkillReviewPanelProps) {
-  const [viewMode, setViewMode] = useState<'guided' | 'all'>('guided');
+  const [showAllSkills, setShowAllSkills] = useState(false);
   const [activeCandidateId, setActiveCandidateId] = useState<string | null>(
     candidates[0]?.candidate_id || null
   );
+  const [expandedEditIds, setExpandedEditIds] = useState<Set<string>>(new Set());
+  const [expandedEvidenceIds, setExpandedEvidenceIds] = useState<Set<string>>(new Set());
+  const [expandedSelectedIds, setExpandedSelectedIds] = useState<Set<string>>(new Set());
+  const [expandedFindIds, setExpandedFindIds] = useState<Set<string>>(new Set());
 
   const orderedCandidates = useMemo(() => {
     return [...candidates].sort((left, right) => {
@@ -144,28 +166,96 @@ export function SkillReviewPanel({
     });
   }, [candidates]);
 
+  const unresolvedCandidates = useMemo(
+    () =>
+      orderedCandidates.filter((candidate) => resolveCandidateStatus(candidate).label !== 'Ready'),
+    [orderedCandidates]
+  );
+
+  const readyCount = orderedCandidates.length - unresolvedCandidates.length;
+  const alreadyInProfileCount = orderedCandidates.filter(
+    (candidate) => candidate.already_in_profile
+  ).length;
+
   useEffect(() => {
-    if (orderedCandidates.length === 0) {
+    if (unresolvedCandidates.length === 0) {
       setActiveCandidateId(null);
       return;
     }
+
     if (
       !activeCandidateId ||
-      !orderedCandidates.some((item) => item.candidate_id === activeCandidateId)
+      !unresolvedCandidates.some((candidate) => candidate.candidate_id === activeCandidateId)
     ) {
-      setActiveCandidateId(orderedCandidates[0].candidate_id);
+      setActiveCandidateId(unresolvedCandidates[0].candidate_id);
     }
-  }, [orderedCandidates, activeCandidateId]);
+  }, [unresolvedCandidates, activeCandidateId]);
 
-  const activeIndex = orderedCandidates.findIndex(
+  const activeUnresolvedIndex = unresolvedCandidates.findIndex(
     (candidate) => candidate.candidate_id === activeCandidateId
   );
-  const visibleCandidates =
-    viewMode === 'all'
-      ? orderedCandidates
-      : activeIndex >= 0
-        ? [orderedCandidates[activeIndex]]
-        : orderedCandidates.slice(0, 1);
+
+  const visibleCandidates = showAllSkills
+    ? orderedCandidates
+    : activeUnresolvedIndex >= 0
+      ? [unresolvedCandidates[activeUnresolvedIndex]]
+      : [];
+
+  const goToNextUnresolved = (fromCandidateId?: string) => {
+    if (unresolvedCandidates.length === 0) {
+      setActiveCandidateId(null);
+      return;
+    }
+
+    if (!fromCandidateId) {
+      setActiveCandidateId(unresolvedCandidates[0].candidate_id);
+      return;
+    }
+
+    const currentIndex = unresolvedCandidates.findIndex(
+      (candidate) => candidate.candidate_id === fromCandidateId
+    );
+
+    if (currentIndex < 0) {
+      setActiveCandidateId(unresolvedCandidates[0].candidate_id);
+      return;
+    }
+
+    const nextCandidate =
+      unresolvedCandidates[currentIndex + 1] || unresolvedCandidates[currentIndex];
+    setActiveCandidateId(nextCandidate?.candidate_id || null);
+  };
+
+  const handleAccept = (candidate: SkillReviewCandidate) => {
+    const topSuggestion = candidate.suggestions[0];
+    if (topSuggestion) {
+      onSelectMatch(candidate.candidate_id, topSuggestion);
+      goToNextUnresolved(candidate.candidate_id);
+      return;
+    }
+
+    setExpandedFindIds((previous) => new Set(previous).add(candidate.candidate_id));
+    onOpenPicker(candidate.candidate_id);
+    onFind(candidate.candidate_id);
+  };
+
+  const handleReplace = (candidate: SkillReviewCandidate) => {
+    const replacement = pickReplacementSuggestion(candidate);
+    if (replacement) {
+      onReplaceMatch(candidate.candidate_id, replacement);
+      goToNextUnresolved(candidate.candidate_id);
+      return;
+    }
+
+    setExpandedFindIds((previous) => new Set(previous).add(candidate.candidate_id));
+    onOpenPicker(candidate.candidate_id);
+    onFind(candidate.candidate_id);
+  };
+
+  const handleSkip = (candidate: SkillReviewCandidate) => {
+    onToggleApproved(candidate.candidate_id, false);
+    goToNextUnresolved(candidate.candidate_id);
+  };
 
   if (orderedCandidates.length === 0) {
     return (
@@ -177,63 +267,42 @@ export function SkillReviewPanel({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/20 p-3">
-        <div className="text-sm text-muted-foreground">
-          {viewMode === 'guided'
-            ? `Guided review ${Math.max(activeIndex + 1, 1)}/${orderedCandidates.length}`
-            : `All candidates (${orderedCandidates.length})`}
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant={viewMode === 'guided' ? 'secondary' : 'outline'}
-            onClick={() => setViewMode('guided')}
-          >
-            Guided queue
-          </Button>
-          <Button
-            size="sm"
-            variant={viewMode === 'all' ? 'secondary' : 'outline'}
-            onClick={() => setViewMode('all')}
-          >
-            All cards
-          </Button>
+      <div className="rounded-lg border bg-muted/20 p-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm text-muted-foreground">
+            {unresolvedCandidates.length} remaining · {readyCount} ready · {alreadyInProfileCount}{' '}
+            already in profile
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => goToNextUnresolved(activeCandidateId || undefined)}
+              disabled={unresolvedCandidates.length < 2 || showAllSkills}
+            >
+              Next unresolved
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setShowAllSkills((previous) => !previous)}
+            >
+              {showAllSkills ? 'Hide advanced list' : 'Show all skills (advanced)'}
+            </Button>
+          </div>
         </div>
       </div>
 
-      {viewMode === 'guided' && orderedCandidates.length > 1 && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3">
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={activeIndex <= 0}
-            onClick={() => {
-              if (activeIndex > 0) {
-                setActiveCandidateId(orderedCandidates[activeIndex - 1].candidate_id);
-              }
-            }}
-          >
-            Previous
-          </Button>
-          <div className="text-xs text-muted-foreground">
-            Priority order: Needs mapping, Needs review, Ready
-          </div>
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={activeIndex < 0 || activeIndex >= orderedCandidates.length - 1}
-            onClick={() => {
-              if (activeIndex >= 0 && activeIndex < orderedCandidates.length - 1) {
-                setActiveCandidateId(orderedCandidates[activeIndex + 1].candidate_id);
-              }
-            }}
-          >
-            Next
-          </Button>
+      {!showAllSkills && unresolvedCandidates.length === 0 && (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-3 text-sm text-emerald-900">
+          All skills are ready. You can proceed to apply, or open advanced list to make detailed
+          edits.
         </div>
       )}
 
       {visibleCandidates.map((candidate) => {
+        const status = resolveCandidateStatus(candidate);
+        const topSuggestion = candidate.suggestions[0] || null;
         const visibleAutoSuggestions = candidate.suggestions.slice(
           0,
           candidate.show_all_suggestions ? 20 : 5
@@ -241,8 +310,8 @@ export function SkillReviewPanel({
         const selectedFallbackSuggestions = candidate.suggestions.filter((option) =>
           candidate.selected_skill_ids.includes(option.skill_id)
         );
-        const optionMap = new Map<string, SkillMatchOption>();
 
+        const optionMap = new Map<string, SkillMatchOption>();
         for (const option of [
           ...visibleAutoSuggestions,
           ...selectedFallbackSuggestions,
@@ -254,225 +323,308 @@ export function SkillReviewPanel({
         const selectedOptions = candidate.selected_skill_ids
           .map((skillId) => optionMap.get(skillId))
           .filter((option): option is SkillMatchOption => Boolean(option));
-        const status = resolveCandidateStatus(candidate);
+
+        const isEditExpanded = expandedEditIds.has(candidate.candidate_id);
+        const isEvidenceExpanded = expandedEvidenceIds.has(candidate.candidate_id);
+        const isSelectedExpanded = expandedSelectedIds.has(candidate.candidate_id);
+        const isFindExpanded = expandedFindIds.has(candidate.candidate_id);
 
         return (
           <article key={candidate.candidate_id} className="rounded-lg border p-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-foreground">{candidate.raw_skill_text}</p>
+                <p className="text-xs text-muted-foreground">{status.reason}</p>
+              </div>
               <div className="flex flex-wrap items-center gap-2">
-                <label className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
-                  <input
-                    type="checkbox"
-                    checked={candidate.approved}
-                    onChange={(event) =>
-                      onToggleApproved(candidate.candidate_id, event.target.checked)
-                    }
-                  />
-                  Approve
-                </label>
                 <Badge variant={status.variant}>{status.label}</Badge>
-                <Badge variant="outline">
-                  {confidencePercent(candidate.confidence)}% confidence
-                </Badge>
-              </div>
-              {candidate.already_in_profile && <Badge variant="outline">Already in profile</Badge>}
-            </div>
-
-            <div className="mt-2 flex flex-wrap gap-2">
-              <Badge variant="outline">Why: {status.reason}</Badge>
-              {candidate.unmapped_candidate && candidate.selected_skill_ids.length === 0 && (
-                <Badge variant="outline">Action: find and select at least one Atlas skill</Badge>
-              )}
-            </div>
-
-            <div className="mt-3 grid gap-3 md:grid-cols-2">
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground">Skill found in CV</p>
-                <Textarea
-                  rows={2}
-                  value={candidate.raw_skill_text}
-                  onChange={(event) => onRawSkillChange(candidate.candidate_id, event.target.value)}
-                />
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground">Skill type</p>
-                <select
-                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-                  value={candidate.category}
-                  onChange={(event) =>
-                    onCategoryChange(
-                      candidate.candidate_id,
-                      event.target.value as CandidateCategory
-                    )
-                  }
-                >
-                  {[
-                    'technical',
-                    'soft_skills',
-                    'tools_technologies',
-                    'languages',
-                    'certifications',
-                    'other',
-                  ].map((option) => (
-                    <option key={option} value={option}>
-                      {formatCategory(option as CandidateCategory)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="mt-3 space-y-1">
-              <p className="text-xs font-medium text-muted-foreground">Evidence from CV</p>
-              {candidate.evidence_snippets.length === 0 ? (
-                <p className="text-xs text-muted-foreground">No evidence snippet available.</p>
-              ) : (
-                <ul className="list-disc space-y-1 pl-4 text-xs text-muted-foreground">
-                  {candidate.evidence_snippets.map((snippet, index) => (
-                    <li key={`${candidate.candidate_id}-${index}`}>{snippet}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            <div className="mt-3 space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-medium text-muted-foreground">Suggested Atlas skills</p>
-                {candidate.suggestions.length > 5 && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => onToggleSuggestions(candidate.candidate_id)}
-                  >
-                    {candidate.show_all_suggestions
-                      ? 'Show fewer suggestions'
-                      : 'Show more suggestions'}
-                  </Button>
+                <Badge variant="outline">{confidencePercent(candidate.confidence)}%</Badge>
+                {candidate.already_in_profile && (
+                  <Badge variant="outline">Already in profile</Badge>
                 )}
               </div>
+            </div>
 
-              {visibleAutoSuggestions.length === 0 ? (
-                <p className="text-xs text-muted-foreground">
-                  No automatic suggestions. Use Find to search Atlas skills manually.
+            <div className="mt-3 rounded-md border bg-background/50 p-3">
+              <p className="text-xs font-medium text-muted-foreground">Top suggested Atlas skill</p>
+              {topSuggestion ? (
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-medium text-foreground">
+                    {topSuggestion.skill_name}
+                  </span>
+                  <Badge variant="outline">{topSuggestion.match_method}</Badge>
+                  <Badge variant="secondary">{Math.round(topSuggestion.score * 100)}%</Badge>
+                </div>
+              ) : (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  No confident automatic match. Use Find manually.
                 </p>
-              ) : (
-                <div className="space-y-2">
-                  {visibleAutoSuggestions.map((option) => {
-                    const isSelected = candidate.selected_skill_ids.includes(option.skill_id);
-                    return (
-                      <div
-                        key={option.skill_id}
-                        className="flex flex-wrap items-center justify-between gap-2 rounded-md border px-3 py-2"
-                      >
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground">{option.skill_name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {option.match_method} · {Math.round(option.score * 100)}%
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant={isSelected ? 'secondary' : 'outline'}
-                            onClick={() => {
-                              if (isSelected) {
-                                onSelectSkillIds(
-                                  candidate.candidate_id,
-                                  removeSelectedSkillId(
-                                    candidate.selected_skill_ids,
-                                    option.skill_id
-                                  )
-                                );
-                                return;
-                              }
-                              onSelectMatch(candidate.candidate_id, option);
-                            }}
-                          >
-                            {isSelected ? 'Remove' : 'Select'}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => onReplaceMatch(candidate.candidate_id, option)}
-                          >
-                            Replace
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
               )}
             </div>
 
-            <div className="mt-3 space-y-2">
-              <p className="text-xs font-medium text-muted-foreground">Selected Atlas skills</p>
-              {selectedOptions.length === 0 ? (
-                <p className="text-xs text-muted-foreground">No skills selected yet.</p>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {selectedOptions.map((option) => (
-                    <Badge
-                      key={`${candidate.candidate_id}-${option.skill_id}`}
-                      variant="secondary"
-                      className="flex items-center gap-1"
-                    >
-                      <span>{option.skill_name}</span>
-                      <button
-                        type="button"
-                        className="rounded-sm hover:text-foreground"
-                        onClick={() =>
-                          onSelectSkillIds(
-                            candidate.candidate_id,
-                            removeSelectedSkillId(candidate.selected_skill_ids, option.skill_id)
-                          )
-                        }
-                        aria-label={`Remove ${option.skill_name}`}
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="mt-3 grid gap-2 md:grid-cols-[1fr_auto]">
-              <Input
-                value={candidate.manual_search_query}
-                onChange={(event) =>
-                  onManualQueryChange(candidate.candidate_id, event.target.value)
-                }
-                placeholder="Search Atlas skills"
-              />
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  onOpenPicker(candidate.candidate_id);
-                  onFind(candidate.candidate_id);
-                }}
-                disabled={candidate.manual_loading}
-              >
-                <Search className="mr-2 h-4 w-4" />
-                {candidate.manual_loading ? '...' : 'Find'}
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button size="sm" onClick={() => handleAccept(candidate)}>
+                <Check className="mr-1 h-3 w-3" />
+                Accept
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => handleReplace(candidate)}>
+                Replace
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => handleSkip(candidate)}>
+                Skip
               </Button>
             </div>
 
-            <div className="mt-2">
-              <SkillMatchPicker
-                open={openPickerId === candidate.candidate_id}
-                loading={candidate.manual_loading}
-                query={candidate.manual_search_query}
-                options={candidate.manual_options}
-                selectedSkillIds={candidate.selected_skill_ids}
-                lastSearchedAtLabel={candidate.manual_last_search_at}
-                onSelect={(option) => onSelectMatch(candidate.candidate_id, option)}
-                onReplace={(option) => onReplaceMatch(candidate.candidate_id, option)}
-                onClose={() => onOpenPicker(null)}
-              />
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 px-2"
+                onClick={() =>
+                  setExpandedEditIds((previous) => toggleId(previous, candidate.candidate_id))
+                }
+              >
+                Edit skill text/category <ChevronDown className="ml-1 h-3 w-3" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 px-2"
+                onClick={() =>
+                  setExpandedEvidenceIds((previous) => toggleId(previous, candidate.candidate_id))
+                }
+              >
+                Show evidence <ChevronDown className="ml-1 h-3 w-3" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 px-2"
+                onClick={() =>
+                  setExpandedSelectedIds((previous) => toggleId(previous, candidate.candidate_id))
+                }
+              >
+                View selected ({selectedOptions.length}) <ChevronDown className="ml-1 h-3 w-3" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 px-2"
+                onClick={() =>
+                  setExpandedFindIds((previous) => toggleId(previous, candidate.candidate_id))
+                }
+              >
+                Find manually <ChevronDown className="ml-1 h-3 w-3" />
+              </Button>
             </div>
+
+            {isEditExpanded && (
+              <div className="mt-3 grid gap-3 md:grid-cols-2">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">Skill found in CV</p>
+                  <Textarea
+                    rows={2}
+                    value={candidate.raw_skill_text}
+                    onChange={(event) =>
+                      onRawSkillChange(candidate.candidate_id, event.target.value)
+                    }
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">Skill type</p>
+                  <select
+                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                    value={candidate.category}
+                    onChange={(event) =>
+                      onCategoryChange(
+                        candidate.candidate_id,
+                        event.target.value as CandidateCategory
+                      )
+                    }
+                  >
+                    {[
+                      'technical',
+                      'soft_skills',
+                      'tools_technologies',
+                      'languages',
+                      'certifications',
+                      'other',
+                    ].map((option) => (
+                      <option key={option} value={option}>
+                        {option.replace(/_/g, ' ')}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {isEvidenceExpanded && (
+              <div className="mt-3 space-y-1">
+                <p className="text-xs font-medium text-muted-foreground">Evidence from CV</p>
+                {candidate.evidence_snippets.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No evidence snippet available.</p>
+                ) : (
+                  <ul className="list-disc space-y-1 pl-4 text-xs text-muted-foreground">
+                    {candidate.evidence_snippets.map((snippet, index) => (
+                      <li key={`${candidate.candidate_id}-${index}`}>{snippet}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            {isSelectedExpanded && (
+              <div className="mt-3 space-y-2">
+                {selectedOptions.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No skills selected yet.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedOptions.map((option) => (
+                      <Badge
+                        key={`${candidate.candidate_id}-${option.skill_id}`}
+                        variant="secondary"
+                        className="flex items-center gap-1"
+                      >
+                        <span>{option.skill_name}</span>
+                        <button
+                          type="button"
+                          className="rounded-sm hover:text-foreground"
+                          onClick={() =>
+                            onSelectSkillIds(
+                              candidate.candidate_id,
+                              removeSelectedSkillId(candidate.selected_skill_ids, option.skill_id)
+                            )
+                          }
+                          aria-label={`Remove ${option.skill_name}`}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {isFindExpanded && (
+              <div className="mt-3 space-y-3">
+                <div className="grid gap-2 md:grid-cols-[1fr_auto]">
+                  <Input
+                    value={candidate.manual_search_query}
+                    onChange={(event) =>
+                      onManualQueryChange(candidate.candidate_id, event.target.value)
+                    }
+                    placeholder="Search Atlas skills"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      onOpenPicker(candidate.candidate_id);
+                      onFind(candidate.candidate_id);
+                    }}
+                    disabled={candidate.manual_loading}
+                  >
+                    <Search className="mr-2 h-4 w-4" />
+                    {candidate.manual_loading ? '...' : 'Find'}
+                  </Button>
+                </div>
+
+                {visibleAutoSuggestions.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-medium text-muted-foreground">
+                        Suggested Atlas skills
+                      </p>
+                      {candidate.suggestions.length > 5 && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => onToggleSuggestions(candidate.candidate_id)}
+                        >
+                          {candidate.show_all_suggestions
+                            ? 'Show fewer suggestions'
+                            : 'Show more suggestions'}
+                        </Button>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      {visibleAutoSuggestions.map((option) => {
+                        const isSelected = candidate.selected_skill_ids.includes(option.skill_id);
+                        return (
+                          <div
+                            key={option.skill_id}
+                            className="flex flex-wrap items-center justify-between gap-2 rounded-md border px-3 py-2"
+                          >
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-foreground">
+                                {option.skill_name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {option.match_method} · {Math.round(option.score * 100)}%
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant={isSelected ? 'secondary' : 'outline'}
+                                onClick={() => {
+                                  if (isSelected) {
+                                    onSelectSkillIds(
+                                      candidate.candidate_id,
+                                      removeSelectedSkillId(
+                                        candidate.selected_skill_ids,
+                                        option.skill_id
+                                      )
+                                    );
+                                    return;
+                                  }
+                                  onSelectMatch(candidate.candidate_id, option);
+                                  goToNextUnresolved(candidate.candidate_id);
+                                }}
+                              >
+                                {isSelected ? 'Remove' : 'Select'}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  onReplaceMatch(candidate.candidate_id, option);
+                                  goToNextUnresolved(candidate.candidate_id);
+                                }}
+                              >
+                                Replace
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <SkillMatchPicker
+                  open={openPickerId === candidate.candidate_id}
+                  loading={candidate.manual_loading}
+                  query={candidate.manual_search_query}
+                  options={candidate.manual_options}
+                  selectedSkillIds={candidate.selected_skill_ids}
+                  lastSearchedAtLabel={candidate.manual_last_search_at}
+                  onSelect={(option) => {
+                    onSelectMatch(candidate.candidate_id, option);
+                    goToNextUnresolved(candidate.candidate_id);
+                  }}
+                  onReplace={(option) => {
+                    onReplaceMatch(candidate.candidate_id, option);
+                    goToNextUnresolved(candidate.candidate_id);
+                  }}
+                  onClose={() => onOpenPicker(null)}
+                />
+              </div>
+            )}
 
             {candidate.unmapped_candidate &&
               !candidate.already_in_profile &&
@@ -481,25 +633,6 @@ export function SkillReviewPanel({
                   Needs mapping. Select at least one Atlas skill.
                 </p>
               )}
-
-            <div className="sticky bottom-0 mt-3 rounded-md border bg-background/95 p-2 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-              <div className="flex flex-wrap items-center justify-end gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onToggleApproved(candidate.candidate_id, false)}
-                >
-                  Skip
-                </Button>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => onToggleApproved(candidate.candidate_id, true)}
-                >
-                  Approve
-                </Button>
-              </div>
-            </div>
           </article>
         );
       })}

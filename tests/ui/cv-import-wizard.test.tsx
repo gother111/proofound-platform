@@ -144,13 +144,10 @@ describe('CvImportWizard', () => {
     });
 
     expect(screen.getByText('Skills to review')).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        'Skills are ready to apply. Use "Review All Extracted Sections" to edit work, learning, volunteering, and languages before full apply.'
-      )
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Finish Review & Apply/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Expand all sections/i })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /Review All Extracted Sections/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Expand all sections/i }));
 
     expect(screen.getByDisplayValue('Senior Engineer')).toBeInTheDocument();
   });
@@ -416,13 +413,15 @@ describe('CvImportWizard', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Apply Recommended Skills/i })).toBeEnabled();
+        expect(screen.getByRole('button', { name: /Finish Review & Apply/i })).toBeEnabled();
       });
 
-      fireEvent.click(screen.getByRole('button', { name: /Apply Recommended Skills/i }));
+      fireEvent.click(screen.getByRole('button', { name: /Finish Review & Apply/i }));
 
       await waitFor(() => {
-        expect(confirmSpy).toHaveBeenCalledWith('Apply 1 skill to your profile now?');
+        expect(confirmSpy).toHaveBeenCalledWith(
+          'Finish review and apply now?\n\nSkills approved: 1\nWork approved: 0\nLearning approved: 0\nVolunteering approved: 0\nLanguages approved: 0'
+        );
       });
 
       await waitFor(() => {
@@ -515,14 +514,14 @@ describe('CvImportWizard', () => {
     fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Apply Recommended Skills/i })).toBeDisabled();
+      expect(screen.getByRole('button', { name: /Finish Review & Apply/i })).toBeDisabled();
     });
 
     expect(screen.getByText('0/1 selected')).toBeInTheDocument();
     expect(screen.getByText('Needs mapping. Select at least one Atlas skill.')).toBeInTheDocument();
   });
 
-  it('uses guided queue navigation for multi-candidate skill review', async () => {
+  it('uses fast-pass unresolved navigation for multi-candidate skill review', async () => {
     apiFetchMock.mockResolvedValueOnce(
       new Response(
         JSON.stringify({
@@ -555,7 +554,7 @@ describe('CvImportWizard', () => {
                     {
                       skill_id: 'skill_react',
                       skill_name: 'React',
-                      match_method: 'exact',
+                      match_method: 'fuzzy',
                       score: 0.98,
                     },
                   ],
@@ -600,13 +599,18 @@ describe('CvImportWizard', () => {
     fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('Guided review 1/2')).toBeInTheDocument();
+      expect(screen.getByText('2 remaining · 0 ready · 0 already in profile')).toBeInTheDocument();
     });
 
-    expect(screen.getAllByDisplayValue('platform orchestration concept').length).toBeGreaterThan(0);
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-    expect(screen.getByText('Guided review 2/2')).toBeInTheDocument();
-    expect(screen.getAllByDisplayValue('React').length).toBeGreaterThan(0);
+    expect(screen.getByText('platform orchestration concept')).toBeInTheDocument();
+    expect(
+      screen.getByText('No confident automatic match. Use Find manually.')
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next unresolved' }));
+
+    expect(screen.getAllByText('React').length).toBeGreaterThan(0);
+    expect(screen.getByText('Top suggested Atlas skill')).toBeInTheDocument();
   });
 
   it('shows partial-success info when skill suggestions are unavailable but extraction succeeds', async () => {
