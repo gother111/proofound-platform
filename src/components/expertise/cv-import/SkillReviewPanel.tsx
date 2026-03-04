@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
 import { Search, X } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -52,6 +53,13 @@ interface SkillReviewPanelProps {
   onReplaceMatch: (candidateId: string, option: SkillMatchOption) => void;
 }
 
+type ReviewStatus = {
+  label: 'Ready' | 'Needs review' | 'Needs mapping';
+  variant: 'secondary' | 'outline';
+  rank: number;
+  reason: string;
+};
+
 function formatCategory(value: CandidateCategory): string {
   return value.replace(/_/g, ' ');
 }
@@ -63,10 +71,7 @@ function confidencePercent(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value * 100)));
 }
 
-function resolveCandidateStatus(candidate: SkillReviewCandidate): {
-  label: 'Ready' | 'Needs review' | 'Needs mapping';
-  variant: 'secondary' | 'outline';
-} {
+function resolveCandidateStatus(candidate: SkillReviewCandidate): ReviewStatus {
   if (
     candidate.approved &&
     (candidate.selected_skill_ids.length > 0 || candidate.already_in_profile)
@@ -74,6 +79,10 @@ function resolveCandidateStatus(candidate: SkillReviewCandidate): {
     return {
       label: 'Ready',
       variant: 'secondary',
+      rank: 3,
+      reason: candidate.already_in_profile
+        ? 'Already in profile'
+        : 'Approved with at least one selected Atlas skill',
     };
   }
 
@@ -85,12 +94,16 @@ function resolveCandidateStatus(candidate: SkillReviewCandidate): {
     return {
       label: 'Needs mapping',
       variant: 'outline',
+      rank: 1,
+      reason: 'No valid Atlas mapping is selected yet',
     };
   }
 
   return {
     label: 'Needs review',
     variant: 'outline',
+    rank: 2,
+    reason: 'Check match quality before approving',
   };
 }
 
@@ -112,9 +125,115 @@ export function SkillReviewPanel({
   onSelectMatch,
   onReplaceMatch,
 }: SkillReviewPanelProps) {
+  const [viewMode, setViewMode] = useState<'guided' | 'all'>('guided');
+  const [activeCandidateId, setActiveCandidateId] = useState<string | null>(
+    candidates[0]?.candidate_id || null
+  );
+
+  const orderedCandidates = useMemo(() => {
+    return [...candidates].sort((left, right) => {
+      const leftStatus = resolveCandidateStatus(left);
+      const rightStatus = resolveCandidateStatus(right);
+      if (leftStatus.rank !== rightStatus.rank) {
+        return leftStatus.rank - rightStatus.rank;
+      }
+      if (right.confidence !== left.confidence) {
+        return right.confidence - left.confidence;
+      }
+      return left.raw_skill_text.localeCompare(right.raw_skill_text);
+    });
+  }, [candidates]);
+
+  useEffect(() => {
+    if (orderedCandidates.length === 0) {
+      setActiveCandidateId(null);
+      return;
+    }
+    if (
+      !activeCandidateId ||
+      !orderedCandidates.some((item) => item.candidate_id === activeCandidateId)
+    ) {
+      setActiveCandidateId(orderedCandidates[0].candidate_id);
+    }
+  }, [orderedCandidates, activeCandidateId]);
+
+  const activeIndex = orderedCandidates.findIndex(
+    (candidate) => candidate.candidate_id === activeCandidateId
+  );
+  const visibleCandidates =
+    viewMode === 'all'
+      ? orderedCandidates
+      : activeIndex >= 0
+        ? [orderedCandidates[activeIndex]]
+        : orderedCandidates.slice(0, 1);
+
+  if (orderedCandidates.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+        No skill candidates were found.
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3">
-      {candidates.map((candidate) => {
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/20 p-3">
+        <div className="text-sm text-muted-foreground">
+          {viewMode === 'guided'
+            ? `Guided review ${Math.max(activeIndex + 1, 1)}/${orderedCandidates.length}`
+            : `All candidates (${orderedCandidates.length})`}
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant={viewMode === 'guided' ? 'secondary' : 'outline'}
+            onClick={() => setViewMode('guided')}
+          >
+            Guided queue
+          </Button>
+          <Button
+            size="sm"
+            variant={viewMode === 'all' ? 'secondary' : 'outline'}
+            onClick={() => setViewMode('all')}
+          >
+            All cards
+          </Button>
+        </div>
+      </div>
+
+      {viewMode === 'guided' && orderedCandidates.length > 1 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3">
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={activeIndex <= 0}
+            onClick={() => {
+              if (activeIndex > 0) {
+                setActiveCandidateId(orderedCandidates[activeIndex - 1].candidate_id);
+              }
+            }}
+          >
+            Previous
+          </Button>
+          <div className="text-xs text-muted-foreground">
+            Priority order: Needs mapping, Needs review, Ready
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={activeIndex < 0 || activeIndex >= orderedCandidates.length - 1}
+            onClick={() => {
+              if (activeIndex >= 0 && activeIndex < orderedCandidates.length - 1) {
+                setActiveCandidateId(orderedCandidates[activeIndex + 1].candidate_id);
+              }
+            }}
+          >
+            Next
+          </Button>
+        </div>
+      )}
+
+      {visibleCandidates.map((candidate) => {
         const visibleAutoSuggestions = candidate.suggestions.slice(
           0,
           candidate.show_all_suggestions ? 20 : 5
@@ -132,7 +251,6 @@ export function SkillReviewPanel({
           optionMap.set(option.skill_id, option);
         }
 
-        const options = Array.from(optionMap.values());
         const selectedOptions = candidate.selected_skill_ids
           .map((skillId) => optionMap.get(skillId))
           .filter((option): option is SkillMatchOption => Boolean(option));
@@ -158,6 +276,13 @@ export function SkillReviewPanel({
                 </Badge>
               </div>
               {candidate.already_in_profile && <Badge variant="outline">Already in profile</Badge>}
+            </div>
+
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Badge variant="outline">Why: {status.reason}</Badge>
+              {candidate.unmapped_candidate && candidate.selected_skill_ids.length === 0 && (
+                <Badge variant="outline">Action: find and select at least one Atlas skill</Badge>
+              )}
             </div>
 
             <div className="mt-3 grid gap-3 md:grid-cols-2">
@@ -313,7 +438,7 @@ export function SkillReviewPanel({
               )}
             </div>
 
-            <div className="mt-3 flex items-center gap-2">
+            <div className="mt-3 grid gap-2 md:grid-cols-[1fr_auto]">
               <Input
                 value={candidate.manual_search_query}
                 onChange={(event) =>
@@ -356,6 +481,25 @@ export function SkillReviewPanel({
                   Needs mapping. Select at least one Atlas skill.
                 </p>
               )}
+
+            <div className="sticky bottom-0 mt-3 rounded-md border bg-background/95 p-2 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onToggleApproved(candidate.candidate_id, false)}
+                >
+                  Skip
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => onToggleApproved(candidate.candidate_id, true)}
+                >
+                  Approve
+                </Button>
+              </div>
+            </div>
           </article>
         );
       })}

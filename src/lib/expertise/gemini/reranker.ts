@@ -1,4 +1,8 @@
 import type { CvImportCandidate } from '@/lib/expertise/cv-import-suggest';
+import {
+  calibrateCandidateConfidence,
+  shouldRejectWeakTopSuggestion,
+} from '@/lib/expertise/skill-confidence';
 
 type ConfidenceTiers = {
   high: number;
@@ -130,12 +134,21 @@ export function rerankGeminiCandidates(params: {
       const composite =
         candidate.confidence * 0.45 + mappedScore * 0.35 + lexical * 0.15 + prior * 0.05;
 
-      const calibratedConfidence = clamp(candidate.confidence * 0.55 + composite * 0.45);
+      const calibratedConfidence = calibrateCandidateConfidence({
+        ...candidate,
+        confidence: clamp(candidate.confidence * 0.55 + composite * 0.45),
+      });
       const ranked: CvImportCandidate = {
         ...candidate,
         evidence_snippets: validEvidence.slice(0, 3),
         confidence: calibratedConfidence,
       };
+
+      if (shouldRejectWeakTopSuggestion(ranked)) {
+        ranked.suggestions = [];
+        ranked.unmapped_candidate = true;
+        ranked.confidence = clamp(ranked.confidence * 0.8);
+      }
 
       return ranked;
     })

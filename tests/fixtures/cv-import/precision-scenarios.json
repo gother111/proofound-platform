@@ -1,0 +1,22 @@
+{
+  "scenarios": [
+    {
+      "id": "skills-section-clean",
+      "text": "Skills\nReact.js, TypeScript, Node.js, CI/CD\nExperience\nBuilt customer portals.",
+      "must_include": ["react", "typescript", "node.js", "ci/cd"],
+      "must_exclude": ["experience", "customer portals"]
+    },
+    {
+      "id": "narrative-noise",
+      "text": "Worked with stakeholders and was responsible for delivery at Acme in Stockholm.",
+      "must_include": [],
+      "must_exclude": ["stakeholders", "delivery", "acme", "stockholm"]
+    },
+    {
+      "id": "inline-skills-heading",
+      "text": "Core Skills: Docker | Kubernetes | GitHub Actions",
+      "must_include": ["docker", "kubernetes", "github actions"],
+      "must_exclude": ["core skills"]
+    }
+  ]
+}

@@ -69,6 +69,7 @@ describe('cv-import wizard suggest route', () => {
   const originalTimeout = process.env.CV_IMPORT_SERVER_TIMEOUT_MS;
   const originalWizardTimeout = process.env.CV_IMPORT_WIZARD_TIMEOUT_MS;
   const originalMode = process.env.CV_IMPORT_ENGINE_MODE;
+  const originalRateLimitMax = process.env.CV_IMPORT_USER_RATE_LIMIT_MAX;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -76,6 +77,7 @@ describe('cv-import wizard suggest route', () => {
     delete process.env.CV_IMPORT_WIZARD_TIMEOUT_MS;
     delete process.env.CV_IMPORT_FORCE_PYTHON;
     delete process.env.CV_IMPORT_ENGINE_MODE;
+    process.env.CV_IMPORT_USER_RATE_LIMIT_MAX = '1000';
   });
 
   afterEach(() => {
@@ -93,6 +95,11 @@ describe('cv-import wizard suggest route', () => {
       delete process.env.CV_IMPORT_ENGINE_MODE;
     } else {
       process.env.CV_IMPORT_ENGINE_MODE = originalMode;
+    }
+    if (originalRateLimitMax === undefined) {
+      delete process.env.CV_IMPORT_USER_RATE_LIMIT_MAX;
+    } else {
+      process.env.CV_IMPORT_USER_RATE_LIMIT_MAX = originalRateLimitMax;
     }
   });
 
@@ -518,6 +525,152 @@ describe('cv-import wizard suggest route', () => {
     expect(body.error).toBe('Failed to process CV wizard suggestions');
     expect(body.code).toBe('WIZARD_PROCESSING_FAILED');
     expect(body.message).toContain('unexpected parser branch');
+  });
+
+  it('fuses local and gemini candidates in gemini mode with local taxonomy verification', async () => {
+    (createClient as any).mockResolvedValue(createAuthenticatedSupabaseMock('user-1'));
+
+    (suggestWizardForDocuments as any).mockResolvedValue({
+      documents: [
+        {
+          document_id: 'doc-1',
+          file_name: 'cv.pdf',
+          context: 'cv',
+          parsed_text: 'React TypeScript',
+          work_experiences: [],
+          learning_experiences: [],
+          volunteering: [],
+          languages: [],
+          skill_candidates: [
+            {
+              candidate_id: 'local-1',
+              raw_skill_text: 'React.js',
+              category: 'technical',
+              evidence_snippets: ['Built React.js dashboards.'],
+              confidence: 0.7,
+              suggestions: [
+                {
+                  skill_id: 'skill_react',
+                  skill_name: 'React',
+                  match_method: 'fuzzy',
+                  score: 0.82,
+                },
+              ],
+              unmapped_candidate: false,
+            },
+          ],
+        },
+      ],
+      metadata: {
+        semantic_used: false,
+        semantic_fallback_triggered: false,
+        unmapped_candidates_count: 0,
+        limits: {
+          max_documents: 5,
+          max_chars_per_document: 30000,
+          max_total_chars: 90000,
+        },
+      },
+    });
+
+    (suggestSkillsWithGemini as any).mockResolvedValueOnce({
+      response: {
+        documents: [
+          {
+            document_id: 'doc-1',
+            file_name: 'cv.pdf',
+            context: 'cv',
+            parsed_text: 'React TypeScript',
+            parse_error: null,
+            parse_error_code: null,
+            candidate_count: 1,
+            candidates: [
+              {
+                candidate_id: 'gemini-1',
+                raw_skill_text: 'React',
+                category: 'technical',
+                evidence_snippets: ['Led React delivery.'],
+                confidence: 0.9,
+                suggestions: [
+                  {
+                    skill_id: 'skill_react',
+                    skill_name: 'React',
+                    match_method: 'exact',
+                    score: 0.97,
+                  },
+                ],
+                unmapped_candidate: false,
+              },
+            ],
+          },
+        ],
+        metadata: {
+          semantic_used: false,
+          semantic_fallback_triggered: false,
+          unmapped_candidates_count: 0,
+          limits: {
+            max_documents: 5,
+            max_chars_per_document: 30000,
+            max_total_chars: 90000,
+          },
+          ai_provider: 'gemini',
+          ai_model: 'gemini-3.1-flash-lite',
+          ai_key_slot: 'primary',
+          ai_fallback_reason: null,
+          cost_ore: 10,
+          currency: 'SEK',
+          idempotency_key: 'idem-1',
+          ai_schema_mode: 'flat_skills_v1',
+          timings: {
+            shortlist_ms: 3,
+            gemini_ms: 15,
+            total_ms: 20,
+          },
+          quality: {
+            mapped_ratio: 1,
+            skills_mapped_after_rerank: 1,
+            evidence_valid_ratio: 1,
+            high_confidence_count: 1,
+            confidence_tiers: {
+              high: 1,
+              medium: 0,
+              low: 0,
+            },
+            avg_skills_per_document: 1,
+          },
+        },
+      },
+      idempotencyKey: 'idem-1',
+      replayed: false,
+    });
+
+    const request = new NextRequest(
+      'http://localhost/api/expertise/cv-import/wizard-suggest?engine=gemini',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          documents: [
+            {
+              document_id: 'doc-1',
+              file_name: 'cv.pdf',
+              text: 'React TypeScript',
+              context: 'cv',
+            },
+          ],
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+
+    const response = await POST(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.metadata.engine_mode).toBe('gemini');
+    expect(body.metadata.engine_used).toBe('gemini');
+    expect(body.documents[0].skill_candidates).toHaveLength(1);
+    expect(body.documents[0].skill_candidates[0].suggestions[0].match_method).toBe('exact');
+    expect(body.metadata.unmapped_candidates_count).toBe(0);
   });
 
   it('reuses deterministic baseline when gemini overlay fails in gemini mode', async () => {

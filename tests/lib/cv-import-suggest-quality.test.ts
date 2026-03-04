@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockSelect = vi.fn();
@@ -127,6 +129,13 @@ function collectSuggestedIds(
     }
   }
   return ids;
+}
+
+function normalizeCandidateText(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9+#]+/g, '')
+    .trim();
 }
 
 describe('cv-import-suggest quality benchmark', () => {
@@ -299,6 +308,72 @@ describe('cv-import-suggest quality benchmark', () => {
     const first = runSignatures[0];
     for (const signature of runSignatures.slice(1)) {
       expect(signature).toBe(first);
+    }
+  });
+
+  it('passes precision fixture scenarios for include and exclude candidate text', async () => {
+    const { suggestSkillsForDocuments } = await import('@/lib/expertise/cv-import-suggest');
+    const fixturePath = join(
+      process.cwd(),
+      'tests',
+      'fixtures',
+      'cv-import',
+      'precision-scenarios.json'
+    );
+    const fixture = JSON.parse(readFileSync(fixturePath, 'utf8')) as {
+      scenarios: Array<{
+        id: string;
+        text: string;
+        must_include: string[];
+        must_exclude: string[];
+      }>;
+    };
+
+    for (const scenario of fixture.scenarios) {
+      const response = await suggestSkillsForDocuments(
+        {
+          documents: [
+            {
+              document_id: scenario.id,
+              file_name: `${scenario.id}.pdf`,
+              text: scenario.text,
+              context: 'cv',
+            },
+          ],
+        },
+        {
+          maxDocuments: 5,
+          maxCharsPerDocument: 30000,
+          maxTotalChars: 50000,
+        },
+        {
+          semanticEnabled: false,
+          fuzzyThreshold: 0.76,
+        }
+      );
+
+      const rawCandidates = new Set(
+        response.documents[0].candidates.map((candidate) => candidate.raw_skill_text.toLowerCase())
+      );
+      const normalizedCandidates = Array.from(rawCandidates).map((value) =>
+        normalizeCandidateText(value)
+      );
+
+      for (const mustInclude of scenario.must_include) {
+        const expected = normalizeCandidateText(mustInclude);
+        expect(
+          normalizedCandidates.some((value) => value.includes(expected)),
+          `expected include "${mustInclude}" in scenario "${scenario.id}"`
+        ).toBe(true);
+      }
+
+      for (const mustExclude of scenario.must_exclude) {
+        const unexpected = normalizeCandidateText(mustExclude);
+        expect(
+          normalizedCandidates.some((value) => value.includes(unexpected)),
+          `expected exclude "${mustExclude}" in scenario "${scenario.id}"`
+        ).toBe(false);
+      }
     }
   });
 });

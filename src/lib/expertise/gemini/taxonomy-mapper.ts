@@ -5,6 +5,10 @@ import { getRows } from '@/lib/db/rows';
 import type { CvImportCandidate } from '@/lib/expertise/cv-import-suggest';
 import type { GeminiSkillCandidate } from '@/lib/expertise/gemini/schemas';
 import type { TaxonomyShortlistSkill } from '@/lib/expertise/gemini/taxonomy-shortlist';
+import {
+  calibrateCandidateConfidence,
+  shouldRejectWeakTopSuggestion,
+} from '@/lib/expertise/skill-confidence';
 
 type SearchSkillRow = {
   code: string;
@@ -360,7 +364,7 @@ export async function mapGeminiCandidatesToCvImportCandidates(params: {
       : [skill.evidence_snippet];
     const evidenceSnippets = normalizeEvidenceSnippets(rawEvidence);
 
-    candidates.push({
+    const candidate: CvImportCandidate = {
       candidate_id: `${params.documentId}::gemini-${index}`,
       raw_skill_text: skill.raw_skill_text.trim(),
       category: normalizeCandidateCategory(skill.category),
@@ -374,7 +378,17 @@ export async function mapGeminiCandidatesToCvImportCandidates(params: {
         score: clamp(entry.score),
       })),
       unmapped_candidate: suggestions.length === 0,
-    });
+    };
+
+    if (shouldRejectWeakTopSuggestion(candidate)) {
+      candidate.suggestions = [];
+      candidate.unmapped_candidate = true;
+      candidate.confidence = clamp(candidate.confidence * 0.82);
+    } else {
+      candidate.confidence = calibrateCandidateConfidence(candidate);
+    }
+
+    candidates.push(candidate);
   }
 
   return candidates;

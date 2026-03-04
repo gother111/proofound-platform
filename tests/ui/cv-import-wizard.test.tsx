@@ -522,6 +522,93 @@ describe('CvImportWizard', () => {
     expect(screen.getByText('Needs mapping. Select at least one Atlas skill.')).toBeInTheDocument();
   });
 
+  it('uses guided queue navigation for multi-candidate skill review', async () => {
+    apiFetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          documents: [
+            {
+              document_id: 'doc-1',
+              file_name: 'cv.pdf',
+              context: 'cv',
+              work_experiences: [],
+              learning_experiences: [],
+              volunteering: [],
+              languages: [],
+              skill_candidates: [
+                {
+                  candidate_id: 'candidate-a',
+                  raw_skill_text: 'platform orchestration concept',
+                  category: 'technical',
+                  evidence_snippets: ['platform orchestration concept'],
+                  confidence: 0.74,
+                  suggestions: [],
+                  unmapped_candidate: true,
+                },
+                {
+                  candidate_id: 'candidate-b',
+                  raw_skill_text: 'React',
+                  category: 'technical',
+                  evidence_snippets: ['Built React products'],
+                  confidence: 0.94,
+                  suggestions: [
+                    {
+                      skill_id: 'skill_react',
+                      skill_name: 'React',
+                      match_method: 'exact',
+                      score: 0.98,
+                    },
+                  ],
+                  unmapped_candidate: false,
+                },
+              ],
+            },
+          ],
+          metadata: {
+            semantic_used: false,
+            semantic_fallback_triggered: false,
+            unmapped_candidates_count: 1,
+            limits: {
+              max_documents: 5,
+              max_chars_per_document: 30000,
+              max_total_chars: 90000,
+            },
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+
+    render(<CvImportWizard />);
+
+    const uploadInput = screen.getByTestId('cv-upload');
+    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
+
+    fireEvent.change(uploadInput, {
+      target: {
+        files: [file],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Guided review 1/2')).toBeInTheDocument();
+    });
+
+    expect(screen.getAllByDisplayValue('platform orchestration concept').length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.getByText('Guided review 2/2')).toBeInTheDocument();
+    expect(screen.getAllByDisplayValue('React').length).toBeGreaterThan(0);
+  });
+
   it('shows partial-success info when skill suggestions are unavailable but extraction succeeds', async () => {
     apiFetchMock.mockResolvedValueOnce(
       new Response(

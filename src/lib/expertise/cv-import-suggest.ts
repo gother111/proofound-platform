@@ -5,6 +5,8 @@ import { extractSkillPhrases, getSkillVariations } from '@/lib/ai/nlp-extractor'
 import { cosineSimilarity, generateEmbedding } from '@/lib/ai/embedding-service';
 import { db } from '@/db';
 import { skillsTaxonomy } from '@/db/schema';
+import { extractLocalSkillCandidates } from '@/lib/expertise/local-skill-candidate-extractor';
+import { computeEvidenceQuality } from '@/lib/expertise/skill-confidence';
 
 const TAXONOMY_CACHE_TTL_MS = 10 * 60 * 1000;
 const MAX_CANDIDATES_PER_DOCUMENT = 40;
@@ -789,7 +791,43 @@ function extractCandidates(
     }
   }
 
+  const deterministicCandidates = extractLocalSkillCandidates(text, {
+    maxCandidates: MAX_CANDIDATES_PER_DOCUMENT,
+  });
+  for (const deterministic of deterministicCandidates) {
+    const normalized = normalizeText(deterministic.raw_skill_text);
+    if (!normalized) {
+      continue;
+    }
+
+    const existing = candidatesMap.get(normalized);
+    if (!existing || deterministic.confidence > existing.confidence) {
+      candidatesMap.set(normalized, {
+        raw_skill_text: deterministic.raw_skill_text,
+        category: deterministic.category,
+        evidence_snippets: deterministic.evidence_snippets.slice(0, 3),
+        confidence: deterministic.confidence,
+      });
+      continue;
+    }
+
+    existing.evidence_snippets = Array.from(
+      new Set([...existing.evidence_snippets, ...deterministic.evidence_snippets])
+    ).slice(0, 3);
+    existing.confidence = clamp(existing.confidence * 0.7 + deterministic.confidence * 0.3);
+  }
+
   return Array.from(candidatesMap.values())
+    .map((candidate) => {
+      const evidenceQuality = computeEvidenceQuality(
+        candidate.raw_skill_text,
+        candidate.evidence_snippets
+      );
+      return {
+        ...candidate,
+        confidence: clamp(candidate.confidence * 0.82 + evidenceQuality * 0.18),
+      };
+    })
     .sort((a, b) => b.confidence - a.confidence)
     .slice(0, MAX_CANDIDATES_PER_DOCUMENT);
 }

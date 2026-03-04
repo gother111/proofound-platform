@@ -21,6 +21,7 @@ import {
   loadExistingSkillIdsForProfile,
   maybeFilterExistingSkillsFromWizardSuggestPayload,
 } from '@/lib/expertise/cv-import-existing-skills-filter';
+import { fuseSkillCandidates } from '@/lib/expertise/skill-candidate-fusion';
 import { proxyCvRequestToPython } from '@/lib/expertise/python-cv-proxy';
 import { suggestWizardForDocuments } from '@/lib/expertise/cv-import-wizard-extractor';
 import {
@@ -328,9 +329,20 @@ function mergeWizardDocuments(params: {
 
     return {
       ...entities,
-      skill_candidates: skills?.candidates || entities.skill_candidates,
+      skill_candidates: fuseSkillCandidates({
+        localCandidates: entities.skill_candidates || [],
+        geminiCandidates: skills?.candidates || [],
+      }),
     };
   });
+}
+
+function countUnmappedCandidates(documents: CvImportWizardSuggestResponse['documents']): number {
+  return documents.reduce(
+    (total, document) =>
+      total + document.skill_candidates.filter((candidate) => candidate.unmapped_candidate).length,
+    0
+  );
 }
 
 function isDependencyUnavailableError(error: Error): boolean {
@@ -637,9 +649,9 @@ export async function POST(request: NextRequest) {
           },
           limits,
           {
-            semanticEnabled,
+            semanticEnabled: false,
             suggestionsLimit,
-            skillSuggestionMode: 'disabled',
+            skillSuggestionMode: 'deterministic',
           }
         ),
         timeoutMs
@@ -660,17 +672,20 @@ export async function POST(request: NextRequest) {
           timeoutMs
         );
 
+        const mergedDocuments = mergeWizardDocuments({
+          sourceOrder,
+          failedDocuments,
+          wizardEntities,
+          geminiSkills: geminiSkills.response,
+        });
+
         const mergedPayload: CvImportWizardSuggestResponse = {
           ...wizardEntities,
-          documents: mergeWizardDocuments({
-            sourceOrder,
-            failedDocuments,
-            wizardEntities,
-            geminiSkills: geminiSkills.response,
-          }),
+          documents: mergedDocuments,
           metadata: {
             ...wizardEntities.metadata,
             ...(geminiSkills.response.metadata as Record<string, unknown>),
+            unmapped_candidates_count: countUnmappedCandidates(mergedDocuments),
           } as CvImportWizardSuggestResponse['metadata'],
         };
         const timedPayload: CvImportWizardSuggestResponse = {
@@ -713,27 +728,34 @@ export async function POST(request: NextRequest) {
         const fallbackReason =
           error instanceof GeminiSuggestError ? error.fallbackReason : 'model_error';
 
+        const geminiFallbackSkills: CvImportSuggestResponse = {
+          documents: wizardEntities.documents.map((document) => ({
+            document_id: document.document_id,
+            file_name: document.file_name,
+            context: document.context,
+            parsed_text: document.parsed_text,
+            parse_error: document.parse_error,
+            parse_error_code: document.parse_error_code,
+            candidate_count: document.skill_candidates.length,
+            candidates: document.skill_candidates,
+          })),
+          metadata: wizardEntities.metadata,
+        };
+
+        const mergedFallbackDocuments = mergeWizardDocuments({
+          sourceOrder,
+          failedDocuments,
+          wizardEntities,
+          geminiSkills: geminiFallbackSkills,
+        });
+
         const mergedFallbackPayload: CvImportWizardSuggestResponse = {
           ...wizardEntities,
-          documents: mergeWizardDocuments({
-            sourceOrder,
-            failedDocuments,
-            wizardEntities,
-            geminiSkills: {
-              documents: wizardEntities.documents.map((document) => ({
-                document_id: document.document_id,
-                file_name: document.file_name,
-                context: document.context,
-                parsed_text: document.parsed_text,
-                parse_error: document.parse_error,
-                parse_error_code: document.parse_error_code,
-                candidate_count: document.skill_candidates.length,
-                candidates: document.skill_candidates,
-              })),
-              metadata: wizardEntities.metadata,
-            },
-          }),
-          metadata: buildGeminiFallbackMetadata(wizardEntities.metadata, fallbackReason),
+          documents: mergedFallbackDocuments,
+          metadata: {
+            ...buildGeminiFallbackMetadata(wizardEntities.metadata, fallbackReason),
+            unmapped_candidates_count: countUnmappedCandidates(mergedFallbackDocuments),
+          },
         };
         const timedFallbackPayload: CvImportWizardSuggestResponse = {
           ...mergedFallbackPayload,

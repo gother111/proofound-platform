@@ -11,6 +11,8 @@ import {
   type CvImportSuggestResponse,
 } from '@/lib/expertise/cv-import-suggest';
 import { extractSkillPhrases } from '@/lib/ai/nlp-extractor';
+import { extractLocalSkillCandidates } from '@/lib/expertise/local-skill-candidate-extractor';
+import { computeEvidenceQuality } from '@/lib/expertise/skill-confidence';
 import {
   CvImportWizardSuggestRequestSchema,
   CvImportWizardSuggestResponseSchema,
@@ -1070,7 +1072,48 @@ function buildCandidateOnlyRows(
     }
   }
 
+  const deterministicCandidates = extractLocalSkillCandidates(text, {
+    maxCandidates: FALLBACK_MAX_SKILL_CANDIDATES,
+  });
+  for (const deterministic of deterministicCandidates) {
+    const normalized = normalizeFallbackText(deterministic.raw_skill_text);
+    if (!normalized) {
+      continue;
+    }
+    const existing = candidateMap.get(normalized);
+    if (!existing || deterministic.confidence > existing.confidence) {
+      candidateMap.set(normalized, {
+        candidate_id: `fallback-${candidateMap.size + 1}`,
+        raw_skill_text: deterministic.raw_skill_text,
+        category: deterministic.category,
+        evidence_snippets: deterministic.evidence_snippets.slice(0, 3),
+        confidence: deterministic.confidence,
+        suggestions: [],
+        unmapped_candidate: true,
+      });
+      continue;
+    }
+
+    existing.evidence_snippets = Array.from(
+      new Set([...existing.evidence_snippets, ...deterministic.evidence_snippets])
+    ).slice(0, 3);
+    existing.confidence = Math.max(
+      existing.confidence,
+      Math.min(0.96, deterministic.confidence * 0.45 + existing.confidence * 0.55)
+    );
+  }
+
   return Array.from(candidateMap.values())
+    .map((candidate) => {
+      const evidenceQuality = computeEvidenceQuality(
+        candidate.raw_skill_text,
+        candidate.evidence_snippets
+      );
+      return {
+        ...candidate,
+        confidence: Math.min(0.98, candidate.confidence * 0.84 + evidenceQuality * 0.16),
+      };
+    })
     .sort((left, right) => right.confidence - left.confidence)
     .slice(0, FALLBACK_MAX_SKILL_CANDIDATES)
     .map((candidate, index) => ({
