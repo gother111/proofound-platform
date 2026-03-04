@@ -13,6 +13,7 @@ import {
   createIdleAnalyzeProgressState,
 } from '@/components/expertise/cv-import/AnalyzeProgressPanel';
 import { resolveInitialSkillSelectionState } from '@/components/expertise/cv-import/initial-selection';
+import { buildManualSuggestion } from '@/components/expertise/cv-import/manual-suggestion';
 import { SkillReviewPanel } from '@/components/expertise/cv-import/SkillReviewPanel';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -994,12 +995,13 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
             ? skill.nameI18n.en.trim()
             : skillId;
 
-        acc.push({
-          skill_id: skillId,
-          skill_name: skillName,
-          match_method: 'fuzzy',
-          score: 0.5,
-        });
+        acc.push(
+          buildManualSuggestion({
+            query,
+            skillId,
+            skillName,
+          })
+        );
         return acc;
       }, []);
 

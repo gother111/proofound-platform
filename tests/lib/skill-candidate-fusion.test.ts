@@ -79,4 +79,47 @@ describe('skill candidate fusion', () => {
     expect(fused[0].unmapped_candidate).toBe(true);
     expect(fused[0].suggestions).toHaveLength(0);
   });
+
+  it('does not collapse distinct raw candidates that map to the same taxonomy skill', () => {
+    const fused = fuseSkillCandidates({
+      localCandidates: [
+        {
+          candidate_id: 'local-1',
+          raw_skill_text: 'React',
+          category: 'technical' as const,
+          evidence_snippets: ['Built React web applications.'],
+          confidence: 0.83,
+          suggestions: [
+            {
+              skill_id: 'skill_react',
+              skill_name: 'React',
+              match_method: 'exact' as const,
+              score: 0.97,
+            },
+          ],
+          unmapped_candidate: false,
+        },
+        {
+          candidate_id: 'local-2',
+          raw_skill_text: 'React Native',
+          category: 'technical' as const,
+          evidence_snippets: ['Built React Native mobile applications.'],
+          confidence: 0.81,
+          suggestions: [
+            {
+              skill_id: 'skill_react',
+              skill_name: 'React',
+              match_method: 'synonym' as const,
+              score: 0.91,
+            },
+          ],
+          unmapped_candidate: false,
+        },
+      ],
+      geminiCandidates: [],
+    });
+
+    expect(fused).toHaveLength(2);
+    expect(fused.map((item) => item.raw_skill_text).sort()).toEqual(['React', 'React Native']);
+  });
 });

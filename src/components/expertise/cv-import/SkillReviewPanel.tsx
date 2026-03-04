@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Check, ChevronDown, Search, X } from 'lucide-react';
+import { AlertTriangle, Check, ChevronDown, Search, X } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,10 @@ import {
   SkillMatchPicker,
   type SkillMatchOption,
 } from '@/components/expertise/cv-import/SkillMatchPicker';
+import {
+  evaluateSuggestionSelectionRisk,
+  type SelectionRiskReason,
+} from '@/lib/expertise/skill-confidence';
 
 export type CandidateCategory =
   | 'technical'
@@ -129,6 +133,20 @@ function toggleId(current: Set<string>, id: string): Set<string> {
   return next;
 }
 
+type PendingSelection = {
+  candidateId: string;
+  option: SkillMatchOption;
+  mode: 'select' | 'replace';
+  reasons: SelectionRiskReason[];
+};
+
+function selectionRiskReasonLabel(reason: SelectionRiskReason): string {
+  if (reason === 'ambiguous_token') return 'Ambiguous token';
+  if (reason === 'weak_method') return 'Weak method';
+  if (reason === 'low_overlap') return 'Low overlap';
+  return 'Weak evidence';
+}
+
 export function SkillReviewPanel({
   candidates,
   openPickerId,
@@ -151,6 +169,7 @@ export function SkillReviewPanel({
   const [expandedEvidenceIds, setExpandedEvidenceIds] = useState<Set<string>>(new Set());
   const [expandedSelectedIds, setExpandedSelectedIds] = useState<Set<string>>(new Set());
   const [expandedFindIds, setExpandedFindIds] = useState<Set<string>>(new Set());
+  const [pendingSelection, setPendingSelection] = useState<PendingSelection | null>(null);
 
   const orderedCandidates = useMemo(() => {
     return [...candidates].sort((left, right) => {
@@ -191,6 +210,18 @@ export function SkillReviewPanel({
     }
   }, [unresolvedCandidates, activeCandidateId]);
 
+  useEffect(() => {
+    if (!pendingSelection) {
+      return;
+    }
+    const candidateStillExists = candidates.some(
+      (candidate) => candidate.candidate_id === pendingSelection.candidateId
+    );
+    if (!candidateStillExists) {
+      setPendingSelection(null);
+    }
+  }, [pendingSelection, candidates]);
+
   const activeUnresolvedIndex = unresolvedCandidates.findIndex(
     (candidate) => candidate.candidate_id === activeCandidateId
   );
@@ -226,11 +257,53 @@ export function SkillReviewPanel({
     setActiveCandidateId(nextCandidate?.candidate_id || null);
   };
 
+  const commitSelection = (
+    candidate: SkillReviewCandidate,
+    option: SkillMatchOption,
+    mode: 'select' | 'replace'
+  ) => {
+    if (mode === 'replace') {
+      onReplaceMatch(candidate.candidate_id, option);
+    } else {
+      onSelectMatch(candidate.candidate_id, option);
+    }
+    goToNextUnresolved(candidate.candidate_id);
+  };
+
+  const requestSelection = (
+    candidate: SkillReviewCandidate,
+    option: SkillMatchOption,
+    mode: 'select' | 'replace'
+  ) => {
+    const risk = evaluateSuggestionSelectionRisk({
+      rawSkillText: candidate.raw_skill_text,
+      evidenceSnippets: candidate.evidence_snippets,
+      suggestion: {
+        skill_id: option.skill_id,
+        skill_name: option.skill_name,
+        match_method: option.match_method,
+        score: option.score,
+      },
+    });
+
+    if (risk.requiresConfirmation) {
+      setPendingSelection({
+        candidateId: candidate.candidate_id,
+        option,
+        mode,
+        reasons: risk.reasons,
+      });
+      return;
+    }
+
+    setPendingSelection(null);
+    commitSelection(candidate, option, mode);
+  };
+
   const handleAccept = (candidate: SkillReviewCandidate) => {
     const topSuggestion = candidate.suggestions[0];
     if (topSuggestion) {
-      onSelectMatch(candidate.candidate_id, topSuggestion);
-      goToNextUnresolved(candidate.candidate_id);
+      requestSelection(candidate, topSuggestion, 'select');
       return;
     }
 
@@ -242,8 +315,7 @@ export function SkillReviewPanel({
   const handleReplace = (candidate: SkillReviewCandidate) => {
     const replacement = pickReplacementSuggestion(candidate);
     if (replacement) {
-      onReplaceMatch(candidate.candidate_id, replacement);
-      goToNextUnresolved(candidate.candidate_id);
+      requestSelection(candidate, replacement, 'replace');
       return;
     }
 
@@ -253,6 +325,9 @@ export function SkillReviewPanel({
   };
 
   const handleSkip = (candidate: SkillReviewCandidate) => {
+    if (pendingSelection?.candidateId === candidate.candidate_id) {
+      setPendingSelection(null);
+    }
     onToggleApproved(candidate.candidate_id, false);
     goToNextUnresolved(candidate.candidate_id);
   };
@@ -328,6 +403,8 @@ export function SkillReviewPanel({
         const isEvidenceExpanded = expandedEvidenceIds.has(candidate.candidate_id);
         const isSelectedExpanded = expandedSelectedIds.has(candidate.candidate_id);
         const isFindExpanded = expandedFindIds.has(candidate.candidate_id);
+        const pendingForCandidate =
+          pendingSelection?.candidateId === candidate.candidate_id ? pendingSelection : null;
 
         return (
           <article key={candidate.candidate_id} className="rounded-lg border p-4">
@@ -374,6 +451,40 @@ export function SkillReviewPanel({
                 Skip
               </Button>
             </div>
+
+            {pendingForCandidate && (
+              <div className="mt-3 rounded-md border border-amber-300 bg-amber-50 p-3">
+                <p className="inline-flex items-center gap-1 text-xs font-medium text-amber-900">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  This match is low-confidence. Confirm before applying.
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {pendingForCandidate.reasons.map((reason) => (
+                    <Badge key={`${candidate.candidate_id}-${reason}`} variant="outline">
+                      {selectionRiskReasonLabel(reason)}
+                    </Badge>
+                  ))}
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      commitSelection(
+                        candidate,
+                        pendingForCandidate.option,
+                        pendingForCandidate.mode
+                      );
+                      setPendingSelection(null);
+                    }}
+                  >
+                    Confirm selection
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setPendingSelection(null)}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
 
             <div className="mt-3 flex flex-wrap gap-2">
               <Button
@@ -582,8 +693,7 @@ export function SkillReviewPanel({
                                     );
                                     return;
                                   }
-                                  onSelectMatch(candidate.candidate_id, option);
-                                  goToNextUnresolved(candidate.candidate_id);
+                                  requestSelection(candidate, option, 'select');
                                 }}
                               >
                                 {isSelected ? 'Remove' : 'Select'}
@@ -591,10 +701,7 @@ export function SkillReviewPanel({
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => {
-                                  onReplaceMatch(candidate.candidate_id, option);
-                                  goToNextUnresolved(candidate.candidate_id);
-                                }}
+                                onClick={() => requestSelection(candidate, option, 'replace')}
                               >
                                 Replace
                               </Button>
@@ -613,14 +720,8 @@ export function SkillReviewPanel({
                   options={candidate.manual_options}
                   selectedSkillIds={candidate.selected_skill_ids}
                   lastSearchedAtLabel={candidate.manual_last_search_at}
-                  onSelect={(option) => {
-                    onSelectMatch(candidate.candidate_id, option);
-                    goToNextUnresolved(candidate.candidate_id);
-                  }}
-                  onReplace={(option) => {
-                    onReplaceMatch(candidate.candidate_id, option);
-                    goToNextUnresolved(candidate.candidate_id);
-                  }}
+                  onSelect={(option) => requestSelection(candidate, option, 'select')}
+                  onReplace={(option) => requestSelection(candidate, option, 'replace')}
                   onClose={() => onOpenPicker(null)}
                 />
               </div>

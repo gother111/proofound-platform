@@ -1,0 +1,20 @@
+{
+  "scenarios": [
+    {
+      "id": "ambiguous-short-tokens",
+      "text": "Skills\nGo, R, PM\nExperience\nWorked with distributed teams.",
+      "must_remain_unmapped": ["go", "r", "pm"]
+    },
+    {
+      "id": "disambiguated-go-language",
+      "text": "Built backend systems in Go language and optimized goroutines.",
+      "must_map": ["skill_go"]
+    },
+    {
+      "id": "react-native-priority",
+      "text": "Built React Native mobile apps with Expo.",
+      "must_map": ["skill_react_native"],
+      "must_not_top_map": ["skill_react"]
+    }
+  ]
+}

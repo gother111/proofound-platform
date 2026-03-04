@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import {
   calibrateCandidateConfidence,
+  evaluateSuggestionSelectionRisk,
   hasPrecisionAutoSelectSignal,
+  isAmbiguousTokenWithoutDisambiguation,
   shouldRejectWeakTopSuggestion,
 } from '@/lib/expertise/skill-confidence';
 
@@ -60,5 +62,30 @@ describe('skill confidence policy', () => {
 
     expect(score).toBeGreaterThanOrEqual(0);
     expect(score).toBeLessThanOrEqual(1);
+  });
+
+  it('marks ambiguous short tokens as requiring disambiguation', () => {
+    const ambiguous = isAmbiguousTokenWithoutDisambiguation({
+      rawSkillText: 'Go',
+      evidenceSnippets: ['Worked with distributed teams and APIs.'],
+      suggestionLabel: 'Go',
+    });
+    expect(ambiguous).toBe(true);
+  });
+
+  it('returns selection risk reasons for weak semantic suggestions', () => {
+    const risk = evaluateSuggestionSelectionRisk({
+      rawSkillText: 'platform concept',
+      evidenceSnippets: ['Platform concept workstream across teams.'],
+      suggestion: {
+        skill_id: 'skill_kubernetes',
+        skill_name: 'Kubernetes',
+        match_method: 'semantic',
+        score: 0.62,
+      },
+    });
+
+    expect(risk.requiresConfirmation).toBe(true);
+    expect(risk.reasons).toContain('weak_method');
   });
 });

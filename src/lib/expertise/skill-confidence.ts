@@ -14,11 +14,23 @@ type SkillCandidateShape = {
   suggestions: SkillSuggestion[];
 };
 
+export type SelectionRiskReason =
+  | 'ambiguous_token'
+  | 'weak_method'
+  | 'low_overlap'
+  | 'weak_evidence';
+
 const METHOD_WEIGHT: Record<SkillMatchMethod, number> = {
   exact: 1,
   synonym: 0.94,
   fuzzy: 0.7,
   semantic: 0.62,
+};
+
+const AMBIGUOUS_SHORT_TOKEN_HINTS: Record<string, string[]> = {
+  r: ['r language', 'rstudio', 'tidyverse', 'ggplot', 'dplyr'],
+  go: ['golang', 'go language', 'goroutine', 'go module', 'go service', 'go microservice'],
+  pm: ['project manager', 'product manager', 'program manager', 'pmp', 'scrum'],
 };
 
 function clamp(value: number, min = 0, max = 1): number {
@@ -59,6 +71,41 @@ function tokenizeForOverlap(value: string): Set<string> {
   }
 
   return tokens;
+}
+
+function normalizeSingleToken(value: string): string {
+  return normalize(value).replace(/\s+/g, ' ').trim();
+}
+
+function resolveAmbiguousToken(value: string): string | null {
+  const normalized = normalizeSingleToken(value);
+  if (!normalized || normalized.includes(' ') || normalized.length > 3) {
+    return null;
+  }
+  return Object.prototype.hasOwnProperty.call(AMBIGUOUS_SHORT_TOKEN_HINTS, normalized)
+    ? normalized
+    : null;
+}
+
+export function isAmbiguousTokenWithoutDisambiguation(params: {
+  rawSkillText: string;
+  evidenceSnippets: string[];
+  suggestionLabel?: string;
+}): boolean {
+  const ambiguousToken = resolveAmbiguousToken(params.rawSkillText);
+  if (!ambiguousToken) {
+    return false;
+  }
+
+  const hints = AMBIGUOUS_SHORT_TOKEN_HINTS[ambiguousToken] || [];
+  if (hints.length === 0) {
+    return true;
+  }
+
+  const haystack = [...params.evidenceSnippets, params.suggestionLabel || '']
+    .join(' ')
+    .toLowerCase();
+  return !hints.some((hint) => haystack.includes(hint));
 }
 
 export function computeLexicalOverlap(left: string, right: string): number {
@@ -133,6 +180,16 @@ export function hasPrecisionAutoSelectSignal(candidate: SkillCandidateShape): bo
     return false;
   }
 
+  if (
+    isAmbiguousTokenWithoutDisambiguation({
+      rawSkillText: candidate.raw_skill_text,
+      evidenceSnippets: candidate.evidence_snippets,
+      suggestionLabel: topSuggestion.skill_name,
+    })
+  ) {
+    return false;
+  }
+
   if (topSuggestion.match_method !== 'exact' && topSuggestion.match_method !== 'synonym') {
     return false;
   }
@@ -153,10 +210,74 @@ export function hasPrecisionAutoSelectSignal(candidate: SkillCandidateShape): bo
   return true;
 }
 
+export function evaluateSuggestionSelectionRisk(params: {
+  rawSkillText: string;
+  evidenceSnippets: string[];
+  suggestion: SkillSuggestion;
+}): {
+  requiresConfirmation: boolean;
+  reasons: SelectionRiskReason[];
+  lexicalOverlap: number;
+  evidenceQuality: number;
+} {
+  const reasons: SelectionRiskReason[] = [];
+  const lexicalOverlap = computeLexicalOverlap(
+    params.rawSkillText,
+    params.suggestion.skill_name || params.rawSkillText
+  );
+  const evidenceQuality = computeEvidenceQuality(params.rawSkillText, params.evidenceSnippets);
+
+  if (
+    isAmbiguousTokenWithoutDisambiguation({
+      rawSkillText: params.rawSkillText,
+      evidenceSnippets: params.evidenceSnippets,
+      suggestionLabel: params.suggestion.skill_name,
+    })
+  ) {
+    reasons.push('ambiguous_token');
+  }
+
+  if (params.suggestion.match_method === 'semantic' || params.suggestion.match_method === 'fuzzy') {
+    reasons.push('weak_method');
+  }
+
+  const overlapThreshold =
+    params.suggestion.match_method === 'exact' || params.suggestion.match_method === 'synonym'
+      ? 0.24
+      : params.suggestion.match_method === 'fuzzy'
+        ? 0.36
+        : 0.42;
+
+  if (lexicalOverlap < overlapThreshold) {
+    reasons.push('low_overlap');
+  }
+
+  if (evidenceQuality < 0.45) {
+    reasons.push('weak_evidence');
+  }
+
+  return {
+    requiresConfirmation: reasons.length > 0,
+    reasons: Array.from(new Set(reasons)),
+    lexicalOverlap,
+    evidenceQuality,
+  };
+}
+
 export function shouldRejectWeakTopSuggestion(candidate: SkillCandidateShape): boolean {
   const top = candidate.suggestions[0];
   if (!top) {
     return false;
+  }
+
+  if (
+    isAmbiguousTokenWithoutDisambiguation({
+      rawSkillText: candidate.raw_skill_text,
+      evidenceSnippets: candidate.evidence_snippets,
+      suggestionLabel: top.skill_name,
+    })
+  ) {
+    return true;
   }
 
   const lexical = computeLexicalOverlap(
@@ -165,11 +286,11 @@ export function shouldRejectWeakTopSuggestion(candidate: SkillCandidateShape): b
   );
   const evidence = computeEvidenceQuality(candidate.raw_skill_text, candidate.evidence_snippets);
 
-  if (top.match_method === 'semantic' && (top.score < 0.88 || lexical < 0.28 || evidence < 0.42)) {
+  if (top.match_method === 'semantic' && (top.score < 0.9 || lexical < 0.34 || evidence < 0.46)) {
     return true;
   }
 
-  if (top.match_method === 'fuzzy' && (top.score < 0.82 || lexical < 0.24 || evidence < 0.38)) {
+  if (top.match_method === 'fuzzy' && (top.score < 0.86 || lexical < 0.32 || evidence < 0.42)) {
     return true;
   }
 

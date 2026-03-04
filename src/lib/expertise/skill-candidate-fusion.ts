@@ -1,6 +1,7 @@
 import type { CvImportCandidate } from '@/lib/expertise/cv-import-suggest';
 import {
   calibrateCandidateConfidence,
+  computeLexicalOverlap,
   shouldRejectWeakTopSuggestion,
 } from '@/lib/expertise/skill-confidence';
 
@@ -35,11 +36,37 @@ function topMethodWeight(candidate: CvImportCandidate): number {
 }
 
 function dedupeKey(candidate: CvImportCandidate): string {
-  const mappedSkill = candidate.suggestions[0]?.skill_id || 'unmapped';
-  if (mappedSkill !== 'unmapped') {
-    return mappedSkill;
+  const normalized = normalize(candidate.raw_skill_text);
+  return normalized || `candidate::${candidate.candidate_id}`;
+}
+
+function simplifyForAliasMerge(value: string): string {
+  return normalize(value)
+    .replace(/\.?js\b/g, '')
+    .replace(/[^a-z0-9+#]/g, '');
+}
+
+function shouldMergeEquivalentSkillText(
+  left: CvImportCandidate,
+  right: CvImportCandidate
+): boolean {
+  const leftNormalized = normalize(left.raw_skill_text);
+  const rightNormalized = normalize(right.raw_skill_text);
+  if (leftNormalized === rightNormalized) {
+    return true;
   }
-  return `${normalize(candidate.raw_skill_text)}::${mappedSkill}`;
+
+  if (simplifyForAliasMerge(left.raw_skill_text) === simplifyForAliasMerge(right.raw_skill_text)) {
+    return true;
+  }
+
+  const leftTop = left.suggestions[0]?.skill_id;
+  const rightTop = right.suggestions[0]?.skill_id;
+  if (!leftTop || !rightTop || leftTop !== rightTop) {
+    return false;
+  }
+
+  return computeLexicalOverlap(left.raw_skill_text, right.raw_skill_text) >= 0.52;
 }
 
 function mergeEvidence(left: string[], right: string[]): string[] {
@@ -143,8 +170,17 @@ export function fuseSkillCandidates(params: {
   ];
 
   for (const incoming of all) {
-    const key = dedupeKey(incoming.candidate);
-    const existing = mergedByKey.get(key);
+    let key = dedupeKey(incoming.candidate);
+    let existing = mergedByKey.get(key);
+    if (!existing) {
+      for (const [existingKey, existingEntry] of mergedByKey.entries()) {
+        if (shouldMergeEquivalentSkillText(existingEntry.candidate, incoming.candidate)) {
+          key = existingKey;
+          existing = existingEntry;
+          break;
+        }
+      }
+    }
     if (!existing) {
       mergedByKey.set(key, incoming);
       continue;
@@ -152,19 +188,33 @@ export function fuseSkillCandidates(params: {
 
     const preferred = choosePreferredCandidate(existing, incoming);
     const secondary = preferred === existing ? incoming : existing;
-    preferred.candidate = {
+    const mergedCandidate: CvImportCandidate = {
       ...preferred.candidate,
       evidence_snippets: mergeEvidence(
         preferred.candidate.evidence_snippets,
         secondary.candidate.evidence_snippets
       ),
       suggestions: mergeSuggestionLists(preferred.candidate, secondary.candidate),
-      confidence: Math.max(
-        calibrateCandidateConfidence(preferred.candidate),
-        calibrateCandidateConfidence(secondary.candidate)
-      ),
+      confidence: preferred.candidate.confidence,
     };
-    preferred.candidate.unmapped_candidate = preferred.candidate.suggestions.length === 0;
+
+    mergedCandidate.confidence = calibrateCandidateConfidence(mergedCandidate);
+    if (shouldRejectWeakTopSuggestion(mergedCandidate)) {
+      mergedCandidate.suggestions = [];
+      mergedCandidate.unmapped_candidate = true;
+      mergedCandidate.confidence = Math.max(0, Math.min(1, mergedCandidate.confidence * 0.78));
+    } else {
+      mergedCandidate.unmapped_candidate = mergedCandidate.suggestions.length === 0;
+      mergedCandidate.confidence = Math.max(
+        mergedCandidate.confidence,
+        calibrateCandidateConfidence(secondary.candidate)
+      );
+    }
+
+    preferred.candidate = {
+      ...mergedCandidate,
+      confidence: Math.max(0, Math.min(1, mergedCandidate.confidence)),
+    };
     mergedByKey.set(key, preferred);
   }
 

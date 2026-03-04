@@ -105,9 +105,48 @@ function topSuggestionLabel(candidate: CvImportCandidate): string {
   return candidate.suggestions[0].skill_name || candidate.raw_skill_text;
 }
 
+function methodWeight(method: 'exact' | 'synonym' | 'fuzzy' | 'semantic'): number {
+  if (method === 'exact') return 4;
+  if (method === 'synonym') return 3;
+  if (method === 'fuzzy') return 2;
+  return 1;
+}
+
+function mergeSuggestionLists(
+  left: CvImportCandidate['suggestions'],
+  right: CvImportCandidate['suggestions']
+): CvImportCandidate['suggestions'] {
+  const bySkillId = new Map<string, CvImportCandidate['suggestions'][number]>();
+  for (const suggestion of [...left, ...right]) {
+    const existing = bySkillId.get(suggestion.skill_id);
+    if (!existing) {
+      bySkillId.set(suggestion.skill_id, suggestion);
+      continue;
+    }
+    const incomingWeight = methodWeight(suggestion.match_method);
+    const existingWeight = methodWeight(existing.match_method);
+    if (
+      incomingWeight > existingWeight ||
+      (incomingWeight === existingWeight && suggestion.score > existing.score)
+    ) {
+      bySkillId.set(suggestion.skill_id, suggestion);
+    }
+  }
+
+  return Array.from(bySkillId.values())
+    .sort((a, b) => {
+      const methodDiff = methodWeight(b.match_method) - methodWeight(a.match_method);
+      if (methodDiff !== 0) {
+        return methodDiff;
+      }
+      return b.score - a.score;
+    })
+    .slice(0, 10);
+}
+
 function dedupeKey(candidate: CvImportCandidate): string {
-  const topSuggestionSkillId = candidate.suggestions[0]?.skill_id || 'unmapped';
-  return `${normalize(candidate.raw_skill_text)}::${topSuggestionSkillId}`;
+  const normalized = normalize(candidate.raw_skill_text);
+  return normalized || `candidate::${candidate.candidate_id}`;
 }
 
 export function rerankGeminiCandidates(params: {
@@ -158,9 +197,31 @@ export function rerankGeminiCandidates(params: {
   for (const candidate of enriched) {
     const key = dedupeKey(candidate);
     const existing = deduped.get(key);
-    if (!existing || candidate.confidence > existing.confidence) {
+    if (!existing) {
       deduped.set(key, candidate);
+      continue;
     }
+
+    const base = candidate.confidence >= existing.confidence ? candidate : existing;
+    const secondary = base === candidate ? existing : candidate;
+    const merged: CvImportCandidate = {
+      ...base,
+      evidence_snippets: Array.from(
+        new Set([...base.evidence_snippets, ...secondary.evidence_snippets])
+      ).slice(0, 3),
+      suggestions: mergeSuggestionLists(base.suggestions, secondary.suggestions),
+      confidence: base.confidence,
+    };
+    merged.confidence = calibrateCandidateConfidence(merged);
+    if (shouldRejectWeakTopSuggestion(merged)) {
+      merged.suggestions = [];
+      merged.unmapped_candidate = true;
+      merged.confidence = clamp(merged.confidence * 0.8);
+    } else {
+      merged.unmapped_candidate = merged.suggestions.length === 0;
+    }
+
+    deduped.set(key, merged);
   }
 
   const candidates = Array.from(deduped.values()).sort((a, b) => {

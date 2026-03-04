@@ -135,21 +135,27 @@ function mergeSuggestions(
       continue;
     }
 
-    if (entry.score > existing.score) {
+    const incomingWeight = methodWeight[entry.matchMethod];
+    const existingWeight = methodWeight[existing.matchMethod];
+
+    if (incomingWeight > existingWeight) {
       byId.set(entry.skillId, entry);
       continue;
     }
 
-    if (
-      entry.score === existing.score &&
-      methodWeight[entry.matchMethod] > methodWeight[existing.matchMethod]
-    ) {
+    if (incomingWeight === existingWeight && entry.score > existing.score) {
       byId.set(entry.skillId, entry);
     }
   }
 
   return Array.from(byId.values())
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => {
+      const methodDiff = methodWeight[b.matchMethod] - methodWeight[a.matchMethod];
+      if (methodDiff !== 0) {
+        return methodDiff;
+      }
+      return b.score - a.score;
+    })
     .slice(0, limit);
 }
 

@@ -45,7 +45,7 @@ const KNOWN_SKILL_PATTERNS: Record<string, string[]> = {
   java: ['java', 'jvm'],
   'c#': ['c#', 'csharp', 'c-sharp', '.net', 'dotnet'],
   'c++': ['c++', 'cpp', 'c plus plus'],
-  go: ['golang', 'go lang'],
+  go: ['go', 'golang', 'go lang', 'go language'],
   rust: ['rust', 'rustlang'],
   ruby: ['ruby', 'ruby on rails', 'ror'],
   php: ['php'],
@@ -55,7 +55,8 @@ const KNOWN_SKILL_PATTERNS: Record<string, string[]> = {
   r: ['r programming', 'r language', 'rstudio'],
 
   // Frontend
-  react: ['react', 'reactjs', 'react.js', 'react native'],
+  react: ['react', 'reactjs', 'react.js'],
+  'react native': ['react native', 'react-native', 'rn'],
   vue: ['vue', 'vuejs', 'vue.js', 'vue 3'],
   angular: ['angular', 'angularjs', 'angular 2+'],
   svelte: ['svelte', 'sveltekit'],
@@ -490,13 +491,18 @@ export function extractSkillPhrases(text: string): NLPExtractionResult {
       !isCommonWord(cleanPhrase)
     ) {
       // Check if it looks like a technical term
-      if (isTechnicalTerm(cleanPhrase) && !looksLikeNoiseCandidate(cleanPhrase)) {
+      const context = findContext(normalizedText, phrase);
+      if (
+        isTechnicalTerm(cleanPhrase) &&
+        !looksLikeNoiseCandidate(cleanPhrase) &&
+        hasStrongNounSkillSignal(cleanPhrase, context)
+      ) {
         foundSkills.add(cleanPhrase);
         phrases.push({
           text: phrase,
           type: 'skill',
           confidence: 0.42, // Lower confidence for broad NLP extraction
-          context: findContext(normalizedText, phrase),
+          context,
         });
       }
     }
@@ -718,6 +724,34 @@ function isTechnicalTerm(phrase: string): boolean {
   }
 
   return false;
+}
+
+function hasStrongNounSkillSignal(phrase: string, context: string): boolean {
+  const normalized = normalizeSkillAlias(phrase);
+  if (!normalized) {
+    return false;
+  }
+
+  if (KNOWN_SKILL_BY_ALIAS.has(normalized)) {
+    return true;
+  }
+
+  if (normalized.split(' ').length > 3) {
+    return false;
+  }
+
+  if (/\b(engineer|developer|manager|team|project|experience|employment)\b/i.test(phrase)) {
+    return false;
+  }
+
+  if (/[+#./\d]/.test(phrase) || /[a-z][A-Z]/.test(phrase)) {
+    return true;
+  }
+
+  const normalizedContext = context.toLowerCase();
+  return /\b(skills?|competenc(?:y|ies)|technologies?|tooling|tools?|frameworks?|tech\s+stack)\b/.test(
+    normalizedContext
+  );
 }
 
 /**

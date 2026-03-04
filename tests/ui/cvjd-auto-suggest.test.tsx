@@ -262,6 +262,81 @@ describe('CVJDAutoSuggest', () => {
     expect(screen.getByText('0/1 selected')).toBeInTheDocument();
   });
 
+  it('requires confirmation before applying weak semantic matches in text mode', async () => {
+    apiFetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          documents: [
+            {
+              document_id: 'jd-1',
+              file_name: 'job-description.txt',
+              context: 'jd',
+              candidate_count: 1,
+              candidates: [
+                {
+                  candidate_id: 'candidate-1',
+                  raw_skill_text: 'platform concept',
+                  category: 'technical',
+                  evidence_snippets: ['platform concept workstream across teams'],
+                  confidence: 0.84,
+                  suggestions: [
+                    {
+                      skill_id: 'skill_kubernetes',
+                      skill_name: 'Kubernetes',
+                      match_method: 'semantic',
+                      score: 0.85,
+                    },
+                  ],
+                  unmapped_candidate: false,
+                },
+              ],
+            },
+          ],
+          metadata: {
+            semantic_used: true,
+            semantic_fallback_triggered: false,
+            unmapped_candidates_count: 0,
+            limits: {
+              max_documents: 5,
+              max_chars_per_document: 30000,
+              max_total_chars: 90000,
+            },
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+
+    render(<CVJDAutoSuggest />);
+
+    fireEvent.click(screen.getByRole('button', { name: /job description/i }));
+
+    const textInput = screen.getByTestId('context-text-input');
+    fireEvent.change(textInput, {
+      target: { value: 'Need platform concept alignment for distributed teams.' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /analyze text/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('platform concept')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
+    expect(
+      screen.getByText('This match is low-confidence. Confirm before applying.')
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm selection' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Add Approved \(1\) to Profile/i })).toBeEnabled();
+    });
+  });
+
   it('shows staged progress and auto-collapses completion for text analysis', async () => {
     vi.useFakeTimers();
     try {

@@ -6,7 +6,11 @@ import { cosineSimilarity, generateEmbedding } from '@/lib/ai/embedding-service'
 import { db } from '@/db';
 import { skillsTaxonomy } from '@/db/schema';
 import { extractLocalSkillCandidates } from '@/lib/expertise/local-skill-candidate-extractor';
-import { computeEvidenceQuality } from '@/lib/expertise/skill-confidence';
+import {
+  calibrateCandidateConfidence,
+  computeEvidenceQuality,
+  shouldRejectWeakTopSuggestion,
+} from '@/lib/expertise/skill-confidence';
 
 const TAXONOMY_CACHE_TTL_MS = 10 * 60 * 1000;
 const MAX_CANDIDATES_PER_DOCUMENT = 40;
@@ -350,7 +354,7 @@ function isUsefulEvidenceVariation(variation: string, rawSkillText: string): boo
   }
 
   if (AMBIGUOUS_SHORT_VARIATIONS.has(normalized)) {
-    return false;
+    return normalized === normalizeText(rawSkillText);
   }
 
   return true;
@@ -1073,6 +1077,15 @@ export async function suggestSkillsForDocuments(
         suggestions,
         unmapped_candidate: suggestions.length === 0,
       };
+
+      candidateOutput.confidence = calibrateCandidateConfidence(candidateOutput);
+      if (shouldRejectWeakTopSuggestion(candidateOutput)) {
+        candidateOutput.suggestions = [];
+        candidateOutput.unmapped_candidate = true;
+        candidateOutput.confidence = clamp(candidateOutput.confidence * 0.8);
+      } else {
+        candidateOutput.unmapped_candidate = candidateOutput.suggestions.length === 0;
+      }
 
       if (candidateOutput.unmapped_candidate) {
         unmappedCandidatesCount += 1;

@@ -413,7 +413,7 @@ function attachReviewHintsMetadata(
       skills_first: true,
       recommended_action:
         'Review suggested Atlas skills first, then expand work, learning, volunteering, and languages if needed.',
-      quick_apply_label: 'Apply recommended skills',
+      quick_apply_label: 'Apply skills only',
     },
   };
 }

@@ -1,4 +1,5 @@
 import { extractSkillPhrases, getSkillVariations } from '@/lib/ai/nlp-extractor';
+import { isAmbiguousTokenWithoutDisambiguation } from '@/lib/expertise/skill-confidence';
 
 export type LocalSkillCategory =
   | 'technical'
@@ -96,6 +97,7 @@ const NOISE_PATTERN =
   /\b(responsible\s+for|worked\s+on|worked\s+with|team|stakeholders?|company|location|based\s+in|graduated|university|college|school)\b/i;
 const EVIDENCE_CONTEXT_WINDOW = 80;
 const EVIDENCE_MAX = 3;
+const SHORT_TOKEN_ALLOWLIST = new Set(['ai', 'ml', 'ui', 'ux', 'qa', 'ci', 'cd', 'js', 'ts']);
 
 function clamp(value: number, min = 0, max = 1): number {
   return Math.max(min, Math.min(max, value));
@@ -144,6 +146,13 @@ function looksLikeSkillCandidate(raw: string): boolean {
   const tokens = normalized.split(' ').filter(Boolean);
   if (tokens.length === 0 || tokens.length > 8) {
     return false;
+  }
+
+  const compact = normalized.replace(/\s+/g, '');
+  if (tokens.length === 1 && compact.length <= 2) {
+    if (!SHORT_TOKEN_ALLOWLIST.has(compact) && compact !== 'c#' && compact !== 'c++') {
+      return false;
+    }
   }
 
   if (!/[a-z]/i.test(normalized)) {
@@ -296,8 +305,14 @@ export function extractLocalSkillCandidates(
 
       const sectionBoost = sectionEntries.has(normalized) ? 0.14 : 0;
       const noisePenalty = NOISE_PATTERN.test(phrase.context || '') ? 0.08 : 0;
+      const ambiguityPenalty = isAmbiguousTokenWithoutDisambiguation({
+        rawSkillText: raw,
+        evidenceSnippets: evidence,
+      })
+        ? 0.22
+        : 0;
       const base = typeof phrase.confidence === 'number' ? phrase.confidence : 0.5;
-      const confidence = clamp(base + sectionBoost - noisePenalty);
+      const confidence = clamp(base + sectionBoost - noisePenalty - ambiguityPenalty);
 
       const existing = byNormalized.get(normalized);
       const candidate: LocalSkillCandidate = {

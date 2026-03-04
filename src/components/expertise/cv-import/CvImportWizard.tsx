@@ -18,6 +18,7 @@ import {
   type ImportActionSummary,
 } from '@/components/expertise/cv-import/ImportActionBanner';
 import { resolveInitialSkillSelectionState } from '@/components/expertise/cv-import/initial-selection';
+import { buildManualSuggestion } from '@/components/expertise/cv-import/manual-suggestion';
 import { SkillReviewPanel } from '@/components/expertise/cv-import/SkillReviewPanel';
 import { EventType } from '@/lib/analytics/constants';
 import {
@@ -1438,12 +1439,13 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
             ? skill.nameI18n.en.trim()
             : skillId;
 
-        acc.push({
-          skill_id: skillId,
-          skill_name: skillName,
-          match_method: 'fuzzy',
-          score: 0.5,
-        });
+        acc.push(
+          buildManualSuggestion({
+            query,
+            skillId,
+            skillName,
+          })
+        );
 
         return acc;
       }, []);

@@ -613,6 +613,90 @@ describe('CvImportWizard', () => {
     expect(screen.getByText('Top suggested Atlas skill')).toBeInTheDocument();
   });
 
+  it('requires explicit confirmation before selecting weak suggestions', async () => {
+    apiFetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          documents: [
+            {
+              document_id: 'doc-1',
+              file_name: 'cv.pdf',
+              context: 'cv',
+              work_experiences: [],
+              learning_experiences: [],
+              volunteering: [],
+              languages: [],
+              skill_candidates: [
+                {
+                  candidate_id: 'candidate-weak',
+                  raw_skill_text: 'platform concept',
+                  category: 'technical',
+                  evidence_snippets: ['platform concept workstream across teams'],
+                  confidence: 0.8,
+                  suggestions: [
+                    {
+                      skill_id: 'skill_kubernetes',
+                      skill_name: 'Kubernetes',
+                      match_method: 'semantic',
+                      score: 0.84,
+                    },
+                  ],
+                  unmapped_candidate: false,
+                },
+              ],
+            },
+          ],
+          metadata: {
+            semantic_used: false,
+            semantic_fallback_triggered: false,
+            unmapped_candidates_count: 0,
+            limits: {
+              max_documents: 5,
+              max_chars_per_document: 30000,
+              max_total_chars: 90000,
+            },
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+
+    render(<CvImportWizard />);
+
+    const uploadInput = screen.getByTestId('cv-upload');
+    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
+
+    fireEvent.change(uploadInput, {
+      target: {
+        files: [file],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('platform concept')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
+
+    expect(
+      screen.getByText('This match is low-confidence. Confirm before applying.')
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm selection' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('1/1 selected')).toBeInTheDocument();
+    });
+  });
+
   it('shows partial-success info when skill suggestions are unavailable but extraction succeeds', async () => {
     apiFetchMock.mockResolvedValueOnce(
       new Response(
