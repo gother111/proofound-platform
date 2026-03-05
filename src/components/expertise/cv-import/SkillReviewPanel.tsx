@@ -24,6 +24,13 @@ export type CandidateCategory =
   | 'certifications'
   | 'other';
 
+export type SkillReviewOutcome = 'pending' | 'accepted' | 'kept_unmapped' | 'not_skill';
+
+export type SkillReviewSelectionMeta = {
+  riskReasons?: SelectionRiskReason[];
+  selectionSource: 'suggested' | 'manual';
+};
+
 export interface SkillReviewCandidate {
   candidate_id: string;
   raw_skill_text: string;
@@ -40,25 +47,36 @@ export interface SkillReviewCandidate {
   unmapped_candidate: boolean;
   already_in_profile?: boolean;
   manual_last_search_at?: string;
+  review_outcome?: SkillReviewOutcome;
 }
 
 interface SkillReviewPanelProps {
   candidates: SkillReviewCandidate[];
   openPickerId: string | null;
   onOpenPicker: (candidateId: string | null) => void;
-  onToggleApproved: (candidateId: string, checked: boolean) => void;
   onRawSkillChange: (candidateId: string, value: string) => void;
   onCategoryChange: (candidateId: string, value: CandidateCategory) => void;
   onSelectSkillIds: (candidateId: string, value: string[]) => void;
   onManualQueryChange: (candidateId: string, value: string) => void;
   onToggleSuggestions: (candidateId: string) => void;
   onFind: (candidateId: string) => void;
-  onSelectMatch: (candidateId: string, option: SkillMatchOption) => void;
-  onReplaceMatch: (candidateId: string, option: SkillMatchOption) => void;
+  onSelectMatch: (
+    candidateId: string,
+    option: SkillMatchOption,
+    meta: SkillReviewSelectionMeta
+  ) => void;
+  onReplaceMatch: (
+    candidateId: string,
+    option: SkillMatchOption,
+    meta: SkillReviewSelectionMeta
+  ) => void;
+  onKeepUnmapped: (candidateId: string) => void;
+  onMarkNotSkill: (candidateId: string) => void;
+  onCandidateViewed?: (candidateId: string) => void;
 }
 
 type ReviewStatus = {
-  label: 'Ready' | 'Needs review' | 'Needs mapping';
+  label: 'Ready' | 'Needs review' | 'Needs mapping' | 'Kept unmapped' | 'Not a skill';
   variant: 'secondary' | 'outline';
   rank: number;
   reason: string;
@@ -72,6 +90,24 @@ function confidencePercent(value: number): number {
 }
 
 function resolveCandidateStatus(candidate: SkillReviewCandidate): ReviewStatus {
+  if (candidate.review_outcome === 'not_skill') {
+    return {
+      label: 'Not a skill',
+      variant: 'outline',
+      rank: 5,
+      reason: 'Excluded from import as non-skill noise',
+    };
+  }
+
+  if (candidate.review_outcome === 'kept_unmapped') {
+    return {
+      label: 'Kept unmapped',
+      variant: 'outline',
+      rank: 4,
+      reason: 'Left out of import until you choose a taxonomy match',
+    };
+  }
+
   if (
     candidate.approved &&
     (candidate.selected_skill_ids.length > 0 || candidate.already_in_profile)
@@ -138,6 +174,7 @@ type PendingSelection = {
   option: SkillMatchOption;
   mode: 'select' | 'replace';
   reasons: SelectionRiskReason[];
+  selectionSource: 'suggested' | 'manual';
 };
 
 function selectionRiskReasonLabel(reason: SelectionRiskReason): string {
@@ -147,11 +184,14 @@ function selectionRiskReasonLabel(reason: SelectionRiskReason): string {
   return 'Weak evidence';
 }
 
+function isPrimaryUnresolved(status: ReviewStatus): boolean {
+  return status.label === 'Needs mapping' || status.label === 'Needs review';
+}
+
 export function SkillReviewPanel({
   candidates,
   openPickerId,
   onOpenPicker,
-  onToggleApproved,
   onRawSkillChange,
   onCategoryChange,
   onSelectSkillIds,
@@ -160,6 +200,9 @@ export function SkillReviewPanel({
   onFind,
   onSelectMatch,
   onReplaceMatch,
+  onKeepUnmapped,
+  onMarkNotSkill,
+  onCandidateViewed,
 }: SkillReviewPanelProps) {
   const [showAllSkills, setShowAllSkills] = useState(false);
   const [activeCandidateId, setActiveCandidateId] = useState<string | null>(
@@ -187,11 +230,15 @@ export function SkillReviewPanel({
 
   const unresolvedCandidates = useMemo(
     () =>
-      orderedCandidates.filter((candidate) => resolveCandidateStatus(candidate).label !== 'Ready'),
+      orderedCandidates.filter((candidate) =>
+        isPrimaryUnresolved(resolveCandidateStatus(candidate))
+      ),
     [orderedCandidates]
   );
 
-  const readyCount = orderedCandidates.length - unresolvedCandidates.length;
+  const readyCount = orderedCandidates.filter(
+    (candidate) => resolveCandidateStatus(candidate).label === 'Ready'
+  ).length;
   const alreadyInProfileCount = orderedCandidates.filter(
     (candidate) => candidate.already_in_profile
   ).length;
@@ -221,6 +268,14 @@ export function SkillReviewPanel({
       setPendingSelection(null);
     }
   }, [pendingSelection, candidates]);
+
+  useEffect(() => {
+    if (showAllSkills || !activeCandidateId || !onCandidateViewed) {
+      return;
+    }
+
+    onCandidateViewed(activeCandidateId);
+  }, [activeCandidateId, onCandidateViewed, showAllSkills]);
 
   const activeUnresolvedIndex = unresolvedCandidates.findIndex(
     (candidate) => candidate.candidate_id === activeCandidateId
@@ -260,12 +315,20 @@ export function SkillReviewPanel({
   const commitSelection = (
     candidate: SkillReviewCandidate,
     option: SkillMatchOption,
-    mode: 'select' | 'replace'
+    mode: 'select' | 'replace',
+    selectionSource: 'suggested' | 'manual',
+    riskReasons?: SelectionRiskReason[]
   ) => {
     if (mode === 'replace') {
-      onReplaceMatch(candidate.candidate_id, option);
+      onReplaceMatch(candidate.candidate_id, option, {
+        riskReasons,
+        selectionSource,
+      });
     } else {
-      onSelectMatch(candidate.candidate_id, option);
+      onSelectMatch(candidate.candidate_id, option, {
+        riskReasons,
+        selectionSource,
+      });
     }
     goToNextUnresolved(candidate.candidate_id);
   };
@@ -273,7 +336,8 @@ export function SkillReviewPanel({
   const requestSelection = (
     candidate: SkillReviewCandidate,
     option: SkillMatchOption,
-    mode: 'select' | 'replace'
+    mode: 'select' | 'replace',
+    selectionSource: 'suggested' | 'manual'
   ) => {
     const risk = evaluateSuggestionSelectionRisk({
       rawSkillText: candidate.raw_skill_text,
@@ -292,18 +356,19 @@ export function SkillReviewPanel({
         option,
         mode,
         reasons: risk.reasons,
+        selectionSource,
       });
       return;
     }
 
     setPendingSelection(null);
-    commitSelection(candidate, option, mode);
+    commitSelection(candidate, option, mode, selectionSource, risk.reasons);
   };
 
   const handleAccept = (candidate: SkillReviewCandidate) => {
     const topSuggestion = candidate.suggestions[0];
     if (topSuggestion) {
-      requestSelection(candidate, topSuggestion, 'select');
+      requestSelection(candidate, topSuggestion, 'select', 'suggested');
       return;
     }
 
@@ -315,7 +380,7 @@ export function SkillReviewPanel({
   const handleReplace = (candidate: SkillReviewCandidate) => {
     const replacement = pickReplacementSuggestion(candidate);
     if (replacement) {
-      requestSelection(candidate, replacement, 'replace');
+      requestSelection(candidate, replacement, 'replace', 'suggested');
       return;
     }
 
@@ -324,11 +389,19 @@ export function SkillReviewPanel({
     onFind(candidate.candidate_id);
   };
 
-  const handleSkip = (candidate: SkillReviewCandidate) => {
+  const handleKeepUnmapped = (candidate: SkillReviewCandidate) => {
     if (pendingSelection?.candidateId === candidate.candidate_id) {
       setPendingSelection(null);
     }
-    onToggleApproved(candidate.candidate_id, false);
+    onKeepUnmapped(candidate.candidate_id);
+    goToNextUnresolved(candidate.candidate_id);
+  };
+
+  const handleMarkNotSkill = (candidate: SkillReviewCandidate) => {
+    if (pendingSelection?.candidateId === candidate.candidate_id) {
+      setPendingSelection(null);
+    }
+    onMarkNotSkill(candidate.candidate_id);
     goToNextUnresolved(candidate.candidate_id);
   };
 
@@ -370,8 +443,8 @@ export function SkillReviewPanel({
 
       {!showAllSkills && unresolvedCandidates.length === 0 && (
         <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-3 text-sm text-emerald-900">
-          All skills are ready. You can proceed to apply, or open advanced list to make detailed
-          edits.
+          All primary review items are resolved. You can proceed to apply, or open advanced list to
+          make detailed edits.
         </div>
       )}
 
@@ -447,8 +520,11 @@ export function SkillReviewPanel({
               <Button size="sm" variant="outline" onClick={() => handleReplace(candidate)}>
                 Replace
               </Button>
-              <Button size="sm" variant="outline" onClick={() => handleSkip(candidate)}>
-                Skip
+              <Button size="sm" variant="outline" onClick={() => handleKeepUnmapped(candidate)}>
+                Keep unmapped
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => handleMarkNotSkill(candidate)}>
+                Not a skill
               </Button>
             </div>
 
@@ -465,6 +541,14 @@ export function SkillReviewPanel({
                     </Badge>
                   ))}
                 </div>
+                <p className="mt-3 text-sm font-medium text-amber-950">
+                  {pendingForCandidate.option.skill_name}
+                </p>
+                {candidate.evidence_snippets[0] && (
+                  <p className="mt-1 text-xs text-amber-900">
+                    Evidence: {candidate.evidence_snippets[0]}
+                  </p>
+                )}
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button
                     size="sm"
@@ -472,7 +556,9 @@ export function SkillReviewPanel({
                       commitSelection(
                         candidate,
                         pendingForCandidate.option,
-                        pendingForCandidate.mode
+                        pendingForCandidate.mode,
+                        pendingForCandidate.selectionSource,
+                        pendingForCandidate.reasons
                       );
                       setPendingSelection(null);
                     }}
@@ -693,7 +779,7 @@ export function SkillReviewPanel({
                                     );
                                     return;
                                   }
-                                  requestSelection(candidate, option, 'select');
+                                  requestSelection(candidate, option, 'select', 'suggested');
                                 }}
                               >
                                 {isSelected ? 'Remove' : 'Select'}
@@ -701,7 +787,9 @@ export function SkillReviewPanel({
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => requestSelection(candidate, option, 'replace')}
+                                onClick={() =>
+                                  requestSelection(candidate, option, 'replace', 'suggested')
+                                }
                               >
                                 Replace
                               </Button>
@@ -720,14 +808,14 @@ export function SkillReviewPanel({
                   options={candidate.manual_options}
                   selectedSkillIds={candidate.selected_skill_ids}
                   lastSearchedAtLabel={candidate.manual_last_search_at}
-                  onSelect={(option) => requestSelection(candidate, option, 'select')}
-                  onReplace={(option) => requestSelection(candidate, option, 'replace')}
+                  onSelect={(option) => requestSelection(candidate, option, 'select', 'manual')}
+                  onReplace={(option) => requestSelection(candidate, option, 'replace', 'manual')}
                   onClose={() => onOpenPicker(null)}
                 />
               </div>
             )}
 
-            {candidate.unmapped_candidate &&
+            {status.label === 'Needs mapping' &&
               !candidate.already_in_profile &&
               candidate.selected_skill_ids.length === 0 && (
                 <p className="mt-2 text-xs text-amber-700">

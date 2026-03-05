@@ -501,6 +501,15 @@ export const CURATED_ALIAS_MAP: AliasCandidate[] = [
     confidence: 1.0,
   },
   { targetSlug: 'go-programming-language', alias: 'golang', source: 'curated', confidence: 1.0 },
+  { targetSlug: 'c-programming-13641', alias: 'C++', source: 'curated', confidence: 1.0 },
+  {
+    targetSlug: 'c-programming-13641',
+    alias: 'C plus plus',
+    source: 'curated',
+    confidence: 0.99,
+  },
+  { targetSlug: 'nodejs-runtime', alias: 'NodeJS', source: 'curated', confidence: 0.99 },
+  { targetSlug: 'nodejs-runtime', alias: 'Node.js', source: 'curated', confidence: 0.98 },
   {
     targetSlug: 'ai-literacy',
     alias: 'artificial intelligence literacy',

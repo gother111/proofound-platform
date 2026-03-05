@@ -122,4 +122,49 @@ describe('skill candidate fusion', () => {
     expect(fused).toHaveLength(2);
     expect(fused.map((item) => item.raw_skill_text).sort()).toEqual(['React', 'React Native']);
   });
+
+  it('forces unresolved output when local and gemini top mappings disagree without strong evidence', () => {
+    const fused = fuseSkillCandidates({
+      localCandidates: [
+        {
+          candidate_id: 'local-1',
+          raw_skill_text: 'PM',
+          category: 'other' as const,
+          evidence_snippets: ['Worked with PM stakeholders across projects.'],
+          confidence: 0.66,
+          suggestions: [
+            {
+              skill_id: 'skill_project_management',
+              skill_name: 'Project Management',
+              match_method: 'fuzzy' as const,
+              score: 0.88,
+            },
+          ],
+          unmapped_candidate: false,
+        },
+      ],
+      geminiCandidates: [
+        {
+          candidate_id: 'gemini-1',
+          raw_skill_text: 'PM',
+          category: 'other' as const,
+          evidence_snippets: ['Worked with PM stakeholders across projects.'],
+          confidence: 0.69,
+          suggestions: [
+            {
+              skill_id: 'skill_product_management',
+              skill_name: 'Product Management',
+              match_method: 'semantic' as const,
+              score: 0.9,
+            },
+          ],
+          unmapped_candidate: false,
+        },
+      ],
+    });
+
+    expect(fused).toHaveLength(1);
+    expect(fused[0].unmapped_candidate).toBe(true);
+    expect(fused[0].suggestions).toHaveLength(0);
+  });
 });

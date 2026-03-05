@@ -20,6 +20,8 @@ export type SelectionRiskReason =
   | 'low_overlap'
   | 'weak_evidence';
 
+export type ConfidenceBucket = 'high' | 'medium' | 'low';
+
 const METHOD_WEIGHT: Record<SkillMatchMethod, number> = {
   exact: 1,
   synonym: 0.94,
@@ -85,6 +87,33 @@ function resolveAmbiguousToken(value: string): string | null {
   return Object.prototype.hasOwnProperty.call(AMBIGUOUS_SHORT_TOKEN_HINTS, normalized)
     ? normalized
     : null;
+}
+
+export function getAmbiguousTokenKey(value: string): string | null {
+  return resolveAmbiguousToken(value);
+}
+
+export function isManualReviewOnlyShortToken(value: string): boolean {
+  return resolveAmbiguousToken(value) !== null;
+}
+
+export function getAmbiguousTokenHints(value: string): string[] {
+  const token = resolveAmbiguousToken(value);
+  if (!token) {
+    return [];
+  }
+
+  return [...(AMBIGUOUS_SHORT_TOKEN_HINTS[token] || [])];
+}
+
+export function confidenceBucketForValue(value: number): ConfidenceBucket {
+  if (value >= 0.82) {
+    return 'high';
+  }
+  if (value >= 0.58) {
+    return 'medium';
+  }
+  return 'low';
 }
 
 export function isAmbiguousTokenWithoutDisambiguation(params: {
@@ -295,4 +324,31 @@ export function shouldRejectWeakTopSuggestion(candidate: SkillCandidateShape): b
   }
 
   return false;
+}
+
+export function hasStrongExactOrSynonymSignal(candidate: SkillCandidateShape): boolean {
+  const top = candidate.suggestions[0];
+  if (!top) {
+    return false;
+  }
+
+  if (top.match_method !== 'exact' && top.match_method !== 'synonym') {
+    return false;
+  }
+
+  if (top.score < 0.93) {
+    return false;
+  }
+
+  if (
+    isAmbiguousTokenWithoutDisambiguation({
+      rawSkillText: candidate.raw_skill_text,
+      evidenceSnippets: candidate.evidence_snippets,
+      suggestionLabel: top.skill_name,
+    })
+  ) {
+    return false;
+  }
+
+  return computeEvidenceQuality(candidate.raw_skill_text, candidate.evidence_snippets) >= 0.45;
 }

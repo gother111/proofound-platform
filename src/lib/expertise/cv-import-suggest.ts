@@ -741,11 +741,33 @@ async function loadTaxonomy(): Promise<TaxonomyCache> {
 function extractCandidates(
   text: string
 ): Array<Omit<CvImportCandidate, 'candidate_id' | 'suggestions' | 'unmapped_candidate'>> {
+  const deterministicCandidates = extractLocalSkillCandidates(text, {
+    maxCandidates: MAX_CANDIDATES_PER_DOCUMENT,
+  });
+  const groundedCandidateKeys = new Set(
+    deterministicCandidates
+      .map((candidate) => normalizeText(candidate.raw_skill_text))
+      .filter(Boolean)
+  );
   const phraseResult = extractSkillPhrases(text);
   const candidatesMap = new Map<
     string,
     Omit<CvImportCandidate, 'candidate_id' | 'suggestions' | 'unmapped_candidate'>
   >();
+
+  for (const deterministic of deterministicCandidates) {
+    const normalized = normalizeText(deterministic.raw_skill_text);
+    if (!normalized) {
+      continue;
+    }
+
+    candidatesMap.set(normalized, {
+      raw_skill_text: deterministic.raw_skill_text,
+      category: deterministic.category,
+      evidence_snippets: deterministic.evidence_snippets.slice(0, 3),
+      confidence: deterministic.confidence,
+    });
+  }
 
   for (const phrase of phraseResult.phrases) {
     if (phrase.type !== 'skill' && phrase.type !== 'experience') {
@@ -776,12 +798,23 @@ function extractCandidates(
       }
 
       const confidence = clamp((phrase.confidence || 0.5) - confidencePenalty);
+      const category = inferCategory(rawSkillText);
+      const hasGroundedDeterministicMatch = groundedCandidateKeys.has(normalized);
+
+      if (!hasGroundedDeterministicMatch && confidence < 0.5) {
+        continue;
+      }
+
+      if (!hasGroundedDeterministicMatch && category === 'other' && confidence < 0.7) {
+        continue;
+      }
+
       const existing = candidatesMap.get(normalized);
 
       if (!existing || confidence > existing.confidence) {
         candidatesMap.set(normalized, {
           raw_skill_text: rawSkillText,
-          category: inferCategory(rawSkillText),
+          category,
           evidence_snippets: evidenceSnippets,
           confidence,
         });
@@ -793,32 +826,6 @@ function extractCandidates(
       ).slice(0, 3);
       existing.evidence_snippets = mergedSnippets;
     }
-  }
-
-  const deterministicCandidates = extractLocalSkillCandidates(text, {
-    maxCandidates: MAX_CANDIDATES_PER_DOCUMENT,
-  });
-  for (const deterministic of deterministicCandidates) {
-    const normalized = normalizeText(deterministic.raw_skill_text);
-    if (!normalized) {
-      continue;
-    }
-
-    const existing = candidatesMap.get(normalized);
-    if (!existing || deterministic.confidence > existing.confidence) {
-      candidatesMap.set(normalized, {
-        raw_skill_text: deterministic.raw_skill_text,
-        category: deterministic.category,
-        evidence_snippets: deterministic.evidence_snippets.slice(0, 3),
-        confidence: deterministic.confidence,
-      });
-      continue;
-    }
-
-    existing.evidence_snippets = Array.from(
-      new Set([...existing.evidence_snippets, ...deterministic.evidence_snippets])
-    ).slice(0, 3);
-    existing.confidence = clamp(existing.confidence * 0.7 + deterministic.confidence * 0.3);
   }
 
   return Array.from(candidatesMap.values())

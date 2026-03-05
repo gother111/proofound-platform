@@ -1,6 +1,7 @@
 import type { CvImportCandidate } from '@/lib/expertise/cv-import-suggest';
 import {
   calibrateCandidateConfidence,
+  hasStrongExactOrSynonymSignal,
   shouldRejectWeakTopSuggestion,
 } from '@/lib/expertise/skill-confidence';
 
@@ -149,6 +150,10 @@ function dedupeKey(candidate: CvImportCandidate): string {
   return normalized || `candidate::${candidate.candidate_id}`;
 }
 
+function topSuggestionSkillId(candidate: CvImportCandidate): string | null {
+  return candidate.suggestions[0]?.skill_id || null;
+}
+
 export function rerankGeminiCandidates(params: {
   text: string;
   candidates: CvImportCandidate[];
@@ -212,6 +217,23 @@ export function rerankGeminiCandidates(params: {
       suggestions: mergeSuggestionLists(base.suggestions, secondary.suggestions),
       confidence: base.confidence,
     };
+
+    const baseTopSkillId = topSuggestionSkillId(base);
+    const secondaryTopSkillId = topSuggestionSkillId(secondary);
+    if (
+      baseTopSkillId &&
+      secondaryTopSkillId &&
+      baseTopSkillId !== secondaryTopSkillId &&
+      !hasStrongExactOrSynonymSignal(base) &&
+      !hasStrongExactOrSynonymSignal(secondary)
+    ) {
+      merged.suggestions = [];
+      merged.unmapped_candidate = true;
+      merged.confidence = clamp(Math.max(base.confidence, secondary.confidence) * 0.84);
+      deduped.set(key, merged);
+      continue;
+    }
+
     merged.confidence = calibrateCandidateConfidence(merged);
     if (shouldRejectWeakTopSuggestion(merged)) {
       merged.suggestions = [];

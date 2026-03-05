@@ -19,7 +19,11 @@ import {
 } from '@/components/expertise/cv-import/ImportActionBanner';
 import { resolveInitialSkillSelectionState } from '@/components/expertise/cv-import/initial-selection';
 import { buildManualSuggestion } from '@/components/expertise/cv-import/manual-suggestion';
-import { SkillReviewPanel } from '@/components/expertise/cv-import/SkillReviewPanel';
+import {
+  SkillReviewPanel,
+  type SkillReviewOutcome,
+  type SkillReviewSelectionMeta,
+} from '@/components/expertise/cv-import/SkillReviewPanel';
 import { EventType } from '@/lib/analytics/constants';
 import {
   extractPdfTextFromFile,
@@ -30,6 +34,8 @@ import {
   isOcrClientEnabled,
   resolveOcrClientLimits,
 } from '@/lib/expertise/ocr-client';
+import { buildCvImportReviewTelemetry } from '@/lib/expertise/cv-review-telemetry';
+import { getAmbiguousTokenHints } from '@/lib/expertise/skill-confidence';
 import { LANGUAGE_OPTIONS, CEFR_LEVELS } from '@/lib/taxonomy/data';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -177,6 +183,7 @@ interface SkillState extends ApiSkillCandidate {
   manual_loading: boolean;
   show_all_suggestions: boolean;
   manual_last_search_at?: string;
+  review_outcome: SkillReviewOutcome;
 }
 
 interface ParsedDocumentState {
@@ -939,6 +946,16 @@ function collectApprovedSkillIds(document: ParsedDocumentState): string[] {
   return Array.from(validSkillIds);
 }
 
+function resolveInitialReviewOutcome(params: {
+  approved: boolean;
+  alreadyInProfile: boolean;
+}): SkillReviewOutcome {
+  if (params.approved || params.alreadyInProfile) {
+    return 'accepted';
+  }
+  return 'pending';
+}
+
 function downloadJson(filename: string, payload: unknown) {
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -1049,6 +1066,11 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         document.document_id === documentId ? updater(document) : document
       )
     );
+  };
+
+  const findSkillCandidateState = (documentId: string, candidateId: string): SkillState | null => {
+    const document = documents.find((item) => item.document_id === documentId);
+    return document?.skill_candidates.find((item) => item.candidate_id === candidateId) || null;
   };
 
   const clearProgressResetTimer = () => {
@@ -1357,6 +1379,10 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
               manual_loading: false,
               show_all_suggestions: false,
               already_in_profile: Boolean(candidate.already_in_profile),
+              review_outcome: resolveInitialReviewOutcome({
+                approved: initialSelection.approved,
+                alreadyInProfile: Boolean(candidate.already_in_profile),
+              }),
             };
           }),
         };
@@ -1465,16 +1491,28 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       }));
 
       if (mappedOptions.length === 0) {
-        toast.info('No taxonomy matches found for manual mapping.');
+        const hints = getAmbiguousTokenHints(query);
+        toast.info(
+          hints.length > 0
+            ? `No taxonomy matches found. Try a more specific query such as ${hints.slice(0, 3).join(', ')}.`
+            : 'No taxonomy matches found for manual mapping.'
+        );
       } else {
         toast.success(
           `${mappedOptions.length} Atlas ${mappedOptions.length === 1 ? 'match' : 'matches'} found.`
         );
       }
 
-      void trackCvImportUiEvent('cv_review_find_opened', {
-        result_count: mappedOptions.length,
-      });
+      void trackCvImportUiEvent(
+        'cv_review_find_opened',
+        buildCvImportReviewTelemetry({
+          action: 'cv_review_find_opened',
+          candidate,
+          engineUsed: apiMetadata?.engine_used || null,
+          resultCount: mappedOptions.length,
+          searchQuery: query,
+        })
+      );
     } catch (error) {
       updateDocument(documentId, (document) => ({
         ...document,
@@ -1491,8 +1529,10 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     documentId: string,
     candidateId: string,
     option: ApiSuggestion,
-    mode: 'select' | 'replace'
+    mode: 'select' | 'replace',
+    meta: SkillReviewSelectionMeta
   ) => {
+    const candidate = findSkillCandidateState(documentId, candidateId);
     updateDocument(documentId, (document) => ({
       ...document,
       skill_candidates: document.skill_candidates.map((entry) => {
@@ -1518,14 +1558,82 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
           approved: true,
           already_in_profile: false,
           unmapped_candidate: nextSelected.length === 0,
+          review_outcome: 'accepted',
         };
       }),
     }));
 
-    void trackCvImportUiEvent('cv_review_match_selected', {
-      mode,
-      match_method: option.match_method,
-    });
+    if (candidate) {
+      void trackCvImportUiEvent(
+        mode === 'replace' ? 'cv_review_match_replaced' : 'cv_review_match_selected',
+        buildCvImportReviewTelemetry({
+          action: mode === 'replace' ? 'cv_review_match_replaced' : 'cv_review_match_selected',
+          candidate,
+          engineUsed: apiMetadata?.engine_used || null,
+          riskReasons: meta.riskReasons,
+          selectedSkillId: option.skill_id,
+          selectedSkillName: option.skill_name,
+          selectionSource: meta.selectionSource,
+          reviewOutcome: 'accepted',
+        })
+      );
+    }
+  };
+
+  const markSkillCandidateOutcome = (
+    documentId: string,
+    candidateId: string,
+    reviewOutcome: Extract<SkillReviewOutcome, 'kept_unmapped' | 'not_skill'>
+  ) => {
+    const candidate = findSkillCandidateState(documentId, candidateId);
+
+    updateDocument(documentId, (document) => ({
+      ...document,
+      skill_candidates: document.skill_candidates.map((entry) =>
+        entry.candidate_id === candidateId
+          ? {
+              ...entry,
+              approved: false,
+              selected_skill_ids: [],
+              already_in_profile: false,
+              unmapped_candidate: true,
+              review_outcome: reviewOutcome,
+            }
+          : entry
+      ),
+    }));
+
+    if (candidate) {
+      void trackCvImportUiEvent(
+        reviewOutcome === 'not_skill' ? 'cv_review_marked_not_skill' : 'cv_review_kept_unmapped',
+        buildCvImportReviewTelemetry({
+          action:
+            reviewOutcome === 'not_skill'
+              ? 'cv_review_marked_not_skill'
+              : 'cv_review_kept_unmapped',
+          candidate,
+          engineUsed: apiMetadata?.engine_used || null,
+          reviewOutcome,
+        })
+      );
+    }
+  };
+
+  const trackCandidateViewed = (documentId: string, candidateId: string) => {
+    const candidate = findSkillCandidateState(documentId, candidateId);
+    if (!candidate) {
+      return;
+    }
+
+    void trackCvImportUiEvent(
+      'cv_review_candidate_shown',
+      buildCvImportReviewTelemetry({
+        action: 'cv_review_candidate_shown',
+        candidate,
+        engineUsed: apiMetadata?.engine_used || null,
+        reviewOutcome: candidate.review_outcome,
+      })
+    );
   };
 
   const reviewSummary: ImportActionSummary = useMemo(() => {
@@ -1543,8 +1651,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
 
       for (const candidate of document.skill_candidates) {
         if (
-          candidate.approved &&
-          candidate.unmapped_candidate &&
+          candidate.review_outcome === 'pending' &&
           !candidate.already_in_profile &&
           candidate.selected_skill_ids.length === 0
         ) {
@@ -1703,6 +1810,19 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         remaining: reviewSummary.skillsNeedingMapping,
       });
     }
+
+    void trackCvImportUiEvent(
+      scope === 'skills_only' ? 'cv_apply_skills_confirmed' : 'cv_apply_full_confirmed',
+      {
+        approved_skill_count: totalSkills,
+        approved_work_count: totalWork,
+        approved_learning_count: totalLearning,
+        approved_volunteering_count: totalVolunteering,
+        approved_language_count: totalLanguages,
+        unresolved_count: reviewSummary.skillsNeedingMapping,
+        engine_used: apiMetadata?.engine_used || null,
+      }
+    );
 
     setIsApplying(true);
 
@@ -1960,16 +2080,6 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                             : null
                         )
                       }
-                      onToggleApproved={(candidateId, checked) => {
-                        updateDocument(document.document_id, (current) => ({
-                          ...current,
-                          skill_candidates: current.skill_candidates.map((item) =>
-                            item.candidate_id === candidateId
-                              ? { ...item, approved: checked }
-                              : item
-                          ),
-                        }));
-                      }}
                       onRawSkillChange={(candidateId, value) => {
                         updateDocument(document.document_id, (current) => ({
                           ...current,
@@ -2002,11 +2112,12 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                               ? {
                                   ...item,
                                   selected_skill_ids: selectedSkillIds,
-                                  approved: selectedSkillIds.length > 0 ? true : item.approved,
+                                  approved: selectedSkillIds.length > 0 ? true : false,
                                   already_in_profile:
                                     selectedSkillIds.length > 0 ? false : item.already_in_profile,
-                                  unmapped_candidate:
-                                    selectedSkillIds.length > 0 ? false : item.unmapped_candidate,
+                                  unmapped_candidate: selectedSkillIds.length > 0 ? false : true,
+                                  review_outcome:
+                                    selectedSkillIds.length > 0 ? 'accepted' : 'pending',
                                 }
                               : item
                           ),
@@ -2038,11 +2149,24 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                       onFind={(candidateId) =>
                         searchManualMappings(document.document_id, candidateId)
                       }
-                      onSelectMatch={(candidateId, option) =>
-                        selectAtlasMatch(document.document_id, candidateId, option, 'select')
+                      onSelectMatch={(candidateId, option, meta) =>
+                        selectAtlasMatch(document.document_id, candidateId, option, 'select', meta)
                       }
-                      onReplaceMatch={(candidateId, option) =>
-                        selectAtlasMatch(document.document_id, candidateId, option, 'replace')
+                      onReplaceMatch={(candidateId, option, meta) =>
+                        selectAtlasMatch(document.document_id, candidateId, option, 'replace', meta)
+                      }
+                      onKeepUnmapped={(candidateId) =>
+                        markSkillCandidateOutcome(
+                          document.document_id,
+                          candidateId,
+                          'kept_unmapped'
+                        )
+                      }
+                      onMarkNotSkill={(candidateId) =>
+                        markSkillCandidateOutcome(document.document_id, candidateId, 'not_skill')
+                      }
+                      onCandidateViewed={(candidateId) =>
+                        trackCandidateViewed(document.document_id, candidateId)
                       }
                     />
                   </div>

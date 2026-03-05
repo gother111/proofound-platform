@@ -258,6 +258,34 @@ describe('GET /api/expertise/taxonomy (search mode)', () => {
     expect(body.l4_skills[0].l1.nameI18n.en).toBe('Tools & Technology');
   });
 
+  it('suppresses ambiguous short-token search queries', async () => {
+    const supabase = createSupabaseMock({
+      rpcData: [
+        {
+          code: '03.090.714.96411',
+          cat_id: 3,
+          subcat_id: 90,
+          l3_id: 714,
+          slug: 'hi-fi-prototyping-migration',
+          name_i18n: { en: 'Hi-fi prototyping migration' },
+          description_i18n: { en: 'Incorrect PM alias regression fixture.' },
+          tags: ['t'],
+          status: 'active',
+          version: 1,
+        },
+      ],
+    });
+
+    (createClient as any).mockResolvedValue(supabase);
+
+    const response = await GET(new Request('http://localhost/api/expertise/taxonomy?search=pm'));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.l4_skills).toEqual([]);
+    expect(supabase.rpc).not.toHaveBeenCalled();
+  });
+
   it('returns 500 when smart search and all fallback strategies fail', async () => {
     const supabase = createSupabaseMock({
       rpcError: { message: 'function similarity(text, text) does not exist' },

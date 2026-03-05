@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { getOrSet, CACHE_KEYS, CACHE_TTL } from '@/lib/cache';
 import { createHash } from 'node:crypto';
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
+import { isManualReviewOnlyShortToken } from '@/lib/expertise/skill-confidence';
 
 const SEARCH_RESULT_LIMIT = 50;
 const ALIAS_SEARCH_LIMIT = SEARCH_RESULT_LIMIT * 2;
@@ -575,6 +576,18 @@ export async function GET(request: Request) {
         const normalizedSearch = normalizeSearchTerm(search);
         const queryClass = classifySearchQuery(normalizedSearch);
         if (!normalizedSearch) {
+          return NextResponse.json({ l4_skills: [] });
+        }
+
+        if (isManualReviewOnlyShortToken(normalizedSearch)) {
+          void emitSearchTelemetry({
+            eventType: 'taxonomy_search_zero_results',
+            searchTerm: normalizedSearch,
+            queryClass,
+            resultCount: 0,
+            usedFallback: false,
+            rpcFailed: false,
+          });
           return NextResponse.json({ l4_skills: [] });
         }
 

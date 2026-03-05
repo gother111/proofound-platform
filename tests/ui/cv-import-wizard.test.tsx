@@ -690,11 +690,111 @@ describe('CvImportWizard', () => {
     expect(
       screen.getByText('This match is low-confidence. Confirm before applying.')
     ).toBeInTheDocument();
+    expect(screen.getAllByText('Kubernetes').length).toBeGreaterThan(0);
+    expect(
+      screen.getByText('Evidence: platform concept workstream across teams')
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Confirm selection' }));
 
     await waitFor(() => {
       expect(screen.getByText('1/1 selected')).toBeInTheDocument();
     });
+  });
+
+  it('supports explicit keep-unmapped and not-a-skill outcomes', async () => {
+    apiFetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          documents: [
+            {
+              document_id: 'doc-1',
+              file_name: 'cv.pdf',
+              context: 'cv',
+              work_experiences: [],
+              learning_experiences: [],
+              volunteering: [],
+              languages: [],
+              skill_candidates: [
+                {
+                  candidate_id: 'candidate-keep',
+                  raw_skill_text: 'PM',
+                  category: 'other',
+                  evidence_snippets: ['Worked closely with PM stakeholders.'],
+                  confidence: 0.61,
+                  suggestions: [],
+                  unmapped_candidate: true,
+                },
+                {
+                  candidate_id: 'candidate-noise',
+                  raw_skill_text: 'platform collaboration',
+                  category: 'other',
+                  evidence_snippets: ['Responsible for platform collaboration across teams.'],
+                  confidence: 0.58,
+                  suggestions: [],
+                  unmapped_candidate: true,
+                },
+              ],
+            },
+          ],
+          metadata: {
+            semantic_used: false,
+            semantic_fallback_triggered: false,
+            unmapped_candidates_count: 2,
+            limits: {
+              max_documents: 5,
+              max_chars_per_document: 30000,
+              max_total_chars: 90000,
+            },
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+
+    render(<CvImportWizard />);
+
+    const uploadInput = screen.getByTestId('cv-upload');
+    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
+
+    fireEvent.change(uploadInput, {
+      target: {
+        files: [file],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('PM')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Keep unmapped' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('platform collaboration')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Not a skill' }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          'All primary review items are resolved. You can proceed to apply, or open advanced list to make detailed edits.'
+        )
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Show all skills \(advanced\)/i }));
+
+    expect(screen.getAllByText('Kept unmapped').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Not a skill').length).toBeGreaterThan(0);
   });
 
   it('shows partial-success info when skill suggestions are unavailable but extraction succeeds', async () => {

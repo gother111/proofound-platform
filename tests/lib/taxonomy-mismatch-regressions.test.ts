@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockSelect = vi.fn();
@@ -51,6 +52,32 @@ const taxonomyRows = [
   },
 ];
 
+const scenarios = JSON.parse(
+  readFileSync('tests/fixtures/cv-import/taxonomy-mismatch-scenarios.json', 'utf8')
+) as {
+  mustRemainUnmapped: Array<{
+    id: string;
+    file_name: string;
+    text: string;
+    expected_raw_tokens?: string[];
+    forbidden_raw_tokens?: string[];
+  }>;
+  mustMap: Array<{
+    id: string;
+    file_name: string;
+    text: string;
+    raw_token: string;
+    expected_skill_id: string;
+  }>;
+  mustNotMap: Array<{
+    id: string;
+    file_name: string;
+    text: string;
+    raw_token: string;
+    forbidden_skill_id: string;
+  }>;
+};
+
 function mockTaxonomyQuery(rows = taxonomyRows) {
   mockSelect.mockReturnValue({
     from: () => ({
@@ -73,105 +100,120 @@ describe('taxonomy mismatch regressions', () => {
     mockTaxonomyQuery();
   });
 
-  it('keeps ambiguous short tokens unmapped without explicit disambiguation evidence', async () => {
+  it('keeps ambiguous or noisy scenarios unresolved when required', async () => {
     const { suggestSkillsForDocuments } = await import('@/lib/expertise/cv-import-suggest');
 
-    const response = await suggestSkillsForDocuments(
-      {
-        documents: [
-          {
-            document_id: 'ambiguous-short',
-            file_name: 'ambiguous-short.pdf',
-            text: ['Skills', 'Go, R, PM', 'Experience', 'Worked with distributed teams.'].join(
-              '\n'
-            ),
-            context: 'cv',
-          },
-        ],
-      },
-      {
-        maxDocuments: 5,
-        maxCharsPerDocument: 30000,
-        maxTotalChars: 50000,
-      },
-      {
-        semanticEnabled: false,
+    for (const scenario of scenarios.mustRemainUnmapped) {
+      const response = await suggestSkillsForDocuments(
+        {
+          documents: [
+            {
+              document_id: scenario.id,
+              file_name: scenario.file_name,
+              text: scenario.text,
+              context: 'cv',
+            },
+          ],
+        },
+        {
+          maxDocuments: 5,
+          maxCharsPerDocument: 30000,
+          maxTotalChars: 50000,
+        },
+        {
+          semanticEnabled: false,
+        }
+      );
+
+      if (scenario.expected_raw_tokens?.length) {
+        const ambiguousCandidates = response.documents[0].candidates.filter((candidate) =>
+          scenario.expected_raw_tokens?.includes(normalize(candidate.raw_skill_text))
+        );
+
+        expect(ambiguousCandidates.length).toBeGreaterThan(0);
+        for (const candidate of ambiguousCandidates) {
+          expect(candidate.unmapped_candidate).toBe(true);
+          expect(candidate.suggestions).toHaveLength(0);
+        }
       }
-    );
 
-    const ambiguousCandidates = response.documents[0].candidates.filter((candidate) =>
-      ['go', 'r', 'pm'].includes(normalize(candidate.raw_skill_text))
-    );
-
-    expect(ambiguousCandidates.length).toBeGreaterThan(0);
-    for (const candidate of ambiguousCandidates) {
-      expect(candidate.unmapped_candidate).toBe(true);
-      expect(candidate.suggestions).toHaveLength(0);
+      if (scenario.forbidden_raw_tokens?.length) {
+        const allRawTokens = response.documents[0].candidates.map((candidate) =>
+          normalize(candidate.raw_skill_text)
+        );
+        for (const forbidden of scenario.forbidden_raw_tokens) {
+          expect(allRawTokens).not.toContain(normalize(forbidden));
+        }
+      }
     }
   });
 
-  it('maps ambiguous tokens when explicit disambiguating evidence is present', async () => {
+  it('maps curated benchmark scenarios to the expected taxonomy target', async () => {
     const { suggestSkillsForDocuments } = await import('@/lib/expertise/cv-import-suggest');
 
-    const response = await suggestSkillsForDocuments(
-      {
-        documents: [
-          {
-            document_id: 'disambiguated-go',
-            file_name: 'disambiguated-go.pdf',
-            text: 'Built backend microservices in Go language and optimized goroutine throughput.',
-            context: 'cv',
-          },
-        ],
-      },
-      {
-        maxDocuments: 5,
-        maxCharsPerDocument: 30000,
-        maxTotalChars: 50000,
-      },
-      {
-        semanticEnabled: false,
-      }
-    );
+    for (const scenario of scenarios.mustMap) {
+      const response = await suggestSkillsForDocuments(
+        {
+          documents: [
+            {
+              document_id: scenario.id,
+              file_name: scenario.file_name,
+              text: scenario.text,
+              context: 'cv',
+            },
+          ],
+        },
+        {
+          maxDocuments: 5,
+          maxCharsPerDocument: 30000,
+          maxTotalChars: 50000,
+        },
+        {
+          semanticEnabled: false,
+        }
+      );
 
-    const goCandidate = response.documents[0].candidates.find((candidate) =>
-      normalize(candidate.raw_skill_text).includes('go')
-    );
-    expect(goCandidate).toBeDefined();
-    expect(goCandidate?.unmapped_candidate).toBe(false);
-    expect(goCandidate?.suggestions[0]?.skill_id).toBe('skill_go');
+      const candidate = response.documents[0].candidates.find((entry) =>
+        normalize(entry.raw_skill_text).includes(normalize(scenario.raw_token))
+      );
+
+      expect(candidate).toBeDefined();
+      expect(candidate?.unmapped_candidate).toBe(false);
+      expect(candidate?.suggestions[0]?.skill_id).toBe(scenario.expected_skill_id);
+    }
   });
 
-  it('prioritizes React Native over React for React Native phrases', async () => {
+  it('does not map curated benchmark scenarios to the forbidden taxonomy target', async () => {
     const { suggestSkillsForDocuments } = await import('@/lib/expertise/cv-import-suggest');
 
-    const response = await suggestSkillsForDocuments(
-      {
-        documents: [
-          {
-            document_id: 'react-native',
-            file_name: 'react-native.pdf',
-            text: 'Built React Native mobile applications with Expo and TypeScript.',
-            context: 'cv',
-          },
-        ],
-      },
-      {
-        maxDocuments: 5,
-        maxCharsPerDocument: 30000,
-        maxTotalChars: 50000,
-      },
-      {
-        semanticEnabled: false,
-      }
-    );
+    for (const scenario of scenarios.mustNotMap) {
+      const response = await suggestSkillsForDocuments(
+        {
+          documents: [
+            {
+              document_id: scenario.id,
+              file_name: scenario.file_name,
+              text: scenario.text,
+              context: 'cv',
+            },
+          ],
+        },
+        {
+          maxDocuments: 5,
+          maxCharsPerDocument: 30000,
+          maxTotalChars: 50000,
+        },
+        {
+          semanticEnabled: false,
+        }
+      );
 
-    const reactNativeCandidate = response.documents[0].candidates.find((candidate) =>
-      candidate.suggestions.some((suggestion) => suggestion.skill_id === 'skill_react_native')
-    );
+      const candidate = response.documents[0].candidates.find((entry) =>
+        normalize(entry.raw_skill_text).includes(normalize(scenario.raw_token))
+      );
 
-    expect(reactNativeCandidate).toBeDefined();
-    expect(reactNativeCandidate?.suggestions[0]?.skill_id).toBe('skill_react_native');
-    expect(reactNativeCandidate?.suggestions[0]?.match_method).toMatch(/exact|synonym/);
+      expect(candidate).toBeDefined();
+      expect(candidate?.suggestions[0]?.skill_id).not.toBe(scenario.forbidden_skill_id);
+    }
   });
 });

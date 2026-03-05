@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 import {
   calibrateCandidateConfidence,
   evaluateSuggestionSelectionRisk,
+  getAmbiguousTokenHints,
   hasPrecisionAutoSelectSignal,
+  isManualReviewOnlyShortToken,
   isAmbiguousTokenWithoutDisambiguation,
   shouldRejectWeakTopSuggestion,
 } from '@/lib/expertise/skill-confidence';
@@ -87,5 +89,10 @@ describe('skill confidence policy', () => {
 
     expect(risk.requiresConfirmation).toBe(true);
     expect(risk.reasons).toContain('weak_method');
+  });
+
+  it('exposes hints for ambiguous short-token manual searches', () => {
+    expect(isManualReviewOnlyShortToken('pm')).toBe(true);
+    expect(getAmbiguousTokenHints('pm')).toContain('project manager');
   });
 });

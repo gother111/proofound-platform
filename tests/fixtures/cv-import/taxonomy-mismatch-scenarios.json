@@ -1,20 +1,45 @@
 {
-  "scenarios": [
+  "mustRemainUnmapped": [
     {
-      "id": "ambiguous-short-tokens",
+      "id": "ambiguous-short",
+      "file_name": "ambiguous-short.pdf",
       "text": "Skills\nGo, R, PM\nExperience\nWorked with distributed teams.",
-      "must_remain_unmapped": ["go", "r", "pm"]
+      "expected_raw_tokens": ["go", "r", "pm"]
     },
     {
-      "id": "disambiguated-go-language",
-      "text": "Built backend systems in Go language and optimized goroutines.",
-      "must_map": ["skill_go"]
+      "id": "narrative-noise",
+      "file_name": "narrative-noise.pdf",
+      "text": "Experience\nResponsible for stakeholder alignment, delivery planning, and platform collaboration across teams.",
+      "forbidden_raw_tokens": [
+        "stakeholder alignment",
+        "delivery planning",
+        "platform collaboration"
+      ]
+    }
+  ],
+  "mustMap": [
+    {
+      "id": "disambiguated-go",
+      "file_name": "disambiguated-go.pdf",
+      "text": "Built backend microservices in Go language and optimized goroutine throughput.",
+      "raw_token": "go",
+      "expected_skill_id": "skill_go"
     },
     {
-      "id": "react-native-priority",
-      "text": "Built React Native mobile apps with Expo.",
-      "must_map": ["skill_react_native"],
-      "must_not_top_map": ["skill_react"]
+      "id": "react-native",
+      "file_name": "react-native.pdf",
+      "text": "Built React Native mobile applications with Expo and TypeScript.",
+      "raw_token": "react native",
+      "expected_skill_id": "skill_react_native"
+    }
+  ],
+  "mustNotMap": [
+    {
+      "id": "react-native-not-react",
+      "file_name": "react-native-not-react.pdf",
+      "text": "Built React Native mobile applications with Expo and TypeScript.",
+      "raw_token": "react native",
+      "forbidden_skill_id": "skill_react"
     }
   ]
 }

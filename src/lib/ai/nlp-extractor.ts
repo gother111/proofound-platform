@@ -142,6 +142,8 @@ const INLINE_SKILL_LINE_PATTERN =
 
 const NOISY_SKILL_PHRASE_PATTERN =
   /\b(responsible\s+for|worked\s+on|worked\s+with|based\s+in|located\s+in|at\s+[A-Z][a-z]+|team|department|stakeholders?)\b/i;
+const NARRATIVE_ONLY_CONTEXT_PATTERN =
+  /\b(responsible\s+for|worked\s+on|worked\s+with|led|managed|supported|delivered|collaborated|stakeholders?|customers?|clients?)\b/i;
 
 /**
  * Patterns to identify experience duration
@@ -744,14 +746,37 @@ function hasStrongNounSkillSignal(phrase: string, context: string): boolean {
     return false;
   }
 
+  const normalizedContext = context.toLowerCase();
+  const inExplicitSkillContext =
+    /\b(skills?|competenc(?:y|ies)|technologies?|tooling|tools?|frameworks?|tech\s+stack)\b/.test(
+      normalizedContext
+    );
+
+  if (NARRATIVE_ONLY_CONTEXT_PATTERN.test(normalizedContext) && !inExplicitSkillContext) {
+    return false;
+  }
+
+  if (
+    /^[a-z]+$/.test(normalized) &&
+    normalized.length < 4 &&
+    !KNOWN_SKILL_BY_ALIAS.has(normalized)
+  ) {
+    return false;
+  }
+
   if (/[+#./\d]/.test(phrase) || /[a-z][A-Z]/.test(phrase)) {
     return true;
   }
 
-  const normalizedContext = context.toLowerCase();
-  return /\b(skills?|competenc(?:y|ies)|technologies?|tooling|tools?|frameworks?|tech\s+stack)\b/.test(
-    normalizedContext
-  );
+  if (!inExplicitSkillContext) {
+    return false;
+  }
+
+  if (normalized.split(' ').length > 2 && !KNOWN_SKILL_BY_ALIAS.has(normalized)) {
+    return false;
+  }
+
+  return true;
 }
 
 /**

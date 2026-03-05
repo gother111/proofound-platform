@@ -98,6 +98,8 @@ const NOISE_PATTERN =
 const EVIDENCE_CONTEXT_WINDOW = 80;
 const EVIDENCE_MAX = 3;
 const SHORT_TOKEN_ALLOWLIST = new Set(['ai', 'ml', 'ui', 'ux', 'qa', 'ci', 'cd', 'js', 'ts']);
+const SKILL_CONTEXT_PATTERN =
+  /\b(skills?|core\s+skills?|technical\s+skills?|technologies?|tools?|tooling|competenc(?:y|ies)|tech\s+stack)\b/i;
 
 function clamp(value: number, min = 0, max = 1): number {
   return Math.max(min, Math.min(max, value));
@@ -271,6 +273,10 @@ function deterministicSort(left: LocalSkillCandidate, right: LocalSkillCandidate
   return left.raw_skill_text.localeCompare(right.raw_skill_text);
 }
 
+function hasExplicitSkillContext(value: string): boolean {
+  return SKILL_CONTEXT_PATTERN.test(value);
+}
+
 export function extractLocalSkillCandidates(
   text: string,
   options: {
@@ -303,6 +309,20 @@ export function extractLocalSkillCandidates(
         continue;
       }
 
+      const category = inferCategory(raw);
+      const fromSkillsSection =
+        sectionEntries.has(normalized) ||
+        hasExplicitSkillContext(phrase.context || '') ||
+        evidence.some((snippet) => hasExplicitSkillContext(snippet));
+
+      if (!fromSkillsSection && phrase.confidence < 0.5) {
+        continue;
+      }
+
+      if (!fromSkillsSection && category === 'other' && phrase.confidence < 0.68) {
+        continue;
+      }
+
       const sectionBoost = sectionEntries.has(normalized) ? 0.14 : 0;
       const noisePenalty = NOISE_PATTERN.test(phrase.context || '') ? 0.08 : 0;
       const ambiguityPenalty = isAmbiguousTokenWithoutDisambiguation({
@@ -317,7 +337,7 @@ export function extractLocalSkillCandidates(
       const existing = byNormalized.get(normalized);
       const candidate: LocalSkillCandidate = {
         raw_skill_text: raw,
-        category: inferCategory(raw),
+        category,
         evidence_snippets: evidence,
         confidence,
       };

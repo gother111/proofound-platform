@@ -65,6 +65,7 @@
     "taxonomy:build:aliases": "tsx scripts/taxonomy-build-alias-wave.ts",
     "taxonomy:validate:aliases": "tsx scripts/taxonomy-validate-alias-quality.ts",
     "taxonomy:report:search-misses": "tsx scripts/taxonomy-report-search-misses.ts",
+    "taxonomy:report:cv-import-review": "tsx scripts/cv-import-review-report.ts",
     "py:build-skills-db": "PYTHONPATH=. python3.11 python_cv/scripts/build_skills_db.py --source-mode auto || PYTHONPATH=. python3 python_cv/scripts/build_skills_db.py --source-mode auto",
     "test:python": "PYTHONPATH=. python3.11 -m pytest tests/python -q || PYTHONPATH=. python3 -m pytest tests/python -q"
   },

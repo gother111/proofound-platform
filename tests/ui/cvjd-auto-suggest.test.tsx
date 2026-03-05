@@ -329,6 +329,10 @@ describe('CVJDAutoSuggest', () => {
     expect(
       screen.getByText('This match is low-confidence. Confirm before applying.')
     ).toBeInTheDocument();
+    expect(screen.getAllByText('Kubernetes').length).toBeGreaterThan(0);
+    expect(
+      screen.getByText('Evidence: platform concept workstream across teams')
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Confirm selection' }));
 

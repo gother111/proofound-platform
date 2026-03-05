@@ -14,7 +14,12 @@ import {
 } from '@/components/expertise/cv-import/AnalyzeProgressPanel';
 import { resolveInitialSkillSelectionState } from '@/components/expertise/cv-import/initial-selection';
 import { buildManualSuggestion } from '@/components/expertise/cv-import/manual-suggestion';
-import { SkillReviewPanel } from '@/components/expertise/cv-import/SkillReviewPanel';
+import {
+  SkillReviewPanel,
+  type SkillReviewOutcome,
+  type SkillReviewSelectionMeta,
+} from '@/components/expertise/cv-import/SkillReviewPanel';
+import { getAmbiguousTokenHints } from '@/lib/expertise/skill-confidence';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -87,6 +92,7 @@ interface CandidateState extends ApiCandidate {
   manual_loading: boolean;
   show_all_suggestions: boolean;
   manual_last_search_at?: string;
+  review_outcome: SkillReviewOutcome;
 }
 
 interface ParsedDocumentState {
@@ -119,6 +125,16 @@ const DEFAULT_IMPORT_LIMITS = {
   max_chars_per_document: 30000,
   max_total_chars: 90000,
 };
+
+function resolveInitialReviewOutcome(params: {
+  approved: boolean;
+  alreadyInProfile: boolean;
+}): SkillReviewOutcome {
+  if (params.approved || params.alreadyInProfile) {
+    return 'accepted';
+  }
+  return 'pending';
+}
 
 const DEFAULT_API_METADATA: ApiSuggestResponse['metadata'] = {
   semantic_used: false,
@@ -934,6 +950,10 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
               manual_loading: false,
               show_all_suggestions: false,
               already_in_profile: Boolean(candidate.already_in_profile),
+              review_outcome: resolveInitialReviewOutcome({
+                approved: initialSelection.approved,
+                alreadyInProfile: Boolean(candidate.already_in_profile),
+              }),
             };
           }),
         };
@@ -1013,7 +1033,12 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
       }));
 
       if (mappedOptions.length === 0) {
-        toast.info('No taxonomy matches found for manual mapping.');
+        const hints = getAmbiguousTokenHints(query);
+        toast.info(
+          hints.length > 0
+            ? `No taxonomy matches found. Try a more specific query such as ${hints.slice(0, 3).join(', ')}.`
+            : 'No taxonomy matches found for manual mapping.'
+        );
       } else {
         toast.success(
           `${mappedOptions.length} Atlas ${mappedOptions.length === 1 ? 'match' : 'matches'} found.`
@@ -1032,7 +1057,8 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
     documentId: string,
     candidateId: string,
     option: ApiSuggestion,
-    mode: 'select' | 'replace'
+    mode: 'select' | 'replace',
+    _meta: SkillReviewSelectionMeta
   ) => {
     updateCandidate(documentId, candidateId, (current) => {
       const manualOptions = current.manual_options.some(
@@ -1052,8 +1078,24 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
         approved: true,
         already_in_profile: false,
         unmapped_candidate: selectedSkillIds.length === 0,
+        review_outcome: 'accepted',
       };
     });
+  };
+
+  const markCandidateOutcome = (
+    documentId: string,
+    candidateId: string,
+    reviewOutcome: Extract<SkillReviewOutcome, 'kept_unmapped' | 'not_skill'>
+  ) => {
+    updateCandidate(documentId, candidateId, (current) => ({
+      ...current,
+      approved: false,
+      selected_skill_ids: [],
+      already_in_profile: false,
+      unmapped_candidate: true,
+      review_outcome: reviewOutcome,
+    }));
   };
 
   const exportDocument = (document: ParsedDocumentState) => {
@@ -1310,12 +1352,6 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
                           : null
                       )
                     }
-                    onToggleApproved={(candidateId, checked) => {
-                      updateCandidate(document.document_id, candidateId, (current) => ({
-                        ...current,
-                        approved: checked,
-                      }));
-                    }}
                     onRawSkillChange={(candidateId, value) => {
                       updateCandidate(document.document_id, candidateId, (current) => ({
                         ...current,
@@ -1333,11 +1369,11 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
                       updateCandidate(document.document_id, candidateId, (current) => ({
                         ...current,
                         selected_skill_ids: selectedSkillIds,
-                        approved: selectedSkillIds.length > 0 ? true : current.approved,
+                        approved: selectedSkillIds.length > 0 ? true : false,
                         already_in_profile:
                           selectedSkillIds.length > 0 ? false : current.already_in_profile,
-                        unmapped_candidate:
-                          selectedSkillIds.length > 0 ? false : current.unmapped_candidate,
+                        unmapped_candidate: selectedSkillIds.length > 0 ? false : true,
+                        review_outcome: selectedSkillIds.length > 0 ? 'accepted' : 'pending',
                       }));
                     }}
                     onManualQueryChange={(candidateId, value) => {
@@ -1355,11 +1391,17 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
                     onFind={(candidateId) =>
                       searchManualMappings(document.document_id, candidateId)
                     }
-                    onSelectMatch={(candidateId, option) =>
-                      selectAtlasMatch(document.document_id, candidateId, option, 'select')
+                    onSelectMatch={(candidateId, option, meta) =>
+                      selectAtlasMatch(document.document_id, candidateId, option, 'select', meta)
                     }
-                    onReplaceMatch={(candidateId, option) =>
-                      selectAtlasMatch(document.document_id, candidateId, option, 'replace')
+                    onReplaceMatch={(candidateId, option, meta) =>
+                      selectAtlasMatch(document.document_id, candidateId, option, 'replace', meta)
+                    }
+                    onKeepUnmapped={(candidateId) =>
+                      markCandidateOutcome(document.document_id, candidateId, 'kept_unmapped')
+                    }
+                    onMarkNotSkill={(candidateId) =>
+                      markCandidateOutcome(document.document_id, candidateId, 'not_skill')
                     }
                   />
                 </div>
