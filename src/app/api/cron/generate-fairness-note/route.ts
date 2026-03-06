@@ -1,13 +1,8 @@
 /**
- * Cron Job: Automated Fairness Note Generation
+ * Legacy manual fairness-note trigger with alert fan-out.
  *
- * Runs: Weekly on Mondays at 2 AM UTC
- * Purpose: Automatically generate fairness notes and send alerts if gaps detected
- *
- * Configure in Vercel:
- * - Cron schedule: 0 2 * * 1 (Mondays at 2 AM UTC)
- * - Path: /api/cron/generate-fairness-note
- * - Add CRON_SECRET to environment variables
+ * This route remains available for manual triggering, but scheduled fairness-note
+ * generation is owned by /api/cron/fairness-note.
  */
 
 import { NextRequest, NextResponse } from 'next/server';

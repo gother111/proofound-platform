@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { log } from '@/lib/log';
-import { generateFairnessNoteResult } from '@/lib/analytics/fairness-note-generator';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
- * Vercel Cron Job: Fairness note generation + account-deletion workflow guard.
+ * Legacy compatibility endpoint for the retired account-deletion cron workflow.
  *
- * Account deletion is now immediate in /api/user/account, so scheduled reminder/deletion
- * processing is intentionally disabled.
+ * Account deletion is immediate in /api/user/account, so scheduled reminder/deletion
+ * processing is intentionally disabled and fairness-note generation is owned by
+ * /api/cron/fairness-note.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -36,54 +36,25 @@ export async function GET(request: NextRequest) {
       timestamp: now.toISOString(),
     });
 
-    const reminderResults: Array<Record<string, unknown>> = [];
-    const deletionResults: Array<Record<string, unknown>> = [];
-
     log.info('cron.account_deletion_workflow.deletion_model_immediate', {
       message:
-        'Scheduled reminder/deletion processing skipped because account deletion is immediate.',
+        'Scheduled reminder/deletion processing skipped because account deletion is immediate and fairness-note generation moved to /api/cron/fairness-note.',
     });
-
-    let fairnessNoteId: string | null = null;
-    let fairnessNoteStatus: 'success' | 'insufficient_data' | 'error' = 'success';
-
-    try {
-      const releaseVersion = now.toISOString().split('T')[0];
-      const fairnessNote = await generateFairnessNoteResult({
-        releaseVersion,
-        publicationStatus: 'published',
-      });
-      fairnessNoteId = fairnessNote.noteId;
-      fairnessNoteStatus = fairnessNote.status;
-
-      log.info('cron.account_deletion_workflow.fairness_note_generated', {
-        noteId: fairnessNoteId,
-        releaseVersion,
-        status: fairnessNote.status,
-      });
-    } catch (error) {
-      fairnessNoteStatus = 'error';
-      log.error('cron.account_deletion_workflow.fairness_note_failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-      });
-    }
 
     return NextResponse.json({
       success: true,
       timestamp: now.toISOString(),
+      mode: 'legacy_noop',
+      message:
+        'Account deletion is immediate. This endpoint remains for compatibility only and no longer generates fairness notes.',
       reminders: {
         processed: 0,
-        results: reminderResults,
+        results: [],
       },
       deletions: {
         processed: 0,
-        results: deletionResults,
+        results: [],
         mode: 'immediate',
-      },
-      fairnessNote: {
-        status: fairnessNoteStatus,
-        noteId: fairnessNoteId,
       },
     });
   } catch (error) {

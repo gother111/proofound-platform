@@ -28,7 +28,7 @@ Canonical API documentation generated from the current App Router route handlers
 ## Coverage Summary
 
 - Total route handlers: **296**
-- Auth tier counts: `public=171`, `session=105`, `service=6`, `cron=14`
+- Auth tier counts: `public=171`, `session=104`, `service=7`, `cron=14`
 - Family count: **55**
 
 ## Endpoint Inventory
@@ -152,11 +152,11 @@ Canonical API documentation generated from the current App Router route handlers
 
 | Methods | Path                                  | Auth Tier                   | Notes                           | Source                                                |
 | ------- | ------------------------------------- | --------------------------- | ------------------------------- | ----------------------------------------------------- | ------------------------------------------- |
-| `GET`   | `/api/cron/account-deletion-workflow` | `cron`                      | -                               | `src/app/api/cron/account-deletion-workflow/route.ts` |
+| `GET`   | `/api/cron/account-deletion-workflow` | `cron`                      | legacy/compat markers in source | `src/app/api/cron/account-deletion-workflow/route.ts` |
 | `GET`   | `/api/cron/decision-reminders`        | `cron`                      | -                               | `src/app/api/cron/decision-reminders/route.ts`        |
 | `GET`   | `/api/cron/fairness-note`             | `cron`                      | -                               | `src/app/api/cron/fairness-note/route.ts`             |
 | `GET    | POST`                                 | `/api/cron/fairness-report` | `cron`                          | contains TODO                                         | `src/app/api/cron/fairness-report/route.ts` |
-| `GET`   | `/api/cron/generate-fairness-note`    | `cron`                      | -                               | `src/app/api/cron/generate-fairness-note/route.ts`    |
+| `GET`   | `/api/cron/generate-fairness-note`    | `cron`                      | legacy/compat markers in source | `src/app/api/cron/generate-fairness-note/route.ts`    |
 | `GET`   | `/api/cron/health-check`              | `cron`                      | -                               | `src/app/api/cron/health-check/route.ts`              |
 | `GET`   | `/api/cron/performance-check`         | `cron`                      | -                               | `src/app/api/cron/performance-check/route.ts`         |
 | `GET`   | `/api/cron/process-deletions`         | `cron`                      | legacy/compat markers in source | `src/app/api/cron/process-deletions/route.ts`         |
@@ -213,7 +213,7 @@ Canonical API documentation generated from the current App Router route handlers
 | `POST`   | `/api/expertise/auto-suggest`                      | `session`                                                     | legacy/compat markers in source | `src/app/api/expertise/auto-suggest/route.ts`                      |
 | `POST`   | `/api/expertise/cv-import/suggest`                 | `session`                                                     | -                               | `src/app/api/expertise/cv-import/suggest/route.ts`                 |
 | `POST`   | `/api/expertise/cv-import/wizard-apply`            | `session`                                                     | -                               | `src/app/api/expertise/cv-import/wizard-apply/route.ts`            |
-| `POST`   | `/api/expertise/cv-import/wizard-suggest`          | `session`                                                     | -                               | `src/app/api/expertise/cv-import/wizard-suggest/route.ts`          |
+| `POST`   | `/api/expertise/cv-import/wizard-suggest`          | `service`                                                     | -                               | `src/app/api/expertise/cv-import/wizard-suggest/route.ts`          |
 | `GET`    | `/api/expertise/gap-analysis`                      | `public`                                                      | legacy/compat markers in source | `src/app/api/expertise/gap-analysis/route.ts`                      |
 | `POST`   | `/api/expertise/jd-to-l4`                          | `public`                                                      | -                               | `src/app/api/expertise/jd-to-l4/route.ts`                          |
 | `POST`   | `/api/expertise/linkedin-disconnect`               | `session`                                                     | -                               | `src/app/api/expertise/linkedin-disconnect/route.ts`               |
@@ -615,6 +615,8 @@ Routes with source-level `legacy`/`deprecated` markers should be treated as comp
 | `/api/core/matching/matching-profile`                         | `src/app/api/core/matching/matching-profile/route.ts`                         | legacy/deprecated text present |
 | `/api/core/matching/near-matches`                             | `src/app/api/core/matching/near-matches/route.ts`                             | legacy/deprecated text present |
 | `/api/core/matching/profile`                                  | `src/app/api/core/matching/profile/route.ts`                                  | legacy/deprecated text present |
+| `/api/cron/account-deletion-workflow`                         | `src/app/api/cron/account-deletion-workflow/route.ts`                         | legacy/deprecated text present |
+| `/api/cron/generate-fairness-note`                            | `src/app/api/cron/generate-fairness-note/route.ts`                            | legacy/deprecated text present |
 | `/api/cron/process-deletions`                                 | `src/app/api/cron/process-deletions/route.ts`                                 | legacy/deprecated text present |
 | `/api/cron/send-deletion-reminders`                           | `src/app/api/cron/send-deletion-reminders/route.ts`                           | legacy/deprecated text present |
 | `/api/data-import/preview`                                    | `src/app/api/data-import/preview/route.ts`                                    | legacy/deprecated text present |

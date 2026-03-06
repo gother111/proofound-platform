@@ -294,52 +294,63 @@ Test all email features:
 
 ### 3. Cron Jobs ✅ COMPLETED
 
-All 3 cron jobs are configured and active in cron-job.org.
+Cron ownership is split between Vercel Cron and cron-job.org.
+
+#### Vercel Cron - Verification
+
+- [ ] Exactly 4 jobs configured in `vercel.json`
+  - [ ] `/api/cron/decision-reminders`
+  - [ ] `/api/cron/refresh-matches`
+  - [ ] `/api/cron/refresh-matches-worker`
+  - [ ] `/api/cron/sla-enforcement`
+- [ ] `/api/cron/account-deletion-workflow` is not scheduled
 
 #### cron-job.org Dashboard - Verification
 
-- [x] All 3 cron jobs created ✅
-  - [x] Proofound - Send Deletion Reminders
-  - [x] Proofound - Process Deletions
-  - [x] Proofound - Refresh Matches
-- [x] Correct URLs configured (`https://proofound.io/api/cron/*`) ✅
-- [x] Authorization headers set ✅
-- [x] Jobs enabled (not paused) ✅
-
-**Status**: Next execution scheduled for tomorrow
+- [ ] Enabled external jobs:
+  - [ ] Proofound - Python Internal Worker
+  - [ ] Proofound – Fairness Note Refresh
+  - [ ] Proofound – Health Check
+  - [ ] Proofound – Performance Check
+- [ ] Disabled external jobs:
+  - [ ] Proofound – Fairness Report
+  - [ ] Proofound - Account Deletion Workflow
+  - [ ] Proofound - Send Deletion Reminders
+  - [ ] Proofound - Process Deletions
+  - [ ] Proofound - Refresh Matches
+  - [ ] Proofound - SLA Enforcement
+- [ ] Correct URLs configured (`https://proofound.io/api/cron/*`)
+- [ ] Authorization headers set for protected routes
 
 #### Test Cron Endpoints
 
 ```bash
-# Test each endpoint with curl (use your CRON_SECRET from Vercel):
-
-# 1. Deletion Reminders
-curl -X GET https://proofound.io/api/cron/send-deletion-reminders \
+# Vercel-owned daily automation
+curl -X GET https://proofound.io/api/cron/decision-reminders \
   -H "Authorization: Bearer YOUR_CRON_SECRET"
-
-# Expected: {"success": true, ...}
-
-# 2. Process Deletions
-curl -X GET https://proofound.io/api/cron/process-deletions \
-  -H "Authorization: Bearer YOUR_CRON_SECRET"
-
-# Expected: {"success": true, ...}
-
-# 3. Refresh Matches
 curl -X GET https://proofound.io/api/cron/refresh-matches \
   -H "Authorization: Bearer YOUR_CRON_SECRET"
+curl -X GET https://proofound.io/api/cron/refresh-matches-worker \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"
+curl -X GET https://proofound.io/api/cron/sla-enforcement \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"
 
-# Expected: {"success": true, ...}
+# cron-job.org-owned workers and observability
+curl -X GET https://proofound.io/api/cron/python-internal-worker \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"
+curl -X GET https://proofound.io/api/cron/fairness-note \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"
+curl -X GET https://proofound.io/api/cron/performance-check \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"
+curl -X GET https://proofound.io/api/cron/health-check
 ```
-
-**Recommended**: Use the "Execute now" button in cron-job.org dashboard to test each job.
 
 #### Verify in Vercel Logs
 
 - [ ] Go to Vercel → Logs
 - [ ] Filter by `/api/cron/`
-- [ ] Should see successful cron executions
-- [ ] No 401 Unauthorized errors
+- [ ] Should see successful executions for the Vercel-owned routes
+- [ ] No 401 Unauthorized errors on protected cron routes
 
 ---
 

@@ -286,13 +286,13 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
 
 ## Cron Jobs (Ops Quick Reference)
 
-- Primary scheduler: Vercel Cron for daily core jobs. Use cron-job.org for the sub-daily Python worker plus explicitly managed observability jobs.
+- Primary scheduler: Vercel Cron for daily core business automation. Use cron-job.org for the sub-daily Python worker plus explicitly managed observability jobs.
 - Auth: cron routes require `Authorization: Bearer ${CRON_SECRET}` unless explicitly documented otherwise, such as `/api/cron/health-check`.
 - Routes and schedules (UTC):
-  - `/api/cron/process-deletions` — 02:00 (permanent deletes after grace period)
-  - `/api/cron/send-deletion-reminders` — 01:00 (7-day reminder emails)
+  - `/api/cron/decision-reminders` — 10:00 (decision reminders, performance-health summary, Monday weekly digest)
   - `/api/cron/refresh-matches` — 03:00 (enqueue match refresh jobs)
   - `/api/cron/refresh-matches-worker` — 03:15 (drain queued refresh jobs)
+  - `/api/cron/sla-enforcement` — 08:00 (expire stale matches and flag overdue interview decisions)
   - `/api/cron/python-internal-worker` — every 15 minutes via cron-job.org on Hobby (`npm run cron:sync`)
 - Env requirements:
   - `CRON_SECRET` (for inbound cron calls)
@@ -301,7 +301,7 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
   - `PYTHON_CV_IMPORT_BASE_URL` (optional base URL when document intelligence moves out of the monolith into a separate Python service)
   - `SUPABASE_SERVICE_ROLE_KEY` (required for queue worker + matching internals)
   - `MATCHING_REFRESH_QUEUE_ENABLED` (default `true`)
-  - `MATCHING_REFRESH_WORKER_BATCH_SIZE` (default `25`)
+  - `MATCHING_REFRESH_WORKER_BATCH_SIZE` (default `100`)
   - `MATCHING_REFRESH_WORKER_CONCURRENCY` (default `4`)
   - `MATCHING_REFRESH_MAX_ATTEMPTS` (default `3`)
   - `PYTHON_INTERNAL_JOBS_ENABLED` (default `true`)
@@ -316,9 +316,14 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
 - Observability/optional routes (if scheduled via cron-job.org):
   - `/api/cron/fairness-note` — daily at 02:00 Europe/Stockholm
   - `/api/cron/fairness-report` — tracked in cron-job.org but intentionally kept disabled
-  - `/api/cron/sla-enforcement` — daily at 08:00 Europe/Stockholm
   - `/api/cron/performance-check` — daily at 06:00 Europe/Stockholm
   - `/api/cron/health-check` — every 3 hours (no auth required by the route)
+- Unscheduled compatibility/manual routes:
+  - `/api/cron/account-deletion-workflow` — legacy no-op compatibility route
+  - `/api/cron/send-deletion-reminders` — legacy no-op compatibility route
+  - `/api/cron/process-deletions` — legacy no-op compatibility route
+  - `/api/cron/generate-fairness-note` — manual fairness-note trigger with alert fan-out
+  - `/api/cron/weekly-digest` — manual fallback; scheduled digest runs through `decision-reminders`
 - Tracking & troubleshooting:
   - cron-job.org History for status/body; enable notifications on non-200.
   - Vercel function logs for detailed errors.
@@ -333,7 +338,7 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
   ```bash
   npm run cron:sync
   ```
-- `npm run cron:sync` keeps the intended external jobs enabled/disabled and disables overlapping legacy jobs such as `send-deletion-reminders`, `process-deletions`, and `refresh-matches`.
+- `npm run cron:sync` keeps the intended external jobs enabled/disabled and disables overlapping or retired external jobs such as `account-deletion-workflow`, `send-deletion-reminders`, `process-deletions`, `refresh-matches`, and `sla-enforcement`.
 - If managing cron-job.org manually: use Method `GET`, the same URL, and the header `Authorization: Bearer $CRON_SECRET` for protected routes. Use its notifications/logs for external monitoring.
 
 ## Database Schema

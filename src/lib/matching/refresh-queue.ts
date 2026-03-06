@@ -4,7 +4,7 @@ import { db } from '@/db';
 import { matchingRefreshJobs } from '@/db/schema';
 import { getRows } from '@/lib/db/rows';
 
-const DEFAULT_WORKER_BATCH_SIZE = 25;
+const DEFAULT_WORKER_BATCH_SIZE = 100;
 const DEFAULT_WORKER_CONCURRENCY = 4;
 const DEFAULT_MAX_ATTEMPTS = 3;
 const DEFAULT_LEASE_SECONDS = 180;

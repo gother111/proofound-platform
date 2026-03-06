@@ -333,11 +333,14 @@ CRON_SECRET=K7x9mP2nQ4vL8wR6yT3zC5bN1aM0hF
 
 **Used By**:
 
-- `/api/cron/send-deletion-reminders`
-- `/api/cron/process-deletions`
+- `/api/cron/decision-reminders`
 - `/api/cron/refresh-matches`
 - `/api/cron/refresh-matches-worker`
+- `/api/cron/sla-enforcement`
 - `/api/cron/python-internal-worker`
+- `/api/cron/fairness-note`
+- `/api/cron/performance-check`
+- Legacy/manual compatibility routes such as `/api/cron/account-deletion-workflow`
 
 **How to Generate**:
 
@@ -382,7 +385,7 @@ CRON_API_KEY=your_cron_job_org_api_token
 - Lets the repo reconcile the managed cron-job.org job set via `npm run cron:sync`.
 - Ensures `/api/cron/python-internal-worker` exists and stays enabled.
 - Ensures the intended observability jobs remain enabled or disabled according to repo policy.
-- Disables overlapping legacy external jobs such as `/api/cron/send-deletion-reminders`, `/api/cron/process-deletions`, and `/api/cron/refresh-matches`.
+- Disables overlapping legacy external jobs such as `/api/cron/account-deletion-workflow`, `/api/cron/send-deletion-reminders`, `/api/cron/process-deletions`, `/api/cron/refresh-matches`, and `/api/cron/sla-enforcement`.
 - Intended for Hobby deployments where Vercel cron cannot run sub-daily schedules.
 
 **Without This**:
@@ -1013,10 +1016,10 @@ MATCHING_REFRESH_QUEUE_ENABLED=true
 **Format**:
 
 ```env
-MATCHING_REFRESH_WORKER_BATCH_SIZE=25
+MATCHING_REFRESH_WORKER_BATCH_SIZE=100
 ```
 
-**Default**: `25`
+**Default**: `100`
 
 ---
 

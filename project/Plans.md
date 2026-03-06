@@ -45,5 +45,5 @@ Validation checklist:
 Validation checklist:
 
 - CI passes on the target branch (lint/typecheck/unit/build + perf budgets + go/no-go). (source: .github/workflows/ci.yml)
-- Cron schedules are defined in `vercel.json`; cron endpoints validate Bearer `CRON_SECRET` from the `authorization` header. (source: vercel.json, src/app/api/cron/account-deletion-workflow/route.ts, src/app/api/cron/decision-reminders/route.ts, docs/ENV_VARIABLES.md)
+- Cron schedules are defined in `vercel.json`; cron endpoints validate Bearer `CRON_SECRET` from the `authorization` header. (source: vercel.json, src/app/api/cron/sla-enforcement/route.ts, src/app/api/cron/decision-reminders/route.ts, docs/ENV_VARIABLES.md)
 - Observability: setup docs exist for Sentry, structured logging, and monitoring/alerting; confirm production env vars and integrations are configured before launch. (source: docs/sentry-setup.md, docs/structured-logging.md, docs/monitoring-alerting.md)

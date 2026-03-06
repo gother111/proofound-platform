@@ -15,8 +15,7 @@ This document records a lightweight, repo-grounded architecture view. Statements
 - Observability: Sentry is integrated via Next.js config. (source: package.json, next.config.js)
 - Email: Resend + React Email dependencies are present. (source: package.json)
 - Testing: Vitest (unit) + Playwright (E2E). (source: package.json, vitest.config.ts, playwright.config.ts)
-- Hosting: Vercel cron schedules are configured in `vercel.json`. (source: vercel.json)
-- External cron-job.org ownership is reconciled through `scripts/sync-cron-job-org.mjs`, which keeps the Python worker and approved observability jobs aligned while disabling overlapping legacy jobs. (source: package.json, scripts/sync-cron-job-org.mjs)
+- Hosting: Vercel cron schedules are configured in `vercel.json` for daily core business automation, while cron-job.org is reconciled through `scripts/sync-cron-job-org.mjs` for the sub-daily Python worker and approved observability jobs. (source: vercel.json, package.json, scripts/sync-cron-job-org.mjs)
 
 ## Folder Map (Repo Truth)
 
