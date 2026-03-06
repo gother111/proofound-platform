@@ -501,19 +501,6 @@ async function getFirstOrganizationSlug(userId: string) {
   return organizations[0]?.org.slug ?? null;
 }
 
-function hasIndividualShellAccess(
-  profile: {
-    handle?: string | null;
-    persona?: ProfileRow['persona'] | null;
-  } | null
-) {
-  if (profile?.persona !== 'individual') {
-    return false;
-  }
-
-  return typeof profile.handle === 'string' && profile.handle.trim().length > 0;
-}
-
 export async function resolveUserHomePath(client?: SupabaseClient) {
   const supabase = client ?? (await createClient());
 
@@ -528,7 +515,7 @@ export async function resolveUserHomePath(client?: SupabaseClient) {
   // Check if user is a platform admin first AND get persona in one query
   const { data: profile } = await supabase
     .from('profiles')
-    .select('platform_role, persona, handle')
+    .select('platform_role, persona')
     .eq('id', user.id)
     .single();
 
@@ -538,12 +525,8 @@ export async function resolveUserHomePath(client?: SupabaseClient) {
 
   // Use persona from the same query instead of calling getPersona separately
   const persona = (profile?.persona as ProfileRow['persona']) ?? 'unknown';
-  const individualProfile = profile as {
-    handle?: string | null;
-    persona?: ProfileRow['persona'] | null;
-  } | null;
 
-  if (hasIndividualShellAccess(individualProfile)) {
+  if (persona === 'individual') {
     return '/app/i/home';
   }
 

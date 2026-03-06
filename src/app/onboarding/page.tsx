@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { resolveUserHomePath, getPersona, getUserOrganizations, getCurrentUser } from '@/lib/auth';
 import { OnboardingClient } from '@/components/onboarding/OnboardingClient';
+import { getIndividualProfileCompletionState } from '@/lib/profile/completion-flow.server';
 
 export default async function OnboardingPage() {
   const supabase = await createClient();
@@ -29,9 +30,8 @@ export default async function OnboardingPage() {
       return <OnboardingClient initialPersona="organization" />;
     }
   } else if (persona === 'individual') {
-    // Check if profile is complete (has handle)
-    const profile = await getCurrentUser();
-    if (!profile?.handle) {
+    const completionState = await getIndividualProfileCompletionState(user.id);
+    if (!completionState.isCoreProfileComplete) {
       // Show individual onboarding
       return <OnboardingClient initialPersona="individual" />;
     }

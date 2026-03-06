@@ -186,7 +186,7 @@ describe('auth request-scoped caching', () => {
     expect(redirectMock).toHaveBeenCalledWith('/app/i/home');
   });
 
-  it('routes incomplete individual users to onboarding', async () => {
+  it('routes legacy individual users without handles to the individual home', async () => {
     const { supabase } = createSupabaseStub({
       profilePersona: 'individual',
       profileHandle: null,
@@ -194,7 +194,7 @@ describe('auth request-scoped caching', () => {
     createClientMock.mockResolvedValue(supabase);
     const auth = await loadAuthModule();
 
-    await expect(auth.resolveUserHomePath()).resolves.toBe('/onboarding');
+    await expect(auth.resolveUserHomePath()).resolves.toBe('/app/i/home');
   });
 
   it('routes completed individual users to the individual home', async () => {
