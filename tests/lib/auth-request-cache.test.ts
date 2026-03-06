@@ -35,11 +35,24 @@ function createAwaitableBuilder<T>(result: QueryResult<T>) {
 
 function createSupabaseStub(options?: {
   profilePersona?: 'individual' | 'org_member' | 'unknown';
+  profileHandle?: string | null;
+  organizationMemberships?: Array<{
+    org: {
+      id: string;
+      slug: string;
+      displayName?: string | null;
+    } | null;
+    orgId: string;
+    userId: string;
+    role: 'owner' | 'admin' | 'member' | 'viewer';
+    status: 'active' | 'pending' | 'inactive';
+    joinedAt: Date;
+  }>;
 }) {
   const profileBuilder = createAwaitableBuilder({
     data: {
       id: 'user-1',
-      handle: 'user-handle',
+      handle: options && 'profileHandle' in options ? options.profileHandle : 'user-handle',
       displayName: 'User Name',
       avatarUrl: null,
       locale: 'en',
@@ -92,7 +105,10 @@ function createSupabaseStub(options?: {
     error: null,
   });
 
-  const organizationMembersBuilder = createAwaitableBuilder({ data: [], error: null });
+  const organizationMembersBuilder = createAwaitableBuilder({
+    data: options?.organizationMemberships ?? [],
+    error: null,
+  });
 
   const from = vi.fn((table: string) => {
     if (table === 'profiles') return profileBuilder;
@@ -168,5 +184,51 @@ describe('auth request-scoped caching', () => {
 
     await expect(auth.requirePersona('org_member')).rejects.toThrow('REDIRECT:/app/i/home');
     expect(redirectMock).toHaveBeenCalledWith('/app/i/home');
+  });
+
+  it('routes incomplete individual users to onboarding', async () => {
+    const { supabase } = createSupabaseStub({
+      profilePersona: 'individual',
+      profileHandle: null,
+    });
+    createClientMock.mockResolvedValue(supabase);
+    const auth = await loadAuthModule();
+
+    await expect(auth.resolveUserHomePath()).resolves.toBe('/onboarding');
+  });
+
+  it('routes completed individual users to the individual home', async () => {
+    const { supabase } = createSupabaseStub({
+      profilePersona: 'individual',
+      profileHandle: 'user-handle',
+    });
+    createClientMock.mockResolvedValue(supabase);
+    const auth = await loadAuthModule();
+
+    await expect(auth.resolveUserHomePath()).resolves.toBe('/app/i/home');
+  });
+
+  it('keeps org-member routing unchanged when an active org exists', async () => {
+    const { supabase } = createSupabaseStub({
+      profilePersona: 'org_member',
+      organizationMemberships: [
+        {
+          org: {
+            id: 'org-1',
+            slug: 'acme',
+            displayName: 'ACME',
+          },
+          orgId: 'org-1',
+          userId: 'user-1',
+          role: 'owner',
+          status: 'active',
+          joinedAt: new Date('2026-01-01T00:00:00.000Z'),
+        },
+      ],
+    });
+    createClientMock.mockResolvedValue(supabase);
+    const auth = await loadAuthModule();
+
+    await expect(auth.resolveUserHomePath()).resolves.toBe('/app/o/acme/home');
   });
 });
