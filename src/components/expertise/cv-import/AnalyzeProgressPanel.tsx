@@ -6,9 +6,10 @@ import { cn } from '@/lib/utils';
 export type AnalyzeProgressStatus = 'idle' | 'running' | 'completed' | 'warning' | 'failed';
 export type AnalyzeProgressPhase =
   | 'preparing'
-  | 'submitting'
+  | 'uploading'
+  | 'queued'
   | 'extracting'
-  | 'mapping'
+  | 'analyzing'
   | 'finalizing';
 
 export interface AnalyzeProgressState {
@@ -24,9 +25,10 @@ export const ANALYZE_PROGRESS_AUTO_COLLAPSE_MS = 4000;
 
 const PHASE_LABELS: Record<AnalyzeProgressPhase, string> = {
   preparing: 'Preparing',
-  submitting: 'Submitting',
-  extracting: 'Extracting',
-  mapping: 'Matching to taxonomy',
+  uploading: 'Uploading CV',
+  queued: 'Queued for extraction',
+  extracting: 'Extracting text',
+  analyzing: 'Analyzing skills',
   finalizing: 'Finalizing',
 };
 

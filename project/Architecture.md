@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `Architecture.md`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-03-06`
 
 # Architecture Snapshot
 
@@ -49,13 +49,13 @@ This document records a lightweight, repo-grounded architecture view. Statements
 
 - Public CV import routes stay in Next.js while Python handles the document-intelligence compute path behind internal-only contracts. (source: src/lib/expertise/python-cv-proxy.ts, api/python/cv_import.py, python_cv/contracts.py)
 - The Python service can stay in-process or move behind a separate base URL via `PYTHON_CV_IMPORT_BASE_URL` without changing the public TypeScript route surface. (source: src/lib/python-internal/service.ts)
-- Internal queue-backed Python work uses `public.python_internal_jobs` plus the worker route `/api/cron/python-internal-worker` and the internal enqueue route `/api/internal/python-jobs`. (source: src/db/schema.ts, src/db/migrations/20260306103000_add_python_internal_jobs.sql, src/app/api/cron/python-internal-worker/route.ts, src/app/api/internal/python-jobs/route.ts)
+- Internal queue-backed Python work uses `public.python_internal_jobs` plus the worker route `/api/cron/python-internal-worker` and the internal enqueue route `/api/internal/python-jobs`. CV PDF extraction now also uses the same queue via `document_intelligence_extract_only` jobs, with uploaded PDFs staged in the private `cv-import-temp` storage bucket and polled through `/api/expertise/cv-import/wizard-extract/status`. (source: src/db/schema.ts, src/db/migrations/20260306103000_add_python_internal_jobs.sql, src/db/migrations/20260306201000_add_cv_import_extract_jobs_and_temp_storage.sql, src/app/api/cron/python-internal-worker/route.ts, src/app/api/internal/python-jobs/route.ts, src/app/api/expertise/cv-import/wizard-extract/route.ts, src/app/api/expertise/cv-import/wizard-extract/status/route.ts)
 
 ### Queue + Worker Flow (Repo Truth)
 
 - Match refresh jobs and Python internal jobs both use Postgres-backed leasing with retries/backoff rather than Redis or a separate broker. (source: src/lib/matching/refresh-queue.ts, src/lib/python-internal/job-queue.ts)
-- Python internal jobs are claimed by a cron worker, executed through the versioned Python contract, and written back to the queue row as `result` or `last_error`. (source: src/app/api/cron/python-internal-worker/route.ts, src/lib/python-internal/client.ts, api/python/cv_import.py)
-- On Hobby, the Python internal worker is intended to be triggered by cron-job.org rather than Vercel Cron because the schedule is sub-daily. (source: README.md, scripts/sync-cron-job-org.mjs)
+- Python internal jobs are claimed by a cron worker, executed through the versioned Python contract, and written back to the queue row as `result` or `last_error`. `document_intelligence_extract_only` is handled directly in the TypeScript worker, which downloads PDFs from private storage, calls the Python `/extract` endpoint with multipart form-data, then deletes temp files after completion. (source: src/app/api/cron/python-internal-worker/route.ts, src/lib/python-internal/client.ts, api/python/cv_import.py, src/lib/expertise/cv-import-extract-worker.ts)
+- On Hobby, the Python internal worker is intended to be triggered by cron-job.org every minute rather than Vercel Cron because the schedule is interactive and sub-daily. A separate daily cron cleans expired temp CV uploads from private storage. (source: README.md, scripts/sync-cron-job-org.mjs, scripts/lib/cron-job-org-config.mjs, src/app/api/cron/cv-import-temp-cleanup/route.ts)
 
 ### Cron Compatibility (Repo Truth)
 

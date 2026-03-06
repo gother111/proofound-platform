@@ -168,6 +168,42 @@ interface ApiSuggestResponse {
   metadata: ApiMetadata;
 }
 
+interface ApiExtractedTextDocument {
+  document_id: string;
+  file_name: string;
+  text: string;
+  context: 'cv';
+}
+
+interface ApiExtractFailedDocument {
+  document_id: string;
+  file_name: string;
+  context: 'cv';
+  parse_error: string;
+  parse_error_code?: string | null;
+}
+
+type ApiExtractStatusResponse =
+  | {
+      job_id: string;
+      status: 'queued' | 'processing';
+      poll_after_ms: number;
+    }
+  | {
+      job_id: string;
+      status: 'completed';
+      documents: ApiExtractedTextDocument[];
+      failed_documents: ApiExtractFailedDocument[];
+      cleanup_pending?: boolean;
+    }
+  | {
+      job_id: string;
+      status: 'failed';
+      error: string;
+      message?: string;
+      code?: string;
+    };
+
 interface WorkState extends ApiWorkExperience {
   approved: boolean;
 }
@@ -222,6 +258,16 @@ interface AnalyzeDocumentDescriptor {
   document: ParsedDocumentState;
 }
 
+interface StoredExtractJobState {
+  jobId: string;
+  fingerprint: string;
+  documents: Array<{
+    requestId: string;
+    localId: string;
+    fileName: string;
+  }>;
+}
+
 const DEFAULT_METADATA: ApiMetadata = {
   semantic_used: false,
   semantic_fallback_triggered: false,
@@ -238,6 +284,8 @@ const DEFAULT_METADATA: ApiMetadata = {
     max_total_chars: 90000,
   },
 };
+
+const EXTRACT_JOB_SESSION_STORAGE_KEY = 'cv-import-wizard-extract-job';
 
 const GENERIC_BACKEND_ERRORS = new Set([
   'Failed to extract CV text',
@@ -277,6 +325,67 @@ async function readTextSafely(response: Response): Promise<string> {
   }
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
+function buildAnalyzeFingerprint(documents: AnalyzeDocumentDescriptor[]): string {
+  return documents
+    .map(({ requestId, document }) =>
+      [
+        requestId,
+        document.file_name,
+        document.file?.size ?? 0,
+        document.file?.lastModified ?? 0,
+      ].join(':')
+    )
+    .join('|');
+}
+
+function saveStoredExtractJobState(state: StoredExtractJobState): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.sessionStorage.setItem(EXTRACT_JOB_SESSION_STORAGE_KEY, JSON.stringify(state));
+}
+
+function readStoredExtractJobState(): StoredExtractJobState | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const raw = window.sessionStorage.getItem(EXTRACT_JOB_SESSION_STORAGE_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as StoredExtractJobState;
+    if (
+      typeof parsed?.jobId !== 'string' ||
+      typeof parsed?.fingerprint !== 'string' ||
+      !Array.isArray(parsed?.documents)
+    ) {
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function clearStoredExtractJobState(): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.sessionStorage.removeItem(EXTRACT_JOB_SESSION_STORAGE_KEY);
+}
+
 async function readErrorMessage(response: Response, fallback: string): Promise<string> {
   const payload = await readJsonSafely(response);
   if (isRecord(payload)) {
@@ -309,6 +418,91 @@ async function readErrorMessage(response: Response, fallback: string): Promise<s
   return fallback;
 }
 
+function normalizeExtractStatusResponse(payload: unknown): ApiExtractStatusResponse | null {
+  if (
+    !isRecord(payload) ||
+    typeof payload.job_id !== 'string' ||
+    typeof payload.status !== 'string'
+  ) {
+    return null;
+  }
+
+  if (payload.status === 'queued' || payload.status === 'processing') {
+    return {
+      job_id: payload.job_id,
+      status: payload.status,
+      poll_after_ms:
+        typeof payload.poll_after_ms === 'number' && Number.isFinite(payload.poll_after_ms)
+          ? Math.max(250, Math.floor(payload.poll_after_ms))
+          : 1500,
+    };
+  }
+
+  if (payload.status === 'completed') {
+    const documents = Array.isArray(payload.documents)
+      ? payload.documents.flatMap((document) =>
+          isRecord(document) &&
+          typeof document.document_id === 'string' &&
+          typeof document.file_name === 'string' &&
+          typeof document.text === 'string' &&
+          document.context === 'cv'
+            ? [
+                {
+                  document_id: document.document_id,
+                  file_name: document.file_name,
+                  text: document.text,
+                  context: 'cv' as const,
+                },
+              ]
+            : []
+        )
+      : [];
+
+    const failedDocuments = Array.isArray(payload.failed_documents)
+      ? payload.failed_documents.flatMap((document) =>
+          isRecord(document) &&
+          typeof document.document_id === 'string' &&
+          typeof document.file_name === 'string' &&
+          typeof document.parse_error === 'string' &&
+          document.context === 'cv'
+            ? [
+                {
+                  document_id: document.document_id,
+                  file_name: document.file_name,
+                  context: 'cv' as const,
+                  parse_error: document.parse_error,
+                  parse_error_code:
+                    typeof document.parse_error_code === 'string'
+                      ? document.parse_error_code
+                      : null,
+                },
+              ]
+            : []
+        )
+      : [];
+
+    return {
+      job_id: payload.job_id,
+      status: 'completed',
+      documents,
+      failed_documents: failedDocuments,
+      cleanup_pending: Boolean(payload.cleanup_pending),
+    };
+  }
+
+  if (payload.status === 'failed' && typeof payload.error === 'string') {
+    return {
+      job_id: payload.job_id,
+      status: 'failed',
+      error: payload.error,
+      message: typeof payload.message === 'string' ? payload.message : payload.error,
+      code: typeof payload.code === 'string' ? payload.code : undefined,
+    };
+  }
+
+  return null;
+}
+
 function isProxyRetryableError(payload: unknown): boolean {
   if (!isRecord(payload)) {
     return false;
@@ -338,6 +532,18 @@ function isRecoverableExtractStageFailure(payload: unknown, status: number): boo
     typeof payload.error === 'string' &&
     payload.error.trim() === GENERIC_EXTRACT_ERROR
   );
+}
+
+function isRecoverableAsyncExtractFailure(payload: unknown, status: number): boolean {
+  if (status === 401 || status === 403 || status === 413 || status === 429) {
+    return false;
+  }
+
+  if (status === 400 && !isMultipartMetadataInvalidError(payload)) {
+    return false;
+  }
+
+  return true;
 }
 
 function isMultipartMetadataInvalidError(payload: unknown): boolean {
@@ -1030,6 +1236,10 @@ function buildAnalyzeWarningMessage(params: {
     return 'Analysis completed, but the uploaded PDFs could not be read. Review the document errors below or upload a clearer text-based PDF.';
   }
 
+  if (unreadableDocuments.length > 0) {
+    return 'Analysis completed, but some PDFs could not be read. Review the document errors below or upload a clearer text-based PDF.';
+  }
+
   if (params.metadata.wizard_stage_failed === 'atlas_verification') {
     return 'Analysis completed with partial recovery. Atlas verification was unavailable, so review skill matches carefully below.';
   }
@@ -1228,6 +1438,28 @@ function buildSectionStatusBadges(totalCount: number, hasParseWarning: boolean) 
   return badges;
 }
 
+function createEmptyParsedDocumentState(params: {
+  documentId: string;
+  fileName: string;
+  file?: File;
+  parseError?: string;
+  parseErrorCode?: string;
+}): ParsedDocumentState {
+  return {
+    document_id: params.documentId,
+    file_name: params.fileName,
+    file: params.file,
+    parsed_text: '',
+    parse_error: params.parseError,
+    parse_error_code: params.parseErrorCode,
+    work_experiences: [],
+    learning_experiences: [],
+    volunteering: [],
+    languages: [],
+    skill_candidates: [],
+  };
+}
+
 async function trackCvImportUiEvent(action: string, properties?: Record<string, unknown>) {
   try {
     await apiFetch('/api/analytics/track', {
@@ -1267,6 +1499,15 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
   const documentsRef = useRef<ParsedDocumentState[]>([]);
   const progressResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoVerifyTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const activeExtractSequenceRef = useRef(0);
+  const resumeAsyncExtractJobRef = useRef<
+    | ((
+        storedJob: StoredExtractJobState,
+        sourceByRequestId: Map<string, ParsedDocumentState>,
+        sequence: number
+      ) => Promise<void>)
+    | null
+  >(null);
 
   const approvedSkillIds = useMemo(() => {
     const selected = new Set<string>();
@@ -1353,6 +1594,437 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     }));
   };
 
+  const canUseLocalFallback = (sourceByRequestId: Map<string, ParsedDocumentState>) =>
+    Array.from(sourceByRequestId.values()).some((document) => Boolean(document.file));
+
+  const buildFailedExtractDocumentStates = (
+    failedDocuments: ApiExtractFailedDocument[],
+    sourceByRequestId: Map<string, ParsedDocumentState>
+  ) =>
+    failedDocuments.map((document) => {
+      const source = sourceByRequestId.get(document.document_id);
+      return createEmptyParsedDocumentState({
+        documentId: document.document_id,
+        fileName: document.file_name,
+        file: source?.file,
+        parseError: document.parse_error,
+        parseErrorCode: document.parse_error_code ?? undefined,
+      });
+    });
+
+  const finalizeAnalyzeSuccess = (params: {
+    payload: ApiSuggestResponse;
+    sourceByRequestId: Map<string, ParsedDocumentState>;
+    extraFailedDocuments?: ApiExtractFailedDocument[];
+    fallbackStageUsed?: ApiFallbackStage | null;
+    metadataFallbackTriggered?: boolean;
+    timeoutFallbackTriggered?: boolean;
+  }) => {
+    let payload = params.payload;
+
+    if (params.fallbackStageUsed && payload.metadata.fallback_stage === 'none') {
+      payload = {
+        ...payload,
+        metadata: {
+          ...payload.metadata,
+          fallback_stage: params.fallbackStageUsed,
+        },
+      };
+    }
+
+    setRunningProgress('analyzing', 78, 'Matching to taxonomy...');
+    setApiMetadata(payload.metadata);
+
+    const analyzedById = new Map<string, ParsedDocumentState>();
+    for (const document of payload.documents) {
+      const source = params.sourceByRequestId.get(document.document_id);
+
+      analyzedById.set(document.document_id, {
+        document_id: document.document_id,
+        file_name: document.file_name,
+        file: source?.file,
+        parsed_text: document.parsed_text || source?.parsed_text || '',
+        parse_error: document.parse_error || source?.parse_error,
+        parse_error_code: document.parse_error_code || source?.parse_error_code,
+        work_experiences: document.work_experiences.map((entry) => ({
+          ...entry,
+          approved: true,
+        })),
+        learning_experiences: document.learning_experiences.map((entry) => ({
+          ...entry,
+          approved: true,
+        })),
+        volunteering: document.volunteering.map((entry) => ({
+          ...entry,
+          approved: true,
+        })),
+        languages: document.languages.map((entry) => ({
+          ...entry,
+          approved: true,
+        })),
+        skill_candidates: document.skill_candidates.map(buildInitialSkillState),
+      });
+    }
+
+    for (const failedDocument of params.extraFailedDocuments ?? []) {
+      if (analyzedById.has(failedDocument.document_id)) {
+        continue;
+      }
+      const source = params.sourceByRequestId.get(failedDocument.document_id);
+      analyzedById.set(
+        failedDocument.document_id,
+        createEmptyParsedDocumentState({
+          documentId: failedDocument.document_id,
+          fileName: failedDocument.file_name,
+          file: source?.file,
+          parseError: failedDocument.parse_error,
+          parseErrorCode: failedDocument.parse_error_code ?? undefined,
+        })
+      );
+    }
+
+    const analyzedDocuments = Array.from(params.sourceByRequestId.keys())
+      .map((documentId) => analyzedById.get(documentId))
+      .filter((document): document is ParsedDocumentState => Boolean(document));
+
+    const warningMessage = hasPartialRecovery(payload.metadata)
+      ? buildAnalyzeWarningMessage({
+          metadata: payload.metadata,
+          documents: analyzedDocuments,
+        })
+      : analyzedDocuments.some(isUnreadableDocument)
+        ? buildAnalyzeWarningMessage({
+            metadata: payload.metadata,
+            documents: analyzedDocuments,
+          })
+        : null;
+
+    setRunningProgress('finalizing', 92, 'Finalizing results...');
+    setDocuments(analyzedDocuments);
+    setSectionExpandSignal(0);
+    setOpenSkillPicker(null);
+
+    const totalSkillCandidates = payload.documents.reduce(
+      (count, document) => count + document.skill_candidates.length,
+      0
+    );
+
+    if (
+      params.fallbackStageUsed &&
+      !params.metadataFallbackTriggered &&
+      !params.timeoutFallbackTriggered
+    ) {
+      toast.info('CV analysis recovered via fallback path.');
+    }
+    if (payload.metadata.semantic_fallback_triggered && totalSkillCandidates === 0) {
+      toast.info(
+        'Skill suggestions are temporarily unavailable, but core CV entities were extracted.'
+      );
+    } else if (payload.metadata.candidate_only_fallback_triggered && totalSkillCandidates > 0) {
+      toast.info('Showing candidate-only skills while taxonomy matching recovers.');
+    }
+
+    if (warningMessage) {
+      setWarningProgress(warningMessage);
+    } else {
+      setCompletedProgress('Extraction completed. Review and approve the results below.');
+    }
+    toast.success(
+      `Analyzed ${payload.documents.length} document${payload.documents.length > 1 ? 's' : ''}.`
+    );
+    if (warningMessage) {
+      toast.info(warningMessage);
+    }
+  };
+
+  const analyzeExtractedTextDocuments = async (params: {
+    textDocuments: Array<{
+      document_id: string;
+      file_name: string;
+      text: string;
+      context: 'cv';
+    }>;
+    sourceByRequestId: Map<string, ParsedDocumentState>;
+    extraFailedDocuments?: ApiExtractFailedDocument[];
+    fallbackStageUsed?: ApiFallbackStage | null;
+    metadataFallbackTriggered?: boolean;
+    timeoutFallbackTriggered?: boolean;
+  }) => {
+    let response = await apiFetch('/api/expertise/cv-import/wizard-suggest?engine=gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ documents: params.textDocuments }),
+    });
+
+    let fallbackStageUsed = params.fallbackStageUsed ?? null;
+
+    if (!response.ok) {
+      const pythonFailurePayload = await readJsonSafely(response);
+      if (isProxyRetryableError(pythonFailurePayload)) {
+        setRunningProgress(
+          'extracting',
+          48,
+          'Retrying analysis with deterministic fallback service...'
+        );
+        response = await apiFetch('/api/expertise/cv-import/wizard-suggest?engine=typescript', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ documents: params.textDocuments }),
+        });
+        fallbackStageUsed = 'typescript_retry';
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error(await readErrorMessage(response, 'Failed to analyze uploaded PDFs'));
+    }
+
+    setRunningProgress('analyzing', 62, 'Analyzing skills and experience...');
+
+    let payload = normalizeSuggestResponse(await readJsonSafely(response));
+    if (!payload) {
+      throw new Error('Invalid response format from CV analysis service');
+    }
+
+    if (isOcrClientEnabled()) {
+      setRunningProgress('extracting', 68, 'Running OCR fallback for scanned PDFs...');
+      const {
+        payload: mergedPayload,
+        ocrAttempted,
+        ocrFailed,
+      } = await retryOcrDocuments({
+        payload,
+        sourceByRequestId: params.sourceByRequestId,
+      });
+      payload = mergedPayload;
+
+      if (ocrAttempted > 0) {
+        if (ocrFailed > 0) {
+          toast.info(
+            'OCR succeeded for some scanned PDFs. Upload a clearer text-based PDF for documents that still failed.'
+          );
+        } else {
+          toast.success('OCR fallback extracted text from scanned PDF documents.');
+        }
+      } else if (ocrFailed > 0) {
+        toast.error(
+          'OCR fallback could not extract readable text. Upload a better text-based PDF.'
+        );
+      }
+    }
+
+    finalizeAnalyzeSuccess({
+      payload,
+      sourceByRequestId: params.sourceByRequestId,
+      extraFailedDocuments: params.extraFailedDocuments,
+      fallbackStageUsed,
+      metadataFallbackTriggered: params.metadataFallbackTriggered,
+      timeoutFallbackTriggered: params.timeoutFallbackTriggered,
+    });
+  };
+
+  const analyzeWithLocalTextFallback = async (params: {
+    sourceByRequestId: Map<string, ParsedDocumentState>;
+    progressMessage: string;
+  }) => {
+    setRunningProgress('extracting', 45, params.progressMessage);
+    const fallbackPayload = await buildTextFallbackPayload(
+      Array.from(params.sourceByRequestId.entries()).map(([documentId, document]) => ({
+        ...document,
+        document_id: documentId,
+      }))
+    );
+
+    await analyzeExtractedTextDocuments({
+      textDocuments: fallbackPayload.documents,
+      sourceByRequestId: params.sourceByRequestId,
+      fallbackStageUsed: 'python_json_retry',
+    });
+  };
+
+  const pollExtractJobUntilSettled = async (jobId: string, sequence: number) => {
+    while (activeExtractSequenceRef.current === sequence) {
+      const response = await apiFetch(
+        `/api/expertise/cv-import/wizard-extract/status?job_id=${encodeURIComponent(jobId)}`
+      );
+
+      if (!response.ok) {
+        throw new Error(await readErrorMessage(response, 'Failed to check CV extraction status'));
+      }
+
+      const payload = normalizeExtractStatusResponse(await readJsonSafely(response));
+      if (!payload) {
+        throw new Error('CV extraction status returned an invalid response.');
+      }
+
+      if (payload.status === 'completed' || payload.status === 'failed') {
+        return payload;
+      }
+
+      setRunningProgress(
+        payload.status === 'queued' ? 'queued' : 'extracting',
+        payload.status === 'queued' ? 34 : 50,
+        payload.status === 'queued'
+          ? 'Queued for extraction. Waiting for worker...'
+          : 'Extracting text from uploaded PDFs...'
+      );
+
+      await sleep(payload.poll_after_ms);
+    }
+
+    throw new Error('CV extraction polling was interrupted.');
+  };
+
+  const resumeAsyncExtractJob = async (
+    storedJob: StoredExtractJobState,
+    sourceByRequestId: Map<string, ParsedDocumentState>,
+    sequence: number
+  ) => {
+    setRunningProgress('queued', 34, 'Resuming background extraction...');
+
+    const settled = await pollExtractJobUntilSettled(storedJob.jobId, sequence);
+    clearStoredExtractJobState();
+
+    if (settled.status === 'failed') {
+      throw new Error(settled.message || settled.error);
+    }
+
+    if (settled.documents.length === 0) {
+      const failedDocuments = buildFailedExtractDocumentStates(
+        settled.failed_documents,
+        sourceByRequestId
+      );
+      setDocuments(failedDocuments);
+      setApiMetadata(DEFAULT_METADATA);
+      const warningMessage = buildAnalyzeWarningMessage({
+        metadata: DEFAULT_METADATA,
+        documents: failedDocuments,
+      });
+      setWarningProgress(warningMessage);
+      toast.info(warningMessage);
+      return;
+    }
+
+    await analyzeExtractedTextDocuments({
+      textDocuments: settled.documents,
+      sourceByRequestId,
+      extraFailedDocuments: settled.failed_documents,
+    });
+
+    if (settled.cleanup_pending) {
+      toast.info('CV extraction completed, but temp file cleanup is still pending.');
+    }
+  };
+  resumeAsyncExtractJobRef.current = resumeAsyncExtractJob;
+
+  const startAsyncExtractAnalyze = async (
+    analyzeDocuments: AnalyzeDocumentDescriptor[],
+    sourceByRequestId: Map<string, ParsedDocumentState>
+  ) => {
+    const formData = new FormData();
+    for (const descriptor of analyzeDocuments) {
+      if (!descriptor.document.file) {
+        continue;
+      }
+
+      formData.append(
+        'files',
+        descriptor.document.file,
+        sanitizeMultipartFilename(descriptor.document.file_name)
+      );
+      formData.append('document_ids', descriptor.requestId);
+      formData.append('contexts', 'cv');
+    }
+
+    setRunningProgress('uploading', 25, 'Uploading CV for background extraction...');
+
+    const response = await apiFetch('/api/expertise/cv-import/wizard-extract', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const failurePayload = await readJsonSafely(response);
+      if (isRecoverableAsyncExtractFailure(failurePayload, response.status)) {
+        await analyzeWithLocalTextFallback({
+          sourceByRequestId,
+          progressMessage: 'Async extraction is unavailable. Retrying with local PDF extraction...',
+        });
+        return;
+      }
+
+      throw new Error(await readErrorMessage(response, 'Failed to queue CV extraction'));
+    }
+
+    const queued = normalizeExtractStatusResponse(await readJsonSafely(response));
+    if (!queued || queued.status !== 'queued') {
+      throw new Error('CV extraction queue returned an invalid response.');
+    }
+
+    saveStoredExtractJobState({
+      jobId: queued.job_id,
+      fingerprint: buildAnalyzeFingerprint(analyzeDocuments),
+      documents: analyzeDocuments.map((descriptor) => ({
+        requestId: descriptor.requestId,
+        localId: descriptor.localId,
+        fileName: descriptor.document.file_name,
+      })),
+    });
+
+    setRunningProgress('queued', 34, 'Queued for extraction. Waiting for worker...');
+
+    const sequence = ++activeExtractSequenceRef.current;
+    const settled = await pollExtractJobUntilSettled(queued.job_id, sequence);
+    clearStoredExtractJobState();
+
+    if (settled.status === 'failed') {
+      if (canUseLocalFallback(sourceByRequestId)) {
+        await analyzeWithLocalTextFallback({
+          sourceByRequestId,
+          progressMessage: 'Background extraction failed. Retrying with local PDF extraction...',
+        });
+        return;
+      }
+
+      throw new Error(settled.message || settled.error);
+    }
+
+    if (settled.documents.length === 0) {
+      if (canUseLocalFallback(sourceByRequestId)) {
+        await analyzeWithLocalTextFallback({
+          sourceByRequestId,
+          progressMessage:
+            'No usable text came back from background extraction. Retrying locally...',
+        });
+        return;
+      }
+
+      const failedDocuments = buildFailedExtractDocumentStates(
+        settled.failed_documents,
+        sourceByRequestId
+      );
+      setDocuments(failedDocuments);
+      setApiMetadata(DEFAULT_METADATA);
+      const warningMessage = buildAnalyzeWarningMessage({
+        metadata: DEFAULT_METADATA,
+        documents: failedDocuments,
+      });
+      setWarningProgress(warningMessage);
+      toast.info(warningMessage);
+      return;
+    }
+
+    await analyzeExtractedTextDocuments({
+      textDocuments: settled.documents,
+      sourceByRequestId,
+      extraFailedDocuments: settled.failed_documents,
+    });
+
+    if (settled.cleanup_pending) {
+      toast.info('CV extraction completed, but temp file cleanup is still pending.');
+    }
+  };
+
   useEffect(
     () => () => {
       if (progressResetTimerRef.current !== null) {
@@ -1370,6 +2042,60 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
   useEffect(() => {
     documentsRef.current = documents;
   }, [documents]);
+
+  useEffect(() => {
+    const storedJob = readStoredExtractJobState();
+    if (!storedJob) {
+      return;
+    }
+
+    setDocuments((previous) => {
+      if (previous.length > 0) {
+        return previous;
+      }
+
+      return storedJob.documents.map((document) =>
+        createEmptyParsedDocumentState({
+          documentId: document.requestId,
+          fileName: document.fileName,
+        })
+      );
+    });
+
+    setIsAnalyzing(true);
+    clearProgressResetTimer();
+    setAnalyzeProgress({
+      status: 'running',
+      phase: 'queued',
+      percent: 34,
+      message: 'Resuming background extraction...',
+      startedAt: Date.now(),
+      completedAt: undefined,
+    });
+
+    const sourceByRequestId = new Map<string, ParsedDocumentState>(
+      storedJob.documents.map((document) => [
+        document.requestId,
+        createEmptyParsedDocumentState({
+          documentId: document.requestId,
+          fileName: document.fileName,
+        }),
+      ])
+    );
+    const sequence = ++activeExtractSequenceRef.current;
+
+    void resumeAsyncExtractJobRef
+      .current?.(storedJob, sourceByRequestId, sequence)
+      .catch((error) => {
+        clearStoredExtractJobState();
+        const message = normalizeAnalyzeFailureMessage(error);
+        setFailedProgress(message);
+        toast.error(error instanceof Error ? error.message : message);
+      })
+      .finally(() => {
+        setIsAnalyzing(false);
+      });
+  }, []);
 
   const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const fileList = Array.from(event.target.files || []);
@@ -1409,6 +2135,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       setSectionExpandSignal(0);
       setOpenSkillPicker(null);
       clearProgressResetTimer();
+      clearStoredExtractJobState();
+      activeExtractSequenceRef.current += 1;
       setAnalyzeProgress(createIdleAnalyzeProgressState());
 
       if (parsedDocuments.length > 0) {
@@ -1445,226 +2173,9 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       const sourceByRequestId = new Map(
         analyzeDocuments.map((descriptor) => [descriptor.requestId, descriptor.document])
       );
-
-      const formData = new FormData();
-      for (const descriptor of analyzeDocuments) {
-        if (!descriptor.document.file) continue;
-        formData.append(
-          'files',
-          descriptor.document.file,
-          sanitizeMultipartFilename(descriptor.document.file_name)
-        );
-        formData.append('document_ids', descriptor.requestId);
-        formData.append('contexts', 'cv');
-      }
-
-      setRunningProgress('submitting', 25, 'Submitting files to extraction service...');
-
-      let fallbackStageUsed: ApiFallbackStage | null = null;
-      let metadataFallbackTriggered = false;
-      let timeoutFallbackTriggered = false;
-      let response = await apiFetch('/api/expertise/cv-import/wizard-suggest?engine=gemini', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const failurePayload = await readJsonSafely(response);
-        const timeoutFailure = isWizardTimeoutFailure(failurePayload, response.status);
-        const metadataInvalidFailure = isMultipartMetadataInvalidError(failurePayload);
-        const recoverableExtractFailure = isRecoverableExtractStageFailure(
-          failurePayload,
-          response.status
-        );
-
-        if (timeoutFailure) {
-          timeoutFallbackTriggered = true;
-          const fallbackPayload = await buildTextFallbackPayload(
-            analyzeDocuments.map((descriptor) => ({
-              ...descriptor.document,
-              document_id: descriptor.requestId,
-            }))
-          );
-          setRunningProgress(
-            'extracting',
-            45,
-            'Retrying extraction with deterministic fallback service...'
-          );
-          response = await apiFetch('/api/expertise/cv-import/wizard-suggest?engine=typescript', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(fallbackPayload),
-          });
-          fallbackStageUsed = 'typescript_retry';
-        } else if (recoverableExtractFailure) {
-          metadataFallbackTriggered = metadataInvalidFailure;
-
-          console.warn(
-            '[cv-import] wizard suggest multipart request failed, retrying with gemini json payload'
-          );
-
-          const fallbackPayload = await buildTextFallbackPayload(
-            analyzeDocuments.map((descriptor) => ({
-              ...descriptor.document,
-              document_id: descriptor.requestId,
-            }))
-          );
-          setRunningProgress('extracting', 45, 'Retrying extraction with fallback service...');
-
-          response = await apiFetch('/api/expertise/cv-import/wizard-suggest?engine=gemini', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(fallbackPayload),
-          });
-          fallbackStageUsed = 'python_json_retry';
-
-          if (!response.ok) {
-            const pythonFailurePayload = await readJsonSafely(response);
-            if (isProxyRetryableError(pythonFailurePayload)) {
-              setRunningProgress(
-                'extracting',
-                48,
-                'Retrying extraction with deterministic fallback service...'
-              );
-              response = await apiFetch(
-                '/api/expertise/cv-import/wizard-suggest?engine=typescript',
-                {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(fallbackPayload),
-                }
-              );
-              fallbackStageUsed = 'typescript_retry';
-            }
-          }
-        }
-      }
-
-      if (!response.ok) {
-        throw new Error(await readErrorMessage(response, 'Failed to analyze uploaded PDFs'));
-      }
-
-      setRunningProgress('extracting', 55, 'Extracting skills and experience...');
-
-      let payload = normalizeSuggestResponse(await readJsonSafely(response));
-      if (!payload) {
-        throw new Error('Invalid response format from CV analysis service');
-      }
-
-      if (fallbackStageUsed && payload.metadata.fallback_stage === 'none') {
-        payload = {
-          ...payload,
-          metadata: {
-            ...payload.metadata,
-            fallback_stage: fallbackStageUsed,
-          },
-        };
-      }
-
-      if (isOcrClientEnabled()) {
-        setRunningProgress('extracting', 60, 'Running OCR fallback for scanned PDFs...');
-        const {
-          payload: mergedPayload,
-          ocrAttempted,
-          ocrFailed,
-        } = await retryOcrDocuments({
-          payload,
-          sourceByRequestId,
-        });
-        payload = mergedPayload;
-
-        if (ocrAttempted > 0) {
-          if (ocrFailed > 0) {
-            toast.info(
-              'OCR succeeded for some scanned PDFs. Upload a clearer text-based PDF for documents that still failed.'
-            );
-          } else {
-            toast.success('OCR fallback extracted text from scanned PDF documents.');
-          }
-        } else if (ocrFailed > 0) {
-          toast.error(
-            'OCR fallback could not extract readable text. Upload a better text-based PDF.'
-          );
-        }
-      }
-
-      setRunningProgress('mapping', 78, 'Matching to taxonomy...');
-      setApiMetadata(payload.metadata);
-
-      const analyzedDocuments = payload.documents.map((document) => {
-        const source = sourceByRequestId.get(document.document_id);
-
-        return {
-          document_id: document.document_id,
-          file_name: document.file_name,
-          file: source?.file,
-          parsed_text: document.parsed_text || source?.parsed_text || '',
-          parse_error: document.parse_error || source?.parse_error,
-          parse_error_code: document.parse_error_code || source?.parse_error_code,
-          work_experiences: document.work_experiences.map((entry) => ({
-            ...entry,
-            approved: true,
-          })),
-          learning_experiences: document.learning_experiences.map((entry) => ({
-            ...entry,
-            approved: true,
-          })),
-          volunteering: document.volunteering.map((entry) => ({
-            ...entry,
-            approved: true,
-          })),
-          languages: document.languages.map((entry) => ({
-            ...entry,
-            approved: true,
-          })),
-          skill_candidates: document.skill_candidates.map(buildInitialSkillState),
-        };
-      });
-
-      const warningMessage = hasPartialRecovery(payload.metadata)
-        ? buildAnalyzeWarningMessage({
-            metadata: payload.metadata,
-            documents: analyzedDocuments,
-          })
-        : analyzedDocuments.length > 0 && analyzedDocuments.every(isUnreadableDocument)
-          ? buildAnalyzeWarningMessage({
-              metadata: payload.metadata,
-              documents: analyzedDocuments,
-            })
-          : null;
-
-      setRunningProgress('finalizing', 92, 'Finalizing results...');
-      setDocuments(analyzedDocuments);
-      setSectionExpandSignal(0);
-      setOpenSkillPicker(null);
-
-      const totalSkillCandidates = payload.documents.reduce(
-        (count, document) => count + document.skill_candidates.length,
-        0
-      );
-      if (fallbackStageUsed && !metadataFallbackTriggered && !timeoutFallbackTriggered) {
-        toast.info('CV analysis recovered via fallback path.');
-      }
-      if (payload.metadata.semantic_fallback_triggered && totalSkillCandidates === 0) {
-        toast.info(
-          'Skill suggestions are temporarily unavailable, but core CV entities were extracted.'
-        );
-      } else if (payload.metadata.candidate_only_fallback_triggered && totalSkillCandidates > 0) {
-        toast.info('Showing candidate-only skills while taxonomy matching recovers.');
-      }
-
-      if (warningMessage) {
-        setWarningProgress(warningMessage);
-      } else {
-        setCompletedProgress('Extraction completed. Review and approve the results below.');
-      }
-      toast.success(
-        `Analyzed ${payload.documents.length} document${payload.documents.length > 1 ? 's' : ''}.`
-      );
-      if (warningMessage) {
-        toast.info(warningMessage);
-      }
+      await startAsyncExtractAnalyze(analyzeDocuments, sourceByRequestId);
     } catch (error) {
+      clearStoredExtractJobState();
       setFailedProgress(normalizeAnalyzeFailureMessage(error));
       toast.error(error instanceof Error ? error.message : 'Failed to analyze uploaded PDFs');
     } finally {

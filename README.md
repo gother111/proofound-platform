@@ -293,7 +293,8 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
   - `/api/cron/refresh-matches` — 03:00 (enqueue match refresh jobs)
   - `/api/cron/refresh-matches-worker` — 03:15 (drain queued refresh jobs)
   - `/api/cron/sla-enforcement` — 08:00 (expire stale matches and flag overdue interview decisions)
-  - `/api/cron/python-internal-worker` — every 15 minutes via cron-job.org on Hobby (`npm run cron:sync`)
+  - `/api/cron/python-internal-worker` — every minute via cron-job.org on Hobby (`npm run cron:sync`)
+  - `/api/cron/cv-import-temp-cleanup` — 04:20 daily via cron-job.org (removes expired private CV upload objects)
 - Env requirements:
   - `CRON_SECRET` (for inbound cron calls)
   - `CRON_API_KEY` (optional, for syncing cron-job.org jobs from the repo)
@@ -312,6 +313,7 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
   - `MATCHING_TWO_STAGE_ENABLED` (default `true`)
   - `MATCHING_NEAR_SCAN_LIMIT` (default `300`)
   - `CV_IMPORT_ENGINE_MODE` (default `auto`)
+  - `CV_IMPORT_TEMP_TTL_HOURS` (default `24`, controls private temp CV upload retention)
   - `PERF_API_P95_BUDGET_MS` (default `1500`)
 - Observability/optional routes (if scheduled via cron-job.org):
   - `/api/cron/fairness-note` — daily at 02:00 Europe/Stockholm
@@ -329,6 +331,11 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
   - Vercel function logs for detailed errors.
   - DB tables: `fairnessNotes`, `fairnessReports` for outputs; other crons rely on logs/status JSON.
   - Success = 200 JSON; 401 = bad/missing bearer; 500 = code/data/env issue (check logs).
+- CV import PDF analyze now uses an async extract-first flow:
+  1. `POST /api/expertise/cv-import/wizard-extract` uploads PDFs into private temp storage and enqueues `document_intelligence_extract_only`
+  2. `GET /api/expertise/cv-import/wizard-extract/status?job_id=...` polls until extraction completes or fails
+  3. the client submits extracted text to the existing JSON `POST /api/expertise/cv-import/wizard-suggest`
+  4. browser-side PDF extraction remains the automatic fallback if the async extract job cannot be accepted or completed
 - Manual test (example):
   ```bash
   curl -i -H "Authorization: Bearer $CRON_SECRET" https://proofound.io/api/cron/refresh-matches

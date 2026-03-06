@@ -53,7 +53,21 @@ export function buildManagedJobs(siteUrl, cronSecret) {
       schedule: {
         hours: [-1],
         mdays: [-1],
-        minutes: [0, 15, 30, 45],
+        minutes: [-1],
+        months: [-1],
+        wdays: [-1],
+      },
+      cronSecret,
+    }),
+    buildJob({
+      title: 'Proofound - CV Import Temp Cleanup',
+      url: `${siteUrl}/api/cron/cv-import-temp-cleanup`,
+      enabled: true,
+      requestTimeout: 300,
+      schedule: {
+        hours: [4],
+        mdays: [-1],
+        minutes: [20],
         months: [-1],
         wdays: [-1],
       },

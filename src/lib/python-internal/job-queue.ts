@@ -23,6 +23,23 @@ export type ClaimedPythonInternalJob = {
   payload: Record<string, unknown>;
 };
 
+export type PythonInternalJobStatus = 'pending' | 'leased' | 'completed' | 'failed';
+
+export type PythonInternalJobRecord = {
+  id: string;
+  jobType: PythonInternalJobType;
+  status: PythonInternalJobStatus;
+  attempts: number;
+  maxAttempts: number;
+  source: string;
+  payload: Record<string, unknown>;
+  result: Record<string, unknown> | null;
+  lastError: string | null;
+  completedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 function parsePositiveInt(value: string | undefined, fallback: number): number {
   if (!value) {
     return fallback;
@@ -83,6 +100,7 @@ export function resolvePythonInternalMaxAttempts(): number {
 
 export async function enqueuePythonInternalJobs(
   jobs: Array<{
+    id?: string;
     jobType: PythonInternalJobType;
     payload: Record<string, unknown>;
     maxAttempts?: number;
@@ -95,6 +113,7 @@ export async function enqueuePythonInternalJobs(
 
   const now = new Date();
   const rows = jobs.map((job) => ({
+    id: job.id,
     jobType: job.jobType,
     status: 'pending' as const,
     attempts: 0,
@@ -195,7 +214,8 @@ export async function markPythonInternalJobSuccess(
 
 export async function markPythonInternalJobFailure(
   jobId: string,
-  errorMessage: string
+  errorMessage: string,
+  resultPayload?: Record<string, unknown>
 ): Promise<void> {
   const [job] = await db
     .select({
@@ -217,6 +237,7 @@ export async function markPythonInternalJobFailure(
       .set({
         status: 'failed',
         lastError: errorMessage.slice(0, 2000),
+        result: resultPayload ?? null,
         leaseExpiresAt: null,
         completedAt: new Date(),
         updatedAt: new Date(),
@@ -236,6 +257,46 @@ export async function markPythonInternalJobFailure(
       updatedAt: new Date(),
     })
     .where(eq(pythonInternalJobs.id, jobId));
+}
+
+export async function getPythonInternalJob(jobId: string): Promise<PythonInternalJobRecord | null> {
+  const [job] = await db
+    .select({
+      id: pythonInternalJobs.id,
+      jobType: pythonInternalJobs.jobType,
+      status: pythonInternalJobs.status,
+      attempts: pythonInternalJobs.attempts,
+      maxAttempts: pythonInternalJobs.maxAttempts,
+      source: pythonInternalJobs.source,
+      payload: pythonInternalJobs.payload,
+      result: pythonInternalJobs.result,
+      lastError: pythonInternalJobs.lastError,
+      completedAt: pythonInternalJobs.completedAt,
+      createdAt: pythonInternalJobs.createdAt,
+      updatedAt: pythonInternalJobs.updatedAt,
+    })
+    .from(pythonInternalJobs)
+    .where(eq(pythonInternalJobs.id, jobId))
+    .limit(1);
+
+  if (!job) {
+    return null;
+  }
+
+  return {
+    id: job.id,
+    jobType: job.jobType as PythonInternalJobType,
+    status: job.status as PythonInternalJobStatus,
+    attempts: job.attempts,
+    maxAttempts: job.maxAttempts,
+    source: job.source,
+    payload: (job.payload as Record<string, unknown> | null) ?? {},
+    result: (job.result as Record<string, unknown> | null) ?? null,
+    lastError: job.lastError ?? null,
+    completedAt: job.completedAt ?? null,
+    createdAt: job.createdAt,
+    updatedAt: job.updatedAt,
+  };
 }
 
 export async function countPendingPythonInternalJobs(): Promise<number> {

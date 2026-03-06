@@ -1007,7 +1007,7 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
     });
 
     try {
-      setRunningProgress('submitting', 35, 'Submitting text to extraction service...');
+      setRunningProgress('uploading', 35, 'Submitting text to extraction service...');
       const response = await apiFetch('/api/expertise/cv-import/suggest?engine=gemini', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1026,7 +1026,7 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
         throw new Error('Invalid response format from CV analysis service');
       }
 
-      setRunningProgress('mapping', 85, 'Matching to taxonomy...');
+      setRunningProgress('analyzing', 85, 'Matching to taxonomy...');
       setApiMetadata(payload.metadata);
 
       const requestStateById = new Map(

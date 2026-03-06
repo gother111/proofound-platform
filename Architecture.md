@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `Architecture.md`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-03-06`
 
 # Architecture Snapshot
 
@@ -15,7 +15,7 @@ This document records a lightweight, repo-grounded architecture view. Statements
 - Observability: Sentry is integrated via Next.js config. (source: package.json, next.config.js)
 - Email: Resend + React Email dependencies are present. (source: package.json)
 - Testing: Vitest (unit) + Playwright (E2E). (source: package.json, vitest.config.ts, playwright.config.ts)
-- Hosting: Vercel cron schedules are configured in `vercel.json`. (source: vercel.json)
+- Hosting: Vercel cron schedules are configured in `vercel.json` for daily core business automation, while cron-job.org is reconciled through `scripts/sync-cron-job-org.mjs` for the sub-daily Python worker and approved observability jobs. (source: vercel.json, package.json, scripts/sync-cron-job-org.mjs)
 
 ## Folder Map (Repo Truth)
 
@@ -45,6 +45,23 @@ This document records a lightweight, repo-grounded architecture view. Statements
 
 - Browser traffic hits Next.js; reads/writes flow through Supabase with RLS enforced. (source: README.md)
 
+### Python Compute Layer (Repo Truth)
+
+- Public CV import routes stay in Next.js while Python handles the document-intelligence compute path behind internal-only contracts. (source: src/lib/expertise/python-cv-proxy.ts, api/python/cv_import.py, python_cv/contracts.py)
+- The Python service can stay in-process or move behind a separate base URL via `PYTHON_CV_IMPORT_BASE_URL` without changing the public TypeScript route surface. (source: src/lib/python-internal/service.ts)
+- Internal queue-backed Python work uses `public.python_internal_jobs` plus the worker route `/api/cron/python-internal-worker` and the internal enqueue route `/api/internal/python-jobs`. CV PDF extraction now also uses the same queue via `document_intelligence_extract_only` jobs, with uploaded PDFs staged in the private `cv-import-temp` storage bucket and polled through `/api/expertise/cv-import/wizard-extract/status`. (source: src/db/schema.ts, src/db/migrations/20260306103000_add_python_internal_jobs.sql, src/db/migrations/20260306201000_add_cv_import_extract_jobs_and_temp_storage.sql, src/app/api/cron/python-internal-worker/route.ts, src/app/api/internal/python-jobs/route.ts, src/app/api/expertise/cv-import/wizard-extract/route.ts, src/app/api/expertise/cv-import/wizard-extract/status/route.ts)
+
+### Queue + Worker Flow (Repo Truth)
+
+- Match refresh jobs and Python internal jobs both use Postgres-backed leasing with retries/backoff rather than Redis or a separate broker. (source: src/lib/matching/refresh-queue.ts, src/lib/python-internal/job-queue.ts)
+- Python internal jobs are claimed by a cron worker, executed through the versioned Python contract, and written back to the queue row as `result` or `last_error`. `document_intelligence_extract_only` is handled directly in the TypeScript worker, which downloads PDFs from private storage, calls the Python `/extract` endpoint with multipart form-data, then deletes temp files after completion. (source: src/app/api/cron/python-internal-worker/route.ts, src/lib/python-internal/client.ts, api/python/cv_import.py, src/lib/expertise/cv-import-extract-worker.ts)
+- On Hobby, the Python internal worker is intended to be triggered by cron-job.org every minute rather than Vercel Cron because the schedule is interactive and sub-daily. A separate daily cron cleans expired temp CV uploads from private storage. (source: README.md, scripts/sync-cron-job-org.mjs, scripts/lib/cron-job-org-config.mjs, src/app/api/cron/cv-import-temp-cleanup/route.ts)
+
+### Cron Compatibility (Repo Truth)
+
+- `src/app/api/cron/sla-enforcement/route.ts` now treats completed interviews with `decided_by IS NULL` as still awaiting a decision, which matches the currently deployed production `interviews` schema. (source: src/app/api/cron/sla-enforcement/route.ts)
+- `src/lib/analytics/fairness.ts` introspects `information_schema.columns` before segmenting on `wellbeing_opt_ins`, so the fairness cron degrades to a zero-segment report instead of failing when demographic columns are absent. (source: src/lib/analytics/fairness.ts, src/app/api/cron/fairness-report/route.ts)
+
 ### API Security Flow (Repo Truth)
 
 - API routes are protected by CSRF middleware with an allowlist for public endpoints; security headers are applied in both `src/middleware.ts` and `next.config.js`. (source: src/middleware.ts, next.config.js)
@@ -60,3 +77,4 @@ This document records a lightweight, repo-grounded architecture view. Statements
 - Repo Truth: CSP/security headers are set in both `next.config.js` and `src/middleware.ts`. (source: next.config.js, src/middleware.ts)
 - Guidance: Coordinate security header changes across both surfaces to avoid policy drift.
 - Go/no-go evidence remains an operational dependency through `ACCESSIBILITY_AUDIT_REPORT.md` in `scripts/go-no-go-check.mjs`. (source: scripts/go-no-go-check.mjs, ACCESSIBILITY_AUDIT_REPORT.md)
+- Guidance: `PYTHON_INTERNAL_SERVICE_SECRET` should be configured explicitly before moving the document-intelligence service to a separate deployment; relying on `CRON_SECRET` fallback is acceptable only as a transitional compatibility path. (source: src/lib/python-internal/service.ts, api/python/cv_import.py)

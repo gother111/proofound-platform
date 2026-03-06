@@ -17,42 +17,222 @@ const normalizePdfParseErrorMock = vi.fn((error: unknown) =>
 );
 
 vi.mock('@/lib/api/fetch', () => ({
-  apiFetch: (...args: any[]) => apiFetchMock(...args),
+  apiFetch: (...args: unknown[]) => apiFetchMock(...args),
 }));
 
 vi.mock('sonner', () => ({
   toast: {
-    success: (...args: any[]) => toastSuccessMock(...args),
-    error: (...args: any[]) => toastErrorMock(...args),
-    info: (...args: any[]) => toastInfoMock(...args),
+    success: (...args: unknown[]) => toastSuccessMock(...args),
+    error: (...args: unknown[]) => toastErrorMock(...args),
+    info: (...args: unknown[]) => toastInfoMock(...args),
   },
 }));
 
 vi.mock('@/lib/expertise/pdf-client-extractor', () => ({
-  extractPdfTextFromFile: (...args: any[]) => extractPdfTextFromFileMock(...args),
-  normalizePdfParseError: (...args: any[]) => normalizePdfParseErrorMock(...args),
+  extractPdfTextFromFile: (...args: unknown[]) => extractPdfTextFromFileMock(...args),
+  normalizePdfParseError: (...args: unknown[]) => normalizePdfParseErrorMock(...args),
 }));
 
 vi.mock('@/lib/expertise/ocr-client', () => ({
-  extractPdfTextWithOcr: (...args: any[]) => extractPdfTextWithOcrMock(...args),
-  isOcrClientEnabled: (...args: any[]) => isOcrClientEnabledMock(...args),
-  resolveOcrClientLimits: (...args: any[]) => resolveOcrClientLimitsMock(...args),
+  extractPdfTextWithOcr: (...args: unknown[]) => extractPdfTextWithOcrMock(...args),
+  isOcrClientEnabled: (...args: unknown[]) => isOcrClientEnabledMock(...args),
+  resolveOcrClientLimits: (...args: unknown[]) => resolveOcrClientLimitsMock(...args),
 }));
+
+function jsonResponse(payload: unknown, status = 200) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+function buildAnalyzePayload(overrides?: Partial<Record<string, unknown>>) {
+  return {
+    documents: [
+      {
+        document_id: 'doc-1',
+        file_name: 'cv.pdf',
+        context: 'cv',
+        parsed_text: 'React TypeScript',
+        parse_error: null,
+        parse_error_code: null,
+        work_experiences: [],
+        learning_experiences: [],
+        volunteering: [],
+        languages: [],
+        skill_candidates: [],
+      },
+    ],
+    metadata: {
+      semantic_used: false,
+      semantic_fallback_triggered: false,
+      fallback_stage: 'none',
+      candidate_only_fallback_triggered: false,
+      unmapped_candidates_count: 0,
+      limits: {
+        max_documents: 5,
+        max_chars_per_document: 30000,
+        max_total_chars: 90000,
+      },
+      ...(overrides?.metadata as Record<string, unknown> | undefined),
+    },
+    ...(overrides || {}),
+  };
+}
+
+function remapAnalyzePayloadDocumentIds(payload: Record<string, unknown>, documentIds: string[]) {
+  const documents = Array.isArray(payload.documents) ? payload.documents : [];
+  return {
+    ...payload,
+    documents: documents.map((document, index) => ({
+      ...(document as Record<string, unknown>),
+      document_id: documentIds[index] ?? (document as Record<string, unknown>).document_id,
+    })),
+  };
+}
+
+function remapStatusResponseDocumentIds(
+  response: Record<string, unknown>,
+  documentIds: string[],
+  fileNames: string[]
+) {
+  if (response.status !== 'completed') {
+    return response;
+  }
+
+  const documents = Array.isArray(response.documents) ? response.documents : [];
+  const failedDocuments = Array.isArray(response.failed_documents) ? response.failed_documents : [];
+
+  return {
+    ...response,
+    documents: documents.map((document, index) => ({
+      ...(document as Record<string, unknown>),
+      document_id: documentIds[index] ?? (document as Record<string, unknown>).document_id,
+      file_name: fileNames[index] ?? (document as Record<string, unknown>).file_name,
+    })),
+    failed_documents: failedDocuments.map((document, index) => ({
+      ...(document as Record<string, unknown>),
+      document_id: documentIds[index] ?? (document as Record<string, unknown>).document_id,
+      file_name: fileNames[index] ?? (document as Record<string, unknown>).file_name,
+    })),
+  };
+}
+
+function installAsyncAnalyzeFlow(params?: {
+  analyzePayload?: Record<string, unknown>;
+  extractedDocuments?: Array<Record<string, unknown>>;
+  failedDocuments?: Array<Record<string, unknown>>;
+  statusResponses?: Array<Record<string, unknown>>;
+  applyPayload?: Record<string, unknown>;
+}) {
+  const analyzePayload = params?.analyzePayload ?? buildAnalyzePayload();
+  const statusResponses = params?.statusResponses ?? [
+    {
+      job_id: 'job-1',
+      status: 'completed',
+      documents: params?.extractedDocuments ?? [
+        {
+          document_id: 'doc-1',
+          file_name: 'cv.pdf',
+          text: 'React TypeScript',
+          context: 'cv',
+        },
+      ],
+      failed_documents: params?.failedDocuments ?? [],
+    },
+  ];
+  let statusIndex = 0;
+  let requestDocumentIds: string[] = [];
+  let requestFileNames: string[] = [];
+
+  apiFetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+    if (url === '/api/expertise/cv-import/wizard-extract') {
+      const formData = init?.body as FormData;
+      requestDocumentIds = formData
+        .getAll('document_ids')
+        .map((value) => String(value))
+        .filter(Boolean);
+      requestFileNames = formData
+        .getAll('files')
+        .map((value) => (value instanceof File ? value.name : 'cv.pdf'));
+      return jsonResponse({ job_id: 'job-1', status: 'queued', poll_after_ms: 1 }, 202);
+    }
+
+    if (url.startsWith('/api/expertise/cv-import/wizard-extract/status')) {
+      const nextStatus = remapStatusResponseDocumentIds(
+        statusResponses[Math.min(statusIndex, statusResponses.length - 1)],
+        requestDocumentIds,
+        requestFileNames
+      );
+      statusIndex += 1;
+      return jsonResponse(nextStatus);
+    }
+
+    if (url === '/api/expertise/cv-import/wizard-suggest?engine=gemini') {
+      return jsonResponse(remapAnalyzePayloadDocumentIds(analyzePayload, requestDocumentIds));
+    }
+
+    if (url === '/api/expertise/cv-import/wizard-suggest?engine=typescript') {
+      return jsonResponse(remapAnalyzePayloadDocumentIds(analyzePayload, requestDocumentIds));
+    }
+
+    if (url === '/api/expertise/cv-import/wizard-apply') {
+      return jsonResponse(
+        params?.applyPayload ?? {
+          imported_counts: {
+            skills: 1,
+            work_experiences: 0,
+            learning_experiences: 0,
+            volunteering: 0,
+            languages: 0,
+          },
+          skipped_counts: {
+            skills: 0,
+            work_experiences: 0,
+            learning_experiences: 0,
+            volunteering: 0,
+            languages: 0,
+          },
+          warnings: [],
+        }
+      );
+    }
+
+    if (url === '/api/analytics/track') {
+      return jsonResponse({ ok: true });
+    }
+
+    if (url.startsWith('/api/expertise/taxonomy')) {
+      return jsonResponse({ l4_skills: [] });
+    }
+
+    throw new Error(`Unexpected apiFetch call: ${url} ${JSON.stringify(init || {})}`);
+  });
+}
+
+async function uploadPdf(fileName = 'cv.pdf') {
+  const uploadInput = screen.getByTestId('cv-upload');
+  fireEvent.change(uploadInput, {
+    target: {
+      files: [new File(['dummy'], fileName, { type: 'application/pdf' })],
+    },
+  });
+
+  await waitFor(() => {
+    expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
+  });
+}
+
+async function clickAnalyze() {
+  fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
+}
 
 describe('CvImportWizard', () => {
   beforeEach(() => {
     vi.useRealTimers();
     vi.clearAllMocks();
-    extractPdfTextFromFileMock.mockReset();
-    extractPdfTextWithOcrMock.mockReset();
-    isOcrClientEnabledMock.mockReset();
-    resolveOcrClientLimitsMock.mockReset();
-    normalizePdfParseErrorMock.mockReset();
-    normalizePdfParseErrorMock.mockImplementation((error: unknown) =>
-      error instanceof Error ? error.message : 'Failed to parse PDF'
-    );
+    window.sessionStorage.clear();
     isOcrClientEnabledMock.mockReturnValue(false);
-    delete process.env.NEXT_PUBLIC_CV_IMPORT_CLIENT_FALLBACK_ENABLED;
     resolveOcrClientLimitsMock.mockReturnValue({
       maxPages: 4,
       maxFileSizeBytes: 5 * 1024 * 1024,
@@ -61,108 +241,122 @@ describe('CvImportWizard', () => {
       renderScale: 2,
       language: 'eng',
     });
+    normalizePdfParseErrorMock.mockImplementation((error: unknown) =>
+      error instanceof Error ? error.message : 'Failed to parse PDF'
+    );
   });
 
-  it('uploads and analyzes CV PDFs through wizard suggest route', async () => {
-    apiFetchMock.mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          documents: [
-            {
-              document_id: 'doc-1',
-              file_name: 'cv.pdf',
-              context: 'cv',
-              work_experiences: [
-                {
-                  item_id: 'work-1',
-                  title: 'Senior Engineer',
-                  organization: 'Acme',
-                  duration: '2021 - Present',
-                  summary: 'Built React products.',
-                  evidence_snippets: ['Senior Engineer at Acme'],
-                  confidence: 0.8,
-                },
-              ],
-              learning_experiences: [],
-              volunteering: [],
-              languages: [
-                {
-                  item_id: 'language-1',
-                  language_code: 'en',
-                  language_name: 'English',
-                  level: 'C2',
-                  evidence_snippets: ['English Native'],
-                  confidence: 0.9,
-                },
-              ],
-              skill_candidates: [],
-            },
-          ],
-          metadata: {
-            semantic_used: false,
-            semantic_fallback_triggered: false,
-            unmapped_candidates_count: 0,
-            limits: {
-              max_documents: 5,
-              max_chars_per_document: 30000,
-              max_total_chars: 90000,
-            },
+  it('uploads PDFs through the async extract route and then analyzes extracted text', async () => {
+    installAsyncAnalyzeFlow({
+      analyzePayload: buildAnalyzePayload({
+        documents: [
+          {
+            document_id: 'doc-1',
+            file_name: 'cv.pdf',
+            context: 'cv',
+            parsed_text: 'React TypeScript',
+            parse_error: null,
+            parse_error_code: null,
+            work_experiences: [
+              {
+                item_id: 'work-1',
+                title: 'Senior Engineer',
+                organization: 'Acme',
+                duration: '2021 - Present',
+                summary: 'Built React products.',
+                evidence_snippets: ['Senior Engineer at Acme'],
+                confidence: 0.8,
+              },
+            ],
+            learning_experiences: [],
+            volunteering: [],
+            languages: [],
+            skill_candidates: [],
           },
-        }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      )
-    );
+        ],
+      }),
+    });
 
     render(<CvImportWizard />);
-
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
-    });
+    await uploadPdf();
+    await clickAnalyze();
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/api/expertise/cv-import/wizard-extract',
+        expect.objectContaining({ method: 'POST', body: expect.any(FormData) })
+      );
     });
-
-    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
 
     await waitFor(() => {
       expect(apiFetchMock).toHaveBeenCalledWith(
         '/api/expertise/cv-import/wizard-suggest?engine=gemini',
         expect.objectContaining({
           method: 'POST',
-          body: expect.any(FormData),
+          headers: { 'Content-Type': 'application/json' },
         })
       );
     });
 
     expect(screen.getByText('Skills to review')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Finish Review & Apply/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Expand all sections/i })).toBeInTheDocument();
-
     fireEvent.click(screen.getByRole('button', { name: /Expand all sections/i }));
-
     expect(screen.getByDisplayValue('Senior Engineer')).toBeInTheDocument();
   });
 
-  it('uses ASCII-safe multipart document IDs for non-ASCII filenames', async () => {
-    apiFetchMock.mockImplementationOnce(async (_url: string, init?: RequestInit) => {
-      const formData = init?.body as FormData;
-      const requestDocumentId = String(formData.getAll('document_ids')[0] || 'doc-1');
+  it('uses ASCII-safe document ids in the async extract upload payload', async () => {
+    installAsyncAnalyzeFlow();
 
-      return new Response(
-        JSON.stringify({
+    render(<CvImportWizard />);
+    await uploadPdf('CV_Äндрей.pdf');
+    await clickAnalyze();
+
+    await waitFor(() => {
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/api/expertise/cv-import/wizard-extract',
+        expect.any(Object)
+      );
+    });
+
+    const formData = apiFetchMock.mock.calls.find(
+      ([url]) => url === '/api/expertise/cv-import/wizard-extract'
+    )?.[1]?.body as FormData;
+    const requestDocumentId = String(formData.getAll('document_ids')[0] || '');
+    expect(requestDocumentId).toMatch(/^[A-Za-z0-9_-]+$/);
+    expect(requestDocumentId).not.toContain('Ä');
+    expect(requestDocumentId).not.toContain('ндрей');
+  });
+
+  it('shows upload progress and auto-collapses completion after 4 seconds', async () => {
+    installAsyncAnalyzeFlow();
+
+    render(<CvImportWizard />);
+    await uploadPdf();
+    await clickAnalyze();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Extraction completed. Review and approve the results below.')
+      ).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 4200));
+    });
+
+    expect(
+      screen.queryByText('Extraction completed. Review and approve the results below.')
+    ).not.toBeInTheDocument();
+  }, 10000);
+
+  it('applies approved wizard selections via wizard-apply route', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    try {
+      installAsyncAnalyzeFlow({
+        analyzePayload: buildAnalyzePayload({
           documents: [
             {
-              document_id: requestDocumentId,
-              file_name: 'CV_Äндрей.pdf',
+              document_id: 'doc-1',
+              file_name: 'cv.pdf',
               context: 'cv',
               parsed_text: 'React',
               parse_error: null,
@@ -171,971 +365,13 @@ describe('CvImportWizard', () => {
               learning_experiences: [],
               volunteering: [],
               languages: [],
-              skill_candidates: [],
-            },
-          ],
-          metadata: {
-            semantic_used: false,
-            semantic_fallback_triggered: false,
-            unmapped_candidates_count: 0,
-            limits: {
-              max_documents: 5,
-              max_chars_per_document: 30000,
-              max_total_chars: 90000,
-            },
-          },
-        }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    });
-
-    render(<CvImportWizard />);
-
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy'], 'CV_Äндрей.pdf', { type: 'application/pdf' });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
-
-    await waitFor(() => {
-      expect(apiFetchMock).toHaveBeenCalledTimes(1);
-    });
-
-    const multipartBody = apiFetchMock.mock.calls[0]?.[1]?.body as FormData;
-    const requestDocumentId = String(multipartBody.getAll('document_ids')[0] || '');
-    expect(requestDocumentId).toMatch(/^[A-Za-z0-9_-]+$/);
-    expect(requestDocumentId).not.toContain('Ä');
-    expect(requestDocumentId).not.toContain('ндрей');
-  });
-
-  it('shows staged progress and auto-collapses completion after 4 seconds', async () => {
-    vi.useFakeTimers();
-    try {
-      let resolveRequest: ((value: Response) => void) | null = null;
-      apiFetchMock.mockImplementationOnce(
-        () =>
-          new Promise<Response>((resolve) => {
-            resolveRequest = resolve;
-          })
-      );
-
-      render(<CvImportWizard />);
-
-      const uploadInput = screen.getByTestId('cv-upload');
-      const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-
-      fireEvent.change(uploadInput, {
-        target: {
-          files: [file],
-        },
-      });
-
-      const analyzeButton = screen.getByRole('button', { name: /Analyze Uploaded PDFs/i });
-      expect(analyzeButton).toBeEnabled();
-
-      fireEvent.click(analyzeButton);
-
-      expect(screen.getByText('Submitting files to extraction service...')).toBeInTheDocument();
-      expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '25');
-
-      expect(resolveRequest).toBeTruthy();
-      await act(async () => {
-        resolveRequest?.(
-          new Response(
-            JSON.stringify({
-              documents: [
-                {
-                  document_id: 'doc-1',
-                  file_name: 'cv.pdf',
-                  context: 'cv',
-                  parsed_text: 'React TypeScript',
-                  parse_error: null,
-                  parse_error_code: null,
-                  work_experiences: [],
-                  learning_experiences: [],
-                  volunteering: [],
-                  languages: [],
-                  skill_candidates: [],
-                },
-              ],
-              metadata: {
-                semantic_used: false,
-                semantic_fallback_triggered: false,
-                unmapped_candidates_count: 0,
-                limits: {
-                  max_documents: 5,
-                  max_chars_per_document: 30000,
-                  max_total_chars: 90000,
-                },
-              },
-            }),
-            {
-              status: 200,
-              headers: { 'Content-Type': 'application/json' },
-            }
-          )
-        );
-        await Promise.resolve();
-        await Promise.resolve();
-      });
-
-      expect(
-        screen.getByText('Extraction completed. Review and approve the results below.')
-      ).toBeInTheDocument();
-      expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '100');
-
-      await act(async () => {
-        vi.advanceTimersByTime(4000);
-        await Promise.resolve();
-      });
-
-      expect(
-        screen.queryByText('Extraction completed. Review and approve the results below.')
-      ).not.toBeInTheDocument();
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it('applies approved wizard selections via wizard-apply route', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
-    try {
-      apiFetchMock
-        .mockResolvedValueOnce(
-          new Response(
-            JSON.stringify({
-              documents: [
-                {
-                  document_id: 'doc-1',
-                  file_name: 'cv.pdf',
-                  context: 'cv',
-                  work_experiences: [],
-                  learning_experiences: [],
-                  volunteering: [],
-                  languages: [],
-                  skill_candidates: [
-                    {
-                      candidate_id: 'candidate-1',
-                      raw_skill_text: 'React',
-                      category: 'technical',
-                      evidence_snippets: ['Built React products'],
-                      confidence: 0.88,
-                      suggestions: [
-                        {
-                          skill_id: 'skill_react',
-                          skill_name: 'React',
-                          match_method: 'exact',
-                          score: 0.99,
-                        },
-                      ],
-                      unmapped_candidate: false,
-                    },
-                  ],
-                },
-              ],
-              metadata: {
-                semantic_used: false,
-                semantic_fallback_triggered: false,
-                unmapped_candidates_count: 0,
-                limits: {
-                  max_documents: 5,
-                  max_chars_per_document: 30000,
-                  max_total_chars: 90000,
-                },
-              },
-            }),
-            {
-              status: 200,
-              headers: { 'Content-Type': 'application/json' },
-            }
-          )
-        )
-        .mockResolvedValueOnce(
-          new Response(
-            JSON.stringify({
-              imported_counts: {
-                skills: 1,
-                work_experiences: 0,
-                learning_experiences: 0,
-                volunteering: 0,
-                languages: 0,
-              },
-              skipped_counts: {
-                skills: 0,
-                work_experiences: 0,
-                learning_experiences: 0,
-                volunteering: 0,
-                languages: 0,
-              },
-              warnings: [],
-            }),
-            {
-              status: 200,
-              headers: { 'Content-Type': 'application/json' },
-            }
-          )
-        );
-
-      render(<CvImportWizard />);
-
-      const uploadInput = screen.getByTestId('cv-upload');
-      const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-
-      fireEvent.change(uploadInput, {
-        target: {
-          files: [file],
-        },
-      });
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
-      });
-
-      fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
-
-      await waitFor(() => {
-        expect(apiFetchMock).toHaveBeenCalledWith(
-          '/api/expertise/cv-import/wizard-suggest?engine=gemini',
-          expect.objectContaining({ method: 'POST' })
-        );
-      });
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Finish Review & Apply/i })).toBeEnabled();
-      });
-
-      fireEvent.click(screen.getByRole('button', { name: /Finish Review & Apply/i }));
-
-      await waitFor(() => {
-        expect(confirmSpy).toHaveBeenCalledWith(
-          'Finish review and apply now?\n\nSkills approved: 1\nWork approved: 0\nLearning approved: 0\nVolunteering approved: 0\nLanguages approved: 0'
-        );
-      });
-
-      await waitFor(() => {
-        expect(apiFetchMock).toHaveBeenCalledWith(
-          '/api/expertise/cv-import/wizard-apply',
-          expect.objectContaining({ method: 'POST' })
-        );
-      });
-
-      const applyCall = apiFetchMock.mock.calls.find(
-        ([url]) => url === '/api/expertise/cv-import/wizard-apply'
-      );
-
-      expect(applyCall).toBeDefined();
-
-      const requestPayload = JSON.parse(String(applyCall?.[1]?.body || '{}'));
-      expect(requestPayload.documents).toHaveLength(1);
-      expect(requestPayload.documents[0].skill_ids).toContain('skill_react');
-    } finally {
-      confirmSpy.mockRestore();
-    }
-  });
-
-  it('does not preselect fuzzy-only matches by default', async () => {
-    apiFetchMock.mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          documents: [
-            {
-              document_id: 'doc-1',
-              file_name: 'cv.pdf',
-              context: 'cv',
-              work_experiences: [],
-              learning_experiences: [],
-              volunteering: [],
-              languages: [],
-              skill_candidates: [
-                {
-                  candidate_id: 'candidate-1',
-                  raw_skill_text: 'React-ish frontend stack',
-                  category: 'technical',
-                  evidence_snippets: ['Built modern frontend stack'],
-                  confidence: 0.91,
-                  suggestions: [
-                    {
-                      skill_id: 'skill_react',
-                      skill_name: 'React',
-                      match_method: 'fuzzy',
-                      score: 0.98,
-                    },
-                  ],
-                  unmapped_candidate: true,
-                },
-              ],
-            },
-          ],
-          metadata: {
-            semantic_used: false,
-            semantic_fallback_triggered: false,
-            unmapped_candidates_count: 1,
-            limits: {
-              max_documents: 5,
-              max_chars_per_document: 30000,
-              max_total_chars: 90000,
-            },
-          },
-        }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      )
-    );
-
-    render(<CvImportWizard />);
-
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Finish Review & Apply/i })).toBeDisabled();
-    });
-
-    expect(screen.getByText('0/1 selected')).toBeInTheDocument();
-    expect(screen.getByText('Needs mapping. Select at least one Atlas skill.')).toBeInTheDocument();
-  });
-
-  it('uses fast-pass unresolved navigation for multi-candidate skill review', async () => {
-    apiFetchMock.mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          documents: [
-            {
-              document_id: 'doc-1',
-              file_name: 'cv.pdf',
-              context: 'cv',
-              work_experiences: [],
-              learning_experiences: [],
-              volunteering: [],
-              languages: [],
-              skill_candidates: [
-                {
-                  candidate_id: 'candidate-a',
-                  raw_skill_text: 'platform orchestration concept',
-                  category: 'technical',
-                  evidence_snippets: ['platform orchestration concept'],
-                  confidence: 0.74,
-                  suggestions: [],
-                  unmapped_candidate: true,
-                },
-                {
-                  candidate_id: 'candidate-b',
-                  raw_skill_text: 'React',
-                  category: 'technical',
-                  evidence_snippets: ['Built React products'],
-                  confidence: 0.94,
-                  suggestions: [
-                    {
-                      skill_id: 'skill_react',
-                      skill_name: 'React',
-                      match_method: 'fuzzy',
-                      score: 0.98,
-                    },
-                  ],
-                  unmapped_candidate: false,
-                },
-              ],
-            },
-          ],
-          metadata: {
-            semantic_used: false,
-            semantic_fallback_triggered: false,
-            unmapped_candidates_count: 1,
-            limits: {
-              max_documents: 5,
-              max_chars_per_document: 30000,
-              max_total_chars: 90000,
-            },
-          },
-        }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      )
-    );
-
-    render(<CvImportWizard />);
-
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText('2 remaining · 0 ready · 0 already in profile')).toBeInTheDocument();
-    });
-
-    expect(screen.getByText('platform orchestration concept')).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        /No confident Atlas match yet\. We searched automatically using aliases and CV context\./i
-      )
-    ).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Next unresolved' }));
-
-    expect(screen.getAllByText('React').length).toBeGreaterThan(0);
-    expect(screen.getByText('Auto-verified Atlas guesses')).toBeInTheDocument();
-  });
-
-  it('reruns atlas verification automatically when the raw skill text is edited', async () => {
-    apiFetchMock.mockImplementation(async (url: string) => {
-      if (url === '/api/analytics/track') {
-        return new Response(JSON.stringify({ ok: true }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        });
-      }
-
-      if (url === '/api/expertise/cv-import/wizard-suggest?engine=gemini') {
-        return new Response(
-          JSON.stringify({
-            documents: [
-              {
-                document_id: 'doc-1',
-                file_name: 'cv.pdf',
-                context: 'cv',
-                work_experiences: [],
-                learning_experiences: [],
-                volunteering: [],
-                languages: [],
-                skill_candidates: [
-                  {
-                    candidate_id: 'candidate-edit',
-                    raw_skill_text: 'server runtime',
-                    category: 'technical',
-                    evidence_snippets: ['Built backend services with Node.js'],
-                    confidence: 0.71,
-                    suggestions: [],
-                    unmapped_candidate: true,
-                  },
-                ],
-              },
-            ],
-            metadata: {
-              semantic_used: false,
-              semantic_fallback_triggered: false,
-              unmapped_candidates_count: 1,
-              limits: {
-                max_documents: 5,
-                max_chars_per_document: 30000,
-                max_total_chars: 90000,
-              },
-            },
-          }),
-          {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        );
-      }
-
-      if (
-        typeof url === 'string' &&
-        url.startsWith('/api/expertise/taxonomy?') &&
-        url.includes('context=cv_import') &&
-        url.includes('search=Node.js')
-      ) {
-        return new Response(
-          JSON.stringify({
-            l4_skills: [
-              {
-                code: 'skill_nodejs',
-                nameI18n: { en: 'Node.js' },
-                matchMethod: 'exact',
-                matchScore: 0.99,
-              },
-              {
-                code: 'skill_runtime',
-                nameI18n: { en: 'Runtime environments' },
-                matchMethod: 'fuzzy',
-                matchScore: 0.64,
-              },
-            ],
-          }),
-          {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        );
-      }
-
-      throw new Error(`Unexpected apiFetch call: ${url}`);
-    });
-
-    render(<CvImportWizard />);
-
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText('server runtime')).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Edit skill text\/category/i }));
-    fireEvent.change(screen.getByDisplayValue('server runtime'), {
-      target: { value: 'Node.js' },
-    });
-
-    await waitFor(
-      () => {
-        expect(
-          apiFetchMock.mock.calls.some(
-            ([url]) =>
-              typeof url === 'string' &&
-              url.startsWith('/api/expertise/taxonomy?') &&
-              url.includes('context=cv_import') &&
-              url.includes('search=Node.js')
-          )
-        ).toBe(true);
-      },
-      { timeout: 1500 }
-    );
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Finish Review & Apply/i })).toBeEnabled();
-    });
-  });
-
-  it('requires explicit confirmation before selecting weak suggestions', async () => {
-    apiFetchMock.mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          documents: [
-            {
-              document_id: 'doc-1',
-              file_name: 'cv.pdf',
-              context: 'cv',
-              work_experiences: [],
-              learning_experiences: [],
-              volunteering: [],
-              languages: [],
-              skill_candidates: [
-                {
-                  candidate_id: 'candidate-weak',
-                  raw_skill_text: 'platform concept',
-                  category: 'technical',
-                  evidence_snippets: ['platform concept workstream across teams'],
-                  confidence: 0.8,
-                  suggestions: [
-                    {
-                      skill_id: 'skill_kubernetes',
-                      skill_name: 'Kubernetes',
-                      match_method: 'semantic',
-                      score: 0.84,
-                    },
-                  ],
-                  unmapped_candidate: false,
-                },
-              ],
-            },
-          ],
-          metadata: {
-            semantic_used: false,
-            semantic_fallback_triggered: false,
-            unmapped_candidates_count: 0,
-            limits: {
-              max_documents: 5,
-              max_chars_per_document: 30000,
-              max_total_chars: 90000,
-            },
-          },
-        }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      )
-    );
-
-    render(<CvImportWizard />);
-
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText('platform concept')).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getAllByRole('button', { name: 'Accept' })[0]);
-
-    expect(
-      screen.getByText('This match is low-confidence. Confirm before applying.')
-    ).toBeInTheDocument();
-    expect(screen.getAllByText('Kubernetes').length).toBeGreaterThan(0);
-    expect(
-      screen.getByText('Evidence: platform concept workstream across teams')
-    ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm selection' }));
-
-    await waitFor(() => {
-      expect(screen.getByText('1/1 selected')).toBeInTheDocument();
-    });
-  });
-
-  it('supports explicit keep-unmapped and not-a-skill outcomes', async () => {
-    apiFetchMock.mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          documents: [
-            {
-              document_id: 'doc-1',
-              file_name: 'cv.pdf',
-              context: 'cv',
-              work_experiences: [],
-              learning_experiences: [],
-              volunteering: [],
-              languages: [],
-              skill_candidates: [
-                {
-                  candidate_id: 'candidate-keep',
-                  raw_skill_text: 'PM',
-                  category: 'other',
-                  evidence_snippets: ['Worked closely with PM stakeholders.'],
-                  confidence: 0.61,
-                  suggestions: [],
-                  unmapped_candidate: true,
-                },
-                {
-                  candidate_id: 'candidate-noise',
-                  raw_skill_text: 'platform collaboration',
-                  category: 'other',
-                  evidence_snippets: ['Responsible for platform collaboration across teams.'],
-                  confidence: 0.58,
-                  suggestions: [],
-                  unmapped_candidate: true,
-                },
-              ],
-            },
-          ],
-          metadata: {
-            semantic_used: false,
-            semantic_fallback_triggered: false,
-            unmapped_candidates_count: 2,
-            limits: {
-              max_documents: 5,
-              max_chars_per_document: 30000,
-              max_total_chars: 90000,
-            },
-          },
-        }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      )
-    );
-
-    render(<CvImportWizard />);
-
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText('PM')).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: 'Keep unmapped' }));
-
-    await waitFor(() => {
-      expect(screen.getByText('platform collaboration')).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: 'Not a skill' }));
-
-    await waitFor(() => {
-      expect(
-        screen.getByText(
-          'All primary review items are resolved. You can proceed to apply, or open advanced list to make detailed edits.'
-        )
-      ).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Show all skills \(advanced\)/i }));
-
-    expect(screen.getAllByText('Kept unmapped').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Not a skill').length).toBeGreaterThan(0);
-  });
-
-  it('shows partial-success info when skill suggestions are unavailable but extraction succeeds', async () => {
-    apiFetchMock.mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          documents: [
-            {
-              document_id: 'doc-1',
-              file_name: 'cv.pdf',
-              context: 'cv',
-              work_experiences: [
-                {
-                  item_id: 'work-1',
-                  title: 'Senior Engineer',
-                  organization: 'Acme',
-                  duration: '2021 - Present',
-                  summary: 'Built React products.',
-                  evidence_snippets: ['Senior Engineer at Acme'],
-                  confidence: 0.8,
-                },
-              ],
-              learning_experiences: [],
-              volunteering: [],
-              languages: [],
-              skill_candidates: [],
-            },
-          ],
-          metadata: {
-            semantic_used: false,
-            semantic_fallback_triggered: true,
-            unmapped_candidates_count: 0,
-            limits: {
-              max_documents: 5,
-              max_chars_per_document: 30000,
-              max_total_chars: 90000,
-            },
-          },
-        }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      )
-    );
-
-    render(<CvImportWizard />);
-
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
-
-    await waitFor(() => {
-      expect(toastInfoMock).toHaveBeenCalledWith(
-        'Skill suggestions are temporarily unavailable, but core CV entities were extracted.'
-      );
-    });
-  });
-
-  it('renders already-in-profile tag and skips needs-mapping warning for duplicate-only candidates', async () => {
-    apiFetchMock.mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          documents: [
-            {
-              document_id: 'doc-1',
-              file_name: 'cv.pdf',
-              context: 'cv',
-              work_experiences: [],
-              learning_experiences: [],
-              volunteering: [],
-              languages: [],
               skill_candidates: [
                 {
                   candidate_id: 'candidate-1',
                   raw_skill_text: 'React',
                   category: 'technical',
                   evidence_snippets: ['Built React products'],
-                  confidence: 0.9,
-                  suggestions: [],
-                  unmapped_candidate: false,
-                  already_in_profile: true,
-                },
-              ],
-            },
-          ],
-          metadata: {
-            semantic_used: false,
-            semantic_fallback_triggered: false,
-            unmapped_candidates_count: 0,
-            limits: {
-              max_documents: 5,
-              max_chars_per_document: 30000,
-              max_total_chars: 90000,
-            },
-          },
-        }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      )
-    );
-
-    render(<CvImportWizard />);
-
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText('Already in profile')).toBeInTheDocument();
-    });
-
-    expect(
-      screen.queryByText('Needs mapping. Select at least one Atlas skill.')
-    ).not.toBeInTheDocument();
-  });
-
-  it('shows detailed backend message when wizard suggest returns generic wrapper error', async () => {
-    apiFetchMock.mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          error: 'Failed to process CV wizard suggestions',
-          message:
-            'CV wizard dependencies are temporarily unavailable. Please retry in a few minutes.',
-          code: 'WIZARD_DEPENDENCY_UNAVAILABLE',
-        }),
-        {
-          status: 503,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      )
-    );
-
-    render(<CvImportWizard />);
-
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
-
-    await waitFor(() => {
-      expect(toastErrorMock).toHaveBeenCalledWith(
-        'CV wizard dependencies are temporarily unavailable. Please retry in a few minutes.'
-      );
-    });
-
-    expect(
-      screen.getByText(
-        'Analysis service is temporarily unavailable. Please retry in a few minutes.'
-      )
-    ).toBeInTheDocument();
-    expect(screen.queryByText('Analysis failed. Please try again.')).not.toBeInTheDocument();
-  });
-
-  it('keeps the review UI usable when analysis completes with partial recovery', async () => {
-    apiFetchMock.mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          documents: [
-            {
-              document_id: 'doc-1',
-              file_name: 'cv.pdf',
-              context: 'cv',
-              work_experiences: [],
-              learning_experiences: [],
-              volunteering: [],
-              languages: [],
-              skill_candidates: [
-                {
-                  candidate_id: 'candidate-1',
-                  raw_skill_text: 'React',
-                  category: 'technical',
-                  evidence_snippets: ['Built React applications'],
-                  confidence: 0.84,
+                  confidence: 0.88,
                   suggestions: [
                     {
                       skill_id: 'skill_react',
@@ -1145,994 +381,301 @@ describe('CvImportWizard', () => {
                     },
                   ],
                   unmapped_candidate: false,
-                  verification_fallback_reason: 'atlas_verification_failed',
                 },
               ],
             },
           ],
-          metadata: {
-            semantic_used: false,
-            semantic_fallback_triggered: false,
-            unmapped_candidates_count: 0,
-            partial_results: true,
-            atlas_verification_fallback_triggered: true,
-            wizard_stage_failed: 'atlas_verification',
-            limits: {
-              max_documents: 5,
-              max_chars_per_document: 30000,
-              max_total_chars: 90000,
-            },
-          },
         }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      )
-    );
-
-    render(<CvImportWizard />);
-
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
-
-    await waitFor(() => {
-      expect(
-        screen.getByText(
-          'Analysis completed with partial recovery. Atlas verification was unavailable, so review skill matches carefully below.'
-        )
-      ).toBeInTheDocument();
-    });
-
-    expect(screen.getByText('Skills to review')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Finish Review & Apply/i })).toBeInTheDocument();
-    expect(screen.queryByText('Analysis failed. Please try again.')).not.toBeInTheDocument();
-    expect(toastInfoMock).toHaveBeenCalledWith(
-      'Analysis completed with partial recovery. Atlas verification was unavailable, so review skill matches carefully below.'
-    );
-  });
-
-  it('retries with gemini json engine when multipart proxy path is unavailable', async () => {
-    extractPdfTextFromFileMock.mockResolvedValueOnce('React TypeScript');
-    apiFetchMock
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            error: 'Failed to process CV wizard suggestions',
-            message: 'Python CV service route is unavailable. Falling back is recommended.',
-            code: 'CV_IMPORT_PROXY_UNAVAILABLE',
-          }),
-          {
-            status: 503,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        )
-      )
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            documents: [
-              {
-                document_id: 'doc-1',
-                file_name: 'cv.pdf',
-                context: 'cv',
-                parsed_text: 'React TypeScript',
-                work_experiences: [],
-                learning_experiences: [],
-                volunteering: [],
-                languages: [],
-                skill_candidates: [],
-              },
-            ],
-            metadata: {
-              semantic_used: false,
-              semantic_fallback_triggered: false,
-              unmapped_candidates_count: 0,
-              limits: {
-                max_documents: 5,
-                max_chars_per_document: 30000,
-                max_total_chars: 90000,
-              },
-            },
-          }),
-          {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        )
-      );
-
-    render(<CvImportWizard />);
-
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
-
-    await waitFor(() => {
-      expect(apiFetchMock).toHaveBeenCalledTimes(2);
-    });
-
-    expect(extractPdfTextFromFileMock).toHaveBeenCalledTimes(1);
-    expect(apiFetchMock).toHaveBeenNthCalledWith(
-      1,
-      '/api/expertise/cv-import/wizard-suggest?engine=gemini',
-      expect.objectContaining({
-        method: 'POST',
-        body: expect.any(FormData),
-      })
-    );
-
-    expect(apiFetchMock).toHaveBeenNthCalledWith(
-      2,
-      '/api/expertise/cv-import/wizard-suggest?engine=gemini',
-      expect.objectContaining({
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      })
-    );
-
-    const multipartBody = apiFetchMock.mock.calls[0]?.[1]?.body as FormData;
-    const requestDocumentId = String(multipartBody.getAll('document_ids')[0] || '');
-    const retryPayload = JSON.parse(String(apiFetchMock.mock.calls[1]?.[1]?.body || '{}'));
-    expect(requestDocumentId).toMatch(/^[A-Za-z0-9_-]+$/);
-    expect(retryPayload.documents[0].document_id).toBe(requestDocumentId);
-    expect(retryPayload.documents[0].file_name).toBe('cv.pdf');
-    expect(retryPayload.documents[0].context).toBe('cv');
-    expect(retryPayload.documents[0].text).toBe('React TypeScript');
-    expect(screen.getByText('Extracted text preview')).toBeInTheDocument();
-  });
-
-  it('retries with gemini json engine when multipart extract returns invalid contract', async () => {
-    extractPdfTextFromFileMock.mockResolvedValueOnce('React TypeScript');
-    apiFetchMock
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            error: 'Failed to extract CV text',
-            message: 'Python CV service returned an invalid contract response.',
-            code: 'CV_IMPORT_PROXY_INVALID_CONTRACT',
-          }),
-          {
-            status: 502,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        )
-      )
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            documents: [
-              {
-                document_id: 'doc-1',
-                file_name: 'cv.pdf',
-                context: 'cv',
-                parsed_text: 'React TypeScript',
-                work_experiences: [],
-                learning_experiences: [],
-                volunteering: [],
-                languages: [],
-                skill_candidates: [],
-              },
-            ],
-            metadata: {
-              semantic_used: false,
-              semantic_fallback_triggered: false,
-              unmapped_candidates_count: 0,
-              limits: {
-                max_documents: 5,
-                max_chars_per_document: 30000,
-                max_total_chars: 90000,
-              },
-            },
-          }),
-          {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        )
-      );
-
-    render(<CvImportWizard />);
-
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
-
-    await waitFor(() => {
-      expect(apiFetchMock).toHaveBeenCalledTimes(2);
-    });
-
-    expect(extractPdfTextFromFileMock).toHaveBeenCalledTimes(1);
-    expect(apiFetchMock).toHaveBeenNthCalledWith(
-      2,
-      '/api/expertise/cv-import/wizard-suggest?engine=gemini',
-      expect.objectContaining({
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      })
-    );
-    expect(screen.getByText('Extracted text preview')).toBeInTheDocument();
-  });
-
-  it('retries with gemini json engine when multipart extract returns generic server failure', async () => {
-    extractPdfTextFromFileMock.mockResolvedValueOnce('React TypeScript');
-    apiFetchMock
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            error: 'Failed to extract CV text',
-            message: 'CV extraction failed: upstream parser pool crashed.',
-          }),
-          {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        )
-      )
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            documents: [
-              {
-                document_id: 'doc-1',
-                file_name: 'cv.pdf',
-                context: 'cv',
-                parsed_text: 'React TypeScript',
-                work_experiences: [],
-                learning_experiences: [],
-                volunteering: [],
-                languages: [],
-                skill_candidates: [],
-              },
-            ],
-            metadata: {
-              semantic_used: false,
-              semantic_fallback_triggered: false,
-              unmapped_candidates_count: 0,
-              limits: {
-                max_documents: 5,
-                max_chars_per_document: 30000,
-                max_total_chars: 90000,
-              },
-            },
-          }),
-          {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        )
-      );
-
-    render(<CvImportWizard />);
-
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
-
-    await waitFor(() => {
-      expect(apiFetchMock).toHaveBeenCalledTimes(2);
-    });
-
-    expect(extractPdfTextFromFileMock).toHaveBeenCalledTimes(1);
-    expect(apiFetchMock).toHaveBeenNthCalledWith(
-      2,
-      '/api/expertise/cv-import/wizard-suggest?engine=gemini',
-      expect.objectContaining({
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      })
-    );
-    expect(screen.getByText('Extracted text preview')).toBeInTheDocument();
-  });
-
-  it('auto-retries with gemini json payload on multipart metadata parse failures even when client fallback flag is false', async () => {
-    process.env.NEXT_PUBLIC_CV_IMPORT_CLIENT_FALLBACK_ENABLED = 'false';
-    extractPdfTextFromFileMock.mockResolvedValueOnce('React TypeScript');
-    apiFetchMock
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            error:
-              'Upload metadata contains unsupported characters. Please rename the PDF and retry.',
-            code: 'CV_IMPORT_MULTIPART_METADATA_INVALID',
-          }),
-          {
-            status: 400,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        )
-      )
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            documents: [
-              {
-                document_id: 'doc-1',
-                file_name: 'cv.pdf',
-                context: 'cv',
-                parsed_text: 'React TypeScript',
-                work_experiences: [],
-                learning_experiences: [],
-                volunteering: [],
-                languages: [],
-                skill_candidates: [],
-              },
-            ],
-            metadata: {
-              semantic_used: false,
-              semantic_fallback_triggered: false,
-              unmapped_candidates_count: 0,
-              limits: {
-                max_documents: 5,
-                max_chars_per_document: 30000,
-                max_total_chars: 90000,
-              },
-            },
-          }),
-          {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        )
-      );
-
-    render(<CvImportWizard />);
-
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
-
-    await waitFor(() => {
-      expect(apiFetchMock).toHaveBeenCalledTimes(2);
-    });
-
-    const multipartBody = apiFetchMock.mock.calls[0]?.[1]?.body as FormData;
-    const requestDocumentId = String(multipartBody.getAll('document_ids')[0] || '');
-    const retryPayload = JSON.parse(String(apiFetchMock.mock.calls[1]?.[1]?.body || '{}'));
-    expect(requestDocumentId).toMatch(/^[A-Za-z0-9_-]+$/);
-    expect(retryPayload.documents[0].document_id).toBe(requestDocumentId);
-    expect(retryPayload.documents[0].file_name).toBe('cv.pdf');
-    expect(retryPayload.documents[0].context).toBe('cv');
-    expect(retryPayload.documents[0].text).toBe('React TypeScript');
-    expect(toastErrorMock).not.toHaveBeenCalledWith(
-      'Upload metadata contains unsupported characters. Please rename the PDF and retry.'
-    );
-    delete process.env.NEXT_PUBLIC_CV_IMPORT_CLIENT_FALLBACK_ENABLED;
-  });
-
-  it('auto-retries with deterministic fallback when wizard request times out', async () => {
-    extractPdfTextFromFileMock.mockResolvedValueOnce('React TypeScript');
-    apiFetchMock
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            error: 'CV wizard processing timed out',
-            message: 'Try fewer documents or shorter CV content.',
-            code: 'CV_IMPORT_WIZARD_TIMEOUT',
-          }),
-          {
-            status: 408,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        )
-      )
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            documents: [
-              {
-                document_id: 'doc-1',
-                file_name: 'cv.pdf',
-                context: 'cv',
-                parsed_text: 'React TypeScript',
-                work_experiences: [],
-                learning_experiences: [],
-                volunteering: [],
-                languages: [],
-                skill_candidates: [],
-              },
-            ],
-            metadata: {
-              semantic_used: false,
-              semantic_fallback_triggered: false,
-              unmapped_candidates_count: 0,
-              limits: {
-                max_documents: 5,
-                max_chars_per_document: 30000,
-                max_total_chars: 90000,
-              },
-            },
-          }),
-          {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        )
-      );
-
-    render(<CvImportWizard />);
-
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
-
-    await waitFor(() => {
-      expect(apiFetchMock).toHaveBeenCalledTimes(2);
-    });
-
-    expect(apiFetchMock).toHaveBeenNthCalledWith(
-      1,
-      '/api/expertise/cv-import/wizard-suggest?engine=gemini',
-      expect.objectContaining({
-        method: 'POST',
-        body: expect.any(FormData),
-      })
-    );
-    expect(apiFetchMock).toHaveBeenNthCalledWith(
-      2,
-      '/api/expertise/cv-import/wizard-suggest?engine=typescript',
-      expect.objectContaining({
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      })
-    );
-
-    const multipartBody = apiFetchMock.mock.calls[0]?.[1]?.body as FormData;
-    const requestDocumentId = String(multipartBody.getAll('document_ids')[0] || '');
-    const retryPayload = JSON.parse(String(apiFetchMock.mock.calls[1]?.[1]?.body || '{}'));
-    expect(retryPayload.documents[0].document_id).toBe(requestDocumentId);
-    expect(retryPayload.documents[0].file_name).toBe('cv.pdf');
-    expect(retryPayload.documents[0].context).toBe('cv');
-    expect(retryPayload.documents[0].text).toBe('React TypeScript');
-    expect(toastErrorMock).not.toHaveBeenCalledWith('CV wizard processing timed out');
-    expect(toastInfoMock).not.toHaveBeenCalledWith('CV analysis recovered via fallback path.');
-  });
-
-  it('retries with typescript engine when gemini json retry also fails', async () => {
-    extractPdfTextFromFileMock.mockResolvedValueOnce('React TypeScript');
-    apiFetchMock
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            error: 'Failed to process CV wizard suggestions',
-            message: 'Python CV service timed out. Falling back is recommended.',
-            code: 'CV_IMPORT_PROXY_TIMEOUT',
-          }),
-          {
-            status: 504,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        )
-      )
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            error: 'Failed to process CV wizard suggestions',
-            message: 'Python CV service timed out. Falling back is recommended.',
-            code: 'CV_IMPORT_PROXY_TIMEOUT',
-          }),
-          {
-            status: 504,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        )
-      )
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            documents: [
-              {
-                document_id: 'doc-1',
-                file_name: 'cv.pdf',
-                context: 'cv',
-                parsed_text: 'React TypeScript',
-                work_experiences: [],
-                learning_experiences: [],
-                volunteering: [],
-                languages: [],
-                skill_candidates: [],
-              },
-            ],
-            metadata: {
-              semantic_used: false,
-              semantic_fallback_triggered: false,
-              unmapped_candidates_count: 0,
-              limits: {
-                max_documents: 5,
-                max_chars_per_document: 30000,
-                max_total_chars: 90000,
-              },
-            },
-          }),
-          {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        )
-      );
-
-    render(<CvImportWizard />);
-
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
-
-    await waitFor(() => {
-      expect(apiFetchMock).toHaveBeenCalledTimes(3);
-    });
-
-    expect(extractPdfTextFromFileMock).toHaveBeenCalledTimes(1);
-    expect(apiFetchMock).toHaveBeenNthCalledWith(
-      1,
-      '/api/expertise/cv-import/wizard-suggest?engine=gemini',
-      expect.objectContaining({
-        method: 'POST',
-        body: expect.any(FormData),
-      })
-    );
-
-    expect(apiFetchMock).toHaveBeenNthCalledWith(
-      2,
-      '/api/expertise/cv-import/wizard-suggest?engine=gemini',
-      expect.objectContaining({
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      })
-    );
-
-    expect(apiFetchMock).toHaveBeenNthCalledWith(
-      3,
-      '/api/expertise/cv-import/wizard-suggest?engine=typescript',
-      expect.objectContaining({
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      })
-    );
-
-    const multipartBody = apiFetchMock.mock.calls[0]?.[1]?.body as FormData;
-    const requestDocumentId = String(multipartBody.getAll('document_ids')[0] || '');
-    const retryPayload = JSON.parse(String(apiFetchMock.mock.calls[2]?.[1]?.body || '{}'));
-    expect(requestDocumentId).toMatch(/^[A-Za-z0-9_-]+$/);
-    expect(retryPayload.documents[0].document_id).toBe(requestDocumentId);
-    expect(retryPayload.documents[0].file_name).toBe('cv.pdf');
-    expect(retryPayload.documents[0].context).toBe('cv');
-    expect(retryPayload.documents[0].text).toBe('React TypeScript');
-    expect(screen.getByText('Extracted text preview')).toBeInTheDocument();
-  });
-
-  it('shows friendly parser message when fallback extraction cannot initialize parser', async () => {
-    extractPdfTextFromFileMock.mockRejectedValueOnce(new Error('PDF parser initialization failed'));
-    normalizePdfParseErrorMock.mockReturnValueOnce(
-      'PDF parser could not start. Please refresh and re-upload the file.'
-    );
-    apiFetchMock.mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          error: 'Failed to process CV wizard suggestions',
-          message: 'Python CV service route is unavailable. Falling back is recommended.',
-          code: 'CV_IMPORT_PROXY_UNAVAILABLE',
-        }),
-        {
-          status: 503,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      )
-    );
-
-    render(<CvImportWizard />);
-
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
-
-    await waitFor(() => {
-      expect(toastErrorMock).toHaveBeenCalledWith(
-        'PDF parser could not start. Please refresh and re-upload the file.'
-      );
-    });
-
-    expect(apiFetchMock).toHaveBeenCalledTimes(1);
-  });
-
-  it('shows normalized parser message instead of bare extract error when local fallback extraction fails', async () => {
-    extractPdfTextFromFileMock.mockRejectedValueOnce(new Error('PDF parser initialization failed'));
-    normalizePdfParseErrorMock.mockReturnValueOnce(
-      'PDF parser could not start. Please refresh and re-upload the file.'
-    );
-    apiFetchMock.mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          error: 'Failed to extract CV text',
-          message: 'CV extraction failed: upstream parser pool crashed.',
-        }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      )
-    );
-
-    render(<CvImportWizard />);
-
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
-
-    await waitFor(() => {
-      expect(toastErrorMock).toHaveBeenCalledWith(
-        'PDF parser could not start. Please refresh and re-upload the file.'
-      );
-    });
-
-    expect(
-      screen.getByText('PDF parser could not start. Please refresh and re-upload the file.')
-    ).toBeInTheDocument();
-    expect(screen.queryByText('Failed to extract CV text')).not.toBeInTheDocument();
-    expect(apiFetchMock).toHaveBeenCalledTimes(1);
-  });
-
-  it('runs OCR retry for PDF_EMPTY_TEXT documents when OCR is enabled', async () => {
-    isOcrClientEnabledMock.mockReturnValue(true);
-    extractPdfTextWithOcrMock.mockResolvedValueOnce({
-      text: 'OCR extracted text',
-      pagesProcessed: 1,
-    });
-
-    apiFetchMock
-      .mockImplementationOnce(async (_url: string, init?: RequestInit) => {
-        const formData = init?.body as FormData;
-        const requestDocumentId = String(formData.getAll('document_ids')[0] || 'doc-1');
-
-        return new Response(
-          JSON.stringify({
-            documents: [
-              {
-                document_id: requestDocumentId,
-                file_name: 'cv-scan.pdf',
-                context: 'cv',
-                parsed_text: '',
-                parse_error: 'No extractable text found in document.',
-                parse_error_code: 'PDF_EMPTY_TEXT',
-                work_experiences: [],
-                learning_experiences: [],
-                volunteering: [],
-                languages: [],
-                skill_candidates: [],
-              },
-            ],
-            metadata: {
-              semantic_used: false,
-              semantic_fallback_triggered: false,
-              unmapped_candidates_count: 0,
-              limits: {
-                max_documents: 5,
-                max_chars_per_document: 30000,
-                max_total_chars: 90000,
-              },
-            },
-          }),
-          {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        );
-      })
-      .mockImplementationOnce(async (_url: string, init?: RequestInit) => {
-        const parsed = JSON.parse(String(init?.body || '{}')) as {
-          documents?: Array<{ document_id?: string }>;
-        };
-        const requestDocumentId = parsed.documents?.[0]?.document_id || 'doc-1';
-
-        return new Response(
-          JSON.stringify({
-            documents: [
-              {
-                document_id: requestDocumentId,
-                file_name: 'cv-scan.pdf',
-                context: 'cv',
-                parsed_text: 'OCR extracted text',
-                parse_error: null,
-                parse_error_code: null,
-                work_experiences: [],
-                learning_experiences: [],
-                volunteering: [],
-                languages: [],
-                skill_candidates: [],
-              },
-            ],
-            metadata: {
-              semantic_used: false,
-              semantic_fallback_triggered: false,
-              unmapped_candidates_count: 0,
-              limits: {
-                max_documents: 5,
-                max_chars_per_document: 30000,
-                max_total_chars: 90000,
-              },
-            },
-          }),
-          {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        );
       });
 
+      render(<CvImportWizard />);
+      await uploadPdf();
+      await clickAnalyze();
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Finish Review & Apply/i })).toBeEnabled();
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: /Finish Review & Apply/i }));
+
+      await waitFor(() => {
+        expect(confirmSpy).toHaveBeenCalled();
+      });
+
+      await waitFor(() => {
+        expect(apiFetchMock).toHaveBeenCalledWith(
+          '/api/expertise/cv-import/wizard-apply',
+          expect.objectContaining({ method: 'POST' })
+        );
+      });
+    } finally {
+      confirmSpy.mockRestore();
+    }
+  });
+
+  it('does not preselect fuzzy-only matches by default', async () => {
+    installAsyncAnalyzeFlow({
+      analyzePayload: buildAnalyzePayload({
+        documents: [
+          {
+            document_id: 'doc-1',
+            file_name: 'cv.pdf',
+            context: 'cv',
+            parsed_text: 'React-ish frontend stack',
+            parse_error: null,
+            parse_error_code: null,
+            work_experiences: [],
+            learning_experiences: [],
+            volunteering: [],
+            languages: [],
+            skill_candidates: [
+              {
+                candidate_id: 'candidate-1',
+                raw_skill_text: 'React-ish frontend stack',
+                category: 'technical',
+                evidence_snippets: ['Built modern frontend stack'],
+                confidence: 0.91,
+                suggestions: [
+                  {
+                    skill_id: 'skill_react',
+                    skill_name: 'React',
+                    match_method: 'fuzzy',
+                    score: 0.98,
+                  },
+                ],
+                unmapped_candidate: true,
+              },
+            ],
+          },
+        ],
+        metadata: {
+          unmapped_candidates_count: 1,
+        },
+      }),
+    });
+
     render(<CvImportWizard />);
-
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy'], 'cv-scan.pdf', { type: 'application/pdf' });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
-    });
+    await uploadPdf();
+    await clickAnalyze();
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
+      expect(screen.getByRole('button', { name: /Finish Review & Apply/i })).toBeDisabled();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
+    expect(screen.getByText('Needs mapping')).toBeInTheDocument();
+  });
+
+  it('falls back to local PDF extraction when async enqueue fails', async () => {
+    extractPdfTextFromFileMock.mockResolvedValueOnce('React TypeScript');
+    apiFetchMock.mockImplementation(async (url: string) => {
+      if (url === '/api/expertise/cv-import/wizard-extract') {
+        return jsonResponse(
+          {
+            error: 'CV extraction queue unavailable',
+            message: 'Background extraction is unavailable.',
+            code: 'CV_IMPORT_EXTRACT_ENQUEUE_FAILED',
+          },
+          503
+        );
+      }
+
+      if (url === '/api/expertise/cv-import/wizard-suggest?engine=gemini') {
+        return jsonResponse(buildAnalyzePayload());
+      }
+
+      if (url === '/api/analytics/track') {
+        return jsonResponse({ ok: true });
+      }
+
+      throw new Error(`Unexpected apiFetch call: ${url}`);
+    });
+
+    render(<CvImportWizard />);
+    await uploadPdf();
+    await clickAnalyze();
 
     await waitFor(() => {
-      expect(apiFetchMock).toHaveBeenCalledTimes(2);
+      expect(extractPdfTextFromFileMock).toHaveBeenCalledTimes(1);
     });
 
-    expect(apiFetchMock).toHaveBeenNthCalledWith(
-      2,
-      '/api/expertise/cv-import/wizard-suggest?engine=gemini',
-      expect.objectContaining({
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      })
+    const suggestCall = apiFetchMock.mock.calls.find(
+      ([url]) => url === '/api/expertise/cv-import/wizard-suggest?engine=gemini'
     );
-    expect(extractPdfTextWithOcrMock).toHaveBeenCalledTimes(1);
+    expect(suggestCall).toBeDefined();
+    expect(suggestCall?.[1]?.headers).toEqual({ 'Content-Type': 'application/json' });
+  });
+
+  it('falls back to local PDF extraction when the async extract job fails', async () => {
+    extractPdfTextFromFileMock.mockResolvedValueOnce('React TypeScript');
+    apiFetchMock.mockImplementation(async (url: string) => {
+      if (url === '/api/expertise/cv-import/wizard-extract') {
+        return jsonResponse({ job_id: 'job-1', status: 'queued', poll_after_ms: 1 }, 202);
+      }
+
+      if (url.startsWith('/api/expertise/cv-import/wizard-extract/status')) {
+        return jsonResponse({
+          job_id: 'job-1',
+          status: 'failed',
+          error: 'Python extract unavailable',
+          message: 'Python extract unavailable',
+          code: 'CV_IMPORT_PROXY_UNAVAILABLE',
+        });
+      }
+
+      if (url === '/api/expertise/cv-import/wizard-suggest?engine=gemini') {
+        return jsonResponse(buildAnalyzePayload());
+      }
+
+      if (url === '/api/analytics/track') {
+        return jsonResponse({ ok: true });
+      }
+
+      throw new Error(`Unexpected apiFetch call: ${url}`);
+    });
+
+    render(<CvImportWizard />);
+    await uploadPdf();
+    await clickAnalyze();
+
+    await waitFor(() => {
+      expect(extractPdfTextFromFileMock).toHaveBeenCalledTimes(1);
+    });
+
+    expect(toastInfoMock).toHaveBeenCalledWith('CV analysis recovered via fallback path.');
+  });
+
+  it('reruns OCR for scanned PDFs after async extraction completes', async () => {
+    isOcrClientEnabledMock.mockReturnValue(true);
+    extractPdfTextWithOcrMock.mockResolvedValueOnce({ text: 'OCR extracted text' });
+
+    let geminiAnalyzeCalls = 0;
+    let requestDocumentIds: string[] = [];
+    apiFetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (url === '/api/expertise/cv-import/wizard-extract') {
+        const formData = init?.body as FormData;
+        requestDocumentIds = formData
+          .getAll('document_ids')
+          .map((value) => String(value))
+          .filter(Boolean);
+        return jsonResponse({ job_id: 'job-1', status: 'queued', poll_after_ms: 1 }, 202);
+      }
+
+      if (url.startsWith('/api/expertise/cv-import/wizard-extract/status')) {
+        return jsonResponse({
+          job_id: 'job-1',
+          status: 'completed',
+          documents: [
+            {
+              document_id: requestDocumentIds[0] ?? 'doc-1',
+              file_name: 'cv-scan.pdf',
+              text: 'scanned',
+              context: 'cv',
+            },
+          ],
+          failed_documents: [],
+        });
+      }
+
+      if (url === '/api/expertise/cv-import/wizard-suggest?engine=gemini') {
+        geminiAnalyzeCalls += 1;
+        if (geminiAnalyzeCalls === 1) {
+          return jsonResponse(
+            buildAnalyzePayload({
+              documents: [
+                {
+                  document_id: requestDocumentIds[0] ?? 'doc-1',
+                  file_name: 'cv-scan.pdf',
+                  context: 'cv',
+                  parsed_text: '',
+                  parse_error: 'No text could be extracted from the PDF.',
+                  parse_error_code: 'PDF_EMPTY_TEXT',
+                  work_experiences: [],
+                  learning_experiences: [],
+                  volunteering: [],
+                  languages: [],
+                  skill_candidates: [],
+                },
+              ],
+            })
+          );
+        }
+
+        return jsonResponse(buildAnalyzePayload());
+      }
+
+      if (url === '/api/analytics/track') {
+        return jsonResponse({ ok: true });
+      }
+
+      throw new Error(`Unexpected apiFetch call: ${url}`);
+    });
+
+    render(<CvImportWizard />);
+    await uploadPdf('cv-scan.pdf');
+    await clickAnalyze();
+
+    await waitFor(() => {
+      expect(extractPdfTextWithOcrMock).toHaveBeenCalledTimes(1);
+    });
+
+    const secondGeminiCall = apiFetchMock.mock.calls.filter(
+      ([url]) => url === '/api/expertise/cv-import/wizard-suggest?engine=gemini'
+    )[1];
+    expect(secondGeminiCall).toBeDefined();
     expect(toastSuccessMock).toHaveBeenCalledWith(
       'OCR fallback extracted text from scanned PDF documents.'
     );
-
-    const retryPayload = JSON.parse(String(apiFetchMock.mock.calls[1]?.[1]?.body || '{}'));
-    expect(retryPayload.documents).toEqual([
-      expect.objectContaining({
-        file_name: 'cv-scan.pdf',
-        context: 'cv',
-        text: 'OCR extracted text',
-      }),
-    ]);
   });
 
-  it('shows OCR failure guidance when OCR cannot recover scanned PDFs', async () => {
-    isOcrClientEnabledMock.mockReturnValue(true);
-    extractPdfTextWithOcrMock.mockRejectedValueOnce(new Error('OCR timeout'));
-
-    apiFetchMock.mockImplementationOnce(async (_url: string, init?: RequestInit) => {
-      const formData = init?.body as FormData;
-      const requestDocumentId = String(formData.getAll('document_ids')[0] || 'doc-1');
-
-      return new Response(
-        JSON.stringify({
-          documents: [
-            {
-              document_id: requestDocumentId,
-              file_name: 'cv-scan.pdf',
-              context: 'cv',
-              parsed_text: '',
-              parse_error: 'No extractable text found in document.',
-              parse_error_code: 'PDF_EMPTY_TEXT',
-              work_experiences: [],
-              learning_experiences: [],
-              volunteering: [],
-              languages: [],
-              skill_candidates: [],
-            },
-          ],
-          metadata: {
-            semantic_used: false,
-            semantic_fallback_triggered: false,
-            unmapped_candidates_count: 0,
-            limits: {
-              max_documents: 5,
-              max_chars_per_document: 30000,
-              max_total_chars: 90000,
-            },
+  it('surfaces the local parser error if both async and local extraction fail', async () => {
+    extractPdfTextFromFileMock.mockRejectedValueOnce(new Error('PDF parser initialization failed'));
+    apiFetchMock.mockImplementation(async (url: string) => {
+      if (url === '/api/expertise/cv-import/wizard-extract') {
+        return jsonResponse(
+          {
+            error: 'CV extraction queue unavailable',
+            message: 'Background extraction is unavailable.',
+            code: 'CV_IMPORT_EXTRACT_ENQUEUE_FAILED',
           },
-        }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+          503
+        );
+      }
+
+      throw new Error(`Unexpected apiFetch call: ${url}`);
     });
 
     render(<CvImportWizard />);
-
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy'], 'cv-scan.pdf', { type: 'application/pdf' });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
-    });
+    await uploadPdf();
+    await clickAnalyze();
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
+      expect(toastErrorMock).toHaveBeenCalledWith('PDF parser initialization failed');
     });
-
-    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
-
-    await waitFor(() => {
-      expect(toastErrorMock).toHaveBeenCalledWith(
-        'OCR fallback could not extract readable text. Upload a better text-based PDF.'
-      );
-    });
-
-    expect(apiFetchMock).toHaveBeenCalledTimes(1);
-    expect(extractPdfTextWithOcrMock).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('PDF parser initialization failed')).toBeInTheDocument();
   });
 
-  it('renders backend parse_error message when server-side parser fails for a document', async () => {
-    apiFetchMock.mockImplementationOnce(async (_url: string, init?: RequestInit) => {
-      const formData = init?.body as FormData;
-      const requestDocumentId = String(formData.getAll('document_ids')[0] || 'doc-1');
+  it('resumes a queued extract job from sessionStorage after reload', async () => {
+    window.sessionStorage.setItem(
+      'cv-import-wizard-extract-job',
+      JSON.stringify({
+        jobId: 'job-1',
+        fingerprint: 'doc-1:cv.pdf:0:0',
+        documents: [{ requestId: 'doc-1', localId: 'doc-1', fileName: 'cv.pdf' }],
+      })
+    );
 
-      return new Response(
-        JSON.stringify({
-          documents: [
-            {
-              document_id: requestDocumentId,
-              file_name: 'cv-init-error.pdf',
-              context: 'cv',
-              parsed_text: '',
-              parse_error: 'PDF parser could not start. Please refresh and re-upload the file.',
-              parse_error_code: 'PDF_EMPTY_TEXT',
-              work_experiences: [],
-              learning_experiences: [],
-              volunteering: [],
-              languages: [],
-              skill_candidates: [],
-            },
-          ],
-          metadata: {
-            semantic_used: false,
-            semantic_fallback_triggered: false,
-            unmapped_candidates_count: 0,
-            limits: {
-              max_documents: 5,
-              max_chars_per_document: 30000,
-              max_total_chars: 90000,
-            },
-          },
-        }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    });
+    installAsyncAnalyzeFlow();
 
     render(<CvImportWizard />);
 
-    const uploadInput = screen.getByTestId('cv-upload');
-    const file = new File(['dummy'], 'cv-init-error.pdf', { type: 'application/pdf' });
-
-    fireEvent.change(uploadInput, {
-      target: {
-        files: [file],
-      },
+    await waitFor(() => {
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/api/expertise/cv-import/wizard-extract/status?job_id=job-1'
+      );
     });
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
-
-    await waitFor(() => {
-      expect(
-        screen.getByText('PDF parser could not start. Please refresh and re-upload the file.')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Skills to review')).toBeInTheDocument();
     });
   });
 });

@@ -50,6 +50,7 @@ export const PythonInternalJobTypeSchema = z.enum([
   'document_intelligence_skill_report',
   'document_intelligence_wizard_report',
   'document_intelligence_quality_report',
+  'document_intelligence_extract_only',
 ]);
 
 export type PythonInternalJobType = z.infer<typeof PythonInternalJobTypeSchema>;

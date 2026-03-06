@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireInternalApiRequest } from '@/lib/api/auth';
+import { processCvImportExtractJob } from '@/lib/expertise/cv-import-extract-worker';
 import { log } from '@/lib/log';
 import { executePythonInternalJob } from '@/lib/python-internal/client';
 import {
@@ -73,19 +74,42 @@ export async function GET(request: NextRequest) {
 
     await runWithConcurrency(claimedJobs, concurrency, async (job) => {
       try {
-        const response = await executePythonInternalJob({
-          request,
-          jobId: job.id,
-          jobType: job.jobType,
-          payload: job.payload,
-        });
+        if (job.jobType === 'document_intelligence_extract_only') {
+          const result = await processCvImportExtractJob({
+            request,
+            payload: job.payload,
+          });
 
-        await markPythonInternalJobSuccess(job.id, response.result);
+          await markPythonInternalJobSuccess(job.id, result);
+        } else {
+          const response = await executePythonInternalJob({
+            request,
+            jobId: job.id,
+            jobType: job.jobType,
+            payload: job.payload,
+          });
+
+          await markPythonInternalJobSuccess(job.id, response.result);
+        }
         successCount += 1;
       } catch (error) {
+        const failureResult =
+          error && typeof error === 'object'
+            ? {
+                error: error instanceof Error ? error.name : 'PythonInternalWorkerError',
+                message:
+                  error instanceof Error ? error.message : 'Unknown Python internal worker error',
+                code:
+                  'code' in error && typeof (error as { code?: unknown }).code === 'string'
+                    ? (error as { code: string }).code
+                    : undefined,
+              }
+            : undefined;
+
         await markPythonInternalJobFailure(
           job.id,
-          error instanceof Error ? error.message : 'Unknown Python internal worker error'
+          error instanceof Error ? error.message : 'Unknown Python internal worker error',
+          failureResult
         );
         errorCount += 1;
       }

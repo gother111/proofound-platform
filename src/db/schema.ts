@@ -1025,6 +1025,7 @@ export const pythonInternalJobs = pgTable(
         'document_intelligence_skill_report',
         'document_intelligence_wizard_report',
         'document_intelligence_quality_report',
+        'document_intelligence_extract_only',
       ],
     }).notNull(),
     status: text('status', {
