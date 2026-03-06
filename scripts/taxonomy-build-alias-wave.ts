@@ -11,6 +11,7 @@ import {
   SEARCH_COVERAGE_REQUIRED_TERMS,
   type AliasCandidate,
 } from './taxonomy-wave-config';
+import { normalizeTaxonomyAlias } from '../src/lib/expertise/taxonomy-normalization';
 
 loadEnv({ path: '.env.local', quiet: true });
 
@@ -40,15 +41,7 @@ const OUTPUT_SQL = path.join(
 const OUTPUT_JSON = path.join(process.cwd(), 'scripts', 'generated', 'taxonomy-alias-wave.json');
 
 function normalize(value: string): string {
-  return value
-    .normalize('NFKD')
-    .toLowerCase()
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/&/g, ' and ')
-    .replace(/[\u2019\u2018']/g, '')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim()
-    .replace(/\s+/g, ' ');
+  return normalizeTaxonomyAlias(value);
 }
 
 function slugify(value: string): string {
@@ -514,7 +507,7 @@ insert_aliases AS (
     i.confidence,
     i.status
   FROM insertable i
-  ON CONFLICT (skill_code, locale, alias_norm) DO UPDATE
+  ON CONFLICT (skill_code, locale, alias_norm, status) DO UPDATE
   SET
     alias = EXCLUDED.alias,
     source = EXCLUDED.source,

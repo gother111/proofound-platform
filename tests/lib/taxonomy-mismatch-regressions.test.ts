@@ -2,10 +2,12 @@ import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockSelect = vi.fn();
+const mockExecute = vi.fn();
 
 vi.mock('@/db', () => ({
   db: {
     select: (...args: unknown[]) => mockSelect(...args),
+    execute: (...args: unknown[]) => mockExecute(...args),
   },
 }));
 
@@ -36,6 +38,30 @@ const taxonomyRows = [
     code: 'skill_project_management',
     nameI18n: { en: 'Project Management' },
     aliasesI18n: [{ en: 'PM' }, { en: 'Project Manager' }],
+    embedding: null,
+  },
+  {
+    code: 'skill_node_generic',
+    nameI18n: { en: 'Node' },
+    aliasesI18n: [],
+    embedding: null,
+  },
+  {
+    code: 'skill_nodejs',
+    nameI18n: { en: 'Node.js runtime' },
+    aliasesI18n: [{ en: 'Node.js' }, { en: 'NodeJS' }],
+    embedding: null,
+  },
+  {
+    code: 'skill_c_sharp',
+    nameI18n: { en: 'C# programming language' },
+    aliasesI18n: [{ en: 'C#' }, { en: 'csharp' }, { en: '.NET' }],
+    embedding: null,
+  },
+  {
+    code: 'skill_c_plus_plus',
+    nameI18n: { en: 'C++ programming' },
+    aliasesI18n: [{ en: 'C++' }, { en: 'cplusplus' }, { en: 'c plus plus' }],
     embedding: null,
   },
   {
@@ -84,6 +110,33 @@ function mockTaxonomyQuery(rows = taxonomyRows) {
       where: async () => rows,
     }),
   });
+
+  mockExecute.mockResolvedValue([
+    { skill_code: 'skill_go', alias: 'Go language', alias_norm: 'go language', confidence: 1 },
+    { skill_code: 'skill_r', alias: 'R language', alias_norm: 'r language', confidence: 1 },
+    {
+      skill_code: 'skill_project_management',
+      alias: 'PM',
+      alias_norm: 'pm',
+      confidence: 1,
+    },
+    { skill_code: 'skill_nodejs', alias: 'Node.js', alias_norm: 'nodejs', confidence: 1 },
+    { skill_code: 'skill_nodejs', alias: 'NodeJS', alias_norm: 'nodejs', confidence: 0.98 },
+    { skill_code: 'skill_c_sharp', alias: 'C#', alias_norm: 'csharp', confidence: 1 },
+    {
+      skill_code: 'skill_c_plus_plus',
+      alias: 'C++',
+      alias_norm: 'cplusplus',
+      confidence: 1,
+    },
+    { skill_code: 'skill_react', alias: 'ReactJS', alias_norm: 'reactjs', confidence: 0.98 },
+    {
+      skill_code: 'skill_react_native',
+      alias: 'React Native',
+      alias_norm: 'react native',
+      confidence: 1,
+    },
+  ]);
 }
 
 function normalize(value: string): string {

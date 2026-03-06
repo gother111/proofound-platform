@@ -12,6 +12,7 @@ import {
   computeEvidenceQuality,
   shouldRejectWeakTopSuggestion,
 } from '@/lib/expertise/skill-confidence';
+import { normalizeTaxonomyComparison } from '@/lib/expertise/taxonomy-normalization';
 
 const TAXONOMY_CACHE_TTL_MS = 10 * 60 * 1000;
 const MAX_CANDIDATES_PER_DOCUMENT = 40;
@@ -695,9 +696,9 @@ async function loadTaxonomy(): Promise<TaxonomyCache> {
         return null;
       }
 
-      const normalizedName = normalizeText(skillName);
+      const normalizedName = normalizeTaxonomyComparison(skillName);
       const normalizedAliases = parseAliases(row.aliasesI18n)
-        .map((alias) => normalizeText(alias))
+        .map((alias) => normalizeTaxonomyComparison(alias))
         .filter(Boolean);
       const embedding =
         semanticCapable && Array.isArray(row.embedding) ? (row.embedding as number[]) : null;
@@ -878,7 +879,7 @@ async function matchCandidate(
   options: Required<SuggestionOptions>,
   runtimeState: SuggestionRuntimeState
 ): Promise<z.infer<typeof CvImportSuggestionSchema>[]> {
-  const normalizedCandidate = normalizeText(candidateText);
+  const normalizedCandidate = normalizeTaxonomyComparison(candidateText);
   if (!normalizedCandidate) {
     return [];
   }

@@ -26,6 +26,27 @@
       "expected_skill_id": "skill_go"
     },
     {
+      "id": "cplusplus",
+      "file_name": "cplusplus.pdf",
+      "text": "Optimized rendering pipelines in C++ and modern STL.",
+      "raw_token": "c++",
+      "expected_skill_id": "skill_c_plus_plus"
+    },
+    {
+      "id": "csharp",
+      "file_name": "csharp.pdf",
+      "text": "Built internal tooling in C# with .NET services.",
+      "raw_token": "c#",
+      "expected_skill_id": "skill_c_sharp"
+    },
+    {
+      "id": "node-runtime",
+      "file_name": "node-runtime.pdf",
+      "text": "Built backend APIs in Node.js runtime with TypeScript.",
+      "raw_token": "node.js",
+      "expected_skill_id": "skill_nodejs"
+    },
+    {
       "id": "react-native",
       "file_name": "react-native.pdf",
       "text": "Built React Native mobile applications with Expo and TypeScript.",
@@ -40,6 +61,27 @@
       "text": "Built React Native mobile applications with Expo and TypeScript.",
       "raw_token": "react native",
       "forbidden_skill_id": "skill_react"
+    },
+    {
+      "id": "cplusplus-not-csharp",
+      "file_name": "cplusplus-not-csharp.pdf",
+      "text": "Optimized rendering pipelines in C++ and modern STL.",
+      "raw_token": "c++",
+      "forbidden_skill_id": "skill_c_sharp"
+    },
+    {
+      "id": "csharp-not-cplusplus",
+      "file_name": "csharp-not-cplusplus.pdf",
+      "text": "Built internal tooling in C# with .NET services.",
+      "raw_token": "c#",
+      "forbidden_skill_id": "skill_c_plus_plus"
+    },
+    {
+      "id": "nodejs-not-node",
+      "file_name": "nodejs-not-node.pdf",
+      "text": "Built backend APIs in Node.js runtime with TypeScript.",
+      "raw_token": "node.js",
+      "forbidden_skill_id": "skill_node_generic"
     }
   ]
 }

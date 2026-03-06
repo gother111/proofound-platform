@@ -3,6 +3,7 @@
 import { config as loadEnv } from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import { SEARCH_COVERAGE_REQUIRED_TERMS } from './taxonomy-wave-config';
+import { normalizeTaxonomyAlias } from '../src/lib/expertise/taxonomy-normalization';
 
 loadEnv({ path: '.env.local', quiet: true });
 
@@ -20,15 +21,7 @@ type AliasRow = {
 };
 
 function normalize(value: string): string {
-  return value
-    .normalize('NFKD')
-    .toLowerCase()
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/&/g, ' and ')
-    .replace(/[\u2019\u2018']/g, '')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim()
-    .replace(/\s+/g, ' ');
+  return normalizeTaxonomyAlias(value);
 }
 
 async function fetchAllAliases() {

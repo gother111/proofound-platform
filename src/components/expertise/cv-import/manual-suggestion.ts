@@ -1,11 +1,9 @@
 type SkillMatchMethod = 'exact' | 'synonym' | 'fuzzy' | 'semantic';
 
+import { normalizeTaxonomyComparison } from '@/lib/expertise/taxonomy-normalization';
+
 function normalize(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9+.#/\-\s]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return normalizeTaxonomyComparison(value);
 }
 
 function lexicalOverlap(left: string, right: string): number {

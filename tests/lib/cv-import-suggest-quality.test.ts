@@ -3,10 +3,12 @@ import { join } from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockSelect = vi.fn();
+const mockExecute = vi.fn();
 
 vi.mock('@/db', () => ({
   db: {
     select: (...args: unknown[]) => mockSelect(...args),
+    execute: (...args: unknown[]) => mockExecute(...args),
   },
 }));
 
@@ -117,6 +119,29 @@ function mockTaxonomyQuery(rows = taxonomyRows) {
       where: async () => rows,
     }),
   });
+
+  mockExecute.mockResolvedValue([
+    { skill_code: 'skill_react', alias: 'ReactJS', alias_norm: 'reactjs', confidence: 0.98 },
+    {
+      skill_code: 'skill_typescript',
+      alias: 'TS',
+      alias_norm: 'ts',
+      confidence: 0.92,
+    },
+    { skill_code: 'skill_nodejs', alias: 'Node.js', alias_norm: 'nodejs', confidence: 1 },
+    { skill_code: 'skill_nodejs', alias: 'NodeJS', alias_norm: 'nodejs', confidence: 0.98 },
+    { skill_code: 'skill_nextjs', alias: 'NextJS', alias_norm: 'nextjs', confidence: 0.98 },
+    { skill_code: 'skill_python', alias: 'Python3', alias_norm: 'python3', confidence: 0.94 },
+    {
+      skill_code: 'skill_jupyter_notebook',
+      alias: 'Google Colab',
+      alias_norm: 'google colab',
+      confidence: 0.94,
+    },
+    { skill_code: 'skill_c_plus_plus', alias: 'C++', alias_norm: 'cplusplus', confidence: 1 },
+    { skill_code: 'skill_c_sharp', alias: 'C#', alias_norm: 'csharp', confidence: 1 },
+    { skill_code: 'skill_ci_cd', alias: 'CI/CD', alias_norm: 'cicd', confidence: 1 },
+  ]);
 }
 
 function collectSuggestedIds(
@@ -220,6 +245,26 @@ describe('cv-import-suggest quality benchmark', () => {
         }
       }
     }
+
+    const devopsResult = response.documents.find((item) => item.document_id === 'cv-devops');
+    const cPlusPlusCandidate = devopsResult?.candidates.find((candidate) =>
+      normalizeCandidateText(candidate.raw_skill_text).includes('c++')
+    );
+    const cSharpCandidate = devopsResult?.candidates.find((candidate) =>
+      normalizeCandidateText(candidate.raw_skill_text).includes('c#')
+    );
+
+    expect(cPlusPlusCandidate?.suggestions[0]?.skill_id).toBe('skill_c_plus_plus');
+    expect(cPlusPlusCandidate?.suggestions[0]?.skill_id).not.toBe('skill_c_sharp');
+    expect(cSharpCandidate?.suggestions[0]?.skill_id).toBe('skill_c_sharp');
+    expect(cSharpCandidate?.suggestions[0]?.skill_id).not.toBe('skill_c_plus_plus');
+
+    const frontendResult = response.documents.find((item) => item.document_id === 'cv-frontend');
+    const nodeCandidate = frontendResult?.candidates.find((candidate) =>
+      normalizeCandidateText(candidate.raw_skill_text).includes('nodejs')
+    );
+
+    expect(nodeCandidate?.suggestions[0]?.skill_id).toBe('skill_nodejs');
   });
 
   it('keeps unmapped candidates excluded from suggestions until manually mapped', async () => {

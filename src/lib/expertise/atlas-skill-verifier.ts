@@ -12,6 +12,10 @@ import {
   isAmbiguousTokenWithoutDisambiguation,
   shouldRejectWeakTopSuggestion,
 } from '@/lib/expertise/skill-confidence';
+import {
+  normalizeTaxonomyAlias,
+  normalizeTaxonomyComparison,
+} from '@/lib/expertise/taxonomy-normalization';
 
 const ATLAS_CACHE_TTL_MS = 10 * 60 * 1000;
 const DEFAULT_LIMIT = 8;
@@ -107,29 +111,12 @@ function clamp(value: number, min = 0, max = 1): number {
   return Math.max(min, Math.min(max, value));
 }
 
-function normalizeDiacritics(value: string): string {
-  return value.normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
-}
-
 function normalizeStrict(value: string): string {
-  return normalizeDiacritics(value)
-    .toLowerCase()
-    .replace(/[’'`]/g, '')
-    .replace(/&/g, ' and ')
-    .replace(/\bc\s*\+\+\b/g, ' cplusplus ')
-    .replace(/\bc\s*#\b/g, ' csharp ')
-    .replace(/\bnode\s*\.\s*js\b/g, ' nodejs ')
-    .replace(/\breact\s*\.\s*js\b/g, ' reactjs ')
-    .replace(/\bnext\s*\.\s*js\b/g, ' nextjs ')
-    .replace(/\bci\s*\/\s*cd\b/g, ' cicd ')
-    .replace(/\b\.\s*net\b/g, ' dotnet ')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return normalizeTaxonomyAlias(value);
 }
 
 function normalizeLoose(value: string): string {
-  return normalizeStrict(value).replace(/\s+/g, ' ').trim();
+  return normalizeTaxonomyComparison(value);
 }
 
 function parseAliases(value: unknown): string[] {
@@ -345,6 +332,7 @@ function buildSearchVariants(params: {
   evidenceSnippets: string[];
 }): SearchVariant[] {
   const variants = new Map<string, number>();
+  const normalizedQuery = normalizeTaxonomyComparison(params.query);
   const push = (value: string, boost: number) => {
     const trimmed = value.trim();
     if (!trimmed) {
@@ -358,6 +346,9 @@ function buildSearchVariants(params: {
   push(params.query, 0.18);
 
   for (const variation of getSkillVariations(params.query).slice(0, MAX_QUERY_VARIANTS)) {
+    if (normalizeTaxonomyComparison(variation) !== normalizedQuery) {
+      continue;
+    }
     push(variation, 0.14);
   }
 
