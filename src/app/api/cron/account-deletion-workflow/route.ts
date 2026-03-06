@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { log } from '@/lib/log';
-import { generateFairnessNote } from '@/lib/analytics/fairness-note-generator';
+import { generateFairnessNoteResult } from '@/lib/analytics/fairness-note-generator';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -45,15 +45,21 @@ export async function GET(request: NextRequest) {
     });
 
     let fairnessNoteId: string | null = null;
-    let fairnessNoteStatus: 'success' | 'error' = 'success';
+    let fairnessNoteStatus: 'success' | 'insufficient_data' | 'error' = 'success';
 
     try {
       const releaseVersion = now.toISOString().split('T')[0];
-      fairnessNoteId = await generateFairnessNote(releaseVersion, 'system');
+      const fairnessNote = await generateFairnessNoteResult({
+        releaseVersion,
+        publicationStatus: 'published',
+      });
+      fairnessNoteId = fairnessNote.noteId;
+      fairnessNoteStatus = fairnessNote.status;
 
       log.info('cron.account_deletion_workflow.fairness_note_generated', {
         noteId: fairnessNoteId,
         releaseVersion,
+        status: fairnessNote.status,
       });
     } catch (error) {
       fairnessNoteStatus = 'error';

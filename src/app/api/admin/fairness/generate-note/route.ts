@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { generateFairnessNote } from '@/lib/analytics/fairness-note-generator';
+import { generateFairnessNoteResult } from '@/lib/analytics/fairness-note-generator';
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,12 +49,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate the fairness note
-    const noteId = await generateFairnessNote(releaseVersion, user.id);
+    const result = await generateFairnessNoteResult({
+      releaseVersion,
+      createdBy: user.id,
+      publicationStatus: 'draft',
+    });
 
     return NextResponse.json({
       success: true,
-      noteId,
-      message: 'Fairness note generated successfully',
+      noteId: result.noteId,
+      status: result.status,
+      message:
+        result.status === 'insufficient_data'
+          ? 'Fairness note generated with insufficient data'
+          : 'Fairness note generated successfully',
     });
   } catch (error) {
     console.error('Error generating fairness note:', error);

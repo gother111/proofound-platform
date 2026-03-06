@@ -7,6 +7,8 @@ loadDotenv({ path: '.env.local' });
 
 const API_BASE_URL = 'https://api.cron-job.org';
 const GET_METHOD = 0;
+const DEFAULT_TIMEOUT_SECONDS = 30;
+const CRON_TIMEZONE = 'Europe/Stockholm';
 
 function readEnvFile() {
   if (!fs.existsSync('.env.local')) {
@@ -71,23 +73,36 @@ async function apiFetch(path, init, apiKey) {
   return payload;
 }
 
-function buildPythonInternalWorkerJob(siteUrl, cronSecret) {
+function withAuthHeader(cronSecret) {
   return {
-    title: 'Proofound - Python Internal Worker',
-    enabled: true,
-    saveResponses: true,
-    url: `${siteUrl}/api/cron/python-internal-worker`,
+    headers: {
+      Authorization: `Bearer ${cronSecret}`,
+    },
+  };
+}
+
+function buildJob({
+  title,
+  url,
+  enabled,
+  schedule,
+  requestTimeout = DEFAULT_TIMEOUT_SECONDS,
+  saveResponses = true,
+  includeAuthHeader = true,
+  cronSecret,
+}) {
+  return {
+    title,
+    enabled,
+    saveResponses,
+    url,
     requestMethod: GET_METHOD,
-    requestTimeout: 300,
+    requestTimeout,
     redirectSuccess: false,
     schedule: {
-      timezone: 'Europe/Stockholm',
+      timezone: CRON_TIMEZONE,
       expiresAt: 0,
-      hours: [-1],
-      mdays: [-1],
-      minutes: [0, 15, 30, 45],
-      months: [-1],
-      wdays: [-1],
+      ...schedule,
     },
     notification: {
       onFailure: true,
@@ -95,60 +110,200 @@ function buildPythonInternalWorkerJob(siteUrl, cronSecret) {
       onSuccess: false,
       onDisable: true,
     },
-    extendedData: {
-      headers: {
-        Authorization: `Bearer ${cronSecret}`,
-      },
-    },
+    ...(includeAuthHeader ? { extendedData: withAuthHeader(cronSecret) } : {}),
   };
+}
+
+function buildManagedJobs(siteUrl, cronSecret) {
+  return [
+    buildJob({
+      title: 'Proofound - Python Internal Worker',
+      url: `${siteUrl}/api/cron/python-internal-worker`,
+      enabled: true,
+      requestTimeout: 300,
+      schedule: {
+        hours: [-1],
+        mdays: [-1],
+        minutes: [0, 15, 30, 45],
+        months: [-1],
+        wdays: [-1],
+      },
+      cronSecret,
+    }),
+    buildJob({
+      title: 'Proofound – Fairness Note Refresh',
+      url: `${siteUrl}/api/cron/fairness-note`,
+      enabled: true,
+      schedule: {
+        hours: [2],
+        mdays: [-1],
+        minutes: [0],
+        months: [-1],
+        wdays: [-1],
+      },
+      cronSecret,
+    }),
+    buildJob({
+      title: 'Proofound – Health Check',
+      url: `${siteUrl}/api/cron/health-check`,
+      enabled: true,
+      includeAuthHeader: false,
+      schedule: {
+        hours: [0, 3, 6, 9, 12, 15, 18, 21],
+        mdays: [-1],
+        minutes: [0],
+        months: [-1],
+        wdays: [-1],
+      },
+      cronSecret,
+    }),
+    buildJob({
+      title: 'Proofound – Performance Check',
+      url: `${siteUrl}/api/cron/performance-check`,
+      enabled: true,
+      schedule: {
+        hours: [6],
+        mdays: [-1],
+        minutes: [0],
+        months: [-1],
+        wdays: [-1],
+      },
+      cronSecret,
+    }),
+    buildJob({
+      title: 'Proofound - SLA Enforcement',
+      url: `${siteUrl}/api/cron/sla-enforcement`,
+      enabled: true,
+      schedule: {
+        hours: [8],
+        mdays: [-1],
+        minutes: [0],
+        months: [-1],
+        wdays: [-1],
+      },
+      cronSecret,
+    }),
+    buildJob({
+      title: 'Proofound – Fairness Report',
+      url: `${siteUrl}/api/cron/fairness-report`,
+      enabled: false,
+      schedule: {
+        hours: [3],
+        mdays: [-1],
+        minutes: [30],
+        months: [-1],
+        wdays: [-1],
+      },
+      cronSecret,
+    }),
+  ];
+}
+
+function buildLegacyJobsToDisable(siteUrl) {
+  return [
+    {
+      title: 'Proofound - Send Deletion Reminders',
+      url: `${siteUrl}/api/cron/send-deletion-reminders`,
+    },
+    {
+      title: 'Proofound - Process Deletions',
+      url: `${siteUrl}/api/cron/process-deletions`,
+    },
+    {
+      title: 'Proofound - Refresh Matches',
+      url: `${siteUrl}/api/cron/refresh-matches`,
+    },
+  ];
 }
 
 async function main() {
   const { apiKey, cronSecret, siteUrl } = getRequiredConfig();
-  const desiredJob = buildPythonInternalWorkerJob(siteUrl, cronSecret);
+  const managedJobs = buildManagedJobs(siteUrl, cronSecret);
+  const legacyJobs = buildLegacyJobsToDisable(siteUrl);
 
   const current = await apiFetch('/jobs', { method: 'GET' }, apiKey);
-  const existing = (current.jobs || []).find((job) => job.url === desiredJob.url);
+  const existingJobs = current.jobs || [];
+  const results = [];
 
-  if (existing) {
-    await apiFetch(`/jobs/${existing.jobId}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ job: desiredJob }),
-    }, apiKey);
-    console.log(
-      JSON.stringify(
+  for (const desiredJob of managedJobs) {
+    const existing = existingJobs.find((job) => job.url === desiredJob.url);
+
+    if (!existing) {
+      const created = await apiFetch(
+        '/jobs',
         {
-          status: 'updated',
-          jobId: existing.jobId,
-          title: desiredJob.title,
-          url: desiredJob.url,
-          minutes: desiredJob.schedule.minutes,
+          method: 'PUT',
+          body: JSON.stringify({ job: desiredJob }),
         },
-        null,
-        2
-      )
-    );
-    return;
-  }
+        apiKey
+      );
 
-  const created = await apiFetch('/jobs', {
-    method: 'PUT',
-    body: JSON.stringify({ job: desiredJob }),
-  }, apiKey);
-
-  console.log(
-    JSON.stringify(
-      {
-        status: 'created',
+      results.push({
+        action: 'created',
         jobId: created.jobId,
         title: desiredJob.title,
-        url: desiredJob.url,
-        minutes: desiredJob.schedule.minutes,
+        enabled: desiredJob.enabled,
+      });
+      continue;
+    }
+
+    if (existing.enabled !== desiredJob.enabled) {
+      await apiFetch(
+        `/jobs/${existing.jobId}`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({ job: { enabled: desiredJob.enabled } }),
+        },
+        apiKey
+      );
+
+      results.push({
+        action: 'toggled',
+        jobId: existing.jobId,
+        title: desiredJob.title,
+        enabled: desiredJob.enabled,
+      });
+      continue;
+    }
+
+    results.push({
+      action: 'unchanged',
+      jobId: existing.jobId,
+      title: desiredJob.title,
+      enabled: existing.enabled,
+    });
+  }
+
+  for (const legacyJob of legacyJobs) {
+    const existing = existingJobs.find((job) => job.url === legacyJob.url);
+    if (!existing || !existing.enabled) {
+      results.push({
+        action: existing ? 'already_disabled' : 'missing',
+        jobId: existing?.jobId ?? null,
+        title: legacyJob.title,
+        enabled: false,
+      });
+      continue;
+    }
+
+    await apiFetch(
+      `/jobs/${existing.jobId}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ job: { enabled: false } }),
       },
-      null,
-      2
-    )
-  );
+      apiKey
+    );
+
+    results.push({
+      action: 'disabled_legacy_overlap',
+      jobId: existing.jobId,
+      title: legacyJob.title,
+      enabled: false,
+    });
+  }
+
+  console.log(JSON.stringify(results, null, 2));
 }
 
 main().catch((error) => {

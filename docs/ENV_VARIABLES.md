@@ -364,7 +364,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
 ### CRON_API_KEY
 
-**Purpose**: API token for syncing cron-job.org jobs from the repo
+**Purpose**: API token for reconciling the managed cron-job.org job set from the repo
 
 **Format**:
 
@@ -379,12 +379,15 @@ CRON_API_KEY=your_cron_job_org_api_token
 
 **Behavior**:
 
-- Lets the repo create or update the external cron-job.org worker job for `/api/cron/python-internal-worker`.
+- Lets the repo reconcile the managed cron-job.org job set via `npm run cron:sync`.
+- Ensures `/api/cron/python-internal-worker` exists and stays enabled.
+- Ensures the intended observability jobs remain enabled or disabled according to repo policy.
+- Disables overlapping legacy external jobs such as `/api/cron/send-deletion-reminders`, `/api/cron/process-deletions`, and `/api/cron/refresh-matches`.
 - Intended for Hobby deployments where Vercel cron cannot run sub-daily schedules.
 
 **Without This**:
 
-- The Python worker can still be configured manually in the cron-job.org dashboard.
+- External cron-job.org jobs must be created and reconciled manually in the dashboard.
 - `npm run cron:sync` will fail fast with a configuration error.
 
 ---

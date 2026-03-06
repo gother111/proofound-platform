@@ -16,7 +16,7 @@ This document records a lightweight, repo-grounded architecture view. Statements
 - Email: Resend + React Email dependencies are present. (source: package.json)
 - Testing: Vitest (unit) + Playwright (E2E). (source: package.json, vitest.config.ts, playwright.config.ts)
 - Hosting: Vercel cron schedules are configured in `vercel.json`. (source: vercel.json)
-- External sub-daily worker scheduling can be managed through cron-job.org via `scripts/sync-cron-job-org.mjs`. (source: package.json, scripts/sync-cron-job-org.mjs)
+- External cron-job.org ownership is reconciled through `scripts/sync-cron-job-org.mjs`, which keeps the Python worker and approved observability jobs aligned while disabling overlapping legacy jobs. (source: package.json, scripts/sync-cron-job-org.mjs)
 
 ## Folder Map (Repo Truth)
 

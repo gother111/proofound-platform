@@ -11,7 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { generateFairnessNote } from '@/lib/analytics/fairness-note-generator';
+import { generateFairnessNoteResult } from '@/lib/analytics/fairness-note-generator';
 import { db } from '@/db';
 import { fairnessNotes } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -34,7 +34,11 @@ export async function GET(request: NextRequest) {
 
     console.log(`[Cron] Generating fairness note for version: ${version}`);
 
-    const noteId = await generateFairnessNote(version, undefined);
+    const result = await generateFairnessNoteResult({
+      releaseVersion: version,
+      publicationStatus: 'published',
+    });
+    const noteId = result.noteId;
 
     // Fetch the generated note to check for significant gaps
     const [note] = await db
@@ -59,10 +63,13 @@ export async function GET(request: NextRequest) {
       success: true,
       noteId,
       version,
+      status: result.status,
       hasSignificantGaps: note.hasSignificantGaps,
       message: note.hasSignificantGaps
         ? 'Fairness note generated with SIGNIFICANT GAPS - Alert sent'
-        : 'Fairness note generated - No significant gaps',
+        : result.status === 'insufficient_data'
+          ? 'Fairness note generated with insufficient data'
+          : 'Fairness note generated - No significant gaps',
     });
   } catch (error) {
     console.error('[Cron] Fairness note generation failed:', error);
@@ -87,12 +94,16 @@ async function sendFairnessAlertEmail(note: any): Promise<void> {
   try {
     // Extract critical and moderate findings
     const findings = note.findings || [];
-    const criticalFindings = findings.filter(
-      (f: any) => f.type === 'gap' && f.severity === 'critical'
+    const actionableFindings = findings.filter((f: any) => f.type !== 'insufficient_data');
+    const criticalFindings = actionableFindings.filter(
+      (f: any) => f.severity === 'critical' || Math.abs(Number(f.deviationPercent || 0)) >= 40
     );
-    const moderateFindings = findings.filter(
-      (f: any) => f.type === 'gap' && f.severity === 'moderate'
-    );
+    const moderateFindings = actionableFindings.filter((f: any) => !criticalFindings.includes(f));
+    const renderFinding = (finding: any) =>
+      finding.description ||
+      `${finding.cohort?.role || 'Unknown role'} / ${finding.cohort?.seniority || 'All'} / ${
+        finding.cohort?.geography || 'Global'
+      } changed ${finding.deviationPercent || 0}% versus baseline.`;
 
     const emailContent = `
       <!DOCTYPE html>
@@ -125,7 +136,7 @@ async function sendFairnessAlertEmail(note: any): Promise<void> {
             criticalFindings.length > 0
               ? `
             <h2>Critical Findings (Immediate Action Required)</h2>
-            ${criticalFindings.map((f: any) => `<div class="finding">${f.description}</div>`).join('')}
+            ${criticalFindings.map((f: any) => `<div class="finding">${renderFinding(f)}</div>`).join('')}
           `
               : ''
           }
@@ -134,7 +145,9 @@ async function sendFairnessAlertEmail(note: any): Promise<void> {
             moderateFindings.length > 0
               ? `
             <h2>Moderate Findings (Review Recommended)</h2>
-            ${moderateFindings.map((f: any) => `<div class="finding moderate">${f.description}</div>`).join('')}
+            ${moderateFindings
+              .map((f: any) => `<div class="finding moderate">${renderFinding(f)}</div>`)
+              .join('')}
           `
               : ''
           }

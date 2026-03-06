@@ -286,8 +286,8 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
 
 ## Cron Jobs (Ops Quick Reference)
 
-- Primary scheduler: Vercel Cron for daily jobs. Use cron-job.org for sub-daily workers on Hobby, including the Python internal worker.
-- Auth: all cron routes require `Authorization: Bearer ${CRON_SECRET}`.
+- Primary scheduler: Vercel Cron for daily core jobs. Use cron-job.org for the sub-daily Python worker plus explicitly managed observability jobs.
+- Auth: cron routes require `Authorization: Bearer ${CRON_SECRET}` unless explicitly documented otherwise, such as `/api/cron/health-check`.
 - Routes and schedules (UTC):
   - `/api/cron/process-deletions` — 02:00 (permanent deletes after grace period)
   - `/api/cron/send-deletion-reminders` — 01:00 (7-day reminder emails)
@@ -314,11 +314,11 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
   - `CV_IMPORT_ENGINE_MODE` (default `auto`)
   - `PERF_API_P95_BUDGET_MS` (default `1500`)
 - Observability/optional routes (if scheduled via cron-job.org):
-  - `/api/cron/fairness-note` — weekly (e.g., Sun 03:00) writes to `fairnessNotes`
-  - `/api/cron/fairness-report` — weekly (e.g., Sun 03:30) writes to `fairnessReports` (skips if already exists for release)
-  - `/api/cron/sla-enforcement` — daily (e.g., 08:00) expires stale matches/interviews
-  - `/api/cron/performance-check` — daily/hourly (e.g., 06:00) aggregates metrics + checks SLAs
-  - `/api/cron/health-check` — hourly (no auth; uptime/DB/metrics sanity)
+  - `/api/cron/fairness-note` — daily at 02:00 Europe/Stockholm
+  - `/api/cron/fairness-report` — tracked in cron-job.org but intentionally kept disabled
+  - `/api/cron/sla-enforcement` — daily at 08:00 Europe/Stockholm
+  - `/api/cron/performance-check` — daily at 06:00 Europe/Stockholm
+  - `/api/cron/health-check` — every 3 hours (no auth required by the route)
 - Tracking & troubleshooting:
   - cron-job.org History for status/body; enable notifications on non-200.
   - Vercel function logs for detailed errors.
@@ -329,11 +329,12 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
   curl -i -H "Authorization: Bearer $CRON_SECRET" https://proofound.io/api/cron/refresh-matches
   curl -i -H "Authorization: Bearer $CRON_SECRET" https://proofound.io/api/cron/refresh-matches-worker
   ```
-- Sync the cron-job.org Python worker job from this repo:
+- Sync the managed cron-job.org job set from this repo:
   ```bash
   npm run cron:sync
   ```
-- If managing cron-job.org manually: use Method `GET`, the same URL, and the header `Authorization: Bearer $CRON_SECRET`. Use its notifications/logs for external monitoring.
+- `npm run cron:sync` keeps the intended external jobs enabled/disabled and disables overlapping legacy jobs such as `send-deletion-reminders`, `process-deletions`, and `refresh-matches`.
+- If managing cron-job.org manually: use Method `GET`, the same URL, and the header `Authorization: Bearer $CRON_SECRET` for protected routes. Use its notifications/logs for external monitoring.
 
 ## Database Schema
 
