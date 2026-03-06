@@ -44,6 +44,9 @@ export interface FairnessReport {
   recommendations: string[];
 }
 
+const DEMOGRAPHIC_SEGMENT_COLUMNS = ['age', 'gender', 'location', 'ethnicity'] as const;
+type DemographicSegmentColumn = (typeof DEMOGRAPHIC_SEGMENT_COLUMNS)[number];
+
 // ============================================================================
 // STATISTICAL FUNCTIONS
 // ============================================================================
@@ -125,37 +128,26 @@ export async function calculateFairnessGaps(releaseVersion: string): Promise<Fai
   try {
     // Get overall metrics
     const overallMetrics = await getOverallMetrics(releaseVersion);
+    const availableSegmentColumns = await getAvailableDemographicSegmentColumns();
+    const unavailableSegmentColumns = DEMOGRAPHIC_SEGMENT_COLUMNS.filter(
+      (column) => !availableSegmentColumns.includes(column)
+    );
 
     // Calculate gaps for each segment type
     const segments: FairnessSegment[] = [];
 
-    // Age segments (if users opted in)
-    const ageSegments = await calculateSegmentGaps('age', 'match_acceptance', releaseVersion);
-    segments.push(...ageSegments);
-
-    // Gender segments (if users opted in)
-    const genderSegments = await calculateSegmentGaps('gender', 'match_acceptance', releaseVersion);
-    segments.push(...genderSegments);
-
-    // Location segments
-    const locationSegments = await calculateSegmentGaps(
-      'location',
-      'match_acceptance',
-      releaseVersion
-    );
-    segments.push(...locationSegments);
-
-    // Ethnicity segments (if users opted in)
-    const ethnicitySegments = await calculateSegmentGaps(
-      'ethnicity',
-      'match_acceptance',
-      releaseVersion
-    );
-    segments.push(...ethnicitySegments);
+    for (const segmentType of availableSegmentColumns) {
+      const segmentRows = await calculateSegmentGaps(
+        segmentType,
+        'match_acceptance',
+        releaseVersion
+      );
+      segments.push(...segmentRows);
+    }
 
     // Generate summary and recommendations
-    const summary = generateSummary(segments);
-    const recommendations = generateRecommendations(segments);
+    const summary = generateSummary(segments, unavailableSegmentColumns);
+    const recommendations = generateRecommendations(segments, unavailableSegmentColumns);
 
     const report: FairnessReport = {
       releaseVersion,
@@ -170,6 +162,8 @@ export async function calculateFairnessGaps(releaseVersion: string): Promise<Fai
       releaseVersion,
       totalSegments: segments.length,
       significantGaps: segments.filter((s) => s.significant).length,
+      availableSegmentColumns,
+      unavailableSegmentColumns,
     });
 
     return report;
@@ -222,11 +216,31 @@ async function getOverallMetrics(
   };
 }
 
+async function getAvailableDemographicSegmentColumns(): Promise<DemographicSegmentColumn[]> {
+  const result = await db.execute(sql`
+    SELECT column_name
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'wellbeing_opt_ins'
+      AND column_name IN ('age', 'gender', 'location', 'ethnicity')
+  `);
+
+  const availableColumns = new Set(
+    (getRows(result) as Array<{ column_name?: string | null }>)
+      .map((row) => row.column_name)
+      .filter((value): value is DemographicSegmentColumn =>
+        DEMOGRAPHIC_SEGMENT_COLUMNS.includes(value as DemographicSegmentColumn)
+      )
+  );
+
+  return DEMOGRAPHIC_SEGMENT_COLUMNS.filter((column) => availableColumns.has(column));
+}
+
 /**
  * Calculate gaps for a specific segment type (age, gender, location, etc.)
  */
 async function calculateSegmentGaps(
-  segmentType: 'age' | 'gender' | 'location' | 'ethnicity',
+  segmentType: DemographicSegmentColumn,
   metricType: FairnessSegment['metricType'],
   releaseVersion: string
 ): Promise<FairnessSegment[]> {
@@ -306,11 +320,29 @@ async function calculateSegmentGaps(
 /**
  * Generate summary text for fairness report
  */
-function generateSummary(segments: FairnessSegment[]): string {
+function generateSummary(
+  segments: FairnessSegment[],
+  unavailableSegmentColumns: readonly DemographicSegmentColumn[]
+): string {
+  if (
+    segments.length === 0 &&
+    unavailableSegmentColumns.length === DEMOGRAPHIC_SEGMENT_COLUMNS.length
+  ) {
+    return 'Demographic fairness analysis is unavailable for the current production schema because wellbeing_opt_ins does not yet include age, gender, location, or ethnicity columns. Overall matching metrics were recorded successfully.';
+  }
+
+  if (segments.length === 0 && unavailableSegmentColumns.length > 0) {
+    return `No statistically significant fairness gaps detected for the currently available demographic fields. Skipped schema-missing fields: ${unavailableSegmentColumns.join(', ')}.`;
+  }
+
   const significantGaps = segments.filter((s) => s.significant);
 
   if (significantGaps.length === 0) {
-    return 'No statistically significant fairness gaps detected. All demographic segments show comparable acceptance rates when controlling for skills and constraints.';
+    const skippedFields =
+      unavailableSegmentColumns.length > 0
+        ? ` Skipped schema-missing fields: ${unavailableSegmentColumns.join(', ')}.`
+        : '';
+    return `No statistically significant fairness gaps detected. All demographic segments show comparable acceptance rates when controlling for skills and constraints.${skippedFields}`;
   }
 
   const negativeGaps = significantGaps.filter((s) => s.gap < -5);
@@ -335,13 +367,34 @@ function generateSummary(segments: FairnessSegment[]): string {
 /**
  * Generate actionable recommendations
  */
-function generateRecommendations(segments: FairnessSegment[]): string[] {
+function generateRecommendations(
+  segments: FairnessSegment[],
+  unavailableSegmentColumns: readonly DemographicSegmentColumn[]
+): string[] {
   const recommendations: string[] = [];
   const significantGaps = segments.filter((s) => s.significant);
+
+  if (
+    segments.length === 0 &&
+    unavailableSegmentColumns.length === DEMOGRAPHIC_SEGMENT_COLUMNS.length
+  ) {
+    recommendations.push(
+      'Add demographic segment columns to wellbeing_opt_ins before re-enabling demographic fairness segmentation.'
+    );
+    recommendations.push(
+      'Keep the fairness cron enabled only for baseline report generation until schema support is available.'
+    );
+    return recommendations;
+  }
 
   if (significantGaps.length === 0) {
     recommendations.push('Continue monitoring fairness metrics on each release');
     recommendations.push('Maintain current matching algorithm and bias mitigation practices');
+    if (unavailableSegmentColumns.length > 0) {
+      recommendations.push(
+        `Backfill or add schema support for skipped fields: ${unavailableSegmentColumns.join(', ')}`
+      );
+    }
     return recommendations;
   }
 

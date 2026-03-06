@@ -58,6 +58,11 @@ This document records a lightweight, repo-grounded architecture view. Statements
 - Python internal jobs are claimed by a cron worker, executed through the versioned Python contract, and written back to the queue row as `result` or `last_error`. (source: src/app/api/cron/python-internal-worker/route.ts, src/lib/python-internal/client.ts, api/python/cv_import.py)
 - On Hobby, the Python internal worker is intended to be triggered by cron-job.org rather than Vercel Cron because the schedule is sub-daily. (source: README.md, scripts/sync-cron-job-org.mjs)
 
+### Cron Compatibility (Repo Truth)
+
+- `src/app/api/cron/sla-enforcement/route.ts` now treats completed interviews with `decided_by IS NULL` as still awaiting a decision, which matches the currently deployed production `interviews` schema. (source: src/app/api/cron/sla-enforcement/route.ts)
+- `src/lib/analytics/fairness.ts` introspects `information_schema.columns` before segmenting on `wellbeing_opt_ins`, so the fairness cron degrades to a zero-segment report instead of failing when demographic columns are absent. (source: src/lib/analytics/fairness.ts, src/app/api/cron/fairness-report/route.ts)
+
 ### API Security Flow (Repo Truth)
 
 - API routes are protected by CSRF middleware with an allowlist for public endpoints; security headers are applied in both `src/middleware.ts` and `next.config.js`. (source: src/middleware.ts, next.config.js)

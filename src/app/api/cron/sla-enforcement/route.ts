@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
       .where(
         and(
           eq(interviews.status, 'completed'),
-          isNull(interviews.decision),
+          isNull(interviews.decidedBy),
           lt(interviews.scheduledAt, decisionCutoff)
         )
       )
