@@ -37,9 +37,13 @@ def test_dispatch_routes_wizard_suggest_endpoint(monkeypatch):
     async def fake_extract(_request):
         return JSONResponse({"handler": "extract"})
 
+    async def fake_internal_job(_request):
+        return JSONResponse({"handler": "internal-job"})
+
     monkeypatch.setattr(cv_import, "wizard_suggest", fake_wizard_suggest)
     monkeypatch.setattr(cv_import, "suggest", fake_suggest)
     monkeypatch.setattr(cv_import, "extract", fake_extract)
+    monkeypatch.setattr(cv_import, "internal_job", fake_internal_job)
 
     response = asyncio.run(cv_import.dispatch_import(_make_request("wizard-suggest")))
 
@@ -57,9 +61,13 @@ def test_dispatch_routes_suggest_endpoint(monkeypatch):
     async def fake_extract(_request):
         return JSONResponse({"handler": "extract"})
 
+    async def fake_internal_job(_request):
+        return JSONResponse({"handler": "internal-job"})
+
     monkeypatch.setattr(cv_import, "wizard_suggest", fake_wizard_suggest)
     monkeypatch.setattr(cv_import, "suggest", fake_suggest)
     monkeypatch.setattr(cv_import, "extract", fake_extract)
+    monkeypatch.setattr(cv_import, "internal_job", fake_internal_job)
 
     response = asyncio.run(cv_import.dispatch_import(_make_request("suggest")))
 
@@ -77,9 +85,13 @@ def test_dispatch_routes_extract_endpoint(monkeypatch):
     async def fake_extract(_request):
         return JSONResponse({"handler": "extract"})
 
+    async def fake_internal_job(_request):
+        return JSONResponse({"handler": "internal-job"})
+
     monkeypatch.setattr(cv_import, "wizard_suggest", fake_wizard_suggest)
     monkeypatch.setattr(cv_import, "suggest", fake_suggest)
     monkeypatch.setattr(cv_import, "extract", fake_extract)
+    monkeypatch.setattr(cv_import, "internal_job", fake_internal_job)
 
     response = asyncio.run(cv_import.dispatch_import(_make_request("extract")))
 
@@ -87,10 +99,34 @@ def test_dispatch_routes_extract_endpoint(monkeypatch):
     assert response.body == b'{"handler":"extract"}'
 
 
+def test_dispatch_routes_internal_job_endpoint(monkeypatch):
+    async def fake_wizard_suggest(_request):
+        return JSONResponse({"handler": "wizard"})
+
+    async def fake_suggest(_request):
+        return JSONResponse({"handler": "suggest"})
+
+    async def fake_extract(_request):
+        return JSONResponse({"handler": "extract"})
+
+    async def fake_internal_job(_request):
+        return JSONResponse({"handler": "internal-job"})
+
+    monkeypatch.setattr(cv_import, "wizard_suggest", fake_wizard_suggest)
+    monkeypatch.setattr(cv_import, "suggest", fake_suggest)
+    monkeypatch.setattr(cv_import, "extract", fake_extract)
+    monkeypatch.setattr(cv_import, "internal_job", fake_internal_job)
+
+    response = asyncio.run(cv_import.dispatch_import(_make_request("internal-job")))
+
+    assert response.status_code == 200
+    assert response.body == b'{"handler":"internal-job"}'
+
+
 def test_dispatch_rejects_invalid_endpoint():
     response = asyncio.run(cv_import.dispatch_import(_make_request("unknown")))
 
     assert response.status_code == 400
     assert response.body == (
-        b'{"error":"Invalid endpoint parameter","message":"Use endpoint=wizard-suggest, endpoint=suggest, or endpoint=extract."}'
+        b'{"error":"Invalid endpoint parameter","message":"Use endpoint=wizard-suggest, endpoint=suggest, endpoint=extract, or endpoint=internal-job."}'
     )

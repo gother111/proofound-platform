@@ -1015,6 +1015,50 @@ export const matchingRefreshJobs = pgTable(
   })
 );
 
+// Shared durable queue for internal Python batch and reporting jobs
+export const pythonInternalJobs = pgTable(
+  'python_internal_jobs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    jobType: text('job_type', {
+      enum: [
+        'document_intelligence_skill_report',
+        'document_intelligence_wizard_report',
+        'document_intelligence_quality_report',
+      ],
+    }).notNull(),
+    status: text('status', {
+      enum: ['pending', 'leased', 'completed', 'failed'],
+    })
+      .default('pending')
+      .notNull(),
+    attempts: integer('attempts').default(0).notNull(),
+    maxAttempts: integer('max_attempts').default(3).notNull(),
+    nextRunAt: timestamp('next_run_at', { withTimezone: true }).defaultNow().notNull(),
+    leaseExpiresAt: timestamp('lease_expires_at', { withTimezone: true }),
+    lastError: text('last_error'),
+    source: text('source').default('manual').notNull(),
+    payload: jsonb('payload')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    result: jsonb('result'),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    statusNextRunIdx: index('python_internal_jobs_status_next_run_idx').on(
+      table.status,
+      table.nextRunAt
+    ),
+    typeStatusNextRunIdx: index('python_internal_jobs_type_status_next_run_idx').on(
+      table.jobType,
+      table.status,
+      table.nextRunAt
+    ),
+  })
+);
+
 // CV import AI monthly budgets (Gemini primary/secondary key slots)
 export const cvImportAiBudgets = pgTable(
   'cv_import_ai_budgets',
@@ -2480,6 +2524,8 @@ export type MatchingProfile = typeof matchingProfiles.$inferSelect;
 export type InsertMatchingProfile = typeof matchingProfiles.$inferInsert;
 export type MatchingRefreshJob = typeof matchingRefreshJobs.$inferSelect;
 export type InsertMatchingRefreshJob = typeof matchingRefreshJobs.$inferInsert;
+export type PythonInternalJob = typeof pythonInternalJobs.$inferSelect;
+export type InsertPythonInternalJob = typeof pythonInternalJobs.$inferInsert;
 export type CvImportAiBudget = typeof cvImportAiBudgets.$inferSelect;
 export type InsertCvImportAiBudget = typeof cvImportAiBudgets.$inferInsert;
 export type CvImportAiUsageLog = typeof cvImportAiUsageLogs.$inferSelect;

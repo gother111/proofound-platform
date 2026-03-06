@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server';
 import { POST } from '@/app/api/expertise/cv-import/suggest/route';
 import { createClient } from '@/lib/supabase/server';
 import { suggestSkillsForDocuments } from '@/lib/expertise/cv-import-suggest';
+import { PYTHON_INTERNAL_CONTRACT_VERSION } from '@/lib/python-internal/contracts';
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
@@ -47,6 +48,24 @@ function createAuthenticatedSupabaseMock(userId = 'user-1', existingSkillIds: st
           }),
         }),
       };
+    },
+  };
+}
+
+function createPythonSuggestPayload() {
+  return {
+    documents: [],
+    metadata: {
+      semantic_used: false,
+      semantic_fallback_triggered: false,
+      unmapped_candidates_count: 0,
+      service: 'document_intelligence',
+      contract_version: PYTHON_INTERNAL_CONTRACT_VERSION,
+      limits: {
+        max_documents: 5,
+        max_chars_per_document: 30000,
+        max_total_chars: 90000,
+      },
     },
   };
 }
@@ -139,22 +158,10 @@ describe('cv-import suggest route', () => {
     (createClient as any).mockResolvedValue(createAuthenticatedSupabaseMock('user-1'));
 
     const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          documents: [],
-          metadata: {
-            semantic_used: false,
-            semantic_fallback_triggered: false,
-            unmapped_candidates_count: 0,
-            limits: {
-              max_documents: 5,
-              max_chars_per_document: 30000,
-              max_total_chars: 90000,
-            },
-          },
-        }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      )
+      new Response(JSON.stringify(createPythonSuggestPayload()), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
     );
 
     const formData = new FormData();
@@ -232,22 +239,10 @@ describe('cv-import suggest route', () => {
     (createClient as any).mockResolvedValue(createAuthenticatedSupabaseMock('user-1'));
 
     const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          documents: [],
-          metadata: {
-            semantic_used: false,
-            semantic_fallback_triggered: false,
-            unmapped_candidates_count: 0,
-            limits: {
-              max_documents: 5,
-              max_chars_per_document: 30000,
-              max_total_chars: 90000,
-            },
-          },
-        }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      )
+      new Response(JSON.stringify(createPythonSuggestPayload()), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
     );
 
     const request = new NextRequest('http://localhost/api/expertise/cv-import/suggest', {

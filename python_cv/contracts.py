@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
+
+PYTHON_INTERNAL_SERVICE_NAME = "document_intelligence"
+PYTHON_INTERNAL_CONTRACT_VERSION = "2026-03-06.python-internal.v1"
 
 CandidateCategory = Literal[
     "technical",
@@ -25,6 +28,18 @@ class CvImportDocumentIn(BaseModel):
 
 class CvImportSuggestRequest(BaseModel):
     documents: list[CvImportDocumentIn] = Field(min_length=1)
+    suggestions_limit: int | None = Field(default=None, ge=5, le=10)
+
+
+class CvImportWizardDocumentIn(BaseModel):
+    document_id: str = Field(min_length=1, max_length=128)
+    file_name: str = Field(min_length=1, max_length=260)
+    text: str = Field(min_length=1)
+    context: Literal["cv"] = "cv"
+
+
+class CvImportWizardSuggestRequest(BaseModel):
+    documents: list[CvImportWizardDocumentIn] = Field(min_length=1)
     suggestions_limit: int | None = Field(default=None, ge=5, le=10)
 
 
@@ -99,6 +114,8 @@ class MetadataOut(BaseModel):
     semantic_fallback_triggered: bool = False
     unmapped_candidates_count: int = 0
     limits: MetadataLimitsOut
+    service: str = PYTHON_INTERNAL_SERVICE_NAME
+    contract_version: str = PYTHON_INTERNAL_CONTRACT_VERSION
 
 
 class WizardDocumentOut(BaseModel):
@@ -134,3 +151,39 @@ class SuggestDocumentOut(BaseModel):
 class SuggestResponse(BaseModel):
     documents: list[SuggestDocumentOut]
     metadata: MetadataOut
+
+
+class ExtractDocumentOut(BaseModel):
+    document_id: str
+    file_name: str
+    context: Literal["cv", "jd", "general"]
+    parsed_text: str = ""
+    parse_error: str | None = None
+    parse_error_code: str | None = None
+
+
+class ExtractResponse(BaseModel):
+    documents: list[ExtractDocumentOut]
+    metadata: MetadataOut
+
+
+PythonInternalJobType = Literal[
+    "document_intelligence_skill_report",
+    "document_intelligence_wizard_report",
+    "document_intelligence_quality_report",
+]
+
+
+class PythonInternalJobRequest(BaseModel):
+    job_id: str = Field(min_length=1)
+    job_type: PythonInternalJobType
+    payload: dict[str, Any]
+
+
+class PythonInternalJobResponse(BaseModel):
+    ok: Literal[True] = True
+    service: str = PYTHON_INTERNAL_SERVICE_NAME
+    contract_version: str = PYTHON_INTERNAL_CONTRACT_VERSION
+    job_id: str = Field(min_length=1)
+    job_type: PythonInternalJobType
+    result: dict[str, Any]

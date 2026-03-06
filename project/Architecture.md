@@ -16,6 +16,7 @@ This document records a lightweight, repo-grounded architecture view. Statements
 - Email: Resend + React Email dependencies are present. (source: package.json)
 - Testing: Vitest (unit) + Playwright (E2E). (source: package.json, vitest.config.ts, playwright.config.ts)
 - Hosting: Vercel cron schedules are configured in `vercel.json`. (source: vercel.json)
+- External sub-daily worker scheduling can be managed through cron-job.org via `scripts/sync-cron-job-org.mjs`. (source: package.json, scripts/sync-cron-job-org.mjs)
 
 ## Folder Map (Repo Truth)
 
@@ -45,6 +46,18 @@ This document records a lightweight, repo-grounded architecture view. Statements
 
 - Browser traffic hits Next.js; reads/writes flow through Supabase with RLS enforced. (source: README.md)
 
+### Python Compute Layer (Repo Truth)
+
+- Public CV import routes stay in Next.js while Python handles the document-intelligence compute path behind internal-only contracts. (source: src/lib/expertise/python-cv-proxy.ts, api/python/cv_import.py, python_cv/contracts.py)
+- The Python service can stay in-process or move behind a separate base URL via `PYTHON_CV_IMPORT_BASE_URL` without changing the public TypeScript route surface. (source: src/lib/python-internal/service.ts)
+- Internal queue-backed Python work uses `public.python_internal_jobs` plus the worker route `/api/cron/python-internal-worker` and the internal enqueue route `/api/internal/python-jobs`. (source: src/db/schema.ts, src/db/migrations/20260306103000_add_python_internal_jobs.sql, src/app/api/cron/python-internal-worker/route.ts, src/app/api/internal/python-jobs/route.ts)
+
+### Queue + Worker Flow (Repo Truth)
+
+- Match refresh jobs and Python internal jobs both use Postgres-backed leasing with retries/backoff rather than Redis or a separate broker. (source: src/lib/matching/refresh-queue.ts, src/lib/python-internal/job-queue.ts)
+- Python internal jobs are claimed by a cron worker, executed through the versioned Python contract, and written back to the queue row as `result` or `last_error`. (source: src/app/api/cron/python-internal-worker/route.ts, src/lib/python-internal/client.ts, api/python/cv_import.py)
+- On Hobby, the Python internal worker is intended to be triggered by cron-job.org rather than Vercel Cron because the schedule is sub-daily. (source: README.md, scripts/sync-cron-job-org.mjs)
+
 ### API Security Flow (Repo Truth)
 
 - API routes are protected by CSRF middleware with an allowlist for public endpoints; security headers are applied in both `src/middleware.ts` and `next.config.js`. (source: src/middleware.ts, next.config.js)
@@ -60,3 +73,4 @@ This document records a lightweight, repo-grounded architecture view. Statements
 - Repo Truth: CSP/security headers are set in both `next.config.js` and `src/middleware.ts`. (source: next.config.js, src/middleware.ts)
 - Guidance: Coordinate security header changes across both surfaces to avoid policy drift.
 - Go/no-go evidence remains an operational dependency through `ACCESSIBILITY_AUDIT_REPORT.md` in `scripts/go-no-go-check.mjs`. (source: scripts/go-no-go-check.mjs, ACCESSIBILITY_AUDIT_REPORT.md)
+- Guidance: `PYTHON_INTERNAL_SERVICE_SECRET` should be configured explicitly before moving the document-intelligence service to a separate deployment; relying on `CRON_SECRET` fallback is acceptable only as a transitional compatibility path. (source: src/lib/python-internal/service.ts, api/python/cv_import.py)

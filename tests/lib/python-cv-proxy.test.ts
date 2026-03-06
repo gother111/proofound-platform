@@ -2,8 +2,25 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 import { proxyCvRequestToPython } from '@/lib/expertise/python-cv-proxy';
+import { PYTHON_INTERNAL_CONTRACT_VERSION } from '@/lib/python-internal/contracts';
 
 describe('python-cv-proxy', () => {
+  const validSuggestPayload = {
+    documents: [],
+    metadata: {
+      semantic_used: false,
+      semantic_fallback_triggered: false,
+      unmapped_candidates_count: 0,
+      service: 'document_intelligence',
+      contract_version: PYTHON_INTERNAL_CONTRACT_VERSION,
+      limits: {
+        max_documents: 5,
+        max_chars_per_document: 30000,
+        max_total_chars: 90000,
+      },
+    },
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -14,7 +31,7 @@ describe('python-cv-proxy', () => {
 
   it('builds endpoint query URL and forwards csrf context headers', async () => {
     const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify({ ok: true }), {
+      new Response(JSON.stringify(validSuggestPayload), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       })
@@ -34,7 +51,7 @@ describe('python-cv-proxy', () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.ok).toBe(true);
+    expect(body.metadata.contract_version).toBe(PYTHON_INTERNAL_CONTRACT_VERSION);
     expect(fetchSpy).toHaveBeenCalledTimes(1);
 
     const [targetUrl, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
@@ -44,11 +61,13 @@ describe('python-cv-proxy', () => {
     expect(targetUrl).toContain('a=1');
     expect(headers['x-csrf-token']).toBe('csrf-token-value');
     expect(headers.cookie).toContain('csrf_token=csrf-token-value');
+    expect(headers['x-proofound-contract-version']).toBe(PYTHON_INTERNAL_CONTRACT_VERSION);
+    expect(headers['x-python-service-secret']).toBeTruthy();
   });
 
   it('forwards multipart content-type boundary to python runtime', async () => {
     const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify({ ok: true }), {
+      new Response(JSON.stringify(validSuggestPayload), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       })
@@ -67,7 +86,7 @@ describe('python-cv-proxy', () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.ok).toBe(true);
+    expect(body.metadata.service).toBe('document_intelligence');
     expect(fetchSpy).toHaveBeenCalledTimes(1);
 
     const [, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
@@ -161,5 +180,41 @@ describe('python-cv-proxy', () => {
       'Upload metadata contains unsupported characters. Please rename the PDF and retry.'
     );
     expect(body.code).toBe('CV_IMPORT_MULTIPART_METADATA_INVALID');
+  });
+
+  it('rejects python success responses that do not match the versioned contract', async () => {
+    vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          documents: [],
+          metadata: {
+            semantic_used: false,
+            semantic_fallback_triggered: false,
+            unmapped_candidates_count: 0,
+            limits: {
+              max_documents: 5,
+              max_chars_per_document: 30000,
+              max_total_chars: 90000,
+            },
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+
+    const request = new NextRequest('http://localhost/api/expertise/cv-import/suggest', {
+      method: 'POST',
+      body: JSON.stringify({ documents: [] }),
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const response = await proxyCvRequestToPython(request, '/suggest');
+    const body = await response.json();
+
+    expect(response.status).toBe(502);
+    expect(body.code).toBe('CV_IMPORT_PROXY_INVALID_CONTRACT');
   });
 });

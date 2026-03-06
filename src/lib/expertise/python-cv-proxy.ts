@@ -1,8 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import {
+  PYTHON_INTERNAL_CONTRACT_VERSION,
+  PythonCvImportExtractResponseSchema,
+  PythonCvImportSuggestResponseSchema,
+  PythonCvImportWizardSuggestResponseSchema,
+} from '@/lib/python-internal/contracts';
+import {
+  getPythonInternalServiceSecret,
+  resolvePythonInternalServiceBaseUrl,
+} from '@/lib/python-internal/service';
+
 const DEFAULT_PROXY_TIMEOUT_MS = 10000;
 const PROXY_UNAVAILABLE_CODE = 'CV_IMPORT_PROXY_UNAVAILABLE';
 const PROXY_TIMEOUT_CODE = 'CV_IMPORT_PROXY_TIMEOUT';
+const PROXY_INVALID_CONTRACT_CODE = 'CV_IMPORT_PROXY_INVALID_CONTRACT';
 const MULTIPART_METADATA_INVALID_CODE = 'CV_IMPORT_MULTIPART_METADATA_INVALID';
 const UPLOAD_METADATA_ENCODING_ERROR_MESSAGE =
   'Upload metadata contains unsupported characters. Please rename the PDF and retry.';
@@ -24,22 +36,6 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
         reject(error);
       });
   });
-}
-
-function resolveBaseUrl(request: NextRequest): string {
-  const configured = process.env.PYTHON_CV_IMPORT_BASE_URL?.trim();
-  if (configured) {
-    return configured.replace(/\/$/, '');
-  }
-
-  const forwardedProto = request.headers.get('x-forwarded-proto');
-  const forwardedHost = request.headers.get('x-forwarded-host');
-
-  if (forwardedProto && forwardedHost) {
-    return `${forwardedProto}://${forwardedHost}`;
-  }
-
-  return request.nextUrl.origin;
 }
 
 function resolveContentType(request: NextRequest): string | null {
@@ -134,12 +130,22 @@ function resolveTargetUrl(
   return targetUrl.toString();
 }
 
+function resolveContractSchema(endpointPath: EndpointPath) {
+  if (endpointPath === '/wizard-suggest') {
+    return PythonCvImportWizardSuggestResponseSchema;
+  }
+  if (endpointPath === '/suggest') {
+    return PythonCvImportSuggestResponseSchema;
+  }
+  return PythonCvImportExtractResponseSchema;
+}
+
 export async function proxyCvRequestToPython(
   request: NextRequest,
   endpointPath: EndpointPath,
   timeoutMs = DEFAULT_PROXY_TIMEOUT_MS
 ): Promise<NextResponse> {
-  const baseUrl = resolveBaseUrl(request);
+  const baseUrl = resolvePythonInternalServiceBaseUrl(request);
   const targetUrl = resolveTargetUrl(request, baseUrl, endpointPath);
 
   const contentType = resolveContentType(request);
@@ -164,10 +170,18 @@ export async function proxyCvRequestToPython(
     headers['cookie'] = cookieHeader;
   }
 
-  const internalSecret = process.env.CV_IMPORT_PROXY_INTERNAL_SECRET?.trim();
-  if (internalSecret) {
-    headers['x-cv-proxy-secret'] = internalSecret;
+  const internalSecret = getPythonInternalServiceSecret();
+  if (!internalSecret) {
+    return buildUnavailableResponse(
+      endpointPath,
+      'Python internal service secret is not configured.',
+      503
+    );
   }
+
+  headers['x-python-service-secret'] = internalSecret;
+  headers['x-cv-proxy-secret'] = internalSecret;
+  headers['x-proofound-contract-version'] = PYTHON_INTERNAL_CONTRACT_VERSION;
 
   let response: Response;
   try {
@@ -220,6 +234,20 @@ export async function proxyCvRequestToPython(
         endpointPath,
         'Python CV service rejected internal CSRF context. Falling back is recommended.'
       );
+    }
+
+    if (response.ok) {
+      const parsed = resolveContractSchema(endpointPath).safeParse(jsonPayload);
+      if (!parsed.success) {
+        return buildUnavailableResponse(
+          endpointPath,
+          'Python CV service returned an invalid contract response.',
+          502,
+          PROXY_INVALID_CONTRACT_CODE
+        );
+      }
+
+      return NextResponse.json(parsed.data, { status: response.status });
     }
 
     return NextResponse.json(jsonPayload, { status: response.status });

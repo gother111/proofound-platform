@@ -10,7 +10,10 @@ import api.python.cv_import as cv_import
 
 class _MultipartErrorRequest:
     def __init__(self, exc: BaseException):
-        self.headers = {"content-type": "multipart/form-data; boundary=----pytest"}
+        self.headers = {
+            "content-type": "multipart/form-data; boundary=----pytest",
+            "x-python-service-secret": cv_import.LOCAL_DEV_PYTHON_SERVICE_SECRET,
+        }
         self.query_params = {}
         self._exc = exc
 

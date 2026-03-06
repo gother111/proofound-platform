@@ -2,7 +2,7 @@
 
 > Doc Class: `active`
 > Verification Source: `src/app/api/**/route.ts`, `src/middleware.ts`, `package.json`, `.github/workflows/ci.yml`, `vercel.json`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-03-06`
 
 Canonical API documentation generated from the current App Router route handlers under `src/app/api/**/route.ts`.
 
@@ -27,9 +27,9 @@ Canonical API documentation generated from the current App Router route handlers
 
 ## Coverage Summary
 
-- Total route handlers: **276**
-- Auth tier counts: `public=161`, `session=98`, `service=5`, `cron=12`
-- Family count: **53**
+- Total route handlers: **296**
+- Auth tier counts: `public=171`, `session=105`, `service=6`, `cron=14`
+- Family count: **55**
 
 ## Endpoint Inventory
 
@@ -37,6 +37,7 @@ Canonical API documentation generated from the current App Router route handlers
 
 | Methods | Path                                               | Auth Tier                  | Notes                            | Source                                                             |
 | ------- | -------------------------------------------------- | -------------------------- | -------------------------------- | ------------------------------------------------------------------ | ------------------------------------------ | ------------------------------------------------ |
+| `GET`   | `/api/admin/analytics/cv-import-spend`             | `public`                   | -                                | `src/app/api/admin/analytics/cv-import-spend/route.ts`             |
 | `GET`   | `/api/admin/analytics/growth`                      | `public`                   | -                                | `src/app/api/admin/analytics/growth/route.ts`                      |
 | `GET`   | `/api/admin/analytics/metrics-dashboard`           | `public`                   | -                                | `src/app/api/admin/analytics/metrics-dashboard/route.ts`           |
 | `GET`   | `/api/admin/analytics/overview`                    | `public`                   | -                                | `src/app/api/admin/analytics/overview/route.ts`                    |
@@ -106,12 +107,12 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### auth
 
-| Methods | Path                          | Auth Tier | Notes | Source                                        |
-| ------- | ----------------------------- | --------- | ----- | --------------------------------------------- |
-| `GET`   | `/api/auth/google/callback`   | `public`  | -     | `src/app/api/auth/google/callback/route.ts`   |
-| `GET`   | `/api/auth/linkedin`          | `session` | -     | `src/app/api/auth/linkedin/route.ts`          |
-| `GET`   | `/api/auth/linkedin/callback` | `session` | -     | `src/app/api/auth/linkedin/callback/route.ts` |
-| `GET`   | `/api/auth/zoom/callback`     | `public`  | -     | `src/app/api/auth/zoom/callback/route.ts`     |
+| Methods | Path                          | Auth Tier | Notes                           | Source                                        |
+| ------- | ----------------------------- | --------- | ------------------------------- | --------------------------------------------- |
+| `GET`   | `/api/auth/google/callback`   | `public`  | legacy/compat markers in source | `src/app/api/auth/google/callback/route.ts`   |
+| `GET`   | `/api/auth/linkedin`          | `session` | -                               | `src/app/api/auth/linkedin/route.ts`          |
+| `GET`   | `/api/auth/linkedin/callback` | `session` | -                               | `src/app/api/auth/linkedin/callback/route.ts` |
+| `GET`   | `/api/auth/zoom/callback`     | `public`  | -                               | `src/app/api/auth/zoom/callback/route.ts`     |
 
 ### candidate-invites
 
@@ -144,7 +145,7 @@ Canonical API documentation generated from the current App Router route handlers
 | `POST`  | `/api/core/matching/assignment`   | `public`                              | -                               | `src/app/api/core/matching/assignment/route.ts`   |
 | `GET    | POST`                             | `/api/core/matching/interest`         | `public`                        | -                                                 | `src/app/api/core/matching/interest/route.ts`         |
 | `GET    | PUT`                              | `/api/core/matching/matching-profile` | `public`                        | legacy/compat markers in source                   | `src/app/api/core/matching/matching-profile/route.ts` |
-| `POST`  | `/api/core/matching/near-matches` | `public`                              | -                               | `src/app/api/core/matching/near-matches/route.ts` |
+| `POST`  | `/api/core/matching/near-matches` | `public`                              | legacy/compat markers in source | `src/app/api/core/matching/near-matches/route.ts` |
 | `POST`  | `/api/core/matching/profile`      | `service`                             | legacy/compat markers in source | `src/app/api/core/matching/profile/route.ts`      |
 
 ### cron
@@ -159,7 +160,9 @@ Canonical API documentation generated from the current App Router route handlers
 | `GET`   | `/api/cron/health-check`              | `cron`                      | -                               | `src/app/api/cron/health-check/route.ts`              |
 | `GET`   | `/api/cron/performance-check`         | `cron`                      | -                               | `src/app/api/cron/performance-check/route.ts`         |
 | `GET`   | `/api/cron/process-deletions`         | `cron`                      | legacy/compat markers in source | `src/app/api/cron/process-deletions/route.ts`         |
+| `GET`   | `/api/cron/python-internal-worker`    | `cron`                      | -                               | `src/app/api/cron/python-internal-worker/route.ts`    |
 | `GET`   | `/api/cron/refresh-matches`           | `cron`                      | -                               | `src/app/api/cron/refresh-matches/route.ts`           |
+| `GET`   | `/api/cron/refresh-matches-worker`    | `cron`                      | -                               | `src/app/api/cron/refresh-matches-worker/route.ts`    |
 | `GET`   | `/api/cron/send-deletion-reminders`   | `cron`                      | legacy/compat markers in source | `src/app/api/cron/send-deletion-reminders/route.ts`   |
 | `GET`   | `/api/cron/sla-enforcement`           | `cron`                      | -                               | `src/app/api/cron/sla-enforcement/route.ts`           |
 | `GET`   | `/api/cron/weekly-digest`             | `cron`                      | -                               | `src/app/api/cron/weekly-digest/route.ts`             |
@@ -205,24 +208,32 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### expertise
 
-| Methods  | Path                                               | Auth Tier                                              | Notes                           | Source                                                             |
-| -------- | -------------------------------------------------- | ------------------------------------------------------ | ------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| `POST`   | `/api/expertise/auto-suggest`                      | `session`                                              | -                               | `src/app/api/expertise/auto-suggest/route.ts`                      |
-| `GET`    | `/api/expertise/gap-analysis`                      | `public`                                               | legacy/compat markers in source | `src/app/api/expertise/gap-analysis/route.ts`                      |
-| `POST`   | `/api/expertise/jd-to-l4`                          | `public`                                               | -                               | `src/app/api/expertise/jd-to-l4/route.ts`                          |
-| `POST`   | `/api/expertise/linkedin-disconnect`               | `session`                                              | -                               | `src/app/api/expertise/linkedin-disconnect/route.ts`               |
-| `POST`   | `/api/expertise/linkedin-import`                   | `session`                                              | legacy/compat markers in source | `src/app/api/expertise/linkedin-import/route.ts`                   |
-| `GET`    | `/api/expertise/linkedin-status`                   | `session`                                              | -                               | `src/app/api/expertise/linkedin-status/route.ts`                   |
-| `GET     | PUT`                                               | `/api/expertise/profile`                               | `public`                        | -                                                                  | `src/app/api/expertise/profile/route.ts`                               |
-| `GET`    | `/api/expertise/stats`                             | `public`                                               | -                               | `src/app/api/expertise/stats/route.ts`                             |
-| `GET`    | `/api/expertise/taxonomy`                          | `service`                                              | -                               | `src/app/api/expertise/taxonomy/route.ts`                          |
-| `GET     | POST`                                              | `/api/expertise/user-skills`                           | `public`                        | legacy/compat markers in source; contains TODO                     | `src/app/api/expertise/user-skills/route.ts`                           |
-| `PATCH   | DELETE`                                            | `/api/expertise/user-skills/[id]`                      | `public`                        | -                                                                  | `src/app/api/expertise/user-skills/[id]/route.ts`                      |
-| `GET     | POST`                                              | `/api/expertise/user-skills/[id]/proofs`               | `public`                        | -                                                                  | `src/app/api/expertise/user-skills/[id]/proofs/route.ts`               |
-| `DELETE` | `/api/expertise/user-skills/[id]/proofs/[proofId]` | `public`                                               | -                               | `src/app/api/expertise/user-skills/[id]/proofs/[proofId]/route.ts` |
-| `GET     | POST`                                              | `/api/expertise/user-skills/[id]/verification-request` | `session`                       | legacy/compat markers in source                                    | `src/app/api/expertise/user-skills/[id]/verification-request/route.ts` |
-| `POST`   | `/api/expertise/verification/[requestId]/respond`  | `session`                                              | -                               | `src/app/api/expertise/verification/[requestId]/respond/route.ts`  |
-| `GET`    | `/api/expertise/verifications/incoming`            | `session`                                              | -                               | `src/app/api/expertise/verifications/incoming/route.ts`            |
+| Methods  | Path                                               | Auth Tier                                                     | Notes                           | Source                                                             |
+| -------- | -------------------------------------------------- | ------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| `POST`   | `/api/expertise/auto-suggest`                      | `session`                                                     | legacy/compat markers in source | `src/app/api/expertise/auto-suggest/route.ts`                      |
+| `POST`   | `/api/expertise/cv-import/suggest`                 | `session`                                                     | -                               | `src/app/api/expertise/cv-import/suggest/route.ts`                 |
+| `POST`   | `/api/expertise/cv-import/wizard-apply`            | `session`                                                     | -                               | `src/app/api/expertise/cv-import/wizard-apply/route.ts`            |
+| `POST`   | `/api/expertise/cv-import/wizard-suggest`          | `session`                                                     | -                               | `src/app/api/expertise/cv-import/wizard-suggest/route.ts`          |
+| `GET`    | `/api/expertise/gap-analysis`                      | `public`                                                      | legacy/compat markers in source | `src/app/api/expertise/gap-analysis/route.ts`                      |
+| `POST`   | `/api/expertise/jd-to-l4`                          | `public`                                                      | -                               | `src/app/api/expertise/jd-to-l4/route.ts`                          |
+| `POST`   | `/api/expertise/linkedin-disconnect`               | `session`                                                     | -                               | `src/app/api/expertise/linkedin-disconnect/route.ts`               |
+| `POST`   | `/api/expertise/linkedin-import`                   | `session`                                                     | legacy/compat markers in source | `src/app/api/expertise/linkedin-import/route.ts`                   |
+| `GET`    | `/api/expertise/linkedin-status`                   | `session`                                                     | -                               | `src/app/api/expertise/linkedin-status/route.ts`                   |
+| `GET     | PUT`                                               | `/api/expertise/profile`                                      | `public`                        | -                                                                  | `src/app/api/expertise/profile/route.ts`                                      |
+| `GET`    | `/api/expertise/stats`                             | `public`                                                      | -                               | `src/app/api/expertise/stats/route.ts`                             |
+| `GET`    | `/api/expertise/taxonomy`                          | `service`                                                     | -                               | `src/app/api/expertise/taxonomy/route.ts`                          |
+| `GET     | POST`                                              | `/api/expertise/user-skills`                                  | `public`                        | legacy/compat markers in source; contains TODO                     | `src/app/api/expertise/user-skills/route.ts`                                  |
+| `PATCH   | DELETE`                                            | `/api/expertise/user-skills/[id]`                             | `public`                        | -                                                                  | `src/app/api/expertise/user-skills/[id]/route.ts`                             |
+| `GET     | POST`                                              | `/api/expertise/user-skills/[id]/proofs`                      | `public`                        | -                                                                  | `src/app/api/expertise/user-skills/[id]/proofs/route.ts`                      |
+| `DELETE` | `/api/expertise/user-skills/[id]/proofs/[proofId]` | `public`                                                      | -                               | `src/app/api/expertise/user-skills/[id]/proofs/[proofId]/route.ts` |
+| `GET     | POST`                                              | `/api/expertise/user-skills/[id]/verification-request`        | `session`                       | legacy/compat markers in source                                    | `src/app/api/expertise/user-skills/[id]/verification-request/route.ts`        |
+| `POST`   | `/api/expertise/verification/[requestId]/respond`  | `session`                                                     | -                               | `src/app/api/expertise/verification/[requestId]/respond/route.ts`  |
+| `GET     | PATCH`                                             | `/api/expertise/verifications/custom/[requestId]`             | `public`                        | -                                                                  | `src/app/api/expertise/verifications/custom/[requestId]/route.ts`             |
+| `GET`    | `/api/expertise/verifications/custom/artifacts`    | `public`                                                      | -                               | `src/app/api/expertise/verifications/custom/artifacts/route.ts`    |
+| `POST`   | `/api/expertise/verifications/custom/request`      | `session`                                                     | -                               | `src/app/api/expertise/verifications/custom/request/route.ts`      |
+| `GET`    | `/api/expertise/verifications/email-hint`          | `service`                                                     | -                               | `src/app/api/expertise/verifications/email-hint/route.ts`          |
+| `GET`    | `/api/expertise/verifications/incoming`            | `session`                                                     | -                               | `src/app/api/expertise/verifications/incoming/route.ts`            |
+| `POST    | DELETE`                                            | `/api/expertise/verifications/sent/[requestType]/[requestId]` | `public`                        | legacy/compat markers in source                                    | `src/app/api/expertise/verifications/sent/[requestType]/[requestId]/route.ts` |
 
 ### feature-flags
 
@@ -282,16 +293,29 @@ Canonical API documentation generated from the current App Router route handlers
 | `POST`   | `/api/integrations/video/generate-link`   | `session` | -             | `src/app/api/integrations/video/generate-link/route.ts`   |
 | `GET`    | `/api/integrations/video/status`          | `public`  | -             | `src/app/api/integrations/video/status/route.ts`          |
 | `GET`    | `/api/integrations/zoom/callback`         | `public`  | -             | `src/app/api/integrations/zoom/callback/route.ts`         |
-| `GET`    | `/api/integrations/zoom/connect`          | `session` | -             | `src/app/api/integrations/zoom/connect/route.ts`          |
+| `GET`    | `/api/integrations/zoom/connect`          | `public`  | -             | `src/app/api/integrations/zoom/connect/route.ts`          |
+
+### internal
+
+| Methods | Path                        | Auth Tier | Notes | Source                                      |
+| ------- | --------------------------- | --------- | ----- | ------------------------------------------- |
+| `POST`  | `/api/internal/python-jobs` | `public`  | -     | `src/app/api/internal/python-jobs/route.ts` |
 
 ### interviews
 
-| Methods | Path                       | Auth Tier                  | Notes         | Source                                     |
-| ------- | -------------------------- | -------------------------- | ------------- | ------------------------------------------ | ------------------------------------------ |
-| `GET`   | `/api/interviews`          | `session`                  | -             | `src/app/api/interviews/route.ts`          |
-| `POST`  | `/api/interviews/cancel`   | `session`                  | contains TODO | `src/app/api/interviews/cancel/route.ts`   |
-| `POST`  | `/api/interviews/complete` | `session`                  | -             | `src/app/api/interviews/complete/route.ts` |
-| `GET    | POST`                      | `/api/interviews/schedule` | `session`     | legacy/compat markers in source            | `src/app/api/interviews/schedule/route.ts` |
+| Methods | Path                       | Auth Tier                  | Notes     | Source                                     |
+| ------- | -------------------------- | -------------------------- | --------- | ------------------------------------------ | ------------------------------------------ |
+| `GET`   | `/api/interviews`          | `session`                  | -         | `src/app/api/interviews/route.ts`          |
+| `POST`  | `/api/interviews/cancel`   | `session`                  | -         | `src/app/api/interviews/cancel/route.ts`   |
+| `POST`  | `/api/interviews/complete` | `session`                  | -         | `src/app/api/interviews/complete/route.ts` |
+| `POST`  | `/api/interviews/edit`     | `session`                  | -         | `src/app/api/interviews/edit/route.ts`     |
+| `GET    | POST`                      | `/api/interviews/schedule` | `session` | legacy/compat markers in source            | `src/app/api/interviews/schedule/route.ts` |
+
+### location
+
+| Methods | Path                         | Auth Tier | Notes | Source                                       |
+| ------- | ---------------------------- | --------- | ----- | -------------------------------------------- |
+| `GET`   | `/api/location/autocomplete` | `public`  | -     | `src/app/api/location/autocomplete/route.ts` |
 
 ### match
 
@@ -306,6 +330,7 @@ Canonical API documentation generated from the current App Router route handlers
 | `UNKNOWN` | `/api/match/profile`                  | `public`              | -                   | `src/app/api/match/profile/route.ts`                  |
 | `GET      | POST                                  | DELETE`               | `/api/match/snooze` | `session`                                             | -                                     | `src/app/api/match/snooze/route.ts` |
 | `GET`     | `/api/match/snoozed`                  | `public`              | -                   | `src/app/api/match/snoozed/route.ts`                  |
+| `GET`     | `/api/match/test`                     | `session`             | -                   | `src/app/api/match/test/route.ts`                     |
 | `GET`     | `/api/match/visible-fields/[matchId]` | `session`             | -                   | `src/app/api/match/visible-fields/[matchId]/route.ts` |
 
 ### matches
@@ -366,7 +391,7 @@ Canonical API documentation generated from the current App Router route handlers
 | `GET    | PATCH`                                       | `/api/mobile/v1/notifications/preferences`      | `public`                         | -                                                            | `src/app/api/mobile/v1/notifications/preferences/route.ts`      |
 | `PUT`   | `/api/mobile/v1/onboarding/individual`       | `public`                                        | -                                | `src/app/api/mobile/v1/onboarding/individual/route.ts`       |
 | `PUT`   | `/api/mobile/v1/onboarding/org`              | `public`                                        | -                                | `src/app/api/mobile/v1/onboarding/org/route.ts`              |
-| `GET    | PATCH`                                       | `/api/mobile/v1/organizations/[orgId]`          | `public`                         | -                                                            | `src/app/api/mobile/v1/organizations/[orgId]/route.ts`          |
+| `GET    | PATCH`                                       | `/api/mobile/v1/organizations/[orgId]`          | `public`                         | legacy/compat markers in source                              | `src/app/api/mobile/v1/organizations/[orgId]/route.ts`          |
 | `GET    | POST`                                        | `/api/mobile/v1/organizations/[orgId]/goals`    | `public`                         | -                                                            | `src/app/api/mobile/v1/organizations/[orgId]/goals/route.ts`    |
 | `GET    | POST`                                        | `/api/mobile/v1/organizations/[orgId]/projects` | `public`                         | -                                                            | `src/app/api/mobile/v1/organizations/[orgId]/projects/route.ts` |
 | `GET`   | `/api/mobile/v1/organizations/[orgId]/team`  | `public`                                        | -                                | `src/app/api/mobile/v1/organizations/[orgId]/team/route.ts`  |
@@ -392,9 +417,9 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### monitoring
 
-| Methods | Path                          | Auth Tier | Notes | Source                                        |
-| ------- | ----------------------------- | --------- | ----- | --------------------------------------------- |
-| `GET`   | `/api/monitoring/perf-status` | `public`  | -     | `src/app/api/monitoring/perf-status/route.ts` |
+| Methods | Path                          | Auth Tier | Notes                           | Source                                        |
+| ------- | ----------------------------- | --------- | ------------------------------- | --------------------------------------------- |
+| `GET`   | `/api/monitoring/perf-status` | `public`  | legacy/compat markers in source | `src/app/api/monitoring/perf-status/route.ts` |
 
 ### notifications
 
@@ -420,7 +445,7 @@ Canonical API documentation generated from the current App Router route handlers
 | Methods | Path                                                      | Auth Tier                                            | Notes                                          | Source                                                                    |
 | ------- | --------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------- |
 | `GET`   | `/api/organizations`                                      | `public`                                             | legacy/compat markers in source                | `src/app/api/organizations/route.ts`                                      |
-| `GET    | PUT`                                                      | `/api/organizations/[orgId]`                         | `public`                                       | -                                                                         | `src/app/api/organizations/[orgId]/route.ts`                         |
+| `GET    | PUT`                                                      | `/api/organizations/[orgId]`                         | `public`                                       | legacy/compat markers in source                                           | `src/app/api/organizations/[orgId]/route.ts`                         |
 | `GET`   | `/api/organizations/[orgId]/assignments`                  | `session`                                            | -                                              | `src/app/api/organizations/[orgId]/assignments/route.ts`                  |
 | `GET    | POST`                                                     | `/api/organizations/[orgId]/candidate-invites`       | `session`                                      | -                                                                         | `src/app/api/organizations/[orgId]/candidate-invites/route.ts`       |
 | `PATCH` | `/api/organizations/[orgId]/candidate-invites/[inviteId]` | `session`                                            | -                                              | `src/app/api/organizations/[orgId]/candidate-invites/[inviteId]/route.ts` |
@@ -442,6 +467,7 @@ Canonical API documentation generated from the current App Router route handlers
 | `GET    | PUT                                                       | DELETE`                                              | `/api/organizations/[orgId]/structure/[id]`    | `session`                                                                 | -                                                                    | `src/app/api/organizations/[orgId]/structure/[id]/route.ts`    |
 | `GET`   | `/api/organizations/[orgId]/structure/export`             | `session`                                            | -                                              | `src/app/api/organizations/[orgId]/structure/export/route.ts`             |
 | `GET`   | `/api/organizations/[orgId]/team`                         | `public`                                             | -                                              | `src/app/api/organizations/[orgId]/team/route.ts`                         |
+| `GET`   | `/api/organizations/[orgId]/test-matches`                 | `session`                                            | -                                              | `src/app/api/organizations/[orgId]/test-matches/route.ts`                 |
 | `GET    | PUT`                                                      | `/api/organizations/[orgId]/visibility`              | `session`                                      | -                                                                         | `src/app/api/organizations/[orgId]/visibility/route.ts`              |
 | `POST`  | `/api/organizations/evidence-pack`                        | `session`                                            | -                                              | `src/app/api/organizations/evidence-pack/route.ts`                        |
 
@@ -459,12 +485,15 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### portfolio
 
-| Methods | Path                       | Auth Tier                   | Notes     | Source                                     |
-| ------- | -------------------------- | --------------------------- | --------- | ------------------------------------------ | ------------------------------------------- |
-| `GET`   | `/api/portfolio/export`    | `session`                   | -         | `src/app/api/portfolio/export/route.ts`    |
-| `GET`   | `/api/portfolio/text-pack` | `session`                   | -         | `src/app/api/portfolio/text-pack/route.ts` |
-| `GET    | POST`                      | `/api/portfolio/view`       | `public`  | -                                          | `src/app/api/portfolio/view/route.ts`       |
-| `GET    | POST`                      | `/api/portfolio/visibility` | `session` | -                                          | `src/app/api/portfolio/visibility/route.ts` |
+| Methods | Path                                     | Auth Tier                   | Notes     | Source                                                   |
+| ------- | ---------------------------------------- | --------------------------- | --------- | -------------------------------------------------------- | ------------------------------------------- |
+| `GET`   | `/api/portfolio/export`                  | `session`                   | -         | `src/app/api/portfolio/export/route.ts`                  |
+| `GET`   | `/api/portfolio/org/[slug]/export`       | `session`                   | -         | `src/app/api/portfolio/org/[slug]/export/route.ts`       |
+| `GET`   | `/api/portfolio/public/[handle]/export`  | `public`                    | -         | `src/app/api/portfolio/public/[handle]/export/route.ts`  |
+| `GET`   | `/api/portfolio/public/[handle]/summary` | `public`                    | -         | `src/app/api/portfolio/public/[handle]/summary/route.ts` |
+| `GET`   | `/api/portfolio/text-pack`               | `session`                   | -         | `src/app/api/portfolio/text-pack/route.ts`               |
+| `GET    | POST`                                    | `/api/portfolio/view`       | `public`  | -                                                        | `src/app/api/portfolio/view/route.ts`       |
+| `GET    | POST`                                    | `/api/portfolio/visibility` | `session` | -                                                        | `src/app/api/portfolio/visibility/route.ts` |
 
 ### profile
 
@@ -545,7 +574,7 @@ Canonical API documentation generated from the current App Router route handlers
 
 | Methods | Path                                  | Auth Tier | Notes                           | Source                                                |
 | ------- | ------------------------------------- | --------- | ------------------------------- | ----------------------------------------------------- |
-| `POST`  | `/api/verification/linkedin/initiate` | `session` | -                               | `src/app/api/verification/linkedin/initiate/route.ts` |
+| `POST`  | `/api/verification/linkedin/initiate` | `session` | legacy/compat markers in source | `src/app/api/verification/linkedin/initiate/route.ts` |
 | `POST`  | `/api/verification/skill/request`     | `session` | -                               | `src/app/api/verification/skill/request/route.ts`     |
 | `POST`  | `/api/verification/skill/respond`     | `public`  | -                               | `src/app/api/verification/skill/respond/route.ts`     |
 | `GET`   | `/api/verification/status`            | `session` | legacy/compat markers in source | `src/app/api/verification/status/route.ts`            |
@@ -556,9 +585,10 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### verify
 
-| Methods | Path  | Auth Tier             | Notes     | Source                          |
-| ------- | ----- | --------------------- | --------- | ------------------------------- | ------------------------------------- |
-| `GET    | POST` | `/api/verify/[token]` | `session` | legacy/compat markers in source | `src/app/api/verify/[token]/route.ts` |
+| Methods | Path  | Auth Tier                    | Notes     | Source                          |
+| ------- | ----- | ---------------------------- | --------- | ------------------------------- | -------------------------------------------- |
+| `GET    | POST` | `/api/verify/[token]`        | `session` | legacy/compat markers in source | `src/app/api/verify/[token]/route.ts`        |
+| `GET    | POST` | `/api/verify/custom/[token]` | `public`  | -                               | `src/app/api/verify/custom/[token]/route.ts` |
 
 ### wellbeing
 
@@ -578,34 +608,42 @@ Canonical API documentation generated from the current App Router route handlers
 
 Routes with source-level `legacy`/`deprecated` markers should be treated as compatibility surfaces and reviewed before removal.
 
-| Path                                                   | Source                                                                 | Marker                         |
-| ------------------------------------------------------ | ---------------------------------------------------------------------- | ------------------------------ |
-| `/api/analytics/events`                                | `src/app/api/analytics/events/route.ts`                                | legacy/deprecated text present |
-| `/api/core/matching/matching-profile`                  | `src/app/api/core/matching/matching-profile/route.ts`                  | legacy/deprecated text present |
-| `/api/core/matching/profile`                           | `src/app/api/core/matching/profile/route.ts`                           | legacy/deprecated text present |
-| `/api/cron/process-deletions`                          | `src/app/api/cron/process-deletions/route.ts`                          | legacy/deprecated text present |
-| `/api/cron/send-deletion-reminders`                    | `src/app/api/cron/send-deletion-reminders/route.ts`                    | legacy/deprecated text present |
-| `/api/data-import/preview`                             | `src/app/api/data-import/preview/route.ts`                             | legacy/deprecated text present |
-| `/api/expertise/gap-analysis`                          | `src/app/api/expertise/gap-analysis/route.ts`                          | legacy/deprecated text present |
-| `/api/expertise/linkedin-import`                       | `src/app/api/expertise/linkedin-import/route.ts`                       | legacy/deprecated text present |
-| `/api/expertise/user-skills`                           | `src/app/api/expertise/user-skills/route.ts`                           | legacy/deprecated text present |
-| `/api/expertise/user-skills/[id]/verification-request` | `src/app/api/expertise/user-skills/[id]/verification-request/route.ts` | legacy/deprecated text present |
-| `/api/goals`                                           | `src/app/api/goals/route.ts`                                           | legacy/deprecated text present |
-| `/api/interviews/schedule`                             | `src/app/api/interviews/schedule/route.ts`                             | legacy/deprecated text present |
-| `/api/match/decision`                                  | `src/app/api/match/decision/route.ts`                                  | legacy/deprecated text present |
-| `/api/match/hide`                                      | `src/app/api/match/hide/route.ts`                                      | legacy/deprecated text present |
-| `/api/matching/profile`                                | `src/app/api/matching/profile/route.ts`                                | legacy/deprecated text present |
-| `/api/matching/profile/[id]`                           | `src/app/api/matching/profile/[id]/route.ts`                           | legacy/deprecated text present |
-| `/api/matching-profile`                                | `src/app/api/matching-profile/route.ts`                                | legacy/deprecated text present |
-| `/api/messages`                                        | `src/app/api/messages/route.ts`                                        | legacy/deprecated text present |
-| `/api/messages/[conversationId]`                       | `src/app/api/messages/[conversationId]/route.ts`                       | legacy/deprecated text present |
-| `/api/moderation/report`                               | `src/app/api/moderation/report/route.ts`                               | legacy/deprecated text present |
-| `/api/organizations`                                   | `src/app/api/organizations/route.ts`                                   | legacy/deprecated text present |
-| `/api/skill-gaps/goals`                                | `src/app/api/skill-gaps/goals/route.ts`                                | legacy/deprecated text present |
-| `/api/user/consent`                                    | `src/app/api/user/consent/route.ts`                                    | legacy/deprecated text present |
-| `/api/user/export`                                     | `src/app/api/user/export/route.ts`                                     | legacy/deprecated text present |
-| `/api/verification/status`                             | `src/app/api/verification/status/route.ts`                             | legacy/deprecated text present |
-| `/api/verify/[token]`                                  | `src/app/api/verify/[token]/route.ts`                                  | legacy/deprecated text present |
+| Path                                                          | Source                                                                        | Marker                         |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------ |
+| `/api/analytics/events`                                       | `src/app/api/analytics/events/route.ts`                                       | legacy/deprecated text present |
+| `/api/auth/google/callback`                                   | `src/app/api/auth/google/callback/route.ts`                                   | legacy/deprecated text present |
+| `/api/core/matching/matching-profile`                         | `src/app/api/core/matching/matching-profile/route.ts`                         | legacy/deprecated text present |
+| `/api/core/matching/near-matches`                             | `src/app/api/core/matching/near-matches/route.ts`                             | legacy/deprecated text present |
+| `/api/core/matching/profile`                                  | `src/app/api/core/matching/profile/route.ts`                                  | legacy/deprecated text present |
+| `/api/cron/process-deletions`                                 | `src/app/api/cron/process-deletions/route.ts`                                 | legacy/deprecated text present |
+| `/api/cron/send-deletion-reminders`                           | `src/app/api/cron/send-deletion-reminders/route.ts`                           | legacy/deprecated text present |
+| `/api/data-import/preview`                                    | `src/app/api/data-import/preview/route.ts`                                    | legacy/deprecated text present |
+| `/api/expertise/auto-suggest`                                 | `src/app/api/expertise/auto-suggest/route.ts`                                 | legacy/deprecated text present |
+| `/api/expertise/gap-analysis`                                 | `src/app/api/expertise/gap-analysis/route.ts`                                 | legacy/deprecated text present |
+| `/api/expertise/linkedin-import`                              | `src/app/api/expertise/linkedin-import/route.ts`                              | legacy/deprecated text present |
+| `/api/expertise/user-skills`                                  | `src/app/api/expertise/user-skills/route.ts`                                  | legacy/deprecated text present |
+| `/api/expertise/user-skills/[id]/verification-request`        | `src/app/api/expertise/user-skills/[id]/verification-request/route.ts`        | legacy/deprecated text present |
+| `/api/expertise/verifications/sent/[requestType]/[requestId]` | `src/app/api/expertise/verifications/sent/[requestType]/[requestId]/route.ts` | legacy/deprecated text present |
+| `/api/goals`                                                  | `src/app/api/goals/route.ts`                                                  | legacy/deprecated text present |
+| `/api/interviews/schedule`                                    | `src/app/api/interviews/schedule/route.ts`                                    | legacy/deprecated text present |
+| `/api/match/decision`                                         | `src/app/api/match/decision/route.ts`                                         | legacy/deprecated text present |
+| `/api/match/hide`                                             | `src/app/api/match/hide/route.ts`                                             | legacy/deprecated text present |
+| `/api/matching/profile`                                       | `src/app/api/matching/profile/route.ts`                                       | legacy/deprecated text present |
+| `/api/matching/profile/[id]`                                  | `src/app/api/matching/profile/[id]/route.ts`                                  | legacy/deprecated text present |
+| `/api/matching-profile`                                       | `src/app/api/matching-profile/route.ts`                                       | legacy/deprecated text present |
+| `/api/messages`                                               | `src/app/api/messages/route.ts`                                               | legacy/deprecated text present |
+| `/api/messages/[conversationId]`                              | `src/app/api/messages/[conversationId]/route.ts`                              | legacy/deprecated text present |
+| `/api/mobile/v1/organizations/[orgId]`                        | `src/app/api/mobile/v1/organizations/[orgId]/route.ts`                        | legacy/deprecated text present |
+| `/api/moderation/report`                                      | `src/app/api/moderation/report/route.ts`                                      | legacy/deprecated text present |
+| `/api/monitoring/perf-status`                                 | `src/app/api/monitoring/perf-status/route.ts`                                 | legacy/deprecated text present |
+| `/api/organizations`                                          | `src/app/api/organizations/route.ts`                                          | legacy/deprecated text present |
+| `/api/organizations/[orgId]`                                  | `src/app/api/organizations/[orgId]/route.ts`                                  | legacy/deprecated text present |
+| `/api/skill-gaps/goals`                                       | `src/app/api/skill-gaps/goals/route.ts`                                       | legacy/deprecated text present |
+| `/api/user/consent`                                           | `src/app/api/user/consent/route.ts`                                           | legacy/deprecated text present |
+| `/api/user/export`                                            | `src/app/api/user/export/route.ts`                                            | legacy/deprecated text present |
+| `/api/verification/linkedin/initiate`                         | `src/app/api/verification/linkedin/initiate/route.ts`                         | legacy/deprecated text present |
+| `/api/verification/status`                                    | `src/app/api/verification/status/route.ts`                                    | legacy/deprecated text present |
+| `/api/verify/[token]`                                         | `src/app/api/verify/[token]/route.ts`                                         | legacy/deprecated text present |
 
 ## Verification Checklist
 

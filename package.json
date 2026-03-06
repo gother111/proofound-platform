@@ -53,6 +53,7 @@
     "gates:mvp:strict": "node ./scripts/run-mvp-strict-gates.mjs",
     "vercel:preflight": "node ./scripts/vercel-preflight.mjs",
     "vercel:env-parity": "node ./scripts/vercel-env-parity.mjs",
+    "cron:sync": "node ./scripts/sync-cron-job-org.mjs",
     "docs:freshness": "node ./scripts/docs-freshness-check.mjs",
     "log:session": "node ./scripts/new-session-log.mjs session",
     "log:change": "node ./scripts/new-session-log.mjs change",
@@ -66,8 +67,8 @@
     "taxonomy:validate:aliases": "tsx scripts/taxonomy-validate-alias-quality.ts",
     "taxonomy:report:search-misses": "tsx scripts/taxonomy-report-search-misses.ts",
     "taxonomy:report:cv-import-review": "tsx scripts/cv-import-review-report.ts",
-    "py:build-skills-db": "PYTHONPATH=. python3.11 python_cv/scripts/build_skills_db.py --source-mode auto || PYTHONPATH=. python3 python_cv/scripts/build_skills_db.py --source-mode auto",
-    "test:python": "PYTHONPATH=. python3.11 -m pytest tests/python -q || PYTHONPATH=. python3 -m pytest tests/python -q"
+    "py:build-skills-db": "PYTHONPATH=. ./.venv311/bin/python python_cv/scripts/build_skills_db.py --source-mode auto || PYTHONPATH=. ./.venv/bin/python python_cv/scripts/build_skills_db.py --source-mode auto || PYTHONPATH=. python3.12 python_cv/scripts/build_skills_db.py --source-mode auto || PYTHONPATH=. python3.11 python_cv/scripts/build_skills_db.py --source-mode auto || PYTHONPATH=. python3 python_cv/scripts/build_skills_db.py --source-mode auto",
+    "test:python": "PYTHONPATH=. ./.venv311/bin/python -m pytest tests/python -q || PYTHONPATH=. ./.venv/bin/python -m pytest tests/python -q || PYTHONPATH=. python3.12 -m pytest tests/python -q || PYTHONPATH=. python3.11 -m pytest tests/python -q || PYTHONPATH=. python3 -m pytest tests/python -q"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",

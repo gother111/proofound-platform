@@ -22,11 +22,13 @@ graph TD
   B --> C[Next.js App Router]
   C -->|Auth JWT| D[Supabase Auth]
   C -->|Reads/Writes| E[Supabase Postgres (RLS on)]
+  C -->|Internal document intelligence| J[Python internal service]
   C -->|Emails| F[Resend]
   C -->|Telemetry| G[Sentry]
   H[Vercel Cron] --> C
   C -->|Internal API calls| C
   E -. secure storage .- I[Supabase Storage (assets)]
+  E -->|Queue-backed jobs| K[Python internal job queue]
 ```
 
 - Traffic enters via Vercel edge, hits the Next.js app, and all data flows through Supabase with RLS enforced.
@@ -80,6 +82,7 @@ Design system extracted from Figma "Proofound Style Guidelines":
 ## Prerequisites
 
 - Node.js 20.20.0 (see `.nvmrc`) and npm
+- Python 3.12 recommended for local document-intelligence work (`.venv311` or `python3.11` also work for the bundled Python tests)
 - Supabase account (free tier works)
 - Resend account (free tier works)
 - Vercel account (optional, for deployment)
@@ -140,6 +143,15 @@ SENTRY_DEBUG=false
 
 # Cron jobs
 CRON_SECRET=your-cron-bearer-token
+PYTHON_INTERNAL_SERVICE_SECRET=your-python-internal-secret
+
+# Optional Python compute routing
+PYTHON_CV_IMPORT_BASE_URL=http://127.0.0.1:3000
+PYTHON_INTERNAL_JOBS_ENABLED=true
+PYTHON_INTERNAL_WORKER_BATCH_SIZE=10
+PYTHON_INTERNAL_WORKER_CONCURRENCY=2
+PYTHON_INTERNAL_WORKER_LEASE_SECONDS=180
+PYTHON_INTERNAL_MAX_ATTEMPTS=3
 ```
 
 > **Heads up:** Once this works locally, open your Vercel project, go to **Settings → Environment Variables**, and add each of the keys above (Production, Preview, and Development tabs). For `DATABASE_URL`, copy the Supabase value from **Project Settings → Database → Connection string → Node.js**.
@@ -274,20 +286,29 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
 
 ## Cron Jobs (Ops Quick Reference)
 
-- Primary scheduler: Vercel Cron. Optional monitor/fallback: cron-job.org hitting the same URLs.
+- Primary scheduler: Vercel Cron for daily jobs. Use cron-job.org for sub-daily workers on Hobby, including the Python internal worker.
 - Auth: all cron routes require `Authorization: Bearer ${CRON_SECRET}`.
 - Routes and schedules (UTC):
   - `/api/cron/process-deletions` — 02:00 (permanent deletes after grace period)
   - `/api/cron/send-deletion-reminders` — 01:00 (7-day reminder emails)
   - `/api/cron/refresh-matches` — 03:00 (enqueue match refresh jobs)
-  - `/api/cron/refresh-matches-worker` — every 10 minutes (drain queued refresh jobs)
+  - `/api/cron/refresh-matches-worker` — 03:15 (drain queued refresh jobs)
+  - `/api/cron/python-internal-worker` — every 15 minutes via cron-job.org on Hobby (`npm run cron:sync`)
 - Env requirements:
   - `CRON_SECRET` (for inbound cron calls)
+  - `CRON_API_KEY` (optional, for syncing cron-job.org jobs from the repo)
+  - `PYTHON_INTERNAL_SERVICE_SECRET` (preferred secret for internal TypeScript-to-Python calls; falls back to `INTERNAL_API_SECRET` or `CRON_SECRET`)
+  - `PYTHON_CV_IMPORT_BASE_URL` (optional base URL when document intelligence moves out of the monolith into a separate Python service)
   - `SUPABASE_SERVICE_ROLE_KEY` (required for queue worker + matching internals)
   - `MATCHING_REFRESH_QUEUE_ENABLED` (default `true`)
   - `MATCHING_REFRESH_WORKER_BATCH_SIZE` (default `25`)
   - `MATCHING_REFRESH_WORKER_CONCURRENCY` (default `4`)
   - `MATCHING_REFRESH_MAX_ATTEMPTS` (default `3`)
+  - `PYTHON_INTERNAL_JOBS_ENABLED` (default `true`)
+  - `PYTHON_INTERNAL_WORKER_BATCH_SIZE` (default `10`)
+  - `PYTHON_INTERNAL_WORKER_CONCURRENCY` (default `2`)
+  - `PYTHON_INTERNAL_WORKER_LEASE_SECONDS` (default `180`)
+  - `PYTHON_INTERNAL_MAX_ATTEMPTS` (default `3`)
   - `MATCHING_TWO_STAGE_ENABLED` (default `true`)
   - `MATCHING_NEAR_SCAN_LIMIT` (default `300`)
   - `CV_IMPORT_ENGINE_MODE` (default `auto`)
@@ -308,7 +329,11 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
   curl -i -H "Authorization: Bearer $CRON_SECRET" https://proofound.io/api/cron/refresh-matches
   curl -i -H "Authorization: Bearer $CRON_SECRET" https://proofound.io/api/cron/refresh-matches-worker
   ```
-- If using cron-job.org: set Method GET, the same URL, and the header `Authorization: Bearer $CRON_SECRET`. Use its notifications/logs for external monitoring.
+- Sync the cron-job.org Python worker job from this repo:
+  ```bash
+  npm run cron:sync
+  ```
+- If managing cron-job.org manually: use Method `GET`, the same URL, and the header `Authorization: Bearer $CRON_SECRET`. Use its notifications/logs for external monitoring.
 
 ## Database Schema
 

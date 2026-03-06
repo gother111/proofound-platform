@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { suggestWizardForDocuments } from '@/lib/expertise/cv-import-wizard-extractor';
 import { suggestSkillsWithGemini } from '@/lib/expertise/gemini/skill-extractor';
 import { verifyAtlasSkillCandidate } from '@/lib/expertise/atlas-skill-verifier';
+import { PYTHON_INTERNAL_CONTRACT_VERSION } from '@/lib/python-internal/contracts';
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
@@ -69,6 +70,24 @@ function createAuthenticatedSupabaseMock(userId = 'user-1', existingSkillIds: st
           }),
         }),
       };
+    },
+  };
+}
+
+function createPythonWizardPayload() {
+  return {
+    documents: [],
+    metadata: {
+      semantic_used: false,
+      semantic_fallback_triggered: false,
+      unmapped_candidates_count: 0,
+      service: 'document_intelligence',
+      contract_version: PYTHON_INTERNAL_CONTRACT_VERSION,
+      limits: {
+        max_documents: 5,
+        max_chars_per_document: 30000,
+        max_total_chars: 90000,
+      },
     },
   };
 }
@@ -192,22 +211,10 @@ describe('cv-import wizard suggest route', () => {
     (createClient as any).mockResolvedValue(createAuthenticatedSupabaseMock('user-1'));
 
     const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          documents: [],
-          metadata: {
-            semantic_used: false,
-            semantic_fallback_triggered: false,
-            unmapped_candidates_count: 0,
-            limits: {
-              max_documents: 5,
-              max_chars_per_document: 30000,
-              max_total_chars: 90000,
-            },
-          },
-        }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      )
+      new Response(JSON.stringify(createPythonWizardPayload()), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
     );
 
     const formData = new FormData();
@@ -317,22 +324,10 @@ describe('cv-import wizard suggest route', () => {
     (createClient as any).mockResolvedValue(createAuthenticatedSupabaseMock('user-1'));
 
     const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          documents: [],
-          metadata: {
-            semantic_used: false,
-            semantic_fallback_triggered: false,
-            unmapped_candidates_count: 0,
-            limits: {
-              max_documents: 5,
-              max_chars_per_document: 30000,
-              max_total_chars: 90000,
-            },
-          },
-        }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      )
+      new Response(JSON.stringify(createPythonWizardPayload()), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
     );
 
     const request = new NextRequest('http://localhost/api/expertise/cv-import/wizard-suggest', {

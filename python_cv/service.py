@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from python_cv.contracts import (
+    PYTHON_INTERNAL_CONTRACT_VERSION,
+    PYTHON_INTERNAL_SERVICE_NAME,
+)
 from python_cv.entity_extract import extract_all_entities
 from python_cv.skill_candidate_extract import extract_skill_candidates
 from python_cv.skill_db import SkillDb
@@ -50,6 +54,8 @@ def _metadata(limits: ImportLimits, unmapped_count: int) -> dict[str, object]:
         "semantic_used": False,
         "semantic_fallback_triggered": False,
         "unmapped_candidates_count": unmapped_count,
+        "service": PYTHON_INTERNAL_SERVICE_NAME,
+        "contract_version": PYTHON_INTERNAL_CONTRACT_VERSION,
         "limits": {
             "max_documents": limits.max_documents,
             "max_chars_per_document": limits.max_chars_per_document,

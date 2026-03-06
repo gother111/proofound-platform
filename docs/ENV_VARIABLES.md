@@ -31,6 +31,8 @@ RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxx
 EMAIL_FROM="Proofound <no-reply@proofound.io>"
 LINKEDIN_VERIFICATION_ADMIN_EMAILS=admin1@proofound.io,admin2@proofound.io
 CRON_SECRET=your_secure_random_token_here
+CRON_API_KEY=your_cron_job_org_api_token
+PYTHON_INTERNAL_SERVICE_SECRET=your_python_internal_secret_here
 ZOOM_CLIENT_ID=your_zoom_client_id
 ZOOM_CLIENT_SECRET=your_zoom_client_secret
 ZOOM_REDIRECT_URI=/api/integrations/zoom/callback
@@ -55,6 +57,12 @@ MATCHING_FEATURE_ENABLED=true
 NEXT_PUBLIC_WIREFRAME_MODE=false
 RATE_LIMIT_WINDOW_SECONDS=60
 RATE_LIMIT_MAX=30
+PYTHON_CV_IMPORT_BASE_URL=https://python-internal.proofound.internal
+PYTHON_INTERNAL_JOBS_ENABLED=true
+PYTHON_INTERNAL_WORKER_BATCH_SIZE=10
+PYTHON_INTERNAL_WORKER_CONCURRENCY=2
+PYTHON_INTERNAL_WORKER_LEASE_SECONDS=180
+PYTHON_INTERNAL_MAX_ATTEMPTS=3
 ```
 
 ---
@@ -329,6 +337,7 @@ CRON_SECRET=K7x9mP2nQ4vL8wR6yT3zC5bN1aM0hF
 - `/api/cron/process-deletions`
 - `/api/cron/refresh-matches`
 - `/api/cron/refresh-matches-worker`
+- `/api/cron/python-internal-worker`
 
 **How to Generate**:
 
@@ -350,6 +359,146 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 - ⚠️ Security vulnerability - DOS risk
 
 **Setup Guide**: See [CRON_SETUP.md](./CRON_SETUP.md)
+
+---
+
+### CRON_API_KEY
+
+**Purpose**: API token for syncing cron-job.org jobs from the repo
+
+**Format**:
+
+```env
+CRON_API_KEY=your_cron_job_org_api_token
+```
+
+**Used By**:
+
+- `npm run cron:sync`
+- `scripts/sync-cron-job-org.mjs`
+
+**Behavior**:
+
+- Lets the repo create or update the external cron-job.org worker job for `/api/cron/python-internal-worker`.
+- Intended for Hobby deployments where Vercel cron cannot run sub-daily schedules.
+
+**Without This**:
+
+- The Python worker can still be configured manually in the cron-job.org dashboard.
+- `npm run cron:sync` will fail fast with a configuration error.
+
+---
+
+### PYTHON_INTERNAL_SERVICE_SECRET
+
+**Purpose**: Shared secret for internal TypeScript-to-Python document-intelligence calls
+
+**Format**:
+
+```env
+PYTHON_INTERNAL_SERVICE_SECRET=your_strong_internal_secret_here
+```
+
+**Used By**:
+
+- `src/lib/expertise/python-cv-proxy.ts`
+- `src/lib/python-internal/client.ts`
+- `api/python/cv_import.py`
+
+**Behavior**:
+
+- Preferred secret for all internal Python calls.
+- Fallback order is `PYTHON_INTERNAL_SERVICE_SECRET` → `CV_IMPORT_PROXY_INTERNAL_SECRET` → `INTERNAL_API_SECRET` → `CRON_SECRET`.
+- Local non-production fallback uses an in-process development secret only when none of the above are configured.
+
+**Without This**:
+
+- ⚠️ Production Python internal calls fail with `503` if no fallback secret is configured.
+- ⚠️ Cross-service deployments cannot authenticate safely.
+
+---
+
+### PYTHON_CV_IMPORT_BASE_URL
+
+**Purpose**: Optional base URL for a dedicated Python document-intelligence deployment
+
+**Format**:
+
+```env
+PYTHON_CV_IMPORT_BASE_URL=https://python-internal.proofound.internal
+```
+
+**Used By**:
+
+- `src/lib/expertise/python-cv-proxy.ts`
+- `src/lib/python-internal/client.ts`
+
+**Behavior**:
+
+- If set, TypeScript routes call the Python service at this base URL instead of looping back through the current Next.js deployment.
+- Keep public clients on the Next.js routes. This variable is for server-to-server traffic only.
+
+**Without This**:
+
+- The app falls back to the current request origin or `NEXT_PUBLIC_SITE_URL`.
+
+---
+
+### PYTHON_INTERNAL_JOBS_ENABLED
+
+**Purpose**: Toggle the Postgres-backed Python internal job queue worker
+
+**Format**:
+
+```env
+PYTHON_INTERNAL_JOBS_ENABLED=true
+```
+
+**Used By**:
+
+- `/api/internal/python-jobs`
+- `/api/cron/python-internal-worker`
+- `src/lib/python-internal/job-queue.ts`
+
+**Behavior**:
+
+- `true` or unset: queueing and draining remain active.
+- `false`: enqueue and worker routes return a skip response without touching the queue.
+
+---
+
+### PYTHON_INTERNAL_WORKER_BATCH_SIZE
+
+**Purpose**: Maximum number of Python internal jobs to lease per worker run
+
+**Default**: `10`
+
+### PYTHON_INTERNAL_WORKER_CONCURRENCY
+
+**Purpose**: Maximum concurrent Python internal job executions per worker run
+
+**Default**: `2`
+
+### PYTHON_INTERNAL_WORKER_LEASE_SECONDS
+
+**Purpose**: Lease timeout for claimed Python internal jobs before they are eligible for retry
+
+**Default**: `180`
+
+### PYTHON_INTERNAL_MAX_ATTEMPTS
+
+**Purpose**: Maximum retry attempts for queued Python internal jobs
+
+**Default**: `3`
+
+**Used By**:
+
+- `src/lib/python-internal/job-queue.ts`
+
+**Behavior**:
+
+- Failed jobs are returned to `pending` with exponential backoff until `max_attempts` is reached.
+- Once the attempt limit is reached, the job is marked `failed` with the last error message.
 
 ---
 
