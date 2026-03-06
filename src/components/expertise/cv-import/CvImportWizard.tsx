@@ -240,6 +240,7 @@ const DEFAULT_METADATA: ApiMetadata = {
 };
 
 const GENERIC_BACKEND_ERRORS = new Set([
+  'Failed to extract CV text',
   'Failed to process CV wizard suggestions',
   'Failed to process CV documents',
 ]);
@@ -248,7 +249,12 @@ const WIZARD_TIMEOUT_ERROR = 'cv wizard processing timed out';
 const MULTIPART_METADATA_INVALID_CODE = 'CV_IMPORT_MULTIPART_METADATA_INVALID';
 const UPLOAD_METADATA_ENCODING_ERROR_MESSAGE =
   'Upload metadata contains unsupported characters. Please rename the PDF and retry.';
-const PROXY_RETRYABLE_CODES = new Set(['CV_IMPORT_PROXY_UNAVAILABLE', 'CV_IMPORT_PROXY_TIMEOUT']);
+const GENERIC_EXTRACT_ERROR = 'Failed to extract CV text';
+const PROXY_RETRYABLE_CODES = new Set([
+  'CV_IMPORT_PROXY_UNAVAILABLE',
+  'CV_IMPORT_PROXY_TIMEOUT',
+  'CV_IMPORT_PROXY_INVALID_CONTRACT',
+]);
 const OCR_RETRYABLE_PARSE_CODES = new Set(['PDF_EMPTY_TEXT']);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -309,6 +315,29 @@ function isProxyRetryableError(payload: unknown): boolean {
   }
 
   return typeof payload.code === 'string' && PROXY_RETRYABLE_CODES.has(payload.code);
+}
+
+function isRecoverableExtractStageFailure(payload: unknown, status: number): boolean {
+  if (isMultipartMetadataInvalidError(payload) || isProxyRetryableError(payload)) {
+    return true;
+  }
+
+  if (
+    status === 400 ||
+    status === 401 ||
+    status === 403 ||
+    status === 413 ||
+    status === 429 ||
+    !isRecord(payload)
+  ) {
+    return false;
+  }
+
+  return (
+    status >= 500 &&
+    typeof payload.error === 'string' &&
+    payload.error.trim() === GENERIC_EXTRACT_ERROR
+  );
 }
 
 function isMultipartMetadataInvalidError(payload: unknown): boolean {
@@ -1443,6 +1472,10 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         const failurePayload = await readJsonSafely(response);
         const timeoutFailure = isWizardTimeoutFailure(failurePayload, response.status);
         const metadataInvalidFailure = isMultipartMetadataInvalidError(failurePayload);
+        const recoverableExtractFailure = isRecoverableExtractStageFailure(
+          failurePayload,
+          response.status
+        );
 
         if (timeoutFailure) {
           timeoutFallbackTriggered = true;
@@ -1463,7 +1496,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
             body: JSON.stringify(fallbackPayload),
           });
           fallbackStageUsed = 'typescript_retry';
-        } else if (isProxyRetryableError(failurePayload) || metadataInvalidFailure) {
+        } else if (recoverableExtractFailure) {
           metadataFallbackTriggered = metadataInvalidFailure;
 
           console.warn(

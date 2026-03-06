@@ -1305,6 +1305,171 @@ describe('CvImportWizard', () => {
     expect(screen.getByText('Extracted text preview')).toBeInTheDocument();
   });
 
+  it('retries with gemini json engine when multipart extract returns invalid contract', async () => {
+    extractPdfTextFromFileMock.mockResolvedValueOnce('React TypeScript');
+    apiFetchMock
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            error: 'Failed to extract CV text',
+            message: 'Python CV service returned an invalid contract response.',
+            code: 'CV_IMPORT_PROXY_INVALID_CONTRACT',
+          }),
+          {
+            status: 502,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            documents: [
+              {
+                document_id: 'doc-1',
+                file_name: 'cv.pdf',
+                context: 'cv',
+                parsed_text: 'React TypeScript',
+                work_experiences: [],
+                learning_experiences: [],
+                volunteering: [],
+                languages: [],
+                skill_candidates: [],
+              },
+            ],
+            metadata: {
+              semantic_used: false,
+              semantic_fallback_triggered: false,
+              unmapped_candidates_count: 0,
+              limits: {
+                max_documents: 5,
+                max_chars_per_document: 30000,
+                max_total_chars: 90000,
+              },
+            },
+          }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        )
+      );
+
+    render(<CvImportWizard />);
+
+    const uploadInput = screen.getByTestId('cv-upload');
+    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
+
+    fireEvent.change(uploadInput, {
+      target: {
+        files: [file],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
+
+    await waitFor(() => {
+      expect(apiFetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    expect(extractPdfTextFromFileMock).toHaveBeenCalledTimes(1);
+    expect(apiFetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/expertise/cv-import/wizard-suggest?engine=gemini',
+      expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    expect(screen.getByText('Extracted text preview')).toBeInTheDocument();
+  });
+
+  it('retries with gemini json engine when multipart extract returns generic server failure', async () => {
+    extractPdfTextFromFileMock.mockResolvedValueOnce('React TypeScript');
+    apiFetchMock
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            error: 'Failed to extract CV text',
+            message: 'CV extraction failed: upstream parser pool crashed.',
+          }),
+          {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            documents: [
+              {
+                document_id: 'doc-1',
+                file_name: 'cv.pdf',
+                context: 'cv',
+                parsed_text: 'React TypeScript',
+                work_experiences: [],
+                learning_experiences: [],
+                volunteering: [],
+                languages: [],
+                skill_candidates: [],
+              },
+            ],
+            metadata: {
+              semantic_used: false,
+              semantic_fallback_triggered: false,
+              unmapped_candidates_count: 0,
+              limits: {
+                max_documents: 5,
+                max_chars_per_document: 30000,
+                max_total_chars: 90000,
+              },
+            },
+          }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        )
+      );
+
+    render(<CvImportWizard />);
+
+    const uploadInput = screen.getByTestId('cv-upload');
+    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
+
+    fireEvent.change(uploadInput, {
+      target: {
+        files: [file],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
+
+    await waitFor(() => {
+      expect(apiFetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    expect(extractPdfTextFromFileMock).toHaveBeenCalledTimes(1);
+    expect(apiFetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/expertise/cv-import/wizard-suggest?engine=gemini',
+      expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    expect(screen.getByText('Extracted text preview')).toBeInTheDocument();
+  });
+
   it('auto-retries with gemini json payload on multipart metadata parse failures even when client fallback flag is false', async () => {
     process.env.NEXT_PUBLIC_CV_IMPORT_CLIENT_FALLBACK_ENABLED = 'false';
     extractPdfTextFromFileMock.mockResolvedValueOnce('React TypeScript');
@@ -1655,6 +1820,54 @@ describe('CvImportWizard', () => {
       );
     });
 
+    expect(apiFetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows normalized parser message instead of bare extract error when local fallback extraction fails', async () => {
+    extractPdfTextFromFileMock.mockRejectedValueOnce(new Error('PDF parser initialization failed'));
+    normalizePdfParseErrorMock.mockReturnValueOnce(
+      'PDF parser could not start. Please refresh and re-upload the file.'
+    );
+    apiFetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          error: 'Failed to extract CV text',
+          message: 'CV extraction failed: upstream parser pool crashed.',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+
+    render(<CvImportWizard />);
+
+    const uploadInput = screen.getByTestId('cv-upload');
+    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
+
+    fireEvent.change(uploadInput, {
+      target: {
+        files: [file],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
+
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalledWith(
+        'PDF parser could not start. Please refresh and re-upload the file.'
+      );
+    });
+
+    expect(
+      screen.getByText('PDF parser could not start. Please refresh and re-upload the file.')
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Failed to extract CV text')).not.toBeInTheDocument();
     expect(apiFetchMock).toHaveBeenCalledTimes(1);
   });
 
