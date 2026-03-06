@@ -387,11 +387,11 @@ export async function mapGeminiCandidatesToCvImportCandidates(params: {
     };
 
     if (shouldRejectWeakTopSuggestion(candidate)) {
-      candidate.suggestions = [];
       candidate.unmapped_candidate = true;
       candidate.confidence = clamp(candidate.confidence * 0.82);
     } else {
       candidate.confidence = calibrateCandidateConfidence(candidate);
+      candidate.unmapped_candidate = candidate.suggestions.length === 0;
     }
 
     candidates.push(candidate);

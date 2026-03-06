@@ -450,10 +450,10 @@ export function SkillReviewPanel({
 
       {visibleCandidates.map((candidate) => {
         const status = resolveCandidateStatus(candidate);
-        const topSuggestion = candidate.suggestions[0] || null;
+        const primaryAtlasGuesses = candidate.suggestions.slice(0, 3);
         const visibleAutoSuggestions = candidate.suggestions.slice(
           0,
-          candidate.show_all_suggestions ? 20 : 5
+          candidate.show_all_suggestions ? 20 : 3
         );
         const selectedFallbackSuggestions = candidate.suggestions.filter((option) =>
           candidate.selected_skill_ids.includes(option.skill_id)
@@ -496,18 +496,60 @@ export function SkillReviewPanel({
             </div>
 
             <div className="mt-3 rounded-md border bg-background/50 p-3">
-              <p className="text-xs font-medium text-muted-foreground">Top suggested Atlas skill</p>
-              {topSuggestion ? (
-                <div className="mt-1 flex flex-wrap items-center gap-2">
-                  <span className="text-sm font-medium text-foreground">
-                    {topSuggestion.skill_name}
-                  </span>
-                  <Badge variant="outline">{topSuggestion.match_method}</Badge>
-                  <Badge variant="secondary">{Math.round(topSuggestion.score * 100)}%</Badge>
+              <p className="text-xs font-medium text-muted-foreground">
+                Auto-verified Atlas guesses
+              </p>
+              {primaryAtlasGuesses.length > 0 ? (
+                <div className="mt-2 space-y-2">
+                  {primaryAtlasGuesses.map((option, index) => {
+                    const risk = evaluateSuggestionSelectionRisk({
+                      rawSkillText: candidate.raw_skill_text,
+                      evidenceSnippets: candidate.evidence_snippets,
+                      suggestion: {
+                        skill_id: option.skill_id,
+                        skill_name: option.skill_name,
+                        match_method: option.match_method,
+                        score: option.score,
+                      },
+                    });
+
+                    return (
+                      <div
+                        key={`${candidate.candidate_id}-${option.skill_id}`}
+                        className="flex flex-wrap items-center justify-between gap-2 rounded-md border px-3 py-2"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-foreground">
+                            {index === 0 ? 'Top match: ' : `Guess ${index + 1}: `}
+                            {option.skill_name}
+                          </p>
+                          <div className="mt-1 flex flex-wrap gap-2">
+                            <Badge variant="outline">{option.match_method}</Badge>
+                            <Badge variant="secondary">{Math.round(option.score * 100)}%</Badge>
+                            {risk.requiresConfirmation && (
+                              <Badge variant="outline">
+                                {selectionRiskReasonLabel(risk.reasons[0] || 'weak_evidence')}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant={index === 0 ? 'default' : 'outline'}
+                          onClick={() =>
+                            requestSelection(candidate, option, 'replace', 'suggested')
+                          }
+                        >
+                          {index === 0 ? 'Accept' : 'Use'}
+                        </Button>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="mt-1 text-xs text-muted-foreground">
-                  No confident automatic match. Use Find manually.
+                  No confident Atlas match yet. We searched automatically using aliases and CV
+                  context. Keep it unmapped, mark it as not a skill, or refine the query.
                 </p>
               )}
             </div>

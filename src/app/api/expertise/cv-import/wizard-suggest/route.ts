@@ -21,6 +21,7 @@ import {
   loadExistingSkillIdsForProfile,
   maybeFilterExistingSkillsFromWizardSuggestPayload,
 } from '@/lib/expertise/cv-import-existing-skills-filter';
+import { verifyAtlasSkillCandidate } from '@/lib/expertise/atlas-skill-verifier';
 import { fuseSkillCandidates } from '@/lib/expertise/skill-candidate-fusion';
 import { proxyCvRequestToPython } from '@/lib/expertise/python-cv-proxy';
 import { suggestWizardForDocuments } from '@/lib/expertise/cv-import-wizard-extractor';
@@ -286,12 +287,13 @@ function buildGeminiSourceDocument(document: ExtractDocument): GeminiSourceDocum
   };
 }
 
-function mergeWizardDocuments(params: {
+async function mergeWizardDocuments(params: {
   sourceOrder: Array<{ document_id: string; file_name: string; context: 'cv' | 'jd' | 'general' }>;
   failedDocuments: ExtractDocument[];
   wizardEntities: CvImportWizardSuggestResponse;
   geminiSkills: CvImportSuggestResponse;
-}): CvImportWizardSuggestResponse['documents'] {
+  suggestionsLimit: number;
+}): Promise<CvImportWizardSuggestResponse['documents']> {
   const failedByDocumentId = new Map(
     params.failedDocuments.map((document) => [document.document_id, document])
   );
@@ -302,39 +304,62 @@ function mergeWizardDocuments(params: {
     params.geminiSkills.documents.map((document) => [document.document_id, document])
   );
 
-  return params.sourceOrder.map((sourceDocument) => {
-    const failed = failedByDocumentId.get(sourceDocument.document_id);
-    if (failed) {
-      return normalizeWizardErrorDocument(failed);
-    }
+  return Promise.all(
+    params.sourceOrder.map(async (sourceDocument) => {
+      const failed = failedByDocumentId.get(sourceDocument.document_id);
+      if (failed) {
+        return normalizeWizardErrorDocument(failed);
+      }
 
-    const entities = entitiesByDocumentId.get(sourceDocument.document_id);
-    const skills = skillsByDocumentId.get(sourceDocument.document_id);
+      const entities = entitiesByDocumentId.get(sourceDocument.document_id);
+      const skills = skillsByDocumentId.get(sourceDocument.document_id);
 
-    if (!entities) {
-      return {
-        document_id: sourceDocument.document_id,
-        file_name: sourceDocument.file_name,
-        context: 'cv',
-        parsed_text: '',
-        parse_error: 'Document could not be analyzed.',
-        parse_error_code: 'CV_IMPORT_ANALYSIS_FAILED',
-        work_experiences: [],
-        learning_experiences: [],
-        volunteering: [],
-        languages: [],
-        skill_candidates: skills?.candidates || [],
-      };
-    }
+      if (!entities) {
+        return {
+          document_id: sourceDocument.document_id,
+          file_name: sourceDocument.file_name,
+          context: 'cv',
+          parsed_text: '',
+          parse_error: 'Document could not be analyzed.',
+          parse_error_code: 'CV_IMPORT_ANALYSIS_FAILED',
+          work_experiences: [],
+          learning_experiences: [],
+          volunteering: [],
+          languages: [],
+          skill_candidates: skills?.candidates || [],
+        };
+      }
 
-    return {
-      ...entities,
-      skill_candidates: fuseSkillCandidates({
+      const fusedCandidates = fuseSkillCandidates({
         localCandidates: entities.skill_candidates || [],
         geminiCandidates: skills?.candidates || [],
-      }),
-    };
-  });
+      });
+
+      const verifiedCandidates = await Promise.all(
+        fusedCandidates.map(async (candidate) => {
+          const atlasVerification = await verifyAtlasSkillCandidate({
+            rawSkillText: candidate.raw_skill_text,
+            category: candidate.category,
+            evidenceSnippets: candidate.evidence_snippets,
+            suggestions: candidate.suggestions,
+            limit: params.suggestionsLimit,
+          });
+
+          return {
+            ...candidate,
+            suggestions: atlasVerification.suggestions,
+            unmapped_candidate:
+              atlasVerification.forceUnmapped || atlasVerification.suggestions.length === 0,
+          };
+        })
+      );
+
+      return {
+        ...entities,
+        skill_candidates: verifiedCandidates,
+      };
+    })
+  );
 }
 
 function countUnmappedCandidates(documents: CvImportWizardSuggestResponse['documents']): number {
@@ -672,11 +697,12 @@ export async function POST(request: NextRequest) {
           timeoutMs
         );
 
-        const mergedDocuments = mergeWizardDocuments({
+        const mergedDocuments = await mergeWizardDocuments({
           sourceOrder,
           failedDocuments,
           wizardEntities,
           geminiSkills: geminiSkills.response,
+          suggestionsLimit: suggestionsLimit ?? 8,
         });
 
         const mergedPayload: CvImportWizardSuggestResponse = {
@@ -742,11 +768,12 @@ export async function POST(request: NextRequest) {
           metadata: wizardEntities.metadata,
         };
 
-        const mergedFallbackDocuments = mergeWizardDocuments({
+        const mergedFallbackDocuments = await mergeWizardDocuments({
           sourceOrder,
           failedDocuments,
           wizardEntities,
           geminiSkills: geminiFallbackSkills,
+          suggestionsLimit: suggestionsLimit ?? 8,
         });
 
         const mergedFallbackPayload: CvImportWizardSuggestResponse = {

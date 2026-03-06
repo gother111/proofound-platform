@@ -189,7 +189,6 @@ export function rerankGeminiCandidates(params: {
       };
 
       if (shouldRejectWeakTopSuggestion(ranked)) {
-        ranked.suggestions = [];
         ranked.unmapped_candidate = true;
         ranked.confidence = clamp(ranked.confidence * 0.8);
       }
@@ -236,7 +235,6 @@ export function rerankGeminiCandidates(params: {
 
     merged.confidence = calibrateCandidateConfidence(merged);
     if (shouldRejectWeakTopSuggestion(merged)) {
-      merged.suggestions = [];
       merged.unmapped_candidate = true;
       merged.confidence = clamp(merged.confidence * 0.8);
     } else {

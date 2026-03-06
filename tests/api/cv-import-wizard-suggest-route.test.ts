@@ -5,6 +5,7 @@ import { POST } from '@/app/api/expertise/cv-import/wizard-suggest/route';
 import { createClient } from '@/lib/supabase/server';
 import { suggestWizardForDocuments } from '@/lib/expertise/cv-import-wizard-extractor';
 import { suggestSkillsWithGemini } from '@/lib/expertise/gemini/skill-extractor';
+import { verifyAtlasSkillCandidate } from '@/lib/expertise/atlas-skill-verifier';
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
@@ -28,6 +29,13 @@ vi.mock('@/lib/expertise/gemini/skill-extractor', () => ({
       this.fallbackReason = fallbackReason;
     }
   },
+}));
+
+vi.mock('@/lib/expertise/atlas-skill-verifier', () => ({
+  verifyAtlasSkillCandidate: vi.fn(async ({ suggestions }: { suggestions?: Array<unknown> }) => ({
+    suggestions: Array.isArray(suggestions) ? suggestions : [],
+    forceUnmapped: !Array.isArray(suggestions) || suggestions.length === 0,
+  })),
 }));
 
 vi.mock('@/lib/expertise/cv-import-wizard-types', async (importOriginal) => {
@@ -78,6 +86,12 @@ describe('cv-import wizard suggest route', () => {
     delete process.env.CV_IMPORT_FORCE_PYTHON;
     delete process.env.CV_IMPORT_ENGINE_MODE;
     process.env.CV_IMPORT_USER_RATE_LIMIT_MAX = '1000';
+    (verifyAtlasSkillCandidate as any).mockImplementation(
+      async ({ suggestions }: { suggestions?: Array<unknown> }) => ({
+        suggestions: Array.isArray(suggestions) ? suggestions : [],
+        forceUnmapped: !Array.isArray(suggestions) || suggestions.length === 0,
+      })
+    );
   });
 
   afterEach(() => {

@@ -34,6 +34,7 @@ import {
   GeminiDocumentsExtractionSchema,
   type GeminiSkillCandidate,
 } from '@/lib/expertise/gemini/schemas';
+import { verifyAtlasSkillCandidate } from '@/lib/expertise/atlas-skill-verifier';
 import { rerankGeminiCandidates } from '@/lib/expertise/gemini/reranker';
 import {
   buildTaxonomyShortlistsForDocuments,
@@ -555,9 +556,31 @@ export async function suggestSkillsWithGemini(params: {
           text: document.text,
           candidates: mappedCandidates,
         });
+        const verifiedCandidates = await Promise.all(
+          reranked.candidates.map(async (candidate) => {
+            const atlasVerification = await verifyAtlasSkillCandidate({
+              rawSkillText: candidate.raw_skill_text,
+              category: candidate.category,
+              evidenceSnippets: candidate.evidence_snippets,
+              suggestions: candidate.suggestions,
+              limit: suggestionsLimit,
+            });
+
+            const nextCandidate = {
+              ...candidate,
+              suggestions: atlasVerification.suggestions,
+              unmapped_candidate:
+                atlasVerification.forceUnmapped || atlasVerification.suggestions.length === 0,
+            };
+
+            return nextCandidate;
+          })
+        );
         totalInputCandidates += reranked.metrics.inputCandidateCount;
-        totalFinalCandidates += reranked.metrics.candidateCount;
-        totalMappedCandidates += reranked.metrics.mappedCount;
+        totalFinalCandidates += verifiedCandidates.length;
+        totalMappedCandidates += verifiedCandidates.filter(
+          (candidate) => !candidate.unmapped_candidate
+        ).length;
         totalHighConfidenceCount += reranked.metrics.highConfidenceCount;
         aggregatedTiers.high += reranked.metrics.confidenceTiers.high;
         aggregatedTiers.medium += reranked.metrics.confidenceTiers.medium;
@@ -573,8 +596,8 @@ export async function suggestSkillsWithGemini(params: {
           parsed_text: document.parse_error ? '' : document.text,
           parse_error: document.parse_error || null,
           parse_error_code: document.parse_error_code || null,
-          candidate_count: reranked.candidates.length,
-          candidates: reranked.candidates,
+          candidate_count: verifiedCandidates.length,
+          candidates: verifiedCandidates,
         });
       }
 

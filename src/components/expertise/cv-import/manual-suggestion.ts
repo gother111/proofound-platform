@@ -33,12 +33,31 @@ export function buildManualSuggestion(params: {
   query: string;
   skillId: string;
   skillName: string;
+  matchMethod?: SkillMatchMethod | null;
+  matchScore?: number | null;
 }): {
   skill_id: string;
   skill_name: string;
   match_method: SkillMatchMethod;
   score: number;
 } {
+  if (
+    params.matchMethod &&
+    (params.matchMethod === 'exact' ||
+      params.matchMethod === 'synonym' ||
+      params.matchMethod === 'fuzzy' ||
+      params.matchMethod === 'semantic') &&
+    typeof params.matchScore === 'number' &&
+    Number.isFinite(params.matchScore)
+  ) {
+    return {
+      skill_id: params.skillId,
+      skill_name: params.skillName,
+      match_method: params.matchMethod,
+      score: clamp(params.matchScore),
+    };
+  }
+
   const normalizedQuery = normalize(params.query);
   const normalizedName = normalize(params.skillName);
   const overlap = lexicalOverlap(normalizedQuery, normalizedName);

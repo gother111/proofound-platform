@@ -325,7 +325,7 @@ describe('CVJDAutoSuggest', () => {
       expect(screen.getByText('platform concept')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Accept' })[0]);
     expect(
       screen.getByText('This match is low-confidence. Confirm before applying.')
     ).toBeInTheDocument();
@@ -339,6 +339,106 @@ describe('CVJDAutoSuggest', () => {
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /Add Approved \(1\) to Profile/i })).toBeEnabled();
     });
+  });
+
+  it('reruns atlas verification automatically when a text candidate is edited', async () => {
+    apiFetchMock
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            documents: [
+              {
+                document_id: 'jd-1',
+                file_name: 'job-description.txt',
+                context: 'jd',
+                candidate_count: 1,
+                candidates: [
+                  {
+                    candidate_id: 'candidate-edit',
+                    raw_skill_text: 'server runtime',
+                    category: 'technical',
+                    evidence_snippets: ['Node.js backend services'],
+                    confidence: 0.7,
+                    suggestions: [],
+                    unmapped_candidate: true,
+                  },
+                ],
+              },
+            ],
+            metadata: {
+              semantic_used: false,
+              semantic_fallback_triggered: false,
+              unmapped_candidates_count: 1,
+              limits: {
+                max_documents: 5,
+                max_chars_per_document: 30000,
+                max_total_chars: 90000,
+              },
+            },
+          }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            l4_skills: [
+              {
+                code: 'skill_nodejs',
+                nameI18n: { en: 'Node.js' },
+                matchMethod: 'exact',
+                matchScore: 0.99,
+              },
+            ],
+          }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        )
+      );
+
+    render(<CVJDAutoSuggest />);
+
+    fireEvent.click(screen.getByRole('button', { name: /job description/i }));
+    fireEvent.change(screen.getByTestId('context-text-input'), {
+      target: { value: 'Need backend runtime ownership.' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /analyze text/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('server runtime')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Edit skill text\/category/i }));
+    fireEvent.change(screen.getByDisplayValue('server runtime'), {
+      target: { value: 'Node.js' },
+    });
+
+    await waitFor(
+      () => {
+        expect(
+          apiFetchMock.mock.calls.some(
+            ([url]) =>
+              typeof url === 'string' &&
+              url.startsWith('/api/expertise/taxonomy?') &&
+              url.includes('context=cv_import') &&
+              url.includes('search=Node.js')
+          )
+        ).toBe(true);
+      },
+      { timeout: 1500 }
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('0 remaining · 1 ready · 0 already in profile')).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('button', { name: /Add Approved \(1\) to Profile/i })).toBeEnabled();
   });
 
   it('shows staged progress and auto-collapses completion for text analysis', async () => {

@@ -604,13 +604,146 @@ describe('CvImportWizard', () => {
 
     expect(screen.getByText('platform orchestration concept')).toBeInTheDocument();
     expect(
-      screen.getByText('No confident automatic match. Use Find manually.')
+      screen.getByText(
+        /No confident Atlas match yet\. We searched automatically using aliases and CV context\./i
+      )
     ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Next unresolved' }));
 
     expect(screen.getAllByText('React').length).toBeGreaterThan(0);
-    expect(screen.getByText('Top suggested Atlas skill')).toBeInTheDocument();
+    expect(screen.getByText('Auto-verified Atlas guesses')).toBeInTheDocument();
+  });
+
+  it('reruns atlas verification automatically when the raw skill text is edited', async () => {
+    apiFetchMock.mockImplementation(async (url: string) => {
+      if (url === '/api/analytics/track') {
+        return new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (url === '/api/expertise/cv-import/wizard-suggest?engine=gemini') {
+        return new Response(
+          JSON.stringify({
+            documents: [
+              {
+                document_id: 'doc-1',
+                file_name: 'cv.pdf',
+                context: 'cv',
+                work_experiences: [],
+                learning_experiences: [],
+                volunteering: [],
+                languages: [],
+                skill_candidates: [
+                  {
+                    candidate_id: 'candidate-edit',
+                    raw_skill_text: 'server runtime',
+                    category: 'technical',
+                    evidence_snippets: ['Built backend services with Node.js'],
+                    confidence: 0.71,
+                    suggestions: [],
+                    unmapped_candidate: true,
+                  },
+                ],
+              },
+            ],
+            metadata: {
+              semantic_used: false,
+              semantic_fallback_triggered: false,
+              unmapped_candidates_count: 1,
+              limits: {
+                max_documents: 5,
+                max_chars_per_document: 30000,
+                max_total_chars: 90000,
+              },
+            },
+          }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      if (
+        typeof url === 'string' &&
+        url.startsWith('/api/expertise/taxonomy?') &&
+        url.includes('context=cv_import') &&
+        url.includes('search=Node.js')
+      ) {
+        return new Response(
+          JSON.stringify({
+            l4_skills: [
+              {
+                code: 'skill_nodejs',
+                nameI18n: { en: 'Node.js' },
+                matchMethod: 'exact',
+                matchScore: 0.99,
+              },
+              {
+                code: 'skill_runtime',
+                nameI18n: { en: 'Runtime environments' },
+                matchMethod: 'fuzzy',
+                matchScore: 0.64,
+              },
+            ],
+          }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      throw new Error(`Unexpected apiFetch call: ${url}`);
+    });
+
+    render(<CvImportWizard />);
+
+    const uploadInput = screen.getByTestId('cv-upload');
+    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
+
+    fireEvent.change(uploadInput, {
+      target: {
+        files: [file],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('server runtime')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Edit skill text\/category/i }));
+    fireEvent.change(screen.getByDisplayValue('server runtime'), {
+      target: { value: 'Node.js' },
+    });
+
+    await waitFor(
+      () => {
+        expect(
+          apiFetchMock.mock.calls.some(
+            ([url]) =>
+              typeof url === 'string' &&
+              url.startsWith('/api/expertise/taxonomy?') &&
+              url.includes('context=cv_import') &&
+              url.includes('search=Node.js')
+          )
+        ).toBe(true);
+      },
+      { timeout: 1500 }
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Finish Review & Apply/i })).toBeEnabled();
+    });
   });
 
   it('requires explicit confirmation before selecting weak suggestions', async () => {
@@ -685,7 +818,7 @@ describe('CvImportWizard', () => {
       expect(screen.getByText('platform concept')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Accept' })[0]);
 
     expect(
       screen.getByText('This match is low-confidence. Confirm before applying.')

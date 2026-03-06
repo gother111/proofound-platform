@@ -166,7 +166,6 @@ function normalizeCandidate(candidate: CvImportCandidate): CvImportCandidate {
   };
   next.confidence = calibrateCandidateConfidence(next);
   if (shouldRejectWeakTopSuggestion(next)) {
-    next.suggestions = [];
     next.unmapped_candidate = true;
     next.confidence = Math.max(0, Math.min(1, next.confidence * 0.78));
   } else {
@@ -234,7 +233,6 @@ export function fuseSkillCandidates(params: {
 
     mergedCandidate.confidence = calibrateCandidateConfidence(mergedCandidate);
     if (shouldRejectWeakTopSuggestion(mergedCandidate)) {
-      mergedCandidate.suggestions = [];
       mergedCandidate.unmapped_candidate = true;
       mergedCandidate.confidence = Math.max(0, Math.min(1, mergedCandidate.confidence * 0.78));
     } else {

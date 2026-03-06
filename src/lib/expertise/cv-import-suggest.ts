@@ -5,6 +5,7 @@ import { extractSkillPhrases, getSkillVariations } from '@/lib/ai/nlp-extractor'
 import { cosineSimilarity, generateEmbedding } from '@/lib/ai/embedding-service';
 import { db } from '@/db';
 import { skillsTaxonomy } from '@/db/schema';
+import { verifyAtlasSkillCandidate } from '@/lib/expertise/atlas-skill-verifier';
 import { extractLocalSkillCandidates } from '@/lib/expertise/local-skill-candidate-extractor';
 import {
   calibrateCandidateConfidence,
@@ -1085,11 +1086,19 @@ export async function suggestSkillsForDocuments(
         unmapped_candidate: suggestions.length === 0,
       };
 
+      const atlasVerification = await verifyAtlasSkillCandidate({
+        rawSkillText: candidateOutput.raw_skill_text,
+        category: candidateOutput.category,
+        evidenceSnippets: candidateOutput.evidence_snippets,
+        suggestions: candidateOutput.suggestions,
+        limit: resolvedOptions.suggestionsLimit,
+      });
+
+      candidateOutput.suggestions = atlasVerification.suggestions;
       candidateOutput.confidence = calibrateCandidateConfidence(candidateOutput);
-      if (shouldRejectWeakTopSuggestion(candidateOutput)) {
-        candidateOutput.suggestions = [];
+      if (atlasVerification.forceUnmapped || shouldRejectWeakTopSuggestion(candidateOutput)) {
         candidateOutput.unmapped_candidate = true;
-        candidateOutput.confidence = clamp(candidateOutput.confidence * 0.8);
+        candidateOutput.confidence = clamp(candidateOutput.confidence * 0.84);
       } else {
         candidateOutput.unmapped_candidate = candidateOutput.suggestions.length === 0;
       }

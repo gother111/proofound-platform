@@ -19,6 +19,7 @@ import {
 } from '@/components/expertise/cv-import/ImportActionBanner';
 import { resolveInitialSkillSelectionState } from '@/components/expertise/cv-import/initial-selection';
 import { buildManualSuggestion } from '@/components/expertise/cv-import/manual-suggestion';
+import { buildCvImportTaxonomySearchUrl } from '@/components/expertise/cv-import/taxonomy-search';
 import {
   SkillReviewPanel,
   type SkillReviewOutcome,
@@ -996,6 +997,98 @@ function formatRelativeTimeLabel(dateIso: string | undefined): string | undefine
   })}`;
 }
 
+function mapTaxonomyPayloadToSuggestions(params: {
+  query: string;
+  payload: unknown;
+  limit?: number;
+}): ApiSuggestion[] {
+  const l4Skills =
+    isRecord(params.payload) && Array.isArray(params.payload.l4_skills)
+      ? params.payload.l4_skills
+      : [];
+
+  return l4Skills.slice(0, params.limit ?? 8).reduce<ApiSuggestion[]>((acc, skill: any) => {
+    const skillId = typeof skill?.code === 'string' ? skill.code.trim() : '';
+    if (!skillId) {
+      return acc;
+    }
+
+    const skillName =
+      typeof skill?.nameI18n?.en === 'string' && skill.nameI18n.en.trim().length > 0
+        ? skill.nameI18n.en.trim()
+        : skillId;
+
+    acc.push(
+      buildManualSuggestion({
+        query: params.query,
+        skillId,
+        skillName,
+        matchMethod:
+          skill?.matchMethod === 'exact' ||
+          skill?.matchMethod === 'synonym' ||
+          skill?.matchMethod === 'fuzzy' ||
+          skill?.matchMethod === 'semantic'
+            ? skill.matchMethod
+            : null,
+        matchScore:
+          typeof skill?.matchScore === 'number' && Number.isFinite(skill.matchScore)
+            ? skill.matchScore
+            : null,
+      })
+    );
+
+    return acc;
+  }, []);
+}
+
+function buildInitialSkillState(candidate: ApiSkillCandidate): SkillState {
+  const initialSelection = resolveInitialSkillSelectionState(candidate);
+  const seededOptions = candidate.suggestions.slice(0, 8);
+
+  return {
+    ...candidate,
+    approved: initialSelection.approved,
+    selected_skill_ids: initialSelection.selectedSkillIds,
+    manual_search_query: candidate.raw_skill_text,
+    manual_options: seededOptions,
+    manual_loading: false,
+    show_all_suggestions: false,
+    already_in_profile: Boolean(candidate.already_in_profile),
+    review_outcome: resolveInitialReviewOutcome({
+      approved: initialSelection.approved,
+      alreadyInProfile: Boolean(candidate.already_in_profile),
+    }),
+  };
+}
+
+function buildVerifiedSkillRefreshState(
+  current: SkillState,
+  suggestions: ApiSuggestion[]
+): Partial<SkillState> {
+  const refreshedCandidate: ApiSkillCandidate = {
+    ...current,
+    suggestions,
+    unmapped_candidate: suggestions.length === 0,
+    already_in_profile: false,
+  };
+  const initialSelection = resolveInitialSkillSelectionState(refreshedCandidate);
+
+  return {
+    suggestions,
+    manual_options: suggestions.slice(0, 8),
+    manual_loading: false,
+    manual_last_search_at: new Date().toISOString(),
+    approved: initialSelection.approved,
+    selected_skill_ids: initialSelection.selectedSkillIds,
+    already_in_profile: false,
+    unmapped_candidate: initialSelection.selectedSkillIds.length === 0,
+    review_outcome: resolveInitialReviewOutcome({
+      approved: initialSelection.approved,
+      alreadyInProfile: false,
+    }),
+  };
+}
+
 function buildSectionStatusBadges(totalCount: number, hasParseWarning: boolean) {
   const badges: Array<{ label: string; variant?: 'secondary' | 'outline' | 'destructive' }> = [];
   if (totalCount > 0) {
@@ -1045,7 +1138,9 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
   const [analyzeProgress, setAnalyzeProgress] = useState<AnalyzeProgressState>(
     createIdleAnalyzeProgressState
   );
+  const documentsRef = useRef<ParsedDocumentState[]>([]);
   const progressResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoVerifyTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   const approvedSkillIds = useMemo(() => {
     const selected = new Set<string>();
@@ -1069,7 +1164,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
   };
 
   const findSkillCandidateState = (documentId: string, candidateId: string): SkillState | null => {
-    const document = documents.find((item) => item.document_id === documentId);
+    const document = documentsRef.current.find((item) => item.document_id === documentId);
     return document?.skill_candidates.find((item) => item.candidate_id === candidateId) || null;
   };
 
@@ -1122,9 +1217,17 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         clearTimeout(progressResetTimerRef.current);
         progressResetTimerRef.current = null;
       }
+      for (const timer of autoVerifyTimersRef.current.values()) {
+        clearTimeout(timer);
+      }
+      autoVerifyTimersRef.current.clear();
     },
     []
   );
+
+  useEffect(() => {
+    documentsRef.current = documents;
+  }, [documents]);
 
   const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const fileList = Array.from(event.target.files || []);
@@ -1368,23 +1471,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
             ...entry,
             approved: true,
           })),
-          skill_candidates: document.skill_candidates.map((candidate) => {
-            const initialSelection = resolveInitialSkillSelectionState(candidate);
-            return {
-              ...candidate,
-              approved: initialSelection.approved,
-              selected_skill_ids: initialSelection.selectedSkillIds,
-              manual_search_query: candidate.raw_skill_text,
-              manual_options: [],
-              manual_loading: false,
-              show_all_suggestions: false,
-              already_in_profile: Boolean(candidate.already_in_profile),
-              review_outcome: resolveInitialReviewOutcome({
-                approved: initialSelection.approved,
-                alreadyInProfile: Boolean(candidate.already_in_profile),
-              }),
-            };
-          }),
+          skill_candidates: document.skill_candidates.map(buildInitialSkillState),
         };
       });
 
@@ -1420,8 +1507,16 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     }
   };
 
-  const searchManualMappings = async (documentId: string, candidateId: string) => {
-    const candidate = documents
+  const searchManualMappings = async (
+    documentId: string,
+    candidateId: string,
+    options?: {
+      query?: string;
+      syncSuggestions?: boolean;
+      silent?: boolean;
+    }
+  ) => {
+    const candidate = documentsRef.current
       .find((document) => document.document_id === documentId)
       ?.skill_candidates.find((entry) => entry.candidate_id === candidateId);
 
@@ -1429,9 +1524,11 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       return;
     }
 
-    const query = candidate.manual_search_query.trim();
+    const query = (options?.query ?? candidate.manual_search_query).trim();
     if (!query) {
-      toast.error('Enter a search query for manual mapping.');
+      if (!options?.silent) {
+        toast.error('Enter a search query for manual mapping.');
+      }
       return;
     }
 
@@ -1444,37 +1541,23 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
 
     try {
       const response = await apiFetch(
-        `/api/expertise/taxonomy?search=${encodeURIComponent(query)}`
+        buildCvImportTaxonomySearchUrl({
+          query,
+          category: candidate.category,
+          evidenceSnippets: candidate.evidence_snippets,
+          limit: 8,
+        })
       );
       if (!response.ok) {
         throw new Error(await readErrorMessage(response, 'Failed to search taxonomy'));
       }
 
       const payload = await readJsonSafely(response);
-      const l4Skills =
-        isRecord(payload) && Array.isArray(payload.l4_skills) ? payload.l4_skills : [];
-
-      const mappedOptions = l4Skills.slice(0, 8).reduce<ApiSuggestion[]>((acc, skill: any) => {
-        const skillId = typeof skill?.code === 'string' ? skill.code.trim() : '';
-        if (!skillId) {
-          return acc;
-        }
-
-        const skillName =
-          typeof skill?.nameI18n?.en === 'string' && skill.nameI18n.en.trim().length > 0
-            ? skill.nameI18n.en.trim()
-            : skillId;
-
-        acc.push(
-          buildManualSuggestion({
-            query,
-            skillId,
-            skillName,
-          })
-        );
-
-        return acc;
-      }, []);
+      const mappedOptions = mapTaxonomyPayloadToSuggestions({
+        query,
+        payload,
+        limit: 8,
+      });
 
       updateDocument(documentId, (document) => ({
         ...document,
@@ -1482,22 +1565,33 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
           entry.candidate_id === candidateId
             ? {
                 ...entry,
+                ...(options?.syncSuggestions
+                  ? buildVerifiedSkillRefreshState(
+                      {
+                        ...entry,
+                        raw_skill_text: query,
+                      },
+                      mappedOptions
+                    )
+                  : {}),
+                raw_skill_text: options?.syncSuggestions ? query : entry.raw_skill_text,
                 manual_loading: false,
                 manual_options: mappedOptions,
+                manual_search_query: query,
                 manual_last_search_at: new Date().toISOString(),
               }
             : entry
         ),
       }));
 
-      if (mappedOptions.length === 0) {
+      if (!options?.silent && mappedOptions.length === 0) {
         const hints = getAmbiguousTokenHints(query);
         toast.info(
           hints.length > 0
             ? `No taxonomy matches found. Try a more specific query such as ${hints.slice(0, 3).join(', ')}.`
             : 'No taxonomy matches found for manual mapping.'
         );
-      } else {
+      } else if (!options?.silent) {
         toast.success(
           `${mappedOptions.length} Atlas ${mappedOptions.length === 1 ? 'match' : 'matches'} found.`
         );
@@ -1521,8 +1615,34 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         ),
       }));
 
-      toast.error(error instanceof Error ? error.message : 'Failed to search taxonomy');
+      if (!options?.silent) {
+        toast.error(error instanceof Error ? error.message : 'Failed to search taxonomy');
+      }
     }
+  };
+
+  const scheduleAtlasVerification = (documentId: string, candidateId: string, query: string) => {
+    const timerKey = `${documentId}::${candidateId}`;
+    const existingTimer = autoVerifyTimersRef.current.get(timerKey);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+    }
+
+    if (!query.trim()) {
+      autoVerifyTimersRef.current.delete(timerKey);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      autoVerifyTimersRef.current.delete(timerKey);
+      await searchManualMappings(documentId, candidateId, {
+        query,
+        syncSuggestions: true,
+        silent: true,
+      });
+    }, 350);
+
+    autoVerifyTimersRef.current.set(timerKey, timer);
   };
 
   const selectAtlasMatch = (
@@ -2089,10 +2209,16 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                                   ...item,
                                   raw_skill_text: value,
                                   manual_search_query: value,
+                                  approved: false,
+                                  selected_skill_ids: [],
+                                  already_in_profile: false,
+                                  unmapped_candidate: true,
+                                  review_outcome: 'pending',
                                 }
                               : item
                           ),
                         }));
+                        scheduleAtlasVerification(document.document_id, candidateId, value);
                       }}
                       onCategoryChange={(candidateId, value) => {
                         updateDocument(document.document_id, (current) => ({
@@ -2103,6 +2229,17 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                               : item
                           ),
                         }));
+                        const candidate = findSkillCandidateState(
+                          document.document_id,
+                          candidateId
+                        );
+                        if (candidate) {
+                          scheduleAtlasVerification(
+                            document.document_id,
+                            candidateId,
+                            candidate.manual_search_query || candidate.raw_skill_text
+                          );
+                        }
                       }}
                       onSelectSkillIds={(candidateId, selectedSkillIds) => {
                         updateDocument(document.document_id, (current) => ({

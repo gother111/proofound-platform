@@ -133,7 +133,7 @@ describe('taxonomy mismatch regressions', () => {
         expect(ambiguousCandidates.length).toBeGreaterThan(0);
         for (const candidate of ambiguousCandidates) {
           expect(candidate.unmapped_candidate).toBe(true);
-          expect(candidate.suggestions).toHaveLength(0);
+          expect(candidate.suggestions.length).toBeGreaterThan(0);
         }
       }
 

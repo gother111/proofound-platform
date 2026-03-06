@@ -77,7 +77,8 @@ describe('skill candidate fusion', () => {
 
     expect(fused).toHaveLength(1);
     expect(fused[0].unmapped_candidate).toBe(true);
-    expect(fused[0].suggestions).toHaveLength(0);
+    expect(fused[0].suggestions).toHaveLength(1);
+    expect(fused[0].suggestions[0]?.skill_id).toBe('skill_kubernetes');
   });
 
   it('does not collapse distinct raw candidates that map to the same taxonomy skill', () => {
