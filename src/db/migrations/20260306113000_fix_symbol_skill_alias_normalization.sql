@@ -69,9 +69,12 @@ $function$;
 ALTER TABLE public.skills_taxonomy_aliases
   DROP CONSTRAINT IF EXISTS skills_taxonomy_aliases_skill_locale_alias_norm_key;
 
+DROP INDEX IF EXISTS public.idx_skills_taxonomy_aliases_unique_active_alias_norm;
+
 ALTER TABLE public.skills_taxonomy_aliases
   ADD CONSTRAINT skills_taxonomy_aliases_skill_locale_alias_norm_status_key
-  UNIQUE (skill_code, locale, alias_norm, status);
+  UNIQUE (skill_code, locale, alias_norm, status)
+  DEFERRABLE INITIALLY DEFERRED;
 
 CREATE TEMP TABLE tmp_skill_alias_projection ON COMMIT DROP AS
 SELECT
@@ -85,6 +88,7 @@ SELECT
     WHEN public.normalize_skill_alias(a.alias) = public.normalize_skill_alias(COALESCE(st.name_i18n->>'en', ''))
       THEN 'deprecated'
     WHEN a.skill_code = '03.082.649.96351' AND lower(a.alias) = 'c#' THEN 'active'
+    WHEN a.skill_code = '03.082.653.13641' AND lower(a.alias) = 'cplusplus' THEN 'deprecated'
     WHEN a.skill_code = '03.082.655.95017' AND lower(a.alias) = 'nodejs' THEN 'deprecated'
     ELSE a.status
   END AS next_status,
@@ -152,5 +156,11 @@ WHERE a.id = p.id
     a.alias_norm IS DISTINCT FROM p.next_alias_norm
     OR a.status IS DISTINCT FROM p.next_status
   );
+
+SET CONSTRAINTS ALL IMMEDIATE;
+
+CREATE UNIQUE INDEX idx_skills_taxonomy_aliases_unique_active_alias_norm
+  ON public.skills_taxonomy_aliases (locale, alias_norm)
+  WHERE status = 'active';
 
 COMMIT;
