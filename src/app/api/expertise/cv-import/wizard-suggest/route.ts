@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
 
 import {
   createRequestId,
@@ -80,6 +81,16 @@ const ExtractResponseSchema = z.object({
 type RouteTimings = {
   extractMs?: number;
   totalMs: number;
+};
+
+type WizardStage = 'python_extract' | 'wizard_entities' | 'gemini_skills' | 'atlas_verification';
+
+type MergeWizardDocumentsResult = {
+  documents: CvImportWizardSuggestResponse['documents'];
+  skillsRecoveryTriggered: boolean;
+  recoveredStage?: 'gemini_skills' | 'atlas_verification';
+  atlasVerificationFallbackTriggered: boolean;
+  atlasVerificationFallbackCount: number;
 };
 
 function parsePositiveInt(value: string | undefined, fallback: number): number {
@@ -193,6 +204,86 @@ function decorateMetadata(
   };
 }
 
+async function emitWizardAnalyzeTelemetry(input: {
+  eventType: 'cv_import_wizard_recovered' | 'cv_import_wizard_failed';
+  requestId: string;
+  userId?: string;
+  stage: WizardStage;
+  engineUsed: EngineUsed;
+  partialResults: boolean;
+  errorCode?: string;
+  detail?: string;
+}) {
+  if (process.env.NODE_ENV === 'test') {
+    return;
+  }
+
+  const supabaseUrl =
+    process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || process.env.SUPABASE_URL?.trim();
+  const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+
+  if (!supabaseUrl || !serviceRole) {
+    return;
+  }
+
+  try {
+    const admin = createSupabaseAdminClient(supabaseUrl, serviceRole, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+
+    const { error } = await admin.from('analytics_events').insert({
+      event_type: input.eventType,
+      user_id: input.userId,
+      entity_type: 'api',
+      entity_id: input.requestId,
+      properties: {
+        request_id: input.requestId,
+        stage: input.stage,
+        engine_used: input.engineUsed,
+        partial_results: input.partialResults,
+        error_code: input.errorCode || null,
+        detail: input.detail ? input.detail.slice(0, 180) : null,
+      },
+      created_at: new Date().toISOString(),
+    });
+
+    if (error) {
+      console.warn('[cv-import] failed to emit wizard telemetry', {
+        eventType: input.eventType,
+        requestId: input.requestId,
+        stage: input.stage,
+        error: error.message,
+      });
+    }
+  } catch (error) {
+    console.warn('[cv-import] failed to emit wizard telemetry', {
+      eventType: input.eventType,
+      requestId: input.requestId,
+      stage: input.stage,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+function withWizardRecoveryMetadata(
+  metadata: CvImportWizardSuggestResponse['metadata'],
+  params: {
+    partialResults?: boolean;
+    atlasVerificationFallbackTriggered?: boolean;
+    wizardStageFailed?: WizardStage;
+  }
+): CvImportWizardSuggestResponse['metadata'] {
+  return {
+    ...metadata,
+    partial_results: params.partialResults ?? metadata.partial_results ?? false,
+    atlas_verification_fallback_triggered:
+      params.atlasVerificationFallbackTriggered ??
+      metadata.atlas_verification_fallback_triggered ??
+      false,
+    wizard_stage_failed: params.wizardStageFailed ?? metadata.wizard_stage_failed,
+  };
+}
+
 async function attachEngineMetadata(
   response: NextResponse,
   requestId: string,
@@ -293,7 +384,10 @@ async function mergeWizardDocuments(params: {
   wizardEntities: CvImportWizardSuggestResponse;
   geminiSkills: CvImportSuggestResponse;
   suggestionsLimit: number;
-}): Promise<CvImportWizardSuggestResponse['documents']> {
+  requestId: string;
+  userId: string;
+  engineUsed: EngineUsed;
+}): Promise<MergeWizardDocumentsResult> {
   const failedByDocumentId = new Map(
     params.failedDocuments.map((document) => [document.document_id, document])
   );
@@ -304,62 +398,138 @@ async function mergeWizardDocuments(params: {
     params.geminiSkills.documents.map((document) => [document.document_id, document])
   );
 
-  return Promise.all(
-    params.sourceOrder.map(async (sourceDocument) => {
-      const failed = failedByDocumentId.get(sourceDocument.document_id);
-      if (failed) {
-        return normalizeWizardErrorDocument(failed);
-      }
+  let atlasVerificationAvailable = true;
+  let skillsRecoveryTriggered = false;
+  let recoveredStage: 'gemini_skills' | 'atlas_verification' | undefined;
+  let atlasVerificationFallbackTriggered = false;
+  let atlasVerificationFallbackCount = 0;
+  const mergedDocuments: CvImportWizardSuggestResponse['documents'] = [];
 
-      const entities = entitiesByDocumentId.get(sourceDocument.document_id);
-      const skills = skillsByDocumentId.get(sourceDocument.document_id);
+  for (const sourceDocument of params.sourceOrder) {
+    const failed = failedByDocumentId.get(sourceDocument.document_id);
+    if (failed) {
+      mergedDocuments.push(normalizeWizardErrorDocument(failed));
+      continue;
+    }
 
-      if (!entities) {
-        return {
-          document_id: sourceDocument.document_id,
-          file_name: sourceDocument.file_name,
-          context: 'cv',
-          parsed_text: '',
-          parse_error: 'Document could not be analyzed.',
-          parse_error_code: 'CV_IMPORT_ANALYSIS_FAILED',
-          work_experiences: [],
-          learning_experiences: [],
-          volunteering: [],
-          languages: [],
-          skill_candidates: skills?.candidates || [],
-        };
-      }
+    const entities = entitiesByDocumentId.get(sourceDocument.document_id);
+    const skills = skillsByDocumentId.get(sourceDocument.document_id);
 
-      const fusedCandidates = fuseSkillCandidates({
+    if (!entities) {
+      mergedDocuments.push({
+        document_id: sourceDocument.document_id,
+        file_name: sourceDocument.file_name,
+        context: 'cv',
+        parsed_text: '',
+        parse_error: 'Document could not be analyzed.',
+        parse_error_code: 'CV_IMPORT_ANALYSIS_FAILED',
+        work_experiences: [],
+        learning_experiences: [],
+        volunteering: [],
+        languages: [],
+        skill_candidates: skills?.candidates || [],
+      });
+      continue;
+    }
+
+    let fusedCandidates = entities.skill_candidates || [];
+    try {
+      fusedCandidates = fuseSkillCandidates({
         localCandidates: entities.skill_candidates || [],
         geminiCandidates: skills?.candidates || [],
       });
+    } catch (error) {
+      skillsRecoveryTriggered = true;
+      recoveredStage = recoveredStage ?? 'gemini_skills';
+      await emitWizardAnalyzeTelemetry({
+        eventType: 'cv_import_wizard_recovered',
+        requestId: params.requestId,
+        userId: params.userId,
+        stage: 'gemini_skills',
+        engineUsed: params.engineUsed,
+        partialResults: true,
+        errorCode: 'WIZARD_SKILL_MERGE_FAILED',
+        detail: error instanceof Error ? error.message : 'skill merge failed',
+      });
 
-      const verifiedCandidates = await Promise.all(
-        fusedCandidates.map(async (candidate) => {
-          const atlasVerification = await verifyAtlasSkillCandidate({
-            rawSkillText: candidate.raw_skill_text,
-            category: candidate.category,
-            evidenceSnippets: candidate.evidence_snippets,
-            suggestions: candidate.suggestions,
-            limit: params.suggestionsLimit,
-          });
+      fusedCandidates = (
+        entities.skill_candidates && entities.skill_candidates.length > 0
+          ? entities.skill_candidates
+          : skills?.candidates || []
+      ).map((candidate) => ({
+        ...candidate,
+        verification_fallback_reason: 'skill_merge_fallback',
+      }));
+    }
 
-          return {
-            ...candidate,
-            suggestions: atlasVerification.suggestions,
-            unmapped_candidate:
-              atlasVerification.forceUnmapped || atlasVerification.suggestions.length === 0,
-          };
-        })
-      );
+    const verifiedCandidates: typeof fusedCandidates = [];
+    for (const candidate of fusedCandidates) {
+      if (!atlasVerificationAvailable) {
+        atlasVerificationFallbackTriggered = true;
+        atlasVerificationFallbackCount += 1;
+        verifiedCandidates.push({
+          ...candidate,
+          verification_fallback_reason: 'atlas_verification_skipped',
+          unmapped_candidate: candidate.unmapped_candidate || candidate.suggestions.length === 0,
+        });
+        continue;
+      }
 
-      return {
-        ...entities,
-        skill_candidates: verifiedCandidates,
-      };
-    })
-  );
+      try {
+        const atlasVerification = await verifyAtlasSkillCandidate({
+          rawSkillText: candidate.raw_skill_text,
+          category: candidate.category,
+          evidenceSnippets: candidate.evidence_snippets,
+          suggestions: candidate.suggestions,
+          limit: params.suggestionsLimit,
+        });
+
+        verifiedCandidates.push({
+          ...candidate,
+          suggestions: atlasVerification.suggestions,
+          unmapped_candidate:
+            atlasVerification.forceUnmapped || atlasVerification.suggestions.length === 0,
+          verification_fallback_reason: null,
+        });
+      } catch (error) {
+        atlasVerificationAvailable = false;
+        skillsRecoveryTriggered = true;
+        recoveredStage = 'atlas_verification';
+        atlasVerificationFallbackTriggered = true;
+        atlasVerificationFallbackCount += 1;
+
+        await emitWizardAnalyzeTelemetry({
+          eventType: 'cv_import_wizard_recovered',
+          requestId: params.requestId,
+          userId: params.userId,
+          stage: 'atlas_verification',
+          engineUsed: params.engineUsed,
+          partialResults: true,
+          errorCode: 'ATLAS_VERIFICATION_FAILED',
+          detail: error instanceof Error ? error.message : 'atlas verification failed',
+        });
+
+        verifiedCandidates.push({
+          ...candidate,
+          verification_fallback_reason: 'atlas_verification_failed',
+          unmapped_candidate: candidate.unmapped_candidate || candidate.suggestions.length === 0,
+        });
+      }
+    }
+
+    mergedDocuments.push({
+      ...entities,
+      skill_candidates: verifiedCandidates,
+    });
+  }
+
+  return {
+    documents: mergedDocuments,
+    skillsRecoveryTriggered,
+    recoveredStage,
+    atlasVerificationFallbackTriggered,
+    atlasVerificationFallbackCount,
+  };
 }
 
 function countUnmappedCandidates(documents: CvImportWizardSuggestResponse['documents']): number {
@@ -470,6 +640,7 @@ async function markFallbackSuccess(
 export async function POST(request: NextRequest) {
   const requestId = createRequestId(request);
   const routeStartedAt = Date.now();
+  const engineMode = resolveCvImportEngineMode(request);
 
   const supabase = await createClient();
   const {
@@ -505,7 +676,6 @@ export async function POST(request: NextRequest) {
     const timeoutMs = resolveWizardTimeoutMs();
     const existingSkillIds = await loadExistingSkillIdsForProfile(supabase, user.id);
     const contentType = request.headers.get('content-type') || '';
-    const engineMode = resolveCvImportEngineMode(request);
     const proxyToPython = shouldProxyToPython(contentType, engineMode);
 
     if (proxyToPython) {
@@ -520,6 +690,16 @@ export async function POST(request: NextRequest) {
         );
       } catch (error) {
         if (error instanceof Error && error.message.includes('timed out')) {
+          await emitWizardAnalyzeTelemetry({
+            eventType: 'cv_import_wizard_failed',
+            requestId,
+            userId: user.id,
+            stage: 'python_extract',
+            engineUsed: 'python',
+            partialResults: false,
+            errorCode: WIZARD_TIMEOUT_CODE,
+            detail: error.message,
+          });
           return jsonWithRequestId(
             requestId,
             {
@@ -531,6 +711,16 @@ export async function POST(request: NextRequest) {
           );
         }
 
+        await emitWizardAnalyzeTelemetry({
+          eventType: 'cv_import_wizard_failed',
+          requestId,
+          userId: user.id,
+          stage: 'python_extract',
+          engineUsed: 'python',
+          partialResults: false,
+          errorCode: WIZARD_DEPENDENCY_UNAVAILABLE_CODE,
+          detail: error instanceof Error ? error.message : 'python wizard proxy unavailable',
+        });
         return jsonWithRequestId(
           requestId,
           {
@@ -697,21 +887,33 @@ export async function POST(request: NextRequest) {
           timeoutMs
         );
 
-        const mergedDocuments = await mergeWizardDocuments({
+        const mergeResult = await mergeWizardDocuments({
           sourceOrder,
           failedDocuments,
           wizardEntities,
           geminiSkills: geminiSkills.response,
           suggestionsLimit: suggestionsLimit ?? 8,
+          requestId,
+          userId: user.id,
+          engineUsed: 'gemini',
         });
 
         const mergedPayload: CvImportWizardSuggestResponse = {
           ...wizardEntities,
-          documents: mergedDocuments,
+          documents: mergeResult.documents,
           metadata: {
-            ...wizardEntities.metadata,
-            ...(geminiSkills.response.metadata as Record<string, unknown>),
-            unmapped_candidates_count: countUnmappedCandidates(mergedDocuments),
+            ...withWizardRecoveryMetadata(
+              {
+                ...wizardEntities.metadata,
+                ...(geminiSkills.response.metadata as Record<string, unknown>),
+                unmapped_candidates_count: countUnmappedCandidates(mergeResult.documents),
+              } as CvImportWizardSuggestResponse['metadata'],
+              {
+                partialResults: mergeResult.skillsRecoveryTriggered,
+                atlasVerificationFallbackTriggered: mergeResult.atlasVerificationFallbackTriggered,
+                wizardStageFailed: mergeResult.recoveredStage,
+              }
+            ),
           } as CvImportWizardSuggestResponse['metadata'],
         };
         const timedPayload: CvImportWizardSuggestResponse = {
@@ -768,20 +970,33 @@ export async function POST(request: NextRequest) {
           metadata: wizardEntities.metadata,
         };
 
-        const mergedFallbackDocuments = await mergeWizardDocuments({
+        const mergeFallbackResult = await mergeWizardDocuments({
           sourceOrder,
           failedDocuments,
           wizardEntities,
           geminiSkills: geminiFallbackSkills,
           suggestionsLimit: suggestionsLimit ?? 8,
+          requestId,
+          userId: user.id,
+          engineUsed: 'typescript',
         });
 
         const mergedFallbackPayload: CvImportWizardSuggestResponse = {
           ...wizardEntities,
-          documents: mergedFallbackDocuments,
+          documents: mergeFallbackResult.documents,
           metadata: {
-            ...buildGeminiFallbackMetadata(wizardEntities.metadata, fallbackReason),
-            unmapped_candidates_count: countUnmappedCandidates(mergedFallbackDocuments),
+            ...withWizardRecoveryMetadata(
+              {
+                ...buildGeminiFallbackMetadata(wizardEntities.metadata, fallbackReason),
+                unmapped_candidates_count: countUnmappedCandidates(mergeFallbackResult.documents),
+              },
+              {
+                partialResults: true,
+                atlasVerificationFallbackTriggered:
+                  mergeFallbackResult.atlasVerificationFallbackTriggered,
+                wizardStageFailed: mergeFallbackResult.recoveredStage ?? 'gemini_skills',
+              }
+            ),
           },
         };
         const timedFallbackPayload: CvImportWizardSuggestResponse = {
@@ -799,6 +1014,16 @@ export async function POST(request: NextRequest) {
         if (error instanceof GeminiSuggestError) {
           await markFallbackSuccess(error, filteredTimedFallbackPayload);
         }
+        await emitWizardAnalyzeTelemetry({
+          eventType: 'cv_import_wizard_recovered',
+          requestId,
+          userId: user.id,
+          stage: 'gemini_skills',
+          engineUsed: 'typescript',
+          partialResults: true,
+          errorCode: error instanceof GeminiSuggestError ? error.code : 'GEMINI_SKILLS_FAILED',
+          detail: error instanceof Error ? error.message : 'gemini skills stage failed',
+        });
 
         return jsonWithRequestId(
           requestId,
@@ -887,6 +1112,16 @@ export async function POST(request: NextRequest) {
     }
 
     if (error instanceof Error && error.message.includes('timed out')) {
+      await emitWizardAnalyzeTelemetry({
+        eventType: 'cv_import_wizard_failed',
+        requestId,
+        userId: user.id,
+        stage: 'wizard_entities',
+        engineUsed: engineMode === 'gemini' ? 'gemini' : 'typescript',
+        partialResults: false,
+        errorCode: WIZARD_TIMEOUT_CODE,
+        detail: error.message,
+      });
       return jsonWithRequestId(
         requestId,
         {
@@ -903,6 +1138,16 @@ export async function POST(request: NextRequest) {
     }
 
     if (error instanceof Error && isDependencyUnavailableError(error)) {
+      await emitWizardAnalyzeTelemetry({
+        eventType: 'cv_import_wizard_failed',
+        requestId,
+        userId: user.id,
+        stage: 'wizard_entities',
+        engineUsed: engineMode === 'gemini' ? 'gemini' : 'typescript',
+        partialResults: false,
+        errorCode: WIZARD_DEPENDENCY_UNAVAILABLE_CODE,
+        detail: error.message,
+      });
       return jsonWithRequestId(
         requestId,
         {
@@ -915,6 +1160,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    await emitWizardAnalyzeTelemetry({
+      eventType: 'cv_import_wizard_failed',
+      requestId,
+      userId: user.id,
+      stage: 'wizard_entities',
+      engineUsed: engineMode === 'gemini' ? 'gemini' : 'typescript',
+      partialResults: false,
+      errorCode: WIZARD_PROCESSING_FAILED_CODE,
+      detail: error instanceof Error ? error.message : 'unknown wizard processing error',
+    });
     return jsonWithRequestId(
       requestId,
       {

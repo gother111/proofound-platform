@@ -1107,6 +1107,101 @@ describe('CvImportWizard', () => {
         'CV wizard dependencies are temporarily unavailable. Please retry in a few minutes.'
       );
     });
+
+    expect(
+      screen.getByText(
+        'Analysis service is temporarily unavailable. Please retry in a few minutes.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Analysis failed. Please try again.')).not.toBeInTheDocument();
+  });
+
+  it('keeps the review UI usable when analysis completes with partial recovery', async () => {
+    apiFetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          documents: [
+            {
+              document_id: 'doc-1',
+              file_name: 'cv.pdf',
+              context: 'cv',
+              work_experiences: [],
+              learning_experiences: [],
+              volunteering: [],
+              languages: [],
+              skill_candidates: [
+                {
+                  candidate_id: 'candidate-1',
+                  raw_skill_text: 'React',
+                  category: 'technical',
+                  evidence_snippets: ['Built React applications'],
+                  confidence: 0.84,
+                  suggestions: [
+                    {
+                      skill_id: 'skill_react',
+                      skill_name: 'React',
+                      match_method: 'exact',
+                      score: 0.99,
+                    },
+                  ],
+                  unmapped_candidate: false,
+                  verification_fallback_reason: 'atlas_verification_failed',
+                },
+              ],
+            },
+          ],
+          metadata: {
+            semantic_used: false,
+            semantic_fallback_triggered: false,
+            unmapped_candidates_count: 0,
+            partial_results: true,
+            atlas_verification_fallback_triggered: true,
+            wizard_stage_failed: 'atlas_verification',
+            limits: {
+              max_documents: 5,
+              max_chars_per_document: 30000,
+              max_total_chars: 90000,
+            },
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+
+    render(<CvImportWizard />);
+
+    const uploadInput = screen.getByTestId('cv-upload');
+    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
+
+    fireEvent.change(uploadInput, {
+      target: {
+        files: [file],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          'Analysis completed with partial recovery. Atlas verification was unavailable, so review skill matches carefully below.'
+        )
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Skills to review')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Finish Review & Apply/i })).toBeInTheDocument();
+    expect(screen.queryByText('Analysis failed. Please try again.')).not.toBeInTheDocument();
+    expect(toastInfoMock).toHaveBeenCalledWith(
+      'Analysis completed with partial recovery. Atlas verification was unavailable, so review skill matches carefully below.'
+    );
   });
 
   it('retries with gemini json engine when multipart proxy path is unavailable', async () => {

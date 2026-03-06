@@ -682,6 +682,267 @@ describe('cv-import wizard suggest route', () => {
     expect(body.metadata.unmapped_candidates_count).toBe(0);
   });
 
+  it('returns partial results when atlas verification fails for one candidate', async () => {
+    (createClient as any).mockResolvedValue(createAuthenticatedSupabaseMock('user-1'));
+
+    (suggestWizardForDocuments as any).mockResolvedValue({
+      documents: [
+        {
+          document_id: 'doc-1',
+          file_name: 'cv.pdf',
+          context: 'cv',
+          parsed_text: 'React TypeScript',
+          work_experiences: [],
+          learning_experiences: [],
+          volunteering: [],
+          languages: [],
+          skill_candidates: [
+            {
+              candidate_id: 'candidate-react',
+              raw_skill_text: 'React',
+              category: 'technical',
+              evidence_snippets: ['Built React applications'],
+              confidence: 0.86,
+              suggestions: [
+                {
+                  skill_id: 'skill_react',
+                  skill_name: 'React',
+                  match_method: 'exact',
+                  score: 0.99,
+                },
+              ],
+              unmapped_candidate: false,
+            },
+            {
+              candidate_id: 'candidate-ts',
+              raw_skill_text: 'TypeScript',
+              category: 'technical',
+              evidence_snippets: ['Implemented TypeScript services'],
+              confidence: 0.82,
+              suggestions: [
+                {
+                  skill_id: 'skill_typescript',
+                  skill_name: 'TypeScript',
+                  match_method: 'exact',
+                  score: 0.99,
+                },
+              ],
+              unmapped_candidate: false,
+            },
+          ],
+        },
+      ],
+      metadata: {
+        semantic_used: false,
+        semantic_fallback_triggered: false,
+        unmapped_candidates_count: 0,
+        limits: {
+          max_documents: 5,
+          max_chars_per_document: 30000,
+          max_total_chars: 90000,
+        },
+      },
+    });
+
+    (suggestSkillsWithGemini as any).mockResolvedValueOnce({
+      response: {
+        documents: [
+          {
+            document_id: 'doc-1',
+            file_name: 'cv.pdf',
+            context: 'cv',
+            parsed_text: 'React TypeScript',
+            parse_error: null,
+            parse_error_code: null,
+            candidate_count: 0,
+            candidates: [],
+          },
+        ],
+        metadata: {
+          semantic_used: false,
+          semantic_fallback_triggered: false,
+          unmapped_candidates_count: 0,
+          limits: {
+            max_documents: 5,
+            max_chars_per_document: 30000,
+            max_total_chars: 90000,
+          },
+          ai_provider: 'gemini',
+          ai_model: 'gemini-3.1-flash-lite',
+          ai_key_slot: 'primary',
+          ai_fallback_reason: null,
+          cost_ore: 7,
+          currency: 'SEK',
+          ai_schema_mode: 'flat_skills_v1',
+        },
+      },
+      idempotencyKey: 'idem-atlas-partial',
+      replayed: false,
+    });
+
+    (verifyAtlasSkillCandidate as any).mockImplementation(
+      async ({
+        rawSkillText,
+        suggestions,
+      }: {
+        rawSkillText: string;
+        suggestions?: Array<unknown>;
+      }) => {
+        if (rawSkillText === 'React') {
+          throw new Error('atlas cache unavailable');
+        }
+
+        return {
+          suggestions: Array.isArray(suggestions) ? suggestions : [],
+          forceUnmapped: !Array.isArray(suggestions) || suggestions.length === 0,
+        };
+      }
+    );
+
+    const request = new NextRequest(
+      'http://localhost/api/expertise/cv-import/wizard-suggest?engine=gemini',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          documents: [
+            {
+              document_id: 'doc-1',
+              file_name: 'cv.pdf',
+              text: 'React TypeScript',
+              context: 'cv',
+            },
+          ],
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+
+    const response = await POST(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.metadata.engine_used).toBe('gemini');
+    expect(body.metadata.partial_results).toBe(true);
+    expect(body.metadata.atlas_verification_fallback_triggered).toBe(true);
+    expect(body.metadata.wizard_stage_failed).toBe('atlas_verification');
+    expect(body.documents[0].skill_candidates).toHaveLength(2);
+    expect(body.documents[0].skill_candidates[0].verification_fallback_reason).toBe(
+      'atlas_verification_failed'
+    );
+    expect(body.documents[0].skill_candidates[1].verification_fallback_reason).toBe(
+      'atlas_verification_skipped'
+    );
+    expect(body.documents[0].skill_candidates[0].suggestions[0].skill_id).toBe('skill_react');
+  });
+
+  it('returns unmapped candidates with recovery metadata when atlas verification fails for all candidates', async () => {
+    (createClient as any).mockResolvedValue(createAuthenticatedSupabaseMock('user-1'));
+
+    (suggestWizardForDocuments as any).mockResolvedValue({
+      documents: [
+        {
+          document_id: 'doc-1',
+          file_name: 'cv.pdf',
+          context: 'cv',
+          parsed_text: 'Go',
+          work_experiences: [],
+          learning_experiences: [],
+          volunteering: [],
+          languages: [],
+          skill_candidates: [
+            {
+              candidate_id: 'candidate-go',
+              raw_skill_text: 'Go',
+              category: 'technical',
+              evidence_snippets: ['Worked with Go services'],
+              confidence: 0.58,
+              suggestions: [],
+              unmapped_candidate: true,
+            },
+          ],
+        },
+      ],
+      metadata: {
+        semantic_used: false,
+        semantic_fallback_triggered: false,
+        unmapped_candidates_count: 1,
+        limits: {
+          max_documents: 5,
+          max_chars_per_document: 30000,
+          max_total_chars: 90000,
+        },
+      },
+    });
+
+    (suggestSkillsWithGemini as any).mockResolvedValueOnce({
+      response: {
+        documents: [
+          {
+            document_id: 'doc-1',
+            file_name: 'cv.pdf',
+            context: 'cv',
+            parsed_text: 'Go',
+            parse_error: null,
+            parse_error_code: null,
+            candidate_count: 0,
+            candidates: [],
+          },
+        ],
+        metadata: {
+          semantic_used: false,
+          semantic_fallback_triggered: false,
+          unmapped_candidates_count: 1,
+          limits: {
+            max_documents: 5,
+            max_chars_per_document: 30000,
+            max_total_chars: 90000,
+          },
+          ai_provider: 'gemini',
+          ai_model: 'gemini-3.1-flash-lite',
+          ai_key_slot: 'primary',
+          ai_fallback_reason: null,
+          cost_ore: 3,
+          currency: 'SEK',
+          ai_schema_mode: 'flat_skills_v1',
+        },
+      },
+      idempotencyKey: 'idem-atlas-all-fail',
+      replayed: false,
+    });
+
+    (verifyAtlasSkillCandidate as any).mockRejectedValueOnce(new Error('atlas db offline'));
+
+    const request = new NextRequest(
+      'http://localhost/api/expertise/cv-import/wizard-suggest?engine=gemini',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          documents: [
+            {
+              document_id: 'doc-1',
+              file_name: 'cv.pdf',
+              text: 'Go',
+              context: 'cv',
+            },
+          ],
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+
+    const response = await POST(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.metadata.partial_results).toBe(true);
+    expect(body.metadata.atlas_verification_fallback_triggered).toBe(true);
+    expect(body.metadata.wizard_stage_failed).toBe('atlas_verification');
+    expect(body.documents[0].skill_candidates[0].unmapped_candidate).toBe(true);
+    expect(body.documents[0].skill_candidates[0].verification_fallback_reason).toBe(
+      'atlas_verification_failed'
+    );
+  });
+
   it('reuses deterministic baseline when gemini overlay fails in gemini mode', async () => {
     (createClient as any).mockResolvedValue(createAuthenticatedSupabaseMock('user-1'));
 
@@ -755,6 +1016,73 @@ describe('cv-import wizard suggest route', () => {
     expect(body.documents[0].skill_candidates).toHaveLength(1);
     expect(suggestWizardForDocuments).toHaveBeenCalledTimes(1);
     expect(suggestSkillsWithGemini).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns document-level parse errors instead of hard failing when no extractable text is found', async () => {
+    (createClient as any).mockResolvedValue(createAuthenticatedSupabaseMock('user-1'));
+
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          documents: [
+            {
+              document_id: 'doc-1',
+              file_name: 'cv.pdf',
+              context: 'cv',
+              parsed_text: '',
+              parse_error: 'No extractable text found in document.',
+              parse_error_code: 'PDF_EMPTY_TEXT',
+            },
+          ],
+          metadata: {
+            semantic_used: false,
+            semantic_fallback_triggered: false,
+            unmapped_candidates_count: 0,
+            service: 'document_intelligence',
+            contract_version: PYTHON_INTERNAL_CONTRACT_VERSION,
+            limits: {
+              max_documents: 5,
+              max_chars_per_document: 30000,
+              max_total_chars: 90000,
+            },
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+
+    const formData = new FormData();
+    formData.append('files', new File(['dummy'], 'cv.pdf', { type: 'application/pdf' }));
+    formData.append('document_ids', 'doc-1');
+    formData.append('contexts', 'cv');
+
+    const request = new NextRequest(
+      'http://localhost/api/expertise/cv-import/wizard-suggest?engine=gemini',
+      {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data; boundary=----vitest',
+          'x-csrf-token': 'csrf-token-value',
+          cookie: 'csrf_token=csrf-token-value; sb-auth-token=session-value',
+        },
+      }
+    );
+
+    const response = await POST(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.documents).toHaveLength(1);
+    expect(body.documents[0].parse_error).toBe('No extractable text found in document.');
+    expect(body.documents[0].parse_error_code).toBe('PDF_EMPTY_TEXT');
+    expect(body.documents[0].skill_candidates).toEqual([]);
+    expect(body.metadata.ai_fallback_reason).toBe('no_extractable_text');
+    expect(body.metadata.engine_used).toBe('gemini');
+    fetchSpy.mockRestore();
   });
 
   it('tags duplicate-only wizard skill candidates as already_in_profile', async () => {

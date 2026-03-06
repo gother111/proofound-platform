@@ -76,6 +76,7 @@ interface ApiSkillCandidate {
   suggestions: ApiSuggestion[];
   unmapped_candidate: boolean;
   already_in_profile?: boolean;
+  verification_fallback_reason?: string | null;
 }
 
 interface ApiWorkExperience {
@@ -145,6 +146,13 @@ interface ApiMetadata {
   ai_model?: string | null;
   ai_key_slot?: 'primary' | 'secondary' | null;
   ai_fallback_reason?: string | null;
+  partial_results?: boolean;
+  atlas_verification_fallback_triggered?: boolean;
+  wizard_stage_failed?:
+    | 'python_extract'
+    | 'wizard_entities'
+    | 'gemini_skills'
+    | 'atlas_verification';
   cost_ore?: number;
   engine_mode?: 'auto' | 'typescript' | 'python' | 'gemini';
   engine_used?: 'python' | 'typescript' | 'gemini';
@@ -221,6 +229,9 @@ const DEFAULT_METADATA: ApiMetadata = {
   candidate_only_fallback_triggered: false,
   match_dependency_error_code: undefined,
   unmapped_candidates_count: 0,
+  partial_results: false,
+  atlas_verification_fallback_triggered: false,
+  wizard_stage_failed: undefined,
   limits: {
     max_documents: 5,
     max_chars_per_document: 30000,
@@ -487,6 +498,15 @@ function normalizeMetadata(value: unknown): ApiMetadata {
         : null,
     ai_fallback_reason:
       typeof value.ai_fallback_reason === 'string' ? value.ai_fallback_reason : null,
+    partial_results: Boolean(value.partial_results),
+    atlas_verification_fallback_triggered: Boolean(value.atlas_verification_fallback_triggered),
+    wizard_stage_failed:
+      value.wizard_stage_failed === 'python_extract' ||
+      value.wizard_stage_failed === 'wizard_entities' ||
+      value.wizard_stage_failed === 'gemini_skills' ||
+      value.wizard_stage_failed === 'atlas_verification'
+        ? value.wizard_stage_failed
+        : undefined,
     cost_ore:
       typeof value.cost_ore === 'number' && Number.isFinite(value.cost_ore)
         ? value.cost_ore
@@ -801,6 +821,11 @@ function normalizeSuggestResponse(value: unknown): ApiSuggestResponse | null {
                     ? candidate.unmapped_candidate
                     : suggestions.length === 0,
                 already_in_profile: Boolean(candidate.already_in_profile),
+                verification_fallback_reason:
+                  typeof candidate.verification_fallback_reason === 'string' &&
+                  candidate.verification_fallback_reason.trim().length > 0
+                    ? candidate.verification_fallback_reason.trim()
+                    : null,
               };
             })
             .filter((entry): entry is ApiSkillCandidate => Boolean(entry))
@@ -947,6 +972,77 @@ function collectApprovedSkillIds(document: ParsedDocumentState): string[] {
   return Array.from(validSkillIds);
 }
 
+function isUnreadableDocument(document: ParsedDocumentState): boolean {
+  return (
+    typeof document.parse_error === 'string' &&
+    document.parse_error.trim().length > 0 &&
+    document.work_experiences.length === 0 &&
+    document.learning_experiences.length === 0 &&
+    document.volunteering.length === 0 &&
+    document.languages.length === 0 &&
+    document.skill_candidates.length === 0
+  );
+}
+
+function hasPartialRecovery(metadata: ApiMetadata): boolean {
+  return Boolean(
+    metadata.partial_results ||
+      metadata.atlas_verification_fallback_triggered ||
+      metadata.wizard_stage_failed
+  );
+}
+
+function buildAnalyzeWarningMessage(params: {
+  metadata: ApiMetadata;
+  documents: ParsedDocumentState[];
+}): string {
+  const unreadableDocuments = params.documents.filter(isUnreadableDocument);
+  if (unreadableDocuments.length === params.documents.length && unreadableDocuments.length > 0) {
+    return 'Analysis completed, but the uploaded PDFs could not be read. Review the document errors below or upload a clearer text-based PDF.';
+  }
+
+  if (params.metadata.wizard_stage_failed === 'atlas_verification') {
+    return 'Analysis completed with partial recovery. Atlas verification was unavailable, so review skill matches carefully below.';
+  }
+
+  if (params.metadata.wizard_stage_failed === 'gemini_skills') {
+    return 'Analysis completed with partial recovery. Skill mapping fell back to deterministic extraction, so review skill matches carefully below.';
+  }
+
+  return 'Analysis completed with partial recovery. Review the extracted results below before applying them.';
+}
+
+function normalizeAnalyzeFailureMessage(error: unknown): string {
+  const message =
+    error instanceof Error && error.message.trim().length > 0
+      ? error.message.trim()
+      : 'Analysis failed. Please try again.';
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes('timed out')) {
+    return 'Analysis timed out. Try fewer documents or shorter CV content.';
+  }
+
+  if (
+    normalized.includes('temporarily unavailable') ||
+    normalized.includes('service is unavailable') ||
+    normalized.includes('dependencies are temporarily unavailable')
+  ) {
+    return 'Analysis service is temporarily unavailable. Please retry in a few minutes.';
+  }
+
+  if (
+    normalized.includes('upload metadata contains unsupported characters') ||
+    normalized.includes('parser could not start') ||
+    normalized.includes('no text could be extracted') ||
+    normalized.includes('could not be read')
+  ) {
+    return message;
+  }
+
+  return message;
+}
+
 function resolveInitialReviewOutcome(params: {
   approved: boolean;
   alreadyInProfile: boolean;
@@ -1070,6 +1166,7 @@ function buildVerifiedSkillRefreshState(
     suggestions,
     unmapped_candidate: suggestions.length === 0,
     already_in_profile: false,
+    verification_fallback_reason: null,
   };
   const initialSelection = resolveInitialSkillSelectionState(refreshedCandidate);
 
@@ -1191,6 +1288,22 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     setAnalyzeProgress((previous) => ({
       ...previous,
       status: 'completed',
+      percent: 100,
+      message,
+      completedAt,
+    }));
+    clearProgressResetTimer();
+    progressResetTimerRef.current = setTimeout(() => {
+      setAnalyzeProgress(createIdleAnalyzeProgressState());
+      progressResetTimerRef.current = null;
+    }, ANALYZE_PROGRESS_AUTO_COLLAPSE_MS);
+  };
+
+  const setWarningProgress = (message: string) => {
+    const completedAt = Date.now();
+    setAnalyzeProgress((previous) => ({
+      ...previous,
+      status: 'warning',
       percent: 100,
       message,
       completedAt,
@@ -1475,6 +1588,18 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         };
       });
 
+      const warningMessage = hasPartialRecovery(payload.metadata)
+        ? buildAnalyzeWarningMessage({
+            metadata: payload.metadata,
+            documents: analyzedDocuments,
+          })
+        : analyzedDocuments.length > 0 && analyzedDocuments.every(isUnreadableDocument)
+          ? buildAnalyzeWarningMessage({
+              metadata: payload.metadata,
+              documents: analyzedDocuments,
+            })
+          : null;
+
       setRunningProgress('finalizing', 92, 'Finalizing results...');
       setDocuments(analyzedDocuments);
       setSectionExpandSignal(0);
@@ -1495,12 +1620,19 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         toast.info('Showing candidate-only skills while taxonomy matching recovers.');
       }
 
-      setCompletedProgress('Extraction completed. Review and approve the results below.');
+      if (warningMessage) {
+        setWarningProgress(warningMessage);
+      } else {
+        setCompletedProgress('Extraction completed. Review and approve the results below.');
+      }
       toast.success(
         `Analyzed ${payload.documents.length} document${payload.documents.length > 1 ? 's' : ''}.`
       );
+      if (warningMessage) {
+        toast.info(warningMessage);
+      }
     } catch (error) {
-      setFailedProgress('Analysis failed. Please try again.');
+      setFailedProgress(normalizeAnalyzeFailureMessage(error));
       toast.error(error instanceof Error ? error.message : 'Failed to analyze uploaded PDFs');
     } finally {
       setIsAnalyzing(false);

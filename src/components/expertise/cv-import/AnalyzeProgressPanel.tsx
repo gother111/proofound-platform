@@ -3,7 +3,7 @@
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 
-export type AnalyzeProgressStatus = 'idle' | 'running' | 'completed' | 'failed';
+export type AnalyzeProgressStatus = 'idle' | 'running' | 'completed' | 'warning' | 'failed';
 export type AnalyzeProgressPhase =
   | 'preparing'
   | 'submitting'
@@ -49,6 +49,10 @@ function getPhaseLabel(progress: AnalyzeProgressState): string {
     return 'Completed';
   }
 
+  if (progress.status === 'warning') {
+    return 'Needs review';
+  }
+
   if (progress.status === 'failed') {
     return 'Failed';
   }
@@ -64,14 +68,16 @@ export function AnalyzeProgressPanel({ progress, className }: AnalyzeProgressPan
   const roundedPercent = Math.max(0, Math.min(100, Math.round(progress.percent)));
   const isFailed = progress.status === 'failed';
   const isCompleted = progress.status === 'completed';
+  const isWarning = progress.status === 'warning';
 
   return (
     <div
       className={cn(
         'rounded-lg border p-3',
         isCompleted && 'border-emerald-200 bg-emerald-50/60',
+        isWarning && 'border-amber-200 bg-amber-50/70',
         isFailed && 'border-red-200 bg-red-50/60',
-        !isCompleted && !isFailed && 'border-muted-foreground/20',
+        !isCompleted && !isWarning && !isFailed && 'border-muted-foreground/20',
         className
       )}
     >
@@ -82,8 +88,9 @@ export function AnalyzeProgressPanel({ progress, className }: AnalyzeProgressPan
             className={cn(
               'inline-block h-2 w-2 rounded-full',
               isCompleted && 'bg-emerald-600',
+              isWarning && 'bg-amber-600',
               isFailed && 'bg-red-600',
-              !isCompleted && !isFailed && 'bg-proofound-forest'
+              !isCompleted && !isWarning && !isFailed && 'bg-proofound-forest'
             )}
           />
           {getPhaseLabel(progress)}
@@ -96,8 +103,9 @@ export function AnalyzeProgressPanel({ progress, className }: AnalyzeProgressPan
         className="mt-2"
         indicatorClassName={cn(
           isCompleted && 'bg-emerald-600',
+          isWarning && 'bg-amber-600',
           isFailed && 'bg-red-600',
-          !isCompleted && !isFailed && 'bg-proofound-forest'
+          !isCompleted && !isWarning && !isFailed && 'bg-proofound-forest'
         )}
       />
 
@@ -107,8 +115,9 @@ export function AnalyzeProgressPanel({ progress, className }: AnalyzeProgressPan
         className={cn(
           'mt-2 text-sm',
           isCompleted && 'text-emerald-700',
+          isWarning && 'text-amber-800',
           isFailed && 'text-red-700',
-          !isCompleted && !isFailed && 'text-muted-foreground'
+          !isCompleted && !isWarning && !isFailed && 'text-muted-foreground'
         )}
       >
         {progress.message}

@@ -101,6 +101,11 @@ export const CvImportWizardMetadataSchema = z.object({
   ai_model: z.string().optional().nullable(),
   ai_key_slot: z.enum(['primary', 'secondary']).optional().nullable(),
   ai_fallback_reason: z.string().optional().nullable(),
+  partial_results: z.boolean().optional(),
+  atlas_verification_fallback_triggered: z.boolean().optional(),
+  wizard_stage_failed: z
+    .enum(['python_extract', 'wizard_entities', 'gemini_skills', 'atlas_verification'])
+    .optional(),
   ai_schema_mode: z.string().optional(),
   cost_ore: z.number().int().min(0).optional(),
   currency: z.literal('SEK').optional(),
