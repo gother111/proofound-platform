@@ -60,24 +60,46 @@ export const canonicalProofPackKinds = [
   'verification_bundle',
 ] as const;
 export const canonicalVerificationKinds = [
-  'skill_peer',
-  'skill_manager',
-  'custom_bundle',
-  'impact_story',
+  'veriff_identity',
+  'linkedin_identity',
+  'linkedin_workplace',
   'work_email',
-  'linkedin',
-  'veriff',
-  'org_registry',
+  'skill_attestation_peer',
+  'skill_attestation_manager',
+  'impact_attestation',
   'org_domain',
-  'manual',
+  'org_registry_manual',
+  'platform_manual_review',
 ] as const;
 export const canonicalVerificationStatuses = [
   'pending',
-  'accepted',
-  'declined',
+  'verified',
   'expired',
+  'superseded',
+  'downgraded',
+  'contradicted',
+  'disputed',
+  'revoked',
+  'declined',
   'cancelled',
   'failed',
+] as const;
+export const canonicalVerificationSlots = [
+  'individual.identity',
+  'individual.workplace',
+  'skill.attestation',
+  'impact_story.attestation',
+  'artifact.attestation',
+  'organization.domain',
+  'organization.platform_review',
+] as const;
+export const canonicalVerifierClasses = [
+  'system_provider',
+  'system_signal',
+  'authenticated_manager',
+  'authenticated_peer',
+  'authenticated_external',
+  'manual_platform_reviewer',
 ] as const;
 export const canonicalAssignmentWorkflowStates = ['draft', 'active', 'hold', 'closed'] as const;
 export const canonicalIntroWorkflowStates = [
@@ -156,7 +178,41 @@ export const canonicalVerifierPrincipalTypes = [
   'platform_admin',
   'system',
 ] as const;
-export const canonicalIntegrityStatuses = ['unknown', 'clear', 'flagged'] as const;
+export const canonicalIntegrityStatuses = ['unknown', 'clear', 'warning', 'contradicted'] as const;
+export const canonicalDisputeStates = [
+  'none',
+  'open',
+  'under_review',
+  'resolved_upheld',
+  'resolved_downgraded',
+  'resolved_revoked',
+] as const;
+export const canonicalContradictionTypes = [
+  'identity_mismatch',
+  'workplace_mismatch',
+  'verifier_identity_mismatch',
+  'relationship_mismatch',
+  'subject_chronology_mismatch',
+  'artifact_authenticity_concern',
+  'org_domain_control_mismatch',
+  'platform_review_evidence_invalidated',
+] as const;
+export const canonicalDisputeReasonCodes = [
+  'wrong_person',
+  'wrong_organization',
+  'outdated_employment_or_role',
+  'verifier_misattributed',
+  'artifact_forged_or_incorrect',
+  'unauthorized_or_abusive_request',
+  'admin_review_error',
+] as const;
+export const canonicalDisputeResolutionActions = [
+  'uphold',
+  'request_refresh',
+  'downgrade',
+  'revoke',
+  'supersede_with_corrected_record',
+] as const;
 export const matchReviewStageValues = [
   'blind_review',
   'shortlisted',
@@ -197,6 +253,41 @@ export const fairnessRemediationActionValues = [
   'resolved',
   'recheck_requested',
 ] as const;
+export const zenMilestoneTypes = [
+  'rejection',
+  'interview',
+  'offer',
+  'withdrawal',
+  'no_show',
+] as const;
+export const zenAuditEventTypes = [
+  'zen_opt_in_changed',
+  'zen_export_requested',
+  'zen_export_completed',
+  'zen_delete_requested',
+  'zen_delete_completed',
+  'zen_checkin_written',
+  'zen_reflection_written',
+] as const;
+export const proofTrustSnapshotContexts = ['portfolio', 'matching'] as const;
+export const proofFreshnessStates = ['fresh', 'review_soon', 'stale', 'expired'] as const;
+export const proofTrustMetricTypes = [
+  'proof_coverage',
+  'proof_quality',
+  'proof_freshness',
+  'verification_coverage',
+  'time_to_verified',
+  'trust_signal_coverage',
+  'reveal_rate',
+  'intro_expiry_rate',
+  'withdrawal_rate',
+  'no_show_rate',
+  'override_rate',
+  'portfolio_indexing_coverage',
+] as const;
+export const portfolioIndexingStates = ['unavailable', 'noindex', 'indexable'] as const;
+export const portfolioRobotsStates = ['noindex_nofollow', 'index_follow'] as const;
+export const portfolioSitemapStates = ['excluded', 'included'] as const;
 
 const vector = customType<{ data: number[]; notNull?: boolean; default?: boolean }>({
   dataType(config) {
@@ -1291,6 +1382,9 @@ export const verificationRecords = pgTable(
     proofArtifactId: uuid('proof_artifact_id').references(() => proofArtifacts.id, {
       onDelete: 'set null',
     }),
+    verificationSlot: text('verification_slot', {
+      enum: canonicalVerificationSlots,
+    }),
     verificationKind: text('verification_kind', {
       enum: canonicalVerificationKinds,
     }).notNull(),
@@ -1302,6 +1396,9 @@ export const verificationRecords = pgTable(
     verifierPrincipalType: text('verifier_principal_type', {
       enum: canonicalVerifierPrincipalTypes,
     }).notNull(),
+    verifierClass: text('verifier_class', {
+      enum: canonicalVerifierClasses,
+    }).default('system_signal'),
     verifierProfileId: uuid('verifier_profile_id').references(() => profiles.id, {
       onDelete: 'set null',
     }),
@@ -1316,6 +1413,12 @@ export const verificationRecords = pgTable(
       .default('unknown')
       .notNull(),
     integrityReason: text('integrity_reason'),
+    disputeState: text('dispute_state', {
+      enum: canonicalDisputeStates,
+    })
+      .default('none')
+      .notNull(),
+    badgeSemanticsVersion: integer('badge_semantics_version').default(2).notNull(),
     riskSignals: jsonb('risk_signals')
       .default(sql`'{}'::jsonb`)
       .notNull(),
@@ -1326,11 +1429,21 @@ export const verificationRecords = pgTable(
     sourceRequestId: uuid('source_request_id'),
     sourceResponseTable: text('source_response_table'),
     sourceResponseId: uuid('source_response_id'),
+    requestedAt: timestamp('requested_at', { withTimezone: true }),
+    expiresAt: timestamp('expires_at', { withTimezone: true }),
     requestExpiresAt: timestamp('request_expires_at', { withTimezone: true }),
     followUpDueAt: timestamp('follow_up_due_at', { withTimezone: true }),
     lastFollowUpAt: timestamp('last_follow_up_at', { withTimezone: true }),
+    lastRefreshedAt: timestamp('last_refreshed_at', { withTimezone: true }),
     completedAt: timestamp('completed_at', { withTimezone: true }),
     expiredAt: timestamp('expired_at', { withTimezone: true }),
+    supersededAt: timestamp('superseded_at', { withTimezone: true }),
+    supersededByVerificationId: uuid('superseded_by_verification_id'),
+    downgradedAt: timestamp('downgraded_at', { withTimezone: true }),
+    contradictedAt: timestamp('contradicted_at', { withTimezone: true }),
+    contradictedByVerificationId: uuid('contradicted_by_verification_id'),
+    disputedAt: timestamp('disputed_at', { withTimezone: true }),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
     cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
     failureCode: text('failure_code'),
     verifiedAt: timestamp('verified_at', { withTimezone: true }),
@@ -1345,12 +1458,120 @@ export const verificationRecords = pgTable(
     subjectIdx: index('idx_verification_records_subject').on(table.subjectType, table.subjectId),
     proofArtifactIdx: index('idx_verification_records_artifact').on(table.proofArtifactId),
     statusIdx: index('idx_verification_records_status').on(table.status, table.verificationKind),
+    slotIdx: index('idx_verification_records_slot').on(
+      table.ownerType,
+      table.ownerId,
+      table.verificationSlot,
+      table.updatedAt
+    ),
     sourceRequestUnique: unique().on(
       table.sourceRequestTable,
       table.sourceRequestId,
       table.subjectType,
       table.subjectId
     ),
+  })
+);
+
+export const verificationContradictions = pgTable(
+  'verification_contradictions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    verificationRecordId: uuid('verification_record_id')
+      .references(() => verificationRecords.id, { onDelete: 'cascade' })
+      .notNull(),
+    contradictingVerificationRecordId: uuid('contradicting_verification_record_id').references(
+      () => verificationRecords.id,
+      { onDelete: 'set null' }
+    ),
+    contradictionType: text('contradiction_type', {
+      enum: canonicalContradictionTypes,
+    }).notNull(),
+    severity: text('severity', {
+      enum: ['warning', 'material'],
+    })
+      .default('material')
+      .notNull(),
+    detectedBy: text('detected_by', {
+      enum: ['system', 'profile_change', 'verifier_change', 'admin_review', 'imported_update'],
+    }).notNull(),
+    detectedAt: timestamp('detected_at', { withTimezone: true }).defaultNow().notNull(),
+    status: text('status', {
+      enum: ['open', 'reviewing', 'resolved'],
+    })
+      .default('open')
+      .notNull(),
+    reasonCode: text('reason_code'),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    verificationIdx: index('verification_contradictions_verification_idx').on(
+      table.verificationRecordId,
+      table.detectedAt
+    ),
+    contradictingIdx: index('verification_contradictions_contradicting_idx').on(
+      table.contradictingVerificationRecordId
+    ),
+  })
+);
+
+export const verificationDisputes = pgTable(
+  'verification_disputes',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    verificationRecordId: uuid('verification_record_id')
+      .references(() => verificationRecords.id, { onDelete: 'cascade' })
+      .notNull(),
+    disputeState: text('dispute_state', {
+      enum: canonicalDisputeStates,
+    })
+      .default('open')
+      .notNull(),
+    disputeReasonCode: text('dispute_reason_code', {
+      enum: canonicalDisputeReasonCodes,
+    }).notNull(),
+    openedByType: text('opened_by_type', {
+      enum: ['subject_owner', 'organization_admin', 'original_verifier', 'platform_admin'],
+    }).notNull(),
+    openedByProfileId: uuid('opened_by_profile_id').references(() => profiles.id, {
+      onDelete: 'set null',
+    }),
+    openedByOrgId: uuid('opened_by_org_id').references(() => organizations.id, {
+      onDelete: 'set null',
+    }),
+    openedAt: timestamp('opened_at', { withTimezone: true }).defaultNow().notNull(),
+    reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+    resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+    resolutionAction: text('resolution_action', {
+      enum: canonicalDisputeResolutionActions,
+    }),
+    resolvedByProfileId: uuid('resolved_by_profile_id').references(() => profiles.id, {
+      onDelete: 'set null',
+    }),
+    supersedingVerificationRecordId: uuid('superseding_verification_record_id').references(
+      () => verificationRecords.id,
+      { onDelete: 'set null' }
+    ),
+    note: text('note'),
+    evidenceSnapshot: jsonb('evidence_snapshot')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    verificationIdx: index('verification_disputes_verification_idx').on(
+      table.verificationRecordId,
+      table.openedAt
+    ),
+    stateIdx: index('verification_disputes_state_idx').on(table.disputeState, table.updatedAt),
   })
 );
 
@@ -3126,7 +3347,9 @@ export const wellbeingCheckins = pgTable('wellbeing_checkins', {
     .notNull(),
   stressLevel: integer('stress_level').notNull(), // 1-5 Likert scale
   controlLevel: integer('control_level').notNull(), // 1-5 Likert scale
-  milestoneTriggerId: text('milestone_trigger_id'), // 'rejection', 'interview', 'offer', null
+  milestoneTriggerId: text('milestone_trigger_id', {
+    enum: zenMilestoneTypes,
+  }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -3137,7 +3360,9 @@ export const wellbeingReflections = pgTable('wellbeing_reflections', {
     .references(() => profiles.id, { onDelete: 'cascade' })
     .notNull(),
   reflectionText: text('reflection_text').notNull(),
-  milestoneType: text('milestone_type'), // 'rejection', 'interview', 'offer'
+  milestoneType: text('milestone_type', {
+    enum: zenMilestoneTypes,
+  }),
   linkedCheckinId: uuid('linked_checkin_id').references(() => wellbeingCheckins.id, {
     onDelete: 'set null',
   }),
@@ -3184,6 +3409,133 @@ export const wellbeingOptIns = pgTable('wellbeing_opt_ins', {
   optedOutAt: timestamp('opted_out_at'),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+export const zenAuditEvents = pgTable(
+  'zen_audit_events',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    eventType: text('event_type', {
+      enum: zenAuditEventTypes,
+    }).notNull(),
+    actorType: text('actor_type', {
+      enum: canonicalWorkflowActorTypes,
+    })
+      .default('candidate')
+      .notNull(),
+    routeSource: text('route_source'),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    userCreatedIdx: index('zen_audit_events_user_created_idx').on(table.userId, table.createdAt),
+    typeCreatedIdx: index('zen_audit_events_type_created_idx').on(table.eventType, table.createdAt),
+  })
+);
+
+export const proofTrustSnapshots = pgTable(
+  'proof_trust_snapshots',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    subjectType: text('subject_type', {
+      enum: canonicalOwnerTypes,
+    }).notNull(),
+    subjectId: uuid('subject_id').notNull(),
+    context: text('context', {
+      enum: proofTrustSnapshotContexts,
+    }).notNull(),
+    proofCoverageRatio: numeric('proof_coverage_ratio').default('0').notNull(),
+    proofBackedSkillCount: integer('proof_backed_skill_count').default(0).notNull(),
+    publicSkillCount: integer('public_skill_count').default(0).notNull(),
+    verificationCoverageRatio: numeric('verification_coverage_ratio').default('0').notNull(),
+    timeToVerifiedHoursP50: numeric('time_to_verified_hours_p50'),
+    trustSignalCoverageCount: integer('trust_signal_coverage_count').default(0).notNull(),
+    trustSignalClassesPresent: text('trust_signal_classes_present')
+      .array()
+      .default(sql`'{}'::text[]`)
+      .notNull(),
+    proofFreshnessState: text('proof_freshness_state', {
+      enum: proofFreshnessStates,
+    })
+      .default('fresh')
+      .notNull(),
+    proofFreshnessDistribution: jsonb('proof_freshness_distribution')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    proofQuality: jsonb('proof_quality')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    proofQualitySummary: numeric('proof_quality_summary'),
+    suggestedActions: text('suggested_actions')
+      .array()
+      .default(sql`'{}'::text[]`)
+      .notNull(),
+    computedAt: timestamp('computed_at', { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    subjectContextUnique: unique('proof_trust_snapshots_subject_context_unique').on(
+      table.subjectType,
+      table.subjectId,
+      table.context
+    ),
+    subjectIdx: index('proof_trust_snapshots_subject_idx').on(table.subjectType, table.subjectId),
+  })
+);
+
+export const portfolioPublicationStates = pgTable(
+  'portfolio_publication_states',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    subjectType: text('subject_type', {
+      enum: canonicalOwnerTypes,
+    }).notNull(),
+    subjectId: uuid('subject_id').notNull(),
+    requestedState: text('requested_state', {
+      enum: publicPortfolioStates,
+    }).notNull(),
+    effectiveState: text('effective_state', {
+      enum: publicPortfolioStates,
+    }).notNull(),
+    publicationState: text('publication_state', {
+      enum: publicPortfolioStates,
+    }).notNull(),
+    indexingState: text('indexing_state', {
+      enum: portfolioIndexingStates,
+    }).notNull(),
+    robotsState: text('robots_state', {
+      enum: portfolioRobotsStates,
+    }).notNull(),
+    sitemapState: text('sitemap_state', {
+      enum: portfolioSitemapStates,
+    }).notNull(),
+    reasonCodes: text('reason_codes')
+      .array()
+      .default(sql`'{}'::text[]`)
+      .notNull(),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    lastComputedAt: timestamp('last_computed_at', { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    subjectUnique: unique('portfolio_publication_states_subject_unique').on(
+      table.subjectType,
+      table.subjectId
+    ),
+    effectiveStateIdx: index('portfolio_publication_states_effective_state_idx').on(
+      table.effectiveState,
+      table.indexingState
+    ),
+  })
+);
 
 // ====================================
 // Notifications System
@@ -3374,7 +3726,7 @@ export const metricSnapshots = pgTable('metric_snapshots', {
   id: uuid('id').defaultRandom().primaryKey(),
   // Metric identification
   metricType: text('metric_type', {
-    enum: ['ttsc', 'ttfqi', 'ttv', 'pac', 'sus', 'wellbeing_delta'],
+    enum: ['ttsc', 'ttfqi', 'ttv', 'pac', 'sus', 'wellbeing_delta', ...proofTrustMetricTypes],
   }).notNull(),
   cohort: text('cohort'), // e.g., 'student', 'senior-engineer', 'us-remote'
   // Metric values
@@ -3777,6 +4129,12 @@ export type WellbeingReflection = typeof wellbeingReflections.$inferSelect;
 export type InsertWellbeingReflection = typeof wellbeingReflections.$inferInsert;
 export type WellbeingOptIn = typeof wellbeingOptIns.$inferSelect;
 export type InsertWellbeingOptIn = typeof wellbeingOptIns.$inferInsert;
+export type ZenAuditEvent = typeof zenAuditEvents.$inferSelect;
+export type InsertZenAuditEvent = typeof zenAuditEvents.$inferInsert;
+export type ProofTrustSnapshot = typeof proofTrustSnapshots.$inferSelect;
+export type InsertProofTrustSnapshot = typeof proofTrustSnapshots.$inferInsert;
+export type PortfolioPublicationState = typeof portfolioPublicationStates.$inferSelect;
+export type InsertPortfolioPublicationState = typeof portfolioPublicationStates.$inferInsert;
 
 // Contracts & metrics types
 export type Contract = typeof contracts.$inferSelect;

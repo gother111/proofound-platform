@@ -1,3 +1,5 @@
+import type { VerificationPolicySummary } from '@/lib/verification/policy';
+
 export type PortfolioProfile = {
   id?: string | null;
   handle?: string | null;
@@ -46,9 +48,11 @@ export type TrustSignals = {
     verified: boolean;
     method?: string | null;
     verifiedAt?: string | null;
+    label?: string | null;
   };
   workEmail: {
     verified: boolean;
+    label?: string | null;
   };
   linkedin: {
     confidence?: number;
@@ -66,6 +70,17 @@ export type TrustSignals = {
   attestations: {
     count: number;
   };
+  badges: Array<{
+    key: string;
+    label: string;
+    meaning: string;
+    doesNotMean: string;
+  }>;
+  activeIssues: Array<{
+    slot: string;
+    label: string;
+    issueKey: string;
+  }>;
 };
 
 function pickIndividual(profile: PortfolioProfile['individual_profiles']) {
@@ -108,7 +123,8 @@ function resolveHasLinkedInIdentityVerification(
 
 export function buildTrustSignals(
   profile: PortfolioProfile | null,
-  counts: TrustCounts = {}
+  counts: TrustCounts = {},
+  policySummary?: VerificationPolicySummary | null
 ): TrustSignals {
   const individual = pickIndividual(profile?.individual_profiles);
   const linkedInVerificationData =
@@ -117,7 +133,8 @@ export function buildTrustSignals(
   const hasLinkedInIdentityVerification =
     resolveHasLinkedInIdentityVerification(linkedInVerificationData);
   const identityVerified =
-    individual?.verification_status === 'verified' || individual?.verified === true;
+    policySummary?.compatibility.verified ??
+    (individual?.verification_status === 'verified' || individual?.verified === true);
 
   const proofsCount = counts.proofsCount ?? 0;
   const acceptedVerificationsCount = counts.acceptedVerificationsCount ?? 0;
@@ -126,11 +143,15 @@ export function buildTrustSignals(
   return {
     identity: {
       verified: identityVerified,
-      method: individual?.verification_method ?? null,
+      method:
+        policySummary?.compatibility.verificationMethod ?? individual?.verification_method ?? null,
       verifiedAt: individual?.verified_at ?? null,
+      label: policySummary?.slots.identity.publicLabel ?? null,
     },
     workEmail: {
-      verified: Boolean(individual?.work_email_verified),
+      verified:
+        policySummary?.compatibility.workEmailVerified ?? Boolean(individual?.work_email_verified),
+      label: policySummary?.slots.workplace.publicLabel ?? null,
     },
     linkedin: {
       hasIdentityVerification: hasLinkedInIdentityVerification,
@@ -151,6 +172,17 @@ export function buildTrustSignals(
     attestations: {
       count: attestationCount,
     },
+    badges: (policySummary?.publicBadges ?? []).map((badge) => ({
+      key: badge.key,
+      label: badge.label,
+      meaning: badge.meaning,
+      doesNotMean: badge.doesNotMean,
+    })),
+    activeIssues: (policySummary?.activeIssues ?? []).map((issue) => ({
+      slot: issue.slot,
+      label: issue.label,
+      issueKey: issue.issueKey,
+    })),
   };
 }
 

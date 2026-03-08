@@ -5,6 +5,17 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }));
 
+vi.mock('@/lib/verification/policy', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/verification/policy')>(
+    '@/lib/verification/policy'
+  );
+
+  return {
+    ...actual,
+    listVerificationRecordsForOwner: vi.fn().mockResolvedValue([]),
+  };
+});
+
 import { createClient } from '@/lib/supabase/server';
 import { GET } from '@/app/api/verification/status/route';
 

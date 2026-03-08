@@ -53,30 +53,47 @@ export type ProofPackKind = (typeof PROOF_PACK_KIND_VALUES)[number];
 export const ProofPackKindSchema = z.enum(PROOF_PACK_KIND_VALUES);
 
 export const VERIFICATION_KIND_VALUES = [
-  'skill_peer',
-  'skill_manager',
-  'custom_bundle',
-  'impact_story',
+  'veriff_identity',
+  'linkedin_identity',
+  'linkedin_workplace',
   'work_email',
-  'linkedin',
-  'veriff',
-  'org_registry',
+  'skill_attestation_peer',
+  'skill_attestation_manager',
+  'impact_attestation',
   'org_domain',
-  'manual',
+  'org_registry_manual',
+  'platform_manual_review',
 ] as const;
 export type VerificationKind = (typeof VERIFICATION_KIND_VALUES)[number];
 export const VerificationKindSchema = z.enum(VERIFICATION_KIND_VALUES);
 
 export const VERIFICATION_STATUS_VALUES = [
   'pending',
-  'accepted',
-  'declined',
+  'verified',
   'expired',
+  'superseded',
+  'downgraded',
+  'contradicted',
+  'disputed',
+  'revoked',
+  'declined',
   'cancelled',
   'failed',
 ] as const;
 export type VerificationStatus = (typeof VERIFICATION_STATUS_VALUES)[number];
 export const VerificationStatusSchema = z.enum(VERIFICATION_STATUS_VALUES);
+
+export const VERIFICATION_SLOT_VALUES = [
+  'individual.identity',
+  'individual.workplace',
+  'skill.attestation',
+  'impact_story.attestation',
+  'artifact.attestation',
+  'organization.domain',
+  'organization.platform_review',
+] as const;
+export type VerificationSlot = (typeof VERIFICATION_SLOT_VALUES)[number];
+export const VerificationSlotSchema = z.enum(VERIFICATION_SLOT_VALUES);
 
 export const VERIFIER_PRINCIPAL_TYPE_VALUES = [
   'user_account',
@@ -88,9 +105,31 @@ export const VERIFIER_PRINCIPAL_TYPE_VALUES = [
 export type VerifierPrincipalType = (typeof VERIFIER_PRINCIPAL_TYPE_VALUES)[number];
 export const VerifierPrincipalTypeSchema = z.enum(VERIFIER_PRINCIPAL_TYPE_VALUES);
 
-export const INTEGRITY_STATUS_VALUES = ['unknown', 'clear', 'flagged'] as const;
+export const VERIFIER_CLASS_VALUES = [
+  'system_provider',
+  'system_signal',
+  'authenticated_manager',
+  'authenticated_peer',
+  'authenticated_external',
+  'manual_platform_reviewer',
+] as const;
+export type VerifierClass = (typeof VERIFIER_CLASS_VALUES)[number];
+export const VerifierClassSchema = z.enum(VERIFIER_CLASS_VALUES);
+
+export const INTEGRITY_STATUS_VALUES = ['unknown', 'clear', 'warning', 'contradicted'] as const;
 export type IntegrityStatus = (typeof INTEGRITY_STATUS_VALUES)[number];
 export const IntegrityStatusSchema = z.enum(INTEGRITY_STATUS_VALUES);
+
+export const DISPUTE_STATE_VALUES = [
+  'none',
+  'open',
+  'under_review',
+  'resolved_upheld',
+  'resolved_downgraded',
+  'resolved_revoked',
+] as const;
+export type DisputeState = (typeof DISPUTE_STATE_VALUES)[number];
+export const DisputeStateSchema = z.enum(DISPUTE_STATE_VALUES);
 
 export const MATCH_REASON_CODE_VALUES = [
   'skills_strong',
@@ -198,22 +237,36 @@ export const VerificationRecordSchema = z.object({
   subjectType: ProofSubjectTypeSchema,
   subjectId: z.string().uuid(),
   proofArtifactId: z.string().uuid().nullable(),
+  verificationSlot: VerificationSlotSchema.nullable(),
   verificationKind: VerificationKindSchema,
   status: VerificationStatusSchema,
   verifierPrincipalType: VerifierPrincipalTypeSchema,
+  verifierClass: VerifierClassSchema.nullable(),
   verifierProfileId: z.string().uuid().nullable(),
   verifierOrgId: z.string().uuid().nullable(),
   verifierEmailHash: z.string().nullable(),
   verifierDomainSnapshot: z.string().nullable(),
   integrityStatus: IntegrityStatusSchema,
   integrityReason: z.string().nullable(),
+  disputeState: DisputeStateSchema,
+  badgeSemanticsVersion: z.number().int(),
   riskSignals: z.record(z.any()),
   claimSnapshot: z.record(z.any()),
   sourceRequestTable: z.string().nullable(),
   sourceRequestId: z.string().uuid().nullable(),
   sourceResponseTable: z.string().nullable(),
   sourceResponseId: z.string().uuid().nullable(),
+  requestedAt: z.string().datetime().nullable(),
+  lastRefreshedAt: z.string().datetime().nullable(),
   verifiedAt: z.string().datetime().nullable(),
+  expiresAt: z.string().datetime().nullable(),
+  supersededAt: z.string().datetime().nullable(),
+  supersededByVerificationId: z.string().uuid().nullable(),
+  downgradedAt: z.string().datetime().nullable(),
+  contradictedAt: z.string().datetime().nullable(),
+  contradictedByVerificationId: z.string().uuid().nullable(),
+  disputedAt: z.string().datetime().nullable(),
+  revokedAt: z.string().datetime().nullable(),
   metadata: z.record(z.any()),
 });
 export type VerificationRecord = z.infer<typeof VerificationRecordSchema>;

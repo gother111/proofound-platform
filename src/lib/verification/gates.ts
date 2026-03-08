@@ -12,7 +12,10 @@ import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { getRows } from '@/lib/db/rows';
-import { resolveCanonicalVerificationTier } from '@/lib/verification/tier';
+import {
+  listVerificationRecordsForOwner,
+  summarizeVerificationPolicy,
+} from '@/lib/verification/policy';
 import { resolveWorkEmailValidity } from '@/lib/verification/work-email-validity';
 
 // Re-export types from client-safe utils
@@ -206,29 +209,32 @@ async function getUserVerifications(userId: string): Promise<VerificationStatus[
       work_email_reverify_due_at: row.work_email_reverify_due_at,
       verified_at: row.verified_at,
     });
-    const canonicalTier = resolveCanonicalVerificationTier({
-      currentTier: row.verification_tier,
-      currentTierSource: row.verification_tier_source,
-      verificationMethod: row.verification_method,
-      verificationStatus: row.verification_status,
-      verified: row.verified,
-      linkedinVerificationStatus: row.linkedin_verification_status,
-      linkedinVerificationData: row.linkedin_verification_data,
-      workEmailCurrentlyVerified: workEmailValidity.isCurrentlyVerified,
+    const policySummary = summarizeVerificationPolicy({
+      records: await listVerificationRecordsForOwner('individual_profile', userId).catch(() => []),
+      legacyProfile: {
+        verified: row.verified,
+        verificationMethod: row.verification_method,
+        verificationStatus: row.verification_status,
+        verificationTier: row.verification_tier,
+        verificationTierSource: row.verification_tier_source,
+        workEmailCurrentlyVerified: workEmailValidity.isCurrentlyVerified,
+        linkedinVerificationStatus: row.linkedin_verification_status,
+      },
     });
 
     // Identity verification
-    if (canonicalTier.verificationTier === 'identity_verified') {
+    if (policySummary.compatibility.verificationTier === 'identity_verified') {
       verifications.push({
         type: 'identity',
         verified: true,
         verifiedAt: row.verified_at ? new Date(row.verified_at) : undefined,
-        provider: canonicalTier.verificationTierSource === 'veriff' ? 'veriff' : 'linkedin',
+        provider:
+          policySummary.compatibility.verificationTierSource === 'veriff' ? 'veriff' : 'linkedin',
       });
     }
 
     // Work email verification
-    if (workEmailValidity.isCurrentlyVerified) {
+    if (workEmailValidity.isCurrentlyVerified || policySummary.compatibility.workEmailVerified) {
       verifications.push({
         type: 'work_email',
         verified: true,

@@ -6,7 +6,10 @@ import { individualProfiles } from '@/db/schema';
 import { requireMobileAuth } from '@/lib/api/mobile/auth';
 import { mobileError, mobileSuccess } from '@/lib/api/mobile/response';
 import { resolveHasLinkedInIdentityVerification } from '@/lib/linkedin-verified';
-import { resolveCanonicalVerificationTier } from '@/lib/verification/tier';
+import {
+  listVerificationRecordsForOwner,
+  summarizeVerificationPolicy,
+} from '@/lib/verification/policy';
 import { resolveWorkEmailValidity } from '@/lib/verification/work-email-validity';
 
 export const dynamic = 'force-dynamic';
@@ -87,67 +90,72 @@ export async function GET(request: NextRequest) {
       work_email_reverify_due_at: profile.workEmailReverifyDueAt?.toISOString() || null,
       verified_at: profile.verifiedAt?.toISOString() || null,
     });
-    const canonicalTier = resolveCanonicalVerificationTier({
-      currentTier: profile.verificationTier,
-      currentTierSource: profile.verificationTierSource,
-      verificationMethod: profile.verificationMethod,
-      verificationStatus: profile.verificationStatus,
-      verified: profile.verified,
-      linkedinVerificationStatus: profile.linkedinVerificationStatus,
-      linkedinVerificationData: profile.linkedinVerificationData,
-      workEmailCurrentlyVerified: workEmailValidity.isCurrentlyVerified,
+    const canonicalRecords = await listVerificationRecordsForOwner(
+      'individual_profile',
+      auth.user.id
+    ).catch(() => []);
+    const policySummary = summarizeVerificationPolicy({
+      records: canonicalRecords,
+      legacyProfile: {
+        verified: profile.verified,
+        verificationMethod: profile.verificationMethod,
+        verificationStatus: profile.verificationStatus,
+        verificationTier: profile.verificationTier,
+        verificationTierSource: profile.verificationTierSource,
+        workEmailCurrentlyVerified: workEmailValidity.isCurrentlyVerified,
+        linkedinVerificationStatus: profile.linkedinVerificationStatus,
+        linkedinHasIdentityVerification: resolveHasLinkedInIdentityVerification(
+          profile.linkedinVerificationData
+        ),
+      },
     });
     const hasPendingToken = hasActiveWorkEmailToken(profile);
-    const effectiveIdentityVerified = canonicalTier.verificationTier === 'identity_verified';
+    const effectiveIdentityVerified =
+      policySummary.compatibility.verificationTier === 'identity_verified';
     const linkedinVerificationStatus = profile.linkedinVerificationStatus || 'unverified';
     const linkedinVerificationLevel =
-      profile.linkedinVerificationLevel || canonicalTier.linkedinVerificationLevel;
+      profile.linkedinVerificationLevel ||
+      (policySummary.compatibility.verificationTier === 'identity_verified'
+        ? 'identity'
+        : policySummary.compatibility.verificationTier === 'workplace_verified'
+          ? 'workplace'
+          : 'unverified');
     const linkedinHasIdentityVerification =
       linkedinVerificationLevel === 'identity' ||
       resolveHasLinkedInIdentityVerification(profile.linkedinVerificationData);
-
-    let verificationStatus: 'unverified' | 'pending' | 'verified' | 'failed' = 'unverified';
-    let verificationMethod: 'veriff' | 'work_email' | 'linkedin' | null = null;
-
-    if (effectiveIdentityVerified) {
-      verificationStatus = 'verified';
-      verificationMethod =
-        canonicalTier.verificationTierSource === 'veriff' ? 'veriff' : 'linkedin';
-    } else if (profile.verificationStatus === 'failed') {
-      verificationStatus = 'failed';
-      verificationMethod = profile.verificationMethod;
-    } else if (
-      linkedinVerificationStatus === 'pending' ||
-      canonicalTier.linkedinVerificationLevel === 'pending' ||
-      profile.verificationStatus === 'pending' ||
-      hasPendingToken
-    ) {
-      verificationStatus = 'pending';
-      verificationMethod = profile.verificationMethod === 'work_email' ? 'work_email' : 'linkedin';
-    } else {
-      verificationStatus = 'unverified';
-      verificationMethod =
-        canonicalTier.verificationTierSource === 'work_email' ||
-        profile.verificationMethod === 'work_email'
-          ? 'work_email'
-          : null;
-    }
+    const verificationStatus =
+      hasPendingToken && policySummary.compatibility.verificationStatus === 'unverified'
+        ? 'pending'
+        : policySummary.compatibility.verificationStatus;
+    const verificationMethod =
+      verificationStatus === 'pending' &&
+      hasPendingToken &&
+      !policySummary.compatibility.verificationMethod
+        ? 'work_email'
+        : policySummary.compatibility.verificationMethod;
 
     return mobileSuccess({
       verified: effectiveIdentityVerified,
       verificationMethod,
       verificationStatus,
-      verificationTier: canonicalTier.verificationTier,
-      verificationTierSource: canonicalTier.verificationTierSource,
+      verificationTier: policySummary.compatibility.verificationTier,
+      verificationTierSource: policySummary.compatibility.verificationTierSource,
       verifiedAt: profile.verifiedAt,
       linkedinVerificationStatus,
       linkedinVerificationLevel,
       linkedinHasIdentityVerification,
       linkedinVerifiedAt: profile.linkedinVerifiedAt,
       workEmail: profile.workEmail,
-      workEmailVerified: workEmailValidity.isCurrentlyVerified,
+      workEmailVerified:
+        workEmailValidity.isCurrentlyVerified || policySummary.compatibility.workEmailVerified,
       workEmailReverifyDueAt: workEmailValidity.reverifyDueAt,
       workEmailNeedsReverify: workEmailValidity.needsReverify,
+      summary: {
+        badgeSemanticsVersion: policySummary.badgeSemanticsVersion,
+        publicBadges: policySummary.publicBadges,
+        activeIssues: policySummary.activeIssues,
+        slots: policySummary.slots,
+      },
     });
   } catch (error) {
     console.error('[mobile.verification.status.get] failed', error);

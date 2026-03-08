@@ -45,36 +45,82 @@ type VerificationRecordUpsertInput = {
   subjectId: string;
   proofArtifactId?: string | null;
   verificationKind:
-    | 'skill_peer'
-    | 'skill_manager'
-    | 'custom_bundle'
-    | 'impact_story'
+    | 'veriff_identity'
+    | 'linkedin_identity'
+    | 'linkedin_workplace'
     | 'work_email'
-    | 'linkedin'
-    | 'veriff'
-    | 'org_registry'
+    | 'skill_attestation_peer'
+    | 'skill_attestation_manager'
+    | 'impact_attestation'
     | 'org_domain'
-    | 'manual';
-  status: 'pending' | 'accepted' | 'declined' | 'expired' | 'cancelled' | 'failed';
+    | 'org_registry_manual'
+    | 'platform_manual_review';
+  verificationSlot?:
+    | 'individual.identity'
+    | 'individual.workplace'
+    | 'skill.attestation'
+    | 'impact_story.attestation'
+    | 'artifact.attestation'
+    | 'organization.domain'
+    | 'organization.platform_review'
+    | null;
+  status:
+    | 'pending'
+    | 'verified'
+    | 'expired'
+    | 'superseded'
+    | 'downgraded'
+    | 'contradicted'
+    | 'disputed'
+    | 'revoked'
+    | 'declined'
+    | 'cancelled'
+    | 'failed';
   verifierPrincipalType:
     | 'user_account'
     | 'organization'
     | 'external_email'
     | 'platform_admin'
     | 'system';
+  verifierClass?:
+    | 'system_provider'
+    | 'system_signal'
+    | 'authenticated_manager'
+    | 'authenticated_peer'
+    | 'authenticated_external'
+    | 'manual_platform_reviewer'
+    | null;
   verifierProfileId?: string | null;
   verifierOrgId?: string | null;
   verifierEmailHash?: string | null;
   verifierDomainSnapshot?: string | null;
-  integrityStatus?: 'unknown' | 'clear' | 'flagged';
+  integrityStatus?: 'unknown' | 'clear' | 'warning' | 'contradicted';
   integrityReason?: string | null;
+  disputeState?:
+    | 'none'
+    | 'open'
+    | 'under_review'
+    | 'resolved_upheld'
+    | 'resolved_downgraded'
+    | 'resolved_revoked';
+  badgeSemanticsVersion?: number;
   riskSignals?: Record<string, unknown>;
   claimSnapshot?: Record<string, unknown>;
   sourceRequestTable?: string | null;
   sourceRequestId?: string | null;
   sourceResponseTable?: string | null;
   sourceResponseId?: string | null;
+  requestedAt?: string | Date | null;
+  expiresAt?: string | Date | null;
+  lastRefreshedAt?: string | Date | null;
   verifiedAt?: string | Date | null;
+  supersededAt?: string | Date | null;
+  supersededByVerificationId?: string | null;
+  downgradedAt?: string | Date | null;
+  contradictedAt?: string | Date | null;
+  contradictedByVerificationId?: string | null;
+  disputedAt?: string | Date | null;
+  revokedAt?: string | Date | null;
   metadata?: Record<string, unknown>;
 };
 
@@ -280,21 +326,35 @@ export async function upsertCanonicalVerificationRecord(input: VerificationRecor
       subjectType: input.subjectType,
       subjectId: input.subjectId,
       proofArtifactId: input.proofArtifactId || null,
+      verificationSlot: input.verificationSlot || null,
       verificationKind: input.verificationKind,
       status: input.status,
       verifierPrincipalType: input.verifierPrincipalType,
+      verifierClass: input.verifierClass || null,
       verifierProfileId: input.verifierProfileId || null,
       verifierOrgId: input.verifierOrgId || null,
       verifierEmailHash: input.verifierEmailHash || null,
       verifierDomainSnapshot: input.verifierDomainSnapshot || null,
       integrityStatus: input.integrityStatus || 'unknown',
       integrityReason: input.integrityReason || null,
+      disputeState: input.disputeState || 'none',
+      badgeSemanticsVersion: input.badgeSemanticsVersion ?? 2,
       riskSignals: input.riskSignals || {},
       claimSnapshot: input.claimSnapshot || {},
       sourceRequestTable: input.sourceRequestTable || null,
       sourceRequestId: input.sourceRequestId || null,
       sourceResponseTable: input.sourceResponseTable || null,
       sourceResponseId: input.sourceResponseId || null,
+      requestedAt: input.requestedAt ? new Date(input.requestedAt) : null,
+      expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
+      lastRefreshedAt: input.lastRefreshedAt ? new Date(input.lastRefreshedAt) : null,
+      supersededAt: input.supersededAt ? new Date(input.supersededAt) : null,
+      supersededByVerificationId: input.supersededByVerificationId || null,
+      downgradedAt: input.downgradedAt ? new Date(input.downgradedAt) : null,
+      contradictedAt: input.contradictedAt ? new Date(input.contradictedAt) : null,
+      contradictedByVerificationId: input.contradictedByVerificationId || null,
+      disputedAt: input.disputedAt ? new Date(input.disputedAt) : null,
+      revokedAt: input.revokedAt ? new Date(input.revokedAt) : null,
       verifiedAt: input.verifiedAt ? new Date(input.verifiedAt) : null,
       metadata: input.metadata || {},
       updatedAt: new Date(),
@@ -308,19 +368,33 @@ export async function upsertCanonicalVerificationRecord(input: VerificationRecor
       ],
       set: {
         proofArtifactId: sql`excluded.proof_artifact_id`,
+        verificationSlot: sql`excluded.verification_slot`,
         verificationKind: sql`excluded.verification_kind`,
         status: sql`excluded.status`,
         verifierPrincipalType: sql`excluded.verifier_principal_type`,
+        verifierClass: sql`excluded.verifier_class`,
         verifierProfileId: sql`excluded.verifier_profile_id`,
         verifierOrgId: sql`excluded.verifier_org_id`,
         verifierEmailHash: sql`excluded.verifier_email_hash`,
         verifierDomainSnapshot: sql`excluded.verifier_domain_snapshot`,
         integrityStatus: sql`excluded.integrity_status`,
         integrityReason: sql`excluded.integrity_reason`,
+        disputeState: sql`excluded.dispute_state`,
+        badgeSemanticsVersion: sql`excluded.badge_semantics_version`,
         riskSignals: sql`excluded.risk_signals`,
         claimSnapshot: sql`excluded.claim_snapshot`,
         sourceResponseTable: sql`excluded.source_response_table`,
         sourceResponseId: sql`excluded.source_response_id`,
+        requestedAt: sql`excluded.requested_at`,
+        expiresAt: sql`excluded.expires_at`,
+        lastRefreshedAt: sql`excluded.last_refreshed_at`,
+        supersededAt: sql`excluded.superseded_at`,
+        supersededByVerificationId: sql`excluded.superseded_by_verification_id`,
+        downgradedAt: sql`excluded.downgraded_at`,
+        contradictedAt: sql`excluded.contradicted_at`,
+        contradictedByVerificationId: sql`excluded.contradicted_by_verification_id`,
+        disputedAt: sql`excluded.disputed_at`,
+        revokedAt: sql`excluded.revoked_at`,
         verifiedAt: sql`excluded.verified_at`,
         metadata: sql`excluded.metadata`,
         updatedAt: sql`excluded.updated_at`,

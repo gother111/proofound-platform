@@ -1132,12 +1132,18 @@ export async function syncWorkEmailVerificationRequested(params: {
         ownerId: params.profileId,
         subjectType: 'individual_profile',
         subjectId: params.profileId,
+        verificationSlot: 'individual.workplace',
         verificationKind: 'work_email',
         status: 'pending',
         verifierPrincipalType: 'system',
+        verifierClass: 'system_signal',
         verifierOrgId: params.orgId ?? null,
+        requestedAt: new Date(),
+        expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
         requestExpiresAt: params.requestExpiresAt,
         followUpDueAt,
+        disputeState: 'none',
+        badgeSemanticsVersion: 2,
         metadata: {
           workEmailDomain: params.workEmail.split('@')[1] ?? null,
         },
@@ -1169,11 +1175,21 @@ export async function syncWorkEmailVerificationRequested(params: {
     .set({
       status: 'pending',
       verifierOrgId: params.orgId ?? existing.verifierOrgId ?? null,
+      requestedAt: new Date(),
+      expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
       requestExpiresAt: params.requestExpiresAt,
       followUpDueAt,
       lastFollowUpAt: null,
+      lastRefreshedAt: null,
       completedAt: null,
       expiredAt: null,
+      supersededAt: null,
+      supersededByVerificationId: null,
+      downgradedAt: null,
+      contradictedAt: null,
+      contradictedByVerificationId: null,
+      disputedAt: null,
+      revokedAt: null,
       cancelledAt: null,
       failureCode: null,
       updatedAt: new Date(),
@@ -1235,13 +1251,19 @@ export async function recordVerificationTransition(params: {
     .update(verificationRecords)
     .set({
       status: params.toState,
-      completedAt: params.toState === 'accepted' ? now : record.completedAt,
-      verifiedAt: params.toState === 'accepted' ? now : record.verifiedAt,
+      completedAt: params.toState === 'verified' ? now : record.completedAt,
+      verifiedAt: params.toState === 'verified' ? now : record.verifiedAt,
+      lastRefreshedAt: params.toState === 'verified' ? now : record.lastRefreshedAt,
       expiredAt: params.toState === 'expired' ? now : null,
+      supersededAt: params.toState === 'superseded' ? now : record.supersededAt,
+      downgradedAt: params.toState === 'downgraded' ? now : record.downgradedAt,
+      contradictedAt: params.toState === 'contradicted' ? now : record.contradictedAt,
+      disputedAt: params.toState === 'disputed' ? now : record.disputedAt,
+      revokedAt: params.toState === 'revoked' ? now : record.revokedAt,
       cancelledAt: params.toState === 'cancelled' ? now : null,
       failureCode: params.toState === 'failed' ? (params.reasonCode ?? null) : null,
       lastFollowUpAt:
-        params.toState === 'pending' || params.toState === 'accepted'
+        params.toState === 'pending' || params.toState === 'verified'
           ? record.lastFollowUpAt
           : record.lastFollowUpAt,
       updatedAt: now,
@@ -1268,7 +1290,7 @@ export async function recordVerificationTransition(params: {
     });
   }
 
-  if (params.toState === 'accepted') {
+  if (params.toState === 'verified') {
     await Promise.all([
       enqueueWorkflowJob({
         jobType: 'proof_freshness_nudge',

@@ -16,6 +16,17 @@ vi.mock('@/lib/log', () => ({
   },
 }));
 
+vi.mock('@/lib/verification/policy', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/verification/policy')>(
+    '@/lib/verification/policy'
+  );
+
+  return {
+    ...actual,
+    listVerificationRecordsForOwner: vi.fn().mockResolvedValue([]),
+  };
+});
+
 describe('checkVerificationGates', () => {
   beforeEach(() => {
     vi.clearAllMocks();
