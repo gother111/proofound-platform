@@ -7,8 +7,6 @@ import { randomUUID } from 'crypto';
 import { createClient } from '@/lib/supabase/server';
 import { resolvePublicSnippetBaseUrl } from '@/lib/profile/snippet-generator';
 import { ORGANIZATION_DAY_ONE_VISIBILITY } from '@/lib/portfolio/public-organization';
-import { reserveOrganizationSlug, reserveProfileHandle } from '@/lib/portfolio/slug-history';
-import { normalizePublicSlug, validatePublicSlug } from '@/lib/portfolio/slug-policy';
 import { reconcileVerifierContradictions } from '@/lib/verification/contradiction';
 import { emitIndividualOnboardingCompleted } from '@/lib/analytics/events';
 import { syncReadinessMilestones } from '@/lib/readiness/analytics';
@@ -43,6 +41,30 @@ function slugifySkillSeed(value: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 40);
+}
+
+function normalizeHandle(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function validateHandle(value: string): string | null {
+  if (!/^[a-zA-Z0-9_-]+$/.test(value.trim())) {
+    return 'Handle can only contain letters, numbers, hyphens, and underscores';
+  }
+
+  return null;
+}
+
+function normalizeOrganizationSlug(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function validateOrganizationSlug(value: string): string | null {
+  if (!/^[a-z0-9-]+$/.test(value.trim())) {
+    return 'Slug can only contain lowercase letters, numbers, and hyphens';
+  }
+
+  return null;
 }
 
 export async function choosePersona(formData: FormData) {
@@ -88,8 +110,8 @@ export async function completeIndividualOnboarding(formData: FormData) {
     return { error: 'Display name and handle are required' };
   }
 
-  const normalizedHandle = normalizePublicSlug(handle);
-  const slugError = validatePublicSlug(handle);
+  const normalizedHandle = normalizeHandle(handle);
+  const slugError = validateHandle(handle);
   if (slugError) {
     return { error: slugError };
   }
@@ -102,8 +124,6 @@ export async function completeIndividualOnboarding(formData: FormData) {
       .from('profiles')
       .update({
         handle: normalizedHandle,
-        public_portfolio_state: 'public_link_only',
-        search_indexing_enabled_at: null,
         display_name: displayName,
         persona: 'individual',
         updated_at: new Date().toISOString(),
@@ -117,13 +137,6 @@ export async function completeIndividualOnboarding(formData: FormData) {
 
       console.error('Failed to update profile during onboarding:', profileUpdate.error);
       return { error: 'Failed to complete setup. Please try again.' };
-    }
-
-    try {
-      await reserveProfileHandle(supabase as any, user.id, normalizedHandle);
-    } catch (historyError) {
-      console.error('Failed to reserve public handle:', historyError);
-      return { error: 'Handle already taken. Please choose another.' };
     }
 
     const individualInsert = await supabase.from('individual_profiles').upsert({
@@ -238,8 +251,8 @@ export async function completeOrganizationOnboarding(formData: FormData) {
     return { error: 'Organization name, slug, and type are required' };
   }
 
-  const orgSlug = normalizePublicSlug(slug);
-  const orgSlugError = validatePublicSlug(slug);
+  const orgSlug = normalizeOrganizationSlug(slug);
+  const orgSlugError = validateOrganizationSlug(orgSlug);
   if (orgSlugError) {
     return { error: orgSlugError };
   }
@@ -292,11 +305,6 @@ export async function completeOrganizationOnboarding(formData: FormData) {
     const orgInsert = await supabase.from('organizations').insert({
       id: orgId,
       slug: orgSlug,
-      public_portfolio_state: 'public_link_only',
-      search_indexing_enabled_at: null,
-      trust_status: website ? 'pending' : 'unverified',
-      trust_status_updated_at: new Date().toISOString(),
-      operating_region: null,
       display_name: displayName,
       legal_name: legalName || null,
       type,
@@ -325,13 +333,6 @@ export async function completeOrganizationOnboarding(formData: FormData) {
       console.log(
         'Organization inserted but RLS blocked SELECT - this is expected, continuing with membership creation'
       );
-    }
-
-    try {
-      await reserveOrganizationSlug(supabase as any, orgId, orgSlug);
-    } catch (historyError) {
-      console.error('Failed to reserve organization slug:', historyError);
-      return { error: 'Organization slug already taken. Please choose another.' };
     }
 
     const memberInsert = await supabase.from('organization_members').insert({

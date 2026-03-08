@@ -17,12 +17,6 @@ import { emitMatchActioned } from '@/lib/analytics/events';
 import { log } from '@/lib/log';
 import { notifyIntroAccepted } from '@/lib/notifications';
 import { getIndividualReadinessState } from '@/lib/readiness/individual-state';
-import { unlockFullIdentityForMatch } from '@/lib/matching/review-contract';
-import {
-  buildWorkflowView,
-  openIntroConversation,
-  syncIntroWorkflowFromInterest,
-} from '@/lib/workflow/service';
 
 export const dynamic = 'force-dynamic';
 
@@ -175,31 +169,8 @@ export async function POST(request: NextRequest) {
       mutualInterest: interestResult.mutual,
     });
 
-    const candidateProfileId = isOrgAction ? targetProfileId! : user.id;
-    const introWorkflow = await syncIntroWorkflowFromInterest({
-      assignmentId,
-      candidateProfileId,
-      orgId: assignment.orgId,
-      actorType: isOrgAction ? 'organization_member' : 'candidate',
-      actorId: user.id,
-      mutual: interestResult.mutual,
-    });
-
     if (!interestResult.mutual) {
-      return NextResponse.json({
-        revealed: false,
-        workflow: buildWorkflowView({
-          machine: 'intro',
-          state: introWorkflow.state,
-          reasonCode: introWorkflow.closeReason,
-          timestamps: {
-            expiresAt: introWorkflow.expiresAt?.toISOString(),
-            withdrawnAt: introWorkflow.withdrawnAt?.toISOString(),
-            closedAt: introWorkflow.closedAt?.toISOString(),
-            updatedAt: introWorkflow.updatedAt?.toISOString(),
-          },
-        }),
-      });
+      return NextResponse.json({ revealed: false });
     }
 
     const individualId = isOrgAction ? targetProfileId! : user.id;
@@ -305,46 +276,10 @@ export async function POST(request: NextRequest) {
         conversationId = newConversation.id;
       }
 
-      const openedIntroWorkflow = await openIntroConversation({
-        introWorkflowId: introWorkflow.id,
-        conversationId,
-        actorType: isOrgAction ? 'organization_member' : 'candidate',
-        actorId: user.id,
-        matchId: match?.id ?? null,
-      });
-
-      if (match?.id) {
-        await unlockFullIdentityForMatch({
-          matchId: match.id,
-          actorId: user.id,
-          actorRole: isOrgAction ? 'member' : 'candidate',
-          actorType: 'user_account',
-          triggerType: 'automatic',
-          sourceSurface: 'mutual_interest_route',
-          reasonCode: 'reveal_full_identity',
-          unlockTrigger: 'mutual_interest',
-          context: {
-            conversationId,
-            reciprocalActorProfileId: interestResult.reciprocalActorProfileId,
-          },
-        });
-      }
-
       return NextResponse.json({
         revealed: true,
         conversationId,
         ...(match ? { matchId: match.id } : {}),
-        workflow: buildWorkflowView({
-          machine: 'intro',
-          state: openedIntroWorkflow.state,
-          reasonCode: openedIntroWorkflow.closeReason,
-          timestamps: {
-            expiresAt: openedIntroWorkflow.expiresAt?.toISOString(),
-            withdrawnAt: openedIntroWorkflow.withdrawnAt?.toISOString(),
-            closedAt: openedIntroWorkflow.closedAt?.toISOString(),
-            updatedAt: openedIntroWorkflow.updatedAt?.toISOString(),
-          },
-        }),
       });
     } catch (convError) {
       log.error('conversation.creation.failed', {
@@ -356,17 +291,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         revealed: true,
         ...(match ? { matchId: match.id } : {}),
-        workflow: buildWorkflowView({
-          machine: 'intro',
-          state: introWorkflow.state,
-          reasonCode: introWorkflow.closeReason,
-          timestamps: {
-            expiresAt: introWorkflow.expiresAt?.toISOString(),
-            withdrawnAt: introWorkflow.withdrawnAt?.toISOString(),
-            closedAt: introWorkflow.closedAt?.toISOString(),
-            updatedAt: introWorkflow.updatedAt?.toISOString(),
-          },
-        }),
       });
     }
   } catch (error) {

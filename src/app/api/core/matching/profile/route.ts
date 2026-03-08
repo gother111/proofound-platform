@@ -53,11 +53,6 @@ import {
   CANONICAL_MATCH_AUDIT_FIELDS_ENABLED,
   CANONICAL_MATCH_SCORE_VERSION,
 } from '@/lib/canonical/repository';
-import {
-  appendSystemReasonLedger,
-  buildCanonicalMatchPersistenceFields,
-  ensureMatchReviewState,
-} from '@/lib/matching/review-contract';
 
 export const dynamic = 'force-dynamic';
 
@@ -323,7 +318,7 @@ export async function POST(request: NextRequest) {
       orgId: string;
       role: string;
       description: string | null;
-      status: 'draft' | 'active' | 'hold' | 'closed';
+      status: 'draft' | 'active' | 'hold' | 'paused' | 'closed';
       valuesRequired: string[] | null;
       causeTags: string[] | null;
       mustHaveSkills: unknown;
@@ -675,18 +670,14 @@ export async function POST(request: NextRequest) {
         },
         verificationGates: assignment?.verificationGates || [],
       });
-      const persistenceFields = buildCanonicalMatchPersistenceFields({
-        scoreVersion: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.scoreVersion : null,
-        inputsHash: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.inputsHash : null,
-        reasonCodes: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.reasonCodes : [],
-        generatedAt: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.generatedAt : null,
-      });
-
       return {
         assignmentId: match.assignmentId,
         profileId: user.id,
         score: match.score.toString(),
-        ...persistenceFields,
+        scoreVersion: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.scoreVersion : null,
+        inputsHash: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.inputsHash : null,
+        reasonCodes: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.reasonCodes : [],
+        generatedAt: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.generatedAt : null,
         vector: {
           subscores: match.subscores,
           contributions: match.contributions,
@@ -707,11 +698,6 @@ export async function POST(request: NextRequest) {
               set: {
                 score: sql`excluded.score`,
                 scoreVersion: sql`excluded.score_version`,
-                modelVersion: sql`excluded.model_version`,
-                explanationVersion: sql`excluded.explanation_version`,
-                fairnessCheckVersion: sql`excluded.fairness_check_version`,
-                fairnessStatus: sql`excluded.fairness_status`,
-                fairnessEvaluatedAt: sql`excluded.fairness_evaluated_at`,
                 inputsHash: sql`excluded.inputs_hash`,
                 reasonCodes: sql`excluded.reason_codes`,
                 generatedAt: sql`excluded.generated_at`,
@@ -719,43 +705,8 @@ export async function POST(request: NextRequest) {
                 weights: sql`excluded.weights`,
               },
             })
-            .returning({
-              id: matches.id,
-              assignmentId: matches.assignmentId,
-              profileId: matches.profileId,
-            })
+            .returning({ id: matches.id, assignmentId: matches.assignmentId })
         : [];
-
-    const upsertPayloadByAssignmentId = new Map(
-      upsertPayload.map((payload) => [payload.assignmentId, payload])
-    );
-
-    await Promise.all(
-      upsertedMatches.map(async (row) => {
-        const assignment = activeAssignments.find((candidate) => candidate.id === row.assignmentId);
-        const payload = upsertPayloadByAssignmentId.get(row.assignmentId);
-        if (!assignment || !payload) {
-          return;
-        }
-
-        await ensureMatchReviewState({
-          matchId: row.id,
-          assignmentId: row.assignmentId,
-          profileId: row.profileId,
-          orgId: assignment.orgId,
-        });
-
-        await appendSystemReasonLedger({
-          matchId: row.id,
-          assignmentId: row.assignmentId,
-          profileId: row.profileId,
-          reasonCodes: (payload.reasonCodes || []) as Array<
-            Parameters<typeof appendSystemReasonLedger>[0]['reasonCodes'][number]
-          >,
-          createdAt: payload.generatedAt,
-        });
-      })
-    );
 
     // Merge returned IDs into response payload
     upsertedMatches.forEach((row) => {
