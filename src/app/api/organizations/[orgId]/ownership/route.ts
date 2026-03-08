@@ -4,6 +4,7 @@ import { db } from '@/db';
 import { organizationOwnership } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
+import { isActiveOrgMember } from '@/lib/api/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,7 +26,18 @@ export async function GET(
     if (!authContext) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const { user, supabase } = authContext;
     const { orgId } = await params;
+
+    const canRead = await isActiveOrgMember(supabase as any, user.id, orgId, [
+      'owner',
+      'admin',
+      'member',
+      'viewer',
+    ]);
+    if (!canRead) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     const ownership = await db
       .select()
@@ -49,9 +61,15 @@ export async function POST(
     if (!authContext) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const { user, supabase } = authContext;
     const { orgId } = await params;
     const body = await request.json();
     const validated = OwnershipSchema.parse(body);
+
+    const canWrite = await isActiveOrgMember(supabase as any, user.id, orgId, ['owner', 'admin']);
+    if (!canWrite) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     const [ownership] = await db
       .insert(organizationOwnership)

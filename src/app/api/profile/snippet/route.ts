@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
+import { proofPacks } from '@/db/schema';
 import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { getRows } from '@/lib/db/rows';
@@ -18,6 +19,12 @@ import {
   validateSnippetConfig,
   type SnippetFields,
 } from '@/lib/profile/snippet-generator';
+import {
+  CANONICAL_PROOFS_WRITE_ENABLED,
+  deleteCanonicalProofPackForSnippet,
+  upsertCanonicalProofPackForSnippet,
+} from '@/lib/canonical/repository';
+import { inArray } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 type ProfileType = 'individual' | 'organization';
@@ -123,6 +130,21 @@ export async function POST(req: NextRequest) {
 
     const [snippet] = getRows<any>(result as any);
 
+    const canonicalPack =
+      CANONICAL_PROOFS_WRITE_ENABLED && snippet
+        ? await upsertCanonicalProofPackForSnippet({
+            snippetId: snippet.id,
+            userId: user.id,
+            shareToken,
+            profileType,
+            orgId,
+            fields,
+            theme: (theme || 'auto') as 'light' | 'dark' | 'auto',
+            format: (format || 'card') as 'card' | 'mini' | 'full',
+            expiresAt: snippet.expires_at,
+          })
+        : null;
+
     log.info('profile.snippet.created', {
       userId: user.id,
       snippetId: snippet.id,
@@ -143,6 +165,7 @@ export async function POST(req: NextRequest) {
         format: snippet.format,
         profileType: snippet.profile_type,
         orgId: snippet.org_id,
+        canonicalPackId: canonicalPack?.id ?? null,
         expiresAt: snippet.expires_at,
         createdAt: snippet.created_at,
       },
@@ -198,9 +221,25 @@ export async function GET(req: NextRequest) {
       lastViewedAt: row.last_viewed_at,
     }));
 
+    const snippetIds = snippets.map((snippet) => snippet.id);
+    const canonicalPacks =
+      snippetIds.length > 0
+        ? await db
+            .select({
+              id: proofPacks.id,
+              legacySourceId: proofPacks.legacySourceId,
+            })
+            .from(proofPacks)
+            .where(inArray(proofPacks.legacySourceId, snippetIds))
+        : [];
+    const packIdBySnippetId = new Map(canonicalPacks.map((pack) => [pack.legacySourceId, pack.id]));
+
     return NextResponse.json({
       success: true,
-      snippets,
+      snippets: snippets.map((snippet) => ({
+        ...snippet,
+        canonicalPackId: packIdBySnippetId.get(snippet.id) ?? null,
+      })),
     });
   } catch (error) {
     log.error('profile.snippet.list.failed', {
@@ -237,6 +276,10 @@ export async function DELETE(req: NextRequest) {
       WHERE id = ${snippetId}
         AND user_id = ${user.id}
     `);
+
+    if (CANONICAL_PROOFS_WRITE_ENABLED) {
+      await deleteCanonicalProofPackForSnippet(snippetId);
+    }
 
     log.info('profile.snippet.deleted', {
       userId: user.id,

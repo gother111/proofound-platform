@@ -26,6 +26,11 @@ import {
   parseLegacyLanguageLevels,
   resolveLanguageLevel,
 } from '@/lib/core/matching/language-resolution';
+import {
+  buildMatchAuditFields,
+  CANONICAL_MATCH_AUDIT_FIELDS_ENABLED,
+  CANONICAL_MATCH_SCORE_VERSION,
+} from '@/lib/canonical/repository';
 
 /**
  * Generate matches for an assignment and upsert the top results into the `matches` table.
@@ -249,13 +254,30 @@ export async function generateMatchesForAssignment(
     const topMatches = matchResults.slice(0, 100);
 
     if (topMatches.length > 0) {
-      const matchInserts = topMatches.map((match) => ({
-        assignmentId,
-        profileId: match.profileId,
-        score: match.score.toString(),
-        vector: match.vector,
-        weights,
-      }));
+      const matchInserts = topMatches.map((match) => {
+        const auditFields = buildMatchAuditFields({
+          scoreVersion: CANONICAL_MATCH_SCORE_VERSION,
+          assignmentId,
+          profileId: match.profileId,
+          weights: weights as Record<string, number>,
+          subscores: (match.vector.subscores as Record<string, number>) || {},
+          missing: (match.vector.missing as string[]) || [],
+          gaps: (match.vector.gaps as Array<{ id: string; required: number; have: number }>) || [],
+          verificationGates: assignment.verificationGates || [],
+        });
+
+        return {
+          assignmentId,
+          profileId: match.profileId,
+          score: match.score.toString(),
+          scoreVersion: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.scoreVersion : null,
+          inputsHash: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.inputsHash : null,
+          reasonCodes: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.reasonCodes : [],
+          generatedAt: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.generatedAt : null,
+          vector: match.vector,
+          weights,
+        };
+      });
 
       // Upsert: update score/vector/weights without overwriting snoozed_until.
       await db
@@ -265,6 +287,10 @@ export async function generateMatchesForAssignment(
           target: [matches.assignmentId, matches.profileId],
           set: {
             score: sql`excluded.score`,
+            scoreVersion: sql`excluded.score_version`,
+            inputsHash: sql`excluded.inputs_hash`,
+            reasonCodes: sql`excluded.reason_codes`,
+            generatedAt: sql`excluded.generated_at`,
             vector: sql`excluded.vector`,
             weights: sql`excluded.weights`,
           },

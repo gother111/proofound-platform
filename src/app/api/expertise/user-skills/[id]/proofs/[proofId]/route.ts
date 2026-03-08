@@ -1,6 +1,10 @@
 import { requireApiAuthContext } from '@/lib/auth';
 import { NextResponse, NextRequest } from 'next/server';
 import { emitSkillProofDeletedAsync } from '@/lib/analytics/events';
+import {
+  CANONICAL_PROOFS_WRITE_ENABLED,
+  deleteCanonicalProofArtifactForSkillProof,
+} from '@/lib/canonical/repository';
 
 /**
  * DELETE /api/expertise/user-skills/[id]/proofs/[proofId]
@@ -39,6 +43,10 @@ export async function DELETE(
     if (deleteError) {
       console.error('Error deleting proof:', deleteError);
       return NextResponse.json({ error: 'Failed to delete proof' }, { status: 500 });
+    }
+
+    if (CANONICAL_PROOFS_WRITE_ENABLED) {
+      await deleteCanonicalProofArtifactForSkillProof(proofId);
     }
 
     // Best-effort cleanup for uploaded documents. Never fail DELETE because of storage cleanup.

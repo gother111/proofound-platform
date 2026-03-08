@@ -3,6 +3,15 @@ import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 import { emitSkillProofAddedAsync } from '@/lib/analytics/events';
 import { MAX_PROOFS_PER_SKILL } from '@/lib/proofs/constants';
+import { db } from '@/db';
+import { proofArtifacts } from '@/db/schema';
+import {
+  CANONICAL_PROOFS_READ_ENABLED,
+  CANONICAL_PROOFS_WRITE_ENABLED,
+  mapCanonicalProofRowToLegacySkillProof,
+  upsertCanonicalProofArtifactFromSkillProof,
+} from '@/lib/canonical/repository';
+import { inArray } from 'drizzle-orm';
 
 function deriveProofTitleFromUrl(rawUrl: string): string {
   try {
@@ -152,6 +161,28 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       );
     }
 
+    const canonicalProof =
+      CANONICAL_PROOFS_WRITE_ENABLED && proof
+        ? await upsertCanonicalProofArtifactFromSkillProof({
+            id: proof.id,
+            skillId,
+            profileId: user.id,
+            proofType: validated.proofType,
+            title: proof.title,
+            description: proof.description,
+            url: proof.url,
+            filePath: proof.file_path,
+            issuedDate: proof.issued_date,
+            expiresDate: proof.expires_date,
+            metadata:
+              proof.metadata && typeof proof.metadata === 'object'
+                ? (proof.metadata as Record<string, unknown>)
+                : {},
+            createdAt: proof.created_at,
+            updatedAt: proof.updated_at,
+          })
+        : null;
+
     // Emit analytics event for proof addition (PRD F3)
     emitSkillProofAddedAsync(user.id, skillId, proof.id, {
       skill_name: proofTitle,
@@ -160,7 +191,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     return NextResponse.json(
       {
-        proof,
+        proof: {
+          ...proof,
+          canonicalArtifactId: canonicalProof?.id ?? null,
+        },
       },
       { status: 201 }
     );
@@ -215,8 +249,30 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Failed to fetch proofs' }, { status: 500 });
     }
 
+    const proofRows = proofs || [];
+    const legacyIds = proofRows.map((proof) => proof.id).filter(Boolean);
+    const canonicalRows =
+      legacyIds.length > 0
+        ? await db
+            .select()
+            .from(proofArtifacts)
+            .where(inArray(proofArtifacts.legacySourceId, legacyIds))
+        : [];
+    const canonicalByLegacyId = new Map(canonicalRows.map((row) => [row.legacySourceId, row]));
+    const normalizedProofs = proofRows.map((proof) => {
+      const canonicalRow = canonicalByLegacyId.get(proof.id);
+      if (CANONICAL_PROOFS_READ_ENABLED && canonicalRow) {
+        return mapCanonicalProofRowToLegacySkillProof(canonicalRow);
+      }
+
+      return {
+        ...proof,
+        canonicalArtifactId: canonicalRow?.id ?? null,
+      };
+    });
+
     return NextResponse.json({
-      proofs: proofs || [],
+      proofs: normalizedProofs,
     });
   } catch (error) {
     console.error('Proof GET error:', error);

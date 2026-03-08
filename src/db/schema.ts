@@ -26,6 +26,68 @@ const bit = customType<{ data: string; notNull?: boolean; default?: boolean }>({
   },
 });
 
+export const canonicalVisibilityLevels = [
+  'public',
+  'link_only',
+  'matched_org',
+  'owner_only',
+] as const;
+export const canonicalRevealGates = ['none', 'match_exists', 'conversation_started'] as const;
+export const canonicalOwnerTypes = ['individual_profile', 'organization'] as const;
+export const canonicalProofSubjectTypes = [
+  'individual_profile',
+  'skill',
+  'project',
+  'impact_story',
+  'experience',
+  'education',
+  'volunteering',
+  'organization',
+] as const;
+export const canonicalProofArtifactKinds = [
+  'link',
+  'document',
+  'image',
+  'video',
+  'credential',
+  'reference',
+  'assessment',
+  'other',
+] as const;
+export const canonicalProofPackKinds = [
+  'profile_export',
+  'organization_export',
+  'verification_bundle',
+] as const;
+export const canonicalVerificationKinds = [
+  'skill_peer',
+  'skill_manager',
+  'custom_bundle',
+  'impact_story',
+  'work_email',
+  'linkedin',
+  'veriff',
+  'org_registry',
+  'org_domain',
+  'manual',
+] as const;
+export const canonicalVerificationStatuses = [
+  'pending',
+  'accepted',
+  'declined',
+  'expired',
+  'cancelled',
+  'failed',
+] as const;
+export const canonicalVerifierPrincipalTypes = [
+  'user_account',
+  'organization',
+  'external_email',
+  'platform_admin',
+  'system',
+] as const;
+export const canonicalIntegrityStatuses = ['unknown', 'clear', 'flagged'] as const;
+
 const vector = customType<{ data: number[]; notNull?: boolean; default?: boolean }>({
   dataType(config) {
     const dimensions = (config as { dimensions?: number } | undefined)?.dimensions;
@@ -489,6 +551,64 @@ export const profileFieldVisibility = pgTable('profile_field_visibility', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+export const profileSnippets = pgTable(
+  'profile_snippets',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    shareToken: text('share_token').notNull().unique(),
+    fields: jsonb('fields')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    theme: text('theme', {
+      enum: ['light', 'dark', 'auto'],
+    })
+      .default('auto')
+      .notNull(),
+    format: text('format', {
+      enum: ['card', 'mini', 'full'],
+    })
+      .default('card')
+      .notNull(),
+    profileType: text('profile_type', {
+      enum: ['individual', 'organization'],
+    })
+      .default('individual')
+      .notNull(),
+    orgId: uuid('org_id').references(() => organizations.id, { onDelete: 'cascade' }),
+    expiresAt: timestamp('expires_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdIdx: index('idx_profile_snippets_user_id').on(table.userId),
+    shareTokenIdx: index('idx_profile_snippets_share_token').on(table.shareToken),
+    profileTypeIdx: index('idx_profile_snippets_profile_type').on(table.profileType),
+    orgIdIdx: index('idx_profile_snippets_org_id').on(table.orgId),
+    expiresAtIdx: index('idx_profile_snippets_expires_at').on(table.expiresAt),
+  })
+);
+
+export const profileSnippetViews = pgTable(
+  'profile_snippet_views',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    snippetId: uuid('snippet_id')
+      .references(() => profileSnippets.id, { onDelete: 'cascade' })
+      .notNull(),
+    viewerIp: text('viewer_ip'),
+    viewerUserAgent: text('viewer_user_agent'),
+    referrer: text('referrer'),
+    viewedAt: timestamp('viewed_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    snippetIdIdx: index('idx_profile_snippet_views_snippet_id').on(table.snippetId),
+    viewedAtIdx: index('idx_profile_snippet_views_viewed_at').on(table.viewedAt),
+  })
+);
+
 // Audit logs
 export const auditLogs = pgTable('audit_logs', {
   id: bigserial('id', { mode: 'number' }).primaryKey(),
@@ -665,6 +785,125 @@ export const skillProofs = pgTable('skill_proofs', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+export const proofArtifacts = pgTable(
+  'proof_artifacts',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    ownerType: text('owner_type', {
+      enum: canonicalOwnerTypes,
+    }).notNull(),
+    ownerId: uuid('owner_id').notNull(),
+    subjectType: text('subject_type', {
+      enum: canonicalProofSubjectTypes,
+    }).notNull(),
+    subjectId: uuid('subject_id'),
+    artifactKind: text('artifact_kind', {
+      enum: canonicalProofArtifactKinds,
+    }).notNull(),
+    title: text('title').notNull(),
+    description: text('description'),
+    sourceUrl: text('source_url'),
+    storagePath: text('storage_path'),
+    mimeType: text('mime_type'),
+    issuedAt: timestamp('issued_at', { withTimezone: true }),
+    expiresAt: timestamp('expires_at', { withTimezone: true }),
+    visibility: text('visibility', {
+      enum: canonicalVisibilityLevels,
+    })
+      .default('owner_only')
+      .notNull(),
+    revealGate: text('reveal_gate', {
+      enum: canonicalRevealGates,
+    })
+      .default('none')
+      .notNull(),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    legacySourceTable: text('legacy_source_table'),
+    legacySourceId: uuid('legacy_source_id'),
+    legacySourcePath: text('legacy_source_path'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    ownerIdx: index('idx_proof_artifacts_owner').on(table.ownerType, table.ownerId),
+    subjectIdx: index('idx_proof_artifacts_subject').on(table.subjectType, table.subjectId),
+    visibilityIdx: index('idx_proof_artifacts_visibility').on(table.visibility, table.revealGate),
+    legacySourceUnique: unique().on(
+      table.legacySourceTable,
+      table.legacySourceId,
+      table.legacySourcePath
+    ),
+  })
+);
+
+export const proofPacks = pgTable(
+  'proof_packs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    ownerType: text('owner_type', {
+      enum: canonicalOwnerTypes,
+    }).notNull(),
+    ownerId: uuid('owner_id').notNull(),
+    packKind: text('pack_kind', {
+      enum: canonicalProofPackKinds,
+    }).notNull(),
+    title: text('title').notNull(),
+    summary: text('summary'),
+    visibility: text('visibility', {
+      enum: canonicalVisibilityLevels,
+    })
+      .default('owner_only')
+      .notNull(),
+    revealGate: text('reveal_gate', {
+      enum: canonicalRevealGates,
+    })
+      .default('none')
+      .notNull(),
+    shareTokenHash: text('share_token_hash'),
+    shareExpiresAt: timestamp('share_expires_at', { withTimezone: true }),
+    createdBy: uuid('created_by').references(() => profiles.id, { onDelete: 'set null' }),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    legacySourceTable: text('legacy_source_table'),
+    legacySourceId: uuid('legacy_source_id'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    ownerIdx: index('idx_proof_packs_owner').on(table.ownerType, table.ownerId),
+    visibilityIdx: index('idx_proof_packs_visibility').on(table.visibility, table.revealGate),
+    shareTokenHashIdx: index('idx_proof_packs_share_token_hash').on(table.shareTokenHash),
+    legacySourceUnique: unique().on(table.legacySourceTable, table.legacySourceId),
+  })
+);
+
+export const proofPackItems = pgTable(
+  'proof_pack_items',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    packId: uuid('pack_id')
+      .references(() => proofPacks.id, { onDelete: 'cascade' })
+      .notNull(),
+    artifactId: uuid('artifact_id')
+      .references(() => proofArtifacts.id, { onDelete: 'cascade' })
+      .notNull(),
+    position: integer('position').default(0).notNull(),
+    includedFields: jsonb('included_fields')
+      .default(sql`'[]'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    packIdx: index('idx_proof_pack_items_pack').on(table.packId, table.position),
+    artifactIdx: index('idx_proof_pack_items_artifact').on(table.artifactId),
+    packArtifactUnique: unique().on(table.packId, table.artifactId),
+  })
+);
 
 // Skill Verification Requests - peer/manager/external verification requests
 export const customVerificationRequests = pgTable('custom_verification_requests', {
@@ -869,6 +1108,77 @@ export const impactStoryVerificationResponses = pgTable('impact_story_verificati
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+export const verificationRecords = pgTable(
+  'verification_records',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    ownerType: text('owner_type', {
+      enum: canonicalOwnerTypes,
+    }).notNull(),
+    ownerId: uuid('owner_id').notNull(),
+    subjectType: text('subject_type', {
+      enum: canonicalProofSubjectTypes,
+    }).notNull(),
+    subjectId: uuid('subject_id').notNull(),
+    proofArtifactId: uuid('proof_artifact_id').references(() => proofArtifacts.id, {
+      onDelete: 'set null',
+    }),
+    verificationKind: text('verification_kind', {
+      enum: canonicalVerificationKinds,
+    }).notNull(),
+    status: text('status', {
+      enum: canonicalVerificationStatuses,
+    })
+      .default('pending')
+      .notNull(),
+    verifierPrincipalType: text('verifier_principal_type', {
+      enum: canonicalVerifierPrincipalTypes,
+    }).notNull(),
+    verifierProfileId: uuid('verifier_profile_id').references(() => profiles.id, {
+      onDelete: 'set null',
+    }),
+    verifierOrgId: uuid('verifier_org_id').references(() => organizations.id, {
+      onDelete: 'set null',
+    }),
+    verifierEmailHash: text('verifier_email_hash'),
+    verifierDomainSnapshot: text('verifier_domain_snapshot'),
+    integrityStatus: text('integrity_status', {
+      enum: canonicalIntegrityStatuses,
+    })
+      .default('unknown')
+      .notNull(),
+    integrityReason: text('integrity_reason'),
+    riskSignals: jsonb('risk_signals')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    claimSnapshot: jsonb('claim_snapshot')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    sourceRequestTable: text('source_request_table'),
+    sourceRequestId: uuid('source_request_id'),
+    sourceResponseTable: text('source_response_table'),
+    sourceResponseId: uuid('source_response_id'),
+    verifiedAt: timestamp('verified_at', { withTimezone: true }),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    ownerIdx: index('idx_verification_records_owner').on(table.ownerType, table.ownerId),
+    subjectIdx: index('idx_verification_records_subject').on(table.subjectType, table.subjectId),
+    proofArtifactIdx: index('idx_verification_records_artifact').on(table.proofArtifactId),
+    statusIdx: index('idx_verification_records_status').on(table.status, table.verificationKind),
+    sourceRequestUnique: unique().on(
+      table.sourceRequestTable,
+      table.sourceRequestId,
+      table.subjectType,
+      table.subjectId
+    ),
+  })
+);
+
 // Assignment templates - reusable presets for assignment creation
 export const assignmentTemplates = pgTable('assignment_templates', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -964,6 +1274,12 @@ export const matches = pgTable(
       .references(() => profiles.id, { onDelete: 'cascade' })
       .notNull(),
     score: numeric('score').notNull(),
+    scoreVersion: text('score_version'),
+    inputsHash: text('inputs_hash'),
+    reasonCodes: text('reason_codes')
+      .array()
+      .default(sql`'{}'::text[]`),
+    generatedAt: timestamp('generated_at', { withTimezone: true }),
     vector: jsonb('vector').notNull(), // Subscores + details
     weights: jsonb('weights').notNull(),
     isTestMatch: boolean('is_test_match').default(false).notNull(),
@@ -977,6 +1293,8 @@ export const matches = pgTable(
     assignmentIdIdx: index('matches_assignment_id_idx').on(table.assignmentId),
     scoreIdx: index('matches_score_idx').on(table.score),
     isTestMatchIdx: index('matches_is_test_match_idx').on(table.isTestMatch),
+    scoreVersionIdx: index('matches_score_version_idx').on(table.scoreVersion),
+    generatedAtIdx: index('matches_generated_at_idx').on(table.generatedAt),
   })
 );
 

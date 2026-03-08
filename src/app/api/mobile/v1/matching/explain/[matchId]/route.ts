@@ -39,6 +39,10 @@ export async function GET(
         profileId: matches.profileId,
         assignmentId: matches.assignmentId,
         score: matches.score,
+        scoreVersion: matches.scoreVersion,
+        inputsHash: matches.inputsHash,
+        reasonCodes: matches.reasonCodes,
+        generatedAt: matches.generatedAt,
         vector: matches.vector,
         assignmentOrgId: assignments.orgId,
       })
@@ -74,6 +78,10 @@ export async function GET(
       matchId: row.id,
       assignmentId: row.assignmentId,
       compositeScore: Number(row.score),
+      scoreVersion: row.scoreVersion,
+      inputsHash: row.inputsHash,
+      reasonCodes: row.reasonCodes || [],
+      generatedAt: row.generatedAt,
       subscores: {
         skills: Number(subscores?.skills ?? 0),
         pac: Number(subscores?.pac ?? subscores?.purpose_alignment ?? 0),

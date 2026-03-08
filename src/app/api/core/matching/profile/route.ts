@@ -48,6 +48,11 @@ import {
   resolveLanguageLevel,
 } from '@/lib/core/matching/language-resolution';
 import { toAnnualCompensationRange } from '@/lib/matching/compensation';
+import {
+  buildMatchAuditFields,
+  CANONICAL_MATCH_AUDIT_FIELDS_ENABLED,
+  CANONICAL_MATCH_SCORE_VERSION,
+} from '@/lib/canonical/repository';
 
 export const dynamic = 'force-dynamic';
 
@@ -649,18 +654,39 @@ export async function POST(request: NextRequest) {
     const topK = results.slice(0, k);
 
     // Ensure returned matches exist in DB and capture their IDs
-    const upsertPayload = topK.map((match) => ({
-      assignmentId: match.assignmentId,
-      profileId: user.id,
-      score: match.score.toString(),
-      vector: {
+    const upsertPayload = topK.map((match) => {
+      const assignment = activeAssignments.find((candidate) => candidate.id === match.assignmentId);
+      const auditFields = buildMatchAuditFields({
+        scoreVersion: CANONICAL_MATCH_SCORE_VERSION,
+        assignmentId: match.assignmentId,
+        profileId: user.id,
+        weights: weights as Record<string, number>,
         subscores: match.subscores,
-        contributions: match.contributions,
-        gaps: match.gaps,
         missing: match.missing,
-      },
-      weights,
-    }));
+        gaps: match.gaps,
+        focusBoost: {
+          matched: match.focusBoost?.matched,
+        },
+        verificationGates: assignment?.verificationGates || [],
+      });
+
+      return {
+        assignmentId: match.assignmentId,
+        profileId: user.id,
+        score: match.score.toString(),
+        scoreVersion: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.scoreVersion : null,
+        inputsHash: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.inputsHash : null,
+        reasonCodes: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.reasonCodes : [],
+        generatedAt: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.generatedAt : null,
+        vector: {
+          subscores: match.subscores,
+          contributions: match.contributions,
+          gaps: match.gaps,
+          missing: match.missing,
+        },
+        weights,
+      };
+    });
 
     const upsertedMatches =
       upsertPayload.length > 0
@@ -671,6 +697,10 @@ export async function POST(request: NextRequest) {
               target: [matches.assignmentId, matches.profileId],
               set: {
                 score: sql`excluded.score`,
+                scoreVersion: sql`excluded.score_version`,
+                inputsHash: sql`excluded.inputs_hash`,
+                reasonCodes: sql`excluded.reason_codes`,
+                generatedAt: sql`excluded.generated_at`,
                 vector: sql`excluded.vector`,
                 weights: sql`excluded.weights`,
               },

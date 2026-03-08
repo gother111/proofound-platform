@@ -16,6 +16,10 @@ import {
   parseCustomSkillName,
   relationshipLabel,
 } from '@/lib/verification/custom-verification';
+import {
+  CANONICAL_PROOFS_WRITE_ENABLED,
+  upsertCanonicalVerificationRecord,
+} from '@/lib/canonical/repository';
 
 const RequestArtifactSchema = z.object({
   type: z.enum(CUSTOM_VERIFICATION_ARTIFACT_TYPES),
@@ -572,6 +576,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const canonicalRecords = CANONICAL_PROOFS_WRITE_ENABLED
+      ? await Promise.all(
+          selectedArtifacts.map((artifact) =>
+            upsertCanonicalVerificationRecord({
+              ownerType: 'individual_profile',
+              ownerId: user.id,
+              subjectType: artifact.type,
+              subjectId: artifact.id,
+              verificationKind: 'custom_bundle',
+              status: 'pending',
+              verifierPrincipalType: verifierProfileId ? 'user_account' : 'external_email',
+              verifierProfileId,
+              verifierEmailHash: hashVerificationToken(verifierEmail),
+              verifierDomainSnapshot: verifierEmail.split('@')[1] || null,
+              integrityStatus: 'unknown',
+              claimSnapshot: {
+                displayLabel: artifact.label,
+                artifactType: artifact.type,
+              },
+              sourceRequestTable: 'custom_verification_requests',
+              sourceRequestId: customRequest.id,
+              metadata: {
+                relationship: parsed.data.relationship,
+                message: parsed.data.message?.trim() || null,
+              },
+            })
+          )
+        )
+      : [];
+
     if (selectedSkillIds.length > 0) {
       const mappedSkillVerifierSource = mapCustomRelationshipToSkillVerifierSource(
         parsed.data.relationship
@@ -672,6 +706,7 @@ export async function POST(request: NextRequest) {
         request: {
           ...customRequest,
           artifact_count: selectedArtifacts.length,
+          canonical_record_ids: canonicalRecords.map((record) => record.id),
         },
         email_sent: emailResult.success,
       },

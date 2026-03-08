@@ -49,6 +49,10 @@ export async function GET(
         m.assignment_id,
         m.profile_id,
         m.score,
+        m.score_version,
+        m.inputs_hash,
+        m.reason_codes,
+        m.generated_at,
         m.vector,
         m.weights,
         a.role,
@@ -78,6 +82,10 @@ export async function GET(
       assignment_id: string;
       profile_id: string;
       score: string | number;
+      score_version: string | null;
+      inputs_hash: string | null;
+      reason_codes: string[] | null;
+      generated_at: string | null;
       vector: unknown;
       weights: unknown;
       role: string | null;
@@ -268,6 +276,10 @@ export async function GET(
     const explanation = {
       matchId: match.id,
       compositeScore: Number(match.score) || 0,
+      scoreVersion: match.score_version,
+      inputsHash: match.inputs_hash,
+      reasonCodes: Array.isArray(match.reason_codes) ? match.reason_codes : [],
+      generatedAt: match.generated_at,
       rank: exactRankAllowed ? rank : undefined,
       totalCandidates,
       rankBand,

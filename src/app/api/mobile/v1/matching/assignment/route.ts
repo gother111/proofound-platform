@@ -8,6 +8,11 @@ import { isActiveOrgMember, requireMobileAuth } from '@/lib/api/mobile/auth';
 import { mobileError, mobileSuccess } from '@/lib/api/mobile/response';
 import { computeAssignmentMatches } from '@/lib/core/matching/assignmentMatcher';
 import { getPreset, normalizeWeights, type PresetKey } from '@/lib/core/matching/presets';
+import {
+  buildMatchAuditFields,
+  CANONICAL_MATCH_AUDIT_FIELDS_ENABLED,
+  CANONICAL_MATCH_SCORE_VERSION,
+} from '@/lib/canonical/repository';
 
 export const dynamic = 'force-dynamic';
 
@@ -92,6 +97,16 @@ export async function POST(request: NextRequest) {
           weights,
           pac: item.pac,
         };
+        const auditFields = buildMatchAuditFields({
+          scoreVersion: CANONICAL_MATCH_SCORE_VERSION,
+          assignmentId,
+          profileId: item.profileId,
+          weights,
+          subscores: item.subscores,
+          missing: item.missing,
+          gaps: item.gaps,
+          verificationGates: assignment.verificationGates || [],
+        });
 
         const [row] = await db
           .insert(matches)
@@ -99,6 +114,10 @@ export async function POST(request: NextRequest) {
             assignmentId,
             profileId: item.profileId,
             score: item.score.toString(),
+            scoreVersion: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.scoreVersion : null,
+            inputsHash: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.inputsHash : null,
+            reasonCodes: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.reasonCodes : [],
+            generatedAt: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.generatedAt : null,
             vector: vectorPayload,
             weights,
           })
@@ -106,6 +125,10 @@ export async function POST(request: NextRequest) {
             target: [matches.assignmentId, matches.profileId],
             set: {
               score: item.score.toString(),
+              scoreVersion: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.scoreVersion : null,
+              inputsHash: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.inputsHash : null,
+              reasonCodes: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.reasonCodes : [],
+              generatedAt: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.generatedAt : null,
               vector: vectorPayload,
               weights,
             },

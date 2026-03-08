@@ -9,6 +9,11 @@ import {
   normalizeEmail,
   writeVerificationAuditLog,
 } from '@/lib/verification/integrity';
+import {
+  CANONICAL_PROOFS_WRITE_ENABLED,
+  upsertCanonicalVerificationRecord,
+} from '@/lib/canonical/repository';
+import { hashOpaqueToken } from '@/lib/contracts/canonical-domain';
 
 const RespondSchema = z.object({
   action: z.enum(['accept', 'decline']),
@@ -129,6 +134,44 @@ export async function POST(
       return NextResponse.json({ error: 'Failed to update verification request' }, { status: 500 });
     }
 
+    const canonicalRecord = CANONICAL_PROOFS_WRITE_ENABLED
+      ? await upsertCanonicalVerificationRecord({
+          ownerType: 'individual_profile',
+          ownerId: verificationRequest.requester_profile_id,
+          subjectType: 'skill',
+          subjectId: verificationRequest.skill_id,
+          verificationKind:
+            verificationRequest.verifier_source === 'manager'
+              ? 'skill_manager'
+              : verificationRequest.verifier_source === 'peer'
+                ? 'skill_peer'
+                : 'manual',
+          status: updated.status,
+          verifierPrincipalType: 'user_account',
+          verifierProfileId: user.id,
+          verifierEmailHash: userEmail ? hashOpaqueToken(userEmail) : null,
+          verifierDomainSnapshot:
+            typeof verificationRequest.verifier_domain_snapshot === 'string'
+              ? verificationRequest.verifier_domain_snapshot
+              : null,
+          integrityStatus: updated.integrity_status === 'clear' ? 'clear' : 'flagged',
+          integrityReason: updated.integrity_reason || null,
+          riskSignals:
+            updated.risk_signals && typeof updated.risk_signals === 'object'
+              ? (updated.risk_signals as Record<string, unknown>)
+              : {},
+          sourceRequestTable: 'skill_verification_requests',
+          sourceRequestId: requestId,
+          sourceResponseTable: 'skill_verification_requests',
+          sourceResponseId: requestId,
+          verifiedAt: validated.action === 'accept' ? respondedAt : null,
+          metadata: {
+            responseMessage: validated.responseMessage || null,
+            responseAuthMethod: 'authenticated',
+          },
+        })
+      : null;
+
     // Notify the requester that verification was completed
     try {
       const { data: requesterProfile } = await supabase
@@ -169,6 +212,7 @@ export async function POST(
     return NextResponse.json({
       request: updated,
       message: `Verification request ${validated.action === 'accept' ? 'accepted' : 'declined'} successfully`,
+      canonical_record_id: canonicalRecord?.id ?? null,
       integrity_status: updated.integrity_status || mergedIntegrity.integrityStatus,
       integrity_reason:
         (updated.integrity_status || mergedIntegrity.integrityStatus) === 'flagged'
