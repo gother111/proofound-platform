@@ -1,6 +1,6 @@
 /**
  * Assignment Builder - Step 1: Business Value
- * 
+ *
  * Define role, outcomes, and assign stakeholders
  */
 
@@ -22,6 +22,7 @@ interface Step1Props {
   onOpenTemplatePicker: () => void;
   appliedTemplateName?: string | null;
   isLoadingTemplates?: boolean;
+  templateAccessEnabled?: boolean;
 }
 
 const STAKEHOLDER_OPTIONS = [
@@ -37,19 +38,28 @@ export function Step1BusinessValue({
   onOpenTemplatePicker,
   appliedTemplateName,
   isLoadingTemplates = false,
+  templateAccessEnabled = false,
 }: Step1Props) {
-  const { register, watch, setValue, formState: { errors } } = form;
-  
+  const {
+    register,
+    watch,
+    setValue,
+    formState: { errors },
+  } = form;
+
   const role = watch('role');
   const businessValue = watch('businessValue');
   const stakeholders = watch('stakeholders') || [];
-  
+
   const isValid = role && role.length >= 3 && businessValue && businessValue.length > 0;
-  
+
   const toggleStakeholder = (stakeholderId: string) => {
     const current = stakeholders || [];
     if (current.includes(stakeholderId)) {
-      setValue('stakeholders', current.filter((id: string) => id !== stakeholderId));
+      setValue(
+        'stakeholders',
+        current.filter((id: string) => id !== stakeholderId)
+      );
     } else {
       setValue('stakeholders', [...current, stakeholderId]);
     }
@@ -67,19 +77,22 @@ export function Step1BusinessValue({
             )}
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onOpenTemplatePicker}
-              disabled={isLoadingTemplates}
-            >
-              {isLoadingTemplates ? 'Loading...' : 'Load template'}
-            </Button>
+            {templateAccessEnabled ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onOpenTemplatePicker}
+                disabled={isLoadingTemplates}
+              >
+                {isLoadingTemplates ? 'Loading...' : 'Load template'}
+              </Button>
+            ) : null}
             <span className="text-sm text-muted-foreground">Step 1 of 5</span>
           </div>
         </div>
         <p className="text-muted-foreground">
-          Define the role and articulate the business value it will create
+          Define the role and articulate the business value it will create.
+          {!templateAccessEnabled ? ' Templates stay out of the default launch path.' : ''}
         </p>
         <Progress value={20} className="mt-4" />
       </div>
@@ -100,9 +113,7 @@ export function Step1BusinessValue({
             },
           })}
         />
-        {errors.role && (
-          <p className="text-sm text-destructive">{errors.role.message as string}</p>
-        )}
+        {errors.role && <p className="text-sm text-destructive">{errors.role.message as string}</p>}
       </div>
 
       {/* Business Value */}
@@ -123,9 +134,7 @@ export function Step1BusinessValue({
           <p className="text-sm text-muted-foreground">
             Explain the business value this role will create
           </p>
-          <span className="text-xs text-muted-foreground">
-            {businessValue?.length || 0}/500
-          </span>
+          <span className="text-xs text-muted-foreground">{businessValue?.length || 0}/500</span>
         </div>
         {errors.businessValue && (
           <p className="text-sm text-destructive">{errors.businessValue.message as string}</p>
@@ -150,9 +159,7 @@ export function Step1BusinessValue({
       {/* Stakeholders */}
       <div className="space-y-3">
         <Label>Stakeholders (Optional)</Label>
-        <p className="text-sm text-muted-foreground">
-          Who are the key stakeholders for this role?
-        </p>
+        <p className="text-sm text-muted-foreground">Who are the key stakeholders for this role?</p>
         <div className="space-y-2">
           {STAKEHOLDER_OPTIONS.map((stakeholder) => (
             <div key={stakeholder.id} className="flex items-center space-x-2">
@@ -161,10 +168,7 @@ export function Step1BusinessValue({
                 checked={stakeholders.includes(stakeholder.id)}
                 onCheckedChange={() => toggleStakeholder(stakeholder.id)}
               />
-              <Label
-                htmlFor={stakeholder.id}
-                className="text-sm font-normal cursor-pointer"
-              >
+              <Label htmlFor={stakeholder.id} className="text-sm font-normal cursor-pointer">
                 {stakeholder.label}
               </Label>
             </div>
