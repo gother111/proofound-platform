@@ -17,6 +17,7 @@ import {
   canManageInterviewAsOrgAdmin,
   postInterviewUpdateMessageBestEffort,
 } from '@/lib/interviews/messaging';
+import { buildWorkflowView, recordInterviewTransition } from '@/lib/workflow/service';
 
 const CancelInterviewSchema = z.object({
   interviewId: z.string().uuid(),
@@ -106,6 +107,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to cancel interview' }, { status: 500 });
     }
 
+    const updatedInterview = await recordInterviewTransition({
+      interviewId,
+      toState: 'cancelled',
+      actorType: 'organization_member',
+      actorId: user.id,
+      trigger: 'org_cancelled_interview',
+      reasonCode: reason?.trim() || 'cancelled_by_org',
+      metadata: {
+        previousScheduledAt: context.scheduledAt?.toISOString?.() ?? null,
+      },
+    });
+
     await postInterviewUpdateMessageBestEffort({
       action: 'cancelled',
       actorUserId: user.id,
@@ -129,6 +142,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Interview cancelled successfully',
+      workflow: buildWorkflowView({
+        machine: 'interview',
+        state: updatedInterview.status,
+        reasonCode: updatedInterview.cancelReason,
+        timestamps: {
+          completedAt: updatedInterview.completedAt?.toISOString(),
+          cancelledAt: updatedInterview.cancelledAt?.toISOString(),
+          noShowAt: updatedInterview.noShowAt?.toISOString(),
+          updatedAt: updatedInterview.updatedAt?.toISOString(),
+        },
+      }),
     });
   } catch (error: any) {
     console.error('Interview cancellation error:', error);

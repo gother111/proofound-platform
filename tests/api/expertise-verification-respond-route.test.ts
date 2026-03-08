@@ -19,8 +19,8 @@ describe('POST /api/expertise/verification/[requestId]/respond', () => {
   });
 
   it('uses requester_profile_id and authorizes verifier email case-insensitively', async () => {
-    const requestId = 'req-1';
-    const requesterProfileId = 'requester-profile-1';
+    const requestId = '11111111-1111-4111-8111-111111111111';
+    const requesterProfileId = '22222222-2222-4222-8222-222222222222';
     const verificationRequest = {
       id: requestId,
       requester_profile_id: requesterProfileId,
@@ -95,7 +95,7 @@ describe('POST /api/expertise/verification/[requestId]/respond', () => {
 
     (requireApiAuthContext as any).mockResolvedValue({
       user: {
-        id: 'verifier-user-1',
+        id: '33333333-3333-4333-8333-333333333333',
       },
       supabase,
     });
@@ -113,7 +113,7 @@ describe('POST /api/expertise/verification/[requestId]/respond', () => {
 
     expect(response.status).toBe(200);
     expect(requestedProfileId).toBe(requesterProfileId);
-    expect(updatePayload?.verifier_profile_id).toBe('verifier-user-1');
+    expect(updatePayload?.verifier_profile_id).toBe('33333333-3333-4333-8333-333333333333');
     expect(updatePayload?.response_auth_method).toBe('authenticated');
     expect(updatePayload?.response_actor_email).toBe('verifier@example.com');
     expect(notifyVerificationCompleted).toHaveBeenCalledWith(

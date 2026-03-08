@@ -227,7 +227,7 @@ export async function getOrgDashboardMetrics(orgId: string, userId: string) {
         total: assignmentStats.total,
         active: assignmentStats.active,
         draft: assignmentsData.find((a) => a.status === 'draft')?.count || 0,
-        paused: assignmentsData.find((a) => a.status === 'paused')?.count || 0,
+        hold: assignmentsData.find((a) => a.status === 'hold')?.count || 0,
         closed: assignmentsData.find((a) => a.status === 'closed')?.count || 0,
       },
       activity: {

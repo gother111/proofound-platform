@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const ASSIGNMENT_STATUS_VALUES = ['draft', 'active', 'paused', 'closed'] as const;
+export const ASSIGNMENT_STATUS_VALUES = ['draft', 'active', 'hold', 'closed'] as const;
 export type AssignmentStatus = (typeof ASSIGNMENT_STATUS_VALUES)[number];
 export const AssignmentStatusSchema = z.enum(ASSIGNMENT_STATUS_VALUES);
 

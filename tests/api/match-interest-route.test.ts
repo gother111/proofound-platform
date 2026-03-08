@@ -45,6 +45,34 @@ vi.mock('@/lib/readiness/individual-state', () => ({
   getIndividualReadinessState: vi.fn(),
 }));
 
+vi.mock('@/lib/workflow/service', () => ({
+  syncIntroWorkflowFromInterest: vi.fn().mockResolvedValue({
+    id: 'intro-1',
+    state: 'mutual',
+    closeReason: null,
+    expiresAt: null,
+    withdrawnAt: null,
+    closedAt: null,
+    updatedAt: new Date(),
+  }),
+  openIntroConversation: vi.fn().mockResolvedValue({
+    id: 'intro-1',
+    state: 'conversation_open',
+    closeReason: null,
+    expiresAt: null,
+    withdrawnAt: null,
+    closedAt: null,
+    updatedAt: new Date(),
+  }),
+  buildWorkflowView: vi.fn().mockReturnValue({
+    state: 'conversation_open',
+    displayState: 'Conversation open',
+    reasonCode: null,
+    timestamps: {},
+    allowedActions: [],
+  }),
+}));
+
 describe('match interest route', () => {
   const assignmentId = '11111111-1111-1111-1111-111111111111';
   const orgId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';

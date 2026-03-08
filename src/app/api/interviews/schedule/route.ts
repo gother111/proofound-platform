@@ -19,6 +19,7 @@ import {
 import { postInterviewUpdateMessageBestEffort } from '@/lib/interviews/messaging';
 import { classifyGoogleScheduleError } from '@/lib/interviews/schedule-errors';
 import { log } from '@/lib/log';
+import { registerScheduledInterviewWorkflow } from '@/lib/workflow/service';
 
 export const dynamic = 'force-dynamic';
 
@@ -626,6 +627,18 @@ export async function POST(request: NextRequest) {
     if (!interview) {
       throw lastInsertError ?? new Error('Failed to insert interview after compatibility retries');
     }
+
+    await registerScheduledInterviewWorkflow({
+      interviewId: interview.id,
+      matchId: data.matchId,
+      actorType: 'organization_member',
+      actorId: user.id,
+      metadata: {
+        platform: persistedPlatform,
+        scheduledAt: data.scheduledAt,
+        timezone: data.timezone,
+      },
+    });
 
     try {
       const { emitInterviewScheduledAsync } = await import('@/lib/analytics/events');

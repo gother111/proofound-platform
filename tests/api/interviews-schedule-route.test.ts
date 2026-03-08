@@ -48,6 +48,10 @@ vi.mock('@/lib/log', () => ({
   },
 }));
 
+vi.mock('@/lib/workflow/service', () => ({
+  registerScheduledInterviewWorkflow: vi.fn().mockResolvedValue(undefined),
+}));
+
 describe('POST /api/interviews/schedule', () => {
   const userId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
   const matchId = '11111111-1111-4111-8111-111111111111';

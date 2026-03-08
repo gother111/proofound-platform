@@ -100,7 +100,7 @@ export default async function OpportunitiesPage({ params }: { params: Promise<{ 
         return 'bg-green-50 text-green-700';
       case 'draft':
         return 'bg-gray-50 text-gray-700';
-      case 'paused':
+      case 'hold':
         return 'bg-yellow-50 text-yellow-700';
       case 'closed':
         return 'bg-red-50 text-red-700';
@@ -245,7 +245,7 @@ export default async function OpportunitiesPage({ params }: { params: Promise<{ 
           <div className="flex items-center gap-4 text-sm">
             <span className="text-neutral-dark-600">Filter by status:</span>
             <div className="flex gap-2">
-              {['all', 'active', 'draft', 'paused', 'closed'].map((status) => (
+              {['all', 'active', 'draft', 'hold', 'closed'].map((status) => (
                 <Link
                   key={status}
                   href={`/app/o/${slug}/opportunities${status !== 'all' ? `?status=${status}` : ''}`}

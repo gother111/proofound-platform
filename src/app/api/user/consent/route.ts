@@ -11,6 +11,7 @@ import {
   getPolicyVersionForConsentType,
   type ConsentTypeValue,
 } from '@/lib/privacy/consent-contract';
+import { getConsentCheck, syncConsentObligation } from '@/lib/workflow/service';
 
 export const dynamic = 'force-dynamic';
 
@@ -134,6 +135,37 @@ export async function POST(request: NextRequest) {
 
     await db.insert(userConsents).values(consentRecords);
 
+    const latestConsentRecords = await db
+      .select({
+        id: userConsents.id,
+        consentType: userConsents.consentType,
+        consented: userConsents.consented,
+        version: userConsents.version,
+      })
+      .from(userConsents)
+      .where(eq(userConsents.profileId, user.id))
+      .orderBy(desc(userConsents.consentedAt));
+
+    await Promise.all(
+      normalized.consents.map(async (consent) => {
+        const latest = latestConsentRecords.find(
+          (row) => row.consentType === consent.type && row.consented === consent.consented
+        );
+
+        await syncConsentObligation({
+          profileId: user.id,
+          consentType: consent.type,
+          grantedConsentId: latest?.id ?? null,
+          consented: consent.consented,
+          version: latest?.version ?? getPolicyVersionForConsentType(consent.type),
+          actorType: 'candidate',
+          actorId: user.id,
+        });
+      })
+    );
+
+    const consentCheck = await getConsentCheck(user.id);
+
     log.info('privacy.consent.stored', {
       userId: user.id,
       consentTypes: consentRecords.map((record) => record.consentType),
@@ -149,6 +181,7 @@ export async function POST(request: NextRequest) {
         consented: record.consented,
         version: record.version,
       })),
+      workflow: consentCheck.obligations,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

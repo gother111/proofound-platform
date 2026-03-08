@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { reconcileVerifierContradictions } from '@/lib/verification/contradiction';
+import {
+  buildWorkflowView,
+  getLatestWorkEmailVerification,
+  recordVerificationTransition,
+} from '@/lib/workflow/service';
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function isUuid(value: unknown): value is string {
+  return typeof value === 'string' && UUID_PATTERN.test(value);
+}
 
 /**
  * GET /api/verification/work-email/verify?token=xxx
@@ -108,10 +119,42 @@ export async function GET(request: NextRequest) {
       console.error('Work email contradiction reconciliation failed:', reconcileError);
     }
 
+    let updatedVerificationRecord = null;
+    if (isUuid(profile.user_id)) {
+      try {
+        const verificationRecord = await getLatestWorkEmailVerification(profile.user_id);
+        if (verificationRecord) {
+          updatedVerificationRecord = await recordVerificationTransition({
+            verificationRecordId: verificationRecord.id,
+            toState: 'accepted',
+            actorType: 'candidate',
+            actorId: profile.user_id,
+            metadata: {
+              workEmail: profile.work_email,
+            },
+          });
+        }
+      } catch (workflowError) {
+        console.error('Failed to sync canonical work email verification:', workflowError);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Work email verified successfully',
       workEmail: profile.work_email,
+      workflow: updatedVerificationRecord
+        ? buildWorkflowView({
+            machine: 'verification',
+            state: updatedVerificationRecord.status,
+            reasonCode: updatedVerificationRecord.failureCode,
+            timestamps: {
+              completedAt: updatedVerificationRecord.completedAt?.toISOString(),
+              verifiedAt: updatedVerificationRecord.verifiedAt?.toISOString(),
+              requestExpiresAt: updatedVerificationRecord.requestExpiresAt?.toISOString(),
+            },
+          })
+        : null,
     });
   } catch (error) {
     console.error('Error in work email verification:', error);

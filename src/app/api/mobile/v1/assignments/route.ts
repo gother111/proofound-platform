@@ -13,7 +13,7 @@ const CreateAssignmentSchema = z.object({
   orgId: z.string().uuid(),
   role: z.string().min(1),
   description: z.string().optional(),
-  status: z.enum(['draft', 'active', 'paused', 'closed']).optional().default('draft'),
+  status: z.enum(['draft', 'active', 'hold', 'paused', 'closed']).optional().default('draft'),
   valuesRequired: z.array(z.string()).optional(),
   causeTags: z.array(z.string()).optional(),
   mustHaveSkills: z.array(z.any()).optional(),
@@ -57,8 +57,9 @@ export async function GET(request: NextRequest) {
     }
 
     const status = request.nextUrl.searchParams.get('status');
-    const allowedStatus = ['draft', 'active', 'paused', 'closed'];
-    const statusFilter = status && allowedStatus.includes(status) ? status : null;
+    const allowedStatus = ['draft', 'active', 'hold', 'paused', 'closed'];
+    const statusFilter =
+      status && allowedStatus.includes(status) ? (status === 'paused' ? 'hold' : status) : null;
     const whereClause = statusFilter
       ? and(eq(assignments.orgId, orgId), eq(assignments.status, statusFilter as any))
       : eq(assignments.orgId, orgId);
@@ -105,6 +106,7 @@ export async function POST(request: NextRequest) {
       .insert(assignments)
       .values({
         ...parsed.data,
+        status: parsed.data.status === 'paused' ? 'hold' : parsed.data.status,
         createdAt: new Date(),
         updatedAt: new Date(),
       })

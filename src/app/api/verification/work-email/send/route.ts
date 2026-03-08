@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { sendWorkEmailVerification } from '@/lib/email';
 import crypto from 'crypto';
 import { z } from 'zod';
+import { buildWorkflowView, syncWorkEmailVerificationRequested } from '@/lib/workflow/service';
 
 const SendWorkEmailVerificationSchema = z.object({
   workEmail: z.string().email('Invalid email address'),
@@ -121,11 +122,34 @@ export async function POST(request: NextRequest) {
       console.error('Failed to set work email verification status to pending:', pendingStatusError);
     }
 
+    let verificationWorkflow = null;
+    try {
+      verificationWorkflow = await syncWorkEmailVerificationRequested({
+        profileId: user.id,
+        orgId: orgId || null,
+        workEmail: normalizedEmail,
+        requestExpiresAt: expiresAt,
+      });
+    } catch (workflowError) {
+      console.error('Failed to sync canonical verification workflow:', workflowError);
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Verification email sent',
       verificationStatus: 'pending',
       expiresAt: expiresAt.toISOString(),
+      workflow: verificationWorkflow
+        ? buildWorkflowView({
+            machine: 'verification',
+            state: verificationWorkflow.status,
+            timestamps: {
+              requestExpiresAt: verificationWorkflow.requestExpiresAt?.toISOString(),
+              followUpDueAt: verificationWorkflow.followUpDueAt?.toISOString(),
+              updatedAt: verificationWorkflow.updatedAt?.toISOString(),
+            },
+          })
+        : null,
     });
   } catch (error) {
     console.error('Error in work email verification send:', error);

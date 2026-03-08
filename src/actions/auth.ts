@@ -266,6 +266,24 @@ export async function signUp(
             );
           }
 
+          const { syncConsentObligation } = await import('@/lib/workflow/service');
+          const signUpUserId = signUpResult.user?.id;
+          if (!signUpUserId) {
+            throw new Error('Signup completed without a persisted user id');
+          }
+          await Promise.all(
+            consentRecords.map((record) =>
+              syncConsentObligation({
+                profileId: signUpUserId,
+                consentType: record.consent_type,
+                grantedConsentId: null,
+                consented: record.consented,
+                version: record.version,
+                actorType: 'system',
+              })
+            )
+          );
+
           console.log('GDPR consent records stored successfully for user:', signUpResult.user.id);
         } catch (consentError) {
           console.error('CRITICAL: GDPR consent storage failed:', consentError);

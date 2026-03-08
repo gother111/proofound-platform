@@ -1,19 +1,23 @@
 /**
- * Decision Automation Library
+ * Canonical decision automation and reminder processing.
  *
- * Implements PRD Requirement: 48-hour decision window after interview
- * Tracks decision SLA and sends reminders
+ * Decision current-state lives in `decisions`.
+ * Reminder delivery attempts live in `workflow_async_jobs`.
  */
 
-import { db } from '@/db';
-import { sql } from 'drizzle-orm';
-import { log } from '@/lib/log';
-import { emitDecisionMade } from '@/lib/analytics/events';
-import { getRows } from '@/lib/db/rows';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 
-// ============================================================================
-// TYPES
-// ============================================================================
+import { db } from '@/db';
+import { decisions, interviews, workflowAsyncJobs } from '@/db/schema';
+import { getRows } from '@/lib/db/rows';
+import { log } from '@/lib/log';
+import {
+  cancelWorkflowJobs,
+  claimWorkflowJobs,
+  markWorkflowJobFailure,
+  markWorkflowJobSuccess,
+} from '@/lib/workflow/queue';
+import { recordDecisionTransition } from '@/lib/workflow/service';
 
 export type DecisionType = 'hire' | 'advance' | 'hold' | 'reject';
 
@@ -24,167 +28,41 @@ export interface Decision {
   feedback?: string;
   decisionMadeAt: Date;
   hoursSinceInterview: number;
-  withinSLA: boolean; // Within 48 hours
+  withinSLA: boolean;
 }
 
 export interface DecisionWindow {
   interviewId: string;
   interviewCompletedAt: Date;
-  deadline: Date; // 48 hours from interview completion
+  deadline: Date;
   hoursRemaining: number;
   isOverdue: boolean;
   remindersSent: number;
 }
 
-type InterviewReminderCandidate = {
-  interview_id: string;
-  assignment_id: string;
-  candidate_id: string;
-  organization_id: string;
-  completed_at: string;
-  hours_remaining: string;
-};
-
-function isUndefinedColumnError(error: unknown): boolean {
-  return Boolean(
-    error && typeof error === 'object' && (error as { code?: string }).code === '42703'
-  );
-}
-
-async function getInterviewCompletionTime(interviewId: string): Promise<Date> {
-  try {
-    const canonical = await db.execute(sql`
-      SELECT COALESCE(i.updated_at, i.scheduled_at) AS completed_at
-      FROM interviews i
-      WHERE i.id = ${interviewId}
-    `);
-
-    const canonicalRows = getRows(canonical) as Array<{ completed_at: string | null }>;
-    if (canonicalRows.length > 0 && canonicalRows[0].completed_at) {
-      return new Date(canonicalRows[0].completed_at);
-    }
-  } catch (error) {
-    if (!isUndefinedColumnError(error)) {
-      throw error;
-    }
+function resolveCompletedAt(interview: typeof interviews.$inferSelect | null) {
+  if (!interview) {
+    return null;
   }
 
-  const legacy = await db.execute(sql`
-    SELECT completed_at
-    FROM interviews
-    WHERE id = ${interviewId}
-  `);
-
-  const legacyRows = getRows(legacy) as Array<{ completed_at: string | null }>;
-  if (!legacyRows.length || !legacyRows[0].completed_at) {
-    throw new Error('Interview not found or completion time unavailable');
-  }
-
-  return new Date(legacyRows[0].completed_at);
+  return interview.completedAt ?? interview.updatedAt ?? interview.scheduledAt;
 }
 
-async function getInterviewReminderRows(): Promise<InterviewReminderCandidate[]> {
-  try {
-    const canonical = await db.execute(sql`
-      SELECT
-        i.id AS interview_id,
-        m.assignment_id,
-        m.profile_id AS candidate_id,
-        a.org_id AS organization_id,
-        COALESCE(i.updated_at, i.scheduled_at) AS completed_at,
-        EXTRACT(EPOCH FROM ((COALESCE(i.updated_at, i.scheduled_at) + INTERVAL '48 hours') - NOW())) / 3600 AS hours_remaining
-      FROM interviews i
-      INNER JOIN matches m ON i.match_id = m.id
-      INNER JOIN assignments a ON m.assignment_id = a.id
-      LEFT JOIN decisions d ON i.id = d.interview_id
-      WHERE i.status = 'completed'
-        AND d.id IS NULL
-        AND COALESCE(i.updated_at, i.scheduled_at) < NOW()
-      ORDER BY COALESCE(i.updated_at, i.scheduled_at) ASC
-    `);
-
-    return getRows(canonical) as InterviewReminderCandidate[];
-  } catch (error) {
-    if (!isUndefinedColumnError(error)) {
-      throw error;
-    }
-  }
-
-  const legacy = await db.execute(sql`
-    SELECT
-      i.id AS interview_id,
-      i.assignment_id,
-      i.participant_user_ids[1] AS candidate_id,
-      a.org_id AS organization_id,
-      i.completed_at,
-      EXTRACT(EPOCH FROM (i.completed_at + INTERVAL '48 hours' - NOW())) / 3600 AS hours_remaining
-    FROM interviews i
-    INNER JOIN assignments a ON i.assignment_id = a.id
-    LEFT JOIN decisions d ON i.id = d.interview_id
-    WHERE i.status = 'completed'
-      AND d.id IS NULL
-      AND i.completed_at < NOW()
-    ORDER BY i.completed_at ASC
-  `);
-
-  return getRows(legacy) as InterviewReminderCandidate[];
+async function getInterview(interviewId: string) {
+  return db.query.interviews.findFirst({
+    where: eq(interviews.id, interviewId),
+  });
 }
 
-async function getInterviewForReminder(interviewId: string) {
-  try {
-    const canonical = await db.execute(sql`
-      SELECT
-        i.id,
-        i.status,
-        a.role,
-        a.org_id AS organization_id
-      FROM interviews i
-      INNER JOIN matches m ON i.match_id = m.id
-      INNER JOIN assignments a ON m.assignment_id = a.id
-      WHERE i.id = ${interviewId}
-    `);
-
-    const rows = getRows(canonical) as Array<{
-      id: string;
-      status: string;
-      role: string;
-      organization_id: string;
-    }>;
-    if (rows.length > 0) {
-      return rows[0];
-    }
-  } catch (error) {
-    if (!isUndefinedColumnError(error)) {
-      throw error;
-    }
-  }
-
-  const legacy = await db.execute(sql`
-    SELECT
-      i.id,
-      i.status,
-      a.role,
-      a.org_id AS organization_id
-    FROM interviews i
-    INNER JOIN assignments a ON i.assignment_id = a.id
-    WHERE i.id = ${interviewId}
-  `);
-
-  const legacyRows = getRows(legacy) as Array<{
-    id: string;
-    status: string;
-    role: string;
-    organization_id: string;
-  }>;
-  return legacyRows[0] ?? null;
+async function getDecisionByInterview(interviewId: string) {
+  return db.query.decisions.findFirst({
+    where: eq(decisions.latestInterviewId, interviewId),
+    orderBy: [desc(decisions.updatedAt)],
+  });
 }
-
-// ============================================================================
-// DECISION TRACKING
-// ============================================================================
 
 /**
- * Record a decision for an interview
+ * Backward-compatible wrapper used by older route/tests.
  */
 export async function recordDecision(
   userId: string,
@@ -192,109 +70,60 @@ export async function recordDecision(
   decision: DecisionType,
   feedback?: string
 ): Promise<Decision> {
-  try {
-    const completedAt = await getInterviewCompletionTime(interviewId);
-    const now = new Date();
-    const hoursSinceInterview = (now.getTime() - completedAt.getTime()) / (1000 * 60 * 60);
-    const withinSLA = hoursSinceInterview <= 48;
+  const updated = await recordDecisionTransition({
+    interviewId,
+    toState: decision,
+    actorType: 'organization_member',
+    actorId: userId,
+    internalNote: feedback ?? null,
+  });
 
-    // Store decision
-    const result = await db.execute(sql`
-      INSERT INTO decisions (
-        interview_id,
-        decision,
-        feedback,
-        hours_since_interview,
-        within_sla,
-        created_at
-      ) VALUES (
-        ${interviewId},
-        ${decision},
-        ${feedback || null},
-        ${hoursSinceInterview},
-        ${withinSLA},
-        NOW()
-      )
-      RETURNING *
-    `);
+  const interview = await getInterview(interviewId);
+  const completedAt = resolveCompletedAt(interview ?? null) ?? new Date();
+  const decisionMadeAt = updated.updatedAt ?? new Date();
+  const hoursSinceInterview = (decisionMadeAt.getTime() - completedAt.getTime()) / (1000 * 60 * 60);
 
-    const decisionRecord = (getRows(result)[0] ?? null) as any;
-
-    // Emit analytics event
-    await emitDecisionMade(userId, interviewId, {
-      interview_id: interviewId,
-      decision,
-      hours_since_interview: hoursSinceInterview,
-      feedback_provided: !!feedback,
-    });
-
-    log.info('decision.recorded', {
-      userId,
-      interviewId,
-      decision,
-      hoursSinceInterview: hoursSinceInterview.toFixed(2),
-      withinSLA,
-    });
-
-    return {
-      id: decisionRecord.id,
-      interviewId,
-      decision,
-      feedback,
-      decisionMadeAt: new Date(decisionRecord.created_at),
-      hoursSinceInterview,
-      withinSLA,
-    };
-  } catch (error) {
-    log.error('decision.record.failed', {
-      userId,
-      interviewId,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-    throw error;
-  }
+  return {
+    id: updated.id,
+    interviewId,
+    decision,
+    feedback,
+    decisionMadeAt,
+    hoursSinceInterview,
+    withinSLA: hoursSinceInterview <= 48,
+  };
 }
 
-/**
- * Get decision window status for an interview
- */
 export async function getDecisionWindow(interviewId: string): Promise<DecisionWindow | null> {
-  try {
-    const completedAt = await getInterviewCompletionTime(interviewId);
-    const deadline = new Date(completedAt.getTime() + 48 * 60 * 60 * 1000); // 48 hours
-    const now = new Date();
-    const hoursRemaining = (deadline.getTime() - now.getTime()) / (1000 * 60 * 60);
-    const isOverdue = hoursRemaining < 0;
-
-    // Count reminders sent
-    const reminders = await db.execute(sql`
-      SELECT COUNT(*) as count
-      FROM decision_reminders
-      WHERE interview_id = ${interviewId}
-    `);
-
-    const remindersSent = parseInt(((getRows(reminders)[0] as any)?.count ?? '0') as string, 10);
-
-    return {
-      interviewId,
-      interviewCompletedAt: completedAt,
-      deadline,
-      hoursRemaining,
-      isOverdue,
-      remindersSent,
-    };
-  } catch (error) {
-    log.error('decision.window.failed', {
-      interviewId,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+  const interview = await getInterview(interviewId);
+  const completedAt = resolveCompletedAt(interview ?? null);
+  if (!interview || !completedAt) {
     return null;
   }
+
+  const deadline = new Date(completedAt.getTime() + 48 * 60 * 60 * 1000);
+  const now = new Date();
+  const hoursRemaining = (deadline.getTime() - now.getTime()) / (1000 * 60 * 60);
+  const remindersResult = await db.execute(sql`
+    SELECT COUNT(*)::int AS sent_count
+    FROM public.workflow_async_jobs
+    WHERE interview_id = ${interviewId}
+      AND job_type = 'decision_reminder'
+      AND status = 'completed'
+  `);
+  const remindersSent =
+    (getRows(remindersResult)[0] as { sent_count?: number } | undefined)?.sent_count ?? 0;
+
+  return {
+    interviewId,
+    interviewCompletedAt: completedAt,
+    deadline,
+    hoursRemaining,
+    isOverdue: hoursRemaining < 0,
+    remindersSent,
+  };
 }
 
-/**
- * Get all interviews awaiting decisions (no decision made yet)
- */
 export async function getInterviewsAwaitingDecision(): Promise<
   Array<{
     interviewId: string;
@@ -306,85 +135,67 @@ export async function getInterviewsAwaitingDecision(): Promise<
     isOverdue: boolean;
   }>
 > {
-  try {
-    const rows = await getInterviewReminderRows();
+  const result = await db.execute(sql`
+    SELECT
+      i.id AS interview_id,
+      d.assignment_id,
+      d.candidate_profile_id AS candidate_id,
+      d.org_id AS organization_id,
+      COALESCE(i.completed_at, i.updated_at, i.scheduled_at) AS completed_at
+    FROM public.decisions d
+    INNER JOIN public.interviews i ON i.id = d.latest_interview_id
+    WHERE d.state = 'pending'
+      AND i.status = 'completed'
+    ORDER BY COALESCE(i.completed_at, i.updated_at, i.scheduled_at) ASC
+  `);
 
-    return rows.map((row) => {
-      const hoursRemaining = parseFloat(row.hours_remaining);
-      return {
-        interviewId: row.interview_id,
-        assignmentId: row.assignment_id,
-        candidateId: row.candidate_id,
-        organizationId: row.organization_id,
-        completedAt: new Date(row.completed_at),
-        hoursRemaining,
-        isOverdue: hoursRemaining < 0,
-      };
-    });
-  } catch (error) {
-    log.error('decision.awaiting.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-    return [];
-  }
+  return (
+    getRows(result) as Array<{
+      interview_id: string;
+      assignment_id: string;
+      candidate_id: string;
+      organization_id: string;
+      completed_at: string;
+    }>
+  ).map((row) => {
+    const completedAt = new Date(row.completed_at);
+    const deadline = new Date(completedAt.getTime() + 48 * 60 * 60 * 1000);
+    const hoursRemaining = (deadline.getTime() - Date.now()) / (1000 * 60 * 60);
+    return {
+      interviewId: row.interview_id,
+      assignmentId: row.assignment_id,
+      candidateId: row.candidate_id,
+      organizationId: row.organization_id,
+      completedAt,
+      hoursRemaining,
+      isOverdue: hoursRemaining < 0,
+    };
+  });
 }
 
-// ============================================================================
-// REMINDER SYSTEM
-// ============================================================================
-
-/**
- * Send decision reminder to organization
- * Reminders sent at: 24h, 40h, 48h (deadline), 54h (overdue)
- */
 export async function sendDecisionReminder(
   interviewId: string,
   organizationId: string,
   reminderType: '24h' | '40h' | '48h_deadline' | '54h_overdue'
 ): Promise<boolean> {
-  try {
-    const interviewData = await getInterviewForReminder(interviewId);
-
-    if (!interviewData) {
-      log.warn('decision.reminder.no_interview', { interviewId });
-      return false;
-    }
-
-    // Check if decision already made
-    const decision = await db.execute(sql`
-      SELECT id FROM decisions WHERE interview_id = ${interviewId}
-    `);
-
-    if (getRows(decision).length > 0) {
-      log.info('decision.reminder.already_decided', { interviewId });
-      return false;
-    }
-
-    // Record reminder sent
-    await db.execute(sql`
-      INSERT INTO decision_reminders (
-        interview_id,
-        organization_id,
-        reminder_type,
-        sent_at
-      ) VALUES (
-        ${interviewId},
-        ${organizationId},
-        ${reminderType},
-        NOW()
-      )
-    `);
-
-    // TODO: Send actual email/notification
-    // For now, just log
-    log.info('decision.reminder.sent', {
+  const decision = await getDecisionByInterview(interviewId);
+  if (!decision || decision.state !== 'pending') {
+    log.info('decision.reminder.skipped_not_pending', {
       interviewId,
       organizationId,
       reminderType,
-      role: interviewData.role,
     });
+    return false;
+  }
 
-    // Emit analytics event
+  log.info('decision.reminder.sent', {
+    interviewId,
+    organizationId,
+    reminderType,
+    decisionId: decision.id,
+  });
+
+  try {
     await db.execute(sql`
       INSERT INTO analytics_events (
         event_type,
@@ -396,100 +207,119 @@ export async function sendDecisionReminder(
         created_at
       ) VALUES (
         'decision_reminder_sent',
+        ${decision.candidateProfileId},
         ${organizationId},
-        ${organizationId},
-        'interview',
-        ${interviewId},
-        ${JSON.stringify({ reminder_type: reminderType })}::jsonb,
+        'decision',
+        ${decision.id},
+        ${JSON.stringify({ reminder_type: reminderType, interview_id: interviewId })}::jsonb,
         NOW()
       )
     `);
-
-    return true;
   } catch (error) {
-    log.error('decision.reminder.failed', {
+    log.warn('decision.reminder.analytics_failed', {
       interviewId,
-      reminderType,
+      decisionId: decision.id,
       error: error instanceof Error ? error.message : 'Unknown error',
     });
-    return false;
   }
+
+  return true;
 }
 
-/**
- * Process decision reminders (called by cron)
- * Checks all completed interviews and sends appropriate reminders
- */
 export async function processDecisionReminders(): Promise<{
   processed: number;
   sent: number;
   skipped: number;
 }> {
-  try {
-    log.info('decision.reminders.processing.start');
+  const jobs = await claimWorkflowJobs(50);
+  const reminderJobs = jobs.filter((job) => job.jobType === 'decision_reminder');
 
-    const awaitingDecision = await getInterviewsAwaitingDecision();
-    let sent = 0;
-    let skipped = 0;
+  let sent = 0;
+  let skipped = 0;
 
-    for (const interview of awaitingDecision) {
-      const hoursElapsed = 48 - interview.hoursRemaining;
+  for (const job of reminderJobs) {
+    try {
+      const decisionId = job.decisionId;
+      const interviewId = job.interviewId;
+      const reminderType = String((job.payload as Record<string, unknown>)?.reminderKey ?? '');
 
-      // Check if reminder already sent
-      const existingReminders = await db.execute(sql`
-        SELECT reminder_type
-        FROM decision_reminders
-        WHERE interview_id = ${interview.interviewId}
-      `);
+      if (
+        !decisionId ||
+        !interviewId ||
+        !['24h', '40h', '48h_deadline', '54h_overdue'].includes(reminderType)
+      ) {
+        await markWorkflowJobFailure(job.id, 'Malformed decision reminder payload');
+        continue;
+      }
 
-      const sentTypes = new Set(
-        (getRows(existingReminders) as any[]).map((r: any) => r.reminder_type)
+      const decision = await db.query.decisions.findFirst({
+        where: eq(decisions.id, decisionId),
+      });
+
+      if (!decision || decision.state !== 'pending') {
+        await markWorkflowJobSuccess(job.id, { outcome: 'suppressed_not_pending' });
+        skipped += 1;
+        continue;
+      }
+
+      const sentReminder = await sendDecisionReminder(
+        interviewId,
+        decision.orgId,
+        reminderType as '24h' | '40h' | '48h_deadline' | '54h_overdue'
       );
 
-      // Determine which reminder to send based on hours elapsed
-      let reminderType: '24h' | '40h' | '48h_deadline' | '54h_overdue' | null = null;
-
-      if (hoursElapsed >= 54 && !sentTypes.has('54h_overdue')) {
-        reminderType = '54h_overdue';
-      } else if (hoursElapsed >= 48 && !sentTypes.has('48h_deadline')) {
-        reminderType = '48h_deadline';
-      } else if (hoursElapsed >= 40 && !sentTypes.has('40h')) {
-        reminderType = '40h';
-      } else if (hoursElapsed >= 24 && !sentTypes.has('24h')) {
-        reminderType = '24h';
+      if (!sentReminder) {
+        await markWorkflowJobSuccess(job.id, { outcome: 'suppressed' });
+        skipped += 1;
+        continue;
       }
 
-      if (reminderType) {
-        const success = await sendDecisionReminder(
-          interview.interviewId,
-          interview.organizationId,
-          reminderType
-        );
-        if (success) {
-          sent++;
-        } else {
-          skipped++;
-        }
-      } else {
-        skipped++;
-      }
+      await markWorkflowJobSuccess(job.id, { outcome: 'sent', reminderType });
+      sent += 1;
+    } catch (error) {
+      await markWorkflowJobFailure(
+        job.id,
+        error instanceof Error ? error.message : 'Unknown decision reminder error'
+      );
     }
-
-    log.info('decision.reminders.processing.complete', {
-      processed: awaitingDecision.length,
-      sent,
-      skipped,
-    });
-
-    return {
-      processed: awaitingDecision.length,
-      sent,
-      skipped,
-    };
-  } catch (error) {
-    log.error('decision.reminders.processing.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-    return { processed: 0, sent: 0, skipped: 0 };
   }
+
+  const leasedNonReminderIds = jobs
+    .filter((job) => job.jobType !== 'decision_reminder')
+    .map((job) => job.id);
+
+  if (leasedNonReminderIds.length > 0) {
+    await db
+      .update(workflowAsyncJobs)
+      .set({
+        status: 'pending',
+        leaseExpiresAt: null,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          inArray(workflowAsyncJobs.id, leasedNonReminderIds),
+          eq(workflowAsyncJobs.status, 'leased')
+        )
+      );
+  }
+
+  return {
+    processed: reminderJobs.length,
+    sent,
+    skipped,
+  };
+}
+
+export async function cancelDecisionRemindersForInterview(interviewId: string) {
+  const decision = await getDecisionByInterview(interviewId);
+  if (!decision) {
+    return 0;
+  }
+
+  return cancelWorkflowJobs({
+    decisionId: decision.id,
+    jobTypes: ['decision_reminder'],
+    reason: 'decision_no_longer_pending',
+  });
 }

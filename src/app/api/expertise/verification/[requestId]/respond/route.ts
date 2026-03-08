@@ -15,6 +15,12 @@ import {
 } from '@/lib/canonical/repository';
 import { hashOpaqueToken } from '@/lib/contracts/canonical-domain';
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function isUuid(value: unknown): value is string {
+  return typeof value === 'string' && UUID_PATTERN.test(value);
+}
+
 const RespondSchema = z.object({
   action: z.enum(['accept', 'decline']),
   responseMessage: z.string().optional(),
@@ -134,8 +140,15 @@ export async function POST(
       return NextResponse.json({ error: 'Failed to update verification request' }, { status: 500 });
     }
 
-    const canonicalRecord = CANONICAL_PROOFS_WRITE_ENABLED
-      ? await upsertCanonicalVerificationRecord({
+    let canonicalRecord = null;
+    if (
+      CANONICAL_PROOFS_WRITE_ENABLED &&
+      isUuid(verificationRequest.requester_profile_id) &&
+      isUuid(verificationRequest.skill_id) &&
+      isUuid(user.id)
+    ) {
+      try {
+        canonicalRecord = await upsertCanonicalVerificationRecord({
           ownerType: 'individual_profile',
           ownerId: verificationRequest.requester_profile_id,
           subjectType: 'skill',
@@ -169,8 +182,11 @@ export async function POST(
             responseMessage: validated.responseMessage || null,
             responseAuthMethod: 'authenticated',
           },
-        })
-      : null;
+        });
+      } catch (canonicalError) {
+        console.error('Failed to upsert canonical verification record:', canonicalError);
+      }
+    }
 
     // Notify the requester that verification was completed
     try {

@@ -5,6 +5,7 @@ import { matches, interviews, auditLogs, assignments, organizationMembers } from
 import { eq, and, isNull, lt, sql } from 'drizzle-orm';
 import { validateDecisionWindow, DECISION_CONSTRAINTS, getDecisionDeadline } from '@/lib/sla';
 import { log } from '@/lib/log';
+import { recordDecisionTransition } from '@/lib/workflow/service';
 
 /**
  * POST /api/match/decision
@@ -126,18 +127,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Record decision
-    const [updatedInterview] = await db
-      .update(interviews)
-      .set({
-        decision,
-        decidedBy: user.id,
-        decidedAt: new Date(),
-        feedback: feedback || null,
-        updatedAt: new Date(),
-      })
-      .where(eq(interviews.id, interviewId))
-      .returning();
+    const canonicalDecision = await recordDecisionTransition({
+      interviewId,
+      toState: decision === 'accept' ? 'advance' : 'reject',
+      actorType: isCandidate ? 'candidate' : 'organization_member',
+      actorId: user.id,
+      internalNote: feedback || null,
+      reasonCode: decision === 'accept' ? 'legacy_accept' : 'legacy_decline',
+    });
 
     // Log the decision
     log.info('interview.decision.recorded', {
@@ -170,11 +167,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      interview: {
-        id: updatedInterview.id,
-        decision: updatedInterview.decision,
-        decidedBy: updatedInterview.decidedBy,
-        decidedAt: updatedInterview.decidedAt,
+      decision: {
+        id: canonicalDecision.id,
+        state: canonicalDecision.state,
+        workflow: canonicalDecision.workflow,
       },
       message: `Decision "${decision}" recorded successfully`,
     });

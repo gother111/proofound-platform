@@ -15,6 +15,7 @@ import { processDecisionReminders } from '@/lib/decisions/automation';
 import { checkPerformanceHealth, sendPerformanceAlert } from '@/lib/analytics/health-check';
 import { processWeeklyDigests } from '@/lib/notifications/weekly-digest';
 import { log } from '@/lib/log';
+import { processWorkflowAsyncJobs } from '@/lib/workflow/processor';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -51,6 +52,8 @@ export async function GET(req: NextRequest) {
     const decisionResult = await processDecisionReminders();
 
     log.info('decision.reminders.cron.complete', decisionResult);
+
+    const workflowResult = await processWorkflowAsyncJobs(100);
 
     // ========================================
     // STEP 2: Performance Health Check
@@ -130,6 +133,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       decisionReminders: decisionResult,
+      workflowJobs: workflowResult,
       performanceHealthCheck: {
         status: healthCheckStatus,
         healthy: healthStatus?.healthy ?? null,

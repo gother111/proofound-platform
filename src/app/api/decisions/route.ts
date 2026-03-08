@@ -6,9 +6,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { recordDecision } from '@/lib/decisions/automation';
 import { log } from '@/lib/log';
 import { isActiveOrgMember } from '@/lib/api/auth';
+import { recordDecisionTransition } from '@/lib/workflow/service';
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { interviewId, decision, feedback } = body;
+    const { interviewId, decision, feedback, holdUntil, reasonCode } = body;
 
     if (!interviewId || !decision) {
       return NextResponse.json({ error: 'interviewId and decision are required' }, { status: 400 });
@@ -87,24 +87,33 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const decisionRecord = await recordDecision(user.id, interviewId, decision, feedback);
+    const decisionRecord = await recordDecisionTransition({
+      interviewId,
+      toState: decision,
+      actorType: 'organization_member',
+      actorId: user.id,
+      internalNote: feedback,
+      reasonCode: reasonCode ?? null,
+      holdUntil: holdUntil ? new Date(holdUntil) : null,
+    });
 
     log.info('decision.recorded', {
       userId: user.id,
       interviewId,
       decision,
-      withinSLA: decisionRecord.withinSLA,
+      reasonCode: reasonCode ?? null,
     });
 
     return NextResponse.json({
       success: true,
       decision: {
         id: decisionRecord.id,
-        interviewId: decisionRecord.interviewId,
-        decision: decisionRecord.decision,
-        hoursSinceInterview: decisionRecord.hoursSinceInterview,
-        withinSLA: decisionRecord.withinSLA,
-        decisionMadeAt: decisionRecord.decisionMadeAt,
+        interviewId,
+        decision: decisionRecord.state,
+        holdUntil: decisionRecord.holdUntil,
+        reasonCode: decisionRecord.reasonCode,
+        updatedAt: decisionRecord.updatedAt,
+        workflow: decisionRecord.workflow,
       },
     });
   } catch (error) {

@@ -17,6 +17,24 @@ vi.mock('@/lib/interviews/messaging', () => ({
   postInterviewUpdateMessageBestEffort: vi.fn(),
 }));
 
+vi.mock('@/lib/workflow/service', () => ({
+  recordInterviewTransition: vi.fn().mockResolvedValue({
+    status: 'cancelled',
+    cancelReason: 'cancelled_by_org',
+    completedAt: null,
+    cancelledAt: new Date(),
+    noShowAt: null,
+    updatedAt: new Date(),
+  }),
+  buildWorkflowView: vi.fn().mockReturnValue({
+    state: 'cancelled',
+    displayState: 'Cancelled',
+    reasonCode: 'cancelled_by_org',
+    timestamps: {},
+    allowedActions: [],
+  }),
+}));
+
 describe('POST /api/interviews/cancel', () => {
   const interviewId = '11111111-1111-4111-8111-111111111111';
   const orgAdminId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';

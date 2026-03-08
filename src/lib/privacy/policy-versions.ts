@@ -13,6 +13,7 @@ import {
   getPolicyVersionForConsentType,
   type ConsentTypeValue,
 } from '@/lib/privacy/consent-contract';
+import { getConsentCheck, syncConsentObligation } from '@/lib/workflow/service';
 
 export { CONSENT_TYPES, getPolicyVersionForConsentType };
 export type { ConsentTypeValue };
@@ -73,28 +74,12 @@ export async function checkPolicyConsent(userId: string): Promise<{
   missingConsents: string[];
 }> {
   try {
-    const consents = await db
-      .select()
-      .from(userConsents)
-      .where(eq(userConsents.profileId, userId))
-      .orderBy(desc(userConsents.createdAt));
-
-    const tosConsent = consents.find((c) => c.consentType === CONSENT_TYPES.TOS);
-    const tosUpToDate = tosConsent?.version === POLICY_VERSIONS.tos && tosConsent.consented;
-
-    const privacyConsent = consents.find((c) => c.consentType === CONSENT_TYPES.PRIVACY);
-    const privacyUpToDate =
-      privacyConsent?.version === POLICY_VERSIONS.privacy && privacyConsent.consented;
-
-    const missingConsents: string[] = [];
-    if (!tosUpToDate) missingConsents.push('Terms of Service');
-    if (!privacyUpToDate) missingConsents.push('Privacy Policy');
-
+    const status = await getConsentCheck(userId);
     return {
-      needsConsent: !tosUpToDate || !privacyUpToDate,
-      tosUpToDate,
-      privacyUpToDate,
-      missingConsents,
+      needsConsent: status.needsConsent,
+      tosUpToDate: status.tosUpToDate,
+      privacyUpToDate: status.privacyUpToDate,
+      missingConsents: status.missingConsents,
     };
   } catch (error) {
     console.error('Failed to check policy consent:', error);
@@ -134,6 +119,16 @@ export async function recordPolicyConsent(
       userAgentHash,
     })
     .returning();
+
+  await syncConsentObligation({
+    profileId: userId,
+    consentType: resolvedConsentType,
+    grantedConsentId: consent.id,
+    consented,
+    version,
+    actorType: 'candidate',
+    actorId: userId,
+  });
 
   return consent;
 }

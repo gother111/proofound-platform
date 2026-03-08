@@ -1,15 +1,15 @@
 /**
  * Policy Consent Check API
- * 
+ *
  * Check if user needs to re-consent to updated policies
- * 
+ *
  * GET /api/user/consent/check
  * Returns: { needsConsent, tosUpToDate, privacyUpToDate, missingConsents[] }
  */
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { checkPolicyConsent } from '@/lib/privacy/policy-versions';
+import { getConsentCheck } from '@/lib/workflow/service';
 
 export async function GET() {
   try {
@@ -25,7 +25,7 @@ export async function GET() {
     }
 
     // Check consent status
-    const consentStatus = await checkPolicyConsent(user.id);
+    const consentStatus = await getConsentCheck(user.id);
 
     return NextResponse.json(consentStatus);
   } catch (error) {
@@ -33,4 +33,3 @@ export async function GET() {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

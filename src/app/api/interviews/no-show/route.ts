@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+
 import { createClient } from '@/lib/supabase/server';
-import { issueFeedbackInvites } from '@/lib/feedback/service';
+import { canManageInterviewAsOrgAdmin } from '@/lib/interviews/messaging';
 import { buildWorkflowView, recordInterviewTransition } from '@/lib/workflow/service';
 
-const CompleteSchema = z.object({
+const NoShowSchema = z.object({
   interviewId: z.string().uuid(),
+  reason: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    const body = CompleteSchema.parse(await request.json());
-
     const {
       data: { user },
       error: authError,
@@ -22,42 +22,39 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: interview, error: interviewError } = await supabase
-      .from('interviews')
-      .select('id, host_user_id, participant_user_ids, status')
-      .eq('id', body.interviewId)
-      .maybeSingle();
+    const body = NoShowSchema.parse(await request.json());
+    const { allowed, context } = await canManageInterviewAsOrgAdmin(
+      supabase,
+      user.id,
+      body.interviewId
+    );
 
-    if (interviewError || !interview) {
+    if (!context) {
       return NextResponse.json({ error: 'Interview not found' }, { status: 404 });
     }
 
-    if (interview.host_user_id !== user.id) {
-      return NextResponse.json({ error: 'Only the host can mark completion' }, { status: 403 });
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Only organization owners/admins can mark no-show' },
+        { status: 403 }
+      );
     }
 
-    if (interview.status === 'completed') {
-      return NextResponse.json({ success: true, message: 'Already completed' });
-    }
-
-    const { error: updateError } = await supabase
-      .from('interviews')
-      .update({ status: 'completed', updated_at: new Date().toISOString() })
-      .eq('id', body.interviewId);
-
-    if (updateError) {
-      return NextResponse.json({ error: 'Could not update interview status' }, { status: 500 });
+    if (context.status !== 'scheduled') {
+      return NextResponse.json(
+        { error: 'Only scheduled interviews can be marked as no-show' },
+        { status: 400 }
+      );
     }
 
     const updatedInterview = await recordInterviewTransition({
       interviewId: body.interviewId,
-      toState: 'completed',
+      toState: 'no_show',
       actorType: 'organization_member',
       actorId: user.id,
-      trigger: 'host_marked_complete',
+      trigger: 'org_marked_no_show',
+      reasonCode: body.reason?.trim() || 'candidate_no_show',
     });
-
-    await issueFeedbackInvites(body.interviewId);
 
     return NextResponse.json({
       success: true,
@@ -74,15 +71,13 @@ export async function POST(request: NextRequest) {
       }),
     });
   } catch (error: any) {
-    console.error('Interview completion failed', error);
-
     if (error.name === 'ZodError') {
       return NextResponse.json(
-        { error: 'Invalid payload', details: error.issues },
+        { error: 'Invalid request data', details: error.errors },
         { status: 400 }
       );
     }
 
-    return NextResponse.json({ error: 'Unexpected error' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to mark no-show' }, { status: 500 });
   }
 }

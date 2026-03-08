@@ -130,6 +130,7 @@ export default function AssignmentBuilderPage() {
   const [appliedTemplateName, setAppliedTemplateName] = useState<string | null>(null);
   const assignmentIdRef = useRef<string | null>(null);
   const activeSteps = getActiveSteps(builderMode);
+  const templateAccessEnabled = advancedModeUnlocked && builderMode === 'advanced';
 
   useEffect(() => {
     assignmentIdRef.current = assignmentId;
@@ -260,8 +261,13 @@ export default function AssignmentBuilderPage() {
     void hydrateDraft();
   }, [assignmentBasicModeEnabled, draftId, form, hasHydratedDraft, normalizeDateInput]);
 
-  // Load templates for the organization
   useEffect(() => {
+    if (!templateAccessEnabled) {
+      setTemplates([]);
+      setIsTemplatePickerOpen(false);
+      return;
+    }
+
     const loadTemplates = async () => {
       setIsLoadingTemplates(true);
       try {
@@ -280,7 +286,7 @@ export default function AssignmentBuilderPage() {
     };
 
     loadTemplates();
-  }, [slug]);
+  }, [slug, templateAccessEnabled]);
 
   const trackTemplateApplied = useCallback(
     (template: AssignmentTemplate, selectedBuilderMode: BuilderMode) => {
@@ -342,7 +348,7 @@ export default function AssignmentBuilderPage() {
     (
       data: AssignmentFormData,
       overrides?: {
-        status?: 'draft' | 'active' | 'paused' | 'closed';
+        status?: 'draft' | 'active' | 'hold' | 'closed';
         creationStatus?:
           | 'draft'
           | 'pipeline_in_progress'
@@ -390,7 +396,7 @@ export default function AssignmentBuilderPage() {
 
   const persistDraft = useCallback(
     async (options?: {
-      status?: 'draft' | 'active' | 'paused' | 'closed';
+      status?: 'draft' | 'active' | 'hold' | 'closed';
       creationStatus?:
         | 'draft'
         | 'pipeline_in_progress'
@@ -825,7 +831,7 @@ export default function AssignmentBuilderPage() {
                 <p className="text-sm font-semibold text-foreground">Assignment builder mode</p>
                 <p className="text-xs text-muted-foreground">
                   {advancedModeUnlocked
-                    ? 'Switch between Basic and Advanced any time.'
+                    ? 'Switch between Basic and Advanced any time. Templates stay behind Advanced mode.'
                     : 'You are in Basic mode. Enable Advanced mode only when you need extra control.'}
                 </p>
               </div>
@@ -906,9 +912,14 @@ export default function AssignmentBuilderPage() {
             <Step1BusinessValue
               form={form}
               onNext={handleNext}
-              onOpenTemplatePicker={() => setIsTemplatePickerOpen(true)}
+              onOpenTemplatePicker={() => {
+                if (templateAccessEnabled) {
+                  setIsTemplatePickerOpen(true);
+                }
+              }}
               appliedTemplateName={appliedTemplateName}
               isLoadingTemplates={isLoadingTemplates}
+              templateAccessEnabled={templateAccessEnabled}
             />
           )}
           {currentStep === 2 && (
@@ -943,14 +954,16 @@ export default function AssignmentBuilderPage() {
         </div>
       </div>
 
-      <TemplatePicker
-        open={isTemplatePickerOpen}
-        onOpenChange={setIsTemplatePickerOpen}
-        templates={templates}
-        isLoading={isLoadingTemplates}
-        onApply={handleApplyTemplate}
-        appliedTemplateId={appliedTemplateId}
-      />
+      {templateAccessEnabled ? (
+        <TemplatePicker
+          open={isTemplatePickerOpen}
+          onOpenChange={setIsTemplatePickerOpen}
+          templates={templates}
+          isLoading={isLoadingTemplates}
+          onApply={handleApplyTemplate}
+          appliedTemplateId={appliedTemplateId}
+        />
+      ) : null}
     </AppSurface>
   );
 }

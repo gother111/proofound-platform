@@ -118,11 +118,11 @@ export async function GET(
     const interview = await db.execute(sql`
       SELECT
         i.*,
-        d.decision,
-        d.feedback,
-        d.created_at as decision_made_at
+        COALESCE(d.state, d.decision) AS decision,
+        COALESCE(d.internal_note, d.feedback) AS feedback,
+        COALESCE(d.updated_at, d.created_at) as decision_made_at
       FROM interviews i
-      LEFT JOIN decisions d ON i.id = d.interview_id
+      LEFT JOIN decisions d ON i.id = d.latest_interview_id OR i.id = d.interview_id
       WHERE i.assignment_id = ${assignmentId}
         AND ${candidateId} = ANY(i.participant_user_ids)
       ORDER BY i.scheduled_at DESC
@@ -177,10 +177,10 @@ export async function GET(
       interviewDate: interviewData?.scheduled_at ? new Date(interviewData.scheduled_at) : undefined,
       decision: interviewData?.decision
         ? {
-          type: interviewData.decision,
-          madeAt: new Date(interviewData.decision_made_at),
-          feedback: interviewData.feedback,
-        }
+            type: interviewData.decision,
+            madeAt: new Date(interviewData.decision_made_at),
+            feedback: interviewData.feedback,
+          }
         : undefined,
     };
 

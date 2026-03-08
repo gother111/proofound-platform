@@ -4,6 +4,7 @@ import { resolveWorkEmailValidity } from '@/lib/verification/work-email-validity
 import { isMissingColumnError } from '@/lib/db/schemaCompatibility';
 import { resolveHasLinkedInIdentityVerification } from '@/lib/linkedin-verified';
 import { resolveCanonicalVerificationTier } from '@/lib/verification/tier';
+import { buildWorkflowView, getLatestWorkEmailVerification } from '@/lib/workflow/service';
 
 function hasActiveWorkEmailToken(profile: {
   work_email_token?: string | null;
@@ -142,11 +143,16 @@ export async function GET(request: NextRequest) {
         workEmailVerified: false,
         workEmailReverifyDueAt: null,
         workEmailNeedsReverify: false,
+        workflow: null,
       });
     }
 
+    const canonicalWorkEmailVerification = await getLatestWorkEmailVerification(user.id).catch(
+      () => null
+    );
     const workEmailValidity = resolveWorkEmailValidity(profile);
-    const hasPendingToken = hasActiveWorkEmailToken(profile);
+    const hasPendingToken =
+      hasActiveWorkEmailToken(profile) || canonicalWorkEmailVerification?.status === 'pending';
     const canonicalTier = resolveCanonicalVerificationTier({
       currentTier: profile.verification_tier,
       currentTierSource: profile.verification_tier_source,
@@ -185,7 +191,9 @@ export async function GET(request: NextRequest) {
       verificationMethod =
         canonicalTier.verificationTierSource === 'veriff' ? 'veriff' : 'linkedin';
     } else {
-      const hasFailedStatus = profile.verification_status === 'failed';
+      const hasFailedStatus =
+        profile.verification_status === 'failed' ||
+        canonicalWorkEmailVerification?.status === 'failed';
       const hasManualPending =
         linkedinVerificationStatus === 'pending' ||
         canonicalTier.linkedinVerificationLevel === 'pending' ||
@@ -220,9 +228,30 @@ export async function GET(request: NextRequest) {
       linkedinHasIdentityVerification,
       linkedinVerifiedAt: profile.linkedin_verified_at,
       workEmail: profile.work_email,
-      workEmailVerified: workEmailValidity.isCurrentlyVerified,
+      workEmailVerified:
+        workEmailValidity.isCurrentlyVerified ||
+        canonicalWorkEmailVerification?.status === 'accepted',
       workEmailReverifyDueAt: workEmailValidity.reverifyDueAt,
       workEmailNeedsReverify: workEmailValidity.needsReverify,
+      workflow: buildWorkflowView({
+        machine: 'verification',
+        state: (canonicalWorkEmailVerification?.status ?? 'pending') as
+          | 'pending'
+          | 'accepted'
+          | 'declined'
+          | 'expired'
+          | 'cancelled'
+          | 'failed',
+        reasonCode: canonicalWorkEmailVerification?.failureCode ?? null,
+        timestamps: {
+          requestExpiresAt: canonicalWorkEmailVerification?.requestExpiresAt?.toISOString(),
+          followUpDueAt: canonicalWorkEmailVerification?.followUpDueAt?.toISOString(),
+          completedAt: canonicalWorkEmailVerification?.completedAt?.toISOString(),
+          expiredAt: canonicalWorkEmailVerification?.expiredAt?.toISOString(),
+          cancelledAt: canonicalWorkEmailVerification?.cancelledAt?.toISOString(),
+          verifiedAt: canonicalWorkEmailVerification?.verifiedAt?.toISOString(),
+        },
+      }),
     });
   } catch (error) {
     console.error('Error in verification status API:', error);

@@ -93,7 +93,7 @@ const AssignmentCreateSchema = AssignmentSchema.extend({
  * Query params:
  * - limit: Number of items to return (default: 20, max: 100)
  * - offset: Number of items to skip (default: 0)
- * - status: Filter by status (draft, active, paused, closed)
+ * - status: Filter by status (draft, active, hold, closed)
  */
 
 export async function GET(request: NextRequest) {
@@ -127,9 +127,13 @@ export async function GET(request: NextRequest) {
       let query = db.select().from(assignments).where(eq(assignments.orgId, orgId)).$dynamic();
 
       // Add status filter if provided
-      if (statusFilter && ['draft', 'active', 'paused', 'closed'].includes(statusFilter)) {
+      const normalizedStatusFilter = statusFilter === 'paused' ? 'hold' : statusFilter;
+      if (
+        normalizedStatusFilter &&
+        ['draft', 'active', 'hold', 'closed'].includes(normalizedStatusFilter)
+      ) {
         query = query.where(
-          and(eq(assignments.orgId, orgId), eq(assignments.status, statusFilter as any))
+          and(eq(assignments.orgId, orgId), eq(assignments.status, normalizedStatusFilter as any))
         );
       }
 
@@ -146,7 +150,7 @@ export async function GET(request: NextRequest) {
         count: orgAssignments.length,
         limit,
         offset,
-        status: statusFilter,
+        status: normalizedStatusFilter ?? statusFilter,
       });
 
       // Check if there are more results
