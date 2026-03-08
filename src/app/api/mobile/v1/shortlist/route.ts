@@ -1,11 +1,24 @@
-import { and, desc, eq, isNull } from 'drizzle-orm';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 
 import { db } from '@/db';
-import { assignments, matchInterest, matches, profiles } from '@/db/schema';
+import {
+  assignments,
+  individualProfiles,
+  matchReviewStates,
+  matches,
+  matchingProfiles,
+  profiles,
+} from '@/db/schema';
 import { isActiveOrgMember, requireMobileAuth } from '@/lib/api/mobile/auth';
 import { mobileError, mobileSuccess } from '@/lib/api/mobile/response';
+import {
+  buildCandidateReviewProjection,
+  getRankBand,
+  getVisibleIdentityFields,
+  normalizeFairnessStatus,
+} from '@/lib/matching/review-contract';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,11 +26,6 @@ const QuerySchema = z.object({
   orgId: z.string().uuid(),
 });
 
-/**
- * GET /api/mobile/v1/shortlist?orgId=<uuid>
- *
- * Org-side shortlist, derived from candidate-expressed interest.
- */
 export async function GET(request: NextRequest) {
   try {
     const auth = await requireMobileAuth(request);
@@ -45,49 +53,112 @@ export async function GET(request: NextRequest) {
       return mobileError('forbidden', 'Organization membership required', 403);
     }
 
-    const rows = await db
+    const shortlist = await db
       .select({
-        id: matchInterest.id,
+        matchId: matches.id,
         assignmentId: assignments.id,
         assignmentRole: assignments.role,
         assignmentStatus: assignments.status,
-        candidateId: profiles.id,
-        candidateName: profiles.displayName,
-        candidateHandle: profiles.handle,
-        candidateAvatarUrl: profiles.avatarUrl,
-        score: matches.score,
-        createdAt: matchInterest.createdAt,
+        profileId: profiles.id,
+        displayName: profiles.displayName,
+        handle: profiles.handle,
+        avatarUrl: profiles.avatarUrl,
+        headline: individualProfiles.headline,
+        tagline: individualProfiles.tagline,
+        desiredRoles: matchingProfiles.desiredRoles,
+        valuesTags: matchingProfiles.valuesTags,
+        causeTags: matchingProfiles.causeTags,
+        workMode: matchingProfiles.workMode,
+        country: matchingProfiles.country,
+        city: matchingProfiles.city,
+        verified: matchingProfiles.verified,
+        reviewStage: matchReviewStates.reviewStage,
+        revealScope: matchReviewStates.revealScope,
+        shortlistedAt: matchReviewStates.shortlistedAt,
+        fairnessStatus: matches.fairnessStatus,
       })
-      .from(matchInterest)
-      .innerJoin(assignments, eq(matchInterest.assignmentId, assignments.id))
-      .leftJoin(
-        matches,
-        and(
-          eq(matches.assignmentId, assignments.id),
-          eq(matches.profileId, matchInterest.actorProfileId)
-        )
+      .from(matchReviewStates)
+      .innerJoin(matches, eq(matches.id, matchReviewStates.matchId))
+      .innerJoin(assignments, eq(assignments.id, matchReviewStates.assignmentId))
+      .innerJoin(profiles, eq(profiles.id, matchReviewStates.profileId))
+      .leftJoin(individualProfiles, eq(individualProfiles.userId, profiles.id))
+      .leftJoin(matchingProfiles, eq(matchingProfiles.profileId, profiles.id))
+      .where(
+        and(eq(matchReviewStates.orgId, orgId), eq(matchReviewStates.reviewStage, 'shortlisted'))
       )
-      .leftJoin(profiles, eq(matchInterest.actorProfileId, profiles.id))
-      .where(and(eq(assignments.orgId, orgId), isNull(matchInterest.targetProfileId)))
-      .orderBy(desc(matchInterest.createdAt))
+      .orderBy(desc(matchReviewStates.shortlistedAt), desc(matches.score))
       .limit(100);
 
+    const assignmentIds = Array.from(new Set(shortlist.map((row) => row.assignmentId)));
+    const rankRows =
+      assignmentIds.length > 0
+        ? await db
+            .select({
+              matchId: matches.id,
+              assignmentId: matches.assignmentId,
+              score: matches.score,
+            })
+            .from(matches)
+            .where(inArray(matches.assignmentId, assignmentIds))
+            .orderBy(matches.assignmentId, desc(matches.score), matches.id)
+        : [];
+
+    const rankMap = new Map<string, { rank: number; total: number }>();
+    const totalByAssignment = new Map<string, number>();
+    for (const row of rankRows) {
+      totalByAssignment.set(row.assignmentId, (totalByAssignment.get(row.assignmentId) || 0) + 1);
+    }
+    const rankCounter = new Map<string, number>();
+    for (const row of rankRows) {
+      const nextRank = (rankCounter.get(row.assignmentId) || 0) + 1;
+      rankCounter.set(row.assignmentId, nextRank);
+      rankMap.set(row.matchId, {
+        rank: nextRank,
+        total: totalByAssignment.get(row.assignmentId) || 1,
+      });
+    }
+
     return mobileSuccess({
-      items: rows.map((row) => ({
-        id: row.id,
-        assignmentId: row.assignmentId,
-        assignmentRole: row.assignmentRole,
-        assignmentStatus: row.assignmentStatus,
-        candidate: {
-          id: row.candidateId,
-          displayName: row.candidateName,
-          handle: row.candidateHandle,
-          avatarUrl: row.candidateAvatarUrl,
-        },
-        score: row.score === null ? null : Number(row.score),
-        createdAt: row.createdAt,
-      })),
-      count: rows.length,
+      items: shortlist.map((row) => {
+        const fairnessStatus = normalizeFairnessStatus(row.fairnessStatus);
+        const rankInfo = rankMap.get(row.matchId);
+        return {
+          id: row.matchId,
+          assignmentId: row.assignmentId,
+          assignmentRole: row.assignmentRole,
+          assignmentStatus: row.assignmentStatus,
+          reviewStage: row.reviewStage,
+          revealScope: row.revealScope,
+          visibleIdentityFields: getVisibleIdentityFields(row.revealScope),
+          candidate: buildCandidateReviewProjection(
+            {
+              profileId: row.profileId,
+              displayName: row.displayName,
+              handle: row.handle,
+              avatarUrl: row.avatarUrl,
+              headline: row.headline,
+              tagline: row.tagline,
+              workMode: row.workMode,
+              country: row.country,
+              city: row.city,
+              desiredRoles: row.desiredRoles,
+              valuesTags: row.valuesTags,
+              causeTags: row.causeTags,
+              verified: (row.verified as Record<string, unknown> | null) ?? null,
+            },
+            row.revealScope
+          ),
+          fairness: {
+            status: fairnessStatus,
+          },
+          rankBand:
+            rankInfo && fairnessStatus === 'pass'
+              ? getRankBand(rankInfo.rank, rankInfo.total)
+              : 'Shortlisted',
+          shortlistedAt: row.shortlistedAt,
+        };
+      }),
+      count: shortlist.length,
     });
   } catch (error) {
     console.error('[mobile.shortlist.get] failed', error);

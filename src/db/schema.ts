@@ -79,6 +79,76 @@ export const canonicalVerificationStatuses = [
   'cancelled',
   'failed',
 ] as const;
+export const canonicalAssignmentWorkflowStates = ['draft', 'active', 'hold', 'closed'] as const;
+export const canonicalIntroWorkflowStates = [
+  'pending_candidate_interest',
+  'pending_org_interest',
+  'mutual',
+  'conversation_open',
+  'interview_handoff',
+  'withdrawn',
+  'expired',
+  'duplicate_candidate',
+  'closed',
+] as const;
+export const canonicalInterviewWorkflowStates = [
+  'scheduled',
+  'completed',
+  'cancelled',
+  'no_show',
+] as const;
+export const canonicalDecisionWorkflowStates = [
+  'pending',
+  'advance',
+  'hire',
+  'hold',
+  'hold_expired',
+  'reject',
+  'withdrawn',
+  'closed',
+] as const;
+export const canonicalConsentObligationStates = [
+  'active',
+  'expiring',
+  'expired',
+  'revoked',
+] as const;
+export const canonicalWorkflowActorTypes = [
+  'candidate',
+  'organization_member',
+  'platform_admin',
+  'system',
+  'service_account',
+] as const;
+export const canonicalWorkflowAsyncJobTypes = [
+  'intro_reminder',
+  'decision_reminder',
+  'expiry_transition',
+  'verification_follow_up',
+  'proof_freshness_nudge',
+  'portfolio_index_refresh',
+  'consent_prompt',
+  'workflow_fanout',
+] as const;
+export const canonicalWorkflowAsyncJobStatuses = [
+  'pending',
+  'leased',
+  'completed',
+  'failed',
+  'cancelled',
+] as const;
+export const publicPortfolioStates = [
+  'unavailable',
+  'public_link_only',
+  'public_noindex',
+  'public_indexable',
+] as const;
+export const orgTrustStatusValues = [
+  'unverified',
+  'pending',
+  'domain_verified',
+  'platform_reviewed',
+] as const;
 export const canonicalVerifierPrincipalTypes = [
   'user_account',
   'organization',
@@ -87,6 +157,46 @@ export const canonicalVerifierPrincipalTypes = [
   'system',
 ] as const;
 export const canonicalIntegrityStatuses = ['unknown', 'clear', 'flagged'] as const;
+export const matchReviewStageValues = [
+  'blind_review',
+  'shortlisted',
+  'passed',
+  'rejected',
+  'closed',
+] as const;
+export const matchRevealScopeValues = ['blind', 'shortlist_identity', 'full_identity'] as const;
+export const matchFullIdentityUnlockTriggerValues = [
+  'mutual_interest',
+  'conversation_reveal',
+  'interview_scheduled',
+  'policy_override',
+] as const;
+export const revealActorTypeValues = [
+  'user_account',
+  'organization',
+  'platform_admin',
+  'system',
+] as const;
+export const revealTriggerTypeValues = ['user', 'system', 'policy', 'automatic'] as const;
+export const revealEventOutcomeValues = ['granted', 'denied', 'no_op'] as const;
+export const matchReasonCategoryValues = [
+  'positive_match',
+  'constraint_mismatch',
+  'workflow_decision',
+  'manual_override',
+  'fairness',
+] as const;
+export const matchReasonSourceValues = ['system', 'reviewer', 'policy'] as const;
+export const fairnessStatusValues = ['pass', 'unavailable', 'elevated', 'breach'] as const;
+export const fairnessEvaluationScopeValues = ['ranking_snapshot'] as const;
+export const fairnessRemediationActionValues = [
+  'warning_issued',
+  'ranking_suppressed',
+  'admin_alert_sent',
+  'acknowledged',
+  'resolved',
+  'recheck_requested',
+] as const;
 
 const vector = customType<{ data: number[]; notNull?: boolean; default?: boolean }>({
   dataType(config) {
@@ -99,6 +209,12 @@ const vector = customType<{ data: number[]; notNull?: boolean; default?: boolean
 export const profiles = pgTable('profiles', {
   id: uuid('id').primaryKey(), // references auth.users(id)
   handle: text('handle').unique(),
+  publicPortfolioState: text('public_portfolio_state', {
+    enum: publicPortfolioStates,
+  })
+    .default('unavailable')
+    .notNull(),
+  searchIndexingEnabledAt: timestamp('search_indexing_enabled_at'),
   displayName: text('display_name'),
   avatarUrl: text('avatar_url'),
   locale: text('locale').default('en'),
@@ -218,6 +334,20 @@ export const dashboardLayouts = pgTable(
 export const organizations = pgTable('organizations', {
   id: uuid('id').defaultRandom().primaryKey(),
   slug: text('slug').unique().notNull(),
+  publicPortfolioState: text('public_portfolio_state', {
+    enum: publicPortfolioStates,
+  })
+    .default('unavailable')
+    .notNull(),
+  searchIndexingEnabledAt: timestamp('search_indexing_enabled_at'),
+  trustStatus: text('trust_status', {
+    enum: orgTrustStatusValues,
+  })
+    .default('unverified')
+    .notNull(),
+  trustStatusUpdatedAt: timestamp('trust_status_updated_at'),
+  websiteVerifiedAt: timestamp('website_verified_at'),
+  operatingRegion: text('operating_region'),
   legalName: text('legal_name'),
   displayName: text('display_name').notNull(),
   verified: boolean('verified').default(false),
@@ -550,6 +680,44 @@ export const profileFieldVisibility = pgTable('profile_field_visibility', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+export const profileHandleHistory = pgTable(
+  'profile_handle_history',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    profileId: uuid('profile_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    slug: text('slug').notNull().unique(),
+    isActive: boolean('is_active').default(true).notNull(),
+    redirectTargetSlug: text('redirect_target_slug'),
+    retiredAt: timestamp('retired_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    profileIdIdx: index('idx_profile_handle_history_profile_id').on(table.profileId),
+  })
+);
+
+export const organizationSlugHistory = pgTable(
+  'organization_slug_history',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    orgId: uuid('org_id')
+      .references(() => organizations.id, { onDelete: 'cascade' })
+      .notNull(),
+    slug: text('slug').notNull().unique(),
+    isActive: boolean('is_active').default(true).notNull(),
+    redirectTargetSlug: text('redirect_target_slug'),
+    retiredAt: timestamp('retired_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    orgIdIdx: index('idx_organization_slug_history_org_id').on(table.orgId),
+  })
+);
 
 export const profileSnippets = pgTable(
   'profile_snippets',
@@ -1158,6 +1326,13 @@ export const verificationRecords = pgTable(
     sourceRequestId: uuid('source_request_id'),
     sourceResponseTable: text('source_response_table'),
     sourceResponseId: uuid('source_response_id'),
+    requestExpiresAt: timestamp('request_expires_at', { withTimezone: true }),
+    followUpDueAt: timestamp('follow_up_due_at', { withTimezone: true }),
+    lastFollowUpAt: timestamp('last_follow_up_at', { withTimezone: true }),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+    expiredAt: timestamp('expired_at', { withTimezone: true }),
+    cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
+    failureCode: text('failure_code'),
     verifiedAt: timestamp('verified_at', { withTimezone: true }),
     metadata: jsonb('metadata')
       .default(sql`'{}'::jsonb`)
@@ -1176,6 +1351,37 @@ export const verificationRecords = pgTable(
       table.subjectType,
       table.subjectId
     ),
+  })
+);
+
+export const verificationStateTransitions = pgTable(
+  'verification_state_transitions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    verificationRecordId: uuid('verification_record_id')
+      .references(() => verificationRecords.id, { onDelete: 'cascade' })
+      .notNull(),
+    fromState: text('from_state', {
+      enum: canonicalVerificationStatuses,
+    }),
+    toState: text('to_state', {
+      enum: canonicalVerificationStatuses,
+    }).notNull(),
+    trigger: text('trigger').notNull(),
+    reasonCode: text('reason_code'),
+    actorType: text('actor_type', {
+      enum: canonicalWorkflowActorTypes,
+    }).notNull(),
+    actorId: uuid('actor_id').references(() => profiles.id, { onDelete: 'set null' }),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    verificationCreatedAtIdx: index(
+      'verification_state_transitions_verification_created_at_idx'
+    ).on(table.verificationRecordId, table.createdAt),
   })
 );
 
@@ -1212,10 +1418,15 @@ export const assignments = pgTable('assignments', {
   role: text('role').notNull(),
   description: text('description'),
   status: text('status', {
-    enum: ['draft', 'active', 'paused', 'closed'],
+    enum: canonicalAssignmentWorkflowStates,
   })
     .default('draft')
     .notNull(),
+  heldAt: timestamp('held_at', { withTimezone: true }),
+  holdUntil: timestamp('hold_until', { withTimezone: true }),
+  holdReason: text('hold_reason'),
+  closedAt: timestamp('closed_at', { withTimezone: true }),
+  closedReason: text('closed_reason'),
   // Assignment creation workflow fields
   creationStatus: text('creation_status', {
     enum: ['draft', 'pipeline_in_progress', 'pending_review', 'ready_to_publish', 'published'],
@@ -1262,6 +1473,38 @@ export const assignments = pgTable('assignments', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+export const assignmentStateTransitions = pgTable(
+  'assignment_state_transitions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    assignmentId: uuid('assignment_id')
+      .references(() => assignments.id, { onDelete: 'cascade' })
+      .notNull(),
+    fromState: text('from_state', {
+      enum: canonicalAssignmentWorkflowStates,
+    }),
+    toState: text('to_state', {
+      enum: canonicalAssignmentWorkflowStates,
+    }).notNull(),
+    trigger: text('trigger').notNull(),
+    reasonCode: text('reason_code'),
+    actorType: text('actor_type', {
+      enum: canonicalWorkflowActorTypes,
+    }).notNull(),
+    actorId: uuid('actor_id').references(() => profiles.id, { onDelete: 'set null' }),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    assignmentCreatedAtIdx: index('assignment_state_transitions_assignment_created_at_idx').on(
+      table.assignmentId,
+      table.createdAt
+    ),
+  })
+);
+
 // Matches - cached match results
 export const matches = pgTable(
   'matches',
@@ -1275,6 +1518,13 @@ export const matches = pgTable(
       .notNull(),
     score: numeric('score').notNull(),
     scoreVersion: text('score_version'),
+    modelVersion: text('model_version'),
+    explanationVersion: text('explanation_version'),
+    fairnessCheckVersion: text('fairness_check_version'),
+    fairnessStatus: text('fairness_status', {
+      enum: fairnessStatusValues,
+    }),
+    fairnessEvaluatedAt: timestamp('fairness_evaluated_at', { withTimezone: true }),
     inputsHash: text('inputs_hash'),
     reasonCodes: text('reason_codes')
       .array()
@@ -1295,6 +1545,314 @@ export const matches = pgTable(
     isTestMatchIdx: index('matches_is_test_match_idx').on(table.isTestMatch),
     scoreVersionIdx: index('matches_score_version_idx').on(table.scoreVersion),
     generatedAtIdx: index('matches_generated_at_idx').on(table.generatedAt),
+    fairnessStatusIdx: index('matches_fairness_status_idx').on(table.fairnessStatus),
+  })
+);
+
+export const matchReviewStates = pgTable(
+  'match_review_states',
+  {
+    matchId: uuid('match_id')
+      .primaryKey()
+      .references(() => matches.id, { onDelete: 'cascade' }),
+    assignmentId: uuid('assignment_id')
+      .references(() => assignments.id, { onDelete: 'cascade' })
+      .notNull(),
+    profileId: uuid('profile_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    orgId: uuid('org_id')
+      .references(() => organizations.id, { onDelete: 'cascade' })
+      .notNull(),
+    reviewStage: text('review_stage', {
+      enum: matchReviewStageValues,
+    })
+      .default('blind_review')
+      .notNull(),
+    revealScope: text('reveal_scope', {
+      enum: matchRevealScopeValues,
+    })
+      .default('blind')
+      .notNull(),
+    shortlistedAt: timestamp('shortlisted_at', { withTimezone: true }),
+    shortlistedBy: uuid('shortlisted_by').references(() => profiles.id, { onDelete: 'set null' }),
+    decisionAt: timestamp('decision_at', { withTimezone: true }),
+    decisionBy: uuid('decision_by').references(() => profiles.id, { onDelete: 'set null' }),
+    fullIdentityUnlockedAt: timestamp('full_identity_unlocked_at', { withTimezone: true }),
+    fullIdentityUnlockedBy: uuid('full_identity_unlocked_by').references(() => profiles.id, {
+      onDelete: 'set null',
+    }),
+    fullIdentityUnlockTrigger: text('full_identity_unlock_trigger', {
+      enum: matchFullIdentityUnlockTriggerValues,
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    assignmentStageIdx: index('match_review_states_assignment_stage_idx').on(
+      table.assignmentId,
+      table.reviewStage
+    ),
+    orgStageIdx: index('match_review_states_org_stage_idx').on(table.orgId, table.reviewStage),
+    profileIdx: index('match_review_states_profile_idx').on(table.profileId),
+    revealScopeIdx: index('match_review_states_reveal_scope_idx').on(table.revealScope),
+  })
+);
+
+export const introWorkflows = pgTable(
+  'intro_workflows',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    assignmentId: uuid('assignment_id')
+      .references(() => assignments.id, { onDelete: 'cascade' })
+      .notNull(),
+    candidateProfileId: uuid('candidate_profile_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    orgId: uuid('org_id')
+      .references(() => organizations.id, { onDelete: 'cascade' })
+      .notNull(),
+    state: text('state', {
+      enum: canonicalIntroWorkflowStates,
+    })
+      .default('pending_org_interest')
+      .notNull(),
+    matchId: uuid('match_id').references(() => matches.id, { onDelete: 'set null' }),
+    conversationId: uuid('conversation_id').references(() => conversations.id, {
+      onDelete: 'set null',
+    }),
+    candidateInviteId: uuid('candidate_invite_id').references(() => orgCandidateInvites.id, {
+      onDelete: 'set null',
+    }),
+    duplicateOfIntroId: uuid('duplicate_of_intro_id'),
+    expiresAt: timestamp('expires_at', { withTimezone: true }),
+    withdrawnAt: timestamp('withdrawn_at', { withTimezone: true }),
+    withdrawnByActorType: text('withdrawn_by_actor_type', {
+      enum: canonicalWorkflowActorTypes,
+    }),
+    withdrawnByActorId: uuid('withdrawn_by_actor_id').references(() => profiles.id, {
+      onDelete: 'set null',
+    }),
+    closeReason: text('close_reason'),
+    closedAt: timestamp('closed_at', { withTimezone: true }),
+    lastActivityAt: timestamp('last_activity_at', { withTimezone: true }).defaultNow().notNull(),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    assignmentCandidateIdx: index('intro_workflows_assignment_candidate_idx').on(
+      table.assignmentId,
+      table.candidateProfileId
+    ),
+    orgStateIdx: index('intro_workflows_org_state_idx').on(table.orgId, table.state),
+    matchIdx: index('intro_workflows_match_idx').on(table.matchId),
+    conversationIdx: index('intro_workflows_conversation_idx').on(table.conversationId),
+    inviteIdx: index('intro_workflows_invite_idx').on(table.candidateInviteId),
+  })
+);
+
+export const introWorkflowStateTransitions = pgTable(
+  'intro_workflow_state_transitions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    introWorkflowId: uuid('intro_workflow_id')
+      .references(() => introWorkflows.id, { onDelete: 'cascade' })
+      .notNull(),
+    fromState: text('from_state', {
+      enum: canonicalIntroWorkflowStates,
+    }),
+    toState: text('to_state', {
+      enum: canonicalIntroWorkflowStates,
+    }).notNull(),
+    trigger: text('trigger').notNull(),
+    reasonCode: text('reason_code'),
+    actorType: text('actor_type', {
+      enum: canonicalWorkflowActorTypes,
+    }).notNull(),
+    actorId: uuid('actor_id').references(() => profiles.id, { onDelete: 'set null' }),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    introCreatedAtIdx: index('intro_workflow_state_transitions_intro_created_at_idx').on(
+      table.introWorkflowId,
+      table.createdAt
+    ),
+  })
+);
+
+export const revealEvents = pgTable(
+  'reveal_events',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    matchId: uuid('match_id')
+      .references(() => matches.id, { onDelete: 'cascade' })
+      .notNull(),
+    assignmentId: uuid('assignment_id')
+      .references(() => assignments.id, { onDelete: 'cascade' })
+      .notNull(),
+    profileId: uuid('profile_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    orgId: uuid('org_id')
+      .references(() => organizations.id, { onDelete: 'cascade' })
+      .notNull(),
+    actorId: uuid('actor_id').references(() => profiles.id, { onDelete: 'set null' }),
+    actorRole: text('actor_role'),
+    actorType: text('actor_type', {
+      enum: revealActorTypeValues,
+    }).notNull(),
+    triggerType: text('trigger_type', {
+      enum: revealTriggerTypeValues,
+    }).notNull(),
+    requestedScope: text('requested_scope', {
+      enum: matchRevealScopeValues,
+    }).notNull(),
+    grantedScope: text('granted_scope', {
+      enum: matchRevealScopeValues,
+    }).notNull(),
+    reasonCode: text('reason_code').notNull(),
+    sourceSurface: text('source_surface'),
+    contextJson: jsonb('context_json')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    outcome: text('outcome', {
+      enum: revealEventOutcomeValues,
+    }).notNull(),
+    occurredAt: timestamp('occurred_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    matchOccurredIdx: index('reveal_events_match_occurred_idx').on(table.matchId, table.occurredAt),
+    profileOccurredIdx: index('reveal_events_profile_occurred_idx').on(
+      table.profileId,
+      table.occurredAt
+    ),
+    orgOccurredIdx: index('reveal_events_org_occurred_idx').on(table.orgId, table.occurredAt),
+    outcomeIdx: index('reveal_events_outcome_idx').on(table.outcome, table.occurredAt),
+  })
+);
+
+export const matchReasonLedger = pgTable(
+  'match_reason_ledger',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    matchId: uuid('match_id')
+      .references(() => matches.id, { onDelete: 'cascade' })
+      .notNull(),
+    assignmentId: uuid('assignment_id')
+      .references(() => assignments.id, { onDelete: 'cascade' })
+      .notNull(),
+    profileId: uuid('profile_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    category: text('category', {
+      enum: matchReasonCategoryValues,
+    }).notNull(),
+    reasonCode: text('reason_code').notNull(),
+    source: text('source', {
+      enum: matchReasonSourceValues,
+    }).notNull(),
+    payloadJson: jsonb('payload_json')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    importance: integer('importance').default(50).notNull(),
+    createdBy: uuid('created_by').references(() => profiles.id, { onDelete: 'set null' }),
+    noteHash: text('note_hash'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    matchCreatedIdx: index('match_reason_ledger_match_created_idx').on(
+      table.matchId,
+      table.createdAt
+    ),
+    assignmentCategoryIdx: index('match_reason_ledger_assignment_category_idx').on(
+      table.assignmentId,
+      table.category,
+      table.createdAt
+    ),
+    profileCategoryIdx: index('match_reason_ledger_profile_category_idx').on(
+      table.profileId,
+      table.category,
+      table.createdAt
+    ),
+  })
+);
+
+export const fairnessEvaluations = pgTable(
+  'fairness_evaluations',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    assignmentId: uuid('assignment_id')
+      .references(() => assignments.id, { onDelete: 'cascade' })
+      .notNull(),
+    scope: text('scope', {
+      enum: fairnessEvaluationScopeValues,
+    })
+      .default('ranking_snapshot')
+      .notNull(),
+    checkVersion: text('check_version').notNull(),
+    status: text('status', {
+      enum: fairnessStatusValues,
+    }).notNull(),
+    metricsJson: jsonb('metrics_json')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    thresholdsJson: jsonb('thresholds_json')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    eligibleCohortCount: integer('eligible_cohort_count').default(0).notNull(),
+    sampleSizesJson: jsonb('sample_sizes_json')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    insufficientReason: text('insufficient_reason'),
+    evaluatedAt: timestamp('evaluated_at', { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    assignmentEvaluatedIdx: index('fairness_evaluations_assignment_evaluated_idx').on(
+      table.assignmentId,
+      table.evaluatedAt
+    ),
+    statusIdx: index('fairness_evaluations_status_idx').on(table.status, table.evaluatedAt),
+  })
+);
+
+export const fairnessRemediationEvents = pgTable(
+  'fairness_remediation_events',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    fairnessEvaluationId: uuid('fairness_evaluation_id').references(() => fairnessEvaluations.id, {
+      onDelete: 'cascade',
+    }),
+    assignmentId: uuid('assignment_id')
+      .references(() => assignments.id, { onDelete: 'cascade' })
+      .notNull(),
+    actorId: uuid('actor_id').references(() => profiles.id, { onDelete: 'set null' }),
+    actorType: text('actor_type', {
+      enum: revealActorTypeValues,
+    }).notNull(),
+    actionType: text('action_type', {
+      enum: fairnessRemediationActionValues,
+    }).notNull(),
+    detailsJson: jsonb('details_json')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    occurredAt: timestamp('occurred_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    assignmentOccurredIdx: index('fairness_remediation_events_assignment_occurred_idx').on(
+      table.assignmentId,
+      table.occurredAt
+    ),
+    actionOccurredIdx: index('fairness_remediation_events_action_occurred_idx').on(
+      table.actionType,
+      table.occurredAt
+    ),
   })
 );
 
@@ -1375,6 +1933,62 @@ export const pythonInternalJobs = pgTable(
       table.status,
       table.nextRunAt
     ),
+  })
+);
+
+export const workflowAsyncJobs = pgTable(
+  'workflow_async_jobs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    jobType: text('job_type', {
+      enum: canonicalWorkflowAsyncJobTypes,
+    }).notNull(),
+    status: text('status', {
+      enum: canonicalWorkflowAsyncJobStatuses,
+    })
+      .default('pending')
+      .notNull(),
+    assignmentId: uuid('assignment_id').references(() => assignments.id, { onDelete: 'set null' }),
+    introWorkflowId: uuid('intro_workflow_id').references(() => introWorkflows.id, {
+      onDelete: 'set null',
+    }),
+    interviewId: uuid('interview_id').references(() => interviews.id, { onDelete: 'set null' }),
+    decisionId: uuid('decision_id'),
+    verificationRecordId: uuid('verification_record_id').references(() => verificationRecords.id, {
+      onDelete: 'set null',
+    }),
+    consentObligationId: uuid('consent_obligation_id'),
+    profileId: uuid('profile_id').references(() => profiles.id, { onDelete: 'set null' }),
+    scheduledAt: timestamp('scheduled_at', { withTimezone: true }).defaultNow().notNull(),
+    leaseExpiresAt: timestamp('lease_expires_at', { withTimezone: true }),
+    attempts: integer('attempts').default(0).notNull(),
+    maxAttempts: integer('max_attempts').default(5).notNull(),
+    idempotencyKey: text('idempotency_key').notNull().unique(),
+    dedupeKey: text('dedupe_key'),
+    correlationId: text('correlation_id'),
+    sourceState: text('source_state'),
+    payload: jsonb('payload')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    result: jsonb('result'),
+    lastError: text('last_error'),
+    cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    statusScheduledIdx: index('workflow_async_jobs_status_scheduled_idx').on(
+      table.status,
+      table.scheduledAt
+    ),
+    typeStatusScheduledIdx: index('workflow_async_jobs_type_status_scheduled_idx').on(
+      table.jobType,
+      table.status,
+      table.scheduledAt
+    ),
+    dedupeIdx: index('workflow_async_jobs_dedupe_idx').on(table.dedupeKey, table.status),
+    correlationIdx: index('workflow_async_jobs_correlation_idx').on(table.correlationId),
   })
 );
 
@@ -2424,6 +3038,82 @@ export const userConsents = pgTable('user_consents', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+export const consentObligations = pgTable(
+  'consent_obligations',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    profileId: uuid('profile_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    consentType: text('consent_type', {
+      enum: [
+        'gdpr_terms_of_service',
+        'gdpr_privacy_policy',
+        'marketing_emails',
+        'analytics_tracking',
+        'ml_matching',
+      ],
+    }).notNull(),
+    state: text('state', {
+      enum: canonicalConsentObligationStates,
+    })
+      .default('expired')
+      .notNull(),
+    requiredVersion: text('required_version'),
+    grantedConsentId: uuid('granted_consent_id').references(() => userConsents.id, {
+      onDelete: 'set null',
+    }),
+    expiresAt: timestamp('expires_at', { withTimezone: true }),
+    expiredAt: timestamp('expired_at', { withTimezone: true }),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    nextPromptAt: timestamp('next_prompt_at', { withTimezone: true }),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    profileConsentUnique: unique().on(table.profileId, table.consentType),
+    statePromptIdx: index('consent_obligations_state_prompt_idx').on(
+      table.state,
+      table.nextPromptAt
+    ),
+  })
+);
+
+export const consentStateTransitions = pgTable(
+  'consent_state_transitions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    consentObligationId: uuid('consent_obligation_id')
+      .references(() => consentObligations.id, { onDelete: 'cascade' })
+      .notNull(),
+    fromState: text('from_state', {
+      enum: canonicalConsentObligationStates,
+    }),
+    toState: text('to_state', {
+      enum: canonicalConsentObligationStates,
+    }).notNull(),
+    trigger: text('trigger').notNull(),
+    reasonCode: text('reason_code'),
+    actorType: text('actor_type', {
+      enum: canonicalWorkflowActorTypes,
+    }).notNull(),
+    actorId: uuid('actor_id').references(() => profiles.id, { onDelete: 'set null' }),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    consentCreatedAtIdx: index('consent_state_transitions_consent_created_at_idx').on(
+      table.consentObligationId,
+      table.createdAt
+    ),
+  })
+);
+
 // ====================================
 // Zen Hub - Well-being Tracking (Privacy-First)
 // ====================================
@@ -2753,9 +3443,132 @@ export const interviews = pgTable('interviews', {
   decidedBy: uuid('decided_by').references(() => profiles.id),
   decidedAt: timestamp('decided_at'),
   feedback: text('feedback'),
+  completedAt: timestamp('completed_at', { withTimezone: true }),
+  cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
+  cancelledBy: uuid('cancelled_by').references(() => profiles.id, { onDelete: 'set null' }),
+  cancelReason: text('cancel_reason'),
+  noShowAt: timestamp('no_show_at', { withTimezone: true }),
+  noShowRecordedBy: uuid('no_show_recorded_by').references(() => profiles.id, {
+    onDelete: 'set null',
+  }),
+  rescheduleCount: integer('reschedule_count').default(0).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+export const interviewStateTransitions = pgTable(
+  'interview_state_transitions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    interviewId: uuid('interview_id')
+      .references(() => interviews.id, { onDelete: 'cascade' })
+      .notNull(),
+    fromState: text('from_state', {
+      enum: canonicalInterviewWorkflowStates,
+    }),
+    toState: text('to_state', {
+      enum: canonicalInterviewWorkflowStates,
+    }).notNull(),
+    trigger: text('trigger').notNull(),
+    reasonCode: text('reason_code'),
+    actorType: text('actor_type', {
+      enum: canonicalWorkflowActorTypes,
+    }).notNull(),
+    actorId: uuid('actor_id').references(() => profiles.id, { onDelete: 'set null' }),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    interviewCreatedAtIdx: index('interview_state_transitions_interview_created_at_idx').on(
+      table.interviewId,
+      table.createdAt
+    ),
+  })
+);
+
+export const decisions = pgTable(
+  'decisions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    introId: uuid('intro_id')
+      .references(() => introWorkflows.id, { onDelete: 'cascade' })
+      .notNull(),
+    assignmentId: uuid('assignment_id')
+      .references(() => assignments.id, { onDelete: 'cascade' })
+      .notNull(),
+    candidateProfileId: uuid('candidate_profile_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    orgId: uuid('org_id')
+      .references(() => organizations.id, { onDelete: 'cascade' })
+      .notNull(),
+    latestInterviewId: uuid('latest_interview_id').references(() => interviews.id, {
+      onDelete: 'set null',
+    }),
+    state: text('state', {
+      enum: canonicalDecisionWorkflowStates,
+    })
+      .default('pending')
+      .notNull(),
+    holdUntil: timestamp('hold_until', { withTimezone: true }),
+    reasonCode: text('reason_code'),
+    internalNote: text('internal_note'),
+    madeByActorType: text('made_by_actor_type', {
+      enum: canonicalWorkflowActorTypes,
+    }),
+    madeByActorId: uuid('made_by_actor_id').references(() => profiles.id, { onDelete: 'set null' }),
+    supersededByDecisionId: uuid('superseded_by_decision_id'),
+    reopenedAt: timestamp('reopened_at', { withTimezone: true }),
+    withdrawnAt: timestamp('withdrawn_at', { withTimezone: true }),
+    closedAt: timestamp('closed_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    introUnique: unique().on(table.introId),
+    assignmentStateIdx: index('decisions_assignment_state_idx').on(table.assignmentId, table.state),
+    orgStateIdx: index('decisions_org_state_idx').on(table.orgId, table.state),
+    candidateStateIdx: index('decisions_candidate_state_idx').on(
+      table.candidateProfileId,
+      table.state
+    ),
+    interviewIdx: index('decisions_latest_interview_idx').on(table.latestInterviewId),
+  })
+);
+
+export const decisionStateTransitions = pgTable(
+  'decision_state_transitions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    decisionId: uuid('decision_id')
+      .references(() => decisions.id, { onDelete: 'cascade' })
+      .notNull(),
+    fromState: text('from_state', {
+      enum: canonicalDecisionWorkflowStates,
+    }),
+    toState: text('to_state', {
+      enum: canonicalDecisionWorkflowStates,
+    }).notNull(),
+    trigger: text('trigger').notNull(),
+    reasonCode: text('reason_code'),
+    actorType: text('actor_type', {
+      enum: canonicalWorkflowActorTypes,
+    }).notNull(),
+    actorId: uuid('actor_id').references(() => profiles.id, { onDelete: 'set null' }),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    decisionCreatedAtIdx: index('decision_state_transitions_decision_created_at_idx').on(
+      table.decisionId,
+      table.createdAt
+    ),
+  })
+);
 
 // ============================================================================
 // ADMIN SYSTEM TABLES

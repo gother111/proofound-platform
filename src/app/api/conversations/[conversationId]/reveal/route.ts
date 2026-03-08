@@ -18,6 +18,7 @@ import { log } from '@/lib/log';
 import { Resend } from 'resend';
 import IdentityRevealed from '@/../emails/IdentityRevealed';
 import { EMAIL_CONFIG } from '@/lib/email/config';
+import { unlockFullIdentityForMatch } from '@/lib/matching/review-contract';
 
 function getResendClient(): Resend | null {
   const apiKey = process.env.RESEND_API_KEY;
@@ -137,6 +138,22 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           .where(eq(conversations.id, conversationId))
           .returning();
         revealedConversation = explicitlyRevealedConversation;
+      }
+
+      if (revealedConversation.matchId) {
+        await unlockFullIdentityForMatch({
+          matchId: revealedConversation.matchId,
+          actorId: user.id,
+          actorRole: 'conversation_participant',
+          actorType: 'user_account',
+          triggerType: 'user',
+          sourceSurface: 'conversation_reveal_route',
+          reasonCode: 'reveal_full_identity',
+          unlockTrigger: 'conversation_reveal',
+          context: {
+            conversationId,
+          },
+        });
       }
 
       // Log reveal event

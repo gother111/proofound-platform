@@ -386,7 +386,7 @@ export function MatchResultCard({
                 style={{ backgroundColor: '#1C4D3A' }}
                 className="flex-1"
               >
-                Interested
+                {isOrgView ? 'Shortlist' : 'Interested'}
               </Button>
               <Button size="sm" variant="outline" onClick={onHide}>
                 Hide

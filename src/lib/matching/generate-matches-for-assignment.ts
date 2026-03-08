@@ -31,6 +31,12 @@ import {
   CANONICAL_MATCH_AUDIT_FIELDS_ENABLED,
   CANONICAL_MATCH_SCORE_VERSION,
 } from '@/lib/canonical/repository';
+import {
+  appendSystemReasonLedger,
+  buildCanonicalMatchPersistenceFields,
+  ensureMatchReviewState,
+  persistFairnessEvaluationForAssignment,
+} from '@/lib/matching/review-contract';
 
 /**
  * Generate matches for an assignment and upsert the top results into the `matches` table.
@@ -265,22 +271,25 @@ export async function generateMatchesForAssignment(
           gaps: (match.vector.gaps as Array<{ id: string; required: number; have: number }>) || [],
           verificationGates: assignment.verificationGates || [],
         });
+        const persistenceFields = buildCanonicalMatchPersistenceFields({
+          scoreVersion: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.scoreVersion : null,
+          inputsHash: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.inputsHash : null,
+          reasonCodes: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.reasonCodes : [],
+          generatedAt: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.generatedAt : null,
+        });
 
         return {
           assignmentId,
           profileId: match.profileId,
           score: match.score.toString(),
-          scoreVersion: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.scoreVersion : null,
-          inputsHash: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.inputsHash : null,
-          reasonCodes: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.reasonCodes : [],
-          generatedAt: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.generatedAt : null,
+          ...persistenceFields,
           vector: match.vector,
           weights,
         };
       });
 
       // Upsert: update score/vector/weights without overwriting snoozed_until.
-      await db
+      const persisted = await db
         .insert(matches)
         .values(matchInserts)
         .onConflictDoUpdate({
@@ -288,13 +297,50 @@ export async function generateMatchesForAssignment(
           set: {
             score: sql`excluded.score`,
             scoreVersion: sql`excluded.score_version`,
+            modelVersion: sql`excluded.model_version`,
+            explanationVersion: sql`excluded.explanation_version`,
+            fairnessCheckVersion: sql`excluded.fairness_check_version`,
+            fairnessStatus: sql`excluded.fairness_status`,
+            fairnessEvaluatedAt: sql`excluded.fairness_evaluated_at`,
             inputsHash: sql`excluded.inputs_hash`,
             reasonCodes: sql`excluded.reason_codes`,
             generatedAt: sql`excluded.generated_at`,
             vector: sql`excluded.vector`,
             weights: sql`excluded.weights`,
           },
+        })
+        .returning({
+          id: matches.id,
+          assignmentId: matches.assignmentId,
+          profileId: matches.profileId,
+          generatedAt: matches.generatedAt,
+          reasonCodes: matches.reasonCodes,
         });
+
+      await Promise.all(
+        persisted.map(async (row) => {
+          await ensureMatchReviewState({
+            matchId: row.id,
+            assignmentId: row.assignmentId,
+            profileId: row.profileId,
+            orgId: assignment.orgId,
+          });
+
+          await appendSystemReasonLedger({
+            matchId: row.id,
+            assignmentId: row.assignmentId,
+            profileId: row.profileId,
+            reasonCodes: (row.reasonCodes || []) as Array<
+              Parameters<typeof appendSystemReasonLedger>[0]['reasonCodes'][number]
+            >,
+            createdAt: row.generatedAt,
+          });
+        })
+      );
+
+      await persistFairnessEvaluationForAssignment({
+        assignmentId,
+      });
     }
 
     log.info('generate.matches.success', {

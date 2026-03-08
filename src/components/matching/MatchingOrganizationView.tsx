@@ -189,14 +189,18 @@ export function MatchingOrganizationView({
     void fetchTestMatches();
   }, [currentOrgId, selectedAssignment]);
 
-  const handleInterested = async (profileId: string) => {
+  const handleInterested = async (matchId?: string | null) => {
+    if (!matchId || !slug) {
+      toast.error('Match context not found');
+      return;
+    }
+
     try {
-      const response = await apiFetch('/api/match/interest', {
+      const response = await apiFetch(`/api/org/${slug}/matches/${matchId}/review`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          assignmentId: selectedAssignment,
-          targetProfileId: profileId,
+          action: 'shortlist',
         }),
       });
 
@@ -205,14 +209,20 @@ export function MatchingOrganizationView({
       }
 
       const data = await response.json();
-
-      if (data.revealed) {
-        toast.success('Mutual interest! Identity revealed.');
-      } else {
-        toast.success('Interest recorded! Waiting for candidate response.');
-      }
+      setMatches((current) =>
+        current.map((match: any) =>
+          match.id === matchId
+            ? {
+                ...match,
+                reviewStage: data.reviewStage,
+                revealScope: data.revealScope,
+              }
+            : match
+        )
+      );
+      toast.success('Candidate added to shortlist.');
     } catch {
-      toast.error('Failed to record interest');
+      toast.error('Failed to update shortlist');
     }
   };
 
@@ -507,7 +517,7 @@ export function MatchingOrganizationView({
                             )
                           : []
                       }
-                      onInterested={() => handleInterested(match.profileId)}
+                      onInterested={() => handleInterested(match.id)}
                       onHide={() => handleHide(match.profileId)}
                     />
                   ))}

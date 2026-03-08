@@ -52,8 +52,8 @@ export default async function OrgShortlistPage({ params }: { params: Promise<{ s
         {items.length === 0 ? (
           <Card className="p-6">
             <p className="text-sm text-muted-foreground">
-              No candidates shortlisted yet. Encourage candidates to express interest from the
-              Matching tab.
+              No candidates shortlisted yet. Start with one assignment, review blind matches, and
+              move only the strongest candidates into shortlist.
             </p>
           </Card>
         ) : (

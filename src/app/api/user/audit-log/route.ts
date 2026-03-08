@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { desc, eq, sql } from 'drizzle-orm';
-import { analyticsEvents } from '@/db/schema';
+import { analyticsEvents, revealEvents } from '@/db/schema';
 import { requireApiAuthContext } from '@/lib/auth';
 import { log } from '@/lib/log';
 import { db } from '@/db';
@@ -48,16 +48,19 @@ export async function GET(request: NextRequest) {
       offset: searchParams.get('offset'),
     });
 
-    // Get total count of events for pagination
-    const [countResult] = await db
+    const [analyticsCountResult] = await db
       .select({ count: sql<number>`count(*)` })
       .from(analyticsEvents)
       .where(eq(analyticsEvents.userId, user.id));
+    const [revealCountResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(revealEvents)
+      .where(eq(revealEvents.profileId, user.id));
 
-    const totalEvents = Number(countResult.count);
+    const totalEvents =
+      Number(analyticsCountResult.count || 0) + Number(revealCountResult.count || 0);
 
-    // Fetch audit log events
-    const events = await db
+    const analyticsLogEvents = await db
       .select({
         id: analyticsEvents.id,
         timestamp: analyticsEvents.createdAt,
@@ -74,6 +77,37 @@ export async function GET(request: NextRequest) {
       .orderBy(desc(analyticsEvents.createdAt))
       .limit(queryParams.limit)
       .offset(queryParams.offset);
+
+    const revealLogEvents = await db
+      .select({
+        id: revealEvents.id,
+        timestamp: revealEvents.occurredAt,
+        action: sql<string>`'identity_reveal_event'`,
+        ipHash: sql<string>`NULL`,
+        userAgentHash: sql<string>`NULL`,
+        sessionId: sql<string>`NULL`,
+        entityType: sql<string>`'match'`,
+        entityId: revealEvents.matchId,
+        properties: sql`
+          jsonb_build_object(
+            'requested_scope', ${revealEvents.requestedScope},
+            'granted_scope', ${revealEvents.grantedScope},
+            'reason_code', ${revealEvents.reasonCode},
+            'source_surface', ${revealEvents.sourceSurface},
+            'outcome', ${revealEvents.outcome}
+          )
+        `,
+      })
+      .from(revealEvents)
+      .where(eq(revealEvents.profileId, user.id))
+      .orderBy(desc(revealEvents.occurredAt))
+      .limit(queryParams.limit);
+
+    const events = [...analyticsLogEvents, ...revealLogEvents]
+      .sort(
+        (a, b) => new Date(String(b.timestamp)).getTime() - new Date(String(a.timestamp)).getTime()
+      )
+      .slice(0, queryParams.limit);
 
     // Transform events for user-friendly display
     const transformedEvents = events.map((event) => {
@@ -169,6 +203,7 @@ function convertEventTypeToHumanReadable(eventType: string): string {
     // Messaging
     message_sent: 'Sent message',
     conversation_started: 'Started conversation',
+    identity_reveal_event: 'Identity reveal event',
 
     // Projects
     project_created: 'Created project',

@@ -1,13 +1,28 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { db } from '@/db';
-import { assignments, organizationMembers } from '@/db/schema';
+import { assignments, matches, organizationMembers } from '@/db/schema';
 import { requireApiAuthContext } from '@/lib/auth';
 import { computeAssignmentMatches } from '@/lib/core/matching/assignmentMatcher';
 import { getPreset, normalizeWeights, type PresetKey } from '@/lib/core/matching/presets';
 import { log } from '@/lib/log';
+import {
+  buildMatchAuditFields,
+  CANONICAL_MATCH_AUDIT_FIELDS_ENABLED,
+  CANONICAL_MATCH_SCORE_VERSION,
+} from '@/lib/canonical/repository';
+import {
+  appendSystemReasonLedger,
+  buildCanonicalMatchPersistenceFields,
+  canMutateReview,
+  ensureMatchReviewState,
+  getRankBand,
+  getVisibleIdentityFields,
+  normalizeFairnessStatus,
+  persistFairnessEvaluationForAssignment,
+} from '@/lib/matching/review-contract';
 
 export const dynamic = 'force-dynamic';
 
@@ -77,7 +92,119 @@ export async function POST(request: NextRequest) {
       startTime,
     });
 
-    return NextResponse.json({ items, meta });
+    const upserted = await Promise.all(
+      items.map(async (item) => {
+        const vectorPayload = {
+          subscores: item.subscores,
+          contributions: item.contributions,
+          gaps: item.gaps,
+          missing: item.missing,
+          weights,
+          pac: item.pac,
+        };
+        const auditFields = buildMatchAuditFields({
+          scoreVersion: CANONICAL_MATCH_SCORE_VERSION,
+          assignmentId,
+          profileId: item.profileId,
+          weights,
+          subscores: item.subscores,
+          missing: item.missing,
+          gaps: item.gaps,
+          verificationGates: assignment.verificationGates || [],
+        });
+        const persistenceFields = buildCanonicalMatchPersistenceFields({
+          scoreVersion: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.scoreVersion : null,
+          inputsHash: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.inputsHash : null,
+          reasonCodes: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.reasonCodes : [],
+          generatedAt: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.generatedAt : null,
+        });
+
+        const [row] = await db
+          .insert(matches)
+          .values({
+            assignmentId,
+            profileId: item.profileId,
+            score: item.score.toString(),
+            ...persistenceFields,
+            vector: vectorPayload,
+            weights,
+          })
+          .onConflictDoUpdate({
+            target: [matches.assignmentId, matches.profileId],
+            set: {
+              score: item.score.toString(),
+              scoreVersion: sql`excluded.score_version`,
+              modelVersion: sql`excluded.model_version`,
+              explanationVersion: sql`excluded.explanation_version`,
+              fairnessCheckVersion: sql`excluded.fairness_check_version`,
+              fairnessStatus: sql`excluded.fairness_status`,
+              fairnessEvaluatedAt: sql`excluded.fairness_evaluated_at`,
+              inputsHash: sql`excluded.inputs_hash`,
+              reasonCodes: sql`excluded.reason_codes`,
+              generatedAt: sql`excluded.generated_at`,
+              vector: vectorPayload,
+              weights,
+            },
+          })
+          .returning({
+            id: matches.id,
+            profileId: matches.profileId,
+            assignmentId: matches.assignmentId,
+            generatedAt: matches.generatedAt,
+            reasonCodes: matches.reasonCodes,
+          });
+
+        await ensureMatchReviewState({
+          matchId: row.id,
+          assignmentId: row.assignmentId,
+          profileId: row.profileId,
+          orgId: assignment.orgId,
+        });
+
+        await appendSystemReasonLedger({
+          matchId: row.id,
+          assignmentId: row.assignmentId,
+          profileId: row.profileId,
+          reasonCodes: (row.reasonCodes || []) as Array<
+            Parameters<typeof appendSystemReasonLedger>[0]['reasonCodes'][number]
+          >,
+          createdAt: row.generatedAt,
+        });
+
+        return row;
+      })
+    );
+
+    const fairnessEvaluation = await persistFairnessEvaluationForAssignment({
+      assignmentId,
+      actorId: user.id,
+      actorType: 'user_account',
+    });
+    const fairnessStatus = normalizeFairnessStatus(fairnessEvaluation.status);
+    const canViewExactRank = canMutateReview(membership.role);
+    const matchIdByProfileId = new Map(upserted.map((row) => [row.profileId, row.id]));
+
+    return NextResponse.json({
+      items: items.map((item, index) => ({
+        ...item,
+        id: matchIdByProfileId.get(item.profileId) ?? null,
+        reviewStage: 'blind_review',
+        revealScope: 'blind',
+        visibleIdentityFields: getVisibleIdentityFields('blind'),
+        fairness: {
+          status: fairnessStatus,
+        },
+        rank: canViewExactRank && fairnessStatus === 'pass' ? index + 1 : null,
+        rankBand: getRankBand(index + 1, items.length),
+      })),
+      meta: {
+        ...meta,
+        fairness: {
+          status: fairnessStatus,
+          evaluationId: fairnessEvaluation.id,
+        },
+      },
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Invalid input', details: error.errors }, { status: 400 });

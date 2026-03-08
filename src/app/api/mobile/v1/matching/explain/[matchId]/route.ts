@@ -5,6 +5,12 @@ import { db } from '@/db';
 import { assignments, matches } from '@/db/schema';
 import { isActiveOrgMember, requireMobileAuth } from '@/lib/api/mobile/auth';
 import { mobileError, mobileSuccess } from '@/lib/api/mobile/response';
+import {
+  buildFairnessUiContract,
+  getReasonLedgerEntries,
+  normalizeFairnessStatus,
+  renderExplanationFromReasonCodes,
+} from '@/lib/matching/review-contract';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,6 +46,11 @@ export async function GET(
         assignmentId: matches.assignmentId,
         score: matches.score,
         scoreVersion: matches.scoreVersion,
+        modelVersion: matches.modelVersion,
+        explanationVersion: matches.explanationVersion,
+        fairnessCheckVersion: matches.fairnessCheckVersion,
+        fairnessStatus: matches.fairnessStatus,
+        fairnessEvaluatedAt: matches.fairnessEvaluatedAt,
         inputsHash: matches.inputsHash,
         reasonCodes: matches.reasonCodes,
         generatedAt: matches.generatedAt,
@@ -73,15 +84,44 @@ export async function GET(
     const subscores =
       (vector['subscores'] as Record<string, number> | undefined) ??
       (vector as Record<string, number>);
+    const fairnessStatus = normalizeFairnessStatus(row.fairnessStatus);
+    const fairnessUi = buildFairnessUiContract(fairnessStatus);
+    const ledgerEntries = await getReasonLedgerEntries(row.id);
+    const renderedExplanation = renderExplanationFromReasonCodes({
+      reasonCodes: row.reasonCodes || [],
+      ledgerEntries: ledgerEntries.map((entry) => ({
+        category: entry.category,
+        reasonCode: entry.reasonCode,
+        source: entry.source,
+        payloadJson:
+          entry.payloadJson && typeof entry.payloadJson === 'object'
+            ? (entry.payloadJson as Record<string, unknown>)
+            : {},
+        createdAt: entry.createdAt,
+        noteHash: entry.noteHash,
+      })),
+      fairnessStatus,
+      audience: ownMatch ? 'candidate' : 'org',
+    });
 
     return mobileSuccess({
       matchId: row.id,
       assignmentId: row.assignmentId,
       compositeScore: Number(row.score),
       scoreVersion: row.scoreVersion,
+      modelVersion: row.modelVersion,
+      explanationVersion: row.explanationVersion,
+      fairnessCheckVersion: row.fairnessCheckVersion,
       inputsHash: row.inputsHash,
       reasonCodes: row.reasonCodes || [],
       generatedAt: row.generatedAt,
+      fairness: {
+        status: fairnessStatus,
+        evaluatedAt: row.fairnessEvaluatedAt,
+        warning: fairnessUi.warning,
+      },
+      reasonSummary: renderedExplanation.summary,
+      reasonSections: renderedExplanation.sections,
       subscores: {
         skills: Number(subscores?.skills ?? 0),
         pac: Number(subscores?.pac ?? subscores?.purpose_alignment ?? 0),

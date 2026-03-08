@@ -105,9 +105,29 @@ export const MATCH_REASON_CODE_VALUES = [
   'focus_role',
   'focus_industry',
   'focus_org_type',
+  'shortlist_selected',
+  'passed_for_now',
+  'rejected_constraints',
+  'override_keep_under_review',
+  'override_shortlist_manual',
+  'override_reject_manual',
+  'fairness_warning_active',
+  'fairness_ranking_suppressed',
+  'reveal_shortlist_identity',
+  'reveal_full_identity',
 ] as const;
 export type MatchReasonCode = (typeof MATCH_REASON_CODE_VALUES)[number];
 export const MatchReasonCodeSchema = z.enum(MATCH_REASON_CODE_VALUES);
+
+export const MATCH_REASON_CATEGORY_VALUES = [
+  'positive_match',
+  'constraint_mismatch',
+  'workflow_decision',
+  'manual_override',
+  'fairness',
+] as const;
+export type MatchReasonCategory = (typeof MATCH_REASON_CATEGORY_VALUES)[number];
+export const MatchReasonCategorySchema = z.enum(MATCH_REASON_CATEGORY_VALUES);
 
 export const PrincipalRefSchema = z.object({
   type: z.enum(['user_account', 'organization']),

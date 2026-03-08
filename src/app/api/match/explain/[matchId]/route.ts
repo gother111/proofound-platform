@@ -10,6 +10,15 @@ import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { getRows } from '@/lib/db/rows';
 import { isActiveOrgMember, requireApiAuth } from '@/lib/api/auth';
+import {
+  buildFairnessUiContract,
+  canRevealExactRank,
+  getOrgMembershipRole,
+  getRankBand,
+  getReasonLedgerEntries,
+  normalizeFairnessStatus,
+  renderExplanationFromReasonCodes,
+} from '@/lib/matching/review-contract';
 
 type SkillRequirement = {
   id?: string;
@@ -50,6 +59,11 @@ export async function GET(
         m.profile_id,
         m.score,
         m.score_version,
+        m.model_version,
+        m.explanation_version,
+        m.fairness_check_version,
+        m.fairness_status,
+        m.fairness_evaluated_at,
         m.inputs_hash,
         m.reason_codes,
         m.generated_at,
@@ -83,6 +97,11 @@ export async function GET(
       profile_id: string;
       score: string | number;
       score_version: string | null;
+      model_version: string | null;
+      explanation_version: string | null;
+      fairness_check_version: string | null;
+      fairness_status: string | null;
+      fairness_evaluated_at: string | null;
       inputs_hash: string | null;
       reason_codes: string[] | null;
       generated_at: string | null;
@@ -117,6 +136,9 @@ export async function GET(
       match.org_id,
       ['owner', 'admin', 'member', 'viewer']
     );
+    const orgRole = canViewAsOrgMember
+      ? await getOrgMembershipRole(authResult.user.id, match.org_id)
+      : null;
 
     if (match.profile_id !== authResult.user.id && !canViewAsOrgMember) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
@@ -253,22 +275,34 @@ export async function GET(
     const rank = allMatches.findIndex((candidate) => candidate.id === matchId) + 1;
     const totalCandidates = allMatches.length;
 
-    let rankBand: string | undefined;
-    if (rank > 0 && rank <= 5) rankBand = 'Top 5';
-    else if (rank <= 10) rankBand = 'Top 10';
-    else if (rank <= 20) rankBand = 'Top 20';
-    else if (rank > 0 && totalCandidates > 0) {
-      const percentile = Math.ceil((rank / totalCandidates) * 100);
-      if (percentile <= 30) rankBand = 'Top 30%';
-      else if (percentile <= 50) rankBand = 'Top 50%';
-      else rankBand = 'Competitive';
-    } else {
-      rankBand = 'Competitive';
-    }
-
+    const rankBand =
+      rank > 0 && totalCandidates > 0 ? getRankBand(rank, totalCandidates) : 'Competitive';
     const requestedRankMode = request.nextUrl.searchParams.get('rankMode');
+    const fairnessStatus = normalizeFairnessStatus(match.fairness_status);
+    const fairnessUi = buildFairnessUiContract(fairnessStatus);
     const exactRankAllowed =
-      requestedRankMode === 'exact' && canViewAsOrgMember && totalCandidates >= 30;
+      requestedRankMode === 'exact' &&
+      canViewAsOrgMember &&
+      totalCandidates >= 30 &&
+      canRevealExactRank(orgRole, fairnessStatus) &&
+      !fairnessUi.suppressExactRank;
+    const ledgerEntries = await getReasonLedgerEntries(match.id);
+    const renderedExplanation = renderExplanationFromReasonCodes({
+      reasonCodes: Array.isArray(match.reason_codes) ? match.reason_codes : [],
+      ledgerEntries: ledgerEntries.map((entry) => ({
+        category: entry.category,
+        reasonCode: entry.reasonCode,
+        source: entry.source,
+        payloadJson:
+          entry.payloadJson && typeof entry.payloadJson === 'object'
+            ? (entry.payloadJson as Record<string, unknown>)
+            : {},
+        createdAt: entry.createdAt,
+        noteHash: entry.noteHash,
+      })),
+      fairnessStatus,
+      audience: match.profile_id === authResult.user.id ? 'candidate' : 'org',
+    });
 
     const vector = (match.vector as Record<string, any> | null) || {};
     const vectorSubscores = (vector.subscores as Record<string, number> | undefined) || {};
@@ -277,14 +311,28 @@ export async function GET(
       matchId: match.id,
       compositeScore: Number(match.score) || 0,
       scoreVersion: match.score_version,
+      modelVersion: match.model_version,
+      explanationVersion: match.explanation_version,
+      fairnessCheckVersion: match.fairness_check_version,
       inputsHash: match.inputs_hash,
       reasonCodes: Array.isArray(match.reason_codes) ? match.reason_codes : [],
       generatedAt: match.generated_at,
+      fairness: {
+        status: fairnessStatus,
+        evaluatedAt: match.fairness_evaluated_at,
+        warning: fairnessUi.warning,
+      },
+      reasonSummary: renderedExplanation.summary,
+      reasonSections: renderedExplanation.sections,
       rank: exactRankAllowed ? rank : undefined,
       totalCandidates,
       rankBand,
       rankMode: exactRankAllowed ? 'exact' : 'band',
-      exactRankAvailable: canViewAsOrgMember && totalCandidates >= 30,
+      exactRankAvailable:
+        canViewAsOrgMember &&
+        totalCandidates >= 30 &&
+        canRevealExactRank(orgRole, fairnessStatus) &&
+        !fairnessUi.suppressExactRank,
       subscores: {
         skills: Number(vectorSubscores.skills ?? vector.skills ?? 0),
         pac: Number(vectorSubscores.pac ?? vector.pac ?? 0),

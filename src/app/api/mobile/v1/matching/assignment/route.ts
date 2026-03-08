@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 
@@ -13,6 +13,15 @@ import {
   CANONICAL_MATCH_AUDIT_FIELDS_ENABLED,
   CANONICAL_MATCH_SCORE_VERSION,
 } from '@/lib/canonical/repository';
+import {
+  appendSystemReasonLedger,
+  buildCanonicalMatchPersistenceFields,
+  ensureMatchReviewState,
+  getRankBand,
+  getVisibleIdentityFields,
+  normalizeFairnessStatus,
+  persistFairnessEvaluationForAssignment,
+} from '@/lib/matching/review-contract';
 
 export const dynamic = 'force-dynamic';
 
@@ -107,6 +116,12 @@ export async function POST(request: NextRequest) {
           gaps: item.gaps,
           verificationGates: assignment.verificationGates || [],
         });
+        const persistenceFields = buildCanonicalMatchPersistenceFields({
+          scoreVersion: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.scoreVersion : null,
+          inputsHash: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.inputsHash : null,
+          reasonCodes: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.reasonCodes : [],
+          generatedAt: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.generatedAt : null,
+        });
 
         const [row] = await db
           .insert(matches)
@@ -114,10 +129,7 @@ export async function POST(request: NextRequest) {
             assignmentId,
             profileId: item.profileId,
             score: item.score.toString(),
-            scoreVersion: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.scoreVersion : null,
-            inputsHash: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.inputsHash : null,
-            reasonCodes: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.reasonCodes : [],
-            generatedAt: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.generatedAt : null,
+            ...persistenceFields,
             vector: vectorPayload,
             weights,
           })
@@ -125,27 +137,79 @@ export async function POST(request: NextRequest) {
             target: [matches.assignmentId, matches.profileId],
             set: {
               score: item.score.toString(),
-              scoreVersion: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.scoreVersion : null,
-              inputsHash: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.inputsHash : null,
-              reasonCodes: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.reasonCodes : [],
-              generatedAt: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.generatedAt : null,
+              scoreVersion: sql`excluded.score_version`,
+              modelVersion: sql`excluded.model_version`,
+              explanationVersion: sql`excluded.explanation_version`,
+              fairnessCheckVersion: sql`excluded.fairness_check_version`,
+              fairnessStatus: sql`excluded.fairness_status`,
+              fairnessEvaluatedAt: sql`excluded.fairness_evaluated_at`,
+              inputsHash: sql`excluded.inputs_hash`,
+              reasonCodes: sql`excluded.reason_codes`,
+              generatedAt: sql`excluded.generated_at`,
               vector: vectorPayload,
               weights,
             },
           })
-          .returning({ id: matches.id, profileId: matches.profileId });
+          .returning({
+            id: matches.id,
+            profileId: matches.profileId,
+            assignmentId: matches.assignmentId,
+            generatedAt: matches.generatedAt,
+            reasonCodes: matches.reasonCodes,
+          });
+
+        await ensureMatchReviewState({
+          matchId: row.id,
+          assignmentId: row.assignmentId,
+          profileId: row.profileId,
+          orgId: assignment.orgId,
+        });
+
+        await appendSystemReasonLedger({
+          matchId: row.id,
+          assignmentId: row.assignmentId,
+          profileId: row.profileId,
+          reasonCodes: (row.reasonCodes || []) as Array<
+            Parameters<typeof appendSystemReasonLedger>[0]['reasonCodes'][number]
+          >,
+          createdAt: row.generatedAt,
+        });
 
         return row;
       })
     );
 
+    const fairnessEvaluation = await persistFairnessEvaluationForAssignment({
+      assignmentId,
+      actorId: auth.user.id,
+      actorType: 'user_account',
+    });
+    const fairnessStatus = normalizeFairnessStatus(fairnessEvaluation.status);
+
     const matchIdByProfileId = new Map(upserted.map((row) => [row.profileId, row.id]));
-    const itemsWithIds = items.map((item) => ({
+    const itemsWithIds = items.map((item, index) => ({
       ...item,
       matchId: matchIdByProfileId.get(item.profileId) ?? null,
+      reviewStage: 'blind_review',
+      revealScope: 'blind',
+      visibleIdentityFields: getVisibleIdentityFields('blind'),
+      fairness: {
+        status: fairnessStatus,
+      },
+      rankBand: getRankBand(index + 1, items.length),
     }));
 
-    return mobileSuccess({ items: itemsWithIds, count: itemsWithIds.length, meta });
+    return mobileSuccess({
+      items: itemsWithIds,
+      count: itemsWithIds.length,
+      meta: {
+        ...meta,
+        fairness: {
+          status: fairnessStatus,
+          evaluationId: fairnessEvaluation.id,
+        },
+      },
+    });
   } catch (error) {
     console.error('[mobile.matching.assignment.post] failed', error);
     return mobileError('internal_error', 'Failed to compute assignment matches', 500);

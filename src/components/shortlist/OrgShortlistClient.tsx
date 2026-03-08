@@ -1,8 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Card } from '@/components/ui/card';
+
 import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
 export interface ShortlistItem {
@@ -10,14 +11,28 @@ export interface ShortlistItem {
   assignmentId: string;
   assignmentRole: string | null;
   assignmentStatus: string | null;
-  candidateId: string | null;
-  candidateName: string | null;
-  candidateEmail: string | null;
-  score: string | number | null;
-  createdAt: string;
+  reviewStage: string;
+  revealScope: string;
+  visibleIdentityFields: string[];
+  candidate: {
+    id: string;
+    displayName: string | null;
+    headline: string | null;
+    tagline: string | null;
+    desiredRoles: string[];
+    workMode: string | null;
+    valuesTags: string[];
+    causeTags: string[];
+    verificationSummary: number;
+  };
+  fairness: {
+    status: string;
+  };
+  rankBand: string;
+  shortlistedAt: string | null;
 }
 
-type SortOption = 'recent' | 'score';
+type SortOption = 'recent' | 'rankBand';
 
 interface Props {
   items: ShortlistItem[];
@@ -42,26 +57,33 @@ export function OrgShortlistClient({ items }: Props) {
     let next = items;
 
     if (assignmentFilter !== 'all') {
-      next = next.filter((i) => i.assignmentId === assignmentFilter);
+      next = next.filter((item) => item.assignmentId === assignmentFilter);
     }
 
     if (search.trim()) {
-      const q = search.toLowerCase();
-      next = next.filter(
-        (i) =>
-          i.candidateName?.toLowerCase().includes(q) ||
-          i.candidateEmail?.toLowerCase().includes(q)
-      );
+      const query = search.toLowerCase();
+      next = next.filter((item) => {
+        const searchValues = [
+          item.candidate.displayName,
+          item.candidate.headline,
+          item.candidate.tagline,
+          ...item.candidate.desiredRoles,
+          ...item.candidate.valuesTags,
+          ...item.candidate.causeTags,
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+
+        return searchValues.includes(query);
+      });
     }
 
     next = [...next].sort((a, b) => {
-      if (sortBy === 'score') {
-        const sa = Number(a.score ?? 0);
-        const sb = Number(b.score ?? 0);
-        return sb - sa;
+      if (sortBy === 'rankBand') {
+        return a.rankBand.localeCompare(b.rankBand);
       }
-      // recent
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      return new Date(b.shortlistedAt || 0).getTime() - new Date(a.shortlistedAt || 0).getTime();
     });
 
     return next;
@@ -69,14 +91,12 @@ export function OrgShortlistClient({ items }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3 justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Badge variant="outline">
             {filtered.length} candidate{filtered.length === 1 ? '' : 's'}
           </Badge>
-          {assignmentFilter !== 'all' && (
-            <Badge variant="secondary">Filtered</Badge>
-          )}
+          <Badge variant="secondary">Progressive reveal</Badge>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -87,7 +107,7 @@ export function OrgShortlistClient({ items }: Props) {
             <select
               id="assignment-filter"
               value={assignmentFilter}
-              onChange={(e) => setAssignmentFilter(e.target.value)}
+              onChange={(event) => setAssignmentFilter(event.target.value)}
               className="h-9 rounded-md border border-neutral-300 bg-white px-2 text-sm"
             >
               <option value="all">All</option>
@@ -106,11 +126,11 @@ export function OrgShortlistClient({ items }: Props) {
             <select
               id="sort-by"
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortOption)}
+              onChange={(event) => setSortBy(event.target.value as SortOption)}
               className="h-9 rounded-md border border-neutral-300 bg-white px-2 text-sm"
             >
               <option value="recent">Most recent</option>
-              <option value="score">Highest score</option>
+              <option value="rankBand">Rank band</option>
             </select>
           </div>
 
@@ -121,9 +141,9 @@ export function OrgShortlistClient({ items }: Props) {
             <Input
               id="shortlist-search"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Name or email"
-              className="h-9 w-48"
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Name, role focus, value"
+              className="h-9 w-56"
             />
           </div>
         </div>
@@ -132,25 +152,28 @@ export function OrgShortlistClient({ items }: Props) {
       {filtered.length === 0 ? (
         <Card className="p-6">
           <p className="text-sm text-muted-foreground">
-            No shortlist entries match these filters. Try clearing filters or refreshing.
+            No shortlisted candidates match these filters right now.
           </p>
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-3">
           {filtered.map((item) => (
-            <Card key={item.id} className="p-4 flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <div className="flex flex-col gap-1">
+            <Card key={item.id} className="flex flex-col gap-3 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-1">
                   <div className="text-sm font-medium text-proofound-charcoal">
-                    {item.candidateName || 'Candidate'}
+                    {item.candidate.displayName || 'Candidate'}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {item.candidateEmail || 'Email unavailable'}
+                    {item.candidate.headline ||
+                      item.candidate.tagline ||
+                      'Identity stays partially hidden until a later reveal trigger.'}
                   </div>
                 </div>
-                <Badge variant="secondary">
-                  {item.assignmentStatus ?? 'active'}
-                </Badge>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="secondary">{item.assignmentStatus ?? 'active'}</Badge>
+                  <Badge variant="outline">{item.rankBand}</Badge>
+                </div>
               </div>
 
               <div className="text-sm text-proofound-charcoal/80">
@@ -158,9 +181,28 @@ export function OrgShortlistClient({ items }: Props) {
                 {item.assignmentRole || 'Untitled role'}
               </div>
 
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <span>Shortlisted: {new Date(item.createdAt).toLocaleDateString()}</span>
-                {item.score ? <span>Score: {Number(item.score).toFixed(0)}</span> : null}
+              <div className="flex flex-wrap gap-2">
+                {item.candidate.desiredRoles.slice(0, 2).map((role) => (
+                  <Badge key={role} variant="outline">
+                    {role}
+                  </Badge>
+                ))}
+                {item.candidate.valuesTags.slice(0, 2).map((value) => (
+                  <Badge key={value} variant="outline">
+                    {value}
+                  </Badge>
+                ))}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                <span>
+                  Shortlisted:{' '}
+                  {item.shortlistedAt
+                    ? new Date(item.shortlistedAt).toLocaleDateString()
+                    : 'Just now'}
+                </span>
+                <span>Reveal scope: {item.revealScope}</span>
+                <span>Fairness: {item.fairness.status}</span>
               </div>
             </Card>
           ))}
@@ -169,4 +211,3 @@ export function OrgShortlistClient({ items }: Props) {
     </div>
   );
 }
-

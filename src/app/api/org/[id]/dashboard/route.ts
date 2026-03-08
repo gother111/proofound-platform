@@ -4,7 +4,7 @@
  *
  * Aggregates dashboard metrics for organization dashboard:
  * - Active assignments count
- * - Open shortlists (matches with interest)
+ * - Open shortlists (matches in review stage)
  * - Pending intros (conversations started)
  * - Team member count
  * - Goals progress
@@ -21,12 +21,12 @@ import {
   organizationMembers,
   organizationGoals,
   assignments,
+  matchReviewStates,
   matches,
-  matchInterest,
   conversations,
   profiles,
 } from '@/db/schema';
-import { eq, and, sql, gte, desc, count, isNull } from 'drizzle-orm';
+import { eq, and, sql, gte, desc, count } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -103,12 +103,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       avgScore: number | null;
       highQualityMatches: number | null;
     }[] = [];
-    let interestData: { count: number | null }[] = [];
+    let shortlistData: { count: number | null }[] = [];
     let conversationsData: { count: number | null }[] = [];
 
     try {
       // Fetch all dashboard metrics concurrently (PRD Part 7)
-      [assignmentsData, teamData, goalsData, matchesData, interestData, conversationsData] =
+      [assignmentsData, teamData, goalsData, matchesData, shortlistData, conversationsData] =
         await Promise.all([
           db
             .select({
@@ -154,9 +154,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             .select({
               count: sql<number>`count(*)::int`,
             })
-            .from(matchInterest)
-            .innerJoin(assignments, eq(matchInterest.assignmentId, assignments.id))
-            .where(and(eq(assignments.orgId, org.id), isNull(matchInterest.targetProfileId))),
+            .from(matchReviewStates)
+            .where(
+              and(
+                eq(matchReviewStates.orgId, org.id),
+                eq(matchReviewStates.reviewStage, 'shortlisted')
+              )
+            ),
 
           db
             .select({
@@ -175,7 +179,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       total: assignmentsData.reduce((sum, a) => sum + (a.count || 0), 0),
       active: assignmentsData.find((a) => a.status === 'active')?.count || 0,
       draft: assignmentsData.find((a) => a.status === 'draft')?.count || 0,
-      paused: assignmentsData.find((a) => a.status === 'paused')?.count || 0,
+      hold: assignmentsData.find((a) => a.status === 'hold')?.count || 0,
       closed: assignmentsData.find((a) => a.status === 'closed')?.count || 0,
     };
 
@@ -207,7 +211,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       assignmentsWithMatches: matchData.assignmentCount || 0,
     };
 
-    const shortlistCount = interestData[0]?.count || 0;
+    const shortlistCount = shortlistData[0]?.count || 0;
     const activeIntros = conversationsData[0]?.count || 0;
 
     const ttscTrend = {
@@ -260,7 +264,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           assignmentsWithMatches: 0,
         },
       },
-      assignments: { total: 0, active: 0, draft: 0, paused: 0, closed: 0 },
+      assignments: { total: 0, active: 0, draft: 0, hold: 0, closed: 0 },
       team: { total: 0, owners: 0, admins: 0, members: 0, viewers: 0 },
       goals: { total: 0, inProgress: 0, achieved: 0, notStarted: 0 },
       ttsc: { current: null, previous: null, change: null, unit: 'days' },

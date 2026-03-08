@@ -9,6 +9,7 @@ import { conversations, profiles } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { sendIdentityRevealedEmail } from '@/lib/email';
 import { createClient } from '@/lib/supabase/server';
+import { unlockFullIdentityForMatch } from '@/lib/matching/review-contract';
 
 /**
  * Trigger identity reveal for a conversation
@@ -34,6 +35,19 @@ export async function triggerIdentityReveal(conversationId: string): Promise<voi
         stage: 'revealed',
       })
       .where(eq(conversations.id, conversationId));
+
+    if (conversation.matchId) {
+      await unlockFullIdentityForMatch({
+        matchId: conversation.matchId,
+        triggerType: 'automatic',
+        sourceSurface: 'identity_reveal_service',
+        reasonCode: 'reveal_full_identity',
+        unlockTrigger: 'interview_scheduled',
+        context: {
+          conversationId,
+        },
+      });
+    }
 
     // Send email notifications to both parties
     try {
