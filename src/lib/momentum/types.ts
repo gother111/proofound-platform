@@ -43,10 +43,32 @@ export type ProofProgressTracker = {
   nextStep: string;
 };
 
+export type ReadinessState = 'portfolio_ready' | 'browse_ready' | 'qualified_intro_ready';
+
+export type ReadinessRequirement = {
+  id: string;
+  label: string;
+  detail: string;
+  met: boolean;
+  actionUrl: string;
+  current?: number | boolean | string;
+  required?: number | boolean | string;
+};
+
 export type IndividualReadiness = {
   readinessScore: number;
   scoreBreakdown: ReadinessScoreBreakdown[];
   topActions: ReadinessAction[];
+  states: ReadinessState[];
+  highestState: ReadinessState | null;
+  publicPortfolioUrl?: string | null;
+  missingByState: Record<ReadinessState, ReadinessRequirement[]>;
+  legacyTier: 'none' | 'lite' | 'strong';
+  flags: {
+    portfolioReady: boolean;
+    browseReady: boolean;
+    qualifiedIntroReady: boolean;
+  };
   proofProgress: ProofProgressTracker;
   skillToOpportunityBridge: Array<{
     skillCode: string;
@@ -63,6 +85,10 @@ export type IndividualReadiness = {
     highQualityMatches: number;
     pendingVerifications: number;
     skillsCount: number;
+    skillsWithRecency?: number;
+    publicProofSignalCount?: number;
+    proofBackedSkillCount?: number;
+    verifiedTrustSignalCount?: number;
   };
 };
 

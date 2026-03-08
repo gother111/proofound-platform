@@ -28,7 +28,11 @@ export const EventType = {
   PROFILE_UPDATED: 'profile_updated',
   PURPOSE_UPDATED: 'purpose_updated',
   PORTFOLIO_SHARE_LINK_COPIED: 'portfolio_share_link_copied',
+  PORTFOLIO_PREVIEW_OPENED: 'portfolio_preview_opened',
   PORTFOLIO_PDF_EXPORT_SUCCEEDED: 'portfolio_pdf_export_succeeded',
+  PORTFOLIO_READY_ACHIEVED: 'portfolio_ready_achieved',
+  BROWSE_READY_ACHIEVED: 'browse_ready_achieved',
+  QUALIFIED_INTRO_READY_ACHIEVED: 'qualified_intro_ready_achieved',
 
   // Expertise & Skills
   L4_SKILL_ADDED: 'l4_skill_added',
@@ -344,7 +348,11 @@ export function getEventDisplayName(eventType: EventTypeValue): string {
     [EventType.PROFILE_UPDATED]: 'Profile Updated',
     [EventType.PURPOSE_UPDATED]: 'Purpose Updated',
     [EventType.PORTFOLIO_SHARE_LINK_COPIED]: 'Portfolio Share Link Copied',
+    [EventType.PORTFOLIO_PREVIEW_OPENED]: 'Portfolio Preview Opened',
     [EventType.PORTFOLIO_PDF_EXPORT_SUCCEEDED]: 'Portfolio PDF Export Succeeded',
+    [EventType.PORTFOLIO_READY_ACHIEVED]: 'Portfolio Ready Achieved',
+    [EventType.BROWSE_READY_ACHIEVED]: 'Browse Ready Achieved',
+    [EventType.QUALIFIED_INTRO_READY_ACHIEVED]: 'Qualified Intro Ready Achieved',
     [EventType.L4_SKILL_ADDED]: 'Skill Added',
     [EventType.PROOF_UPLOADED]: 'Proof Uploaded',
     [EventType.CV_IMPORTED]: 'CV Imported',

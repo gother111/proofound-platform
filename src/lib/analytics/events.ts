@@ -638,6 +638,45 @@ export async function emitPortfolioShareLinkCopied(
   });
 }
 
+export async function emitPortfolioPreviewOpened(
+  userId: string,
+  properties?: Record<string, any>
+): Promise<void> {
+  await emitAnalyticsEvent({
+    eventType: 'portfolio_preview_opened',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: userId,
+    properties,
+  });
+}
+
+export async function emitReadinessStateAchieved(
+  userId: string,
+  state: 'portfolio_ready' | 'browse_ready' | 'qualified_intro_ready',
+  properties?: Record<string, any>
+): Promise<void> {
+  const eventType =
+    state === 'portfolio_ready'
+      ? 'portfolio_ready_achieved'
+      : state === 'browse_ready'
+        ? 'browse_ready_achieved'
+        : 'qualified_intro_ready_achieved';
+
+  await emitAnalyticsEvent({
+    eventType,
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: userId,
+    properties: {
+      readiness_state: state,
+      ...properties,
+    },
+  });
+}
+
 export async function emitPortfolioPdfExportSucceeded(
   userId: string,
   properties?: Record<string, any>

@@ -50,15 +50,15 @@ export function DashboardClient({ initialLayout, initialData }: DashboardClientP
     const candidateSteps = [
       {
         id: 'widget-profile-activation',
-        title: 'Profile Activation',
+        title: 'Public Portfolio',
         description:
-          'Track your profile activation tier and complete the key requirements to unlock stronger matching.',
+          'Start with your public portfolio. Preview it, share it, and see what proof to add next.',
       },
       {
         id: 'widget-matching-readiness',
-        title: 'Matching Readiness',
+        title: 'Browse Readiness',
         description:
-          'Close priority skill and preference gaps to increase fit and improve your ranking.',
+          'Browsing stays available before introductions. Add only the signal needed to personalize results.',
       },
       {
         id: 'widget-momentum-metrics',

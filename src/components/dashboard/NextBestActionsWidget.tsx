@@ -177,12 +177,12 @@ export function NextBestActionsWidget({
   const actions = completeness?.actions || [];
   const topActions = actions.slice(0, 5); // Show top 5 actions
 
-  // Determine profile status
+  // Determine portfolio-first status
   const getProfileStatus = () => {
-    if (percentage >= 80) return { text: 'Excellent', color: 'text-green-600' };
-    if (percentage >= 60) return { text: 'Matchable', color: 'text-blue-600' };
-    if (percentage >= 40) return { text: 'In Progress', color: 'text-yellow-600' };
-    return { text: 'Getting Started', color: 'text-gray-600' };
+    if (percentage >= 85) return { text: 'Qualified intro progress', color: 'text-green-600' };
+    if (percentage >= 60) return { text: 'Browse progress', color: 'text-blue-600' };
+    if (percentage >= 35) return { text: 'Portfolio progress', color: 'text-yellow-600' };
+    return { text: 'Getting started', color: 'text-gray-600' };
   };
 
   const status = getProfileStatus();
@@ -203,13 +203,13 @@ export function NextBestActionsWidget({
         {/* Profile Completeness */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Profile Completeness</span>
+            <span className="text-muted-foreground">Readiness progress</span>
             <span className="font-semibold text-foreground">{percentage}%</span>
           </div>
           <Progress value={percentage} className="h-2" />
           {percentage < 60 && (
             <p className="text-xs text-muted-foreground">
-              Reach 60% to become matchable and start receiving opportunities
+              Start with public proof, then add just enough signal to browse without friction.
             </p>
           )}
         </div>
@@ -219,9 +219,9 @@ export function NextBestActionsWidget({
         {topActions.length === 0 ? (
           <div className="text-center py-8">
             <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-3" />
-            <p className="text-sm font-medium text-foreground mb-1">Profile Complete!</p>
+            <p className="text-sm font-medium text-foreground mb-1">Core milestones covered</p>
             <p className="text-xs text-muted-foreground">
-              Great job! Your profile is optimized for matching.
+              Your portfolio is live and your next actions are now about keeping proof fresh.
             </p>
           </div>
         ) : (

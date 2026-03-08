@@ -274,71 +274,9 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    // Check if user has reached activation threshold (PRD: minimum L4 count)
-    // Activation threshold: ≥10 L4 skills per PRD Part 5, F3
     try {
-      const { emitProfileActivatedAsync } = await import('@/lib/analytics/events');
-      const { db } = await import('@/db');
-      const { analyticsEvents } = await import('@/db/schema');
-      const { eq, and } = await import('drizzle-orm');
-
-      // Check if already activated
-      const existingActivation = await db
-        .select()
-        .from(analyticsEvents)
-        .where(
-          and(
-            eq(analyticsEvents.userId, user.id),
-            eq(analyticsEvents.eventType, 'profile_activated')
-          )
-        )
-        .limit(1);
-
-      if (existingActivation.length === 0) {
-        // Get total skill count
-        const { data: allSkills } = await supabase
-          .from('skills')
-          .select('id')
-          .eq('profile_id', user.id);
-
-        const skillCount = allSkills?.length || 0;
-
-        // Check if reached activation threshold
-        if (skillCount >= 10) {
-          // Get matching profile to check if user has mission/vision/values
-          const { data: matchingProfile } = await supabase
-            .from('matching_profiles')
-            .select('*')
-            .eq('profile_id', user.id)
-            .single();
-
-          const { data: individualProfile } = await supabase
-            .from('individual_profiles')
-            .select('mission, vision, values, causes')
-            .eq('user_id', user.id)
-            .single();
-
-          // Calculate approximate activation duration (from profile creation)
-          const activationDurationMs =
-            Date.now() - new Date((user as any).createdAt || Date.now()).getTime();
-          emitProfileActivatedAsync(user.id, activationDurationMs, {
-            l4_count: skillCount,
-            has_proofs: false, // TODO: Check actual proof count
-            has_mission: !!individualProfile?.mission,
-            has_vision: !!individualProfile?.vision,
-            has_values: !!(
-              individualProfile?.values &&
-              Array.isArray(individualProfile.values) &&
-              individualProfile.values.length > 0
-            ),
-            has_causes: !!(
-              individualProfile?.causes &&
-              Array.isArray(individualProfile.causes) &&
-              individualProfile.causes.length > 0
-            ),
-          });
-        }
-      }
+      const { syncReadinessMilestones } = await import('@/lib/readiness/analytics');
+      await syncReadinessMilestones(user.id, { source: 'skill_added' });
     } catch (activationError) {
       console.error('Failed to check/emit profile activation:', activationError);
       // Don't fail the request if activation tracking fails

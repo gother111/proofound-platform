@@ -187,10 +187,9 @@ export const individualTourSteps: Step[] = [
           </p>
           <ul className="text-xs text-muted-foreground list-disc list-inside space-y-1 mt-1">
             <li>Share your Public Portfolio link</li>
-            <li>Complete your Profile (mission, vision, values)</li>
-            <li>Add at least 3 skills to unlock Lite activation</li>
-            <li>Grow to 10 skills for Strong activation</li>
-            <li>Set your Matching preferences</li>
+            <li>Add one proof-backed signal you want to show publicly</li>
+            <li>Add recent skills and one browse preference</li>
+            <li>Complete stronger proof and constraints for qualified introductions</li>
           </ul>
         </div>
       </div>

@@ -25,7 +25,7 @@ import {
   type LocationMode,
 } from '@/lib/core/matching/scorers';
 import { getPreset, normalizeWeights, type PresetKey } from '@/lib/core/matching/presets';
-import { evaluateIndividualMatchability, toNotMatchablePayload } from '@/lib/matching/eligibility';
+import { evaluateIndividualMatchability, toSoftGatedPayload } from '@/lib/matching/eligibility';
 import { calculateFocusBoost, isIndustryAvoided } from '@/lib/core/matching/focus';
 import {
   deriveAtlasLanguageLevels,
@@ -134,10 +134,11 @@ export async function POST(request: NextRequest) {
           tier: eligibility.tier,
           nextTierTarget: eligibility.nextTierTarget?.tier || null,
           counts: eligibility.counts,
+          states: eligibility.readiness.states,
         },
       });
 
-      return NextResponse.json(toNotMatchablePayload(eligibility), { status: 200 });
+      return NextResponse.json(toSoftGatedPayload(eligibility), { status: 200 });
     }
 
     // Fetch user's matching profile

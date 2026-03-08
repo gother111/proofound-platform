@@ -183,7 +183,7 @@ describe('EditableProfileView guided completion and purpose gating', () => {
     expect(screen.getByTestId('edit-profile-open')).toBeInTheDocument();
   });
 
-  it('shows guided Step 1 when values/causes are missing and opens editors', () => {
+  it('keeps the full profile visible when values and causes are missing, but still routes purpose edits through guided editors', () => {
     mockUseProfileData(
       createProfile({
         basicInfo: { name: 'Jane Doe', avatar: null, tagline: '' },
@@ -194,15 +194,26 @@ describe('EditableProfileView guided completion and purpose gating', () => {
 
     render(<EditableProfileView />);
 
-    expect(screen.getByTestId('guided-profile-setup')).toHaveAttribute(
-      'data-stage',
-      'step1_purpose'
+    expect(screen.queryByTestId('guided-profile-setup')).not.toBeInTheDocument();
+    expect(screen.getByTestId('profile-sidebar')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'sidebar-open-mission' }));
+    expect(screen.getByTestId('values-editor-open')).toBeInTheDocument();
+    expect(toastInfoMock).toHaveBeenCalled();
+  });
+
+  it('routes purpose edits to causes when values exist but causes are still missing', () => {
+    mockUseProfileData(
+      createProfile({
+        basicInfo: { name: 'Jane Doe', avatar: null, tagline: '' },
+        values: [{ id: 'v1', label: 'Integrity', icon: 'shield' }],
+        causes: [],
+      })
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'guided-open-values' }));
-    expect(screen.getByTestId('values-editor-open')).toBeInTheDocument();
+    render(<EditableProfileView />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'guided-open-causes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'sidebar-open-vision' }));
     expect(screen.getByTestId('causes-editor-open')).toBeInTheDocument();
   });
 
@@ -245,10 +256,10 @@ describe('EditableProfileView guided completion and purpose gating', () => {
   });
 
   it('preserves query params and sets profileView=full when opening full profile from guided flow', () => {
-    searchParamsState = new URLSearchParams('portfolioLocked=1&lockReason=purpose');
+    searchParamsState = new URLSearchParams('portfolioLocked=1&lockReason=name');
     mockUseProfileData(
       createProfile({
-        basicInfo: { name: 'Jane Doe', avatar: null, tagline: '' },
+        basicInfo: { name: 'Your Name', avatar: null, tagline: '' },
         values: [],
         causes: [],
       })
@@ -262,7 +273,7 @@ describe('EditableProfileView guided completion and purpose gating', () => {
     const nextUrl = String(replaceMock.mock.calls[0][0]);
     expect(nextUrl.startsWith('/app/i/profile?')).toBe(true);
     expect(nextUrl).toContain('portfolioLocked=1');
-    expect(nextUrl).toContain('lockReason=purpose');
+    expect(nextUrl).toContain('lockReason=name');
     expect(nextUrl).toContain('profileView=full');
   });
 });

@@ -13,22 +13,20 @@ export function PortfolioReadinessChecklist({ completionState }: PortfolioReadin
   const checklist = [
     {
       id: 'name',
-      label: 'Name + surname',
-      passed: completionState.checks.hasTwoWordName,
+      label: 'Display name, handle, and headline',
+      passed:
+        completionState.checks.hasDisplayName &&
+        completionState.checks.hasHandle &&
+        completionState.checks.hasHeadlineOrBio,
     },
     {
       id: 'purpose',
-      label: 'At least 1 value and 1 cause',
-      passed: completionState.checks.hasValues && completionState.checks.hasCauses,
-    },
-    {
-      id: 'skills',
-      label: 'At least 3 skills',
+      label: 'At least 1 skill',
       passed: completionState.checks.hasMinimumSkills,
     },
     {
       id: 'artifact',
-      label: 'At least 1 proof or accepted verification',
+      label: 'At least 1 public proof-backed signal',
       passed: completionState.checks.hasVerificationArtifact,
     },
   ];
@@ -38,7 +36,8 @@ export function PortfolioReadinessChecklist({ completionState }: PortfolioReadin
       <div className="space-y-2">
         <h2 className="text-sm font-medium text-proofound-charcoal">Public Portfolio readiness</h2>
         <p className="text-xs text-muted-foreground">
-          Complete each requirement to unlock Public Portfolio navigation.
+          Keep this light. A credible public portfolio only needs basics plus one proof-backed
+          signal.
         </p>
         <div className="pt-1 space-y-2">
           {checklist.map((item) => (

@@ -50,24 +50,28 @@ vi.mock('sonner', () => ({
   },
 }));
 
-describe('MatchingPage blocked state', () => {
+describe('MatchingPage soft-gated state', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('renders dedicated blocked card for profile-not-matchable payload', async () => {
+  it('renders browse-readiness guidance when personalized browse is soft-gated', async () => {
     const blockedPayload = {
-      error: 'PROFILE_NOT_MATCHABLE',
-      message: 'Your profile is not matchable yet.',
+      items: [],
+      meta: {
+        softGated: true,
+        message:
+          'Browsing is open, but add a few recent skills and one preference to personalize results.',
+      },
       eligibility: {
         criteria: {
           skillsWithRecency: {
             id: 'skillsWithRecency',
-            label: 'Skills with recency',
+            label: 'Recent skills',
             met: false,
             detail: 'Add skills with last used dates.',
             current: 2,
-            required: 10,
+            required: 3,
           },
         },
       },
@@ -121,10 +125,10 @@ describe('MatchingPage blocked state', () => {
     render(<MatchingPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Profile setup required')).toBeInTheDocument();
+      expect(screen.getByText('Browse readiness')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Skills with recency')).toBeInTheDocument();
+    expect(screen.getByText('Recent skills')).toBeInTheDocument();
     expect(screen.getByText('Update Expertise Atlas')).toBeInTheDocument();
   });
 });

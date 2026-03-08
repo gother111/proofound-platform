@@ -23,15 +23,15 @@ import type { Education, Experience, ImpactStory, Volunteering } from '@/types/p
 function resolvePortfolioGateMessage(lockReason: string | null): string {
   switch (lockReason) {
     case 'name':
-      return 'Public Portfolio is locked until you add your first and last name.';
+      return 'Public portfolio is locked until you add your display name, public handle, and a short headline.';
     case 'purpose':
-      return 'Public Portfolio is locked until you add at least one value and one cause.';
+      return 'Public portfolio is locked until you add your public handle and a short headline.';
     case 'skills':
-      return 'Public Portfolio is locked until you add at least 3 skills.';
+      return 'Public portfolio is locked until you add at least one skill.';
     case 'artifact':
-      return 'Public Portfolio is locked until you add one proof or accepted verification.';
+      return 'Public portfolio is locked until you add one public proof link or accepted verification.';
     default:
-      return 'Complete the required profile steps to unlock Public Portfolio.';
+      return 'Complete the required profile steps to unlock your public portfolio.';
   }
 }
 

@@ -35,10 +35,14 @@ vi.mock('@/lib/auth', () => ({
 
 vi.mock('@/lib/matching/eligibility', () => ({
   evaluateIndividualMatchability: vi.fn(),
-  toNotMatchablePayload: (result: any) => ({
-    error: 'PROFILE_NOT_MATCHABLE',
-    message: result.message,
+  toSoftGatedPayload: (result: any) => ({
+    items: [],
+    meta: {
+      softGated: true,
+      message: result.message,
+    },
     eligibility: result,
+    readiness: result.readiness,
     topActions: result.topActions,
   }),
 }));
@@ -58,7 +62,7 @@ const baseEligibility = {
   unmetCriteria: ['skillsWithRecency', 'proofs'],
   nextTierTarget: {
     tier: 'lite',
-    message: 'Complete Lite activation to unlock first matches.',
+    message: 'Add recent skills and one preference to unlock personalized browse results.',
     remaining: { skillsWithRecency: 1, proofCount: 1, purpose: 1, constraints: 1 },
   },
   criteria: {
@@ -72,6 +76,9 @@ const baseEligibility = {
       actionUrl: '/app/i/expertise',
     },
   ],
+  readiness: {
+    states: [],
+  },
 };
 
 describe('core matching gating routes', () => {
@@ -90,7 +97,7 @@ describe('core matching gating routes', () => {
     (evaluateIndividualMatchability as any).mockResolvedValue(baseEligibility);
   });
 
-  it('/api/core/matching/profile returns 200 with eligibility payload when gated', async () => {
+  it('/api/core/matching/profile returns 200 with soft-gate payload when browse requirements are incomplete', async () => {
     const req = new NextRequest('http://localhost/api/core/matching/profile', {
       method: 'POST',
       body: JSON.stringify({}),
@@ -100,12 +107,12 @@ describe('core matching gating routes', () => {
     const payload = await res.json();
 
     expect(res.status).toBe(200);
-    expect(payload.error).toBe('PROFILE_NOT_MATCHABLE');
+    expect(payload.meta.softGated).toBe(true);
     expect(payload.eligibility.unmetCriteria).toEqual(baseEligibility.unmetCriteria);
     expect(payload.topActions[0].actionUrl).toBe('/app/i/expertise');
   });
 
-  it('/api/core/matching/near-matches returns 200 with same shape when gated', async () => {
+  it('/api/core/matching/near-matches returns 200 with same soft-gate shape when browse requirements are incomplete', async () => {
     const req = new NextRequest('http://localhost/api/core/matching/near-matches', {
       method: 'POST',
       body: JSON.stringify({}),
@@ -115,7 +122,7 @@ describe('core matching gating routes', () => {
     const payload = await res.json();
 
     expect(res.status).toBe(200);
-    expect(payload.error).toBe('PROFILE_NOT_MATCHABLE');
+    expect(payload.meta.softGated).toBe(true);
     expect(payload.eligibility.unmetCriteria).toEqual(baseEligibility.unmetCriteria);
     expect(Array.isArray(payload.topActions)).toBe(true);
   });

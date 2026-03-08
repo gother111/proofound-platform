@@ -40,7 +40,7 @@ import {
   batchGetMissionVisionScoresForProfile,
 } from '@/lib/matching/semantic';
 import { isTrustedInternalRequest, requireApiAuth } from '@/lib/api/auth';
-import { evaluateIndividualMatchability, toNotMatchablePayload } from '@/lib/matching/eligibility';
+import { evaluateIndividualMatchability, toSoftGatedPayload } from '@/lib/matching/eligibility';
 import { calculateFocusBoost, isIndustryAvoided } from '@/lib/core/matching/focus';
 import {
   deriveAtlasLanguageLevels,
@@ -53,6 +53,11 @@ import {
   CANONICAL_MATCH_AUDIT_FIELDS_ENABLED,
   CANONICAL_MATCH_SCORE_VERSION,
 } from '@/lib/canonical/repository';
+import {
+  appendSystemReasonLedger,
+  buildCanonicalMatchPersistenceFields,
+  ensureMatchReviewState,
+} from '@/lib/matching/review-contract';
 
 export const dynamic = 'force-dynamic';
 
@@ -198,10 +203,11 @@ export async function POST(request: NextRequest) {
           tier: eligibility.tier,
           nextTierTarget: eligibility.nextTierTarget?.tier || null,
           counts: eligibility.counts,
+          states: eligibility.readiness.states,
         },
       });
 
-      return NextResponse.json(toNotMatchablePayload(eligibility), { status: 200 });
+      return NextResponse.json(toSoftGatedPayload(eligibility), { status: 200 });
     }
 
     // Fetch user's matching profile (with caching)
@@ -317,7 +323,7 @@ export async function POST(request: NextRequest) {
       orgId: string;
       role: string;
       description: string | null;
-      status: 'draft' | 'active' | 'paused' | 'closed';
+      status: 'draft' | 'active' | 'hold' | 'closed';
       valuesRequired: string[] | null;
       causeTags: string[] | null;
       mustHaveSkills: unknown;
@@ -669,15 +675,18 @@ export async function POST(request: NextRequest) {
         },
         verificationGates: assignment?.verificationGates || [],
       });
+      const persistenceFields = buildCanonicalMatchPersistenceFields({
+        scoreVersion: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.scoreVersion : null,
+        inputsHash: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.inputsHash : null,
+        reasonCodes: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.reasonCodes : [],
+        generatedAt: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.generatedAt : null,
+      });
 
       return {
         assignmentId: match.assignmentId,
         profileId: user.id,
         score: match.score.toString(),
-        scoreVersion: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.scoreVersion : null,
-        inputsHash: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.inputsHash : null,
-        reasonCodes: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.reasonCodes : [],
-        generatedAt: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.generatedAt : null,
+        ...persistenceFields,
         vector: {
           subscores: match.subscores,
           contributions: match.contributions,
@@ -698,6 +707,11 @@ export async function POST(request: NextRequest) {
               set: {
                 score: sql`excluded.score`,
                 scoreVersion: sql`excluded.score_version`,
+                modelVersion: sql`excluded.model_version`,
+                explanationVersion: sql`excluded.explanation_version`,
+                fairnessCheckVersion: sql`excluded.fairness_check_version`,
+                fairnessStatus: sql`excluded.fairness_status`,
+                fairnessEvaluatedAt: sql`excluded.fairness_evaluated_at`,
                 inputsHash: sql`excluded.inputs_hash`,
                 reasonCodes: sql`excluded.reason_codes`,
                 generatedAt: sql`excluded.generated_at`,
@@ -705,8 +719,43 @@ export async function POST(request: NextRequest) {
                 weights: sql`excluded.weights`,
               },
             })
-            .returning({ id: matches.id, assignmentId: matches.assignmentId })
+            .returning({
+              id: matches.id,
+              assignmentId: matches.assignmentId,
+              profileId: matches.profileId,
+            })
         : [];
+
+    const upsertPayloadByAssignmentId = new Map(
+      upsertPayload.map((payload) => [payload.assignmentId, payload])
+    );
+
+    await Promise.all(
+      upsertedMatches.map(async (row) => {
+        const assignment = activeAssignments.find((candidate) => candidate.id === row.assignmentId);
+        const payload = upsertPayloadByAssignmentId.get(row.assignmentId);
+        if (!assignment || !payload) {
+          return;
+        }
+
+        await ensureMatchReviewState({
+          matchId: row.id,
+          assignmentId: row.assignmentId,
+          profileId: row.profileId,
+          orgId: assignment.orgId,
+        });
+
+        await appendSystemReasonLedger({
+          matchId: row.id,
+          assignmentId: row.assignmentId,
+          profileId: row.profileId,
+          reasonCodes: (payload.reasonCodes || []) as Array<
+            Parameters<typeof appendSystemReasonLedger>[0]['reasonCodes'][number]
+          >,
+          createdAt: payload.generatedAt,
+        });
+      })
+    );
 
     // Merge returned IDs into response payload
     upsertedMatches.forEach((row) => {

@@ -7,7 +7,12 @@ import { randomUUID } from 'crypto';
 import { createClient } from '@/lib/supabase/server';
 import { resolvePublicSnippetBaseUrl } from '@/lib/profile/snippet-generator';
 import { ORGANIZATION_DAY_ONE_VISIBILITY } from '@/lib/portfolio/public-organization';
+import { reserveOrganizationSlug, reserveProfileHandle } from '@/lib/portfolio/slug-history';
+import { normalizePublicSlug, validatePublicSlug } from '@/lib/portfolio/slug-policy';
 import { reconcileVerifierContradictions } from '@/lib/verification/contradiction';
+import { emitIndividualOnboardingCompleted } from '@/lib/analytics/events';
+import { syncReadinessMilestones } from '@/lib/readiness/analytics';
+import { getIndividualReadinessState } from '@/lib/readiness/individual-state';
 
 const choosePersonaSchema = z.object({
   persona: z.enum(['individual', 'org_member']),
@@ -19,9 +24,9 @@ const INDIVIDUAL_DAY_ONE_FIELD_VISIBILITY = {
   workEmail: false,
   linkedin: true,
   identity: true,
-  counts: true,
-  skills: true,
-  bio: true,
+  counts: false,
+  skills: false,
+  bio: false,
   contact: false,
 } as const;
 
@@ -29,6 +34,15 @@ function buildPublicPortfolioUrl(pathname: string) {
   const baseUrl = resolvePublicSnippetBaseUrl();
   const normalizedPath = pathname.startsWith('/') ? pathname : `/${pathname}`;
   return `${baseUrl}${normalizedPath}`;
+}
+
+function slugifySkillSeed(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40);
 }
 
 export async function choosePersona(formData: FormData) {
@@ -66,25 +80,30 @@ export async function completeIndividualOnboarding(formData: FormData) {
   const headline = formData.get('headline') as string;
   const bio = formData.get('bio') as string;
   const location = formData.get('location') as string;
+  const proofUrl = String(formData.get('proofUrl') || '').trim();
+  const proofTitle = String(formData.get('proofTitle') || '').trim();
+  const proofSkillLabel = String(formData.get('proofSkillLabel') || '').trim();
 
   if (!displayName || !handle) {
     return { error: 'Display name and handle are required' };
   }
 
-  // Validate handle format
-  if (!/^[a-zA-Z0-9_-]+$/.test(handle)) {
-    return { error: 'Handle can only contain letters, numbers, hyphens, and underscores' };
+  const normalizedHandle = normalizePublicSlug(handle);
+  const slugError = validatePublicSlug(handle);
+  if (slugError) {
+    return { error: slugError };
   }
 
   try {
     const supabase = await createClient({ allowCookieWrite: true });
-    const normalizedHandle = handle.toLowerCase();
     const publicPortfolioPath = `/portfolio/${encodeURIComponent(normalizedHandle)}`;
 
     const profileUpdate = await supabase
       .from('profiles')
       .update({
         handle: normalizedHandle,
+        public_portfolio_state: 'public_link_only',
+        search_indexing_enabled_at: null,
         display_name: displayName,
         persona: 'individual',
         updated_at: new Date().toISOString(),
@@ -98,6 +117,13 @@ export async function completeIndividualOnboarding(formData: FormData) {
 
       console.error('Failed to update profile during onboarding:', profileUpdate.error);
       return { error: 'Failed to complete setup. Please try again.' };
+    }
+
+    try {
+      await reserveProfileHandle(supabase as any, user.id, normalizedHandle);
+    } catch (historyError) {
+      console.error('Failed to reserve public handle:', historyError);
+      return { error: 'Handle already taken. Please choose another.' };
     }
 
     const individualInsert = await supabase.from('individual_profiles').upsert({
@@ -117,6 +143,51 @@ export async function completeIndividualOnboarding(formData: FormData) {
       return { error: 'Failed to complete setup. Please try again.' };
     }
 
+    let onboardingSkillId: string | null = null;
+    if (proofUrl && proofSkillLabel) {
+      onboardingSkillId = randomUUID();
+      const skillSeed = slugifySkillSeed(proofSkillLabel);
+
+      const skillInsert = await supabase.from('skills').insert({
+        id: onboardingSkillId,
+        profile_id: user.id,
+        skill_id: `onboarding-${skillSeed || randomUUID().slice(0, 8)}`,
+        skill_code: null,
+        level: 3,
+        competency_label: 'C3',
+        months_experience: 0,
+        relevance: 'current',
+        last_used_at: new Date().toISOString(),
+      });
+
+      if (skillInsert.error) {
+        console.error('Failed to seed onboarding skill:', skillInsert.error);
+        return { error: 'Failed to save your first proof. Please try again.' };
+      }
+
+      const proofInsert = await supabase.from('skill_proofs').insert({
+        id: randomUUID(),
+        skill_id: onboardingSkillId,
+        profile_id: user.id,
+        proof_type: 'link',
+        title: proofTitle || proofSkillLabel || 'Proof link',
+        description: `Imported during onboarding for ${proofSkillLabel}.`,
+        url: proofUrl,
+        verified: false,
+        metadata: {
+          visibility: 'public',
+          imported_from: 'onboarding',
+          candidate_evidence: true,
+          topic_label: proofSkillLabel,
+        },
+      });
+
+      if (proofInsert.error) {
+        console.error('Failed to seed onboarding proof:', proofInsert.error);
+        return { error: 'Failed to save your first proof. Please try again.' };
+      }
+    }
+
     revalidatePath('/app/i');
     revalidatePath(publicPortfolioPath);
 
@@ -128,10 +199,24 @@ export async function completeIndividualOnboarding(formData: FormData) {
       console.error('Individual onboarding contradiction reconciliation failed:', reconcileError);
     }
 
+    await syncReadinessMilestones(user.id, { source: 'individual_onboarding_completed' });
+    const readiness = await getIndividualReadinessState(user.id);
+    await emitIndividualOnboardingCompleted(user.id, {
+      highestState: readiness.highestState,
+      states: readiness.states,
+      portfolioReady: readiness.flags.portfolioReady,
+      browseReady: readiness.flags.browseReady,
+      qualifiedIntroReady: readiness.flags.qualifiedIntroReady,
+      proofImported: Boolean(proofUrl && proofSkillLabel),
+    });
+
     return {
       success: true,
       handle: normalizedHandle,
       publicPortfolioUrl: buildPublicPortfolioUrl(publicPortfolioPath),
+      portfolioReady: readiness.flags.portfolioReady,
+      browseReady: readiness.flags.browseReady,
+      qualifiedIntroReady: readiness.flags.qualifiedIntroReady,
     };
   } catch (error: any) {
     console.error('Individual onboarding error:', error);
@@ -153,9 +238,10 @@ export async function completeOrganizationOnboarding(formData: FormData) {
     return { error: 'Organization name, slug, and type are required' };
   }
 
-  // Validate slug format
-  if (!/^[a-z0-9-]+$/.test(slug)) {
-    return { error: 'Slug can only contain lowercase letters, numbers, and hyphens' };
+  const orgSlug = normalizePublicSlug(slug);
+  const orgSlugError = validatePublicSlug(slug);
+  if (orgSlugError) {
+    return { error: orgSlugError };
   }
 
   // Validate type
@@ -202,11 +288,15 @@ export async function completeOrganizationOnboarding(formData: FormData) {
     }
 
     const orgId = randomUUID();
-    const orgSlug = slug.toLowerCase();
 
     const orgInsert = await supabase.from('organizations').insert({
       id: orgId,
       slug: orgSlug,
+      public_portfolio_state: 'public_link_only',
+      search_indexing_enabled_at: null,
+      trust_status: website ? 'pending' : 'unverified',
+      trust_status_updated_at: new Date().toISOString(),
+      operating_region: null,
       display_name: displayName,
       legal_name: legalName || null,
       type,
@@ -235,6 +325,13 @@ export async function completeOrganizationOnboarding(formData: FormData) {
       console.log(
         'Organization inserted but RLS blocked SELECT - this is expected, continuing with membership creation'
       );
+    }
+
+    try {
+      await reserveOrganizationSlug(supabase as any, orgId, orgSlug);
+    } catch (historyError) {
+      console.error('Failed to reserve organization slug:', historyError);
+      return { error: 'Organization slug already taken. Please choose another.' };
     }
 
     const memberInsert = await supabase.from('organization_members').insert({

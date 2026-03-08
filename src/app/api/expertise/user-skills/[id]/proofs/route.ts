@@ -189,6 +189,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       proof_type: validated.proofType,
     });
 
+    void import('@/lib/readiness/analytics')
+      .then(({ syncReadinessMilestones }) =>
+        syncReadinessMilestones(user.id, { source: 'proof_added' })
+      )
+      .catch((readinessError) => {
+        console.error('Failed to sync readiness milestones after proof creation:', readinessError);
+      });
+
     return NextResponse.json(
       {
         proof: {

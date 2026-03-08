@@ -21,10 +21,7 @@ import {
 } from '@/db/schema';
 import { requireAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { emitProfileActivated } from '@/lib/analytics/events';
 import { triggerProfileActivationSurvey } from '@/lib/surveys/sus-triggers';
-import { evaluateIndividualMatchability } from '@/lib/matching/eligibility';
-import { MATCHABILITY_STRONG_SKILLS_WITH_RECENCY } from '@/lib/matching/thresholds';
 import { sendEmail } from '@/lib/email/sender';
 import { resolveSiteUrlFromHeaders } from '@/lib/env';
 import { buildExperienceTimeline } from '@/lib/profile/experience-timeline';
@@ -50,6 +47,7 @@ import {
   normalizeEmail,
   writeVerificationAuditLog,
 } from '@/lib/verification/integrity';
+import { syncReadinessMilestones } from '@/lib/readiness/analytics';
 import type {
   ProfileData,
   BasicInfo,
@@ -105,48 +103,10 @@ function coerceDateOnlyString(value: unknown): string | null {
   return null;
 }
 
-/**
- * Track if profile was already activated (to avoid duplicate events)
- */
-const activatedProfiles = new Set<string>();
-
-/**
- * Check if profile meets activation criteria and emit event.
- * Uses shared matchability eligibility to avoid rule drift.
- */
 async function checkAndEmitProfileActivation(userId: string): Promise<void> {
-  // Skip if already emitted for this profile
-  if (activatedProfiles.has(userId)) {
-    return;
-  }
-
   try {
-    const eligibility = await evaluateIndividualMatchability(userId);
-    if (!eligibility.eligible) return;
-
-    const completionScore = eligibility.tier === 'strong' ? 100 : 75;
-    const hasMinimumL4Count =
-      eligibility.counts.skillsWithRecency >= MATCHABILITY_STRONG_SKILLS_WITH_RECENCY;
-    const hasPurposeBlock = eligibility.counts.hasPurpose;
-    const hasMatchingProfile = eligibility.counts.hasConstraints;
-
-    // All criteria met - emit activation event!
-    await emitProfileActivated(userId, 0, {
-      completionScore,
-      hasMinimumL4Count,
-      l4SkillsCount: eligibility.counts.skillsWithRecency,
-      hasPurposeBlock,
-      hasMatchingProfile,
-      proofCount: eligibility.counts.proofCount,
-      activationTier: eligibility.tier,
-      nextTierTarget: eligibility.nextTierTarget?.tier || null,
-    });
-
-    // Trigger SUS survey for profile activation milestone
+    await syncReadinessMilestones(userId, { source: 'profile_updated' });
     await triggerProfileActivationSurvey(userId);
-
-    // Mark as emitted to prevent duplicates
-    activatedProfiles.add(userId);
   } catch (error) {
     console.error('Profile activation check failed:', error);
     // Don't throw - activation tracking shouldn't break profile updates

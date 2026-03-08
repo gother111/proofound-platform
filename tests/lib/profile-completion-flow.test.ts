@@ -13,9 +13,11 @@ describe('profile completion flow', () => {
   it('returns step 0 when two-word name is missing', () => {
     const state = evaluateIndividualProfileCompletion({
       displayName: 'Jane',
+      handle: 'jane-doe',
+      headline: 'Builder',
       valuesCount: 2,
       causesCount: 2,
-      skillsCount: 3,
+      skillsCount: 1,
       proofCount: 1,
       acceptedVerificationCount: 0,
     });
@@ -25,27 +27,31 @@ describe('profile completion flow', () => {
     expect(state.portfolioLockCode).toBe('name');
   });
 
-  it('returns step 1 when values/causes are missing', () => {
+  it('returns step 1 when handle or headline is missing', () => {
     const state = evaluateIndividualProfileCompletion({
       displayName: 'Jane Doe',
+      handle: '',
+      headline: '',
       valuesCount: 0,
       causesCount: 1,
-      skillsCount: 3,
+      skillsCount: 1,
       proofCount: 1,
       acceptedVerificationCount: 0,
     });
 
     expect(state.stage).toBe('step1_purpose');
     expect(state.isCoreProfileComplete).toBe(false);
-    expect(state.portfolioLockCode).toBe('purpose');
+    expect(state.portfolioLockCode).toBe('name');
   });
 
   it('requires artifact as proof OR accepted verification', () => {
     const stateWithAcceptedVerification = evaluateIndividualProfileCompletion({
       displayName: 'Jane Doe',
+      handle: 'jane-doe',
+      headline: 'Builder',
       valuesCount: 1,
       causesCount: 1,
-      skillsCount: 3,
+      skillsCount: 1,
       proofCount: 0,
       acceptedVerificationCount: 1,
     });
@@ -54,12 +60,14 @@ describe('profile completion flow', () => {
     expect(stateWithAcceptedVerification.isPortfolioReady).toBe(true);
   });
 
-  it('gates readiness when skills are below the minimum', () => {
+  it('gates readiness when skills are missing', () => {
     const state = evaluateIndividualProfileCompletion({
       displayName: 'Jane Doe',
+      handle: 'jane-doe',
+      headline: 'Builder',
       valuesCount: 1,
       causesCount: 1,
-      skillsCount: 2,
+      skillsCount: 0,
       proofCount: 1,
       acceptedVerificationCount: 0,
     });

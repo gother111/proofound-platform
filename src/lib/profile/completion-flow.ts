@@ -4,17 +4,21 @@ export type PortfolioLockCode = 'name' | 'purpose' | 'skills' | 'artifact' | nul
 
 export interface IndividualProfileCompletionInput {
   displayName: string | null | undefined;
+  handle?: string | null | undefined;
+  headline?: string | null | undefined;
+  bio?: string | null | undefined;
   valuesCount: number;
   causesCount: number;
   skillsCount: number;
   proofCount: number;
   acceptedVerificationCount: number;
+  publicProofCount?: number;
 }
 
 export interface IndividualProfileCompletionChecks {
-  hasTwoWordName: boolean;
-  hasValues: boolean;
-  hasCauses: boolean;
+  hasDisplayName: boolean;
+  hasHandle: boolean;
+  hasHeadlineOrBio: boolean;
   hasMinimumSkills: boolean;
   hasVerificationArtifact: boolean;
 }
@@ -36,7 +40,7 @@ export interface IndividualProfileCompletionState {
 }
 
 const NAME_PLACEHOLDER = 'your name';
-const MIN_SKILLS_FOR_READY = 3;
+const MIN_SKILLS_FOR_READY = 1;
 
 function toSafeCount(value: number): number {
   if (!Number.isFinite(value)) return 0;
@@ -62,21 +66,30 @@ export function evaluateIndividualProfileCompletion(
   const skillsCount = toSafeCount(input.skillsCount);
   const proofCount = toSafeCount(input.proofCount);
   const acceptedVerificationCount = toSafeCount(input.acceptedVerificationCount);
+  const publicProofCount = toSafeCount(input.publicProofCount ?? proofCount);
 
   const checks: IndividualProfileCompletionChecks = {
-    hasTwoWordName: isTwoWordName(input.displayName),
-    hasValues: valuesCount >= 1,
-    hasCauses: causesCount >= 1,
+    hasDisplayName: isTwoWordName(input.displayName),
+    hasHandle:
+      input.handle === undefined
+        ? true
+        : typeof input.handle === 'string' && input.handle.trim().length > 0,
+    hasHeadlineOrBio:
+      input.headline === undefined && input.bio === undefined
+        ? true
+        : (typeof input.headline === 'string' && input.headline.trim().length > 0) ||
+          (typeof input.bio === 'string' && input.bio.trim().length > 0),
     hasMinimumSkills: skillsCount >= MIN_SKILLS_FOR_READY,
-    hasVerificationArtifact: proofCount > 0 || acceptedVerificationCount > 0,
+    hasVerificationArtifact: publicProofCount > 0 || acceptedVerificationCount > 0,
   };
 
-  const isCoreProfileComplete = checks.hasTwoWordName && checks.hasValues && checks.hasCauses;
+  const isCoreProfileComplete =
+    checks.hasDisplayName && checks.hasHandle && checks.hasHeadlineOrBio;
 
   let stage: IndividualProfileCompletionStage = 'step2_profile';
-  if (!checks.hasTwoWordName) {
+  if (!checks.hasDisplayName) {
     stage = 'step0_name';
-  } else if (!checks.hasValues || !checks.hasCauses) {
+  } else if (!checks.hasHandle || !checks.hasHeadlineOrBio) {
     stage = 'step1_purpose';
   }
 
@@ -87,19 +100,17 @@ export function evaluateIndividualProfileCompletion(
   let portfolioLockReason: string | null = null;
 
   if (!isPortfolioReady) {
-    if (!checks.hasTwoWordName) {
+    if (!checks.hasDisplayName || !checks.hasHandle || !checks.hasHeadlineOrBio) {
       portfolioLockCode = 'name';
-      portfolioLockReason = 'Add your first and last name on Profile to unlock Public Portfolio.';
-    } else if (!checks.hasValues || !checks.hasCauses) {
-      portfolioLockCode = 'purpose';
-      portfolioLockReason = 'Add at least one value and one cause to unlock Public Portfolio.';
+      portfolioLockReason =
+        'Add your display name, public handle, and a short headline to publish your portfolio.';
     } else if (!checks.hasMinimumSkills) {
       portfolioLockCode = 'skills';
-      portfolioLockReason = 'Add at least 3 skills to unlock Public Portfolio.';
+      portfolioLockReason = 'Add at least one skill to publish your public portfolio.';
     } else if (!checks.hasVerificationArtifact) {
       portfolioLockCode = 'artifact';
       portfolioLockReason =
-        'Add at least one proof or accepted verification to unlock Public Portfolio.';
+        'Add one proof link or accepted verification that you want to show on your portfolio.';
     }
   }
 

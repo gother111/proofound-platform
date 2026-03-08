@@ -2,25 +2,67 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { ArrowLeft, Link as LinkIcon } from 'lucide-react';
+
+import { completeIndividualOnboarding } from '@/actions/onboarding';
+import { PublicPortfolioReadyStep } from '@/components/onboarding/PublicPortfolioReadyStep';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { completeIndividualOnboarding } from '@/actions/onboarding';
-import { CheckCircle2, Copy, ExternalLink } from 'lucide-react';
+
+type SetupPhase = 'basics' | 'proof' | 'success';
+
+type BasicsState = {
+  displayName: string;
+  handle: string;
+  headline: string;
+  bio: string;
+  location: string;
+};
+
+const EMPTY_BASICS: BasicsState = {
+  displayName: '',
+  handle: '',
+  headline: '',
+  bio: '',
+  location: '',
+};
 
 export function IndividualSetup() {
   const router = useRouter();
+  const [phase, setPhase] = useState<SetupPhase>('basics');
+  const [basics, setBasics] = useState<BasicsState>(EMPTY_BASICS);
+  const [portfolioUrl, setPortfolioUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [portfolioUrl, setPortfolioUrl] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
+  async function finalizeOnboarding(proof?: {
+    proofUrl?: string;
+    proofTitle?: string;
+    proofSkillLabel?: string;
+  }) {
     setIsLoading(true);
     setError(null);
 
     try {
+      const formData = new FormData();
+      formData.set('displayName', basics.displayName);
+      formData.set('handle', basics.handle);
+      formData.set('headline', basics.headline);
+      formData.set('bio', basics.bio);
+      formData.set('location', basics.location);
+
+      if (proof?.proofUrl) {
+        formData.set('proofUrl', proof.proofUrl);
+      }
+      if (proof?.proofTitle) {
+        formData.set('proofTitle', proof.proofTitle);
+      }
+      if (proof?.proofSkillLabel) {
+        formData.set('proofSkillLabel', proof.proofSkillLabel);
+      }
+
       const result = await completeIndividualOnboarding(formData);
 
       if (result.error) {
@@ -29,186 +71,241 @@ export function IndividualSetup() {
         return;
       }
 
-      const handle = String(formData.get('handle') || '').toLowerCase();
-      if (handle) {
-        setPortfolioUrl(`${window.location.origin}/portfolio/${handle}`);
+      if (result.portfolioReady && result.publicPortfolioUrl) {
+        setPortfolioUrl(result.publicPortfolioUrl);
+        setPhase('success');
       } else {
         router.push('/app/i/home');
       }
-
-      setIsLoading(false);
-    } catch (err) {
+    } catch {
       setError('Something went wrong. Please try again.');
+    } finally {
       setIsLoading(false);
     }
   }
 
-  const handleCopyUrl = async () => {
-    if (!portfolioUrl) return;
-    try {
-      await navigator.clipboard.writeText(portfolioUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      setCopied(false);
-    }
-  };
+  function handleBasicsSubmit(formData: FormData) {
+    const nextBasics = {
+      displayName: String(formData.get('displayName') || ''),
+      handle: String(formData.get('handle') || ''),
+      headline: String(formData.get('headline') || ''),
+      bio: String(formData.get('bio') || ''),
+      location: String(formData.get('location') || ''),
+    };
 
-  if (portfolioUrl) {
+    setBasics(nextBasics);
+    setError(null);
+    setPhase('proof');
+  }
+
+  async function handleProofSubmit(formData: FormData) {
+    await finalizeOnboarding({
+      proofUrl: String(formData.get('proofUrl') || '').trim(),
+      proofTitle: String(formData.get('proofTitle') || '').trim(),
+      proofSkillLabel: String(formData.get('proofSkillLabel') || '').trim(),
+    });
+  }
+
+  if (phase === 'success' && portfolioUrl) {
     return (
-      <Card className="max-w-2xl mx-auto border-proofound-stone dark:border-border rounded-2xl">
-        <CardContent className="py-10 px-8 space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
-              <CheckCircle2 className="h-7 w-7 text-proofound-forest" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
-                Public portfolio ready
-              </h2>
-              <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
-                Your shareable portfolio link is live.
+      <PublicPortfolioReadyStep
+        persona="individual"
+        publicPortfolioUrl={portfolioUrl}
+        onContinue={() => router.push('/app/i/home')}
+        continueLabel="Continue to app"
+      />
+    );
+  }
+
+  if (phase === 'proof') {
+    return (
+      <Card className="mx-auto max-w-2xl rounded-2xl border-proofound-stone dark:border-border">
+        <CardHeader>
+          <button
+            type="button"
+            onClick={() => setPhase('basics')}
+            className="mb-4 inline-flex items-center gap-2 text-sm text-proofound-charcoal/70 transition-colors hover:text-proofound-forest dark:text-muted-foreground dark:hover:text-primary"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to basics
+          </button>
+          <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
+            Add one proof link
+          </CardTitle>
+          <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
+            This is the shortest path to a public portfolio you can preview, open, and share today.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form action={handleProofSubmit} className="space-y-6">
+            <div className="rounded-xl border border-proofound-stone bg-proofound-parchment/60 p-4 text-sm text-proofound-charcoal dark:border-border dark:bg-muted dark:text-foreground">
+              <p className="font-medium">What happens next</p>
+              <p className="mt-1 text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
+                We will attach one proof link to one skill and publish it on your public portfolio.
+                Imported evidence is treated as candidate evidence, not automatically verified
+                proof. Search engines stay off by default.
               </p>
             </div>
-          </div>
 
-          <div className="rounded-xl border border-proofound-stone bg-proofound-parchment/50 px-4 py-3">
-            <p className="text-xs uppercase tracking-wide text-proofound-charcoal/60 mb-1">
-              Live URL
-            </p>
-            <p className="text-sm break-all text-proofound-charcoal dark:text-foreground">
-              {portfolioUrl}
-            </p>
-          </div>
+            <div>
+              <Label htmlFor="proofSkillLabel">Skill or topic label *</Label>
+              <Input
+                id="proofSkillLabel"
+                name="proofSkillLabel"
+                placeholder="e.g. Product onboarding, React, Customer research"
+                required
+                disabled={isLoading}
+              />
+            </div>
 
-          <div className="flex flex-wrap gap-3">
-            <Button type="button" variant="outline" onClick={handleCopyUrl} className="gap-2">
-              <Copy className="h-4 w-4" />
-              {copied ? 'Copied' : 'Copy link'}
-            </Button>
-            <Button asChild type="button" variant="outline" className="gap-2">
-              <a href={portfolioUrl} target="_blank" rel="noreferrer">
-                <ExternalLink className="h-4 w-4" />
-                Open portfolio
-              </a>
-            </Button>
-            <Button type="button" onClick={() => router.push('/app/i/home')}>
-              Continue to app
-            </Button>
-          </div>
+            <div>
+              <Label htmlFor="proofUrl">Proof link *</Label>
+              <Input
+                id="proofUrl"
+                name="proofUrl"
+                type="url"
+                placeholder="https://"
+                required
+                disabled={isLoading}
+              />
+              <p className="mt-1 text-xs text-proofound-charcoal/70 dark:text-muted-foreground">
+                Use a project link, article, case study, portfolio page, GitHub repo, or similar
+                thin evidence.
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="proofTitle">Optional proof label</Label>
+              <Input
+                id="proofTitle"
+                name="proofTitle"
+                placeholder="What should this proof be called on your portfolio?"
+                disabled={isLoading}
+              />
+            </div>
+
+            {error ? (
+              <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+                {error}
+              </div>
+            ) : null}
+
+            <div className="flex flex-wrap justify-between gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={isLoading}
+                onClick={() => finalizeOnboarding()}
+              >
+                Finish for now
+              </Button>
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
+              >
+                {isLoading ? 'Publishing portfolio...' : 'Publish portfolio'}
+              </Button>
+            </div>
+          </form>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="max-w-2xl mx-auto border-proofound-stone dark:border-border rounded-2xl">
+    <Card className="mx-auto max-w-2xl rounded-2xl border-proofound-stone dark:border-border">
       <CardHeader>
         <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
-          Complete Your Profile
+          Public basics
         </CardTitle>
         <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-          Let&apos;s set up your individual profile so others can find and connect with you
+          Start with the basics for your public portfolio. You can defer matching and verification
+          work until later.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={handleSubmit} className="space-y-6">
+        <form action={handleBasicsSubmit} className="space-y-6">
           <div>
-            <Label htmlFor="displayName" className="text-proofound-charcoal dark:text-foreground">
-              Display Name *
-            </Label>
+            <Label htmlFor="displayName">Display name *</Label>
             <Input
               id="displayName"
               name="displayName"
               placeholder="Your full name"
               required
-              disabled={isLoading}
-              className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
+              defaultValue={basics.displayName}
             />
-            <p className="text-xs text-proofound-charcoal/70 dark:text-muted-foreground mt-1">
-              This is how others will see your name
-            </p>
           </div>
 
           <div>
-            <Label htmlFor="handle" className="text-proofound-charcoal dark:text-foreground">
-              Username *
-            </Label>
+            <Label htmlFor="handle">Username *</Label>
             <Input
               id="handle"
               name="handle"
-              placeholder="your-username"
-              pattern="[a-zA-Z0-9_-]+"
+              placeholder="your-name"
+              pattern="[a-z0-9-]+"
               required
-              disabled={isLoading}
-              className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
+              defaultValue={basics.handle}
             />
-            <p className="text-xs text-proofound-charcoal/70 dark:text-muted-foreground mt-1">
-              Letters, numbers, hyphens, and underscores only
+            <p className="mt-1 text-xs text-proofound-charcoal/70 dark:text-muted-foreground">
+              Lowercase letters, numbers, and hyphens only. Search engines stay off by default.
             </p>
           </div>
 
           <div>
-            <Label htmlFor="headline" className="text-proofound-charcoal dark:text-foreground">
-              Headline
-            </Label>
+            <Label htmlFor="headline">Headline *</Label>
             <Input
               id="headline"
               name="headline"
-              placeholder="e.g., Software Engineer | Designer | Entrepreneur"
-              maxLength={200}
-              disabled={isLoading}
-              className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
+              placeholder="e.g. Product engineer building proof-first onboarding"
+              required
+              defaultValue={basics.headline}
             />
-            <p className="text-xs text-proofound-charcoal/70 dark:text-muted-foreground mt-1">
-              A brief professional tagline (optional)
-            </p>
           </div>
 
           <div>
-            <Label htmlFor="bio" className="text-proofound-charcoal dark:text-foreground">
-              Bio
-            </Label>
+            <Label htmlFor="bio">Bio</Label>
             <textarea
               id="bio"
               name="bio"
-              placeholder="Tell us about yourself..."
+              placeholder="A short summary is enough for day one."
               maxLength={2000}
-              disabled={isLoading}
-              className="flex min-h-[120px] w-full rounded-lg border border-proofound-stone dark:border-border bg-white dark:bg-background px-4 py-2 text-base transition-colors placeholder:text-proofound-charcoal/40 dark:placeholder:text-muted-foreground/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:border-proofound-forest disabled:cursor-not-allowed disabled:opacity-50 text-proofound-charcoal dark:text-foreground"
+              defaultValue={basics.bio}
+              className="flex min-h-[120px] w-full rounded-lg border border-proofound-stone bg-white px-4 py-2 text-base text-proofound-charcoal transition-colors placeholder:text-proofound-charcoal/40 focus-visible:border-proofound-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest dark:border-border dark:bg-background dark:text-foreground dark:placeholder:text-muted-foreground/40"
             />
-            <p className="text-xs text-proofound-charcoal/70 dark:text-muted-foreground mt-1">
-              Share your experience, interests, or what you&apos;re looking for (optional)
-            </p>
           </div>
 
           <div>
-            <Label htmlFor="location" className="text-proofound-charcoal dark:text-foreground">
-              Location
-            </Label>
+            <Label htmlFor="location">Location</Label>
             <Input
               id="location"
               name="location"
-              placeholder="City, Country"
-              disabled={isLoading}
-              className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
+              placeholder="City, country"
+              defaultValue={basics.location}
             />
           </div>
 
-          {error && (
-            <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-xl text-destructive text-sm">
+          {error ? (
+            <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
               {error}
             </div>
-          )}
+          ) : null}
 
-          <div className="flex justify-end gap-4">
+          <div className="flex items-start gap-3 rounded-xl border border-proofound-stone bg-proofound-parchment/60 p-4 text-sm text-proofound-charcoal dark:border-border dark:bg-muted dark:text-foreground">
+            <LinkIcon className="mt-0.5 h-4 w-4 flex-none text-proofound-forest" />
+            <p>
+              The next step is optional but recommended: add one proof link so you leave onboarding
+              with a live, shareable public portfolio.
+            </p>
+          </div>
+
+          <div className="flex justify-end">
             <Button
               type="submit"
-              disabled={isLoading}
               size="lg"
-              className="bg-proofound-forest hover:bg-proofound-forest/90 text-white"
+              className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
             >
-              {isLoading ? 'Creating Profile...' : 'Complete Setup'}
+              Continue
             </Button>
           </div>
         </form>

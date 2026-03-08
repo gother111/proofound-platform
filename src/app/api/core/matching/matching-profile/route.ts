@@ -5,49 +5,23 @@ import { db } from '@/db';
 import { individualProfiles, matchingProfiles, skills } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { log } from '@/lib/log';
-import { emitAnalyticsEventAsync, emitProfileActivated } from '@/lib/analytics/events';
+import { emitAnalyticsEventAsync } from '@/lib/analytics/events';
 import { evaluateIndividualMatchability } from '@/lib/matching/eligibility';
 import { getWeightBiasBucket } from '@/lib/core/matching/presets';
-import { MATCHABILITY_STRONG_SKILLS_WITH_RECENCY } from '@/lib/matching/thresholds';
 import { mapIndustryListToCanonical } from '@/lib/industry/options';
 import {
   normalizeIndividualCauses,
   normalizeIndividualValueLabels,
 } from '@/lib/profile/normalizePurposeLinks';
+import { syncReadinessMilestones } from '@/lib/readiness/analytics';
 
 export const dynamic = 'force-dynamic';
 const ENABLE_MATCHING_PROFILE_SKILL_WRITES =
   process.env.MATCHING_PROFILE_ENABLE_SKILL_WRITES === 'true';
 
-/**
- * Track if profile was already activated (to avoid duplicate events)
- */
-const activatedProfiles = new Set<string>();
-
-/**
- * Check if profile meets activation criteria and emit event.
- */
 async function checkAndEmitProfileActivation(userId: string): Promise<void> {
-  if (activatedProfiles.has(userId)) return;
-
   try {
-    const eligibility = await evaluateIndividualMatchability(userId);
-    if (!eligibility.eligible) return;
-
-    const completionScore = eligibility.tier === 'strong' ? 100 : 75;
-    await emitProfileActivated(userId, 0, {
-      completionScore,
-      hasMinimumL4Count:
-        eligibility.counts.skillsWithRecency >= MATCHABILITY_STRONG_SKILLS_WITH_RECENCY,
-      l4SkillsCount: eligibility.counts.skillsWithRecency,
-      hasPurposeBlock: eligibility.counts.hasPurpose,
-      hasMatchingProfile: eligibility.counts.hasConstraints,
-      proofCount: eligibility.counts.proofCount,
-      activationTier: eligibility.tier,
-      nextTierTarget: eligibility.nextTierTarget?.tier || null,
-    });
-
-    activatedProfiles.add(userId);
+    await syncReadinessMilestones(userId, { source: 'matching_profile_updated' });
   } catch (error) {
     log.error('profile-activation-check.failed', {
       userId,

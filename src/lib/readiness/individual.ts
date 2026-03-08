@@ -11,6 +11,7 @@ import {
 } from '@/db/schema';
 import { computeSkillGaps } from '@/lib/skills/gap-service';
 import { getOrSetTtlCache, PLATFORM_PERF_CACHE_TTL_MS } from '@/lib/performance/ttl-cache';
+import { getIndividualReadinessState } from '@/lib/readiness/individual-state';
 import type {
   IndividualReadiness,
   ReadinessAction,
@@ -24,50 +25,39 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 export async function getIndividualReadiness(userId: string): Promise<IndividualReadiness> {
-  const [
-    profileRow,
-    individualRow,
-    skillsCountRow,
-    proofStatsRow,
-    verificationStatsRow,
-    matchStatsRow,
-  ] = await Promise.all([
-    db.query.profiles.findFirst({
-      where: eq(profiles.id, userId),
-    }),
-    db.query.individualProfiles.findFirst({
-      where: eq(individualProfiles.userId, userId),
-    }),
-    db
-      .select({
-        count: sql<number>`count(${skills.id})::int`,
-      })
-      .from(skills)
-      .where(eq(skills.profileId, userId)),
-    db
-      .select({
-        totalProofs: sql<number>`count(${skillProofs.id})::int`,
-        verifiedProofs: sql<number>`count(${skillProofs.id}) filter (where ${skillProofs.verified} = true)::int`,
-      })
-      .from(skillProofs)
-      .where(eq(skillProofs.profileId, userId)),
-    db
-      .select({
-        pending: sql<number>`count(${skillVerificationRequests.id}) filter (where ${skillVerificationRequests.status} = 'pending')::int`,
-        accepted: sql<number>`count(${skillVerificationRequests.id}) filter (where ${skillVerificationRequests.status} = 'accepted' and ${skillVerificationRequests.integrityStatus} = 'clear')::int`,
-      })
-      .from(skillVerificationRequests)
-      .where(eq(skillVerificationRequests.requesterProfileId, userId)),
-    db
-      .select({
-        totalMatches: sql<number>`count(${matches.id})::int`,
-        highQualityMatches: sql<number>`count(${matches.id}) filter (where ${matches.score}::numeric >= 0.8)::int`,
-      })
-      .from(matches)
-      .where(eq(matches.profileId, userId)),
-  ]);
+  const readinessState = await getIndividualReadinessState(userId);
+  const [profileRow, individualRow, proofStatsRow, verificationStatsRow, matchStatsRow] =
+    await Promise.all([
+      db.query.profiles.findFirst({
+        where: eq(profiles.id, userId),
+      }),
+      db.query.individualProfiles.findFirst({
+        where: eq(individualProfiles.userId, userId),
+      }),
+      db
+        .select({
+          totalProofs: sql<number>`count(${skillProofs.id})::int`,
+          verifiedProofs: sql<number>`count(${skillProofs.id}) filter (where ${skillProofs.verified} = true)::int`,
+        })
+        .from(skillProofs)
+        .where(eq(skillProofs.profileId, userId)),
+      db
+        .select({
+          pending: sql<number>`count(${skillVerificationRequests.id}) filter (where ${skillVerificationRequests.status} = 'pending')::int`,
+          accepted: sql<number>`count(${skillVerificationRequests.id}) filter (where ${skillVerificationRequests.status} = 'accepted' and ${skillVerificationRequests.integrityStatus} = 'clear')::int`,
+        })
+        .from(skillVerificationRequests)
+        .where(eq(skillVerificationRequests.requesterProfileId, userId)),
+      db
+        .select({
+          totalMatches: sql<number>`count(${matches.id})::int`,
+          highQualityMatches: sql<number>`count(${matches.id}) filter (where ${matches.score}::numeric >= 0.8)::int`,
+        })
+        .from(matches)
+        .where(eq(matches.profileId, userId)),
+    ]);
 
-  const skillsCount = skillsCountRow[0]?.count ?? 0;
+  const skillsCount = readinessState.counts.skillsCount;
   const totalProofs = proofStatsRow[0]?.totalProofs ?? 0;
   const verifiedProofs = proofStatsRow[0]?.verifiedProofs ?? 0;
   const pendingVerifications = verificationStatsRow[0]?.pending ?? 0;
@@ -129,60 +119,7 @@ export async function getIndividualReadiness(userId: string): Promise<Individual
 
   const topActions: ReadinessAction[] = [];
 
-  if (skillsCount < 5) {
-    topActions.push({
-      id: 'add-skills',
-      title: 'Add core skills to your Expertise Atlas',
-      description: 'Profiles with at least 5 skills receive more relevant opportunities.',
-      priority: 'high',
-      category: 'expertise',
-      actionUrl: '/app/i/expertise',
-    });
-  }
-
-  if (totalProofs < 1) {
-    topActions.push({
-      id: 'add-first-proof',
-      title: 'Add your first proof artifact',
-      description: 'Attach a project link or credential to increase trust and ranking.',
-      priority: 'high',
-      category: 'verification',
-      actionUrl: '/app/i/expertise?tab=proofs',
-    });
-  }
-
-  if (acceptedVerifications < 1) {
-    topActions.push({
-      id: 'request-verification',
-      title: 'Request one skill verification',
-      description: 'Verification can materially increase your match confidence score.',
-      priority: 'medium',
-      category: 'verification',
-      actionUrl: '/app/i/verifications',
-    });
-  }
-
-  if (totalMatches === 0) {
-    topActions.push({
-      id: 'tune-matching-preferences',
-      title: 'Tune matching preferences',
-      description: 'Set role, location, and compensation constraints for better fit.',
-      priority: 'medium',
-      category: 'matching',
-      actionUrl: '/app/i/matching/preferences',
-    });
-  }
-
-  if (!individualRow?.mission) {
-    topActions.push({
-      id: 'complete-mission-block',
-      title: 'Complete mission and values',
-      description: 'Values alignment improves quality in purpose-first matching.',
-      priority: 'medium',
-      category: 'profile',
-      actionUrl: '/app/i/profile',
-    });
-  }
+  topActions.push(...readinessState.nextBestActions);
 
   const gapAnalysis = await computeSkillGaps({ profileId: userId, limitAssignments: 12 });
 
@@ -227,6 +164,16 @@ export async function getIndividualReadiness(userId: string): Promise<Individual
     readinessScore,
     scoreBreakdown,
     topActions: topActions.slice(0, 3),
+    states: readinessState.states,
+    highestState: readinessState.highestState,
+    publicPortfolioUrl: readinessState.publicPortfolioUrl,
+    missingByState: readinessState.missingByState,
+    legacyTier: readinessState.legacyTier,
+    flags: {
+      portfolioReady: readinessState.flags.portfolioReady,
+      browseReady: readinessState.flags.browseReady,
+      qualifiedIntroReady: readinessState.flags.qualifiedIntroReady,
+    },
     proofProgress,
     skillToOpportunityBridge,
     marketActivityLow: highQualityMatches < 3,
@@ -235,6 +182,10 @@ export async function getIndividualReadiness(userId: string): Promise<Individual
       highQualityMatches,
       pendingVerifications,
       skillsCount,
+      skillsWithRecency: readinessState.counts.skillsWithRecency,
+      publicProofSignalCount: readinessState.counts.publicProofSignalCount,
+      proofBackedSkillCount: readinessState.counts.proofBackedSkillCount,
+      verifiedTrustSignalCount: readinessState.counts.verifiedTrustSignalCount,
     },
   };
 }

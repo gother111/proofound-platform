@@ -4,6 +4,9 @@ import { requireAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { reconcileVerifierContradictions } from '@/lib/verification/contradiction';
+import { syncReadinessMilestones } from '@/lib/readiness/analytics';
+import { getIndividualReadinessState } from '@/lib/readiness/individual-state';
+import { emitIndividualOnboardingCompleted } from '@/lib/analytics/events';
 
 vi.mock('@/lib/auth', () => ({
   requireAuth: vi.fn(),
@@ -21,11 +24,34 @@ vi.mock('@/lib/verification/contradiction', () => ({
   reconcileVerifierContradictions: vi.fn(),
 }));
 
+vi.mock('@/lib/readiness/analytics', () => ({
+  syncReadinessMilestones: vi.fn(),
+}));
+
+vi.mock('@/lib/readiness/individual-state', () => ({
+  getIndividualReadinessState: vi.fn(),
+}));
+
+vi.mock('@/lib/analytics/events', () => ({
+  emitIndividualOnboardingCompleted: vi.fn(),
+}));
+
 describe('onboarding actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
     (requireAuth as any).mockResolvedValue({ id: 'user-1' });
+    (syncReadinessMilestones as any).mockResolvedValue(undefined);
+    (emitIndividualOnboardingCompleted as any).mockResolvedValue(undefined);
+    (getIndividualReadinessState as any).mockResolvedValue({
+      highestState: 'portfolio_ready',
+      states: ['portfolio_ready'],
+      flags: {
+        portfolioReady: true,
+        browseReady: false,
+        qualifiedIntroReady: false,
+      },
+    });
   });
 
   it('returns individual public portfolio URL and applies day-1 privacy defaults', async () => {
@@ -56,6 +82,9 @@ describe('onboarding actions', () => {
       success: true,
       handle: 'jane_founder',
       publicPortfolioUrl: 'https://proofound.io/portfolio/jane_founder',
+      portfolioReady: true,
+      browseReady: false,
+      qualifiedIntroReady: false,
     });
 
     expect(individualUpsert).toHaveBeenCalledWith(

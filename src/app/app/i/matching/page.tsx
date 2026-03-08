@@ -27,8 +27,11 @@ type MatchabilityCriterion = {
 };
 
 type MatchabilityBlockedPayload = {
-  error: 'PROFILE_NOT_MATCHABLE';
-  message: string;
+  items: unknown[];
+  meta: {
+    softGated: true;
+    message: string;
+  };
   eligibility: {
     criteria: Record<string, MatchabilityCriterion>;
   };
@@ -51,7 +54,7 @@ function isMatchabilityBlockedPayload(payload: unknown): payload is Matchability
   return Boolean(
     payload &&
       typeof payload === 'object' &&
-      (payload as { error?: string }).error === 'PROFILE_NOT_MATCHABLE' &&
+      (payload as { meta?: { softGated?: boolean } }).meta?.softGated === true &&
       Array.isArray((payload as { topActions?: unknown }).topActions)
   );
 }
@@ -426,15 +429,15 @@ export default function MatchingPage() {
         </div>
         <p className="text-sm text-muted-foreground dark:text-[#8A8174]">
           {blockedState
-            ? 'Complete the required matchability steps to unlock personalized opportunities.'
+            ? 'Browsing stays open. Add a few recent skills and one preference to personalize results.'
             : `${filteredMatches.length} opportunit${filteredMatches.length === 1 ? 'y' : 'ies'} aligned with your skills and values`}
         </p>
       </div>
 
       {blockedState ? (
         <div className="rounded-xl border border-proofound-stone bg-japandi-bg p-5">
-          <h2 className="text-lg font-semibold text-foreground">Profile setup required</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{blockedState.message}</p>
+          <h2 className="text-lg font-semibold text-foreground">Browse readiness</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{blockedState.meta.message}</p>
 
           <div className="mt-4 space-y-2">
             {Object.values(blockedState.eligibility.criteria)
@@ -449,6 +452,11 @@ export default function MatchingPage() {
                 </div>
               ))}
           </div>
+
+          <p className="mt-4 text-xs text-muted-foreground">
+            Qualified introductions stay locked until stronger proof, a verified trust signal, and
+            full intro constraints are complete.
+          </p>
 
           {ensureThreeActions(blockedState.topActions).length > 0 ? (
             <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-3">
@@ -515,7 +523,10 @@ export default function MatchingPage() {
                     }),
                   });
 
-                  if (!response.ok) throw new Error('Failed');
+                  if (!response.ok) {
+                    const errorPayload = await response.json().catch(() => null);
+                    throw new Error(errorPayload?.message || 'Failed');
+                  }
 
                   const data = await response.json();
                   if (data.revealed) {

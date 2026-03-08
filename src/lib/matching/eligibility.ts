@@ -1,18 +1,14 @@
-import { and, eq, isNotNull, sql } from 'drizzle-orm';
-
-import { db } from '@/db';
-import { individualProfiles, matchingProfiles, skillProofs, skills } from '@/db/schema';
-import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
-import { isFeatureEnabled } from '@/lib/feature-flags/server';
+import type { ReadinessRequirement } from '@/lib/momentum/types';
 import {
-  MATCHABILITY_LITE_SKILLS_WITH_RECENCY,
-  MATCHABILITY_MIN_PROOFS,
-  MATCHABILITY_STRONG_SKILLS_WITH_RECENCY,
-  resolveMatchabilityTier,
-  type MatchabilityTier,
-} from './thresholds';
+  getIndividualReadinessState,
+  type LegacyReadinessTier,
+} from '@/lib/readiness/individual-state';
 
-export type EligibilityCriterionId = 'skillsWithRecency' | 'proofs' | 'purpose' | 'constraints';
+export type EligibilityCriterionId =
+  | 'skillsWithRecency'
+  | 'matchingProfile'
+  | 'intentSignal'
+  | 'logisticsSignal';
 
 export interface EligibilityCriterion {
   id: EligibilityCriterionId;
@@ -35,13 +31,16 @@ export interface EligibilityResult {
   profileId: string;
   status: 'eligible' | 'not_matchable';
   eligible: boolean;
-  tier: MatchabilityTier;
+  tier: LegacyReadinessTier;
   message: string;
   counts: {
     skillsWithRecency: number;
     proofCount: number;
     hasPurpose: boolean;
     hasConstraints: boolean;
+    hasIntentSignal: boolean;
+    hasLogisticsSignal: boolean;
+    hasTrustedSignal: boolean;
   };
   nextTierTarget: null | {
     tier: 'lite' | 'strong';
@@ -51,33 +50,64 @@ export interface EligibilityResult {
       proofCount: number;
       purpose: number;
       constraints: number;
+      trustedSignal: number;
     };
   };
   criteria: Record<EligibilityCriterionId, EligibilityCriterion>;
   unmetCriteria: EligibilityCriterionId[];
   topActions: EligibilityAction[];
+  readiness: Awaited<ReturnType<typeof getIndividualReadinessState>>;
 }
 
-export interface NotMatchablePayload {
-  error: 'PROFILE_NOT_MATCHABLE';
-  message: string;
+export interface MatchingSoftGatePayload {
+  items: unknown[];
+  meta: {
+    softGated: true;
+    softGateReason: 'browse_requirements_incomplete';
+    message: string;
+  };
   eligibility: EligibilityResult;
+  readiness: EligibilityResult['readiness'];
   topActions: EligibilityAction[];
 }
 
-function hasContent(value: unknown): boolean {
-  return typeof value === 'string' && value.trim().length > 0;
-}
+function toEligibilityAction(requirement: ReadinessRequirement): EligibilityAction {
+  if (requirement.actionUrl === '/app/i/profile') {
+    return {
+      id: requirement.id,
+      title: 'Add purpose signals',
+      description: requirement.detail,
+      actionUrl: '/app/i/profile',
+    };
+  }
 
-function hasArrayContent(value: unknown): boolean {
-  return Array.isArray(value) && value.length > 0;
-}
+  if (requirement.actionUrl === '/app/i/expertise') {
+    return {
+      id: requirement.id,
+      title: 'Add recent skills and proof',
+      description: requirement.detail,
+      actionUrl: '/app/i/expertise',
+    };
+  }
 
-export function toNotMatchablePayload(result: EligibilityResult): NotMatchablePayload {
   return {
-    error: 'PROFILE_NOT_MATCHABLE',
-    message: result.message,
+    id: requirement.id,
+    title: 'Set browse preferences',
+    description: requirement.detail,
+    actionUrl: '/app/i/matching/preferences',
+  };
+}
+
+export function toSoftGatedPayload(result: EligibilityResult): MatchingSoftGatePayload {
+  return {
+    items: [],
+    meta: {
+      softGated: true,
+      softGateReason: 'browse_requirements_incomplete',
+      message: result.message,
+    },
     eligibility: result,
+    readiness: result.readiness,
     topActions: result.topActions,
   };
 }
@@ -85,190 +115,112 @@ export function toNotMatchablePayload(result: EligibilityResult): NotMatchablePa
 export async function evaluateIndividualMatchability(
   profileId: string
 ): Promise<EligibilityResult> {
-  const activationTieringEnabled = await isFeatureEnabled(
-    FEATURE_FLAG_KEYS.ACTIVATION_TIERING,
-    { userId: profileId },
-    true
-  );
-
-  const [profileRow, individualRow, skillsWithRecencyResult, proofsResult] = await Promise.all([
-    db.query.matchingProfiles.findFirst({
-      where: eq(matchingProfiles.profileId, profileId),
-    }),
-    db.query.individualProfiles.findFirst({
-      where: eq(individualProfiles.userId, profileId),
-    }),
-    db
-      .select({
-        count: sql<number>`count(${skills.id})::int`,
-      })
-      .from(skills)
-      .where(and(eq(skills.profileId, profileId), isNotNull(skills.lastUsedAt))),
-    db
-      .select({
-        count: sql<number>`count(${skillProofs.id})::int`,
-      })
-      .from(skillProofs)
-      .where(eq(skillProofs.profileId, profileId)),
-  ]);
-
-  const skillsWithRecency = skillsWithRecencyResult[0]?.count ?? 0;
-  const proofCount = proofsResult[0]?.count ?? 0;
-
-  const hasPurpose =
-    hasContent(individualRow?.mission) ||
-    hasArrayContent(individualRow?.values) ||
-    hasArrayContent(individualRow?.causes);
-
-  const hasConstraints =
-    !!profileRow?.workMode &&
-    !!profileRow?.availabilityEarliest &&
-    !!profileRow?.availabilityLatest &&
-    profileRow?.compMin != null &&
-    profileRow?.compMax != null &&
-    !!profileRow?.currency;
-
-  const tier = activationTieringEnabled
-    ? resolveMatchabilityTier({
-        skillsWithRecency,
-        proofCount,
-        hasPurpose,
-        hasConstraints,
-      })
-    : proofCount >= MATCHABILITY_MIN_PROOFS &&
-        hasPurpose &&
-        hasConstraints &&
-        skillsWithRecency >= MATCHABILITY_STRONG_SKILLS_WITH_RECENCY
-      ? 'strong'
-      : 'none';
-
-  const requiredSkillThreshold = activationTieringEnabled
-    ? MATCHABILITY_LITE_SKILLS_WITH_RECENCY
-    : MATCHABILITY_STRONG_SKILLS_WITH_RECENCY;
+  const readiness = await getIndividualReadinessState(profileId);
+  const { counts, flags } = readiness;
 
   const criteria: Record<EligibilityCriterionId, EligibilityCriterion> = {
     skillsWithRecency: {
       id: 'skillsWithRecency',
-      label: 'Skills with recency',
-      met: skillsWithRecency >= requiredSkillThreshold,
-      status: skillsWithRecency >= requiredSkillThreshold ? 'met' : 'unmet',
-      current: skillsWithRecency,
-      required: requiredSkillThreshold,
-      detail: activationTieringEnabled
-        ? 'Add or refresh at least 3 skills with "last used" dates in Expertise Atlas (10 for Strong tier).'
-        : 'Add or refresh at least 10 skills with "last used" dates in Expertise Atlas.',
+      label: 'Recent skills',
+      met: counts.skillsWithRecency >= 3,
+      status: counts.skillsWithRecency >= 3 ? 'met' : 'unmet',
+      current: counts.skillsWithRecency,
+      required: 3,
+      detail: 'Add at least 3 skills with last-used dates so browse results stay relevant.',
     },
-    proofs: {
-      id: 'proofs',
-      label: 'Proof artifacts',
-      met: proofCount >= MATCHABILITY_MIN_PROOFS,
-      status: proofCount >= MATCHABILITY_MIN_PROOFS ? 'met' : 'unmet',
-      current: proofCount,
-      required: MATCHABILITY_MIN_PROOFS,
-      detail: 'Add at least one proof artifact in Expertise Atlas.',
+    matchingProfile: {
+      id: 'matchingProfile',
+      label: 'Browse profile',
+      met: flags.hasMatchingProfile,
+      status: flags.hasMatchingProfile ? 'met' : 'unmet',
+      current: flags.hasMatchingProfile,
+      required: 'matching profile',
+      detail: 'Create your matching profile so preferences have somewhere to live.',
     },
-    purpose: {
-      id: 'purpose',
-      label: 'Purpose block',
-      met: hasPurpose,
-      status: hasPurpose ? 'met' : 'unmet',
-      current: hasPurpose,
-      required: 'mission OR values OR causes',
-      detail: 'Add mission, values, or causes on your profile.',
+    intentSignal: {
+      id: 'intentSignal',
+      label: 'Intent signal',
+      met: flags.hasIntentSignal,
+      status: flags.hasIntentSignal ? 'met' : 'unmet',
+      current: flags.hasIntentSignal,
+      required: 'mission OR values OR causes OR desired roles',
+      detail: 'Add mission, values, causes, or desired roles to make browse results explainable.',
     },
-    constraints: {
-      id: 'constraints',
-      label: 'Matching constraints',
-      met: hasConstraints,
-      status: hasConstraints ? 'met' : 'unmet',
-      current: hasConstraints,
-      required: 'work mode + availability earliest/latest + compensation min/max + currency',
-      detail: 'Set work mode, availability window, and compensation range in matching preferences.',
+    logisticsSignal: {
+      id: 'logisticsSignal',
+      label: 'One practical preference',
+      met: flags.hasLogisticsSignal,
+      status: flags.hasLogisticsSignal ? 'met' : 'unmet',
+      current: flags.hasLogisticsSignal,
+      required: 'work mode OR country OR city',
+      detail: 'Add work mode or a location preference before personalized browse unlocks.',
     },
   };
 
-  const unmetCriteria = (Object.values(criteria)
+  const unmetCriteria = Object.values(criteria)
     .filter((criterion) => !criterion.met)
-    .map((criterion) => criterion.id) || []) as EligibilityCriterionId[];
+    .map((criterion) => criterion.id) as EligibilityCriterionId[];
 
-  const topActions: EligibilityAction[] = [];
-  if (unmetCriteria.includes('skillsWithRecency') || unmetCriteria.includes('proofs')) {
-    topActions.push({
-      id: 'update-expertise-atlas',
-      title: 'Update Expertise Atlas',
-      description: 'Add skills with recency and at least one proof artifact.',
-      actionUrl: '/app/i/expertise',
-    });
-  }
-  if (unmetCriteria.includes('constraints')) {
-    topActions.push({
-      id: 'set-matching-constraints',
-      title: 'Set matching constraints',
-      description: 'Save work mode, availability window, and compensation range.',
-      actionUrl: '/app/i/matching/preferences',
-    });
-  }
-  if (unmetCriteria.includes('purpose')) {
-    topActions.push({
-      id: 'complete-purpose',
-      title: 'Complete purpose section',
-      description: 'Add mission, values, or causes to activate purpose alignment.',
-      actionUrl: '/app/i/profile',
-    });
-  }
-
-  const eligible = tier !== 'none';
+  const topActions = readiness.missingByState.browse_ready
+    .map(toEligibilityAction)
+    .filter(
+      (action, index, collection) =>
+        collection.findIndex((candidate) => candidate.actionUrl === action.actionUrl) === index
+    )
+    .slice(0, 3);
 
   const nextTierTarget =
-    tier === 'none'
+    readiness.legacyTier === 'none'
       ? {
-          tier: activationTieringEnabled ? ('lite' as const) : ('strong' as const),
-          message: activationTieringEnabled
-            ? 'Complete Lite activation to unlock first matches.'
-            : 'Complete activation requirements to unlock first matches.',
+          tier: 'lite' as const,
+          message:
+            'Browsing is available today. Add a few recent skills and one preference to personalize results.',
           remaining: {
-            skillsWithRecency: Math.max(0, requiredSkillThreshold - skillsWithRecency),
-            proofCount: Math.max(0, MATCHABILITY_MIN_PROOFS - proofCount),
-            purpose: hasPurpose ? 0 : 1,
-            constraints: hasConstraints ? 0 : 1,
+            skillsWithRecency: Math.max(0, 3 - counts.skillsWithRecency),
+            proofCount: 0,
+            purpose: flags.hasIntentSignal ? 0 : 1,
+            constraints: flags.hasLogisticsSignal ? 0 : 1,
+            trustedSignal: 0,
           },
         }
-      : tier === 'lite'
+      : readiness.legacyTier === 'lite'
         ? {
             tier: 'strong' as const,
-            message: 'Add more skills to reach Strong activation and improve ranking precision.',
+            message:
+              'Qualified introductions need stronger proof coverage, trust signals, and complete constraints.',
             remaining: {
-              skillsWithRecency: Math.max(
-                0,
-                MATCHABILITY_STRONG_SKILLS_WITH_RECENCY - skillsWithRecency
-              ),
-              proofCount: 0,
-              purpose: 0,
-              constraints: 0,
+              skillsWithRecency: Math.max(0, 5 - counts.skillsWithRecency),
+              proofCount: Math.max(0, 2 - counts.proofCount),
+              purpose: flags.hasPurposeBlock ? 0 : 1,
+              constraints: flags.hasIntroConstraints ? 0 : 1,
+              trustedSignal: flags.hasTrustedSignal ? 0 : 1,
             },
           }
         : null;
 
   return {
     profileId,
-    status: eligible ? 'eligible' : 'not_matchable',
-    eligible,
-    tier,
-    message:
-      tier === 'strong'
-        ? 'Profile is strongly matchable.'
-        : tier === 'lite'
-          ? 'Profile is matchable in Lite tier.'
-          : 'Your profile is not matchable yet. Complete the required steps and try again.',
+    status: readiness.flags.browseReady ? 'eligible' : 'not_matchable',
+    eligible: readiness.flags.browseReady,
+    tier: readiness.legacyTier,
+    message: readiness.flags.browseReady
+      ? readiness.flags.qualifiedIntroReady
+        ? 'Browse is active and qualified introductions are unlocked.'
+        : 'Browse is active. Add stronger proof and complete constraints for qualified introductions.'
+      : 'Browsing is open, but add a few recent skills and one preference to personalize results.',
     counts: {
-      skillsWithRecency,
-      proofCount,
-      hasPurpose,
-      hasConstraints,
+      skillsWithRecency: counts.skillsWithRecency,
+      proofCount: counts.proofCount,
+      hasPurpose: flags.hasPurposeBlock,
+      hasConstraints: flags.hasIntroConstraints,
+      hasIntentSignal: flags.hasIntentSignal,
+      hasLogisticsSignal: flags.hasLogisticsSignal,
+      hasTrustedSignal: flags.hasTrustedSignal,
     },
     nextTierTarget,
     criteria,
     unmetCriteria,
-    topActions: topActions.slice(0, 3),
+    topActions,
+    readiness,
   };
 }

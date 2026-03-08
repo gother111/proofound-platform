@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server';
 import { POST } from '@/app/api/core/matching/interest/route';
 import { db } from '@/db';
 import { requireApiAuthContext, requireAuth } from '@/lib/auth';
+import { getIndividualReadinessState } from '@/lib/readiness/individual-state';
 
 vi.mock('@/lib/auth', () => ({
   requireApiAuthContext: vi.fn(),
@@ -40,6 +41,10 @@ vi.mock('@/lib/log', () => ({
   },
 }));
 
+vi.mock('@/lib/readiness/individual-state', () => ({
+  getIndividualReadinessState: vi.fn(),
+}));
+
 describe('match interest route', () => {
   const assignmentId = '11111111-1111-1111-1111-111111111111';
   const orgId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
@@ -48,6 +53,11 @@ describe('match interest route', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    (getIndividualReadinessState as any).mockResolvedValue({
+      flags: {
+        qualifiedIntroReady: true,
+      },
+    });
     (requireApiAuthContext as any).mockImplementation(async () => {
       const user = await (requireAuth as any)();
       return user ? { user, supabase: {} } : null;
