@@ -52,3 +52,44 @@ export function isMissingColumnError(error: unknown, columns: string[]): boolean
     );
   });
 }
+
+export function isMissingRelationError(error: unknown, relations: string[]): boolean {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const typed = error as ErrorWithMetadata;
+  const code = typeof typed.code === 'string' ? typed.code : String(typed.code ?? '');
+  const fullText = collectErrorText(typed);
+
+  if (!fullText) {
+    return false;
+  }
+
+  const genericMissingRelationSignal =
+    fullText.includes('does not exist') ||
+    fullText.includes('undefined table') ||
+    fullText.includes('relation');
+
+  if (!genericMissingRelationSignal && code !== '42P01') {
+    return false;
+  }
+
+  const normalizedText = normalizeColumnHint(fullText);
+  return relations.some((relation) => normalizedText.includes(normalizeColumnHint(relation)));
+}
+
+export function isSchemaCompatibilityError(
+  error: unknown,
+  options: {
+    columns?: string[];
+    relations?: string[];
+  }
+): boolean {
+  const { columns = [], relations = [] } = options;
+
+  return (
+    (columns.length > 0 && isMissingColumnError(error, columns)) ||
+    (relations.length > 0 && isMissingRelationError(error, relations))
+  );
+}

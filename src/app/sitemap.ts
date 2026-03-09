@@ -3,6 +3,8 @@ import { sql } from 'drizzle-orm';
 
 import { db } from '@/db';
 import { getRows } from '@/lib/db/rows';
+import { isSchemaCompatibilityError } from '@/lib/db/schemaCompatibility';
+import { log } from '@/lib/log';
 
 const FALLBACK_SITE_URL = 'https://proofound.io';
 
@@ -23,6 +25,55 @@ type SitemapSlugRow = {
   updated_at?: string | null;
 };
 
+async function fetchPortfolioSitemapRows(): Promise<{
+  individualRows: SitemapSlugRow[];
+  organizationRows: SitemapSlugRow[];
+}> {
+  try {
+    const [individualRowsResult, organizationRowsResult] = await Promise.all([
+      db.execute(sql`
+        SELECT handle, updated_at
+        FROM profiles
+        WHERE handle IS NOT NULL
+          AND public_portfolio_state = 'public_indexable'
+          AND deleted = false
+      `),
+      db.execute(sql`
+        SELECT slug, updated_at
+        FROM organizations
+        WHERE slug IS NOT NULL
+          AND public_portfolio_state = 'public_indexable'
+      `),
+    ]);
+
+    return {
+      individualRows: getRows<SitemapSlugRow>(individualRowsResult as any),
+      organizationRows: getRows<SitemapSlugRow>(organizationRowsResult as any),
+    };
+  } catch (error) {
+    if (
+      isSchemaCompatibilityError(error, {
+        columns: ['public_portfolio_state'],
+        relations: ['profiles', 'organizations'],
+      })
+    ) {
+      log.warn('seo.sitemap.schema_compatibility_fallback', {
+        code:
+          error && typeof error === 'object' && 'code' in error
+            ? String((error as { code?: string | number }).code ?? '')
+            : undefined,
+      });
+
+      return {
+        individualRows: [],
+        organizationRows: [],
+      };
+    }
+
+    throw error;
+  }
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = getSiteUrl();
   const now = new Date();
@@ -39,24 +90,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/cookies/settings',
   ];
 
-  const [individualRowsResult, organizationRowsResult] = await Promise.all([
-    db.execute(sql`
-      SELECT handle, updated_at
-      FROM profiles
-      WHERE handle IS NOT NULL
-        AND public_portfolio_state = 'public_indexable'
-        AND deleted = false
-    `),
-    db.execute(sql`
-      SELECT slug, updated_at
-      FROM organizations
-      WHERE slug IS NOT NULL
-        AND public_portfolio_state = 'public_indexable'
-    `),
-  ]);
-
-  const individualRows = getRows<SitemapSlugRow>(individualRowsResult as any);
-  const organizationRows = getRows<SitemapSlugRow>(organizationRowsResult as any);
+  const { individualRows, organizationRows } = await fetchPortfolioSitemapRows();
 
   const staticEntries = urls.map((path) => ({
     url: `${siteUrl}${path}`,
