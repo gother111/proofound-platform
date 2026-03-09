@@ -469,40 +469,88 @@ Security: tokenHash-only storage for invite links (raw tokens are never persiste
 
 #### Proof & Verification
 
-**`impact_stories`** (Verified projects with outcomes):
+**Canonical proof-first model**
+
+**`proof_artifacts`** (Atomic evidence units):
 
 ```
 Primary Key: id (UUID)
-Fields: userId, title, orgDescription, problem, solution, outcome, impact, duration, role, skills[], verified, evidenceUrls[], visibility
-Tier: Tier 3 (Semi-Public, user-controlled)
+Fields: ownerType, ownerId, subjectType, subjectId, artifactKind, lifecycleState, title, description, sourceUrl, storagePath, issuedAt, expiresAt, visibility, revealGate, metadata, provenance pointers
+Purpose: One atomic piece of evidence such as a file, link, image, credential, reference, or assessment
 ```
 
-**`experiences`** (Work experience with growth focus):
+**`proof_packs`** (Canonical reviewable work units):
+
+```
+Primary Key: id (UUID)
+Fields: ownerType, ownerId, packKind, title, summary, visibility, revealGate, shareTokenHash, shareExpiresAt, createdBy, metadata, lifecycle timestamps, export flags
+Purpose: The canonical proof object tying together brief, contribution, outputs, artifacts, outcomes, trust state, privacy, and portability
+```
+
+**`proof_pack_items`** (Artifact membership inside a pack):
+
+```
+Primary Key: id (UUID)
+Fields: packId, artifactId, position, includedFields
+Purpose: Ordered inclusion of one or more artifacts inside a Proof Pack
+```
+
+**`verification_records`** (Canonical trust judgments):
+
+```
+Primary Key: id (UUID)
+Fields: ownerType, ownerId, subjectType, subjectId, proofArtifactId, verificationSlot, verificationKind, status, verifierClass, integrityStatus, disputeState, verifiedAt, expiresAt, lastRefreshedAt, metadata
+Purpose: Verification, contradiction, downgrade, dispute, and expiry judgments over a subject and its linked proof context
+```
+
+**`submissions`** (Contextual proof delivery):
+
+```
+Primary Key: id (UUID)
+Fields: submissionKind, status, ownerType, ownerId, assignmentId, proofPackId, requestContextType, requestContextId, matchId, introId, submittedAt, reviewedAt, withdrawnAt, supersededAt, metadata
+Purpose: Delivery of a Proof Pack into assignment, invite, match, intro, verification, or manual review contexts
+```
+
+**Subject records linked to packs**
+
+**`impact_stories`**:
+
+```
+Primary Key: id (UUID)
+Fields: userId, title, orgDescription, problem, solution, outcome, impact, duration, role, skills[], verified, visibility
+Role in model: A subject that can be supported by one or more Proof Packs
+```
+
+**`experiences`**:
 
 ```
 Primary Key: id (UUID)
 Fields: userId, title, orgName, orgDescription, duration, keyLearnings, skillsGained[], verified, visibility
+Role in model: A subject that can be referenced by a Proof Pack
 ```
 
-**`education`** (Academic credentials):
+**`education`**:
 
 ```
 Primary Key: id (UUID)
 Fields: userId, institution, degree, fieldOfStudy, startDate, endDate, description, skillsGained[], projectsCompleted[], verified, visibility
+Role in model: A subject that can be referenced by a Proof Pack
 ```
 
-**`volunteering`** (Service work):
+**`volunteering`**:
 
 ```
 Primary Key: id (UUID)
 Fields: userId, orgName, role, cause, description, impact, duration, skillsGained[], personalConnection, verified, visibility
+Role in model: A subject that can be referenced by a Proof Pack
 ```
 
-**Proof Verification Rules**:
+**Canonical Proof Pack rules**:
 
-- Up to 3 proofs per claim: (1) verified reference, (2) link/file, (3) credential
-- Artifacts can support multiple claims
-- Verification status: unverified → pending → verified/rejected
+- Proof Pack is the canonical storage and product-logic object for portfolio, matching, org review, exports, and BYOC proof-card flows.
+- Every Proof Pack has exactly one primary linked subject in MVP: role, assignment, capability, or domain.
+- Artifacts are atomic evidence units and may appear in multiple packs when the context differs.
+- Verification and freshness are judgments over a pack or its linked artifacts, not loose counts of uploaded evidence.
 
 #### Skills & Capabilities
 
@@ -523,12 +571,11 @@ Fields: profileId, skillRecordId, privacyLevel (only_me/team/organization/public
 Tier: Tier 3 (user-controlled)
 ```
 
-**`evidence`** (Proofs for capabilities):
+**Capability evidence model**:
 
-```
-Primary Key: id (UUID)
-Fields: capabilityId, profileId, title, description, evidenceType (document/link/assessment/peer_review/credential), url, filePath, issuedAt, verified, metadata
-```
+- Capabilities are supported canonically by linked Proof Packs and their child proof artifacts.
+- `evidenceCount` is a compatibility summary derived from linked proof context, not the primary evidence storage model.
+- Legacy evidence-style rows may remain for compatibility, but new product logic should reason over `proof_packs`, `proof_artifacts`, `verification_records`, and `submissions`.
 
 **`skill_endorsements`** (Peer validation):
 
@@ -1271,17 +1318,23 @@ Limits: 60 req/min per IP, 120 req/min per user token
 profiles (1) ←→ (1) individual_profiles
 profiles (1) ←→ (many) organization_members ←→ (many) organizations
 profiles (1) ←→ (many) skills
-profiles (1) ←→ (many) capabilities ←→ (many) evidence
+profiles (1) ←→ (many) capabilities ←→ (many) proof_packs ←→ (many) proof_artifacts
 profiles (1) ←→ (many) impact_stories, experiences, education, volunteering
 
 organizations (1) ←→ (many) assignments
 organizations (1) ←→ (many) projects
 organizations (1) ←→ (many) org_candidate_invites
 profiles (1) ←→ (many) org_candidate_invites (as inviter or claimant)
+organizations (1) ←→ (many) proof_packs ←→ (many) proof_artifacts
 
 profiles (1) ←→ (1) matching_profiles
 assignments (1) ←→ (many) matches ←→ (1) profiles
 matches (1) ←→ (1) conversations ←→ (many) messages
+
+proof_packs (1) ←→ (many) proof_pack_items ←→ (1) proof_artifacts
+proof_packs (1) ←→ (many) submissions
+proof_artifacts (1) ←→ (many) verification_records
+proof_packs (many) ←→ (many) public portfolio surfaces and org review contexts
 
 profiles (1) ←→ (many) verification_requests ←→ (1) verification_responses
 profiles (1) ←→ (many) content_reports ←→ (1) moderation_actions

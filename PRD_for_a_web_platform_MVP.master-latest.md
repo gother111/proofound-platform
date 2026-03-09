@@ -65,7 +65,7 @@ Portfolio-first promise (day 1):
 
 Core sections (single template, responsive):
 
-- Individual public page: minimal proof-first portfolio with header, proof bar, proof-based summary, featured proofs, optional skills snapshot, and optional contact/share actions.
+- Individual public page: minimal proof-first portfolio with header, proof bar, proof-based summary, featured Proof Packs, optional skills snapshot, and optional contact/share actions.
 - Organization public page: minimal public trust card with trust basics, short purpose statement, durable trust signals, and at most one active assignment summary.
 - Public surfaces stay read-only; owner editing controls do not appear on public pages.
 
@@ -113,6 +113,164 @@ Views:
 Out of scope for v0.1:
 
 - No ATS integrations, portfolio analytics dashboards, advanced analytics, multi-language, or custom templates; single clean layout only.
+
+# Canonical Product Object: Proof Pack
+
+## Executive recommendation
+
+- Proofound should treat the **Proof Pack** as the canonical product, storage, and review object across portfolio, matching, org review, exports, and BYOC intake.
+- An **artifact** is one atomic evidence unit, such as a file, link, image, credential, reference, or assessment.
+- A **proof** is the claim and trust judgment about real work, including verification, freshness, provenance, and outcome credibility.
+- A **Proof Pack** is the bounded container that assembles a brief, contribution, outputs, artifacts, outcome claims, trust state, privacy rules, and portability metadata into one reviewable unit of real work.
+- In MVP, every Proof Pack has exactly one primary linked subject: `role`, `assignment`, `capability`, or `domain`. Additional related skills or artifacts may be attached, but the pack stays bounded around one primary subject.
+- A candidate **Proof Card** is not a separate canonical entity. It is a submission-safe render of a selected Proof Pack for an invite, assignment, intro, or review flow.
+
+## Canonical entity definition
+
+- The canonical stored object is **Proof Pack**. Artifacts are child evidence units of a pack. Verification records and freshness states are judgments over the pack or its linked artifacts.
+- A Proof Pack is owned and maintained by one creator, either an individual profile or an organization.
+- A Proof Pack is the default evidence object shown anywhere Proofound asks, "What real work supports this claim?"
+- When the primary linked subject is a capability, the pack is the canonical evidence object for that L4 skill claim. Matching and profile credibility reason over the pack, not over loose artifact counts.
+- A pack may be public, link-only, matched-org visible, or owner-only, but child artifact visibility can narrow exposure further and never widen it.
+
+## Required MVP schema
+
+**Required to create a draft**
+
+- `proof_pack_id`
+- `creator`
+- `primary_linked_subject`
+- `visibility_controls`
+- `provenance`
+- `signature_metadata`
+- `version_metadata`
+- `exportability`
+
+**Required before submission, matching credibility, or public portfolio eligibility**
+
+- `problem_or_brief`
+- `context_and_constraints`
+- `user_contribution_or_role`
+- `methods_tools_systems_used`
+- `collaborators_and_attribution_model`
+- `outputs_deliverables`
+- at least one `evidence_attachment_or_link_or_media_item`
+- `outcome_claims`
+- `outcome_evidence` or explicit `outcome_evidence_unavailable`
+- `verification_status`
+- `freshness_state`
+- `public_portfolio_eligibility`
+
+**Plain-language field decisions**
+
+- `creator` means the person or organization that owns and maintains the pack.
+- `provenance` captures source, creation path, linked system or upload origin, and any legacy import mapping.
+- `signature_metadata` means content hash, signer identity if available, and signature method version. No blockchain.
+- `version_metadata` means pack version, supersedes pointer, last updated at, and change summary.
+- `exportability` means the pack can be emitted as a portable, versioned manifest with attachments referenced or bundled according to permission.
+
+**Optional later, not MVP-required**
+
+- richer collaborator role matrices
+- reviewer annotations and scorecards
+- automated duplicate clustering
+- machine-readable outcome metric schemas
+- multi-pack narratives or chained case-study groupings
+
+## Lifecycle / states / transitions
+
+**Primary lifecycle**
+
+- `draft`
+- `ready`
+- `published`
+- `submitted`
+- `withdrawn`
+- `superseded`
+- `archived`
+
+**Trust and quality overlays**
+
+- verification: `unverified`, `partially_verified`, `verified`, `disputed`
+- freshness: `fresh`, `review_soon`, `stale`, `expired`
+- portfolio eligibility: `ineligible`, `eligible`, `public`
+- review posture: `clear`, `under_review`, `suppressed`
+
+**Transition rules**
+
+- `draft -> ready` only when publish-eligible fields are complete.
+- `ready -> published` only when visibility and eligibility rules pass.
+- `published -> submitted` when attached to an assignment, invite, intro, or verification flow.
+- `submitted -> superseded` when a newer pack replaces it for the same context.
+- any active state -> `withdrawn` by owner action.
+- `verified -> disputed` immediately suppresses trust boosts and public trust language.
+- `fresh -> stale` is automatic by time-window logic. Stale packs remain visible but stop counting as current trust strength.
+- `withdrawn` and `superseded` remain exportable to the owner with status history intact.
+
+## Surface-by-surface product behavior
+
+**Relations**
+
+- one creator profile or organization
+- one primary linked role, assignment, capability, or domain
+- many child artifacts
+- zero or more linked verification records
+- zero or more linked submissions
+- zero or more linked L4 skills as secondary evidence references
+- zero or more public portfolio surfaces
+- zero or more matching explanations and org review references
+- one current export manifest lineage
+
+**Behavior by surface**
+
+- **Profile:** show Proof Packs as the canonical proof objects. Artifacts expand only inside a pack. Skill credibility summaries point to linked packs.
+- **Public portfolio:** render only packs with `public_portfolio_eligibility = eligible|public`. If a child artifact is more private than the pack, show a redacted placeholder only when summary visibility is allowed; otherwise omit the artifact entirely.
+- **Matching:** use linked packs for capability credibility, outcome relevance, freshness, and verification. Disputed, withdrawn, or stale packs do not provide full trust lift.
+- **Org review:** review the pack as the unit of evidence. Reviewers see only the details allowed by pack visibility and reveal-gate rules. Private child artifacts remain redacted unless permission is sufficient.
+- **BYOC Proof Card flow:** invite submission selects or generates a Proof Pack, and the Proof Card is a formatted presentation of that pack for reviewers.
+- **Exports:** keep the platform user export version unchanged unless broader export scope requires a bump. Add a nested Proof Pack manifest with `proof_pack_format_version: 1`.
+
+## Acceptance criteria
+
+- Proof Pack is explicitly defined as the canonical storage and product-logic object.
+- Artifact, proof, and Proof Pack have separate definitions and are used consistently.
+- MVP-required versus later-only fields are explicitly separated.
+- Proof Pack behavior is defined for profile, public portfolio, matching, org review, BYOC review, and export.
+- L4 capability claims are explicitly supported by linked Proof Packs.
+- Withdrawn, disputed, stale, partially verified, duplicate, and overlapping packs have defined behavior.
+- Permissions are explicit when a pack is partially public but one or more child artifacts are private.
+
+## Event tracking
+
+- `proof_pack_created`
+- `proof_pack_updated`
+- `proof_pack_ready`
+- `proof_pack_published`
+- `proof_pack_submitted`
+- `proof_pack_withdrawn`
+- `proof_pack_superseded`
+- `proof_pack_exported`
+- `proof_pack_disputed`
+- `proof_pack_became_stale`
+- `proof_pack_portfolio_visibility_changed`
+- `proof_card_submitted` with linked `proof_pack_id`
+
+## Edge cases / failure modes
+
+- **Withdrawn pack:** hidden from public portfolio and matching boosts, but preserved in owner history and prior submission audit.
+- **Disputed pack:** visible with conservative "under review" language and removed from positive trust reasoning until resolved.
+- **Partially verified pack:** visible with narrow verification summaries only on the verified dimensions.
+- **Stale pack:** still renderable when otherwise eligible, but visually muted and excluded from "current evidence" counts.
+- **Duplicate or overlapping packs:** flag likely duplicates when the same creator submits materially overlapping evidence for the same primary linked subject. Do not auto-merge in MVP. Allow `supersedes` or `related` relationships and prefer the latest non-withdrawn non-superseded pack on public and matching surfaces.
+- **Pack public, artifact private:** artifact-level permissions always win. The pack may remain partially public while private child artifacts are redacted or omitted.
+
+## Out of scope
+
+- blockchain or on-chain signatures
+- heavy legal, government, or employer-of-record verification
+- automatic duplicate merging
+- complex marketplace pricing or incentive mechanics
+- multi-pack storytelling systems beyond simple related or superseded links
 
 # PRD — MVP — Part 1: Problem Statement
 
@@ -165,7 +323,7 @@ For job seekers overwhelmed by volatile, biased, and time-intensive hiring—and
 - MVP prioritizes **bias reduction, privacy, and transparency** by design (not add-ons).
 - MVP excludes engagement-driven social feeds; **no LinkedIn-style content feed**.
 - MVP will surface **values/causes** and **work-preference** signals in matching logic.
-- MVP supports **BYOC candidate invites** for organizations: invite known candidates by email and collect structured Proof Cards instead of CV attachments.
+- MVP supports **BYOC candidate invites** for organizations: invite known candidates by email and collect structured Proof Pack submissions through a Proof Card surface instead of CV attachments.
 
 **Open questions (to resolve in subsequent sections)**
 
@@ -969,7 +1127,7 @@ Each flow follows a consistent mini‑spec: **Purpose • Entry • Steps • In
 **System Support:** Level definitions; privacy for proofs; save as draft; later edit; anti‑overclaim nudges.  
 **Done:** L4 skill saved (with or without pending verification).  
 **Metrics:** Skills per user; proof attach rate; verification uptake.  
-**Edge Cases:** NDA‑bound work → private evidence notes.
+**Edge Cases:** NDA‑bound work -> private artifact notes inside a private or link-only Proof Pack.
 
 ---
 
@@ -1408,10 +1566,10 @@ Each flow includes:
 
 **Goal:** Let organizations bring known candidates into the platform without CV-first review.  
 **Entry:** Candidates area in org workspace (`Invited candidates` tab).  
-**Happy‑path steps:** Add one or many candidate emails → send invite links → candidate opens invite, authenticates with the same email, claims invite, and submits a Proof Card link (`/p/[token]`) generated from structured profile data.  
-**Success:** Invite status transitions to `proof_submitted`, and org reviewers can open the submitted Proof Card from the queue.  
-**Key data:** CandidateInvite(status lifecycle, token hash, claimant, proof snippet/token, timestamps).  
-**Implementation note (user-visible effect only):** BYOC Proof Card intake and assignment section intake map into canonical submission records so exported history and reviewer audit views stay consistent.  
+**Happy‑path steps:** Add one or many candidate emails → send invite links → candidate opens invite, authenticates with the same email, claims invite, and submits a Proof Card link (`/p/[token]`) that renders a selected Proof Pack generated from structured profile data.  
+**Success:** Invite status transitions to `proof_submitted`, and org reviewers can open the submitted Proof Card and its linked Proof Pack from the queue.  
+**Key data:** CandidateInvite(status lifecycle, token hash, claimant, proof snippet/token, linked proof pack, timestamps).  
+**Implementation note (user-visible effect only):** BYOC Proof Card intake and assignment section intake map into canonical submission records backed by Proof Packs so exported history and reviewer audit views stay consistent.  
 **Edge cases:** Duplicate active invite blocked per org/email, expired/revoked token, claimant email mismatch, resend/revoke actions.  
 **MVP:** Yes.
 
@@ -1985,7 +2143,7 @@ Each flow includes:
 
 - Empty: show top 3 actions to raise score (e.g., add L4 proof, widen availability).
 - Critical individual empty/incomplete states must always show exactly 3 recovery CTAs:
-  - `Add a proof`
+  - `Add a Proof Pack`
   - `Add a skill`
   - `Turn on matchable` (routes to matching preferences)
 - Organization matching empty/no-results states must always show exactly 3 recovery CTAs, including:
@@ -2151,7 +2309,7 @@ Each flow includes:
 **Processing**: basic calculations, validation; generate **Evidence Pack** (PDF).  
 **Outputs**: impact list; donor/investor-ready export.  
 **Errors/Empty**: missing metrics → inline prompts; export failure → retry.  
-**Events**: `impact_entry_created/updated`; `evidence_pack_exported` {pages}.
+**Events**: `impact_entry_created/updated`; `proof_pack_exported` {pages}.
 
 ---
 
