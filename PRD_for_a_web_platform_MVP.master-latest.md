@@ -314,6 +314,152 @@ Canonical organization journey:
 - Submission uses a Proof Card derived from a selected Proof Pack.
 - Proof Card remains a render surface, not a separate stored entity.
 
+### G. Organization Trust Tiers and Sensitive-Domain Safety (MVP-lite / post-MVP corridor)
+
+- Proofound uses a lightweight organization trust-tier model to decide how far an organization can move through publishing, intro, and sensitive-domain workflows.
+- This is an MVP safety and gating layer, not full KYC, not compliance certification, and not an enterprise trust-and-safety suite.
+- Organization trust tier is a separate org-level state model. It does not replace user trust tier, Proof Pack verification status, or moderation and suspension states.
+
+#### Organization trust tiers
+
+- `Unreviewed`
+  - default for newly created organizations
+  - standard public trust profile may exist
+  - standard non-sensitive assignments may publish
+  - sensitive-domain publishing and stronger verification-path requests stay queued or unavailable until more trust signals exist
+- `Basic trusted`
+  - standard assignment publishing works normally
+  - standard intro corridor access works normally
+  - stronger verification-path requests or sensitive-domain requests may still queue for review
+- `Reviewed`
+  - Proofound completed a scoped product-safety review for the organization
+  - sensitive-domain publishing may proceed when the specific organization and assignment pass review
+  - certain stronger verification-path requests may be accepted, still with case-by-case review
+- `Restricted`
+  - assignment publishing, intro requests, or visibility may be paused, limited, or hidden pending review
+  - this is an operational safety state, not a public accusation and not a permanent status by default
+
+#### Early-version inputs that influence org trust tier
+
+- verified work email or verified domain control
+- org profile completeness
+- manual admin review
+- issue and dispute history
+
+#### What org trust tier affects
+
+- visibility of organization assignments inside matching surfaces
+- whether an assignment can publish normally, queue for review, or pause
+- whether the organization can move a candidate into intro request flow
+- whether the organization can request certain stronger verification or sensitive review paths
+
+#### Sensitive-domain and child-safety guardrails
+
+Sensitive categories that require additional review in MVP-lite:
+
+- child-facing work, youth programs, schools, tutoring, and mentoring
+- healthcare, mental health, therapy, care, and safeguarding
+- housing, shelter, crisis support, domestic-violence support, or similar vulnerable-population support
+- legal aid, immigration support, or similar high-vulnerability support contexts
+- roles involving direct access to minors, vulnerable adults, or sensitive personal data
+
+Queued for review:
+
+- sensitive-domain organizations
+- sensitive-domain assignments
+- requests for stronger verification paths
+- orgs with incomplete trust signals or unresolved review context
+
+Blocked or paused:
+
+- `Restricted` organizations
+- assignments that imply unsafe direct child contact outside a verified institutional context
+- exploitative unpaid work patterns inside sensitive domains
+- repeat abuse or dispute patterns that indicate elevated risk
+
+#### Abuse prevention signals
+
+- suspicious assignment patterns, including repeated reposting with shifting expectations, identity evasiveness, or inconsistent org details
+- exploitative unpaid work patterns, especially when responsibilities are high-risk or operationally significant
+- repeated dispute triggers across assignments, intro requests, or verification-related workflows
+
+#### Audit and admin tooling
+
+- an internal admin queue with reason codes for review, escalation, restriction, and release
+- an append-only trust tier change log with actor, timestamp, prior tier, new tier, and reason code
+- moderation notes visible only to internal admins and authorized reviewers
+- org-facing product surfaces show only coarse status and next step, never internal moderation rationale
+
+#### Analytics
+
+- trust tier distribution across organizations
+- escalation rates from `Unreviewed` or `Basic trusted` into manual review
+- abuse flags and repeated safety-trigger counts
+
+#### MVP-lite vs post-MVP corridor
+
+MVP-lite:
+
+- manual review
+- coarse heuristics
+- limited sensitive-domain categories
+- internal notes and reason codes
+- simple queue, gating, and restriction actions
+
+Post-MVP corridor:
+
+- richer verification-path requests
+- a stronger review rubric for sensitive-domain organizations
+- limited appeal and re-review workflows
+- stronger domain-authorization proofs for high-risk contexts
+- better queue tooling and operator triage support
+
+#### Facts & Decisions
+
+- Organizations use four product trust tiers:
+  - `Unreviewed`
+  - `Basic trusted`
+  - `Reviewed`
+  - `Restricted`
+- MVP-lite trust tiering is a lightweight operational safety model for publishing, intros, and sensitive-domain access.
+- Sensitive-domain guardrails focus on a short list of higher-risk contexts and keep review manual by default.
+- Org trust tier remains separate from:
+  - user trust tier
+  - Proof Pack verification status
+  - moderation, suspension, or account-ban states
+- `Reviewed` means Proofound completed a scoped product-safety review. It does not mean legal certification, enterprise compliance approval, or blanket endorsement.
+- `Restricted` is reversible and operational.
+
+#### Open Questions
+
+- Whether some sensitive-domain categories need narrower sub-rules before launch, especially around child-facing volunteer work
+- Whether post-MVP should require stronger org authorization proofs for certain healthcare, education, or care contexts
+- Whether repeated dispute thresholds should differ for publishing restrictions versus intro restrictions
+
+#### Out of Scope
+
+- full KYC
+- sanctions screening
+- background checks
+- payroll verification
+- enterprise trust-and-safety case management
+- public display of moderation notes or detailed internal risk scoring
+
+#### Acceptance Criteria
+
+- Scenario: a new organization completes onboarding with a standard profile and a verified work email.
+  - Result: it starts as `Unreviewed`, may publish a standard non-sensitive assignment, and cannot bypass sensitive-domain review automatically.
+- Scenario: an organization has sufficient trust signals and no meaningful issue history.
+  - Result: it may become `Basic trusted`, publish normal assignments, and use the standard intro corridor.
+- Scenario: an organization operates in a sensitive domain and passes scoped admin review.
+  - Result: it may become `Reviewed` and publish the reviewed sensitive-domain assignment path without implying full compliance approval.
+- Scenario: an organization shows repeat dispute or abuse signals.
+  - Result: it may move to `Restricted`, and publishing or intro actions may pause or hide pending review.
+- Scenario: an internal reviewer adds moderation notes.
+  - Result: internal admins and authorized reviewers can see the notes, while org-facing surfaces receive only coarse status and next step.
+- Scenario: analytics reporting is generated for org trust and safety.
+  - Result: trust tier distribution, escalation rates, and abuse flags are available internally only and do not create a user-facing analytics product.
+
 ## 4.4 Public Portfolio Trust Layer, Share Metadata, and Indexing Rules (MVP)
 
 ### Purpose of public portfolio pages in MVP
@@ -1635,9 +1781,13 @@ These are the only launch KPIs promised across the PRD.
 ### Organization workflow
 
 - `org_trust_profile_updated`
+- `org_trust_tier_changed`
 - `assignment_draft_saved`
 - `assignment_published`
+- `org_sensitive_domain_review_queued`
+- `assignment_blocked_by_safety`
 - `org_review_queue_viewed`
+- `org_flagged_for_abuse`
 - `candidate_invite_sent`
 - `candidate_invite_claimed`
 - `proof_card_submitted`
@@ -1677,6 +1827,8 @@ These are the only launch KPIs promised across the PRD.
   - contract-attestation or signed-contract event recorded in the operational pipeline that closes the intro or assignment corridor
 - **48-hour feedback follow-up compliance**
   - `feedback_follow_up_due`, `feedback_follow_up_submitted`, `feedback_follow_up_breached`
+- **Org trust and safety operations**
+  - `org_trust_tier_changed`, `org_sensitive_domain_review_queued`, `assignment_blocked_by_safety`, `org_flagged_for_abuse`
 - **Fairness note status**
   - derived from release-level event aggregation only when privacy thresholds pass
 
@@ -1747,8 +1899,7 @@ Canonical stage-to-event mapping:
 - **verification completed**
   - `verification_record_completed`
 - **proof pack exported / shared**
-  - `portfolio_pdf_export_succeeded`, `portfolio_share_link_copied`
-  - `proof_pack_exported` may be added later as an explicit launch-safe event if the export path needs a dedicated event instead of a derived metric
+  - `proof_pack_exported`, `portfolio_pdf_export_succeeded`, `portfolio_share_link_copied`
 - **proof used in match / intro / interview / contract**
   - `proof_pack_submitted`, `candidate_proof_card_submitted`, `intro_created`, `interview_scheduled`, `contract_signed`
   - downstream events should include `proof_pack_id` or `proof_card_id` when available
@@ -1944,7 +2095,6 @@ Naming note:
 
 ### Open Questions
 
-- Should `proof_pack_exported` become a dedicated machine-stable event at launch, or remain a derived metric from current export and share events?
 - Which downstream contract outcome should be treated as the canonical proof reuse success anchor when a workflow reaches both interview and contract stages?
 - What tolerance threshold should be enforced for event-to-source reconciliation in launch ETL validation?
 
@@ -2001,6 +2151,7 @@ Those may exist operationally later, but they are not part of the MVP product co
 
 - Org onboarding ends with a public portfolio-ready step and live shareable URL.
 - Organization trust profile, assignment publishing, and review queue all align with the lean org MVP scope.
+- Org trust tiers and sensitive-domain review gating stay lightweight, operational, and separate from user trust tier, Proof Pack verification status, and moderation-ban states.
 - The org review corridor uses privacy-safe matching and staged reveal.
 - Optional reviewer access works without introducing enterprise admin scope.
 - BYOC candidate invites use Proof Cards derived from Proof Packs.
@@ -2017,6 +2168,7 @@ Those may exist operationally later, but they are not part of the MVP product co
 - Every internal metric named in the PRD maps to explicit source events.
 - No user-facing product requirement depends on BI-style analytics surfaces.
 - Zen Hub analytics rules match Zen Hub privacy rules everywhere in the PRD.
+- Org trust-tier distribution, escalation rates, and abuse flags remain internal-only and do not create user-facing trust dashboards or exposure surfaces.
 - Launch trust dashboards are defined for product, operations, and admin trust or audit use without changing the calm user-facing product surface.
 - Launch-critical trust events pass schema validation and forbidden-payload checks.
 - ETL validation covers idempotent deduplication, lifecycle ordering, proof-trust snapshot reconciliation, and exclusion of Zen or private-partition data from warehouse outputs.
