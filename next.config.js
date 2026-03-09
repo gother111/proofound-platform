@@ -5,6 +5,7 @@ import { withSentryConfig } from '@sentry/nextjs';
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 const isVercelBuild = process.env.VERCEL === '1' || Boolean(process.env.VERCEL_ENV);
 const skipBuildValidation = process.env.NEXT_SKIP_BUILD_VALIDATION === '1' || isVercelBuild;
+const widenSentryClientUpload = process.env.SENTRY_WIDEN_CLIENT_FILE_UPLOAD === '1';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -102,7 +103,9 @@ export default withSentryConfig(config, {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   silent: true, // Suppresses source map uploading logs
-  widenClientFileUpload: true, // Upload more client files for better error context
+  // Keep the default upload surface narrow so Vercel deploys do not spend minutes
+  // uploading hundreds of extra client source maps. Opt in only when needed.
+  widenClientFileUpload: widenSentryClientUpload,
   hideSourceMaps: true, // Hides source maps from browser DevTools
   disableLogger: true, // Automatically tree-shake Sentry logger statements
   automaticVercelMonitors: true, // Enable automatic Vercel cron monitoring

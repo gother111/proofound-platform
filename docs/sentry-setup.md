@@ -173,6 +173,13 @@ To configure:
    SENTRY_ORG=your-org
    SENTRY_PROJECT=your-project
    ```
+3. Keep widened client uploads disabled by default on Vercel. This repo now uses the
+   standard Sentry client sourcemap upload surface unless you explicitly opt in with:
+   ```
+   SENTRY_WIDEN_CLIENT_FILE_UPLOAD=1
+   ```
+   Enable that only when you need extra client-side stacktrace context and can tolerate
+   slower deploys.
 
 ## Best Practices
 
