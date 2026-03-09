@@ -15,6 +15,10 @@ import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
+const AssignmentStatusUpdateSchema = z
+  .enum(['draft', 'active', 'hold', 'paused', 'closed'])
+  .transform((value) => (value === 'paused' ? 'hold' : value));
+
 /**
  * GET /api/assignments/[id]
  */
@@ -123,7 +127,7 @@ const AssignmentUpdateSchema = z.object({
   description: z.string().optional(),
   businessValue: z.string().optional(),
   expectedImpact: z.string().optional(),
-  status: z.enum(['draft', 'active', 'hold', 'paused', 'closed']).optional(),
+  status: AssignmentStatusUpdateSchema.optional(),
   creationStatus: z
     .enum(['draft', 'pipeline_in_progress', 'pending_review', 'ready_to_publish', 'published'])
     .optional(),
@@ -215,7 +219,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     const updateData = {
       ...validatedData,
-      status: validatedData.status === 'paused' ? 'hold' : validatedData.status,
+      status: validatedData.status,
       ...(derivedRequirements
         ? {
             mustHaveSkills: derivedRequirements.mustHaveSkills,

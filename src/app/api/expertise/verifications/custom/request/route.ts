@@ -584,7 +584,7 @@ export async function POST(request: NextRequest) {
               ownerId: user.id,
               subjectType: artifact.type,
               subjectId: artifact.id,
-              verificationKind: 'custom_bundle',
+              verificationKind: 'platform_manual_review',
               status: 'pending',
               verifierPrincipalType: verifierProfileId ? 'user_account' : 'external_email',
               verifierProfileId,

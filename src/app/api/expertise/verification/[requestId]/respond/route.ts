@@ -155,10 +155,10 @@ export async function POST(
           subjectId: verificationRequest.skill_id,
           verificationKind:
             verificationRequest.verifier_source === 'manager'
-              ? 'skill_manager'
+              ? 'skill_attestation_manager'
               : verificationRequest.verifier_source === 'peer'
-                ? 'skill_peer'
-                : 'manual',
+                ? 'skill_attestation_peer'
+                : 'platform_manual_review',
           status: updated.status,
           verifierPrincipalType: 'user_account',
           verifierProfileId: user.id,
@@ -167,7 +167,7 @@ export async function POST(
             typeof verificationRequest.verifier_domain_snapshot === 'string'
               ? verificationRequest.verifier_domain_snapshot
               : null,
-          integrityStatus: updated.integrity_status === 'clear' ? 'clear' : 'flagged',
+          integrityStatus: updated.integrity_status === 'clear' ? 'clear' : 'warning',
           integrityReason: updated.integrity_reason || null,
           riskSignals:
             updated.risk_signals && typeof updated.risk_signals === 'object'
