@@ -5,6 +5,8 @@
 
 This checklist ensures your Proofound application is properly configured for production deployment on Vercel.
 
+Launch-note: `PRD_TECHNICAL_REQUIREMENTS.md` Section 7 is the canonical launch contract for auth, storage, privacy, logging, accessibility, and recovery targets. This checklist should be read as an execution aid, not a competing spec.
+
 ## ✅ Environment Variables (Vercel)
 
 Before deploying, ensure all required environment variables are set in Vercel:

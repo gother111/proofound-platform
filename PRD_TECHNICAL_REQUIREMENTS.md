@@ -1,7 +1,7 @@
 # PROOFOUND — PRD TECHNICAL REQUIREMENTS & ARCHITECTURE
 
 **Document Version**: 1.0  
-**Last Updated**: 2026-02-23  
+**Last Updated**: 2026-03-08  
 **Scope**: Complete technical specifications for MVP → Future-proof architecture  
 **Audience**: Engineering, Product, Leadership
 
@@ -15,8 +15,11 @@
 4. [Dependencies & Constraints](#4-dependencies--constraints)
 5. [Launch Plan](#5-launch-plan)
 6. [Document Summary](#6-document-summary)
+7. [Block 12: Canonical Launch Security, NFR Hardening, and Spec Reconciliation Appendix](#7-block-12-canonical-launch-security-nfr-hardening-and-spec-reconciliation-appendix)
 
 ---
+
+> Canonical launch note: Section 7 is the authoritative launch contract for security, auth, storage, privacy, accessibility, reliability, and operational readiness. Where older sections in this document describe broader, earlier, or post-MVP assumptions, Section 7 overrides them for launch implementation.
 
 ## 1. NON-FUNCTIONAL REQUIREMENTS
 
@@ -28,9 +31,9 @@
 
 - ✅ Email/password with bcrypt hashing (Supabase Auth)
 - ✅ OAuth 2.0 (Google, LinkedIn)
-- ✅ JWT-based sessions (24-hour access tokens, 7-day refresh tokens)
-- ✅ HttpOnly, Secure, SameSite=Strict cookies
-- ✅ Session revocation on logout
+- ✅ Supabase SSR cookie sessions for interactive web auth
+- ✅ HttpOnly, Secure session cookies with server-side revocation on logout, password reset, or admin invalidation
+- ✅ Scoped capability tokens for verification, recovery, invite, and proof-response flows
 - ⚠️ Rate limiting: 60 req/min per IP, 120 req/min per authenticated user
 
 **Authorization**:
@@ -56,7 +59,7 @@
 
 - ✅ OWASP Top 10 compliance
 - ✅ XSS prevention (React auto-escaping + DOMPurify for rich text)
-- ✅ CSRF protection (SameSite cookies)
+- ✅ CSRF protection (double-submit token on cookie-auth mutating routes)
 - ✅ SQL injection prevention (Drizzle ORM parameterized queries)
 - ✅ Input validation (Zod schemas)
 - ⚠️ Rate limiting implementation needed
@@ -89,7 +92,8 @@
 
 - ✅ Minimal data collection (only what's needed for matching)
 - ✅ Privacy-by-default settings:
-  - Profile visibility: `public` with a minimal safe field allowlist (day-1 shareable portfolio)
+  - App profile visibility: `private` by default
+  - Public portfolio publication: explicit user action required and non-indexed by default until publication criteria are met
   - Contact/work email visibility: `private` by default
   - Proof visibility: `private`
   - Marketing emails: opt-in
@@ -255,16 +259,16 @@
 - 30-day backup retention
 - Point-in-time recovery (PITR) available
 - Multi-region replication (Supabase automatic)
-- RPO (Recovery Point Objective): <1 hour
-- RTO (Recovery Time Objective): <4 hours
+- RPO (Recovery Point Objective): 24 hours
+- RTO (Recovery Time Objective): 8 hours
 
 **Monitoring**:
 
 - ✅ Vercel Analytics (web vitals)
 - ✅ Supabase Dashboard (database metrics)
-- ⚠️ Sentry (error tracking) - needs setup
-- ⚠️ Uptime monitoring (UptimeRobot or Pingdom)
-- ⚠️ Custom metrics via OpenTelemetry
+- ✅ Sentry (error tracking and release health)
+- ⚠️ Uptime monitoring (single external checker for `/` and `/api/health`)
+- ⚠️ Custom metrics via OpenTelemetry (post-launch, non-canonical for MVP)
 
 **Incident Response**:
 
@@ -318,9 +322,9 @@
 
 **Bottleneck Identification**:
 
-- Matching algorithm: Pre-compute scores, cache results (Redis)
+- Matching algorithm: Pre-compute scores and persist queue state in Postgres-backed workers
 - Full-text search: Migrate to Elasticsearch at 50K+ assignments
-- Real-time messaging: Migrate to dedicated WebSocket service (Socket.io + Redis Pub/Sub)
+- Real-time messaging: Migrate to a dedicated realtime transport only if polling or database-backed fan-out becomes insufficient
 - File storage: Migrate to AWS S3 + CloudFront at 10TB+
 
 #### Future Scalability Targets
@@ -343,7 +347,7 @@
 
 - Kafka for event streaming (analytics, webhooks)
 - Elasticsearch for advanced search
-- Redis for caching + Pub/Sub
+- Redis for caching + Pub/Sub (post-launch only if evidence justifies added operational complexity)
 - CDN for user-generated content (Cloudflare)
 - Microservices for matching engine (separate from API)
 
@@ -375,8 +379,9 @@
 
 **Internationalization** (i18n):
 
-- ✅ next-intl configured (English, Swedish)
+- ✅ next-intl configured for an English launch baseline
 - ✅ Message files structure created
+- ⚠️ Swedish runtime parity deferred until post-launch
 - ⚠️ RTL support (Arabic, Hebrew) - Post-MVP
 - ⚠️ CJK support (Chinese, Japanese, Korean) - Post-MVP
 
@@ -868,7 +873,7 @@ All taxonomy tables use JSONB fields for internationalization:
 **Supported Languages** (MVP):
 
 - English (en) - Primary
-- Swedish (sv) - Secondary
+- Swedish (sv) - Deferred from launch runtime parity; keep message assets only until explicitly activated
 
 **Post-MVP**:
 
@@ -1524,7 +1529,7 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 - A/B testing
 - Cost: ~$25-50/month
 
-**Datadog** (Phase 3, 100K+ users):
+**Datadog** (Archived from launch scope; revisit only after MVP saturation):
 
 - Infrastructure monitoring
 - APM (Application Performance Monitoring)
@@ -1536,10 +1541,11 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 
 #### Infrastructure Services
 
-**Redis** (Phase 1):
+**Redis** (Archived from launch scope):
 
-- Upstash Redis ($10/month) or Supabase + Redis Cloud ($15/month)
-- Use cases: Caching, session storage, Pub/Sub
+- Not part of the canonical MVP launch stack
+- Reconsider only if Postgres-backed queues and direct reads show measured bottlenecks
+- Session storage remains Supabase-managed cookies at launch
 
 **Kafka** (Phase 3, 100K+ users):
 
@@ -1860,10 +1866,10 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 
 **Session Security**:
 
-- Access token: 24-hour expiry
-- Refresh token: 7-day expiry
-- Automatic refresh on activity
-- Logout = revoke refresh token
+- Interactive sessions use Supabase-managed SSR cookies
+- No app-issued access/refresh JWT contract is documented for launch
+- Logout, password reset, and admin invalidation must revoke the active session server-side
+- Cookie-auth mutating requests require CSRF validation
 
 **RLS Enforcement**:
 
@@ -2164,7 +2170,7 @@ This PRD Technical Requirements document provides comprehensive specifications f
 
 3. **Integrations** (Section 3)
    - Current integrations: Supabase, Resend, Vercel
-   - Planned integrations: Stripe, OpenAI, Redis, Elasticsearch
+   - Planned integrations: Stripe, OpenAI, Elasticsearch
    - API architecture (13 endpoints currently implemented)
    - Webhook strategy for external integrations
 
@@ -2228,6 +2234,542 @@ This PRD Technical Requirements document provides comprehensive specifications f
 **No timelines included per user request** - All implementation can be done faster with Cursor, so effort estimates omitted
 
 **MVP vs Future clearly delineated** - MVP requirements marked with ✅, future enhancements clearly labeled "Post-MVP" throughout document
+
+## 7. BLOCK 12: CANONICAL LAUNCH SECURITY, NFR HARDENING, AND SPEC RECONCILIATION APPENDIX
+
+This appendix is the single implementation-ready launch contract. It turns prior aspirational language into enforceable MVP controls and archives older contradictory launch assumptions.
+
+### A. Canonical launch architecture decision
+
+**Canonical launch stack**
+
+- Runtime and hosting: Next.js App Router on Vercel.
+- Identity and data: Supabase Auth, Supabase Postgres, Supabase Storage.
+- Database access: Drizzle ORM against Postgres with RLS plus server-side authorization checks.
+- Email: Resend for transactional mail.
+- Observability: Sentry for errors and release health, Vercel Analytics for web vitals, Supabase dashboard for database health.
+- Scheduled work: Vercel Cron for daily or coarse schedules, `cron-job.org` for the approved minute-level worker trigger paths already wired in the repo.
+- Async work: Postgres-backed queue tables and workers. No launch Redis, no external broker.
+- Document intelligence: the existing internal Python CV and document-intelligence service only where already integrated behind internal routes and shared contracts.
+
+**Reconciled launch decision**
+
+- Canonical auth and session model is Supabase-managed SSR cookies. Launch does not document or require an app-managed access-token plus refresh-token contract.
+- Canonical async architecture is Postgres-backed queues with retries and terminal-failure states. Redis session brokers, Redis Pub/Sub, and external queue brokers are non-canonical for launch.
+- Canonical monitoring stack is Sentry, Vercel Analytics, Supabase dashboard, and one external uptime monitor. Datadog, LogDNA, and broader observability stacks are post-launch only.
+- Canonical locale baseline is English only. Swedish assets may remain in source, but Swedish runtime parity is deferred and must not be represented as launch-ready.
+- Canonical public-portfolio posture is privacy-first publication with explicit publish actions and non-indexed defaults until publication criteria are met.
+
+**In scope for the canonical stack**
+
+- Public marketing pages, public portfolio pages, proof-sharing pages, exports, uploads, auth, onboarding, matching, messaging, verification, organization workflows, cron jobs, and the wired Python extraction path.
+- Server-side authorization checks, RLS, structured logging, backup checkpoints, restore drills, accessibility baseline, and rollout metrics.
+
+**Explicitly archived or non-canonical**
+
+- App-managed JWT access and refresh token lifecycle as the primary launch session model.
+- Redis for session storage, queue brokering, or required cache infrastructure.
+- GraphQL as a launch API surface.
+- Datadog, LogDNA, or similar optional monitoring stacks as launch dependencies.
+- Multi-locale launch commitments beyond English.
+- Public-by-default storage or remote-fetch-on-render behavior for portfolio surfaces.
+
+**Why this is the safest MVP choice**
+
+- It matches the code that already exists, avoids adding new trust boundaries late in launch prep, and reduces operational surface area.
+- It keeps the security model server-enforced and testable.
+- It preserves proof-first and privacy-first product intent without forcing enterprise-grade infrastructure before the MVP proves load or workflow needs.
+
+### B. Authentication, session, and cookie model
+
+**Interactive sign-in methods**
+
+- Launch web sign-in methods are email/password, Google OAuth, and LinkedIn OAuth.
+- General interactive login by magic link is not a separate launch session model.
+- Magic-link-style URLs are limited to scoped external actions such as email verification, password recovery, invite claim, proof response, and equivalent capability-token flows.
+
+**Session model**
+
+- Interactive web sessions are Supabase-managed SSR sessions carried in HttpOnly cookies.
+- The server is the source of truth for session state. Client-side storage must not be treated as the authoritative session store.
+- Authorization requires both authenticated identity and server-side resource checks. RLS is necessary but not sufficient on its own.
+
+**Cookie and session security settings**
+
+- Session cookies: `HttpOnly`, `Secure`, `Path=/`, and `SameSite=Lax` at minimum. `SameSite=Strict` may be used only if it does not break OAuth, recovery, or verification callback flows.
+- Session cookies must not be readable by client JavaScript.
+- Cookie lifetime is managed by Supabase session policy. Launch code must not mint parallel app session cookies for the same browser session.
+- Logout must revoke the current server session and clear session cookies.
+- Password reset and admin-initiated session invalidation must revoke all active sessions for the affected user.
+
+**Email verification, invite, and attestation token behavior**
+
+- All external-action tokens must be represented as capability tokens with:
+  - Random high-entropy secret values.
+  - Hash-at-rest storage. Only the hash and metadata are persisted.
+  - Explicit scope metadata such as `email_verification`, `password_recovery`, `candidate_invite`, `proof_response`, or `public_snippet`.
+  - Actor binding where applicable: user ID, email, organization ID, or target resource ID.
+- Single-use is the default for invite claim, email verification, password recovery completion, and verifier response tokens.
+- Multi-use tokens are allowed only for explicitly documented read-only public sharing scopes and must still have explicit expiry.
+- Legacy plaintext token columns are transitional only. They must either be migrated to hashed capability-token storage before launch or be wrapped behind server logic that hashes, revokes, and enforces single-use semantics equivalent to capability tokens.
+
+**TTL, revocation, replay protection, and actor binding**
+
+- Default TTLs:
+  - Email verification: 24 hours.
+  - Password recovery initiation: 60 minutes to complete the reset.
+  - Candidate invite claim: 7 days unless a shorter business rule is set.
+  - Proof and verification response tokens: 7 days unless product rules require shorter windows.
+  - Read-only public snippet tokens: 30 days maximum, renewable by issuing a new token.
+- Replay protection:
+  - Single-use tokens must be atomically redeemed once and thereafter fail closed.
+  - Redemption must record `usedAt`, `usedBy`, and target binding metadata.
+  - A redeemed, revoked, expired, or scope-mismatched token must return a generic invalid-or-expired response.
+- Actor binding:
+  - When a token is issued for a known email, user, or organization, redemption must verify the same actor context before completing the action.
+  - Cross-account redemption is denied by default.
+
+**CSRF protection strategy**
+
+- All cookie-authenticated mutating HTTP requests must pass CSRF validation using the repo’s double-submit token pattern.
+- Exemptions are limited to:
+  - Cron routes authenticated with `CRON_SECRET`.
+  - Verified inbound webhooks authenticated by provider signature or shared secret.
+  - Bearer-token mobile or internal API routes that do not rely on browser cookies.
+- `SameSite` cookies are defense-in-depth only and are not treated as the primary CSRF control.
+
+### C. Input, rich-text, and rendering safety
+
+**Sanitization rules**
+
+- Plain text is the default for user-generated fields.
+- Raw HTML is disallowed by default on both private and public surfaces.
+- If rich text is needed, it must go through an approved allowlist sanitizer before storage and again before render if content may have been created under older rules.
+
+**Allowed markup**
+
+- Launch allowlist, if rich text is enabled for a field, is limited to structural and inline formatting tags such as `p`, `br`, `strong`, `em`, `ul`, `ol`, `li`, `blockquote`, `code`, and safe `a`.
+- Disallowed content includes `script`, `style`, `iframe`, `object`, `embed`, `svg`, inline event handlers, `javascript:` URLs, `data:` URLs other than explicitly approved image transforms, and arbitrary class or style attributes.
+- Links must be normalized to `https` or `mailto` only, with `rel="nofollow noopener noreferrer"` when rendered publicly.
+
+**Escaping and rendering requirements**
+
+- All user-generated strings rendered in React must rely on normal escaping. `dangerouslySetInnerHTML` is prohibited except inside approved sanitizer wrappers.
+- Public portfolio pages, proof cards, verifier notes, and exports must use pre-sanitized or plain-text renderers only.
+- Markdown, if introduced, must render through a restricted parser with HTML disabled by default.
+
+**Stored-vs-render-time strategy**
+
+- On ingest:
+  - Validate schema and length.
+  - Normalize whitespace and Unicode control characters.
+  - Sanitize any rich-text field to the approved allowlist before persistence.
+- On render:
+  - Escape all plain text.
+  - Re-sanitize or reject stored legacy HTML content until migration is complete.
+- Launch does not permit trusting historical stored HTML without revalidation.
+
+**XSS and injection protections**
+
+- Reject inline scripts, event-handler attributes, SVG payloads, CSS expressions, and active content in user-provided markup.
+- Do not interpolate user content into script blocks, JSON script tags, CSS, or metadata tags without escaping.
+- Public pages must not hydrate remote third-party user content directly.
+
+### D. Upload, storage, and remote-content security
+
+**Upload quarantine and promotion**
+
+- All browser uploads land in a quarantine bucket or quarantine prefix first.
+- Presigned upload URLs may only write to quarantine storage, for one object key, with short expiry and size constraints.
+- Quarantine objects are not user-visible until the server validates and promotes them.
+- Promotion to a canonical bucket is server-side only after validation succeeds.
+
+**Storage access control after presigned upload**
+
+- Presigned upload does not grant presigned read.
+- After upload, the server re-reads the object, verifies MIME and signature, records metadata, and decides the destination bucket and visibility.
+- Canonical object paths must be server-generated and scoped by tenant or user ownership. Clients must not choose final public paths.
+
+**Object visibility rules**
+
+- Default visibility is private.
+- Proof documents, resumes, attestation files, exported data packages, and temp extraction files remain private.
+- Only explicitly approved safe image classes, currently avatar and cover images, may be promoted to the public asset bucket.
+- Public bucket objects must not contain PDFs, HTML, SVG, archives, office docs, or other active or ambiguous content types.
+- Private object reads require authenticated server-side authorization plus short-lived signed read URLs or server-streamed downloads.
+
+**AV, MIME, and size limits**
+
+- The server must validate:
+  - Declared MIME type.
+  - File signature or magic bytes.
+  - Maximum size by upload class.
+- Launch defaults:
+  - Avatar and cover images: JPEG, PNG, WebP; maximum 10 MB.
+  - Resume or proof documents: PDF only unless a route explicitly documents another type; maximum 25 MB.
+  - Temporary CV extraction uploads: PDF only; maximum 25 MB.
+- MIME mismatch, missing signature, encrypted archives, executable formats, macro-enabled office files, and unsupported containers fail closed.
+- If antivirus scanning is not available at launch, the quarantine validator plus file-type restrictions are mandatory and public promotion remains limited to safe image formats only.
+
+**Remote URL preview and import rules**
+
+- Public portfolio rendering must never fetch arbitrary remote URLs during request handling.
+- Remote preview or import is allowed only in backend jobs or backend endpoints built for that purpose.
+- Remote fetches may retrieve only a safe metadata subset:
+  - Normalized final URL.
+  - HTTP status.
+  - Page title.
+  - Description.
+  - Canonical URL.
+  - Approved preview image URL if it independently passes the same URL safety policy.
+- Fetched HTML, scripts, or embeds must not be rendered raw.
+
+**SSRF protection and fetch boundaries**
+
+- Allowed schemes: `https` only.
+- Deny:
+  - `http`.
+  - Loopback, link-local, multicast, and RFC1918 private IP space.
+  - Cloud metadata endpoints.
+  - `.local` hostnames and raw IP literals unless explicitly allowlisted for internal service-to-service use.
+- DNS resolution must be performed server-side and rechecked on each redirect.
+- Redirect limit: 3 maximum.
+- Timeouts:
+  - Connect timeout: 2 seconds.
+  - Total request timeout: 5 seconds.
+- Response-size cap:
+  - Metadata preview fetch: 2 MB maximum body read.
+- The fetcher must use a dedicated outbound client with redirects, size, and timeout limits enforced in code rather than by convention.
+
+### E. Privacy, PII isolation, and logging standards
+
+**What data may appear in logs, analytics, traces, and alerts**
+
+- Request ID, event name, route, status code, latency, coarse feature flag names, queue or job IDs, entity IDs, organization IDs, and stable internal user IDs.
+- Aggregated counters and percentiles.
+- Hashed or truncated network markers only where strictly required for abuse control or audit correlation.
+
+**What must never appear**
+
+- Raw email addresses, phone numbers, full names, verifier identities, freeform proof text, message bodies, portfolio draft content, password material, tokens, cookies, Authorization headers, refresh or session secrets, raw IP addresses, raw user-agent strings, or secret environment values.
+- Full exported payloads, backup contents, or document text in observability sinks.
+
+**Structured logging standard**
+
+- All application logs must be structured events.
+- Each log event must include a stable event name and timestamp.
+- Request-scoped logs must include `requestId`.
+- Authenticated request logs may include internal `userId` or `orgId`, but not human-readable identity fields.
+- Freeform string interpolation that can accidentally embed PII is disallowed for application logging.
+
+**PII redaction and masking**
+
+- Redaction must happen before logs leave the application boundary.
+- Any field that can contain user-entered text is deny-by-default for observability export.
+- Network identifiers, if retained for abuse or audit purposes, must be stored as:
+  - Salted hash for IP.
+  - Parsed browser family or device family only, not raw user-agent.
+- Retention for abuse-linked hashes should be limited and documented. Launch default: 30 days unless legal or incident handling requires less.
+
+**Audit logging vs observability logging boundaries**
+
+- Audit logs record security-relevant actions such as role change, invite issuance, verification decision, publication change, export generation, and destructive admin actions.
+- Audit logs are product records, not troubleshooting logs.
+- Audit logs may store actor ID, target ID, action, timestamp, result, and reason code. They must not store raw secret material or raw content payloads.
+- Observability logs are for runtime health and debugging only and must remain PII-minimized.
+
+**Specially protected data classes**
+
+- Work email verification state, verifier relationships, demographic opt-ins, wellbeing and Zen data, exports, and uploaded proof artifacts are specially protected data classes.
+- These classes must stay out of analytics payloads and out of general-purpose logs.
+- Zen and wellbeing data must remain isolated from ranking, matching, and public rendering, and any audit trail for that data must use the same least-PII rules above.
+
+### F. Reliability, queues, and operational hardening
+
+**Minimum reliability expectations**
+
+- Monthly availability target: 99.5% for launch-critical user-facing surfaces.
+- Health endpoints and smoke tests must cover auth, profile reads, portfolio rendering, uploads, and core org workflows.
+- Sentry alerting, uptime monitoring, and database health review are mandatory before launch sign-off.
+
+**Idempotency and retry standards**
+
+- Queue consumers and webhook-like handlers must be idempotent.
+- State-changing background jobs must have:
+  - Stable job identifier.
+  - Attempt counter.
+  - Lease or claim ownership.
+  - Safe retry behavior for duplicate delivery.
+- Backoff must be bounded and explicit. Launch default: exponential or stepped retry with maximum 3 attempts unless a queue documents a lower cap.
+- User-triggered exports, invite sends, proof requests, and remote imports must reject duplicate submissions or coalesce them by idempotency key where practical.
+
+**Timeout budgets, DLQ expectations, alert thresholds, and queue ownership rules**
+
+- API route timeout budget must remain within Vercel plan limits and should target:
+  - Read routes: complete within 10 seconds hard timeout.
+  - Write routes: complete within 15 seconds hard timeout.
+  - Remote preview or import endpoints: 5 seconds total outbound budget per remote request.
+- Long-running work must move to queue-backed async processing.
+- DLQ expectation for MVP:
+  - A terminal-failed queue row with preserved error summary is the DLQ.
+  - Terminal failures must be queryable, alertable, and replayable only by an authorized operator workflow.
+- Alert thresholds:
+  - Any launch-critical cron failing 2 consecutive runs must page the operator channel.
+  - Any queue with more than 25 terminal failures in 15 minutes must alert.
+  - Any error-rate alert breaching 5% for a critical route over 5 minutes must alert.
+- Every queue must have a named owning module or team path and a documented replay method.
+
+**Backup, restore, RTO, RPO, and reconciliation**
+
+- Canonical launch durability target:
+  - RPO: 24 hours.
+  - RTO: 8 hours.
+- Daily automated database backups are required.
+- A checkpoint backup must be taken before risky production DDL or destructive data repair.
+- Restore drill evidence is required before launch and then at least monthly for the MVP operating period.
+- Restore verification must include:
+  - Schema presence.
+  - Critical row-count spot checks.
+  - Auth or login smoke test.
+  - Upload metadata integrity checks.
+- If an incident requires partial restore or manual repair, a reconciliation pass must compare restored counts and key invariants before reopening writes.
+
+**Safe deploy, rollback, and feature-flag usage expectations**
+
+- Production deploys require passing lint, typecheck, docs freshness, and the repo’s launch gates.
+- Risky launches must be wrapped in feature flags or config gates where feasible.
+- Rollback must prefer:
+  - Disabling the feature flag.
+  - Reverting the Vercel deployment.
+  - Restoring data only after impact assessment and checkpoint review.
+- New launch-critical security controls must fail closed by default.
+
+### G. Abuse prevention and rate limiting
+
+**Rate-limit classes and abuse controls**
+
+- Anonymous browser traffic: baseline per-IP or per-IP-hash limits.
+- Authenticated user actions: per-user limits with optional secondary IP-based guard.
+- Sensitive token redemption: per-token, per-email-hash, and per-IP-hash throttles.
+- Public portfolio fetches: per-IP-hash and per-route scraping controls.
+- Notification sends: per-actor, per-target, and daily cap.
+
+**Launch abuse controls**
+
+- Auth:
+  - Login, signup, password reset start, and verification resend endpoints must be rate-limited.
+  - Repeated failed auth attempts trigger temporary lockout or progressive backoff.
+- Invite and token redemption:
+  - Single-use token redemption must be throttled and logged.
+  - Invalid-token bursts from the same source must trigger alerts or temporary blocks.
+- Uploads:
+  - Per-user daily upload count caps.
+  - Per-file size caps by route.
+  - Quarantine cleanup for abandoned uploads.
+- Exports:
+  - Per-user daily export caps and one active export job per scope unless explicitly overridden.
+- Public page scraping:
+  - Basic bot heuristics, IP-hash throttling, caching, and non-index-by-default posture for private or semi-private public pages.
+- Notification abuse:
+  - Proof request, invite send, and resend endpoints require cooldowns and daily caps.
+
+**Bot and spam protections appropriate for MVP**
+
+- Launch uses server-side rate limiting, CSRF, capability-token replay protection, and allowlist-based publication controls as the primary anti-abuse layers.
+- CAPTCHA is optional for launch and should be enabled only on endpoints that show abuse pressure.
+- Content moderation is heuristic and report-driven for MVP, not full ML moderation.
+
+**Safest defaults where precision is not yet known**
+
+- If exact traffic thresholds are not yet known, start conservative and tune upward with observed metrics.
+- Sensitive flows fail closed with `429` or generic invalid responses rather than leaking whether an account, token, or invite exists.
+
+### H. Accessibility, i18n, and timezone baseline
+
+**Launch accessibility baseline**
+
+- Launch-critical user flows must meet WCAG 2.1 AA:
+  - Auth and recovery.
+  - Onboarding.
+  - Portfolio editing and publication.
+  - Upload and export flows.
+  - Organization posting, review, and invite flows.
+
+**Required accessibility behaviors**
+
+- Full keyboard navigation for interactive controls.
+- Visible focus indicators with logical focus order.
+- Form inputs with persistent labels, programmatic descriptions, and accessible error messages.
+- Dialogs, menus, and drawers with focus trapping and ESC dismissal where appropriate.
+- Screen-reader-accessible button names for icon-only controls.
+- Color contrast at or above WCAG AA thresholds.
+- `aria-live` or equivalent announcement for async success and error states where the UI would otherwise be silent.
+- Upload progress, validation failure, and rate-limit errors must be perceivable without color alone.
+
+**Basic i18n and timezone rules**
+
+- Launch runtime locale is English only.
+- The codebase may retain locale-ready abstractions and untranslated message assets, but no non-English locale is part of launch acceptance.
+- Deferred locales must remain behind an explicit product decision and QA pass before activation.
+- All server-side persistence uses UTC.
+- User-facing times render in the viewer’s or account-selected timezone, with a clear timezone label where ambiguity matters.
+- Audit logs, exports, and ops runbooks must preserve UTC timestamps.
+- Relative time copy is optional. Exact timestamps must remain available for security, audit, and scheduling events.
+
+**Deferred features**
+
+- Full runtime Swedish parity.
+- RTL support.
+- Broad localization QA beyond English.
+
+### I. Security / NFR acceptance criteria
+
+Launch is not complete until the following checks pass:
+
+**Session security**
+
+- Interactive browser login uses Supabase SSR cookies and no parallel app-managed JWT refresh flow is required for web auth.
+- Logout invalidates the current session and subsequent authenticated requests fail until re-authentication.
+- Password reset invalidates prior sessions.
+
+**CSRF**
+
+- Every cookie-authenticated mutating route rejects requests missing a valid CSRF token.
+- Allowed exemptions are documented and covered by bearer-secret or signature verification.
+
+**XSS and rendering safety**
+
+- User-entered HTML, script tags, event handlers, and `javascript:` URLs do not execute on public or private surfaces.
+- Any field using rich text is sanitized to the approved allowlist before storage and before render for legacy content.
+- `dangerouslySetInnerHTML` appears only in approved sanitizer wrappers.
+
+**Upload quarantine and storage privacy**
+
+- Uploads land in quarantine first.
+- Unsupported MIME or signature mismatches are rejected and never promoted.
+- Proof documents, resumes, and temp extraction files remain private after upload.
+- Only approved safe image types can become public objects.
+
+**Token hashing and replay protection**
+
+- Capability tokens are stored hashed at rest.
+- Single-use tokens cannot be redeemed twice.
+- Expired, revoked, or actor-mismatched tokens fail closed.
+- Transitional plaintext token paths are either removed or wrapped behind equivalent hash and single-use enforcement before launch.
+
+**SSRF controls**
+
+- Public page render paths do not perform arbitrary remote fetches.
+- Remote preview or import endpoints reject `http`, private IP targets, loopback targets, metadata endpoints, and over-limit redirects or bodies.
+- Timeout and response-size caps are enforced in code.
+
+**Storage privacy**
+
+- Direct object listing is unavailable to anonymous clients for private buckets.
+- Post-presigned-upload promotion determines final visibility server-side.
+- Public objects are limited to approved safe image classes only.
+
+**PII-safe logging**
+
+- Structured logs omit raw emails, names, tokens, raw IPs, raw user-agent strings, message bodies, and proof text.
+- Audit records and observability logs remain distinct and least-PII.
+- Zen and other specially protected datasets do not appear in analytics payloads or general logs.
+
+**Rate limiting**
+
+- Auth, invite, token redemption, uploads, exports, public portfolio fetches, and notification sends all have enforced rate limits.
+- Repeated invalid-token or brute-force attempts produce throttling without account enumeration.
+
+**Backup, restore, and operational readiness**
+
+- Lint, typecheck, and docs freshness pass in CI and before launch sign-off.
+- A documented restore drill has been executed successfully against a recent backup.
+- Queue workers show bounded retries and terminal-failure visibility.
+- Health checks and smoke tests cover launch-critical flows.
+
+**Accessibility baseline**
+
+- Keyboard-only traversal succeeds through auth, onboarding, portfolio publication, and upload flows.
+- Screen-reader labels exist for all critical controls.
+- Launch-critical forms expose accessible validation and error recovery.
+- Contrast and focus indicators meet WCAG 2.1 AA.
+
+### J. Spec reconciliation ledger
+
+**Main contradictions from prior docs and canonical decisions**
+
+- Session model:
+  - Older text: app-managed JWT access and refresh tokens.
+  - Canonical decision: Supabase-managed SSR cookies for interactive web auth.
+  - Remove or archive: JWT refresh-token launch language from active docs.
+- CSRF:
+  - Older text: SameSite cookies as the primary CSRF control.
+  - Canonical decision: double-submit CSRF token on all cookie-auth mutating routes, with narrow exemptions.
+  - Remove or archive: SameSite-only CSRF language.
+- Storage:
+  - Older text: vague signed-URL or public-profile assumptions.
+  - Canonical decision: quarantine first, private by default, public promotion only for approved safe image classes.
+  - Remove or archive: ambiguous public-by-default storage wording.
+- Remote content:
+  - Older text: public portfolio and proof surfaces described without explicit remote-fetch constraints.
+  - Canonical decision: no arbitrary remote fetch in public render paths. Backend-only preview or import with SSRF controls.
+  - Remove or archive: any wording that implies arbitrary remote embeds or fetch-on-render.
+- Logging:
+  - Older text: observability docs allowed broader log aggregation patterns without firm privacy boundaries.
+  - Canonical decision: structured logs only, deny-by-default for PII, hashed network identifiers only where required.
+  - Remove or archive: raw-PII logging allowance and Datadog or LogDNA as launch dependencies.
+- Monitoring:
+  - Older text: broad optional monitoring stack.
+  - Canonical decision: Sentry, Vercel Analytics, Supabase dashboard, one uptime checker.
+  - Remove or archive: optional launch dependency language for larger monitoring platforms.
+- Async architecture:
+  - Older text: Redis session broker and Pub/Sub as near-term architecture.
+  - Canonical decision: Postgres-backed queues and workers for MVP launch.
+  - Remove or archive: Redis or session-broker launch assumptions.
+- Locale baseline:
+  - Older text: English and Swedish described as launch-ready.
+  - Canonical decision: English-only launch runtime. Swedish deferred.
+  - Remove or archive: bilingual launch claims.
+- Recovery targets:
+  - Older text: conflicting RTO targets of 2h, 4h, and 8h.
+  - Canonical decision: RTO 8h, RPO 24h for launch.
+  - Remove or archive: faster RTO claims unless supported by tested evidence.
+
+**What should be removed or archived from the active spec**
+
+- Launch references to JWT refresh-token architecture.
+- SameSite-only CSRF claims.
+- Redis as required launch infrastructure.
+- GraphQL as a planned launch API surface.
+- Datadog or LogDNA as part of launch readiness.
+- Swedish runtime parity as a launch expectation.
+- Any backup target stricter than the tested 8h RTO and 24h RPO launch contract.
+
+### K. Risks / tradeoffs
+
+**Biggest security, operability, and documentation risks**
+
+- Transitional plaintext token paths are the most obvious gap between current repo reality and the desired launch-standard token model.
+- Upload validation without a dedicated AV engine depends on strict file-type allowlists and public-promotion constraints.
+- Logging policy can still drift if new code paths bypass structured log helpers or write raw audit context.
+- Broader historical docs can reintroduce ambiguity if future changes update them without also updating this appendix.
+
+**Where MVP simplification could weaken safety**
+
+- Relying only on RLS without server-side resource checks would weaken privacy and org-boundary enforcement.
+- Treating SameSite as sufficient CSRF protection would leave browser-cookie routes exposed.
+- Allowing remote content fetches in public render paths would create SSRF and availability risks.
+
+**Where too much hardening could slow launch unnecessarily**
+
+- Introducing Redis, a new queue broker, or a parallel session platform would add operational risk without launch evidence that the current queue model is insufficient.
+- Requiring a full enterprise observability stack before launch would slow delivery without materially improving early MVP safety if Sentry, structured logs, and uptime checks are already enforced.
+- Full multilingual launch QA would expand scope without improving launch safety.
+
+**Safest MVP recommendation where ambiguity exists**
+
+- Prefer server-side enforcement, narrow allowlists, private-by-default storage, hashed tokens, structured logs, and tested restore drills.
+- Add new infrastructure only after measured operational pain, not in anticipation of it.
 
 ---
 

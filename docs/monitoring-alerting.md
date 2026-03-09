@@ -4,6 +4,8 @@
 
 This guide covers setting up comprehensive monitoring and alerting for the Proofound application in production. It includes error monitoring, performance tracking, log aggregation, and incident response procedures.
 
+Launch note: `PRD_TECHNICAL_REQUIREMENTS.md` Section 7 is the canonical launch contract for monitoring, logging boundaries, recovery targets, and operational readiness. This guide should be read as implementation support, not a competing launch spec.
+
 ---
 
 ## Table of Contents
@@ -52,12 +54,12 @@ This guide covers setting up comprehensive monitoring and alerting for the Proof
                   └───────────────┘
 ```
 
-**Services Used:**
+**Services Used at Launch:**
 
 - **Sentry:** Error tracking, performance monitoring
 - **Vercel:** Analytics, logs, deployment monitoring
 - **Supabase:** Database metrics, connection pooling
-- **UptimeRobot/Better Uptime:** Uptime monitoring (optional)
+- **Better Uptime or UptimeRobot:** One external uptime monitor for `/` and `/api/health`
 
 ---
 
@@ -353,9 +355,13 @@ vercel logs | jq 'select(.requestId == "abc-xyz-789")'
 
 ### Log Alerts
 
-**Set up log-based alerts using external service:**
+**Set up log-based alerts using the launch stack first.**
 
-**Option 1: Datadog (Recommended for Production)**
+**Option 1: Vercel + Sentry + script-based checks (canonical launch path)**
+
+Use Vercel logs, Sentry alerts, and a small script or scheduled review for launch. Do not add a new log platform unless the existing stack proves insufficient.
+
+**Option 2: Datadog (post-launch only)**
 
 ```bash
 # Install Datadog agent
@@ -363,7 +369,7 @@ vercel logs | jq 'select(.requestId == "abc-xyz-789")'
 # Set up log-based monitors
 ```
 
-**Option 2: LogDNA/Mezmo**
+**Option 3: LogDNA/Mezmo (post-launch only)**
 
 ```bash
 # Install LogDNA
@@ -380,7 +386,7 @@ const logger = LogDNA.createLogger(process.env.LOGDNA_KEY, {
 logger.log('Custom log message', { level: 'info', meta: { userId: 'xxx' } });
 ```
 
-**Option 3: Manual Monitoring Script**
+**Option 4: Manual Monitoring Script**
 
 ```typescript
 // scripts/monitor-logs.ts
@@ -979,7 +985,7 @@ Post-mortem: Scheduled for 2025-11-04
 | UptimeRobot      | Uptime monitoring    | Free (50 monitors)       |
 | Better Uptime    | Uptime + status page | Free tier available      |
 
-### Optional Advanced Tools
+### Optional Advanced Tools (post-launch only, non-canonical for MVP)
 
 | Tool      | Purpose             | Cost               |
 | --------- | ------------------- | ------------------ |

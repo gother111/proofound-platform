@@ -1,12 +1,50 @@
 # Proofound MVP Launch Runbook
 
 > Doc Class: `active`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-03-08`
 
-**Version:** 1.0  
-**Last Updated:** November 5, 2025  
+**Version:** 1.1  
+**Last Updated:** March 8, 2026  
 **Document Owner:** Pavlo Samoshko (CEO) & Yurii Bakurov (Technical Lead)  
 **Purpose:** Operational playbook for MVP beta launch and ongoing operations
+
+---
+
+## 0. Launch-Safe Corridor Override
+
+The active launch contract for MVP is defined in `docs/launch-operations-mvp.md`. When this
+runbook conflicts with older marketplace assumptions, the Block 9 launch-safe corridor wins.
+
+For security, auth, storage, privacy, accessibility, reliability, and backup expectations, `PRD_TECHNICAL_REQUIREMENTS.md` Section 7 is the canonical launch contract. This runbook must defer to that appendix where older wording conflicts.
+
+### MVP-safe operational principles
+
+- Do not pretend the marketplace is dense when it is not.
+- Do not expose users to silent dead ends.
+- Keep public portfolio value, browse-safe review, exports, and delete or unpublish live even when
+  intros are paused.
+- Treat `fairness_suppressed_ranking` and `intro_hold_insufficient_qualified_intros` as protected
+  states, not bugs to hide.
+- Require structured feedback on closed outcomes when the structured-feedback launch flag is on.
+
+### Current incident and queue model
+
+- `P1`: signup/auth, token redemption, portfolio render, export, delete, unpublish
+- `P2`: shortlist generation, intro generation, verification queue, fairness remediation
+- `P3`: thin-market fallback volume high while platform remains safe
+- Active manual queues:
+  - verification pending or disputed
+  - intro hold
+  - fairness remediation
+  - thin assignment supply
+  - thin candidate supply
+
+### Safe mode
+
+- Enable intro kill switch
+- Force rank-band mode and suppress exact rank
+- Leave portfolio, browse, share, export, delete, and unpublish available
+- Disable pilot-only features without touching core privacy or portfolio surfaces
 
 ---
 
@@ -1174,7 +1212,7 @@ rm backups/proofound-$(date +%Y-%m-%d).sql.gz
 
 #### **Scenario 1: Data Corruption (Recent)**
 
-**Recovery Time Objective (RTO):** 4 hours  
+**Recovery Time Objective (RTO):** 8 hours  
 **Recovery Point Objective (RPO):** 24 hours (last backup)
 
 **Steps:**
@@ -1246,8 +1284,8 @@ We apologize for the inconvenience.
 
 **Example:** Admin accidentally deletes users or assignments
 
-**RTO:** 2 hours  
-**RPO:** Up to 24 hours (last backup)
+**RTO:** 8 hours  
+**RPO:** 24 hours (last backup)
 
 **Steps:**
 

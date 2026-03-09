@@ -1,8 +1,31 @@
 > Doc Class: `governance`
 > Sync Pair: `Architecture.md`
-> Last Verified: `2026-03-06`
+> Last Verified: `2026-03-08`
 
 # Architecture Snapshot
+
+## Canonical Launch Contract
+
+- The canonical MVP launch contract lives in `PRD_TECHNICAL_REQUIREMENTS.md` Section 7, "Block 12: Canonical Launch Security, NFR Hardening, and Spec Reconciliation Appendix".
+- This document is a repo-grounded snapshot, not a competing launch spec.
+- Historical references that describe app-managed JWT sessions, Redis-backed session or queue infrastructure, Datadog or LogDNA as launch dependencies, or Swedish runtime parity are non-canonical for launch.
+
+## Canonical Launch Stack
+
+- Next.js App Router on Vercel.
+- Supabase Auth, Postgres, and Storage.
+- Drizzle ORM.
+- Resend for transactional email.
+- Sentry, Vercel Analytics, and Supabase dashboard for launch monitoring.
+- Vercel Cron plus `cron-job.org` for the minute-level worker path already wired in the repo.
+- Internal Python CV and document-intelligence service only where already integrated.
+
+## Launch Scope Boundaries
+
+- Interactive web auth uses Supabase SSR session cookies, not an app-managed JWT refresh model.
+- Public portfolio pages are explicit publication surfaces and remain non-indexed by default until publication criteria are met.
+- Uploads are quarantine-first and private by default, with public promotion limited to approved safe image types.
+- Postgres-backed queues are the canonical MVP async model. Redis and other brokers remain post-launch options only if measured bottlenecks justify them.
 
 This document records a lightweight, repo-grounded architecture view. Statements marked **Repo Truth** are cited like `(source: README.md)`. Anything else is labeled **Inference**, **Proposal**, or **TODO**.
 

@@ -14,13 +14,19 @@ Proofound is a platform built for authenticity, not algorithms. It features:
 - **Privacy by Design**: Row-level security, user-controlled visibility
 - **Steward-owned Governance**: Built for long-term sustainability
 
+Launch contract highlights:
+
+- Interactive web auth uses Supabase SSR session cookies.
+- Public portfolio publication is explicit and non-indexed by default until publication criteria are met.
+- Uploads are quarantine-first and private by default, with public promotion limited to approved safe image types.
+
 ## Visual Architecture (quick view)
 
 ```mermaid
 graph TD
   A[User Browser] --> B[Vercel Edge]
   B --> C[Next.js App Router]
-  C -->|Auth JWT| D[Supabase Auth]
+  C -->|SSR session cookies| D[Supabase Auth]
   C -->|Reads/Writes| E[Supabase Postgres (RLS on)]
   C -->|Internal document intelligence| J[Python internal service]
   C -->|Emails| F[Resend]
@@ -54,7 +60,8 @@ flowchart LR
 
 ## Documentation map
 
-- Product/architecture: `PRD_TECHNICAL_REQUIREMENTS.md`, `SYSTEM_ARCHITECTURE_COMPREHENSIVE.md`, `SYSTEM_ARCHITECTURE_SUPPLEMENT.md`, `PRD_for_a_web_platform_MVP.md`.
+- Canonical launch contract: `PRD_TECHNICAL_REQUIREMENTS.md` Section 7, `project/Architecture.md`, `LAUNCH_RUNBOOK.md`, `PRODUCTION_CHECKLIST.md`.
+- Historical architecture context only: `SYSTEM_ARCHITECTURE_COMPREHENSIVE.md`, `SYSTEM_ARCHITECTURE_SUPPLEMENT.md`, `PRD_for_a_web_platform_MVP.md`.
 - APIs: `docs/API_REFERENCE.md` (generated from `src/app/api/**/route.ts` via `node scripts/generate-api-reference.mjs`; historical API specs remain archived under `docs/archive/legacy-platform/api-reference-history/`).
 - Runbooks: `LAUNCH_RUNBOOK.md`, `PRODUCTION_CHECKLIST.md`, `APPLY_MIGRATIONS_MANUAL.md`, `RUN_MIGRATIONS_GUIDE.md`, `OAUTH_SETUP_GUIDE.md`, `SETUP_SUPABASE.md`.
 - Archives: historical docs are grouped under `docs/archive/legacy-platform/`, status reports under `docs/archive/status-reports/`, demo artifacts under `docs/archive/demos/`.
@@ -65,9 +72,9 @@ flowchart LR
 - **Framework**: Next.js 15 (App Router) + TypeScript + React Server Components
 - **Styling**: Tailwind CSS + shadcn/ui (Radix primitives)
 - **Database**: Supabase Postgres + Drizzle ORM
-- **Auth**: Supabase Auth (email/password + magic link)
+- **Auth**: Supabase Auth with SSR session cookies (email/password + Google + LinkedIn)
 - **Email**: Resend + React Email
-- **i18n**: next-intl (English, Swedish)
+- **i18n**: next-intl with English launch baseline; Swedish deferred
 - **Testing**: Vitest (unit) + Playwright (e2e) + @axe-core (a11y)
 - **CI/CD**: GitHub Actions + Vercel
 
@@ -497,11 +504,11 @@ Protect your `master` branch:
 
 ## Internationalization
 
-Supported locales: English (en), Swedish (sv)
+Launch runtime locale: English (en)
 
-- Messages in `src/i18n/messages/{locale}.json`
-- Language switcher in user menu and footer
-- Server-side rendering with next-intl
+- Locale-ready message files remain in `src/i18n/messages/{locale}.json`
+- Swedish assets may remain in source, but Swedish runtime parity is deferred from launch
+- Server-side rendering uses next-intl with UTC persistence and user-local display formatting
 
 ## Accessibility
 

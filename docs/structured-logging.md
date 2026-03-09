@@ -4,6 +4,8 @@
 
 This document describes the structured logging system implemented in the Proofound application, including log levels, context management, request correlation, and migration from console.\* calls.
 
+Launch note: `PRD_TECHNICAL_REQUIREMENTS.md` Section 7 is the canonical launch contract for logging, PII isolation, and audit-boundary rules. This guide must defer to that appendix where older examples imply broader observability exports.
+
 ## Logger Features
 
 ### Log Levels
@@ -321,9 +323,9 @@ Structured logs are automatically ingested by Vercel:
 
 ### Log Aggregation
 
-For production, consider integrating with:
+For launch, use Vercel logs plus the in-app structured logger. Additional log aggregation platforms are post-launch options only and must preserve the same PII restrictions.
 
-**Datadog:**
+**Datadog (post-launch only, non-canonical for MVP launch):**
 
 ```typescript
 // Custom integration in log.ts
@@ -332,7 +334,7 @@ if (process.env.DATADOG_API_KEY) {
 }
 ```
 
-**LogDNA/Mezmo:**
+**LogDNA/Mezmo (post-launch only, non-canonical for MVP launch):**
 
 ```bash
 # Install LogDNA agent
@@ -429,7 +431,7 @@ setInterval(() => {
 
 ### DON'T
 
-❌ Log PII (emails, names, locations)
+❌ Log PII (emails, names, locations, raw IPs, raw user-agent strings)
 ❌ Log sensitive data (passwords, tokens)
 ❌ Log excessively in hot paths
 ❌ Use string concatenation in event names
