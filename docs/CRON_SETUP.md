@@ -17,7 +17,7 @@ These are the only jobs that should be scheduled in `vercel.json`:
 
 These are the only external jobs that should be enabled:
 
-- `/api/cron/python-internal-worker` every 15 minutes
+- `/api/cron/python-internal-worker` every minute
 - `/api/cron/fairness-note` daily at `02:00 Europe/Stockholm`
 - `/api/cron/health-check` every 3 hours
 - `/api/cron/performance-check` daily at `06:00 Europe/Stockholm`
@@ -88,6 +88,7 @@ curl -i https://proofound.io/api/cron/health-check
   - Check the `Authorization: Bearer $CRON_SECRET` header for protected routes.
 - `500` on `python-internal-worker`
   - Check `PYTHON_INTERNAL_JOBS_ENABLED`, internal service secrets, and the `python_internal_jobs` queue.
+  - CV import status polls now opportunistically execute their own queued extract job inline, so repeated queue stalls usually point to the Python extract path itself rather than a missing cron tick.
 - `refresh-matches-worker` leaves backlog behind
   - Increase `MATCHING_REFRESH_WORKER_BATCH_SIZE` or concurrency before adding more schedulers.
 - `fairness-report` showing failed externally

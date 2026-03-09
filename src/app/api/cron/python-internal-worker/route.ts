@@ -1,18 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireInternalApiRequest } from '@/lib/api/auth';
-import { processCvImportExtractJob } from '@/lib/expertise/cv-import-extract-worker';
 import { log } from '@/lib/log';
-import { executePythonInternalJob } from '@/lib/python-internal/client';
 import {
   claimPythonInternalJobs,
   countPendingPythonInternalJobs,
   isPythonInternalJobsEnabled,
-  markPythonInternalJobFailure,
-  markPythonInternalJobSuccess,
   resolvePythonInternalWorkerBatchSize,
   resolvePythonInternalWorkerConcurrency,
 } from '@/lib/python-internal/job-queue';
+import { executeClaimedPythonInternalJob } from '@/lib/python-internal/worker';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -73,44 +70,14 @@ export async function GET(request: NextRequest) {
     let errorCount = 0;
 
     await runWithConcurrency(claimedJobs, concurrency, async (job) => {
-      try {
-        if (job.jobType === 'document_intelligence_extract_only') {
-          const result = await processCvImportExtractJob({
-            request,
-            payload: job.payload,
-          });
+      const outcome = await executeClaimedPythonInternalJob({
+        request,
+        job,
+      });
 
-          await markPythonInternalJobSuccess(job.id, result);
-        } else {
-          const response = await executePythonInternalJob({
-            request,
-            jobId: job.id,
-            jobType: job.jobType,
-            payload: job.payload,
-          });
-
-          await markPythonInternalJobSuccess(job.id, response.result);
-        }
+      if (outcome.status === 'completed') {
         successCount += 1;
-      } catch (error) {
-        const failureResult =
-          error && typeof error === 'object'
-            ? {
-                error: error instanceof Error ? error.name : 'PythonInternalWorkerError',
-                message:
-                  error instanceof Error ? error.message : 'Unknown Python internal worker error',
-                code:
-                  'code' in error && typeof (error as { code?: unknown }).code === 'string'
-                    ? (error as { code: string }).code
-                    : undefined,
-              }
-            : undefined;
-
-        await markPythonInternalJobFailure(
-          job.id,
-          error instanceof Error ? error.message : 'Unknown Python internal worker error',
-          failureResult
-        );
+      } else {
         errorCount += 1;
       }
     });

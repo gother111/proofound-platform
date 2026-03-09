@@ -6,6 +6,8 @@ const mocks = vi.hoisted(() => ({
   createRequestId: vi.fn(),
   jsonWithRequestId: vi.fn(),
   getPythonInternalJob: vi.fn(),
+  claimPythonInternalJobById: vi.fn(),
+  executeClaimedPythonInternalJob: vi.fn(),
 }));
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -19,6 +21,11 @@ vi.mock('@/lib/expertise/cv-import-runtime', () => ({
 
 vi.mock('@/lib/python-internal/job-queue', () => ({
   getPythonInternalJob: mocks.getPythonInternalJob,
+  claimPythonInternalJobById: mocks.claimPythonInternalJobById,
+}));
+
+vi.mock('@/lib/python-internal/worker', () => ({
+  executeClaimedPythonInternalJob: mocks.executeClaimedPythonInternalJob,
 }));
 
 import { GET } from '@/app/api/expertise/cv-import/wizard-extract/status/route';
@@ -38,6 +45,11 @@ describe('/api/expertise/cv-import/wizard-extract/status', () => {
     vi.clearAllMocks();
     mocks.createRequestId.mockReturnValue('req-status');
     mocks.jsonWithRequestId.mockImplementation(jsonResponse);
+    mocks.claimPythonInternalJobById.mockResolvedValue(null);
+    mocks.executeClaimedPythonInternalJob.mockResolvedValue({
+      status: 'completed',
+      result: {},
+    });
     mocks.createClient.mockResolvedValue({
       auth: {
         getUser: async () => ({
@@ -98,6 +110,175 @@ describe('/api/expertise/cv-import/wizard-extract/status', () => {
     ]);
   });
 
+  it('claims queued jobs inline and returns the completed result', async () => {
+    mocks.getPythonInternalJob
+      .mockResolvedValueOnce({
+        id: 'job-1',
+        jobType: 'document_intelligence_extract_only',
+        status: 'pending',
+        payload: {
+          user_id: '11111111-1111-4111-8111-111111111111',
+          requested_at: '2026-03-06T12:00:00.000Z',
+          documents: [
+            {
+              document_id: 'doc_1',
+              file_name: 'cv.pdf',
+              storage_path: 'user/job/doc_1-cv.pdf',
+              content_type: 'application/pdf',
+              context: 'cv',
+            },
+          ],
+        },
+        result: null,
+      })
+      .mockResolvedValueOnce({
+        id: 'job-1',
+        jobType: 'document_intelligence_extract_only',
+        status: 'completed',
+        payload: {
+          user_id: '11111111-1111-4111-8111-111111111111',
+          requested_at: '2026-03-06T12:00:00.000Z',
+          documents: [
+            {
+              document_id: 'doc_1',
+              file_name: 'cv.pdf',
+              storage_path: 'user/job/doc_1-cv.pdf',
+              content_type: 'application/pdf',
+              context: 'cv',
+            },
+          ],
+        },
+        result: {
+          documents: [
+            {
+              document_id: 'doc_1',
+              file_name: 'cv.pdf',
+              text: 'React TypeScript',
+              context: 'cv',
+            },
+          ],
+          failed_documents: [],
+          cleanup_pending: false,
+        },
+      });
+    mocks.claimPythonInternalJobById.mockResolvedValue({
+      id: 'job-1',
+      jobType: 'document_intelligence_extract_only',
+      attempts: 1,
+      maxAttempts: 3,
+      source: 'manual',
+      payload: {
+        user_id: '11111111-1111-4111-8111-111111111111',
+      },
+    });
+
+    const request = new NextRequest(
+      'http://localhost/api/expertise/cv-import/wizard-extract/status?job_id=job-1'
+    );
+
+    const response = await GET(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.status).toBe('completed');
+    expect(mocks.claimPythonInternalJobById).toHaveBeenCalledWith('job-1');
+    expect(mocks.executeClaimedPythonInternalJob).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps queued jobs queued when inline claim loses the race', async () => {
+    mocks.getPythonInternalJob
+      .mockResolvedValueOnce({
+        id: 'job-1',
+        jobType: 'document_intelligence_extract_only',
+        status: 'pending',
+        payload: {
+          user_id: '11111111-1111-4111-8111-111111111111',
+          requested_at: '2026-03-06T12:00:00.000Z',
+          documents: [
+            {
+              document_id: 'doc_1',
+              file_name: 'cv.pdf',
+              storage_path: 'user/job/doc_1-cv.pdf',
+              content_type: 'application/pdf',
+              context: 'cv',
+            },
+          ],
+        },
+        result: null,
+      })
+      .mockResolvedValueOnce({
+        id: 'job-1',
+        jobType: 'document_intelligence_extract_only',
+        status: 'pending',
+        payload: {
+          user_id: '11111111-1111-4111-8111-111111111111',
+          requested_at: '2026-03-06T12:00:00.000Z',
+          documents: [
+            {
+              document_id: 'doc_1',
+              file_name: 'cv.pdf',
+              storage_path: 'user/job/doc_1-cv.pdf',
+              content_type: 'application/pdf',
+              context: 'cv',
+            },
+          ],
+        },
+        result: null,
+      });
+    mocks.claimPythonInternalJobById.mockResolvedValue(null);
+
+    const request = new NextRequest(
+      'http://localhost/api/expertise/cv-import/wizard-extract/status?job_id=job-1'
+    );
+
+    const response = await GET(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      job_id: 'job-1',
+      status: 'queued',
+    });
+    expect(mocks.executeClaimedPythonInternalJob).not.toHaveBeenCalled();
+  });
+
+  it('returns processing without double-running leased jobs', async () => {
+    mocks.getPythonInternalJob.mockResolvedValue({
+      id: 'job-1',
+      jobType: 'document_intelligence_extract_only',
+      status: 'leased',
+      payload: {
+        user_id: '11111111-1111-4111-8111-111111111111',
+        requested_at: '2026-03-06T12:00:00.000Z',
+        documents: [
+          {
+            document_id: 'doc_1',
+            file_name: 'cv.pdf',
+            storage_path: 'user/job/doc_1-cv.pdf',
+            content_type: 'application/pdf',
+            context: 'cv',
+          },
+        ],
+      },
+      result: null,
+    });
+
+    const request = new NextRequest(
+      'http://localhost/api/expertise/cv-import/wizard-extract/status?job_id=job-1'
+    );
+
+    const response = await GET(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      job_id: 'job-1',
+      status: 'processing',
+    });
+    expect(mocks.claimPythonInternalJobById).not.toHaveBeenCalled();
+    expect(mocks.executeClaimedPythonInternalJob).not.toHaveBeenCalled();
+  });
+
   it('returns 404 when the current user does not own the job', async () => {
     mocks.getPythonInternalJob.mockResolvedValue({
       id: 'job-1',
@@ -147,6 +328,88 @@ describe('/api/expertise/cv-import/wizard-extract/status', () => {
           },
         ],
       },
+      result: {
+        error: 'PythonCvExtractError',
+        message: 'Python extract unavailable',
+        code: 'CV_IMPORT_PROXY_UNAVAILABLE',
+      },
+    });
+
+    const request = new NextRequest(
+      'http://localhost/api/expertise/cv-import/wizard-extract/status?job_id=job-1'
+    );
+
+    const response = await GET(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      job_id: 'job-1',
+      status: 'failed',
+      error: 'Python extract unavailable',
+      message: 'Python extract unavailable',
+      code: 'CV_IMPORT_PROXY_UNAVAILABLE',
+    });
+  });
+
+  it('returns normalized failure payloads after inline execution fails', async () => {
+    mocks.getPythonInternalJob
+      .mockResolvedValueOnce({
+        id: 'job-1',
+        jobType: 'document_intelligence_extract_only',
+        status: 'pending',
+        payload: {
+          user_id: '11111111-1111-4111-8111-111111111111',
+          requested_at: '2026-03-06T12:00:00.000Z',
+          documents: [
+            {
+              document_id: 'doc_1',
+              file_name: 'cv.pdf',
+              storage_path: 'user/job/doc_1-cv.pdf',
+              content_type: 'application/pdf',
+              context: 'cv',
+            },
+          ],
+        },
+        result: null,
+      })
+      .mockResolvedValueOnce({
+        id: 'job-1',
+        jobType: 'document_intelligence_extract_only',
+        status: 'failed',
+        lastError: 'Python extract unavailable',
+        payload: {
+          user_id: '11111111-1111-4111-8111-111111111111',
+          requested_at: '2026-03-06T12:00:00.000Z',
+          documents: [
+            {
+              document_id: 'doc_1',
+              file_name: 'cv.pdf',
+              storage_path: 'user/job/doc_1-cv.pdf',
+              content_type: 'application/pdf',
+              context: 'cv',
+            },
+          ],
+        },
+        result: {
+          error: 'PythonCvExtractError',
+          message: 'Python extract unavailable',
+          code: 'CV_IMPORT_PROXY_UNAVAILABLE',
+        },
+      });
+    mocks.claimPythonInternalJobById.mockResolvedValue({
+      id: 'job-1',
+      jobType: 'document_intelligence_extract_only',
+      attempts: 1,
+      maxAttempts: 3,
+      source: 'manual',
+      payload: {
+        user_id: '11111111-1111-4111-8111-111111111111',
+      },
+    });
+    mocks.executeClaimedPythonInternalJob.mockResolvedValue({
+      status: 'failed',
+      error: 'Python extract unavailable',
       result: {
         error: 'PythonCvExtractError',
         message: 'Python extract unavailable',

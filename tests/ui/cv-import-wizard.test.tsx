@@ -541,6 +541,39 @@ describe('CvImportWizard', () => {
     expect(toastInfoMock).toHaveBeenCalledWith('CV analysis recovered via fallback path.');
   });
 
+  it('falls back to local extraction when the queue stays stuck too long', async () => {
+    const dateNowSpy = vi.spyOn(Date, 'now');
+    let now = 0;
+    dateNowSpy.mockImplementation(() => {
+      now += 6_000;
+      return now;
+    });
+    extractPdfTextFromFileMock.mockResolvedValueOnce('React TypeScript');
+    try {
+      installAsyncAnalyzeFlow({
+        statusResponses: [
+          {
+            job_id: 'job-1',
+            status: 'queued',
+            poll_after_ms: 1,
+          },
+        ],
+      });
+
+      render(<CvImportWizard />);
+      await uploadPdf();
+      await clickAnalyze();
+
+      await waitFor(() => {
+        expect(extractPdfTextFromFileMock).toHaveBeenCalledTimes(1);
+      });
+
+      expect(toastInfoMock).toHaveBeenCalledWith('CV analysis recovered via fallback path.');
+    } finally {
+      dateNowSpy.mockRestore();
+    }
+  });
+
   it('reruns OCR for scanned PDFs after async extraction completes', async () => {
     isOcrClientEnabledMock.mockReturnValue(true);
     extractPdfTextWithOcrMock.mockResolvedValueOnce({ text: 'OCR extracted text' });
@@ -674,5 +707,50 @@ describe('CvImportWizard', () => {
     await waitFor(() => {
       expect(screen.getByText('Skills to review')).toBeInTheDocument();
     });
+  });
+
+  it('shows a clear error when a resumed queued job stays stuck too long', async () => {
+    const dateNowSpy = vi.spyOn(Date, 'now');
+    let now = 0;
+    dateNowSpy.mockImplementation(() => {
+      now += 6_000;
+      return now;
+    });
+    try {
+      window.sessionStorage.setItem(
+        'cv-import-wizard-extract-job',
+        JSON.stringify({
+          jobId: 'job-1',
+          fingerprint: 'doc-1:cv.pdf:0:0',
+          documents: [{ requestId: 'doc-1', localId: 'doc-1', fileName: 'cv.pdf' }],
+        })
+      );
+
+      installAsyncAnalyzeFlow({
+        statusResponses: [
+          {
+            job_id: 'job-1',
+            status: 'queued',
+            poll_after_ms: 1,
+          },
+        ],
+      });
+
+      render(<CvImportWizard />);
+
+      await waitFor(() => {
+        expect(toastErrorMock).toHaveBeenCalledWith(
+          'Background extraction is taking longer than expected. Please retry the analysis.'
+        );
+      });
+
+      expect(
+        screen.getByText(
+          'Background extraction is taking longer than expected. Please retry the analysis.'
+        )
+      ).toBeInTheDocument();
+    } finally {
+      dateNowSpy.mockRestore();
+    }
   });
 });

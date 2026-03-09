@@ -40,6 +40,26 @@ export type PythonInternalJobRecord = {
   updatedAt: Date;
 };
 
+function mapClaimedPythonInternalJobRows(
+  rows: Array<{
+    id: string;
+    job_type: PythonInternalJobType;
+    attempts: number;
+    max_attempts: number;
+    source: string;
+    payload: Record<string, unknown> | null;
+  }>
+): ClaimedPythonInternalJob[] {
+  return rows.map((row) => ({
+    id: row.id,
+    jobType: row.job_type,
+    attempts: row.attempts,
+    maxAttempts: row.max_attempts,
+    source: row.source,
+    payload: row.payload || {},
+  }));
+}
+
 function parsePositiveInt(value: string | undefined, fallback: number): number {
   if (!value) {
     return fallback;
@@ -185,14 +205,53 @@ export async function claimPythonInternalJobs(
     payload: Record<string, unknown> | null;
   }>;
 
-  return rows.map((row) => ({
-    id: row.id,
-    jobType: row.job_type,
-    attempts: row.attempts,
-    maxAttempts: row.max_attempts,
-    source: row.source,
-    payload: row.payload || {},
-  }));
+  return mapClaimedPythonInternalJobRows(rows);
+}
+
+export async function claimPythonInternalJobById(
+  jobId: string
+): Promise<ClaimedPythonInternalJob | null> {
+  const leaseSeconds = resolveLeaseSeconds();
+
+  const result = await db.execute(sql`
+    WITH claimable AS (
+      SELECT id
+      FROM public.python_internal_jobs
+      WHERE id = ${jobId}
+      AND (
+        status = 'pending'
+        OR (status = 'leased' AND lease_expires_at IS NOT NULL AND lease_expires_at <= now())
+      )
+      AND next_run_at <= now()
+      FOR UPDATE SKIP LOCKED
+    )
+    UPDATE public.python_internal_jobs AS jobs
+    SET
+      status = 'leased',
+      attempts = jobs.attempts + 1,
+      lease_expires_at = now() + (${leaseSeconds} * interval '1 second'),
+      updated_at = now()
+    FROM claimable
+    WHERE jobs.id = claimable.id
+    RETURNING
+      jobs.id,
+      jobs.job_type,
+      jobs.attempts,
+      jobs.max_attempts,
+      jobs.source,
+      jobs.payload;
+  `);
+
+  const rows = getRows(result) as Array<{
+    id: string;
+    job_type: PythonInternalJobType;
+    attempts: number;
+    max_attempts: number;
+    source: string;
+    payload: Record<string, unknown> | null;
+  }>;
+
+  return mapClaimedPythonInternalJobRows(rows)[0] ?? null;
 }
 
 export async function markPythonInternalJobSuccess(

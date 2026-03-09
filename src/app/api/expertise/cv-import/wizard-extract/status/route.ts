@@ -7,38 +7,18 @@ import {
   CvImportExtractJobPayloadSchema,
   CvImportExtractJobResultSchema,
 } from '@/lib/expertise/cv-import-wizard-extract';
-import { getPythonInternalJob } from '@/lib/python-internal/job-queue';
+import {
+  claimPythonInternalJobById,
+  getPythonInternalJob,
+  type PythonInternalJobRecord,
+} from '@/lib/python-internal/job-queue';
+import { executeClaimedPythonInternalJob } from '@/lib/python-internal/worker';
 import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
-export async function GET(request: NextRequest) {
-  const requestId = createRequestId(request);
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return jsonWithRequestId(requestId, { error: 'Unauthorized' }, 401);
-  }
-
-  const jobId = request.nextUrl.searchParams.get('job_id')?.trim();
-  if (!jobId) {
-    return jsonWithRequestId(requestId, { error: 'job_id is required' }, 400);
-  }
-
-  const job = await getPythonInternalJob(jobId);
-  if (!job || job.jobType !== CV_IMPORT_EXTRACT_JOB_TYPE) {
-    return jsonWithRequestId(requestId, { error: 'Extraction job not found' }, 404);
-  }
-
-  const payload = CvImportExtractJobPayloadSchema.safeParse(job.payload);
-  if (!payload.success || payload.data.user_id !== user.id) {
-    return jsonWithRequestId(requestId, { error: 'Extraction job not found' }, 404);
-  }
-
+function buildStatusResponse(requestId: string, job: PythonInternalJobRecord) {
   if (job.status === 'pending') {
     return jsonWithRequestId(requestId, {
       job_id: job.id,
@@ -98,4 +78,53 @@ export async function GET(request: NextRequest) {
     message: failureMessage,
     ...(failureCode ? { code: failureCode } : {}),
   });
+}
+
+export async function GET(request: NextRequest) {
+  const requestId = createRequestId(request);
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return jsonWithRequestId(requestId, { error: 'Unauthorized' }, 401);
+  }
+
+  const jobId = request.nextUrl.searchParams.get('job_id')?.trim();
+  if (!jobId) {
+    return jsonWithRequestId(requestId, { error: 'job_id is required' }, 400);
+  }
+
+  let job = await getPythonInternalJob(jobId);
+  if (!job || job.jobType !== CV_IMPORT_EXTRACT_JOB_TYPE) {
+    return jsonWithRequestId(requestId, { error: 'Extraction job not found' }, 404);
+  }
+
+  const payload = CvImportExtractJobPayloadSchema.safeParse(job.payload);
+  if (!payload.success || payload.data.user_id !== user.id) {
+    return jsonWithRequestId(requestId, { error: 'Extraction job not found' }, 404);
+  }
+
+  if (job.status === 'pending') {
+    const claimedJob = await claimPythonInternalJobById(job.id);
+    if (claimedJob) {
+      await executeClaimedPythonInternalJob({
+        request,
+        job: claimedJob,
+      });
+
+      const refreshedJob = await getPythonInternalJob(job.id);
+      if (refreshedJob && refreshedJob.jobType === CV_IMPORT_EXTRACT_JOB_TYPE) {
+        job = refreshedJob;
+      }
+    } else {
+      const refreshedJob = await getPythonInternalJob(job.id);
+      if (refreshedJob && refreshedJob.jobType === CV_IMPORT_EXTRACT_JOB_TYPE) {
+        job = refreshedJob;
+      }
+    }
+  }
+
+  return buildStatusResponse(requestId, job);
 }

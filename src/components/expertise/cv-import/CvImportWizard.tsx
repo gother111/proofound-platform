@@ -302,6 +302,19 @@ const PROXY_RETRYABLE_CODES = new Set([
   'CV_IMPORT_PROXY_INVALID_CONTRACT',
 ]);
 const OCR_RETRYABLE_PARSE_CODES = new Set(['PDF_EMPTY_TEXT']);
+const MAX_QUEUED_EXTRACT_WAIT_MS = 10_000;
+const QUEUED_EXTRACT_STALLED_CODE = 'CV_IMPORT_EXTRACT_STALLED';
+const QUEUED_EXTRACT_STALLED_MESSAGE =
+  'Background extraction is taking too long. Retrying with local PDF extraction...';
+
+class QueuedExtractStalledError extends Error {
+  code = QUEUED_EXTRACT_STALLED_CODE;
+
+  constructor(message = QUEUED_EXTRACT_STALLED_MESSAGE) {
+    super(message);
+    this.name = 'QueuedExtractStalledError';
+  }
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -1841,6 +1854,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
   };
 
   const pollExtractJobUntilSettled = async (jobId: string, sequence: number) => {
+    const queuedSince = Date.now();
+
     while (activeExtractSequenceRef.current === sequence) {
       const response = await apiFetch(
         `/api/expertise/cv-import/wizard-extract/status?job_id=${encodeURIComponent(jobId)}`
@@ -1867,6 +1882,10 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
           : 'Extracting text from uploaded PDFs...'
       );
 
+      if (payload.status === 'queued' && Date.now() - queuedSince >= MAX_QUEUED_EXTRACT_WAIT_MS) {
+        throw new QueuedExtractStalledError();
+      }
+
       await sleep(payload.poll_after_ms);
     }
 
@@ -1880,7 +1899,20 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
   ) => {
     setRunningProgress('queued', 34, 'Resuming background extraction...');
 
-    const settled = await pollExtractJobUntilSettled(storedJob.jobId, sequence);
+    let settled: ApiExtractStatusResponse;
+    try {
+      settled = await pollExtractJobUntilSettled(storedJob.jobId, sequence);
+    } catch (error) {
+      clearStoredExtractJobState();
+
+      if (error instanceof QueuedExtractStalledError) {
+        throw new Error(
+          'Background extraction is taking longer than expected. Please retry the analysis.'
+        );
+      }
+
+      throw error;
+    }
     clearStoredExtractJobState();
 
     if (settled.status === 'failed') {
@@ -1972,7 +2004,29 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     setRunningProgress('queued', 34, 'Queued for extraction. Waiting for worker...');
 
     const sequence = ++activeExtractSequenceRef.current;
-    const settled = await pollExtractJobUntilSettled(queued.job_id, sequence);
+    let settled: ApiExtractStatusResponse;
+
+    try {
+      settled = await pollExtractJobUntilSettled(queued.job_id, sequence);
+    } catch (error) {
+      clearStoredExtractJobState();
+
+      if (error instanceof QueuedExtractStalledError) {
+        if (canUseLocalFallback(sourceByRequestId)) {
+          await analyzeWithLocalTextFallback({
+            sourceByRequestId,
+            progressMessage: QUEUED_EXTRACT_STALLED_MESSAGE,
+          });
+          return;
+        }
+
+        throw new Error(
+          'Background extraction is taking longer than expected. Please retry the analysis.'
+        );
+      }
+
+      throw error;
+    }
     clearStoredExtractJobState();
 
     if (settled.status === 'failed') {

@@ -5,12 +5,9 @@ const mocks = vi.hoisted(() => ({
   isPythonInternalJobsEnabled: vi.fn(),
   claimPythonInternalJobs: vi.fn(),
   countPendingPythonInternalJobs: vi.fn(),
-  markPythonInternalJobSuccess: vi.fn(),
-  markPythonInternalJobFailure: vi.fn(),
   resolvePythonInternalWorkerBatchSize: vi.fn(),
   resolvePythonInternalWorkerConcurrency: vi.fn(),
-  executePythonInternalJob: vi.fn(),
-  processCvImportExtractJob: vi.fn(),
+  executeClaimedPythonInternalJob: vi.fn(),
   logInfo: vi.fn(),
   logError: vi.fn(),
 }));
@@ -23,18 +20,12 @@ vi.mock('@/lib/python-internal/job-queue', () => ({
   isPythonInternalJobsEnabled: mocks.isPythonInternalJobsEnabled,
   claimPythonInternalJobs: mocks.claimPythonInternalJobs,
   countPendingPythonInternalJobs: mocks.countPendingPythonInternalJobs,
-  markPythonInternalJobSuccess: mocks.markPythonInternalJobSuccess,
-  markPythonInternalJobFailure: mocks.markPythonInternalJobFailure,
   resolvePythonInternalWorkerBatchSize: mocks.resolvePythonInternalWorkerBatchSize,
   resolvePythonInternalWorkerConcurrency: mocks.resolvePythonInternalWorkerConcurrency,
 }));
 
-vi.mock('@/lib/python-internal/client', () => ({
-  executePythonInternalJob: mocks.executePythonInternalJob,
-}));
-
-vi.mock('@/lib/expertise/cv-import-extract-worker', () => ({
-  processCvImportExtractJob: mocks.processCvImportExtractJob,
+vi.mock('@/lib/python-internal/worker', () => ({
+  executeClaimedPythonInternalJob: mocks.executeClaimedPythonInternalJob,
 }));
 
 vi.mock('@/lib/log', () => ({
@@ -54,17 +45,13 @@ describe('/api/cron/python-internal-worker', () => {
     mocks.resolvePythonInternalWorkerBatchSize.mockReturnValue(10);
     mocks.resolvePythonInternalWorkerConcurrency.mockReturnValue(2);
     mocks.countPendingPythonInternalJobs.mockResolvedValue(0);
-    mocks.markPythonInternalJobSuccess.mockResolvedValue(undefined);
-    mocks.markPythonInternalJobFailure.mockResolvedValue(undefined);
-    mocks.processCvImportExtractJob.mockResolvedValue({
-      documents: [],
-      failed_documents: [],
-      cleanup_pending: false,
-      cleanup_failed_paths: [],
+    mocks.executeClaimedPythonInternalJob.mockResolvedValue({
+      status: 'completed',
+      result: {},
     });
   });
 
-  it('drains claimed jobs through the Python internal client', async () => {
+  it('counts completed claimed jobs as successful', async () => {
     mocks.claimPythonInternalJobs.mockResolvedValue([
       {
         id: '7f3fa932-5187-420f-ab86-0408a42fd2f5',
@@ -84,12 +71,8 @@ describe('/api/cron/python-internal-worker', () => {
         },
       },
     ]);
-    mocks.executePythonInternalJob.mockResolvedValue({
-      ok: true,
-      service: 'document_intelligence',
-      contract_version: '2026-03-06.python-internal.v1',
-      job_id: '7f3fa932-5187-420f-ab86-0408a42fd2f5',
-      job_type: 'document_intelligence_quality_report',
+    mocks.executeClaimedPythonInternalJob.mockResolvedValue({
+      status: 'completed',
       result: {
         documents_total: 1,
       },
@@ -105,14 +88,10 @@ describe('/api/cron/python-internal-worker', () => {
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
     expect(body.successCount).toBe(1);
-    expect(mocks.executePythonInternalJob).toHaveBeenCalledTimes(1);
-    expect(mocks.markPythonInternalJobSuccess).toHaveBeenCalledWith(
-      '7f3fa932-5187-420f-ab86-0408a42fd2f5',
-      { documents_total: 1 }
-    );
+    expect(mocks.executeClaimedPythonInternalJob).toHaveBeenCalledTimes(1);
   });
 
-  it('records failures when Python execution throws', async () => {
+  it('counts failed claimed jobs as errors', async () => {
     mocks.claimPythonInternalJobs.mockResolvedValue([
       {
         id: '7f3fa932-5187-420f-ab86-0408a42fd2f5',
@@ -123,7 +102,14 @@ describe('/api/cron/python-internal-worker', () => {
         payload: {},
       },
     ]);
-    mocks.executePythonInternalJob.mockRejectedValue(new Error('Python worker unavailable'));
+    mocks.executeClaimedPythonInternalJob.mockResolvedValue({
+      status: 'failed',
+      error: 'Python worker unavailable',
+      result: {
+        error: 'Error',
+        message: 'Python worker unavailable',
+      },
+    });
 
     const response = await GET(
       new Request('https://example.com/api/cron/python-internal-worker', {
@@ -134,18 +120,9 @@ describe('/api/cron/python-internal-worker', () => {
 
     expect(response.status).toBe(200);
     expect(body.errorCount).toBe(1);
-    expect(mocks.markPythonInternalJobFailure).toHaveBeenCalledWith(
-      '7f3fa932-5187-420f-ab86-0408a42fd2f5',
-      'Python worker unavailable',
-      {
-        error: 'Error',
-        message: 'Python worker unavailable',
-        code: undefined,
-      }
-    );
   });
 
-  it('processes cv extract-only jobs in the node worker path', async () => {
+  it('passes extract-only jobs through the shared execution helper', async () => {
     mocks.claimPythonInternalJobs.mockResolvedValue([
       {
         id: '7f3fa932-5187-420f-ab86-0408a42fd2f5',
@@ -168,34 +145,9 @@ describe('/api/cron/python-internal-worker', () => {
         },
       },
     ]);
-    mocks.processCvImportExtractJob.mockResolvedValue({
-      documents: [
-        {
-          document_id: 'doc_1',
-          file_name: 'cv.pdf',
-          text: 'React TypeScript',
-          context: 'cv',
-        },
-      ],
-      failed_documents: [],
-      cleanup_pending: false,
-      cleanup_failed_paths: [],
-    });
-
-    const response = await GET(
-      new Request('https://example.com/api/cron/python-internal-worker', {
-        headers: { authorization: 'Bearer top-secret' },
-      }) as any
-    );
-    const body = await response.json();
-
-    expect(response.status).toBe(200);
-    expect(body.successCount).toBe(1);
-    expect(mocks.processCvImportExtractJob).toHaveBeenCalledTimes(1);
-    expect(mocks.executePythonInternalJob).not.toHaveBeenCalled();
-    expect(mocks.markPythonInternalJobSuccess).toHaveBeenCalledWith(
-      '7f3fa932-5187-420f-ab86-0408a42fd2f5',
-      {
+    mocks.executeClaimedPythonInternalJob.mockResolvedValue({
+      status: 'completed',
+      result: {
         documents: [
           {
             document_id: 'doc_1',
@@ -207,7 +159,18 @@ describe('/api/cron/python-internal-worker', () => {
         failed_documents: [],
         cleanup_pending: false,
         cleanup_failed_paths: [],
-      }
+      },
+    });
+
+    const response = await GET(
+      new Request('https://example.com/api/cron/python-internal-worker', {
+        headers: { authorization: 'Bearer top-secret' },
+      }) as any
     );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.successCount).toBe(1);
+    expect(mocks.executeClaimedPythonInternalJob).toHaveBeenCalledTimes(1);
   });
 });
