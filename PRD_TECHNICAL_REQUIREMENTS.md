@@ -1,7 +1,7 @@
 # PROOFOUND — PRD TECHNICAL REQUIREMENTS & ARCHITECTURE
 
 **Document Version**: 1.0  
-**Last Updated**: 2026-03-08  
+**Last Updated**: 2026-03-09  
 **Scope**: Complete technical specifications for MVP → Future-proof architecture  
 **Audience**: Engineering, Product, Leadership
 
@@ -115,15 +115,40 @@
   - Access: Anyone authenticated
   - Storage: Standard, CDN-cacheable
 
-**Staged Identity Reveal** (Messaging):
+**Blind-by-default progressive reveal** (matching, shortlist review, messaging):
 
-- ✅ **Stage 1 (Masked)**: Both parties anonymous ("Contributor #123")
-  - No PII exchange
-  - Platform-mediated messaging
-  - Auto-detection of PII in messages (email/phone regex)
-- ✅ **Stage 2 (Revealed)**: Mutual consent to reveal identities
-  - Full names, contact info visible
-  - Direct communication enabled
+- ✅ Matching and shortlist review are blind-by-default. Identity, contact, exact location, compensation specifics, public portfolio links, and other bias-sensitive signals remain hidden unless a later reveal stage explicitly permits them.
+- ✅ Public portfolio publication is a separate explicit-public surface and does not weaken blind review inside matching surfaces.
+- ✅ Candidate approval is required for any identity-bearing reveal, including name, photo, employer or school names, direct portfolio access, exact location, exact compensation, or contact details.
+- ✅ Existing implementation reveal scopes remain the canonical technical contract:
+  - `blind` maps to product Stage 0 anonymous review and Stage 1 capability + proof review.
+  - `shortlist_identity` maps to product Stage 2 contextual reveal.
+  - `full_identity` maps to product Stage 3 intro-approved reveal and Stage 4 interview coordination reveal.
+- ✅ Product stage rules:
+  - **Stage 0: anonymous / redacted review**
+    - Visible: anonymous label, capability summary, skill clusters, proof-pack summaries, outcome evidence summaries, work-mode fit, timezone band or broad region if needed, compensation fit as `overlap / no overlap / not shared`, narrow verification labels, rank band or unordered shortlist position.
+    - Hidden: name, handle, photo, exact location, employer names, school names, exact compensation, contact details, public portfolio URL, direct social/profile links, demographic or inferred bias-sensitive signals.
+    - Allowed actions: shortlist, pass, snooze, request more proof, request contextual reveal.
+  - **Stage 1: capability + proof review**
+    - Visible: Stage 0 plus deeper proof-pack content, artifact summaries, methods/tools, outcome metrics, verification summary, and redacted class labels such as “global NGO” or “public university” when redaction is enabled.
+    - Hidden: name, photo, handle, direct links, contact details, exact employer or school names when redaction is enabled, exact location, exact compensation, demographic or inferred bias-sensitive signals.
+    - Allowed actions: keep under review, shortlist, pass, request contextual reveal, request missing proof.
+  - **Stage 2: contextual reveal**
+    - Visible: Stage 1 plus exact timezone, metro or region, work authorization summary, availability window, and employer, school, or portfolio context only when redaction is disabled and candidate consent exists.
+    - Hidden: personal contact details, non-revealable private social links, exact compensation unless separately allowed, demographic or inferred bias-sensitive signals.
+    - Allowed actions: request intro, request Stage 3 reveal, pass with structured feedback, continue in-platform discussion.
+  - **Stage 3: intro-approved reveal**
+    - Visible: full name, photo, public portfolio URL if published, employer and school names according to profile visibility, allowed verification labels, and the identified intro thread.
+    - Hidden: direct email, phone, and off-platform contact details by default; exact compensation unless separately allowed.
+    - Allowed actions: approve intro, open identified thread, exchange structured intro context, request interview.
+  - **Stage 4: interview coordination reveal**
+    - Visible: direct contact channel needed for coordination, exact location only when needed for interview logistics, calendar or meeting details, and exact compensation only when separately allowed or negotiation-safe.
+    - Hidden: anything outside coordination scope plus demographic or inferred bias-sensitive signals.
+    - Allowed actions: schedule interview, exchange meeting details, negotiate logistics.
+- ✅ Redaction mode takes priority over general public visibility inside matching surfaces.
+- ✅ Exact rank is hidden by default. Rank bands are the standard until fairness policy and workflow stage permit exact rank exposure.
+- ✅ Verification badges remain conservative in early stages and must not reveal raw verifier identities or detailed provenance.
+- ✅ Manually uploaded artifacts with identifying metadata must be sanitized, withheld, or requires-review before they can appear in reveal-stage UI.
 
 **GDPR Compliance** (EU users):
 
@@ -158,6 +183,7 @@
 - ✅ Security events: Login, logout, password changes, permission changes
 - ✅ Privacy events: Profile views by orgs, data exports, consent changes
 - ✅ Admin events: Admin access to user data, moderation actions, deletions
+- ✅ Reveal events: requested scope, granted scope, actor type, actor ID when available, target profile, org, assignment, and match IDs, source surface, trigger type, reason code, consent state, policy version, outcome, timestamp
 - ✅ Retention: 2 years for compliance
 
 #### Future Privacy Enhancements
@@ -1148,7 +1174,27 @@ TTL: Refresh daily (employment) or weekly (volunteering)
 Primary Key: id (UUID)
 Unique: (actorProfileId, assignmentId, targetProfileId)
 Fields: actorProfileId, assignmentId, targetProfileId, createdAt
-Purpose: Track "Interested" actions → triggers Stage 1 messaging
+Purpose: Track downstream interest and intro intent. It may support reveal requests, but it does not itself grant identity reveal.
+```
+
+**`match_review_states`** (Blind review source of truth):
+
+```
+Primary Key: matchId (UUID, FK → matches.id)
+Fields: matchId, assignmentId, profileId, orgId, reviewStage, revealScope, shortlistedAt, shortlistedBy, decisionAt, decisionBy, fullIdentityUnlockedAt, fullIdentityUnlockedBy, fullIdentityUnlockTrigger, createdAt, updatedAt
+Purpose: Persist blind review posture and reveal scope for each match
+Canonical mapping:
+  - reviewStage `blind_review` + revealScope `blind` cover product Stage 0 and Stage 1
+  - revealScope `shortlist_identity` covers product Stage 2 contextual reveal
+  - revealScope `full_identity` covers product Stage 3 intro-approved reveal and Stage 4 interview coordination reveal
+```
+
+**`reveal_events`** (Reveal audit contract):
+
+```
+Primary Key: id (UUID)
+Fields: matchId, assignmentId, profileId, orgId, actorId, actorRole, actorType, triggerType, requestedScope, grantedScope, reasonCode, sourceSurface, contextJson, outcome, occurredAt
+Purpose: Immutable audit trail for reveal_requested, reveal_granted, reveal_denied, and related override or policy actions
 ```
 
 **Matching Algorithm** (Multi-factor):
@@ -1210,8 +1256,9 @@ Primary Key: id (UUID)
 Unique: matchId
 Fields: matchId, assignmentId, participantOneId, participantTwoId, stage (1=masked, 2=revealed), status (active/archived/closed), lastMessageAt
 Staged Reveal:
-  - Stage 1: Masked identities, platform-mediated
-  - Stage 2: Full reveal after mutual consent
+  - Conversation `stage=1` is the masked messaging state downstream of blind review and early reveal stages
+  - Conversation `stage=2` is the identified messaging state entered only after the reveal policy grants identity-bearing access
+  - Product reveal stages 0-4 are governed by `match_review_states` and `reveal_events`; conversation stage is not the source of truth for review permissions
 ```
 
 **`messages`** (Individual messages):
@@ -1638,14 +1685,17 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 - `/api/user/audit-log` - User audit log
 - `/api/user/consent` - Consent management
 
-**Matching Soft-Gate Contract (Lite Activation)**:
+**Matching and Intro Trust Contract**:
 
-- `POST /api/core/matching/profile` and `POST /api/core/matching/near-matches` return `200` for authenticated users even when Lite activation is incomplete.
-- When Lite requirements are unmet, payload includes:
+- `POST /api/core/matching/profile` and `POST /api/core/matching/near-matches` return `200` for authenticated users even when the profile is not yet match-visible or intro-eligible.
+- When trust requirements are unmet, payload includes:
   - `items` (may be empty)
-  - `eligibility` (full criteria and tier state)
+  - `eligibility` (full criteria and legacy compatibility state)
+  - `trustLevel`
+  - `introEligibility` with `status`, `reasonCodes`, `missingRequirements`, `nextActions`, `profileEligible`, and `assignmentEligible`
   - `topActions` (next best actions)
   - `meta.softGated=true`
+- `POST /api/core/matching/interest` returns `409 INTRO_QUALIFICATION_NOT_MET` when profile-level or assignment-level introduction gates are not satisfied, with blocked-state copy and remediation guidance while browse remains available.
 - `GET /api/core/matching/matching-profile` auto-bootstraps a baseline profile row if one does not exist, so new users avoid null-profile dead ends.
 
 **Cron Endpoints** (Vercel Cron):

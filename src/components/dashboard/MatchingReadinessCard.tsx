@@ -42,10 +42,15 @@ export function MatchingReadinessCard({ useMockData, onActionClick }: MatchingRe
           qualified_intro_ready: [],
         },
         legacyTier: 'none',
+        trustLevel: 'discoverable',
         flags: {
           portfolioReady: true,
           browseReady: false,
           qualifiedIntroReady: false,
+          discoverable: true,
+          matchVisible: false,
+          introEligible: false,
+          stronglyTrusted: false,
         },
         proofProgress: {
           totalProofs: 1,
@@ -106,7 +111,11 @@ export function MatchingReadinessCard({ useMockData, onActionClick }: MatchingRe
           </p>
         </div>
         <Badge variant="outline" className={DASHBOARD_STATUS_CHIP_CLASS}>
-          {data?.flags.browseReady ? 'Ready to browse' : 'Soft-gated'}
+          {data?.flags.matchVisible
+            ? 'Match-visible'
+            : data?.flags.discoverable
+              ? 'Discoverable'
+              : 'Soft-gated'}
         </Badge>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -137,12 +146,14 @@ export function MatchingReadinessCard({ useMockData, onActionClick }: MatchingRe
             Qualified introductions
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {data?.flags.qualifiedIntroReady
-              ? 'Qualified introductions are unlocked.'
+            {data?.flags.introEligible
+              ? data?.flags.stronglyTrusted
+                ? 'Introductions are unlocked and the profile carries a higher-trust label.'
+                : 'Introductions are unlocked.'
               : (fallbackCopy?.detail ??
-                'There are not enough qualified introductions yet. Your portfolio is still doing useful work while we protect quality.')}
+                'This profile can keep browsing and appear in matching once visible, but introductions stay paused until stronger relevant proof is in place.')}
           </p>
-          {!data?.flags.qualifiedIntroReady && missingIntro.length > 0 ? (
+          {!data?.flags.introEligible && missingIntro.length > 0 ? (
             <div className="mt-2 space-y-2">
               <p className="text-xs text-foreground">{missingIntro[0]?.detail}</p>
               {fallbackCopy ? (

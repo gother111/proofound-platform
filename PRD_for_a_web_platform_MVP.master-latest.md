@@ -1,7 +1,7 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-03-06`
+> Last Verified: `2026-03-09`
 
-# Addendum - PRD-Relevant Delta Note (2026-03-06)
+# Addendum - PRD-Relevant Delta Note (2026-03-09)
 
 Scope rule for this PRD:
 
@@ -37,6 +37,13 @@ PRD-relevant updates since `2026-02-26`:
   - `workplace_verified`
   - `identity_verified`
   - Inputs come from work email, LinkedIn, and attestations; Government ID is not exposed in the current self-serve UI
+- Matching and shortlist review are now documented as explicitly blind-by-default with progressive reveal:
+  - Stage 0 anonymous review
+  - Stage 1 capability + proof review
+  - Stage 2 contextual reveal
+  - Stage 3 intro-approved reveal
+  - Stage 4 interview coordination reveal
+  - Candidate approval is required for identity-bearing reveal
 - Data portability wording now matches the repo contract:
   - Versioned JSON export (`v3.0.0`)
   - Import validation plus consent acknowledgment
@@ -1694,13 +1701,16 @@ Each flow includes:
 **Why Now:** Moves from keyword CVs to structured, high-signal expertise representation that AI can’t trivially game.  
 **Acceptance Criteria:**
 
-- Users can activate in two tiers:
-  - **Lite (match unlock):** ≥3 L4 skills with level + recency, ≥1 proof overall, purpose present, and matching constraints saved.
-  - **Strong (quality boost):** ≥10 L4 skills with level + recency, ≥1 proof overall, purpose present, and matching constraints saved.
-- Activation is **non-blocking** for product access: users can open Matching immediately, while unmet Lite criteria are shown as checklist actions.
+- Users move through an explicit trust ladder instead of Lite/Strong:
+  - **Discoverable:** public basics, one target role or focus area, one recent L4 skill, one proof linked to that skill, and one practical preference.
+  - **Match-visible:** discoverable plus three recent L4 skills, two acceptable proofs across two distinct skills, desired roles, work mode, country or city, and basic availability.
+  - **Intro-eligible:** match-visible plus five recent L4 skills, four proof-linked L4 skills, three role-relevant proof-linked L4 skills, one trusted or attested proof-backed skill, fresh proof coverage, and complete intro preferences.
+  - **Strongly trusted:** intro-eligible plus deeper proof coverage across contexts and at least two active trust anchors.
+- Activation is **non-blocking** for product access: users can publish a portfolio and browse matching before they become intro-eligible.
+- Private browse unlocks before org-visible matching. Candidate visibility to org matching starts at **Match-visible**. Qualified introductions start only at **Intro-eligible**.
 - Users can still add/edit L4 properties (level, months, proof links/files) via guided flow or import.
 - Auto-suggest L4s from pasted CV/JD with explain-why; user acceptance/edit-in-place.
-- Time-to-activation (profile matchable at Lite tier) **≤ 20 minutes** P50 for first-time users.
+- Time-to-activation (profile becomes **Match-visible**) **≤ 20 minutes** P50 for first-time users.
 - Event tracking on add/edit; visible **Expertise depth** tile on Dashboard.  
   **MoSCoW:** **Must** (manual add + basic auto-suggest); **Should:** Gap Map basic; **Could:** bulk CSV import.
 
@@ -1712,13 +1722,17 @@ Each flow includes:
 **Acceptance Criteria:**
 
 - Generates ranked shortlists with composite score and **PAC** component.
+- Matching and shortlist review are blind-by-default. Default reviewer surfaces are limited to Stage 0 anonymous review or Stage 1 capability + proof review and must not expose identity-bearing fields.
 - **TTFQI median ≤ 72 hours** for at least one target cohort after activation (Part 2).
 - Inline “Why this match” with editable constraints (location, availability, verification gates) and quick actions (intro, pass, snooze).
 - Compensation visibility defaults to **overlap-only** in matching surfaces unless explicit exact-range visibility is granted.
 - Setup flow always shows **sample match previews** (real near-matches when available, clearly labeled mock samples otherwise).
 - Matching endpoints return eligibility guidance without hard blocking:
-  - If Lite criteria are unmet, return `200` with `items` (possibly empty), `eligibility`, and `topActions`.
-  - UI remains usable and surfaces “Get match-ready in 4 quick steps” guidance.
+  - If the user is not yet **Discoverable**, return `200` with `items` (possibly empty), `eligibility`, `trustLevel`, `introEligibility`, and `topActions`.
+  - If the user is **Discoverable** but not **Match-visible**, private browse remains usable while org-visible matching stays paused.
+  - If intro criteria are unmet, intro actions return `409 INTRO_QUALIFICATION_NOT_MET` with missing requirements, reason codes, and next actions, without blocking browse.
+- “Why this match” and pass reason codes must stay useful without exposing hidden employer names, school names, demographic markers, or private portfolio details.
+- Published public portfolios do not weaken blind review. Matching surfaces may show sanitized proof summaries, never direct identity-bearing portfolio links before the allowed reveal stage.
 - **Fairness note** per release with cohort checks where users opt-in to share demographics.  
   **MoSCoW:** **Must** (shortlist + why + quick actions); **Should:** snooze/feedback loops; **Could:** experiment flags for alternative scoring.
 
@@ -1745,8 +1759,49 @@ Each flow includes:
 - Field-level visibility (public, network-only, match-only, private) for purpose, artifacts, and selected L4s.
 - One-click **Redact name/photo** mode for blinded previews.
 - Single **“What others can see”** summary panel with quick preview-as entry points.
-- Privacy settings surfaced in relevant flows (purpose edit, artifact upload, match review).  
-  **MoSCoW:** **Must** (field-level + redact); **Could:** audience presets.
+- Privacy settings surfaced in relevant flows (purpose edit, artifact upload, match review).
+- **Blind-by-default progressive reveal stages**
+  - **Stage 0: anonymous / redacted review**
+    - Visible: anonymous label, capability summary, skill clusters, proof-pack summaries, outcome evidence summaries, work-mode fit, timezone band or broad region if needed, compensation fit as `overlap / no overlap / not shared`, narrow verification labels, rank band or unordered shortlist position.
+    - Hidden: name, handle, photo, exact location, employer names, school names, exact compensation, contact details, direct social/profile links, public portfolio URL, demographic or inferred bias-sensitive signals.
+    - Actions: shortlist, pass, snooze, request more proof, request contextual reveal.
+    - Reveal authority: org reviewer may request Stage 1 or Stage 2; system may suppress for fairness or policy reasons.
+    - Consent or policy: no candidate approval needed to remain blind; redact mode and field visibility always apply.
+    - Logged: `shortlist_generated`, `match_viewed`, `reveal_requested`, fairness suppression events, reviewer decision reason code.
+  - **Stage 1: capability + proof review**
+    - Visible: Stage 0 plus deeper proof-pack content, artifact summaries, methods/tools, outcome metrics, verification summary, and redacted class labels such as “global NGO” or “public university” when redaction is enabled.
+    - Hidden: name, photo, handle, direct links, contact details, exact employer or school names when redaction is enabled, exact location, exact compensation, demographic or inferred bias-sensitive signals.
+    - Actions: keep under review, shortlist, pass, request contextual reveal, request missing proof.
+    - Reveal authority: org reviewer requests Stage 2; system may deny if visibility, fairness, or artifact-safety rules would be violated.
+    - Consent or policy: candidate approval is not needed only while no identity-bearing field is exposed; identifying artifact metadata must stay sanitized or withheld.
+    - Logged: `reveal_requested`, `reveal_denied`, `review_override_applied`, reason-ledger updates.
+  - **Stage 2: contextual reveal**
+    - Visible: Stage 1 plus exact timezone, metro or region, work authorization summary, availability window, and employer, school, or portfolio context only when redaction is disabled and the candidate has allowed contextual reveal.
+    - Hidden: personal contact details, private social links not explicitly revealable, exact compensation unless separately allowed, demographic or inferred bias-sensitive signals.
+    - Actions: request intro, request Stage 3 reveal, pass with structured feedback, continue in-platform discussion.
+    - Reveal authority: org reviewer may request; candidate must approve any reveal that exposes identity-bearing context.
+    - Consent or policy: explicit candidate consent required for employer, school, portfolio URL, or other identity-bearing context; fairness suppression or admin hold may still deny.
+    - Logged: `reveal_requested`, `reveal_granted`, `reveal_denied`, consent capture, policy reason code.
+  - **Stage 3: intro-approved reveal**
+    - Visible: full name, photo, public portfolio URL if published, employer and school names according to profile visibility, full allowed verification labels, and the identified intro thread.
+    - Hidden: direct email, phone, and off-platform contact details by default; exact compensation unless separately allowed.
+    - Actions: approve intro, open identified thread, exchange structured intro context, request interview.
+    - Reveal authority: org requests intro-approved reveal; candidate must explicitly approve.
+    - Consent or policy: candidate approval and mutual intro state required; verification or fairness policy may still block stronger actions.
+    - Logged: `reveal_requested`, `reveal_granted`, intro workflow start, consent version, source surface, reason code.
+  - **Stage 4: interview coordination reveal**
+    - Visible: direct contact channel needed for coordination, exact location only when needed for interview logistics, calendar or meeting details, exact compensation only when the candidate separately allows it or the process reaches a negotiation-safe stage.
+    - Hidden: anything outside coordination scope plus demographic or inferred bias-sensitive signals.
+    - Actions: schedule interview, exchange meeting details, negotiate logistics.
+    - Reveal authority: either side may request after Stage 3; candidate approval required before direct contact or exact logistics are exposed.
+    - Consent or policy: explicit coordination consent and interview workflow trigger required.
+    - Logged: `reveal_requested`, `reveal_granted`, interview scheduling events, coordination consent, scope granted.
+- **Bypass prevention and artifact handling**
+  - Org reviewers cannot self-upgrade from blind review to identity reveal.
+  - Hidden identity-bearing links remain absent, not merely blurred.
+  - Manually uploaded artifacts that contain identifying metadata must render as sanitized, withheld, or requires-review, never silently leaked through filename, EXIF, watermark, embedded email, or author metadata.
+  - Public portfolios remain explicit publication surfaces, but matching review must not expose the direct route, handle, or indexable identity hooks before the allowed reveal stage.
+- **MoSCoW:** **Must** (field-level + redact + staged reveal); **Could:** audience presets.
 
 ---
 
@@ -2096,9 +2151,11 @@ Each flow includes:
 - Validate files (size/type); virus-scan uploads.
 - Auto-suggest pipeline extracts candidates, maps to known L4 IDs with confidence + “why” rationale.
 - Compute **expertise_depth** (count, recency of proofs).
-- Profile **activation** computes two states:
-  - **Lite matchable:** ≥3 skills with level + recency, ≥1 proof, purpose present, constraints saved.
-  - **Strong matchable:** ≥10 skills with level + recency, ≥1 proof, purpose present, constraints saved.
+- Profile trust and activation compute four states:
+  - **Discoverable:** portfolio basics plus one proof-linked recent skill and one practical preference.
+  - **Match-visible:** three recent L4 skills, two proof-backed skills, desired roles, work mode, location, and basic availability.
+  - **Intro-eligible:** five recent L4 skills, four proof-linked L4 skills, three role-relevant proof-linked L4 skills, one trusted or attested proof-backed skill, fresh qualifying proof, and complete intro preferences.
+  - **Strongly trusted:** intro-eligible plus deeper proof coverage and multiple active trust anchors.
 
 **Outputs**
 
@@ -2206,12 +2263,15 @@ Each flow includes:
 
 - Enforce visibility on all reads (UI & API) with defense-in-depth checks.
 - Redaction applies to profile preview and shortlist cards.
+- Matching and shortlist review must honor the staged reveal model. Redaction mode overrides general public visibility inside matching surfaces until the relevant stage allows identity-bearing fields.
+- Candidate-controlled reveal is the default for name, photo, exact location, employer, school, direct portfolio access, exact compensation, and contact details.
 - Audit log for changes; “restore defaults” control.
 
 **Outputs**
 
 - Live preview; updated profile/match cards.
 - “What others can see” summary buckets: public, network-only, match-only, private.
+- Blind review cards, contextual reveal states, intro-approved reveal, and interview-coordination reveal all render according to the same stage contract.
 - Audit trail accessible to the user.
 
 **Error & Empty States**
@@ -2224,6 +2284,9 @@ Each flow includes:
 - `visibility_changed` {entity, field, from, to}
 - `redact_mode_toggled` {enabled}
 - `preview_rendered` {mode}
+- `reveal_requested` {requested_scope, source_surface, reason_code, outcome}
+- `reveal_granted` {requested_scope, granted_scope, source_surface, reason_code}
+- `reveal_denied` {requested_scope, granted_scope, source_surface, reason_code}
 
 ---
 
@@ -2675,9 +2738,10 @@ Each flow includes:
 
 **F3 Expertise Atlas**
 
-- [ ] Lite activation unlocks matching at **≥3 L4** (with level + recency) + ≥1 proof + purpose + constraints.
-- [ ] Strong activation is recognized at **≥10 L4** (with level + recency) + ≥1 proof + purpose + constraints.
-- [ ] Matching remains accessible before Lite completion (no hard lock screen), with a non-blocking readiness checklist.
+- [ ] The trust ladder is explicit: **Discoverable**, **Match-visible**, **Intro-eligible**, **Strongly trusted**.
+- [ ] Matching remains explorable before intro eligibility, with no hard lock screen and a non-blocking readiness checklist.
+- [ ] Org-visible matching starts at **Match-visible**, not merely at portfolio publication.
+- [ ] Qualified introductions require deeper proof than browse visibility and never unlock from weak profiles too early.
 - [ ] CV paste → receive suggestions with “why it mapped”; accept/edit-in-place.
 - [ ] Profile reaches **Activation** when minimum threshold met (configurable).
 
@@ -2685,6 +2749,8 @@ Each flow includes:
 
 - [ ] Ranked shortlist with composite score and **Why this match** explainer.
 - [ ] Quick actions: **Introduce / Pass / Snooze**; near-threshold hints shown.
+- [ ] Browse and match-review payloads include `trustLevel` and structured `introEligibility` when the user is not yet intro-eligible.
+- [ ] Intro actions return `409 INTRO_QUALIFICATION_NOT_MET` with reason codes, missing requirements, and next actions when profile-level or assignment-level qualification fails.
 - [ ] **Fairness note** generated per release when opt-in demographics exist.
 
 **F5 Zen Hub**
@@ -2755,7 +2821,7 @@ Each flow includes:
 
 ## 12.4 Smoke Test Playbook (must pass end-to-end)
 
-1. **Individual activation:** Sign up → Purpose → Atlas (Lite: ≥3 L4 + proof) → Activate → See matches; progress to Strong at ≥10 L4.
+1. **Individual activation:** Sign up → Purpose → Atlas → become Discoverable → unlock Match-visible → qualify for Intro-eligible when proof depth and trust are strong enough.
 2. **Org assignment:** Create org → Purpose → Assignment (Basic default) → Publish → Shortlist appears; Advanced path retains strict 5-step.
 3. **Introduce:** From shortlist → Introduce → Message thread opens (basic) → Mark as interview scheduled.
 4. **Verification:** Complete work email or LinkedIn verification and optionally request attestation → resulting tier/badge visible.
@@ -2893,6 +2959,10 @@ Each flow includes:
   - Public visibility defaults remain launch-safe: header/proof bar on, identity/LinkedIn trust signals allowed when present, work email off, contact off, skills off, bio off.
   - Pre-publish check blocks sharing if private artifacts/fields are referenced in public/network-only surfaces; shows inline fixes.
   - “What others can see” summary panel is always available and grouped into public/network-only/match-only/private buckets.
+  - Matching and shortlist review remain blind-by-default even when the candidate has a published public portfolio.
+  - Org reviewers cannot reveal identity or direct contact without the defined trigger and candidate consent path.
+  - Hidden identity-bearing fields do not expose copy/open actions and do not surface direct portfolio routes before the allowed reveal stage.
+  - Uploaded artifacts remain private by default, filenames are sanitized, and identifying metadata that cannot be safely stripped keeps the artifact withheld until a later reveal stage with consent.
   - Zen Hub data stored in a separate partition and excluded from ranking and analytics; privacy banner explicitly states this.
 
 ## A4 Resilience & Third-Party Fallbacks
@@ -2913,23 +2983,31 @@ Each flow includes:
 ## A6 Matching Transparency (Rank Bands)
 
 - Acceptance checks:
-  - Show rank bands (“Top 5/10/20”) by default; show exact rank only when pool ≥30 and fairness risk is low; label which mode is used.
-  - “Why this match” is always present; never reveal other candidates’ personal details.
+  - Show rank bands (“Top 5/10/20”) by default; show exact rank only when pool ≥30, fairness risk is low, and the workflow has reached Stage 4 interview coordination reveal; label which mode is used.
+  - If fairness suppression is active, exact rank never appears and reason copy uses a fairness-safe explanation.
+  - “Why this match” is always present; never reveal other candidates’ personal details or hidden private context.
 
 ## A7 Activation Thresholds
 
 - Acceptance checks:
-  - Individual profile supports **tiered matchability**:
-    - **Lite:** ≥3 L4 skills each have level + recency, ≥1 proof overall, matching constraints saved, and purpose present.
-    - **Strong:** ≥10 L4 skills each have level + recency, ≥1 proof overall, matching constraints saved, and purpose present.
+  - Individual profile supports an explicit **trust ladder**:
+    - **Discoverable:** public basics, one target role or focus area, one recent L4 skill, one acceptable proof linked to that skill, and one practical preference.
+    - **Match-visible:** discoverable plus three recent L4 skills, two acceptable proofs across two distinct skills, desired roles, work mode, country or city, and basic availability.
+    - **Intro-eligible:** match-visible plus five recent L4 skills, four proof-linked L4 skills, three role-relevant proof-linked L4 skills, at least one trusted or attested proof-backed skill, fresh qualifying proof, and complete intro preferences.
+    - **Strongly trusted:** intro-eligible plus eight recent L4 skills, five proof-linked L4 skills across multiple contexts, and at least two active trust anchors.
   - Matching APIs are soft-gated for authenticated users:
-    - `POST /api/core/matching/profile` and `POST /api/core/matching/near-matches` return `200` with `eligibility` and `topActions` when Lite criteria are unmet.
-    - `meta.softGated=true` indicates unmet activation without blocking platform use.
+    - `POST /api/core/matching/profile` and `POST /api/core/matching/near-matches` return `200` with `eligibility`, `trustLevel`, `introEligibility`, and `topActions` when the profile is not yet match-visible or intro-eligible.
+    - `meta.softGated=true` indicates unmet visibility requirements without blocking platform use.
+    - Private browse can remain active before org-visible matching.
+  - Introduction actions enforce a separate qualified-introduction gate:
+    - Profile-level gate requires four proof-linked L4 skills, three role-relevant proof-linked L4 skills, one trusted or attested proof-backed skill, fresh proof, and complete intro preferences.
+    - Assignment-level gate requires at least two qualifying proof-linked L4 skills that map to assignment must-have skills when the assignment is sufficiently mapped, with a role-relevance fallback for sparse assignments.
+    - Failed intro actions return `409 INTRO_QUALIFICATION_NOT_MET` and do not block browsing.
   - `GET /api/core/matching/matching-profile` auto-bootstraps a baseline matching profile row when missing.
   - Assignment publish readiness is mode-specific:
     - **Basic:** role, business value, ≥1 measurable outcome, practicals, and ≥3 must-have skills (default entry path).
     - **Advanced:** full 5-step completeness including stakeholders and weight matrix; exposed only after explicit opt-in; education marked “required” must include justification.
-  - Dashboards show current tier/state and next-best action when unmet.
+  - Dashboards show current trust level, intro status, and next-best action when unmet.
 
 ## A8 Plain-Language Vocabulary Policy
 
@@ -2943,6 +3021,8 @@ Each flow includes:
 - Acceptance checks:
   - Matching setup always shows sample previews using real near-matches when available, otherwise clearly labeled mock samples.
   - Compensation is shown as overlap-only by default in matching cards and visible-fields APIs unless explicit exact-range visibility is granted.
+  - Matching cards and shortlist surfaces do not surface public portfolio links, direct social links, or other identity-bearing URLs in blind stages.
+  - Manually uploaded artifacts with identifying metadata render as sanitized, withheld, or requires-review until the reveal stage and consent policy permit display.
   - Empty states across Atlas, Matching, Assignment, and Privacy provide exactly three deep-linked remediation actions.
 
 ## A10 Data Export/Import Safety

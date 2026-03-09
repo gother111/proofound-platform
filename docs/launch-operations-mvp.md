@@ -15,6 +15,7 @@
 - System-driven fallback:
   - `portfolio_ready` remains independently useful even when browse or intro readiness is not met.
   - Matching degrades from exact shortlist or intro output to browse-safe discovery, rank bands, and portfolio or proof guidance.
+  - Private browse can stay live before org-visible matching or intro eligibility; the system must not collapse those thresholds together.
   - Verification never upgrades trust labels optimistically. Pending or stale verification keeps stronger trust actions paused.
   - Fairness suppression replaces exact ordering with shortlist-safe banding and may pause new intros for the assignment.
   - Intro corridor failure enters an explicit hold state instead of emitting weak or empty intros as if they were qualified.
@@ -75,7 +76,7 @@
   - never hide a paused intro corridor behind a generic loading state
 - Canonical replacement copy:
   - “Your portfolio is still live and shareable.”
-  - “Browsing stays open while qualified introductions are protected.”
+  - “Private browse stays open while org-visible matching and introductions are protected.”
   - “Verification is still in progress, so stronger trust actions stay paused.”
   - “Exact ranking is temporarily hidden to protect shortlist quality.”
   - “There are not enough qualified introductions yet for this assignment.”

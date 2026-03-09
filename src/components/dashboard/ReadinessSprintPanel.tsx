@@ -35,7 +35,7 @@ export function ReadinessSprintPanel() {
   }
 
   const missingIntro = data.missingByState.qualified_intro_ready ?? [];
-  const fallbackMode: OperationalFallbackMode | null = data.flags.qualifiedIntroReady
+  const fallbackMode: OperationalFallbackMode | null = data.flags.introEligible
     ? null
     : data.metrics.pendingVerifications > 0
       ? 'trust_pending_verification'
@@ -57,13 +57,15 @@ export function ReadinessSprintPanel() {
           </p>
         </div>
         <Badge variant="outline" className={`w-fit ${DASHBOARD_STATUS_CHIP_CLASS}`}>
-          {data.highestState === 'qualified_intro_ready'
-            ? 'Ready for qualified introductions'
-            : data.highestState === 'browse_ready'
-              ? 'Ready to browse'
-              : data.highestState === 'portfolio_ready'
-                ? 'Portfolio live'
-                : 'Portfolio draft'}
+          {data.flags.stronglyTrusted
+            ? 'Strongly trusted'
+            : data.flags.introEligible
+              ? 'Intro-eligible'
+              : data.flags.matchVisible
+                ? 'Match-visible'
+                : data.flags.discoverable
+                  ? 'Discoverable'
+                  : 'Portfolio draft'}
         </Badge>
       </div>
 
@@ -103,10 +105,12 @@ export function ReadinessSprintPanel() {
             Qualified introductions
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {data.flags.qualifiedIntroReady
-              ? 'Qualified introductions are unlocked.'
+            {data.flags.introEligible
+              ? data.flags.stronglyTrusted
+                ? 'Introductions are unlocked and the profile carries a higher-trust label.'
+                : 'Introductions are unlocked.'
               : (fallbackCopy?.detail ??
-                'There are not enough qualified introductions yet. Your portfolio is still doing useful work while we protect quality.')}
+                'You can keep browsing and stay reviewable while introductions are paused for stronger proof and trust.')}
           </p>
           {missingIntro.length > 0 ? (
             <div className="mt-2 space-y-1">

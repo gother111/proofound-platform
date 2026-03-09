@@ -1625,13 +1625,16 @@ Each flow includes:
 **Why Now:** Moves from keyword CVs to structured, high-signal expertise representation that AI can’t trivially game.  
 **Acceptance Criteria:**
 
-- Users can activate in two tiers:
-  - **Lite (match unlock):** ≥3 L4 skills with level + recency, ≥1 proof overall, purpose present, and matching constraints saved.
-  - **Strong (quality boost):** ≥10 L4 skills with level + recency, ≥1 proof overall, purpose present, and matching constraints saved.
-- Activation is **non-blocking** for product access: users can open Matching immediately, while unmet Lite criteria are shown as checklist actions.
+- Users move through an explicit trust ladder instead of Lite/Strong:
+  - **Discoverable:** public basics, one target role or focus area, one recent L4 skill, one proof linked to that skill, and one practical preference.
+  - **Match-visible:** discoverable plus three recent L4 skills, two acceptable proofs across two distinct skills, desired roles, work mode, country or city, and basic availability.
+  - **Intro-eligible:** match-visible plus five recent L4 skills, four proof-linked L4 skills, three role-relevant proof-linked L4 skills, one trusted or attested proof-backed skill, fresh proof coverage, and complete intro preferences.
+  - **Strongly trusted:** intro-eligible plus deeper proof coverage across contexts and at least two active trust anchors.
+- Activation is **non-blocking** for product access: users can publish a portfolio and browse matching before they become intro-eligible.
+- Private browse unlocks before org-visible matching. Candidate visibility to org matching starts at **Match-visible**. Qualified introductions start only at **Intro-eligible**.
 - Users can still add/edit L4 properties (level, months, proof links/files) via guided flow or import.
 - Auto-suggest L4s from pasted CV/JD with explain-why; user acceptance/edit-in-place.
-- Time-to-activation (profile matchable at Lite tier) **≤ 20 minutes** P50 for first-time users.
+- Time-to-activation (profile becomes **Match-visible**) **≤ 20 minutes** P50 for first-time users.
 - Event tracking on add/edit; visible **Expertise depth** tile on Dashboard.  
   **MoSCoW:** **Must** (manual add + basic auto-suggest); **Should:** Gap Map basic; **Could:** bulk CSV import.
 
@@ -1648,8 +1651,9 @@ Each flow includes:
 - Compensation visibility defaults to **overlap-only** in matching surfaces unless explicit exact-range visibility is granted.
 - Setup flow always shows **sample match previews** (real near-matches when available, clearly labeled mock samples otherwise).
 - Matching endpoints return eligibility guidance without hard blocking:
-  - If Lite criteria are unmet, return `200` with `items` (possibly empty), `eligibility`, and `topActions`.
-  - UI remains usable and surfaces “Get match-ready in 4 quick steps” guidance.
+  - If the user is not yet **Discoverable**, return `200` with `items` (possibly empty), `eligibility`, `trustLevel`, `introEligibility`, and `topActions`.
+  - If the user is **Discoverable** but not **Match-visible**, private browse remains usable while org-visible matching stays paused.
+  - If intro criteria are unmet, intro actions return `409 INTRO_QUALIFICATION_NOT_MET` with missing requirements, reason codes, and next actions, without blocking browse.
 - **Fairness note** per release with cohort checks where users opt-in to share demographics.  
   **MoSCoW:** **Must** (shortlist + why + quick actions); **Should:** snooze/feedback loops; **Could:** experiment flags for alternative scoring.
 
@@ -2022,9 +2026,11 @@ Each flow includes:
 - Validate files (size/type); virus-scan uploads.
 - Auto-suggest pipeline extracts candidates, maps to known L4 IDs with confidence + “why” rationale.
 - Compute **expertise_depth** (count, recency of proofs).
-- Profile **activation** computes two states:
-  - **Lite matchable:** ≥3 skills with level + recency, ≥1 proof, purpose present, constraints saved.
-  - **Strong matchable:** ≥10 skills with level + recency, ≥1 proof, purpose present, constraints saved.
+- Profile trust and activation compute four states:
+  - **Discoverable:** portfolio basics plus one proof-linked recent skill and one practical preference.
+  - **Match-visible:** three recent L4 skills, two proof-backed skills, desired roles, work mode, location, and basic availability.
+  - **Intro-eligible:** five recent L4 skills, four proof-linked L4 skills, three role-relevant proof-linked L4 skills, one trusted or attested proof-backed skill, fresh qualifying proof, and complete intro preferences.
+  - **Strongly trusted:** intro-eligible plus deeper proof coverage and multiple active trust anchors.
 
 **Outputs**
 
@@ -2585,9 +2591,10 @@ Each flow includes:
 
 **F3 Expertise Atlas**
 
-- [ ] Lite activation unlocks matching at **≥3 L4** (with level + recency) + ≥1 proof + purpose + constraints.
-- [ ] Strong activation is recognized at **≥10 L4** (with level + recency) + ≥1 proof + purpose + constraints.
-- [ ] Matching remains accessible before Lite completion (no hard lock screen), with a non-blocking readiness checklist.
+- [ ] The trust ladder is explicit: **Discoverable**, **Match-visible**, **Intro-eligible**, **Strongly trusted**.
+- [ ] Matching remains explorable before intro eligibility, with no hard lock screen and a non-blocking readiness checklist.
+- [ ] Org-visible matching starts at **Match-visible**, not merely at portfolio publication.
+- [ ] Qualified introductions require deeper proof than browse visibility and never unlock from weak profiles too early.
 - [ ] CV paste → receive suggestions with “why it mapped”; accept/edit-in-place.
 - [ ] Profile reaches **Activation** when minimum threshold met (configurable).
 
@@ -2595,6 +2602,8 @@ Each flow includes:
 
 - [ ] Ranked shortlist with composite score and **Why this match** explainer.
 - [ ] Quick actions: **Introduce / Pass / Snooze**; near-threshold hints shown.
+- [ ] Browse and match-review payloads include `trustLevel` and structured `introEligibility` when the user is not yet intro-eligible.
+- [ ] Intro actions return `409 INTRO_QUALIFICATION_NOT_MET` with reason codes, missing requirements, and next actions when profile-level or assignment-level qualification fails.
 - [ ] **Fairness note** generated per release when opt-in demographics exist.
 
 **F5 Zen Hub**
@@ -2663,7 +2672,7 @@ Each flow includes:
 
 ## 12.4 Smoke Test Playbook (must pass end-to-end)
 
-1. **Individual activation:** Sign up → Purpose → Atlas (Lite: ≥3 L4 + proof) → Activate → See matches; progress to Strong at ≥10 L4.
+1. **Individual activation:** Sign up → Purpose → Atlas → become Discoverable → unlock Match-visible → qualify for Intro-eligible when proof depth and trust are strong enough.
 2. **Org assignment:** Create org → Purpose → Assignment (Basic default) → Publish → Shortlist appears; Advanced path retains strict 5-step.
 3. **Introduce:** From shortlist → Introduce → Message thread opens (basic) → Mark as interview scheduled.
 4. **Verification:** Request attestation → Approver completes → Badge visible.
@@ -2825,17 +2834,24 @@ Each flow includes:
 ## A7 Activation Thresholds
 
 - Acceptance checks:
-  - Individual profile supports **tiered matchability**:
-    - **Lite:** ≥3 L4 skills each have level + recency, ≥1 proof overall, matching constraints saved, and purpose present.
-    - **Strong:** ≥10 L4 skills each have level + recency, ≥1 proof overall, matching constraints saved, and purpose present.
+  - Individual profile supports an explicit **trust ladder**:
+    - **Discoverable:** public basics, one target role or focus area, one recent L4 skill, one acceptable proof linked to that skill, and one practical preference.
+    - **Match-visible:** discoverable plus three recent L4 skills, two acceptable proofs across two distinct skills, desired roles, work mode, country or city, and basic availability.
+    - **Intro-eligible:** match-visible plus five recent L4 skills, four proof-linked L4 skills, three role-relevant proof-linked L4 skills, at least one trusted or attested proof-backed skill, fresh qualifying proof, and complete intro preferences.
+    - **Strongly trusted:** intro-eligible plus eight recent L4 skills, five proof-linked L4 skills across multiple contexts, and at least two active trust anchors.
   - Matching APIs are soft-gated for authenticated users:
-    - `POST /api/core/matching/profile` and `POST /api/core/matching/near-matches` return `200` with `eligibility` and `topActions` when Lite criteria are unmet.
-    - `meta.softGated=true` indicates unmet activation without blocking platform use.
+    - `POST /api/core/matching/profile` and `POST /api/core/matching/near-matches` return `200` with `eligibility`, `trustLevel`, `introEligibility`, and `topActions` when the profile is not yet match-visible or intro-eligible.
+    - `meta.softGated=true` indicates unmet visibility requirements without blocking platform use.
+    - Private browse can remain active before org-visible matching.
+  - Introduction actions enforce a separate qualified-introduction gate:
+    - Profile-level gate requires four proof-linked L4 skills, three role-relevant proof-linked L4 skills, one trusted or attested proof-backed skill, fresh proof, and complete intro preferences.
+    - Assignment-level gate requires at least two qualifying proof-linked L4 skills that map to assignment must-have skills when the assignment is sufficiently mapped, with a role-relevance fallback for sparse assignments.
+    - Failed intro actions return `409 INTRO_QUALIFICATION_NOT_MET` and do not block browsing.
   - `GET /api/core/matching/matching-profile` auto-bootstraps a baseline matching profile row when missing.
   - Assignment publish readiness is mode-specific:
     - **Basic:** role, business value, ≥1 measurable outcome, practicals, and ≥3 must-have skills (default entry path).
     - **Advanced:** full 5-step completeness including stakeholders and weight matrix; exposed only after explicit opt-in; education marked “required” must include justification.
-  - Dashboards show current tier/state and next-best action when unmet.
+  - Dashboards show current trust level, intro status, and next-best action when unmet.
 
 ## A8 Plain-Language Vocabulary Policy
 

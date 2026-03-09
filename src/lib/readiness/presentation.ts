@@ -1,5 +1,8 @@
 import type { ReadinessAction, ReadinessState } from '@/lib/momentum/types';
-import type { IndividualReadinessStateSnapshot } from '@/lib/readiness/individual-state';
+import type {
+  IndividualReadinessStateSnapshot,
+  TrustLevelOrNone,
+} from '@/lib/readiness/individual-state';
 
 export type ProfileCompletenessPresentation = {
   percentage: number;
@@ -33,6 +36,7 @@ export type ExpertiseStatsPresentation = {
   };
   eligibility: {
     tier: 'none' | 'lite' | 'strong';
+    trustLevel: TrustLevelOrNone;
     nextTierTarget: null | {
       tier: 'lite' | 'strong';
       message: string;
@@ -123,12 +127,13 @@ export function toExpertiseStatsPresentation(
     },
     eligibility: {
       tier: readiness.legacyTier,
+      trustLevel: readiness.trustLevel,
       nextTierTarget:
         readiness.legacyTier === 'none'
           ? {
               tier: 'lite',
               message:
-                'Browsing is available once you add a few recent skills and one practical preference.',
+                'Browsing is available once you add a few recent skills and one practical preference so your profile becomes match-visible.',
               remaining: {
                 skillsWithRecency: Math.max(0, 3 - readiness.counts.skillsWithRecency),
                 proofCount: 0,
@@ -140,10 +145,10 @@ export function toExpertiseStatsPresentation(
             ? {
                 tier: 'strong',
                 message:
-                  'Your portfolio remains useful now. Qualified introductions stay protected until stronger proof coverage, trust signals, and full constraints are in place.',
+                  'Your portfolio remains useful now. Introductions stay protected until stronger proof coverage, one trusted proof-backed skill, and full intro preferences are in place.',
                 remaining: {
                   skillsWithRecency: Math.max(0, 5 - readiness.counts.skillsWithRecency),
-                  proofCount: Math.max(0, 2 - readiness.counts.proofCount),
+                  proofCount: Math.max(0, 4 - readiness.counts.qualifyingProofLinkedL4Count),
                   purpose: readiness.flags.hasPurposeBlock ? 0 : 1,
                   constraints: readiness.flags.hasIntroConstraints ? 0 : 1,
                   trustedSignal: readiness.flags.hasTrustedSignal ? 0 : 1,

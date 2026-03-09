@@ -1,3 +1,5 @@
+import type { IntroEligibilitySummary, TrustLevelOrNone } from '@/lib/readiness/individual-state';
+
 export type ActivityEventType =
   | 'goal_progress'
   | 'profile_progress'
@@ -64,10 +66,16 @@ export type IndividualReadiness = {
   publicPortfolioUrl?: string | null;
   missingByState: Record<ReadinessState, ReadinessRequirement[]>;
   legacyTier: 'none' | 'lite' | 'strong';
+  trustLevel?: TrustLevelOrNone;
+  introEligibility?: IntroEligibilitySummary;
   flags: {
     portfolioReady: boolean;
     browseReady: boolean;
     qualifiedIntroReady: boolean;
+    discoverable?: boolean;
+    matchVisible?: boolean;
+    introEligible?: boolean;
+    stronglyTrusted?: boolean;
   };
   proofProgress: ProofProgressTracker;
   skillToOpportunityBridge: Array<{
@@ -88,7 +96,14 @@ export type IndividualReadiness = {
     skillsWithRecency?: number;
     publicProofSignalCount?: number;
     proofBackedSkillCount?: number;
+    qualifyingProofLinkedL4Count?: number;
+    roleRelevantProofLinkedL4Count?: number;
+    attestedProofLinkedSkillCount?: number;
+    freshProofLinkedL4Count24?: number;
+    freshProofLinkedL4Count12?: number;
     verifiedTrustSignalCount?: number;
+    activeTrustAnchorCount?: number;
+    providerTrustAnchorCount?: number;
   };
 };
 

@@ -52,12 +52,31 @@ const baseEligibility = {
   eligible: false,
   status: 'not_matchable',
   tier: 'none',
+  trustLevel: 'none',
+  introEligibility: {
+    status: 'blocked_profile',
+    profileEligible: false,
+    assignmentEligible: null,
+    reasonCodes: ['discoverable_requirements_incomplete'],
+    missingRequirements: [],
+    nextActions: [],
+    qualifyingProofLinkedL4Count: 0,
+    roleRelevantProofLinkedL4Count: 0,
+    assignmentRelevantProofLinkedL4Count: 0,
+    activeTrustAnchorCount: 0,
+  },
   message: 'Profile is not matchable',
   counts: {
     skillsWithRecency: 2,
     proofCount: 0,
     hasPurpose: false,
     hasConstraints: false,
+    hasIntentSignal: false,
+    hasLogisticsSignal: false,
+    hasTrustedSignal: false,
+    qualifyingProofLinkedL4Count: 0,
+    roleRelevantProofLinkedL4Count: 0,
+    activeTrustAnchorCount: 0,
   },
   unmetCriteria: ['skillsWithRecency', 'proofs'],
   nextTierTarget: {
@@ -78,6 +97,7 @@ const baseEligibility = {
   ],
   readiness: {
     states: [],
+    trustLevel: 'none',
   },
 };
 

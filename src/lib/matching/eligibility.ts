@@ -2,6 +2,8 @@ import type { ReadinessRequirement } from '@/lib/momentum/types';
 import {
   getIndividualReadinessState,
   type LegacyReadinessTier,
+  type IntroEligibilitySummary,
+  type TrustLevelOrNone,
 } from '@/lib/readiness/individual-state';
 
 export type EligibilityCriterionId =
@@ -32,6 +34,8 @@ export interface EligibilityResult {
   status: 'eligible' | 'not_matchable';
   eligible: boolean;
   tier: LegacyReadinessTier;
+  trustLevel: TrustLevelOrNone;
+  introEligibility: IntroEligibilitySummary;
   message: string;
   counts: {
     skillsWithRecency: number;
@@ -41,6 +45,9 @@ export interface EligibilityResult {
     hasIntentSignal: boolean;
     hasLogisticsSignal: boolean;
     hasTrustedSignal: boolean;
+    qualifyingProofLinkedL4Count: number;
+    roleRelevantProofLinkedL4Count: number;
+    activeTrustAnchorCount: number;
   };
   nextTierTarget: null | {
     tier: 'lite' | 'strong';
@@ -67,6 +74,8 @@ export interface MatchingSoftGatePayload {
     message: string;
   };
   eligibility: EligibilityResult;
+  trustLevel: TrustLevelOrNone;
+  introEligibility: IntroEligibilitySummary;
   readiness: EligibilityResult['readiness'];
   topActions: EligibilityAction[];
 }
@@ -107,6 +116,8 @@ export function toSoftGatedPayload(result: EligibilityResult): MatchingSoftGateP
       message: result.message,
     },
     eligibility: result,
+    trustLevel: result.trustLevel,
+    introEligibility: result.introEligibility,
     readiness: result.readiness,
     topActions: result.topActions,
   };
@@ -174,7 +185,7 @@ export async function evaluateIndividualMatchability(
       ? {
           tier: 'lite' as const,
           message:
-            'Browsing is available today. Add a few recent skills and one preference to personalize results.',
+            'Keep browsing. Add a few recent skills and one practical preference to become match-visible.',
           remaining: {
             skillsWithRecency: Math.max(0, 3 - counts.skillsWithRecency),
             proofCount: 0,
@@ -187,10 +198,10 @@ export async function evaluateIndividualMatchability(
         ? {
             tier: 'strong' as const,
             message:
-              'Qualified introductions need stronger proof coverage, trust signals, and complete constraints.',
+              'Browsing stays open while introductions are protected. Add deeper proof, one trusted proof-backed skill, and complete intro preferences.',
             remaining: {
               skillsWithRecency: Math.max(0, 5 - counts.skillsWithRecency),
-              proofCount: Math.max(0, 2 - counts.proofCount),
+              proofCount: Math.max(0, 4 - counts.qualifyingProofLinkedL4Count),
               purpose: flags.hasPurposeBlock ? 0 : 1,
               constraints: flags.hasIntroConstraints ? 0 : 1,
               trustedSignal: flags.hasTrustedSignal ? 0 : 1,
@@ -200,14 +211,18 @@ export async function evaluateIndividualMatchability(
 
   return {
     profileId,
-    status: readiness.flags.browseReady ? 'eligible' : 'not_matchable',
-    eligible: readiness.flags.browseReady,
+    status: readiness.flags.discoverable ? 'eligible' : 'not_matchable',
+    eligible: readiness.flags.discoverable,
     tier: readiness.legacyTier,
     message: readiness.flags.browseReady
-      ? readiness.flags.qualifiedIntroReady
-        ? 'Browse is active and qualified introductions are unlocked.'
-        : 'Browsing stays open while qualified introductions are protected. Add stronger proof, trust signals, and complete constraints when you are ready.'
-      : 'Browsing stays open while you add a few recent skills and one preference to personalize results.',
+      ? readiness.flags.introEligible
+        ? readiness.flags.stronglyTrusted
+          ? 'Browse is active. Introductions are unlocked and the profile carries a higher-trust label.'
+          : 'Browse is active and introductions are unlocked.'
+        : 'Browsing stays open while qualified introductions are protected. Add stronger relevant proof and one trusted proof-backed skill when you are ready.'
+      : readiness.flags.discoverable
+        ? 'Private browse is active. Add deeper recent proof and availability details to become match-visible.'
+        : 'Browsing stays open while you add a target role, one proof-linked skill, and one practical preference.',
     counts: {
       skillsWithRecency: counts.skillsWithRecency,
       proofCount: counts.proofCount,
@@ -216,7 +231,12 @@ export async function evaluateIndividualMatchability(
       hasIntentSignal: flags.hasIntentSignal,
       hasLogisticsSignal: flags.hasLogisticsSignal,
       hasTrustedSignal: flags.hasTrustedSignal,
+      qualifyingProofLinkedL4Count: counts.qualifyingProofLinkedL4Count,
+      roleRelevantProofLinkedL4Count: counts.roleRelevantProofLinkedL4Count,
+      activeTrustAnchorCount: counts.activeTrustAnchorCount,
     },
+    trustLevel: readiness.trustLevel,
+    introEligibility: readiness.introEligibility,
     nextTierTarget,
     criteria,
     unmetCriteria,

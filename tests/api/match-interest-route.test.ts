@@ -18,6 +18,8 @@ vi.mock('@/db', () => ({
       organizationMembers: { findFirst: vi.fn(), findMany: vi.fn() },
       conversations: { findFirst: vi.fn() },
       profiles: { findFirst: vi.fn() },
+      skills: { findMany: vi.fn() },
+      skillProofs: { findMany: vi.fn() },
     },
     transaction: vi.fn(),
     select: vi.fn(),
@@ -26,6 +28,7 @@ vi.mock('@/db', () => ({
 }));
 
 vi.mock('@/lib/analytics/events', () => ({
+  emitAnalyticsEventAsync: vi.fn(),
   emitMatchActioned: vi.fn(),
 }));
 
@@ -82,10 +85,30 @@ describe('match interest route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (getIndividualReadinessState as any).mockResolvedValue({
+      trustLevel: 'intro_eligible',
+      counts: {
+        qualifyingProofLinkedL4Count: 4,
+        roleRelevantProofLinkedL4Count: 3,
+        activeTrustAnchorCount: 1,
+      },
+      introEligibility: {
+        status: 'eligible',
+        profileEligible: true,
+        assignmentEligible: null,
+        reasonCodes: [],
+        missingRequirements: [],
+        nextActions: [],
+        qualifyingProofLinkedL4Count: 4,
+        roleRelevantProofLinkedL4Count: 3,
+        assignmentRelevantProofLinkedL4Count: 0,
+        activeTrustAnchorCount: 1,
+      },
       flags: {
         qualifiedIntroReady: true,
       },
     });
+    (db.query.skills.findMany as any).mockResolvedValue([]);
+    (db.query.skillProofs.findMany as any).mockResolvedValue([]);
     (requireApiAuthContext as any).mockImplementation(async () => {
       const user = await (requireAuth as any)();
       return user ? { user, supabase: {} } : null;
@@ -108,6 +131,60 @@ describe('match interest route', () => {
     const res = await POST(req);
 
     expect(res.status).toBe(403);
+  });
+
+  it('returns structured 409 when intro qualification is blocked', async () => {
+    (requireAuth as any).mockResolvedValue({ id: candidateId });
+    (db.query.assignments.findFirst as any).mockResolvedValue({
+      id: assignmentId,
+      orgId,
+      mustHaveSkills: [{ id: 'typescript', level: 4 }],
+    });
+    (getIndividualReadinessState as any).mockResolvedValue({
+      trustLevel: 'match_visible',
+      counts: {
+        qualifyingProofLinkedL4Count: 2,
+        roleRelevantProofLinkedL4Count: 2,
+        activeTrustAnchorCount: 0,
+      },
+      introEligibility: {
+        status: 'blocked_profile',
+        profileEligible: false,
+        assignmentEligible: null,
+        reasonCodes: ['trusted_or_attested_proof_missing'],
+        missingRequirements: [
+          {
+            id: 'trusted_signal',
+            label: 'Trusted or attested proof-backed signal',
+            detail: 'Add one trusted proof-backed skill.',
+            met: false,
+            actionUrl: '/app/i/verifications',
+          },
+        ],
+        nextActions: [],
+        qualifyingProofLinkedL4Count: 2,
+        roleRelevantProofLinkedL4Count: 2,
+        assignmentRelevantProofLinkedL4Count: 0,
+        activeTrustAnchorCount: 0,
+      },
+      flags: {
+        qualifiedIntroReady: false,
+      },
+    });
+
+    const req = new NextRequest('http://localhost/api/match/interest', {
+      method: 'POST',
+      body: JSON.stringify({ assignmentId }),
+    });
+
+    const res = await POST(req);
+    const payload = await res.json();
+
+    expect(res.status).toBe(409);
+    expect(payload.error).toBe('INTRO_QUALIFICATION_NOT_MET');
+    expect(payload.currentTrustLevel).toBe('match_visible');
+    expect(payload.browseStillAvailable).toBe(true);
+    expect(payload.copy.title).toContain('You can keep browsing');
   });
 
   it('creates conversation when candidate interest meets existing org interest', async () => {

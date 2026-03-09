@@ -19,11 +19,16 @@ function createReadinessSnapshot(
     states: ['portfolio_ready', 'browse_ready'],
     highestState: 'browse_ready',
     legacyTier: 'lite',
+    trustLevel: 'match_visible',
     publicPortfolioUrl: 'https://proofound.io/portfolio/jane-doe',
     flags: {
       portfolioReady: true,
       browseReady: true,
       qualifiedIntroReady: false,
+      discoverable: true,
+      matchVisible: true,
+      introEligible: false,
+      stronglyTrusted: false,
       hasDisplayName: true,
       hasHandle: true,
       hasHeadlineOrBio: true,
@@ -42,8 +47,15 @@ function createReadinessSnapshot(
       proofCount: 1,
       publicProofSignalCount: 1,
       proofBackedSkillCount: 1,
+      qualifyingProofLinkedL4Count: 1,
+      roleRelevantProofLinkedL4Count: 1,
+      attestedProofLinkedSkillCount: 0,
+      freshProofLinkedL4Count24: 0,
+      freshProofLinkedL4Count12: 0,
       acceptedVerificationCount: 0,
       verifiedTrustSignalCount: 0,
+      activeTrustAnchorCount: 0,
+      providerTrustAnchorCount: 0,
     },
     missingByState: {
       portfolio_ready: [],
@@ -68,6 +80,35 @@ function createReadinessSnapshot(
         actionUrl: '/app/i/matching/preferences',
       },
     ],
+    introEligibility: {
+      status: 'blocked_profile',
+      profileEligible: false,
+      assignmentEligible: null,
+      reasonCodes: ['trusted_or_attested_proof_missing'],
+      missingRequirements: [
+        {
+          id: 'trusted_signal',
+          label: 'Trusted or attested proof-backed signal',
+          detail: 'Add a verified or attested proof-backed skill.',
+          met: false,
+          actionUrl: '/app/i/verifications',
+        },
+      ],
+      nextActions: [
+        {
+          id: 'complete-intro-constraints',
+          title: 'Complete intro requirements',
+          description: 'Add role, availability, location, and compensation constraints.',
+          priority: 'high',
+          category: 'matching',
+          actionUrl: '/app/i/matching/preferences',
+        },
+      ],
+      qualifyingProofLinkedL4Count: 1,
+      roleRelevantProofLinkedL4Count: 1,
+      assignmentRelevantProofLinkedL4Count: 0,
+      activeTrustAnchorCount: 0,
+    },
     ...overrides,
   };
 }
@@ -86,6 +127,7 @@ describe('evaluateIndividualMatchability', () => {
 
     expect(result.eligible).toBe(true);
     expect(result.tier).toBe('lite');
+    expect(result.trustLevel).toBe('match_visible');
     expect(result.unmetCriteria).toHaveLength(0);
     expect(result.nextTierTarget?.tier).toBe('strong');
     expect(result.readiness.highestState).toBe('browse_ready');
@@ -97,10 +139,15 @@ describe('evaluateIndividualMatchability', () => {
         states: ['portfolio_ready', 'browse_ready', 'qualified_intro_ready'],
         highestState: 'qualified_intro_ready',
         legacyTier: 'strong',
+        trustLevel: 'strongly_trusted',
         flags: {
           portfolioReady: true,
           browseReady: true,
           qualifiedIntroReady: true,
+          discoverable: true,
+          matchVisible: true,
+          introEligible: true,
+          stronglyTrusted: true,
           hasDisplayName: true,
           hasHandle: true,
           hasHeadlineOrBio: true,
@@ -118,9 +165,16 @@ describe('evaluateIndividualMatchability', () => {
           skillsWithRecency: 6,
           proofCount: 2,
           publicProofSignalCount: 2,
-          proofBackedSkillCount: 2,
+          proofBackedSkillCount: 5,
+          qualifyingProofLinkedL4Count: 4,
+          roleRelevantProofLinkedL4Count: 4,
+          attestedProofLinkedSkillCount: 2,
+          freshProofLinkedL4Count24: 4,
+          freshProofLinkedL4Count12: 2,
           acceptedVerificationCount: 1,
-          verifiedTrustSignalCount: 1,
+          verifiedTrustSignalCount: 3,
+          activeTrustAnchorCount: 3,
+          providerTrustAnchorCount: 1,
         },
         missingByState: {
           portfolio_ready: [],
@@ -128,6 +182,18 @@ describe('evaluateIndividualMatchability', () => {
           qualified_intro_ready: [],
         },
         nextBestActions: [],
+        introEligibility: {
+          status: 'eligible',
+          profileEligible: true,
+          assignmentEligible: null,
+          reasonCodes: [],
+          missingRequirements: [],
+          nextActions: [],
+          qualifyingProofLinkedL4Count: 4,
+          roleRelevantProofLinkedL4Count: 4,
+          assignmentRelevantProofLinkedL4Count: 0,
+          activeTrustAnchorCount: 3,
+        },
       })
     );
 
@@ -136,7 +202,7 @@ describe('evaluateIndividualMatchability', () => {
     expect(result.eligible).toBe(true);
     expect(result.tier).toBe('strong');
     expect(result.nextTierTarget).toBeNull();
-    expect(result.message).toContain('qualified introductions are unlocked');
+    expect(result.message).toContain('higher-trust label');
   });
 
   it('soft-gates browse when recent skills or preferences are missing', async () => {
@@ -145,10 +211,15 @@ describe('evaluateIndividualMatchability', () => {
         states: [],
         highestState: null,
         legacyTier: 'none',
+        trustLevel: 'none',
         flags: {
           portfolioReady: false,
           browseReady: false,
           qualifiedIntroReady: false,
+          discoverable: false,
+          matchVisible: false,
+          introEligible: false,
+          stronglyTrusted: false,
           hasDisplayName: true,
           hasHandle: true,
           hasHeadlineOrBio: true,
@@ -167,8 +238,15 @@ describe('evaluateIndividualMatchability', () => {
           proofCount: 0,
           publicProofSignalCount: 0,
           proofBackedSkillCount: 0,
+          qualifyingProofLinkedL4Count: 0,
+          roleRelevantProofLinkedL4Count: 0,
+          attestedProofLinkedSkillCount: 0,
+          freshProofLinkedL4Count24: 0,
+          freshProofLinkedL4Count12: 0,
           acceptedVerificationCount: 0,
           verifiedTrustSignalCount: 0,
+          activeTrustAnchorCount: 0,
+          providerTrustAnchorCount: 0,
         },
         missingByState: {
           portfolio_ready: [
@@ -204,6 +282,18 @@ describe('evaluateIndividualMatchability', () => {
             },
           ],
           qualified_intro_ready: [],
+        },
+        introEligibility: {
+          status: 'blocked_profile',
+          profileEligible: false,
+          assignmentEligible: null,
+          reasonCodes: ['discoverable_requirements_incomplete'],
+          missingRequirements: [],
+          nextActions: [],
+          qualifyingProofLinkedL4Count: 0,
+          roleRelevantProofLinkedL4Count: 0,
+          assignmentRelevantProofLinkedL4Count: 0,
+          activeTrustAnchorCount: 0,
         },
       })
     );

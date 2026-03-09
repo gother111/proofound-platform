@@ -17,9 +17,10 @@ type ProfileActivationCardProps = {
 };
 
 function milestoneTone(readiness: IndividualReadiness | null) {
-  if (readiness?.flags.qualifiedIntroReady) return 'Ready for qualified introductions';
-  if (readiness?.flags.browseReady) return 'Ready to browse';
-  if (readiness?.flags.portfolioReady) return 'Portfolio live';
+  if (readiness?.flags.stronglyTrusted) return 'Strongly trusted';
+  if (readiness?.flags.introEligible) return 'Intro-eligible';
+  if (readiness?.flags.matchVisible) return 'Match-visible';
+  if (readiness?.flags.discoverable) return 'Discoverable';
   return 'Portfolio draft';
 }
 
@@ -50,10 +51,15 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
           ],
         },
         legacyTier: 'lite',
+        trustLevel: 'match_visible',
         flags: {
           portfolioReady: true,
           browseReady: true,
           qualifiedIntroReady: false,
+          discoverable: true,
+          matchVisible: true,
+          introEligible: false,
+          stronglyTrusted: false,
         },
         proofProgress: {
           totalProofs: 1,
@@ -115,7 +121,7 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
             <CardTitle className="text-lg">Public portfolio</CardTitle>
             <p className="text-sm text-muted-foreground">
               Publish proof first. Search engines stay off by default, and browsing plus
-              introductions build on top of that.
+              introductions build on top of that once trust is strong enough.
             </p>
           </div>
           <Badge variant="outline" className={DASHBOARD_STATUS_CHIP_CLASS}>
@@ -127,16 +133,17 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
         <div className="space-y-2 rounded-xl border border-proofound-stone bg-white/70 p-4">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-foreground">Milestones</p>
-            <p className="text-xs text-muted-foreground">Portfolio first</p>
+            <p className="text-xs text-muted-foreground">Trust ladder</p>
           </div>
           <div className="space-y-2">
             {[
-              { label: 'Portfolio live', met: Boolean(data?.flags.portfolioReady) },
-              { label: 'Ready to browse', met: Boolean(data?.flags.browseReady) },
+              { label: 'Discoverable', met: Boolean(data?.flags.discoverable) },
+              { label: 'Match-visible', met: Boolean(data?.flags.matchVisible) },
               {
-                label: 'Ready for qualified introductions',
-                met: Boolean(data?.flags.qualifiedIntroReady),
+                label: 'Intro-eligible',
+                met: Boolean(data?.flags.introEligible),
               },
+              { label: 'Strongly trusted', met: Boolean(data?.flags.stronglyTrusted) },
             ].map((item) => (
               <div key={item.label} className="flex items-center gap-2 text-sm">
                 {item.met ? (
@@ -191,8 +198,7 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
         ) : (
           <p className="text-sm text-muted-foreground">
             Your public portfolio is live and shareable by link. It remains useful even while
-            qualified introductions stay protected until stronger proof and trust signals are in
-            place.
+            introductions stay protected until stronger proof and trust signals are in place.
           </p>
         )}
       </CardContent>

@@ -12,8 +12,10 @@ import {
   matches,
   organizationMembers,
   profiles,
+  skillProofs,
+  skills,
 } from '@/db/schema';
-import { emitMatchActioned } from '@/lib/analytics/events';
+import { emitAnalyticsEventAsync, emitMatchActioned } from '@/lib/analytics/events';
 import { log } from '@/lib/log';
 import { notifyIntroAccepted } from '@/lib/notifications';
 import { getIndividualReadinessState } from '@/lib/readiness/individual-state';
@@ -35,6 +37,126 @@ async function hasOrgAccess(userId: string, orgId: string) {
   });
 
   return !!membership;
+}
+
+type AssignmentSkillRequirement = {
+  id?: string;
+  skillId?: string;
+  code?: string;
+};
+
+function normalizeSkillKey(value: string | null | undefined): string | null {
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim().toLowerCase();
+  return normalized.length > 0 ? normalized : null;
+}
+
+function extractRequiredSkillKeys(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+
+  return Array.from(
+    new Set(
+      raw
+        .map((entry) => {
+          const requirement = entry as AssignmentSkillRequirement;
+          return (
+            normalizeSkillKey(requirement.id) ||
+            normalizeSkillKey(requirement.skillId) ||
+            normalizeSkillKey(requirement.code)
+          );
+        })
+        .filter((value): value is string => Boolean(value))
+    )
+  );
+}
+
+async function getAssignmentRelevantProofLinkedSkillCount(
+  profileId: string,
+  assignment: typeof assignments.$inferSelect
+) {
+  const requiredSkillKeys = extractRequiredSkillKeys(assignment.mustHaveSkills);
+  if (requiredSkillKeys.length === 0) {
+    return {
+      requiredSkillKeys,
+      overlapCount: 0,
+      assignmentEligible: true,
+    };
+  }
+
+  const [skillRows, proofRows] = await Promise.all([
+    db.query?.skills?.findMany?.({
+      where: eq(skills.profileId, profileId),
+    }) ?? [],
+    db.query?.skillProofs?.findMany?.({
+      where: eq(skillProofs.profileId, profileId),
+    }) ?? [],
+  ]);
+
+  const nowMs = Date.now();
+  const proofBackedSkillIds = new Set(
+    (proofRows || [])
+      .filter((proof) => {
+        const expiresAt = proof.expiresDate ? new Date(proof.expiresDate).getTime() : null;
+        return expiresAt === null || expiresAt >= nowMs;
+      })
+      .map((proof) => proof.skillId)
+  );
+
+  const recentProofLinkedSkillKeys = new Set(
+    (skillRows || [])
+      .filter((skill) => {
+        if (!proofBackedSkillIds.has(skill.id)) return false;
+        if (skill.relevance === 'current' || skill.relevance === 'emerging') return true;
+        if (!skill.lastUsedAt) return false;
+        const timestamp =
+          skill.lastUsedAt instanceof Date
+            ? skill.lastUsedAt.getTime()
+            : new Date(skill.lastUsedAt).getTime();
+        return Number.isFinite(timestamp) && timestamp >= nowMs - 3 * 365 * 24 * 60 * 60 * 1000;
+      })
+      .map(
+        (skill) =>
+          normalizeSkillKey(skill.skillCode) ||
+          normalizeSkillKey(skill.skillId) ||
+          normalizeSkillKey(skill.id)
+      )
+      .filter((value): value is string => Boolean(value))
+  );
+
+  const overlapCount = requiredSkillKeys.filter((key) =>
+    recentProofLinkedSkillKeys.has(key)
+  ).length;
+  const minimumRequiredOverlap = requiredSkillKeys.length >= 2 ? 2 : 1;
+
+  return {
+    requiredSkillKeys,
+    overlapCount,
+    assignmentEligible: overlapCount >= minimumRequiredOverlap,
+  };
+}
+
+function buildIntroBlockedCopy(
+  isOrgAction: boolean,
+  reasonCodes: string[]
+): { title: string; body: string } {
+  if (reasonCodes.includes('trust_regressed')) {
+    return {
+      title: 'Trust changed since this profile last qualified.',
+      body: 'The profile is still visible in matching, but new introductions are paused until proof or trust signals are refreshed.',
+    };
+  }
+
+  if (isOrgAction) {
+    return {
+      title: 'This candidate is reviewable, but not yet intro-eligible.',
+      body: 'You can save this profile and keep reviewing it, but Proofound is holding introductions until the candidate has stronger relevant proof and at least one active trust anchor for this assignment.',
+    };
+  }
+
+  return {
+    title: 'You can keep browsing. Introductions unlock after stronger proof.',
+    body: 'Your profile is visible, but it does not yet meet Proofound’s qualified introduction threshold. Add proof to more relevant skills and complete one trusted or attested proof to unlock introductions.',
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -71,16 +193,81 @@ export async function POST(request: NextRequest) {
     }
 
     const introductionProfileId = isOrgAction ? targetProfileId! : user.id;
-    const introductionReadiness = await getIndividualReadinessState(introductionProfileId);
-    if (!introductionReadiness.flags.qualifiedIntroReady) {
+    const [introductionReadiness, assignmentQualification] = await Promise.all([
+      getIndividualReadinessState(introductionProfileId),
+      getAssignmentRelevantProofLinkedSkillCount(
+        introductionProfileId,
+        assignment as typeof assignments.$inferSelect
+      ),
+    ]);
+    const profileEligible = introductionReadiness.introEligibility.profileEligible;
+    const assignmentEligible =
+      assignmentQualification.requiredSkillKeys.length === 0
+        ? profileEligible
+        : profileEligible && assignmentQualification.assignmentEligible;
+
+    if (!profileEligible || !assignmentEligible) {
+      const reasonCodes = Array.from(
+        new Set([
+          ...introductionReadiness.introEligibility.reasonCodes,
+          ...(!assignmentEligible && assignmentQualification.requiredSkillKeys.length > 0
+            ? ['assignment_relevant_proof_insufficient']
+            : []),
+        ])
+      );
+      const copy = buildIntroBlockedCopy(isOrgAction, reasonCodes);
+      const introEligibility = {
+        ...introductionReadiness.introEligibility,
+        status:
+          profileEligible && !assignmentEligible
+            ? ('blocked_assignment' as const)
+            : 'blocked_profile',
+        profileEligible,
+        assignmentEligible,
+        reasonCodes,
+        assignmentRelevantProofLinkedL4Count: assignmentQualification.overlapCount,
+      };
+
+      emitAnalyticsEventAsync({
+        eventType: 'intro_qualification_blocked',
+        userId: user.id,
+        profileId: introductionProfileId,
+        entityType: 'assignment',
+        entityId: assignmentId,
+        properties: {
+          assignment_id: assignmentId,
+          current_trust_level: introductionReadiness.trustLevel,
+          previous_trust_level: introductionReadiness.trustLevel,
+          new_trust_level: introductionReadiness.trustLevel,
+          profile_eligible: profileEligible,
+          assignment_eligible: assignmentEligible,
+          reason_codes: reasonCodes,
+          qualifying_proof_linked_l4_count:
+            introductionReadiness.counts.qualifyingProofLinkedL4Count,
+          role_relevant_proof_linked_l4_count:
+            introductionReadiness.counts.roleRelevantProofLinkedL4Count,
+          assignment_relevant_proof_linked_l4_count: assignmentQualification.overlapCount,
+          active_trust_anchor_count: introductionReadiness.counts.activeTrustAnchorCount,
+          actor_type: isOrgAction ? 'organization' : 'candidate',
+        },
+      });
+
       return NextResponse.json(
         {
-          error: 'QUALIFIED_INTRO_NOT_READY',
-          message:
-            'Qualified introductions stay locked until stronger proof, trust signals, and intro constraints are complete.',
+          error: 'INTRO_QUALIFICATION_NOT_MET',
+          currentTrustLevel: introductionReadiness.trustLevel,
+          profileEligible,
+          assignmentEligible,
+          reasonCodes,
+          missingRequirements: introEligibility.missingRequirements,
+          nextActions: introEligibility.nextActions,
+          browseStillAvailable: true,
+          copy,
+          message: copy.body,
+          introEligibility,
           readiness: introductionReadiness,
         },
-        { status: 403 }
+        { status: 409 }
       );
     }
 
