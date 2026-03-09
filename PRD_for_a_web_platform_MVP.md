@@ -287,41 +287,24 @@ For job seekers overwhelmed by volatile, biased, and time-intensive hiring—and
 
 > Why this matters: It directly reflects the platform’s promise—faster, more efficient matches that culminate in real engagements.
 
-## 2.2 Executive Recommendation
+## 2.2 Outcome Metrics
 
-- Treat trust formation and proof quality as the primary product analytics layer for MVP.
-- Measure Proof Packs, verification lifecycle, freshness, reveal progression, intro reliability, override governance, and public portfolio safety before funnel velocity.
-- Keep **TTSC** as the North Star Metric. Keep **TTFQI**, **TTV**, fairness notes, effort reduction, and first-session activation as secondary outcome metrics rather than the primary product-health lens.
+- **TTFQI:** Median elapsed time from activation to the first qualified introduction where qualification thresholds and consent are satisfied.
+- **TTV:** Median elapsed time from activation to the first meaningful step such as an interview scheduled or an async task accepted.
+- **PAC:** Purpose-Alignment Contribution remains a supporting diagnostic inside matching and explanation. It helps explain fit but is not a public score or vanity metric.
+- **SUS:** Launch usability benchmark for activation, assignment publishing, and match review.
+- **Fairness note:** Release-level fairness summary generated only for opt-in cohorts above minimum privacy thresholds.
+- **Effort reduction and first-session activation:** Internal launch diagnostics used to validate onboarding clarity and publish speed.
 
-## 2.3 Revised KPI Set
+## 2.3 Metrics Guardrails
 
-| KPI                                        | Exact meaning                                                                                                                                                                                                                                                                                                                                                                                                                     | Numerator                                                                                                                                   | Denominator                                                   | Unit                           | Cohorting dimensions                                                                              | Where it appears                                                                    | Who can see it                                                                      | Internal-only or user-facing                                              | Privacy boundaries                                                                                                                                     |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Proof Quality Score**                    | Weighted 0-100 quality score for an active published Proof Pack as evidence of credible work: verification integrity `30%`, outcome evidence strength `25%`, freshness state `20%`, proof coverage contribution `15%`, provenance/completeness `10%`. Roll up as median `PQS` across active published packs for a person, org, assignment, or cohort. Users see only the band: `weak`, `developing`, `strong`, `high confidence`. | n/a                                                                                                                                         | n/a                                                           | score `0-100` and band         | persona type, org type, role family, seniority band, region band, verification tier, pack type    | owner trust-health card, org assignment trust summary, internal trust dashboard     | profile owner for own band, org owner for own assignment summary, product/ops/admin | Banded user-facing; raw score internal                                    | Never expose component math, raw evidence weightings, restricted artifact detail, or cross-user rank comparisons.                                      |
-| **Proof freshness**                        | Share of active published Proof Packs that remain current enough to count as live trust evidence.                                                                                                                                                                                                                                                                                                                                 | active published packs in `fresh` state                                                                                                     | all active published packs                                    | percent                        | persona type, org type, role family, seniority band, region band, proof type                      | owner trust-health card, org assignment trust summary, internal trust dashboard     | owner for own profile or portfolio, org owner for own assignment, product/ops/admin | User-facing for own objects; aggregate internal                           | Show only owner or authorized org aggregate; do not expose another user’s pack-level freshness outside permitted review surfaces.                      |
-| **Proof coverage**                         | Share of active declared claims or assignment requirements backed by at least one active published Proof Pack above the minimum quality threshold.                                                                                                                                                                                                                                                                                | active declared claims or required slots backed by a qualifying active published pack                                                       | all active declared claims or required slots in scope         | percent                        | persona type, org type, assignment type, role family, seniority band, region band                 | owner trust-health card, assignment readiness, internal trust dashboard             | owner for own profile/org, org owner for own assignment, product/ops/admin          | User-facing for own objects; aggregate internal                           | Coverage exposes only scoped counts, never hidden claim text, reviewer notes, or restricted pack contents.                                             |
-| **Time-to-Verified**                       | Median elapsed time from `proof_pack_created` to the first successful `proof_verification_completed`.                                                                                                                                                                                                                                                                                                                             | elapsed hours for proof packs that reach first successful verification in scope                                                             | proof packs that reach first successful verification in scope | hours (median)                 | persona type, org type, proof type, role family, seniority band, region band, verification tier   | internal trust dashboard, verification ops dashboard, owner proof status timeline   | proof owner for own object status, product/ops/admin for aggregates                 | Aggregate internal; owner sees only own proof status                      | No public disclosure of verification timestamps beyond the owner and authorized reviewers already entitled to see proof state.                         |
-| **Verification lifecycle conversion**      | Conversion through the proof verification funnel. Primary rate is completed verifications divided by verification requests created. Secondary rates track opened, accepted, expired, and downgraded stages.                                                                                                                                                                                                                       | stage-specific completed, opened, accepted, expired, or downgraded verification records                                                     | verification requests created                                 | percent by stage               | persona type, org type, proof type, verification tier, role family, region band                   | internal trust dashboard, verification ops dashboard, owner proof request state     | proof owner for own request state, product/ops/admin for funnel aggregates          | Funnel internals are internal-only; owner sees current request state only | No verifier identity, freeform verifier text, or raw message content in analytics properties or user-facing summaries.                                 |
-| **Intro expiry rate**                      | Share of created intros that expire before acceptance or progress.                                                                                                                                                                                                                                                                                                                                                                | intros expired                                                                                                                              | intros created                                                | percent                        | persona type, org type, assignment type, role family, seniority band, region band                 | org assignment dashboard, internal trust dashboard                                  | org assignment owner for own assignments, product/ops/admin                         | Org-facing aggregate and internal                                         | Do not expose counterparty identity or reason text outside authorized assignment owners and internal staff.                                            |
-| **Withdrawal rate**                        | Share of submitted proof-backed workflows that are later withdrawn by the owner or counterparty. Applies to proof submissions and intros in scope.                                                                                                                                                                                                                                                                                | withdrawn proof submissions or withdrawn intros                                                                                             | submitted proof submissions or submitted intros in scope      | percent                        | persona type, org type, proof type, assignment type, role family, region band                     | internal trust dashboard, limited owner object status                               | object owner for own status, product/ops/admin for aggregates                       | Internal-only except own-object status                                    | Never expose who withdrew another user’s object or any withdrawal rationale text beyond authorized workflow participants.                              |
-| **No-show rate**                           | Share of scheduled interviews that are marked as no-show.                                                                                                                                                                                                                                                                                                                                                                         | interviews marked no-show                                                                                                                   | scheduled interviews                                          | percent                        | persona type, org type, assignment type, interview type, role family, seniority band, region band | org assignment dashboard, internal trust dashboard, interview reliability dashboard | org assignment owner for own aggregate, product/ops/admin                           | Org-facing aggregate and internal                                         | No cross-user no-show leaderboard, no public reputation surface, no analytics properties with personal excuses or feedback text.                       |
-| **Reveal-stage conversion**                | Share of matches that progress from one reveal stage to the next, tracked at `stage0->1`, `1->2`, `2->3`, and `3->4`.                                                                                                                                                                                                                                                                                                             | matches reaching the next reveal stage                                                                                                      | matches eligible for the current reveal stage                 | percent by stage               | persona type, org type, assignment type, reveal stage, role family, seniority band, region band   | internal trust dashboard, assignment review dashboard                               | org reviewers for own assignment aggregate, product/ops/admin                       | Internal-only with limited assignment aggregate                           | No identity-bearing reveal details, no per-candidate progression scoreboard, and no hidden-field leakage through analytics.                            |
-| **Override usage**                         | Share of reviewed matches with at least one manual override.                                                                                                                                                                                                                                                                                                                                                                      | reviewed matches with at least one override                                                                                                 | reviewed matches                                              | percent                        | org type, assignment type, reviewer role, role family, region band, override reason code          | internal governance dashboard                                                       | product/ops/admin, compliance leads                                                 | Internal-only                                                             | No public or reviewer-to-reviewer ranking. Keep actor identity in audit systems, not in analytics dashboards exposed beyond authorized internal staff. |
-| **Override-to-outcome drift**              | Difference in downstream verified outcome rate between override-promoted matches and non-overridden matches within the same score band and cohort.                                                                                                                                                                                                                                                                                | verified downstream outcomes for override-promoted matches minus verified downstream outcomes for non-overridden matches in matched cohorts | compared population within the same score band and cohort     | percentage-point delta         | org type, assignment type, reviewer role, score band, role family, seniority band, region band    | internal governance dashboard                                                       | product/ops/admin, compliance leads                                                 | Internal-only                                                             | Never surface per-reviewer or per-candidate drift publicly. Suppress views below minimum sample thresholds.                                            |
-| **Public portfolio indexing status**       | Distribution of published public portfolios across `disabled`, `eligible_not_enabled`, `enabled`, `blocked_by_safety`, and `depublished`.                                                                                                                                                                                                                                                                                         | portfolios in a given indexing state                                                                                                        | published public portfolios in scope                          | count and percent distribution | persona type, org type, portfolio type, region band, indexing status                              | owner portfolio settings, internal public-portfolio health dashboard                | portfolio owner for own status, product/ops/admin for aggregate distribution        | Owner-facing for own status; aggregate internal                           | No public exposure of blocked-by-safety reasons beyond owner-safe language. No search-referrer or viewer identity in owner surfaces.                   |
-| **Public portfolio reveal / share events** | Share activation rate for public portfolios. A portfolio counts as activated when it is shared at least once after publication. Public-view volume is diagnostic only and not a success KPI.                                                                                                                                                                                                                                      | active public portfolios shared at least once                                                                                               | active public portfolios                                      | percent                        | persona type, org type, portfolio type, region band, source surface                               | owner portfolio settings, internal public-portfolio distribution dashboard          | portfolio owner for own share actions, product/ops/admin for aggregate              | Share status user-facing; raw public-view counts internal diagnostic only | Do not expose public-view counts, viewer identity, or precise referrers to owners. Referrer classes stay aggregated and internal.                      |
-| **Assignment fulfillment rate**            | Share of eligible published assignments that reach `fulfilled` through a proof-backed intro and verified hire or engagement.                                                                                                                                                                                                                                                                                                      | eligible published assignments reaching `fulfilled` via proof-backed intro and verified outcome                                             | eligible published assignments                                | percent                        | org type, assignment type, role family, seniority band, region band                               | org assignment dashboard, internal trust dashboard                                  | org owners for own aggregate, product/ops/admin                                     | Org-facing aggregate and internal                                         | No exposure of individual candidate identity or contract details beyond existing assignment permissions.                                               |
+- The canonical MVP metric set is **TTSC**, **TTFQI**, **TTV**, **PAC**, **SUS**, and the release-level **fairness note**.
+- User-facing product surfaces remain calm and status-oriented: profile readiness, assignment readiness, intro status, interview status, and feedback status.
+- Internal rollout, observability, and launch reporting may monitor activation, publish speed, SLA compliance, and system health, but those internal views are not part of the product-surface promise.
+- Public portfolio views remain diagnostic only. No owner-facing public-view counters, leaderboards, streaks, or habit loops ship in MVP.
+- Zen Hub emits only coarse private-partition action events and remains excluded from ranking, org review, fairness workflows, and public rendering.
 
-## 2.4 Secondary Outcome Metrics
-
-- **TTSC (North Star Metric):** Median elapsed calendar days from activation to a signed employment or engagement agreement attributable to the platform. Track median and P75 by cohort.
-- **TTFQI:** Median elapsed time from activation to the first qualified introduction where thresholds and consent are satisfied.
-- **TTV:** Median elapsed time from activation to the first meaningful step such as an interview scheduled or async task accepted.
-- **Fairness note / fairness gap:** Release-level fairness note generated only for opt-in cohorts above minimum privacy thresholds; compare intro and contract outcomes without exposing protected attributes in user-facing surfaces.
-- **Effort reduction:** Self-reported hours saved plus measured on-platform steps for profile activation, proof preparation, and assignment publishing.
-- **First-session activation:** Persona-specific success inside a strict 10-minute window from onboarding completion; individual flow uses `portfolio_share_link_copied` plus `portfolio_pdf_export_succeeded`, and organization flow uses `assignment_template_applied` plus `assignment_publish_succeeded`.
-
-## 2.5 Anti-Goals / Non-Metrics (MVP)
+## 2.4 Anti-Goals / Non-Metrics (MVP)
 
 - Do **not** optimize remuneration levels, work conditions, or culture fit beyond explicit constraints supplied by users.
 - Do **not** optimize for time-on-site, feed engagement, vanity counts, message volume, or owner-facing public-view counters.
@@ -339,26 +322,27 @@ For job seekers overwhelmed by volatile, biased, and time-intensive hiring—and
 - **Qualified Introduction:** A two-sided, values-aware intro produced when skills/constraints thresholds and consent are satisfied.
 - **Meaningful Step (TTV event):** A scheduled interview or accepted async task within the platform.
 - **PAC (Purpose-Alignment Contribution):** The additive portion of the composite match score attributable to values/causes alignment.
-- **Proof Quality Score (PQS):** The weighted quality score over active published Proof Packs used for trust-health rollups; users see only the qualitative band, not the raw formula components.
+- **Fairness note:** Release-level summary of opt-in cohort checks with privacy thresholds, limitations, and status.
 
 **Decisions captured here**
 
 - **NSM = TTSC** for both sides; track cohort medians + P75.
-- Trust-first KPI layer is primary for product analytics: **PQS**, proof freshness, proof coverage, Time-to-Verified, verification lifecycle conversion, intro expiry, withdrawal, no-show, reveal-stage conversion, override usage, override-to-outcome drift, public portfolio indexing status, public portfolio share activation, and assignment fulfillment rate.
-- Purpose/values signals remain **first-class** in scoring and are evaluated for lift as a secondary matching diagnostic, not a vanity KPI.
-- User-facing analytics remain minimal and status-oriented: own proof freshness, own proof coverage, own verification state, own PQS band, own portfolio indexing status, and own share actions.
+- The canonical MVP metric set is **TTSC**, **TTFQI**, **TTV**, **PAC**, **SUS**, and the release-level **fairness note**.
+- Purpose and values signals remain first-class inside matching and explanation, but they do not become public scores, vanity counters, or engagement loops.
+- User-facing analytics remain minimal and status-oriented: readiness, intro state, interview state, and feedback follow-up.
+- Internal rollout and observability reporting may monitor activation, publish speed, endpoint health, and SLA compliance without expanding product scope.
 - Public portfolio public-view events remain diagnostic only and are not surfaced as owner-facing success counters.
-- Zen Hub is optional, private, and excluded from matching, ranking, reveal, fairness workflows, and public rendering.
+- Zen Hub is optional, private, and excluded from matching, ranking, org review, fairness workflows, and public rendering.
 - Zen analytics are limited to coarse private-partition action events and never include reflection text or raw scores.
-- UX quality is still tracked with **SUS** + task success + drop-off; no social feed.
+- UX quality is tracked with **SUS** plus task success and drop-off; no social feed, no vanity loops.
 
 **Open questions**
 
 - **Contract verification:** acceptable proofs (mutual attestation, doc upload, third-party integration later)?
 - **Baselines:** how collected for TTSC/Effort (onboarding survey vs. control cohorts)?
 - **Fairness controls:** which de-biasing techniques in MVP (blinding, calibration, periodic fairness audit)?
-- **Cohort definitions:** by role family, seniority, geography—exact bins for dashboarding.
-- **Freshness policy:** exact freshness decay windows and minimum qualifying PQS thresholds by proof type and role family.
+- **Cohort definitions:** by role family, seniority, geography—exact bins for internal reporting.
+- **Freshness policy:** exact freshness decay windows and minimum qualifying proof thresholds by proof type and role family.
 - **Privacy defaults:** analytics/event-level redaction for sensitive fields, public-view referrer classes, and opt-in demographics.
 
 **Approved on**
@@ -412,11 +396,11 @@ For job seekers overwhelmed by volatile, biased, and time-intensive hiring—and
 
 **Purchase**
 
-- **Actions:** Buys Starter; completes mobile payment.
+- **Actions:** Commits to the activation path, completes enough proof and visibility setup to become match-visible, and confirms what will stay private.
 - **Feelings:** Relieved.
-- **Friction:** Mobile pay friction.
-- **Metrics:** Mobile checkout success; drop-off by step.
-- **Design Ops:** Apple/Google Pay; one-screen checkout.
+- **Friction:** Unclear verification or visibility steps.
+- **Metrics:** Activation completion; visibility-summary completion; time-to-match-visible.
+- **Design Ops:** Plain-language verification choices; privacy summary before matching turns on.
 
 **Retention**
 
@@ -424,7 +408,7 @@ For job seekers overwhelmed by volatile, biased, and time-intensive hiring—and
 - **Feelings:** Progressing; occasional discouragement.
 - **Friction:** Quiet match weeks.
 - **Metrics:** 4-week retention; artifacts cadence; TTFQI→interview rate.
-- **Design Ops:** Auto-suggest L4s from uploaded CV; optional Zen prompts tied to milestones.
+- **Design Ops:** Auto-suggest L4s from uploaded CV; optional Zen prompts tied to milestone moments only.
 
 ---
 
@@ -448,7 +432,7 @@ For job seekers overwhelmed by volatile, biased, and time-intensive hiring—and
 
 **Consideration**
 
-- **Actions:** Import projects to **Profile**; map to Expertise Hub (auto-scan suggests L4s like “Time-series cleaning,” “ETL in Python”). **Gap Map** highlights top L4s to add.
+- **Actions:** Import prior work examples to **Profile**; map to Expertise Hub (auto-scan suggests L4s like “Time-series cleaning,” “ETL in Python”). **Gap Map** highlights top L4s to add.
 - **Feelings:** Oriented.
 - **Friction:** Mapping confidence.
 - **Metrics:** Auto-map acceptance rate; time-to-activation.
@@ -460,15 +444,15 @@ For job seekers overwhelmed by volatile, biased, and time-intensive hiring—and
 - **Feelings:** Cost-sensitive.
 - **Friction:** Which verification matters?
 - **Metrics:** Verification pack attach rate; PAC contribution vs acceptance rate.
-- **Design Ops:** “Switch Pack”: portfolio review + 1 verified project + mock interview.
+- **Design Ops:** Show which proofs matter most for the target role and what can stay optional for launch.
 
 **Purchase**
 
-- **Actions:** Buys Switch Pack; books async review.
+- **Actions:** Completes proof-backed activation, requests an attestation where helpful, and readies the profile for intros.
 - **Feelings:** Motivated.
-- **Friction:** Scheduling.
-- **Metrics:** Time-to-first verified proof.
-- **Design Ops:** 48-hour async SLA; calendar picker with soonest slot.
+- **Friction:** Which proof or attestation actually matters.
+- **Metrics:** Time-to-first verified proof; time-to-match-visible.
+- **Design Ops:** Proof guidance tied to the target role; clear next-best-action prompts.
 
 **Retention**
 
@@ -482,7 +466,7 @@ For job seekers overwhelmed by volatile, biased, and time-intensive hiring—and
 
 ### 3) Ola, 38 — senior security engineer, time-poor advisor
 
-**Goal:** Low-lift paid advisory with vetted orgs.  
+**Goal:** Low-lift advisory opportunities with vetted orgs.  
 **Context:** Privacy/security-sensitive; minimal time.
 
 **Definition of Done (MVP):** Advisory sprint accepted with ≤15m onboarding; repeat micro-engagements per quarter.
@@ -510,17 +494,17 @@ For job seekers overwhelmed by volatile, biased, and time-intensive hiring—and
 
 - **Actions:** Reviews 2 NGO briefs; requests NDA before details.
 - **Feelings:** Professional.
-- **Friction:** NDA loops.
-- **Metrics:** NDA turnaround time; drop-offs.
-- **Design Ops:** One-click NDA; org security self-assessment badge on Assignments.
+- **Friction:** Knowing when to share more detail.
+- **Metrics:** Match-detail views; intro-request conversion.
+- **Design Ops:** Clear reveal-stage copy and privacy-safe assignment summaries.
 
 **Purchase**
 
-- **Actions:** Accepts paid advisory sprint.
+- **Actions:** Accepts a first advisory intro and confirms availability with minimal setup.
 - **Feelings:** Clear.
 - **Friction:** Onboarding overhead.
-- **Metrics:** Time-to-onboard < 15m.
-- **Design Ops:** Sprint starter brief; Slack/Teams bridge.
+- **Metrics:** Time-to-first intro accepted; time-to-interview or scope call.
+- **Design Ops:** Keep onboarding to proof, availability, and intro follow-up only.
 
 **Retention**
 
@@ -535,9 +519,9 @@ For job seekers overwhelmed by volatile, biased, and time-intensive hiring—and
 ### 4) Dmitry, 59 — manufacturing expert, mentorship-first
 
 **Goal:** Light mentorship/consulting; desktop-first.  
-**Context:** Prefers simple scheduling and payouts.
+**Context:** Prefers simple scheduling and low admin overhead.
 
-**Definition of Done (MVP):** 3 pro-bono sessions completed; paid sessions enabled; first payout achieved.
+**Definition of Done (MVP):** 3 mentorship sessions completed; consulting availability made clear; first consulting intro accepted.
 
 #### Journey Stages
 
@@ -568,11 +552,11 @@ For job seekers overwhelmed by volatile, biased, and time-intensive hiring—and
 
 **Purchase**
 
-- **Actions:** Enables paid sessions; connects payouts.
+- **Actions:** Makes consulting availability visible and accepts a first consulting intro.
 - **Feelings:** Valued.
-- **Friction:** Payout setup.
-- **Metrics:** Time-to-first payout.
-- **Design Ops:** Stripe Connect guide; earnings widget.
+- **Friction:** Converting interest into a real intro.
+- **Metrics:** Time-to-first consulting intro; repeat intro requests.
+- **Design Ops:** Keep the flow focused on scheduling, proof context, and testimonial follow-up.
 
 **Retention**
 
@@ -665,7 +649,7 @@ _Merged into Persona #1 to keep set concise and measurable._
 - **Actions:** Books a demo and reviews example assignments.
 - **Feelings:** Interested but busy.
 - **Friction:** Manager adoption.
-- **Metrics:** Demo → trial start.
+- **Metrics:** Demo → org signup intent.
 - **Design Ops:** “Shortlist in inbox” workflow; example match-review queue.
 
 **Consideration**
@@ -678,10 +662,10 @@ _Merged into Persona #1 to keep set concise and measurable._
 
 **Decision**
 
-- **Actions:** Picks a plan and invites one reviewer if needed.
+- **Actions:** Proceeds with the first assignment and invites one reviewer if needed.
 - **Feelings:** ROI-oriented.
 - **Friction:** Budget approval.
-- **Metrics:** Trial-to-purchase; time to first live assignment.
+- **Metrics:** Time to first live assignment; reviewer activation.
 - **Design Ops:** ROI framing around publish speed and intro quality.
 
 **Purchase**
@@ -717,7 +701,7 @@ _Merged into Persona #1 to keep set concise and measurable._
 - **Actions:** Views volunteer/impact demo.
 - **Feelings:** Curious.
 - **Friction:** Compliance.
-- **Metrics:** Demo → trial start.
+- **Metrics:** Demo → org signup intent.
 - **Design Ops:** Safe-data templates; proof-first org profile example.
 
 **Consideration**
@@ -730,11 +714,11 @@ _Merged into Persona #1 to keep set concise and measurable._
 
 **Decision**
 
-- **Actions:** Chooses NGO plan with volunteer screening.
+- **Actions:** Proceeds with volunteer assignment publishing and turns on the minimum verification gates needed for trust.
 - **Feelings:** Reassured.
-- **Friction:** Cost.
-- **Metrics:** Conversion to paid.
-- **Design Ops:** Invoice + discount; emphasis on faster qualified intros.
+- **Friction:** Balancing trust with low overhead.
+- **Metrics:** Time-to-first assignment; verification-gated intro quality.
+- **Design Ops:** Emphasize faster qualified intros and simple trust controls.
 
 **Purchase**
 
@@ -822,7 +806,7 @@ _Merged into Persona #1 to keep set concise and measurable._
 **Canonical persona clusters**
 
 - **Individuals:** Student/Grad, Career Switcher, Senior Advisor/Expert, Mentor/Consultant, Founder-Operator.
-- **Organizations:** Scale-ups/Enterprises (HR/Talent), NGOs, Government departments.
+- **Organizations:** Founder-led small organizations, scale-ups or larger hiring teams, and NGOs/community organizations.
 
 **Ties to metrics (Part 2)**
 
@@ -838,7 +822,7 @@ _Merged into Persona #1 to keep set concise and measurable._
 
 **Open questions**
 
-- Minimum verification set per persona (student vs senior expert vs NGO vs enterprise team).
+- Minimum verification set per persona (student vs senior expert vs NGO vs larger hiring team).
 - Exact cohort bins for benchmarking TTSC/TTFQI (role family, seniority, region).
 - Privacy defaults for artifacts and attestations per persona.
 
@@ -921,7 +905,7 @@ Each flow follows a consistent mini‑spec: **Purpose • Entry • Steps • In
 
 **Purpose:** Prevent overwhelm; orient users to core areas.  
 **Entry:** First successful login (or when requested later).  
-**Steps:** 1) Blank canvas with styled background → reveal **Navigation** + hint → 2) Reveal **Dashboard** + hint → 3) Jump to **Profile** (empty state & hint) → 4) Show **Expertise Hub** (About + hint) → 5) Show **Matching Profile** (why it matters) → 6) Show **Settings** (one‑line explainer) → 7) Suggest “Start with your Profile”.  
+**Steps:** 1) Blank canvas with styled background → reveal **Navigation** + hint → 2) Reveal the calm **Home Snapshot** + hint → 3) Jump to **Profile** (empty state & hint) → 4) Show **Skills and Proof** (About + hint) → 5) Show **Matching Preferences** (why it matters) → 6) Show **Settings** (one‑line explainer) → 7) Suggest “Start with your Profile”.  
 **Inputs/Data:** Tour seen flag; per‑module “seen” state.  
 **Needs & Feelings:** Calm; agency; no forced learning.  
 **System Support:** Skippable; repeatable; keyboard/ARIA compatible.  
@@ -931,16 +915,16 @@ Each flow follows a consistent mini‑spec: **Purpose • Entry • Steps • In
 
 ---
 
-## I‑04 Home Dashboard (Observer‑Only Snapshot) **[MVP]**
+## I‑04 Home Snapshot (Observer‑Only) **[MVP]**
 
-**Purpose:** Provide a non‑interactive snapshot and deep‑link to the right area.  
+**Purpose:** Provide a calm, non-interactive status view and deep-link to the right area.  
 **Entry:** Home route after login.  
-**Steps:** See cards/tiles summarizing Profile, Expertise, and Matching; clicking a tile deep‑links to its module.  
+**Steps:** See a small set of status cards summarizing Profile, Skills and Proof, Matching, and Privacy; each card deep-links to its module.  
 **Inputs/Data:** Read‑only aggregates.  
 **Needs & Feelings:** Orientation; no pressure to act.  
-**System Support:** Empty‑state copy per tile; “no actions here” clarity.  
-**Done:** User navigates purposefully from dashboard.  
-**Metrics:** Tile click‑through; bounce from home.  
+**System Support:** Empty-state copy per card; "no busy dashboard" clarity.  
+**Done:** User navigates purposefully from the home snapshot.  
+**Metrics:** Card click-through; bounce from home.  
 **Edge Cases:** No data → tasteful placeholders.
 
 ---
@@ -989,9 +973,9 @@ Each flow follows a consistent mini‑spec: **Purpose • Entry • Steps • In
 
 ## I‑08 Journey — Add **Work Experience** **[MVP]**
 
-**Purpose:** Record work with minimal friction; enable later linkage to skills & projects.  
+**Purpose:** Record work with minimal friction; enable later linkage to skills and proof.  
 **Entry:** Profile → Journey tab (empty‑state hint).  
-**Steps:** Toggle “Work” → Organization → Role/Title → Dates → Location (optional) → **What I did** (few short sentences) → **Impact** (brief example‑guided) → **Projects** (optional, names/briefs; continuous vs time‑boxed) → Save Draft or Publish.  
+**Steps:** Toggle “Work” → Organization → Role/Title → Dates → Location (optional) → **What I did** (few short sentences) → **Impact** (brief example‑guided) → **Context** (optional, short brief) → Save Draft or Publish.  
 **Inputs/Data:** Structured fields; short texts.  
 **Needs & Feelings:** Light, honest, safe; can edit later.  
 **System Support:** Example prompts (e.g., “Improved accessibility for commuters”); drafts; privacy controls.  
@@ -1287,261 +1271,131 @@ Each flow includes:
 
 ---
 
-## Global assumptions from the narration
+## Global assumptions
 
-- **Free trial** exists for organizations; shows concise value cards before commitment.
-- **Privacy & data handling**: legally public org data is public by default; sensitive/contractual data remains private.
-- **First-run guidance** uses a **gradual reveal** of UI (nav, dashboard cards) with **concise hints** and **mock data** during onboarding only.
-- **Account modes**: a person can hold an **Individual** account and also act as an **Org Representative**; easy switching is required.
-- **Trial seats**: free trial permits **up to 5 seats** (CEO + 4).
-- **Interview policy**: policy presets apply by default with mode-specific windows/durations (`startup`: 7 days/30 min, `enterprise`: 14 days/45 min, `volunteer`: 21 days/30 min). Advanced policy mode retains strict controls; decision feedback SLA remains 48 hours.
-- **Matching results**: **Top 5** candidates for free tier; if the pool is too small, platform compiles best matches by **72 hours** post‑publish.
+- **Portfolio-first onboarding** applies to organizations as well as individuals; org setup ends with a public portfolio-ready confirmation step before the first workspace visit.
+- **Privacy & data handling**: legally public org data is public by default; sensitive or contractual data remains private.
+- **First-run guidance** uses a gradual reveal of navigation and the operational home with concise hints only.
+- **Minimal collaboration**: the launch path assumes one owner account and, if needed, optional reviewer access with narrow review permissions.
+- **Interview policy**: policy presets apply by default with mode-specific windows and durations. The launch promise is scheduling discipline and timely feedback, not workflow depth.
+- **Matching results**: organizations get a privacy-safe review queue focused on publish speed, match quality, intros, interviews, and follow-up.
 
 ---
 
 # Flows
 
-## O‑01 Landing → Trial Intent
+## O‑01 Landing → Organization Sign‑Up Intent
 
-**Goal:** Understand value and decide to try the platform.  
-**Entry:** Visitor reads the shared landing page (for individuals & orgs).  
-**Happy‑path steps:** Landing → “Start Free Trial (Organizations)” → Value cards (concise).  
+**Goal:** Understand the value and decide to create an organization account.  
+**Entry:** Visitor reads the shared landing page.  
+**Happy‑path steps:** Landing → organization CTA → concise value cards and proof points → continue to organization sign-up.  
 **Success:** User proceeds to org sign‑up.  
 **Key data:** None.  
-**Edge cases:** TL;DR behavior—value cards must be scannable; avoid walls of text.  
+**Edge cases:** Keep value cards scannable and low-friction; avoid walls of text.  
 **MVP:** Yes.
 
 ## O‑02 Organization Sign‑Up & Email Verification
 
 **Goal:** Create an org representative account cleanly.  
 **Entry:** CTA from O‑01.  
-**Happy‑path steps:** Choose **Organization account** → enter **name, work email, title, password** → submit → receive **verification email** → verify.  
-**Success:** Account verified; user can sign in.  
-**Key data:** User(OrgRep), Org placeholder.  
-**Edge cases:** Email deliverability; password policy; duplicate email.  
+**Happy‑path steps:** Choose **Organization account** → sign up with email/password or continue with Google/LinkedIn → accept required consent → verify email if needed → sign in.  
+**Success:** Org representative account created and ready for onboarding.  
+**Key data:** User account, consent records, auth provider data.  
+**Edge cases:** Duplicate email, expired verification link, provider auth failure, email deliverability issues.  
 **MVP:** Yes.
 
-## O‑03 Minimal Org Setup (Slug & Names)
+## O‑03 Minimal Org Setup
 
-**Goal:** Provide only essentials before seeing value.  
+**Goal:** Create the organization and its owner relationship with only the fields needed for day-1 value.  
 **Entry:** First sign‑in after O‑02.  
-**Happy‑path steps:** Form with **org slug**, **display name**, **legal name** → save.  
-**Success:** Org created with minimal profile; hint that more details can be added later.  
-**Key data:** Org.slug, Org.name, Org.legal_name.  
-**Edge cases:** Slug collision; reserved words.  
+**Happy‑path steps:** Enter **organization name**, **slug**, **organization type**, optional **mission**, and optional **website** → save.  
+**Success:** Organization is created, owner membership is active, and the public org portfolio URL is generated.  
+**Key data:** Org.slug, Org.name, Org.type, Org.website, optional mission, owner membership.  
+**Edge cases:** Slug collision, reserved words, existing active membership routes the user back to the existing org home.  
 **MVP:** Yes.
 
-## O‑04 Trial Activation & Consent
+## O‑04 Public Org Portfolio Ready & Continue
 
-**Goal:** Start free trial with clear terms and reassurance.  
+**Goal:** Deliver a live public organization link immediately after org creation and move the user into the first assignment flow.  
 **Entry:** Post O‑03.  
-**Happy‑path steps:** Show **value cards** → accept **ToS/Privacy** → optional note on **security/privacy contact** → start trial.  
-**Success:** Trial active; seat limit set.  
-**Key data:** Trial.start_at, Trial.end_at, Trial.seat_cap=5.  
-**Edge cases:** Decline terms → return to dashboard with limited access.  
+**Happy‑path steps:** Show dedicated **Organization link ready** step → display live `/portfolio/org/{slug}` URL → copy link or open portfolio → continue into the trust-profile and first-assignment flow.  
+**Success:** Public org link is live and the user is steered toward creating the first assignment.  
+**Key data:** Public org portfolio URL.  
+**Edge cases:** Clipboard blocked, open-in-new-tab failure, search indexing stays off by default, public route may stay unavailable until minimum trust-card content exists.  
 **MVP:** Yes.
 
-## O‑05 First‑Run Guided Tour (Nav + Dashboard)
+## O‑05 First‑Run Orientation
 
-**Goal:** Prevent overwhelm; explain layout & purpose swiftly.  
-**Entry:** Trial starts / first dashboard view.  
-**Happy‑path steps:** Gradual reveal of **nav bar** (with hint) → **dashboard cards** one by one with **mock data** while hints visible → on dismiss, cards revert to **empty defaults**.  
-**Success:** Tour completed or skipped; user orients.  
-**Key data:** Dismissed_tutorial flags.  
-**Edge cases:** Skip/replay; accessibility (keyboard, reduced motion).  
+**Goal:** Prevent overwhelm and explain the lean launch layout quickly.  
+**Entry:** First org workspace visit after O‑04.  
+**Happy‑path steps:** Reveal navigation with a short hint → reveal the operational home and its queue panels → explain where trust profile, assignments, and review live → suggest the next best action.  
+**Success:** Tour completed or skipped and the user can navigate intentionally.  
+**Key data:** Tutorial dismissed flags.  
+**Edge cases:** Skip, replay, reduced motion, keyboard-only use.  
 **MVP:** Yes.
 
-## O‑06 Structure Overview: Tabs & Quick Intros
+## O‑06 Organization Trust Profile Completion
 
-**Goal:** High‑level understanding of what exists (Profile, Assignments, Atlas, Team, Settings).  
-**Entry:** End of O‑05 or via “Show me around.”  
-**Happy‑path steps:** One‑screen intro per tab → concise “why it matters.”  
-**Success:** User navigates intentionally.  
-**Key data:** None.  
-**Edge cases:** Do not deep‑dive yet; keep scannable.  
+**Goal:** Add only the trust context needed to make assignments and match review credible.  
+**Entry:** From the operational home or trust-profile prompt.  
+**Happy‑path steps:** Add mission, why-join statement, up to 3 values, 1-3 proof highlights, and lightweight work norms → preview → save.  
+**Success:** Trust profile is ready to support assignment views and match review.  
+**Key data:** Mission, why-join statement, values, proof highlights, lightweight work norms.  
+**Edge cases:** Incomplete trust profile still saves as draft; preview makes public versus private scope explicit.  
 **MVP:** Yes.
 
-## O‑07 Account‑Mode Linking & Switching (Individual ↔ Org Rep)
+## O‑07 Basic Assignment Publishing
 
-**Goal:** Allow a person to connect personal & org representative identities and switch easily.  
-**Entry:** From header switcher or settings.  
-**Happy‑path steps:** Link accounts (work email ↔ personal identity) → switch context via header control.  
-**Success:** Context reflects chosen mode.  
-**Key data:** LinkedAccount(user_id_personal, user_id_orgrep).  
-**Edge cases:** Org policy forbids linking; visibility rules differ per mode.  
+**Goal:** Publish a high-signal assignment quickly without advanced org tooling.  
+**Entry:** From the operational home or assignment CTA.  
+**Happy‑path steps:** Enter title, why this role exists, outcomes, must-have skills, practical constraints, optional trust requirements, and publish.  
+**Success:** Assignment is live and match generation begins.  
+**Key data:** Assignment basics, skills, constraints, publish status.  
+**Edge cases:** Inline fixes for missing required fields; keep editing on the same launch path rather than branching to an advanced builder.  
 **MVP:** Yes.
 
-## O‑08 Team Setup: Departments, Hierarchy, Seats
+## O‑08 Match Review Queue & Optional Reviewer Invite
 
-**Goal:** Model company structure & invite collaborators (trial cap = 5 seats).  
-**Entry:** Team tab.  
-**Happy‑path steps:** Create **departments** → set **hierarchy** → **invite members** by work email → assign **roles** and **departments**.  
-**Success:** Team active with roles and seat usage displayed.  
-**Key data:** Dept tree, Invites, Roles/Permissions.  
-**Edge cases:** Seat cap reached; resend invite; revoke access.  
+**Goal:** Review privacy-safe candidate summaries and bring in lightweight collaboration only when needed.  
+**Entry:** After O‑07 or from the operational home.  
+**Happy‑path steps:** Open the **Assignments and Matches** queue → review privacy-safe candidate summaries with proof context and match reasons → shortlist, pass, or request intro → optionally invite a reviewer with narrow review permissions.  
+**Success:** The organization has an active review queue and optional reviewer access without admin sprawl.  
+**Key data:** Match review actions, intro requests, reviewer invite records.  
+**Edge cases:** No matches yet state with next steps; duplicate reviewer invite; invite expiry or revoke.  
 **MVP:** Yes.
 
-## O‑09 Org Profile Completion (Core Data)
+## O‑09 Intro, Interview, and Feedback Follow-Up
 
-**Goal:** Fill sensitive but essential org details with reassurance.  
-**Entry:** Profile tab.  
-**Happy‑path steps:** Enter **org number/registry**, **locations**, **industries**, **legal structure**, **ownership & voting rights**; add **mission/vision (free text)**, **values/causes (preset tags)**; upload **logo & cover**.  
-**Success:** Profile saved; public vs private fields respected.  
-**Key data:** Org registry IDs; governance & transparency fields.  
-**Edge cases:** Public‑by‑law defaults vs confidential flags.  
+**Goal:** Move from intro to interview and decision follow-up with clear operational discipline.  
+**Entry:** From O‑08 once a candidate is shortlisted or an intro is approved.  
+**Happy‑path steps:** Request or approve intro → open the message thread → schedule an interview inside the active policy window → send a timely decision and personalized feedback follow-up.  
+**Success:** Intro, interview, and feedback states are updated from the same operational home.  
+**Key data:** Intro state, message thread, interview record, decision status, feedback timestamps.  
+**Edge cases:** Reschedule, manual meeting-link fallback, silence or SLA reminder, no-show handling.  
 **MVP:** Yes.
-
-## O‑10 Impact Areas — Create, Edit, Publish
-
-**Goal:** Declare public impact areas with strong guidance.  
-**Entry:** Profile → Impact Areas.  
-**Happy‑path steps:** Add **impact area** via dialog → field‑level hints → **save draft** → **publish** (public by design) → edit later.  
-**Success:** Impact areas visible on public org profile.  
-**Key data:** ImpactArea entities (title, scope, metrics optional).  
-**Edge cases:** Draft vs published; versioning.  
-**MVP:** Yes.
-
-## O‑11 Projects — Create, Edit, Confidentiality
-
-**Goal:** Track org projects with confidentiality controls.  
-**Entry:** Profile → Projects.  
-**Happy‑path steps:** Create project (name, scope, team, status) → mark **confidential/NDA** if needed → save draft/publish (respect visibility).  
-**Success:** Project stored; visibility enforced.  
-**Key data:** Project, Confidentiality flags, Team links.  
-**Edge cases:** Redactions on public views; access control for private projects.  
-**MVP:** Yes.
-
-## O‑12 Bindings: Link Projects/Impact Areas ↔ Team & Competencies
-
-**Goal:** Connect work and impact to people and competencies.  
-**Entry:** From Project/ImpactArea editors or Atlas/Team views.  
-**Happy‑path steps:** Select **project/impact area** → link **team members** and **competencies** (from Atlas) → save.  
-**Success:** Relationships appear in Team and Atlas.  
-**Key data:** Link tables (Project↔User, ImpactArea↔Competency).  
-**Edge cases:** Permission checks; circular edits.  
-**MVP:** Yes.
-
-## O‑13 Assignment Creation (5‑Step) with Stakeholders
-
-**Goal:** Define a high‑quality assignment aligned to business value.  
-**Entry:** Assignments → “Create First Assignment.”  
-**Happy‑path steps:**
-
-1. **Business Value (BV)** — creator assigns **stakeholders** (e.g., CTO/HR/Lead/CEO) and drafts BV; stakeholders can review/comment.
-2. **Target Outcomes (TO)** — measurable outcomes & improvement targets.
-3. **Weight Matrix** — relative weights: **mission/purpose fit**, **expertise depth**, **work mode** (onsite/hybrid/remote; hard/soft requirement).
-4. **Practicals** — budget/salary range, location, availability window.
-5. **Expertise Mapping** — pick competencies (Atlas) and tie each to **BV/TO**; optional **education requirements** must include a short **justification**.  
-   **Success:** Validated draft ready to publish.  
-   **Key data:** Assignment with stakeholders, weights, mappings, education justification texts.  
-   **Edge cases:** Missing stakeholder input; conflicting weights; justification omitted when education is marked “required.”  
-   **MVP:** Yes.
-
-## O‑14 Publish Assignment (Free Tier Constraints)
-
-**Goal:** Make the assignment discoverable and ready for matching.  
-**Entry:** From O‑13.  
-**Happy‑path steps:** Review summary → confirm visibility → publish.  
-**Success:** Assignment live; matching pipeline starts.  
-**Key data:** Assignment.status=Published; subscription tier.  
-**Edge cases:** Editing after publish; tier upgrade prompt.  
-**MVP:** Yes.
-
-## O‑14A BYOC Candidate Invites & Proof Card Intake
-
-**Goal:** Let organizations bring known candidates into the platform without CV-first review.  
-**Entry:** Candidates area in org workspace (`Invited candidates` tab).  
-**Happy‑path steps:** Add one or many candidate emails → send invite links → candidate opens invite, authenticates with the same email, claims invite, and submits a Proof Card link (`/p/[token]`) that renders a selected Proof Pack generated from structured profile data.  
-**Success:** Invite status transitions to `proof_submitted`, and org reviewers can open the submitted Proof Card and its linked Proof Pack from the queue.  
-**Key data:** CandidateInvite(status lifecycle, token hash, claimant, proof snippet/token, linked proof pack, timestamps).  
-**Edge cases:** Duplicate active invite blocked per org/email, expired/revoked token, claimant email mismatch, resend/revoke actions.  
-**MVP:** Yes.
-
-## O‑15 Intake Matches & Review
-
-**Goal:** Receive and evaluate best candidates quickly.  
-**Entry:** After O‑14; matching engine runs.  
-**Happy‑path steps:** System compiles **Top 5** candidates (free tier) immediately or within **72h**; show **ranked list** with **subscores** and “why this match.”  
-**Success:** Shortlist created.  
-**Key data:** CandidateMatch(score, subscores, rationale).  
-**Edge cases:** Insufficient pool → partial list + ETA; stale profiles.  
-**MVP:** Yes.
-
-## O‑16 Candidate Pipeline: Message & Schedule Single Interview
-
-**Goal:** Move shortlisted candidates through one structured touchpoint.  
-**Entry:** From O‑15 shortlist.  
-**Happy‑path steps:** Open **message thread** → propose slot(s) via Zoom or Google Meet within active policy window (`startup`: 7 days, `enterprise`: 14 days, `volunteer`: 21 days; `advanced` configurable) and duration limits (30/45/30/60 min max) → system generates video call link automatically; auto‑invite **assigned stakeholders**; confirm time.
-**Success:** Interview completed.  
-**Key data:** Conversation, Calendar event, Participants, Video call link.  
-**Edge cases:** Time‑zone collisions; no‑shows; reschedule once.  
-**MVP:** Yes.
-
-## O‑17 Decision & Feedback (48h SLA)
-
-**Goal:** Decide promptly and provide personal feedback.  
-**Entry:** After O‑16.  
-**Happy‑path steps:** Collect stakeholder inputs → choose **hire/advance/hold/reject** → send **personalized feedback** to each candidate within **48h**.  
-**Success:** Candidate informed; pipeline updated.  
-**Key data:** Decision records, Feedback artifacts.  
-**Edge cases:** Breach of SLA → reminder/escalation; templated but personalized guidance.  
-**MVP:** Yes.
-
-## O‑18 Enterprise Expertise Atlas: Intro & Dashboard
-
-**Goal:** Familiarize with org‑level Atlas without overload.  
-**Entry:** Atlas tab.  
-**Happy‑path steps:** Collapsible **About** (value & future use cases) → gradual reveal of dashboard **graphs with mock data** → revert to empty after tour.  
-**Success:** User understands purpose; no data required yet.  
-**Key data:** Tutorial flags.  
-**Edge cases:** Skip/replay; performance on empty datasets.  
-**MVP:** Yes (intro only).
-
-## O‑19 Enterprise Atlas: L1→L4 Competencies (Show‑Only‑Added)
-
-**Goal:** Create and manage org competencies with progressive disclosure.  
-**Entry:** Atlas after O‑18.  
-**Happy‑path steps:** Show **six L1 domain cards** → on click, list **only L2 categories that have items added** → select L2 to see only added **L3** → expand **L4 competencies**; add/edit competencies; bind to **Impact Areas** and **Projects**.  
-**Success:** Competency structure saved; bindings visible.  
-**Key data:** Competency(L1‑L4), bindings.  
-**Edge cases:** Permissions; bulk edits; taxonomy updates.  
-**MVP:** Yes (foundational authoring).
-
-## O‑20 Settings, Security & Data Lifecycle
-
-**Goal:** Manage org security and compliance with strong safeguards.  
-**Entry:** Settings tab or header menu.  
-**Happy‑path steps:** Change password; setup **MFA**; manage privacy defaults; manage team/roles; **export JSON** of org data; **delete org** with multi‑step confirmations and manual text entry.  
-**Success:** Settings applied; exports/downloads complete; deletions irreversible.  
-**Key data:** Security settings, Export package, Deletion logs.  
-**Edge cases:** Legal hold blocking deletion; restore from JSON (future); role‑based access to sensitive actions.  
-**MVP:** Yes (MFA, privacy, export, guarded delete).
 
 ---
 
-## Appendix A — Entities & References (from narration)
+## Canonical org-flow notes
 
-- **Org**: slug, name, legal_name, registry_ids, locations, industries, legal_structure, ownership/voting, mission, vision, values, causes, pledges, logos, cover.
-- **User(OrgRep)**: name, work_email, title, role.
-- **Team/Dept**: tree structure; roles/permissions; seat cap in trial.
-- **ImpactArea**: public by default; fields guided by hints; draft/publish states.
-- **Project**: name, scope, team, status; confidentiality/NDA flags; draft/publish.
-- **Competency (L1–L4)**: taxonomy items; bindings to ImpactArea/Project.
-- **Assignment**: BV, TO, weights, practicals, expertise mapping, education justification, stakeholders.
-- **Match**: score, subscores, rationale; rank.
+- The MVP org corridor is limited to sign-up, minimal setup, public portfolio ready, first-run orientation, trust profile completion, basic assignment publishing, privacy-safe match review, optional reviewer invite, and intro/interview/feedback follow-up.
+- Post-MVP org-system surfaces such as trials, seat caps, departments, hierarchy, project systems, impact-area systems, stakeholder workflows, advanced builder paths, and org-level atlas authoring are intentionally excluded from launch scope.
+- BYOC candidate invites remain compatible with the same lean review queue and do not introduce a separate enterprise or government branch.
 - **Interview**: policy preset, duration, platform, participants, scheduled within active preset window.
 - **Decision/Feedback**: outcome with personal feedback ≤48h SLA.
 - **Settings/Security**: MFA, privacy, export JSON, deletion safeguards.
 
 ## Appendix B — SLA & Trial Rules
 
-- **Free tier:** Top 5 candidates; **≤72h** to populate if pool is small; **5 seats** (CEO + 4).
-- **Interview:** Preset defaults apply by policy (`startup`: 7 days/30 min, `enterprise`: 14 days/45 min, `volunteer`: 21 days/30 min); **advanced** policy mode allows stricter custom handling with max duration guardrails.
+- **Qualified introductions:** Early cohorts should still target **TTFQI ≤ 72h** in at least one cohort when pool size and activation quality allow it.
+- **Interview:** Recommended presets stay lightweight: `default` (7 days / 30 min) and `volunteer` (21 days / 30 min). No enterprise-specific or advanced policy mode ships in MVP.
 - **Decision:** **48 hours** default SLA to inform candidates with personalized feedback; reminders/escalations remain mandatory.
 
 # PRD — MVP — Part 5: Scope (MVP Features)
 
 > **Scope philosophy (for this MVP):** “Features” are **distinct, value-creating capabilities** beyond commodity plumbing (e.g., auth, basic profile, settings). Below separates **Individual** and **Organization** features, each with **Why Now** (from Part 1), **Acceptance Criteria** (pulling from Part 2 metrics and Part 4 flows), and **MoSCoW** priority for MVP.
+
+> **Canonical MVP boundary:** Proofound MVP is a privacy-first, calm workflow for individuals and lean organizations to build trust, publish one high-signal assignment path, review privacy-safe matches, and move to intros. MVP excludes government deployment branches, org operating-system features, enterprise admin suites, payments/contracting, Zen expansion beyond private check-ins and reflections, and vanity or gamified mechanics.
 
 ---
 
@@ -1560,16 +1414,16 @@ Each flow includes:
 
 ---
 
-### F2 — **Customizable Dashboard** (Tiles from key hubs)
+### F2 — **Calm Home Snapshot** (Observer-only status view)
 
-**Why Now:** Reduces cognitive load and time-to-value through a single, user-curated view.  
+**Why Now:** Reduces cognitive load and time-to-value through one quiet status surface instead of a rich dashboard product.  
 **Acceptance Criteria:**
 
-- Add/remove/reorder tiles for: Matches, Applications/Intros, Expertise depth, Evidence/Artifacts, Next Best Action.
-- Dashboard loads < 2.0s P75 with cohort baseline volumes.
-- **Task success ≥ 90%** for add/remove tile; **drop-off < 10%** in final two steps.
-- Zen Hub stays reachable from navigation and settings, not as a default dashboard habit surface.  
-  **MoSCoW:** **Must** (core tiles); **Should:** per-persona presets; **Could:** multiple layouts.
+- Home shows a fixed set of status cards for Matches, Applications/Intros, Skills and Proof, Privacy, and Next Best Action.
+- The home snapshot loads < 2.0s P75 with cohort baseline volumes.
+- **Task success ≥ 90%** for finding the next relevant area from home; **drop-off < 10%** in the transition to the selected module.
+- Zen Hub stays reachable from navigation and settings, not as a home-surface habit loop.  
+  **MoSCoW:** **Must**.
 
 ---
 
@@ -1588,7 +1442,7 @@ Each flow includes:
 - Users can still add/edit L4 properties (level, months, proof links/files) via guided flow or import.
 - Auto-suggest L4s from pasted CV/JD with explain-why; user acceptance/edit-in-place.
 - Time-to-activation (profile becomes **Match-visible**) **≤ 20 minutes** P50 for first-time users.
-- Event tracking on add/edit; visible **Expertise depth** tile on Dashboard.  
+- Event tracking on add/edit; visible status on the home snapshot.  
   **MoSCoW:** **Must** (manual add + basic auto-suggest); **Should:** Gap Map basic; **Could:** bulk CSV import.
 
 ---
@@ -1671,7 +1525,7 @@ Each flow includes:
 
 - Individuals see **decision + personalized feedback** per interview within the **48h SLA**; status shows pending/received.
 - Feedback is stored with the related assignment/interview and is **notified** (in-app/email).
-- Users can review past feedback from the Dashboard/Matching hub without exposing private notes to orgs.  
+- Users can review past feedback from the home snapshot or Matching hub without exposing private notes to orgs.  
   **MoSCoW:** **Must** (SLA-aligned feedback for candidates).
 
 ---
@@ -1738,13 +1592,15 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 - Clinical, therapeutic, coaching, or burnout-management tooling.
 - Deep HRIS/ATS integrations beyond simple exports/placeholders in MVP.
 - Automated compensation benchmarking; culture scoring; legal/contracting workflows.
+- Government deployment branches, procurement-specific rollout paths, and records-retention variants beyond generic export.
+- Org operating-system features, enterprise admin suites, vanity counters, gamified mechanics, and BI-style product dashboards.
 
 ---
 
 ## 5.4 Cross-Feature Acceptance Gates (MVP “Done” hooks)
 
 - **Activation thresholds** defined and enforced for both Profiles and Assignments.
-- **TTFQI**, **TTV**, **TTSC** instrumentation live; baseline dashboards populated.
+- **TTFQI**, **TTV**, **TTSC**, **PAC**, and **SUS** instrumentation live; internal ops reporting populated.
 - **SUS** study executed on activation and assignment flows; targets from Part 2 met.
 - **Fairness note** generated from cohort checks (opt-in demographics).
 - **Privacy review** passed for Zen Hub and visibility controls; redaction works in previews.
@@ -1753,9 +1609,9 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 
 ## 5.5 MoSCoW Summary (MVP)
 
-- **Must:** F1, F2, F3, F4, F5, F6, F9; O1, O6, O7, O8, O9, O10, O11.
-- **Should:** F7, F8; O2, O3, O4, O5, O12.
-- **Could:** Bulk import/export niceties; richer analytics; SSO/SCIM; donor/investor views; exercises library.
+- **Must:** F1, F2, F3, F4, F5, F6, F9; O1, O2, O3.
+- **Should:** F7, F8; O4.
+- **Could:** Bulk import/export niceties; internal analytics refinements; SSO/SCIM; donor/investor views; exercises library.
 
 ---
 
@@ -1764,13 +1620,13 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 - **Features vs plumbing:** Auth, base profile, settings, messaging basics are **non-features** (plumbing) and assumed present.
 - **Values-aware matching:** Purpose signals are first-class (PAC) and must never be used to penalize or exclude protected groups.
 - **Zen Hub boundary:** Optional, private-by-default, and never used to rank matches, feed org analytics, power fairness workflows, or affect public rendering.
-- **Org type flag:** Mandatory at creation, enabling tailored copy and presets without branching the platform.
+- **Org type flag:** Optional for copy and guidance only; it must not create separate government or enterprise workflow branches.
 
 **Open Questions**
 
 - Minimum verification set per persona/org in MVP (tie to Part 3).
 - Exact fairness checks & thresholds to include in the “fairness note.”
-- Cohort bins for TTSC/TTFQI dashboards (role, seniority, region) to finalize with data model.
+- Cohort bins for TTSC/TTFQI internal reporting (role, seniority, region) to finalize with data model.
 
 **Approval**
 
@@ -1806,6 +1662,7 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 
 - **Included (Part 5):** Organization Trust Profile, Assignment Publishing, Match Review and Intro Workflow, Minimal Org Access, Expertise Atlas, **Gap Analysis**, Matching Hub (with **PAC**), post-interview feedback loops (individual + org), Zen Hub (private check-ins and reflections only), visibility controls, and soft **attestations**.
 - **Not included:** Anything that materially expands scope beyond these (above exclusions apply).
+- **Canonical MVP boundary:** Proofound MVP is a privacy-first, calm workflow for individuals and lean organizations to build trust, publish one high-signal assignment path, review privacy-safe matches, and move to intros. MVP excludes government deployment branches, org operating-system features, enterprise admin suites, payments/contracting, Zen expansion beyond private check-ins and reflections, and vanity or gamified mechanics.
 
 ---
 
@@ -1865,31 +1722,29 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 
 ---
 
-### F2 — Customizable Dashboard (Tiles)
+### F2 — Calm Home Snapshot
 
 **Inputs**
 
-- Tile config: ordered list of tiles (Matches, Applications/Intros, Expertise Depth, Evidence/Artifacts, Next Best Action).
-- Persona preset (optional).
+- Fixed card set: Matches, Applications/Intros, Skills and Proof, Privacy, Next Best Action.
 
 **Processing Rules**
 
-- Persist user-specific layout; fetch tile data concurrently with 2.0s P75 budget.
+- Fetch status-card data concurrently with 2.0s P75 budget.
 - “Next Best Action” computes from profile completeness, L4 gaps, and match backlog.
 
 **Outputs**
 
-- Dashboard page; per-tile quick actions (e.g., open shortlist, add L4, review privacy settings).
+- Home snapshot page; per-card deep-links to the relevant module.
 
 **Error & Empty States**
 
-- Empty: show skeletons and seeded examples (“No matches yet—complete 3 L4s to unlock”).
-- Tile fetch error: display fallback message and retry control.
+- Empty: show calm placeholders and seeded examples (“No matches yet, complete 3 L4s to unlock”).
+- Card fetch error: display fallback message and retry control.
 
 **Event Tracking**
 
-- `dashboard_viewed` {tiles[], load_ms}
-- `dashboard_tile_added/removed/reordered` {tile, position}
+- `home_snapshot_viewed` {cards[], load_ms}
 - `next_best_action_clicked` {action_type}
 
 ---
@@ -2144,7 +1999,7 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 
 **Permissions**
 
-- Enforce role-based access throughout (Owner/Manager/Reviewer; Individual).
+- Enforce role-based access throughout (Owner/Reviewer; Individual).
 
 **Auditability**
 
@@ -2164,14 +2019,14 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 
 - Every event includes `{event_id, occurred_at, user_id?, org_id?, profile_id?, assignment_id?, properties}`.
 - PII minimization: avoid free-text in properties; use IDs/enums.
-- Events feed dashboards for **TTFQI, TTV, TTSC**, **SUS study tags**, and **fairness notes**.
+- Events feed internal ops reporting for **TTFQI, TTV, TTSC, PAC, SUS**, and **fairness notes**.
 
 ---
 
 ## 7.5 Dependencies / Hand-offs
 
 - Matching score weights & fairness checks are configured server-side and versioned.
-- Evidence Pack export requires server-side PDF service.
+- Optional public snippet export requires server-side PDF or document-rendering service if that export ships.
 - Email/magic links require a transactional email provider.
 
 ---
@@ -2198,7 +2053,7 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 
 - **Page SLAs:** P95 Time-to-Interactive ≤ **2.5s** (desktop broadband), ≤ **3.5s** (mid‑tier mobile). First meaningful paint budget: 1.5s (desktop).
 - **API SLAs:** P95 endpoint latency ≤ **1.5s**; P99 ≤ 3s. File upload ≤ 25MB with streaming; images ≤ 10MB.
-- **Query hygiene:** Indexed filters; pagination for lists; N+1 guards in ORM; batch fetching for dashboard tiles.
+- **Query hygiene:** Indexed filters; pagination for lists; N+1 guards in ORM; batch fetching for home snapshot cards.
 - **Rate limiting:** 100 requests/min per IP (burst 200) for public APIs; introduce backoff and friendly errors.
 - **Batch jobs:** Nightly ETL completes by **02:00 UTC**; weekly model export completes within 2h window.
 
@@ -2219,7 +2074,7 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 ## Accessibility
 
 - **WCAG 2.1 AA baselines:** Semantic HTML, labels, focus order, visible focus ring, keyboard nav, ARIA only when necessary, color‑contrast ≥ 4.5:1, skip links, reduced‑motion setting, screen‑reader announcements on dynamic content.
-- **Testing:** Automated a11y checks in CI; manual audits on critical flows (activation, assignment creation, checkout if used).
+- **Testing:** Automated a11y checks in CI; manual audits on critical flows (activation, assignment creation, match review).
 
 ## Localization
 
@@ -2229,7 +2084,7 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 ## Observability
 
 - **Structured logging:** JSON logs with request‑id; scrub PII on emit; 30‑day retention in log store.
-- **Metrics:** RED (Rate/Errors/Duration) for APIs; trust-health dashboards for PQS, proof freshness, proof coverage, TTSC, TTFQI, and TTV.
+- **Metrics:** RED (Rate/Errors/Duration) for APIs; internal launch reporting for TTSC, TTFQI, TTV, PAC, SUS, fairness note status, and queue health.
 - **Tracing:** Minimal distributed traces on critical paths (match generation, assignment publish).
 - **Product analytics:** Event taxonomy aligned to Part 9; sampling allowed for high‑volume events.
 
@@ -2248,11 +2103,11 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 
 - **User** — authentication identity; 1:1 with **Profile**.
 - **Profile (Individual)** — public summary and private fields; 1:1 **MatchingProfile**; 1:N **Experience**, **Education**, **Artifact** (proof), **Verification**.
-- **Organization (Org)** — profile (mission/vision/values/causes, culture, impact); 1:N **Member** (Profile) with role; 1:N **Assignment**.
+- **Organization (Org)** — trust profile (mission, why-join statement, values, proof highlights, lightweight work norms); 1:N **Member** (Profile) with role; 1:N **Assignment**.
 - **MatchingProfile** — constraints & preferences used by matching (availability, comp, location mode, languages, causes).
 - **SkillsTaxonomy** — hierarchical L1→L4 catalog; synonyms; level rubric.
 - **ProfileSkill** — join table: Profile × L4 skill with `level (0–5)`, `months_experience`, `visibility`.
-- **Assignment** — role & outcomes, must/nice L4 skills, verification gates, logistics, and weights.
+- **Assignment** — role context, outcomes, must-have skills, practical constraints, optional trust requirements, and publish state.
 - **Match** — materialized (Profile × Assignment) ranking record with the current score trace package: `score`, top-level component scores (`skills_fit`, `proof_fit`, `constraints_fit`, `verification_fit`, `purpose_fit`), component applicability states, `score_version`, `model_version`, `explanation_version`, `fairness_check_version`, `inputs_hash`, `reason_codes`, `rank_presentation`, `fairness_status`, `generated_at`, stale-policy state, and reviewer override linkage.
 - **MatchReasonLedger** — immutable ledger of canonical reason codes and payload snapshots for each match decision, including system, reviewer, and policy-generated entries used for explanation rendering and audits.
 - **MatchReviewState** — reviewer workflow state, reveal scope, shortlist timing, and manual override posture for each match.
@@ -2288,7 +2143,7 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 
 ## Top Events & Properties
 
-- `dashboard_viewed` — `{ tiles[], load_ms }`
+- `home_snapshot_viewed` — `{ cards[], load_ms }`
 - `l4_added` — `{ l4_id, source, level }`
 - `match_settings_changed` — `{ field, old, new }`
 - `match_ranked` — `{ match_id, assignment_id, score_version, model_version, explanation_version, fairness_check_version, rank_presentation, fairness_status, reason_codes[] }`
@@ -2302,7 +2157,7 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 - `fairness_note_published` — `{ release_id, status, cohorts_analyzed, exact_rank_suppressed }`
 - `applied` — `{ assignment_id, match_score }`
 - `interview_scheduled` — `{ application_id, scheduled_at, duration_minutes, policy_preset }`
-- `assignment_published` — `{ assignment_id, builderMode, minimumRequiredSkills }`
+- `assignment_published` — `{ assignment_id, mode, required_skills_count }`
 - `hired` — `{ application_id }`
 - `wellbeing_checkin_submitted` — `{ trigger_type }` (private Zen partition only)
 - `reflection_added` — `{ trigger_type, length_bucket }` (private Zen partition only)
@@ -2347,13 +2202,13 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 ## Video Conferencing
 
 - **Providers:** Zoom API and/or Google Meet API for interview scheduling.
-- **Features:** Automatic meeting link generation, calendar invites with video link, timezone handling, and policy preset enforcement (`startup`, `enterprise`, `volunteer`, `advanced`) with preset-based duration limits.
+- **Features:** Automatic meeting link generation, calendar invites with video link, timezone handling, and lightweight preset enforcement (`default`, `volunteer`) with preset-based duration limits.
 - **Fallback:** Manual link entry if API unavailable.
 
 ## Feature Flag Control APIs
 
-- **User flags endpoint:** `/api/feature-flags` resolves audience-aware flags for activation tiering, assignment builder mode, plain-language vocabulary, and privacy summary.
-- **Rollout metrics endpoint:** `/api/admin/metrics/rollout` exposes admin-only rollout indicators (activation completion, publish completion, individual/company first-10-minute activation rates, visibility reversal rate, tier/mode breakdown, and endpoint health for matching/publish APIs).
+- **User flags endpoint:** `/api/feature-flags` resolves audience-aware flags for activation tiering, plain-language vocabulary, privacy summary, and launch-safe guidance experiments.
+- **Rollout metrics endpoint:** `/api/admin/metrics/rollout` exposes admin-only rollout indicators (activation completion, publish completion, first-10-minute activation rates, visibility reversal rate, and endpoint health for matching/publish APIs).
 
 ## Storage
 
@@ -2410,7 +2265,7 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 ## Third‑Party Limits & Risks
 
 - **Quotas/outages:** Email provider rate limits; map API quotas; object storage egress costs.
-- **Video conferencing APIs:** Zoom/Google Meet rate limits; account requirements; OAuth setup; preset-based meeting durations (30/45 min defaults by policy, up to 60 min in advanced mode) and manual-link fallback when provider limits apply.
+- **Video conferencing APIs:** Zoom/Google Meet rate limits; account requirements; OAuth setup; preset-based meeting durations (30 min default, volunteer fallback where needed) and manual-link fallback when provider limits apply.
 - **Vendor lock‑in:** Keep portable SQL and storage paths; document exit plans (e.g., Postgres dump, S3 export).
 - **Security posture:** Monitor for dependency CVEs; maintain an allowlist for uploads.
 
@@ -2437,9 +2292,9 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 - [ ] Purpose signals appear in **Match Detail** with **PAC** shown when applicable.
 - [ ] Audit log records purpose edits (who/when/what).
 
-**F2 Customizable Dashboard**
+**F2 Calm Home Snapshot**
 
-- [ ] Add/remove/reorder tiles; layout persists across sessions/devices.
+- [ ] Home shows fixed status cards for Matches, Applications/Intros, Skills and Proof, Privacy, and Next Best Action.
 - [ ] “Next Best Action” suggests at least one actionable step when TTFQI=∅.
 
 **F3 Expertise Atlas**
@@ -2485,7 +2340,7 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 
 - [ ] Individual sees decision + personalized feedback within 48h SLA; status shows pending/received.
 - [ ] Feedback stored with assignment/interview and notified to the user.
-- [ ] Historical feedback accessible from dashboard/matching without exposing private notes to orgs.
+- [ ] Historical feedback accessible from the home snapshot or matching without exposing private notes to orgs.
 
 ### Organizations
 
@@ -2503,14 +2358,14 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 - [ ] **Security & Privacy:** RLS policies audited; consent logs in place; PII not present in logs/events.
 - [ ] **Accessibility:** Critical flows pass WCAG 2.1 AA checks; manual keyboard audit completed.
 - [ ] **Localization:** Timezone & locale formatting verified; English UI confirmed.
-- [ ] **Observability:** Error tracking, latency dashboards, and event pipeline active.
+- [ ] **Observability:** Error tracking, latency reporting, and event pipeline active.
 
 ---
 
 ## 12.3 Data Quality & Analytics Readiness (Parts 9–10)
 
 - [ ] Event schema validated in CI; no PII in event properties.
-- [ ] Dashboards show **NSM (TTSC)**, **TTFQI**, **TTV**, and funnel conversion (view→intro→interview→hire).
+- [ ] Internal ops reporting shows **TTSC**, **TTFQI**, **TTV**, **PAC**, **SUS**, fairness note status, and funnel conversion (view→intro→interview→hire).
 - [ ] Nightly ETL → analytics DB successful; **ml_training_data** table populated with labels.
 
 ---
@@ -2518,7 +2373,7 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 ## 12.4 Smoke Test Playbook (must pass end-to-end)
 
 1. **Individual activation:** Sign up → Purpose → Atlas → become Discoverable → unlock Match-visible → qualify for Intro-eligible when proof depth and trust are strong enough.
-2. **Org assignment:** Create org → Purpose → Assignment (Basic default) → Publish → Shortlist appears; Advanced path retains strict 5-step.
+2. **Org assignment:** Create org → Trust Profile → Assignment → Publish → Review queue appears.
 3. **Introduce:** From shortlist → Introduce → Message thread opens (basic) → Mark as interview scheduled.
 4. **Verification:** Request attestation → Approver completes → Badge visible.
 5. **Zen Hub:** Opt-in → Add check-in → Save milestone-linked reflection → Export JSON or permanently delete Zen data.
@@ -2531,7 +2386,7 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 - **Product:** feature scope & UX (Parts 3–5)
 - **Engineering:** NFRs, reliability, security & data (Parts 8–9)
 - **Design/Accessibility:** WCAG checks, design parity
-- **Data/Analytics:** event schemas, dashboards
+- **Data/Analytics:** event schemas, internal ops reporting
 - **Owner (Go/No‑Go):** Pavlo Samoshko
 
 **Status:** Draft v0.1 · **Date:** —
@@ -2567,7 +2422,7 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 
 ## 13.3 Kill-Switch & Rollback
 
-- **Feature flags** guard: `FF_ACTIVATION_TIERING`, `FF_ASSIGNMENT_BASIC_MODE`, `FF_UI_VOCAB_PLAIN`, `FF_PRIVACY_SUMMARY` (plus existing platform flags for legacy flows).
+- **Feature flags** guard: `FF_ACTIVATION_TIERING`, `FF_ASSIGNMENT_GUIDANCE`, `FF_UI_VOCAB_PLAIN`, `FF_PRIVACY_SUMMARY` (plus existing platform flags for legacy flows).
 - **Operational rollback:** Vercel instant rollback to last green deploy; DB migration strategy uses reversible migrations.
 - **Comms:** If user-impacting issue occurs, post status, email affected users (template ready).
 
@@ -2587,7 +2442,7 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 
 - Part 12 acceptance suite (functional + NFR) passes.
 - Security/privacy checks complete (RLS audit; consent logs).
-- Analytics dashboards live for trust health and secondary outcomes (PQS, proof freshness, proof coverage, TTSC, TTFQI, TTV).
+- Internal ops reporting live for TTSC, TTFQI, TTV, PAC, SUS, fairness note status, rollout health, and queue health.
 - Run smoke tests from 12.4 on Preview then on Prod after deploy.
 
 **Release strategy:** Trunk-based with feature flags and deterministic percentage rollout; sequence is internal-only → 10% → 50% → 100%; instant rollback available in Vercel.
@@ -2602,8 +2457,8 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 ## 14.3 Observability
 
 - **Dashboards (Ops):** API RED (rate/errors/duration), page TTI P95, job success, error rate by release, DB health.
-- **Dashboards (Product):** Trust health first: **PQS** bands, proof freshness, proof coverage, verification lifecycle conversion, reveal-stage conversion, intro expiry rate, no-show rate, assignment fulfillment rate, then secondary outcomes **TTSC**, **TTFQI**, **TTV**, and fairness note summary.
-- **Rollout dashboard:** Admin metrics endpoint tracks activation completion, assignment publish completion, individual/company first-10-minute activation rates, privacy visibility reversal rate, activation tier mix, builder-mode mix, and p95/sla-breach rates for `/api/core/matching/profile` and `/api/assignments/[id]/publish`.
+- **User-facing surfaces:** Individuals get a calm home snapshot; orgs get a simple **Assignments and Matches** operational queue. Neither surface becomes a BI-style dashboard product in MVP.
+- **Internal-only rollout reporting:** Admin metrics endpoint tracks activation completion, assignment publish completion, first-10-minute activation rates, privacy visibility reversal rate, and p95/sla-breach rates for `/api/core/matching/profile` and `/api/assignments/[id]/publish`.
 - **Alerts:** 5xx spike, latency P95 breach, failed ETL, error rate by route, email bounce spike.
 - **Tracing:** Critical paths (assignment publish, shortlist generation) traced end-to-end.
 - **Log hygiene:** JSON logs with request-id; PII scrubbing.
@@ -2612,46 +2467,34 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 
 ### Executive recommendation
 
-- Instrument trust formation before funnel velocity. The analytics model should explain whether Proofound is improving proof quality, verification confidence, reveal safety, and assignment fulfillment, not just whether users move faster through a funnel.
-- Keep the canonical KPI definitions in Part 2. Product and ops dashboards should order metrics as trust health first, secondary speed and efficiency outcomes second.
-- Keep launch-safe observability narrow: measure only what is needed to validate trust quality, proof quality, and launch readiness.
+- Keep launch analytics narrow and operational. Measure whether users and lean orgs can activate, publish, review, and reach qualified intros without turning product surfaces into analytics products.
+- Keep the canonical KPI definitions in Part 2. Internal reporting should center **TTSC**, **TTFQI**, **TTV**, **PAC**, **SUS**, and the release-scoped **fairness note**.
+- Keep user-facing surfaces calm: no vanity counters, no public view counts, no leaderboard behavior, and no deep org analytics in MVP.
 
-### Revised KPI set
+### Canonical KPI set
 
 - Canonical KPI definitions live in Part 2 and are the source of truth for:
-  - **Proof Quality Score**
-  - **proof freshness**
-  - **proof coverage**
-  - **Time-to-Verified**
-  - **verification lifecycle conversion**
-  - **intro expiry rate**
-  - **withdrawal rate**
-  - **no-show rate**
-  - **reveal-stage conversion**
-  - **override usage**
-  - **override-to-outcome drift**
-  - **public portfolio indexing status**
-  - **public portfolio reveal / share events**
-  - **assignment fulfillment rate**
-- Secondary outcome metrics remain **TTSC**, **TTFQI**, **TTV**, fairness note / fairness gap, effort reduction, and first-session activation.
+  - **TTSC**
+  - **TTFQI**
+  - **TTV**
+  - **PAC**
+  - **SUS**
+  - **Fairness note status**
 
 ### Revised event taxonomy
 
 - **Shared property contract**
   - Required IDs only when needed: `proof_pack_id`, `assignment_id`, `match_id`, `intro_id`, `interview_id`, `portfolio_id`
   - Actor metadata only as role or class, never raw identity in analytics payloads
-  - Common dimensions: `persona_type`, `org_type`, `role_family`, `seniority_band`, `region_band`, `verification_tier`, `reveal_stage`, `override_reason_code`, `indexing_status`, `source_surface`
+  - Common dimensions: `persona_type`, `org_type`, `role_family`, `seniority_band`, `region_band`, `trust_level`, `override_reason_code`, `source_surface`
   - Operational flags: `privacy_tier`, `is_test_event`
-- **Proof lifecycle**
-  - `proof_pack_created`
-  - `proof_pack_published`
-  - `proof_verification_requested`
-  - `proof_verification_completed`
-  - `proof_verification_expired`
-  - `proof_verification_downgraded`
-  - `proof_freshness_state_changed`
-  - `proof_marked_stale`
-  - `proof_pack_withdrawn`
+- **Activation and trust context**
+  - `purpose_created`
+  - `purpose_updated`
+  - `l4_added`
+  - `proof_uploaded`
+  - `attestation_requested`
+  - `attestation_completed`
 - **Reveal lifecycle**
   - `reveal_stage_viewed`
   - `reveal_stage_advanced`
@@ -2669,14 +2512,15 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
   - `interview_rescheduled`
   - `interview_no_show_marked`
   - `interview_feedback_breach_flagged`
+- **Lean org workflow**
+  - `org_trust_profile_updated`
+  - `assignment_draft_saved`
+  - `assignment_published`
+  - `org_review_queue_viewed`
+  - `intro_requested`
 - **Match governance**
   - `review_override_applied`
   - `review_override_reverted`
-- **Public portfolio distribution**
-  - `portfolio_indexing_enabled`
-  - `portfolio_indexing_disabled`
-  - `portfolio_shared`
-  - `portfolio_public_viewed`
 - **Zen private partition**
   - Zen Hub emits only private-partition events: `wellbeing_opt_in_changed`, `wellbeing_checkin_submitted`, `reflection_added`, `zen_export_requested`, `zen_export_completed`, and `zen_delete_completed`
 - **Events explicitly excluded from analytics payloads**
@@ -2690,37 +2534,25 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 ### User-facing vs internal analytics split
 
 - **User-facing**
-  - Own proof freshness
-  - Own proof coverage
-  - Own verification status and verification request state
-  - Own Proof Quality Score band
-  - Own portfolio indexing status
-  - Own portfolio share actions
-- **Org-facing**
-  - Assignment fulfillment rate
-  - Intro expiry rate
-  - No-show rate
-  - High-level reveal-stage conversion by assignment
-  - Never override drift or individual reviewer behavior
+  - Individuals see a calm home snapshot with personal status only.
+  - Orgs see a simple operational queue for assignments, matches, intros, and feedback follow-up.
+  - No user-facing surface exposes leaderboard mechanics, streaks, public counters, or BI-style analytics.
 - **Internal-only**
-  - Raw PQS distributions
-  - Override usage
-  - Override-to-outcome drift
-  - Detailed verification lifecycle funnel
-  - Raw public portfolio views and referrer classes
-  - Fairness segment slices unless minimum privacy thresholds pass
+  - TTSC, TTFQI, TTV, PAC, SUS, fairness note status, rollout health, and queue health.
+  - Privacy-safe funnel conversion and SLA compliance summaries.
+  - Fairness segment slices only when minimum privacy thresholds pass.
 
 ### Acceptance criteria
 
-- Both PRDs use the same trust-first KPI names, formulas, and visibility rules.
+- Both PRDs use the same canonical KPI names, formulas, and visibility rules.
 - Every KPI definition includes exact meaning, numerator, denominator, unit, cohorting dimensions, where it appears, who can see it, exposure level, and privacy boundaries.
 - All required event names are present in the canonical event taxonomy grouped by lifecycle.
-- **TTSC**, **TTFQI**, and **TTV** remain present but are clearly secondary to trust and proof instrumentation.
+- **TTSC**, **TTFQI**, **TTV**, **PAC**, **SUS**, and fairness note status are the only launch KPIs promised across documents.
 - Owner-facing public-view counters and gamified streak mechanics are removed or explicitly demoted as non-goals.
 
 ### Privacy and data minimization rules
 
-- No PII in analytics properties or dashboard cards.
+- No PII in analytics properties or internal reporting cards.
 - Opt-out and consent controls are honored for non-essential telemetry.
 - Zen Hub data stays partitioned and excluded from ranking, reveal, and public analytics.
 - Public-view data is retained only as coarse internal diagnostics or anti-abuse signals and is never surfaced as owner-facing success metrics.
@@ -2743,8 +2575,8 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 
 ## 14.6 Post‑Launch Checkpoints (user milestones)
 
-- **100 users:** Validate trust instrumentation coverage, onboarding friction points, and Atlas starter success; fix launch-blocking proof and verification gaps.
-- **1,000 users:** Validate proof freshness, proof coverage, assignment fulfillment, indexing safety, and TTFQI median target in at least one cohort; review fairness note cadence.
+- **100 users:** Validate activation completion, assignment publish speed, and first qualified intro signals; fix launch-blocking trust and verification gaps.
+- **1,000 users:** Validate TTSC, TTFQI, TTV, PAC, SUS, fairness note cadence, and queue health in at least one cohort; review privacy thresholds.
 - **10,000 users:** Load/latency review; enable caching/read replica if needed; consider pgvector pilot; review compliance needs.
 
 **Status:** Draft v0.1 · **Owner:** Pavlo Samoshko · **Date:** —
@@ -2755,7 +2587,7 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 
 - Acceptance checks:
   - Onboarding captures self-reported prior TTSC/TTFQI/TTV during the first two weeks; stored with cohort tags (persona, role family, region).
-  - Baseline vs target appears on the trust-first analytics dashboard by end of week two; method documented for reproducibility.
+  - Baseline vs target appears in internal ops reporting by end of week two; method documented for reproducibility.
   - Events support cohort-level median + P75 for TTSC/TTFQI/TTV.
 
 ## A2 Fairness Note (Opt-in Cohorts)
@@ -2780,15 +2612,15 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 - Acceptance checks:
   - Interview scheduling allows manual video link entry if Zoom/Meet APIs fail and surfaces a fallback banner.
   - Location autocomplete falls back to free-text city + country while still allowing assignment/profile publish.
-  - Transactional email retries up to three attempts with backoff; bounces logged and visible on an ops dashboard.
+  - Transactional email retries up to three attempts with backoff; bounces logged and visible in internal ops reporting.
 
 ## A5 SLA Instrumentation (7-day Interview, 48h Feedback)
 
 - Acceptance checks:
-  - Emit SLA events (`interview_window_started`, `interview_scheduled`, `feedback_due`, `feedback_sent`) with timestamps; dashboard shows compliance per assignment.
+  - Emit SLA events (`interview_window_started`, `interview_scheduled`, `feedback_due`, `feedback_sent`) with timestamps; internal ops reporting shows compliance per assignment.
   - Alerts fire at 80% of the window and on breach for interviews and feedback (in-app + email to owners).
   - SLA status visible to org reviewers and candidates; breach reasons recorded.
-  - SLA policy supports recommended presets (startup, enterprise, volunteer) while preserving strict limits in advanced policy mode.
+  - SLA policy supports recommended presets (`default`, `volunteer`) without introducing enterprise-specific or advanced policy mode.
 
 ## A6 Matching Transparency & Governance
 
@@ -2817,10 +2649,8 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
     - Assignment-level gate requires at least two qualifying proof-linked L4 skills that map to assignment must-have skills when the assignment is sufficiently mapped, with a role-relevance fallback for sparse assignments.
     - Failed intro actions return `409 INTRO_QUALIFICATION_NOT_MET` and do not block browsing.
   - `GET /api/core/matching/matching-profile` auto-bootstraps a baseline matching profile row when missing.
-  - Assignment publish readiness is mode-specific:
-    - **Basic:** role, business value, ≥1 measurable outcome, practicals, and ≥3 must-have skills (default entry path).
-    - **Advanced:** full 5-step completeness including stakeholders and weight matrix; exposed only after explicit opt-in; education marked “required” must include justification.
-  - Dashboards show current trust level, intro status, and next-best action when unmet.
+  - Assignment publish readiness stays on one basic path: role, business value, ≥1 measurable outcome, practical constraints, and ≥3 must-have skills.
+  - Home surfaces show current trust level, intro status, and next-best action when unmet.
 
 ## A8 Plain-Language Vocabulary Policy
 
@@ -2845,7 +2675,7 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 ## A11 Feature-Flag Rollout and Monitoring
 
 - Acceptance checks:
-  - Feature keys are stable and environment-configurable: `FF_ACTIVATION_TIERING`, `FF_ASSIGNMENT_BASIC_MODE`, `FF_UI_VOCAB_PLAIN`, `FF_PRIVACY_SUMMARY`.
+  - Feature keys are stable and environment-configurable: `FF_ACTIVATION_TIERING`, `FF_ASSIGNMENT_GUIDANCE`, `FF_UI_VOCAB_PLAIN`, `FF_PRIVACY_SUMMARY`.
   - Rollout follows internal-only → 10% → 50% → 100% with deterministic audience/percentage targeting.
   - `/api/feature-flags` returns user-scoped flag states for authenticated sessions.
   - `/api/admin/metrics/rollout` returns activation/publish/privacy indicators and endpoint-health metrics used in launch decisions.

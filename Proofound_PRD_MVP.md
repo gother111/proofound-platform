@@ -12,11 +12,13 @@
 **Why Now (placeholders):** _(Founder to fill with figures later)_  
 • % of AI‑assisted CVs → …  
 • Avg. time‑to‑hire in EU NGOs/SMEs → …  
-• Burnout/meaning metrics → …
+• % of candidates and lean orgs reporting low trust in profiles/CVs → …
 
-**Primary Outcome (MVP):** Guarantee a day-1 win: publish and share a clean public proof portfolio link on signup day. Matching remains the core downstream outcome and is tracked via **Time‑to‑First‑Accepted Match** (median) and **% assignments with ≥3 qualified matches in 7 days**.
+**Primary Outcome (MVP):** Guarantee a day-1 win: publish and share a clean public proof portfolio link on signup day. Matching remains the core downstream outcome and is tracked via **TTSC** as the north-star outcome, with **TTFQI** and **TTV** as supporting launch metrics. **PAC**, **SUS**, and the release-scoped **fairness note** remain supporting diagnostics, not vanity surfaces.
 
 **Principles:** Transparency • Non‑discrimination • Authenticity • Trustworthiness • Never monetize inequality/exclusion.
+
+**Canonical MVP boundary:** Proofound MVP is a privacy-first, calm workflow for individuals and lean organizations to build trust, publish one high-signal assignment path, review privacy-safe matches, and move to intros. MVP excludes government deployment branches, org operating-system features, enterprise admin suites, payments/contracting, Zen expansion beyond private check-ins and reflections, and vanity or gamified mechanics.
 
 ---
 
@@ -202,7 +204,7 @@
 
 **Launch geography:** EU.  
 **Segments (Individuals):** students, older workers, experts, career switchers, immigrants.  
-**Segments (Orgs):** NGOs, startups, SMEs.
+**Segments (Orgs):** NGOs, startups, SMEs, and larger hiring teams using the same owner-plus-reviewer workflow.
 
 **Allow‑list (Private Beta):**  
 • **Individuals:** all basic info complete; every claim requiring evidence has ≥1 ready Proof Pack.  
@@ -219,6 +221,8 @@
 
 **Global nav:** Home · **Public Portfolio** · **Matches** · Profile · For Organizations · Zen Hub · Settings.  
 **Settings:** Toggle Individual ↔ Organization; privacy/export/delete; notifications; language.
+
+**User-facing surface rule:** Home is a calm status surface for individuals, and the org side centers on a simple operational queue. MVP does not promise customizable dashboards, deep org analytics, or public counters.
 
 ---
 
@@ -433,17 +437,17 @@
   - Individual activation rate (10m) = successful individuals within 10m / new individuals
   - Company activation rate (10m) = successful organization creators within 10m / new organization creators
 
-**Day‑1 Admin Dashboard (tiles):**
+**Day‑1 Internal Ops Reporting:**
 
-1. Time‑to‑first‑match (median)
-2. % profiles “Ready for Match” (24h)
-3. Org verification completion rate
-4. Match acceptance rate (+ decline reasons)
-5. Safety: report rate & resolution SLA
-6. Individual first-10-minute activation rate
-7. Company first-10-minute activation rate
+1. TTSC trend (cohort median once enough volume exists)
+2. TTFQI
+3. TTV
+4. PAC usage and explanation coverage
+5. SUS for activation, assignment publish, and match review
+6. Fairness note status
+7. Individual and organization first-10-minute activation rates
 
-**Core Events:** `signed_up`, `created_profile`, `profile_ready_for_match`, `org_verified`, `individual_onboarding_completed`, `organization_onboarding_completed`, `portfolio_share_link_copied`, `portfolio_pdf_export_succeeded`, `assignment_template_applied`, `assignment_publish_succeeded`, `assignment_published`, `match_suggested`, `match_viewed`, `match_accepted`, `match_declined(reason)`, `message_sent`, `verification_requested`, `verification_completed(status)`, `content_reported`, `candidate_invite_sent`, `candidate_invite_opened`, `candidate_invite_claimed`, `candidate_proof_card_submitted`.
+**Core Events:** `signed_up`, `created_profile`, `profile_ready_for_match`, `org_verified`, `individual_onboarding_completed`, `organization_onboarding_completed`, `portfolio_share_link_copied`, `portfolio_pdf_export_succeeded`, `assignment_draft_saved`, `assignment_publish_succeeded`, `assignment_published`, `match_suggested`, `match_viewed`, `match_accepted`, `match_declined(reason)`, `message_sent`, `verification_requested`, `verification_completed(status)`, `content_reported`, `candidate_invite_sent`, `candidate_invite_opened`, `candidate_invite_claimed`, `candidate_proof_card_submitted`.
 
 **Targets (90d):** profile completion ≥60% D+1; first suggestion <24h; acceptance ≥20%; ≥50% assignments with ≥3 qualified matches in 7d; verified users ≥30% by D+14; report rate <1% with <24h SLA.
 
@@ -465,7 +469,7 @@
 ## 8) Integrations & Platform **[MVP → Future]**
 
 **Stack (MVP):** Next.js 15 + TypeScript + React + Tailwind + Supabase (Postgres + Auth) + Resend + Vercel Analytics; file links preferred; signed URLs for small files; CDN.  
-**Future:** Apple/GitHub/Facebook auth; Twilio/Vonage SMS; Daily/Vonage video; **Stripe** for future monetization; FeatureFlags table → Unleash/Flipt.
+**Future:** Apple/GitHub/Facebook auth; Twilio/Vonage SMS; Daily/Vonage video; FeatureFlags table → Unleash/Flipt.
 
 ---
 
