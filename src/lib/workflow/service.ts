@@ -37,6 +37,10 @@ import {
 } from '@/lib/workflow/contracts';
 import { cancelWorkflowJobs, enqueueWorkflowJob } from '@/lib/workflow/queue';
 import { computeProofTrustSnapshot } from '@/lib/proof-trust/snapshots';
+import {
+  appendVerificationLogEntry,
+  appendVerificationTransitionLogEntry,
+} from '@/lib/verification/log-entries';
 
 type TransitionContext = {
   trigger: string;
@@ -227,6 +231,17 @@ async function appendVerificationTransition(
     actorType: context.actorType,
     actorId: context.actorId ?? null,
     metadata: context.metadata ?? {},
+  });
+
+  await appendVerificationTransitionLogEntry({
+    verificationRecordId,
+    fromState: fromState as VerificationWorkflowState | null,
+    toState: toState as VerificationWorkflowState,
+    trigger: context.trigger,
+    reasonCode: context.reasonCode ?? null,
+    actorType: context.actorType,
+    actorId: context.actorId ?? null,
+    metadata: context.metadata,
   });
 }
 
@@ -1368,6 +1383,18 @@ export async function syncWorkEmailVerificationRequested(params: {
       actorType: 'system',
       metadata: {
         orgId: params.orgId ?? null,
+      },
+    });
+  } else {
+    await appendVerificationLogEntry({
+      verificationRecordId: existing.id,
+      entryType: 'refresh_requested',
+      fromStatus: 'pending',
+      toStatus: 'pending',
+      actorType: 'system',
+      metadata: {
+        orgId: params.orgId ?? null,
+        trigger: 'verification_requested',
       },
     });
   }

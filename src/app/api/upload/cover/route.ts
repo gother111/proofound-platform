@@ -1,9 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
-
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB for cover images
-const ACCEPTED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+import { ingestUploadedFile, UPLOAD_KINDS } from '@/lib/uploads/lifecycle';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,50 +19,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    if (!ACCEPTED_TYPES.includes(file.type)) {
+    const attachedSubjectType =
+      profileType === 'organization' && orgId ? 'organization' : 'individual_profile';
+    const attachedSubjectId = profileType === 'organization' && orgId ? orgId : user.id;
+    const upload = await ingestUploadedFile(file, {
+      ownerType: attachedSubjectType,
+      ownerId: attachedSubjectId,
+      sourceSurface: 'cover_upload',
+      uploadKind: UPLOAD_KINDS.COVER,
+      attachedSubjectType,
+      attachedSubjectId,
+    });
+
+    if (upload.status === 'rejected' || !upload.url) {
       return NextResponse.json(
-        { error: 'Invalid file type. Please upload JPG, PNG, or WebP' },
+        {
+          error: 'Invalid file',
+          status: 'rejected',
+          uploadedFileId: upload.uploadedFileId,
+          reason: upload.safetyReason,
+        },
         { status: 400 }
       );
     }
 
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: 'File size exceeds 10MB limit' }, { status: 400 });
-    }
-
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-    const filePath = `covers/${fileName}`;
-
     const supabase = await createClient();
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('user-uploads')
-      .upload(filePath, buffer, {
-        contentType: file.type,
-        upsert: true,
-        cacheControl: '3600',
-      });
-
-    if (uploadError) {
-      console.error('Upload error:', uploadError);
-      return NextResponse.json(
-        { error: 'Failed to upload file', details: uploadError.message },
-        { status: 500 }
-      );
-    }
-
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from('user-uploads').getPublicUrl(filePath);
 
     // Update appropriate profile
     if (profileType === 'organization' && orgId) {
       const { error: updateError } = await supabase
         .from('organizations')
-        .update({ cover_image_url: publicUrl })
+        .update({ cover_image_url: upload.url })
         .eq('id', orgId);
 
       if (updateError) {
@@ -77,7 +62,7 @@ export async function POST(request: NextRequest) {
     } else {
       const { error: updateError } = await supabase
         .from('individual_profiles')
-        .update({ cover_image_url: publicUrl })
+        .update({ cover_image_url: upload.url })
         .eq('profile_id', user.id);
 
       if (updateError) {
@@ -91,8 +76,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      url: publicUrl,
-      path: uploadData.path,
+      status: 'ready',
+      uploadedFileId: upload.uploadedFileId,
+      url: upload.url,
+      path: upload.storagePath,
     });
   } catch (error) {
     console.error('Cover upload error:', error);

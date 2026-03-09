@@ -14,7 +14,6 @@ import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { getRows } from '@/lib/db/rows';
 import {
-  generateShareToken,
   buildPublicProfileURL,
   validateSnippetConfig,
   type SnippetFields,
@@ -25,6 +24,13 @@ import {
   upsertCanonicalProofPackForSnippet,
 } from '@/lib/canonical/repository';
 import { inArray } from 'drizzle-orm';
+import crypto from 'crypto';
+import {
+  CAPABILITY_BINDINGS,
+  CAPABILITY_TOKEN_CLASSES,
+  issueCapabilityToken,
+  revokeCapabilityTokensBySource,
+} from '@/lib/security/capability-tokens';
 
 export const dynamic = 'force-dynamic';
 type ProfileType = 'individual' | 'organization';
@@ -94,19 +100,34 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Generate share token
-    const shareToken = generateShareToken();
-
-    // Calculate expiration
+    const snippetId = crypto.randomUUID();
     const expiresAt = expiresInDays
       ? new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000)
-      : null;
+      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    const issued = await issueCapabilityToken({
+      tokenClass: CAPABILITY_TOKEN_CLASSES.PROFILE_SNIPPET_SHARE,
+      sourceTable: 'profile_snippets',
+      sourceId: snippetId,
+      actionScope: 'profile_snippet.read',
+      subjectType: 'profile_snippet',
+      subjectId: snippetId,
+      actorBinding: CAPABILITY_BINDINGS.NONE,
+      expiresAt,
+      singleUse: false,
+      maxUses: 2147483647,
+      metadata: {
+        profileType,
+        orgId,
+        format: format || 'card',
+      },
+    });
 
     // Store snippet
     const result = await db.execute(sql`
       INSERT INTO profile_snippets (
+        id,
         user_id,
-        share_token,
+        capability_token_id,
         fields,
         theme,
         format,
@@ -115,14 +136,15 @@ export async function POST(req: NextRequest) {
         expires_at,
         created_at
       ) VALUES (
+        ${snippetId}::uuid,
         ${user.id},
-        ${shareToken},
+        ${issued.token.id}::uuid,
         ${JSON.stringify(fields)}::jsonb,
         ${theme || 'auto'},
         ${format || 'card'},
         ${profileType},
         ${profileType === 'organization' ? orgId : null},
-        ${expiresAt?.toISOString() || null},
+        ${expiresAt.toISOString()},
         NOW()
       )
       RETURNING *
@@ -135,7 +157,7 @@ export async function POST(req: NextRequest) {
         ? await upsertCanonicalProofPackForSnippet({
             snippetId: snippet.id,
             userId: user.id,
-            shareToken,
+            shareToken: issued.rawToken,
             profileType,
             orgId,
             fields,
@@ -148,7 +170,6 @@ export async function POST(req: NextRequest) {
     log.info('profile.snippet.created', {
       userId: user.id,
       snippetId: snippet.id,
-      shareToken,
       format,
       profileType,
       orgId: profileType === 'organization' ? orgId : null,
@@ -158,8 +179,8 @@ export async function POST(req: NextRequest) {
       success: true,
       snippet: {
         id: snippet.id,
-        shareToken: snippet.share_token,
-        url: buildPublicProfileURL(snippet.share_token),
+        shareToken: issued.rawToken,
+        url: buildPublicProfileURL(issued.rawToken),
         fields: snippet.fields,
         theme: snippet.theme,
         format: snippet.format,
@@ -201,6 +222,8 @@ export async function GET(req: NextRequest) {
       FROM profile_snippets ps
       LEFT JOIN profile_snippet_views pv ON ps.id = pv.snippet_id
       WHERE ps.user_id = ${user.id}
+        AND ps.deleted_at IS NULL
+        AND ps.revoked_at IS NULL
         AND (ps.expires_at IS NULL OR ps.expires_at > NOW())
       GROUP BY ps.id
       ORDER BY ps.created_at DESC
@@ -208,8 +231,8 @@ export async function GET(req: NextRequest) {
 
     const snippets = getRows<any>(result as any).map((row: any) => ({
       id: row.id,
-      shareToken: row.share_token,
-      url: buildPublicProfileURL(row.share_token),
+      shareToken: null,
+      url: null,
       fields: row.fields,
       theme: row.theme,
       format: row.format,
@@ -270,9 +293,23 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Snippet ID is required' }, { status: 400 });
     }
 
-    // Verify ownership and delete
+    await revokeCapabilityTokensBySource('profile_snippets', snippetId, {
+      actor: {
+        profileId: user.id,
+        principalType: 'user_account',
+      },
+      reason: 'snippet_deleted',
+      metadata: { surface: 'profile_snippet_delete' },
+    });
+
     await db.execute(sql`
-      DELETE FROM profile_snippets
+      UPDATE profile_snippets
+      SET
+        deleted_at = NOW(),
+        revoked_at = NOW(),
+        revoked_reason = 'snippet_deleted',
+        public_surface_disabled_at = NOW(),
+        updated_at = NOW()
       WHERE id = ${snippetId}
         AND user_id = ${user.id}
     `);

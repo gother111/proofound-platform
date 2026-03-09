@@ -1,6 +1,12 @@
 import crypto from 'crypto';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { sendFeedbackRequestEmail } from '@/lib/email';
+import {
+  CAPABILITY_BINDINGS,
+  CAPABILITY_TOKEN_CLASSES,
+  issueCapabilityToken,
+  redeemCapabilityToken,
+} from '@/lib/security/capability-tokens';
 
 type Direction = 'candidate_to_org' | 'org_to_candidate';
 
@@ -51,7 +57,7 @@ const findReusableToken = async (
   const nowIso = new Date().toISOString();
   const { data } = await admin
     .from('feedback_tokens')
-    .select('token, template_id, expires_at')
+    .select('id, capability_token_id, token, template_id, expires_at')
     .eq('interview_id', interviewId)
     .eq('direction', direction)
     .is('used_at', null)
@@ -60,8 +66,11 @@ const findReusableToken = async (
     .maybeSingle();
 
   if (!data) return null;
+  if (!data.token) return null;
 
   return data as {
+    id: string;
+    capability_token_id?: string | null;
     token: string;
     template_id: string;
     expires_at: string;
@@ -78,29 +87,62 @@ const createToken = async (
     createdBy?: string | null;
   }
 ) => {
-  const token = crypto.randomBytes(24).toString('hex');
   const expiresAt = addDays(FEEDBACK_EXPIRY_DAYS).toISOString();
+  const feedbackTokenId = crypto.randomUUID();
+  const issued = await issueCapabilityToken({
+    tokenClass: CAPABILITY_TOKEN_CLASSES.FEEDBACK_RESPONSE,
+    sourceTable: 'feedback_tokens',
+    sourceId: feedbackTokenId,
+    actionScope: 'feedback.submit',
+    subjectType: 'interview_feedback',
+    subjectId: params.interviewId,
+    actorBinding: params.recipientEmail ? CAPABILITY_BINDINGS.EMAIL_HASH : CAPABILITY_BINDINGS.NONE,
+    actorEmail: params.recipientEmail,
+    actorProfileId: null,
+    expiresAt: new Date(expiresAt),
+    singleUse: true,
+    maxUses: 1,
+    metadata: {
+      direction: params.direction,
+      templateId: params.templateId,
+    },
+  });
 
   const { error } = await admin.from('feedback_tokens').insert({
-    token,
+    id: feedbackTokenId,
+    token_hash: issued.tokenHash,
     interview_id: params.interviewId,
     template_id: params.templateId,
     direction: params.direction,
     recipient_email: params.recipientEmail,
     expires_at: expiresAt,
     created_by: params.createdBy ?? null,
+    capability_token_id: issued.token.id,
   });
 
   if (error) throw error;
-  return { token, expiresAt };
+  return { token: issued.rawToken, expiresAt };
 };
 
-export const markTokenUsed = async (token: string) => {
+export const markTokenUsed = async (token: string, actor?: { email?: string | null }) => {
+  const redeemed = await redeemCapabilityToken(token, {
+    tokenClass: CAPABILITY_TOKEN_CLASSES.FEEDBACK_RESPONSE,
+    actor: { email: actor?.email ?? null },
+    consume: true,
+    metadata: { surface: 'feedback_submit' },
+  });
+
+  if (!redeemed.ok) {
+    return redeemed;
+  }
+
   const admin = createAdminClient();
   await admin
     .from('feedback_tokens')
     .update({ used_at: new Date().toISOString() })
-    .eq('token', token);
+    .eq('id', redeemed.token.source_id);
+
+  return redeemed;
 };
 
 export const issueFeedbackInvites = async (interviewId: string) => {

@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
         if (verificationRecord) {
           updatedVerificationRecord = await recordVerificationTransition({
             verificationRecordId: verificationRecord.id,
-            toState: 'accepted',
+            toState: 'verified',
             actorType: 'candidate',
             actorId: profile.user_id,
             metadata: {

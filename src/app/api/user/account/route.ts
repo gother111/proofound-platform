@@ -7,6 +7,16 @@ import { log } from '@/lib/log';
 import { db } from '@/db';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import {
+  createLifecycleOperation,
+  executeAccountDeletionLifecycle,
+  finalizeLifecycleOperation,
+} from '@/lib/lifecycle/reconciliation';
+import {
+  createProfileDeletionRequest,
+  getLatestProfileDeletionRequest,
+  updateProfileDeletionRequestState,
+} from '@/lib/lifecycle/residual';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +39,9 @@ const AccountDeletionSchema = z.object({
  * PRD I-25: Immediate, irreversible deletion (no grace period).
  */
 export async function DELETE(request: NextRequest) {
+  let deletionRequest: { id: string } | null = null;
+  let lifecycleOperation: { id: string } | null = null;
+
   try {
     const authContext = await requireApiAuthContext();
     if (!authContext) {
@@ -79,11 +92,80 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    lifecycleOperation = await createLifecycleOperation({
+      operationType: 'delete',
+      subjectType: 'profile',
+      subjectId: user.id,
+      requestedBy: user.id,
+      visibleStatus: 'processing',
+      metadata: {
+        reason: parsed.reason || null,
+      },
+      targets: [
+        { targetType: 'db_record', targetRef: `profiles:${user.id}`, desiredState: 'deleted' },
+        { targetType: 'snippet', targetRef: 'profile_snippets', desiredState: 'revoked' },
+        { targetType: 'proof_pack', targetRef: 'proof_packs', desiredState: 'revoked' },
+        { targetType: 'storage_object', targetRef: 'uploaded_files', desiredState: 'deleted' },
+        {
+          targetType: 'public_portfolio',
+          targetRef: `profiles:${user.id}`,
+          desiredState: 'disabled',
+        },
+        {
+          targetType: 'search_index_state',
+          targetRef: `profiles:${user.id}`,
+          desiredState: 'noindex_pending',
+        },
+        {
+          targetType: 'analytics_snapshot',
+          targetRef: `profiles:${user.id}`,
+          desiredState: 'retained_pseudonymized',
+        },
+      ],
+    });
+    deletionRequest = await createProfileDeletionRequest({
+      profileId: user.id,
+      requestedBy: user.id,
+      lifecycleOperationId: lifecycleOperation.id,
+      reason: parsed.reason || null,
+      metadata: {
+        confirmPhraseVerified: true,
+      },
+    });
+    await updateProfileDeletionRequestState({
+      deletionRequestId: deletionRequest.id,
+      toState: 'processing',
+      actorType: 'system',
+      trigger: 'deletion_processing_started',
+      metadata: {
+        operationId: lifecycleOperation.id,
+      },
+    });
+
     // Remove Supabase auth user to revoke future access
     try {
       const adminClient = createAdminClient();
       const { error: deleteError } = await adminClient.auth.admin.deleteUser(user.id);
       if (deleteError) {
+        if (deletionRequest) {
+          await updateProfileDeletionRequestState({
+            deletionRequestId: deletionRequest.id,
+            toState: 'failed_requires_manual_review',
+            actorType: 'system',
+            trigger: 'deletion_failed',
+            failureCode: 'auth_delete_failed',
+            metadata: {
+              message: deleteError.message,
+            },
+          });
+        }
+        if (lifecycleOperation) {
+          await finalizeLifecycleOperation(lifecycleOperation.id, {
+            status: 'failed_requires_manual_review',
+            visibleStatus: 'failed',
+            summaryCode: 'auth_delete_failed',
+          });
+        }
         log.error('privacy.account_deletion.auth_delete_failed', {
           userId: user.id,
           error: deleteError.message,
@@ -97,6 +179,26 @@ export async function DELETE(request: NextRequest) {
         );
       }
     } catch (authDeleteError) {
+      if (deletionRequest) {
+        await updateProfileDeletionRequestState({
+          deletionRequestId: deletionRequest.id,
+          toState: 'failed_requires_manual_review',
+          actorType: 'system',
+          trigger: 'deletion_failed',
+          failureCode: 'auth_delete_failed',
+          metadata: {
+            message:
+              authDeleteError instanceof Error ? authDeleteError.message : 'Unknown auth error',
+          },
+        });
+      }
+      if (lifecycleOperation) {
+        await finalizeLifecycleOperation(lifecycleOperation.id, {
+          status: 'failed_requires_manual_review',
+          visibleStatus: 'failed',
+          summaryCode: 'auth_delete_failed',
+        });
+      }
       log.error('privacy.account_deletion.auth_delete_failed', {
         userId: user.id,
         error: authDeleteError instanceof Error ? authDeleteError.message : 'Unknown error',
@@ -114,6 +216,26 @@ export async function DELETE(request: NextRequest) {
     try {
       await db.execute(sql`SELECT anonymize_user_account(${user.id}::uuid)`);
     } catch (anonymizeError) {
+      if (deletionRequest) {
+        await updateProfileDeletionRequestState({
+          deletionRequestId: deletionRequest.id,
+          toState: 'failed_requires_manual_review',
+          actorType: 'system',
+          trigger: 'deletion_failed',
+          failureCode: 'anonymize_failed',
+          metadata: {
+            message:
+              anonymizeError instanceof Error ? anonymizeError.message : 'Unknown anonymize error',
+          },
+        });
+      }
+      if (lifecycleOperation) {
+        await finalizeLifecycleOperation(lifecycleOperation.id, {
+          status: 'failed_requires_manual_review',
+          visibleStatus: 'failed',
+          summaryCode: 'anonymize_failed',
+        });
+      }
       log.error('privacy.account_deletion.anonymize_failed', {
         userId: user.id,
         error: anonymizeError instanceof Error ? anonymizeError.message : 'Unknown error',
@@ -127,17 +249,25 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Mark profile as deleted (defense-in-depth if procedure did not)
-    await db
-      .update(profiles)
-      .set({
-        deletionRequestedAt: new Date(),
-        deletionScheduledFor: null,
-        deletionReason: parsed.reason || null,
-        deleted: true,
-        updatedAt: new Date(),
-      })
-      .where(eq(profiles.id, user.id));
+    await executeAccountDeletionLifecycle({
+      userId: user.id,
+      reason: parsed.reason || null,
+      operationId: lifecycleOperation.id,
+    });
+    await updateProfileDeletionRequestState({
+      deletionRequestId: deletionRequest.id,
+      toState: 'deleted',
+      actorType: 'system',
+      trigger: 'deletion_completed',
+      metadata: {
+        operationId: lifecycleOperation.id,
+      },
+    });
+    await finalizeLifecycleOperation(lifecycleOperation.id, {
+      status: 'completed',
+      visibleStatus: 'completed',
+      summaryCode: 'account_deleted',
+    });
 
     log.info('privacy.account_deletion.completed', {
       userId: user.id,
@@ -146,6 +276,8 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({
       status: 'deleted',
+      deletionRequestId: deletionRequest.id,
+      operationId: lifecycleOperation.id,
       message: 'Your account has been permanently deleted. This action cannot be undone.',
     });
   } catch (error) {
@@ -163,6 +295,25 @@ export async function DELETE(request: NextRequest) {
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
     });
+    if (deletionRequest) {
+      await updateProfileDeletionRequestState({
+        deletionRequestId: deletionRequest.id,
+        toState: 'failed_requires_manual_review',
+        actorType: 'system',
+        trigger: 'deletion_failed',
+        failureCode: error instanceof Error ? error.name : 'deletion_failed',
+        metadata: {
+          message: error instanceof Error ? error.message : 'Unknown error',
+        },
+      }).catch(() => undefined);
+    }
+    if (lifecycleOperation) {
+      await finalizeLifecycleOperation(lifecycleOperation.id, {
+        status: 'failed_requires_manual_review',
+        visibleStatus: 'failed',
+        summaryCode: error instanceof Error ? error.name : 'deletion_failed',
+      }).catch(() => undefined);
+    }
 
     return NextResponse.json(
       {
@@ -191,6 +342,7 @@ export async function GET() {
     const [profile] = await db
       .select({
         id: profiles.id,
+        lifecycleState: profiles.lifecycleState,
         deletionRequestedAt: profiles.deletionRequestedAt,
         deleted: profiles.deleted,
       })
@@ -201,10 +353,15 @@ export async function GET() {
     if (!profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
+    const deletionRequest = await getLatestProfileDeletionRequest(user.id);
 
     return NextResponse.json({
-      accountStatus: profile.deleted ? 'deleted' : 'active',
-      deletionRequestedAt: profile.deletionRequestedAt?.toISOString() || null,
+      accountStatus:
+        deletionRequest?.lifecycleState ?? (profile.deleted ? 'deleted' : profile.lifecycleState),
+      deletionRequestedAt:
+        deletionRequest?.requestedAt?.toISOString() ||
+        profile.deletionRequestedAt?.toISOString() ||
+        null,
       deletionScheduledFor: null,
       daysRemaining: null,
       canCancelDeletion: false,

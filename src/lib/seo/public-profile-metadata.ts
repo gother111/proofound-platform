@@ -7,6 +7,10 @@ type PublicProfileMetadataInput = {
   path: string;
   ogTitle?: string;
   ogDescription?: string;
+  imagePath?: string;
+  imageAlt?: string;
+  ogType?: 'website' | 'profile';
+  robots?: Metadata['robots'];
 };
 
 function normalizePath(path: string): string {
@@ -24,6 +28,10 @@ export function buildPublicProfileMetadata({
   path,
   ogTitle,
   ogDescription,
+  imagePath,
+  imageAlt,
+  ogType,
+  robots,
 }: PublicProfileMetadataInput): Metadata {
   return buildPublicMetadata({
     title,
@@ -31,6 +39,10 @@ export function buildPublicProfileMetadata({
     path: normalizePath(path),
     ogTitle,
     ogDescription,
+    imagePath,
+    imageAlt,
+    ogType,
+    robots,
   });
 }
 
@@ -43,5 +55,15 @@ export function buildUnavailablePublicProfileMetadata(path: string): Metadata {
     ogTitle: 'Public Profile Unavailable',
     ogDescription:
       'This public profile link is unavailable. Ask the owner to share a new Proofound link.',
+    robots: {
+      index: false,
+      follow: false,
+      nocache: true,
+      googleBot: {
+        index: false,
+        follow: false,
+        noimageindex: true,
+      },
+    },
   });
 }

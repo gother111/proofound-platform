@@ -40,13 +40,11 @@ describe('/api/portfolio/view', () => {
     expect(db.execute).toHaveBeenCalledTimes(1);
   });
 
-  it('returns profile view count', async () => {
-    (db.execute as any).mockResolvedValue([{ count: '7' }]);
-
+  it('returns gone for owner-facing public portfolio counts', async () => {
     const response = await GET(new Request('http://localhost/api/portfolio/view?handle=alice'));
     const body = await response.json();
 
-    expect(response.status).toBe(200);
-    expect(body.count).toBe(7);
+    expect(response.status).toBe(410);
+    expect(body.error).toContain('not available in MVP');
   });
 });

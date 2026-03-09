@@ -6,6 +6,11 @@ import { z } from 'zod';
 import { log } from '@/lib/log';
 import { notifyVerificationRequested } from '@/lib/notifications';
 import { checkVerificationRateLimit } from '@/lib/rate-limit';
+import {
+  CAPABILITY_BINDINGS,
+  CAPABILITY_TOKEN_CLASSES,
+  issueCapabilityToken,
+} from '@/lib/security/capability-tokens';
 
 const SkillVerificationRequestSchema = z.object({
   skillId: z.string().min(1),
@@ -107,19 +112,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate verification token
-    const token = crypto.randomBytes(32).toString('hex');
+    const verificationRequestId = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14 days
+    const issued = await issueCapabilityToken({
+      tokenClass: CAPABILITY_TOKEN_CLASSES.SKILL_VERIFICATION_RESPONSE,
+      sourceTable: 'skill_verification_requests',
+      sourceId: verificationRequestId,
+      actionScope: 'skill_verification.respond',
+      subjectType: 'skill_verification_request',
+      subjectId: verificationRequestId,
+      actorBinding: CAPABILITY_BINDINGS.EMAIL_HASH,
+      actorEmail: verifierEmail.toLowerCase(),
+      expiresAt,
+      singleUse: true,
+      maxUses: 1,
+      metadata: {
+        verifierSource: 'external',
+        skillId,
+      },
+    });
 
     // Create verification request
     const { data: verificationRequest, error: createError } = await supabase
       .from('skill_verification_requests')
       .insert({
+        id: verificationRequestId,
         requester_id: user.id,
         skill_id: skillId,
         verifier_email: verifierEmail.toLowerCase(),
         message: message || null,
-        token,
+        capability_token_id: issued.token.id,
         token_expires_at: expiresAt.toISOString(),
         status: 'pending',
       })
@@ -138,7 +160,7 @@ export async function POST(request: NextRequest) {
         profile.display_name || 'A Proofound user',
         profile.handle || '',
         skillName,
-        token,
+        issued.rawToken,
         message
       );
     } catch (emailError) {

@@ -16,18 +16,14 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }));
 
-vi.mock('@/app/portfolio/[handle]/ViewCounterClient', () => ({
-  ViewCounterClient: () => null,
-}));
-
 import { createClient } from '@/lib/supabase/server';
 import PortfolioPage from '@/app/portfolio/[handle]/page';
 
 type Fixtures = {
   authUser: { id: string } | null;
   profile: any;
-  matchingProfile?: any;
-  impactStories?: any[];
+  profileFieldVisibility?: any;
+  historicalHandle?: any;
   fallbackSkillProofs?: any[];
 };
 
@@ -35,8 +31,8 @@ function mockSupabaseClient(fixtures: Fixtures) {
   const {
     authUser,
     profile,
-    matchingProfile = null,
-    impactStories = [],
+    profileFieldVisibility = null,
+    historicalHandle = null,
     fallbackSkillProofs = [],
   } = fixtures;
 
@@ -66,23 +62,21 @@ function mockSupabaseClient(fixtures: Fixtures) {
         return { select };
       }
 
-      if (table === 'matching_profiles') {
+      if (table === 'profile_field_visibility') {
         return {
           select: vi.fn(() => ({
             eq: vi.fn().mockReturnValue({
-              maybeSingle: vi.fn().mockResolvedValue({ data: matchingProfile }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: profileFieldVisibility }),
             }),
           })),
         };
       }
 
-      if (table === 'impact_stories') {
+      if (table === 'profile_handle_history') {
         return {
           select: vi.fn(() => ({
             eq: vi.fn().mockReturnValue({
-              order: vi.fn().mockReturnValue({
-                limit: vi.fn().mockResolvedValue({ data: impactStories }),
-              }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: historicalHandle }),
             }),
           })),
         };
@@ -98,18 +92,21 @@ describe('Public individual portfolio page', () => {
     vi.mocked(createClient).mockResolvedValue(
       mockSupabaseClient({
         authUser: null,
+        profileFieldVisibility: {
+          headline: 'public',
+          skills: 'owner_only',
+        },
         profile: {
           id: 'user-1',
           handle: 'jane',
           display_name: 'Jane Doe',
+          public_portfolio_state: 'public_link_only',
+          search_indexing_enabled_at: null,
           avatar_url: null,
           individual_profiles: [
             {
-              headline: null,
+              headline: 'Proof-first builder',
               bio: null,
-              location: 'Stockholm, Sweden',
-              mission: 'Build equitable systems.',
-              vision: 'A fairer labor market.',
               tagline: null,
               verification_status: null,
               verification_method: null,
@@ -135,28 +132,32 @@ describe('Public individual portfolio page', () => {
     render(element);
 
     expect(screen.getByRole('heading', { name: 'Jane Doe' })).toBeInTheDocument();
+    expect(screen.getByText('Shareable by direct link')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /proof-based summary/i })).toBeInTheDocument();
-    expect(screen.getByText(/featured proofs/i)).toBeInTheDocument();
-    expect(screen.getByText(/expertise snapshot/i)).toBeInTheDocument();
-    expect(screen.getByText(/my next challenge/i)).toBeInTheDocument();
-    expect(screen.getByText(/mission & vision/i)).toBeInTheDocument();
-    expect(screen.getByText(/location hidden/i)).toBeInTheDocument();
-    expect(screen.getByText(/mission is private in this view/i)).toBeInTheDocument();
-    expect(screen.getByText(/no proofs published yet/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /featured proofs/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /skills snapshot/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /contact & share/i })).toBeInTheDocument();
+    expect(screen.getByText(/no public summary is published yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/no public proof is available yet/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/skills are not shared publicly in this portfolio/i)
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /request introduction/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /copy recruiter summary/i })).toBeInTheDocument();
-    expect(screen.queryByText(/credibility at a glance/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/verification activity/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/my next challenge/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/mission & vision/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/stockholm, sweden/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /return to menu/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /return home/i })).not.toBeInTheDocument();
   });
 
-  it('renders owner preview mode controls and allows return link when provided', async () => {
+  it('renders owner-safe public preview and allows return link when provided', async () => {
     vi.mocked(createClient).mockResolvedValue(
       mockSupabaseClient({
         authUser: { id: 'user-1' },
-        matchingProfile: {
-          desired_roles: ['Product Lead'],
-          work_mode: 'remote',
+        profileFieldVisibility: {
+          headline: 'public',
+          skills: 'public',
         },
         fallbackSkillProofs: [
           {
@@ -178,30 +179,19 @@ describe('Public individual portfolio page', () => {
             created_at: '2026-01-16T00:00:00.000Z',
           },
         ],
-        impactStories: [
-          {
-            id: 'impact-1',
-            title: 'Impact story should not appear',
-            role_title: 'Program lead',
-            timeline: 'Q4 2025',
-            outcomes: 'Story outcome',
-            verified: true,
-            updated_at: '2026-01-15T00:00:00.000Z',
-          },
-        ],
         profile: {
           id: 'user-1',
           handle: 'jane',
           display_name: 'Jane Doe',
+          public_portfolio_state: 'public_link_only',
+          search_indexing_enabled_at: null,
           avatar_url: null,
           individual_profiles: [
             {
               headline: 'Impact builder',
               bio: 'I build measurable change.',
-              location: 'Stockholm, Sweden',
-              mission: 'Build equitable systems.',
-              vision: 'A fairer labor market.',
               tagline: null,
+              skills: ['Strategy', 'Research ops'],
               verification_status: 'verified',
               verification_method: 'veriff',
               verified_at: null,
@@ -213,7 +203,9 @@ describe('Public individual portfolio page', () => {
               verified: true,
             },
           ],
-          field_visibility: [{ field_visibility: { contact: true, workEmail: true } }],
+          field_visibility: [
+            { field_visibility: { contact: true, workEmail: true, bio: true, skills: true } },
+          ],
         },
       }) as any
     );
@@ -229,12 +221,17 @@ describe('Public individual portfolio page', () => {
       'href',
       '/app/i/home'
     );
-    expect(screen.getByText('Stockholm, Sweden')).toBeInTheDocument();
-    expect(screen.getByText('Build equitable systems.')).toBeInTheDocument();
+    expect(screen.getAllByText('I build measurable change.').length).toBeGreaterThan(0);
     expect(screen.getByText('Verified proof item')).toBeInTheDocument();
+    expect(screen.getByText('Strategy')).toBeInTheDocument();
+    expect(screen.getByText('Research ops')).toBeInTheDocument();
     expect(screen.queryByText('Pending proof item')).not.toBeInTheDocument();
-    expect(screen.queryByText('Impact story should not appear')).not.toBeInTheDocument();
-    expect(screen.queryByText(/pending verification/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /work email/i })).toHaveAttribute(
+      'href',
+      'mailto:jane@example.com'
+    );
+    expect(screen.queryByText(/stockholm, sweden/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/mission & vision/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /edit profile/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /add proof/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /request verification/i })).not.toBeInTheDocument();
@@ -245,6 +242,7 @@ describe('Public individual portfolio page', () => {
       mockSupabaseClient({
         authUser: null,
         profile: null,
+        historicalHandle: null,
       }) as any
     );
 

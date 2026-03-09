@@ -1,7 +1,7 @@
 import { requireApiAuthContext } from '@/lib/auth';
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
-import { randomBytes, randomUUID } from 'crypto';
+import { randomUUID } from 'crypto';
 import { sendEmail } from '@/lib/email/sender';
 import { resolveSiteUrlFromHeaders } from '@/lib/env';
 import {
@@ -10,30 +10,17 @@ import {
   normalizeEmail,
   writeVerificationAuditLog,
 } from '@/lib/verification/integrity';
+import {
+  CAPABILITY_BINDINGS,
+  CAPABILITY_TOKEN_CLASSES,
+  issueCapabilityToken,
+} from '@/lib/security/capability-tokens';
 
 const CreateVerificationRequestSchema = z.object({
   verifierSource: z.enum(['peer', 'manager', 'external']),
   verifierEmail: z.string().trim().email('Valid email is required'),
   message: z.string().optional(),
 });
-
-/**
- * Generate a secure verification token
- */
-function generateVerificationToken(): string {
-  return randomBytes(32).toString('hex');
-}
-
-function isMissingVerificationTokenColumnError(error: unknown): boolean {
-  if (!error || typeof error !== 'object') {
-    return false;
-  }
-
-  const e = error as { code?: string; message?: string; details?: string; hint?: string };
-  const errorText = `${e.message || ''} ${e.details || ''} ${e.hint || ''}`.toLowerCase();
-
-  return (e.code === 'PGRST204' || e.code === '42703') && errorText.includes('verification_token');
-}
 
 function isUniqueViolationError(error: unknown): boolean {
   if (!error || typeof error !== 'object') {
@@ -218,12 +205,29 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     // Generate secure verification token for magic link
     const verificationRequestId = randomUUID();
-    const createdAt = new Date().toISOString();
-    const verificationToken = generateVerificationToken();
-
     // Calculate expiration (7 days from now per PRD F7)
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
+    const issued = await issueCapabilityToken({
+      tokenClass: CAPABILITY_TOKEN_CLASSES.SKILL_VERIFICATION_RESPONSE,
+      sourceTable: 'skill_verification_requests',
+      sourceId: verificationRequestId,
+      actionScope: 'skill_verification.respond',
+      subjectType: 'skill_verification_request',
+      subjectId: verificationRequestId,
+      actorBinding: integrityAssessment.policy.requiresAuthenticatedVerifier
+        ? CAPABILITY_BINDINGS.EMAIL_THEN_PROFILE_LOCK
+        : CAPABILITY_BINDINGS.EMAIL_HASH,
+      actorEmail: normalizedVerifierEmail,
+      actorProfileId: integrityAssessment.verifierProfileId,
+      expiresAt,
+      singleUse: true,
+      maxUses: 1,
+      metadata: {
+        verifierSource: validated.verifierSource,
+        skillId,
+      },
+    });
 
     const verificationInsert = {
       id: verificationRequestId,
@@ -249,65 +253,24 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       },
       requester_ip_hash: integrityAssessment.requesterFingerprints.ipHash,
       requester_user_agent_hash: integrityAssessment.requesterFingerprints.userAgentHash,
-      verification_token: verificationToken,
+      capability_token_id: issued.token.id,
       status: 'pending',
       expires_at: expiresAt.toISOString(),
     };
 
-    // Create verification request with token. Fallback to legacy insert when
-    // the DB has not received the verification_token migration yet.
     const { error: createWithTokenError } = await supabase
       .from('skill_verification_requests')
       .insert(verificationInsert);
 
-    let verificationRequest: Omit<typeof verificationInsert, 'verification_token'> & {
-      verification_token?: string;
-      created_at: string;
-      responded_at: null;
-      response_message: null;
-    } = {
+    let linkToken = issued.rawToken;
+    const verificationRequest = {
       ...verificationInsert,
-      created_at: createdAt,
+      created_at: new Date().toISOString(),
       responded_at: null,
       response_message: null,
     };
-    let linkToken = verificationToken;
 
-    if (isMissingVerificationTokenColumnError(createWithTokenError)) {
-      console.warn(
-        'verification_token column missing, retrying legacy verification request insert'
-      );
-      const { verification_token: _ignored, ...legacyInsert } = verificationInsert;
-      const { error: legacyInsertError } = await supabase
-        .from('skill_verification_requests')
-        .insert(legacyInsert);
-
-      if (legacyInsertError) {
-        if (isDuplicateSkillVerificationConstraintError(legacyInsertError)) {
-          const existingDuringRace = await findExistingActiveVerificationRequest({
-            supabase,
-            requesterProfileId: user.id,
-            skillId,
-            verifierEmail: normalizedVerifierEmail,
-          });
-          return toDuplicateVerificationResponse(existingDuringRace);
-        }
-
-        console.error('Error creating verification request (legacy fallback):', {
-          code: legacyInsertError?.code,
-          message: legacyInsertError?.message,
-          details: legacyInsertError?.details,
-          hint: legacyInsertError?.hint,
-        });
-        return NextResponse.json(
-          { error: 'Failed to create verification request' },
-          { status: 500 }
-        );
-      }
-
-      delete verificationRequest.verification_token;
-      linkToken = verificationRequestId;
-    } else if (createWithTokenError) {
+    if (createWithTokenError) {
       if (isDuplicateSkillVerificationConstraintError(createWithTokenError)) {
         const existingDuringRace = await findExistingActiveVerificationRequest({
           supabase,

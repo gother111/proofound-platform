@@ -13,8 +13,20 @@ vi.mock('@/lib/analytics/events', () => ({
   emitVerificationRequestedAsync: vi.fn(),
 }));
 
+vi.mock('@/lib/security/capability-tokens', () => ({
+  CAPABILITY_BINDINGS: {
+    EMAIL_HASH: 'email_hash',
+    EMAIL_THEN_PROFILE_LOCK: 'email_then_profile_lock',
+  },
+  CAPABILITY_TOKEN_CLASSES: {
+    SKILL_VERIFICATION_RESPONSE: 'skill_verification_response',
+  },
+  issueCapabilityToken: vi.fn(),
+}));
+
 import { requireApiAuthContext } from '@/lib/auth';
 import { sendEmail } from '@/lib/email/sender';
+import { issueCapabilityToken } from '@/lib/security/capability-tokens';
 import { GET, POST } from '@/app/api/expertise/user-skills/[id]/verification-request/route';
 
 const params = { params: Promise.resolve({ id: 'skill-1' }) };
@@ -30,7 +42,6 @@ function createRequest(origin: string, body: Record<string, unknown>) {
 }
 
 function createSupabaseMock(options?: {
-  missingTokenColumnOnFirstInsert?: boolean;
   uniqueConflictOnInsert?: boolean;
   precheckResults?: Array<
     Array<{ id: string; status: 'pending' | 'accepted'; verifier_email: string }>
@@ -95,19 +106,6 @@ function createSupabaseMock(options?: {
             code: '23505',
             message:
               'duplicate key value violates unique constraint "idx_skill_verification_active_unique_verifier"',
-          },
-        };
-      }
-      if (
-        options?.missingTokenColumnOnFirstInsert &&
-        insertCalls === 1 &&
-        payload?.verification_token
-      ) {
-        return {
-          error: {
-            code: 'PGRST204',
-            message:
-              "Could not find the 'verification_token' column of 'skill_verification_requests' in the schema cache",
           },
         };
       }
@@ -183,6 +181,13 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    (issueCapabilityToken as any).mockResolvedValue({
+      rawToken: 'issued-token-123',
+      tokenHash: 'hash-123',
+      token: {
+        id: 'cap-token-123',
+      },
+    });
     const { supabase } = createSupabaseMock();
     authContext = {
       user: {
@@ -226,8 +231,9 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
       verifier_email: 'mentor@example.com',
       verifier_source: 'peer',
       requester_profile_id: 'user-1',
+      capability_token_id: 'cap-token-123',
     });
-    expect(inserts[0].verification_token).toMatch(/^[a-f0-9]{64}$/);
+    expect(inserts[0].verification_token).toBeUndefined();
 
     expect(sendEmail).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -236,7 +242,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
     );
 
     const sentEmailPayload = (sendEmail as any).mock.calls[0][0];
-    expect(sentEmailPayload.html).toContain('https://proofound.io/verify/');
+    expect(sentEmailPayload.html).toContain('https://proofound.io/verify/issued-token-123');
   });
 
   it('accepts verifier emails with surrounding whitespace', async () => {
@@ -295,18 +301,18 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
     expect(sentEmailPayload.html).toContain('https://staging.proofound.io/verify/');
   });
 
-  it('falls back to legacy insert when verification_token column is missing', async () => {
+  it('persists the capability token reference instead of a legacy raw token column', async () => {
     process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
     process.env.NEXT_PUBLIC_APP_URL = '';
 
-    const { supabase, inserts } = createSupabaseMock({ missingTokenColumnOnFirstInsert: true });
+    const { supabase, inserts } = createSupabaseMock();
     authContext.supabase = supabase;
-    (sendEmail as any).mockResolvedValue({ success: true, id: 'email-legacy' });
+    (sendEmail as any).mockResolvedValue({ success: true, id: 'email-capability' });
 
     const response = await POST(
       createRequest('https://proofound.io', {
         verifierSource: 'peer',
-        verifierEmail: 'Legacy@Example.COM',
+        verifierEmail: 'Capability@Example.COM',
       }),
       params
     );
@@ -314,15 +320,15 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
     expect(response.status).toBe(201);
     const body = await response.json();
     expect(body.email_sent).toBe(true);
-    expect(body.request.id).toBe(inserts[1].id);
+    expect(body.request.id).toBe(inserts[0].id);
 
-    expect(inserts).toHaveLength(2);
-    expect(inserts[0].verification_token).toMatch(/^[a-f0-9]{64}$/);
-    expect(inserts[1].verification_token).toBeUndefined();
-    expect(inserts[1].verifier_email).toBe('legacy@example.com');
+    expect(inserts).toHaveLength(1);
+    expect(inserts[0].verification_token).toBeUndefined();
+    expect(inserts[0].capability_token_id).toBe('cap-token-123');
+    expect(inserts[0].verifier_email).toBe('capability@example.com');
 
     const sentEmailPayload = (sendEmail as any).mock.calls[0][0];
-    expect(sentEmailPayload.html).toContain(`https://proofound.io/verify/${inserts[1].id}`);
+    expect(sentEmailPayload.html).toContain('https://proofound.io/verify/issued-token-123');
   });
 
   it('runs only the active-duplicate precheck select before insert', async () => {

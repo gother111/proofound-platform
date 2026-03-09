@@ -7,6 +7,7 @@ import {
 } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
+import { upsertCanonicalAssignmentSectionSubmission } from '@/lib/canonical/submissions';
 
 export const dynamic = 'force-dynamic';
 
@@ -120,6 +121,18 @@ export async function POST(
       changedBy: invitation.stakeholderEmail,
     });
 
+    const canonicalSubmission = await upsertCanonicalAssignmentSectionSubmission({
+      legacySubmissionId: submission.id,
+      invitationId: invitation.id,
+      orgId: invitation.orgId,
+      sectionName: validated.sectionName,
+      sectionData: validated.sectionData,
+      reviewStatus: submission.reviewStatus,
+      reviewedAt: submission.reviewedAt,
+      stakeholderEmail: invitation.stakeholderEmail,
+      submittedAt: submission.submittedAt,
+    });
+
     // Update invitation status if all sections are submitted
     const allSubmissions = await db
       .select()
@@ -138,7 +151,10 @@ export async function POST(
         .where(eq(assignmentInvitations.id, invitation.id));
     }
 
-    return NextResponse.json({ submission });
+    return NextResponse.json({
+      submission,
+      canonicalSubmissionId: canonicalSubmission.id,
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Invalid data', details: error.errors }, { status: 400 });

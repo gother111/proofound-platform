@@ -10,6 +10,11 @@ import {
   normalizeEmail,
   writeVerificationAuditLog,
 } from '@/lib/verification/integrity';
+import {
+  CAPABILITY_TOKEN_CLASSES,
+  inspectCapabilityToken,
+  redeemCapabilityToken,
+} from '@/lib/security/capability-tokens';
 
 const VerifyResponseSchema = z.object({
   action: z.enum(['accept', 'decline']),
@@ -228,6 +233,22 @@ async function getSkillVerificationByTokenOrLegacyId(
 
     return { data: null, error: lastError };
   };
+
+  const capabilityLookup = await inspectCapabilityToken(token, {
+    tokenClass: CAPABILITY_TOKEN_CLASSES.SKILL_VERIFICATION_RESPONSE,
+    metadata: { surface: 'verify_skill_lookup' },
+  });
+
+  if (
+    capabilityLookup.ok &&
+    capabilityLookup.token.source_table === 'skill_verification_requests' &&
+    capabilityLookup.token.source_id
+  ) {
+    const capabilityIdLookup = await runLookup('id', capabilityLookup.token.source_id);
+    if (capabilityIdLookup.data) {
+      return { data: capabilityIdLookup.data as any, error: null };
+    }
+  }
 
   const tokenLookup = await runLookup('verification_token', token);
 
@@ -804,6 +825,29 @@ async function getImpactVerificationRequestByToken(
   adminClient: ReturnType<typeof createAdminClient>,
   token: string
 ) {
+  const capabilityLookup = await inspectCapabilityToken(token, {
+    tokenClass: CAPABILITY_TOKEN_CLASSES.IMPACT_VERIFICATION_RESPONSE,
+    metadata: { surface: 'verify_impact_lookup' },
+  });
+
+  if (
+    capabilityLookup.ok &&
+    capabilityLookup.token.source_table === 'impact_story_verification_requests' &&
+    capabilityLookup.token.source_id
+  ) {
+    const { data, error } = await adminClient
+      .from('impact_story_verification_requests')
+      .select('*')
+      .eq('id', capabilityLookup.token.source_id)
+      .maybeSingle();
+
+    if (error && isRelationMissingError(error)) {
+      return { data: null, error: null };
+    }
+
+    return { data, error };
+  }
+
   const { data, error } = await adminClient
     .from('impact_story_verification_requests')
     .select('*')
@@ -1314,6 +1358,22 @@ export async function POST(
           );
         }
 
+        await redeemCapabilityToken(token, {
+          tokenClass: CAPABILITY_TOKEN_CLASSES.IMPACT_VERIFICATION_RESPONSE,
+          actor: {
+            email: authIdentity.email,
+            profileId: authIdentity.profileId,
+            principalType: authIdentity.isAuthenticated ? 'user_account' : 'external_email',
+            ip: request.headers.get('x-forwarded-for'),
+            userAgent: request.headers.get('user-agent'),
+          },
+          consume: true,
+          metadata: {
+            requestId: impactVerification.id,
+            action: validated.action,
+          },
+        });
+
         if (
           validated.action === 'accept' &&
           mergedIntegrity.integrityStatus === 'clear' &&
@@ -1648,6 +1708,22 @@ export async function POST(
       console.error('Error updating verification:', updateError);
       return NextResponse.json({ error: 'Failed to update verification status' }, { status: 500 });
     }
+
+    await redeemCapabilityToken(token, {
+      tokenClass: CAPABILITY_TOKEN_CLASSES.SKILL_VERIFICATION_RESPONSE,
+      actor: {
+        email: authIdentity.email,
+        profileId: authIdentity.profileId,
+        principalType: authIdentity.isAuthenticated ? 'user_account' : 'external_email',
+        ip: request.headers.get('x-forwarded-for'),
+        userAgent: request.headers.get('user-agent'),
+      },
+      consume: true,
+      metadata: {
+        requestId: normalizedVerification.id,
+        action: validated.action,
+      },
+    });
 
     if (validated.action === 'accept' && mergedIntegrity.integrityStatus === 'clear') {
       const { data: skill } = await skillDataClient

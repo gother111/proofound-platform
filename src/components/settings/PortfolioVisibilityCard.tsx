@@ -13,7 +13,6 @@ type VisibilityFlags = {
   workEmail: boolean;
   linkedin: boolean;
   identity: boolean;
-  counts: boolean;
   skills: boolean;
   bio: boolean;
   contact: boolean;
@@ -25,14 +24,15 @@ const defaults: VisibilityFlags = {
   workEmail: false,
   linkedin: true,
   identity: true,
-  counts: true,
-  skills: true,
-  bio: true,
+  skills: false,
+  bio: false,
   contact: false,
 };
 
 export function PortfolioVisibilityCard() {
   const [flags, setFlags] = useState<VisibilityFlags>(defaults);
+  const [publicPageEnabled, setPublicPageEnabled] = useState(true);
+  const [searchIndexingEnabled, setSearchIndexingEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -44,6 +44,8 @@ export function PortfolioVisibilityCard() {
         if (res.ok) {
           const data = await res.json();
           if (data.visibility) setFlags(data.visibility);
+          setPublicPageEnabled(data.publicPageEnabled !== false);
+          setSearchIndexingEnabled(Boolean(data.searchIndexingEnabled));
         }
       } catch (e) {
         console.error(e);
@@ -64,7 +66,11 @@ export function PortfolioVisibilityCard() {
       const res = await fetch('/api/portfolio/visibility', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(flags),
+        body: JSON.stringify({
+          publicPageEnabled,
+          searchIndexingEnabled,
+          ...flags,
+        }),
       });
       if (!res.ok) throw new Error('Save failed');
     } catch (e) {
@@ -79,7 +85,9 @@ export function PortfolioVisibilityCard() {
     <Card variant="bento">
       <CardHeader>
         <CardTitle>Public Portfolio Visibility</CardTitle>
-        <CardDescription>Controls what is shown on your public portfolio page.</CardDescription>
+        <CardDescription>
+          Shareable by link comes first. Search engines are off by default.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3 text-sm text-slate-700">
         {loading ? (
@@ -90,17 +98,33 @@ export function PortfolioVisibilityCard() {
         ) : (
           <>
             <VisibilityRow
+              label="Public page enabled"
+              description="Anyone with the link can view your public portfolio."
+              checked={publicPageEnabled}
+              onCheckedChange={() => setPublicPageEnabled((prev) => !prev)}
+            />
+            <VisibilityRow
+              label="Allow search engines"
+              description="Only enable this when the page is meant to be searchable."
+              checked={searchIndexingEnabled}
+              onCheckedChange={() => setSearchIndexingEnabled((prev) => !prev)}
+              disabled={!publicPageEnabled}
+            />
+            <VisibilityRow
               label="Header (name, handle, headline)"
+              description="Required for a credible public portfolio."
               checked={flags.header}
               onCheckedChange={() => toggle('header')}
             />
             <VisibilityRow
               label="Proof bar block"
+              description="Shows proof-backed trust summary."
               checked={flags.proofBar}
               onCheckedChange={() => toggle('proofBar')}
             />
             <VisibilityRow
               label="Identity badge"
+              description="Shows coarse verification status only."
               checked={flags.identity}
               onCheckedChange={() => toggle('identity')}
             />
@@ -115,11 +139,6 @@ export function PortfolioVisibilityCard() {
               onCheckedChange={() => toggle('linkedin')}
             />
             <VisibilityRow
-              label="Counts (proofs, verifications, attestations)"
-              checked={flags.counts}
-              onCheckedChange={() => toggle('counts')}
-            />
-            <VisibilityRow
               label="Skills snapshot"
               checked={flags.skills}
               onCheckedChange={() => toggle('skills')}
@@ -131,9 +150,18 @@ export function PortfolioVisibilityCard() {
             />
             <VisibilityRow
               label="Contact section"
+              description="Keep this off unless you explicitly want contact requests surfaced."
               checked={flags.contact}
               onCheckedChange={() => toggle('contact')}
             />
+
+            <p className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+              {publicPageEnabled
+                ? searchIndexingEnabled
+                  ? 'Public page is on and eligible for search indexing when the content is safe to index.'
+                  : 'Public page is on and shareable by direct link. Search engines should not index it.'
+                : 'Public page is off. The public route will be unavailable.'}
+            </p>
 
             <Button size="sm" onClick={save} disabled={saving}>
               {saving ? (
@@ -153,17 +181,24 @@ export function PortfolioVisibilityCard() {
 
 function VisibilityRow({
   label,
+  description,
   checked,
   onCheckedChange,
+  disabled = false,
 }: {
   label: string;
+  description?: string;
   checked: boolean;
   onCheckedChange: () => void;
+  disabled?: boolean;
 }) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-md border border-slate-200 px-3 py-2">
-      <Label className="text-sm text-slate-800">{label}</Label>
-      <Switch checked={checked} onCheckedChange={onCheckedChange} />
+      <div className="space-y-0.5">
+        <Label className="text-sm text-slate-800">{label}</Label>
+        {description ? <p className="text-xs text-slate-500">{description}</p> : null}
+      </div>
+      <Switch checked={checked} onCheckedChange={onCheckedChange} disabled={disabled} />
     </div>
   );
 }

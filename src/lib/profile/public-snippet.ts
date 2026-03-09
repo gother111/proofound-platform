@@ -3,6 +3,7 @@ import { getRows } from '@/lib/db/rows';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
 import type { SnippetFields } from '@/lib/profile/snippet-generator';
 import { sql } from 'drizzle-orm';
+import { CAPABILITY_TOKEN_CLASSES, redeemCapabilityToken } from '@/lib/security/capability-tokens';
 
 export type SnippetProfileType = 'individual' | 'organization';
 export type SnippetTheme = 'light' | 'dark' | 'auto';
@@ -11,7 +12,6 @@ export type SnippetFormat = 'card' | 'mini' | 'full';
 type DbSnippetRow = {
   id: string;
   user_id: string;
-  share_token: string;
   fields: unknown;
   theme: SnippetTheme;
   format: SnippetFormat;
@@ -24,7 +24,6 @@ type DbSnippetRow = {
 export type PublicSnippet = {
   id: string;
   userId: string;
-  shareToken: string;
   fields: SnippetFields;
   theme: SnippetTheme;
   format: SnippetFormat;
@@ -255,11 +254,20 @@ export async function getSnippetByToken(token: string): Promise<PublicSnippet | 
     return null;
   }
 
+  const redeemed = await redeemCapabilityToken(safeToken, {
+    tokenClass: CAPABILITY_TOKEN_CLASSES.PROFILE_SNIPPET_SHARE,
+    consume: false,
+    metadata: { surface: 'public_snippet_read' },
+  });
+
+  if (!redeemed.ok) {
+    return null;
+  }
+
   const result = await db.execute(sql`
     SELECT
       id,
       user_id,
-      share_token,
       fields,
       theme,
       format,
@@ -268,7 +276,10 @@ export async function getSnippetByToken(token: string): Promise<PublicSnippet | 
       profile_type,
       org_id
     FROM profile_snippets
-    WHERE share_token = ${safeToken}
+    WHERE capability_token_id = ${redeemed.token.id}::uuid
+      AND deleted_at IS NULL
+      AND revoked_at IS NULL
+      AND public_surface_disabled_at IS NULL
       AND (expires_at IS NULL OR expires_at > NOW())
     LIMIT 1
   `);
@@ -281,7 +292,6 @@ export async function getSnippetByToken(token: string): Promise<PublicSnippet | 
   return {
     id: row.id,
     userId: row.user_id,
-    shareToken: row.share_token,
     fields: parseSnippetFields(row.fields),
     theme: row.theme ?? 'auto',
     format: row.format ?? 'card',

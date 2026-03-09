@@ -1,20 +1,15 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
 import { getCurrentUser } from '@/lib/auth';
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ACCEPTED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+import { deleteUploadedFile, ingestUploadedFile, UPLOAD_KINDS } from '@/lib/uploads/lifecycle';
 
 export async function POST(request: NextRequest) {
   try {
-    // Authenticate user
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get the uploaded file from FormData
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
 
@@ -22,55 +17,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    // Validate file type
-    if (!ACCEPTED_TYPES.includes(file.type)) {
+    const upload = await ingestUploadedFile(file, {
+      ownerType: 'individual_profile',
+      ownerId: user.id,
+      sourceSurface: 'avatar_upload',
+      uploadKind: UPLOAD_KINDS.AVATAR,
+      attachedSubjectType: 'individual_profile',
+      attachedSubjectId: user.id,
+    });
+
+    if (upload.status === 'rejected' || !upload.url) {
       return NextResponse.json(
-        { error: 'Invalid file type. Please upload JPG, PNG, or WebP' },
+        {
+          error: 'Invalid file',
+          status: 'rejected',
+          uploadedFileId: upload.uploadedFileId,
+          reason: upload.safetyReason,
+        },
         { status: 400 }
       );
     }
 
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: 'File size exceeds 5MB limit' }, { status: 400 });
-    }
-
-    // Convert file to buffer
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // Generate unique filename with user ID
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-    const filePath = `avatars/${fileName}`;
-
-    // Upload to Supabase Storage
     const supabase = await createClient();
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('user-uploads')
-      .upload(filePath, buffer, {
-        contentType: file.type,
-        upsert: true,
-        cacheControl: '3600',
-      });
-
-    if (uploadError) {
-      console.error('Upload error:', uploadError);
-      return NextResponse.json(
-        { error: 'Failed to upload file', details: uploadError.message },
-        { status: 500 }
-      );
-    }
-
-    // Get public URL
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from('user-uploads').getPublicUrl(filePath);
-
-    // Update user profile with new avatar URL
     const { error: updateError } = await supabase
       .from('profiles')
-      .update({ avatar_url: publicUrl })
+      .update({ avatar_url: upload.url })
       .eq('id', user.id);
 
     if (updateError) {
@@ -83,8 +54,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      url: publicUrl,
-      path: uploadData.path,
+      status: 'ready',
+      uploadedFileId: upload.uploadedFileId,
+      url: upload.url,
+      path: upload.storagePath,
     });
   } catch (error) {
     console.error('Avatar upload error:', error);
@@ -119,23 +92,11 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'No avatar to delete' }, { status: 404 });
     }
 
-    // Extract path from URL (assuming it's from Supabase Storage)
-    const urlParts = profile.avatar_url.split('/');
-    const pathIndex = urlParts.indexOf('user-uploads');
-    if (pathIndex !== -1) {
-      const filePath = urlParts.slice(pathIndex + 1).join('/');
-
-      // Delete from storage
-      const { error: deleteError } = await supabase.storage
-        .from('user-uploads')
-        .remove([`avatars/${filePath}`]);
-
-      if (deleteError) {
-        console.error('Storage delete error:', deleteError);
-      }
+    const fileId = new URL(request.url).searchParams.get('fileId');
+    if (fileId) {
+      await deleteUploadedFile(fileId);
     }
 
-    // Update profile to remove avatar URL
     const { error: updateError } = await supabase
       .from('profiles')
       .update({ avatar_url: null })

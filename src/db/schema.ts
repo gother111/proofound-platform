@@ -162,6 +162,87 @@ export const canonicalConsentObligationStates = [
   'expired',
   'revoked',
 ] as const;
+export const canonicalProfileLifecycleStates = [
+  'draft',
+  'active_private',
+  'active_matchable',
+  'restricted',
+  'deleted',
+] as const;
+export const canonicalProofArtifactLifecycleStates = [
+  'draft',
+  'active',
+  'expiring',
+  'expired',
+  'revoked',
+  'deleted',
+] as const;
+export const canonicalMatchLifecycleStates = [
+  'generated',
+  'shortlisted',
+  'passed',
+  'intro_in_progress',
+  'interview_in_progress',
+  'stale',
+  'hidden_due_to_policy',
+  'closed',
+] as const;
+export const canonicalVerificationInviteLifecycleStates = [
+  'pending',
+  'opened',
+  'accepted',
+  'declined',
+  'expired',
+  'revoked',
+  'cancelled',
+] as const;
+export const canonicalImpactVerificationInviteLifecycleStates = [
+  ...canonicalVerificationInviteLifecycleStates,
+  'failed',
+] as const;
+export const canonicalOrgInviteLifecycleStates = [
+  'pending',
+  'accepted',
+  'expired',
+  'revoked',
+] as const;
+export const canonicalExportLifecycleStates = [
+  'requested',
+  'preparing',
+  'ready',
+  'downloaded',
+  'expired',
+  'failed',
+  'cancelled',
+] as const;
+export const canonicalImportLifecycleStates = [
+  'uploaded',
+  'validating',
+  'awaiting_confirmation',
+  'applying',
+  'completed',
+  'rejected',
+  'expired',
+  'failed',
+  'cancelled',
+] as const;
+export const canonicalDeletionLifecycleStates = [
+  'requested',
+  'blocked_legal_hold',
+  'processing',
+  'deleted',
+  'failed_requires_manual_review',
+] as const;
+export const canonicalResidualLifecycleObjectTypes = [
+  'profile',
+  'proof_artifact',
+  'match',
+  'verification_invite',
+  'org_invite',
+  'export',
+  'import',
+  'deletion',
+] as const;
 export const canonicalWorkflowActorTypes = [
   'candidate',
   'organization_member',
@@ -349,6 +430,11 @@ const vector = customType<{ data: number[]; notNull?: boolean; default?: boolean
 export const profiles = pgTable('profiles', {
   id: uuid('id').primaryKey(), // references auth.users(id)
   handle: text('handle').unique(),
+  lifecycleState: text('lifecycle_state', {
+    enum: canonicalProfileLifecycleStates,
+  })
+    .default('draft')
+    .notNull(),
   publicPortfolioState: text('public_portfolio_state', {
     enum: publicPortfolioStates,
   })
@@ -370,9 +456,13 @@ export const profiles = pgTable('profiles', {
   matchingEnabled: boolean('matching_enabled').default(true),
   isBetaTesting: boolean('is_beta_testing').default(false).notNull(),
   // GDPR Account Deletion Support (Article 17: Right to Erasure)
+  activatedAt: timestamp('activated_at'),
+  matchableAt: timestamp('matchable_at'),
+  restrictedAt: timestamp('restricted_at'),
   deletionRequestedAt: timestamp('deletion_requested_at'),
   deletionScheduledFor: timestamp('deletion_scheduled_for'),
   deletionReason: text('deletion_reason'),
+  deletedAt: timestamp('deleted_at'),
   deleted: boolean('deleted').default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -572,10 +662,26 @@ export const orgInvitations = pgTable('org_invitations', {
   role: text('role', {
     enum: ['admin', 'member', 'viewer'],
   }).notNull(),
-  token: text('token').unique().notNull(),
+  status: text('status', {
+    enum: canonicalOrgInviteLifecycleStates,
+  })
+    .default('pending')
+    .notNull(),
+  token: text('token').unique(),
+  tokenHash: text('token_hash'),
+  capabilityTokenId: uuid('capability_token_id'),
+  lastSentAt: timestamp('last_sent_at').defaultNow().notNull(),
   expiresAt: timestamp('expires_at').notNull(),
+  acceptedAt: timestamp('accepted_at'),
+  expiredAt: timestamp('expired_at'),
+  acceptedByProfileId: uuid('accepted_by_profile_id').references(() => profiles.id, {
+    onDelete: 'set null',
+  }),
+  revokedAt: timestamp('revoked_at'),
+  revokedReason: text('revoked_reason'),
   invitedBy: uuid('invited_by').references(() => profiles.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 // Organization candidate invites (BYOC flow)
@@ -1109,13 +1215,22 @@ export const proofArtifacts = pgTable(
     artifactKind: text('artifact_kind', {
       enum: canonicalProofArtifactKinds,
     }).notNull(),
+    lifecycleState: text('lifecycle_state', {
+      enum: canonicalProofArtifactLifecycleStates,
+    })
+      .default('draft')
+      .notNull(),
     title: text('title').notNull(),
     description: text('description'),
     sourceUrl: text('source_url'),
     storagePath: text('storage_path'),
+    uploadedFileId: uuid('uploaded_file_id'),
     mimeType: text('mime_type'),
+    activatedAt: timestamp('activated_at', { withTimezone: true }),
     issuedAt: timestamp('issued_at', { withTimezone: true }),
     expiresAt: timestamp('expires_at', { withTimezone: true }),
+    expiredAt: timestamp('expired_at', { withTimezone: true }),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
     visibility: text('visibility', {
       enum: canonicalVisibilityLevels,
     })
@@ -1132,6 +1247,12 @@ export const proofArtifacts = pgTable(
     legacySourceTable: text('legacy_source_table'),
     legacySourceId: uuid('legacy_source_id'),
     legacySourcePath: text('legacy_source_path'),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+    deleteReason: text('delete_reason'),
+    cleanupStartedAt: timestamp('cleanup_started_at', { withTimezone: true }),
+    cleanupCompletedAt: timestamp('cleanup_completed_at', { withTimezone: true }),
+    exportExcludedReason: text('export_excluded_reason'),
+    publicSurfaceDisabledAt: timestamp('public_surface_disabled_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
@@ -1178,6 +1299,12 @@ export const proofPacks = pgTable(
       .notNull(),
     legacySourceTable: text('legacy_source_table'),
     legacySourceId: uuid('legacy_source_id'),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+    deleteReason: text('delete_reason'),
+    cleanupStartedAt: timestamp('cleanup_started_at', { withTimezone: true }),
+    cleanupCompletedAt: timestamp('cleanup_completed_at', { withTimezone: true }),
+    exportExcludedReason: text('export_excluded_reason'),
+    publicSurfaceDisabledAt: timestamp('public_surface_disabled_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
@@ -1337,15 +1464,21 @@ export const customVerificationRequests = pgTable('custom_verification_requests'
   message: text('message'),
   tokenHash: text('token_hash').notNull().unique(),
   status: text('status', {
-    enum: ['pending', 'accepted', 'declined', 'expired', 'cancelled'],
+    enum: canonicalVerificationInviteLifecycleStates,
   })
     .notNull()
     .default('pending'),
+  capabilityTokenId: uuid('capability_token_id'),
+  openedAt: timestamp('opened_at'),
   respondedAt: timestamp('responded_at'),
   responseMessage: text('response_message'),
   expiresAt: timestamp('expires_at')
     .default(sql`NOW() + INTERVAL '14 days'`)
     .notNull(),
+  expiredAt: timestamp('expired_at'),
+  revokedAt: timestamp('revoked_at'),
+  revokedReason: text('revoked_reason'),
+  cancelledAt: timestamp('cancelled_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -1417,10 +1550,12 @@ export const skillVerificationRequests = pgTable('skill_verification_requests', 
     onDelete: 'set null',
   }),
   status: text('status', {
-    enum: ['pending', 'accepted', 'declined', 'expired'],
+    enum: canonicalVerificationInviteLifecycleStates,
   })
     .notNull()
     .default('pending'),
+  capabilityTokenId: uuid('capability_token_id'),
+  openedAt: timestamp('opened_at'),
   respondedAt: timestamp('responded_at'),
   responseMessage: text('response_message'),
   responderIpHash: text('responder_ip_hash'),
@@ -1431,6 +1566,10 @@ export const skillVerificationRequests = pgTable('skill_verification_requests', 
   responseActorEmail: text('response_actor_email'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   expiresAt: timestamp('expires_at').default(sql`NOW() + INTERVAL '30 days'`),
+  expiredAt: timestamp('expired_at'),
+  revokedAt: timestamp('revoked_at'),
+  revokedReason: text('revoked_reason'),
+  cancelledAt: timestamp('cancelled_at'),
 });
 
 // Impact Story Verification Requests - claim-based verification for impact stories
@@ -1454,10 +1593,11 @@ export const impactStoryVerificationRequests = pgTable('impact_story_verificatio
   message: text('message'),
   token: text('token').notNull().unique(),
   status: text('status', {
-    enum: ['pending', 'accepted', 'declined', 'expired', 'failed'],
+    enum: canonicalImpactVerificationInviteLifecycleStates,
   })
     .notNull()
     .default('pending'),
+  capabilityTokenId: uuid('capability_token_id'),
   riskSignals: jsonb('risk_signals')
     .default(sql`'{}'::jsonb`)
     .notNull(),
@@ -1477,6 +1617,8 @@ export const impactStoryVerificationRequests = pgTable('impact_story_verificatio
   requesterIpHash: text('requester_ip_hash'),
   requesterUserAgentHash: text('requester_user_agent_hash'),
   expiresAt: timestamp('expires_at').notNull(),
+  openedAt: timestamp('opened_at'),
+  expiredAt: timestamp('expired_at'),
   claimSnapshot: jsonb('claim_snapshot')
     .default(sql`'{}'::jsonb`)
     .notNull(),
@@ -1488,6 +1630,9 @@ export const impactStoryVerificationRequests = pgTable('impact_story_verificatio
     enum: ['token', 'authenticated'],
   }),
   responseActorEmail: text('response_actor_email'),
+  revokedAt: timestamp('revoked_at'),
+  revokedReason: text('revoked_reason'),
+  cancelledAt: timestamp('cancelled_at'),
   emailSentAt: timestamp('email_sent_at'),
   emailError: text('email_error'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -1513,6 +1658,167 @@ export const impactStoryVerificationResponses = pgTable('impact_story_verificati
   responseNote: text('response_note'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+export const residualLifecycleTransitions = pgTable(
+  'residual_lifecycle_transitions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    objectType: text('object_type', {
+      enum: canonicalResidualLifecycleObjectTypes,
+    }).notNull(),
+    objectId: uuid('object_id').notNull(),
+    fromState: text('from_state'),
+    toState: text('to_state').notNull(),
+    trigger: text('trigger').notNull(),
+    reasonCode: text('reason_code'),
+    actorType: text('actor_type', {
+      enum: canonicalWorkflowActorTypes,
+    }).notNull(),
+    actorId: uuid('actor_id').references(() => profiles.id, { onDelete: 'set null' }),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    objectCreatedIdx: index('residual_lifecycle_transitions_object_created_idx').on(
+      table.objectType,
+      table.objectId,
+      table.createdAt
+    ),
+  })
+);
+
+export const dataPortabilityExports = pgTable(
+  'data_portability_exports',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    profileId: uuid('profile_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    lifecycleState: text('lifecycle_state', {
+      enum: canonicalExportLifecycleStates,
+    })
+      .default('requested')
+      .notNull(),
+    requestedBy: uuid('requested_by').references(() => profiles.id, { onDelete: 'set null' }),
+    lifecycleOperationId: uuid('lifecycle_operation_id'),
+    exportFormat: text('export_format').default('json').notNull(),
+    payloadVersion: text('payload_version').default('3.0.0').notNull(),
+    payloadChecksum: text('payload_checksum'),
+    requestedAt: timestamp('requested_at', { withTimezone: true }).defaultNow().notNull(),
+    preparingAt: timestamp('preparing_at', { withTimezone: true }),
+    readyAt: timestamp('ready_at', { withTimezone: true }),
+    downloadedAt: timestamp('downloaded_at', { withTimezone: true }),
+    expiresAt: timestamp('expires_at', { withTimezone: true }),
+    failedAt: timestamp('failed_at', { withTimezone: true }),
+    cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
+    failureCode: text('failure_code'),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    profileRequestedIdx: index('data_portability_exports_profile_requested_idx').on(
+      table.profileId,
+      table.requestedAt
+    ),
+    lifecycleIdx: index('data_portability_exports_lifecycle_idx').on(
+      table.lifecycleState,
+      table.expiresAt
+    ),
+  })
+);
+
+export const dataPortabilityImports = pgTable(
+  'data_portability_imports',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    profileId: uuid('profile_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    lifecycleState: text('lifecycle_state', {
+      enum: canonicalImportLifecycleStates,
+    })
+      .default('uploaded')
+      .notNull(),
+    requestedBy: uuid('requested_by').references(() => profiles.id, { onDelete: 'set null' }),
+    sourceFilename: text('source_filename'),
+    sourceChecksum: text('source_checksum'),
+    importMode: text('import_mode', {
+      enum: ['merge', 'replace'],
+    })
+      .default('merge')
+      .notNull(),
+    uploadedAt: timestamp('uploaded_at', { withTimezone: true }).defaultNow().notNull(),
+    validatedAt: timestamp('validated_at', { withTimezone: true }),
+    confirmedAt: timestamp('confirmed_at', { withTimezone: true }),
+    consentConfirmedAt: timestamp('consent_confirmed_at', { withTimezone: true }),
+    appliedAt: timestamp('applied_at', { withTimezone: true }),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+    expiredAt: timestamp('expired_at', { withTimezone: true }),
+    failedAt: timestamp('failed_at', { withTimezone: true }),
+    cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
+    failureCode: text('failure_code'),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    profileUploadedIdx: index('data_portability_imports_profile_uploaded_idx').on(
+      table.profileId,
+      table.uploadedAt
+    ),
+    lifecycleIdx: index('data_portability_imports_lifecycle_idx').on(
+      table.lifecycleState,
+      table.uploadedAt
+    ),
+  })
+);
+
+export const profileDeletionRequests = pgTable(
+  'profile_deletion_requests',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    profileId: uuid('profile_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    lifecycleState: text('lifecycle_state', {
+      enum: canonicalDeletionLifecycleStates,
+    })
+      .default('requested')
+      .notNull(),
+    requestedBy: uuid('requested_by').references(() => profiles.id, { onDelete: 'set null' }),
+    lifecycleOperationId: uuid('lifecycle_operation_id'),
+    reason: text('reason'),
+    requestedAt: timestamp('requested_at', { withTimezone: true }).defaultNow().notNull(),
+    processingStartedAt: timestamp('processing_started_at', { withTimezone: true }),
+    blockedAt: timestamp('blocked_at', { withTimezone: true }),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+    failedAt: timestamp('failed_at', { withTimezone: true }),
+    failureCode: text('failure_code'),
+    blockReason: text('block_reason'),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    profileRequestedIdx: index('profile_deletion_requests_profile_requested_idx').on(
+      table.profileId,
+      table.requestedAt
+    ),
+    lifecycleIdx: index('profile_deletion_requests_lifecycle_idx').on(
+      table.lifecycleState,
+      table.requestedAt
+    ),
+  })
+);
 
 export const verificationRecords = pgTable(
   'verification_records',
@@ -1937,6 +2243,11 @@ export const matches = pgTable(
     profileId: uuid('profile_id')
       .references(() => profiles.id, { onDelete: 'cascade' })
       .notNull(),
+    lifecycleState: text('lifecycle_state', {
+      enum: canonicalMatchLifecycleStates,
+    })
+      .default('generated')
+      .notNull(),
     score: numeric('score').notNull(),
     scoreTotal: integer('score_total'),
     scoreState: text('score_state', {
@@ -1958,9 +2269,15 @@ export const matches = pgTable(
       .array()
       .default(sql`'{}'::text[]`),
     generatedAt: timestamp('generated_at', { withTimezone: true }),
+    shortlistedAt: timestamp('shortlisted_at', { withTimezone: true }),
+    passedAt: timestamp('passed_at', { withTimezone: true }),
+    introStartedAt: timestamp('intro_started_at', { withTimezone: true }),
+    interviewStartedAt: timestamp('interview_started_at', { withTimezone: true }),
     staleAt: timestamp('stale_at', { withTimezone: true }),
     recomputedAt: timestamp('recomputed_at', { withTimezone: true }),
     hiddenDueToPolicyAt: timestamp('hidden_due_to_policy_at', { withTimezone: true }),
+    closedAt: timestamp('closed_at', { withTimezone: true }),
+    closeReason: text('close_reason'),
     hiddenDueToPolicyReasonCodes: text('hidden_due_to_policy_reason_codes')
       .array()
       .default(sql`'{}'::text[]`),
@@ -1975,6 +2292,7 @@ export const matches = pgTable(
     isTestMatch: boolean('is_test_match').default(false).notNull(),
     snoozedUntil: timestamp('snoozed_until'), // When match should reappear (null = not snoozed)
     createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => ({
     assignmentProfileUnique: unique().on(table.assignmentId, table.profileId),

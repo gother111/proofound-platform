@@ -15,6 +15,11 @@ import {
   type CustomVerificationRelationship,
 } from '@/lib/verification/custom-verification';
 import { normalizeEmail, writeVerificationAuditLog } from '@/lib/verification/integrity';
+import {
+  CAPABILITY_BINDINGS,
+  CAPABILITY_TOKEN_CLASSES,
+  issueCapabilityToken,
+} from '@/lib/security/capability-tokens';
 
 type RequestType = 'skill' | 'impact_story';
 type DeleteEligibility = 'pending' | 'failed';
@@ -322,31 +327,8 @@ async function insertSkillRowsWithOptionalToken(
   admin: ReturnType<typeof createAdminClient>,
   rows: Array<Record<string, unknown>>
 ): Promise<InsertSkillResult> {
-  const { error: createWithTokenError } = await admin
-    .from('skill_verification_requests')
-    .insert(rows);
-
-  if (!createWithTokenError) {
-    return { error: null, tokenPersisted: true };
-  }
-
-  if (!isMissingVerificationTokenColumnError(createWithTokenError)) {
-    return { error: createWithTokenError, tokenPersisted: true };
-  }
-
-  const legacyRows = rows.map((row) => {
-    const { verification_token: _ignored, ...rest } = row;
-    return rest;
-  });
-
-  const { error: createLegacyError } = await admin
-    .from('skill_verification_requests')
-    .insert(legacyRows);
-
-  return {
-    error: createLegacyError,
-    tokenPersisted: false,
-  };
+  const { error } = await admin.from('skill_verification_requests').insert(rows);
+  return { error, tokenPersisted: true };
 }
 
 async function sendSkillResendEmail(args: {
@@ -625,7 +607,7 @@ async function resendCustomBundleRequest(
           requester_profile_id: userId,
           requester_email_snapshot: row.requester_email_snapshot,
           requester_domain_snapshot: row.requester_domain_snapshot,
-          verification_token: generateSecureToken(),
+          capability_token_id: null,
           verifier_email: row.verifier_email,
           verifier_domain_snapshot: row.verifier_domain_snapshot,
           verifier_profile_id: row.verifier_profile_id,
@@ -793,15 +775,37 @@ async function handleSkillResend(context: ResendContext, requestId: string): Pro
   const skillName = await fetchSkillName(admin, verificationRequest.skill_id);
   const baseUrl = buildBaseUrl(request);
 
-  const reusedRecord = verificationRequest.status === 'pending';
+  const reusedRecord =
+    verificationRequest.status === 'pending' && Boolean(verificationRequest.verification_token);
   let resentRequestId = verificationRequest.id;
   let resendToken = verificationRequest.verification_token || verificationRequest.id;
 
   if (!reusedRecord) {
     resentRequestId = randomUUID();
-    resendToken = generateSecureToken();
     const nowIso = new Date().toISOString();
     const expiresAtIso = computeExpiresAt(7);
+    const issued = await issueCapabilityToken({
+      tokenClass: CAPABILITY_TOKEN_CLASSES.SKILL_VERIFICATION_RESPONSE,
+      sourceTable: 'skill_verification_requests',
+      sourceId: resentRequestId,
+      actionScope: 'skill_verification.respond',
+      subjectType: 'skill_verification_request',
+      subjectId: resentRequestId,
+      actorBinding: verificationRequest.requires_authenticated_verifier
+        ? CAPABILITY_BINDINGS.EMAIL_THEN_PROFILE_LOCK
+        : CAPABILITY_BINDINGS.EMAIL_HASH,
+      actorEmail: verificationRequest.verifier_email,
+      actorProfileId: verificationRequest.verifier_profile_id,
+      expiresAt: new Date(expiresAtIso),
+      singleUse: true,
+      maxUses: 1,
+      metadata: {
+        verifierSource: verificationRequest.verifier_source,
+        skillId: verificationRequest.skill_id,
+        resend: true,
+      },
+    });
+    resendToken = issued.rawToken;
 
     const insertRows = [
       {
@@ -810,7 +814,7 @@ async function handleSkillResend(context: ResendContext, requestId: string): Pro
         requester_profile_id: userId,
         requester_email_snapshot: verificationRequest.requester_email_snapshot,
         requester_domain_snapshot: verificationRequest.requester_domain_snapshot,
-        verification_token: resendToken,
+        capability_token_id: issued.token.id,
         verifier_email: verificationRequest.verifier_email,
         verifier_domain_snapshot: verificationRequest.verifier_domain_snapshot,
         verifier_profile_id: verificationRequest.verifier_profile_id,
@@ -853,10 +857,6 @@ async function handleSkillResend(context: ResendContext, requestId: string): Pro
 
       console.error('Failed to clone skill verification request for resend:', insertResult.error);
       return NextResponse.json({ error: 'Failed to resend verification request' }, { status: 500 });
-    }
-
-    if (!insertResult.tokenPersisted) {
-      resendToken = resentRequestId;
     }
   }
 
@@ -967,14 +967,36 @@ async function handleImpactResend(
       ? String((storyTitleData as { title?: unknown }).title || 'Impact Story')
       : 'Impact Story';
 
-  const reusedRecord = verificationRequest.status === 'pending';
+  const reusedRecord =
+    verificationRequest.status === 'pending' && Boolean(verificationRequest.token);
   let resentRequestId = verificationRequest.id;
   let resendToken = verificationRequest.token;
 
   if (!reusedRecord) {
     resentRequestId = randomUUID();
-    resendToken = generateSecureToken();
     const nowIso = new Date().toISOString();
+    const expiresAtIso = computeExpiresAt(14);
+    const issued = await issueCapabilityToken({
+      tokenClass: CAPABILITY_TOKEN_CLASSES.IMPACT_VERIFICATION_RESPONSE,
+      sourceTable: 'impact_story_verification_requests',
+      sourceId: resentRequestId,
+      actionScope: 'impact_verification.respond',
+      subjectType: 'impact_verification_request',
+      subjectId: resentRequestId,
+      actorBinding: verificationRequest.requires_authenticated_verifier
+        ? CAPABILITY_BINDINGS.EMAIL_THEN_PROFILE_LOCK
+        : CAPABILITY_BINDINGS.EMAIL_HASH,
+      actorEmail: verificationRequest.verifier_email,
+      actorProfileId: verificationRequest.verifier_profile_id,
+      expiresAt: new Date(expiresAtIso),
+      singleUse: true,
+      maxUses: 1,
+      metadata: {
+        impactStoryId: verificationRequest.impact_story_id,
+        resend: true,
+      },
+    });
+    resendToken = issued.rawToken;
 
     const { error: insertError } = await admin.from('impact_story_verification_requests').insert({
       id: resentRequestId,
@@ -988,7 +1010,7 @@ async function handleImpactResend(
       verifier_name: verificationRequest.verifier_name,
       verifier_relationship: verificationRequest.verifier_relationship,
       message: verificationRequest.message,
-      token: resendToken,
+      capability_token_id: issued.token.id,
       status: 'pending',
       risk_signals: verificationRequest.risk_signals || {},
       requires_authenticated_verifier: verificationRequest.requires_authenticated_verifier || false,
@@ -998,7 +1020,7 @@ async function handleImpactResend(
       integrity_flagged_at: verificationRequest.integrity_flagged_at,
       requester_ip_hash: verificationRequest.requester_ip_hash,
       requester_user_agent_hash: verificationRequest.requester_user_agent_hash,
-      expires_at: computeExpiresAt(14),
+      expires_at: expiresAtIso,
       claim_snapshot: verificationRequest.claim_snapshot || {},
       response_message: null,
       responded_at: null,

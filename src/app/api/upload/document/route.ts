@@ -1,22 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
-import {
-  MAX_PROOF_UPLOAD_SIZE_BYTES,
-  PROOF_ALLOWED_EXTENSIONS_LABEL,
-  isAllowedProofFile,
-} from '@/lib/proofs/constants';
-
-const DEFAULT_MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const DEFAULT_ACCEPTED_TYPES = [
-  'application/pdf',
-  'image/jpeg',
-  'image/jpg',
-  'image/png',
-  'image/webp',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-];
+import { deleteUploadedFile, ingestUploadedFile, UPLOAD_KINDS } from '@/lib/uploads/lifecycle';
 
 const TYPE_LABELS: Record<string, string> = {
   'application/pdf': 'PDF',
@@ -45,76 +30,47 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    const isProofUpload = category === 'proof';
-    const maxFileSize = isProofUpload ? MAX_PROOF_UPLOAD_SIZE_BYTES : DEFAULT_MAX_FILE_SIZE;
+    const uploadKind =
+      category === 'proof'
+        ? UPLOAD_KINDS.PROOF
+        : category === 'certificate'
+          ? UPLOAD_KINDS.CERTIFICATE
+          : category === 'artifact'
+            ? UPLOAD_KINDS.ARTIFACT
+            : UPLOAD_KINDS.DOCUMENT;
+    const upload = await ingestUploadedFile(file, {
+      ownerType: 'individual_profile',
+      ownerId: user.id,
+      sourceSurface: 'document_upload',
+      uploadKind,
+      attachedSubjectType: category ?? 'document',
+      attachedSubjectId: null,
+    });
 
-    if (isProofUpload && !isAllowedProofFile(file.type, file.name)) {
+    if (upload.status === 'rejected') {
       return NextResponse.json(
         {
           error: 'Invalid file type',
-          message: `Proof files must be ${PROOF_ALLOWED_EXTENSIONS_LABEL}`,
+          status: 'rejected',
+          uploadedFileId: upload.uploadedFileId,
+          message:
+            upload.safetyReason === 'mime_signature_mismatch'
+              ? 'The uploaded file type did not match its file signature.'
+              : 'The uploaded file is not allowed for this proof or document flow.',
         },
         { status: 400 }
       );
     }
-
-    if (!isProofUpload && !DEFAULT_ACCEPTED_TYPES.includes(file.type)) {
-      return NextResponse.json(
-        {
-          error: 'Invalid file type',
-          message: 'Please upload PDF, images, or Word documents',
-        },
-        { status: 400 }
-      );
-    }
-
-    if (file.size > maxFileSize) {
-      return NextResponse.json(
-        { error: `File size exceeds ${maxFileSize / (1024 * 1024)}MB limit` },
-        { status: 400 }
-      );
-    }
-
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // Sanitize filename and add timestamp
-    const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_').substring(0, 100);
-    const fileName = `${user.id}-${Date.now()}-${sanitizedName}`;
-
-    // Organize by category
-    const folder =
-      category && ['proof', 'certificate', 'artifact'].includes(category) ? category : 'documents';
-    const filePath = `${folder}/${fileName}`;
-
-    const supabase = await createClient();
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('user-uploads')
-      .upload(filePath, buffer, {
-        contentType: file.type,
-        upsert: false, // Don't overwrite existing files
-        cacheControl: '3600',
-      });
-
-    if (uploadError) {
-      console.error('Upload error:', uploadError);
-      return NextResponse.json(
-        { error: 'Failed to upload file', details: uploadError.message },
-        { status: 500 }
-      );
-    }
-
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from('user-uploads').getPublicUrl(filePath);
 
     return NextResponse.json({
       success: true,
-      url: publicUrl,
-      path: uploadData.path,
+      status: 'ready',
+      uploadedFileId: upload.uploadedFileId,
+      url: upload.url,
+      path: upload.storagePath,
       fileName: file.name,
       fileSize: file.size,
-      fileType: TYPE_LABELS[file.type] || file.type,
+      fileType: TYPE_LABELS[upload.detectedMime || file.type] || upload.detectedMime || file.type,
     });
   } catch (error) {
     console.error('Document upload error:', error);
@@ -143,13 +99,20 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'File path required' }, { status: 400 });
     }
 
-    // Verify the file belongs to the user (path should start with user ID)
+    const fileId = searchParams.get('fileId');
+    if (fileId) {
+      await deleteUploadedFile(fileId);
+      return NextResponse.json({ success: true });
+    }
+
     if (!filePath.includes(user.id)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const supabase = await createClient();
-    const { error: deleteError } = await supabase.storage.from('user-uploads').remove([filePath]);
+    const { error: deleteError } = await supabase.storage
+      .from('user-uploads-private')
+      .remove([filePath]);
 
     if (deleteError) {
       console.error('Delete error:', deleteError);

@@ -1,13 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Logo } from '@/components/brand/Logo';
+import { notFound, permanentRedirect } from 'next/navigation';
 import {
   ArrowLeft,
   CalendarClock,
@@ -17,7 +11,24 @@ import {
   Link2,
   Mail,
 } from 'lucide-react';
+
+import { Logo } from '@/components/brand/Logo';
+import { PublicProfileEmptyState } from '@/components/public-profile/PublicProfileEmptyState';
+import { PublicProfileSection } from '@/components/public-profile/PublicProfileSection';
+import { PublicProfileShell } from '@/components/public-profile/PublicProfileShell';
+import { JsonLdScripts } from '@/components/seo/JsonLdScripts';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { buildTrustSignals } from '@/lib/portfolio/trust-signals';
+import {
+  buildPortfolioRobots,
+  deriveEffectivePublicPortfolioState,
+  isAccessiblePublicPortfolioState,
+  isVisibleOnPublicPage,
+  resolveRequestedPublicPortfolioState,
+  shouldUseGenericSharePreview,
+} from '@/lib/portfolio/public-contract';
 import { mergeVisibilityFlags } from '@/lib/portfolio/visibility';
 import { sanitizeReturnPath } from '@/lib/navigation/sanitize-return-path';
 import {
@@ -30,26 +41,63 @@ import {
   buildPublicPersonPortfolioJsonLd,
   buildWebPageJsonLd,
 } from '@/lib/seo/json-ld';
-import { PublicProfileSection } from '@/components/public-profile/PublicProfileSection';
-import { PublicProfileShell } from '@/components/public-profile/PublicProfileShell';
-import { PublicProfileEmptyState } from '@/components/public-profile/PublicProfileEmptyState';
-import { JsonLdScripts } from '@/components/seo/JsonLdScripts';
-import { ShareLinkButton } from './ShareLinkButton';
-import { DownloadPdfButton } from './DownloadPdfButton';
-import { CopyTextButton } from './CopyTextButton';
-import { ViewCounterClient } from './ViewCounterClient';
+import { getPublicSiteUrl } from '@/lib/seo/public-metadata';
+import { createClient } from '@/lib/supabase/server';
+import {
+  listVerificationRecordsForOwner,
+  summarizeVerificationPolicy,
+  type VerificationPolicySummary,
+} from '@/lib/verification/policy';
+import { resolveHasLinkedInIdentityVerification } from '@/lib/linkedin-verified';
 
-type MatchingProfileRow = {
-  desired_roles?: string[] | null;
-  work_mode?: string | null;
-  availability_earliest?: string | null;
-  availability_latest?: string | null;
-  city?: string | null;
-  country?: string | null;
-  timezone?: string | null;
-  languages?: Array<{ code?: string; level?: string }> | null;
-  values_tags?: string[] | null;
-  cause_tags?: string[] | null;
+import { CopyTextButton } from './CopyTextButton';
+import { DownloadPdfButton } from './DownloadPdfButton';
+import { ShareLinkButton } from './ShareLinkButton';
+
+type ProfileRow = {
+  id: string;
+  handle: string;
+  display_name: string | null;
+  public_portfolio_state?: string | null;
+  search_indexing_enabled_at?: string | null;
+  individual_profiles:
+    | {
+        headline?: string | null;
+        bio?: string | null;
+        tagline?: string | null;
+        skills?: string[] | null;
+        redact_mode?: boolean | null;
+        verification_status?: string | null;
+        verification_method?: string | null;
+        verified_at?: string | null;
+        work_email?: string | null;
+        work_email_verified?: boolean | null;
+        linkedin_verification_status?: string | null;
+        linkedin_verified_at?: string | null;
+        linkedin_verification_data?: Record<string, unknown> | null;
+        verified?: boolean | null;
+      }
+    | Array<{
+        headline?: string | null;
+        bio?: string | null;
+        tagline?: string | null;
+        skills?: string[] | null;
+        redact_mode?: boolean | null;
+        verification_status?: string | null;
+        verification_method?: string | null;
+        verified_at?: string | null;
+        work_email?: string | null;
+        work_email_verified?: boolean | null;
+        linkedin_verification_status?: string | null;
+        linkedin_verified_at?: string | null;
+        linkedin_verification_data?: Record<string, unknown> | null;
+        verified?: boolean | null;
+      }>
+    | null;
+  field_visibility:
+    | { field_visibility?: Record<string, unknown> | null }
+    | Array<{ field_visibility?: Record<string, unknown> | null }>
+    | null;
 };
 
 type SkillProofRow = {
@@ -63,6 +111,25 @@ type SkillProofRow = {
   created_at?: string | null;
 };
 
+type ProfileVisibilityRow = {
+  display_name?: string | null;
+  headline?: string | null;
+  skills?: string | null;
+};
+
+type PortfolioContractData = {
+  profile: ProfileRow;
+  individual: NonNullable<ReturnType<typeof pickIndividual>>;
+  featuredProofs: FeaturedProof[];
+  publicSkills: string[];
+  visibility: ReturnType<typeof mergeVisibilityFlags>;
+  profileVisibility: ProfileVisibilityRow | null;
+  effectiveState: ReturnType<typeof deriveEffectivePublicPortfolioState>;
+  shareUrl: string;
+  signals: ReturnType<typeof buildTrustSignals>;
+  verificationSummary: VerificationPolicySummary;
+};
+
 type FeaturedProof = {
   id: string;
   title: string;
@@ -74,7 +141,259 @@ type FeaturedProof = {
   proofPackHref: string;
 };
 
-const FALLBACK_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+const SITE_URL = getPublicSiteUrl();
+
+function pickIndividual(profile: ProfileRow['individual_profiles']) {
+  if (!profile) return null;
+  return Array.isArray(profile) ? (profile[0] ?? null) : profile;
+}
+
+function getStoredVisibility(
+  fieldVisibility: ProfileRow['field_visibility']
+): Record<string, unknown> | null | undefined {
+  return Array.isArray(fieldVisibility)
+    ? fieldVisibility[0]?.field_visibility
+    : fieldVisibility?.field_visibility;
+}
+
+function hasDurableTrustSignal(signals: ReturnType<typeof buildTrustSignals>): boolean {
+  return Boolean(
+    signals.identity.verified ||
+      signals.workEmail.verified ||
+      signals.linkedin.verificationStatus === 'verified' ||
+      signals.linkedin.hasIdentityVerification
+  );
+}
+
+function isProofPublic(proof: SkillProofRow): boolean {
+  const visibility =
+    typeof proof.metadata?.visibility === 'string' ? proof.metadata.visibility : null;
+  return Boolean(
+    proof.verified ||
+      visibility === 'public' ||
+      visibility === 'link_only' ||
+      visibility === 'network_only'
+  );
+}
+
+function buildFeaturedProofs(
+  fallbackSkillProofs: SkillProofRow[],
+  shareUrl: string
+): FeaturedProof[] {
+  return fallbackSkillProofs.filter(isProofPublic).map((proof) => {
+    const metadataUrl = typeof proof.metadata?.url === 'string' ? proof.metadata.url : null;
+    const href = proof.url || metadataUrl || shareUrl;
+    const importedFrom =
+      typeof proof.metadata?.imported_from === 'string' ? proof.metadata.imported_from : null;
+
+    return {
+      id: proof.id,
+      title: proof.title,
+      role: prettifyProofType(proof.proof_type),
+      timeframe: proof.created_at ? formatDate(proof.created_at) : 'Date unavailable',
+      outcomes: toOutcomeLines(proof.description),
+      evidence: href
+        ? [
+            {
+              label: 'Open evidence',
+              href,
+            },
+          ]
+        : [],
+      verifiedBy: proof.verified
+        ? 'Verified'
+        : importedFrom === 'onboarding'
+          ? 'Public proof link'
+          : 'Candidate evidence',
+      proofPackHref: href,
+    };
+  });
+}
+
+async function loadProfileByHandle(handle: string): Promise<ProfileRow | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('profiles')
+    .select(
+      `
+        id,
+        handle,
+        display_name,
+        public_portfolio_state,
+        search_indexing_enabled_at,
+        individual_profiles (
+          headline,
+          bio,
+          tagline,
+          skills,
+          redact_mode,
+          verification_status,
+          verification_method,
+          verified_at,
+          work_email,
+          work_email_verified,
+          linkedin_verification_status,
+          linkedin_verified_at,
+          linkedin_verification_data,
+          verified
+        ),
+        field_visibility: individual_profiles ( field_visibility )
+      `
+    )
+    .eq('handle', handle)
+    .maybeSingle();
+
+  return (data as ProfileRow | null) ?? null;
+}
+
+async function loadHistoricalHandle(handle: string): Promise<string | null> {
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from('profile_handle_history')
+      .select('redirect_target_slug, is_active')
+      .eq('slug', handle)
+      .maybeSingle();
+
+    if (!data || data.is_active === true) {
+      return null;
+    }
+
+    return typeof data.redirect_target_slug === 'string' ? data.redirect_target_slug : null;
+  } catch {
+    return null;
+  }
+}
+
+async function loadPortfolioContractData(handle: string): Promise<PortfolioContractData | null> {
+  const supabase = await createClient();
+  const profile = await loadProfileByHandle(handle);
+  if (!profile) {
+    return null;
+  }
+
+  const individual = pickIndividual(profile.individual_profiles);
+  if (!individual) {
+    return null;
+  }
+
+  const [profileVisibilityResult, skillProofsResult] = await Promise.all([
+    supabase
+      .from('profile_field_visibility')
+      .select('display_name, headline, skills')
+      .eq('profile_id', profile.id)
+      .maybeSingle(),
+    supabase
+      .from('skill_proofs')
+      .select('id, title, proof_type, description, url, verified, metadata, created_at')
+      .eq('profile_id', profile.id)
+      .order('created_at', { ascending: false })
+      .limit(6),
+  ]);
+
+  const visibility = mergeVisibilityFlags(getStoredVisibility(profile.field_visibility));
+  const profileVisibility = (profileVisibilityResult.data as ProfileVisibilityRow | null) ?? null;
+  const featuredProofs = buildFeaturedProofs(
+    (skillProofsResult.data || []) as SkillProofRow[],
+    `${SITE_URL}/portfolio/${encodeURIComponent(handle)}`
+  );
+  const verificationRecords = await listVerificationRecordsForOwner(
+    'individual_profile',
+    profile.id
+  ).catch(() => []);
+  const verificationSummary = summarizeVerificationPolicy({
+    records: verificationRecords,
+    legacyProfile: {
+      verified: individual.verified,
+      verificationMethod: individual.verification_method as
+        | 'veriff'
+        | 'work_email'
+        | 'linkedin'
+        | null,
+      verificationStatus: individual.verification_status as
+        | 'unverified'
+        | 'pending'
+        | 'verified'
+        | 'failed'
+        | null,
+      verificationTier: null,
+      verificationTierSource: null,
+      workEmailCurrentlyVerified: Boolean(individual.work_email_verified),
+      linkedinVerificationStatus: individual.linkedin_verification_status as
+        | 'unverified'
+        | 'pending'
+        | 'verified'
+        | 'failed'
+        | null,
+      linkedinHasIdentityVerification: resolveHasLinkedInIdentityVerification(
+        individual.linkedin_verification_data
+      ),
+    },
+  });
+  const signals = buildTrustSignals(
+    profile as any,
+    {
+      proofsCount: featuredProofs.length,
+    },
+    verificationSummary
+  );
+
+  const publicSkills =
+    visibility.skills && isVisibleOnPublicPage(profileVisibility?.skills ?? 'owner_only')
+      ? (individual.skills || [])
+          .filter((skill): skill is string => typeof skill === 'string')
+          .slice(0, 8)
+      : [];
+
+  const minimumContentMet = Boolean(
+    profile.handle &&
+      (profile.display_name || profile.handle) &&
+      ((visibility.header && (individual.headline || individual.tagline)) ||
+        featuredProofs.length > 0 ||
+        hasDurableTrustSignal(signals))
+  );
+
+  const effectiveState = deriveEffectivePublicPortfolioState({
+    requestedState: resolveRequestedPublicPortfolioState(profile.public_portfolio_state),
+    searchIndexingEnabled: Boolean(profile.search_indexing_enabled_at),
+    minimumContentMet,
+    redactMode: Boolean(individual.redact_mode),
+    hasLinkOnlyContent: Boolean(
+      visibility.skills && !isVisibleOnPublicPage(profileVisibility?.skills ?? 'owner_only')
+    ),
+  });
+
+  return {
+    profile,
+    individual,
+    featuredProofs,
+    publicSkills,
+    visibility,
+    profileVisibility,
+    effectiveState,
+    shareUrl: `${SITE_URL}/portfolio/${encodeURIComponent(profile.handle)}`,
+    signals,
+    verificationSummary,
+  };
+}
+
+function renderUnavailablePage(handle: string) {
+  return (
+    <PublicProfileShell
+      maxWidthClassName="max-w-4xl"
+      footer={
+        <div className="flex items-center justify-between gap-2">
+          <span>proofound.io/portfolio/{handle}</span>
+          <span>Public portfolio unavailable</span>
+        </div>
+      }
+    >
+      <PublicProfileSection title="Portfolio unavailable">
+        <PublicProfileEmptyState message="This public portfolio link is unavailable. It may be hidden, retired, or not ready for launch-safe sharing." />
+      </PublicProfileSection>
+    </PublicProfileShell>
+  );
+}
 
 export async function generateMetadata({
   params,
@@ -84,57 +403,36 @@ export async function generateMetadata({
   const { handle } = await params;
   const safePath = `/portfolio/${encodeURIComponent(handle)}`;
 
-  try {
-    const supabase = await createClient();
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select(
-        `
-          handle,
-          display_name,
-          individual_profiles (
-            headline,
-            tagline
-          ),
-          field_visibility: individual_profiles(field_visibility)
-        `
-      )
-      .eq('handle', handle)
-      .maybeSingle();
-
-    if (!profile) {
-      return buildUnavailablePublicProfileMetadata(safePath);
-    }
-
-    const visibility = mergeVisibilityFlags(
-      Array.isArray((profile as any).field_visibility)
-        ? (profile as any).field_visibility[0]?.field_visibility
-        : (profile as any).field_visibility?.field_visibility
-    );
-
-    const individual = Array.isArray(profile.individual_profiles)
-      ? profile.individual_profiles[0]
-      : profile.individual_profiles;
-
-    const displayName = profile.display_name || profile.handle || 'Proofound Member';
-    const positioning = visibility.header
-      ? (individual?.headline || individual?.tagline || '').trim() || null
-      : null;
-
-    return buildPublicProfileMetadata({
-      title: `${displayName} | Proofound Public Profile`,
-      description: positioning
-        ? `${displayName}. ${positioning}`
-        : `${displayName}'s proof-first public profile on Proofound.`,
-      path: safePath,
-      ogTitle: `${displayName} on Proofound`,
-      ogDescription: positioning
-        ? `${positioning} Explore verified proof and outcomes.`
-        : `Explore ${displayName}'s public proof profile on Proofound.`,
-    });
-  } catch {
+  const data = await loadPortfolioContractData(handle);
+  if (!data || !isAccessiblePublicPortfolioState(data.effectiveState)) {
     return buildUnavailablePublicProfileMetadata(safePath);
   }
+
+  const displayName =
+    data.profile.display_name || data.profile.handle || 'Proofound public portfolio';
+  const headline =
+    data.visibility.header && isVisibleOnPublicPage(data.profileVisibility?.headline ?? 'public')
+      ? (data.individual.headline || data.individual.tagline || '').trim()
+      : '';
+  const genericPreview = shouldUseGenericSharePreview(data.effectiveState);
+
+  return buildPublicProfileMetadata({
+    title: genericPreview
+      ? 'Proofound public portfolio'
+      : `${displayName} | Proofound Public Portfolio`,
+    description: genericPreview
+      ? 'Shareable by direct link on Proofound.'
+      : headline || `${displayName}'s proof-first public portfolio on Proofound.`,
+    path: safePath,
+    ogTitle: genericPreview ? 'Proofound public portfolio' : `${displayName} on Proofound`,
+    ogDescription: genericPreview
+      ? 'Shareable by direct link on Proofound.'
+      : headline
+        ? `${headline} Explore proof-backed work.`
+        : `Explore ${displayName}'s proof-first public portfolio.`,
+    ogType: 'profile',
+    robots: buildPortfolioRobots(data.effectiveState),
+  });
 }
 
 export default async function PortfolioPage({
@@ -154,119 +452,49 @@ export default async function PortfolioPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select(
-      `
-        id,
-        handle,
-        display_name,
-        avatar_url,
-        individual_profiles (
-          headline,
-          bio,
-          location,
-          mission,
-          vision,
-          tagline,
-          verification_status,
-          verification_method,
-          verified_at,
-          work_email,
-          work_email_verified,
-          linkedin_verification_status,
-          linkedin_verified_at,
-          linkedin_verification_data,
-          verified
-        ),
-        field_visibility: individual_profiles(field_visibility)
-      `
-    )
-    .eq('handle', handle)
-    .maybeSingle();
+  const data = await loadPortfolioContractData(handle);
 
-  if (!profile) {
-    return notFound();
+  if (!data) {
+    const redirectTarget = await loadHistoricalHandle(handle);
+    if (redirectTarget && redirectTarget !== handle) {
+      permanentRedirect(`/portfolio/${encodeURIComponent(redirectTarget)}`);
+    }
+    notFound();
   }
 
-  const viewerIsOwner = Boolean(user?.id && user.id === profile.id);
-  const shareUrl = `${FALLBACK_URL.replace(/\/$/, '')}/portfolio/${encodeURIComponent(handle)}`;
+  if (!isAccessiblePublicPortfolioState(data.effectiveState)) {
+    return renderUnavailablePage(handle);
+  }
 
-  const [matchingResult, fallbackSkillProofsResult] = await Promise.all([
-    supabase
-      .from('matching_profiles')
-      .select(
-        `
-          desired_roles,
-          work_mode,
-          availability_earliest,
-          availability_latest,
-          city,
-          country,
-          timezone,
-          languages,
-          values_tags,
-          cause_tags
-        `
-      )
-      .eq('profile_id', profile.id)
-      .maybeSingle(),
-    supabase
-      .from('skill_proofs')
-      .select(
-        `
-          id,
-          title,
-          proof_type,
-          description,
-          url,
-          verified,
-          metadata,
-          created_at
-        `
-      )
-      .eq('profile_id', profile.id)
-      .order('created_at', { ascending: false })
-      .limit(5),
-  ]);
-  const signals = buildTrustSignals(profile);
+  const viewerIsOwner = Boolean(user?.id && user.id === data.profile.id);
+  const displayName = data.profile.display_name || data.profile.handle || 'Proofound Profile';
+  const headline =
+    data.visibility.header && isVisibleOnPublicPage(data.profileVisibility?.headline ?? 'public')
+      ? (data.individual.headline || data.individual.tagline || '').trim() ||
+        'Proof-first public portfolio'
+      : 'Proof-first public portfolio';
 
-  const individual = Array.isArray(profile.individual_profiles)
-    ? profile.individual_profiles[0]
-    : profile.individual_profiles;
+  const publicBio = data.visibility.bio ? data.individual.bio?.trim() || null : null;
 
-  const visibility = mergeVisibilityFlags(
-    Array.isArray((profile as any).field_visibility)
-      ? (profile as any).field_visibility[0]?.field_visibility
-      : (profile as any).field_visibility?.field_visibility
-  );
-
-  const matchingProfile = (matchingResult.data || null) as MatchingProfileRow | null;
-
-  const displayName = profile.display_name || profile.handle || 'Proofound Profile';
-  const headline = visibility.header
-    ? (individual?.headline || individual?.tagline || '').trim() ||
-      'Proof-based professional profile'
-    : 'Proof-based professional profile';
-  const bio = visibility.bio ? (individual?.bio || '').trim() || null : null;
-  const locationLine =
-    viewerIsOwner && individual?.location?.trim() ? individual.location.trim() : null;
-  const ownerMission = viewerIsOwner ? individual?.mission?.trim() || null : null;
-  const ownerVision = viewerIsOwner ? individual?.vision?.trim() || null : null;
-  const fallbackSkillProofs = (fallbackSkillProofsResult.data || []) as SkillProofRow[];
-
-  const featuredProofs = buildFeaturedProofs({
-    fallbackSkillProofs,
-    shareUrl,
+  const collaborationHref = collaborationMailto({
+    subject: `Request introduction to ${displayName}`,
+    body: `Hi Proofound team, I would like to request an introduction to ${displayName}. Public portfolio: ${data.shareUrl}`,
   });
-  const pagePath = `/portfolio/${encodeURIComponent(handle)}`;
-  const jsonLdDescription =
-    bio || headline || 'Public proof portfolio on Proofound with verifiable outcomes and evidence.';
+
+  const requestContactHref = collaborationMailto({
+    subject: `Request contact for ${displayName}`,
+    body: `Hi Proofound team, please help me connect with ${displayName}. Public portfolio: ${data.shareUrl}`,
+  });
+
+  const publicSummaryEndpoint = `/api/portfolio/public/${encodeURIComponent(data.profile.handle)}/summary`;
+  const publicExportEndpoint = `/api/portfolio/public/${encodeURIComponent(data.profile.handle)}/export`;
+  const pagePath = `/portfolio/${encodeURIComponent(data.profile.handle)}`;
+  const jsonLdDescription = publicBio || headline;
   const jsonLdItems = [
     buildProofoundWebsiteJsonLd(),
     buildWebPageJsonLd({
       path: pagePath,
-      title: `${displayName} | Proofound Public Profile`,
+      title: `${displayName} | Proofound Public Portfolio`,
       description: jsonLdDescription,
     }),
     buildBreadcrumbJsonLd([
@@ -277,26 +505,9 @@ export default async function PortfolioPage({
       path: pagePath,
       name: displayName,
       description: jsonLdDescription,
+      skills: data.publicSkills,
     }),
   ];
-
-  const collaborationHref = collaborationMailto({
-    subject: `Request collaboration with ${displayName}`,
-    body: `Hi Proofound team, I would like to request collaboration with ${displayName}. Public profile: ${shareUrl}`,
-  });
-
-  const requestProofPackHref = collaborationMailto({
-    subject: `Request proof pack for ${displayName}`,
-    body: `Hi Proofound team, please share a proof pack for ${displayName}. Public profile: ${shareUrl}`,
-  });
-
-  const requestContactHref = collaborationMailto({
-    subject: `Request contact for ${displayName}`,
-    body: `Hi Proofound team, please help me connect with ${displayName}. Public profile: ${shareUrl}`,
-  });
-
-  const publicSummaryEndpoint = `/api/portfolio/public/${encodeURIComponent(profile.handle)}/summary`;
-  const publicExportEndpoint = `/api/portfolio/public/${encodeURIComponent(profile.handle)}/export`;
 
   return (
     <PublicProfileShell
@@ -321,32 +532,30 @@ export default async function PortfolioPage({
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-2.5 text-sm text-foreground">
               <Logo size="sm" />
-              <span className="font-medium">Proofound public profile</span>
-              {!viewerIsOwner ? (
-                <Badge variant="outline" className="border-[#D9D5CC] text-muted-foreground">
-                  Public viewer mode
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="border-emerald-200 text-emerald-700">
-                  Owner preview mode
-                </Badge>
-              )}
+              <span className="font-medium">Proofound public portfolio</span>
+              <Badge variant="outline" className="border-[#D9D5CC] text-muted-foreground">
+                {data.effectiveState === 'public_indexable'
+                  ? 'Searchable'
+                  : 'Shareable by direct link'}
+              </Badge>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <ShareLinkButton url={shareUrl} />
+              <ShareLinkButton url={data.shareUrl} />
               <DownloadPdfButton endpoint={viewerIsOwner ? undefined : publicExportEndpoint} />
               <CopyTextButton endpoint={viewerIsOwner ? undefined : publicSummaryEndpoint} />
-
-              <ViewCounterClient handle={handle} showCount={viewerIsOwner} />
             </div>
           </div>
         </div>
       }
       footer={
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-          <span>proofound.io/portfolio/{profile.handle}</span>
-          <span>Proof-first public profile</span>
+          <span>proofound.io/portfolio/{data.profile.handle}</span>
+          <span>
+            {data.effectiveState === 'public_indexable'
+              ? 'Proof-first public portfolio'
+              : 'Direct-link public portfolio'}
+          </span>
         </div>
       }
     >
@@ -365,51 +574,59 @@ export default async function PortfolioPage({
                   </h1>
                   <p className="text-sm text-foreground">{headline}</p>
                   <p className="text-sm text-muted-foreground">
-                    {locationLine || (viewerIsOwner ? 'Location not set yet' : 'Location hidden')}
+                    Public link is live. Search engines are{' '}
+                    {data.effectiveState === 'public_indexable' ? 'allowed.' : 'off by default.'}
                   </p>
                 </div>
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {visibility.identity ? (
+                {data.visibility.identity && data.verificationSummary.slots.identity.publicLabel ? (
                   <StatusChip
                     label="Identity"
-                    value={signals.identity.verified ? 'Verified' : 'Not verified'}
-                    tone={signals.identity.verified ? 'positive' : 'neutral'}
-                  />
-                ) : null}
-                {visibility.linkedin ? (
-                  <StatusChip
-                    label="LinkedIn"
-                    value={
-                      signals.linkedin.verificationStatus === 'verified'
-                        ? 'Verified'
-                        : 'Not verified'
-                    }
+                    value={data.verificationSummary.slots.identity.publicLabel}
                     tone={
-                      signals.linkedin.verificationStatus === 'verified' ? 'positive' : 'neutral'
+                      data.verificationSummary.slots.identity.activeTrust ? 'positive' : 'neutral'
                     }
                   />
                 ) : null}
+                {data.visibility.linkedin &&
+                data.verificationSummary.slots.workplace.publicLabel ? (
+                  <StatusChip
+                    label="Workplace"
+                    value={data.verificationSummary.slots.workplace.publicLabel}
+                    tone={
+                      data.verificationSummary.slots.workplace.activeTrust ? 'positive' : 'neutral'
+                    }
+                  />
+                ) : null}
+                {data.signals.badges
+                  .filter((badge) => badge.key === 'evidence_attested')
+                  .map((badge) => (
+                    <StatusChip
+                      key={badge.key}
+                      label="Evidence"
+                      value={badge.label}
+                      tone="positive"
+                    />
+                  ))}
               </div>
 
               <p className="text-sm text-muted-foreground">
-                {bio || 'I build meaningful outcomes with proof you can open, review, and verify.'}
+                {publicBio || 'A proof-first public portfolio with public-safe details only.'}
               </p>
             </div>
 
             {!viewerIsOwner ? (
               <div className="flex w-full flex-col gap-2 lg:w-auto lg:min-w-[220px]">
                 <Button asChild className="bg-proofound-forest text-white hover:bg-[#163d2f]">
-                  <Link href={collaborationHref}>Request collaboration</Link>
+                  <Link href={collaborationHref}>Request introduction</Link>
                 </Button>
-                {!(visibility.contact && visibility.workEmail && individual?.work_email) ? (
-                  <Button variant="outline" asChild>
-                    <Link href={requestContactHref}>Request contact</Link>
-                  </Button>
-                ) : null}
+                <Button variant="outline" asChild>
+                  <Link href={requestContactHref}>Request contact</Link>
+                </Button>
                 <p className="text-xs text-muted-foreground">
-                  Contact details may be hidden. Use request actions to engage.
+                  Private details stay hidden unless the owner explicitly reveals them.
                 </p>
               </div>
             ) : null}
@@ -419,27 +636,23 @@ export default async function PortfolioPage({
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
           <div className="space-y-4">
             <PublicProfileSection title="Proof-based summary">
-              {bio ? (
-                <p className="whitespace-pre-line text-sm leading-6 text-foreground">{bio}</p>
+              {publicBio ? (
+                <p className="whitespace-pre-line text-sm leading-6 text-foreground">{publicBio}</p>
               ) : (
                 <PublicProfileEmptyState
-                  message="A detailed proof-based summary has not been published yet."
-                  example="I build onboarding flows for mission-driven teams, measured by activation and retention lift."
+                  message="No public summary is published yet."
+                  example="I build proof-backed onboarding systems and share evidence that others can open and inspect."
                 />
               )}
             </PublicProfileSection>
 
             <PublicProfileSection
               title="Featured proofs"
-              right={
-                <span className="text-xs text-muted-foreground">
-                  Finalized verifications with evidence.
-                </span>
-              }
+              right={<span className="text-xs text-muted-foreground">Public-safe proof only</span>}
             >
-              {featuredProofs.length > 0 ? (
+              {data.featuredProofs.length > 0 ? (
                 <div className="space-y-3">
-                  {featuredProofs.slice(0, 5).map((proof) => (
+                  {data.featuredProofs.slice(0, 5).map((proof) => (
                     <article
                       key={proof.id}
                       className="space-y-2 rounded-xl border border-white/40 bg-white/40 p-3 shadow-sm transition-all duration-300 hover:bg-white/60"
@@ -469,9 +682,9 @@ export default async function PortfolioPage({
 
                       {proof.evidence.length > 0 ? (
                         <div className="flex flex-wrap gap-2 text-xs">
-                          {proof.evidence.slice(0, 3).map((item) => (
+                          {proof.evidence.map((item) => (
                             <a
-                              key={`${proof.id}-${item.href}-${item.label}`}
+                              key={`${proof.id}-${item.href}`}
                               href={item.href}
                               target="_blank"
                               rel="noreferrer"
@@ -486,7 +699,7 @@ export default async function PortfolioPage({
 
                       <div className="flex items-center justify-between border-t border-[#EFECE5] pt-2">
                         <span className="text-xs text-muted-foreground">
-                          Audit log available on request
+                          Public-safe evidence only
                         </span>
                         <a
                           href={proof.proofPackHref}
@@ -494,7 +707,7 @@ export default async function PortfolioPage({
                           rel="noreferrer"
                           className="text-xs font-semibold text-proofound-forest hover:text-[#143829]"
                         >
-                          Open proof pack
+                          Open evidence
                         </a>
                       </div>
                     </article>
@@ -504,117 +717,47 @@ export default async function PortfolioPage({
                 <PublicProfileEmptyState
                   message={
                     viewerIsOwner
-                      ? 'No finalized proofs published yet.'
-                      : 'No proofs published yet.'
+                      ? 'No public proof links published yet.'
+                      : 'No public proof is available yet.'
                   }
                   actions={
-                    !viewerIsOwner
-                      ? [
-                          { label: 'Request proof pack', href: requestProofPackHref },
-                          { label: 'Invite to assignment', href: collaborationHref },
-                        ]
-                      : []
+                    !viewerIsOwner ? [{ label: 'Request contact', href: requestContactHref }] : []
                   }
-                  example="Reduced churn by 14% in one quarter with a verified rollout artifact"
                 />
               )}
-            </PublicProfileSection>
-
-            <PublicProfileSection title="Expertise snapshot">
-              <PublicProfileEmptyState message="Selection rules for this section are being finalized." />
             </PublicProfileSection>
           </div>
 
           <div className="space-y-4">
-            <PublicProfileSection title="My next challenge">
-              {hasOpenToData(matchingProfile) ? (
-                <div className="space-y-2 text-sm text-foreground">
-                  <OpenToRow
-                    label="Roles"
-                    value={
-                      matchingProfile?.desired_roles?.length
-                        ? matchingProfile.desired_roles.join(', ')
-                        : 'Not specified'
-                    }
-                  />
-                  <OpenToRow label="Work mode" value={formatWorkMode(matchingProfile?.work_mode)} />
-                  <OpenToRow
-                    label="Availability"
-                    value={formatAvailabilityRange(
-                      matchingProfile?.availability_earliest,
-                      matchingProfile?.availability_latest
-                    )}
-                  />
-                  <OpenToRow
-                    label="Location & timezone"
-                    value={formatLocationAndTimezone(
-                      matchingProfile?.city,
-                      matchingProfile?.country,
-                      matchingProfile?.timezone
-                    )}
-                  />
-                  <OpenToRow
-                    label="Languages"
-                    value={formatLanguages(matchingProfile?.languages ?? null)}
-                  />
-                </div>
-              ) : (
-                <PublicProfileEmptyState message="Availability is not shared." />
-              )}
-            </PublicProfileSection>
-
-            <PublicProfileSection title="Mission & vision">
-              <Tabs defaultValue="mission" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 bg-[#F3F1EB]">
-                  <TabsTrigger value="mission">Mission</TabsTrigger>
-                  <TabsTrigger value="vision">Vision</TabsTrigger>
-                </TabsList>
-                <TabsContent value="mission" className="mt-3">
-                  <p className="whitespace-pre-line text-sm leading-6 text-foreground">
-                    {ownerMission || 'Mission is private in this view.'}
-                  </p>
-                </TabsContent>
-                <TabsContent value="vision" className="mt-3">
-                  <p className="whitespace-pre-line text-sm leading-6 text-foreground">
-                    {ownerVision || 'Vision is private in this view.'}
-                  </p>
-                </TabsContent>
-              </Tabs>
-            </PublicProfileSection>
-
-            <PublicProfileSection title="Values & causes">
-              {(matchingProfile?.values_tags?.length || 0) +
-                (matchingProfile?.cause_tags?.length || 0) >
-              0 ? (
+            <PublicProfileSection title="Skills snapshot">
+              {data.publicSkills.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {(matchingProfile?.values_tags || []).map((value) => (
-                    <TagPill key={`value-${value}`} label={value} />
-                  ))}
-                  {(matchingProfile?.cause_tags || []).map((cause) => (
-                    <TagPill key={`cause-${cause}`} label={cause} />
+                  {data.publicSkills.map((skill) => (
+                    <TagPill key={skill} label={skill} />
                   ))}
                 </div>
               ) : (
-                <PublicProfileEmptyState message="Not specified." />
+                <PublicProfileEmptyState message="Skills are not shared publicly in this portfolio." />
               )}
             </PublicProfileSection>
 
             <PublicProfileSection title="Contact & share">
               <div className="space-y-2 text-sm">
-                {visibility.contact && visibility.workEmail && individual?.work_email ? (
-                  <ContactPill href={`mailto:${individual.work_email}`} label="Work email" />
+                {data.visibility.contact &&
+                data.visibility.workEmail &&
+                data.individual.work_email ? (
+                  <ContactPill href={`mailto:${data.individual.work_email}`} label="Work email" />
                 ) : (
                   <p className="rounded-xl border border-white/40 bg-white/40 px-3 py-2 text-muted-foreground shadow-sm">
                     Contact hidden
                   </p>
                 )}
                 <ContactPill
-                  href={shareUrl}
+                  href={data.shareUrl}
                   label="Share link"
                   icon={<Link2 className="h-4 w-4" />}
                 />
-                {!viewerIsOwner &&
-                !(visibility.contact && visibility.workEmail && individual?.work_email) ? (
+                {!viewerIsOwner ? (
                   <ContactPill
                     href={requestContactHref}
                     label="Request contact"
@@ -628,42 +771,6 @@ export default async function PortfolioPage({
       </div>
     </PublicProfileShell>
   );
-}
-
-function buildFeaturedProofs({
-  fallbackSkillProofs,
-  shareUrl,
-}: {
-  fallbackSkillProofs: SkillProofRow[];
-  shareUrl: string;
-}): FeaturedProof[] {
-  return fallbackSkillProofs
-    .map((proof) => {
-      if (!proof.verified) {
-        return null;
-      }
-      const metadataUrl = typeof proof.metadata?.url === 'string' ? proof.metadata.url : null;
-      const href = proof.url || metadataUrl || shareUrl;
-
-      return {
-        id: proof.id,
-        title: proof.title,
-        role: prettifyProofType(proof.proof_type),
-        timeframe: proof.created_at ? formatDate(proof.created_at) : 'Date unavailable',
-        outcomes: toOutcomeLines(proof.description),
-        evidence: href
-          ? [
-              {
-                label: 'Primary artifact',
-                href,
-              },
-            ]
-          : [],
-        verifiedBy: 'Verified',
-        proofPackHref: href,
-      };
-    })
-    .filter((proof): proof is FeaturedProof => Boolean(proof));
 }
 
 function toOutcomeLines(value: string | null | undefined): string[] {
@@ -706,82 +813,6 @@ function collaborationMailto({ subject, body }: { subject: string; body: string 
   return `mailto:hello@proofound.io?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
-function hasOpenToData(profile: MatchingProfileRow | null): boolean {
-  if (!profile) {
-    return false;
-  }
-
-  return Boolean(
-    (profile.desired_roles && profile.desired_roles.length > 0) ||
-      profile.work_mode ||
-      profile.availability_earliest ||
-      profile.availability_latest ||
-      profile.city ||
-      profile.country ||
-      profile.timezone ||
-      (Array.isArray(profile.languages) && profile.languages.length > 0)
-  );
-}
-
-function formatWorkMode(mode: string | null | undefined): string {
-  if (!mode) {
-    return 'Not specified';
-  }
-
-  if (mode === 'hybrid') {
-    return 'Hybrid';
-  }
-  if (mode === 'remote') {
-    return 'Remote';
-  }
-  if (mode === 'onsite') {
-    return 'On-site';
-  }
-
-  return mode;
-}
-
-function formatAvailabilityRange(
-  start: string | null | undefined,
-  end: string | null | undefined
-): string {
-  if (!start && !end) {
-    return 'Not specified';
-  }
-
-  if (start && end) {
-    return `${formatDate(start)} to ${formatDate(end)}`;
-  }
-
-  return start ? `From ${formatDate(start)}` : `Until ${formatDate(end as string)}`;
-}
-
-function formatLocationAndTimezone(
-  city: string | null | undefined,
-  country: string | null | undefined,
-  timezone: string | null | undefined
-): string {
-  const location = [city, country].filter(Boolean).join(', ');
-  if (location && timezone) {
-    return `${location} (${timezone})`;
-  }
-  return location || timezone || 'Not specified';
-}
-
-function formatLanguages(languages: MatchingProfileRow['languages']): string {
-  if (!Array.isArray(languages) || languages.length === 0) {
-    return 'Not specified';
-  }
-
-  return languages
-    .map((language) => {
-      const code = (language.code || '').toUpperCase();
-      const level = language.level ? ` (${language.level})` : '';
-      return `${code || 'Language'}${level}`;
-    })
-    .join(', ');
-}
-
 function StatusChip({
   label,
   value,
@@ -806,17 +837,6 @@ function StatusChip({
       )}
       {label}: {value}
     </span>
-  );
-}
-
-function OpenToRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl border border-white/40 bg-white/40 px-3 py-2 shadow-sm transition-colors hover:bg-white/60">
-      <p className="text-xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
-        {label}
-      </p>
-      <p className="text-sm text-foreground">{value}</p>
-    </div>
   );
 }
 

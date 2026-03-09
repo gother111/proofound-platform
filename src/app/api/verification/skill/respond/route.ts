@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 import { log } from '@/lib/log';
+import {
+  CAPABILITY_TOKEN_CLASSES,
+  inspectCapabilityToken,
+  redeemCapabilityToken,
+} from '@/lib/security/capability-tokens';
 
 const SkillVerificationResponseSchema = z.object({
   token: z.string().min(1),
@@ -35,12 +40,21 @@ export async function POST(request: NextRequest) {
 
     const { token, action, verifierName, verifierTitle, verifierCompany, anonymous, comment } =
       validation.data;
+    const inspected = await inspectCapabilityToken(token, {
+      tokenClass: CAPABILITY_TOKEN_CLASSES.SKILL_VERIFICATION_RESPONSE,
+      metadata: { surface: 'legacy_skill_verification_respond' },
+    });
+
+    if (!inspected.ok) {
+      const status = inspected.reason === 'invalid' ? 404 : 410;
+      return NextResponse.json({ error: `Verification request ${inspected.reason}` }, { status });
+    }
 
     // Find verification request by token
     const { data: verificationRequest, error: requestError } = await supabase
       .from('skill_verification_requests')
       .select('*')
-      .eq('token', token)
+      .eq('id', inspected.token.source_id)
       .eq('status', 'pending')
       .maybeSingle();
 
@@ -85,6 +99,15 @@ export async function POST(request: NextRequest) {
       console.error('Error updating verification request:', updateError);
       return NextResponse.json({ error: 'Failed to update verification request' }, { status: 500 });
     }
+
+    await redeemCapabilityToken(token, {
+      tokenClass: CAPABILITY_TOKEN_CLASSES.SKILL_VERIFICATION_RESPONSE,
+      consume: true,
+      metadata: {
+        requestId: verificationRequest.id,
+        action,
+      },
+    });
 
     // If approved, update the skill's verification status
     if (action === 'approve') {

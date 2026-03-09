@@ -31,7 +31,9 @@ describe('mergeVisibilityFlags', () => {
     expect(merged.header).toBe(true);
     expect(merged.workEmail).toBe(false);
     expect(merged.contact).toBe(false);
-    expect(merged.skills).toBe(true);
+    expect(merged.skills).toBe(false);
+    expect(merged.bio).toBe(false);
+    expect(merged.counts).toBe(false);
   });
 
   it('applies overrides while keeping other defaults', () => {

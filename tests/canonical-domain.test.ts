@@ -3,6 +3,9 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  SubmissionSchema,
+  SubmissionArtifactSchema,
+  VerificationLogEntrySchema,
   mapLegacyOrganizationVisibility,
   mapLegacyProfileVisibility,
   mapLegacyProofVisibility,
@@ -204,5 +207,80 @@ describe('match score contract v1', () => {
     };
 
     expect(compareCanonicalMatchOrder(left, right)).toBeGreaterThan(0);
+  });
+});
+
+describe('canonical submission and verification audit contracts', () => {
+  it('validates a canonical submission payload', () => {
+    expect(
+      SubmissionSchema.parse({
+        id: '11111111-1111-4111-8111-111111111111',
+        submissionKind: 'proof_card',
+        status: 'submitted',
+        ownerType: 'individual_profile',
+        ownerId: '22222222-2222-4222-8222-222222222222',
+        submittedByUserId: '22222222-2222-4222-8222-222222222222',
+        submittedByOrgId: null,
+        assignmentId: null,
+        proofPackId: '33333333-3333-4333-8333-333333333333',
+        requestContextType: 'candidate_invite',
+        requestContextId: '44444444-4444-4444-8444-444444444444',
+        matchId: null,
+        introId: null,
+        applicationId: null,
+        legacySourceTable: 'org_candidate_invites',
+        legacySourceId: '55555555-5555-4555-8555-555555555555',
+        submittedAt: '2026-03-09T10:00:00.000Z',
+        reviewedAt: null,
+        withdrawnAt: null,
+        supersededAt: null,
+        supersededBySubmissionId: null,
+        metadata: {
+          proofSnippetId: '66666666-6666-4666-8666-666666666666',
+        },
+      })
+    ).toMatchObject({
+      submissionKind: 'proof_card',
+      requestContextType: 'candidate_invite',
+    });
+  });
+
+  it('validates submission artifact and verification log entry payloads', () => {
+    expect(
+      SubmissionArtifactSchema.parse({
+        id: '77777777-7777-4777-8777-777777777777',
+        submissionId: '11111111-1111-4111-8111-111111111111',
+        artifactId: '88888888-8888-4888-8888-888888888888',
+        position: 0,
+        includedFields: ['title', 'sourceUrl'],
+      })
+    ).toMatchObject({
+      position: 0,
+    });
+
+    expect(
+      VerificationLogEntrySchema.parse({
+        id: '99999999-9999-4999-8999-999999999999',
+        verificationRecordId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+        sequenceNumber: 2,
+        entryType: 'expired',
+        fromStatus: 'verified',
+        toStatus: 'expired',
+        reasonCode: 'freshness_window_elapsed',
+        actorType: 'system',
+        actorId: null,
+        relatedContradictionId: null,
+        relatedDisputeId: null,
+        relatedVerificationRecordId: null,
+        recomputeBatchId: null,
+        metadata: {
+          source: 'workflow.service',
+        },
+        occurredAt: '2026-03-09T10:10:00.000Z',
+      })
+    ).toMatchObject({
+      entryType: 'expired',
+      toStatus: 'expired',
+    });
   });
 });

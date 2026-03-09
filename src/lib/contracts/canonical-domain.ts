@@ -52,6 +52,42 @@ export const PROOF_PACK_KIND_VALUES = [
 export type ProofPackKind = (typeof PROOF_PACK_KIND_VALUES)[number];
 export const ProofPackKindSchema = z.enum(PROOF_PACK_KIND_VALUES);
 
+export const SUBMISSION_KIND_VALUES = [
+  'assignment_section',
+  'proof_card',
+  'application_proof',
+  'intro_proof',
+  'verification_response_payload',
+  'manual_upload',
+] as const;
+export type SubmissionKind = (typeof SUBMISSION_KIND_VALUES)[number];
+export const SubmissionKindSchema = z.enum(SUBMISSION_KIND_VALUES);
+
+export const SUBMISSION_STATUS_VALUES = [
+  'draft',
+  'submitted',
+  'under_review',
+  'accepted',
+  'rejected',
+  'withdrawn',
+  'superseded',
+] as const;
+export type SubmissionStatus = (typeof SUBMISSION_STATUS_VALUES)[number];
+export const SubmissionStatusSchema = z.enum(SUBMISSION_STATUS_VALUES);
+
+export const SUBMISSION_CONTEXT_TYPE_VALUES = [
+  'assignment',
+  'assignment_invitation',
+  'candidate_invite',
+  'match',
+  'intro',
+  'application',
+  'verification_request',
+  'manual',
+] as const;
+export type SubmissionContextType = (typeof SUBMISSION_CONTEXT_TYPE_VALUES)[number];
+export const SubmissionContextTypeSchema = z.enum(SUBMISSION_CONTEXT_TYPE_VALUES);
+
 export const VERIFICATION_KIND_VALUES = [
   'veriff_identity',
   'linkedin_identity',
@@ -130,6 +166,25 @@ export const DISPUTE_STATE_VALUES = [
 ] as const;
 export type DisputeState = (typeof DISPUTE_STATE_VALUES)[number];
 export const DisputeStateSchema = z.enum(DISPUTE_STATE_VALUES);
+
+export const VERIFICATION_LOG_ENTRY_TYPE_VALUES = [
+  'record_created',
+  'state_transition',
+  'refresh_requested',
+  'refresh_completed',
+  'expired',
+  'downgraded',
+  'contradiction_detected',
+  'dispute_opened',
+  'dispute_updated',
+  'dispute_resolved',
+  'revoked',
+  'superseded',
+  'restored',
+  'recomputed',
+] as const;
+export type VerificationLogEntryType = (typeof VERIFICATION_LOG_ENTRY_TYPE_VALUES)[number];
+export const VerificationLogEntryTypeSchema = z.enum(VERIFICATION_LOG_ENTRY_TYPE_VALUES);
 
 export const MATCH_REASON_CODE_VALUES = [
   'skills_strong',
@@ -230,6 +285,41 @@ export const ProofPackItemSchema = z.object({
 });
 export type ProofPackItem = z.infer<typeof ProofPackItemSchema>;
 
+export const SubmissionSchema = z.object({
+  id: z.string().uuid(),
+  submissionKind: SubmissionKindSchema,
+  status: SubmissionStatusSchema,
+  ownerType: OwnerTypeSchema,
+  ownerId: z.string().uuid(),
+  submittedByUserId: z.string().uuid().nullable(),
+  submittedByOrgId: z.string().uuid().nullable(),
+  assignmentId: z.string().uuid().nullable(),
+  proofPackId: z.string().uuid().nullable(),
+  requestContextType: SubmissionContextTypeSchema,
+  requestContextId: z.string().uuid().nullable(),
+  matchId: z.string().uuid().nullable(),
+  introId: z.string().uuid().nullable(),
+  applicationId: z.string().uuid().nullable(),
+  legacySourceTable: z.string().nullable(),
+  legacySourceId: z.string().uuid().nullable(),
+  submittedAt: z.string().datetime(),
+  reviewedAt: z.string().datetime().nullable(),
+  withdrawnAt: z.string().datetime().nullable(),
+  supersededAt: z.string().datetime().nullable(),
+  supersededBySubmissionId: z.string().uuid().nullable(),
+  metadata: z.record(z.any()),
+});
+export type Submission = z.infer<typeof SubmissionSchema>;
+
+export const SubmissionArtifactSchema = z.object({
+  id: z.string().uuid(),
+  submissionId: z.string().uuid(),
+  artifactId: z.string().uuid(),
+  position: z.number().int().nonnegative(),
+  includedFields: z.array(z.string()),
+});
+export type SubmissionArtifact = z.infer<typeof SubmissionArtifactSchema>;
+
 export const VerificationRecordSchema = z.object({
   id: z.string().uuid(),
   ownerType: OwnerTypeSchema,
@@ -270,6 +360,31 @@ export const VerificationRecordSchema = z.object({
   metadata: z.record(z.any()),
 });
 export type VerificationRecord = z.infer<typeof VerificationRecordSchema>;
+
+export const VerificationLogEntrySchema = z.object({
+  id: z.string().uuid(),
+  verificationRecordId: z.string().uuid(),
+  sequenceNumber: z.number().int().positive(),
+  entryType: VerificationLogEntryTypeSchema,
+  fromStatus: VerificationStatusSchema.nullable(),
+  toStatus: VerificationStatusSchema.nullable(),
+  reasonCode: z.string().nullable(),
+  actorType: z.enum([
+    'candidate',
+    'organization_member',
+    'platform_admin',
+    'system',
+    'service_account',
+  ]),
+  actorId: z.string().uuid().nullable(),
+  relatedContradictionId: z.string().uuid().nullable(),
+  relatedDisputeId: z.string().uuid().nullable(),
+  relatedVerificationRecordId: z.string().uuid().nullable(),
+  recomputeBatchId: z.string().nullable(),
+  metadata: z.record(z.any()),
+  occurredAt: z.string().datetime(),
+});
+export type VerificationLogEntry = z.infer<typeof VerificationLogEntrySchema>;
 
 export function mapLegacyProfileVisibility(value: string | null | undefined): {
   visibility: VisibilityLevel;

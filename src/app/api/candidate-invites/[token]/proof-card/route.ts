@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db';
-import { orgCandidateInvites } from '@/db/schema';
+import { orgCandidateInvites, proofPacks } from '@/db/schema';
 import { getRows } from '@/lib/db/rows';
 import {
   CANDIDATE_INVITE_FLOW_TYPE,
@@ -14,6 +14,8 @@ import {
 import { buildPublicProfileURL } from '@/lib/profile/snippet-generator';
 import { emitAnalyticsEventAsync } from '@/lib/analytics/events';
 import { createClient } from '@/lib/supabase/server';
+import { CAPABILITY_TOKEN_CLASSES, redeemCapabilityToken } from '@/lib/security/capability-tokens';
+import { upsertCanonicalProofCardSubmission } from '@/lib/canonical/submissions';
 
 export const dynamic = 'force-dynamic';
 
@@ -69,6 +71,9 @@ export async function POST(
         status: orgCandidateInvites.status,
         expiresAt: orgCandidateInvites.expiresAt,
         claimedByProfileId: orgCandidateInvites.claimedByProfileId,
+        assignmentId: orgCandidateInvites.assignmentId,
+        matchId: orgCandidateInvites.matchId,
+        conversationId: orgCandidateInvites.conversationId,
       })
       .from(orgCandidateInvites)
       .where(eq(orgCandidateInvites.tokenHash, tokenHash))
@@ -109,34 +114,74 @@ export async function POST(
       return NextResponse.json({ error: 'Invite is not in a submittable state.' }, { status: 409 });
     }
 
+    let snippetCapabilityTokenId: string | null = null;
+    if (parsed.data.shareToken) {
+      const redeemedSnippet = await redeemCapabilityToken(parsed.data.shareToken, {
+        tokenClass: CAPABILITY_TOKEN_CLASSES.PROFILE_SNIPPET_SHARE,
+        consume: false,
+        actor: { profileId: user.id, principalType: 'user_account' },
+        metadata: { surface: 'candidate_invite_proof_card_submit' },
+      });
+
+      if (!redeemedSnippet.ok) {
+        return NextResponse.json({ error: 'Proof Card snippet not found.' }, { status: 404 });
+      }
+
+      snippetCapabilityTokenId = redeemedSnippet.token.id;
+    }
+
     const snippetResult = await db.execute(sql`
-      SELECT id, share_token
+      SELECT id, capability_token_id
       FROM profile_snippets
       WHERE user_id = ${user.id}
         AND profile_type = 'individual'
+        AND deleted_at IS NULL
+        AND revoked_at IS NULL
+        AND public_surface_disabled_at IS NULL
         AND (
-          (${parsed.data.shareToken ?? null} IS NOT NULL AND share_token = ${parsed.data.shareToken ?? null})
+          (${snippetCapabilityTokenId} IS NOT NULL AND capability_token_id = ${snippetCapabilityTokenId}::uuid)
           OR (${parsed.data.snippetId ?? null} IS NOT NULL AND id = ${parsed.data.snippetId ?? null})
         )
         AND (expires_at IS NULL OR expires_at > NOW())
       LIMIT 1
     `);
 
-    const [snippet] = getRows<{ id: string; share_token: string }>(snippetResult as any);
+    const [snippet] = getRows<{ id: string; capability_token_id: string | null }>(
+      snippetResult as any
+    );
     if (!snippet) {
       return NextResponse.json({ error: 'Proof Card snippet not found.' }, { status: 404 });
     }
 
-    await db
-      .update(orgCandidateInvites)
-      .set({
-        status: CANDIDATE_INVITE_STATUS.PROOF_SUBMITTED,
-        proofSnippetId: snippet.id,
-        proofShareToken: snippet.share_token,
-        proofSubmittedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(orgCandidateInvites.id, invite.id));
+    await db.execute(sql`
+      UPDATE org_candidate_invites
+      SET
+        status = ${CANDIDATE_INVITE_STATUS.PROOF_SUBMITTED},
+        proof_snippet_id = ${snippet.id}::uuid,
+        proof_capability_token_id = ${snippet.capability_token_id ?? null}::uuid,
+        proof_share_token = NULL,
+        proof_submitted_at = NOW(),
+        updated_at = NOW()
+      WHERE id = ${invite.id}::uuid
+    `);
+
+    const canonicalPack = await db.query.proofPacks.findFirst({
+      where: and(
+        eq(proofPacks.legacySourceTable, 'profile_snippets'),
+        eq(proofPacks.legacySourceId, snippet.id)
+      ),
+    });
+
+    const canonicalSubmission = await upsertCanonicalProofCardSubmission({
+      inviteId: invite.id,
+      ownerProfileId: user.id,
+      orgId: invite.orgId,
+      assignmentId: invite.assignmentId ?? null,
+      matchId: invite.matchId ?? null,
+      proofPackId: canonicalPack?.id ?? null,
+      proofSnippetId: snippet.id,
+      conversationId: invite.conversationId ?? null,
+    });
 
     emitAnalyticsEventAsync({
       eventType: 'candidate_proof_card_submitted',
@@ -149,7 +194,9 @@ export async function POST(
     return NextResponse.json({
       success: true,
       status: CANDIDATE_INVITE_STATUS.PROOF_SUBMITTED,
-      proofCardUrl: buildPublicProfileURL(snippet.share_token),
+      proofCardUrl: parsed.data.shareToken ? buildPublicProfileURL(parsed.data.shareToken) : null,
+      canonicalPackId: canonicalPack?.id ?? null,
+      canonicalSubmissionId: canonicalSubmission.id,
     });
   } catch (error) {
     console.error('Failed to submit proof card for invite:', error);

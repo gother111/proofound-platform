@@ -21,7 +21,10 @@ type PublicMetadataOptions = {
   ogTitle?: string;
   ogDescription?: string;
   imagePath?: string;
+  imageAlt?: string;
+  ogType?: 'website' | 'profile';
   keywords?: string[];
+  robots?: Metadata['robots'];
 };
 
 export function buildPublicMetadata({
@@ -31,7 +34,10 @@ export function buildPublicMetadata({
   ogTitle,
   ogDescription,
   imagePath = DEFAULT_OG_IMAGE,
+  imageAlt = 'Proofound public page preview',
+  ogType = 'website',
   keywords,
+  robots,
 }: PublicMetadataOptions): Metadata {
   const siteUrl = getPublicSiteUrl();
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
@@ -42,6 +48,7 @@ export function buildPublicMetadata({
     title,
     description,
     keywords,
+    robots,
     alternates: {
       canonical: canonicalUrl,
     },
@@ -50,13 +57,13 @@ export function buildPublicMetadata({
       description: ogDescription ?? description,
       url: canonicalUrl,
       siteName: 'Proofound',
-      type: 'website',
+      type: ogType,
       images: [
         {
           url: imageUrl,
           width: 1200,
           height: 630,
-          alt: 'Proofound public page preview',
+          alt: imageAlt,
         },
       ],
     },
