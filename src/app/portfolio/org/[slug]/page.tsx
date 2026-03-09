@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { JsonLdScripts } from '@/components/seo/JsonLdScripts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Building2, Globe2, ShieldCheck, Users, Briefcase } from 'lucide-react';
@@ -11,6 +12,12 @@ import {
   buildPublicProfileMetadata,
   buildUnavailablePublicProfileMetadata,
 } from '@/lib/seo/public-profile-metadata';
+import {
+  buildBreadcrumbJsonLd,
+  buildProofoundWebsiteJsonLd,
+  buildPublicOrganizationPortfolioJsonLd,
+  buildWebPageJsonLd,
+} from '@/lib/seo/json-ld';
 import { PublicProfileSection } from '@/components/public-profile/PublicProfileSection';
 import { PublicProfileShell } from '@/components/public-profile/PublicProfileShell';
 import { ShareLinkButton } from '../../[handle]/ShareLinkButton';
@@ -154,6 +161,28 @@ export default async function OrganizationPortfolioPage({
   const activeAssignments = activeAssignmentsResult.count ?? 0;
   const teamMembers = teamMembersResult.count ?? 0;
   const viewerIsMember = Boolean(membershipResult.count && membershipResult.count > 0);
+  const pagePath = `/portfolio/org/${encodeURIComponent(slug)}`;
+  const jsonLdDescription =
+    organization.tagline ||
+    organization.mission ||
+    'Public organization trust portfolio on Proofound with mission and website details.';
+  const jsonLdItems = [
+    buildProofoundWebsiteJsonLd(),
+    buildWebPageJsonLd({
+      path: pagePath,
+      title: `${organization.display_name} | Proofound Organization Portfolio`,
+      description: jsonLdDescription,
+    }),
+    buildBreadcrumbJsonLd([
+      { name: 'Home', path: '/' },
+      { name: organization.display_name, path: pagePath },
+    ]),
+    buildPublicOrganizationPortfolioJsonLd({
+      path: pagePath,
+      name: organization.display_name,
+      description: jsonLdDescription,
+    }),
+  ];
 
   return (
     <PublicProfileShell
@@ -218,6 +247,7 @@ export default async function OrganizationPortfolioPage({
         </div>
       }
     >
+      <JsonLdScripts items={jsonLdItems} idPrefix="public-org-portfolio-jsonld" />
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <div className="space-y-4">
           <PublicProfileSection title="Organization">

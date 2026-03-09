@@ -50,6 +50,7 @@
     "prepare": "node ./scripts/prepare-husky.mjs",
     "perf:budgets": "node ./scripts/perf-budgets.mjs",
     "go:no-go": "node ./scripts/go-no-go-check.mjs",
+    "geo:audit": "node ./scripts/geo-audit.mjs",
     "gates:mvp:strict": "node ./scripts/run-mvp-strict-gates.mjs",
     "vercel:preflight": "node ./scripts/vercel-preflight.mjs",
     "vercel:env-parity": "node ./scripts/vercel-env-parity.mjs",

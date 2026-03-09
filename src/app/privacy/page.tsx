@@ -4,7 +4,9 @@ import { Card } from '@/components/ui/card';
 import { NetworkBackground } from '@/components/NetworkBackground';
 import { ArrowLeft, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { JsonLdScripts } from '@/components/seo/JsonLdScripts';
 import { POLICY_EFFECTIVE_DATES, POLICY_VERSIONS } from '@/lib/privacy/policy-version-config';
+import { buildStaticPageJsonLd } from '@/lib/seo/json-ld';
 import { buildPublicMetadata } from '@/lib/seo/public-metadata';
 
 export const metadata: Metadata = buildPublicMetadata({
@@ -19,9 +21,16 @@ export const dynamic = 'force-dynamic';
 export default function PrivacyPolicyPage() {
   const effectiveDate = POLICY_EFFECTIVE_DATES.privacy;
   const version = POLICY_VERSIONS.privacy;
+  const jsonLdItems = buildStaticPageJsonLd({
+    path: '/privacy',
+    title: 'Privacy Policy | Proofound privacy and consent controls',
+    description:
+      'Read how Proofound collects and processes personal information, applies consent controls, secures platform records, and supports user rights requests.',
+  });
 
   return (
     <div className="relative min-h-screen bg-japandi-bg text-foreground">
+      <JsonLdScripts items={jsonLdItems} idPrefix="privacy-jsonld" />
       <div className="pointer-events-none absolute inset-0 opacity-60">
         <NetworkBackground />
       </div>

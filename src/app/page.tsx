@@ -1,5 +1,7 @@
+import { JsonLdScripts } from '@/components/seo/JsonLdScripts';
 import { ProofoundLanding } from '@/components/ProofoundLanding';
 import type { Metadata } from 'next';
+import { buildStaticPageJsonLd } from '@/lib/seo/json-ld';
 
 const FALLBACK_SITE_URL = 'https://proofound.io';
 
@@ -56,55 +58,17 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
-  const organizationJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: 'Proofound',
-    url: siteUrl,
-    logo: `${siteUrl}/logo.png`,
-    sameAs: [],
-    description:
-      'Proofound is a credibility platform built for public proof portfolios first, with matching and collaboration layered on after.',
-  };
-
-  const webSiteJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: 'Proofound',
-    url: siteUrl,
-    description:
-      'Public proof portfolios for individuals and organizations, with matching and collaboration workflows.',
-  };
-
-  const webPageJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebPage',
-    name: 'Proofound',
-    url: `${siteUrl}/`,
-    isPartOf: {
-      '@type': 'WebSite',
-      url: siteUrl,
-      name: 'Proofound',
-    },
+  const jsonLdItems = buildStaticPageJsonLd({
+    path: '/',
+    title: 'Proofound | Publish a Public Proof Portfolio on Day 1',
     description:
       'Build and share a clean proof-based public portfolio link on day 1, then use matching and workflows as you scale.',
-  };
+  });
 
   // Auth check disabled for debugging/verification of landing page
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageJsonLd) }}
-      />
+      <JsonLdScripts items={jsonLdItems} idPrefix="home-jsonld" />
       <ProofoundLanding />
     </>
   );

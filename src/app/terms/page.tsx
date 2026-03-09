@@ -4,7 +4,9 @@ import { Card } from '@/components/ui/card';
 import { NetworkBackground } from '@/components/NetworkBackground';
 import { ArrowLeft, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { JsonLdScripts } from '@/components/seo/JsonLdScripts';
 import { POLICY_EFFECTIVE_DATES, POLICY_VERSIONS } from '@/lib/privacy/policy-version-config';
+import { buildStaticPageJsonLd } from '@/lib/seo/json-ld';
 import { buildPublicMetadata } from '@/lib/seo/public-metadata';
 
 export const metadata: Metadata = buildPublicMetadata({
@@ -19,9 +21,16 @@ export const dynamic = 'force-dynamic';
 export default function TermsOfServicePage() {
   const effectiveDate = POLICY_EFFECTIVE_DATES.tos;
   const version = POLICY_VERSIONS.tos;
+  const jsonLdItems = buildStaticPageJsonLd({
+    path: '/terms',
+    title: 'Terms of Service | Proofound legal responsibilities',
+    description:
+      'Review the Terms of Service that govern use of Proofound, including eligibility, acceptable use, moderation, account deletion, and legal responsibilities.',
+  });
 
   return (
     <div className="relative min-h-screen bg-japandi-bg text-foreground">
+      <JsonLdScripts items={jsonLdItems} idPrefix="terms-jsonld" />
       <div className="pointer-events-none absolute inset-0 opacity-60">
         <NetworkBackground />
       </div>

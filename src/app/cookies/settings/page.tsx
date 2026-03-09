@@ -2,6 +2,8 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { ArrowLeft, Cookie } from 'lucide-react';
 import { CookieSettingsClient } from '@/components/cookies/CookieSettingsClient';
+import { JsonLdScripts } from '@/components/seo/JsonLdScripts';
+import { buildStaticPageJsonLd } from '@/lib/seo/json-ld';
 import { buildPublicMetadata } from '@/lib/seo/public-metadata';
 
 /**
@@ -31,9 +33,16 @@ export default async function CookieSettingsPage({
 }) {
   const { returnTo: returnToParam } = await searchParams;
   const returnTo = returnToParam || '/';
+  const jsonLdItems = buildStaticPageJsonLd({
+    path: '/cookies/settings',
+    title: 'Cookie Settings | Manage Proofound consent preferences',
+    description:
+      'Manage cookie consent preferences for Proofound, including essential and optional categories, with clear controls and privacy-safe defaults.',
+  });
 
   return (
     <div className="min-h-screen bg-japandi-bg">
+      <JsonLdScripts items={jsonLdItems} idPrefix="cookie-settings-jsonld" />
       {/* Header */}
       <header className="border-b bg-white">
         <div className="container mx-auto px-4 py-4">

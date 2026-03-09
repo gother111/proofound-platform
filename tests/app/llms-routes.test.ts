@@ -1,0 +1,29 @@
+import { describe, expect, it } from 'vitest';
+
+import { GET as getLlms } from '@/app/llms.txt/route';
+import { GET as getLlmsFull } from '@/app/llms-full.txt/route';
+
+describe('llms routes', () => {
+  it('serves llms.txt as deterministic plaintext', async () => {
+    const response = await getLlms();
+    const body = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('text/plain');
+    expect(response.headers.get('cache-control')).toContain('stale-while-revalidate');
+    expect(body).toContain('# Proofound');
+    expect(body).toContain('## Core Pages');
+    expect(body).toContain('/about');
+    expect(body).toContain('hello@proofound.io');
+  });
+
+  it('serves llms-full.txt with technical surfaces included', async () => {
+    const response = await getLlmsFull();
+    const body = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(body).toContain('## Technical Surfaces');
+    expect(body).toContain('/robots.txt');
+    expect(body).toContain('/sitemap.xml');
+  });
+});

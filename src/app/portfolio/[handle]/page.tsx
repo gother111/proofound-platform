@@ -24,9 +24,16 @@ import {
   buildPublicProfileMetadata,
   buildUnavailablePublicProfileMetadata,
 } from '@/lib/seo/public-profile-metadata';
+import {
+  buildBreadcrumbJsonLd,
+  buildProofoundWebsiteJsonLd,
+  buildPublicPersonPortfolioJsonLd,
+  buildWebPageJsonLd,
+} from '@/lib/seo/json-ld';
 import { PublicProfileSection } from '@/components/public-profile/PublicProfileSection';
 import { PublicProfileShell } from '@/components/public-profile/PublicProfileShell';
 import { PublicProfileEmptyState } from '@/components/public-profile/PublicProfileEmptyState';
+import { JsonLdScripts } from '@/components/seo/JsonLdScripts';
 import { ShareLinkButton } from './ShareLinkButton';
 import { DownloadPdfButton } from './DownloadPdfButton';
 import { CopyTextButton } from './CopyTextButton';
@@ -252,6 +259,26 @@ export default async function PortfolioPage({
     fallbackSkillProofs,
     shareUrl,
   });
+  const pagePath = `/portfolio/${encodeURIComponent(handle)}`;
+  const jsonLdDescription =
+    bio || headline || 'Public proof portfolio on Proofound with verifiable outcomes and evidence.';
+  const jsonLdItems = [
+    buildProofoundWebsiteJsonLd(),
+    buildWebPageJsonLd({
+      path: pagePath,
+      title: `${displayName} | Proofound Public Profile`,
+      description: jsonLdDescription,
+    }),
+    buildBreadcrumbJsonLd([
+      { name: 'Home', path: '/' },
+      { name: displayName, path: pagePath },
+    ]),
+    buildPublicPersonPortfolioJsonLd({
+      path: pagePath,
+      name: displayName,
+      description: jsonLdDescription,
+    }),
+  ];
 
   const collaborationHref = collaborationMailto({
     subject: `Request collaboration with ${displayName}`,
@@ -323,6 +350,7 @@ export default async function PortfolioPage({
         </div>
       }
     >
+      <JsonLdScripts items={jsonLdItems} idPrefix="public-portfolio-jsonld" />
       <div className="space-y-4">
         <Card variant="bento" className="p-4 sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
