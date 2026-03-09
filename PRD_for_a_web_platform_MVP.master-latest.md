@@ -1570,16 +1570,21 @@ These are the only launch KPIs promised across the PRD.
 ### Proof Packs and trust evidence
 
 - `proof_pack_created`
+- `proof_pack_updated`
 - `proof_pack_ready`
 - `proof_pack_published`
 - `proof_pack_submitted`
 - `proof_pack_withdrawn`
 - `proof_pack_superseded`
+- `proof_pack_exported`
+- `proof_pack_import_validated`
+- `proof_pack_import_completed`
 - `proof_pack_verification_requested`
 - `proof_pack_verification_completed`
 - `proof_pack_verification_expired`
 - `proof_pack_verification_downgraded`
-- `proof_pack_freshness_state_changed`
+- `proof_pack_freshness_changed`
+- `proof_pack_signature_status_changed`
 - `verification_record_created`
 - `verification_request_submitted`
 - `verification_auto_check_passed`

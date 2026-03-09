@@ -2,6 +2,27 @@
 > Sync Pair: `Documentation.md`
 > Last Verified: `2026-03-09`
 
+## 2026-03-09: Trust, Proof Quality, and Verification Lifecycle Analytics PRD Extension
+
+What changed:
+
+- Extended the canonical MVP PRD in `PRD_for_a_web_platform_MVP.master-latest.md` with a dedicated `7.6 Trust, Proof Quality, and Verification Lifecycle Analytics (MVP)` block.
+- Added an MVP Proof Quality Score model, Time-to-Verified, verification lifecycle funnel, trust-oriented dashboards, event payload guidance, privacy rules, Facts & Decisions, Open Questions, and launch acceptance checks.
+- Tightened `8.5 Analytics and Privacy Acceptance` so launch readiness now explicitly covers trust dashboards, event schema quality, and ETL validation.
+
+Why:
+
+- The PRD already tracked TTSC, TTFQI, TTV, PAC, and fairness notes, but trust and proof-value instrumentation still needed to become first-class without expanding MVP into user-facing BI.
+
+How to verify:
+
+- `npm run docs:freshness`
+- `rg -n "Trust, Proof Quality, and Verification Lifecycle Analytics|Proof Quality Score|Time-to-Verified|7.7 Explicit Analytics Exclusions|trust dashboards" PRD_for_a_web_platform_MVP.master-latest.md`
+
+Open risks/TODO:
+
+- The canonical PRD now formalizes proof and trust analytics direction more explicitly than the compatibility mirror, so future analytics edits should continue to land in the canonical file first.
+
 ## 2026-03-09: Lean Organization MVP PRD Rewrite
 
 What changed:
