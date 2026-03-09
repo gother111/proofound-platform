@@ -259,7 +259,7 @@ CREATE POLICY "Users can view own audit logs"
   ON public.audit_logs FOR SELECT
   USING (actor_id = auth.uid());
 
-CREATE POLICY "Org members can view org audit logs"
+CREATE POLICY "Org owners and admins can view org audit logs"
   ON public.audit_logs FOR SELECT
   USING (
     org_id IS NOT NULL
@@ -267,6 +267,7 @@ CREATE POLICY "Org members can view org audit logs"
       SELECT 1 FROM public.organization_members
       WHERE organization_members.org_id = audit_logs.org_id
         AND organization_members.user_id = auth.uid()
+        AND organization_members.role IN ('owner', 'admin')
         AND organization_members.status = 'active'
     )
   );

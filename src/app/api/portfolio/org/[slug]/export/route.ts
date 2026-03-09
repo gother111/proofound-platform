@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { isActiveOrgMember } from '@/lib/api/auth';
+import { authorize, type OrgRole } from '@/lib/authz';
 import { fetchOrganizationTrustExportData } from '@/lib/portfolio/export-data';
 import { generateOrganizationProfilePdf } from '@/lib/portfolio/pdf';
 
@@ -32,12 +32,20 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
     }
 
-    const canExport = await isActiveOrgMember(supabase, user.id, organization.id, [
-      'owner',
-      'admin',
-      'member',
-      'viewer',
-    ]);
+    const { data: membership } = await supabase
+      .from('organization_members')
+      .select('role')
+      .eq('org_id', organization.id)
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    const orgRole = (membership?.role as OrgRole | undefined) ?? null;
+    const canExport = authorize({
+      resource: 'exports',
+      action: 'export',
+      orgRole,
+    }).allowed;
 
     if (!canExport) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

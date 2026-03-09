@@ -1,5 +1,6 @@
 import { createClient } from './supabase/server';
 import type { Organization, OrganizationMember, Profile } from '@/db/schema';
+import type { OrgRole } from '@/lib/authz';
 import { redirect } from 'next/navigation';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import * as React from 'react';
@@ -487,7 +488,7 @@ export async function assertOrgRole(orgId: string, userId: string, roles: string
   });
 }
 
-export type Role = 'owner' | 'admin' | 'member' | 'viewer';
+export type Role = OrgRole;
 
 export async function getPersona(userId: string) {
   const supabase = await createClient();

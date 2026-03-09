@@ -1,6 +1,7 @@
 'use server';
 
-import { requireAuth, assertOrgRole } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
+import { authorize, canInviteTeam, canManageTeam, type OrgRole } from '@/lib/authz';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { nanoid } from 'nanoid';
@@ -22,13 +23,35 @@ const inviteMemberSchema = z.object({
   role: z.enum(['admin', 'member', 'viewer']),
 });
 
+async function getOrgMembershipRoleForUser(orgId: string, userId: string): Promise<OrgRole | null> {
+  const supabase = await createClient({ allowCookieWrite: true });
+  const { data } = await supabase
+    .from('organization_members')
+    .select('role')
+    .eq('org_id', orgId)
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .maybeSingle();
+
+  return (data?.role as OrgRole | undefined) ?? null;
+}
+
 /** @deprecated Use PUT /api/organizations/[orgId] via apiFetch. */
 export async function updateOrganization(orgId: string, formData: FormData) {
   console.warn(
     'Deprecated: updateOrganization server action is legacy. Use PUT /api/organizations/[orgId] via apiFetch instead.'
   );
   const user = await requireAuth();
-  await assertOrgRole(orgId, user.id, ['owner', 'admin']);
+  const orgRole = await getOrgMembershipRoleForUser(orgId, user.id);
+  if (
+    !authorize({
+      resource: 'org_profile',
+      action: 'update',
+      orgRole,
+    }).allowed
+  ) {
+    return { error: 'Insufficient permissions' };
+  }
 
   // Parse causes from comma-separated string
   const causesRaw = formData.get('causes') as string | null;
@@ -53,6 +76,10 @@ export async function updateOrganization(orgId: string, formData: FormData) {
   const result = updateOrgSchema.safeParse(data);
   if (!result.success) {
     return { error: 'Invalid organization data' };
+  }
+
+  if (result.data.legalName !== undefined && orgRole !== 'owner') {
+    return { error: 'Only owners can update legal organization fields' };
   }
 
   try {
@@ -106,7 +133,10 @@ export async function updateOrganization(orgId: string, formData: FormData) {
 
 export async function inviteMember(orgId: string, formData: FormData) {
   const user = await requireAuth();
-  await assertOrgRole(orgId, user.id, ['owner', 'admin']);
+  const orgRole = await getOrgMembershipRoleForUser(orgId, user.id);
+  if (!canInviteTeam(orgRole)) {
+    return { error: 'Insufficient permissions' };
+  }
 
   const data = {
     email: formData.get('email') as string,
@@ -244,7 +274,10 @@ export async function acceptInvitation(token: string) {
 
 export async function removeMember(orgId: string, userId: string) {
   const user = await requireAuth();
-  await assertOrgRole(orgId, user.id, ['owner', 'admin']);
+  const orgRole = await getOrgMembershipRoleForUser(orgId, user.id);
+  if (!canManageTeam(orgRole)) {
+    return { error: 'Insufficient permissions' };
+  }
 
   try {
     const supabase = await createClient();

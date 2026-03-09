@@ -27,6 +27,7 @@ import {
   profiles,
 } from '@/db/schema';
 import { eq, and, sql, gte, desc, count } from 'drizzle-orm';
+import { authorize, type OrgRole } from '@/lib/authz';
 
 export const dynamic = 'force-dynamic';
 
@@ -89,7 +90,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
     }
 
-    if (!membership) {
+    const orgRole = (membership?.role as OrgRole | undefined) ?? null;
+    if (
+      !authorize({
+        resource: 'assignments',
+        action: 'read',
+        orgRole,
+      }).allowed
+    ) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
@@ -227,7 +235,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         name: org.displayName,
         slug: org.slug,
       },
-      userRole: membership.role,
+      userRole: orgRole,
       pipeline: {
         openAssignments: assignmentStats.active,
         totalAssignments: assignmentStats.total,

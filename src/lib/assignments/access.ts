@@ -167,3 +167,19 @@ export async function resolveUserOrgContext(
 
   return membership.orgId;
 }
+
+/**
+ * Resolves an organization only when the caller provides explicit org context.
+ * Sensitive org reads/writes should use this instead of implicit first-membership fallback.
+ */
+export async function resolveExplicitUserOrgContext(
+  userId: string,
+  context?: MembershipContext,
+  requiredRoles?: readonly string[]
+): Promise<string | null> {
+  if (!context?.orgId && !context?.orgSlug) {
+    return null;
+  }
+
+  return resolveUserOrgContext(userId, context, requiredRoles);
+}

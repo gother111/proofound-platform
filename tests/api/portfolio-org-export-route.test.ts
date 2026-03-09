@@ -6,10 +6,6 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }));
 
-vi.mock('@/lib/api/auth', () => ({
-  isActiveOrgMember: vi.fn(),
-}));
-
 vi.mock('@/lib/portfolio/export-data', () => ({
   fetchOrganizationTrustExportData: vi.fn(),
 }));
@@ -20,30 +16,40 @@ vi.mock('@/lib/portfolio/pdf', () => ({
 
 import { GET } from '@/app/api/portfolio/org/[slug]/export/route';
 import { createClient } from '@/lib/supabase/server';
-import { isActiveOrgMember } from '@/lib/api/auth';
 import { fetchOrganizationTrustExportData } from '@/lib/portfolio/export-data';
 import { generateOrganizationProfilePdf } from '@/lib/portfolio/pdf';
 
 function mockSupabase({
   user,
   organization = { id: 'org-1', slug: 'acme' },
+  membership = { role: 'admin' },
 }: {
   user: { id: string } | null;
   organization?: { id: string; slug: string } | null;
+  membership?: { role: string } | null;
 }) {
   (createClient as any).mockResolvedValue({
     auth: {
       getUser: vi.fn().mockResolvedValue({ data: { user } }),
     },
     from: vi.fn((table: string) => {
-      if (table !== 'organizations') {
-        throw new Error(`Unexpected table ${table}`);
+      if (table === 'organizations') {
+        const maybeSingle = vi.fn().mockResolvedValue({ data: organization });
+        const eqSlug = vi.fn().mockReturnValue({ maybeSingle });
+        const select = vi.fn().mockReturnValue({ eq: eqSlug });
+        return { select };
       }
 
-      const maybeSingle = vi.fn().mockResolvedValue({ data: organization });
-      const eqSlug = vi.fn().mockReturnValue({ maybeSingle });
-      const select = vi.fn().mockReturnValue({ eq: eqSlug });
-      return { select };
+      if (table === 'organization_members') {
+        const maybeSingle = vi.fn().mockResolvedValue({ data: membership });
+        const eqStatus = vi.fn().mockReturnValue({ maybeSingle });
+        const eqUser = vi.fn().mockReturnValue({ eq: eqStatus });
+        const eqOrg = vi.fn().mockReturnValue({ eq: eqUser });
+        const select = vi.fn().mockReturnValue({ eq: eqOrg });
+        return { select };
+      }
+
+      throw new Error(`Unexpected table ${table}`);
     }),
   });
 }
@@ -76,8 +82,7 @@ describe('/api/portfolio/org/[slug]/export', () => {
   });
 
   it('returns 403 when user is not an active org member', async () => {
-    mockSupabase({ user: { id: 'user-1' } });
-    (isActiveOrgMember as any).mockResolvedValue(false);
+    mockSupabase({ user: { id: 'user-1' }, membership: null });
 
     const response = await GET(new Request('http://localhost/api/portfolio/org/acme/export'), {
       params: Promise.resolve({ slug: 'acme' }),
@@ -89,7 +94,6 @@ describe('/api/portfolio/org/[slug]/export', () => {
 
   it('returns 404 when organization export data is unavailable', async () => {
     mockSupabase({ user: { id: 'user-1' } });
-    (isActiveOrgMember as any).mockResolvedValue(true);
     (fetchOrganizationTrustExportData as any).mockResolvedValue(null);
 
     const response = await GET(new Request('http://localhost/api/portfolio/org/acme/export'), {
@@ -102,7 +106,6 @@ describe('/api/portfolio/org/[slug]/export', () => {
 
   it('returns a downloadable PDF on success', async () => {
     mockSupabase({ user: { id: 'user-1' } });
-    (isActiveOrgMember as any).mockResolvedValue(true);
     (fetchOrganizationTrustExportData as any).mockResolvedValue({
       organization: {
         id: 'org-1',
@@ -132,11 +135,27 @@ describe('/api/portfolio/org/[slug]/export', () => {
     expect(response.headers.get('content-type')).toBe('application/pdf');
     expect(response.headers.get('content-disposition')).toContain('proofound-org-acme.pdf');
     expect(bytes.length).toBeGreaterThan(0);
-    expect(isActiveOrgMember).toHaveBeenCalledWith(expect.anything(), 'user-1', 'org-1', [
-      'owner',
-      'admin',
-      'member',
-      'viewer',
-    ]);
+  });
+
+  it('returns 403 for viewer membership', async () => {
+    mockSupabase({ user: { id: 'user-1' }, membership: { role: 'viewer' } });
+
+    const response = await GET(new Request('http://localhost/api/portfolio/org/acme/export'), {
+      params: Promise.resolve({ slug: 'acme' }),
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({ error: 'Forbidden' });
+  });
+
+  it('returns 403 for member membership', async () => {
+    mockSupabase({ user: { id: 'user-1' }, membership: { role: 'member' } });
+
+    const response = await GET(new Request('http://localhost/api/portfolio/org/acme/export'), {
+      params: Promise.resolve({ slug: 'acme' }),
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({ error: 'Forbidden' });
   });
 });

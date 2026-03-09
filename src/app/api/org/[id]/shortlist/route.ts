@@ -14,10 +14,12 @@ import {
 } from '@/db/schema';
 import {
   buildCandidateReviewProjection,
+  getShortlistProjectionPolicy,
   getRankBand,
   getVisibleIdentityFields,
   normalizeFairnessStatus,
 } from '@/lib/matching/review-contract';
+import { authorize, type OrgRole } from '@/lib/authz';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,7 +74,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (!org) {
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
     }
-    if (!membership) {
+    const orgRole = (membership?.role as OrgRole | undefined) ?? null;
+    if (
+      !authorize({
+        resource: 'candidate_shortlist_cards',
+        action: 'read',
+        orgRole,
+      }).allowed
+    ) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
@@ -145,14 +154,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       items: shortlist.map((row) => {
         const fairnessStatus = normalizeFairnessStatus(row.fairnessStatus);
         const rankInfo = rankMap.get(row.matchId);
+        const projectionPolicy = getShortlistProjectionPolicy(orgRole, row.revealScope);
         return {
           id: row.matchId,
           assignmentId: row.assignmentId,
           assignmentRole: row.assignmentRole,
           assignmentStatus: row.assignmentStatus,
           reviewStage: row.reviewStage,
-          revealScope: row.revealScope,
-          visibleIdentityFields: getVisibleIdentityFields(row.revealScope),
+          revealScope: projectionPolicy.effectiveScope,
+          visibleIdentityFields: getVisibleIdentityFields(projectionPolicy.effectiveScope),
           candidate: buildCandidateReviewProjection(
             {
               profileId: row.profileId,
@@ -169,13 +179,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
               causeTags: row.causeTags,
               verified: (row.verified as Record<string, unknown> | null) ?? null,
             },
-            row.revealScope
+            projectionPolicy.effectiveScope,
+            {
+              verificationSummaryVisibility: projectionPolicy.verificationSummaryVisibility,
+            }
           ),
           fairness: {
             status: fairnessStatus,
           },
           rankBand:
-            rankInfo && fairnessStatus === 'pass'
+            rankInfo && fairnessStatus === 'pass' && orgRole !== 'viewer'
               ? getRankBand(rankInfo.rank, rankInfo.total)
               : 'Shortlisted',
           shortlistedAt: row.shortlistedAt,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { User } from '@supabase/supabase-js';
+import type { OrgRole } from '@/lib/authz';
 import { createClient } from '@/lib/supabase/server';
 
 export type ApiAuthContext = {
@@ -63,7 +64,7 @@ export async function isActiveOrgMember(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
   orgId: string,
-  roles?: Array<'owner' | 'admin' | 'member' | 'viewer'>
+  roles?: OrgRole[]
 ): Promise<boolean> {
   let query = supabase
     .from('organization_members')

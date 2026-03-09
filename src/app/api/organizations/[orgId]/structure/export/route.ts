@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { authorize, type OrgRole } from '@/lib/authz';
 import { createClient } from '@/lib/supabase/server';
 
 /**
  * GET /api/organizations/[orgId]/structure/export
- * 
+ *
  * Export organizational structure as JSON file
  */
 export async function GET(
@@ -23,15 +24,23 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check membership
+    // Check membership and canonical export authorization
     const { data: membership } = await supabase
       .from('organization_members')
       .select('role')
       .eq('org_id', orgId)
       .eq('user_id', user.id)
-      .single();
+      .eq('status', 'active')
+      .maybeSingle();
 
-    if (!membership) {
+    const orgRole = (membership?.role as OrgRole | undefined) ?? null;
+    if (
+      !authorize({
+        resource: 'exports',
+        action: 'export',
+        orgRole,
+      }).allowed
+    ) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
