@@ -3,6 +3,10 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { markTokenUsed } from '@/lib/feedback/service';
 import { SubmitPayloadSchema } from '@/lib/feedback/schema';
+import { emitLifecycleEvent } from '@/lib/analytics/lifecycle-events';
+import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
+import { isFeatureEnabled } from '@/lib/feature-flags/server';
+import { CAPABILITY_TOKEN_CLASSES, inspectCapabilityToken } from '@/lib/security/capability-tokens';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,6 +18,7 @@ export async function POST(request: NextRequest) {
     let interviewId = body.interviewId;
     let templateId = body.templateId;
     let useAdminClient = false;
+    let actorEmail: string | null = null;
 
     // Authenticated path
     if (!body.token) {
@@ -26,15 +31,26 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
       userId = user.id;
+      actorEmail = user.email ?? null;
     }
 
     // Resolve token-based context
     if (body.token) {
       useAdminClient = true;
+      const inspected = await inspectCapabilityToken(body.token, {
+        tokenClass: CAPABILITY_TOKEN_CLASSES.FEEDBACK_RESPONSE,
+        metadata: { surface: 'feedback_submit' },
+      });
+
+      if (!inspected.ok) {
+        const status = inspected.reason === 'invalid' ? 404 : 410;
+        return NextResponse.json({ error: `Token ${inspected.reason}` }, { status });
+      }
+
       const { data: tokenRow, error: tokenError } = await admin
         .from('feedback_tokens')
-        .select('interview_id, template_id, direction, expires_at, used_at')
-        .eq('token', body.token)
+        .select('id, interview_id, template_id, direction, expires_at, used_at, recipient_email')
+        .eq('id', inspected.token.source_id)
         .maybeSingle();
 
       if (tokenError || !tokenRow) {
@@ -55,6 +71,8 @@ export async function POST(request: NextRequest) {
       if (tokenRow.direction !== body.direction) {
         return NextResponse.json({ error: 'Token direction mismatch' }, { status: 400 });
       }
+
+      actorEmail = tokenRow.recipient_email ?? null;
     }
 
     if (!interviewId) {
@@ -105,6 +123,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No feedback template configured' }, { status: 400 });
     }
 
+    const structuredFeedbackRequired = await isFeatureEnabled(
+      FEATURE_FLAG_KEYS.STRUCTURED_FEEDBACK_REQUIRED,
+      {
+        userId,
+        userEmail: actorEmail ?? undefined,
+      },
+      true
+    );
+
+    if (structuredFeedbackRequired && !body.structuredFeedback) {
+      return NextResponse.json(
+        {
+          error:
+            'Structured feedback is required. Include a reason code, personalized note, and suggested next step.',
+        },
+        { status: 400 }
+      );
+    }
+
     const client = useAdminClient ? admin : supabase;
 
     // Prevent duplicate token submissions for a side
@@ -126,7 +163,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const numericScores = body.answers
+    const numericScores = (body.answers ?? [])
       .map((a) => a.score)
       .filter((v): v is number => typeof v === 'number');
     const computedOverall =
@@ -134,6 +171,8 @@ export async function POST(request: NextRequest) {
       (numericScores.length
         ? Number((numericScores.reduce((s, v) => s + v, 0) / numericScores.length).toFixed(2))
         : null);
+
+    const structuredFeedback = body.structuredFeedback;
 
     const { data: response, error: insertError } = await client
       .from('feedback_responses')
@@ -146,6 +185,17 @@ export async function POST(request: NextRequest) {
         is_anonymous: true,
         overall_score: computedOverall,
         shared_at: new Date().toISOString(),
+        decision_state: structuredFeedback?.decisionState ?? null,
+        audience_variant: structuredFeedback?.audienceVariant ?? null,
+        reason_code: structuredFeedback?.reasonCode ?? null,
+        personalized_note: structuredFeedback?.personalizedNote ?? null,
+        suggested_next_step: structuredFeedback?.suggestedNextStep ?? null,
+        author_role: structuredFeedback?.authorRole ?? null,
+        rubric_version: structuredFeedback?.rubricVersion ?? null,
+        rubric_subscores: structuredFeedback?.rubricSubscores ?? null,
+        reusable_template_id: structuredFeedback?.reusableTemplateId ?? null,
+        operator_override_reason: structuredFeedback?.operatorOverrideReason ?? null,
+        internal_note: structuredFeedback?.internalNote ?? null,
       })
       .select('id')
       .single();
@@ -155,24 +205,62 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Could not save feedback' }, { status: 500 });
     }
 
-    const answersPayload = body.answers.map((answer) => ({
-      response_id: response.id,
-      question_id: answer.questionId,
-      score: answer.score ?? null,
-      text_answer: answer.textAnswer ?? null,
-    }));
+    if (body.answers?.length) {
+      const answersPayload = body.answers.map((answer) => ({
+        response_id: response.id,
+        question_id: answer.questionId,
+        score: answer.score ?? null,
+        text_answer: answer.textAnswer ?? null,
+      }));
 
-    const { error: answerError } = await client.from('feedback_answers').insert(answersPayload);
-    if (answerError) {
-      console.error('Feedback answers error', answerError);
-      return NextResponse.json({ error: 'Could not save answers' }, { status: 500 });
+      const { error: answerError } = await client.from('feedback_answers').insert(answersPayload);
+      if (answerError) {
+        console.error('Feedback answers error', answerError);
+        return NextResponse.json({ error: 'Could not save answers' }, { status: 500 });
+      }
     }
 
     if (body.token) {
-      await markTokenUsed(body.token);
+      const markUsed = await markTokenUsed(body.token);
+      if (!markUsed.ok) {
+        return NextResponse.json({ error: `Token ${markUsed.reason}` }, { status: 409 });
+      }
     }
 
-    return NextResponse.json({ success: true, responseId: response.id });
+    if (structuredFeedback) {
+      await emitLifecycleEvent(
+        'structured_feedback_submitted',
+        {
+          feedback_response_id: response.id,
+          interview_id: interviewId,
+          direction: body.direction,
+          audience_variant: structuredFeedback.audienceVariant,
+          decision_state: structuredFeedback.decisionState,
+          reason_code: structuredFeedback.reasonCode,
+          author_role: structuredFeedback.authorRole,
+          actor_type:
+            structuredFeedback.authorRole === 'organization_member'
+              ? 'organization_member'
+              : structuredFeedback.authorRole === 'platform_operator'
+                ? 'platform_admin'
+                : structuredFeedback.authorRole === 'system'
+                  ? 'system'
+                  : 'candidate',
+          source: useAdminClient ? 'feedback.submit.token' : 'feedback.submit.dashboard',
+        },
+        {
+          userId,
+          entityType: 'interview',
+          entityId: interviewId,
+        }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      responseId: response.id,
+      structuredFeedbackRequired,
+    });
   } catch (error: any) {
     console.error('Feedback submit failed', error);
 

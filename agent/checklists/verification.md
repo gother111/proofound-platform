@@ -164,6 +164,18 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Auth/CSRF enforcement:
   - `POST /api/profile/snippet` without auth/CSRF should fail (`403` expected for missing CSRF).
 
+## Launch-Safe Ops Checks (Block 9)
+
+- If changes touch launch operations, feature flags, feedback contracts, fallback states, or admin rollout metrics:
+  - Run `npx vitest run tests/api/feedback-schema.test.ts`
+  - Run `npm run docs:freshness`
+- Manual smoke expectations for launch-safe behavior:
+  - qualified intro corridor can be disabled without breaking portfolio, browse, export, delete, or unpublish
+  - feedback token lookup returns structured feedback contract fields
+  - feedback submission rejects empty payloads when both answers and structured feedback are missing
+  - admin rollout metrics returns fallback states, queue health, and synthetic monitor health
+  - fairness suppression never exposes exact ranking when the kill switch or suppression state is active
+
 ## Husky / lint-staged Policy
 
 - If hooks fail, fix only what affects the intended change set.

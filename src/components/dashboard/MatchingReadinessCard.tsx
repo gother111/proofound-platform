@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DASHBOARD_STATUS_CHIP_CLASS } from '@/components/dashboard/chipStyles';
 import { apiFetch } from '@/lib/api/fetch';
+import { FALLBACK_COPY, type OperationalFallbackMode } from '@/lib/contracts/launch-operations';
 import type { IndividualReadiness } from '@/lib/momentum/types';
 
 type MatchingReadinessCardProps = {
@@ -79,6 +80,18 @@ export function MatchingReadinessCard({ useMockData, onActionClick }: MatchingRe
 
   const missingBrowse = data?.missingByState.browse_ready ?? [];
   const missingIntro = data?.missingByState.qualified_intro_ready ?? [];
+  const fallbackMode: OperationalFallbackMode | null = !data
+    ? null
+    : data.flags.qualifiedIntroReady
+      ? null
+      : data.metrics.pendingVerifications > 0
+        ? 'trust_pending_verification'
+        : (data.metrics.proofBackedSkillCount ?? 0) < 2
+          ? 'proof_building_weak_coverage'
+          : data.marketActivityLow
+            ? 'browse_only_low_assignment_supply'
+            : 'intro_hold_insufficient_qualified_intros';
+  const fallbackCopy = fallbackMode ? FALLBACK_COPY[fallbackMode].individual : null;
 
   return (
     <Card className="h-full">
@@ -126,10 +139,25 @@ export function MatchingReadinessCard({ useMockData, onActionClick }: MatchingRe
           <p className="mt-1 text-xs text-muted-foreground">
             {data?.flags.qualifiedIntroReady
               ? 'Qualified introductions are unlocked.'
-              : 'Still protected. Stronger proof, trust signals, and full constraints are required.'}
+              : (fallbackCopy?.detail ??
+                'There are not enough qualified introductions yet. Your portfolio is still doing useful work while we protect quality.')}
           </p>
           {!data?.flags.qualifiedIntroReady && missingIntro.length > 0 ? (
-            <p className="mt-2 text-xs text-foreground">{missingIntro[0]?.detail}</p>
+            <div className="mt-2 space-y-2">
+              <p className="text-xs text-foreground">{missingIntro[0]?.detail}</p>
+              {fallbackCopy ? (
+                <div className="rounded-md bg-japandi-bg/70 p-2">
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    Best next steps
+                  </p>
+                  <ul className="mt-1 space-y-1 text-xs text-foreground">
+                    {fallbackCopy.nextActions.map((action) => (
+                      <li key={action}>{action}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </div>
           ) : null}
         </div>
 

@@ -7,7 +7,6 @@ describe('SubmitPayloadSchema', () => {
       SubmitPayloadSchema.parse({
         interviewId: '00000000-0000-0000-0000-000000000000',
         direction: 'candidate_to_org',
-        answers: [],
       })
     ).toThrow();
   });
@@ -26,5 +25,42 @@ describe('SubmitPayloadSchema', () => {
 
     expect(parsed.direction).toBe('org_to_candidate');
     expect(parsed.answers[0].questionId).toBeDefined();
+  });
+
+  it('accepts structured feedback without answer rows', () => {
+    const parsed = SubmitPayloadSchema.parse({
+      interviewId: '00000000-0000-0000-0000-000000000001',
+      direction: 'candidate_to_org',
+      structuredFeedback: {
+        decisionState: 'not_now',
+        audienceVariant: 'candidate',
+        reasonCode: 'verification_pending',
+        personalizedNote:
+          'Your portfolio is credible, but the strongest trust signal is still waiting on verification.',
+        suggestedNextStep:
+          'Complete the pending verification request and keep your proof links current.',
+        authorRole: 'organization_member',
+      },
+    });
+
+    expect(parsed.structuredFeedback?.reasonCode).toBe('verification_pending');
+  });
+
+  it('rejects audience and reason-code mismatches', () => {
+    expect(() =>
+      SubmitPayloadSchema.parse({
+        interviewId: '00000000-0000-0000-0000-000000000001',
+        direction: 'candidate_to_org',
+        structuredFeedback: {
+          decisionState: 'not_now',
+          audienceVariant: 'candidate',
+          reasonCode: 'assignment_scope_too_narrow',
+          personalizedNote:
+            'This note is intentionally long enough to pass the personalized note length check.',
+          suggestedNextStep: 'Keep your portfolio updated.',
+          authorRole: 'organization_member',
+        },
+      })
+    ).toThrow(/candidate-facing reason code/i);
   });
 });

@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { DASHBOARD_STATUS_CHIP_CLASS } from '@/components/dashboard/chipStyles';
+import { FALLBACK_COPY, type OperationalFallbackMode } from '@/lib/contracts/launch-operations';
 import type { IndividualReadiness } from '@/lib/momentum/types';
 
 export function ReadinessSprintPanel() {
@@ -34,6 +35,16 @@ export function ReadinessSprintPanel() {
   }
 
   const missingIntro = data.missingByState.qualified_intro_ready ?? [];
+  const fallbackMode: OperationalFallbackMode | null = data.flags.qualifiedIntroReady
+    ? null
+    : data.metrics.pendingVerifications > 0
+      ? 'trust_pending_verification'
+      : (data.metrics.proofBackedSkillCount ?? 0) < 2
+        ? 'proof_building_weak_coverage'
+        : data.marketActivityLow
+          ? 'browse_only_low_assignment_supply'
+          : 'intro_hold_insufficient_qualified_intros';
+  const fallbackCopy = fallbackMode ? FALLBACK_COPY[fallbackMode].individual : null;
 
   return (
     <Card className="space-y-4 border p-4" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
@@ -92,7 +103,10 @@ export function ReadinessSprintPanel() {
             Qualified introductions
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Protected until stronger proof, trust signals, and full constraints are complete.
+            {data.flags.qualifiedIntroReady
+              ? 'Qualified introductions are unlocked.'
+              : (fallbackCopy?.detail ??
+                'There are not enough qualified introductions yet. Your portfolio is still doing useful work while we protect quality.')}
           </p>
           {missingIntro.length > 0 ? (
             <div className="mt-2 space-y-1">
@@ -101,6 +115,18 @@ export function ReadinessSprintPanel() {
                   {item.label}: {item.detail}
                 </p>
               ))}
+              {fallbackCopy ? (
+                <div className="rounded-md bg-japandi-bg/70 p-2">
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    Best next steps
+                  </p>
+                  <ul className="mt-1 space-y-1 text-xs text-foreground">
+                    {fallbackCopy.nextActions.map((action) => (
+                      <li key={action}>{action}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </div>
           ) : (
             <p className="mt-2 text-xs text-foreground">Qualified introductions are unlocked.</p>

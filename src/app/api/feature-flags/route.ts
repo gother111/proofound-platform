@@ -39,6 +39,9 @@ export async function GET() {
       FEATURE_FLAG_KEYS.ASSIGNMENT_BASIC_MODE,
       FEATURE_FLAG_KEYS.UI_VOCAB_PLAIN,
       FEATURE_FLAG_KEYS.PRIVACY_SUMMARY,
+      FEATURE_FLAG_KEYS.QUALIFIED_INTRO_CORRIDOR,
+      FEATURE_FLAG_KEYS.STRUCTURED_FEEDBACK_REQUIRED,
+      FEATURE_FLAG_KEYS.EXACT_RANK_EXPOSURE,
     ];
 
     const resolved = await resolveFeatureFlags(
@@ -58,6 +61,9 @@ export async function GET() {
         assignmentBasicMode: resolved[FEATURE_FLAG_KEYS.ASSIGNMENT_BASIC_MODE],
         uiVocabPlain: resolved[FEATURE_FLAG_KEYS.UI_VOCAB_PLAIN],
         privacySummary: resolved[FEATURE_FLAG_KEYS.PRIVACY_SUMMARY],
+        qualifiedIntroCorridor: resolved[FEATURE_FLAG_KEYS.QUALIFIED_INTRO_CORRIDOR],
+        structuredFeedbackRequired: resolved[FEATURE_FLAG_KEYS.STRUCTURED_FEEDBACK_REQUIRED],
+        exactRankExposure: resolved[FEATURE_FLAG_KEYS.EXACT_RANK_EXPOSURE],
       },
     });
   } catch (error) {

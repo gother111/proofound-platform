@@ -140,7 +140,7 @@ export function toExpertiseStatsPresentation(
             ? {
                 tier: 'strong',
                 message:
-                  'Qualified introductions require stronger proof coverage, trust signals, and full constraints.',
+                  'Your portfolio remains useful now. Qualified introductions stay protected until stronger proof coverage, trust signals, and full constraints are in place.',
                 remaining: {
                   skillsWithRecency: Math.max(0, 5 - readiness.counts.skillsWithRecency),
                   proofCount: Math.max(0, 2 - readiness.counts.proofCount),

@@ -12,13 +12,76 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminUser } from '@/lib/auth/admin';
 import { db } from '@/db';
-import { featureFlags, adminAuditLog } from '@/db/schema';
-import { eq, asc } from 'drizzle-orm';
+import { adminAuditLog } from '@/db/schema';
+import { sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { log } from '@/lib/log';
 import { requirePlatformAdminJson } from '@/lib/api/route-helpers';
+import {
+  FeatureFlagControlTypeSchema,
+  FeatureFlagTaxonomySchema,
+} from '@/lib/contracts/launch-operations';
+import { getRows } from '@/lib/db/rows';
 
 export const dynamic = 'force-dynamic';
+
+type FeatureFlagRecord = {
+  key: string;
+  enabled: boolean;
+  audience: Record<string, unknown> | null;
+  description: string | null;
+  taxonomy: string | null;
+  controlType: string | null;
+  owner: string | null;
+  reason: string | null;
+  revisitAfter: string | null;
+  metadata: Record<string, unknown> | null;
+  updatedAt: string | null;
+};
+
+async function listFeatureFlags(): Promise<FeatureFlagRecord[]> {
+  const result = await db.execute(sql`
+    select
+      key,
+      enabled,
+      audience,
+      description,
+      taxonomy,
+      control_type as "controlType",
+      owner,
+      reason,
+      revisit_after as "revisitAfter",
+      metadata,
+      updated_at as "updatedAt"
+    from feature_flags
+    order by key asc
+  `);
+
+  return getRows(result as { rows?: FeatureFlagRecord[] }) as FeatureFlagRecord[];
+}
+
+async function getFeatureFlagByKey(key: string): Promise<FeatureFlagRecord | null> {
+  const result = await db.execute(sql`
+    select
+      key,
+      enabled,
+      audience,
+      description,
+      taxonomy,
+      control_type as "controlType",
+      owner,
+      reason,
+      revisit_after as "revisitAfter",
+      metadata,
+      updated_at as "updatedAt"
+    from feature_flags
+    where key = ${key}
+    limit 1
+  `);
+
+  const rows = getRows(result as { rows?: FeatureFlagRecord[] }) as FeatureFlagRecord[];
+  return rows[0] ?? null;
+}
 
 /**
  * GET /api/admin/feature-flags
@@ -32,7 +95,7 @@ export async function GET() {
       return adminUser;
     }
 
-    const flags = await db.select().from(featureFlags).orderBy(asc(featureFlags.key));
+    const flags = await listFeatureFlags();
 
     log.info('admin.feature_flags.list', {
       adminId: adminUser.userId,
@@ -58,9 +121,8 @@ const FeatureFlagSchema = z.object({
     .string()
     .min(1)
     .max(100)
-    .regex(/^[a-z][a-z0-9_]*$/, {
-      message:
-        'Key must start with lowercase letter and contain only lowercase letters, numbers, and underscores',
+    .regex(/^[A-Za-z][A-Za-z0-9_]*$/, {
+      message: 'Key must start with a letter and contain only letters, numbers, and underscores',
     }),
   enabled: z.boolean().default(false),
   audience: z
@@ -82,6 +144,12 @@ const FeatureFlagSchema = z.object({
     .nullable()
     .optional(),
   description: z.string().max(500).optional(),
+  taxonomy: FeatureFlagTaxonomySchema.optional(),
+  controlType: FeatureFlagControlTypeSchema.optional(),
+  owner: z.string().trim().min(2).max(120).optional(),
+  reason: z.string().trim().min(3).max(400).optional(),
+  revisitAfter: z.string().datetime().nullable().optional(),
+  metadata: z.record(z.any()).optional(),
 });
 
 /**
@@ -111,12 +179,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { key, enabled, audience, description } = validationResult.data;
+    const {
+      key,
+      enabled,
+      audience,
+      description,
+      taxonomy,
+      controlType,
+      owner,
+      reason,
+      revisitAfter,
+      metadata,
+    } = validationResult.data;
 
     // Check if flag exists
-    const existingFlag = await db.query.featureFlags.findFirst({
-      where: eq(featureFlags.key, key),
-    });
+    const existingFlag = await getFeatureFlagByKey(key);
 
     let action: 'created' | 'updated';
     let previousValue: any = null;
@@ -126,20 +203,33 @@ export async function POST(request: NextRequest) {
       previousValue = {
         enabled: existingFlag.enabled,
         audience: existingFlag.audience,
+        description: existingFlag.description,
+        taxonomy: existingFlag.taxonomy,
+        controlType: existingFlag.controlType,
+        owner: existingFlag.owner,
+        reason: existingFlag.reason,
+        revisitAfter: existingFlag.revisitAfter,
+        metadata: existingFlag.metadata,
       };
 
-      await db
-        .update(featureFlags)
-        .set({
-          enabled,
-          audience: audience
-            ? {
-                ...audience,
-                ...(description && { _description: description }),
-              }
-            : null,
-        })
-        .where(eq(featureFlags.key, key));
+      await db.execute(sql`
+          update feature_flags
+          set
+            enabled = ${enabled},
+            audience = ${JSON.stringify(audience ?? null)}::jsonb,
+            description = ${description ?? existingFlag.description ?? null},
+            taxonomy = ${taxonomy ?? existingFlag.taxonomy ?? null},
+            control_type = ${controlType ?? existingFlag.controlType ?? null},
+            owner = ${owner ?? existingFlag.owner ?? null},
+            reason = ${reason ?? existingFlag.reason ?? null},
+            revisit_after = ${revisitAfter ? new Date(revisitAfter).toISOString() : null}::timestamptz,
+            metadata = ${JSON.stringify({
+              ...((existingFlag.metadata as Record<string, unknown> | null) ?? {}),
+              ...(metadata ?? {}),
+            })}::jsonb,
+            updated_at = now()
+          where key = ${key}
+        `);
 
       action = 'updated';
 
@@ -151,16 +241,34 @@ export async function POST(request: NextRequest) {
       });
     } else {
       // Create new flag
-      await db.insert(featureFlags).values({
-        key,
-        enabled,
-        audience: audience
-          ? {
-              ...audience,
-              ...(description && { _description: description }),
-            }
-          : null,
-      });
+      await db.execute(sql`
+        insert into feature_flags (
+          key,
+          enabled,
+          audience,
+          description,
+          taxonomy,
+          control_type,
+          owner,
+          reason,
+          revisit_after,
+          metadata,
+          updated_at
+        )
+        values (
+          ${key},
+          ${enabled},
+          ${JSON.stringify(audience ?? null)}::jsonb,
+          ${description ?? null},
+          ${taxonomy ?? null},
+          ${controlType ?? null},
+          ${owner ?? null},
+          ${reason ?? null},
+          ${revisitAfter ? new Date(revisitAfter).toISOString() : null}::timestamptz,
+          ${JSON.stringify(metadata ?? {})}::jsonb,
+          now()
+        )
+      `);
 
       action = 'created';
 
@@ -181,15 +289,19 @@ export async function POST(request: NextRequest) {
         key,
         enabled,
         audience,
+        description,
+        taxonomy,
+        controlType,
+        owner,
+        revisitAfter,
+        metadata,
         previousValue,
       },
-      reason: body.reason || `Feature flag ${action}`,
+      reason: reason || `Feature flag ${action}`,
     });
 
     // Fetch and return the updated/created flag
-    const flag = await db.query.featureFlags.findFirst({
-      where: eq(featureFlags.key, key),
-    });
+    const flag = await getFeatureFlagByKey(key);
 
     return NextResponse.json({
       success: true,

@@ -206,8 +206,8 @@ export async function evaluateIndividualMatchability(
     message: readiness.flags.browseReady
       ? readiness.flags.qualifiedIntroReady
         ? 'Browse is active and qualified introductions are unlocked.'
-        : 'Browse is active. Add stronger proof and complete constraints for qualified introductions.'
-      : 'Browsing is open, but add a few recent skills and one preference to personalize results.',
+        : 'Browsing stays open while qualified introductions are protected. Add stronger proof, trust signals, and complete constraints when you are ready.'
+      : 'Browsing stays open while you add a few recent skills and one preference to personalize results.',
     counts: {
       skillsWithRecency: counts.skillsWithRecency,
       proofCount: counts.proofCount,

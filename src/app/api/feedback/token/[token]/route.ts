@@ -1,16 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
+import { isFeatureEnabled } from '@/lib/feature-flags/server';
+import { CAPABILITY_TOKEN_CLASSES, inspectCapabilityToken } from '@/lib/security/capability-tokens';
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   const admin = createAdminClient();
 
   try {
     const { token: tokenValue } = await params;
+    const inspected = await inspectCapabilityToken(tokenValue, {
+      tokenClass: CAPABILITY_TOKEN_CLASSES.FEEDBACK_RESPONSE,
+      metadata: { surface: 'feedback_token_lookup' },
+    });
+
+    if (!inspected.ok) {
+      const status = inspected.reason === 'invalid' ? 404 : 410;
+      return NextResponse.json({ error: `Token ${inspected.reason}` }, { status });
+    }
 
     const { data: tokenRow, error: tokenError } = await admin
       .from('feedback_tokens')
-      .select('token, interview_id, template_id, direction, expires_at, used_at')
-      .eq('token', tokenValue)
+      .select('id, interview_id, template_id, direction, expires_at, used_at')
+      .eq('id', inspected.token.source_id)
       .maybeSingle();
 
     if (tokenError || !tokenRow) {
@@ -46,11 +58,26 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
         .maybeSingle(),
     ]);
 
+    const structuredFeedbackRequired = await isFeatureEnabled(
+      FEATURE_FLAG_KEYS.STRUCTURED_FEEDBACK_REQUIRED,
+      {
+        userEmail: null,
+      },
+      true
+    );
+
     return NextResponse.json({
-      token: tokenRow.token,
+      token: tokenValue,
       direction: tokenRow.direction,
       expiresAt: tokenRow.expires_at,
       usedAt: tokenRow.used_at,
+      structuredFeedbackRequired,
+      feedbackContract: {
+        requiresReasonCode: structuredFeedbackRequired,
+        requiresPersonalizedNote: structuredFeedbackRequired,
+        requiresSuggestedNextStep: structuredFeedbackRequired,
+        rubricVersion: 'structured-feedback/v1',
+      },
       template,
       questions,
       interview,

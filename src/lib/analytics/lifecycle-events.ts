@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { emitAnalyticsEvent } from '@/lib/analytics/events';
+import type { EventTypeValue } from '@/lib/analytics/constants';
 import {
   OperationalFallbackModeSchema,
   StructuredFeedbackAudienceSchema,
@@ -554,7 +555,7 @@ export async function emitLifecycleEvent<TEventName extends LifecycleEventName>(
   const validated = lifecycleEventSchemas[eventName].parse(payload);
 
   await emitAnalyticsEvent({
-    eventType: eventName,
+    eventType: eventName as EventTypeValue,
     userId: context?.userId ?? undefined,
     organizationId: context?.organizationId ?? undefined,
     entityType: context?.entityType ?? getEntityType(eventName),

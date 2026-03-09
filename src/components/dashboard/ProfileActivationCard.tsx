@@ -190,8 +190,9 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Your public portfolio is live and shareable by link. Keep strengthening proof coverage
-            before you push toward qualified introductions.
+            Your public portfolio is live and shareable by link. It remains useful even while
+            qualified introductions stay protected until stronger proof and trust signals are in
+            place.
           </p>
         )}
       </CardContent>
