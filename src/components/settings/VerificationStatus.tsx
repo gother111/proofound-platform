@@ -337,9 +337,9 @@ export function VerificationStatus() {
         <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-xl">
           <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400 flex-shrink-0" />
           <div className="flex-1">
-            <p className="font-medium text-green-900 dark:text-green-100">Identity Verified</p>
+            <p className="font-medium text-green-900 dark:text-green-100">Identity checked</p>
             <p className="text-sm text-green-700 dark:text-green-300">
-              Verified via{' '}
+              Active via{' '}
               {status.verificationTierSource === 'veriff' || status.verificationMethod === 'veriff'
                 ? 'Government ID'
                 : 'LinkedIn Identity'}
@@ -356,7 +356,7 @@ export function VerificationStatus() {
         <LinkedInStatusPanel status={status} />
 
         <p className="text-sm text-muted-foreground">
-          Your verified badge is now visible on your profile to organizations.
+          Your identity-check badge is now visible on your profile to organizations.
         </p>
         {status.workEmailNeedsReverify && (
           <Alert className="border-amber-300 bg-amber-50 text-amber-900">
@@ -397,19 +397,20 @@ export function VerificationStatus() {
         <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
           <CheckCircle2 className="w-6 h-6 text-blue-600 flex-shrink-0" />
           <div className="flex-1">
-            <p className="font-medium text-blue-900">Workplace Verified</p>
+            <p className="font-medium text-blue-900">Workplace-verified</p>
             <p className="text-sm text-blue-700">
-              Verified via{' '}
+              Active via{' '}
               {status.verificationTierSource === 'work_email'
                 ? 'Work Email'
                 : 'LinkedIn Workplace Verification'}
-              . Identity badge is not granted at this tier.
+              . This tier does not grant an identity-check badge.
             </p>
           </div>
         </div>
         <LinkedInStatusPanel status={status} />
         <p className="text-sm text-muted-foreground">
-          Upgrade to identity verification to unlock the full verified identity badge.
+          Upgrade to an identity check if you want a person-level trust badge in addition to this
+          workplace signal.
         </p>
         {status.workEmailNeedsReverify && (
           <Alert className="border-amber-300 bg-amber-50 text-amber-900">
@@ -538,8 +539,8 @@ export function VerificationStatus() {
       <LinkedInStatusPanel status={status} />
       <div className="space-y-2">
         <p className="text-sm text-muted-foreground">
-          Choose a verification method. Workplace verification improves trust, while identity
-          verification unlocks the full verified badge.
+          Choose a verification method. Workplace verification improves trust, while identity checks
+          add a narrower person-level trust badge.
         </p>
       </div>
 

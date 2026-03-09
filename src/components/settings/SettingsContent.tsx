@@ -146,7 +146,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
                   Identity Verification
                 </CardTitle>
                 <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-                  Verify your identity to unlock the verified badge
+                  Add identity and workplace trust signals with precise badge meanings
                 </CardDescription>
               </CardHeader>
               <CardContent>

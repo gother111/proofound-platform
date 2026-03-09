@@ -393,17 +393,16 @@ export default async function OrganizationPortfolioPage({
               <SummaryRow
                 label="Trust status"
                 value={
-                  data.verificationSummary.slots.organizationPlatformReview.publicLabel ||
-                  data.verificationSummary.slots.organizationDomain.publicLabel ||
+                  data.verificationSummary.publicBadges.find(
+                    (badge) => badge.key === 'platform_reviewed' || badge.key === 'domain_confirmed'
+                  )?.label ||
                   (data.organization.verified ||
                   data.organization.trust_status === 'platform_reviewed'
                     ? 'Platform reviewed'
                     : data.organization.website_verified_at ||
                         data.organization.trust_status === 'domain_verified'
                       ? 'Domain verified'
-                      : data.organization.trust_status === 'pending'
-                        ? 'Trust review pending'
-                        : 'Trust basics pending')
+                      : 'No active trust badge')
                 }
                 icon={<ShieldCheck className="h-4 w-4 text-proofound-forest" />}
               />

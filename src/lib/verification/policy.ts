@@ -361,11 +361,12 @@ function labelContract(
 
   if (slot === 'individual.workplace' && state === 'verified') {
     return {
-      publicLabel: 'Workplace confirmed',
-      viewerLabel: 'Workplace confirmed',
+      publicLabel: 'Workplace-verified',
+      viewerLabel: 'Workplace-verified',
       meaning:
-        'The person controlled a work email or LinkedIn workplace signal tied to an organization when checked.',
-      doesNotMean: 'It does not prove current employment beyond the freshness window.',
+        'Proofound observed an employer-linked signal tied to this person when the check was completed.',
+      doesNotMean:
+        'It does not guarantee current employment, job title, seniority, or legal employment status.',
     };
   }
 
@@ -549,13 +550,17 @@ function buildBadge(
   summary: VerificationSlotSummary,
   surface: VerificationSurface
 ): VerificationBadgeSummary | null {
+  if (surface === 'public_portfolio' && !summary.activeTrust) {
+    return null;
+  }
+
   if (!summary.publicLabel || !summary.kind) {
     return null;
   }
 
   const keyMap: Record<string, VerificationBadgeSummary['key']> = {
     'Identity checked': 'identity_checked',
-    'Workplace confirmed': 'workplace_confirmed',
+    'Workplace-verified': 'workplace_confirmed',
     'Domain confirmed': 'domain_confirmed',
     'Platform reviewed': 'platform_reviewed',
     'Verification expired': 'verification_expired',

@@ -96,11 +96,13 @@ export function VerifyWorkEmailContent() {
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <CheckCircle2 className="w-4 h-4 text-green-600" />
-                  <span>Your profile now has a verified badge</span>
+                  <span>Your profile now shows an active workplace signal</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <CheckCircle2 className="w-4 h-4 text-green-600" />
-                  <span>Organizations can see you&apos;re verified</span>
+                  <span>
+                    Organizations can see your workplace-verified status while it stays fresh
+                  </span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <CheckCircle2 className="w-4 h-4 text-green-600" />

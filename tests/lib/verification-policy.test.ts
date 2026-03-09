@@ -125,6 +125,31 @@ describe('summarizeVerificationPolicy', () => {
     expect(summary.slots.organizationPlatformReview.state).toBe('contradicted');
     expect(summary.slots.organizationPlatformReview.publicLabel).toBe('Trust review changed');
     expect(summary.compatibility.orgTrustStatus).toBe('unverified');
-    expect(summary.publicBadges.some((badge) => badge.key === 'trust_review_changed')).toBe(true);
+    expect(summary.publicBadges.some((badge) => badge.key === 'trust_review_changed')).toBe(false);
+    expect(summary.orgReviewBadges.some((badge) => badge.key === 'trust_review_changed')).toBe(
+      true
+    );
+  });
+
+  it('uses the launch-safe workplace label only for active public trust', () => {
+    const summary = summarizeVerificationPolicy({
+      records: [
+        makeRecord({
+          verificationKind: 'work_email',
+          verificationSlot: 'individual.workplace',
+          status: 'verified',
+          verifierClass: 'system_signal',
+          verifiedAt: new Date('2026-02-01T00:00:00.000Z'),
+          completedAt: new Date('2026-02-01T00:00:00.000Z'),
+          updatedAt: new Date('2026-02-01T00:00:00.000Z'),
+          lastRefreshedAt: new Date('2026-02-01T00:00:00.000Z'),
+        }),
+      ],
+    });
+
+    expect(summary.slots.workplace.publicLabel).toBe('Workplace-verified');
+    expect(summary.publicBadges).toContainEqual(
+      expect.objectContaining({ key: 'workplace_confirmed', label: 'Workplace-verified' })
+    );
   });
 });

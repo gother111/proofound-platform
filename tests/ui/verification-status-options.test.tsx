@@ -92,7 +92,7 @@ describe('VerificationStatus', () => {
     render(<VerificationStatus />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Workplace Verified/i)).toBeInTheDocument();
+      expect(screen.getByText(/Workplace-verified/i)).toBeInTheDocument();
     });
     expect(screen.getByRole('button', { name: /Check LinkedIn Again/i })).toBeInTheDocument();
   });

@@ -581,24 +581,13 @@ export default async function PortfolioPage({
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {data.visibility.identity && data.verificationSummary.slots.identity.publicLabel ? (
-                  <StatusChip
-                    label="Identity"
-                    value={data.verificationSummary.slots.identity.publicLabel}
-                    tone={
-                      data.verificationSummary.slots.identity.activeTrust ? 'positive' : 'neutral'
-                    }
-                  />
+                {data.visibility.identity &&
+                data.signals.badges.some((badge) => badge.key === 'identity_checked') ? (
+                  <StatusChip label="Identity" value="Identity checked" tone="positive" />
                 ) : null}
                 {data.visibility.linkedin &&
-                data.verificationSummary.slots.workplace.publicLabel ? (
-                  <StatusChip
-                    label="Workplace"
-                    value={data.verificationSummary.slots.workplace.publicLabel}
-                    tone={
-                      data.verificationSummary.slots.workplace.activeTrust ? 'positive' : 'neutral'
-                    }
-                  />
+                data.signals.badges.some((badge) => badge.key === 'workplace_confirmed') ? (
+                  <StatusChip label="Workplace" value="Workplace-verified" tone="positive" />
                 ) : null}
                 {data.signals.badges
                   .filter((badge) => badge.key === 'evidence_attested')

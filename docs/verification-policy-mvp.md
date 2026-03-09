@@ -1,116 +1,252 @@
 > Doc Class: `active`
-> Last Verified: `2026-03-08`
+> Last Verified: `2026-03-09`
 
-# Block 7: Canonical Verification Policy and Badge Semantics
+# Block 7: Launch-Safe Verification Trust Ladder
 
-## A. Canonical verification model
+## Recommendation summary
 
-- Proofound MVP supports these verification types: `veriff_identity`, `linkedin_identity`, `linkedin_workplace`, `work_email`, `skill_attestation_peer`, `skill_attestation_manager`, `impact_attestation`, `org_domain`, `org_registry_manual`, and `platform_manual_review`.
-- Deferred from MVP: employer HRIS or payroll integrations, demographic verification, background checks, government or legal registry automation beyond manual review, and any badge that implies legal certification.
-- Canonical verification states are `pending`, `verified`, `expired`, `superseded`, `downgraded`, `contradicted`, `disputed`, `revoked`, `declined`, `failed`, and `cancelled`.
-- `pending` means requested or collected but not completed. `verified` means the evidence reached the supported threshold for that verification type. `expired` means freshness lapsed without a contradiction. `superseded` means replaced by a newer record in the same verification slot. `downgraded` means still historically relevant but no longer strong enough for the prior trust label. `contradicted` means later evidence materially conflicts with the prior record. `disputed` means a formal challenge is open. `revoked` means Proofound invalidated the verification after review. `declined`, `failed`, and `cancelled` preserve terminal workflow outcomes without claiming trust.
-- Proof artifacts remain the atomic evidence units. Proof packs remain shareable evidence bundles. Verification records are the canonical trust judgments over a subject, with optional links back to one artifact, one request, one response, and one verification slot.
-- Canonical subject mapping is fixed in MVP. Identity and workplace checks attach to `individual_profile`. Skill and impact attestations attach to `skill`, `impact_story`, or a general artifact-attestation slot for other proof-backed claims. Organization trust checks attach to `organization`.
-- Verification slots are the stable trust surfaces Proofound renders and reasons over: `individual.identity`, `individual.workplace`, `skill.attestation`, `impact_story.attestation`, `artifact.attestation`, `organization.domain`, and `organization.platform_review`.
+- Proofound MVP must use a narrow trust ladder, not a generic `verified` state.
+- Verification stays dimensional. Person verification, role or workplace verification, claim attestation, and artifact verification are separate judgments and must not silently upgrade each other.
+- Public portfolio and matching surfaces show active positive trust signals only. Expired, declined, disputed, contradicted, and revoked states remain visible to the owner, org review, and internal or admin surfaces only.
+- `verification_records` and `summary.slots` remain the canonical backend model. The ladder below is the user-facing projection layer over that model.
+- Proofound must not imply KYC, legal identity proof, background checks, employment certification, or regulatory compliance unless a future product explicitly adds those checks.
 
-## B. Badge and trust-label semantics
+## Verification ladder
 
-- `Identity checked` means identity evidence was reviewed by Proofound or an approved provider. It does not mean skill, employment, conduct, or fit is guaranteed.
-- `Workplace confirmed` means the person controlled a work email or LinkedIn workplace signal tied to an organization at the time checked. It does not prove current employment beyond the freshness window.
-- `Evidence attested` means a named claim or artifact was confirmed by an eligible verifier. It does not make every profile claim true.
-- `Domain confirmed` means Proofound confirmed domain control or an equivalent domain signal for the organization. It does not certify legal, financial, or security compliance.
-- `Platform reviewed` means Proofound reviewed defined trust basics for an organization. It does not certify legal, financial, security, or regulatory compliance.
-- `Verification expired` means a prior check is still in history, but its freshness window has passed. It does not mean the claim is false.
-- `Verification under review` means a dispute or review is open, so Proofound is showing a conservative state. It does not confirm the record is wrong.
-- `Verification changed since issue` means later evidence materially weakens or conflicts with the prior verification. It does not erase the historical record.
-- `Verification revoked` means Proofound invalidated the prior verification after review. It does not remove audit history.
-- `Trust review pending`, `Trust review changed`, and `Trust review revoked` are the organization-facing variants of the same conservative semantics.
-- Public portfolio shows calm labels only, never raw verifier identities, raw allegation text, or sensitive contradiction metadata.
-- Org review shows label, verification kind, verifier class, verified date, freshness date, and state reason.
-- Internal and admin surfaces may also show slot, linked contradictions, linked disputes, source request IDs, and audit references.
+### `Unverified`
 
-## C. Verifier eligibility and trust policy
+- Evidence source: no completed third-party or system evidence beyond account and profile creation.
+- Trust meaning: Proofound has not completed verification evidence for this person, claim, role claim, or artifact.
+- Explicitly does not prove: authenticity, identity, employment, authorship, or claim accuracy.
+- Freshness rule: not applicable.
+- Where it can appear: owner profile settings, org review empty states, request-verification entry points.
+- Product benefits unlocked: the item can be shared and submitted for verification.
+- Downgrade conditions: not applicable.
+- Required copy: `No verification evidence has been completed for this item yet.`
 
-- Eligible verifier classes in MVP are `system_provider`, `system_signal`, `authenticated_manager`, `authenticated_peer`, `authenticated_external`, and `manual_platform_reviewer`.
-- `system_provider` covers Veriff and official LinkedIn identity signals. Minimum requirement: provider-backed success event captured in canonical metadata.
-- `system_signal` covers work email control and organization domain signals. Minimum requirement: Proofound observed control of the email or domain at verification time.
-- `authenticated_manager` requires an authenticated Proofound user or signed token response with captured relationship snapshot, plus same-organization evidence stronger than a free-email claim.
-- `authenticated_peer` requires an authenticated Proofound user or signed token response with captured relationship snapshot. Same-organization evidence is preferred and weighted below manager attestations.
-- `authenticated_external` covers clients, partners, and collaborators. Free-email domains are allowed only here and carry lower weight.
-- `manual_platform_reviewer` requires a human Proofound review with an evidence checklist captured in metadata.
-- Trust weighting for MVP is fixed and conservative: provider or manual platform review is strongest, then authenticated manager, then authenticated peer, then authenticated external, then low-confidence token-only external evidence.
-- Low-confidence, mismatched-domain, or weak relationship evidence may support `pending`, `warning`, or `under review` internally, but it must not produce a stronger public badge.
-- Domain and email matching stay evidence, not proof by themselves. A matching domain increases confidence for workplace or org review, but it does not override contradictions or freshness expiry.
+### `Self-asserted`
 
-## D. Verification lifecycle and expiry policy
+- Evidence source: user-entered claim, uploaded artifact, or self-declared role claim with no completed third-party confirmation.
+- Trust meaning: the candidate is making the claim directly, but Proofound has not independently confirmed it.
+- Explicitly does not prove: authenticity, authorship, employment, title, dates, identity, or completeness of the surrounding profile.
+- Freshness rule: no expiry because it is not an active trust signal.
+- Where it can appear: owner profile, Proof Pack, org review, claim detail views.
+- Product benefits unlocked: the item can be shared, included in a Proof Pack, and submitted for attestation or review.
+- Downgrade conditions: removed if the user deletes or unpublishes the item.
+- Required copy: `Provided by the candidate. Not independently verified by Proofound.`
 
-- Creation starts as `pending` with `requested_at`, `request_expires_at`, and optional follow-up timestamps. Completion moves to `verified`, `declined`, `failed`, or `cancelled`.
-- Every canonical record tracks `requested_at`, `completed_at`, `verified_at`, `expires_at`, `superseded_at`, `downgraded_at`, `contradicted_at`, `disputed_at`, `revoked_at`, and `last_refreshed_at` when applicable.
-- Refresh in MVP updates an existing slot record or creates a newer record that supersedes the old one. Old rows remain in history and audit even when they stop contributing to live trust.
-- Freshness defaults are: work email 12 months, LinkedIn workplace 12 months, LinkedIn identity 24 months, Veriff identity 24 months, org domain 12 months, org registry manual 24 months, and platform manual review 24 months.
-- Skill and impact attestations do not hard-expire in MVP, but they become stale for trust reasoning after 24 months without refresh and stop contributing to the active evidence-attested count.
-- When a live record expires, public badges degrade immediately to `Verification expired` and stop counting as active trust. History remains visible internally and auditable.
-- When a newer stronger or corrected record replaces an older record in the same slot, the prior row becomes `superseded` instead of being deleted.
-- `downgraded`, `contradicted`, `disputed`, and `revoked` all remove the stronger trust badge from public and matching surfaces immediately.
+### `Attested`
 
-## E. Contradiction and integrity handling
+- Evidence source: one or more eligible third-party attestations tied to a specific claim, skill, outcome, or role-related statement.
+- Trust meaning: an eligible verifier confirmed the specific claim based on direct professional knowledge.
+- Explicitly does not prove: legal identity, current employment, or every other claim on the profile.
+- Freshness rule: active for 24 months from the most recent accepted attestation. After 24 months it becomes stale and stops counting as active trust.
+- Where it can appear: Proof Pack, org review, matching claim summaries, and public portfolio only when the attested claim is visible and still active.
+- Product benefits unlocked: claim-level trust boost, attested count in Proof Pack, and trust-based matching or review support for that claim.
+- Downgrade conditions: stale age-out, dispute, contradiction, verifier misattribution, or admin revocation.
+- Required copy: `A third party attested to this specific claim. This does not verify the entire profile.`
 
-- Contradiction types in MVP are `identity_mismatch`, `workplace_mismatch`, `verifier_identity_mismatch`, `relationship_mismatch`, `subject_chronology_mismatch`, `artifact_authenticity_concern`, `org_domain_control_mismatch`, and `platform_review_evidence_invalidated`.
-- Contradictions are detected from re-verification with a different outcome, changed profile or verifier facts, conflicting verifier claims, admin moderation input, or imported updates that invalidate an older snapshot.
-- On contradiction, Proofound creates a `verification_contradictions` row, appends a verification state transition, links the contradicting record when known, and downgrades the live trust state to `contradicted` or `downgraded`.
-- Public and org-facing displays must immediately soften or remove the prior trust badge. The conservative copy is `Verification changed since issue` or `Verification under review`.
-- Internal queues must show contradiction type, severity, detection source, linked verification IDs, and audit metadata. Public surfaces never show raw allegation text.
-- Integrity states are `clear`, `warning`, and `contradicted`. `warning` keeps history but blocks trust upgrades when confidence is limited. `contradicted` removes active trust immediately.
+### `Artifact-verified`
 
-## F. Dispute and remediation flow
+- Evidence source: a specific artifact passed platform review or claim-specific corroboration tied to that artifact.
+- Trust meaning: the named artifact itself cleared Proofound's MVP threshold for authenticity, provenance, or direct corroboration.
+- Explicitly does not prove: that the candidate currently holds the related role or that every narrative claim around the artifact is true.
+- Freshness rule: active for 24 months from review or corroboration, then stale until refreshed.
+- Where it can appear: inside the artifact view in Proof Pack, org review, matching evidence panels, and public portfolio only for that specific artifact.
+- Product benefits unlocked: artifact-level trust cue and higher confidence for artifact-based review.
+- Downgrade conditions: material metadata change, failed re-corroboration, dispute, contradiction, or revocation.
+- Required copy: `This specific artifact was checked or corroborated. It does not verify every claim associated with it.`
 
-- A verification may be disputed by the subject owner, an organization admin for org trust records, the original verifier for impersonation or misattribution claims, or a platform admin.
-- Allowed dispute reasons are `wrong_person`, `wrong_organization`, `outdated_employment_or_role`, `verifier_misattributed`, `artifact_forged_or_incorrect`, `unauthorized_or_abusive_request`, and `admin_review_error`.
-- Opening a dispute creates a `verification_disputes` row, moves the live verification state to `disputed` or marks it as under review, and removes that record from positive trust reasoning until resolved.
-- Resolution actions are `uphold`, `request_refresh`, `downgrade`, `revoke`, and `supersede_with_corrected_record`.
-- Only Proofound admins resolve disputes in MVP. Resolution may keep the record verified, downgrade it, revoke it, or supersede it with a corrected record.
-- Users see calm status language during and after resolution: `Verification under review`, `Verification changed since issue`, or `Verification revoked` depending on the outcome.
+### `Workplace-verified`
 
-## G. Schema / API / service-layer impact
+- Evidence source: verified work-email control or an approved workplace signal such as LinkedIn workplace evidence.
+- Trust meaning: Proofound observed an employer-linked signal tied to the candidate at the time of the check.
+- Explicitly does not prove: current employment beyond the freshness window, job title, seniority, performance, payroll status, or legal employment status.
+- Freshness rule: active for 12 months from the latest successful check.
+- Where it can appear: owner profile, Proof Pack header, matching summaries, org review, and public portfolio only when active.
+- Product benefits unlocked: workplace trust badge, organization-linking support, and workplace-gated trust boosts or filters.
+- Downgrade conditions: freshness expiry, contradiction, open dispute, revoked signal, or loss of control over the underlying channel.
+- Required copy: `Proofound confirmed an employer-linked signal at the time checked. It does not guarantee current employment or job title.`
 
-- `verification_records` now carries `verification_slot`, `verifier_class`, `dispute_state`, `badge_semantics_version`, `requested_at`, `expires_at`, `last_refreshed_at`, `superseded_at`, `superseded_by_verification_id`, `downgraded_at`, `contradicted_at`, `contradicted_by_verification_id`, `disputed_at`, and `revoked_at`.
-- New tables are `verification_contradictions` and `verification_disputes`. They preserve conflict and remediation history separately from the live record.
-- Canonical enums now use the richer verification kinds and states. Legacy canonical `accepted` values are migrated to `verified`. Legacy integrity `flagged` values are migrated to `warning`.
-- `/api/verification/status` and `/api/mobile/v1/verification/status` now return canonical summary payloads with badge semantics, active issues, slot summaries, and legacy compatibility projections.
-- Portfolio and org public trust cues now derive from canonical verification summaries instead of raw booleans alone.
-- Verification gates now treat the canonical policy summary as the source of truth for identity and workplace eligibility, while keeping existing compatibility behavior for older rows.
-- Legacy `individual_profiles.verification_tier*`, `individual_profiles.verification_status`, `individual_profiles.verification_method`, `organizations.trust_status`, and `organizations.verified` remain compatibility projections while callers migrate.
+### `Identity checked`
 
-## H. UI and product-language contract
+- Evidence source: approved provider-backed person-match signal only.
+- Trust meaning: Proofound received a provider-backed result that this account holder matched a person identity check at verification time.
+- Explicitly does not prove: KYC completion, legal identity certification, sanctions screening, background checks, employment, qualifications, or that every profile detail is true.
+- Freshness rule: active for 24 months from the latest successful provider result.
+- Where it can appear: owner profile, Proof Pack header, matching summaries, org review, and public portfolio only when active.
+- Product benefits unlocked: top person-level trust badge and eligibility for identity-required trust gates.
+- Downgrade conditions: freshness expiry, contradiction, dispute, provider reversal, or manual revocation.
+- Required copy: `Proofound received a provider-backed identity-check signal for this account. It is not a legal identity certification or background check.`
 
-- Candidate-facing identity copy: `Identity checked`, `Workplace confirmed`, `Evidence attested`, `Verification expired`, `Verification under review`, `Verification changed since issue`, `Verification revoked`.
-- Organization-facing public copy: `Platform reviewed`, `Domain confirmed`, `Trust review pending`, `Trust review changed`, `Trust review revoked`.
-- Org-review and admin copy may show the public label plus verifier class, verification kind, verified date, and freshness date.
-- Expired records should appear muted but still clearly historical. Disputed and contradicted records should appear conservative and non-accusatory. Revoked records should appear stronger than expired but still calm.
-- Candidate-facing public views should hide raw verifier identity and raw dispute details. Org-review views may show structured reasons and timestamps because they are part of trust review, not public marketing copy.
+## Badge semantics
 
-## I. Analytics / audit requirements
+### Canonical model vs ladder
 
-- Required structured events are `verification_requested`, `verification_completed`, `verification_expired`, `verification_refreshed`, `verification_contradicted`, `verification_disputed`, `verification_downgraded`, `verification_superseded`, `verification_revoked`, and `verification_restored`.
-- Required payload fields are privacy-safe identifiers and enums only: verification record ID, owner type, subject type, verification kind, verification slot, verifier class, state transition, reason code, badge semantics version, and timestamps.
-- Audit logs must capture actor type, actor ID when available, transition trigger, previous state, next state, linked contradiction ID, linked dispute ID, and metadata snapshot.
-- Public analytics and matching analytics must reason only over active, non-disputed, non-contradicted, non-revoked trust signals.
+- `verification_records` remain the canonical trust judgments.
+- `summary.slots` remain the source of truth for slot-level state and compatibility projections.
+- The launch-safe ladder is the user-facing projection over those slots:
+  - `individual.identity` -> `Identity checked`
+  - `individual.workplace` -> `Workplace-verified`
+  - `skill.attestation` and `impact_story.attestation` -> `Attested`
+  - `artifact.attestation` or artifact-specific review -> `Artifact-verified`
+- Legacy `verificationTier` values such as `workplace_verified` and `identity_verified` remain compatibility fields only. They are not the canonical language shown to users.
 
-## J. Acceptance criteria
+### What is being verified
 
-- A canonical verification record can represent all supported MVP verification kinds without relying on a single boolean.
-- `verification_records.status` supports `verified`, `expired`, `superseded`, `downgraded`, `contradicted`, `disputed`, and `revoked`, and those states are auditable through state transitions.
-- Legacy canonical rows with `accepted` and `flagged` are migrated to `verified` and `warning`.
-- `/api/verification/status` and the mobile equivalent return compatibility fields plus canonical `summary.publicBadges`, `summary.slots`, and `summary.activeIssues`.
-- Public portfolio identity and organization trust labels come from canonical summaries and use conservative badge copy.
-- Work email verification stops contributing active trust after its freshness window and surfaces `Verification expired` instead of silently remaining verified.
-- Contradictions create auditable records, remove stronger public trust, and surface `Verification changed since issue` or `Verification under review`.
-- Open disputes suppress positive trust reasoning until resolution and preserve history after resolution.
-- Audit coverage exists for completion, expiry, contradiction, dispute, downgrade, revoke, refresh, and supersede flows.
+- Person verification answers: `Is this account tied to a provider-backed person check?`
+- Role or workplace verification answers: `Did Proofound observe an employer-linked signal or an eligible attester confirming this role-related claim?`
+- Artifact verification answers: `Did this specific artifact clear a corroboration or review threshold?`
 
-## K. Risks / tradeoffs
+### Cross-signal limits
 
-- The main product risk is overclaiming trust with generic `verified` language. The safest MVP recommendation is to keep calm, narrow labels tied to a specific slot and evidence type.
-- The main implementation risk is partial migration, where some surfaces still read legacy booleans directly. Compatibility projections reduce breakage, but every new trust surface should use the canonical summary.
-- Contradiction handling can be too weak if it silently logs without downgrading live trust, and too heavy if every mismatch revokes immediately. The safest MVP path is immediate downgrade plus review queue, with revocation reserved for confirmed invalidation.
-- Attestation evidence can overclaim if verifier class or relationship confidence is weak. The safest MVP default is to allow weaker evidence to stay internal or pending, not to grant stronger public badges.
+- `Identity checked` does not imply `Workplace-verified`.
+- `Workplace-verified` does not imply `Attested`.
+- `Artifact-verified` does not imply the full role claim or full profile is true.
+- `Attested` applies to the specific claim being attested. It must not upgrade unrelated claims.
+- Partial verification is allowed and must be explicit. Example: a candidate may be `Identity checked` while a current employer claim is only `Self-asserted`. A separate artifact may be `Artifact-verified` while the person remains `Self-asserted`.
+
+## Freshness, expiry, and downgrade rules
+
+### Action-link expiry and resend
+
+- Work-email action links expire after 24 hours.
+- Attestation and claim-review response links expire after 7 days.
+- Resend must issue a new single-use token and invalidate the old token immediately.
+- Opening an expired or superseded token must never auto-complete an old request. The user should see neutral copy such as `This link is no longer active. Request the latest verification email.`
+
+### Active trust windows
+
+- `Identity checked`: 24 months
+- `Workplace-verified`: 12 months
+- `Attested`: 24 months active, then stale
+- `Artifact-verified`: 24 months active, then stale
+- `Self-asserted` and `Unverified`: no active trust window because they are not active trust
+
+### Stale and expired behavior
+
+- Once an active trust window lapses, the signal stops contributing to public badges, matching boosts, and active org review trust summaries immediately.
+- Owner profile and org review retain the historical record with muted `Expired` or `Stale` treatment plus the checked date and refresh action.
+- `declined` is a request outcome, not a public-facing negative badge.
+
+### Downgrade precedence
+
+- `revoked`, `disputed`, and `contradicted` outrank freshness. They remove active trust immediately.
+- `expired` outranks `verified`.
+- `superseded` keeps history but no longer contributes to active trust.
+- Conflict scope defaults to the affected slot or claim only. Unrelated items are downgraded only if the same evidence directly underpinned them.
+
+## Product-surface display rules
+
+| Surface          | Show                                                                                                                           | Hide                                                                                                   | Action behavior                                                                                   |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| Owner profile    | All current and historical states, including pending, expired, declined, disputed, contradicted, and revoked                   | Raw verifier private data unless the owner already supplied it                                         | Request, resend, refresh, dispute, remove                                                         |
+| Proof Pack       | Person-level summary plus claim-level and artifact-level statuses; stale and under-review states when opened in review context | Raw allegation text, verifier private email, internal moderation notes                                 | Each item shows its own status; self-asserted items remain shareable but labeled as self-asserted |
+| Matching         | Active positive signals only: `Identity checked`, `Workplace-verified`, active `Attested`, active `Artifact-verified`          | Negative states, self-asserted badges, verifier identity                                               | Expired or disputed signals stop boosting and stop satisfying trust filters                       |
+| Public portfolio | Active positive badges only, scoped to the visible person, claim, or artifact                                                  | `Unverified`, `Self-asserted`, `Pending`, `Declined`, `Expired`, `Disputed`, `Contradicted`, `Revoked` | If no active badge exists, show no trust badge rather than a warning                              |
+| Org review       | Full trust matrix by person, role claim, and artifact, with dates, source class, freshness state, and issue state              | Raw allegation text and unnecessary PII                                                                | Resend, dispute intake, manual review, reason-coded downgrade history                             |
+
+## Conflict handling and request outcomes
+
+### Declined and disputed attestations
+
+- A declined attestation appears to the requester as `Declined` on the request record.
+- The underlying claim remains `Self-asserted` unless other active evidence exists.
+- A disputed attestation removes the positive badge from public and matching surfaces immediately.
+- During a dispute, owner and org review surfaces use calm copy such as `Verification under review`.
+
+### Mixed evidence
+
+- If one eligible attester accepts and another declines the same claim, the claim may still appear as `Attested` if at least one accepted attestation remains active and undisputed.
+- Org review should show that evidence is mixed. Public surfaces should still show only the active positive badge, not the conflicting request history.
+
+### Contradictions
+
+- Contradictions may come from re-verification, changed profile facts, conflicting verifier claims, moderation review, or imported evidence that invalidates an earlier snapshot.
+- When contradiction is detected, active public trust is removed immediately for the affected slot or claim.
+- Public surfaces show no negative badge. Owner and org review surfaces show conservative status language only.
+
+## Acceptance criteria
+
+- The verification section defines one user-facing ladder and explicitly separates it from the underlying canonical slot model.
+- Every status states what it proves, what it does not prove, its freshness rule, where it appears, what it unlocks, and how it is lost.
+- The policy explicitly separates person verification, role or workplace verification, and artifact verification.
+- Partial verification is explicitly allowed and illustrated.
+- Public surfaces never use bare `verified` as a trust label.
+- Expired or disputed evidence is removed immediately from public and matching trust reasoning.
+- Declined attestation requests are treated as request outcomes, not public negative badges.
+- Work-email link expiry and attestation-link expiry are explicit, including resend rotation behavior.
+- Analytics and audit requirements are privacy-safe and mandatory for every trust-state transition.
+
+## Edge cases and conflict scenarios
+
+- Work email is active but LinkedIn workplace evidence later conflicts:
+  - Remove active `Workplace-verified` from public and matching immediately.
+  - Show `Verification under review` only in owner and org review surfaces until resolved.
+- `Identity checked` remains active while workplace evidence expires:
+  - Keep `Identity checked`.
+  - Remove `Workplace-verified`.
+  - Treat the role or employment claim as only partially verified.
+- One attester accepts and another declines the same claim:
+  - Keep `Attested` only if at least one eligible positive attestation remains active and undisputed.
+  - Show mixed evidence detail in org review.
+- An artifact is edited after being verified:
+  - Mark the prior artifact verification `superseded`.
+  - Remove the active artifact badge until the changed artifact is reviewed again.
+- An old link is opened after resend:
+  - Show `This link is no longer active. Request the latest verification email.`
+  - Never allow the old token to submit, refresh, or overwrite a newer request state.
+
+## Event tracking
+
+### Analytics events
+
+- `verification_requested`
+- `verification_link_sent`
+- `verification_link_resent`
+- `verification_link_opened`
+- `verification_completed`
+- `verification_declined`
+- `verification_expired`
+- `verification_downgraded`
+- `verification_contradicted`
+- `verification_disputed`
+- `verification_revoked`
+- `verification_restored`
+- `verification_badge_earned`
+- `verification_badge_lost`
+
+### Audit events
+
+- token issued
+- token invalidated by resend
+- token expired
+- request created
+- request viewed
+- response submitted
+- state changed
+- conflict detected
+- dispute opened
+- dispute resolved
+- manual override or revocation
+
+### Required event payload fields
+
+- privacy-safe actor ID
+- owner type and owner ID
+- subject type and subject ID
+- verification slot
+- ladder status before and after
+- canonical state before and after
+- evidence source kind
+- verifier class
+- reason code
+- timestamps
+- related request ID or record ID
+
+### Prohibited analytics payload content
+
+- raw verifier email
+- raw allegation text
+- uploaded artifact contents
+- free-form admin notes

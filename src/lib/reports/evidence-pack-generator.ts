@@ -311,7 +311,7 @@ function addVerificationsSection(doc: PDFKit.PDFDocument, profile: ProfileData) 
       status: profile.verifications.phoneVerified,
     },
     {
-      label: 'Identity Verified',
+      label: 'Identity checked',
       status: profile.verifications.identityVerified,
     },
   ];
