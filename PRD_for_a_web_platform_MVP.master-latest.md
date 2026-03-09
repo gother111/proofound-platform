@@ -305,9 +305,9 @@ We’re in an unusually high-paced, high-volatility era shaped by rapid technolo
 
 ## 1.3 Opportunity (What can be 10× better)
 
-Create a space centered on authenticity, well-being, and values-aligned outcomes—not performative profiles or engagement feeds. Replace CV/cover-letter dependency with an **expertise mapping** model that captures skills, methods, outcomes, values/causes, and work preferences. Give users **control over visibility and boundaries** (privacy-first). Bake in **anti-bias guardrails** and **high-precision, automated matching** so both sides quickly reach motivated, well-reasoned connections that can create business value. Integrate lightweight **mental-well-being check-ins** to help users navigate uncertainty without the pressure to “perform” for algorithms.
+Create a space centered on authenticity, privacy, and values-aligned outcomes, not performative profiles or engagement feeds. Replace CV/cover-letter dependency with an **expertise mapping** model that captures skills, methods, outcomes, values/causes, and work preferences. Give users **control over visibility and boundaries** (privacy-first). Bake in **anti-bias guardrails** and **high-precision, automated matching** so both sides quickly reach motivated, well-reasoned connections that can create business value. Offer a narrow, optional private reflection surface for high-friction hiring moments without turning Proofound into a coaching, therapeutic, or wellbeing-content product.
 
-**MVP industry focus:** Labor Market × Mental Health (with future expansion paths managed outside MVP).
+**MVP industry focus:** Labor Market credibility, privacy, and values-aligned matching.
 
 ## 1.4 Problem Hypothesis (single sentence)
 
@@ -322,7 +322,7 @@ For job seekers overwhelmed by volatile, biased, and time-intensive hiring—and
 - **Expertise Mapping / Expertise Atlas:** Structured, CV-alternative representation of skills, methods, outcomes, values/causes, and preferences.
 - **Values-Aligned Match:** A connection proposed when skills, constraints, values/causes, and availability meaningfully overlap.
 - **Guardrails:** Built-in mechanisms for transparency, anti-bias, credibility, privacy, and security.
-- **Mental-Well-Being Check-ins:** Optional, lightweight prompts and reflections to track user stress and balance (non-diagnostic).
+- **Zen Hub:** An optional private space for brief check-ins and milestone reflections. It is not therapy, coaching, diagnosis, or a wellbeing content library.
 
 **Decisions captured here**
 
@@ -336,7 +336,6 @@ For job seekers overwhelmed by volatile, biased, and time-intensive hiring—and
 
 - Verification scope in MVP: which proofs (e.g., identity, employment, skills) and what UX?
 - Minimum viable anti-bias techniques at launch (e.g., redaction/blinding, calibrated scoring, fairness checks).
-- Which mental-health features fit MVP scope (frequency, opt-in, data handling) without entering medical territory?
 - Data exposure defaults: what’s private by default vs. explicitly shareable?
 - Organization onboarding: minimum inputs to produce high-precision matches quickly?
 - Metrics we will commit to in #2 (e.g., time-to-first qualified intro, candidate/manager effort saved, perceived fairness).
@@ -375,16 +374,13 @@ For job seekers overwhelmed by volatile, biased, and time-intensive hiring—and
 4. **Ease-of-Use / UX Quality**
    - **Definition:** Task success rate for key flows (profile activation, assignment publish, match review), **SUS** score, and drop-off rates.
    - **Target (MVP):** **SUS ≥ 75**, ≥ **90%** task success, < **10%** drop-off between final two steps of activation.
-5. **Well-Being Delta (non-diagnostic, opt-in)**
-   - **Definition:** Change in self-reported **stress** and **sense of control** (5-point Likert) from Activation → Day 14 (and Day 30).
-   - **Target (MVP):** ≥ **60%** of respondents show **≥ +1** improvement on at least one dimension; **no deterioration** trend at cohort level.
-6. **Purpose-Alignment Contribution (PAC)**
+5. **Purpose-Alignment Contribution (PAC)**
    - **Definition:** Share of the **match score** attributable to values/causes alignment; its correlation with acceptance/contract rates.
    - **Target (MVP):** Top-decile PAC matches show **≥20% higher** intro acceptance and **≥15% higher** contract rate vs. baseline.
-7. **Fairness/Equity Signal (opt-in)**
+6. **Fairness/Equity Signal (opt-in)**
    - **Definition:** **Fairness Gap** between opt-in demographic segments on intro and contract rates, controlling for skills/constraints.
    - **Target (MVP):** **No statistically significant negative gap** for underrepresented cohorts; publish a fairness note per release.
-8. **First-session Activation (10-minute)**
+7. **First-session Activation (10-minute)**
    - **Definition:** Persona-specific first-session success inside a strict 10-minute window from onboarding completion.
      - Individual: `individual_onboarding_completed` -> `portfolio_share_link_copied` + `portfolio_pdf_export_succeeded`
      - Company: `organization_onboarding_completed` -> `assignment_template_applied` + `assignment_publish_succeeded`
@@ -398,7 +394,8 @@ For job seekers overwhelmed by volatile, biased, and time-intensive hiring—and
 - Do **not** optimize remuneration levels, work conditions, or culture fit beyond explicit constraints supplied by users.
 - Do **not** optimize for time-on-site, feed engagement, vanity counts, or message volume.
 - Do **not** add social “content feeds”; avoid incentives that increase performative pressure.
-- Do **not** introduce clinical/diagnostic mental-health measurements; keep well-being check-ins strictly **non-diagnostic** and **opt-in**.
+- Do **not** introduce clinical, diagnostic, coaching, therapeutic, or engagement-driven Zen mechanics.
+- Do **not** turn Zen Hub into a dashboard habit loop, content library, or outbound resource experience.
 
 ---
 
@@ -415,7 +412,8 @@ For job seekers overwhelmed by volatile, biased, and time-intensive hiring—and
 
 - **NSM = TTSC** for both sides; track cohort medians + P75.
 - Purpose/values signals are **first-class** in scoring and **evaluated for lift** (PAC).
-- Well-being is measured only via **opt-in**, **non-diagnostic** 1–5 check-ins; results are private and aggregated.
+- Zen Hub is optional, private, and excluded from matching, ranking, reveal, fairness workflows, and public rendering.
+- Zen analytics are limited to coarse private-partition action events and never include reflection text or raw scores.
 - UX quality to be tracked with **SUS** + task success + drop-off; no social feed.
 
 **Open questions**
@@ -435,7 +433,7 @@ For job seekers overwhelmed by volatile, biased, and time-intensive hiring—and
 # PRD — MVP — Part 3: User Personas & Primary Journeys
 
 > **Alignment note:** These personas and journeys are tuned to Parts **1) Problem Statement** and **2) Goals & Success Metrics**.  
-> Metrics referenced below use the canonical labels: **TTSC** (Time-to-Signed-Contract), **TTFQI** (Time-to-First Qualified Introduction), **TTV** (Time-to-Value), **PAC** (Purpose-Alignment Contribution), **SUS** (usability), and **Well-Being Delta** (non-diagnostic, opt-in). “Qualified Introduction” and “Activation” follow Part 2 definitions.
+> Metrics referenced below use the canonical labels: **TTSC** (Time-to-Signed-Contract), **TTFQI** (Time-to-First Qualified Introduction), **TTV** (Time-to-Value), **PAC** (Purpose-Alignment Contribution), and **SUS** (usability). “Qualified Introduction” and “Activation” follow Part 2 definitions.
 
 ---
 
@@ -657,10 +655,10 @@ _Merged into Persona #2 to avoid duplication._
 
 ### 5) Priya, 27 — social entrepreneur (pre-seed)
 
-**Goal:** Credibility with investors/advisors; recruit interns.  
-**Context:** Founder wearing many hats; needs signal not noise.
+**Goal:** Build a credible org presence quickly and recruit interns.  
+**Context:** Founder wearing many hats; needs signal, not platform overhead.
 
-**Definition of Done (MVP):** Investor-ready Evidence Pack; 1–2 advisor attestations; intern assignment published with ≤15m setup; TTFQI ≤ 5 days for applicants.
+**Definition of Done (MVP):** Credible org profile live with proof highlights; 1–2 advisor attestations; intern assignment published with ≤15m setup; TTFQI ≤ 5 days for applicants.
 
 #### Journey Stages
 
@@ -675,15 +673,15 @@ _Merged into Persona #2 to avoid duplication._
 
 **Consideration**
 
-- **Actions:** **Company Profile** (mission/vision/values, roadmap); **Expertise Hub** L1–L4 across ops/tech/impact; add customer pilots as artifacts; open **Assignment Creation** (5-step) for intern role.
+- **Actions:** **Company Profile** with mission, why-join statement, values, and proof highlights; add 1–3 customer pilots as trust evidence; open the basic **Assignment Creation** flow for an intern role.
 - **Feelings:** Empowered.
-- **Friction:** Which L4 properties matter to investors?
-- **Metrics:** L4 completion; artifact richness.
-- **Design Ops:** “Investor-ready” L4 presets (traction, MoU, unit economics).
+- **Friction:** How much profile detail is enough to look credible?
+- **Metrics:** Profile completion; proof highlight coverage.
+- **Design Ops:** Founder-oriented prompts for trust highlights, traction, and real outcomes.
 
 **Decision**
 
-- **Actions:** Enables **Due-Diligence Pack**; invites two advisors to attest.
+- **Actions:** Invites two advisors to attest to proof highlights and role fit.
 - **Feelings:** Confident.
 - **Friction:** Advisor onboarding.
 - **Metrics:** Attestation completion.
@@ -691,19 +689,19 @@ _Merged into Persona #2 to avoid duplication._
 
 **Purchase**
 
-- **Actions:** Buys Team plan + verification credits.
+- **Actions:** Buys a plan that supports one owner and optional reviewer access.
 - **Feelings:** Invested.
 - **Friction:** Pricing clarity.
-- **Metrics:** Plan upgrade path; checkout completion.
-- **Design Ops:** ROI calculator (time saved; conversion lift on applicants/investors).
+- **Metrics:** Checkout completion; first assignment published.
+- **Design Ops:** Clear plan framing around publishing and review, not admin depth.
 
 **Retention**
 
-- **Actions:** **Dashboard** broadcasts updates; **Zen Hub** for founder resilience; recruits via Assignments and Matching.
+- **Actions:** Uses the **Assignments and Matches** home to track drafts, new matches, pending intros, and follow-up; recruits via Assignments and Matching.
 - **Feelings:** Supported.
 - **Friction:** Content overhead.
-- **Metrics:** Investor pack views; applicant conversion; TTSC for hires.
-- **Design Ops:** Auto-updates from commits/sales; “compose update” from artifacts.
+- **Metrics:** Applicant conversion; TTFQI; TTSC for hires.
+- **Design Ops:** Keep the workflow focused on publishing, review, and intro follow-up.
 
 ---
 
@@ -718,7 +716,7 @@ _Merged into Persona #1 to keep set concise and measurable._
 ### 7) GreenGrid Energy (Scale-up, 120 FTE) — hard-to-find hires
 
 **Goal:** Fill 8 specialist roles fast with verified talent.  
-**Context:** Busy managers; wants precision shortlists; prefers SSO and ATS bridge.
+**Context:** Busy managers; wants precision shortlists without heavy platform rollout.
 
 **Definition of Done (MVP):** Time-to-shortlist < 5 days; ≥3 Qualified Introductions per role; 2 offers/month; TTSC improvement ≥30% vs prior.
 
@@ -727,53 +725,52 @@ _Merged into Persona #1 to keep set concise and measurable._
 **Awareness**
 
 - **Touchpoints:** Case study, HR webinar.
-- **Actions:** Requests sandbox.
+- **Actions:** Books a demo and reviews example assignments.
 - **Feelings:** Interested but busy.
 - **Friction:** Manager adoption.
-- **Metrics:** Demo → sandbox activation.
-- **Design Ops:** “Shortlist in inbox” workflow; SSO.
+- **Metrics:** Demo → trial start.
+- **Design Ops:** “Shortlist in inbox” workflow; example match-review queue.
 
 **Consideration**
 
-- **Actions:** **Company Profile** (mission/values/causes); **Expertise Hub** to declare hiring domains; run **Assignment Creation** (5 steps):
-  1. Role & outcomes, 2) Must/Nice skills (mapped to L4), 3) Verification gates, 4) Logistics (location/time/comp), 5) Review & publish.
+- **Actions:** Create an **Org Profile** with mission, why-join statement, values, proof highlights, and work norms; publish a basic assignment with outcomes, must-have skills, practical constraints, and optional trust requirements.
 - **Feelings:** Structured.
-- **Friction:** Mapping JD → L4.
+- **Friction:** Writing a sharp role brief quickly.
 - **Metrics:** Time-to-publish Assignment; manager task success.
-- **Design Ops:** JD paste → auto L4 mapping; verification presets.
+- **Design Ops:** Clear prompts for outcomes, constraints, and proof-backed trust context.
 
 **Decision**
 
-- **Actions:** Picks plan (seats + verify credits); invites hiring managers.
+- **Actions:** Picks a plan and invites one reviewer if needed.
 - **Feelings:** ROI-oriented.
 - **Friction:** Budget approval.
-- **Metrics:** Trial-to-purchase; procurement cycle time.
-- **Design Ops:** ROI calc on time-to-shortlist; security & DPA pack.
+- **Metrics:** Trial-to-purchase; time to first live assignment.
+- **Design Ops:** ROI framing around publish speed and intro quality.
 
 **Purchase**
 
-- **Actions:** Buys 15 seats; connects ATS.
+- **Actions:** Launches the first specialist assignment and starts reviewing matches.
 - **Feelings:** Committed.
-- **Friction:** Legal redlines.
-- **Metrics:** Time-to-contract; ATS integration success.
-- **Design Ops:** Click-through MSA; sandbox → prod migration wizard.
+- **Friction:** Internal alignment on review criteria.
+- **Metrics:** Time-to-contract; reviewer activation.
+- **Design Ops:** Keep implementation light: publish, review, request intro.
 
 **Retention**
 
-- **Actions:** **Dashboard** shows pipeline health; managers score candidates; repeat Assignments.
+- **Actions:** Uses the **Assignments and Matches** home to review new matches, pending intros, and pending feedback; repeats assignments as needed.
 - **Feelings:** Productive.
 - **Friction:** Drift to old habits.
-- **Metrics:** Time-to-shortlist; onsite rate; 90-day success; fairness signal.
-- **Design Ops:** Stale-shortlist nudges; manager NPS; hiring playbooks.
+- **Metrics:** Time-to-shortlist; onsite rate; 90-day success.
+- **Design Ops:** Stale-review nudges and simple reviewer workflow discipline.
 
 ---
 
 ### 8) Bridges for Youth (NGO, 28 FTE) — volunteers & micro-grants
 
-**Goal:** Recruit skilled volunteers; show donor-ready impact.  
+**Goal:** Recruit skilled volunteers and show enough trust context to attract aligned contributors.  
 **Context:** Compliance-minded; resource-constrained.
 
-**Definition of Done (MVP):** 3 volunteer Assignments published in ≤7 days; ≥10 qualified applicants with verification gates; donor-ready Evidence Pack.
+**Definition of Done (MVP):** 3 volunteer Assignments published in ≤7 days; ≥10 qualified applicants with verification gates; credible org profile with proof highlights live.
 
 #### Journey Stages
 
@@ -784,15 +781,15 @@ _Merged into Persona #1 to keep set concise and measurable._
 - **Feelings:** Curious.
 - **Friction:** Compliance.
 - **Metrics:** Demo → trial start.
-- **Design Ops:** Safe-data templates; donor view preview.
+- **Design Ops:** Safe-data templates; proof-first org profile example.
 
 **Consideration**
 
-- **Actions:** **Org Profile**; **Expertise Hub** for program capabilities; create **Assignment** (5 steps) for volunteers; set verification gates (hours + artifact).
+- **Actions:** Build an **Org Profile** with mission, values, proof highlights, and lightweight work norms; create a basic volunteer **Assignment** with outcomes, must-have skills, practical constraints, and verification gates where needed.
 - **Feelings:** Confident.
 - **Friction:** Staff training.
 - **Metrics:** Time-to-first Assignment; task success.
-- **Design Ops:** Train-the-trainer kit; champion badges.
+- **Design Ops:** One lean setup path; train-the-trainer notes kept minimal.
 
 **Decision**
 
@@ -800,7 +797,7 @@ _Merged into Persona #1 to keep set concise and measurable._
 - **Feelings:** Reassured.
 - **Friction:** Cost.
 - **Metrics:** Conversion to paid.
-- **Design Ops:** Invoice + discount; impact forecast.
+- **Design Ops:** Invoice + discount; emphasis on faster qualified intros.
 
 **Purchase**
 
@@ -812,75 +809,74 @@ _Merged into Persona #1 to keep set concise and measurable._
 
 **Retention**
 
-- **Actions:** **Dashboard** exposes donor-ready impact; Zen Hub to prevent burnout in grant cycles.
+- **Actions:** Uses the **Assignments and Matches** home to review volunteer matches, pending intros, and follow-up.
 - **Feelings:** Sustainable.
 - **Friction:** Volunteer engagement.
-- **Metrics:** Volunteer activation; proof submission rate; donor renewals.
-- **Design Ops:** Impact badges; referral loops; quarterly showcases.
+- **Metrics:** Volunteer activation; proof submission rate; repeat assignment publishing.
+- **Design Ops:** Keep proof context lightweight and useful for matching.
 
 ---
 
-### 9) CityWorks Dept. (Local Government) — vendor & talent credibility hub
+### 9) NorthPeak Operations (Enterprise team, 300 FTE) — careful multi-reviewer hiring
 
-**Goal:** Quick, transparent sourcing with audit trail.  
-**Context:** Procurement rules; accessibility and records retention needs.
+**Goal:** Run specialist hiring through a proof-first workflow without deploying heavy enterprise tooling.  
+**Context:** Longer buying cycle than SMBs, but still wants a lean publish-and-review motion.
 
-**Definition of Done (MVP):** Pilot live with 3 departments; SSO set; first micro-RFP published; compliant export and audit trail.
+**Definition of Done (MVP):** First specialist assignment live; owner and reviewer both active; ≥3 qualified introductions for the role.
 
 #### Journey Stages
 
 **Awareness**
 
-- **Touchpoints:** GovTech panel.
-- **Actions:** Books pilot call.
+- **Touchpoints:** Referral, hiring-leader roundtable.
+- **Actions:** Books a product walkthrough.
 - **Feelings:** Interested, cautious.
-- **Friction:** Procurement + risk.
-- **Metrics:** Pilot call completion.
-- **Design Ops:** Accessibility statement; records retention/export demo.
+- **Friction:** Concern that the tool will create another admin layer.
+- **Metrics:** Walkthrough completion.
+- **Design Ops:** Show the lean review queue, not enterprise admin features.
 
 **Consideration**
 
-- **Actions:** **Department Profile**; configure **Assignment Creation** (5 steps) with rubric & verification; create vendor/talent pools mapped to L4 skills; staff roles.
-- **Feelings:** Structured & compliant.
-- **Friction:** Justifying pilot.
-- **Metrics:** Time-to-first RFP/micro-RFP; staff task success.
-- **Design Ops:** 90-day pilot MOU; metrics dashboard template.
+- **Actions:** Create an **Org Profile** with trust context, publish a basic assignment, and invite one reviewer into the match-review workflow.
+- **Feelings:** Structured.
+- **Friction:** Keeping reviewers aligned without overbuilding process.
+- **Metrics:** Time-to-first assignment; reviewer task success.
+- **Design Ops:** Keep review actions to shortlist, pass, intro request, and feedback follow-up.
 
 **Decision**
 
-- **Actions:** Approves 3-dept pilot; SSO setup.
+- **Actions:** Approves a small rollout for one hiring team.
 - **Feelings:** Aligned.
-- **Friction:** IT review.
-- **Metrics:** SSO success; risk sign-off.
-- **Design Ops:** Security pack; data map.
+- **Friction:** Internal process ownership.
+- **Metrics:** Time from approval to first live assignment.
+- **Design Ops:** Keep access control to owner plus optional reviewer.
 
 **Purchase**
 
-- **Actions:** Pilot live; assignments posted.
+- **Actions:** Goes live with the first assignment and begins intro review.
 - **Feelings:** Productive.
 - **Friction:** Change management.
-- **Metrics:** Staff adoption per dept; TTFQI on vendors/talent.
-- **Design Ops:** Champion program; in-product tours.
+- **Metrics:** Reviewer adoption; TTFQI on the first role.
+- **Design Ops:** Favor guided review over dashboard depth.
 
 **Retention**
 
-- **Actions:** Cross-dept analytics; shared pools; Zen Hub check-ins during sprints.
+- **Actions:** Reuses the same publish-and-review workflow for later roles, with optional duplicate-assignment support later if needed.
 - **Feelings:** Supported.
-- **Friction:** Siloing.
-- **Metrics:** Time-to-award; audit passes; expansion to N depts.
-- **Design Ops:** Poly-tenant admin; shared pools; export to archives.
+- **Friction:** Maintaining consistency across reviewers.
+- **Metrics:** Time-to-shortlist; intro conversion; repeat usage by the same team.
+- **Design Ops:** Keep collaboration light and avoid spawning a team hub.
 
 ---
 
 ## What stands out across personas (portable backlog → scope candidates)
 
-- **Onboarding clarity:** Role-specific wizards (Student, Switcher, Mentor, Org/HR, Government).
-- **Auto-mapping:** Paste CV/JD → proposed L4s with editable properties.
-- **Verification strategy:** “Soft verify” first; targeted verification packs tied to outcomes.
-- **Feedback loops:** “Why not shortlisted” + “What raises your match score next.”
-- **Zen Hub hooks:** Trigger reflections after rejections/reviews/deadlines; **Well-Being Delta** tracked privately and in aggregate.
-- **Dashboards that matter:** Activation tiles (Profile %, L4 depth, Matches/Assigns, Proof cadence) + “next best action.”
-- **Fairness:** Monitor fairness gap on intros/contracts where users opt-in to share demographics; publish fairness note per release.
+- **Lean org onboarding:** one setup path for trust profile, assignment publishing, and match review; no separate enterprise or government branches.
+- **Trust context:** mission, why-join statement, values, proof highlights, and lightweight work norms do most of the credibility work.
+- **Assignment speed:** a single basic publish flow is more important than advanced authoring depth.
+- **Review discipline:** privacy-safe summaries, proof context, shortlist/pass, intro request, and follow-up are the true org workflow.
+- **Minimal access:** owner plus optional reviewer is enough for launch.
+- **Defer platform sprawl:** dashboards, org maps, expertise hubs, donor reporting, templates, and heavy admin belong after launch.
 
 ---
 
@@ -905,7 +901,7 @@ _Merged into Persona #1 to keep set concise and measurable._
 
 **Open questions**
 
-- Minimum verification set per persona (student vs senior expert vs NGO vs government).
+- Minimum verification set per persona (student vs senior expert vs NGO vs enterprise team).
 - Exact cohort bins for benchmarking TTSC/TTFQI (role family, seniority, region).
 - Privacy defaults for artifacts and attestations per persona.
 
@@ -1849,218 +1845,57 @@ Each flow includes:
 
 ## 5.2 Organization Features
 
-### O1 — **Purpose Block** (Mission • Vision • Values • Causes) within Org Profile
+Lean launch rule: the org side exists to establish trust for matching, publish a high-signal assignment quickly, review privacy-safe matches, and approve intros. It is not an org operating system, enterprise admin suite, or government workflow in MVP.
 
-**Why Now:** Signals values and impact aims to attract aligned talent; supports purpose-aware matching.  
+### O1 — **Organization Trust Profile**
+
+**Why Now:** Organizations need enough trust context for matching, but not a full storytelling stack.  
 **Acceptance Criteria:**
 
-- Create/edit mission, vision, values (≤5), causes (≤5); visibility controls.
-- Appears in **Match Detail**; contributes to **PAC** in scoring.  
+- Create/edit an org summary with mission, one-line why-join statement, and up to 3 values.
+- Add 1–3 proof highlights or example initiatives; no standalone impact, projects, or org-map modules.
+- Add lightweight work norms that affect fit: async/sync expectations, meeting intensity, timezone expectations, accessibility accommodation, and language expectations.
+- This trust context appears in the org profile, relevant assignment views, and match detail where it improves confidence and purpose-aware matching.  
   **MoSCoW:** **Must**.
 
 ---
 
-### O2 — **Structure Block** (Org structure & roles overview)
+### O2 — **Assignment Publishing**
 
-**Why Now:** Clarifies context and reporting lines; improves expectation alignment.  
+**Why Now:** Fast, high-signal publishing is the main org-side launch job.  
 **Acceptance Criteria:**
 
-- Add departments/teams; link to Assignments; export simple org map.  
-  **MoSCoW:** **Should** (basic); **Could:** import from HRIS later.
-
----
-
-### O3 — **Culture Block** (work norms, collaboration)
-
-**Why Now:** Reduces mismatches that cause churn and anxiety; supports inclusive hiring.  
-**Acceptance Criteria:**
-
-- Define norms (e.g., async/sync, meeting load, tools); accessibility commitments.
-- Visible to candidates pre-intro.  
-  **MoSCoW:** **Should**.
-
----
-
-### O4 — **Impact Block** (outcomes & beneficiaries)
-
-**Why Now:** Evidence for talent motivation and, for NGOs, funders.  
-**Acceptance Criteria:**
-
-- Create “Impact entries” with metrics and artifacts; export **Evidence Pack** (PDF).  
-  **MoSCoW:** **Should** (basic); **Could:** donor/investor view analytics.
-
----
-
-### O5 — **Projects Block** (initiatives & artifacts)
-
-**Why Now:** Practical signal of what work looks like.  
-**Acceptance Criteria:**
-
-- List projects, link to artifacts and Assignments; basic status tags.  
-  **MoSCoW:** **Should**.
-
----
-
-### O6 — **Enterprise Expertise Hub** (org capabilities mapped to L1→L4)
-
-**Why Now:** Structured demand-side skill map for precise matching; reduces JD ambiguity.  
-**Acceptance Criteria:**
-
-- Declare capability domains; map required L4s; see coverage vs team.
-- JD paste → suggested L4s with explain-why.  
-  **MoSCoW:** **Must** (declare + suggest); **Could:** team coverage analytics.
-
----
-
-### O7 — **Assignment Creation (Basic + Advanced)** with Verification Gates
-
-**Why Now:** Standardized, efficient creation of high-signal roles; improves TTFQI and TTSC.  
-**Acceptance Criteria:**
-
-- **Basic mode (default entry):** role, business value, ≥1 outcome, practicals, and ≥3 must-have skills.
-- **Advanced mode (explicit opt-in):** unlocked only when the creator asks for extra control; retains full 5-step flow with stakeholders, weight matrix, verification gates, logistics, and review.
-- **Time-to-publish P50 ≤ 15 minutes**; task success ≥ 90%; drop-off < 10% on final steps.  
+- A single launch path exists for assignment creation: title, why this role exists, outcomes, must-have skills, practical constraints, optional trust requirements, and publish.
+- Optional plain-text team or reporting context may live inside the assignment instead of a standalone structure surface.
+- **Time-to-publish P50 ≤ 15 minutes**; task success ≥ 90%; drop-off < 10% on final steps.
+- Advanced authoring, stakeholder matrices, weight matrices, and template libraries are not part of stated MVP scope.  
   **MoSCoW:** **Must**.
 
 ---
 
-### O8 — **Company Dashboard** (pipeline & outcomes)
+### O3 — **Match Review and Intro Workflow**
 
-**Why Now:** Focuses managers on throughput, not process churn.  
+**Why Now:** Review quality, not dashboard depth, determines day-1 value.  
 **Acceptance Criteria:**
 
-- Tiles for: Open Assignments, Shortlists, Intros pending, TTSC trend, Fairness note, Next actions.
-- Loads < 2.0s P75 at baseline volumes.  
-  **MoSCoW:** **Must** (core tiles); **Could:** custom layouts later.
+- Organizations review privacy-safe candidate summaries with proof context and match reasons per assignment.
+- Reviewers can shortlist, pass, request intro, and track pending intros and decision follow-up from a simple operational home.
+- The launch home is an **Assignments and Matches** view that shows open assignments, new matches, pending intros, and pending feedback.
+- Dashboard analytics, fairness tiles, custom layouts, and BI-style reporting are post-MVP.  
+  **MoSCoW:** **Must**.
 
 ---
 
-### O9 — **Team Management Hub**
+### O4 — **Minimal Org Access**
 
-**Why Now:** Scales usage beyond a single HR owner; supports permissions and accountability.  
+**Why Now:** Some teams need light collaboration, but admin sprawl does not improve launch value.  
 **Acceptance Criteria:**
 
-- Invite members; roles/permissions for creating assignments, viewing candidates, exporting data.
-- SSO-ready config placeholder.  
-  **MoSCoW:** **Must** (roles & invites); **Could:** SSO/SCIM later.
-
----
-
-### O10 — **Organization Type Differentiation** (For‑profit vs Non‑profit)
-
-**Why Now:** Enables tailored defaults, language, and future compliance/reporting.  
-**Acceptance Criteria:**
-
-- Required selection at org creation; stored as a first-class attribute.
-- Toggles copy and minor defaults (e.g., “donors” vs “investors”) without forking code paths.  
-  **MoSCoW:** **Must** (flag + UX copy); **Could:** governance-specific templates later.
-
----
-
-### O11 — **Post-Interview Feedback & Decision SLA (Org)**
-
-**Why Now:** Enforces consistent, respectful closure and learning for candidates while meeting the 48h SLA.  
-**Acceptance Criteria:**
-
-- Closing an interview requires a **decision + personalized feedback**; guardrails prevent closure without a note for shortlisted candidates.
-- **Templates with editable reason codes** speed feedback; reminders trigger before **48h** breach; audit log records sender/time/content hash.
-- Candidates receive feedback via in-app/email and see status in their view; orgs see which candidates have acknowledged receipt.  
-  **MoSCoW:** **Must** (SLA enforcement + templated feedback).
-
-### O11.1 — **Canonical Relationship Lifecycle Contract (Launch)**
-
-**Why Now:** The qualified-intro corridor must behave as one deterministic lifecycle, not as separate reveal, interview, and feedback fragments. This contract supersedes any older reopen behavior that allowed the same withdrawn or no-show record to re-enter in place.
-
-**Objects involved:**
-
-- `match_review_state` controls blind review only: `generated -> shortlisted -> passed|closed`.
-- `intro_workflow` controls bilateral intro intent: `intro_pending -> intro_accepted|intro_declined|intro_expired|withdraw`.
-- `reveal_request` controls identity-bearing reveal only: `reveal_pending -> reveal_completed`.
-- `interview` controls scheduling and attendance: `interview_pending -> interview_scheduled -> interview_rescheduled|interview_cancelled|interview_completed|no_show_reported`.
-- `decision` controls org outcome: `decision_pending -> advance|hold|reject|hire|withdraw`.
-- `feedback_record` controls candidate-visible closure: `feedback_pending -> feedback_submitted -> feedback_delivered -> feedback_acknowledged|feedback_expired`.
-
-**Deterministic state machine overview:**
-
-- `generated -> shortlisted` when an org reviewer explicitly saves a candidate. Candidate is not emailed; org UI may show “under deeper review”.
-- `shortlisted -> intro_pending` when an org reviewer requests an intro. This creates the `intro_workflow`, starts intro expiry, and must block any second active intro for the same `candidate_profile_id + assignment_id`.
-- `intro_pending -> intro_accepted` when the counterparty accepts. Both sides are mutually interested, but identity remains masked.
-- `intro_pending -> intro_declined` when the counterparty declines. This is terminal for that intro attempt and maps to aggregate `closed_lost`.
-- `intro_pending -> intro_expired` when no acceptance arrives within 14 days. This is terminal for that intro attempt and maps to aggregate `closed_lost`.
-- Any active pre-hire state -> `withdraw` when candidate or org withdraws. If this happens before `interview_completed`, the relationship closes immediately as `closed_lost`. If it happens after `interview_completed`, candidate-visible feedback is still owed within the 48h decision SLA.
-- `intro_accepted -> reveal_pending` when the org requests identity-bearing reveal. Policy is fixed for launch: org requests, candidate approves. Denial or timeout returns the relationship to `intro_accepted`, not `intro_declined`.
-- `reveal_pending -> reveal_completed` when the candidate approves. This unlocks only coordination-safe identity fields: name, photo, portfolio link if published, and the contact scope needed for the next step.
-- `reveal_pending -> intro_accepted` when the candidate declines reveal or the request times out after 72 hours.
-- `reveal_completed -> interview_pending` when either side requests to move forward to interview coordination.
-- `interview_pending -> interview_scheduled` when a slot is confirmed. The scheduling window is measured from `intro_accepted_at`, not shortlist time, and follows the policy preset: `startup 7d`, `enterprise 14d`, `volunteer 21d`, default `startup`.
-- `interview_scheduled -> interview_rescheduled` when time changes before the interview occurs. The same `interview_id` is retained, `reschedule_count` increments, full history is preserved, and only one reschedule is allowed.
-- `interview_scheduled|interview_rescheduled -> interview_cancelled` when an org owner/admin cancels before the event. Recovery requires a new interview attempt from `interview_pending`; the cancelled record stays terminal.
-- `interview_scheduled|interview_rescheduled -> interview_completed` when the host marks completion. This immediately starts `decision_pending` and feedback issuance.
-- `interview_scheduled|interview_rescheduled -> no_show_reported` when an org owner/admin reports a no-show within 24 hours of the scheduled time. Recovery requires a new interview attempt from `interview_pending`; the no-show record stays terminal and auditable.
-- `decision_pending -> advance|hold|reject|hire|withdraw` by org owner/admin only.
-- `hold -> advance|hire|reject` by org owner/admin, or `hold -> closed_lost` when `hold_until` expires without follow-up.
-- `advance` is non-terminal and opens a new `interview_pending`.
-- `hire` is terminal and maps aggregate status to `closed_won`.
-- `reject`, `withdraw`, `intro_declined`, `intro_expired`, assignment closure without hire, and unrecovered no-show map aggregate status to `closed_lost`.
-
-**SLA logic:**
-
-- Intro expiry starts at `intro_pending_at` and stops at `intro_accepted`, `intro_declined`, `intro_expired`, or `withdraw`. Default expiry is 14 days; reminder is at T-48h.
-- Reveal expiry starts at `reveal_pending_at` and stops at `reveal_completed`, explicit decline, or 72h timeout.
-- Scheduling window starts at `intro_accepted_at`. Rescheduling does not reset the window; replacement interviews inherit the remaining window.
-- Decision SLA starts at `interview_completed_at` and stops only when the org submits both a decision and candidate-visible feedback. Reminder schedule is 24h, 40h, 48h deadline, and 54h overdue escalation.
-- `hold` satisfies the decision SLA only when the org sends a candidate-visible hold message plus `hold_until`. Internal notes alone do not satisfy the SLA.
-- Feedback token TTL is 7 days from issuance. Token expiry never erases already-submitted feedback.
-
-**Notification rules:**
-
-- Shortlisted: in-app only for org; no candidate email.
-- Intro requested, accepted, declined, expired, withdrawn: in-app + email to the affected party; both parties are notified once the state becomes terminal.
-- Reveal requested: in-app + email to candidate only. Reveal completed: in-app + email to both.
-- Interview scheduled and rescheduled: in-app + email to both, including meeting details and reschedule count.
-- Interview cancelled and no-show reported: in-app + email to both. No-show notices include the supported recovery path when enabled.
-- Decision reminders: org only.
-- Candidate-visible feedback delivered: candidate in-app + email. Org sees delivery and acknowledgement status.
-- Private notes never trigger candidate-facing notifications.
-
-**Event tracking:**
-
-- Reuse existing event names where possible: `shortlist_generated`, `reveal_requested`, `reveal_granted`, `reveal_denied`, `intro_workflow_expired`, `intro_workflow_withdrawn`, `interview_no_show_recorded`, `structured_feedback_submitted`.
-- Standardize or add: `intro_requested`, `intro_accepted`, `intro_declined`, `reveal_request_expired`, `interview_requested`, `interview_rescheduled`, `decision_pending_started`, `decision_recorded`, `feedback_delivered`, `feedback_acknowledged`, `feedback_sla_breached`, `duplicate_intro_blocked`, `pipeline_reentered`.
-- Every event must include: `assignment_id`, `candidate_profile_id`, `org_id`, active object id, actor type/id, prior state, next state, reason code, and timestamp.
-
-**Edge cases and recovery paths:**
-
-- Duplicate intros: hard unique guard for one active intro per `candidate_profile_id + assignment_id`. Repeated clicks return the active intro and must not create a second active record. Parallel intros across different assignments are allowed.
-- Re-entry: allowed only through a new intro attempt after `intro_declined`, `intro_expired`, `reject`, `withdraw`, or `closed_lost`. The same withdrawn or no-show record must not reopen in place.
-- Withdrawal and feedback: if withdrawal happens before interview completion, a structured withdrawal reason is required and candidate-visible personalized feedback is optional. If withdrawal happens after interview completion, candidate-visible feedback remains mandatory inside the 48h SLA.
-- Private notes vs visible feedback: `internal_note` is org/operator-only and never shown to the other party. `personalized_note` and `suggested_next_step` are recipient-visible and are the only fields that satisfy feedback SLA.
-- Assignment closes mid-pipeline: all open non-hire intros, interviews, and decisions transition to terminal loss with reason `assignment_closed`.
-
-**Acceptance criteria:**
-
-- Backend can derive one current aggregate relationship status without losing child-object history.
-- UI can render every required lifecycle state without ambiguous reopen behavior.
-- Candidate-visible reveal never happens without candidate approval after an org request.
-- Intro expiry, reveal timeout, scheduling window, decision SLA, hold expiry, and feedback token TTL are explicit and independently testable.
-- Duplicate active intros for the same `candidate_profile_id + assignment_id` are impossible at the contract layer.
-- Reschedule and replacement interview behavior are distinct and deterministic.
-- Candidate-visible feedback and org-private notes are stored separately and enforced separately.
-- `hire` reports as `closed_won`; all other non-hire terminal outcomes report as `closed_lost`.
-- This contract explicitly supersedes older reopen loops such as `withdrawn -> pending_*` and `no_show -> scheduled`.
-
----
-
-### O12 — **Assignment Templates**
-
-**Why Now:** Speeds repeatable assignment creation and keeps quality consistent across teams.  
-**Acceptance Criteria:**
-
-- Create and save templates that prefill **Basic or Advanced Assignment** flows with **owner/department tags** and recommended mode.
-- Advanced-recommended templates do **not** auto-switch mode unless Advanced has already been explicitly enabled for the draft.
-- Clone a template into a new assignment; edits in the new assignment **do not mutate** the source template; version label shown on publish.
-- Template library shows usage and **time-to-publish** deltas; suggestions surface a relevant template when starting a similar role.  
-  **MoSCoW:** **Should** (baseline template library + clone).
+- The org side works with a single owner account.
+- If multi-user access is needed, keep it to **Owner** plus optional **Reviewer**.
+- Reviewers can review matches and intros; owners can manage profile and assignments.
+- No standalone team hub, SSO placeholder, granular export permissions, or enterprise admin branches in MVP scope.  
+  **MoSCoW:** **Should**.
 
 ---
 
@@ -2131,21 +1966,27 @@ Each flow includes:
 
 ## 6.2 Excluded Geographies / Segments (MVP)
 
-- Government-grade deployments with records‑retention mandates beyond export.
+- Government-grade deployments, procurement-specific flows, or records-retention mandates beyond generic export.
 - Highly regulated sectors requiring bespoke compliance (health/defense) beyond generic controls.
 
 ## 6.3 Boundaries vs Included MVP Features
 
-- **Included (Part 5):** Purpose blocks, customizable dashboards, Expertise Atlas, **Gap Analysis**, Matching Hub (with **PAC**), post-interview feedback loops (individual + org), Zen Hub (non-diagnostic), visibility controls, soft **attestations**, Org Expertise Hub, 5-step Assignment Creation, **Assignment Templates**, Company Dashboard, Team Hub, org-type flag.
+- **Included (Part 5):** Organization Trust Profile, Assignment Publishing, Match Review and Intro Workflow, Minimal Org Access, Expertise Atlas, **Gap Analysis**, Matching Hub (with **PAC**), post-interview feedback loops (individual + org), Zen Hub (non-diagnostic), visibility controls, and soft **attestations**.
 - **Not included:** Anything that materially expands scope beyond these (above exclusions apply).
 
 ---
+
+## 6.4 Lean Organization MVP Migration Notes
+
+- Former standalone org surfaces for structure, culture, impact, projects, expertise hub, dashboard, templates, and org-type UX branching are either collapsed into the four launch surfaces above or moved post-MVP.
+- Enterprise customers may still use the MVP, but enterprise-specific procurement, SSO/SCIM, ATS/HRIS, donor/investor reporting, and government workflow branches do not define launch scope.
+- Historical mentions of evidence-pack exports, org maps, JD-paste analytics, or dashboard tiles should be read as post-MVP unless they are explicitly re-scoped later.
 
 ## Facts & Decisions
 
 - This list is **binding for MVP**; additions require a change note and re‑prioritization.
 - Non‑negotiables: **no social feed**, **no diagnostic mental‑health features**, **no mandatory government-ID verification in the current self-serve MVP**, **no payments/contracting** in MVP.
-- Rationale ties to Parts **1–5**: focus on faster, fairer **matches** (TTFQI/TTSC), privacy‑first, low cognitive load.
+- Rationale ties to Parts **1–5**: focus on faster, fairer **matches** (TTFQI/TTSC), privacy‑first, low cognitive load, and a lean org-side launch workflow.
 
 **Status:** Draft v0.1 (awaiting product approval) · **Approver:** Pavlo Samoshko · **Date:** —
 
@@ -2437,106 +2278,43 @@ Each flow includes:
 
 ## 7.2 Organization Features
 
-### O1 — Org Purpose Block
+### O1 — Organization Trust Profile
 
-**Inputs**: mission, vision, values[], causes[]; visibility flags.  
-**Processing**: normalize & map causes for **PAC**; log edits.  
-**Outputs**: Org profile & Match Detail.  
-**Errors/Empty**: same patterns as F1.  
-**Events**: `org_purpose_updated` {fields_changed[]}.
-
----
-
-### O2 — Structure Block
-
-**Inputs**: departments/teams, parent-child relations, hiring managers.  
-**Processing**: validate tree (no cycles), link teams to Assignments.  
-**Outputs**: simple org map, CSV export.  
-**Errors/Empty**: “No teams yet—add your first team.” Invalid link → inline fix.  
-**Events**: `org_structure_node_added/updated/removed` {node_type}.
+**Inputs**: mission, one-line why-join statement, values[] (max 3), proof highlights[] (max 3), lightweight work norms, website/location/type metadata.  
+**Processing**: normalize trust context, keep work norms structured, log edits, and expose only the fields needed in profile, assignment, and match-detail surfaces.  
+**Outputs**: lean org profile and trust snippets used in match review.  
+**Errors/Empty**: prompt for the minimum trust set rather than spawning separate profile modules.  
+**Events**: `org_trust_profile_updated` {fields_changed[]}.
 
 ---
 
-### O3 — Culture Block
+### O2 — Assignment Publishing
 
-**Inputs**: norms (async/sync, meeting load), accessibility commitments, tooling.  
-**Processing**: store structured fields; show on Assignments.  
-**Outputs**: culture summary card.  
-**Errors/Empty**: template suggestions.  
-**Events**: `org_culture_updated` {fields_changed[]}.
-
----
-
-### O4 — Impact Block
-
-**Inputs**: outcome entries (metric, timeframe, beneficiaries), artifacts.  
-**Processing**: basic calculations, validation; generate **Evidence Pack** (PDF).  
-**Outputs**: impact list; donor/investor-ready export.  
-**Errors/Empty**: missing metrics → inline prompts; export failure → retry.  
-**Events**: `impact_entry_created/updated`; `proof_pack_exported` {pages}.
+**Inputs**: title, why role exists, outcomes[], must-have skills[], practical constraints, optional trust requirements, optional team/reporting context.  
+**Processing**: validate the single launch publish path, compute readiness, and generate a public-facing assignment brief.  
+**Outputs**: published assignment, draft, preview card, and shareable link.  
+**Errors/Empty**: incomplete required fields; invalid ranges; inline fixes; no advanced workflow promise in MVP.  
+**Events**: `assignment_draft_saved`, `assignment_published` {assignment_id, mode: "basic"}.
 
 ---
 
-### O5 — Projects Block
+### O3 — Match Review and Intro Workflow
 
-**Inputs**: project title/summary, links to artifacts and Assignments, status.  
-**Processing**: maintain links; status transitions.  
-**Outputs**: project list; links resolve to artifacts/assignments.  
-**Errors/Empty**: “No projects yet”; broken link notice.  
-**Events**: `project_created`; `project_artifact_linked` {artifact_type}.
-
----
-
-### O6 — Enterprise Expertise Hub
-
-**Inputs**: capability domains, required L4s, JD paste for mapping.  
-**Processing**: suggest L4s with rationale; compute team coverage vs requirements.  
-**Outputs**: coverage view; suggested L4 list for Assignments.  
-**Errors/Empty**: JD paste failure → manual add; “no coverage” → coach marks.  
-**Events**: `jd_pasted_for_mapping` {chars}; `org_l4_required_added` {l4_id}.
+**Inputs**: assignment-linked candidate summaries, proof context, match reasons, reviewer actions, intro requests, and feedback follow-up state.  
+**Processing**: enforce privacy-safe review, record shortlist/pass/intro actions, and surface pending intros and decision follow-up in one operational queue.  
+**Outputs**: **Assignments and Matches** home, per-assignment review queue, intro request state, and pending feedback state.  
+**Errors/Empty**: no matches yet state with next steps; pending follow-up reminders without requiring dashboard analytics.  
+**Events**: `match_reviewed` {action}, `intro_requested`, `org_review_queue_viewed`.
 
 ---
 
-### O7 — Assignment Creation (Basic + Advanced) with Verification Gates
+### O4 — Minimal Org Access
 
-**Inputs**:
-
-- Basic mode (default entry): role, business value, outcomes, practicals, must-have skills (≥3).
-- Advanced mode (explicit opt-in): role/outcomes, must/nice L4s, verification gates, logistics, stakeholders/weights, review.
-  **Processing**: validate by mode; compute readiness; generate public-facing brief.
-  **Outputs**: published Assignment; preview card; shareable link.  
-  **Errors/Empty**: incomplete required fields; invalid ranges; show inline fixers.  
-  **Events**: `assignment_step_completed` {step, mode}; `assignment_published` {assignment_id, mode}.
-
----
-
-### O8 — Company Dashboard
-
-**Inputs**: selected tiles; data from Assignments & matches.  
-**Processing**: aggregate pipeline stats (TTFQI, TTSC, fairness note); refresh cadence.  
-**Outputs**: tiles for Open Assignments, Shortlists, Intros, TTSC trend, Next Actions.  
-**Errors/Empty**: show skeletons and instructions.  
-**Events**: `company_dashboard_viewed` {tiles[]}.
-
----
-
-### O9 — Team Management Hub
-
-**Inputs**: member email/name, role (Owner, Manager, Reviewer), permissions.  
-**Processing**: send invites (magic link); enforce permissions across app.  
-**Outputs**: member list; role editor; invite status.  
+**Inputs**: member email/name and role (`owner` or `reviewer`).  
+**Processing**: send magic-link invites, enforce lean permissions, and avoid branching into enterprise admin models.  
+**Outputs**: member access list and invite status.  
 **Errors/Empty**: already a member; invalid email; expired invite.  
-**Events**: `team_member_invited` {role}; `team_member_joined`; `role_changed` {from,to}.
-
----
-
-### O10 — Organization Type Differentiation (For-profit vs Non-profit)
-
-**Inputs**: selection at org creation; edits require Owner role.  
-**Processing**: set copy defaults (“donors” vs “investors”); toggle minor presets.  
-**Outputs**: tailored UI labels; flag in analytics.  
-**Errors/Empty**: change confirmation with impact note.  
-**Events**: `org_type_set` {type}.
+**Events**: `org_access_invited` {role}, `org_access_joined`, `org_access_role_changed` {from,to}.
 
 ---
 
@@ -2895,18 +2673,10 @@ Each flow includes:
 
 ### Organizations
 
-**O1 Purpose Block** — Mission/vision/values/causes editable; contributes to PAC.
-**O2 Structure Block** — Create teams; link Assignments; export simple org map.
-**O3 Culture Block** — Norms & accessibility commitments visible pre-intro.
-**O4 Impact Block** — Create impact entries; export **Evidence Pack (PDF)**.
-**O5 Projects Block** — Link artifacts & Assignments; status tags.
-**O6 Enterprise Expertise Hub** — Declare domains; JD paste → suggested L4s.
-**O7 Assignment Creation (Basic + Advanced)** — Basic publish works by default; Advanced remains hidden until explicit opt-in and preserves strict 5-step behavior.
-**O8 Company Dashboard** — Tiles for pipeline (Shortlists, Intros, TTSC trend).
-**O9 Team Management Hub** — Invite members; roles/permissions enforced.
-**O10 Organization Type Flag** — For-profit vs Non-profit selected & reflected in copy.
-**O11 Post-Interview Feedback & Decision SLA** — Decision + personalized feedback required; reminders before 48h breach.
-**O12 Assignment Templates** — Templates prefill Basic/Advanced assignments with recommended mode; advanced recommendations do not auto-switch mode; clone without mutating source; usage shown.
+**O1 Organization Trust Profile** — Mission, why-join statement, values, proof highlights, and lightweight work norms are enough to make matching credible.
+**O2 Assignment Publishing** — One basic assignment flow handles outcomes, must-have skills, practical constraints, optional trust requirements, and publish.
+**O3 Match Review and Intro Workflow** — Review privacy-safe matches, shortlist/pass, request intros, and track pending intros and feedback follow-up from an operational queue.
+**O4 Minimal Org Access** — The org side works with one owner; optional reviewer access is the only extra collaboration layer promised in MVP.
 
 ---
 

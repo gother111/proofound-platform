@@ -1,3 +1,28 @@
+> Doc Class: `governance`
+> Sync Pair: `Documentation.md`
+> Last Verified: `2026-03-09`
+
+## 2026-03-09: Lean Organization MVP PRD Rewrite
+
+What changed:
+
+- Rewrote the organization-side MVP in `PRD_for_a_web_platform_MVP.md` and `PRD_for_a_web_platform_MVP.master-latest.md` from 12 feature blocks to 4 launch surfaces: Trust Profile, Assignment Publishing, Match Review and Intro Workflow, and Minimal Org Access.
+- Removed org-side MVP promises for dashboards, templates, expertise hub, org maps, donor/investor exports, and government-specific workflow branches.
+- Updated organization personas and scope boundaries so enterprise customers still fit the launch story without enterprise-specific product branches defining MVP.
+
+Why:
+
+- The PRD had drifted into an organization platform narrative that diluted Proofound's launch promise of proof-first, trust-first, privacy-safe matching.
+- Launch scope now centers only on the org behaviors that improve day-1 publish speed, review quality, and intro quality.
+
+How to verify:
+
+- Confirm `5.2 Organization Features`, `Part 6`, `7.2 Organization Features`, and the org acceptance summary in both PRD files all use the 4-surface model and no longer list dashboards, templates, or expertise hub as MVP.
+
+Open risks/TODO:
+
+- Historical archives still describe the older, broader organization surface and should remain treated as reference history, not launch truth.
+
 ## 2026-03-02: Mobile UI/UX Audit and V3 Characteristics Refactor
 
 What changed:
@@ -47,9 +72,6 @@ How to verify:
 Open risks/TODO:
 
 - Next phase requires implementing cross-route Shared Layout Animations (morphing) for which Next.js App Router poses challenges with `framer-motion` context boundaries.
-  > Doc Class: `governance`
-  > Sync Pair: `Documentation.md`
-  > Last Verified: `2026-02-26`
 
 # Documentation (Status + Index)
 
