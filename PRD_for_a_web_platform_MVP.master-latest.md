@@ -1,7 +1,7 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-03-01`
+> Last Verified: `2026-03-06`
 
-# Addendum - PRD-Relevant Delta Note (2026-03-01)
+# Addendum - PRD-Relevant Delta Note (2026-03-06)
 
 Scope rule for this PRD:
 
@@ -10,13 +10,37 @@ Scope rule for this PRD:
 
 PRD-relevant updates since `2026-02-26`:
 
-- Organization interview lifecycle behavior is now explicit across the journey:
+- Auth and signup flows are now documented as the current repo behavior:
+  - Email/password signup and sign-in
+  - Google OAuth
+  - LinkedIn OAuth
+  - Required consent captured inside signup/auth flow rather than a separate standalone consent screen
+- Individual onboarding is portfolio-first:
+  - Collect display name, handle, headline, bio, and location
+  - End with a dedicated "Public portfolio ready" step showing live URL, copy, open, and continue actions
+- Organization onboarding is portfolio-first:
+  - Create org account
+  - Create organization record
+  - Create active owner membership
+  - End with a dedicated public org portfolio-ready step
+- Guided tours remain in MVP, but are sequenced after onboarding completion and the portfolio-ready confirmation step.
+- Interview lifecycle behavior is now explicit across both personas:
   - Schedule interview
   - Edit interview
   - Cancel interview
-  - Post lifecycle updates into conversation thread as user-visible context
-- Canceled interviews no longer block scheduling a replacement interview for the same match.
-- Google Meet integration failures now surface actionable reconnect/verification guidance, reducing dead-end scheduling states.
+  - Post lifecycle updates into the conversation thread as user-visible context
+  - Allow replacement scheduling after cancellation
+  - Support Google Meet and manual meeting links
+  - Return actionable Zoom fallback guidance instead of promising live Zoom support
+- Verification is now described as a lightweight tiered trust model:
+  - `unverified`
+  - `workplace_verified`
+  - `identity_verified`
+  - Inputs come from work email, LinkedIn, and attestations; Government ID is not exposed in the current self-serve UI
+- Data portability wording now matches the repo contract:
+  - Versioned JSON export (`v3.0.0`)
+  - Import validation plus consent acknowledgment
+  - Immediate irreversible account deletion with password confirmation and exact confirmation phrase
 
 No PRD-level changes confirmed for:
 
@@ -27,8 +51,8 @@ No PRD-level changes confirmed for:
 Source notes:
 
 - Product status and implementation details remain in:
-  - `project/Documentation.md`
   - `project/changes/entries/*`
+  - `agent/scratchpad/entries/*`
 
 # Addendum — Public Portfolio Brief (v0.1)
 
@@ -41,17 +65,22 @@ Portfolio-first promise (day 1):
 
 Core sections (single template, responsive):
 
-- Header: name, handle, headline/positioning; quick proof bar (identity, work email, LinkedIn) with owner-controlled visibility.
-- Mission/values/bio: concise, structured; owner can hide.
-- Expertise/skills snapshot: 3–6 top skills with levels; owner can hide.
-- Trust signals: proofs added, verified skills, peer attestations; identity/work-email/LinkedIn badges.
-- Contact: mailto + shareable link; owner can hide contact email.
+- Individual public page: minimal proof-first portfolio with header, proof bar, proof-based summary, featured proofs, optional skills snapshot, and optional contact/share actions.
+- Organization public page: minimal public trust card with trust basics, short purpose statement, durable trust signals, and at most one active assignment summary.
+- Public surfaces stay read-only; owner editing controls do not appear on public pages.
 
 Owner controls and visibility:
 
-- Owner-only visibility toggles for header, proof bar items, counts, skills, bio, contact.
+- Owner-only visibility toggles for header, proof bar items, skills, bio, and contact.
 - Public view is read-only; owner actions hidden from public viewers.
-- Day-1 defaults publish only a minimal safe allowlist; contact/work-email remain hidden unless explicitly enabled.
+- Day-1 defaults publish only a minimal safe allowlist:
+  - header and proof bar are on
+  - identity and LinkedIn trust signals may be shown when available
+  - work email is off
+  - contact is off
+  - skills are off
+  - bio is off
+- Public counts are not a primary visibility control in the current launch-safe contract.
 
 URL contracts:
 
@@ -62,7 +91,15 @@ URL contracts:
 Onboarding completion requirement:
 
 - Onboarding ends with a dedicated "Public portfolio ready" step for both personas.
-- Step shows live URL, copy button, open/view button, and continue-to-app action.
+- Individual step shows live URL, copy button, open/view button, and continue-to-app action.
+- Organization step shows live URL, copy button, open/view button, and a next-step action that steers the user toward creating the first assignment.
+
+Accessibility and discoverability guardrails:
+
+- Shareable by direct link is the default launch promise.
+- Search indexing stays off by default and is only eligible when content is explicitly allowed and safe to index.
+- Public routes may be unavailable when minimum content or safety constraints are not met.
+- Generic share previews and noindex behavior are part of the launch-safe public-portfolio guardrail.
 
 Exports:
 
@@ -75,7 +112,7 @@ Views:
 
 Out of scope for v0.1:
 
-- No ATS/LinkedIn API integrations, dashboards, advanced analytics, multi-language, or custom templates; single clean layout only.
+- No ATS integrations, portfolio analytics dashboards, advanced analytics, multi-language, or custom templates; single clean layout only.
 
 # PRD — MVP — Part 1: Problem Statement
 
@@ -758,38 +795,38 @@ Each flow follows a consistent mini‑spec: **Purpose • Entry • Steps • In
 
 **Purpose:** Let users start with their preferred auth method and frictionless recovery.  
 **Entry:** From Landing CTA or Login.  
-**Steps:** 1) Choose Email/Google/LinkedIn → 2) Email: enter email + set password OR magic link; SSO: confirm provider → 3) Verify email → 4) Sign in.  
-**Inputs/Data:** Email; name/avatar (from SSO); session token.  
+**Steps:** 1) Choose Email/Password, Google, or LinkedIn → 2) Email path: enter email, set password, and submit required consent choices; social path: confirm provider → 3) Email/password signups verify email before first authenticated app session → 4) Sign in.  
+**Inputs/Data:** Email; password credential; name/avatar (from SSO); consent versions; session token.  
 **Needs & Feelings:** Control & choice; confidence about data.  
-**System Support:** Clear provider options; passwordless option; resilient email delivery; resend link; device/session management.  
+**System Support:** Clear provider options; resilient email delivery; resend verification email; password reset; device/session management.  
 **Done:** Authenticated session established.  
 **Metrics:** Signup completion; verification success; first session latency.  
-**Edge Cases:** SSO domain blocked; expired link → one‑click resend.
+**Edge Cases:** SSO domain blocked; expired verification link → one‑click resend.
 
 ---
 
-## I‑02 Consent & Policy with AI‑assist **[MVP]**
+## I‑02 Consent & Policy Capture (Inside Signup/Auth) **[MVP]**
 
-**Purpose:** Transparent consent for Terms, Privacy, and Verification policy.  
-**Entry:** First login or when terms change.  
-**Steps:** 1) Read human‑readable summaries → 2) Optional “Ask AI” quick explanation → 3) Accept required consents.  
-**Inputs/Data:** Consent versions & timestamps.  
+**Purpose:** Transparently capture required consent without adding a separate standalone screen.  
+**Entry:** During signup, and again when required terms change.  
+**Steps:** 1) Review plain-language Terms/Privacy summaries in the signup flow → 2) Accept required consent and optional marketing opt-in → 3) If policy versions change later, review updated summaries and re-accept before continuing.  
+**Inputs/Data:** Consent versions; required consent timestamp; optional marketing preference.  
 **Needs & Feelings:** Understanding; control; privacy reassurance.  
-**System Support:** Plain‑language summaries; download PDFs; log consent; link to data practices.  
+**System Support:** Plain-language summaries; links to full policies; versioned consent logging; re-consent gating when policy text changes.  
 **Done:** All required consents recorded.  
 **Metrics:** Drop‑off; time on consent.  
-**Edge Cases:** Jurisdictional clauses; under‑age lockout with guidance.
+**Edge Cases:** Policy version changes mid-session; jurisdictional clauses; under-age lockout with guidance.
 
 ---
 
 ## I‑03 First‑Run Guided Tour (Reveal UI, Zero‑State) **[MVP]**
 
 **Purpose:** Prevent overwhelm; orient users to core areas.  
-**Entry:** First successful login (or when requested later).  
+**Entry:** First successful app visit after onboarding completion (or when requested later).  
 **Steps:** 1) Blank canvas with styled background → reveal **Navigation** + hint → 2) Reveal **Dashboard** + hint → 3) Jump to **Profile** (empty state & hint) → 4) Show **Expertise Hub** (About + hint) → 5) Show **Matching Profile** (why it matters) → 6) Show **Zen Hub** (safety & purpose) → 7) Show **Settings** (one‑line explainer) → 8) Suggest “Start with your Profile”.  
 **Inputs/Data:** Tour seen flag; per‑module “seen” state.  
 **Needs & Feelings:** Calm; agency; no forced learning.  
-**System Support:** Skippable; repeatable; keyboard/ARIA compatible.  
+**System Support:** Skippable; repeatable from the app later; keyboard/ARIA compatible.  
 **Done:** Tour completed or dismissed; next step CTA surfaced.  
 **Metrics:** Tour completion; subsequent engagement with Profile.  
 **Edge Cases:** Reduced‑motion mode; partial tour resume.
@@ -810,17 +847,17 @@ Each flow follows a consistent mini‑spec: **Purpose • Entry • Steps • In
 
 ---
 
-## I‑05 Profile Basics (Avatar, Cover, Core Info) **[MVP]**
+## I‑05 Profile Basics (Portfolio-First Setup) **[MVP]**
 
-**Purpose:** Establish a familiar identity surface.  
-**Entry:** From tour nudge or Profile.  
-**Steps:** Upload avatar; set cover image; add headline, location, timezone, languages; preview → save.  
-**Inputs/Data:** Images; text fields.  
-**Needs & Feelings:** Safe, familiar; low friction.  
-**System Support:** Image cropper; content filters; autosave drafts.  
-**Done:** Basics saved.  
-**Metrics:** Completion rate; time to first save.  
-**Edge Cases:** Large images; offensive content → block with feedback.
+**Purpose:** Deliver day-1 value by creating a public portfolio link before deeper profile authoring.  
+**Entry:** Individual onboarding after account verification/sign-in.  
+**Steps:** Enter display name, handle, headline, bio, and location → submit → create public portfolio URL (`/portfolio/{handle}`) → show dedicated **Public portfolio ready** step with live URL, copy link, open portfolio, and continue-to-app actions.  
+**Inputs/Data:** Display name; handle; headline; bio; location; public portfolio URL.  
+**Needs & Feelings:** Immediate progress; low friction; confidence that something tangible is already live.  
+**System Support:** Handle validation and uniqueness checks; safe defaults; direct-link sharing by default; search indexing disabled unless explicitly enabled later; dedicated success state; in-app portfolio shortcut once onboarding is complete.  
+**Done:** Basics saved and public portfolio is live.  
+**Metrics:** Completion rate; time to public portfolio ready; share-link copy/open rate.  
+**Edge Cases:** Handle collision or reserved word; invalid handle characters; public route remains unavailable until minimum safe content requirements are met; onboarding error recovery without losing entered text.
 
 ---
 
@@ -1036,15 +1073,15 @@ Each flow follows a consistent mini‑spec: **Purpose • Entry • Steps • In
 
 ## I‑21 Interview Scheduling (Policy Presets + SLA) **[MVP]**
 
-**Purpose:** Coordinate a single interview quickly with preset-based policy defaults.
+**Purpose:** Coordinate a single interview quickly with preset-based defaults and a visible lifecycle.
 **Entry:** From messaging.  
-**Steps:** Propose/accept slots → confirm event within the active policy window (`startup`: 7 days, `enterprise`: 14 days, `volunteer`: 21 days; `advanced` configurable) → select duration within preset limits → calendar sync → video call link generated (Zoom or Google Meet).
-**Inputs/Data:** Timezones; calendars (optional); video call platform preference (Zoom or Google Meet).  
+**Steps:** Propose/accept slots → confirm event within the active policy window (`startup`: 7 days / 30 min, `enterprise`: 14 days / 45 min, `volunteer`: 21 days / 30 min, `advanced`: 7 days / 60 min) → create meeting details using Google Meet or a manual meeting link → edit or cancel if plans change → if canceled, schedule a replacement interview for the same match without blockage → post schedule/edit/cancel updates into the conversation thread.  
+**Inputs/Data:** Timezones; calendars (optional); meeting platform choice (Google Meet or manual link); lifecycle status.  
 **Needs & Feelings:** Certainty; fairness; speed.  
-**System Support:** Timezone auto‑convert; reminders; reschedule allowed once; automatic video call link generation via Zoom or Google Meet integration.  
-**Done:** Interview held within SLA.  
+**System Support:** Timezone auto-convert; reminders; one active future interview per match unless the current one is canceled; edit/cancel controls; actionable fallback guidance when Zoom is selected.  
+**Done:** Interview is scheduled, updated, canceled, or replaced with all parties seeing the current state.  
 **Metrics:** Time match→interview; no‑show rate.  
-**Edge Cases:** Panel interviews; candidate/org declines → close loop.
+**Edge Cases:** Zoom selected → fallback to Google Meet or manual link; panel interviews; candidate/org declines → close loop.
 
 ---
 
@@ -1080,13 +1117,13 @@ Each flow follows a consistent mini‑spec: **Purpose • Entry • Steps • In
 
 **Purpose:** Let users own their data offline and restore it later.  
 **Entry:** Settings → Data.  
-**Steps:** **Export**: generate JSON → download. **Import**: upload valid JSON → preview what will be restored → confirm.  
-**Inputs/Data:** Profile JSON schema.  
+**Steps:** **Export**: generate versioned JSON (`v3.0.0`) → download. **Import**: upload valid JSON payload → choose merge or replace behavior → acknowledge consent → run validation → confirm import.  
+**Inputs/Data:** Versioned profile JSON schema; import mode; consent acknowledgment.  
 **Needs & Feelings:** Ownership; trust.  
-**System Support:** Schema versioning; validation; redaction of secrets.  
+**System Support:** Schema versioning; validation with field-level errors; legacy export normalization when compatible; redaction of secrets.  
 **Done:** File exported OR profile restored.  
 **Metrics:** Export/Import counts; validation errors.  
-**Edge Cases:** Mismatched schema version → guided migration.
+**Edge Cases:** Mismatched schema version or invalid fields → block import with guidance; import requires explicit consent; PII-heavy payloads require explicit acknowledgment before import.
 
 ---
 
@@ -1094,13 +1131,13 @@ Each flow follows a consistent mini‑spec: **Purpose • Entry • Steps • In
 
 **Purpose:** Allow irreversible exit at user’s request.  
 **Entry:** Settings → Danger Zone.  
-**Steps:** Read consequences → type confirmation phrase → optional export reminder → delete immediately.  
-**Inputs/Data:** Confirmation; audit log.  
+**Steps:** Read consequences → enter account password → type exact confirmation phrase `DELETE MY ACCOUNT` → optional export reminder → delete immediately.  
+**Inputs/Data:** Password confirmation; confirmation phrase; audit log.  
 **Needs & Feelings:** Autonomy; clarity.  
 **System Support:** Final double‑check; email confirmation of deletion.  
 **Done:** Account and personal data deleted per policy.  
 **Metrics:** Deletion completion; post‑delete support contacts.  
-**Edge Cases:** Legal holds; queued exports blocked with notice.
+**Edge Cases:** Wrong password; wrong confirmation phrase; legal holds; queued exports blocked with notice.
 
 ---
 
@@ -1210,11 +1247,10 @@ Each flow includes:
 
 ## Global assumptions from the narration
 
-- **Free trial** exists for organizations; shows concise value cards before commitment.
+- **Portfolio-first onboarding** applies to organizations as well as individuals; org setup ends with a public portfolio-ready confirmation step before the first workspace visit.
 - **Privacy & data handling**: legally public org data is public by default; sensitive/contractual data remains private.
 - **First-run guidance** uses a **gradual reveal** of UI (nav, dashboard cards) with **concise hints** and **mock data** during onboarding only.
 - **Account modes**: a person can hold an **Individual** account and also act as an **Org Representative**; easy switching is required.
-- **Trial seats**: free trial permits **up to 5 seats** (CEO + 4).
 - **Interview policy**: policy presets apply by default with mode-specific windows/durations (`startup`: 7 days/30 min, `enterprise`: 14 days/45 min, `volunteer`: 21 days/30 min). Advanced policy mode retains strict controls; decision feedback SLA remains 48 hours.
 - **Matching results**: **Top 5** candidates for free tier; if the pool is too small, platform compiles best matches by **72 hours** post‑publish.
 
@@ -1222,11 +1258,11 @@ Each flow includes:
 
 # Flows
 
-## O‑01 Landing → Trial Intent
+## O‑01 Landing → Organization Sign‑Up Intent
 
-**Goal:** Understand value and decide to try the platform.  
+**Goal:** Understand value and decide to create an organization account.  
 **Entry:** Visitor reads the shared landing page (for individuals & orgs).  
-**Happy‑path steps:** Landing → “Start Free Trial (Organizations)” → Value cards (concise).  
+**Happy‑path steps:** Landing → organization CTA → concise value cards and proof points → continue to organization sign-up.  
 **Success:** User proceeds to org sign‑up.  
 **Key data:** None.  
 **Edge cases:** TL;DR behavior—value cards must be scannable; avoid walls of text.  
@@ -1236,36 +1272,36 @@ Each flow includes:
 
 **Goal:** Create an org representative account cleanly.  
 **Entry:** CTA from O‑01.  
-**Happy‑path steps:** Choose **Organization account** → enter **name, work email, title, password** → submit → receive **verification email** → verify.  
-**Success:** Account verified; user can sign in.  
-**Key data:** User(OrgRep), Org placeholder.  
-**Edge cases:** Email deliverability; password policy; duplicate email.  
+**Happy‑path steps:** Choose **Organization account** → sign up with email/password or continue with Google/LinkedIn → accept required consent → email/password path receives verification email and verifies before first app session → sign in.  
+**Success:** Org representative account created and ready for onboarding.  
+**Key data:** User(OrgRep), consent records, auth provider data.  
+**Edge cases:** Email deliverability; password policy; duplicate email; provider auth failure; expired verification link.  
 **MVP:** Yes.
 
-## O‑03 Minimal Org Setup (Slug & Names)
+## O‑03 Minimal Org Setup (Slug, Type, and Public Basics)
 
-**Goal:** Provide only essentials before seeing value.  
+**Goal:** Create the organization and its owner relationship with only the fields needed for day-1 value.  
 **Entry:** First sign‑in after O‑02.  
-**Happy‑path steps:** Form with **org slug**, **display name**, **legal name** → save.  
-**Success:** Org created with minimal profile; hint that more details can be added later.  
-**Key data:** Org.slug, Org.name, Org.legal_name.  
-**Edge cases:** Slug collision; reserved words.  
+**Happy‑path steps:** Enter **organization name**, **slug**, **organization type**, optional **legal name**, optional **mission**, and optional **website** → save.  
+**Success:** Organization is created, owner membership is active, and the public org portfolio URL is generated.  
+**Key data:** Org.slug, Org.name, Org.legal_name, Org.type, Org.website, OrganizationMembership(owner).  
+**Edge cases:** Slug collision; reserved words; existing active membership redirects to existing org home instead of creating a duplicate org.  
 **MVP:** Yes.
 
-## O‑04 Trial Activation & Consent
+## O‑04 Public Org Portfolio Ready & Continue
 
-**Goal:** Start free trial with clear terms and reassurance.  
+**Goal:** Deliver a live public organization link immediately after org creation and move the user into the first assignment flow.  
 **Entry:** Post O‑03.  
-**Happy‑path steps:** Show **value cards** → accept **ToS/Privacy** → optional note on **security/privacy contact** → start trial.  
-**Success:** Trial active; seat limit set.  
-**Key data:** Trial.start_at, Trial.end_at, Trial.seat_cap=5.  
-**Edge cases:** Decline terms → return to dashboard with limited access.  
+**Happy‑path steps:** Show dedicated **Organization link ready** step → display live `/portfolio/org/{slug}` URL → copy link or open portfolio → continue into the create-first-assignment flow.  
+**Success:** Public org link is live and the user is steered toward creating the first assignment.  
+**Key data:** Public org portfolio URL.  
+**Edge cases:** Clipboard blocked; open-in-new-tab failure; search indexing stays off by default; public route may stay unavailable until minimum trust-card content exists; user leaves before clicking continue and later returns to org home directly.  
 **MVP:** Yes.
 
 ## O‑05 First‑Run Guided Tour (Nav + Dashboard)
 
 **Goal:** Prevent overwhelm; explain layout & purpose swiftly.  
-**Entry:** Trial starts / first dashboard view.  
+**Entry:** First org workspace visit after O‑04.  
 **Happy‑path steps:** Gradual reveal of **nav bar** (with hint) → **dashboard cards** one by one with **mock data** while hints visible → on dismiss, cards revert to **empty defaults**.  
 **Success:** Tour completed or skipped; user orients.  
 **Key data:** Dismissed_tutorial flags.  
@@ -1292,14 +1328,14 @@ Each flow includes:
 **Edge cases:** Org policy forbids linking; visibility rules differ per mode.  
 **MVP:** Yes.
 
-## O‑08 Team Setup: Departments, Hierarchy, Seats
+## O‑08 Team Setup: Departments, Hierarchy, and Members
 
-**Goal:** Model company structure & invite collaborators (trial cap = 5 seats).  
+**Goal:** Model company structure and invite collaborators.  
 **Entry:** Team tab.  
 **Happy‑path steps:** Create **departments** → set **hierarchy** → **invite members** by work email → assign **roles** and **departments**.  
-**Success:** Team active with roles and seat usage displayed.  
+**Success:** Team active with roles and department assignments visible.  
 **Key data:** Dept tree, Invites, Roles/Permissions.  
-**Edge cases:** Seat cap reached; resend invite; revoke access.  
+**Edge cases:** Duplicate invite; resend invite; revoke access.  
 **MVP:** Yes.
 
 ## O‑09 Org Profile Completion (Core Data)
@@ -1358,7 +1394,7 @@ Each flow includes:
    **Edge cases:** Missing stakeholder input; conflicting weights; justification omitted when education is marked “required.”  
    **MVP:** Yes.
 
-## O‑14 Publish Assignment (Free Tier Constraints)
+## O‑14 Publish Assignment
 
 **Goal:** Make the assignment discoverable and ready for matching.  
 **Entry:** From O‑13.  
@@ -1375,6 +1411,7 @@ Each flow includes:
 **Happy‑path steps:** Add one or many candidate emails → send invite links → candidate opens invite, authenticates with the same email, claims invite, and submits a Proof Card link (`/p/[token]`) generated from structured profile data.  
 **Success:** Invite status transitions to `proof_submitted`, and org reviewers can open the submitted Proof Card from the queue.  
 **Key data:** CandidateInvite(status lifecycle, token hash, claimant, proof snippet/token, timestamps).  
+**Implementation note (user-visible effect only):** BYOC Proof Card intake and assignment section intake map into canonical submission records so exported history and reviewer audit views stay consistent.  
 **Edge cases:** Duplicate active invite blocked per org/email, expired/revoked token, claimant email mismatch, resend/revoke actions.  
 **MVP:** Yes.
 
@@ -1392,10 +1429,10 @@ Each flow includes:
 
 **Goal:** Move shortlisted candidates through one structured touchpoint.  
 **Entry:** From O‑15 shortlist.  
-**Happy‑path steps:** Open **message thread** → propose slot(s) via Zoom or Google Meet within active policy window (`startup`: 7 days, `enterprise`: 14 days, `volunteer`: 21 days; `advanced` configurable) and duration limits (30/45/30/60 min max) → system generates video call link automatically; auto‑invite **assigned stakeholders**; confirm time.
-**Success:** Interview completed.  
-**Key data:** Conversation, Calendar event, Participants, Video call link.  
-**Edge cases:** Time‑zone collisions; no‑shows; reschedule once.  
+**Happy‑path steps:** Open **message thread** → propose slot(s) within active policy window (`startup`: 7 days / 30 min, `enterprise`: 14 days / 45 min, `volunteer`: 21 days / 30 min, `advanced`: 7 days / 60 min) → schedule using Google Meet or a manual meeting link → auto-invite assigned stakeholders → edit or cancel if plans change → if canceled, schedule a replacement interview for the same match → surface schedule/edit/cancel updates in the message thread.
+**Success:** Interview is scheduled, updated, canceled, or rescheduled with a clear current state for all participants.  
+**Key data:** Conversation, Calendar event, Participants, Meeting link, Interview lifecycle messages.  
+**Edge cases:** Time-zone collisions; Zoom selection returns fallback guidance; no-shows; canceled interviews no longer block replacement scheduling.  
 **MVP:** Yes.
 
 ## O‑17 Decision & Feedback (48h SLA)
@@ -1444,7 +1481,7 @@ Each flow includes:
 
 - **Org**: slug, name, legal_name, registry_ids, locations, industries, legal_structure, ownership/voting, mission, vision, values, causes, pledges, logos, cover.
 - **User(OrgRep)**: name, work_email, title, role.
-- **Team/Dept**: tree structure; roles/permissions; seat cap in trial.
+- **Team/Dept**: tree structure; roles/permissions.
 - **ImpactArea**: public by default; fields guided by hints; draft/publish states.
 - **Project**: name, scope, team, status; confidentiality/NDA flags; draft/publish.
 - **Competency (L1–L4)**: taxonomy items; bindings to ImpactArea/Project.
@@ -1454,9 +1491,9 @@ Each flow includes:
 - **Decision/Feedback**: outcome with personal feedback ≤48h SLA.
 - **Settings/Security**: MFA, privacy, export JSON, deletion safeguards.
 
-## Appendix B — SLA & Trial Rules
+## Appendix B — SLA & Matching Rules
 
-- **Free tier:** Top 5 candidates; **≤72h** to populate if pool is small; **5 seats** (CEO + 4).
+- **Matching:** Top 5 candidates; **≤72h** to populate if pool is small.
 - **Interview:** Preset defaults apply by policy (`startup`: 7 days/30 min, `enterprise`: 14 days/45 min, `volunteer`: 21 days/30 min); **advanced** policy mode allows stricter custom handling with max duration guardrails.
 - **Decision:** **48 hours** default SLA to inform candidates with personalized feedback; reminders/escalations remain mandatory.
 
@@ -1560,11 +1597,16 @@ Each flow includes:
 **Why Now:** Credibility without heavy gatekeeping; reduces noise for orgs and anxiety for candidates.  
 **Acceptance Criteria:**
 
+- Users can complete lightweight verification through **work email** and **LinkedIn**, with canonical trust tiers:
+  - `unverified`
+  - `workplace_verified`
+  - `identity_verified`
 - Users can request **peer/mentor attests** to artifacts or L4s via magic link.
 - Assignment-introduced **verification gates** are displayed pre-intro (e.g., ID, portfolio, reference).
 - Contextual “Request attestation” entry points appear on proof/skill surfaces and unmet gate banners.
-- Time-to-first verified proof P50 **≤ 7 days** for users who request it (from Persona flows).  
-  **MoSCoW:** **Should** (soft verify/attest); **Could:** ID or employment verification later.
+- Government ID verification is **not** exposed as a self-serve option in the current MVP UI.
+- Time-to-first trust signal P50 **≤ 7 days** for users who start a work-email, LinkedIn, or attestation flow (from Persona flows).  
+  **MoSCoW:** **Should** (lightweight verification + attestations); **Could:** stronger employment or ID checks later.
 
 ---
 
@@ -1807,7 +1849,7 @@ Each flow includes:
 ## Facts & Decisions
 
 - This list is **binding for MVP**; additions require a change note and re‑prioritization.
-- Non‑negotiables: **no social feed**, **no diagnostic mental‑health features**, **no hard verification**, **no payments/contracting** in MVP.
+- Non‑negotiables: **no social feed**, **no diagnostic mental‑health features**, **no mandatory government-ID verification in the current self-serve MVP**, **no payments/contracting** in MVP.
 - Rationale ties to Parts **1–5**: focus on faster, fairer **matches** (TTFQI/TTSC), privacy‑first, low cognitive load.
 
 **Status:** Draft v0.1 (awaiting product approval) · **Approver:** Pavlo Samoshko · **Date:** —
@@ -2031,27 +2073,40 @@ Each flow includes:
 
 **Inputs**
 
+- Work email verification request and verification result.
+- LinkedIn verification request and resulting verification signal.
 - Attestation request (artifact/L4), recipient email/name, message, due date.
 - Status updates from magic-link form (approve/decline + comment).
 
 **Processing Rules**
 
-- Generate signed magic links; expiry (default 14 days).
-- Store attestations; surface badges on artifacts/L4s.
+- Derive canonical verification tiers from current trust signals:
+  - `unverified`
+  - `workplace_verified`
+  - `identity_verified`
+- Work email verification can elevate a user to `workplace_verified`.
+- LinkedIn verification can elevate a user to `workplace_verified` or `identity_verified` depending on the signal returned.
+- Generate signed magic links for attestations; expiry (default 14 days).
+- Store attestations and verification state; surface badges on artifacts/L4s and trust bars.
 - Assignment **verification gates** displayed pre-intro.
+- Government ID verification remains unavailable in the self-serve MVP UI.
 
 **Outputs**
 
-- Attestation status panel; badges on verified items; reminder emails.
+- Verification status panel showing current tier, source, and next actions; badges on verified items; reminder emails.
 - Export verification summary in Match Detail.
 
 **Error & Empty States**
 
-- Expired link → regenerate flow; declined attest → feedback shown to requester.
+- Expired work email or attestation link → regenerate flow.
+- LinkedIn auth or review failure → show retry/review guidance.
+- Declined attest → feedback shown to requester.
 - Missing gate → block introduce with explanation.
 
 **Event Tracking**
 
+- `work_email_verification_started/completed` {result}
+- `linkedin_verification_started/completed` {result_level}
 - `attestation_requested` {target, recipient_role}
 - `attestation_completed` {target, outcome}
 - `verification_gate_failed` {gate_type}
@@ -2280,8 +2335,10 @@ Each flow includes:
 - **SkillsTaxonomy** — hierarchical L1→L4 catalog; synonyms; level rubric.
 - **ProfileSkill** — join table: Profile × L4 skill with `level (0–5)`, `months_experience`, `visibility`.
 - **Assignment** — role & outcomes, must/nice L4 skills, verification gates, logistics, and weights.
-- **Match** — materialized (Profile × Assignment) record with `score`, `subscores` (skills/constraints/verification/PAC), `created_at`.
-- **Application** — candidate intent + answers, attached artifacts; links to **Interview** events.
+- **Match** — materialized (Profile × Assignment) eligibility record with `score`, `subscores` (skills/constraints/verification/PAC), canonical `lifecycle_state`, and `created_at`.
+- **Application** — explicit candidate intent submitted through an application surface; conceptually separate from **Intro** and only materialized as a first-class object when self-serve apply ships.
+- **Intro** — canonical bilateral pursuit workflow for MVP. Starts from a scored **Match** or BYOC candidate invite, owns consent/interest state, and is the parent of interview handoff.
+- **Interview** — scheduled evaluation event created from an active **Intro**. Every interview must link back to one intro in MVP flows.
 - **Verification** — attestation requests & results for skills/experience/artifacts (soft verify v1).
 - **Message** — basic contact thread or system notifications (MVP minimal).
 - **ConsentRecord** — user policy acceptances with versioning and IP/agent.
@@ -2296,9 +2353,11 @@ Each flow includes:
 - Profile 1—N Experience / Education / Artifact / Verification
 - Org 1—N Assignment
 - Org 1—N Member (Profile) with role
-- Assignment 1—N Application
-- Profile N—N Assignment via Application; Profile × Assignment → Match (scored)
-- Application 1—N Interview
+- Assignment 1—N Match
+- Match 0..1—1 Intro
+- Assignment 0..N Application when self-serve apply exists; Application 0..1—1 Intro
+- Profile N—N Assignment via Match; active Intro uniqueness is `candidate_profile_id + assignment_id`
+- Intro 1—N Interview
 - Any 1—N AnalyticsEvent (with anonymized ids)
 
 ## Data Retention & Deletion
@@ -2432,7 +2491,7 @@ Each flow includes:
 
 ## Facts & Decisions
 
-- **Facts:** MVP deliberately excludes payments, hard verification, deep ATS/HRIS; single‑region hosting.
+- **Facts:** MVP deliberately excludes payments, mandatory government-ID verification in the self-serve UI, deep ATS/HRIS; single‑region hosting.
 - **Decisions:** Implement rate limiting and basic moderation for MVP; treat vector search/caching/SSO as post‑MVP; revisit compliance posture before GA.
 
 # Part 12 — Acceptance Criteria (MVP “Done”)
@@ -2483,8 +2542,10 @@ Each flow includes:
 
 **F7 Verification & Attestations (v1)**
 
+- [ ] Users can complete **work email** and **LinkedIn** verification, and the product shows canonical tiers `unverified`, `workplace_verified`, and `identity_verified`.
 - [ ] Request attestation via magic link; status visible; reminders send.
 - [ ] Assignment gates are displayed pre-intro; unmet gates block “Introduce.”
+- [ ] Government ID verification is not shown as a self-serve option in the current MVP UI.
 
 **F8 Gap Analysis & Next-Best Skills**
 
@@ -2539,7 +2600,7 @@ Each flow includes:
 1. **Individual activation:** Sign up → Purpose → Atlas (Lite: ≥3 L4 + proof) → Activate → See matches; progress to Strong at ≥10 L4.
 2. **Org assignment:** Create org → Purpose → Assignment (Basic default) → Publish → Shortlist appears; Advanced path retains strict 5-step.
 3. **Introduce:** From shortlist → Introduce → Message thread opens (basic) → Mark as interview scheduled.
-4. **Verification:** Request attestation → Approver completes → Badge visible.
+4. **Verification:** Complete work email or LinkedIn verification and optionally request attestation → resulting tier/badge visible.
 5. **Zen Hub:** Opt-in → Add check-in → See reflection log; export PDF.
 6. **Privacy:** Toggle field visibility & Redact mode → Previews reflect settings.
 
@@ -2580,7 +2641,7 @@ Each flow includes:
 - A2: Students/switchers can **activate** (reach matchable profile) in ≤20 minutes median.
 - A3: Organizations can **publish** Assignments in ≤15 minutes median.
 - A4: Opt-in well-being check-ins do **not** harm activation or retention; improve perceived control.
-- A5: Email-first onboarding is sufficient for early cohorts (SSO later).
+- A5: Current auth mix (email/password plus Google and LinkedIn OAuth) is sufficient for early cohorts.
 
 **Validation windows:** First 4–6 weeks post-launch; report weekly.
 
@@ -2669,7 +2730,9 @@ Each flow includes:
 ## A3 Visibility & Privacy Guardrails
 
 - Acceptance checks:
-  - “Preview as” (public/network-only/match-only) available before publish/export; sensitive fields default to match-only.
+  - Public portfolio is shareable by direct link by default; search indexing is off unless explicitly enabled.
+  - Public route becomes unavailable when minimum safe content is not met or when safety/indexing constraints require depublishing.
+  - Public visibility defaults remain launch-safe: header/proof bar on, identity/LinkedIn trust signals allowed when present, work email off, contact off, skills off, bio off.
   - Pre-publish check blocks sharing if private artifacts/fields are referenced in public/network-only surfaces; shows inline fixes.
   - “What others can see” summary panel is always available and grouped into public/network-only/match-only/private buckets.
   - Zen Hub data stored in a separate partition and excluded from ranking and analytics; privacy banner explicitly states this.
@@ -2727,8 +2790,8 @@ Each flow includes:
 ## A10 Data Export/Import Safety
 
 - Acceptance checks:
-  - Exports include schema version; imports run dry-run validation with a summary of changes; block on schema mismatch or invalid fields.
-  - User sees preview of fields to be overwritten; no changes apply on failed validation; validation logs stored for audit.
+  - Exports include schema version `3.0.0`; imports support merge/replace modes, require consent acknowledgment, and block on schema mismatch or invalid fields.
+  - Legacy-compatible exports are normalized into the current portability contract when possible; failed validation applies no changes; validation and import logs are stored for audit.
 
 ## A11 Feature-Flag Rollout and Monitoring
 
@@ -2737,5 +2800,84 @@ Each flow includes:
   - Rollout follows internal-only → 10% → 50% → 100% with deterministic audience/percentage targeting.
   - `/api/feature-flags` returns user-scoped flag states for authenticated sessions.
   - `/api/admin/metrics/rollout` returns activation/publish/privacy indicators and endpoint-health metrics used in launch decisions.
+
+## A12 Residual Lifecycle Appendix
+
+- **Profile lifecycle**
+  - Canonical states: `draft -> active_private -> active_matchable -> restricted -> deleted`
+  - Initial state: `draft`
+  - Terminal states: `deleted`
+  - Timeout behavior: none by default; consent expiry or policy restriction must persist `restricted`
+  - Required timestamps: `created_at`, `activated_at`, `matchable_at`, `restricted_at`, `deleted_at`
+  - Required audit events: `profile_created`, `profile_activated`, `profile_matchable_enabled`, `profile_restricted`, `profile_deleted`
+
+- **Proof/artifact lifecycle**
+  - Canonical states: `draft -> active -> expiring -> expired -> revoked -> deleted`
+  - Initial state: `draft`
+  - Terminal states: `revoked`, `deleted`
+  - Timeout behavior: `expires_at` persists `expiring` and `expired`; revoked or deleted artifacts are excluded from public surfaces and exports
+  - Required timestamps: `created_at`, `activated_at`, `expires_at`, `expired_at`, `revoked_at`, `deleted_at`, `cleanup_completed_at`
+  - Required audit events: `proof_artifact_created`, `proof_artifact_updated`, `proof_freshness_state_changed`, `proof_freshness_nudge_queued`, `proof_freshness_nudge_sent`, `proof_artifact_revoked`, `proof_artifact_deleted`
+
+- **Match lifecycle**
+  - Canonical states: `generated -> shortlisted -> passed -> intro_in_progress -> interview_in_progress -> closed`
+  - Side states: `stale`, `hidden_due_to_policy`
+  - Initial state: `generated`
+  - Terminal states: `closed`
+  - Timeout behavior: stale-match reconciliation persists `stale`; fairness or policy suppression persists `hidden_due_to_policy`; intro expiry may return a match to `shortlisted`
+  - Required timestamps: `generated_at`, `shortlisted_at`, `passed_at`, `intro_started_at`, `interview_started_at`, `stale_at`, `hidden_due_to_policy_at`, `closed_at`
+  - Required audit events: `match_generated`, `match_shortlisted`, `match_passed`, `match_intro_started`, `match_interview_started`, `match_marked_stale`, `match_hidden_due_to_policy`, `match_closed`
+
+- **Verification invite lifecycle**
+  - Canonical states: `pending -> opened -> accepted|declined|expired|revoked|cancelled`
+  - Initial state: `pending`
+  - Terminal states: `accepted`, `declined`, `expired`, `revoked`, `cancelled`
+  - Contract: invite lifecycle is the request envelope and is distinct from the resulting verification-record outcome
+  - Required timestamps: `created_at`, `opened_at`, `responded_at`, `expires_at`, `expired_at`, `revoked_at`, `cancelled_at`
+  - Required audit events: `verification_invite_created`, `verification_invite_opened`, `verification_invite_accepted`, `verification_invite_declined`, `verification_invite_expired`, `verification_invite_revoked`, `verification_invite_resent`
+
+- **Org invite lifecycle**
+  - Canonical states: `pending -> accepted|expired|revoked`
+  - Initial state: `pending`
+  - Terminal states: `accepted`, `expired`, `revoked`
+  - Timeout behavior: expired invites remain queryable and auditable; accepted invites are retained instead of being deleted
+  - Required timestamps: `created_at`, `last_sent_at`, `accepted_at`, `expires_at`, `expired_at`, `revoked_at`
+  - Required audit events: `org_invite_sent`, `org_invite_resent`, `org_invite_accepted`, `org_invite_expired`, `org_invite_revoked`
+
+- **Export lifecycle**
+  - Canonical states: `requested -> preparing -> ready -> downloaded|expired|failed|cancelled`
+  - Initial state: `requested`
+  - Terminal states: `downloaded`, `expired`, `failed`, `cancelled`
+  - Timeout behavior: ready exports receive a fixed TTL; open exports are blocked when account deletion is in flight
+  - Required timestamps: `requested_at`, `ready_at`, `downloaded_at`, `expires_at`, `failed_at`, `cancelled_at`
+  - Required audit events: `export_requested`, `export_ready`, `export_downloaded`, `export_expired`, `export_failed`, `export_cancelled`
+
+- **Import lifecycle**
+  - Canonical states: `uploaded -> validating -> awaiting_confirmation -> applying -> completed|rejected|expired|failed|cancelled`
+  - Initial state: `uploaded`
+  - Terminal states: `completed`, `rejected`, `expired`, `failed`, `cancelled`
+  - Timeout behavior: staged imports expire if they are not confirmed within the retention window; failed validation applies no writes
+  - Required timestamps: `uploaded_at`, `validated_at`, `confirmed_at`, `applied_at`, `completed_at`, `expired_at`, `failed_at`, `cancelled_at`
+  - Required audit events: `import_uploaded`, `import_validated`, `import_confirmed`, `import_applied`, `import_completed`, `import_rejected`, `import_expired`, `import_failed`
+
+- **Deletion lifecycle**
+  - Canonical states: `requested -> blocked_legal_hold|processing -> deleted|failed_requires_manual_review`
+  - Initial state: `requested`
+  - Terminal states: `deleted`, `failed_requires_manual_review`
+  - Timeout behavior: no grace-period state in MVP; long-running deletion processing raises operational alerts instead of silently lingering
+  - Required timestamps: `requested_at`, `processing_started_at`, `blocked_at`, `deleted_at`, `failed_at`
+  - Required audit events: `deletion_requested`, `deletion_blocked`, `deletion_processing_started`, `deletion_completed`, `deletion_failed`
+
+- **Application vs Intro contract**
+  - `Application` and `Intro` are separate concepts.
+  - `Match` is a scored eligibility record.
+  - `Intro` is the canonical bilateral workflow that begins when a match or candidate invite is actively pursued.
+  - `Interview` is a scheduled event created from an active intro and must always link back to that intro.
+  - A matching-driven intro may exist without an application.
+  - An application may create at most one intro for the same `candidate_profile_id + assignment_id`.
+  - MVP recommendation: keep `Intro` as the persisted pipeline object until self-serve apply launches.
+  - Duplicate rule: at most one active intro per `candidate_profile_id + assignment_id`.
+  - Reopen rule: `withdrawn` intros may reopen; `expired`, `duplicate_candidate`, and `closed` remain terminal.
+  - Ownership: candidate controls application withdrawal and intro consent; organization controls shortlist, interview, and decision transitions; system owns expiry and stale reconciliation.
 
 **Status:** Draft v0.1 · **Date:** —
