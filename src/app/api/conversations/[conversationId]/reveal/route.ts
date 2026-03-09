@@ -13,12 +13,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { db, conversations, profiles } from '@/db';
+import { matchReviewStates } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { Resend } from 'resend';
 import IdentityRevealed from '@/../emails/IdentityRevealed';
 import { EMAIL_CONFIG } from '@/lib/email/config';
-import { unlockFullIdentityForMatch } from '@/lib/matching/review-contract';
+import { recordRevealEvent, unlockFullIdentityForMatch } from '@/lib/matching/review-contract';
 
 function getResendClient(): Resend | null {
   const apiKey = process.env.RESEND_API_KEY;
@@ -44,7 +45,7 @@ interface RouteParams {
  * 4. Trigger fires → stage = 'revealed', revealed_at = NOW()
  * 5. Both users receive IdentityRevealed email
  */
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export async function POST(_request: NextRequest, { params }: RouteParams) {
   try {
     const { conversationId } = await params;
 
@@ -188,6 +189,34 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         requesterId: user.id,
         waitingForOther: true,
       });
+
+      if (updated.matchId) {
+        const matchReviewState = await db.query.matchReviewStates.findFirst({
+          where: eq(matchReviewStates.matchId, updated.matchId),
+        });
+
+        if (matchReviewState) {
+          await recordRevealEvent({
+            matchId: matchReviewState.matchId,
+            assignmentId: matchReviewState.assignmentId,
+            profileId: matchReviewState.profileId,
+            orgId: matchReviewState.orgId,
+            actorId: user.id,
+            actorRole: 'conversation_participant',
+            actorType: 'user_account',
+            triggerType: 'user',
+            requestedScope: 'full_identity',
+            grantedScope: matchReviewState.revealScope,
+            reasonCode: 'reveal_full_identity',
+            sourceSurface: 'conversation_reveal_route',
+            context: {
+              conversationId,
+              waitingForOther: true,
+            },
+            outcome: 'no_op',
+          });
+        }
+      }
 
       return NextResponse.json({
         success: true,

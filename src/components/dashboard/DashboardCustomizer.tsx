@@ -84,13 +84,6 @@ const AVAILABLE_WIDGETS: AvailableWidget[] = [
     defaultSize: 'default',
   },
   {
-    id: 'zen-hub',
-    name: 'Well-Being Check',
-    description: 'Quick well-being status',
-    icon: '🧘',
-    defaultSize: 'small',
-  },
-  {
     id: 'profile-completion',
     name: 'Profile Progress',
     description: 'Your profile completion status',

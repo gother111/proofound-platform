@@ -16,6 +16,7 @@ import {
   verificationStateTransitions,
   workflowAsyncJobs,
 } from '@/db/schema';
+import { emitLifecycleEvent } from '@/lib/analytics/lifecycle-events';
 import { getRows } from '@/lib/db/rows';
 import { emitDecisionMade, emitInterviewCompleted } from '@/lib/analytics/events';
 import {
@@ -35,6 +36,7 @@ import {
   type WorkflowMachineName,
 } from '@/lib/workflow/contracts';
 import { cancelWorkflowJobs, enqueueWorkflowJob } from '@/lib/workflow/queue';
+import { computeProofTrustSnapshot } from '@/lib/proof-trust/snapshots';
 
 type TransitionContext = {
   trigger: string;
@@ -72,6 +74,70 @@ function toIso(value: Date | string | null | undefined) {
 
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+}
+
+type LifecycleActorType =
+  | 'candidate'
+  | 'organization_member'
+  | 'platform_admin'
+  | 'system'
+  | 'service_account';
+
+function mapWorkflowActorTypeToLifecycleActorType(
+  actorType: WorkflowActorType
+): LifecycleActorType {
+  switch (actorType) {
+    case 'candidate':
+      return 'candidate';
+    case 'organization_member':
+      return 'organization_member';
+    case 'platform_admin':
+      return 'platform_admin';
+    case 'service_account':
+      return 'service_account';
+    default:
+      return 'system';
+  }
+}
+
+async function refreshIndividualProofTrustSnapshots(profileId: string) {
+  await Promise.all([
+    computeProofTrustSnapshot('individual_profile', profileId, 'portfolio'),
+    computeProofTrustSnapshot('individual_profile', profileId, 'matching'),
+  ]);
+}
+
+function computeTimeToVerifiedHours(requestedAt?: Date | null, verifiedAt?: Date | null) {
+  if (!requestedAt || !verifiedAt) {
+    return null;
+  }
+
+  const hours = (verifiedAt.getTime() - requestedAt.getTime()) / (1000 * 60 * 60);
+  return Number.isFinite(hours) && hours >= 0 ? Number(hours.toFixed(2)) : null;
+}
+
+function computeExpiresInDays(expiresAt?: Date | null) {
+  if (!expiresAt) {
+    return 0;
+  }
+
+  const days = Math.ceil((expiresAt.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+  return Math.max(0, days);
+}
+
+function inferNoShowParticipantRole(
+  actorType: WorkflowActorType,
+  reasonCode?: string | null
+): 'candidate' | 'organization_member' {
+  if (actorType === 'candidate') {
+    return 'organization_member';
+  }
+
+  if (reasonCode?.includes('org_')) {
+    return 'organization_member';
+  }
+
+  return 'candidate';
 }
 
 async function appendAssignmentTransition(
@@ -672,6 +738,54 @@ export async function recordIntroWorkflowTransition(params: {
     });
   }
 
+  const lifecycleActorType = mapWorkflowActorTypeToLifecycleActorType(params.actorType);
+  if (params.toState === 'expired') {
+    const ageHours = Number(
+      ((now.getTime() - intro.createdAt.getTime()) / (1000 * 60 * 60)).toFixed(2)
+    );
+    await emitLifecycleEvent(
+      'intro_workflow_expired',
+      {
+        intro_workflow_id: updated.id,
+        assignment_id: updated.assignmentId,
+        candidate_profile_id: updated.candidateProfileId,
+        org_id: updated.orgId,
+        from_state: intro.state,
+        expiry_reason: params.reasonCode ?? 'intro_expired',
+        age_hours: ageHours,
+        actor_type: lifecycleActorType,
+        source: 'workflow.service',
+      },
+      {
+        userId: updated.candidateProfileId,
+        organizationId: updated.orgId,
+        entityType: 'match',
+        entityId: updated.id,
+      }
+    );
+  }
+
+  if (params.toState === 'withdrawn') {
+    await emitLifecycleEvent(
+      'intro_workflow_withdrawn',
+      {
+        intro_workflow_id: updated.id,
+        assignment_id: updated.assignmentId,
+        actor_id: params.actorId ?? null,
+        from_state: intro.state,
+        withdraw_reason_code: params.reasonCode ?? 'withdrawn',
+        actor_type: lifecycleActorType,
+        source: 'workflow.service',
+      },
+      {
+        userId: updated.candidateProfileId,
+        organizationId: updated.orgId,
+        entityType: 'match',
+        entityId: updated.id,
+      }
+    );
+  }
+
   return updated;
 }
 
@@ -935,6 +1049,28 @@ export async function recordInterviewTransition(params: {
     }
   }
 
+  if (params.toState === 'no_show') {
+    await emitLifecycleEvent(
+      'interview_no_show_recorded',
+      {
+        interview_id: updated.id,
+        intro_workflow_id: context?.intro_id ?? null,
+        assignment_id: context?.assignment_id ?? null,
+        participant_role: inferNoShowParticipantRole(params.actorType, params.reasonCode),
+        recorded_by_actor_type: mapWorkflowActorTypeToLifecycleActorType(params.actorType),
+        resolution_state: updated.status,
+        actor_type: mapWorkflowActorTypeToLifecycleActorType(params.actorType),
+        source: 'workflow.service',
+      },
+      {
+        userId: context?.candidate_profile_id ?? undefined,
+        organizationId: context?.org_id ?? undefined,
+        entityType: 'interview',
+        entityId: updated.id,
+      }
+    );
+  }
+
   return updated;
 }
 
@@ -1167,6 +1303,30 @@ export async function syncWorkEmailVerificationRequested(params: {
       followUpDueAt,
     });
 
+    await emitLifecycleEvent(
+      'verification_request_created',
+      {
+        verification_record_id: record.id,
+        verification_kind: record.verificationKind,
+        subject_type: record.subjectType,
+        subject_id: record.subjectId,
+        proof_artifact_id: record.proofArtifactId,
+        status: record.status,
+        integrity_status: record.integrityStatus,
+        expires_in_days: computeExpiresInDays(record.expiresAt),
+        actor_type: 'system',
+        source: 'workflow.service',
+      },
+      {
+        userId: params.profileId,
+        organizationId: params.orgId ?? undefined,
+        entityType: 'profile',
+        entityId: record.id,
+      }
+    );
+
+    await refreshIndividualProofTrustSnapshots(params.profileId);
+
     return record;
   }
 
@@ -1224,6 +1384,30 @@ export async function syncWorkEmailVerificationRequested(params: {
     requestExpiresAt: params.requestExpiresAt,
     followUpDueAt,
   });
+
+  await emitLifecycleEvent(
+    'verification_request_resent',
+    {
+      verification_record_id: updated.id,
+      verification_kind: updated.verificationKind,
+      subject_type: updated.subjectType,
+      subject_id: updated.subjectId,
+      proof_artifact_id: updated.proofArtifactId,
+      status: updated.status,
+      integrity_status: updated.integrityStatus,
+      expires_in_days: computeExpiresInDays(updated.expiresAt),
+      actor_type: 'system',
+      source: 'workflow.service',
+    },
+    {
+      userId: params.profileId,
+      organizationId: params.orgId ?? undefined,
+      entityType: 'profile',
+      entityId: updated.id,
+    }
+  );
+
+  await refreshIndividualProofTrustSnapshots(params.profileId);
 
   return updated;
 }
@@ -1329,6 +1513,71 @@ export async function recordVerificationTransition(params: {
         },
       }),
     ]);
+  }
+
+  const lifecycleActorType = mapWorkflowActorTypeToLifecycleActorType(params.actorType);
+  const basePayload = {
+    verification_record_id: updated.id,
+    verification_kind: updated.verificationKind,
+    subject_type: updated.subjectType,
+    subject_id: updated.subjectId,
+    proof_artifact_id: updated.proofArtifactId,
+    status: updated.status,
+    integrity_status: updated.integrityStatus,
+    expires_in_days: computeExpiresInDays(updated.expiresAt),
+    actor_type: lifecycleActorType,
+    source: 'workflow.service',
+  } as const;
+
+  if (params.toState === 'expired') {
+    await emitLifecycleEvent('verification_request_expired', basePayload, {
+      userId: updated.ownerId,
+      organizationId: updated.verifierOrgId ?? undefined,
+      entityType: 'profile',
+      entityId: updated.id,
+    });
+  } else if (params.toState !== 'pending') {
+    await emitLifecycleEvent('verification_response_recorded', basePayload, {
+      userId: updated.ownerId,
+      organizationId: updated.verifierOrgId ?? undefined,
+      entityType: 'profile',
+      entityId: updated.id,
+    });
+  }
+
+  if (params.toState === 'verified') {
+    await emitLifecycleEvent(
+      'verification_record_completed',
+      {
+        ...basePayload,
+        time_to_verified_hours:
+          computeTimeToVerifiedHours(
+            updated.requestedAt,
+            updated.verifiedAt ?? updated.completedAt
+          ) ?? 0,
+      },
+      {
+        userId: updated.ownerId,
+        organizationId: updated.verifierOrgId ?? undefined,
+        entityType: 'profile',
+        entityId: updated.id,
+      }
+    );
+  } else if (
+    ['failed', 'declined', 'cancelled', 'revoked', 'disputed', 'contradicted'].includes(
+      params.toState
+    )
+  ) {
+    await emitLifecycleEvent('verification_record_failed', basePayload, {
+      userId: updated.ownerId,
+      organizationId: updated.verifierOrgId ?? undefined,
+      entityType: 'profile',
+      entityId: updated.id,
+    });
+  }
+
+  if (updated.ownerType === 'individual_profile') {
+    await refreshIndividualProofTrustSnapshots(updated.ownerId);
   }
 
   return updated;

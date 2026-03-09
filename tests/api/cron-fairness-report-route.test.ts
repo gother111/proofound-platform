@@ -65,9 +65,9 @@ describe('GET /api/cron/fairness-report', () => {
       },
       segments: [],
       summary:
-        'Demographic fairness analysis is unavailable for the current production schema because wellbeing_opt_ins does not yet include age, gender, location, or ethnicity columns. Overall matching metrics were recorded successfully.',
+        'Demographic fairness analysis is unavailable for the current production schema because demographic_opt_ins does not yet include age, gender, location, or ethnicity columns. Overall matching metrics were recorded successfully.',
       recommendations: [
-        'Add demographic segment columns to wellbeing_opt_ins before re-enabling demographic fairness segmentation.',
+        'Add demographic segment columns to demographic_opt_ins before re-enabling demographic fairness segmentation.',
       ],
     });
   });

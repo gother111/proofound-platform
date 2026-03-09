@@ -1,5 +1,7 @@
 import { db } from '@/db';
 import { proofArtifacts, proofPacks, verificationRecords, proofPackItems } from '@/db/schema';
+import { emitLifecycleEvent } from '@/lib/analytics/lifecycle-events';
+import { getRows } from '@/lib/db/rows';
 import type { ProofSubjectType } from '@/lib/contracts/canonical-domain';
 import {
   MATCH_REASON_CODE_VALUES,
@@ -8,7 +10,8 @@ import {
   mapLegacyProofVisibility,
   stableHashPayload,
 } from '@/lib/contracts/canonical-domain';
-import { sql } from 'drizzle-orm';
+import { computeProofTrustSnapshot, getProofFreshnessState } from '@/lib/proof-trust/snapshots';
+import { and, eq, sql } from 'drizzle-orm';
 
 type SkillProofInput = {
   id: string;
@@ -150,6 +153,65 @@ export const CANONICAL_MATCH_AUDIT_FIELDS_ENABLED =
   process.env.CANONICAL_MATCH_AUDIT_FIELDS !== 'false';
 export const CANONICAL_MATCH_SCORE_VERSION = 'core-match/v2';
 
+async function refreshIndividualProofTrustSnapshots(profileId: string) {
+  await Promise.all([
+    computeProofTrustSnapshot('individual_profile', profileId, 'portfolio'),
+    computeProofTrustSnapshot('individual_profile', profileId, 'matching'),
+  ]);
+}
+
+function getArtifactChangedFields(
+  previous: typeof proofArtifacts.$inferSelect | null,
+  next: typeof proofArtifacts.$inferSelect
+) {
+  if (!previous) {
+    return [];
+  }
+
+  const changedFields: string[] = [];
+
+  if (previous.title !== next.title) changedFields.push('title');
+  if (previous.description !== next.description) changedFields.push('description');
+  if (previous.sourceUrl !== next.sourceUrl) changedFields.push('source_url');
+  if (previous.storagePath !== next.storagePath) changedFields.push('storage_path');
+  if (previous.issuedAt?.toISOString() !== next.issuedAt?.toISOString())
+    changedFields.push('issued_at');
+  if (previous.expiresAt?.toISOString() !== next.expiresAt?.toISOString())
+    changedFields.push('expires_at');
+  if (previous.visibility !== next.visibility) changedFields.push('visibility');
+  if (previous.revealGate !== next.revealGate) changedFields.push('reveal_gate');
+
+  return changedFields;
+}
+
+function getFreshnessAgeBucket(
+  state: ReturnType<typeof getProofFreshnessState>,
+  dateValue?: Date | null
+) {
+  if (state === 'expired') {
+    return 'expired' as const;
+  }
+
+  if (!dateValue) {
+    return '366_plus' as const;
+  }
+
+  const ageDays = Math.floor((Date.now() - dateValue.getTime()) / (24 * 60 * 60 * 1000));
+  if (ageDays <= 90) return '0_90' as const;
+  if (ageDays <= 180) return '91_180' as const;
+  if (ageDays <= 365) return '181_365' as const;
+  return '366_plus' as const;
+}
+
+function getExpiryState(expiresAt?: Date | null) {
+  if (!expiresAt) return 'unknown' as const;
+
+  const diffMs = expiresAt.getTime() - Date.now();
+  if (diffMs <= 0) return 'expired' as const;
+  if (diffMs <= 30 * 24 * 60 * 60 * 1000) return 'expiring' as const;
+  return 'active' as const;
+}
+
 function mapSkillProofTypeToArtifactKind(
   proofType: SkillProofInput['proofType']
 ): 'link' | 'document' | 'image' | 'credential' | 'reference' | 'other' {
@@ -199,6 +261,12 @@ function toLegacyDateString(value: string | Date | null | undefined): string | n
 }
 
 export async function upsertCanonicalProofArtifactFromSkillProof(input: SkillProofInput) {
+  const existing = await db.query.proofArtifacts.findFirst({
+    where: and(
+      eq(proofArtifacts.legacySourceTable, 'skill_proofs'),
+      eq(proofArtifacts.legacySourceId, input.id)
+    ),
+  });
   const visibility = mapLegacyProofVisibility(
     typeof input.metadata?.visibility === 'string' ? input.metadata.visibility : null
   );
@@ -252,15 +320,119 @@ export async function upsertCanonicalProofArtifactFromSkillProof(input: SkillPro
     })
     .returning();
 
+  const eventName = existing ? 'proof_artifact_updated' : 'proof_artifact_created';
+  const changedFields = getArtifactChangedFields(existing ?? null, row);
+
+  await emitLifecycleEvent(
+    eventName,
+    existing
+      ? {
+          proof_artifact_id: row.id,
+          owner_type: row.ownerType,
+          owner_id: row.ownerId,
+          subject_type: row.subjectType,
+          subject_id: row.subjectId,
+          artifact_kind: row.artifactKind,
+          visibility: row.visibility,
+          reveal_gate: row.revealGate,
+          changed_fields: changedFields,
+          actor_type: 'candidate',
+          source: 'canonical.repository',
+        }
+      : {
+          proof_artifact_id: row.id,
+          owner_type: row.ownerType,
+          owner_id: row.ownerId,
+          subject_type: row.subjectType,
+          subject_id: row.subjectId,
+          artifact_kind: row.artifactKind,
+          visibility: row.visibility,
+          reveal_gate: row.revealGate,
+          actor_type: 'candidate',
+          source: 'canonical.repository',
+        },
+    {
+      userId: input.profileId,
+      entityType: 'profile',
+      entityId: row.id,
+    }
+  );
+
+  const nextFreshnessState = getProofFreshnessState({
+    issuedAt: row.issuedAt,
+    expiresAt: row.expiresAt,
+    updatedAt: row.updatedAt,
+  });
+  const previousFreshnessState = existing
+    ? getProofFreshnessState({
+        issuedAt: existing.issuedAt,
+        expiresAt: existing.expiresAt,
+        updatedAt: existing.updatedAt,
+      })
+    : null;
+
+  if (!previousFreshnessState || previousFreshnessState !== nextFreshnessState) {
+    const freshnessBasis = row.updatedAt ?? row.issuedAt ?? null;
+    await emitLifecycleEvent(
+      'proof_freshness_state_changed',
+      {
+        proof_artifact_id: row.id,
+        subject_id: input.profileId,
+        freshness_state: nextFreshnessState,
+        age_bucket_days: getFreshnessAgeBucket(nextFreshnessState, freshnessBasis),
+        expiry_state: getExpiryState(row.expiresAt),
+        trigger: existing ? 'proof_artifact_updated' : 'proof_artifact_created',
+        actor_type: 'candidate',
+        source: 'canonical.repository',
+      },
+      {
+        userId: input.profileId,
+        entityType: 'profile',
+        entityId: row.id,
+      }
+    );
+  }
+
+  await refreshIndividualProofTrustSnapshots(input.profileId);
+
   return row;
 }
 
 export async function deleteCanonicalProofArtifactForSkillProof(proofId: string) {
-  await db.execute(sql`
+  const deletedResult = await db.execute(sql`
     DELETE FROM proof_artifacts
     WHERE legacy_source_table = 'skill_proofs'
       AND legacy_source_id = ${proofId}::uuid
+    RETURNING *
   `);
+
+  const row = (getRows(deletedResult)[0] ?? null) as typeof proofArtifacts.$inferSelect | null;
+  if (!row) {
+    return;
+  }
+
+  await emitLifecycleEvent(
+    'proof_artifact_deleted',
+    {
+      proof_artifact_id: row.id,
+      owner_type: row.ownerType,
+      owner_id: row.ownerId,
+      subject_type: row.subjectType,
+      subject_id: row.subjectId,
+      artifact_kind: row.artifactKind,
+      visibility: row.visibility,
+      reveal_gate: row.revealGate,
+      actor_type: 'candidate',
+      source: 'canonical.repository',
+    },
+    {
+      userId: row.ownerId,
+      entityType: 'profile',
+      entityId: row.id,
+    }
+  );
+
+  await refreshIndividualProofTrustSnapshots(row.ownerId);
 }
 
 export async function upsertCanonicalProofPackForSnippet(input: SnippetPackInput) {

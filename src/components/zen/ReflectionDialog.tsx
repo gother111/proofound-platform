@@ -21,17 +21,42 @@ import {
 import { BookOpen } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
-import { reflectionPrompts } from '@/data/zen';
 
 interface ReflectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  defaultMilestone?: 'rejection' | 'interview' | 'offer';
+  defaultMilestone?: 'rejection' | 'interview' | 'offer' | 'withdrawal' | 'no_show';
   linkedCheckinId?: string;
 }
 
 const MAX_CHARS = 5000;
+const PROMPTS_BY_MILESTONE = {
+  rejection: [
+    'What feels clear after this rejection, even if the outcome was disappointing?',
+    'What would you want to remember before the next application or conversation?',
+  ],
+  interview: [
+    'What part of the interview felt strongest?',
+    'What would you want to revisit before the next step?',
+  ],
+  offer: [
+    'What matters most as you evaluate this offer?',
+    'What evidence do you have that this opportunity fits or does not fit?',
+  ],
+  withdrawal: [
+    'What led you to step back from this process?',
+    'What boundary or signal do you want to hold onto next time?',
+  ],
+  no_show: [
+    'What happened around this missed step, and what would help next time?',
+    'What follow-up feels appropriate, if any?',
+  ],
+  general: [
+    'What feels most important to capture from this moment?',
+    'What would you want your future self to remember about this step?',
+  ],
+} as const;
 
 export function ReflectionDialog({
   open,
@@ -44,7 +69,9 @@ export function ReflectionDialog({
   const [milestoneType, setMilestoneType] = useState<string | undefined>(defaultMilestone);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const relevantPrompts =
-    reflectionPrompts.filter((p) => p.trigger === milestoneType) || reflectionPrompts;
+    milestoneType && milestoneType in PROMPTS_BY_MILESTONE
+      ? PROMPTS_BY_MILESTONE[milestoneType as keyof typeof PROMPTS_BY_MILESTONE]
+      : PROMPTS_BY_MILESTONE.general;
 
   // Reset form when dialog opens
   useEffect(() => {
@@ -112,10 +139,11 @@ export function ReflectionDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-[#7A9278]" />
-            Write a Reflection
+            Private reflection
           </DialogTitle>
           <DialogDescription>
-            Capture your thoughts, feelings, or insights. This is your private space.
+            Capture a short private reflection tied to a milestone or a moment. Nothing leaves your
+            private Zen space unless you export it yourself.
           </DialogDescription>
         </DialogHeader>
 
@@ -142,9 +170,7 @@ export function ReflectionDialog({
               id="reflection"
               value={reflectionText}
               onChange={(e) => setReflectionText(e.target.value)}
-              placeholder="What's on your mind? How are you feeling about your career journey? What did you learn from a recent experience?
-
-Take your time—this is just for you."
+              placeholder="What happened, what stood out, and what do you want to remember next?"
               className={`flex min-h-[250px] w-full rounded-lg border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
                 isOverLimit ? 'border-red-500 focus-visible:ring-red-500' : 'border-input'
               }`}
@@ -171,6 +197,8 @@ Take your time—this is just for you."
                 <SelectItem value="rejection">Application Rejection</SelectItem>
                 <SelectItem value="interview">Interview Experience</SelectItem>
                 <SelectItem value="offer">Job Offer</SelectItem>
+                <SelectItem value="withdrawal">Withdrawal</SelectItem>
+                <SelectItem value="no_show">No-show</SelectItem>
               </SelectContent>
             </Select>
             {milestoneType && milestoneType !== 'none' && (
@@ -182,18 +210,18 @@ Take your time—this is just for you."
 
           {/* Tips */}
           <div className="bg-muted/30 rounded-lg p-4 text-sm">
-            <p className="font-medium mb-2">💡 Reflection Prompts:</p>
+            <p className="font-medium mb-2">Reflection prompts</p>
             <div className="space-y-2">
-              {(relevantPrompts.length > 0 ? relevantPrompts : reflectionPrompts).map((prompt) => (
+              {relevantPrompts.map((prompt) => (
                 <div
-                  key={prompt.prompt}
+                  key={prompt}
                   className="flex items-start justify-between gap-3 rounded-md bg-background/60 px-3 py-2"
                 >
-                  <p className="text-muted-foreground text-sm leading-snug">{prompt.prompt}</p>
+                  <p className="text-muted-foreground text-sm leading-snug">{prompt}</p>
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => setReflectionText(prompt.prompt)}
+                    onClick={() => setReflectionText(prompt)}
                     className="text-[12px]"
                   >
                     Use
@@ -206,8 +234,8 @@ Take your time—this is just for you."
           {/* Privacy Reminder */}
           <div className="text-xs text-muted-foreground bg-muted/20 p-3 rounded-lg">
             <p>
-              <strong>Privacy:</strong> Your reflections are completely private and encrypted. They
-              will never be shared with anyone or used for matching purposes.
+              <strong>Privacy:</strong> Reflection text is stored privately, excluded from matching
+              and org analytics, and never sent in analytics payloads.
             </p>
           </div>
         </div>

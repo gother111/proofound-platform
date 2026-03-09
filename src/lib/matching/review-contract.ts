@@ -8,13 +8,26 @@ import {
   matchReasonLedger,
   matchReviewStates,
   matches,
+  demographicOptIns,
   organizationMembers,
   profiles,
   revealEvents,
-  wellbeingOptIns,
   type Match,
 } from '@/db/schema';
+import { emitLifecycleEvent } from '@/lib/analytics/lifecycle-events';
+import {
+  authorize,
+  getEffectiveReviewRevealScope,
+  getEffectiveShortlistRevealScope,
+  getVerificationSummaryVisibility,
+  type OrgRole,
+} from '@/lib/authz';
 import { EMAIL_CONFIG } from '@/lib/email/config';
+import {
+  resolveEffectiveScoreState,
+  type CanonicalMatchScoreArtifact,
+  type MatchScoreState,
+} from '@/lib/matching/match-score-contract';
 import {
   MATCH_REASON_CODE_VALUES,
   type MatchReasonCategory,
@@ -41,7 +54,7 @@ export const FAIRNESS_THRESHOLDS = {
 export type ReviewStage = 'blind_review' | 'shortlisted' | 'passed' | 'rejected' | 'closed';
 export type RevealScope = 'blind' | 'shortlist_identity' | 'full_identity';
 export type FairnessStatus = 'pass' | 'unavailable' | 'elevated' | 'breach';
-export type OrgReviewRole = 'owner' | 'admin' | 'member' | 'viewer';
+export type OrgReviewRole = OrgRole;
 export type RevealActorType = 'user_account' | 'organization' | 'platform_admin' | 'system';
 
 type ReasonDictionaryEntry = {
@@ -239,6 +252,65 @@ const FULL_VISIBLE_FIELDS = [
   'locationSummary',
 ] as const;
 
+function mapRevealActorTypeToLifecycleActorType(
+  actorType: RevealActorType,
+  actorRole?: string | null
+): 'candidate' | 'organization_member' | 'platform_admin' | 'system' {
+  if (actorType === 'platform_admin') {
+    return 'platform_admin';
+  }
+  if (actorType === 'system') {
+    return 'system';
+  }
+  if (actorType === 'organization' || actorRole) {
+    return 'organization_member';
+  }
+  return 'candidate';
+}
+
+function resolveRevealEventName(outcome: 'granted' | 'denied' | 'no_op') {
+  if (outcome === 'granted') return 'reveal_granted' as const;
+  if (outcome === 'denied') return 'reveal_denied' as const;
+  return 'reveal_requested' as const;
+}
+
+export function evaluateFairnessCohortAvailability(input: {
+  poolCount: number;
+  availableColumns: string[];
+  optedInCount: number;
+  minAssignmentPool?: number;
+  minCohortSize?: number;
+}) {
+  const minAssignmentPool = input.minAssignmentPool ?? FAIRNESS_THRESHOLDS.minAssignmentPool;
+  const minCohortSize = input.minCohortSize ?? FAIRNESS_THRESHOLDS.minCohortSize;
+
+  if (input.poolCount < minAssignmentPool) {
+    return {
+      status: 'unavailable' as const,
+      insufficientReason: 'assignment_pool_below_threshold',
+    };
+  }
+
+  if (input.availableColumns.length === 0) {
+    return {
+      status: 'unavailable' as const,
+      insufficientReason: 'demographic_columns_unavailable',
+    };
+  }
+
+  if (input.optedInCount < minCohortSize) {
+    return {
+      status: 'unavailable' as const,
+      insufficientReason: 'demographic_opt_in_cohort_below_threshold',
+    };
+  }
+
+  return {
+    status: 'pass' as const,
+    insufficientReason: null,
+  };
+}
+
 export function getVisibleIdentityFields(scope: RevealScope): string[] {
   if (scope === 'blind') {
     return [];
@@ -269,25 +341,45 @@ export function getReasonDictionaryEntry(reasonCode: MatchReasonCode | string) {
 }
 
 export function buildCanonicalMatchPersistenceFields(args: {
-  scoreVersion: string | null;
-  inputsHash: string | null;
-  reasonCodes: MatchReasonCode[];
-  generatedAt: Date | null;
+  artifact: CanonicalMatchScoreArtifact | null;
   fairnessStatus?: FairnessStatus;
   fairnessCheckVersion?: string | null;
   fairnessEvaluatedAt?: Date | null;
 }) {
+  const artifact = args.artifact;
   return {
-    scoreVersion: args.scoreVersion,
-    modelVersion: CANONICAL_MODEL_VERSION,
+    score: artifact ? artifact.scoreNormalized.toString() : '0',
+    scoreTotal: artifact?.scoreTotal ?? null,
+    scoreState: artifact?.scoreState ?? null,
+    scoreVersion: artifact?.scoreVersion ?? null,
+    modelVersion: artifact?.modelVersion ?? CANONICAL_MODEL_VERSION,
     explanationVersion: CANONICAL_EXPLANATION_VERSION,
     fairnessCheckVersion: args.fairnessCheckVersion ?? CANONICAL_FAIRNESS_CHECK_VERSION,
     fairnessStatus: args.fairnessStatus ?? 'unavailable',
     fairnessEvaluatedAt: args.fairnessEvaluatedAt ?? null,
-    inputsHash: args.inputsHash,
-    reasonCodes: args.reasonCodes,
-    generatedAt: args.generatedAt,
+    inputsHash: artifact?.inputsHash ?? null,
+    reasonCodes: artifact?.reasonCodes ?? [],
+    staleReasonCodes: [],
+    generatedAt: artifact?.generatedAt ?? null,
+    staleAt: artifact?.staleAt ?? null,
+    recomputedAt: artifact?.recomputedAt ?? null,
+    hiddenDueToPolicyAt: artifact?.hiddenDueToPolicyAt ?? null,
+    hiddenDueToPolicyReasonCodes: artifact?.hiddenDueToPolicyReasonCodes ?? [],
+    subscoresJson: artifact?.subscoresJson ?? {},
+    scoreSnapshotJson: artifact?.scoreSnapshotJson ?? {},
   };
+}
+
+export function shouldSuppressExactRank(
+  fairnessStatus: FairnessStatus,
+  scoreState?: MatchScoreState | null,
+  generatedAt?: Date | string | null,
+  staleAt?: Date | string | null
+) {
+  return (
+    fairnessStatus !== 'pass' ||
+    resolveEffectiveScoreState({ scoreState, generatedAt, staleAt }) === 'stale'
+  );
 }
 
 export async function ensureMatchReviewState(input: {
@@ -363,9 +455,12 @@ export async function appendManualOverrideReason(input: {
   matchId: string;
   assignmentId: string;
   profileId: string;
+  orgId: string;
   actorId: string;
   reasonCode: 'override_keep_under_review' | 'override_shortlist_manual' | 'override_reject_manual';
   annotation?: string | null;
+  reviewStage: ReviewStage;
+  revealScope: RevealScope;
   payload?: Record<string, unknown>;
 }) {
   await db.insert(matchReasonLedger).values({
@@ -383,6 +478,27 @@ export async function appendManualOverrideReason(input: {
     createdBy: input.actorId,
     noteHash: input.annotation?.trim() ? hashOpaqueToken(input.annotation.trim()) : null,
   });
+
+  await emitLifecycleEvent(
+    'review_override_applied',
+    {
+      match_id: input.matchId,
+      assignment_id: input.assignmentId,
+      org_id: input.orgId,
+      override_reason_code: input.reasonCode,
+      previous_stage: input.reviewStage,
+      new_stage: input.reviewStage,
+      requested_scope: input.revealScope,
+      actor_type: 'organization_member',
+      source: 'matching.review-contract',
+    },
+    {
+      userId: input.profileId,
+      organizationId: input.orgId,
+      entityType: 'match',
+      entityId: input.matchId,
+    }
+  );
 }
 
 export async function recordRevealEvent(input: {
@@ -401,22 +517,61 @@ export async function recordRevealEvent(input: {
   context?: Record<string, unknown>;
   outcome: 'granted' | 'denied' | 'no_op';
 }) {
-  await db.insert(revealEvents).values({
-    matchId: input.matchId,
-    assignmentId: input.assignmentId,
-    profileId: input.profileId,
-    orgId: input.orgId,
-    actorId: input.actorId ?? null,
-    actorRole: input.actorRole ?? null,
-    actorType: input.actorType,
-    triggerType: input.triggerType,
-    requestedScope: input.requestedScope,
-    grantedScope: input.grantedScope,
-    reasonCode: input.reasonCode,
-    sourceSurface: input.sourceSurface ?? null,
-    contextJson: input.context ?? {},
+  const [saved] = await db
+    .insert(revealEvents)
+    .values({
+      matchId: input.matchId,
+      assignmentId: input.assignmentId,
+      profileId: input.profileId,
+      orgId: input.orgId,
+      actorId: input.actorId ?? null,
+      actorRole: input.actorRole ?? null,
+      actorType: input.actorType,
+      triggerType: input.triggerType,
+      requestedScope: input.requestedScope,
+      grantedScope: input.grantedScope,
+      reasonCode: input.reasonCode,
+      sourceSurface: input.sourceSurface ?? null,
+      contextJson: input.context ?? {},
+      outcome: input.outcome,
+    })
+    .returning();
+
+  const lifecycleActorType = mapRevealActorTypeToLifecycleActorType(
+    input.actorType,
+    input.actorRole
+  );
+  const basePayload = {
+    reveal_event_id: saved.id,
+    match_id: input.matchId,
+    assignment_id: input.assignmentId,
+    profile_id: input.profileId,
+    org_id: input.orgId,
+    requested_scope: input.requestedScope,
+    granted_scope: input.grantedScope,
+    trigger_type: input.triggerType,
+    reason_code: input.reasonCode,
+    source_surface: input.sourceSurface ?? null,
     outcome: input.outcome,
+    actor_type: lifecycleActorType,
+    source: 'matching.review-contract',
+  } as const;
+
+  await emitLifecycleEvent('reveal_requested', basePayload, {
+    userId: input.profileId,
+    organizationId: input.orgId,
+    entityType: 'match',
+    entityId: input.matchId,
   });
+
+  if (input.outcome !== 'no_op') {
+    await emitLifecycleEvent(resolveRevealEventName(input.outcome), basePayload, {
+      userId: input.profileId,
+      organizationId: input.orgId,
+      entityType: 'match',
+      entityId: input.matchId,
+    });
+  }
 }
 
 export async function getOrgMembershipRole(
@@ -438,7 +593,11 @@ export async function getOrgMembershipRole(
 }
 
 export function canMutateReview(role: OrgReviewRole | null): boolean {
-  return role === 'owner' || role === 'admin' || role === 'member';
+  return authorize({
+    resource: 'candidate_full_review',
+    action: 'update',
+    orgRole: role,
+  }).allowed;
 }
 
 export function canRevealExactRank(
@@ -459,11 +618,18 @@ export function getRankBand(rank: number, totalCandidates: number): string {
 
 export function buildCandidateReviewProjection(
   source: CandidateProjectionInput,
-  scope: RevealScope
+  scope: RevealScope,
+  options?: {
+    verificationSummaryVisibility?: 'none' | 'redacted' | 'detailed';
+  }
 ) {
-  const verificationSummary = source.verified
-    ? Object.keys(source.verified).filter((key) => Boolean(source.verified?.[key])).length
-    : 0;
+  const verificationSummaryVisibility = options?.verificationSummaryVisibility ?? 'redacted';
+  const verificationSummary =
+    verificationSummaryVisibility === 'none'
+      ? null
+      : source.verified
+        ? Object.keys(source.verified).filter((key) => Boolean(source.verified?.[key])).length
+        : 0;
   const base = {
     id: source.profileId,
     workMode: source.workMode ?? null,
@@ -620,6 +786,22 @@ export async function setMatchReviewStage(input: {
   }
 }
 
+export function getReviewProjectionPolicy(role: OrgReviewRole | null, storedScope: RevealScope) {
+  const effectiveScope = getEffectiveReviewRevealScope(role, storedScope);
+  return {
+    allowed: effectiveScope !== null,
+    effectiveScope: effectiveScope ?? 'blind',
+    verificationSummaryVisibility: getVerificationSummaryVisibility(role),
+  };
+}
+
+export function getShortlistProjectionPolicy(role: OrgReviewRole | null, storedScope: RevealScope) {
+  return {
+    effectiveScope: getEffectiveShortlistRevealScope(role, storedScope),
+    verificationSummaryVisibility: getVerificationSummaryVisibility(role),
+  };
+}
+
 export async function unlockFullIdentityForMatch(input: {
   matchId: string;
   actorId?: string | null;
@@ -691,7 +873,7 @@ async function listAvailableFairnessColumns() {
     SELECT column_name
     FROM information_schema.columns
     WHERE table_schema = 'public'
-      AND table_name = 'wellbeing_opt_ins'
+      AND table_name = 'demographic_opt_ins'
       AND column_name IN ('age', 'gender', 'location', 'ethnicity')
   `);
 
@@ -711,26 +893,19 @@ export async function evaluateAssignmentFairnessSnapshot(assignmentId: string) {
       count: sql<number>`count(*)::int`,
     })
     .from(matches)
-    .innerJoin(wellbeingOptIns, eq(wellbeingOptIns.userId, matches.profileId))
-    .where(and(eq(matches.assignmentId, assignmentId), eq(wellbeingOptIns.optedIn, true)));
+    .innerJoin(demographicOptIns, eq(demographicOptIns.profileId, matches.profileId))
+    .where(and(eq(matches.assignmentId, assignmentId), eq(demographicOptIns.optedIn, true)));
 
   const optedInCount = Number(optedInRows[0]?.count || 0);
 
-  let status: FairnessStatus = 'pass';
-  let insufficientReason: string | null = null;
-  if (poolCount < FAIRNESS_THRESHOLDS.minAssignmentPool) {
-    status = 'unavailable';
-    insufficientReason = 'assignment_pool_below_threshold';
-  } else if (availableColumns.length === 0) {
-    status = 'unavailable';
-    insufficientReason = 'demographic_columns_unavailable';
-  } else if (optedInCount < FAIRNESS_THRESHOLDS.minCohortSize) {
-    status = 'unavailable';
-    insufficientReason = 'opt_in_cohort_below_threshold';
-  }
+  const cohortAvailability = evaluateFairnessCohortAvailability({
+    poolCount,
+    availableColumns,
+    optedInCount,
+  });
 
   return {
-    status,
+    status: cohortAvailability.status,
     metricsJson: {
       assignmentPoolCount: poolCount,
       optedInCohortCount: optedInCount,
@@ -743,7 +918,7 @@ export async function evaluateAssignmentFairnessSnapshot(assignmentId: string) {
       assignmentPoolCount: poolCount,
       optedInCohortCount: optedInCount,
     },
-    insufficientReason,
+    insufficientReason: cohortAvailability.insufficientReason,
   };
 }
 

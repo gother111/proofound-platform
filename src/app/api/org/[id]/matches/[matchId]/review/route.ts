@@ -139,9 +139,12 @@ export async function POST(
         matchId: matchRow.matchId,
         assignmentId: matchRow.assignmentId,
         profileId: matchRow.profileId,
+        orgId: org.id,
         actorId: user.id,
         reasonCode: payload.reasonCode,
         annotation: payload.annotation ?? null,
+        reviewStage: matchRow.reviewStage,
+        revealScope: matchRow.revealScope,
         payload: {
           reviewStage: matchRow.reviewStage,
         },

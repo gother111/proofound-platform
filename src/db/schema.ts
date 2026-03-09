@@ -244,6 +244,12 @@ export const matchReasonCategoryValues = [
 ] as const;
 export const matchReasonSourceValues = ['system', 'reviewer', 'policy'] as const;
 export const fairnessStatusValues = ['pass', 'unavailable', 'elevated', 'breach'] as const;
+export const matchScoreStateValues = [
+  'generated',
+  'stale',
+  'recomputed',
+  'hidden_due_to_policy',
+] as const;
 export const fairnessEvaluationScopeValues = ['ranking_snapshot'] as const;
 export const fairnessRemediationActionValues = [
   'warning_issued',
@@ -885,6 +891,16 @@ export const featureFlags = pgTable('feature_flags', {
   key: text('key').primaryKey(),
   enabled: boolean('enabled').default(false).notNull(),
   audience: jsonb('audience'), // rules for targeting
+  description: text('description'),
+  taxonomy: text('taxonomy'),
+  controlType: text('control_type'),
+  owner: text('owner'),
+  reason: text('reason'),
+  revisitAfter: timestamp('revisit_after', { withTimezone: true }),
+  metadata: jsonb('metadata')
+    .default(sql`'{}'::jsonb`)
+    .notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
 // Rate limiter table for tracking rate limits
@@ -1738,6 +1754,10 @@ export const matches = pgTable(
       .references(() => profiles.id, { onDelete: 'cascade' })
       .notNull(),
     score: numeric('score').notNull(),
+    scoreTotal: integer('score_total'),
+    scoreState: text('score_state', {
+      enum: matchScoreStateValues,
+    }),
     scoreVersion: text('score_version'),
     modelVersion: text('model_version'),
     explanationVersion: text('explanation_version'),
@@ -1750,7 +1770,22 @@ export const matches = pgTable(
     reasonCodes: text('reason_codes')
       .array()
       .default(sql`'{}'::text[]`),
+    staleReasonCodes: text('stale_reason_codes')
+      .array()
+      .default(sql`'{}'::text[]`),
     generatedAt: timestamp('generated_at', { withTimezone: true }),
+    staleAt: timestamp('stale_at', { withTimezone: true }),
+    recomputedAt: timestamp('recomputed_at', { withTimezone: true }),
+    hiddenDueToPolicyAt: timestamp('hidden_due_to_policy_at', { withTimezone: true }),
+    hiddenDueToPolicyReasonCodes: text('hidden_due_to_policy_reason_codes')
+      .array()
+      .default(sql`'{}'::text[]`),
+    subscoresJson: jsonb('subscores_json')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    scoreSnapshotJson: jsonb('score_snapshot_json')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
     vector: jsonb('vector').notNull(), // Subscores + details
     weights: jsonb('weights').notNull(),
     isTestMatch: boolean('is_test_match').default(false).notNull(),
@@ -1763,9 +1798,12 @@ export const matches = pgTable(
     profileIdIdx: index('matches_profile_id_idx').on(table.profileId),
     assignmentIdIdx: index('matches_assignment_id_idx').on(table.assignmentId),
     scoreIdx: index('matches_score_idx').on(table.score),
+    scoreTotalIdx: index('matches_score_total_idx').on(table.scoreTotal),
+    scoreStateIdx: index('matches_score_state_idx').on(table.scoreState),
     isTestMatchIdx: index('matches_is_test_match_idx').on(table.isTestMatch),
     scoreVersionIdx: index('matches_score_version_idx').on(table.scoreVersion),
     generatedAtIdx: index('matches_generated_at_idx').on(table.generatedAt),
+    staleAtIdx: index('matches_stale_at_idx').on(table.staleAt),
     fairnessStatusIdx: index('matches_fairness_status_idx').on(table.fairnessStatus),
   })
 );

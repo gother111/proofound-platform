@@ -2,7 +2,7 @@
  * First-Run Guided Tour (Flow I-03)
  *
  * PRD Requirement: First-run guided tour that progressively reveals UI
- * Steps: Navigation → Dashboard → Profile → Public Portfolio → Expertise Hub → Matching → Zen Hub → Settings
+ * Steps: Navigation → Dashboard → Profile → Public Portfolio → Expertise Hub → Matching → Settings
  *
  * Features:
  * - Progressive reveal with styled background
@@ -24,7 +24,6 @@ import {
   Compass,
   Link2,
   Target,
-  Heart,
   Settings,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -109,15 +108,6 @@ const individualTourSteps: TourStep[] = [
       'Matching is the next layer. Once your portfolio is published, discover assignments and roles aligned with your skills and values.',
     icon: Target,
     target: '[data-tour="matching-link"]',
-    placement: 'right',
-  },
-  {
-    id: 'zen',
-    title: 'Zen Hub',
-    description:
-      'Your private well-being space. Track stress, reflect on milestones, and access resources. Completely optional and never shared or used in matching.',
-    icon: Heart,
-    target: '[data-tour="zen-link"]',
     placement: 'right',
   },
   {

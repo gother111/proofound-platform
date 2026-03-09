@@ -1,130 +1,100 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 
-/**
- * Zen Hub Opt-In API
- * POST /api/wellbeing/opt-in
- * 
- * Allows users to opt in/out of Zen Hub features
- * Privacy-first: Data never used in matching/ranking
- */
+import { createClient } from '@/lib/supabase/server';
+import { db } from '@/db';
+import { wellbeingOptIns } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+import { recordZenAuditEvent } from '@/lib/zen/service';
+
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { optedIn, privacyBannerAcknowledged } = await req.json();
-
-    // Validate input
     if (typeof optedIn !== 'boolean') {
-      return NextResponse.json(
-        { error: 'optedIn must be a boolean' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'optedIn must be a boolean' }, { status: 400 });
     }
 
-    // Upsert wellbeing_opt_ins record
-    const { data, error } = await supabase
-      .from('wellbeing_opt_ins')
-      .upsert({
-        user_id: user.id,
-        opted_in: optedIn,
-        privacy_banner_acknowledged: privacyBannerAcknowledged ?? false,
-        opted_in_at: optedIn ? new Date().toISOString() : null,
-        opted_out_at: !optedIn ? new Date().toISOString() : null,
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'user_id',
+    const now = new Date();
+    const [record] = await db
+      .insert(wellbeingOptIns)
+      .values({
+        userId: user.id,
+        optedIn,
+        privacyBannerAcknowledged: Boolean(privacyBannerAcknowledged),
+        optedInAt: optedIn ? now : null,
+        optedOutAt: optedIn ? null : now,
+        updatedAt: now,
       })
-      .select()
-      .single();
+      .onConflictDoUpdate({
+        target: wellbeingOptIns.userId,
+        set: {
+          optedIn,
+          privacyBannerAcknowledged: Boolean(privacyBannerAcknowledged),
+          ...(optedIn ? { optedInAt: now } : {}),
+          optedOutAt: optedIn ? null : now,
+          updatedAt: now,
+        },
+      })
+      .returning();
 
-    if (error) {
-      console.error('Database error:', error);
-      return NextResponse.json(
-        { error: 'Failed to update opt-in status' },
-        { status: 500 }
-      );
-    }
+    await recordZenAuditEvent({
+      userId: user.id,
+      eventType: 'zen_opt_in_changed',
+      routeSource: '/api/wellbeing/opt-in',
+      metadata: {
+        opted_in: optedIn,
+        privacy_banner_acknowledged: Boolean(privacyBannerAcknowledged),
+      },
+    });
 
-    // Emit analytics (private partition)
-    try {
-      const { emitWellbeingOptInChanged, emitPrivacyBannerAcknowledged } = await import('@/lib/analytics/events');
-      await emitWellbeingOptInChanged(user.id, { enabled: optedIn });
-      if (privacyBannerAcknowledged) {
-        await emitPrivacyBannerAcknowledged(user.id);
-      }
-    } catch (analyticsError) {
-      console.error('Failed to emit wellbeing opt-in event', analyticsError);
-    }
-
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      message: 'Opt-in status updated',
-      data,
+      optedIn: record.optedIn,
+      privacyBannerAcknowledged: Boolean(record.privacyBannerAcknowledged),
+      optedInAt: record.optedInAt?.toISOString() ?? null,
+      optedOutAt: record.optedOutAt?.toISOString() ?? null,
     });
   } catch (error) {
-    console.error('Opt-in error:', error);
-    return NextResponse.json(
-      { error: 'Failed to update opt-in status' },
-      { status: 500 }
-    );
+    console.error('wellbeing.opt-in.post.failed', error);
+    return NextResponse.json({ error: 'Failed to update Zen Hub access' }, { status: 500 });
   }
 }
 
-/**
- * GET /api/wellbeing/opt-in
- * 
- * Retrieves user's current opt-in status
- */
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Query wellbeing_opt_ins table
-    const { data, error } = await supabase
-      .from('wellbeing_opt_ins')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
+    const record = await db.query.wellbeingOptIns.findFirst({
+      where: eq(wellbeingOptIns.userId, user.id),
+    });
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 = not found
-      console.error('Database error:', error);
-      return NextResponse.json(
-        { error: 'Failed to retrieve opt-in status' },
-        { status: 500 }
-      );
-    }
-
-    // Return default values if no record exists
-    if (!data) {
-      return NextResponse.json({ 
-        optedIn: false,
-        privacyBannerAcknowledged: false,
-      });
-    }
-
-    return NextResponse.json({ 
-      optedIn: data.opted_in,
-      privacyBannerAcknowledged: data.privacy_banner_acknowledged,
-      optedInAt: data.opted_in_at,
-      optedOutAt: data.opted_out_at,
+    return NextResponse.json({
+      optedIn: Boolean(record?.optedIn),
+      privacyBannerAcknowledged: Boolean(record?.privacyBannerAcknowledged),
+      optedInAt: record?.optedInAt?.toISOString() ?? null,
+      optedOutAt: record?.optedOutAt?.toISOString() ?? null,
+      privacyBoundary:
+        'Zen Hub is private to you and excluded from matching, ranking, reveal, fairness, and org analytics.',
     });
   } catch (error) {
-    console.error('Get opt-in error:', error);
-    return NextResponse.json(
-      { error: 'Failed to retrieve opt-in status' },
-      { status: 500 }
-    );
+    console.error('wellbeing.opt-in.get.failed', error);
+    return NextResponse.json({ error: 'Failed to retrieve Zen Hub access' }, { status: 500 });
   }
 }
-

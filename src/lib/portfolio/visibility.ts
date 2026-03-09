@@ -16,9 +16,9 @@ const defaultVisibility: Required<VisibilityFlags> = {
   workEmail: false,
   linkedin: true,
   identity: true,
-  counts: true,
-  skills: true,
-  bio: true,
+  counts: false,
+  skills: false,
+  bio: false,
   contact: false,
 };
 

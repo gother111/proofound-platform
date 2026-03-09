@@ -236,20 +236,6 @@ function getWidgetContent(widgetId: string): {
         </div>
       ),
     },
-    'zen-hub': {
-      icon: '🧘',
-      title: 'Well-Being Check',
-      content: (
-        <div className="text-sm text-muted-foreground">
-          <p className="overline mb-3">How are you feeling today?</p>
-          <div className="mt-4 flex items-center justify-center gap-4">
-            <button className="text-3xl hover:scale-110 transition-transform">😊</button>
-            <button className="text-3xl hover:scale-110 transition-transform">😐</button>
-            <button className="text-3xl hover:scale-110 transition-transform">😔</button>
-          </div>
-        </div>
-      ),
-    },
     'profile-completion': {
       icon: '📊',
       title: 'Profile Progress',

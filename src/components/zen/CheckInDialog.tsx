@@ -19,17 +19,32 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { Heart, Brain } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
-import { zenCheckInConfig, zenPractices, type RiskState } from '@/data/zen';
 
 interface CheckInDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  defaultMilestone?: 'rejection' | 'interview' | 'offer';
+  defaultMilestone?: 'rejection' | 'interview' | 'offer' | 'withdrawal' | 'no_show';
 }
+
+const STRESS_SCALE = [
+  { score: 1, label: 'Very low', description: 'Things feel steady right now.' },
+  { score: 2, label: 'Low', description: 'There is some pressure, but it feels manageable.' },
+  { score: 3, label: 'Moderate', description: 'There is noticeable friction today.' },
+  { score: 4, label: 'High', description: 'The current work-search flow feels heavy.' },
+  { score: 5, label: 'Very high', description: 'The current work-search flow feels intense.' },
+] as const;
+
+const CONTROL_SCALE = [
+  { score: 1, label: 'Very low', description: 'The next step feels hard to see.' },
+  { score: 2, label: 'Low', description: 'You have a little footing, but not much.' },
+  { score: 3, label: 'Moderate', description: 'Some parts feel clear and some do not.' },
+  { score: 4, label: 'High', description: 'You have a workable sense of the next step.' },
+  { score: 5, label: 'Very high', description: 'You feel clear about what to do next.' },
+] as const;
 
 export function CheckInDialog({
   open,
@@ -42,16 +57,8 @@ export function CheckInDialog({
   const [milestone, setMilestone] = useState<string | undefined>(defaultMilestone);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const stressLabel = zenCheckInConfig.stressScale.find((s) => s.score === stressLevel);
-  const controlLabel = zenCheckInConfig.controlScale.find((c) => c.score === controlLevel);
-
-  const derivedMood: RiskState =
-    stressLevel >= 4 ? 'support' : stressLevel === 3 ? 'focus' : ('calm' as RiskState);
-
-  const microPractice =
-    zenPractices.find(
-      (p) => p.isMicro && p.recommendedFor?.includes(derivedMood)
-    ) || zenPractices.find((p) => p.isMicro);
+  const stressLabel = STRESS_SCALE.find((s) => s.score === stressLevel);
+  const controlLabel = CONTROL_SCALE.find((c) => c.score === controlLevel);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -73,7 +80,7 @@ export function CheckInDialog({
       }
 
       toast.success('Check-in recorded', {
-        description: 'Your well-being check-in has been saved.',
+        description: 'Your private check-in has been saved.',
       });
 
       // Reset form
@@ -99,10 +106,11 @@ export function CheckInDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Heart className="w-5 h-5 text-[#7A9278]" />
-            Well-Being Check-In
+            Private check-in
           </DialogTitle>
           <DialogDescription>
-            Take a moment to check in with yourself. This is private and just for you.
+            Record a brief private check-in. It stays inside Zen Hub and does not affect matching,
+            ranking, or org visibility.
           </DialogDescription>
         </DialogHeader>
 
@@ -111,7 +119,7 @@ export function CheckInDialog({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label htmlFor="stress" className="text-base font-medium">
-                Current Stress Level
+                Current stress level
               </Label>
               <span className="text-sm font-semibold text-[#7A9278]">
                 {stressLabel?.label || 'Moderate'}
@@ -139,7 +147,7 @@ export function CheckInDialog({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label htmlFor="control" className="text-base font-medium">
-                Sense of Control
+                Sense of control
               </Label>
               <span className="text-sm font-semibold text-[#7A9278]">
                 {controlLabel?.label || 'Moderate'}
@@ -177,45 +185,17 @@ export function CheckInDialog({
                 <SelectItem value="rejection">Application Rejection</SelectItem>
                 <SelectItem value="interview">Interview Scheduled/Completed</SelectItem>
                 <SelectItem value="offer">Job Offer Received</SelectItem>
+                <SelectItem value="withdrawal">Withdrawal</SelectItem>
+                <SelectItem value="no_show">No-show</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {/* Well-Being Score Preview */}
-          <div className="bg-muted/30 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <Brain className="w-5 h-5 text-[#7A9278] flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium mb-1">Your Well-Being Score</p>
-                <p className="text-2xl font-semibold text-[#7A9278]">
-                  {5 - stressLevel + controlLevel}{' '}
-                  <span className="text-sm text-muted-foreground">/ 8</span>
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Calculated from: (5 - stress) + control. Higher is better.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick practice nudge */}
-          {microPractice && (
-            <div className="bg-muted/20 rounded-lg p-4 text-sm">
-              <p className="font-medium mb-1">Try a 1-minute reset</p>
-              <p className="text-muted-foreground mb-2">
-                {zenCheckInConfig.quickPracticePrompt}
-              </p>
-              <p className="text-muted-foreground">
-                Suggested: {microPractice.title} · {microPractice.duration}
-              </p>
-            </div>
-          )}
-
           {/* Privacy Reminder */}
           <div className="text-xs text-muted-foreground bg-muted/20 p-3 rounded-lg">
             <p>
-              <strong>Privacy:</strong> This check-in is completely private and will never affect
-              your matching, ranking, or visibility to organizations.
+              <strong>Privacy:</strong> This check-in stays private to you and is excluded from
+              matching, fairness review, reveal, and org analytics.
             </p>
           </div>
         </div>

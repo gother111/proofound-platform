@@ -1,33 +1,7 @@
-/**
- * GET /api/wellbeing/milestones
- *
- * Returns recent milestone events (interview, offer, rejection) for the authenticated user
- * to nudge well-being check-ins with contextual defaults.
- */
-
 import { NextRequest, NextResponse } from 'next/server';
+
 import { requireApiAuthContext } from '@/lib/auth';
-import { db } from '@/db';
-import { analyticsEvents } from '@/db/schema';
-import { and, eq, inArray, gte } from 'drizzle-orm';
-
-const MILESTONE_EVENTS = [
-  'interview_completed',
-  'decision_made',
-  'contract_signed',
-  'contract_declined',
-] as const;
-
-type MilestoneEvent = (typeof MILESTONE_EVENTS)[number];
-
-function mapEventToMilestone(
-  eventType: MilestoneEvent
-): 'interview' | 'offer' | 'rejection' | null {
-  if (eventType === 'interview_completed') return 'interview';
-  if (eventType === 'contract_signed') return 'offer';
-  if (eventType === 'contract_declined' || eventType === 'decision_made') return 'rejection';
-  return null;
-}
+import { listZenMilestones, requireZenOptIn } from '@/lib/zen/service';
 
 export async function GET(request: NextRequest) {
   try {
@@ -35,39 +9,24 @@ export async function GET(request: NextRequest) {
     if (!authContext) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
     const { user } = authContext;
+    if (!(await requireZenOptIn(user.id))) {
+      return NextResponse.json({ error: 'Zen Hub is disabled' }, { status: 403 });
+    }
 
-    const daysParam = request.nextUrl.searchParams.get('days');
-    const days = Number.parseInt(daysParam || '7', 10);
-    const since = new Date();
-    since.setDate(since.getDate() - (Number.isNaN(days) ? 7 : days));
+    const days = Number.parseInt(request.nextUrl.searchParams.get('days') || '14', 10) || 14;
+    const milestones = await listZenMilestones(user.id, days);
 
-    const rows = await db
-      .select({
-        eventType: analyticsEvents.eventType,
-        createdAt: analyticsEvents.createdAt,
-      })
-      .from(analyticsEvents)
-      .where(
-        and(
-          eq(analyticsEvents.userId, user.id),
-          inArray(analyticsEvents.eventType, [...MILESTONE_EVENTS]),
-          gte(analyticsEvents.createdAt, since)
-        )
-      )
-      .orderBy(analyticsEvents.createdAt)
-      .limit(5);
-
-    const milestones = rows
-      .map((row) => ({
-        type: mapEventToMilestone(row.eventType as MilestoneEvent),
-        occurredAt: row.createdAt,
-      }))
-      .filter((m) => m.type !== null);
-
-    return NextResponse.json({ milestones });
+    return NextResponse.json({
+      milestones: milestones.map((milestone) => ({
+        type: milestone.type,
+        occurredAt: milestone.occurredAt.toISOString(),
+        sourceEvent: milestone.sourceEvent,
+      })),
+    });
   } catch (error) {
     console.error('wellbeing.milestones.failed', error);
-    return NextResponse.json({ error: 'Failed to fetch milestones' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch milestone prompts' }, { status: 500 });
   }
 }

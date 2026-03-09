@@ -51,12 +51,6 @@ export const individualTourSteps: Step[] = [
     placement: 'bottom',
   },
   {
-    target: '[data-tour="zen-hub-section"]',
-    content:
-      'Visit the Zen Hub to track your well-being throughout your career journey. Your data is private and helps us measure what truly matters.',
-    placement: 'bottom',
-  },
-  {
     target: '[data-tour="profile-completion"]',
     content:
       'Track your profile completion here. Reach 60% to become "matchable" and start receiving opportunities.',

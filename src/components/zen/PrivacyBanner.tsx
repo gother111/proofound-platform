@@ -46,10 +46,13 @@ export function PrivacyBanner({ onOptIn, onDismiss }: PrivacyBannerProps) {
               Welcome to Zen Hub
             </h3>
             <p className="text-sm text-proofound-charcoal/80 dark:text-muted-foreground mb-4">
-              Zen Hub is your private well-being center. Your check-ins and reflections are
-              <strong> completely private</strong> and will{' '}
-              <strong>never be used for matching, ranking, or recommendations</strong>. This space
-              is for you alone.
+              Zen Hub is an optional private space for brief check-ins and milestone reflections.
+              Your entries stay <strong>private to you</strong> and
+              <strong>
+                {' '}
+                never affect matching, ranking, reveal, fairness review, or org analytics
+              </strong>
+              .
             </p>
 
             <div className="flex flex-wrap gap-3">
@@ -90,9 +93,9 @@ export function PrivacyBanner({ onOptIn, onDismiss }: PrivacyBannerProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-[#7A9278]" />
-              Zen Hub Privacy & Purpose
+              Zen Hub privacy boundary
             </DialogTitle>
-            <DialogDescription>How Zen Hub protects your well-being data</DialogDescription>
+            <DialogDescription>How Zen Hub stays narrow, private, and optional</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4 text-sm">
@@ -101,9 +104,8 @@ export function PrivacyBanner({ onOptIn, onDismiss }: PrivacyBannerProps) {
                 What is Zen Hub?
               </h4>
               <p className="text-proofound-charcoal/80 dark:text-muted-foreground">
-                Zen Hub is a well-being center designed to help you navigate the emotional ups and
-                downs of your career journey. It provides evidence-based practices, check-in tools,
-                and reflection spaces to support your mental health during transitions.
+                Zen Hub is a minimal private support surface for volatile work-search moments. In
+                MVP it includes only opt-in check-ins, milestone reflections, export, and deletion.
               </p>
             </div>
 
@@ -117,44 +119,43 @@ export function PrivacyBanner({ onOptIn, onDismiss }: PrivacyBannerProps) {
                   which opportunities you see or how you&apos;re ranked
                 </li>
                 <li>
-                  <strong>Never shared:</strong> No organizations, recruiters, or other users can
-                  access your check-ins or reflections
+                  <strong>Never shared with organizations:</strong> Recruiters, hiring teams, and
+                  other users cannot access your check-ins or reflections
                 </li>
                 <li>
-                  <strong>Private by default:</strong> All Zen Hub data is isolated from your
-                  professional profile
+                  <strong>Isolated from analytics:</strong> Reflection text is never sent in
+                  analytics payloads, and Zen data is excluded from fairness review and org
+                  analytics
                 </li>
                 <li>
-                  <strong>You control your data:</strong> You can export or delete all your
-                  well-being data at any time
+                  <strong>You control your data:</strong> You can export or delete all your Zen data
+                  at any time
                 </li>
               </ul>
             </div>
 
             <div>
               <h4 className="font-semibold text-proofound-charcoal dark:text-foreground mb-2">
-                What We Track
+                What stays in scope
               </h4>
-              <p className="text-proofound-charcoal/80 dark:text-muted-foreground mb-2">
-                When you opt in, you can:
-              </p>
               <ul className="list-disc list-inside space-y-1 text-proofound-charcoal/80 dark:text-muted-foreground">
-                <li>Log check-ins (stress level and sense of control) - optional, 1-5 scale</li>
-                <li>Write reflections linked to career milestones - optional, private journal</li>
-                <li>View your well-being trends over time - 14 and 30-day comparisons</li>
-                <li>Access evidence-based practices and resources</li>
+                <li>Record optional check-ins using private 1-5 stress and control scales</li>
+                <li>
+                  Write optional reflections linked to milestone tags such as rejection or offer
+                </li>
+                <li>Export your own Zen records as JSON or check-in CSV</li>
+                <li>Delete all Zen data without affecting your portfolio or matching state</li>
               </ul>
             </div>
 
             <div>
               <h4 className="font-semibold text-proofound-charcoal dark:text-foreground mb-2">
-                Non-Diagnostic Tool
+                What Zen Hub is not
               </h4>
               <p className="text-proofound-charcoal/80 dark:text-muted-foreground">
-                Zen Hub is <strong>not a clinical mental health tool</strong> and does not provide
-                diagnoses or treatment. It&apos;s a self-reflection and wellness resource. If
-                you&apos;re experiencing mental health challenges, please consult a licensed
-                professional.
+                Zen Hub is <strong>not</strong> a wellness feed, self-assessment center, burnout
+                tracker, local resource directory, or diagnostic tool. It is intentionally narrow so
+                it remains calm, private, and optional.
               </p>
             </div>
 

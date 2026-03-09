@@ -1,19 +1,20 @@
+import { desc, eq } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { db } from '@/db';
-import { wellbeingCheckins, auditLogs } from '@/db/schema';
-import { eq, desc, gte } from 'drizzle-orm';
-import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit/index';
+import { z } from 'zod';
 
-/**
- * POST /api/wellbeing/checkin
- *
- * PRD Part 5 (F5 - Zen Hub)
- * Records a well-being check-in (stress level, control level)
- * Non-diagnostic, never used in ranking
- */
+import { db } from '@/db';
+import { wellbeingCheckins } from '@/db/schema';
+import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit/index';
+import { createClient } from '@/lib/supabase/server';
+import { recordZenAuditEvent, requireZenOptIn, ZEN_MILESTONE_TYPES } from '@/lib/zen/service';
+
+const CheckInSchema = z.object({
+  stressLevel: z.number().int().min(1).max(5),
+  controlLevel: z.number().int().min(1).max(5),
+  milestoneTriggerId: z.enum(ZEN_MILESTONE_TYPES).nullable().optional(),
+});
+
 export async function POST(request: NextRequest) {
-  // Apply rate limiting (5 req/min for wellbeing check-ins)
   const { allowed, result } = await checkRateLimit(request, RATE_LIMITS.wellbeing);
   if (!allowed) {
     return NextResponse.json(
@@ -41,64 +42,34 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  if (!(await requireZenOptIn(user.id))) {
+    return NextResponse.json(
+      { error: 'Zen Hub is disabled. Opt in before recording a check-in.' },
+      { status: 403 }
+    );
+  }
+
   try {
-    const { stressLevel, controlLevel, milestoneTriggerId } = await request.json();
-
-    // Validate inputs (1-5 Likert scale)
-    if (!stressLevel || !controlLevel) {
-      return NextResponse.json(
-        {
-          error: 'Missing required fields',
-          message: 'stressLevel and controlLevel are required',
-        },
-        { status: 400 }
-      );
-    }
-
-    if (stressLevel < 1 || stressLevel > 5 || controlLevel < 1 || controlLevel > 5) {
-      return NextResponse.json(
-        {
-          error: 'Invalid values',
-          message: 'Levels must be between 1 and 5',
-        },
-        { status: 400 }
-      );
-    }
-
-    // Insert check-in
+    const validated = CheckInSchema.parse(await request.json());
     const [checkin] = await db
       .insert(wellbeingCheckins)
       .values({
         userId: user.id,
-        stressLevel,
-        controlLevel,
-        milestoneTriggerId: milestoneTriggerId || null,
+        stressLevel: validated.stressLevel,
+        controlLevel: validated.controlLevel,
+        milestoneTriggerId: validated.milestoneTriggerId ?? null,
       })
       .returning();
 
-    // Audit log
-    await db.insert(auditLogs).values({
-      actorId: user.id,
-      action: 'wellbeing_checkin',
-      meta: {
-        checkinId: checkin.id,
-        stressLevel,
-        controlLevel,
+    await recordZenAuditEvent({
+      userId: user.id,
+      eventType: 'zen_checkin_written',
+      routeSource: '/api/wellbeing/checkin',
+      metadata: {
+        checkin_id: checkin.id,
+        milestone_type: validated.milestoneTriggerId ?? null,
       },
     });
-
-    // Track well-being check-in for metrics (private partition)
-    try {
-      const { emitWellbeingCheckinSubmitted } = await import('@/lib/analytics/events');
-      await emitWellbeingCheckinSubmitted(user.id, {
-        checkin_id: checkin.id,
-        scores: { stress: stressLevel, control: controlLevel },
-        from_trigger: milestoneTriggerId || 'manual',
-      });
-    } catch (analyticsError) {
-      // Log but don't fail the check-in
-      console.error('Failed to track well-being check-in:', analyticsError);
-    }
 
     return NextResponse.json({
       success: true,
@@ -106,26 +77,26 @@ export async function POST(request: NextRequest) {
         id: checkin.id,
         stressLevel: checkin.stressLevel,
         controlLevel: checkin.controlLevel,
-        createdAt: checkin.createdAt,
+        milestoneType: checkin.milestoneTriggerId,
+        createdAt: checkin.createdAt.toISOString(),
+      },
+      aggregates: {
+        entryCount: 1,
       },
     });
   } catch (error) {
-    console.error('Well-being check-in error:', error);
-    return NextResponse.json(
-      {
-        error: 'Failed to record check-in',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Invalid Zen check-in payload', details: error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    console.error('wellbeing.checkin.post.failed', error);
+    return NextResponse.json({ error: 'Failed to record check-in' }, { status: 500 });
   }
 }
 
-/**
- * GET /api/wellbeing/checkin
- *
- * Retrieves user's check-in history
- */
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const {
@@ -136,12 +107,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  if (!(await requireZenOptIn(user.id))) {
+    return NextResponse.json({ error: 'Zen Hub is disabled' }, { status: 403 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
-    const days = parseInt(searchParams.get('days') || '30');
-    const limit = parseInt(searchParams.get('limit') || '50');
-
-    const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const limit = Math.min(Number.parseInt(searchParams.get('limit') || '30', 10) || 30, 100);
 
     const checkins = await db.query.wellbeingCheckins.findMany({
       where: eq(wellbeingCheckins.userId, user.id),
@@ -149,48 +121,21 @@ export async function GET(request: NextRequest) {
       limit,
     });
 
-    // Filter by date
-    const filtered = checkins.filter((c) => c.createdAt >= cutoffDate);
-
-    // Calculate trend
-    let trend: 'improving' | 'stable' | 'declining' | null = null;
-    if (filtered.length >= 2) {
-      const recent = filtered.slice(0, Math.min(3, filtered.length));
-      const older = filtered.slice(Math.max(0, filtered.length - 3));
-
-      const recentScore =
-        recent.reduce((sum, c) => sum + (5 - c.stressLevel + c.controlLevel), 0) / recent.length;
-      const olderScore =
-        older.reduce((sum, c) => sum + (5 - c.stressLevel + c.controlLevel), 0) / older.length;
-
-      if (recentScore > olderScore + 1) trend = 'improving';
-      else if (recentScore < olderScore - 1) trend = 'declining';
-      else trend = 'stable';
-    }
-
     return NextResponse.json({
-      success: true,
-      checkins: filtered.map((c) => ({
-        id: c.id,
-        stressLevel: c.stressLevel,
-        controlLevel: c.controlLevel,
-        createdAt: c.createdAt,
-        milestoneTriggerId: c.milestoneTriggerId,
+      checkins: checkins.map((checkin) => ({
+        id: checkin.id,
+        stressLevel: checkin.stressLevel,
+        controlLevel: checkin.controlLevel,
+        milestoneType: checkin.milestoneTriggerId,
+        createdAt: checkin.createdAt.toISOString(),
       })),
-      trend,
-      metadata: {
-        total: filtered.length,
-        days,
+      aggregates: {
+        total: checkins.length,
+        milestoneTagged: checkins.filter((item) => Boolean(item.milestoneTriggerId)).length,
       },
     });
   } catch (error) {
-    console.error('Get check-ins error:', error);
-    return NextResponse.json(
-      {
-        error: 'Failed to retrieve check-ins',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+    console.error('wellbeing.checkin.get.failed', error);
+    return NextResponse.json({ error: 'Failed to retrieve check-ins' }, { status: 500 });
   }
 }

@@ -22,7 +22,7 @@ describe('calculateFairnessGaps', () => {
     vi.clearAllMocks();
   });
 
-  it('returns a degraded report instead of failing when wellbeing demographics are absent', async () => {
+  it('returns a degraded report instead of failing when demographic opt-in fields are absent', async () => {
     mockExecute
       .mockResolvedValueOnce([
         {
@@ -45,7 +45,7 @@ describe('calculateFairnessGaps', () => {
     });
     expect(report.segments).toEqual([]);
     expect(report.summary).toContain('Demographic fairness analysis is unavailable');
-    expect(report.recommendations[0]).toContain('wellbeing_opt_ins');
+    expect(report.recommendations[0]).toContain('demographic_opt_ins');
     expect(mockExecute).toHaveBeenCalledTimes(2);
   });
 });

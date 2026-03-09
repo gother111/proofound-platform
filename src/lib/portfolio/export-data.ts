@@ -1,4 +1,9 @@
 import { buildTrustSignals } from '@/lib/portfolio/trust-signals';
+import {
+  deriveEffectivePublicPortfolioState,
+  isAccessiblePublicPortfolioState,
+  resolveRequestedPublicPortfolioState,
+} from '@/lib/portfolio/public-contract';
 import { mergeVisibilityFlags } from '@/lib/portfolio/visibility';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -11,6 +16,11 @@ export type TrustExportData = {
     headline: string;
     bio?: string;
     contactEmail?: string;
+  };
+  publication: {
+    requestedState: string;
+    effectiveState: string;
+    searchIndexingEnabled: boolean;
   };
   signals: ReturnType<typeof buildTrustSignals>;
   skills: Array<{ id: string; name: string; level: number }>;
@@ -40,11 +50,15 @@ type ProfileExportRow = {
   id: string;
   handle: string;
   display_name: string | null;
+  public_portfolio_state?: string | null;
+  search_indexing_enabled_at?: string | null;
   individual_profiles:
     | Array<{
         headline?: string | null;
         bio?: string | null;
         tagline?: string | null;
+        skills?: string[] | null;
+        redact_mode?: boolean | null;
         verification_status?: string | null;
         verification_method?: string | null;
         verified_at?: string | null;
@@ -59,6 +73,8 @@ type ProfileExportRow = {
         headline?: string | null;
         bio?: string | null;
         tagline?: string | null;
+        skills?: string[] | null;
+        redact_mode?: boolean | null;
         verification_status?: string | null;
         verification_method?: string | null;
         verified_at?: string | null;
@@ -227,7 +243,7 @@ function buildTrustExportPayload(
   },
   skills: Array<{ id: string; name: string; level: number }>,
   visibilityOverride?: ReturnType<typeof mergeVisibilityFlags>
-): TrustExportData {
+): TrustExportData | null {
   const visibility = visibilityOverride ?? toVisibility(profile);
   const individual = toIndividual(profile);
 
@@ -242,6 +258,22 @@ function buildTrustExportPayload(
       ? (individual?.headline || individual?.tagline || '').trim()
       : '';
 
+  const effectiveState = deriveEffectivePublicPortfolioState({
+    requestedState: resolveRequestedPublicPortfolioState(profile.public_portfolio_state),
+    searchIndexingEnabled: Boolean(profile.search_indexing_enabled_at),
+    minimumContentMet: Boolean(
+      profile.handle &&
+        (profile.display_name || profile.handle) &&
+        (safeHeadline || counts.proofsCount > 0 || counts.acceptedVerificationsCount > 0)
+    ),
+    redactMode: Boolean(individual?.redact_mode),
+    hasLinkOnlyContent: false,
+  });
+
+  if (!isAccessiblePublicPortfolioState(effectiveState)) {
+    return null as TrustExportData | null;
+  }
+
   return {
     profile: {
       id: profile.id,
@@ -253,6 +285,11 @@ function buildTrustExportPayload(
         visibility.contact && visibility.workEmail
           ? individual?.work_email || undefined
           : undefined,
+    },
+    publication: {
+      requestedState: resolveRequestedPublicPortfolioState(profile.public_portfolio_state),
+      effectiveState,
+      searchIndexingEnabled: Boolean(profile.search_indexing_enabled_at),
     },
     signals,
     skills: visibility.skills ? skills : [],
@@ -271,10 +308,14 @@ export async function fetchTrustExportData(
         id,
         handle,
         display_name,
+        public_portfolio_state,
+        search_indexing_enabled_at,
         individual_profiles (
           headline,
           bio,
           tagline,
+          skills,
+          redact_mode,
           verification_status,
           verification_method,
           verified_at,
@@ -295,7 +336,7 @@ export async function fetchTrustExportData(
 
   const counts = await loadTrustCounts(supabase, profile.id);
   const skills = await loadTopSkills(supabase, profile.id);
-  return buildTrustExportPayload(profile as ProfileExportRow, counts, skills);
+  return buildTrustExportPayload(profile as ProfileExportRow, counts, skills) ?? null;
 }
 
 export async function fetchPublicTrustExportDataByHandle(
@@ -309,10 +350,14 @@ export async function fetchPublicTrustExportDataByHandle(
         id,
         handle,
         display_name,
+        public_portfolio_state,
+        search_indexing_enabled_at,
         individual_profiles (
           headline,
           bio,
           tagline,
+          skills,
+          redact_mode,
           verification_status,
           verification_method,
           verified_at,
@@ -335,7 +380,7 @@ export async function fetchPublicTrustExportDataByHandle(
 
   const counts = await loadTrustCounts(supabase, profile.id);
   const skills = await loadTopSkills(supabase, profile.id);
-  return buildTrustExportPayload(profile as ProfileExportRow, counts, skills);
+  return buildTrustExportPayload(profile as ProfileExportRow, counts, skills) ?? null;
 }
 
 export async function fetchOrganizationTrustExportData(

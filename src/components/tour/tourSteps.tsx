@@ -9,7 +9,6 @@
  * - Part 5: F1 - Profile Builder
  * - Part 5: F3 - Expertise Hub
  * - Part 5: F4 - Matching Profile
- * - Part 5: F5 - Zen Hub
  */
 
 import type { Step } from 'react-joyride';
@@ -26,9 +25,8 @@ import { UI_VOCABULARY } from '@/lib/copy/vocabulary';
  * 5. Show Public Portfolio
  * 6. Show Expertise Hub
  * 7. Show Matching Profile
- * 8. Show Zen Hub
- * 9. Show Settings
- * 10. Suggest next actions
+ * 8. Show Settings
+ * 9. Suggest next actions
  */
 export const individualTourSteps: Step[] = [
   {
@@ -134,24 +132,6 @@ export const individualTourSteps: Step[] = [
         </p>
         <p className="text-xs text-muted-foreground pt-2 border-t border-proofound-stone">
           <strong>Privacy first:</strong> Organizations only see what you choose to share.
-        </p>
-      </div>
-    ),
-    placement: 'right',
-    disableBeacon: true,
-  },
-  {
-    target: '[data-tour="zen-link"]',
-    content: (
-      <div className="space-y-2">
-        <h3 className="text-base font-semibold text-foreground">Zen Hub (Well-Being)</h3>
-        <p className="text-sm text-muted-foreground">
-          Job searching can be stressful. Zen Hub offers optional well-being check-ins and resources
-          to support you.
-        </p>
-        <p className="text-xs text-muted-foreground pt-2 border-t border-proofound-stone">
-          <strong>100% optional:</strong> All check-ins are private and never shared with
-          organizations.
         </p>
       </div>
     ),

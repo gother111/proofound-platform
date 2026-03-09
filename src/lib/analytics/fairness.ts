@@ -221,7 +221,7 @@ async function getAvailableDemographicSegmentColumns(): Promise<DemographicSegme
     SELECT column_name
     FROM information_schema.columns
     WHERE table_schema = 'public'
-      AND table_name = 'wellbeing_opt_ins'
+      AND table_name = 'demographic_opt_ins'
       AND column_name IN ('age', 'gender', 'location', 'ethnicity')
   `);
 
@@ -262,20 +262,19 @@ async function calculateSegmentGaps(
   const baselineIntroductions = parseFloat(baselineRow.introductions || '0');
   const baseline = baselineMatches > 0 ? baselineIntroductions / baselineMatches : 0;
 
-  // Get segment-specific rates
-  // This requires demographic data from wellbeing_opt_ins table
+  // Get segment-specific rates from the dedicated demographic opt-in dataset.
   const segmentResults = await db.execute(sql`
     SELECT
-      wo.${sql.raw(segmentType)} as segment_value,
+      d.${sql.raw(segmentType)} as segment_value,
       COUNT(DISTINCT CASE WHEN e.event_type = 'match_generated' THEN e.entity_id END)::float as matches,
       COUNT(DISTINCT CASE WHEN e.event_type = 'match_introduced' THEN e.entity_id END)::float as introductions
     FROM analytics_events e
-    INNER JOIN wellbeing_opt_ins wo ON e.user_id = wo.user_id
+    INNER JOIN demographic_opt_ins d ON e.user_id = d.profile_id
     WHERE e.occurred_at >= ${thirtyDaysAgo.toISOString()}
       AND e.event_type IN ('match_generated', 'match_introduced')
-      AND wo.${sql.raw(segmentType)} IS NOT NULL
-      AND wo.opted_in = true
-    GROUP BY wo.${sql.raw(segmentType)}
+      AND d.${sql.raw(segmentType)} IS NOT NULL
+      AND d.opt_in = true
+    GROUP BY d.${sql.raw(segmentType)}
     HAVING COUNT(DISTINCT e.entity_id) >= 10
   `);
 
@@ -328,7 +327,7 @@ function generateSummary(
     segments.length === 0 &&
     unavailableSegmentColumns.length === DEMOGRAPHIC_SEGMENT_COLUMNS.length
   ) {
-    return 'Demographic fairness analysis is unavailable for the current production schema because wellbeing_opt_ins does not yet include age, gender, location, or ethnicity columns. Overall matching metrics were recorded successfully.';
+    return 'Demographic fairness analysis is unavailable for the current production schema because demographic_opt_ins does not yet include age, gender, location, or ethnicity columns. Overall matching metrics were recorded successfully.';
   }
 
   if (segments.length === 0 && unavailableSegmentColumns.length > 0) {
@@ -379,7 +378,7 @@ function generateRecommendations(
     unavailableSegmentColumns.length === DEMOGRAPHIC_SEGMENT_COLUMNS.length
   ) {
     recommendations.push(
-      'Add demographic segment columns to wellbeing_opt_ins before re-enabling demographic fairness segmentation.'
+      'Add demographic segment columns to demographic_opt_ins before re-enabling demographic fairness segmentation.'
     );
     recommendations.push(
       'Keep the fairness cron enabled only for baseline report generation until schema support is available.'

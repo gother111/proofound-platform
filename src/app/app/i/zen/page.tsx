@@ -1,177 +1,213 @@
 'use client';
 
-import { useEffect, useState, useMemo, useCallback } from 'react';
-import {
-  zenPractices,
-  localGatherings,
-  supportChannels,
-  toolkitFilters,
-  assessments,
-  externalResources,
-  locationConsentCopy,
-  type ZenPractice,
-} from '@/data/zen';
+import { useEffect, useState } from 'react';
+import { formatDistanceToNow } from 'date-fns';
+import { Download, LockKeyhole, ShieldAlert, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+
+import { CheckInDialog } from '@/components/zen/CheckInDialog';
+import { PrivacyBanner } from '@/components/zen/PrivacyBanner';
+import { ReflectionDialog } from '@/components/zen/ReflectionDialog';
+import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AppSurface } from '@/components/ui/v2/AppSurface';
-import { MapPin, Heart, Info, Phone, Shield } from 'lucide-react';
-import { PrivacyBanner } from '@/components/zen/PrivacyBanner';
-import { CheckInDialog } from '@/components/zen/CheckInDialog';
-import { ReflectionDialog } from '@/components/zen/ReflectionDialog';
-import { MoodResponsiveContainer, useMood } from '@/components/zen/MoodResponsiveContainer';
-import { QuickCheckIn } from '@/components/zen/QuickCheckIn';
-import { GuidedBreathing } from '@/components/zen/GuidedBreathing';
-import { ReflectionJournal } from '@/components/zen/ReflectionJournal';
-import { PracticeCard } from '@/components/zen/PracticeCard';
-import { InterviewPrepTab } from '@/components/zen/interview-prep/InterviewPrepTab';
-import { MiracleMindCTA } from '@/components/zen/MiracleMindCTA';
-import { WellBeingDeltaWidget } from '@/components/wellbeing/WellBeingDeltaWidget';
-import { WellBeingTrendChart } from '@/components/wellbeing/WellBeingTrendChart';
-import { CheckInHistory } from '@/components/wellbeing/CheckInHistory';
-import { WorkScheduleEditor } from '@/components/wellbeing/WorkScheduleEditor';
-import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
-import { createClient } from '@/lib/supabase/client';
-import { setWellbeingOptIn } from '@/lib/wellbeing/client';
+import { deleteZenData, exportZenData, setWellbeingOptIn } from '@/lib/wellbeing/client';
 
 export const dynamic = 'force-dynamic';
 
-function ZenHubContent() {
-  const { mood } = useMood();
-  const [optInStatus, setOptInStatus] = useState<{
-    optedIn: boolean;
-    privacyBannerAcknowledged: boolean;
-  } | null>(null);
-  const [isLoadingOptIn, setIsLoadingOptIn] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('checkin');
-  const [activeFilter, setActiveFilter] = useState('All');
+type OptInState = {
+  optedIn: boolean;
+  privacyBannerAcknowledged: boolean;
+  privacyBoundary?: string;
+};
 
-  // Dialog states
+type CheckInEntry = {
+  id: string;
+  stressLevel: number;
+  controlLevel: number;
+  milestoneType?: string | null;
+  createdAt: string;
+};
+
+type ReflectionEntry = {
+  id: string;
+  reflectionText: string;
+  milestoneType?: string | null;
+  linkedCheckinId?: string | null;
+  createdAt: string;
+};
+
+type MilestonePrompt = {
+  type: 'rejection' | 'interview' | 'offer' | 'withdrawal' | 'no_show';
+  occurredAt: string;
+  sourceEvent: string;
+};
+
+function milestoneLabel(value?: string | null) {
+  switch (value) {
+    case 'rejection':
+      return 'Rejection';
+    case 'interview':
+      return 'Interview';
+    case 'offer':
+      return 'Offer';
+    case 'withdrawal':
+      return 'Withdrawal';
+    case 'no_show':
+      return 'No-show';
+    default:
+      return 'Milestone';
+  }
+}
+
+export default function ZenHubPage() {
+  const [optInState, setOptInState] = useState<OptInState | null>(null);
+  const [checkins, setCheckins] = useState<CheckInEntry[]>([]);
+  const [reflections, setReflections] = useState<ReflectionEntry[]>([]);
+  const [milestones, setMilestones] = useState<MilestonePrompt[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showCheckInDialog, setShowCheckInDialog] = useState(false);
   const [showReflectionDialog, setShowReflectionDialog] = useState(false);
-  const [defaultMilestone, setDefaultMilestone] = useState<
-    'rejection' | 'interview' | 'offer' | undefined
-  >();
+  const [defaultMilestone, setDefaultMilestone] = useState<MilestonePrompt['type'] | undefined>();
+  const [busyAction, setBusyAction] = useState<'export' | 'delete' | null>(null);
 
-  // Data states
-  const [deltaData, setDeltaData] = useState<any>(null);
-  const [trendData, setTrendData] = useState<any[]>([]);
-  const [milestoneSuggestion, setMilestoneSuggestion] = useState<
-    'rejection' | 'interview' | 'offer' | null
-  >(null);
-
-  useEffect(() => {
-    const fetchOptInStatus = async () => {
-      try {
-        const response = await apiFetch('/api/wellbeing/opt-in');
-        if (response.ok) {
-          const data = await response.json();
-          setOptInStatus(data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch opt-in status:', error);
-      } finally {
-        setIsLoadingOptIn(false);
-      }
-    };
-    fetchOptInStatus();
-  }, []);
-
-  // Get user id for widgets that need it
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const supabase = createClient();
-        const { data } = await supabase.auth.getUser();
-        if (data?.user?.id) {
-          setUserId(data.user.id);
-        }
-      } catch (error) {
-        console.error('ZenHub: failed to fetch user', error);
-      }
-    };
-    fetchUser();
-  }, []);
-
-  const fetchInsights = useCallback(async () => {
-    if (!optInStatus?.optedIn) return;
+  async function loadZenState() {
+    setLoading(true);
     try {
-      const [deltaRes, trendRes] = await Promise.all([
-        fetch('/api/wellbeing/delta?period=14'),
-        fetch('/api/wellbeing/trend?weeks=4'),
-      ]);
-      if (deltaRes.ok) setDeltaData(await deltaRes.json());
-      if (trendRes.ok) setTrendData(await trendRes.json());
-    } catch (e) {
-      console.error('Failed to fetch insights', e);
-    }
-  }, [optInStatus?.optedIn]);
+      const optInResponse = await apiFetch('/api/wellbeing/opt-in');
+      if (!optInResponse.ok) {
+        throw new Error('Failed to load Zen Hub status');
+      }
+      const optIn = (await optInResponse.json()) as OptInState;
+      setOptInState(optIn);
 
-  useEffect(() => {
-    fetchInsights();
-  }, [fetchInsights]);
+      if (optIn.optedIn) {
+        const [checkinResponse, reflectionResponse, milestoneResponse] = await Promise.all([
+          apiFetch('/api/wellbeing/checkin?limit=12'),
+          apiFetch('/api/wellbeing/reflections?limit=12'),
+          apiFetch('/api/wellbeing/milestones?days=21'),
+        ]);
 
-  useEffect(() => {
-    const fetchMilestones = async () => {
-      if (!optInStatus?.optedIn || !userId) return;
-      try {
-        const res = await fetch('/api/wellbeing/milestones');
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data.milestones?.length > 0) {
-          setMilestoneSuggestion(data.milestones[0].type);
+        if (checkinResponse.ok) {
+          const data = await checkinResponse.json();
+          setCheckins(data.checkins || []);
         }
-      } catch (error) {
-        console.error('Failed to fetch milestones', error);
+        if (reflectionResponse.ok) {
+          const data = await reflectionResponse.json();
+          setReflections(data.reflections || []);
+        }
+        if (milestoneResponse.ok) {
+          const data = await milestoneResponse.json();
+          setMilestones(data.milestones || []);
+        }
+      } else {
+        setCheckins([]);
+        setReflections([]);
+        setMilestones([]);
       }
-    };
-    fetchMilestones();
-  }, [optInStatus?.optedIn, userId]);
-
-  const handleOptIn = async () => {
-    try {
-      const response = await setWellbeingOptIn({
-        optedIn: true,
-        privacyBannerAcknowledged: true,
-      });
-      if (response.ok) {
-        // The POST response has a different format, so set the expected structure
-        setOptInStatus({ optedIn: true, privacyBannerAcknowledged: true });
-        toast.success('Welcome to Zen Hub');
-      }
-    } catch {
-      toast.error('Failed to enable Zen Hub');
+    } catch (error) {
+      console.error('zen.page.load.failed', error);
+      toast.error('Failed to load Zen Hub');
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const handleOpenCheckIn = (milestone?: 'rejection' | 'interview' | 'offer') => {
-    setDefaultMilestone(milestone);
-    setShowCheckInDialog(true);
-  };
-
-  const filteredPractices = useMemo(() => {
-    if (activeFilter === 'All') return zenPractices;
-    return zenPractices.filter(
-      (p) =>
-        p.style.toLowerCase() === activeFilter.toLowerCase() ||
-        (activeFilter === 'Short' && p.time <= 5) ||
-        (activeFilter === 'Long' && p.time > 5)
-    );
-  }, [activeFilter]);
-
-  if (isLoadingOptIn) {
-    return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
   }
 
-  if (!optInStatus?.optedIn) {
+  useEffect(() => {
+    void loadZenState();
+  }, []);
+
+  const recentEntries = [
+    ...checkins.map((entry) => ({
+      id: `checkin-${entry.id}`,
+      type: 'checkin' as const,
+      createdAt: entry.createdAt,
+      title: 'Private check-in',
+      subtitle: `Stress ${entry.stressLevel}/5 • Control ${entry.controlLevel}/5`,
+      milestoneType: entry.milestoneType,
+      body: null as string | null,
+    })),
+    ...reflections.map((entry) => ({
+      id: `reflection-${entry.id}`,
+      type: 'reflection' as const,
+      createdAt: entry.createdAt,
+      title: 'Private reflection',
+      subtitle: entry.milestoneType ? milestoneLabel(entry.milestoneType) : 'General reflection',
+      milestoneType: entry.milestoneType,
+      body: entry.reflectionText,
+    })),
+  ]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 10);
+
+  async function handleOptIn() {
+    const response = await setWellbeingOptIn({
+      optedIn: true,
+      privacyBannerAcknowledged: true,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || 'Failed to enable Zen Hub');
+    }
+
+    toast.success('Zen Hub enabled');
+    await loadZenState();
+  }
+
+  async function handleExport() {
+    setBusyAction('export');
+    try {
+      const response = await exportZenData('json');
+      if (!response.ok) {
+        throw new Error('Failed to export Zen data');
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `proofound-zen-export-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast.success('Zen export ready');
+    } catch (error) {
+      console.error('zen.export.failed', error);
+      toast.error('Failed to export Zen data');
+    } finally {
+      setBusyAction(null);
+    }
+  }
+
+  async function handleDelete() {
+    const confirmed = window.confirm(
+      'Delete all Zen check-ins and reflections? This cannot be undone.'
+    );
+    if (!confirmed) return;
+
+    setBusyAction('delete');
+    try {
+      const response = await deleteZenData();
+      if (!response.ok) {
+        throw new Error('Failed to delete Zen data');
+      }
+
+      toast.success('Zen data deleted');
+      await loadZenState();
+    } catch (error) {
+      console.error('zen.delete.failed', error);
+      toast.error('Failed to delete Zen data');
+    } finally {
+      setBusyAction(null);
+    }
+  }
+
+  if (loading || !optInState) {
     return (
       <AppSurface>
-        <div className="mx-auto max-w-4xl">
-          <h1 className="mb-6 font-serif text-3xl text-foreground dark:text-[#E8E6DD]">Zen Hub</h1>
-          <PrivacyBanner onOptIn={handleOptIn} />
+        <div className="mx-auto max-w-3xl py-12 text-center text-sm text-muted-foreground">
+          Loading Zen Hub...
         </div>
       </AppSurface>
     );
@@ -179,355 +215,150 @@ function ZenHubContent() {
 
   return (
     <AppSurface>
-      <div className="mx-auto max-w-6xl space-y-8">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="font-serif text-3xl font-medium text-foreground dark:text-[#E8E6DD]">
-              Zen Hub
-            </h1>
-            <p className="text-muted-foreground dark:text-[#C9C2B8]">
-              Your private center for calm and clarity.
-            </p>
-          </div>
-
-          {/* Crisis Support (Visible when mood is 'support') */}
-          {mood === 'support' && (
-            <div className="flex items-center gap-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-rose-800 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-200 animate-in fade-in slide-in-from-top-2">
-              <Phone className="h-4 w-4" />
-              <span className="text-sm font-medium">Crisis Support Available 24/7</span>
-              <div className="h-4 w-px bg-rose-200 dark:bg-rose-800" />
-              <a href="tel:988" className="text-sm font-bold hover:underline">
-                Call 988
-              </a>
-            </div>
-          )}
+      <div className="mx-auto flex max-w-3xl flex-col gap-6 py-6">
+        <div className="space-y-2">
+          <h1 className="font-serif text-3xl text-foreground">Zen Hub</h1>
+          <p className="max-w-2xl text-sm text-muted-foreground">
+            An optional private space for brief check-ins and milestone reflections. Zen Hub is
+            never used for matching, ranking, reveal, or org analytics.
+          </p>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <TabsList className="bg-proofound-forest/5 dark:bg-[#3F473B] p-1">
-            <TabsTrigger
-              value="checkin"
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-[#2F2823]"
-            >
-              Check-In
-            </TabsTrigger>
-            <TabsTrigger
-              value="practices"
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-[#2F2823]"
-            >
-              Practices
-            </TabsTrigger>
-            <TabsTrigger
-              value="journal"
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-[#2F2823]"
-            >
-              Journal
-            </TabsTrigger>
-            <TabsTrigger
-              value="assessments"
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-[#2F2823]"
-            >
-              Assessments
-            </TabsTrigger>
-            <TabsTrigger
-              value="interview-prep"
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-[#2F2823]"
-            >
-              Interview Prep
-            </TabsTrigger>
-            <TabsTrigger
-              value="insights"
-              className="data-[state=active]:bg-white dark:data-[state=active]:bg-[#2F2823]"
-            >
-              Insights
-            </TabsTrigger>
-          </TabsList>
+        {!optInState.optedIn ? (
+          <PrivacyBanner onOptIn={handleOptIn} />
+        ) : (
+          <>
+            <Card className="border-proofound-stone/60 p-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <LockKeyhole className="h-4 w-4 text-proofound-forest" />
+                    Private boundary
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Zen data stays private to you. It is not copied into matching, fairness, reveal,
+                    org analytics, or public portfolio APIs.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      onClick={() => {
+                        setDefaultMilestone(undefined);
+                        setShowCheckInDialog(true);
+                      }}
+                      className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
+                    >
+                      Record private check-in
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setDefaultMilestone(undefined);
+                        setShowReflectionDialog(true);
+                      }}
+                    >
+                      Add private reflection
+                    </Button>
+                  </div>
+                </div>
 
-          {/* CHECK-IN TAB */}
-          <TabsContent value="checkin" className="space-y-8 animate-in fade-in duration-500">
-            {milestoneSuggestion && (
-              <Card className="p-4 border-proofound-stone bg-white/70 dark:bg-[#2F2823]/70">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-foreground dark:text-[#E8E6DD]">
-                      Recent update detected
-                    </p>
-                    <p className="text-sm text-muted-foreground dark:text-[#C9C2B8]">
-                      Log a quick check-in after your recent {milestoneSuggestion}.
+                <div className="flex flex-col gap-2 sm:min-w-[180px]">
+                  <Button
+                    variant="outline"
+                    onClick={handleExport}
+                    disabled={busyAction === 'export'}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    {busyAction === 'export' ? 'Exporting...' : 'Export Zen data'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="border-destructive/40 text-destructive hover:bg-destructive/5"
+                    onClick={handleDelete}
+                    disabled={busyAction === 'delete'}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    {busyAction === 'delete' ? 'Deleting...' : 'Delete Zen data'}
+                  </Button>
+                </div>
+              </div>
+            </Card>
+
+            {milestones.length > 0 && (
+              <Card className="border-proofound-forest/20 bg-proofound-forest/5 p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                      <ShieldAlert className="h-4 w-4 text-proofound-forest" />
+                      Private milestone prompt
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      A recent work-search milestone was detected. If it would help, you can add a
+                      private reflection. Nothing is stored unless you submit it.
                     </p>
                   </div>
                   <Button
-                    onClick={() => handleOpenCheckIn(milestoneSuggestion)}
-                    className="bg-proofound-forest text-white"
+                    variant="outline"
+                    onClick={() => {
+                      setDefaultMilestone(milestones[0].type);
+                      setShowReflectionDialog(true);
+                    }}
                   >
-                    Log check-in
+                    Reflect on {milestoneLabel(milestones[0].type).toLowerCase()}
                   </Button>
                 </div>
               </Card>
             )}
 
-            <QuickCheckIn />
-
-            <div className="grid gap-8 md:grid-cols-2">
-              <div className="space-y-4">
-                <h3 className="font-serif text-xl text-foreground dark:text-[#E8E6DD]">
-                  Quick Reset
-                </h3>
-                <GuidedBreathing />
+            <Card className="p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-foreground">Recent private entries</h2>
+                <p className="text-xs text-muted-foreground">
+                  {checkins.length} check-ins • {reflections.length} reflections
+                </p>
               </div>
-
-              <div className="space-y-4">
-                <h3 className="font-serif text-xl text-foreground dark:text-[#E8E6DD]">
-                  Recommended for You
-                </h3>
-                <div className="space-y-4">
-                  {zenPractices.slice(0, 2).map((practice) => (
-                    <PracticeCard
-                      key={practice.id}
-                      practice={practice}
-                      onStart={() => {
-                        toast.success(`Started ${practice.title}`);
-                        // In real app, this might open a modal or navigation
-                      }}
-                    />
+              {recentEntries.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No entries yet. Zen Hub stays quiet until you choose to use it.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {recentEntries.map((entry) => (
+                    <div key={entry.id} className="rounded-lg border border-border/60 p-4">
+                      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{entry.title}</p>
+                          <p className="text-xs text-muted-foreground">{entry.subtitle}</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(new Date(entry.createdAt), { addSuffix: true })}
+                        </p>
+                      </div>
+                      {entry.body && (
+                        <p className="mt-3 whitespace-pre-wrap text-sm text-muted-foreground">
+                          {entry.body}
+                        </p>
+                      )}
+                    </div>
                   ))}
                 </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* PRACTICES TAB */}
-          <TabsContent value="practices" className="space-y-6 animate-in fade-in duration-500">
-            <MiracleMindCTA />
-
-            <div className="flex flex-wrap gap-2">
-              {['All', ...toolkitFilters].map((filter) => (
-                <Button
-                  key={filter}
-                  variant={activeFilter === filter ? 'default' : 'outline'}
-                  onClick={() => setActiveFilter(filter)}
-                  size="sm"
-                  className={
-                    activeFilter === filter
-                      ? 'bg-proofound-forest text-white'
-                      : 'border-proofound-stone'
-                  }
-                >
-                  {filter}
-                </Button>
-              ))}
-            </div>
-
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredPractices.map((practice) => (
-                <PracticeCard
-                  key={practice.id}
-                  practice={practice}
-                  onStart={() => toast.success(`Started ${practice.title}`)}
-                />
-              ))}
-            </div>
-
-            <div className="pt-8 border-t border-proofound-stone dark:border-[#3C332C]">
-              <h3 className="font-serif text-xl mb-4 text-foreground dark:text-[#E8E6DD] flex items-center gap-2">
-                <MapPin className="h-5 w-5" /> Local Gatherings
-              </h3>
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {localGatherings.map((gathering) => (
-                  <Card
-                    key={gathering.id}
-                    className="p-4 bg-white/50 dark:bg-[#2F2823]/50 border border-proofound-stone dark:border-[#3C332C]"
-                  >
-                    <div className="text-xs font-bold uppercase tracking-wider text-[#7A9278] mb-1">
-                      {gathering.location}
-                    </div>
-                    <h4 className="font-medium text-foreground dark:text-[#E8E6DD]">
-                      {gathering.title}
-                    </h4>
-                    <p className="text-sm text-muted-foreground dark:text-[#C9C2B8] mt-1">
-                      {gathering.when}
-                    </p>
-                    <div className="mt-4 flex justify-between items-center">
-                      <span className="text-xs text-muted-foreground">
-                        {gathering.spotsRemaining} spots left
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-proofound-forest hover:text-proofound-forest hover:bg-proofound-forest/5"
-                      >
-                        RSVP
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-              <p className="text-xs text-center mt-4 text-muted-foreground dark:text-[#C9C2B8]">
-                <Info className="h-3 w-3 inline mr-1" />
-                {locationConsentCopy.prompt} {locationConsentCopy.clearAction} ·{' '}
-                {locationConsentCopy.fallback}
-              </p>
-            </div>
-
-            <div className="pt-8 border-t border-proofound-stone dark:border-[#3C332C]">
-              <h3 className="font-serif text-xl mb-4 text-foreground dark:text-[#E8E6DD] flex items-center gap-2">
-                External Resources
-              </h3>
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {externalResources.map((resource) => (
-                  <Card
-                    key={resource.id}
-                    className="p-4 bg-white/50 dark:bg-[#2F2823]/50 border border-proofound-stone dark:border-[#3C332C]"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="text-xs font-bold uppercase tracking-wider text-[#7A9278] mb-1">
-                        {resource.provider}
-                      </div>
-                      <Badge variant="outline" className="text-[10px]">
-                        {resource.cost}
-                      </Badge>
-                    </div>
-                    <h4 className="font-medium text-foreground dark:text-[#E8E6DD]">
-                      {resource.title}
-                    </h4>
-                    <p className="text-sm text-muted-foreground dark:text-[#C9C2B8] mt-2">
-                      {resource.description}
-                    </p>
-                    {resource.safetyNote && (
-                      <p className="mt-2 text-xs text-amber-700 dark:text-amber-200">
-                        {resource.safetyNote}
-                      </p>
-                    )}
-                    <Button
-                      asChild
-                      variant="ghost"
-                      size="sm"
-                      className="mt-3 text-proofound-forest hover:text-proofound-forest hover:bg-proofound-forest/5"
-                    >
-                      <a href={resource.url} target="_blank" rel="noreferrer">
-                        Open external link
-                      </a>
-                    </Button>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* JOURNAL TAB */}
-          <TabsContent value="journal" className="space-y-6 animate-in fade-in duration-500">
-            <div className="flex justify-between items-center">
-              <h3 className="font-serif text-xl text-foreground dark:text-[#E8E6DD]">
-                Your Reflections
-              </h3>
-              <Button
-                onClick={() => setShowReflectionDialog(true)}
-                className="bg-proofound-forest text-white"
-              >
-                New Entry
-              </Button>
-            </div>
-            <ReflectionJournal />
-          </TabsContent>
-
-          {/* ASSESSMENTS TAB */}
-          <TabsContent value="assessments" className="space-y-6 animate-in fade-in duration-500">
-            <div className="space-y-2">
-              <h3 className="font-serif text-xl text-foreground dark:text-[#E8E6DD]">
-                Assessments
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Quick, non-diagnostic check-ins to spot trends. Results stay private to you.
-              </p>
-            </div>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {assessments.map((assessment) => (
-                <Card
-                  key={assessment.id}
-                  className="p-4 bg-white/70 dark:bg-[#2F2823]/70 border border-proofound-stone dark:border-[#3C332C]"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h4 className="font-medium text-foreground dark:text-[#E8E6DD]">
-                        {assessment.name}
-                      </h4>
-                      <p className="text-xs text-muted-foreground dark:text-[#C9C2B8]">
-                        {assessment.duration}
-                      </p>
-                    </div>
-                    <Badge variant="outline" className="text-[11px]">
-                      Private
-                    </Badge>
-                  </div>
-                  <p className="mt-2 text-sm text-muted-foreground">{assessment.resultScale}</p>
-                  <p className="mt-2 text-xs text-muted-foreground dark:text-[#C9C2B8]">
-                    {assessment.disclaimer}
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-3"
-                    onClick={() => toast.success(`Assessment started: ${assessment.name}`)}
-                  >
-                    Start assessment
-                  </Button>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          {/* INTERVIEW PREP TAB */}
-          <TabsContent value="interview-prep" className="space-y-6 animate-in fade-in duration-500">
-            <InterviewPrepTab />
-          </TabsContent>
-
-          {/* INSIGHTS TAB */}
-          <TabsContent value="insights" className="space-y-8 animate-in fade-in duration-500">
-            <div className="grid gap-6 lg:grid-cols-2">
-              <div className="space-y-6">
-                {deltaData && (
-                  <WellBeingDeltaWidget
-                    stressDelta={deltaData.stressDelta}
-                    controlDelta={deltaData.controlDelta}
-                    period={deltaData.period}
-                    checkinsCount={deltaData.checkinsCount}
-                    hasBaseline={deltaData.hasBaseline}
-                  />
-                )}
-                {userId && <WorkScheduleEditor userId={userId} />}
-              </div>
-              <div className="space-y-6">
-                {trendData.length > 0 && <WellBeingTrendChart trend={trendData} />}
-                {userId && <CheckInHistory userId={userId} />}
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        <ReflectionDialog
-          open={showReflectionDialog}
-          onOpenChange={setShowReflectionDialog}
-          onSuccess={() => toast.success('Reflection saved')}
-        />
-        <CheckInDialog
-          open={showCheckInDialog}
-          onOpenChange={setShowCheckInDialog}
-          onSuccess={() => {
-            fetchInsights();
-            setMilestoneSuggestion(null);
-          }}
-          defaultMilestone={defaultMilestone}
-        />
+              )}
+            </Card>
+          </>
+        )}
       </div>
-    </AppSurface>
-  );
-}
 
-export default function ZenHubPage() {
-  return (
-    <MoodResponsiveContainer>
-      <ZenHubContent />
-    </MoodResponsiveContainer>
+      <CheckInDialog
+        open={showCheckInDialog}
+        onOpenChange={setShowCheckInDialog}
+        onSuccess={loadZenState}
+        defaultMilestone={defaultMilestone}
+      />
+      <ReflectionDialog
+        open={showReflectionDialog}
+        onOpenChange={setShowReflectionDialog}
+        onSuccess={loadZenState}
+        defaultMilestone={defaultMilestone}
+      />
+    </AppSurface>
   );
 }
