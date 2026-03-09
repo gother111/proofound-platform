@@ -1,6 +1,27 @@
 > Doc Class: `governance`
 > Sync Pair: `Documentation.md`
-> Last Verified: `2026-03-09`
+> Last Verified: `2026-03-10`
+
+## 2026-03-10: Organization Trust Tiers and Sensitive-Domain Safety PRD Extension
+
+What changed:
+
+- Added `4.3.G Organization Trust Tiers and Sensitive-Domain Safety (MVP-lite / post-MVP corridor)` to `PRD_for_a_web_platform_MVP.master-latest.md`.
+- Added minimal supporting updates to org acceptance and internal analytics events for org trust tier changes, sensitive-domain review queueing, assignment safety blocks, and abuse flags.
+- Synced `PRD_for_a_web_platform_MVP.md` so the mirror reflects org trust tiers as a separate org-level state model and defers full detail to the canonical PRD.
+
+Why:
+
+- The master direction already referenced org KYC and sensitive-domain vetting, but the lean org MVP PRD still needed a calm, buildable safety layer that stops short of enterprise compliance scope.
+
+How to verify:
+
+- `npm run docs:freshness`
+- `rg -n "Organization Trust Tiers and Sensitive-Domain Safety|org_trust_tier_changed|assignment_blocked_by_safety|sensitive-domain" PRD_for_a_web_platform_MVP.master-latest.md PRD_for_a_web_platform_MVP.md`
+
+Open risks/TODO:
+
+- Sensitive-domain category boundaries and post-MVP authorization proofs still need future refinement if Proofound expands into higher-risk institutional workflows.
 
 ## 2026-03-09: Trust, Proof Quality, and Verification Lifecycle Analytics PRD Extension
 
