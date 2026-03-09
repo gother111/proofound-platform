@@ -8,23 +8,78 @@ import {
   CvImportExtractJobResultSchema,
 } from '@/lib/expertise/cv-import-wizard-extract';
 import {
-  claimPythonInternalJobById,
   getPythonInternalJob,
   type PythonInternalJobRecord,
 } from '@/lib/python-internal/job-queue';
-import { executeClaimedPythonInternalJob } from '@/lib/python-internal/worker';
+import { triggerPythonInternalWorker } from '@/lib/python-internal/trigger';
 import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
+const DEFAULT_CV_IMPORT_WORKER_REWAKE_AFTER_MS = 5_000;
+
+function parsePositiveInt(value: string | undefined, fallback: number): number {
+  if (!value) {
+    return fallback;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return fallback;
+  }
+
+  return parsed;
+}
+
+function resolveWorkerRewakeAfterMs(): number {
+  return parsePositiveInt(
+    process.env.CV_IMPORT_WORKER_REWAKE_AFTER_MS,
+    DEFAULT_CV_IMPORT_WORKER_REWAKE_AFTER_MS
+  );
+}
+
+function buildQueuedResponse(job: PythonInternalJobRecord, recoveryState: 'queued' | 'retrying') {
+  const retryAfterMs = Math.max(
+    CV_IMPORT_EXTRACT_POLL_AFTER_MS,
+    job.nextRunAt.getTime() - Date.now()
+  );
+
+  return {
+    job_id: job.id,
+    status: 'queued' as const,
+    poll_after_ms: CV_IMPORT_EXTRACT_POLL_AFTER_MS,
+    retry_after_ms: retryAfterMs,
+    recovery_state: recoveryState,
+  };
+}
+
+function isLeaseExpired(job: PythonInternalJobRecord): boolean {
+  return Boolean(job.leaseExpiresAt && job.leaseExpiresAt.getTime() <= Date.now());
+}
+
+function shouldWakeWorker(job: PythonInternalJobRecord): boolean {
+  if (job.status === 'leased') {
+    return isLeaseExpired(job);
+  }
+
+  if (job.status !== 'pending') {
+    return false;
+  }
+
+  if (job.nextRunAt.getTime() > Date.now()) {
+    return false;
+  }
+
+  return Date.now() - job.updatedAt.getTime() >= resolveWorkerRewakeAfterMs();
+}
+
 function buildStatusResponse(requestId: string, job: PythonInternalJobRecord) {
-  if (job.status === 'pending') {
-    return jsonWithRequestId(requestId, {
-      job_id: job.id,
-      status: 'queued',
-      poll_after_ms: CV_IMPORT_EXTRACT_POLL_AFTER_MS,
-    });
+  if (job.status === 'pending' || isLeaseExpired(job)) {
+    return jsonWithRequestId(
+      requestId,
+      buildQueuedResponse(job, job.attempts > 0 || Boolean(job.lastError) ? 'retrying' : 'queued')
+    );
   }
 
   if (job.status === 'leased') {
@@ -106,23 +161,12 @@ export async function GET(request: NextRequest) {
     return jsonWithRequestId(requestId, { error: 'Extraction job not found' }, 404);
   }
 
-  if (job.status === 'pending') {
-    const claimedJob = await claimPythonInternalJobById(job.id);
-    if (claimedJob) {
-      await executeClaimedPythonInternalJob({
-        request,
-        job: claimedJob,
-      });
+  if (shouldWakeWorker(job)) {
+    await triggerPythonInternalWorker({ request });
 
-      const refreshedJob = await getPythonInternalJob(job.id);
-      if (refreshedJob && refreshedJob.jobType === CV_IMPORT_EXTRACT_JOB_TYPE) {
-        job = refreshedJob;
-      }
-    } else {
-      const refreshedJob = await getPythonInternalJob(job.id);
-      if (refreshedJob && refreshedJob.jobType === CV_IMPORT_EXTRACT_JOB_TYPE) {
-        job = refreshedJob;
-      }
+    const refreshedJob = await getPythonInternalJob(job.id);
+    if (refreshedJob && refreshedJob.jobType === CV_IMPORT_EXTRACT_JOB_TYPE) {
+      job = refreshedJob;
     }
   }
 

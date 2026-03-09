@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   removeCvImportTempPdfs: vi.fn(),
   enqueuePythonInternalJobs: vi.fn(),
   isPythonInternalJobsEnabled: vi.fn(),
+  triggerPythonInternalWorker: vi.fn(),
 }));
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -33,6 +34,10 @@ vi.mock('@/lib/expertise/cv-import-temp-storage', () => ({
 vi.mock('@/lib/python-internal/job-queue', () => ({
   enqueuePythonInternalJobs: mocks.enqueuePythonInternalJobs,
   isPythonInternalJobsEnabled: mocks.isPythonInternalJobsEnabled,
+}));
+
+vi.mock('@/lib/python-internal/trigger', () => ({
+  triggerPythonInternalWorker: mocks.triggerPythonInternalWorker,
 }));
 
 import { POST } from '@/app/api/expertise/cv-import/wizard-extract/route';
@@ -77,6 +82,7 @@ describe('/api/expertise/cv-import/wizard-extract', () => {
     );
     mocks.removeCvImportTempPdfs.mockResolvedValue({ failedPaths: [] });
     mocks.enqueuePythonInternalJobs.mockResolvedValue(undefined);
+    mocks.triggerPythonInternalWorker.mockResolvedValue(true);
   });
 
   it('queues an async extract job for authenticated pdf uploads', async () => {
@@ -118,6 +124,7 @@ describe('/api/expertise/cv-import/wizard-extract', () => {
         }),
       }),
     ]);
+    expect(mocks.triggerPythonInternalWorker).toHaveBeenCalledTimes(1);
   });
 
   it('returns 429 when the extract route is rate limited', async () => {

@@ -26,13 +26,6 @@ import {
   type SkillReviewSelectionMeta,
 } from '@/components/expertise/cv-import/SkillReviewPanel';
 import { EventType } from '@/lib/analytics/constants';
-import {
-  extractPdfTextFromFile,
-  extractPdfTextWithOcr,
-  isOcrClientEnabled,
-  normalizePdfParseError,
-  resolveOcrClientLimits,
-} from '@/lib/expertise/cv-import-client-loaders';
 import { buildCvImportReviewTelemetry } from '@/lib/expertise/cv-review-telemetry';
 import { getAmbiguousTokenHints } from '@/lib/expertise/skill-confidence';
 import { LANGUAGE_OPTIONS, CEFR_LEVELS } from '@/lib/taxonomy/data';
@@ -186,6 +179,8 @@ type ApiExtractStatusResponse =
       job_id: string;
       status: 'queued' | 'processing';
       poll_after_ms: number;
+      retry_after_ms?: number;
+      recovery_state?: 'queued' | 'retrying';
     }
   | {
       job_id: string;
@@ -290,31 +285,15 @@ const GENERIC_BACKEND_ERRORS = new Set([
   'Failed to process CV wizard suggestions',
   'Failed to process CV documents',
 ]);
-const WIZARD_TIMEOUT_CODE = 'CV_IMPORT_WIZARD_TIMEOUT';
-const WIZARD_TIMEOUT_ERROR = 'cv wizard processing timed out';
-const MULTIPART_METADATA_INVALID_CODE = 'CV_IMPORT_MULTIPART_METADATA_INVALID';
-const UPLOAD_METADATA_ENCODING_ERROR_MESSAGE =
-  'Upload metadata contains unsupported characters. Please rename the PDF and retry.';
-const GENERIC_EXTRACT_ERROR = 'Failed to extract CV text';
 const PROXY_RETRYABLE_CODES = new Set([
   'CV_IMPORT_PROXY_UNAVAILABLE',
   'CV_IMPORT_PROXY_TIMEOUT',
   'CV_IMPORT_PROXY_INVALID_CONTRACT',
 ]);
-const OCR_RETRYABLE_PARSE_CODES = new Set(['PDF_EMPTY_TEXT']);
 const MAX_QUEUED_EXTRACT_WAIT_MS = 10_000;
-const QUEUED_EXTRACT_STALLED_CODE = 'CV_IMPORT_EXTRACT_STALLED';
-const QUEUED_EXTRACT_STALLED_MESSAGE =
-  'Background extraction is taking too long. Retrying with local PDF extraction...';
-
-class QueuedExtractStalledError extends Error {
-  code = QUEUED_EXTRACT_STALLED_CODE;
-
-  constructor(message = QUEUED_EXTRACT_STALLED_MESSAGE) {
-    super(message);
-    this.name = 'QueuedExtractStalledError';
-  }
-}
+const BACKGROUND_CONTINUE_NOTICE_MS = 20_000;
+const BACKGROUND_CONTINUE_POLL_AFTER_MS = 5_000;
+const MAX_PYTHON_REQUEUE_ATTEMPTS = 1;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -446,6 +425,14 @@ function normalizeExtractStatusResponse(payload: unknown): ApiExtractStatusRespo
         typeof payload.poll_after_ms === 'number' && Number.isFinite(payload.poll_after_ms)
           ? Math.max(250, Math.floor(payload.poll_after_ms))
           : 1500,
+      retry_after_ms:
+        typeof payload.retry_after_ms === 'number' && Number.isFinite(payload.retry_after_ms)
+          ? Math.max(250, Math.floor(payload.retry_after_ms))
+          : undefined,
+      recovery_state:
+        payload.recovery_state === 'queued' || payload.recovery_state === 'retrying'
+          ? payload.recovery_state
+          : undefined,
     };
   }
 
@@ -522,128 +509,8 @@ function isProxyRetryableError(payload: unknown): boolean {
   return typeof payload.code === 'string' && PROXY_RETRYABLE_CODES.has(payload.code);
 }
 
-function isRecoverableExtractStageFailure(payload: unknown, status: number): boolean {
-  if (isMultipartMetadataInvalidError(payload) || isProxyRetryableError(payload)) {
-    return true;
-  }
-
-  if (
-    status === 400 ||
-    status === 401 ||
-    status === 403 ||
-    status === 413 ||
-    status === 429 ||
-    !isRecord(payload)
-  ) {
-    return false;
-  }
-
-  return (
-    status >= 500 &&
-    typeof payload.error === 'string' &&
-    payload.error.trim() === GENERIC_EXTRACT_ERROR
-  );
-}
-
-function isRecoverableAsyncExtractFailure(payload: unknown, status: number): boolean {
-  if (status === 401 || status === 403 || status === 413 || status === 429) {
-    return false;
-  }
-
-  if (status === 400 && !isMultipartMetadataInvalidError(payload)) {
-    return false;
-  }
-
-  return true;
-}
-
-function isMultipartMetadataInvalidError(payload: unknown): boolean {
-  if (!isRecord(payload)) {
-    return false;
-  }
-
-  if (payload.code === MULTIPART_METADATA_INVALID_CODE) {
-    return true;
-  }
-
-  for (const key of ['error', 'message', 'detail']) {
-    const value = payload[key];
-    if (
-      typeof value === 'string' &&
-      value.trim().toLowerCase() === UPLOAD_METADATA_ENCODING_ERROR_MESSAGE.toLowerCase()
-    ) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-function isWizardTimeoutFailure(payload: unknown, status: number): boolean {
-  if (status === 408) {
-    return true;
-  }
-
-  if (!isRecord(payload)) {
-    return false;
-  }
-
-  if (payload.code === WIZARD_TIMEOUT_CODE) {
-    return true;
-  }
-
-  for (const key of ['error', 'message']) {
-    const value = payload[key];
-    if (typeof value === 'string' && value.trim().toLowerCase() === WIZARD_TIMEOUT_ERROR) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-async function buildTextFallbackPayload(documents: ParsedDocumentState[]): Promise<{
-  documents: Array<{
-    document_id: string;
-    file_name: string;
-    text: string;
-    context: 'cv';
-  }>;
-}> {
-  const fallbackDocuments: Array<{
-    document_id: string;
-    file_name: string;
-    text: string;
-    context: 'cv';
-  }> = [];
-
-  for (const document of documents) {
-    if (!document.file) {
-      continue;
-    }
-
-    try {
-      const text = await extractPdfTextFromFile(document.file);
-      if (!text) {
-        throw new Error('No text could be extracted from the PDF.');
-      }
-
-      fallbackDocuments.push({
-        document_id: document.document_id,
-        file_name: document.file_name,
-        text,
-        context: 'cv',
-      });
-    } catch (error) {
-      throw new Error(normalizePdfParseError(error));
-    }
-  }
-
-  if (fallbackDocuments.length === 0) {
-    throw new Error('Upload at least one PDF before analyzing.');
-  }
-
-  return { documents: fallbackDocuments };
+function isProxyRetryableCode(code: string | undefined): boolean {
+  return typeof code === 'string' && PROXY_RETRYABLE_CODES.has(code);
 }
 
 function isFallbackStage(value: unknown): value is ApiFallbackStage {
@@ -1096,92 +963,6 @@ function normalizeSuggestResponse(value: unknown): ApiSuggestResponse | null {
   return {
     documents,
     metadata: normalizeMetadata(value.metadata),
-  };
-}
-
-function shouldRetryWithOcr(document: ApiDocumentResult): boolean {
-  return (
-    typeof document.parse_error === 'string' &&
-    document.parse_error.length > 0 &&
-    typeof document.parse_error_code === 'string' &&
-    OCR_RETRYABLE_PARSE_CODES.has(document.parse_error_code)
-  );
-}
-
-async function retryOcrDocuments(params: {
-  payload: ApiSuggestResponse;
-  sourceByRequestId: Map<string, ParsedDocumentState>;
-}): Promise<{ payload: ApiSuggestResponse; ocrAttempted: number; ocrFailed: number }> {
-  if (!isOcrClientEnabled()) {
-    return { payload: params.payload, ocrAttempted: 0, ocrFailed: 0 };
-  }
-
-  const ocrInputs: Array<{
-    document_id: string;
-    file_name: string;
-    text: string;
-    context: 'cv';
-  }> = [];
-  let ocrFailed = 0;
-
-  for (const document of params.payload.documents) {
-    if (!shouldRetryWithOcr(document)) {
-      continue;
-    }
-
-    const source = params.sourceByRequestId.get(document.document_id);
-    if (!source?.file) {
-      continue;
-    }
-
-    try {
-      const extracted = await extractPdfTextWithOcr(source.file);
-      ocrInputs.push({
-        document_id: document.document_id,
-        file_name: document.file_name,
-        text: extracted.text,
-        context: 'cv',
-      });
-    } catch (error) {
-      ocrFailed += 1;
-      console.warn('[cv-import] OCR fallback failed', {
-        documentId: document.document_id,
-        error: error instanceof Error ? error.message : 'Unknown OCR error',
-      });
-    }
-  }
-
-  if (ocrInputs.length === 0) {
-    return { payload: params.payload, ocrAttempted: 0, ocrFailed };
-  }
-
-  const ocrResponse = await apiFetch('/api/expertise/cv-import/wizard-suggest?engine=gemini', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ documents: ocrInputs }),
-  });
-
-  if (!ocrResponse.ok) {
-    throw new Error(await readErrorMessage(ocrResponse, 'OCR retry failed'));
-  }
-
-  const ocrPayload = normalizeSuggestResponse(await readJsonSafely(ocrResponse));
-  if (!ocrPayload) {
-    throw new Error('OCR retry returned invalid response format.');
-  }
-
-  const byId = new Map(ocrPayload.documents.map((document) => [document.document_id, document]));
-  const mergedDocuments = params.payload.documents.map(
-    (document) => byId.get(document.document_id) || document
-  );
-
-  return {
-    payload: {
-      ...params.payload,
-      documents: mergedDocuments,
-    },
-    ocrAttempted: ocrInputs.length,
-    ocrFailed,
   };
 }
 
@@ -1797,33 +1578,6 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       throw new Error('Invalid response format from CV analysis service');
     }
 
-    if (isOcrClientEnabled()) {
-      setRunningProgress('extracting', 68, 'Running OCR fallback for scanned PDFs...');
-      const {
-        payload: mergedPayload,
-        ocrAttempted,
-        ocrFailed,
-      } = await retryOcrDocuments({
-        payload,
-        sourceByRequestId: params.sourceByRequestId,
-      });
-      payload = mergedPayload;
-
-      if (ocrAttempted > 0) {
-        if (ocrFailed > 0) {
-          toast.info(
-            'OCR succeeded for some scanned PDFs. Upload a clearer text-based PDF for documents that still failed.'
-          );
-        } else {
-          toast.success('OCR fallback extracted text from scanned PDF documents.');
-        }
-      } else if (ocrFailed > 0) {
-        toast.error(
-          'OCR fallback could not extract readable text. Upload a better text-based PDF.'
-        );
-      }
-    }
-
     finalizeAnalyzeSuccess({
       payload,
       sourceByRequestId: params.sourceByRequestId,
@@ -1834,27 +1588,9 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     });
   };
 
-  const analyzeWithLocalTextFallback = async (params: {
-    sourceByRequestId: Map<string, ParsedDocumentState>;
-    progressMessage: string;
-  }) => {
-    setRunningProgress('extracting', 45, params.progressMessage);
-    const fallbackPayload = await buildTextFallbackPayload(
-      Array.from(params.sourceByRequestId.entries()).map(([documentId, document]) => ({
-        ...document,
-        document_id: documentId,
-      }))
-    );
-
-    await analyzeExtractedTextDocuments({
-      textDocuments: fallbackPayload.documents,
-      sourceByRequestId: params.sourceByRequestId,
-      fallbackStageUsed: 'python_json_retry',
-    });
-  };
-
   const pollExtractJobUntilSettled = async (jobId: string, sequence: number) => {
     const queuedSince = Date.now();
+    let backgroundNoticeShown = false;
 
     while (activeExtractSequenceRef.current === sequence) {
       const response = await apiFetch(
@@ -1874,22 +1610,60 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         return payload;
       }
 
+      const elapsedMs = Date.now() - queuedSince;
+      const shouldOfferBackgroundContinuation = elapsedMs >= MAX_QUEUED_EXTRACT_WAIT_MS;
+      const pollAfterMs = shouldOfferBackgroundContinuation
+        ? Math.max(payload.poll_after_ms, BACKGROUND_CONTINUE_POLL_AFTER_MS)
+        : payload.recovery_state === 'retrying' && typeof payload.retry_after_ms === 'number'
+          ? Math.max(payload.poll_after_ms, payload.retry_after_ms)
+          : payload.poll_after_ms;
+
       setRunningProgress(
         payload.status === 'queued' ? 'queued' : 'extracting',
         payload.status === 'queued' ? 34 : 50,
         payload.status === 'queued'
-          ? 'Queued for extraction. Waiting for worker...'
-          : 'Extracting text from uploaded PDFs...'
+          ? shouldOfferBackgroundContinuation
+            ? 'Python extraction is still running. You can leave this page and come back later.'
+            : payload.recovery_state === 'retrying'
+              ? 'Retrying Python extraction after a temporary worker issue...'
+              : 'Queued for extraction. Waiting for Python worker...'
+          : shouldOfferBackgroundContinuation
+            ? 'Python extraction is still running in the background. Results will resume here automatically.'
+            : 'Extracting text from uploaded PDFs with Python...'
       );
 
-      if (payload.status === 'queued' && Date.now() - queuedSince >= MAX_QUEUED_EXTRACT_WAIT_MS) {
-        throw new QueuedExtractStalledError();
+      if (!backgroundNoticeShown && elapsedMs >= BACKGROUND_CONTINUE_NOTICE_MS) {
+        toast.info(
+          'Python extraction is still running in the background. You can leave this page and return later.'
+        );
+        backgroundNoticeShown = true;
       }
 
-      await sleep(payload.poll_after_ms);
+      await sleep(pollAfterMs);
     }
 
     throw new Error('CV extraction polling was interrupted.');
+  };
+
+  const canRequeuePythonExtraction = (sourceByRequestId: Map<string, ParsedDocumentState>) =>
+    Array.from(sourceByRequestId.values()).some((document) => Boolean(document.file));
+
+  const handleEmptyExtractResult = (params: {
+    failedDocuments: ApiExtractFailedDocument[];
+    sourceByRequestId: Map<string, ParsedDocumentState>;
+  }) => {
+    const failedDocuments = buildFailedExtractDocumentStates(
+      params.failedDocuments,
+      params.sourceByRequestId
+    );
+    setDocuments(failedDocuments);
+    setApiMetadata(DEFAULT_METADATA);
+    const warningMessage = buildAnalyzeWarningMessage({
+      metadata: DEFAULT_METADATA,
+      documents: failedDocuments,
+    });
+    setWarningProgress(warningMessage);
+    toast.info(warningMessage);
   };
 
   const resumeAsyncExtractJob = async (
@@ -1899,39 +1673,23 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
   ) => {
     setRunningProgress('queued', 34, 'Resuming background extraction...');
 
-    let settled: ApiExtractStatusResponse;
-    try {
-      settled = await pollExtractJobUntilSettled(storedJob.jobId, sequence);
-    } catch (error) {
-      clearStoredExtractJobState();
-
-      if (error instanceof QueuedExtractStalledError) {
-        throw new Error(
-          'Background extraction is taking longer than expected. Please retry the analysis.'
-        );
-      }
-
-      throw error;
-    }
+    const settled = await pollExtractJobUntilSettled(storedJob.jobId, sequence);
     clearStoredExtractJobState();
 
     if (settled.status === 'failed') {
+      if (isProxyRetryableCode(settled.code)) {
+        throw new Error(
+          'Python extraction is still unavailable. Please retry the analysis from this page once the worker recovers.'
+        );
+      }
       throw new Error(settled.message || settled.error);
     }
 
     if (settled.documents.length === 0) {
-      const failedDocuments = buildFailedExtractDocumentStates(
-        settled.failed_documents,
-        sourceByRequestId
-      );
-      setDocuments(failedDocuments);
-      setApiMetadata(DEFAULT_METADATA);
-      const warningMessage = buildAnalyzeWarningMessage({
-        metadata: DEFAULT_METADATA,
-        documents: failedDocuments,
+      handleEmptyExtractResult({
+        failedDocuments: settled.failed_documents,
+        sourceByRequestId,
       });
-      setWarningProgress(warningMessage);
-      toast.info(warningMessage);
       return;
     }
 
@@ -1949,7 +1707,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
 
   const startAsyncExtractAnalyze = async (
     analyzeDocuments: AnalyzeDocumentDescriptor[],
-    sourceByRequestId: Map<string, ParsedDocumentState>
+    sourceByRequestId: Map<string, ParsedDocumentState>,
+    requeueAttempt = 0
   ) => {
     const formData = new FormData();
     for (const descriptor of analyzeDocuments) {
@@ -1974,15 +1733,6 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     });
 
     if (!response.ok) {
-      const failurePayload = await readJsonSafely(response);
-      if (isRecoverableAsyncExtractFailure(failurePayload, response.status)) {
-        await analyzeWithLocalTextFallback({
-          sourceByRequestId,
-          progressMessage: 'Async extraction is unavailable. Retrying with local PDF extraction...',
-        });
-        return;
-      }
-
       throw new Error(await readErrorMessage(response, 'Failed to queue CV extraction'));
     }
 
@@ -2004,37 +1754,17 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     setRunningProgress('queued', 34, 'Queued for extraction. Waiting for worker...');
 
     const sequence = ++activeExtractSequenceRef.current;
-    let settled: ApiExtractStatusResponse;
-
-    try {
-      settled = await pollExtractJobUntilSettled(queued.job_id, sequence);
-    } catch (error) {
-      clearStoredExtractJobState();
-
-      if (error instanceof QueuedExtractStalledError) {
-        if (canUseLocalFallback(sourceByRequestId)) {
-          await analyzeWithLocalTextFallback({
-            sourceByRequestId,
-            progressMessage: QUEUED_EXTRACT_STALLED_MESSAGE,
-          });
-          return;
-        }
-
-        throw new Error(
-          'Background extraction is taking longer than expected. Please retry the analysis.'
-        );
-      }
-
-      throw error;
-    }
+    const settled = await pollExtractJobUntilSettled(queued.job_id, sequence);
     clearStoredExtractJobState();
 
     if (settled.status === 'failed') {
-      if (canUseLocalFallback(sourceByRequestId)) {
-        await analyzeWithLocalTextFallback({
-          sourceByRequestId,
-          progressMessage: 'Background extraction failed. Retrying with local PDF extraction...',
-        });
+      if (
+        isProxyRetryableCode(settled.code) &&
+        requeueAttempt < MAX_PYTHON_REQUEUE_ATTEMPTS &&
+        canRequeuePythonExtraction(sourceByRequestId)
+      ) {
+        toast.info('Python extraction hit a temporary issue. Retrying automatically.');
+        await startAsyncExtractAnalyze(analyzeDocuments, sourceByRequestId, requeueAttempt + 1);
         return;
       }
 
@@ -2042,27 +1772,10 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
     }
 
     if (settled.documents.length === 0) {
-      if (canUseLocalFallback(sourceByRequestId)) {
-        await analyzeWithLocalTextFallback({
-          sourceByRequestId,
-          progressMessage:
-            'No usable text came back from background extraction. Retrying locally...',
-        });
-        return;
-      }
-
-      const failedDocuments = buildFailedExtractDocumentStates(
-        settled.failed_documents,
-        sourceByRequestId
-      );
-      setDocuments(failedDocuments);
-      setApiMetadata(DEFAULT_METADATA);
-      const warningMessage = buildAnalyzeWarningMessage({
-        metadata: DEFAULT_METADATA,
-        documents: failedDocuments,
+      handleEmptyExtractResult({
+        failedDocuments: settled.failed_documents,
+        sourceByRequestId,
       });
-      setWarningProgress(warningMessage);
-      toast.info(warningMessage);
       return;
     }
 
@@ -2725,8 +2438,6 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
   };
 
   const canAnalyze = documents.some((document) => Boolean(document.file) && !document.parse_error);
-  const ocrEnabled = isOcrClientEnabled();
-  const ocrLimits = ocrEnabled ? resolveOcrClientLimits() : null;
   const canApplyApproved = documents.some((document) => {
     const hasSkillSelection = collectApprovedSkillIds(document).length > 0;
     const hasEntities =
@@ -2758,9 +2469,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
               disabled={isParsing || isAnalyzing || isApplying}
             />
             <p className="text-xs text-muted-foreground">
-              {ocrEnabled && ocrLimits
-                ? `Text-based PDFs are recommended. OCR fallback is enabled for scanned PDFs up to ${ocrLimits.maxPages} pages and ${Math.round(ocrLimits.maxFileSizeBytes / (1024 * 1024))}MB.`
-                : 'Text-based PDFs only. Enable OCR fallback to process scanned PDFs.'}
+              Text-based PDFs only. This import flow uses Python extraction and does not fall back
+              to browser-side parsing.
             </p>
           </div>
 

@@ -22,6 +22,7 @@ import {
   enqueuePythonInternalJobs,
   isPythonInternalJobsEnabled,
 } from '@/lib/python-internal/job-queue';
+import { triggerPythonInternalWorker } from '@/lib/python-internal/trigger';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -180,6 +181,8 @@ export async function POST(request: NextRequest) {
         },
       },
     ]);
+
+    await triggerPythonInternalWorker({ request });
 
     return jsonWithRequestId(
       requestId,

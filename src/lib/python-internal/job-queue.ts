@@ -35,6 +35,8 @@ export type PythonInternalJobRecord = {
   payload: Record<string, unknown>;
   result: Record<string, unknown> | null;
   lastError: string | null;
+  nextRunAt: Date;
+  leaseExpiresAt: Date | null;
   completedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -330,6 +332,8 @@ export async function getPythonInternalJob(jobId: string): Promise<PythonInterna
       payload: pythonInternalJobs.payload,
       result: pythonInternalJobs.result,
       lastError: pythonInternalJobs.lastError,
+      nextRunAt: pythonInternalJobs.nextRunAt,
+      leaseExpiresAt: pythonInternalJobs.leaseExpiresAt,
       completedAt: pythonInternalJobs.completedAt,
       createdAt: pythonInternalJobs.createdAt,
       updatedAt: pythonInternalJobs.updatedAt,
@@ -352,6 +356,8 @@ export async function getPythonInternalJob(jobId: string): Promise<PythonInterna
     payload: (job.payload as Record<string, unknown> | null) ?? {},
     result: (job.result as Record<string, unknown> | null) ?? null,
     lastError: job.lastError ?? null,
+    nextRunAt: job.nextRunAt,
+    leaseExpiresAt: job.leaseExpiresAt ?? null,
     completedAt: job.completedAt ?? null,
     createdAt: job.createdAt,
     updatedAt: job.updatedAt,

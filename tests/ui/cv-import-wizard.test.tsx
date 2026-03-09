@@ -8,13 +8,6 @@ const apiFetchMock = vi.fn();
 const toastSuccessMock = vi.fn();
 const toastErrorMock = vi.fn();
 const toastInfoMock = vi.fn();
-const extractPdfTextFromFileMock = vi.fn();
-const extractPdfTextWithOcrMock = vi.fn();
-const isOcrClientEnabledMock = vi.fn();
-const resolveOcrClientLimitsMock = vi.fn();
-const normalizePdfParseErrorMock = vi.fn((error: unknown) =>
-  error instanceof Error ? error.message : 'Failed to parse PDF'
-);
 
 vi.mock('@/lib/api/fetch', () => ({
   apiFetch: (...args: unknown[]) => apiFetchMock(...args),
@@ -26,14 +19,6 @@ vi.mock('sonner', () => ({
     error: (...args: unknown[]) => toastErrorMock(...args),
     info: (...args: unknown[]) => toastInfoMock(...args),
   },
-}));
-
-vi.mock('@/lib/expertise/cv-import-client-loaders', () => ({
-  extractPdfTextFromFile: (...args: unknown[]) => extractPdfTextFromFileMock(...args),
-  extractPdfTextWithOcr: (...args: unknown[]) => extractPdfTextWithOcrMock(...args),
-  isOcrClientEnabled: (...args: unknown[]) => isOcrClientEnabledMock(...args),
-  resolveOcrClientLimits: (...args: unknown[]) => resolveOcrClientLimitsMock(...args),
-  normalizePdfParseError: (...args: unknown[]) => normalizePdfParseErrorMock(...args),
 }));
 
 function jsonResponse(payload: unknown, status = 200) {
@@ -229,18 +214,6 @@ describe('CvImportWizard', () => {
     vi.useRealTimers();
     vi.clearAllMocks();
     window.sessionStorage.clear();
-    isOcrClientEnabledMock.mockReturnValue(false);
-    resolveOcrClientLimitsMock.mockReturnValue({
-      maxPages: 4,
-      maxFileSizeBytes: 5 * 1024 * 1024,
-      pageTimeoutMs: 8000,
-      totalTimeoutMs: 25000,
-      renderScale: 2,
-      language: 'eng',
-    });
-    normalizePdfParseErrorMock.mockImplementation((error: unknown) =>
-      error instanceof Error ? error.message : 'Failed to parse PDF'
-    );
   });
 
   it('uploads PDFs through the async extract route and then analyzes extracted text', async () => {
@@ -462,8 +435,7 @@ describe('CvImportWizard', () => {
     expect(screen.getByText('Needs mapping')).toBeInTheDocument();
   });
 
-  it('falls back to local PDF extraction when async enqueue fails', async () => {
-    extractPdfTextFromFileMock.mockResolvedValueOnce('React TypeScript');
+  it('shows the Python queue error instead of falling back locally when enqueue fails', async () => {
     apiFetchMock.mockImplementation(async (url: string) => {
       if (url === '/api/expertise/cv-import/wizard-extract') {
         return jsonResponse(
@@ -476,14 +448,6 @@ describe('CvImportWizard', () => {
         );
       }
 
-      if (url === '/api/expertise/cv-import/wizard-suggest?engine=gemini') {
-        return jsonResponse(buildAnalyzePayload());
-      }
-
-      if (url === '/api/analytics/track') {
-        return jsonResponse({ ok: true });
-      }
-
       throw new Error(`Unexpected apiFetch call: ${url}`);
     });
 
@@ -492,18 +456,141 @@ describe('CvImportWizard', () => {
     await clickAnalyze();
 
     await waitFor(() => {
-      expect(extractPdfTextFromFileMock).toHaveBeenCalledTimes(1);
+      expect(toastErrorMock).toHaveBeenCalledWith('CV extraction queue unavailable');
     });
-
-    const suggestCall = apiFetchMock.mock.calls.find(
-      ([url]) => url === '/api/expertise/cv-import/wizard-suggest?engine=gemini'
-    );
-    expect(suggestCall).toBeDefined();
-    expect(suggestCall?.[1]?.headers).toEqual({ 'Content-Type': 'application/json' });
   });
 
-  it('falls back to local PDF extraction when the async extract job fails', async () => {
-    extractPdfTextFromFileMock.mockResolvedValueOnce('React TypeScript');
+  it('automatically requeues Python extraction once after a retryable failure', async () => {
+    let extractCalls = 0;
+    apiFetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (url === '/api/expertise/cv-import/wizard-extract') {
+        extractCalls += 1;
+        return jsonResponse(
+          {
+            job_id: `job-${extractCalls}`,
+            status: 'queued',
+            poll_after_ms: 1,
+          },
+          202
+        );
+      }
+
+      if (url.startsWith('/api/expertise/cv-import/wizard-extract/status')) {
+        if (url.includes('job-1')) {
+          return jsonResponse({
+            job_id: 'job-1',
+            status: 'failed',
+            error: 'Python extract unavailable',
+            message: 'Python extract unavailable',
+            code: 'CV_IMPORT_PROXY_UNAVAILABLE',
+          });
+        }
+
+        return jsonResponse({
+          job_id: 'job-2',
+          status: 'completed',
+          documents: [
+            {
+              document_id: 'doc-1',
+              file_name: 'cv.pdf',
+              text: 'React TypeScript',
+              context: 'cv',
+            },
+          ],
+          failed_documents: [],
+        });
+      }
+
+      if (url === '/api/expertise/cv-import/wizard-suggest?engine=gemini') {
+        return jsonResponse(buildAnalyzePayload());
+      }
+
+      if (url === '/api/analytics/track') {
+        return jsonResponse({ ok: true });
+      }
+
+      if (url.startsWith('/api/expertise/taxonomy')) {
+        return jsonResponse({ l4_skills: [] });
+      }
+
+      throw new Error(`Unexpected apiFetch call: ${url} ${JSON.stringify(init || {})}`);
+    });
+
+    render(<CvImportWizard />);
+    await uploadPdf();
+    await clickAnalyze();
+
+    await waitFor(() => {
+      expect(
+        apiFetchMock.mock.calls.filter(([url]) => url === '/api/expertise/cv-import/wizard-extract')
+      ).toHaveLength(2);
+    });
+
+    expect(toastInfoMock).toHaveBeenCalledWith(
+      'Python extraction hit a temporary issue. Retrying automatically.'
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Extraction completed. Review and approve the results below.')
+      ).toBeInTheDocument();
+    });
+  });
+
+  it('keeps polling Python extraction through queued and processing states until it completes', async () => {
+    installAsyncAnalyzeFlow({
+      statusResponses: [
+        {
+          job_id: 'job-1',
+          status: 'queued',
+          poll_after_ms: 1,
+        },
+        {
+          job_id: 'job-1',
+          status: 'queued',
+          poll_after_ms: 1,
+        },
+        {
+          job_id: 'job-1',
+          status: 'processing',
+          poll_after_ms: 1,
+        },
+        {
+          job_id: 'job-1',
+          status: 'completed',
+          documents: [
+            {
+              document_id: 'doc-1',
+              file_name: 'cv.pdf',
+              text: 'React TypeScript',
+              context: 'cv',
+            },
+          ],
+          failed_documents: [],
+        },
+      ],
+    });
+
+    render(<CvImportWizard />);
+    await uploadPdf();
+    await clickAnalyze();
+
+    await waitFor(() => {
+      expect(
+        apiFetchMock.mock.calls.filter(([url]) =>
+          String(url).startsWith('/api/expertise/cv-import/wizard-extract/status')
+        ).length
+      ).toBeGreaterThanOrEqual(3);
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Extraction completed. Review and approve the results below.')
+      ).toBeInTheDocument();
+    });
+  });
+
+  it('shows the Python extraction error when the async job fails permanently', async () => {
     apiFetchMock.mockImplementation(async (url: string) => {
       if (url === '/api/expertise/cv-import/wizard-extract') {
         return jsonResponse({ job_id: 'job-1', status: 'queued', poll_after_ms: 1 }, 202);
@@ -515,16 +602,8 @@ describe('CvImportWizard', () => {
           status: 'failed',
           error: 'Python extract unavailable',
           message: 'Python extract unavailable',
-          code: 'CV_IMPORT_PROXY_UNAVAILABLE',
+          code: 'CV_IMPORT_EXTRACT_FAILED',
         });
-      }
-
-      if (url === '/api/expertise/cv-import/wizard-suggest?engine=gemini') {
-        return jsonResponse(buildAnalyzePayload());
-      }
-
-      if (url === '/api/analytics/track') {
-        return jsonResponse({ ok: true });
       }
 
       throw new Error(`Unexpected apiFetch call: ${url}`);
@@ -535,153 +614,9 @@ describe('CvImportWizard', () => {
     await clickAnalyze();
 
     await waitFor(() => {
-      expect(extractPdfTextFromFileMock).toHaveBeenCalledTimes(1);
+      expect(toastErrorMock).toHaveBeenCalledWith('Python extract unavailable');
     });
-
-    expect(toastInfoMock).toHaveBeenCalledWith('CV analysis recovered via fallback path.');
-  });
-
-  it('falls back to local extraction when the queue stays stuck too long', async () => {
-    const dateNowSpy = vi.spyOn(Date, 'now');
-    let now = 0;
-    dateNowSpy.mockImplementation(() => {
-      now += 6_000;
-      return now;
-    });
-    extractPdfTextFromFileMock.mockResolvedValueOnce('React TypeScript');
-    try {
-      installAsyncAnalyzeFlow({
-        statusResponses: [
-          {
-            job_id: 'job-1',
-            status: 'queued',
-            poll_after_ms: 1,
-          },
-        ],
-      });
-
-      render(<CvImportWizard />);
-      await uploadPdf();
-      await clickAnalyze();
-
-      await waitFor(() => {
-        expect(extractPdfTextFromFileMock).toHaveBeenCalledTimes(1);
-      });
-
-      expect(toastInfoMock).toHaveBeenCalledWith('CV analysis recovered via fallback path.');
-    } finally {
-      dateNowSpy.mockRestore();
-    }
-  });
-
-  it('reruns OCR for scanned PDFs after async extraction completes', async () => {
-    isOcrClientEnabledMock.mockReturnValue(true);
-    extractPdfTextWithOcrMock.mockResolvedValueOnce({ text: 'OCR extracted text' });
-
-    let geminiAnalyzeCalls = 0;
-    let requestDocumentIds: string[] = [];
-    apiFetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
-      if (url === '/api/expertise/cv-import/wizard-extract') {
-        const formData = init?.body as FormData;
-        requestDocumentIds = formData
-          .getAll('document_ids')
-          .map((value) => String(value))
-          .filter(Boolean);
-        return jsonResponse({ job_id: 'job-1', status: 'queued', poll_after_ms: 1 }, 202);
-      }
-
-      if (url.startsWith('/api/expertise/cv-import/wizard-extract/status')) {
-        return jsonResponse({
-          job_id: 'job-1',
-          status: 'completed',
-          documents: [
-            {
-              document_id: requestDocumentIds[0] ?? 'doc-1',
-              file_name: 'cv-scan.pdf',
-              text: 'scanned',
-              context: 'cv',
-            },
-          ],
-          failed_documents: [],
-        });
-      }
-
-      if (url === '/api/expertise/cv-import/wizard-suggest?engine=gemini') {
-        geminiAnalyzeCalls += 1;
-        if (geminiAnalyzeCalls === 1) {
-          return jsonResponse(
-            buildAnalyzePayload({
-              documents: [
-                {
-                  document_id: requestDocumentIds[0] ?? 'doc-1',
-                  file_name: 'cv-scan.pdf',
-                  context: 'cv',
-                  parsed_text: '',
-                  parse_error: 'No text could be extracted from the PDF.',
-                  parse_error_code: 'PDF_EMPTY_TEXT',
-                  work_experiences: [],
-                  learning_experiences: [],
-                  volunteering: [],
-                  languages: [],
-                  skill_candidates: [],
-                },
-              ],
-            })
-          );
-        }
-
-        return jsonResponse(buildAnalyzePayload());
-      }
-
-      if (url === '/api/analytics/track') {
-        return jsonResponse({ ok: true });
-      }
-
-      throw new Error(`Unexpected apiFetch call: ${url}`);
-    });
-
-    render(<CvImportWizard />);
-    await uploadPdf('cv-scan.pdf');
-    await clickAnalyze();
-
-    await waitFor(() => {
-      expect(extractPdfTextWithOcrMock).toHaveBeenCalledTimes(1);
-    });
-
-    const secondGeminiCall = apiFetchMock.mock.calls.filter(
-      ([url]) => url === '/api/expertise/cv-import/wizard-suggest?engine=gemini'
-    )[1];
-    expect(secondGeminiCall).toBeDefined();
-    expect(toastSuccessMock).toHaveBeenCalledWith(
-      'OCR fallback extracted text from scanned PDF documents.'
-    );
-  });
-
-  it('surfaces the local parser error if both async and local extraction fail', async () => {
-    extractPdfTextFromFileMock.mockRejectedValueOnce(new Error('PDF parser initialization failed'));
-    apiFetchMock.mockImplementation(async (url: string) => {
-      if (url === '/api/expertise/cv-import/wizard-extract') {
-        return jsonResponse(
-          {
-            error: 'CV extraction queue unavailable',
-            message: 'Background extraction is unavailable.',
-            code: 'CV_IMPORT_EXTRACT_ENQUEUE_FAILED',
-          },
-          503
-        );
-      }
-
-      throw new Error(`Unexpected apiFetch call: ${url}`);
-    });
-
-    render(<CvImportWizard />);
-    await uploadPdf();
-    await clickAnalyze();
-
-    await waitFor(() => {
-      expect(toastErrorMock).toHaveBeenCalledWith('PDF parser initialization failed');
-    });
-    expect(screen.getByText('PDF parser initialization failed')).toBeInTheDocument();
+    expect(screen.getByText('Python extract unavailable')).toBeInTheDocument();
   });
 
   it('resumes a queued extract job from sessionStorage after reload', async () => {
@@ -709,7 +644,7 @@ describe('CvImportWizard', () => {
     });
   });
 
-  it('shows a clear error when a resumed queued job stays stuck too long', async () => {
+  it('keeps a resumed queued job alive in the background until it completes', async () => {
     const dateNowSpy = vi.spyOn(Date, 'now');
     let now = 0;
     dateNowSpy.mockImplementation(() => {
@@ -733,22 +668,38 @@ describe('CvImportWizard', () => {
             status: 'queued',
             poll_after_ms: 1,
           },
+          {
+            job_id: 'job-1',
+            status: 'processing',
+            poll_after_ms: 1,
+          },
+          {
+            job_id: 'job-1',
+            status: 'completed',
+            documents: [
+              {
+                document_id: 'doc-1',
+                file_name: 'cv.pdf',
+                text: 'React TypeScript',
+                context: 'cv',
+              },
+            ],
+            failed_documents: [],
+          },
         ],
       });
 
       render(<CvImportWizard />);
 
       await waitFor(() => {
-        expect(toastErrorMock).toHaveBeenCalledWith(
-          'Background extraction is taking longer than expected. Please retry the analysis.'
+        expect(toastInfoMock).toHaveBeenCalledWith(
+          'Python extraction is still running in the background. You can leave this page and return later.'
         );
       });
 
-      expect(
-        screen.getByText(
-          'Background extraction is taking longer than expected. Please retry the analysis.'
-        )
-      ).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('Skills to review')).toBeInTheDocument();
+      });
     } finally {
       dateNowSpy.mockRestore();
     }

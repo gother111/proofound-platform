@@ -9,7 +9,7 @@ import {
   resolvePythonInternalServiceBaseUrl,
 } from '@/lib/python-internal/service';
 
-const DEFAULT_PYTHON_EXTRACT_TIMEOUT_MS = 45000;
+const DEFAULT_PYTHON_EXTRACT_TIMEOUT_MS = 55_000;
 
 export class PythonCvExtractError extends Error {
   code?: string;
@@ -44,6 +44,26 @@ function resolveTargetUrl(request?: NextRequest): string {
   const targetUrl = new URL('/api/python/cv_import', `${baseUrl}/`);
   targetUrl.searchParams.set('endpoint', 'extract');
   return targetUrl.toString();
+}
+
+function parsePositiveInt(value: string | undefined, fallback: number): number {
+  if (!value) {
+    return fallback;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return fallback;
+  }
+
+  return parsed;
+}
+
+export function resolvePythonExtractTimeoutMs(): number {
+  return parsePositiveInt(
+    process.env.CV_IMPORT_PYTHON_EXTRACT_TIMEOUT_MS,
+    DEFAULT_PYTHON_EXTRACT_TIMEOUT_MS
+  );
 }
 
 function readPayloadMessage(payload: unknown, fallback: string): string {
@@ -105,7 +125,7 @@ export async function extractPdfTextViaPython(params: {
         body: formData,
         cache: 'no-store',
       }),
-      params.timeoutMs ?? DEFAULT_PYTHON_EXTRACT_TIMEOUT_MS
+      params.timeoutMs ?? resolvePythonExtractTimeoutMs()
     );
   } catch (error) {
     if (error instanceof Error && error.message.includes('timed out')) {

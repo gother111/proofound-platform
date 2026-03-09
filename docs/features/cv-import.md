@@ -2,7 +2,7 @@
 
 ## Overview
 
-The CV Import feature allows users to extract and add skills to their Expertise Atlas from pasted text and uploaded PDFs. The runtime now supports a cost-controlled Gemini extraction path with deterministic fallback, per-key monthly SEK budgets, request-level usage logging, and optional client OCR fallback for scanned PDFs.
+The CV Import feature allows users to extract and add skills to their Expertise Atlas from pasted text and uploaded PDFs. The runtime supports a cost-controlled Gemini extraction path with deterministic fallback, per-key monthly SEK budgets, request-level usage logging, and a Python-only PDF extraction queue for CV uploads.
 
 ## User Flow
 
@@ -338,11 +338,10 @@ npm run test:e2e -- cv-import
 
 ## Known Limitations
 
-1. **OCR Cost and CPU**: OCR fallback runs in-browser and can be slow on low-end devices.
-2. **OCR Scope**: OCR fallback is only attempted for parse failures (for example `PDF_EMPTY_TEXT`) and only when explicitly enabled.
-3. **Upload Guardrails**: Default parser limits are strict (`5MB`, `4` pages) to control latency and spend.
-4. **Budget Enforcement**: Conservative reservation can block near-limit requests even if final token usage would have fit.
-5. **Language Quality Variance**: Non-English CVs can still reduce mapping quality depending on taxonomy coverage.
+1. **Text-based PDFs only**: The CV upload wizard is Python-only and does not fall back to browser OCR or local PDF parsing.
+2. **Upload Guardrails**: Default parser limits are strict (`5MB`, `4` pages) to control latency and spend.
+3. **Budget Enforcement**: Conservative reservation can block near-limit requests even if final token usage would have fit.
+4. **Language Quality Variance**: Non-English CVs can still reduce mapping quality depending on taxonomy coverage.
 
 ## Future Enhancements
 
