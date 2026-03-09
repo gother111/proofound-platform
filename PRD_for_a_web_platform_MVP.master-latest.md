@@ -1660,6 +1660,312 @@ Stage 0 and Stage 1 may include only:
 - Matching review must not expose a direct portfolio route, handle, or identity-bearing URL before the allowed reveal stage.
 - Sanitized Proof Pack summaries may appear in matching without exposing the public route.
 
+### 6.5 Explainable Matching Reason Codes, Overrides, and Fairness Ledger (MVP)
+
+This section defines the MVP contract for deterministic shortlist explanations, reviewer overrides, and fairness-audit traceability. It extends the current repo enum style and must not introduce a second naming system.
+
+#### Facts & Decisions
+
+- One canonical explainability record must exist for every shortlist decision, pass decision, intro-eligibility block, reveal denial, assignment closure or expiry effect, and manual snooze or override.
+- The canonical explainability record uses these fixed fields:
+  - `reason_group`
+  - `reason_code`
+  - `decision_surface`
+  - `decision_state`
+  - `source`
+- `reason_code` values must stay concise, reusable, and analytics-safe.
+- Reasons are append-only in the ledger. Manual actions add to system-generated reasons and must not erase the original system reasons.
+- The explanation order is deterministic and fixed:
+  1. capability
+  2. proof
+  3. freshness
+  4. verification
+  5. availability
+  6. timezone or language
+  7. compensation
+  8. privacy or reveal
+  9. assignment state
+  10. manual decision
+  11. fairness or policy
+- Tie scores must resolve deterministically using the canonical tie-break order already stored in the score trace. The same structured inputs must produce the same rank order and the same ordered reason list.
+
+#### Canonical reason-code taxonomy
+
+```ts
+type ReasonGroup =
+  | 'capability'
+  | 'proof'
+  | 'freshness'
+  | 'verification'
+  | 'availability'
+  | 'timezone_language'
+  | 'compensation'
+  | 'privacy_reveal'
+  | 'assignment_state'
+  | 'manual_decision'
+  | 'fairness_policy';
+
+type MatchReasonCode =
+  | 'skills_strong'
+  | 'skills_gap'
+  | 'proof_coverage_insufficient'
+  | 'proof_stale'
+  | 'proof_expired'
+  | 'verification_ready'
+  | 'verification_gap'
+  | 'availability_mismatch'
+  | 'logistics_fit'
+  | 'timezone_mismatch'
+  | 'language_fit'
+  | 'language_mismatch'
+  | 'compensation_fit'
+  | 'compensation_mismatch'
+  | 'reveal_not_granted'
+  | 'reveal_shortlist_identity'
+  | 'reveal_full_identity'
+  | 'assignment_closed'
+  | 'assignment_expired'
+  | 'shortlist_selected'
+  | 'passed_for_now'
+  | 'rejected_constraints'
+  | 'snoozed_manual'
+  | 'override_keep_under_review'
+  | 'override_shortlist_manual'
+  | 'override_reject_manual'
+  | 'fairness_warning_active'
+  | 'fairness_ranking_suppressed';
+```
+
+- Capability mismatch:
+  - `skills_gap`
+- Proof insufficiency:
+  - `proof_coverage_insufficient`
+- Freshness too low:
+  - `proof_stale`
+  - `proof_expired`
+- Verification gate unmet:
+  - `verification_gap`
+- Availability mismatch:
+  - `availability_mismatch`
+- Timezone or language mismatch:
+  - `timezone_mismatch`
+  - `language_mismatch`
+- Compensation mismatch:
+  - `compensation_mismatch`
+- Privacy or reveal not granted:
+  - `reveal_not_granted`
+- Assignment closed or expired:
+  - `assignment_closed`
+  - `assignment_expired`
+- Manual pass, snooze, or override:
+  - `passed_for_now`
+  - `snoozed_manual`
+  - `override_keep_under_review`
+  - `override_shortlist_manual`
+  - `override_reject_manual`
+
+The existing positive-fit codes such as `skills_strong`, `verification_ready`, `logistics_fit`, `compensation_fit`, `language_fit`, `purpose_alignment_strong`, `purpose_alignment_partial`, `focus_role`, `focus_industry`, and `focus_org_type` remain valid. MVP uses them to explain why a shortlist exists, while the mismatch and state codes explain why a shortlist, intro, or reveal did not advance.
+
+#### Match outcomes, shortlist decisions, intro eligibility, and pass or rejection states
+
+- Match outcome reasons explain whether the candidate is a strong fit, a partial fit, or a blocked fit.
+- Shortlist decision reasons explain why the candidate was shortlisted, passed for now, rejected, or manually snoozed.
+- Intro eligibility reasons explain whether the match may proceed into intro creation or remains blocked on proof, freshness, verification, availability, privacy, or assignment state.
+- Rejection and pass states must always include at least one canonical blocker code and may include supportive positive codes if they clarify what was strong.
+
+#### Automatic vs manual generation rules
+
+- Generated automatically when the reason is derivable from:
+  - structured assignment inputs
+  - structured profile inputs
+  - proof freshness state
+  - verification status
+  - reveal policy
+  - fairness status
+  - assignment lifecycle state
+- Selected manually only for:
+  - `passed_for_now`
+  - `snoozed_manual`
+  - `override_keep_under_review`
+  - `override_shortlist_manual`
+  - `override_reject_manual`
+  - explicit reveal or policy exceptions that are not produced by the normal rules path
+- Manual selection requires one canonical manual code and an internal justification.
+- Manual notes are private. They may be hashed and audited, but they must not be shown to the counterpart.
+
+#### User-facing behavior
+
+- Individuals see:
+  - plain-language top reasons only
+  - the next best action
+  - current reveal or intro status
+  - no internal reviewer notes
+  - no protected-signal language
+- Organizations see:
+  - ranked or banded rationale where policy allows
+  - blockers and intro-eligibility state
+  - no hidden personal notes
+  - no protected-class or inferred protected-signal language
+  - no hidden field values when the field itself is not revealable
+- Admins and auditors see:
+  - the full reason ledger
+  - source and actor
+  - timestamps
+  - score, model, and weight versions
+  - tie-break trace
+  - reveal-stage transitions
+  - override counts
+  - fairness snapshot references
+
+#### Override system
+
+- Allowed override actors:
+  - organization `owner`
+  - organization `admin`
+  - organization `member`
+- Not allowed:
+  - organization `viewer`
+  - platform admins performing routine shortlist preference changes
+- Platform admins remain limited to fairness remediation, policy remediation, and audit surfaces.
+- Override is allowed only when:
+  - the assignment is still open
+  - the match is still live
+  - the override does not bypass protected-class boundaries
+  - the override does not expose hidden notes or hidden identity outside the allowed reveal corridor
+- Mandatory override justification rules:
+  - exactly one override reason code
+  - non-empty internal justification text
+  - actor and role recorded
+  - previous state and new state recorded
+  - previous reveal scope and new reveal scope recorded
+- Audit logging requirements:
+  - log to the reason ledger
+  - log the private note hash
+  - retain the full private note in a private audit surface only
+  - emit the existing lifecycle override event
+- Overrides affect analytics and fairness notes:
+  - override counts are reported separately from system decisions
+  - fairness reviews must be able to segment override-heavy assignments
+  - override-driven outcomes must not be blended silently into system-only quality claims
+
+#### Fairness ledger requirements
+
+- Each decisionable match must be auditable through a deterministic ledger that includes at minimum:
+  - `score_version`
+  - `model_version`
+  - `weights_version`
+  - `inputs_hash`
+  - `tie_break_vector`
+  - `reason_codes`
+  - `decision_surface`
+  - `decision_state`
+  - `source`
+  - `override_count`
+  - `reveal_stage`
+  - `fairness_status`
+  - `fairness_snapshot_id`
+- The ledger must support:
+  - versioned scoring-weight review
+  - reason-code distribution reporting
+  - override count reporting
+  - reveal-stage transition logging
+  - cohort reporting hooks for approved internal fairness audit slices only
+- Fairness ledger outputs are internal only and must never expose protected attributes on counterpart-facing surfaces.
+
+#### Privacy boundaries
+
+- No protected-class leakage in explanations, analytics payloads, or counterpart-facing logs.
+- No hidden personal notes shown to the other side.
+- Hidden fields may influence score only when matching consent and policy allow it, and the explanation must stay generic if the field value itself cannot be revealed.
+- Reveal-stage movement must never imply that public portfolio publication overrides blind-by-default review.
+
+#### "Why this match" UX contract
+
+- Explanations must be plain language.
+- Explanation ordering must follow the canonical deterministic order above.
+- No black-box phrasing such as "the model thinks" or "the algorithm decided."
+- No numeric decomposition promise to the user.
+- No exact comparative language when fairness suppression is active.
+- The explanation should answer:
+  - what was strong
+  - what is missing or blocked
+  - what the next best step is
+
+#### Edge cases
+
+- Empty shortlist:
+  - show a calm empty state with explicit blocker reasons
+  - log the shortlist decision surface and at least one blocker code
+- Tie scores:
+  - resolve through the canonical tie-break vector
+  - preserve the same explanation order for tied candidates
+- Stale proofs:
+  - `proof_stale` reduces confidence and must appear before any manual decision reason
+- Expired proofs:
+  - `proof_expired` blocks stronger intro language until refreshed or replaced
+- Hidden fields needed for better scoring:
+  - scoring may use them when permitted
+  - explanation must refer to a generic stored constraint or requirement rather than exposing the hidden field value
+
+#### Events and analytics mapping
+
+| Requested concept                 | MVP mapping                                                          |
+| --------------------------------- | -------------------------------------------------------------------- |
+| `match_reason_code_generated`     | `match_generated` plus `match_reason_ledger` insert                  |
+| `shortlist_decision_logged`       | `match_shortlisted` or `match_passed` plus review-state ledger write |
+| `override_applied`                | `review_override_applied`                                            |
+| `override_revoked`                | `review_override_reverted`                                           |
+| `reveal_stage_changed`            | `reveal_requested` plus `reveal_granted` or `reveal_denied`          |
+| `fairness_audit_snapshot_created` | fairness evaluation snapshot persisted in `fairness_evaluations`     |
+
+#### Example API payloads
+
+```json
+{
+  "match_id": "9a5c6d63-5a8f-4f2d-b20a-4d67f7d3ef91",
+  "assignment_id": "f0fb23a3-d601-40ce-b0c7-4f320d5ef6bb",
+  "decision_surface": "org_review_queue",
+  "decision_state": "shortlisted",
+  "source": "system",
+  "reason_codes": ["skills_strong", "verification_ready", "shortlist_selected"],
+  "weights_version": "core-rules/v1",
+  "inputs_hash": "6df0d3d64b7d1f45c3c4d5a0d88b44f58d40f6a3b1e9185df21d4bbf5d5f928a"
+}
+```
+
+```json
+{
+  "match_id": "9a5c6d63-5a8f-4f2d-b20a-4d67f7d3ef91",
+  "assignment_id": "f0fb23a3-d601-40ce-b0c7-4f320d5ef6bb",
+  "decision_surface": "org_review_queue",
+  "decision_state": "shortlisted",
+  "source": "reviewer",
+  "override_reason_code": "override_shortlist_manual",
+  "justification": "Candidate has recent private proof under review that is not yet reflected in the automated score.",
+  "previous_state": "blind_review",
+  "new_state": "shortlisted",
+  "previous_reveal_scope": "blind",
+  "new_reveal_scope": "shortlist_identity",
+  "fairness_impact_flag": true
+}
+```
+
+#### Open Questions
+
+- Should `proof_coverage_insufficient` replace older wording such as `proof_strength_incomplete` everywhere later, or can those remain parallel for feedback-only surfaces?
+- Should `timezone_mismatch` and `language_mismatch` remain separate codes in live scoring, or collapse into a single `communication_mismatch` if code churn becomes too high?
+- Should fairness snapshot creation get its own first-class lifecycle event later, or remain a persisted-table contract only for MVP?
+
+#### Acceptance Criteria
+
+- Every shortlist, pass, rejection, intro block, reveal denial, assignment closure, and manual snooze produces at least one canonical reason code and a ledgered decision record.
+- The same structured inputs produce the same reason-code order and tie-break result.
+- Overrides cannot be saved without an allowed actor, one override code, and a non-empty internal justification.
+- Counterpart-facing surfaces never expose internal notes, protected-class data, or hidden personal notes.
+- "Why this match" explanations remain plain-language, deterministic, and non-comparative.
+- Fairness review can inspect reason distributions, override counts, reveal transitions, and versioned score or weight metadata without reconstructing raw decision history.
+- Empty shortlist, stale proof, tie score, and reveal-blocked states all have explicit user-facing copy and logged reason codes.
+
 ---
 
 ## 7. Metrics and Analytics Contract
