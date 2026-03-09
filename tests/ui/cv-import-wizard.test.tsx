@@ -28,15 +28,12 @@ vi.mock('sonner', () => ({
   },
 }));
 
-vi.mock('@/lib/expertise/pdf-client-extractor', () => ({
+vi.mock('@/lib/expertise/cv-import-client-loaders', () => ({
   extractPdfTextFromFile: (...args: unknown[]) => extractPdfTextFromFileMock(...args),
-  normalizePdfParseError: (...args: unknown[]) => normalizePdfParseErrorMock(...args),
-}));
-
-vi.mock('@/lib/expertise/ocr-client', () => ({
   extractPdfTextWithOcr: (...args: unknown[]) => extractPdfTextWithOcrMock(...args),
   isOcrClientEnabled: (...args: unknown[]) => isOcrClientEnabledMock(...args),
   resolveOcrClientLimits: (...args: unknown[]) => resolveOcrClientLimitsMock(...args),
+  normalizePdfParseError: (...args: unknown[]) => normalizePdfParseErrorMock(...args),
 }));
 
 function jsonResponse(payload: unknown, status = 200) {

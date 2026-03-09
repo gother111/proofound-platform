@@ -28,13 +28,11 @@ import {
 import { EventType } from '@/lib/analytics/constants';
 import {
   extractPdfTextFromFile,
-  normalizePdfParseError,
-} from '@/lib/expertise/pdf-client-extractor';
-import {
   extractPdfTextWithOcr,
   isOcrClientEnabled,
+  normalizePdfParseError,
   resolveOcrClientLimits,
-} from '@/lib/expertise/ocr-client';
+} from '@/lib/expertise/cv-import-client-loaders';
 import { buildCvImportReviewTelemetry } from '@/lib/expertise/cv-review-telemetry';
 import { getAmbiguousTokenHints } from '@/lib/expertise/skill-confidence';
 import { LANGUAGE_OPTIONS, CEFR_LEVELS } from '@/lib/taxonomy/data';

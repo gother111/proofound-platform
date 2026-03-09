@@ -1,3 +1,5 @@
+export { normalizePdfParseError } from '@/lib/expertise/pdf-client-errors';
+
 type PdfJsModule = {
   getDocument?: unknown;
   GlobalWorkerOptions?: {
@@ -88,22 +90,6 @@ async function getDocumentLoader(): Promise<GetDocumentFn> {
   }
 
   return getDocumentPromise;
-}
-
-export function normalizePdfParseError(error: unknown): string {
-  if (!(error instanceof Error)) {
-    return 'Failed to parse PDF';
-  }
-
-  if (
-    error.message.includes('GlobalWorkerOptions.workerSrc') ||
-    error.message.includes('getDocument') ||
-    error.message.includes('PDF parser initialization failed')
-  ) {
-    return 'PDF parser could not start. Please refresh and re-upload the file.';
-  }
-
-  return error.message;
 }
 
 export async function extractPdfTextFromFile(file: File): Promise<string> {
