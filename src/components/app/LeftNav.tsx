@@ -307,11 +307,11 @@ export function LeftNav({
 
       {/* Mobile Bottom Tab Bar Navigation */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-neutral-light-50 border-proofound-stone/60"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-neutral-light-50 border-proofound-stone/60 pointer-events-none"
         role="navigation"
         aria-label="Mobile primary navigation"
       >
-        <div className="flex items-center gap-1 px-1 py-2 safe-area-inset-bottom">
+        <div className="flex items-center gap-1 px-1 py-2 safe-area-inset-bottom pointer-events-none">
           {/* Show mobile nav items with settings always included */}
           {mobileNavItems.map((item) => {
             const Icon = item.icon;
@@ -324,7 +324,7 @@ export function LeftNav({
                 <button
                   key={item.href}
                   type="button"
-                  className="relative flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-2 rounded-lg min-h-[64px] justify-center text-muted-foreground/60 cursor-not-allowed"
+                  className="relative flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-2 rounded-lg min-h-[64px] justify-center text-muted-foreground/60 cursor-not-allowed pointer-events-auto"
                   aria-label={`${item.label} (locked)`}
                   aria-disabled="true"
                   title={item.lockReason || ''}
@@ -341,7 +341,7 @@ export function LeftNav({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-2 rounded-lg transition-colors min-h-[64px] justify-center ${
+                className={`relative flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-2 rounded-lg transition-colors min-h-[64px] justify-center pointer-events-auto ${
                   isActive
                     ? 'text-proofound-forest'
                     : 'text-muted-foreground hover:text-proofound-charcoal'

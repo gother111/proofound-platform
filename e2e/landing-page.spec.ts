@@ -170,6 +170,26 @@ test.describe('Landing Page', () => {
     await expect(personas.getByRole('heading', { name: /Built for you/i })).toBeVisible();
   });
 
+  test('cookie banner does not block landing CTAs outside the consent card', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.removeItem('proofound-cookie-consent');
+    });
+
+    await page.goto('/');
+
+    const cookieBanner = page.getByRole('heading', { name: /We Value Your Privacy/i });
+    await expect(cookieBanner).toBeVisible();
+
+    const finalCtaSection = page.getByTestId('landing-final-cta-section');
+    await finalCtaSection.scrollIntoViewIfNeeded();
+
+    const finalCta = finalCtaSection.getByRole('button', { name: /^Get Started$/i });
+    await expect(finalCta).toBeVisible();
+    await finalCta.click();
+
+    await expect(page).toHaveURL(/\/signup$/);
+  });
+
   test('all sections are in correct order', async ({ page }) => {
     const sections = page.locator('main').locator('section');
     const count = await sections.count();

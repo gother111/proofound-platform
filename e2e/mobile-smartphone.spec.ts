@@ -233,6 +233,37 @@ test.describe('Smartphone UI regression', () => {
     }
   });
 
+  test('individual profile action buttons remain clickable above the mobile bottom nav', async ({
+    page,
+  }) => {
+    await gotoStable(page, '/app/i/profile?profileView=full');
+
+    const shareButton = page.getByRole('button', { name: 'Share', exact: true });
+    const addLocationButton = page.getByRole('button', { name: 'Add location' });
+
+    await expect(shareButton).toBeVisible();
+    await expect(addLocationButton).toBeVisible();
+
+    await shareButton.click({ trial: true });
+    await addLocationButton.click({ trial: true });
+  });
+
+  test('organization profile actions remain clickable above the mobile bottom nav', async ({
+    page,
+  }) => {
+    await gotoStable(page, '/app/o/test-org/profile');
+
+    const editProfile = page.getByTestId('org-edit-profile-button');
+    await expect(editProfile).toBeVisible();
+    await editProfile.click({ trial: true });
+
+    const settingsLink = page
+      .getByRole('navigation', { name: 'Mobile primary navigation' })
+      .getByRole('link', { name: 'Settings' });
+    await expect(settingsLink).toBeVisible();
+    await settingsLink.click({ trial: true });
+  });
+
   test('narrow mobile width resilience for profile shells', async ({ browser }) => {
     const context = await browser.newContext({ ...devices['iPhone SE'] });
 
