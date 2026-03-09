@@ -93,7 +93,7 @@
 - ✅ Minimal data collection (only what's needed for matching)
 - ✅ Privacy-by-default settings:
   - App profile visibility: `private` by default
-  - Public portfolio publication: explicit user action required and non-indexed by default until publication criteria are met
+  - Public portfolio publication: auto-live on day 1 once minimum publishable threshold is met, with non-indexed direct-link sharing by default until the owner explicitly opts into indexing
   - Contact/work email visibility: `private` by default
   - Proof visibility: `private`
   - Marketing emails: opt-in
@@ -1607,7 +1607,7 @@ RESEND_FROM_EMAIL=noreply@proofound.io
 
 - Assignment payments
 - Verification credits
-- Subscription billing (Development Hub, Zen Hub)
+- Subscription billing (Development Hub)
 
 **Configuration**:
 
@@ -2410,7 +2410,7 @@ This appendix is the single implementation-ready launch contract. It turns prior
 - Canonical async architecture is Postgres-backed queues with retries and terminal-failure states. Redis session brokers, Redis Pub/Sub, and external queue brokers are non-canonical for launch.
 - Canonical monitoring stack is Sentry, Vercel Analytics, Supabase dashboard, and one external uptime monitor. Datadog, LogDNA, and broader observability stacks are post-launch only.
 - Canonical locale baseline is English only. Swedish assets may remain in source, but Swedish runtime parity is deferred and must not be represented as launch-ready.
-- Canonical public-portfolio posture is privacy-first publication with explicit publish actions and non-indexed defaults until publication criteria are met.
+- Canonical public-portfolio posture is privacy-first day-1 publication: auto-live direct-link sharing once minimum publishable threshold is met, non-indexed by default, and indexable only after a separate explicit opt-in plus public-safety checks.
 
 **In scope for the canonical stack**
 
@@ -2431,6 +2431,173 @@ This appendix is the single implementation-ready launch contract. It turns prior
 - It matches the code that already exists, avoids adding new trust boundaries late in launch prep, and reduces operational surface area.
 - It keeps the security model server-enforced and testable.
 - It preserves proof-first and privacy-first product intent without forcing enterprise-grade infrastructure before the MVP proves load or workflow needs.
+
+### A0. Public portfolio policy for MVP
+
+#### Recommendation summary
+
+- Public portfolio is a day-1 output. Once onboarding reaches the minimum publishable threshold, Proofound creates a signed-out public page automatically.
+- The default launch state is `public_link_only`: live and shareable, but not indexable.
+- Public mode and reveal mode are different products:
+  - Public mode is a signed-out, public-safe credibility surface.
+  - Reveal mode is a workflow-specific expansion used only inside matching, shortlist, intro, and interview flows, with explicit consent and narrower audience scope.
+- Publication and indexing are separate decisions. Indexing is never automatic.
+- MVP public SEO remains product-led, not marketplace-led. Proofound does not ship a public member directory, browse-all-talent surface, crawlable taxonomy archive, or recommendation graph.
+
+#### Public portfolio policy
+
+- Day-1 default:
+  - After onboarding minimums are met, an individual or organization receives a live public URL automatically.
+  - Default state is `public_link_only`.
+  - Search engines remain off by default.
+- Minimum publishable threshold for individuals:
+  - valid handle
+  - visible public identity via display name or handle
+  - at least one of: public-safe headline or tagline, public-safe summary, public-safe proof, or public-safe trust signal
+- Minimum publishable threshold for organizations:
+  - valid slug
+  - visible public organization identity via display name or slug
+  - at least one of: tagline, mission, website, or trust signal
+- Public by default on the day-1 page:
+  - handle or slug
+  - display name when field visibility allows it
+  - headline or tagline when field visibility allows it
+  - public-safe trust summary
+  - public-safe proof summaries and proof links
+  - stable share URL
+- Never public by default:
+  - direct email, phone, exact compensation, exact street-level location
+  - private social links
+  - match-only, link-holder-only, or reveal-gated evidence
+  - employer or school names when redaction mode or field visibility suppresses them
+  - raw uploaded documents, verifier identities, or artifact metadata that can expose sensitive context
+  - anything gated to matched-org, intro-approved, or interview-coordination reveal stages
+- Enabling rules:
+  - public portfolio turns on automatically when onboarding reaches minimum publishable threshold
+  - owner can unpublish later, which makes the route unavailable
+  - search indexing requires separate explicit opt-in and must never be auto-enabled
+
+#### Visibility and indexing rules
+
+- Field-level visibility is the final allowlist for stable public portfolio rendering.
+- Stable public rendering rule:
+  - a field renders only if the portfolio is public and that field is public-safe for public mode
+  - any field marked `network_only`, `match_only`, `link_only`, `matched_org`, or `owner_only` must not render on the canonical public portfolio URL
+- Linked-item conflict rule:
+  - if a linked proof, pack, snippet, employer, school, or artifact is private or reveal-gated, the public page renders only a public-safe summary or omits the item entirely
+  - the public page must never leak a private item in a way that pressures the owner to reveal it
+- Signed-out viewer rule:
+  - signed-out viewers can open published stable public portfolios without authentication
+  - they see only public-safe fields, public-safe trust signals, and public-safe proof summaries
+  - contact flows should route through Proofound-managed requests by default, not direct personal contact
+- Indexing rule:
+  - indexing is opt-in, never automatic
+  - default published state is `public_link_only`
+  - effective `public_indexable` state is allowed only when the owner opted in and no redaction or reveal-gated blocker forces downgrade
+- Canonical URL rule:
+  - canonical URL is the stable handle or slug route
+  - historical handles or slugs 301 to the current canonical URL only while the current portfolio remains publicly accessible
+  - token snippets and embed surfaces are never canonical for a person or organization portfolio
+- Robots and sitemap rule:
+  - `public_link_only` and `public_noindex` emit `noindex, nofollow`
+  - only `public_indexable` emits `index, follow` and is eligible for sitemap inclusion
+- Social preview rule:
+  - all stable public portfolio URLs return valid OG and Twitter metadata
+  - non-indexable stable public portfolios use generic Proofound-branded preview copy and image
+  - indexable stable public portfolios may use person- or organization-specific title and summary drawn only from public-safe fields
+- SEO boundary rule:
+  - no public directory
+  - no search results page of members or organizations
+  - no crawlable taxonomy, skill, cause, location, or recommendation archive
+  - only direct owner-chosen portfolio URLs may be indexable
+  - thin or incomplete portfolios remain share surfaces, not acquisition surfaces
+- Structured metadata for MVP:
+  - justified only for canonical public portfolio pages
+  - keep it minimal: `WebPage`, `BreadcrumbList`, and `Person` or `Organization`
+  - do not add richer job, review, aggregate-rating, or directory schema in MVP
+
+#### Rendering rules
+
+- Stable public portfolio page:
+  - show public-safe identity shell, summary, trust signals, skills snapshot, and featured public-safe proofs
+  - show state badge such as “Shareable by direct link” or “Searchable”
+  - never show private counts, private relationship data, or reveal-only actions
+- Public Proof Packs:
+  - render as public evidence objects rather than internal review records
+  - include title, public-safe summary, trust label, and only public-safe outbound links
+  - if a pack contains blocked private or reveal-gated components, render a redacted summary or omit the blocked component
+- Public snippets:
+  - remain tokenized share surfaces separate from the canonical public portfolio
+  - are viewable signed out only with a valid token
+  - are never canonical, never sitemap-listed, and always noindex
+  - embed variants stay compact, branded, and privacy-safe
+- Unpublish, redact, withdraw:
+  - unpublish sets stable public portfolio to unavailable, removes sitemap eligibility, and flips robots to noindex
+  - redact mode forces effective `public_noindex` at minimum and suppresses fields blocked by redaction policy
+  - withdrawn or removed proof items disappear from stable public rendering immediately or fall back to a generic public-safe unavailable state
+- Reveal mode vs public mode:
+  - public mode is owner-chosen, signed-out safe, and intentionally limited
+  - reveal mode is workflow-triggered, audience-specific, consent-bound, and can expose more context only inside matching and intro flows
+  - reveal permissions must never bleed into the stable public portfolio URL
+
+#### Edge cases
+
+- If onboarding produces a minimal live portfolio, keep it link-only and noindex until the owner explicitly opts into indexing.
+- If the owner enables indexing but a blocker exists, such as redact mode, reveal-gated content, or insufficient public-safe content, effective state downgrades to `public_noindex`.
+- If a proof link breaks, the portfolio still renders and omits the broken outbound link instead of failing the page.
+- If a handle or slug changes, the old URL redirects only while the new stable portfolio remains public; otherwise the old URL resolves to unavailable.
+- If a portfolio is suspended for abuse or moderation, the public URL resolves to unavailable and indexing signals are withdrawn.
+- If a snippet token is expired, revoked, deleted, or disabled, the snippet page resolves to unavailable and does not become canonical.
+- Signed-in owners may see owner controls while previewing their own public page, but those controls must not alter the signed-out rendering contract.
+
+#### Acceptance criteria
+
+- A newly onboarded user reaches a live public portfolio URL on day 1 without a separate publish step.
+- That day-1 URL is shareable but not indexable by default.
+- Search indexing requires a separate explicit opt-in and only succeeds when effective public-safety checks pass.
+- Stable public rendering respects field-level visibility and never leaks `network_only`, `match_only`, `link_only`, `matched_org`, or `owner_only` content.
+- Private or reveal-gated linked items do not render as direct public objects.
+- Signed-out viewers can open published stable portfolios and valid public snippets without authentication.
+- Unpublished, withdrawn, revoked, or moderated public surfaces become unavailable and lose sitemap eligibility.
+- Canonical URLs exist only for stable public portfolio routes, never for token snippets or embed surfaces.
+- Non-indexable stable public pages emit noindex metadata and generic previews; indexable stable pages may emit public-safe specific metadata.
+- MVP public SEO does not create a crawlable directory or spam-like archive surface.
+
+#### Event tracking
+
+- Stable public page events:
+  - `portfolio_preview_opened`
+  - `portfolio_share_link_copied`
+  - `public_portfolio_viewed`
+  - `portfolio_publication_state_changed`
+  - `portfolio_indexing_state_changed`
+- Reveal events:
+  - keep `reveal_requested`, `reveal_granted`, and `reveal_denied`
+  - require `source` to distinguish reveal-stage workflow events from public-surface events
+- Public snippet events:
+  - `public_snippet_viewed`
+  - `public_snippet_unavailable`
+  - revoked and expired states should be reflected through privacy-safe `reason_code`
+- Required analytics payload fields:
+  - subject type and subject ID where applicable
+  - publication state before and after where applicable
+  - indexing state
+  - robots state
+  - sitemap state
+  - source surface
+  - actor type
+  - privacy-safe viewer context
+  - reason code
+- Prohibited analytics payload content:
+  - raw contact details
+  - raw verifier identities
+  - private free-form notes
+  - full referrer URLs when they may expose sensitive query strings
+- Abuse prevention and moderation hooks:
+  - public page rate limiting
+  - report-abuse entry point on public surfaces
+  - manual moderation state that can force `unavailable`
+  - admin audit trail for unpublish, takedown, redaction, and indexing-state changes
 
 ### A1. Canonical relationship lifecycle contract
 
@@ -2783,6 +2950,13 @@ This subsection is the launch-authoritative lifecycle contract for shortlist, in
 - Work email verification state, verifier relationships, demographic opt-ins, wellbeing and Zen data, exports, and uploaded proof artifacts are specially protected data classes.
 - These classes must stay out of analytics payloads and out of general-purpose logs.
 - Zen and wellbeing data must remain isolated from ranking, matching, and public rendering, and any audit trail for that data must use the same least-PII rules above.
+- Zen collection is limited to explicit opt-in state, privacy-boundary acknowledgment timestamp, 1-5 stress score, 1-5 sense-of-control score, timestamps, optional milestone tag, optional reflection text, optional linked check-in ID, and minimal export/delete audit metadata.
+- Zen must never collect self-assessment answers or scores, work schedules, burnout thresholds, location for Zen, local-event preferences, external-resource click history, passive mood inference, biometrics, clinical history, coaching notes, streak counters, or engagement scoring.
+- Zen storage must be segregated into dedicated Zen tables plus a minimal Zen audit table. Routine support and admin tooling must not expose Zen content; only safe audit metadata may be visible for operational troubleshooting.
+- Zen analytics are restricted to coarse private-partition action events only: opt-in changed, check-in submitted, reflection saved, export requested/completed, and delete completed. Reflection text, raw scores, trend lines, narrative summaries, inferred state labels, location, and external-link history are forbidden in analytics and logs.
+- Zen milestone prompts are limited to `rejection`, `interview`, `offer`, and `deadline`, and must render only in-product on the next relevant app open inside the prompt window. No email, push, SMS, auto-save, or reminder loop is allowed in MVP.
+- Zen exports must be user-initiated, on-demand, versioned JSON. Generated export artifacts must not be retained as durable system records after delivery.
+- Zen content persists until explicit Zen delete or account deletion. Opt-out stops future collection only. Minimal Zen audit metadata may be retained for a short fixed operational period without content payloads.
 
 ### F. Reliability, queues, and operational hardening
 

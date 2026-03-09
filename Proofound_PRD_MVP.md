@@ -217,7 +217,7 @@
 
 ## 3) Information Architecture & Navigation
 
-**Global nav:** Home · **Public Portfolio** · **Matches** · Profile · For Organizations · Zen Hub (Coming Soon) · Settings.  
+**Global nav:** Home · **Public Portfolio** · **Matches** · Profile · For Organizations · Zen Hub · Settings.  
 **Settings:** Toggle Individual ↔ Organization; privacy/export/delete; notifications; language.
 
 ---
@@ -268,6 +268,16 @@
 - **No-good-match state:** If no strong match exists, the product shows `No strong matches yet` plus exactly 3 recovery actions chosen from proof, skill, preference, or verification gaps.
 - **Refresh defaults:** Employment → **daily**; Volunteering → **weekly** (user‑configurable; system min daily).
 - **AC:** First suggestions within 24h of profile readiness; reasons render consistently from canonical reason codes; exact score remains internal by default.
+
+### 4.4B Zen Hub **[MVP]**
+
+- **Definition:** Zen Hub is an optional private space for brief check-ins and milestone reflections. It is not therapy, coaching, diagnosis, or a wellbeing content library.
+- **Collection:** explicit opt-in state, privacy-boundary acknowledgment timestamp, 1-5 stress score, 1-5 sense-of-control score, timestamp, optional milestone tag, optional reflection text, optional linked check-in ID, and minimal export/delete audit metadata.
+- **Never collect:** self-assessment answers or scores, work schedules, burnout thresholds, location for Zen, local-event preferences, external-resource clicks or saves, passive mood inference, biometrics, clinical history, coaching notes, streak counters, or engagement scoring.
+- **Milestone prompts:** only `rejection`, `interview`, `offer`, and `deadline`, shown in-product only. Dismissing a prompt stores nothing.
+- **Privacy boundary:** Zen entries are visible only to the user, stored in segregated Zen data stores, and never shown to organizations, used in matching or ranking, or added to the public profile.
+- **Export and delete:** user can export Zen data as versioned JSON and permanently delete Zen data at any time. Opting out stops future collection but does not silently erase prior entries.
+- **Analytics:** only coarse private-partition action events are allowed for Zen (`wellbeing_opt_in_changed`, `wellbeing_checkin_submitted`, `reflection_added`, `zen_export_requested`, `zen_export_completed`, `zen_delete_completed`). Reflection text and raw scores are never included in analytics or logs.
 
 ### 4.4A Matching Transparency & Governance **[MVP]**
 
