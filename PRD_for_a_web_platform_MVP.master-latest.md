@@ -2373,7 +2373,7 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 ## Observability
 
 - **Structured logging:** JSON logs with request‑id; scrub PII on emit; 30‑day retention in log store.
-- **Metrics:** RED (Rate/Errors/Duration) for APIs; key business metrics (TTFQI, TTV, TTSC) on dashboards.
+- **Metrics:** RED (Rate/Errors/Duration) for APIs; trust-health dashboards for PQS, proof freshness, proof coverage, TTSC, TTFQI, and TTV.
 - **Tracing:** Minimal distributed traces on critical paths (match generation, assignment publish).
 - **Product analytics:** Event taxonomy aligned to Part 9; sampling allowed for high‑volume events.
 
@@ -2737,7 +2737,7 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 
 - Part 12 acceptance suite (functional + NFR) passes.
 - Security/privacy checks complete (RLS audit; consent logs).
-- Analytics dashboards live (TTFQI, TTV, TTSC).
+- Analytics dashboards live for trust health and secondary outcomes (PQS, proof freshness, proof coverage, TTSC, TTFQI, TTV).
 - Run smoke tests from 12.4 on Preview then on Prod after deploy.
 
 **Release strategy:** Trunk-based with feature flags and deterministic percentage rollout; sequence is internal-only → 10% → 50% → 100%; instant rollback available in Vercel.
@@ -2752,7 +2752,7 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 ## 14.3 Observability
 
 - **Dashboards (Ops):** API RED (rate/errors/duration), page TTI P95, job success, error rate by release, DB health.
-- **Dashboards (Product):** NSM **TTSC**, **TTFQI**, **TTV**, conversion funnels, fairness note summary.
+- **Dashboards (Product):** Trust health first: **PQS** bands, proof freshness, proof coverage, verification lifecycle conversion, reveal-stage conversion, intro expiry rate, no-show rate, assignment fulfillment rate, then secondary outcomes **TTSC**, **TTFQI**, **TTV**, and fairness note summary.
 - **Rollout dashboard:** Admin metrics endpoint tracks activation completion, assignment publish completion, individual/company first-10-minute activation rates, privacy visibility reversal rate, activation tier mix, builder-mode mix, and p95/sla-breach rates for `/api/core/matching/profile` and `/api/assignments/[id]/publish`.
 - **Alerts:** 5xx spike, latency P95 breach, failed ETL, error rate by route, email bounce spike.
 - **Tracing:** Critical paths (assignment publish, shortlist generation) traced end-to-end.
@@ -2760,14 +2760,131 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 
 ## 14.4 Analytics Plan
 
-**Goals:** Instrument outcomes that reflect speed & quality of matches and user effort reduction.
+### Executive recommendation
 
-- **Core events:** `dashboard_viewed`, `l4_added`, `shortlist_generated`, `match_viewed`, `match_actioned{introduce|pass|snooze}`, `applied`, `interview_scheduled{duration_minutes,policy_preset}`, `individual_onboarding_completed`, `organization_onboarding_completed`, `portfolio_share_link_copied`, `portfolio_pdf_export_succeeded`, `assignment_template_applied`, `assignment_publish_succeeded`, `assignment_published{builderMode,minimumRequiredSkills}`, `hired`. Zen Hub emits only private-partition events: `wellbeing_opt_in_changed`, `wellbeing_checkin_submitted`, `reflection_added`, `zen_export_requested`, `zen_export_completed`, and `zen_delete_completed`.
-- **Attribution:** `source` on landings (organic/referral/paid); `cohort` labels (persona, role family, region).
-- **Derived metrics:** **TTFQI**, **TTV**, **TTSC**; effort saved (self-report + steps); PAC lift on acceptance/hire.
-- **Matching governance analytics:** track override frequency by assignment, org, and reviewer role; outcome drift between model-ranked and override-adjusted candidates; override-to-intro and override-to-hire conversion; fairness-status incidence; exact-rank reveal frequency versus band mode; near-threshold hint generation and follow-through.
-- **Data flow:** Client/server events → analytics DB via ETL (nightly); ML labels persisted in `ml_training_data`.
-- **Privacy:** No PII in properties; opt-out honored; Zen Hub analytics are limited to coarse private-partition action events and exclude reflection text, raw scores, trend lines, location, and external-link history.
+- Instrument trust formation before funnel velocity. The analytics model should explain whether Proofound is improving proof quality, verification confidence, reveal safety, and assignment fulfillment, not just whether users move faster through a funnel.
+- Keep the canonical KPI definitions in Part 2. Product and ops dashboards should order metrics as trust health first, secondary speed and efficiency outcomes second.
+- Keep launch-safe observability narrow: measure only what is needed to validate trust quality, proof quality, and launch readiness.
+
+### Revised KPI set
+
+- Canonical KPI definitions live in Part 2 and are the source of truth for:
+  - **Proof Quality Score**
+  - **proof freshness**
+  - **proof coverage**
+  - **Time-to-Verified**
+  - **verification lifecycle conversion**
+  - **intro expiry rate**
+  - **withdrawal rate**
+  - **no-show rate**
+  - **reveal-stage conversion**
+  - **override usage**
+  - **override-to-outcome drift**
+  - **public portfolio indexing status**
+  - **public portfolio reveal / share events**
+  - **assignment fulfillment rate**
+- Secondary outcome metrics remain **TTSC**, **TTFQI**, **TTV**, fairness note / fairness gap, effort reduction, and first-session activation.
+
+### Revised event taxonomy
+
+- **Shared property contract**
+  - Required IDs only when needed: `proof_pack_id`, `assignment_id`, `match_id`, `intro_id`, `interview_id`, `portfolio_id`
+  - Actor metadata only as role or class, never raw identity in analytics payloads
+  - Common dimensions: `persona_type`, `org_type`, `role_family`, `seniority_band`, `region_band`, `verification_tier`, `reveal_stage`, `override_reason_code`, `indexing_status`, `source_surface`
+  - Operational flags: `privacy_tier`, `is_test_event`
+- **Proof lifecycle**
+  - `proof_pack_created`
+  - `proof_pack_published`
+  - `proof_verification_requested`
+  - `proof_verification_completed`
+  - `proof_verification_expired`
+  - `proof_verification_downgraded`
+  - `proof_freshness_state_changed`
+  - `proof_marked_stale`
+  - `proof_pack_withdrawn`
+- **Reveal lifecycle**
+  - `reveal_stage_viewed`
+  - `reveal_stage_advanced`
+  - `reveal_requested`
+  - `reveal_granted`
+  - `reveal_denied`
+- **Intro lifecycle**
+  - `intro_created`
+  - `intro_accepted`
+  - `intro_declined`
+  - `intro_expired`
+  - `intro_withdrawn`
+- **Interview reliability**
+  - `interview_scheduled`
+  - `interview_rescheduled`
+  - `interview_no_show_marked`
+  - `interview_feedback_breach_flagged`
+- **Match governance**
+  - `review_override_applied`
+  - `review_override_reverted`
+- **Public portfolio distribution**
+  - `portfolio_indexing_enabled`
+  - `portfolio_indexing_disabled`
+  - `portfolio_shared`
+  - `portfolio_public_viewed`
+- **Zen private partition**
+  - Zen Hub emits only private-partition events: `wellbeing_opt_in_changed`, `wellbeing_checkin_submitted`, `reflection_added`, `zen_export_requested`, `zen_export_completed`, and `zen_delete_completed`
+- **Events explicitly excluded from analytics payloads**
+  - No raw message text
+  - No feedback text
+  - No freeform reflection text
+  - No direct public viewer identity
+  - No precise location
+  - No protected attributes in event properties
+
+### User-facing vs internal analytics split
+
+- **User-facing**
+  - Own proof freshness
+  - Own proof coverage
+  - Own verification status and verification request state
+  - Own Proof Quality Score band
+  - Own portfolio indexing status
+  - Own portfolio share actions
+- **Org-facing**
+  - Assignment fulfillment rate
+  - Intro expiry rate
+  - No-show rate
+  - High-level reveal-stage conversion by assignment
+  - Never override drift or individual reviewer behavior
+- **Internal-only**
+  - Raw PQS distributions
+  - Override usage
+  - Override-to-outcome drift
+  - Detailed verification lifecycle funnel
+  - Raw public portfolio views and referrer classes
+  - Fairness segment slices unless minimum privacy thresholds pass
+
+### Acceptance criteria
+
+- Both PRDs use the same trust-first KPI names, formulas, and visibility rules.
+- Every KPI definition includes exact meaning, numerator, denominator, unit, cohorting dimensions, where it appears, who can see it, exposure level, and privacy boundaries.
+- All required event names are present in the canonical event taxonomy grouped by lifecycle.
+- **TTSC**, **TTFQI**, and **TTV** remain present but are clearly secondary to trust and proof instrumentation.
+- Owner-facing public-view counters and gamified streak mechanics are removed or explicitly demoted as non-goals.
+
+### Privacy and data minimization rules
+
+- No PII in analytics properties or dashboard cards.
+- Opt-out and consent controls are honored for non-essential telemetry.
+- Zen Hub data stays partitioned and excluded from ranking, reveal, and public analytics.
+- Public-view data is retained only as coarse internal diagnostics or anti-abuse signals and is never surfaced as owner-facing success metrics.
+- Fairness analytics require minimum sample thresholds before any cohort slice becomes visible internally.
+
+### Edge cases
+
+- Zero-denominator KPIs resolve to `insufficient_data`, never `0%`.
+- Repeated verification attempts are counted once for first-success Time-to-Verified and separately in lifecycle-conversion stage counts.
+- Stale-to-fresh recovery must preserve the stale event in history while allowing a proof to re-enter fresh coverage.
+- Withdrawn proofs and intros stop contributing positive trust lift immediately but remain auditable.
+- Override reversals preserve the original override event and the reversal event for drift analysis.
+- Indexing blocked by safety or depublishing keeps owner-visible status language but never exposes blocked reasons publicly.
+- Expired intros, rescheduled interviews, and no-show after reschedule remain separate events so reliability metrics are not collapsed into one failure bucket.
 
 ## 14.5 Support & Incident Response
 
@@ -2776,8 +2893,8 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 
 ## 14.6 Post‑Launch Checkpoints (user milestones)
 
-- **100 users:** Validate instrumentation, UX friction points, and Atlas starter success; fix onboarding blockers.
-- **1,000 users:** Validate TTFQI median target in ≥1 cohort; test indexing/caching plan; fairness note cadence.
+- **100 users:** Validate trust instrumentation coverage, onboarding friction points, and Atlas starter success; fix launch-blocking proof and verification gaps.
+- **1,000 users:** Validate proof freshness, proof coverage, assignment fulfillment, indexing safety, and TTFQI median target in at least one cohort; review fairness note cadence.
 - **10,000 users:** Load/latency review; enable caching/read replica if needed; consider pgvector pilot; review compliance needs.
 
 **Status:** Draft v0.1 · **Owner:** Pavlo Samoshko · **Date:** —
@@ -2788,7 +2905,7 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 
 - Acceptance checks:
   - Onboarding captures self-reported prior TTSC/TTFQI/TTV during the first two weeks; stored with cohort tags (persona, role family, region).
-  - Baseline vs target appears on the analytics dashboard by end of week two; method documented for reproducibility.
+  - Baseline vs target appears on the trust-first analytics dashboard by end of week two; method documented for reproducibility.
   - Events support cohort-level median + P75 for TTSC/TTFQI/TTV.
 
 ## A2 Fairness Note (Opt-in Cohorts)
@@ -2803,6 +2920,8 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 - Acceptance checks:
   - Public portfolio is shareable by direct link by default; search indexing is off unless explicitly enabled.
   - Public route becomes unavailable when minimum safe content is not met or when safety/indexing constraints require depublishing.
+  - Public portfolio indexing status is explicit: `disabled`, `eligible_not_enabled`, `enabled`, `blocked_by_safety`, or `depublished`.
+  - Public-view events may exist for internal diagnostics or anti-abuse review, but owner-facing surfaces show share readiness and indexing state rather than raw view counters.
   - Public visibility defaults remain launch-safe: header/proof bar on, identity/LinkedIn trust signals allowed when present, work email off, contact off, skills off, bio off.
   - Pre-publish check blocks sharing if private artifacts/fields are referenced in public/network-only surfaces; shows inline fixes.
   - “What others can see” summary panel is always available and grouped into public/network-only/match-only/private buckets.
@@ -2900,30 +3019,71 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
   - Required timestamps: `created_at`, `activated_at`, `matchable_at`, `restricted_at`, `deleted_at`
   - Required audit events: `profile_created`, `profile_activated`, `profile_matchable_enabled`, `profile_restricted`, `profile_deleted`
 
-- **Proof/artifact lifecycle**
-  - Canonical states: `draft -> active -> expiring -> expired -> revoked -> deleted`
+- **Proof pack lifecycle**
+  - Canonical states: `draft -> ready -> published -> submitted -> withdrawn|superseded|archived`
   - Initial state: `draft`
-  - Terminal states: `revoked`, `deleted`
-  - Timeout behavior: `expires_at` persists `expiring` and `expired`; revoked or deleted artifacts are excluded from public surfaces and exports
-  - Required timestamps: `created_at`, `activated_at`, `expires_at`, `expired_at`, `revoked_at`, `deleted_at`, `cleanup_completed_at`
-  - Required audit events: `proof_artifact_created`, `proof_artifact_updated`, `proof_freshness_state_changed`, `proof_freshness_nudge_queued`, `proof_freshness_nudge_sent`, `proof_artifact_revoked`, `proof_artifact_deleted`
+  - Terminal states: `withdrawn`, `superseded`, `archived`
+  - Timeout behavior: freshness decay is modeled separately from publication state; withdrawn or superseded packs stop contributing positive trust lift immediately but remain auditable and exportable to the owner
+  - Required timestamps: `created_at`, `ready_at`, `published_at`, `submitted_at`, `withdrawn_at`, `superseded_at`, `archived_at`
+  - Required audit events: `proof_pack_created`, `proof_pack_published`, `proof_pack_withdrawn`
 
-- **Match lifecycle**
+- **Proof freshness lifecycle**
+  - Canonical states: `fresh -> review_soon -> stale -> refreshed|expired`
+  - Initial state: `fresh`
+  - Terminal states: `expired`
+  - Timeout behavior: stale status persists until a qualifying refresh or explicit expiry; stale-to-fresh recovery must preserve the stale event in history
+  - Required timestamps: `fresh_at`, `review_soon_at`, `stale_at`, `refreshed_at`, `expired_at`
+  - Required audit events: `proof_freshness_state_changed`, `proof_marked_stale`
+
+- **Proof verification lifecycle**
+  - Canonical states: `requested -> opened -> completed|expired|downgraded|withdrawn`
+  - Initial state: `requested`
+  - Terminal states: `completed`, `expired`, `downgraded`, `withdrawn`
+  - Contract: verification lifecycle describes the resulting proof-trust outcome and is distinct from the invite envelope used to request verifier action
+  - Required timestamps: `requested_at`, `opened_at`, `completed_at`, `expires_at`, `expired_at`, `downgraded_at`, `withdrawn_at`
+  - Required audit events: `proof_verification_requested`, `proof_verification_completed`, `proof_verification_expired`, `proof_verification_downgraded`
+
+- **Match and reveal lifecycle**
   - Canonical states: `generated -> shortlisted -> passed -> intro_in_progress -> interview_in_progress -> closed`
   - Side states: `stale`, `hidden_due_to_policy`
+  - Reveal stages: `stage0_anonymous -> stage1_capability_and_proof -> stage2_contextual_reveal -> stage3_intro_approved -> stage4_interview_coordination`
   - Initial state: `generated`
   - Terminal states: `closed`
   - Timeout behavior: stale-match reconciliation persists `stale`; fairness or policy suppression persists `hidden_due_to_policy`; intro expiry may return a match to `shortlisted`
   - Required timestamps: `generated_at`, `shortlisted_at`, `passed_at`, `intro_started_at`, `interview_started_at`, `stale_at`, `hidden_due_to_policy_at`, `closed_at`
-  - Required audit events: `match_generated`, `match_shortlisted`, `match_passed`, `match_intro_started`, `match_interview_started`, `match_marked_stale`, `match_hidden_due_to_policy`, `match_closed`
+  - Required audit events: `match_generated`, `match_shortlisted`, `match_passed`, `match_intro_started`, `match_interview_started`, `match_marked_stale`, `match_hidden_due_to_policy`, `match_closed`, `reveal_stage_viewed`, `reveal_stage_advanced`, `reveal_requested`, `reveal_granted`, `reveal_denied`, `review_override_applied`, `review_override_reverted`
+
+- **Intro lifecycle**
+  - Canonical states: `created -> accepted|declined|expired|withdrawn -> closed`
+  - Initial state: `created`
+  - Terminal states: `declined`, `expired`, `withdrawn`, `closed`
+  - Timeout behavior: expired intros remain auditable and may return the related match to shortlist review; withdrawn intros preserve consent history
+  - Required timestamps: `created_at`, `accepted_at`, `declined_at`, `expires_at`, `expired_at`, `withdrawn_at`, `closed_at`
+  - Required audit events: `intro_created`, `intro_accepted`, `intro_declined`, `intro_expired`, `intro_withdrawn`
+
+- **Interview reliability lifecycle**
+  - Canonical states: `scheduled -> rescheduled|completed|no_show|cancelled`
+  - Initial state: `scheduled`
+  - Terminal states: `completed`, `no_show`, `cancelled`
+  - Timeout behavior: repeated reschedules remain distinct events; no-show after reschedule is logged independently rather than collapsed into a single failure state
+  - Required timestamps: `scheduled_at`, `rescheduled_at`, `completed_at`, `no_show_at`, `cancelled_at`, `feedback_breach_at`
+  - Required audit events: `interview_scheduled`, `interview_rescheduled`, `interview_no_show_marked`, `interview_feedback_breach_flagged`
 
 - **Verification invite lifecycle**
   - Canonical states: `pending -> opened -> accepted|declined|expired|revoked|cancelled`
   - Initial state: `pending`
   - Terminal states: `accepted`, `declined`, `expired`, `revoked`, `cancelled`
-  - Contract: invite lifecycle is the request envelope and is distinct from the resulting verification-record outcome
+  - Contract: invite lifecycle is the request envelope and is distinct from the resulting proof verification outcome
   - Required timestamps: `created_at`, `opened_at`, `responded_at`, `expires_at`, `expired_at`, `revoked_at`, `cancelled_at`
   - Required audit events: `verification_invite_created`, `verification_invite_opened`, `verification_invite_accepted`, `verification_invite_declined`, `verification_invite_expired`, `verification_invite_revoked`, `verification_invite_resent`
+
+- **Public portfolio distribution lifecycle**
+  - Canonical states: `disabled -> eligible_not_enabled -> enabled -> blocked_by_safety|depublished`
+  - Initial state: `disabled`
+  - Terminal states: `blocked_by_safety`, `depublished`
+  - Timeout behavior: public-view events are retained only as internal diagnostics or anti-abuse signals and never become owner-facing success counters
+  - Required timestamps: `disabled_at`, `eligible_at`, `enabled_at`, `blocked_at`, `depublished_at`, `shared_at`, `public_viewed_at`
+  - Required audit events: `portfolio_indexing_enabled`, `portfolio_indexing_disabled`, `portfolio_shared`, `portfolio_public_viewed`
 
 - **Org invite lifecycle**
   - Canonical states: `pending -> accepted|expired|revoked`

@@ -2587,7 +2587,7 @@ Lean launch rule: the org side exists to establish trust for matching, publish a
 
 - Part 12 acceptance suite (functional + NFR) passes.
 - Security/privacy checks complete (RLS audit; consent logs).
-- Analytics dashboards live (TTFQI, TTV, TTSC).
+- Analytics dashboards live for trust health and secondary outcomes (PQS, proof freshness, proof coverage, TTSC, TTFQI, TTV).
 - Run smoke tests from 12.4 on Preview then on Prod after deploy.
 
 **Release strategy:** Trunk-based with feature flags and deterministic percentage rollout; sequence is internal-only → 10% → 50% → 100%; instant rollback available in Vercel.
