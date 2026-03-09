@@ -3,10 +3,12 @@ import { headers } from 'next/headers';
 import { PublicProfileShell } from '@/components/public-profile/PublicProfileShell';
 import { PublicProfileSection } from '@/components/public-profile/PublicProfileSection';
 import { PublicSnippetView } from '@/components/profile/PublicSnippetView';
+import { buildPortfolioRobots } from '@/lib/portfolio/public-contract';
 import {
   buildPublicSnippetViewModel,
   extractSnippetViewMeta,
   getSnippetByToken,
+  recordUnavailableSnippetView,
   recordSnippetView,
 } from '@/lib/profile/public-snippet';
 import {
@@ -27,12 +29,12 @@ export async function generateMetadata({
   try {
     const snippet = await getSnippetByToken(token);
     if (!snippet) {
-      return buildUnavailablePublicProfileMetadata(safePath);
+      return buildUnavailablePublicProfileMetadata(safePath, { canonicalPath: null });
     }
 
     const viewModel = await buildPublicSnippetViewModel(snippet);
     if (!viewModel) {
-      return buildUnavailablePublicProfileMetadata(safePath);
+      return buildUnavailablePublicProfileMetadata(safePath, { canonicalPath: null });
     }
 
     if (viewModel.redacted) {
@@ -41,9 +43,11 @@ export async function generateMetadata({
         description:
           'This public profile link is currently hidden by the owner and is temporarily unavailable.',
         path: safePath,
+        canonicalPath: null,
         ogTitle: 'Profile is currently hidden',
         ogDescription:
           'This public profile link is currently hidden by the owner and is temporarily unavailable.',
+        robots: buildPortfolioRobots('public_noindex'),
       });
     }
 
@@ -61,12 +65,14 @@ export async function generateMetadata({
       description:
         subtitle || about || `Explore this public ${viewModel.profileType} profile on Proofound.`,
       path: safePath,
+      canonicalPath: null,
       ogTitle: `${viewModel.title} on Proofound`,
       ogDescription:
         subtitle || about || `View this public ${viewModel.profileType} profile on Proofound.`,
+      robots: buildPortfolioRobots('public_noindex'),
     });
   } catch {
-    return buildUnavailablePublicProfileMetadata(safePath);
+    return buildUnavailablePublicProfileMetadata(safePath, { canonicalPath: null });
   }
 }
 
@@ -96,17 +102,29 @@ export default async function PublicProfileSnippetPage({
   const { token } = await params;
 
   const snippet = await getSnippetByToken(token);
+  const headerStore = await headers();
+  const requestMeta = extractSnippetViewMeta(headerStore);
+
   if (!snippet) {
+    await recordUnavailableSnippetView({
+      token,
+      requestMeta,
+      source: 'public_snippet_page',
+    });
     return <InvalidSnippetState />;
   }
 
   const viewModel = await buildPublicSnippetViewModel(snippet);
   if (!viewModel) {
+    await recordUnavailableSnippetView({
+      token,
+      requestMeta,
+      source: 'public_snippet_page',
+      reasonCode: 'snippet_render_unavailable',
+    });
     return <InvalidSnippetState />;
   }
-
-  const headerStore = await headers();
-  await recordSnippetView(snippet.id, extractSnippetViewMeta(headerStore));
+  await recordSnippetView(snippet, requestMeta, 'public_snippet_page');
 
   return <PublicSnippetView viewModel={viewModel} />;
 }

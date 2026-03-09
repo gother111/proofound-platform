@@ -16,6 +16,7 @@ vi.mock('@/lib/profile/public-snippet', () => ({
   getSnippetByToken: vi.fn(),
   buildPublicSnippetViewModel: vi.fn(),
   recordSnippetView: vi.fn().mockResolvedValue(undefined),
+  recordUnavailableSnippetView: vi.fn().mockResolvedValue(undefined),
   extractSnippetViewMeta: vi.fn().mockReturnValue({ ip: null, userAgent: null, referrer: null }),
 }));
 

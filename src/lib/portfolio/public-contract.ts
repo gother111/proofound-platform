@@ -11,14 +11,6 @@ type EffectiveStateOptions = {
   hasRevealGatedContent?: boolean;
 };
 
-export const LINK_VISIBLE_LEVELS = new Set([
-  'public',
-  'link_only',
-  'network',
-  'network_only',
-  'public_link_only',
-]);
-
 export const INDEX_VISIBLE_LEVELS = new Set(['public', 'public_indexable']);
 
 export function resolveRequestedPublicPortfolioState(
@@ -37,7 +29,7 @@ export function resolveRequestedPublicPortfolioState(
 
 export function isVisibleOnPublicPage(level: string | null | undefined): boolean {
   if (!level) return false;
-  return LINK_VISIBLE_LEVELS.has(level);
+  return level === 'public';
 }
 
 export function isSearchSafePublicLevel(level: string | null | undefined): boolean {

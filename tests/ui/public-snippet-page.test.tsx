@@ -16,6 +16,7 @@ vi.mock('@/lib/profile/public-snippet', () => ({
   getSnippetByToken: vi.fn(),
   buildPublicSnippetViewModel: vi.fn(),
   recordSnippetView: vi.fn().mockResolvedValue(undefined),
+  recordUnavailableSnippetView: vi.fn().mockResolvedValue(undefined),
   extractSnippetViewMeta: vi.fn().mockReturnValue({ ip: null, userAgent: null, referrer: null }),
 }));
 
@@ -24,6 +25,7 @@ import {
   getSnippetByToken,
   buildPublicSnippetViewModel,
   recordSnippetView,
+  recordUnavailableSnippetView,
 } from '@/lib/profile/public-snippet';
 
 const baseSnippet = {
@@ -98,7 +100,8 @@ describe('Public snippet page', () => {
     const metadata = await generateMetadata({ params: Promise.resolve({ token: 'missing' }) });
 
     expect(metadata.title).toBe('Public Profile Unavailable | Proofound');
-    expect(metadata.alternates?.canonical).toContain('/p/missing');
+    expect(metadata.alternates?.canonical).toBeUndefined();
+    expect(metadata.robots?.index).toBe(false);
   });
 
   it('returns redacted metadata when snippet is hidden', async () => {
@@ -114,5 +117,19 @@ describe('Public snippet page', () => {
 
     expect(metadata.title).toBe('Profile is currently hidden | Proofound');
     expect(String(metadata.description)).toContain('hidden');
+    expect(metadata.alternates?.canonical).toBeUndefined();
+    expect(metadata.robots?.index).toBe(false);
+  });
+
+  it('tracks unavailable snippet requests without rendering errors', async () => {
+    vi.mocked(getSnippetByToken).mockResolvedValue(null as any);
+
+    const element = await PublicProfileSnippetPage({
+      params: Promise.resolve({ token: 'expired-token' }),
+    });
+    render(element);
+
+    expect(screen.getByText(/shared profile is unavailable/i)).toBeInTheDocument();
+    expect(recordUnavailableSnippetView).toHaveBeenCalledTimes(1);
   });
 });

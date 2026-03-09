@@ -3,22 +3,49 @@ import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { createClient } from '@/lib/supabase/server';
 
-async function getProfileByHandle(handle: string) {
+type PublicSubjectType = 'individual_profile' | 'organization';
+
+async function getSubjectBySlugOrHandle(subjectType: PublicSubjectType, slugOrHandle: string) {
   const supabase = await createClient();
-  const { data } = await supabase.from('profiles').select('id').eq('handle', handle).maybeSingle();
+  if (subjectType === 'organization') {
+    const { data } = await supabase
+      .from('organizations')
+      .select('id')
+      .eq('slug', slugOrHandle)
+      .maybeSingle();
+    return data?.id as string | undefined;
+  }
+
+  const { data } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('handle', slugOrHandle)
+    .maybeSingle();
   return data?.id as string | undefined;
 }
 
 export async function POST(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const handle = searchParams.get('handle');
-    if (!handle) return NextResponse.json({ error: 'handle required' }, { status: 400 });
+    const rawSubjectType = searchParams.get('subjectType');
+    const subjectType: PublicSubjectType =
+      rawSubjectType === 'organization' ? 'organization' : 'individual_profile';
+    const slugOrHandle = searchParams.get('slugOrHandle') || searchParams.get('handle');
+    if (!slugOrHandle) {
+      return NextResponse.json({ error: 'slugOrHandle required' }, { status: 400 });
+    }
 
-    const profileId = await getProfileByHandle(handle);
-    if (!profileId) return NextResponse.json({ error: 'profile not found' }, { status: 404 });
+    const subjectId = await getSubjectBySlugOrHandle(subjectType, slugOrHandle);
+    if (!subjectId) {
+      return NextResponse.json({ error: 'public portfolio not found' }, { status: 404 });
+    }
 
-    const properties = { handle };
+    const properties = {
+      subject_type: subjectType,
+      source: 'public_portfolio_page',
+      slug_or_handle: slugOrHandle,
+      viewer_context: 'external_public_viewer',
+    };
 
     await db.execute(sql`
       INSERT INTO analytics_events (
@@ -29,10 +56,10 @@ export async function POST(request: Request) {
         properties,
         created_at
       ) VALUES (
-        'profile_viewed',
-        ${profileId},
-        'profile',
-        ${profileId},
+        'public_portfolio_viewed',
+        NULL,
+        'page',
+        ${subjectId},
         ${JSON.stringify(properties)}::jsonb,
         NOW()
       )
@@ -47,8 +74,8 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  if (!searchParams.get('handle')) {
-    return NextResponse.json({ error: 'handle required' }, { status: 400 });
+  if (!searchParams.get('slugOrHandle') && !searchParams.get('handle')) {
+    return NextResponse.json({ error: 'slugOrHandle required' }, { status: 400 });
   }
 
   return NextResponse.json(

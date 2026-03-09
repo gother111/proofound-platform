@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { db } from '@/db';
 import { getRows } from '@/lib/db/rows';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
@@ -68,6 +69,8 @@ export type SnippetViewRequestMeta = {
   userAgent: string | null;
   referrer: string | null;
 };
+
+type PublicSnippetAnalyticsSource = 'public_snippet_page' | 'public_snippet_embed';
 
 const INDIVIDUAL_VISIBILITY_DEFAULTS: Record<string, 'public' | 'network' | 'private'> = {
   headline: 'public',
@@ -246,6 +249,49 @@ export function extractSnippetViewMeta(headers: Headers): SnippetViewRequestMeta
     userAgent: headers.get('user-agent'),
     referrer: headers.get('referer'),
   };
+}
+
+function hashPublicSnippetToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
+}
+
+async function recordPublicSnippetAnalyticsEvent(params: {
+  eventType: string;
+  snippetId?: string | null;
+  userId?: string | null;
+  source: PublicSnippetAnalyticsSource;
+  profileType?: SnippetProfileType | null;
+  reasonCode?: string | null;
+  requestMeta: SnippetViewRequestMeta;
+  token?: string;
+}) {
+  try {
+    await db.execute(sql`
+      INSERT INTO analytics_events (
+        event_type,
+        user_id,
+        entity_type,
+        entity_id,
+        properties,
+        created_at
+      ) VALUES (
+        ${params.eventType},
+        ${params.userId ?? null},
+        'page',
+        ${params.snippetId ?? null},
+        ${JSON.stringify({
+          source: params.source,
+          profile_type: params.profileType ?? null,
+          reason_code: params.reasonCode ?? null,
+          referrer_present: Boolean(params.requestMeta.referrer),
+          token_hash: params.token ? hashPublicSnippetToken(params.token) : null,
+        })}::jsonb,
+        NOW()
+      )
+    `);
+  } catch {
+    // Best effort analytics, do not block public rendering.
+  }
 }
 
 export async function getSnippetByToken(token: string): Promise<PublicSnippet | null> {
@@ -626,8 +672,9 @@ export async function buildPublicSnippetViewModel(
 }
 
 export async function recordSnippetView(
-  snippetId: string,
-  requestMeta: SnippetViewRequestMeta
+  snippet: Pick<PublicSnippet, 'id' | 'userId' | 'profileType'>,
+  requestMeta: SnippetViewRequestMeta,
+  source: PublicSnippetAnalyticsSource
 ): Promise<void> {
   try {
     await db.execute(sql`
@@ -638,7 +685,7 @@ export async function recordSnippetView(
         referrer,
         viewed_at
       ) VALUES (
-        ${snippetId},
+        ${snippet.id},
         ${requestMeta.ip},
         ${requestMeta.userAgent},
         ${requestMeta.referrer},
@@ -648,4 +695,28 @@ export async function recordSnippetView(
   } catch {
     // Best effort analytics, do not block public rendering.
   }
+
+  await recordPublicSnippetAnalyticsEvent({
+    eventType: 'public_snippet_viewed',
+    snippetId: snippet.id,
+    userId: snippet.userId,
+    source,
+    profileType: snippet.profileType,
+    requestMeta,
+  });
+}
+
+export async function recordUnavailableSnippetView(params: {
+  token: string;
+  requestMeta: SnippetViewRequestMeta;
+  source: PublicSnippetAnalyticsSource;
+  reasonCode?: string;
+}) {
+  await recordPublicSnippetAnalyticsEvent({
+    eventType: 'public_snippet_unavailable',
+    source: params.source,
+    reasonCode: params.reasonCode ?? 'token_invalid_or_unavailable',
+    requestMeta: params.requestMeta,
+    token: params.token,
+  });
 }

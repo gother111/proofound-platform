@@ -39,6 +39,17 @@ describe('public profile metadata helpers', () => {
     expect(metadata.alternates?.canonical).toContain('/portfolio/jane');
   });
 
+  it('omits canonical URL when canonicalPath is null', () => {
+    const metadata = buildPublicProfileMetadata({
+      title: 'Snippet',
+      description: 'Snippet metadata',
+      path: '/p/abc123',
+      canonicalPath: null,
+    });
+
+    expect(metadata.alternates?.canonical).toBeUndefined();
+  });
+
   it('returns safe unavailable metadata copy', () => {
     const metadata = buildUnavailablePublicProfileMetadata('/p/missing-token');
     expect(metadata.title).toBe('Public Profile Unavailable | Proofound');

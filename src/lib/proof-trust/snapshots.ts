@@ -442,25 +442,54 @@ export async function computePortfolioPublicationState(
   const now = new Date();
 
   if (subjectType === 'individual_profile') {
-    const [row] = await db
-      .select({
-        requestedState: profiles.publicPortfolioState,
-        searchIndexingEnabledAt: profiles.searchIndexingEnabledAt,
-        handle: profiles.handle,
-        headline: individualProfiles.headline,
-        bio: individualProfiles.bio,
-        redactMode: individualProfiles.redactMode,
-      })
-      .from(profiles)
-      .leftJoin(individualProfiles, eq(individualProfiles.userId, profiles.id))
-      .where(eq(profiles.id, subjectId))
-      .limit(1);
+    const [profileRows, publicProofCountResult] = await Promise.all([
+      db
+        .select({
+          requestedState: profiles.publicPortfolioState,
+          searchIndexingEnabledAt: profiles.searchIndexingEnabledAt,
+          handle: profiles.handle,
+          displayName: profiles.displayName,
+          headline: individualProfiles.headline,
+          bio: individualProfiles.bio,
+          verificationStatus: individualProfiles.verificationStatus,
+          workEmailVerified: individualProfiles.workEmailVerified,
+          linkedinVerificationStatus: individualProfiles.linkedinVerificationStatus,
+          redactMode: individualProfiles.redactMode,
+        })
+        .from(profiles)
+        .leftJoin(individualProfiles, eq(individualProfiles.userId, profiles.id))
+        .where(eq(profiles.id, subjectId))
+        .limit(1),
+      db.execute(sql`
+        SELECT COUNT(*)::int AS count
+        FROM skill_proofs
+        WHERE profile_id = ${subjectId}::uuid
+          AND (
+            COALESCE(metadata->>'visibility', '') = 'public'
+            OR verified = true
+          )
+      `),
+    ]);
+
+    const row = profileRows[0];
 
     if (!row) {
       throw new Error('Profile not found');
     }
 
-    const minimumContentMet = Boolean(row.handle && (row.headline || row.bio));
+    const publicProofCount = Number(
+      getRows<{ count?: number }>(publicProofCountResult as any)[0]?.count ?? 0
+    );
+    const hasDurableTrustSignal = Boolean(
+      row.verificationStatus === 'verified' ||
+        row.workEmailVerified ||
+        row.linkedinVerificationStatus === 'verified'
+    );
+    const minimumContentMet = Boolean(
+      row.handle &&
+        (row.displayName || row.handle) &&
+        (row.headline?.trim() || row.bio?.trim() || publicProofCount > 0 || hasDurableTrustSignal)
+    );
     const effectiveState = deriveEffectivePublicPortfolioState({
       requestedState: row.requestedState,
       searchIndexingEnabled: Boolean(row.searchIndexingEnabledAt),
@@ -535,6 +564,8 @@ export async function computePortfolioPublicationState(
       searchIndexingEnabledAt: organizations.searchIndexingEnabledAt,
       slug: organizations.slug,
       displayName: organizations.displayName,
+      trustStatus: organizations.trustStatus,
+      verified: organizations.verified,
       mission: organizations.mission,
       tagline: organizations.tagline,
       website: organizations.website,
@@ -550,7 +581,12 @@ export async function computePortfolioPublicationState(
   const minimumContentMet = Boolean(
     organization.slug &&
       organization.displayName &&
-      (organization.tagline || organization.mission || organization.website)
+      (organization.tagline ||
+        organization.mission ||
+        organization.website ||
+        organization.trustStatus === 'domain_verified' ||
+        organization.trustStatus === 'platform_reviewed' ||
+        organization.verified)
   );
   const effectiveState = deriveEffectivePublicPortfolioState({
     requestedState: organization.requestedState,

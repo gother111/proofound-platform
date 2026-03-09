@@ -5,6 +5,7 @@ type PublicProfileMetadataInput = {
   title: string;
   description: string;
   path: string;
+  canonicalPath?: string | null;
   ogTitle?: string;
   ogDescription?: string;
   imagePath?: string;
@@ -26,6 +27,7 @@ export function buildPublicProfileMetadata({
   title,
   description,
   path,
+  canonicalPath,
   ogTitle,
   ogDescription,
   imagePath,
@@ -37,6 +39,12 @@ export function buildPublicProfileMetadata({
     title,
     description,
     path: normalizePath(path),
+    canonicalPath:
+      canonicalPath === undefined
+        ? undefined
+        : canonicalPath === null
+          ? null
+          : normalizePath(canonicalPath),
     ogTitle,
     ogDescription,
     imagePath,
@@ -46,12 +54,16 @@ export function buildPublicProfileMetadata({
   });
 }
 
-export function buildUnavailablePublicProfileMetadata(path: string): Metadata {
+export function buildUnavailablePublicProfileMetadata(
+  path: string,
+  options?: { canonicalPath?: string | null }
+): Metadata {
   return buildPublicProfileMetadata({
     title: 'Public Profile Unavailable | Proofound',
     description:
       'This public profile link is unavailable. It may be expired, hidden, or no longer active.',
     path,
+    canonicalPath: options?.canonicalPath,
     ogTitle: 'Public Profile Unavailable',
     ogDescription:
       'This public profile link is unavailable. Ask the owner to share a new Proofound link.',

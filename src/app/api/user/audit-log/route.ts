@@ -188,6 +188,9 @@ function convertEventTypeToHumanReadable(eventType: string): string {
     profile_created: 'Created profile',
     profile_updated: 'Updated profile',
     profile_viewed: 'Viewed profile',
+    public_portfolio_viewed: 'Viewed public portfolio',
+    public_snippet_viewed: 'Viewed public snippet',
+    public_snippet_unavailable: 'Attempted unavailable public snippet',
 
     // Skills & expertise
     skill_added: 'Added skill',

@@ -2,10 +2,13 @@ import { headers } from 'next/headers';
 import { PublicProfileSection } from '@/components/public-profile/PublicProfileSection';
 import { PublicProfileShell } from '@/components/public-profile/PublicProfileShell';
 import { PublicSnippetView } from '@/components/profile/PublicSnippetView';
+import { buildPortfolioRobots } from '@/lib/portfolio/public-contract';
+import { buildPublicProfileMetadata } from '@/lib/seo/public-profile-metadata';
 import {
   buildPublicSnippetViewModel,
   extractSnippetViewMeta,
   getSnippetByToken,
+  recordUnavailableSnippetView,
   recordSnippetView,
   type SnippetFormat,
 } from '@/lib/profile/public-snippet';
@@ -32,6 +35,17 @@ function InvalidEmbedState() {
   );
 }
 
+export async function generateMetadata({ params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params;
+  return buildPublicProfileMetadata({
+    title: 'Proofound share embed',
+    description: 'Embeddable public profile snippet on Proofound.',
+    path: `/p/${encodeURIComponent(token)}/embed`,
+    canonicalPath: null,
+    robots: buildPortfolioRobots('public_noindex'),
+  });
+}
+
 export default async function PublicProfileSnippetEmbedPage({
   params,
   searchParams,
@@ -42,17 +56,30 @@ export default async function PublicProfileSnippetEmbedPage({
   const [{ token }, { format }] = await Promise.all([params, searchParams]);
 
   const snippet = await getSnippetByToken(token);
+  const headerStore = await headers();
+  const requestMeta = extractSnippetViewMeta(headerStore);
+
   if (!snippet) {
+    await recordUnavailableSnippetView({
+      token,
+      requestMeta,
+      source: 'public_snippet_embed',
+    });
     return <InvalidEmbedState />;
   }
 
   const viewModel = await buildPublicSnippetViewModel(snippet);
   if (!viewModel) {
+    await recordUnavailableSnippetView({
+      token,
+      requestMeta,
+      source: 'public_snippet_embed',
+      reasonCode: 'snippet_render_unavailable',
+    });
     return <InvalidEmbedState />;
   }
 
-  const headerStore = await headers();
-  await recordSnippetView(snippet.id, extractSnippetViewMeta(headerStore));
+  await recordSnippetView(snippet, requestMeta, 'public_snippet_embed');
 
   const effectiveFormat = resolveFormat(format, snippet.format);
 

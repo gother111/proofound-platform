@@ -18,6 +18,7 @@ type PublicMetadataOptions = {
   title: string;
   description: string;
   path: string;
+  canonicalPath?: string | null;
   ogTitle?: string;
   ogDescription?: string;
   imagePath?: string;
@@ -31,6 +32,7 @@ export function buildPublicMetadata({
   title,
   description,
   path,
+  canonicalPath,
   ogTitle,
   ogDescription,
   imagePath = DEFAULT_OG_IMAGE,
@@ -41,7 +43,17 @@ export function buildPublicMetadata({
 }: PublicMetadataOptions): Metadata {
   const siteUrl = getPublicSiteUrl();
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  const canonicalUrl = `${siteUrl}${normalizedPath === '/' ? '' : normalizedPath}`;
+  const normalizedCanonicalPath =
+    canonicalPath === undefined
+      ? normalizedPath
+      : canonicalPath === null
+        ? null
+        : canonicalPath.startsWith('/')
+          ? canonicalPath
+          : `/${canonicalPath}`;
+  const canonicalUrl = normalizedCanonicalPath
+    ? `${siteUrl}${normalizedCanonicalPath === '/' ? '' : normalizedCanonicalPath}`
+    : null;
   const imageUrl = imagePath.startsWith('http') ? imagePath : `${siteUrl}${imagePath}`;
 
   return {
@@ -49,13 +61,15 @@ export function buildPublicMetadata({
     description,
     keywords,
     robots,
-    alternates: {
-      canonical: canonicalUrl,
-    },
+    alternates: canonicalUrl
+      ? {
+          canonical: canonicalUrl,
+        }
+      : undefined,
     openGraph: {
       title: ogTitle ?? title,
       description: ogDescription ?? description,
-      url: canonicalUrl,
+      url: canonicalUrl ?? `${siteUrl}${normalizedPath === '/' ? '' : normalizedPath}`,
       siteName: 'Proofound',
       type: ogType,
       images: [

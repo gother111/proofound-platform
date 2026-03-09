@@ -53,6 +53,7 @@ import { resolveHasLinkedInIdentityVerification } from '@/lib/linkedin-verified'
 import { CopyTextButton } from './CopyTextButton';
 import { DownloadPdfButton } from './DownloadPdfButton';
 import { ShareLinkButton } from './ShareLinkButton';
+import { ViewCounterClient } from './ViewCounterClient';
 
 type ProfileRow = {
   id: string;
@@ -122,6 +123,9 @@ type PortfolioContractData = {
   individual: NonNullable<ReturnType<typeof pickIndividual>>;
   featuredProofs: FeaturedProof[];
   publicSkills: string[];
+  publicDisplayName: string;
+  publicHeadline: string;
+  publicBio: string | null;
   visibility: ReturnType<typeof mergeVisibilityFlags>;
   profileVisibility: ProfileVisibilityRow | null;
   effectiveState: ReturnType<typeof deriveEffectivePublicPortfolioState>;
@@ -165,15 +169,62 @@ function hasDurableTrustSignal(signals: ReturnType<typeof buildTrustSignals>): b
   );
 }
 
+function isPublicVisibilityLevel(
+  level: string | null | undefined,
+  fallback: string = 'owner_only'
+): boolean {
+  return isVisibleOnPublicPage(level ?? fallback);
+}
+
 function isProofPublic(proof: SkillProofRow): boolean {
   const visibility =
     typeof proof.metadata?.visibility === 'string' ? proof.metadata.visibility : null;
-  return Boolean(
-    proof.verified ||
-      visibility === 'public' ||
+  if (visibility === 'public') {
+    return true;
+  }
+
+  if (
+    visibility === 'link_only' ||
+    visibility === 'matched_org' ||
+    visibility === 'network_only' ||
+    visibility === 'match_only' ||
+    visibility === 'owner_only'
+  ) {
+    return false;
+  }
+
+  return Boolean(proof.verified);
+}
+
+function hasRevealGatedProofContent(proofs: SkillProofRow[]): boolean {
+  return proofs.some((proof) => {
+    const visibility =
+      typeof proof.metadata?.visibility === 'string' ? proof.metadata.visibility : null;
+    return (
       visibility === 'link_only' ||
-      visibility === 'network_only'
-  );
+      visibility === 'matched_org' ||
+      visibility === 'network_only' ||
+      visibility === 'match_only'
+    );
+  });
+}
+
+function resolvePublicPortfolioName(
+  profile: Pick<ProfileRow, 'display_name' | 'handle'>,
+  profileVisibility: ProfileVisibilityRow | null
+): string {
+  if (
+    isPublicVisibilityLevel(profileVisibility?.display_name, 'public') &&
+    profile.display_name?.trim()
+  ) {
+    return profile.display_name.trim();
+  }
+
+  if (profile.handle?.trim()) {
+    return profile.handle.trim();
+  }
+
+  return 'Proofound profile';
 }
 
 function buildFeaturedProofs(
@@ -293,8 +344,9 @@ async function loadPortfolioContractData(handle: string): Promise<PortfolioContr
 
   const visibility = mergeVisibilityFlags(getStoredVisibility(profile.field_visibility));
   const profileVisibility = (profileVisibilityResult.data as ProfileVisibilityRow | null) ?? null;
+  const fallbackSkillProofs = (skillProofsResult.data || []) as SkillProofRow[];
   const featuredProofs = buildFeaturedProofs(
-    (skillProofsResult.data || []) as SkillProofRow[],
+    fallbackSkillProofs,
     `${SITE_URL}/portfolio/${encodeURIComponent(handle)}`
   );
   const verificationRecords = await listVerificationRecordsForOwner(
@@ -339,18 +391,23 @@ async function loadPortfolioContractData(handle: string): Promise<PortfolioContr
   );
 
   const publicSkills =
-    visibility.skills && isVisibleOnPublicPage(profileVisibility?.skills ?? 'owner_only')
+    visibility.skills && isPublicVisibilityLevel(profileVisibility?.skills, 'public')
       ? (individual.skills || [])
           .filter((skill): skill is string => typeof skill === 'string')
           .slice(0, 8)
       : [];
 
+  const publicDisplayName = resolvePublicPortfolioName(profile, profileVisibility);
+  const publicHeadline =
+    visibility.header && isPublicVisibilityLevel(profileVisibility?.headline, 'public')
+      ? (individual.headline || individual.tagline || '').trim()
+      : '';
+  const publicBio = visibility.bio ? individual.bio?.trim() || null : null;
+
   const minimumContentMet = Boolean(
     profile.handle &&
-      (profile.display_name || profile.handle) &&
-      ((visibility.header && (individual.headline || individual.tagline)) ||
-        featuredProofs.length > 0 ||
-        hasDurableTrustSignal(signals))
+      publicDisplayName &&
+      (publicHeadline || publicBio || featuredProofs.length > 0 || hasDurableTrustSignal(signals))
   );
 
   const effectiveState = deriveEffectivePublicPortfolioState({
@@ -358,9 +415,7 @@ async function loadPortfolioContractData(handle: string): Promise<PortfolioContr
     searchIndexingEnabled: Boolean(profile.search_indexing_enabled_at),
     minimumContentMet,
     redactMode: Boolean(individual.redact_mode),
-    hasLinkOnlyContent: Boolean(
-      visibility.skills && !isVisibleOnPublicPage(profileVisibility?.skills ?? 'owner_only')
-    ),
+    hasRevealGatedContent: hasRevealGatedProofContent(fallbackSkillProofs),
   });
 
   return {
@@ -374,6 +429,9 @@ async function loadPortfolioContractData(handle: string): Promise<PortfolioContr
     shareUrl: `${SITE_URL}/portfolio/${encodeURIComponent(profile.handle)}`,
     signals,
     verificationSummary,
+    publicDisplayName,
+    publicHeadline,
+    publicBio,
   };
 }
 
@@ -408,28 +466,25 @@ export async function generateMetadata({
     return buildUnavailablePublicProfileMetadata(safePath);
   }
 
-  const displayName =
-    data.profile.display_name || data.profile.handle || 'Proofound public portfolio';
-  const headline =
-    data.visibility.header && isVisibleOnPublicPage(data.profileVisibility?.headline ?? 'public')
-      ? (data.individual.headline || data.individual.tagline || '').trim()
-      : '';
   const genericPreview = shouldUseGenericSharePreview(data.effectiveState);
 
   return buildPublicProfileMetadata({
     title: genericPreview
       ? 'Proofound public portfolio'
-      : `${displayName} | Proofound Public Portfolio`,
+      : `${data.publicDisplayName} | Proofound Public Portfolio`,
     description: genericPreview
       ? 'Shareable by direct link on Proofound.'
-      : headline || `${displayName}'s proof-first public portfolio on Proofound.`,
+      : data.publicHeadline ||
+        `${data.publicDisplayName}'s proof-first public portfolio on Proofound.`,
     path: safePath,
-    ogTitle: genericPreview ? 'Proofound public portfolio' : `${displayName} on Proofound`,
+    ogTitle: genericPreview
+      ? 'Proofound public portfolio'
+      : `${data.publicDisplayName} on Proofound`,
     ogDescription: genericPreview
       ? 'Shareable by direct link on Proofound.'
-      : headline
-        ? `${headline} Explore proof-backed work.`
-        : `Explore ${displayName}'s proof-first public portfolio.`,
+      : data.publicHeadline
+        ? `${data.publicHeadline} Explore proof-backed work.`
+        : `Explore ${data.publicDisplayName}'s proof-first public portfolio.`,
     ogType: 'profile',
     robots: buildPortfolioRobots(data.effectiveState),
   });
@@ -457,7 +512,12 @@ export default async function PortfolioPage({
   if (!data) {
     const redirectTarget = await loadHistoricalHandle(handle);
     if (redirectTarget && redirectTarget !== handle) {
-      permanentRedirect(`/portfolio/${encodeURIComponent(redirectTarget)}`);
+      const redirectData = await loadPortfolioContractData(redirectTarget);
+      if (redirectData && isAccessiblePublicPortfolioState(redirectData.effectiveState)) {
+        permanentRedirect(`/portfolio/${encodeURIComponent(redirectTarget)}`);
+      }
+
+      return renderUnavailablePage(handle);
     }
     notFound();
   }
@@ -467,14 +527,9 @@ export default async function PortfolioPage({
   }
 
   const viewerIsOwner = Boolean(user?.id && user.id === data.profile.id);
-  const displayName = data.profile.display_name || data.profile.handle || 'Proofound Profile';
-  const headline =
-    data.visibility.header && isVisibleOnPublicPage(data.profileVisibility?.headline ?? 'public')
-      ? (data.individual.headline || data.individual.tagline || '').trim() ||
-        'Proof-first public portfolio'
-      : 'Proof-first public portfolio';
-
-  const publicBio = data.visibility.bio ? data.individual.bio?.trim() || null : null;
+  const displayName = data.publicDisplayName;
+  const headline = data.publicHeadline || 'Proof-first public portfolio';
+  const publicBio = data.publicBio;
 
   const collaborationHref = collaborationMailto({
     subject: `Request introduction to ${displayName}`,
@@ -559,6 +614,9 @@ export default async function PortfolioPage({
         </div>
       }
     >
+      {!viewerIsOwner ? (
+        <ViewCounterClient subjectType="individual_profile" slugOrHandle={data.profile.handle} />
+      ) : null}
       <JsonLdScripts items={jsonLdItems} idPrefix="public-portfolio-jsonld" />
       <div className="space-y-4">
         <Card variant="bento" className="p-4 sm:p-5">

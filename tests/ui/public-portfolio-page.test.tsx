@@ -88,6 +88,54 @@ function mockSupabaseClient(fixtures: Fixtures) {
 }
 
 describe('Public individual portfolio page', () => {
+  it('falls back to the public handle when display name is not public', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      mockSupabaseClient({
+        authUser: null,
+        profileFieldVisibility: {
+          display_name: 'network_only',
+          headline: 'public',
+          skills: 'public',
+        },
+        profile: {
+          id: 'user-1',
+          handle: 'jane-hidden',
+          display_name: 'Jane Hidden',
+          public_portfolio_state: 'public_link_only',
+          search_indexing_enabled_at: null,
+          avatar_url: null,
+          individual_profiles: [
+            {
+              headline: 'Proof-first builder',
+              bio: null,
+              tagline: null,
+              verification_status: null,
+              verification_method: null,
+              verified_at: null,
+              work_email: null,
+              work_email_verified: false,
+              linkedin_verification_status: null,
+              linkedin_verified_at: null,
+              linkedin_verification_data: null,
+              verified: false,
+            },
+          ],
+          field_visibility: [{ field_visibility: {} }],
+        },
+      }) as any
+    );
+
+    const element = await PortfolioPage({
+      params: Promise.resolve({ handle: 'jane-hidden' }),
+      searchParams: Promise.resolve({}),
+    });
+
+    render(element);
+
+    expect(screen.getByRole('heading', { name: 'jane-hidden' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Jane Hidden' })).not.toBeInTheDocument();
+  });
+
   it('renders public read-only view with updated sections and no owner-only details', async () => {
     vi.mocked(createClient).mockResolvedValue(
       mockSupabaseClient({

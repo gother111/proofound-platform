@@ -36,6 +36,7 @@ import {
 } from '@/lib/verification/policy';
 
 import { ShareLinkButton } from '../../[handle]/ShareLinkButton';
+import { ViewCounterClient } from '../../[handle]/ViewCounterClient';
 import { DownloadOrganizationPdfButton } from './DownloadOrganizationPdfButton';
 
 type OrganizationRow = {
@@ -71,6 +72,8 @@ type OrgContractData = {
   organization: OrganizationRow;
   assignment: AssignmentSummaryRow | null;
   visibility: OrganizationVisibilityRow | null;
+  publicDisplayName: string;
+  publicSummary: string;
   effectiveState: ReturnType<typeof deriveEffectivePublicPortfolioState>;
   shareUrl: string;
   verificationSummary: ReturnType<typeof summarizeVerificationPolicy>;
@@ -83,13 +86,30 @@ function hasTrustBasics(
   visibility: OrganizationVisibilityRow | null
 ) {
   return Boolean(
-    organization.display_name &&
-      organization.type &&
-      organization.website &&
-      (visibility?.mission === 'public'
-        ? organization.mission?.trim()
-        : organization.tagline?.trim())
+    organization.slug &&
+      organization.display_name &&
+      (organization.website?.trim() ||
+        organization.tagline?.trim() ||
+        (visibility?.mission === 'public' ? organization.mission?.trim() : null) ||
+        organization.verified ||
+        organization.trust_status === 'domain_verified' ||
+        organization.trust_status === 'platform_reviewed')
   );
+}
+
+function resolvePublicOrganizationName(
+  organization: OrganizationRow,
+  visibility: OrganizationVisibilityRow | null
+) {
+  if ((visibility?.display_name ?? 'public') === 'public' && organization.display_name?.trim()) {
+    return organization.display_name.trim();
+  }
+
+  if (organization.slug?.trim()) {
+    return organization.slug.trim();
+  }
+
+  return 'Proofound organization';
 }
 
 async function loadOrganizationBySlug(slug: string): Promise<OrganizationRow | null> {
@@ -172,11 +192,21 @@ async function loadOrgContractData(slug: string): Promise<OrgContractData | null
     minimumContentMet,
     hasLinkOnlyContent: false,
   });
+  const publicDisplayName = resolvePublicOrganizationName(organization, visibility);
+  const publicSummary =
+    (visibility?.mission === 'public'
+      ? organization.mission?.trim()
+      : organization.tagline?.trim()) ||
+    organization.tagline?.trim() ||
+    organization.website?.trim() ||
+    'Public organization trust card on Proofound.';
 
   return {
     organization,
     assignment: (assignmentResult.data as AssignmentSummaryRow | null) ?? null,
     visibility,
+    publicDisplayName,
+    publicSummary,
     effectiveState,
     shareUrl: `${SITE_URL}/portfolio/org/${encodeURIComponent(organization.slug)}`,
     verificationSummary,
@@ -215,24 +245,22 @@ export async function generateMetadata({
   }
 
   const genericPreview = shouldUseGenericSharePreview(data.effectiveState);
-  const displayName = data.organization.display_name || 'Proofound organization';
-  const purpose =
-    (data.visibility?.mission === 'public'
-      ? data.organization.mission
-      : data.organization.tagline) || '';
 
   return buildPublicProfileMetadata({
     title: genericPreview
       ? 'Proofound organization portfolio'
-      : `${displayName} | Proofound Organization Portfolio`,
+      : `${data.publicDisplayName} | Proofound Organization Portfolio`,
     description: genericPreview
       ? 'Shareable organization trust card on Proofound.'
-      : purpose || `Explore ${displayName}'s public organization portfolio on Proofound.`,
+      : data.publicSummary ||
+        `Explore ${data.publicDisplayName}'s public organization portfolio on Proofound.`,
     path: safePath,
-    ogTitle: genericPreview ? 'Proofound organization portfolio' : `${displayName} on Proofound`,
+    ogTitle: genericPreview
+      ? 'Proofound organization portfolio'
+      : `${data.publicDisplayName} on Proofound`,
     ogDescription: genericPreview
       ? 'Shareable organization trust card on Proofound.'
-      : purpose || `View ${displayName}'s public trust card on Proofound.`,
+      : data.publicSummary || `View ${data.publicDisplayName}'s public trust card on Proofound.`,
     robots: buildPortfolioRobots(data.effectiveState),
   });
 }
@@ -259,7 +287,12 @@ export default async function OrganizationPortfolioPage({
   if (!data) {
     const redirectTarget = await loadHistoricalSlug(slug);
     if (redirectTarget && redirectTarget !== slug) {
-      permanentRedirect(`/portfolio/org/${encodeURIComponent(redirectTarget)}`);
+      const redirectData = await loadOrgContractData(redirectTarget);
+      if (redirectData && isAccessiblePublicPortfolioState(redirectData.effectiveState)) {
+        permanentRedirect(`/portfolio/org/${encodeURIComponent(redirectTarget)}`);
+      }
+
+      return renderUnavailablePage(slug);
     }
     notFound();
   }
@@ -295,24 +328,21 @@ export default async function OrganizationPortfolioPage({
   }
 
   const pagePath = `/portfolio/org/${encodeURIComponent(slug)}`;
-  const jsonLdDescription =
-    (data.visibility?.mission === 'public'
-      ? data.organization.mission
-      : data.organization.tagline) || 'Public organization trust card on Proofound.';
+  const jsonLdDescription = data.publicSummary;
   const jsonLdItems = [
     buildProofoundWebsiteJsonLd(),
     buildWebPageJsonLd({
       path: pagePath,
-      title: `${data.organization.display_name} | Proofound Organization Portfolio`,
+      title: `${data.publicDisplayName} | Proofound Organization Portfolio`,
       description: jsonLdDescription,
     }),
     buildBreadcrumbJsonLd([
       { name: 'Home', path: '/' },
-      { name: data.organization.display_name, path: pagePath },
+      { name: data.publicDisplayName, path: pagePath },
     ]),
     buildPublicOrganizationPortfolioJsonLd({
       path: pagePath,
-      name: data.organization.display_name,
+      name: data.publicDisplayName,
       description: jsonLdDescription,
       operatingRegion: data.organization.operating_region,
     }),
@@ -332,7 +362,7 @@ export default async function OrganizationPortfolioPage({
                 <div>
                   <div className="flex items-center gap-2">
                     <h1 className="text-2xl font-semibold text-foreground">
-                      {data.organization.display_name}
+                      {data.publicDisplayName}
                     </h1>
                     <Badge variant="outline" className="border-[#D9D5CC] text-muted-foreground">
                       {data.effectiveState === 'public_indexable'
@@ -344,9 +374,7 @@ export default async function OrganizationPortfolioPage({
                 </div>
               </div>
               <p className="text-sm text-foreground">
-                {(data.visibility?.mission === 'public'
-                  ? data.organization.mission
-                  : data.organization.tagline) ||
+                {data.publicSummary ||
                   'Trust basics only. Rich company profile sections stay out of the launch path.'}
               </p>
             </div>
@@ -382,12 +410,15 @@ export default async function OrganizationPortfolioPage({
         </div>
       }
     >
+      {!viewerIsMember ? (
+        <ViewCounterClient subjectType="organization" slugOrHandle={data.organization.slug} />
+      ) : null}
       <JsonLdScripts items={jsonLdItems} idPrefix="public-org-portfolio-jsonld" />
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <div className="space-y-4">
           <PublicProfileSection title="Trust basics">
             <div className="space-y-3">
-              <SummaryRow label="Organization" value={data.organization.display_name} />
+              <SummaryRow label="Organization" value={data.publicDisplayName} />
               <SummaryRow label="Type" value={data.organization.type || 'Not specified'} />
               <SummaryRow label="Website" value={data.organization.website || 'Not published'} />
               <SummaryRow

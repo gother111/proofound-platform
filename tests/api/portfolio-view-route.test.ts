@@ -33,7 +33,20 @@ describe('/api/portfolio/view', () => {
     (db.execute as any).mockResolvedValue([]);
 
     const response = await POST(
-      new Request('http://localhost/api/portfolio/view?handle=alice%22%7D%2C%22x%22%3A1')
+      new Request(
+        'http://localhost/api/portfolio/view?subjectType=individual_profile&slugOrHandle=alice%22%7D%2C%22x%22%3A1'
+      )
+    );
+
+    expect(response.status).toBe(200);
+    expect(db.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('stores organization portfolio view analytics for org slugs', async () => {
+    (db.execute as any).mockResolvedValue([]);
+
+    const response = await POST(
+      new Request('http://localhost/api/portfolio/view?subjectType=organization&slugOrHandle=acme')
     );
 
     expect(response.status).toBe(200);
@@ -41,7 +54,9 @@ describe('/api/portfolio/view', () => {
   });
 
   it('returns gone for owner-facing public portfolio counts', async () => {
-    const response = await GET(new Request('http://localhost/api/portfolio/view?handle=alice'));
+    const response = await GET(
+      new Request('http://localhost/api/portfolio/view?slugOrHandle=alice')
+    );
     const body = await response.json();
 
     expect(response.status).toBe(410);
