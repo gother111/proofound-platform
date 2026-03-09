@@ -1,12 +1,19 @@
 'use server';
 
+import crypto from 'crypto';
 import { requireAuth } from '@/lib/auth';
 import { authorize, canInviteTeam, canManageTeam, type OrgRole } from '@/lib/authz';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { nanoid } from 'nanoid';
 import { sendOrgInviteEmail } from '@/lib/email';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import {
+  CAPABILITY_BINDINGS,
+  CAPABILITY_TOKEN_CLASSES,
+  issueCapabilityToken,
+  redeemCapabilityToken,
+} from '@/lib/security/capability-tokens';
 
 const updateOrgSchema = z.object({
   displayName: z.string().min(1).max(100).optional(),
@@ -150,17 +157,58 @@ export async function inviteMember(orgId: string, formData: FormData) {
 
   try {
     const supabase = await createClient({ allowCookieWrite: true });
-    const token = nanoid(32);
+    const normalizedEmail = result.data.email.trim().toLowerCase();
+    const existingInviteQuery = await supabase
+      .from('org_invitations')
+      .select('id, status, expires_at')
+      .eq('org_id', orgId)
+      .ilike('email', normalizedEmail)
+      .eq('status', 'pending')
+      .gt('expires_at', new Date().toISOString())
+      .limit(1)
+      .maybeSingle();
+
+    if (existingInviteQuery.error) {
+      console.error('Failed to check existing invitation:', existingInviteQuery.error);
+      return { error: 'Failed to send invitation' };
+    }
+
+    if (existingInviteQuery.data) {
+      return { error: 'An active invitation is already pending for this email' };
+    }
+
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
+    const invitationId = crypto.randomUUID();
+    const issued = await issueCapabilityToken({
+      tokenClass: CAPABILITY_TOKEN_CLASSES.ORG_MEMBER_INVITE,
+      sourceTable: 'org_invitations',
+      sourceId: invitationId,
+      actionScope: 'org_invitation.accept',
+      subjectType: 'organization',
+      subjectId: orgId,
+      actorBinding: CAPABILITY_BINDINGS.EMAIL_HASH,
+      actorEmail: result.data.email,
+      expiresAt,
+      singleUse: true,
+      maxUses: 1,
+      metadata: {
+        role: result.data.role,
+      },
+    });
 
     const invitationInsert = await supabase.from('org_invitations').insert({
+      id: invitationId,
       org_id: orgId,
-      email: result.data.email,
+      email: normalizedEmail,
       role: result.data.role,
-      token,
+      status: 'pending',
+      token_hash: issued.tokenHash,
+      capability_token_id: issued.token.id,
+      last_sent_at: new Date().toISOString(),
       expires_at: expiresAt.toISOString(),
       invited_by: user.id,
+      updated_at: new Date().toISOString(),
     });
 
     if (invitationInsert.error) {
@@ -184,7 +232,7 @@ export async function inviteMember(orgId: string, formData: FormData) {
       result.data.email,
       orgQuery.data.display_name,
       result.data.role,
-      token,
+      issued.rawToken,
       orgQuery.data.slug
     );
 
@@ -211,10 +259,29 @@ export async function acceptInvitation(token: string) {
 
   try {
     const supabase = await createClient({ allowCookieWrite: true });
-    const invitationQuery = await supabase
+    const adminClient = createAdminClient();
+    const {
+      data: { user: authUser },
+    } = await supabase.auth.getUser();
+    const redeemed = await redeemCapabilityToken(token, {
+      tokenClass: CAPABILITY_TOKEN_CLASSES.ORG_MEMBER_INVITE,
+      actor: {
+        email: authUser?.email ?? null,
+        profileId: user.id,
+        principalType: 'user_account',
+      },
+      consume: true,
+      metadata: { surface: 'org_accept_invitation' },
+    });
+
+    if (!redeemed.ok) {
+      return { error: `Invitation ${redeemed.reason}` };
+    }
+
+    const invitationQuery = await adminClient
       .from('org_invitations')
-      .select('id, org_id, email, role, token, expires_at')
-      .eq('token', token)
+      .select('id, org_id, email, role, status, expires_at, accepted_at, revoked_at')
+      .eq('id', redeemed.token.source_id)
       .maybeSingle();
 
     if (invitationQuery.error || !invitationQuery.data) {
@@ -223,7 +290,23 @@ export async function acceptInvitation(token: string) {
 
     const invitation = invitationQuery.data;
 
+    if (invitation.status === 'accepted' || invitation.accepted_at) {
+      return { error: 'Invitation already accepted' };
+    }
+
+    if (invitation.status === 'revoked' || invitation.revoked_at) {
+      return { error: 'Invitation revoked' };
+    }
+
     if (new Date() > new Date(invitation.expires_at)) {
+      await adminClient
+        .from('org_invitations')
+        .update({
+          status: 'expired',
+          expired_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', invitation.id);
       return { error: 'Invitation expired' };
     }
 
@@ -252,7 +335,20 @@ export async function acceptInvitation(token: string) {
       return { error: 'Failed to accept invitation' };
     }
 
-    await supabase.from('org_invitations').delete().eq('id', invitation.id);
+    const inviteUpdate = await adminClient
+      .from('org_invitations')
+      .update({
+        status: 'accepted',
+        accepted_at: new Date().toISOString(),
+        accepted_by_profile_id: user.id,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', invitation.id);
+
+    if (inviteUpdate.error) {
+      console.error('Failed to update invitation status:', inviteUpdate.error);
+      return { error: 'Failed to accept invitation' };
+    }
 
     // Log audit event
     await supabase.from('audit_logs').insert({
