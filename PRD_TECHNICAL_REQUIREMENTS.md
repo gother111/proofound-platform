@@ -1163,9 +1163,25 @@ Tier: Tier 4 (Public when status='active')
 ```
 Primary Key: id (UUID)
 Unique: (assignmentId, profileId)
-Fields: assignmentId, profileId, score (0-100), vector{values, skills, location, ...}, weights{}, createdAt
-Purpose: Pre-computed scores for performance
+Fields: assignmentId, profileId, score, scoreTotal, scoreState, scoreVersion, modelVersion, explanationVersion, fairnessCheckVersion, fairnessStatus, inputsHash, reasonCodes[], staleReasonCodes[], generatedAt, staleAt, hiddenDueToPolicyAt, subscoresJson, scoreSnapshotJson, vector{}, weights{}, createdAt
+Purpose: Pre-computed ranking decision plus audit-ready score trace for performance, explainability, and review governance
 TTL: Refresh daily (employment) or weekly (volunteering)
+```
+
+**`match_reason_ledger`** (Canonical explanation source of truth):
+
+```
+Primary Key: id (UUID)
+Fields: matchId, assignmentId, profileId, category, reasonCode, source (system/reviewer/policy), payloadJson, importance, createdBy, noteHash, createdAt
+Purpose: Immutable internal reason-code ledger used to render user explanations, support audits, and preserve reviewer or policy annotations without mutating the original score artifact
+```
+
+**`fairness_notes`** (Release-level monitoring output):
+
+```
+Primary Key: id (UUID)
+Fields: releaseVersion, generatedAt, cohortData, findings, recommendations, status (draft/published/archived), minSampleSize, hasSignificantGaps, pValue, createdBy, publishedAt
+Purpose: Release-scoped fairness note with sample thresholds, observed gaps, limitations, and explicit insufficient-data handling
 ```
 
 **`match_interest`** (User actions for mutual reveal):
@@ -1200,15 +1216,47 @@ Purpose: Immutable audit trail for reveal_requested, reveal_granted, reveal_deni
 **Matching Algorithm** (Multi-factor):
 
 ```
-Default Weights (adjustable ±15pp):
-- Mission/Values: 30%
-- Core Expertise: 40%
-- Tools: 10%
-- Logistics: 10%
-- Recency: 10%
+Allowed score components:
+- skills_fit
+- proof_fit
+- constraints_fit
+- verification_fit
+- purpose_fit
+
+PAC treatment:
+- PAC is a bounded, positive-only contribution inside purpose_fit
+- PAC may improve ranking only when real values/causes overlap exists
+- Missing PAC data is neutral
+- PAC must never override failed hard constraints or required verification gates
+
+Forbidden score components:
+- protected or proxy demographic attributes
+- Zen or wellbeing data
+- names, photos, direct identity fields, school/employer prestige, social graph popularity, engagement metrics
+- reviewer preference notes or manual overrides as score inputs
+
+User-facing explanation model:
+- reasonSummary: 1-3 plain-language bullets
+- reasonSections: why this match / what may hold it back / what you can improve next / fairness or policy limits when relevant
+- rankPresentation: band by default, exact only in tightly scoped org review when pool and fairness guardrails pass, hidden when policy suppression is active
+
+Decision trace stored per ranking output:
+- score_version
+- model_version
+- explanation_version
+- fairness_check_version
+- inputs_hash
+- top-level component scores
+- component applicability or missing-data status
+- reason codes
+- rank presentation mode
+- fairness status
+- generated timestamp
+- gating outcomes and stale-policy state
+- reviewer override linkage when present
 
 Results: Top 5-10 matches per assignment
-Explainability: "Why this match" with % breakdown + improvement tips
+Explainability: user-facing detail is plain-language and non-numeric by default; exact scores remain internal
 Cold-start: Editorial matches if <5 results
 ```
 

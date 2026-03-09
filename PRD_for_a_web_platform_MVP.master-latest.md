@@ -2186,15 +2186,27 @@ Each flow includes:
 
 **Processing Rules**
 
-- Composite **match_score = f(skills_fit, constraints_fit, verification_fit, PAC)**; configurable weights (server-side defaults).
+- Composite `match_score` uses only `skills_fit`, `proof_fit`, `constraints_fit`, `verification_fit`, and `purpose_fit`; PAC is a bounded, positive-only subcomponent inside `purpose_fit`.
+- Forbidden score inputs: protected or proxy demographic attributes, Zen or wellbeing data, names/photos/direct identity fields, school or employer prestige, social graph popularity, engagement metrics, reviewer preference notes, and manual overrides as direct score inputs.
 - Only surface matches meeting minimum score + gate compatibility.
-- Provide “Why this match” explainer (top contributing factors).
-- Opt-in fairness checks produce cohort-level **fairness note** each release.
+- Every ranking output carries `reasonSummary` (1-3 plain-language bullets), `reasonSections` (`Why this match`, `What may hold it back`, `What you can improve next`, and `Fairness or policy limits` only when relevant), and `rankPresentation` (`band`, `exact`, or `hidden`).
+- Canonical reason-code groups: positive match, constraint mismatch, verification state, freshness or evidence quality, missing-data or confidence limits, workflow decision, manual override, and fairness or policy limitation.
+- Exact scores remain internal by default. User-facing surfaces show bands or qualitative fit states; exact rank is allowed only in tightly scoped org-review surfaces when pool size and fairness guardrails pass.
+- PAC treatment: positive-only, neutral when missing, and never allowed to override failed hard constraints or required verification gates.
+- Verification treatment: `verification_fit` may improve ranking and required verification may gate shortlist or reveal stages, but explanation copy must stay privacy-safe and must not expose hidden identity detail.
+- Freshness treatment: `proof_fit` rewards recent, relevant evidence, lowers confidence for stale evidence, and may generate refresh hints; it must not silently zero an otherwise strong match unless policy marks evidence expired.
+- Missing-data treatment: missing required evidence, preferences, or verification creates explicit reason codes and recovery hints; missing protected or optional personal data is neutral. Weak confidence may move presentation from exact rank to band mode.
+- Opt-in fairness checks produce cohort-level **fairness note** each release, with `insufficient_data` as a valid release outcome.
+- Every ranking decision stores a trace package with `score_version`, `model_version`, `explanation_version`, `fairness_check_version`, `inputs_hash`, top-level component scores, component applicability state, reason codes, rank presentation mode, fairness status, generated timestamp, gating outcomes, stale-policy state, and reviewer override linkage when present.
+- Manual override policy: reviewers may change workflow outcome, not underlying score history. Allowed override reasons are `manual_shortlist_exception`, `manual_hold_for_context`, `manual_reject_policy_or_constraints`, `verification_exception_approved`, `duplicate_candidate_resolution`, `appeal_upheld_reconsider`, `fairness_remediation_hold`, and `safety_or_trust_escalation`.
+- Release fairness note requirements: include release identifier, date range, sample thresholds used, cohorts analyzed, whether exact-rank suppression or remediation was active, observed gap summary in plain language, and explicit limitations including `insufficient_data` handling.
 
 **Outputs**
 
 - Ranked shortlist; actions: **introduce**, **pass (with reason)**, **snooze**, **open assignment**.
-- “Why not shortlisted” hints when near-threshold.
+- “Why not shortlisted” and near-threshold hints are action-oriented and non-numeric.
+- If no strong match exists, show `No strong matches yet` plus exactly 3 recovery actions based on the top missing or stale signals.
+- Suspicious ranking outcomes can be reported from Match Detail or support. The support path must capture match ID, ranking versions, reason codes, rank presentation mode, and any override linkage for audit review.
 
 **Error & Empty States**
 
@@ -2208,13 +2220,20 @@ Each flow includes:
   - `Publish assignment` (or publish updates)
   - `Add skill requirements`
 - Gate mismatch: banner explaining unmet verification.
+- Low-confidence or policy-limited explanations must say why detail is limited without exposing cohort comparisons or internal thresholds.
 - Rate limiting: prevent mass introduces within a window.
 
 **Event Tracking**
 
-- `shortlist_generated` {count, min_score, cohort}
-- `match_viewed` {match_id, score, pac}
+- `match_ranked` {match_id, assignment_id, score_version, model_version, explanation_version, fairness_check_version, rank_presentation, fairness_status, reason_codes[]}
+- `shortlist_generated` {count, min_score, cohort, rank_presentation}
+- `match_viewed` {match_id, rank_presentation, fairness_status}
+- `match_explanation_viewed` {match_id, explanation_version, reason_codes[], rank_presentation}
 - `match_actioned` {match_id, action:introduce|pass|snooze, reason?}
+- `review_override_applied` {match_id, assignment_id, override_reason_code, previous_stage, new_stage, requested_scope}
+- `review_override_reverted` {match_id, assignment_id, override_reason_code, previous_stage, new_stage, requested_scope}
+- `match_outcome_reported` {match_id, support_path:in_product|support, suspicious_outcome:true}
+- `fairness_note_published` {release_id, status:published|insufficient_data, cohorts_analyzed, exact_rank_suppressed}
 - `match_settings_changed` {field, old, new}
 
 ---
@@ -2556,7 +2575,9 @@ Each flow includes:
 - **SkillsTaxonomy** — hierarchical L1→L4 catalog; synonyms; level rubric.
 - **ProfileSkill** — join table: Profile × L4 skill with `level (0–5)`, `months_experience`, `visibility`.
 - **Assignment** — role & outcomes, must/nice L4 skills, verification gates, logistics, and weights.
-- **Match** — materialized (Profile × Assignment) eligibility record with `score`, `subscores` (skills/constraints/verification/PAC), canonical `lifecycle_state`, and `created_at`.
+- **Match** — materialized (Profile × Assignment) ranking record with the current score trace package: `score`, top-level component scores (`skills_fit`, `proof_fit`, `constraints_fit`, `verification_fit`, `purpose_fit`), component applicability states, `score_version`, `model_version`, `explanation_version`, `fairness_check_version`, `inputs_hash`, `reason_codes`, `rank_presentation`, `fairness_status`, canonical `lifecycle_state`, `generated_at`, stale-policy state, and reviewer override linkage.
+- **MatchReasonLedger** — immutable ledger of canonical reason codes and payload snapshots for each match decision, including system, reviewer, and policy-generated entries used for explanation rendering and audits.
+- **MatchReviewState** — reviewer workflow state, reveal scope, shortlist timing, and manual override posture for each match.
 - **Application** — explicit candidate intent submitted through an application surface; conceptually separate from **Intro** and only materialized as a first-class object when self-serve apply ships.
 - **Intro** — canonical bilateral pursuit workflow for MVP. Starts from a scored **Match** or BYOC candidate invite, owns consent/interest state, and is the parent of interview handoff.
 - **Interview** — scheduled evaluation event created from an active **Intro**. Every interview must link back to one intro in MVP flows.
@@ -2564,6 +2585,7 @@ Each flow includes:
 - **Message** — basic contact thread or system notifications (MVP minimal).
 - **ConsentRecord** — user policy acceptances with versioning and IP/agent.
 - **AuditLog** — immutable changes for purpose/visibility/verification.
+- **FairnessNote** — release-scoped fairness monitoring output with thresholds used, cohorts analyzed, findings, limitations, and `published|insufficient_data` status.
 - **AnalyticsEvent** — anonymized interaction event.
 
 ### ER Sketch (text)
@@ -2595,9 +2617,15 @@ Each flow includes:
 - `dashboard_viewed` — `{ tiles[], load_ms }`
 - `l4_added` — `{ l4_id, source, level }`
 - `match_settings_changed` — `{ field, old, new }`
-- `shortlist_generated` — `{ count, min_score }`
-- `match_viewed` — `{ match_id, score, pac }`
+- `match_ranked` — `{ match_id, assignment_id, score_version, model_version, explanation_version, fairness_check_version, rank_presentation, fairness_status, reason_codes[] }`
+- `shortlist_generated` — `{ count, min_score, rank_presentation }`
+- `match_viewed` — `{ match_id, rank_presentation, fairness_status }`
+- `match_explanation_viewed` — `{ match_id, explanation_version, reason_codes[], rank_presentation }`
 - `match_actioned` — `{ match_id, action, reason? }`
+- `review_override_applied` — `{ match_id, assignment_id, override_reason_code, previous_stage, new_stage, requested_scope }`
+- `review_override_reverted` — `{ match_id, assignment_id, override_reason_code, previous_stage, new_stage, requested_scope }`
+- `match_outcome_reported` — `{ match_id, support_path, suspicious_outcome }`
+- `fairness_note_published` — `{ release_id, status, cohorts_analyzed, exact_rank_suppressed }`
 - `applied` — `{ assignment_id, match_score }`
 - `interview_scheduled` — `{ application_id, scheduled_at, duration_minutes, policy_preset }`
 - `assignment_published` — `{ assignment_id, builderMode, minimumRequiredSkills }`
@@ -2919,6 +2947,7 @@ Each flow includes:
 - **Core events:** `dashboard_viewed`, `l4_added`, `shortlist_generated`, `match_viewed`, `match_actioned{introduce|pass|snooze}`, `applied`, `interview_scheduled{duration_minutes,policy_preset}`, `individual_onboarding_completed`, `organization_onboarding_completed`, `portfolio_share_link_copied`, `portfolio_pdf_export_succeeded`, `assignment_template_applied`, `assignment_publish_succeeded`, `assignment_published{builderMode,minimumRequiredSkills}`, `hired`, `wellbeing_checkin_submitted` (private path).
 - **Attribution:** `source` on landings (organic/referral/paid); `cohort` labels (persona, role family, region).
 - **Derived metrics:** **TTFQI**, **TTV**, **TTSC**; effort saved (self-report + steps); PAC lift on acceptance/hire.
+- **Matching governance analytics:** track override frequency by assignment, org, and reviewer role; outcome drift between model-ranked and override-adjusted candidates; override-to-intro and override-to-hire conversion; fairness-status incidence; exact-rank reveal frequency versus band mode; near-threshold hint generation and follow-through.
 - **Data flow:** Client/server events → analytics DB via ETL (nightly); ML labels persisted in `ml_training_data`.
 - **Privacy:** No PII in properties; opt-out honored; Zen Hub data segmented and excluded from ranking.
 
@@ -2980,12 +3009,16 @@ Each flow includes:
   - SLA status visible to org reviewers and candidates; breach reasons recorded.
   - SLA policy supports recommended presets (startup, enterprise, volunteer) while preserving strict limits in advanced policy mode.
 
-## A6 Matching Transparency (Rank Bands)
+## A6 Matching Transparency & Governance
 
 - Acceptance checks:
-  - Show rank bands (“Top 5/10/20”) by default; show exact rank only when pool ≥30, fairness risk is low, and the workflow has reached Stage 4 interview coordination reveal; label which mode is used.
-  - If fairness suppression is active, exact rank never appears and reason copy uses a fairness-safe explanation.
-  - “Why this match” is always present; never reveal other candidates’ personal details or hidden private context.
+  - Show rank bands (`Top 5/10/20`) by default. Exact rank is available only for tightly scoped org-review surfaces when pool ≥30, fairness status is not elevated, and the product labels the active presentation mode.
+  - If fairness suppression is active, exact rank never appears and explanation copy uses a fairness-safe reason section rather than hidden thresholds.
+  - Every visible explanation is generated from canonical reason codes and rendered as plain-language `reasonSummary` plus grouped `reasonSections`.
+  - Exact scores remain internal by default. User-facing views use bands or qualitative fit states, and suppression falls back to `hidden` rather than leaking raw thresholds.
+  - Near-threshold hints are action-oriented and non-numeric, and the no-good-match state always shows `No strong matches yet` plus exactly 3 recovery actions.
+  - Manual overrides never overwrite the original score trace and must be reviewable by actor, reason code, previous state, new state, scope, and timestamp.
+  - Fairness notes must resolve to either `published` or `insufficient_data`, include sample thresholds and limitations, and avoid causal or certification language.
 
 ## A7 Activation Thresholds
 
