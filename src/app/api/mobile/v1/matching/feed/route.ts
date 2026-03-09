@@ -8,6 +8,10 @@ import { getInternalApiSecret } from '@/lib/api/auth';
 import { requireMobileAuth } from '@/lib/api/mobile/auth';
 import { mobileError, mobileSuccess } from '@/lib/api/mobile/response';
 import { POST as computeMatches } from '@/app/api/core/matching/profile/route';
+import {
+  isWithinStaleGraceWindow,
+  resolveEffectiveScoreState,
+} from '@/lib/matching/match-score-contract';
 
 export const dynamic = 'force-dynamic';
 
@@ -81,6 +85,10 @@ export async function POST(request: NextRequest) {
         matchId: matches.id,
         assignmentId: assignments.id,
         score: matches.score,
+        scoreTotal: matches.scoreTotal,
+        scoreState: matches.scoreState,
+        generatedAt: matches.generatedAt,
+        staleAt: matches.staleAt,
         vector: matches.vector,
         snoozedUntil: matches.snoozedUntil,
         assignmentRole: assignments.role,
@@ -98,12 +106,24 @@ export async function POST(request: NextRequest) {
       .innerJoin(assignments, eq(assignments.id, matches.assignmentId))
       .innerJoin(organizations, eq(organizations.id, assignments.orgId))
       .where(eq(matches.profileId, auth.user.id))
-      .orderBy(desc(matches.score));
+      .orderBy(desc(matches.scoreTotal), desc(matches.score));
 
     const now = new Date();
     const filtered = rows
       .filter((row) => !isHiddenMatch(row.vector))
       .filter((row) => !row.snoozedUntil || row.snoozedUntil <= now)
+      .filter((row) => {
+        const state = resolveEffectiveScoreState({
+          scoreState: row.scoreState,
+          generatedAt: row.generatedAt,
+          staleAt: row.staleAt,
+          now,
+        });
+        return (
+          state !== 'hidden_due_to_policy' &&
+          (state !== 'stale' || isWithinStaleGraceWindow(row.staleAt, now))
+        );
+      })
       .slice(0, parsed.data.k);
 
     return mobileSuccess({
@@ -111,6 +131,13 @@ export async function POST(request: NextRequest) {
         id: row.matchId,
         assignmentId: row.assignmentId,
         score: Number(row.score),
+        scoreTotal: row.scoreTotal,
+        scoreState: resolveEffectiveScoreState({
+          scoreState: row.scoreState,
+          generatedAt: row.generatedAt,
+          staleAt: row.staleAt,
+          now,
+        }),
         assignment: {
           id: row.assignmentId,
           role: row.assignmentRole,

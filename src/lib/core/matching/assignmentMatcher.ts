@@ -1,50 +1,42 @@
-import { inArray } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 
 import { db } from '@/db';
 import type { Assignment } from '@/db/schema';
-import { assignmentExpertiseMatrix, matchingProfiles, skills, skillsTaxonomy } from '@/db/schema';
-import { deriveRequirementsFromMatrix } from '@/lib/assignments/expertise-matrix';
-import { log } from '@/lib/log';
-import { scrubDisallowedFields } from '@/lib/core/matching/firewall';
 import {
-  scorePAC,
-  scoreAvailability,
-  scoreCompensation,
-  scoreExperience,
-  scoreLanguage,
-  scoreLocation,
-  scoreSkillsEnhanced,
-  scoreVerifications,
-  scoreWorkAuthorization,
-  composeWeighted,
-  compareMatches,
-  type Skill,
-  type DateWindow,
-  type Range,
-  type LocationMode,
-} from '@/lib/core/matching/scorers';
-import { annRetrieveSimilarProfiles, batchGetMissionVisionScores } from '@/lib/matching/semantic';
-import { toAnnualCompensationRange } from '@/lib/matching/compensation';
+  assignmentExpertiseMatrix,
+  consentObligations,
+  matchingProfiles,
+  skills,
+  skillsTaxonomy,
+} from '@/db/schema';
+import { deriveRequirementsFromMatrix } from '@/lib/assignments/expertise-matrix';
+import { scrubDisallowedFields } from '@/lib/core/matching/firewall';
+import type { Skill } from '@/lib/core/matching/scorers';
 import {
   deriveAtlasLanguageLevels,
   parseLegacyLanguageLevels,
   resolveLanguageLevel,
 } from '@/lib/core/matching/language-resolution';
+import { log } from '@/lib/log';
+import { toAnnualCompensationRange } from '@/lib/matching/compensation';
+import { evaluateIndividualMatchability } from '@/lib/matching/eligibility';
+import {
+  buildCanonicalMatchScoreArtifact,
+  compareCanonicalMatchOrder,
+  type CanonicalMatchScoreArtifact,
+} from '@/lib/matching/match-score-contract';
+import { annRetrieveSimilarProfiles } from '@/lib/matching/semantic';
+import { CONSENT_TYPES } from '@/lib/privacy/consent-contract';
 
 export type AssignmentMatchResult = {
   profileId: string;
   score: number;
-  subscores: Record<string, number>;
-  contributions: Record<string, number>;
-  gaps: Array<{ id: string; required: number; have: number }>;
-  missing: string[];
-  profile: unknown; // Scrubbed profile data (blind-first)
-  pac: {
-    total: number;
-    valuesScore: number;
-    causesScore: number;
-    missionVisionScore: number;
-  };
+  scoreTotal: number;
+  subscoresJson: Record<string, unknown>;
+  scoreSnapshotJson: Record<string, unknown>;
+  reasonCodes: CanonicalMatchScoreArtifact['reasonCodes'];
+  profile: unknown;
+  artifact: CanonicalMatchScoreArtifact;
 };
 
 export type AssignmentMatchMeta = {
@@ -84,13 +76,6 @@ function resolveCandidateScanLimit(k: number, annLimit?: number): number {
   return fullScanTarget;
 }
 
-/**
- * Shared assignment-matching engine used by both web and mobile routes.
- *
- * Notes:
- * - Caller is responsible for auth and org membership checks.
- * - Returns blind-first results with PII scrubbed via matching firewall.
- */
 export async function computeAssignmentMatches(input: ComputeAssignmentMatchesInput): Promise<{
   items: AssignmentMatchResult[];
   meta: AssignmentMatchMeta;
@@ -98,12 +83,6 @@ export async function computeAssignmentMatches(input: ComputeAssignmentMatchesIn
   const startTime = input.startTime ?? Date.now();
   const { assignmentId, assignment, weights, k, useTwoStage, annLimit } = input;
   const candidateScanLimit = resolveCandidateScanLimit(k, annLimit);
-
-  // ========================================================================
-  // TWO-STAGE MATCHING (PRD: Proofound_Matching_Conversation.md)
-  // Stage 1: ANN retrieval using pgvector HNSW index
-  // Stage 2: Precise multi-factor re-ranking
-  // ========================================================================
 
   let candidateProfiles: (typeof matchingProfiles.$inferSelect)[];
   let stage1Count = 0;
@@ -115,81 +94,74 @@ export async function computeAssignmentMatches(input: ComputeAssignmentMatchesIn
     stage1Count = annResults.length;
 
     if (annResults.length > 0) {
-      const profileIds = annResults.map((r) => r.id);
+      const profileIds = annResults.map((row) => row.id);
       candidateProfiles = await db.query.matchingProfiles.findMany({
         where: inArray(matchingProfiles.profileId, profileIds),
       });
-
-      log.info('match.assignment.stage1.complete', {
-        assignmentId,
-        annResultCount: annResults.length,
-        profilesFetched: candidateProfiles.length,
-      });
     } else {
-      // Fallback to full scan if ANN returns no results (embeddings not ready)
-      log.warn('match.assignment.stage1.fallback', {
-        assignmentId,
-        reason: 'No ANN results, falling back to full scan',
-        candidateScanLimit,
-      });
       candidateProfiles = await db.query.matchingProfiles.findMany({
         limit: candidateScanLimit,
       });
     }
   } else {
-    // Traditional full scan
     candidateProfiles = await db.query.matchingProfiles.findMany({
       limit: candidateScanLimit,
     });
   }
 
-  // Fetch skills for candidates with enhanced attributes
-  const profileIds = candidateProfiles.map((p) => p.profileId);
+  const profileIds = candidateProfiles.map((profile) => profile.profileId);
   const candidateSkills = profileIds.length
     ? await db.query.skills.findMany({
         where: inArray(skills.profileId, profileIds),
       })
     : [];
 
-  const assignmentIds = input.assignment ? [input.assignment.id] : [];
-  const matrixRows = assignmentIds.length
-    ? await db.query.assignmentExpertiseMatrix.findMany({
-        where: inArray(assignmentExpertiseMatrix.assignmentId, assignmentIds),
-      })
-    : [];
-  const matrixRowsByAssignment = new Map<string, typeof matrixRows>();
-  for (const row of matrixRows) {
-    const existing = matrixRowsByAssignment.get(row.assignmentId) || [];
-    existing.push(row);
-    matrixRowsByAssignment.set(row.assignmentId, existing);
-  }
+  const matrixRows = await db.query.assignmentExpertiseMatrix.findMany({
+    where: eq(assignmentExpertiseMatrix.assignmentId, assignment.id),
+  });
+  const matrixRequirements =
+    matrixRows.length > 0
+      ? deriveRequirementsFromMatrix(
+          matrixRows.map((row) => ({
+            skillCode: row.skillCode,
+            requiredLevel: row.requiredLevel,
+            stakeholderRole: row.stakeholderRole,
+          }))
+        )
+      : null;
+
+  const mustHaveSkills = matrixRequirements
+    ? (matrixRequirements.mustHaveSkills as Skill[])
+    : (assignment.mustHaveSkills as Skill[]) || [];
+  const niceToHaveSkills = matrixRequirements
+    ? (matrixRequirements.niceToHaveSkills as Skill[])
+    : (assignment.niceToHaveSkills as Skill[]) || [];
 
   const skillsByProfile: Record<string, Record<string, Skill>> = {};
   const profileSkillRows = new Map<string, typeof candidateSkills>();
-
-  for (const skill of candidateSkills) {
-    if (!skillsByProfile[skill.profileId]) {
-      skillsByProfile[skill.profileId] = {};
+  for (const row of candidateSkills) {
+    if (!skillsByProfile[row.profileId]) {
+      skillsByProfile[row.profileId] = {};
     }
-    skillsByProfile[skill.profileId][skill.skillId] = {
-      id: skill.skillId,
-      level: skill.level,
-      months: skill.monthsExperience,
-      evidenceStrength: skill.evidenceStrength ? parseFloat(skill.evidenceStrength) : undefined,
-      recencyMultiplier: skill.recencyMultiplier ? parseFloat(skill.recencyMultiplier) : undefined,
-      impactScore: skill.impactScore ? parseFloat(skill.impactScore) : undefined,
-      lastUsedAt: skill.lastUsedAt || undefined,
+    skillsByProfile[row.profileId][row.skillId] = {
+      id: row.skillId,
+      level: row.level,
+      months: row.monthsExperience,
+      evidenceStrength: row.evidenceStrength ? parseFloat(row.evidenceStrength) : undefined,
+      recencyMultiplier: row.recencyMultiplier ? parseFloat(row.recencyMultiplier) : undefined,
+      impactScore: row.impactScore ? parseFloat(row.impactScore) : undefined,
+      lastUsedAt: row.lastUsedAt || undefined,
     };
 
-    const existingRows = profileSkillRows.get(skill.profileId) || [];
-    existingRows.push(skill);
-    profileSkillRows.set(skill.profileId, existingRows);
+    const existing = profileSkillRows.get(row.profileId) || [];
+    existing.push(row);
+    profileSkillRows.set(row.profileId, existing);
   }
 
   const skillTaxonomyCodes = Array.from(
     new Set(
       candidateSkills
-        .map((skill) => skill.skillCode || skill.skillId)
+        .map((row) => row.skillCode || row.skillId)
         .filter((code): code is string => Boolean(code))
     )
   );
@@ -213,174 +185,122 @@ export async function computeAssignmentMatches(input: ComputeAssignmentMatchesIn
     atlasLanguagesByProfile.set(profileId, deriveAtlasLanguageLevels(rows, skillTaxonomyRows));
   }
 
-  // Batch fetch mission/vision scores for PAC (if using semantic matching)
-  let missionVisionScores: Map<string, number> = new Map();
-  if (useTwoStage && profileIds.length > 0) {
-    missionVisionScores = await batchGetMissionVisionScores(profileIds, assignmentId);
-  }
+  const activeMatchingConsentRows = profileIds.length
+    ? await db
+        .select({ profileId: consentObligations.profileId })
+        .from(consentObligations)
+        .where(
+          and(
+            inArray(consentObligations.profileId, profileIds),
+            eq(consentObligations.consentType, CONSENT_TYPES.ML_MATCHING),
+            eq(consentObligations.state, 'active')
+          )
+        )
+    : [];
+  const activeMatchingConsentIds = new Set(activeMatchingConsentRows.map((row) => row.profileId));
+  const eligibilityByProfileId = new Map(
+    (
+      await Promise.all(
+        candidateProfiles.map(async (profile) => ({
+          profileId: profile.profileId,
+          eligible: (await evaluateIndividualMatchability(profile.profileId)).eligible,
+        }))
+      )
+    ).map((row) => [row.profileId, row.eligible])
+  );
 
-  // Compute scores
   const results: AssignmentMatchResult[] = [];
+  const assignmentLanguageRequirement = assignment.minLanguage as {
+    code: string;
+    level: string;
+  } | null;
 
   for (const profile of candidateProfiles) {
     const candidateSkillSet = skillsByProfile[profile.profileId] || {};
-
-    // Apply hard filters with enhanced scoring
-    const matrixRowsForAssignment = matrixRowsByAssignment.get(assignment.id) || [];
-    const matrixRequirements =
-      matrixRowsForAssignment.length > 0
-        ? deriveRequirementsFromMatrix(
-            matrixRowsForAssignment.map((row) => ({
-              skillCode: row.skillCode,
-              requiredLevel: row.requiredLevel,
-              stakeholderRole: row.stakeholderRole,
-            }))
-          )
-        : null;
-    const mustHaveSkills = matrixRequirements
-      ? (matrixRequirements.mustHaveSkills as Skill[])
-      : (assignment.mustHaveSkills as Skill[]) || [];
-    const niceToHaveSkills = matrixRequirements
-      ? (matrixRequirements.niceToHaveSkills as Skill[])
-      : (assignment.niceToHaveSkills as Skill[]) || [];
-
-    const enhancedSkillScore = scoreSkillsEnhanced(
-      mustHaveSkills,
-      niceToHaveSkills,
-      candidateSkillSet
-    );
-
-    if (enhancedSkillScore.hardFail) {
-      continue; // Skip candidates who don't meet must-haves
-    }
-
-    // Use mission/vision score from embeddings if available (two-stage mode)
-    const missionVisionScore = missionVisionScores.get(profile.profileId);
-    const pacScore = scorePAC(
-      profile.valuesTags || [],
-      profile.causeTags || [],
-      assignment.valuesRequired || [],
-      assignment.causeTags || [],
-      missionVisionScore
-    );
-
-    const workAuthScore = scoreWorkAuthorization({
-      candidateNeedsSponsorship: profile.needsSponsorship ?? false,
-      candidateWishesSponsorship: profile.wishesSponsorship ?? false,
-      orgCanSponsor: assignment.canSponsorVisa ?? false,
-    });
-
-    const subscores: Record<string, number> = {
-      // Legacy classes (kept for backward compatibility with existing presets)
-      values: pacScore.valuesScore,
-      causes: pacScore.causesScore,
-      // Core skills (enhanced weighted score)
-      skills: enhancedSkillScore.weightedScore,
-      experience: scoreExperience(
-        Object.values(candidateSkillSet).reduce((sum, s) => sum + (s.months || 0), 0) /
-          Math.max(Object.keys(candidateSkillSet).length, 1)
-      ),
-      verifications: scoreVerifications(
-        assignment.verificationGates || [],
-        (profile.verified as Record<string, boolean>) || {}
-      ),
-      // PRD aligned classes
-      pac: pacScore.total,
-      recency: enhancedSkillScore.recencyScore,
-      evidence: enhancedSkillScore.evidenceScore,
-      workAuthorization: workAuthScore,
-    };
-
-    // Availability
-    if (assignment.startEarliest && assignment.startLatest && profile.availabilityEarliest) {
-      subscores.availability = scoreAvailability(
-        {
-          earliest: new Date(assignment.startEarliest),
-          latest: new Date(assignment.startLatest),
-        } as DateWindow,
-        new Date(profile.availabilityEarliest),
-        {
-          min: assignment.hoursMin || 0,
-          max: assignment.hoursMax || 40,
-        } as Range,
-        {
-          min: profile.hoursMin || 0,
-          max: profile.hoursMax || 40,
-        } as Range
-      );
-    } else {
-      subscores.availability = 1.0;
-    }
-
-    // Location
-    if (assignment.locationMode && profile.workMode) {
-      subscores.location = scoreLocation(
-        assignment.locationMode as LocationMode,
-        profile.workMode as LocationMode,
-        assignment.country || undefined,
-        profile.country || undefined
-      );
-    } else {
-      subscores.location = 1.0;
-    }
-
-    // Compensation
+    const atlasLanguageLevels = atlasLanguagesByProfile.get(profile.profileId) || {};
+    const legacyLanguageLevels = parseLegacyLanguageLevels(profile.languages);
+    const candidateLanguageLevel = assignmentLanguageRequirement
+      ? resolveLanguageLevel(
+          assignmentLanguageRequirement.code,
+          atlasLanguageLevels,
+          legacyLanguageLevels
+        )
+      : null;
     const profileAnnualComp = toAnnualCompensationRange({
       min: profile.compMin,
       max: profile.compMax,
       period: profile.compPeriod,
     });
-    if (assignment.compMin && assignment.compMax && profileAnnualComp) {
-      subscores.compensation = scoreCompensation(
-        { min: assignment.compMin, max: assignment.compMax } as Range,
-        profileAnnualComp as Range
-      );
-    } else {
-      subscores.compensation = 1.0;
+
+    const artifact = buildCanonicalMatchScoreArtifact({
+      assignmentId,
+      profileId: profile.profileId,
+      assignmentOrgId: assignment.orgId,
+      assignmentStatus: assignment.status,
+      matchabilityEligible: eligibilityByProfileId.get(profile.profileId) ?? false,
+      matchingConsentActive: activeMatchingConsentIds.has(profile.profileId),
+      requiredSkills: mustHaveSkills.map((entry) => ({ id: entry.id, level: entry.level })),
+      niceToHaveSkills: niceToHaveSkills.map((entry) => ({ id: entry.id, level: entry.level })),
+      candidateSkills: candidateSkillSet,
+      assignmentValuesTags: assignment.valuesRequired || [],
+      assignmentCauseTags: assignment.causeTags || [],
+      profileValuesTags: profile.valuesTags || [],
+      profileCauseTags: profile.causeTags || [],
+      assignmentStartEarliest: assignment.startEarliest,
+      assignmentStartLatest: assignment.startLatest,
+      profileAvailabilityEarliest: profile.availabilityEarliest,
+      assignmentHoursMin: assignment.hoursMin,
+      assignmentHoursMax: assignment.hoursMax,
+      profileHoursMin: profile.hoursMin,
+      profileHoursMax: profile.hoursMax,
+      assignmentLocationMode: assignment.locationMode,
+      profileWorkMode: profile.workMode,
+      assignmentCountry: assignment.country,
+      profileCountry: profile.country,
+      assignmentCompMin: assignment.compMin,
+      assignmentCompMax: assignment.compMax,
+      profileCompAnnualRange: profileAnnualComp,
+      assignmentMinLanguage: assignmentLanguageRequirement,
+      candidateLanguageLevel,
+      assignmentCanSponsorVisa: assignment.canSponsorVisa,
+      profileNeedsSponsorship: profile.needsSponsorship,
+      profileWishesSponsorship: profile.wishesSponsorship,
+      verificationGates: assignment.verificationGates || [],
+      verifiedFlags: (profile.verified as Record<string, boolean> | null) || {},
+      sourceRefs: {
+        assignmentUpdatedAt: assignment.updatedAt?.toISOString?.() ?? null,
+        profileUpdatedAt: profile.updatedAt?.toISOString?.() ?? null,
+      },
+    });
+
+    if (!artifact) {
+      continue;
     }
-
-    // Language
-    if (assignment.minLanguage) {
-      const minLang = assignment.minLanguage as { code: string; level: string };
-      const atlasLanguageLevels = atlasLanguagesByProfile.get(profile.profileId) || {};
-      const legacyLanguageLevels = parseLegacyLanguageLevels(profile.languages);
-      const candidateLevel = resolveLanguageLevel(
-        minLang.code,
-        atlasLanguageLevels,
-        legacyLanguageLevels
-      );
-      subscores.language = candidateLevel ? scoreLanguage(minLang.level, candidateLevel) : 0;
-    } else {
-      subscores.language = 1.0;
-    }
-
-    // Compose weighted score
-    const composed = composeWeighted(subscores, weights);
-
-    // Scrub PII from profile (blind-first for org-side candidate lists)
-    const scrubbedProfile = scrubDisallowedFields(profile);
 
     results.push({
       profileId: profile.profileId,
-      score: composed.total,
-      subscores,
-      contributions: composed.contributions,
-      gaps: enhancedSkillScore.gaps,
-      missing: enhancedSkillScore.missing,
-      profile: scrubbedProfile,
-      pac: {
-        total: pacScore.total,
-        valuesScore: pacScore.valuesScore,
-        causesScore: pacScore.causesScore,
-        missionVisionScore: pacScore.missionVisionScore,
-      },
+      score: artifact.scoreNormalized,
+      scoreTotal: artifact.scoreTotal,
+      subscoresJson: artifact.subscoresJson,
+      scoreSnapshotJson: artifact.scoreSnapshotJson,
+      reasonCodes: artifact.reasonCodes,
+      profile: scrubDisallowedFields(profile),
+      artifact,
     });
   }
 
-  results.sort((a, b) =>
-    compareMatches(
-      { score: a.score, assignmentId, profileId: a.profileId },
-      { score: b.score, assignmentId, profileId: b.profileId }
+  results.sort((left, right) =>
+    compareCanonicalMatchOrder(
+      {
+        scoreTotal: left.scoreTotal,
+        subscoresJson: left.subscoresJson,
+        counterpartId: left.profileId,
+      },
+      {
+        scoreTotal: right.scoreTotal,
+        subscoresJson: right.subscoresJson,
+        counterpartId: right.profileId,
+      }
     )
   );
 
@@ -406,7 +326,7 @@ export async function computeAssignmentMatches(input: ComputeAssignmentMatchesIn
       weights,
       twoStage: useTwoStage,
       stage1Count: useTwoStage ? stage1Count : undefined,
-      hasMissionVisionScores: missionVisionScores.size > 0,
+      hasMissionVisionScores: false,
     },
   };
 }

@@ -9,11 +9,6 @@ import { computeAssignmentMatches } from '@/lib/core/matching/assignmentMatcher'
 import { getPreset, normalizeWeights, type PresetKey } from '@/lib/core/matching/presets';
 import { log } from '@/lib/log';
 import {
-  buildMatchAuditFields,
-  CANONICAL_MATCH_AUDIT_FIELDS_ENABLED,
-  CANONICAL_MATCH_SCORE_VERSION,
-} from '@/lib/canonical/repository';
-import {
   appendSystemReasonLedger,
   buildCanonicalMatchPersistenceFields,
   canMutateReview,
@@ -94,37 +89,18 @@ export async function POST(request: NextRequest) {
 
     const upserted = await Promise.all(
       items.map(async (item) => {
-        const vectorPayload = {
-          subscores: item.subscores,
-          contributions: item.contributions,
-          gaps: item.gaps,
-          missing: item.missing,
-          weights,
-          pac: item.pac,
-        };
-        const auditFields = buildMatchAuditFields({
-          scoreVersion: CANONICAL_MATCH_SCORE_VERSION,
-          assignmentId,
-          profileId: item.profileId,
-          weights,
-          subscores: item.subscores,
-          missing: item.missing,
-          gaps: item.gaps,
-          verificationGates: assignment.verificationGates || [],
-        });
         const persistenceFields = buildCanonicalMatchPersistenceFields({
-          scoreVersion: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.scoreVersion : null,
-          inputsHash: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.inputsHash : null,
-          reasonCodes: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.reasonCodes : [],
-          generatedAt: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.generatedAt : null,
+          artifact: item.artifact,
         });
+        const vectorPayload = {
+          hidden: false,
+        };
 
         const [row] = await db
           .insert(matches)
           .values({
             assignmentId,
             profileId: item.profileId,
-            score: item.score.toString(),
             ...persistenceFields,
             vector: vectorPayload,
             weights,
@@ -132,16 +108,7 @@ export async function POST(request: NextRequest) {
           .onConflictDoUpdate({
             target: [matches.assignmentId, matches.profileId],
             set: {
-              score: item.score.toString(),
-              scoreVersion: sql`excluded.score_version`,
-              modelVersion: sql`excluded.model_version`,
-              explanationVersion: sql`excluded.explanation_version`,
-              fairnessCheckVersion: sql`excluded.fairness_check_version`,
-              fairnessStatus: sql`excluded.fairness_status`,
-              fairnessEvaluatedAt: sql`excluded.fairness_evaluated_at`,
-              inputsHash: sql`excluded.inputs_hash`,
-              reasonCodes: sql`excluded.reason_codes`,
-              generatedAt: sql`excluded.generated_at`,
+              ...persistenceFields,
               vector: vectorPayload,
               weights,
             },
@@ -186,7 +153,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       items: items.map((item, index) => ({
-        ...item,
+        profileId: item.profileId,
+        score: item.score,
+        scoreTotal: item.scoreTotal,
+        subscoresJson: item.subscoresJson,
+        scoreSnapshotJson: item.scoreSnapshotJson,
+        reasonCodes: item.reasonCodes,
+        profile: item.profile,
         id: matchIdByProfileId.get(item.profileId) ?? null,
         reviewStage: 'blind_review',
         revealScope: 'blind',

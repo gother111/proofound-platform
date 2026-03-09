@@ -8,6 +8,11 @@ import {
   mapLegacyProofVisibility,
 } from '@/lib/contracts/canonical-domain';
 import { buildMatchAuditFields, CANONICAL_MATCH_SCORE_VERSION } from '@/lib/canonical/repository';
+import {
+  buildCanonicalMatchScoreArtifact,
+  compareCanonicalMatchOrder,
+  MATCH_SCORE_CONTRACT_VERSION,
+} from '@/lib/matching/match-score-contract';
 
 describe('canonical visibility mapping', () => {
   it('maps legacy individual visibility to the canonical model', () => {
@@ -92,5 +97,112 @@ describe('match audit persistence helpers', () => {
       'focus_role',
       'focus_org_type',
     ]);
+  });
+});
+
+describe('match score contract v1', () => {
+  const baseInput = {
+    assignmentId: '11111111-1111-4111-8111-111111111111',
+    profileId: '22222222-2222-4222-8222-222222222222',
+    assignmentOrgId: '33333333-3333-4333-8333-333333333333',
+    assignmentStatus: 'active',
+    matchabilityEligible: true,
+    matchingConsentActive: true,
+    requiredSkills: [{ id: 'typescript', level: 4 }],
+    niceToHaveSkills: [{ id: 'graphql', level: 3 }],
+    candidateSkills: {
+      typescript: {
+        id: 'typescript',
+        level: 5,
+        evidenceStrength: 0.8,
+        recencyMultiplier: 0.9,
+        impactScore: 0.7,
+      },
+      graphql: {
+        id: 'graphql',
+        level: 3,
+        evidenceStrength: 0.6,
+        recencyMultiplier: 0.8,
+        impactScore: 0.5,
+      },
+    },
+    assignmentValuesTags: ['privacy'],
+    assignmentCauseTags: ['climate'],
+    profileValuesTags: ['privacy'],
+    profileCauseTags: ['climate'],
+    assignmentStartEarliest: '2026-03-10',
+    assignmentStartLatest: '2026-03-20',
+    profileAvailabilityEarliest: '2026-03-12',
+    assignmentHoursMin: 20,
+    assignmentHoursMax: 40,
+    profileHoursMin: 20,
+    profileHoursMax: 40,
+    assignmentLocationMode: 'remote',
+    profileWorkMode: 'remote',
+    assignmentCountry: 'SE',
+    profileCountry: 'SE',
+    assignmentCompMin: 100000,
+    assignmentCompMax: 140000,
+    profileCompAnnualRange: { min: 110000, max: 130000 },
+    assignmentMinLanguage: { code: 'en', level: 'B2' },
+    candidateLanguageLevel: 'C1',
+    assignmentCanSponsorVisa: true,
+    profileNeedsSponsorship: false,
+    profileWishesSponsorship: false,
+    verificationGates: ['work_email'],
+    verifiedFlags: { work_email: true },
+  } as const;
+
+  it('is deterministic for identical inputs', () => {
+    const first = buildCanonicalMatchScoreArtifact(baseInput);
+    const second = buildCanonicalMatchScoreArtifact(baseInput);
+
+    expect(first).not.toBeNull();
+    expect(second).not.toBeNull();
+    expect(first?.scoreVersion).toBe(MATCH_SCORE_CONTRACT_VERSION);
+    expect(first?.scoreTotal).toBe(second?.scoreTotal);
+    expect(first?.inputsHash).toBe(second?.inputsHash);
+    expect(first?.reasonCodes).toEqual(second?.reasonCodes);
+    expect(first?.subscoresJson).toEqual(second?.subscoresJson);
+  });
+
+  it('treats missing candidate data as zero instead of inflating the score', () => {
+    const artifact = buildCanonicalMatchScoreArtifact({
+      ...baseInput,
+      candidateLanguageLevel: null,
+    });
+
+    expect(artifact).not.toBeNull();
+    expect(artifact?.subscoresJson.language).toBe(0);
+    expect(Number(artifact?.subscoresJson.confidence_total)).toBeLessThan(10000);
+  });
+
+  it('uses the documented tie breaker order', () => {
+    const left = {
+      scoreTotal: 8500,
+      subscoresJson: {
+        skills_fit: 9000,
+        constraints_fit: 8000,
+        proof_fit: 7000,
+        verification_fit: 10000,
+        purpose_fit: 6000,
+        confidence_total: 9000,
+      },
+      counterpartId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+    };
+    const right = {
+      scoreTotal: 8500,
+      subscoresJson: {
+        skills_fit: 9000,
+        constraints_fit: 8000,
+        proof_fit: 7000,
+        verification_fit: 10000,
+        purpose_fit: 6000,
+        confidence_total: 9000,
+      },
+      counterpartId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+    };
+
+    expect(compareCanonicalMatchOrder(left, right)).toBeGreaterThan(0);
   });
 });

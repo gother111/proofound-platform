@@ -1,110 +1,66 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { and, eq, inArray, notInArray, sql } from 'drizzle-orm';
+
 import { db } from '@/db';
 import {
   assignmentExpertiseMatrix,
   assignments,
+  consentObligations,
   matchingProfiles,
   matches,
-  organizations,
   skills,
   skillsTaxonomy,
 } from '@/db/schema';
-import { and, eq, inArray, notInArray, sql } from 'drizzle-orm';
-import { log } from '@/lib/log';
-import { scrubDisallowedFields } from '@/lib/core/matching/firewall';
-import { getOrSet, CACHE_KEYS, CACHE_TTL } from '@/lib/cache';
-import { emitAnalyticsEventAsync, emitFirstMatchShown } from '@/lib/analytics/events';
-import { getRows } from '@/lib/db/rows';
-import { deriveRequirementsFromMatrix } from '@/lib/assignments/expertise-matrix';
-import {
-  scoreSkillsEnhanced,
-  scoreExperience,
-  scoreVerifications,
-  scoreAvailability,
-  scoreLocation,
-  scoreCompensation,
-  scoreLanguage,
-  scorePAC,
-  scoreWorkAuthorization,
-  composeWeighted,
-  compareMatches,
-  type Skill,
-  type DateWindow,
-  type Range,
-  type LocationMode,
-} from '@/lib/core/matching/scorers';
-import { getPreset, normalizeWeights, type PresetKey } from '@/lib/core/matching/presets';
-import {
-  annRetrieveSimilarAssignments,
-  batchGetMissionVisionScoresForProfile,
-} from '@/lib/matching/semantic';
+import { emitFirstMatchShown } from '@/lib/analytics/events';
 import { isTrustedInternalRequest, requireApiAuth } from '@/lib/api/auth';
-import { evaluateIndividualMatchability, toSoftGatedPayload } from '@/lib/matching/eligibility';
-import { calculateFocusBoost, isIndustryAvoided } from '@/lib/core/matching/focus';
+import { deriveRequirementsFromMatrix } from '@/lib/assignments/expertise-matrix';
+import { getRows } from '@/lib/db/rows';
+import { scrubDisallowedFields } from '@/lib/core/matching/firewall';
+import type { Skill } from '@/lib/core/matching/scorers';
 import {
   deriveAtlasLanguageLevels,
   parseLegacyLanguageLevels,
   resolveLanguageLevel,
 } from '@/lib/core/matching/language-resolution';
+import { log } from '@/lib/log';
 import { toAnnualCompensationRange } from '@/lib/matching/compensation';
+import { evaluateIndividualMatchability, toSoftGatedPayload } from '@/lib/matching/eligibility';
 import {
-  buildMatchAuditFields,
-  CANONICAL_MATCH_AUDIT_FIELDS_ENABLED,
-  CANONICAL_MATCH_SCORE_VERSION,
-} from '@/lib/canonical/repository';
+  buildCanonicalMatchScoreArtifact,
+  compareCanonicalMatchOrder,
+} from '@/lib/matching/match-score-contract';
+import { annRetrieveSimilarAssignments } from '@/lib/matching/semantic';
+import { buildCanonicalMatchPersistenceFields } from '@/lib/matching/review-contract';
+import { CONSENT_TYPES } from '@/lib/privacy/consent-contract';
 
 export const dynamic = 'force-dynamic';
 
 const DEFAULT_ASSIGNMENT_SCAN_MULTIPLIER = 10;
 const MIN_ASSIGNMENT_SCAN_LIMIT = 50;
 const MAX_ASSIGNMENT_SCAN_LIMIT = 500;
-type CandidatePoolSource = 'full_scan' | 'ann_hybrid';
 
-function resolveAssignmentScanLimit(k: number): number {
-  return Math.min(
-    MAX_ASSIGNMENT_SCAN_LIMIT,
-    Math.max(MIN_ASSIGNMENT_SCAN_LIMIT, k * DEFAULT_ASSIGNMENT_SCAN_MULTIPLIER)
-  );
-}
-
-function resolveTwoStageEnabled(requestedSemanticFlag: boolean): boolean {
-  if (requestedSemanticFlag) {
-    return true;
-  }
-  const raw = process.env.MATCHING_TWO_STAGE_ENABLED?.trim().toLowerCase();
-  if (raw === 'true') {
-    return true;
-  }
-  if (raw === 'false') {
-    return false;
-  }
-  return true;
-}
-
-// Validation schemas
 const MatchRequestSchema = z.object({
   weights: z.record(z.number()).optional(),
   mode: z.enum(['mission-first', 'skills-first', 'balanced']).optional(),
-  useSemanticMatching: z.boolean().optional(), // Enable semantic PAC scoring
-  k: z.number().positive().max(100).optional(), // Top k results
+  useSemanticMatching: z.boolean().optional(),
+  k: z.number().positive().max(100).optional(),
 });
 
-// Extended schema for service-role calls (cron refresh) that pass a target userId
 const ServiceMatchRequestSchema = MatchRequestSchema.extend({
   userId: z.string().uuid(),
 });
 
 interface MatchResult {
-  id?: string; // Match ID from database if exists
+  id?: string;
   assignmentId: string;
   score: number;
+  scoreTotal: number;
   subscores: Record<string, number>;
   contributions: Record<string, number>;
   gaps: Array<{ id: string; required: number; have: number }>;
   missing: string[];
-  assignment: unknown; // Scrubbed assignment data
-  // PRD: PAC for analytics and transparency
+  assignment: unknown;
   pac: {
     total: number;
     valuesScore: number;
@@ -124,31 +80,75 @@ interface MatchResult {
       orgType: number;
     };
   };
+  artifact: NonNullable<ReturnType<typeof buildCanonicalMatchScoreArtifact>>;
 }
 
-/**
- * POST /api/match/profile
- *
- * Computes matches for the current user's profile.
- * Returns top k matching assignments (blind-first, org names scrubbed).
- */
+type CandidatePoolSource = 'full_scan' | 'ann_hybrid';
+
+function resolveAssignmentScanLimit(k: number): number {
+  return Math.min(
+    MAX_ASSIGNMENT_SCAN_LIMIT,
+    Math.max(MIN_ASSIGNMENT_SCAN_LIMIT, k * DEFAULT_ASSIGNMENT_SCAN_MULTIPLIER)
+  );
+}
+
+function resolveTwoStageEnabled(requestedSemanticFlag: boolean): boolean {
+  if (requestedSemanticFlag) {
+    return true;
+  }
+  const raw = process.env.MATCHING_TWO_STAGE_ENABLED?.trim().toLowerCase();
+  if (raw === 'true') return true;
+  if (raw === 'false') return false;
+  return true;
+}
+
+function parseVector(vector: unknown) {
+  if (!vector) return {};
+  if (typeof vector === 'string') {
+    try {
+      return JSON.parse(vector);
+    } catch {
+      return {};
+    }
+  }
+  return vector as Record<string, unknown>;
+}
+
+function toLegacySubscores(subscoresJson: Record<string, unknown>): Record<string, number> {
+  const skillsFit = Number(subscoresJson.skills_fit ?? 0) / 10000;
+  const purposeFit = Number(subscoresJson.purpose_fit ?? 0) / 10000;
+  const constraintsFit = Number(subscoresJson.constraints_fit ?? 0) / 10000;
+  const verificationFit = Number(subscoresJson.verification_fit ?? 0) / 10000;
+  const proofFit = Number(subscoresJson.proof_fit ?? 0) / 10000;
+  return {
+    values: Number(subscoresJson.values_fit ?? 0) / 10000,
+    causes: Number(subscoresJson.causes_fit ?? 0) / 10000,
+    skills: skillsFit,
+    pac: purposeFit,
+    constraints: constraintsFit,
+    verifications: verificationFit,
+    recency: proofFit,
+    evidence: proofFit,
+    availability: Number(subscoresJson.availability ?? 0) / 10000,
+    location: Number(subscoresJson.location ?? 0) / 10000,
+    compensation: Number(subscoresJson.compensation ?? 0) / 10000,
+    language: Number(subscoresJson.language ?? 0) / 10000,
+  };
+}
+
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    // Allow internal cron calls to compute matches for a specific userId.
     const isInternalCall = isTrustedInternalRequest(request);
     const rawBody = await request.text();
     let body: unknown = {};
-    if (rawBody.trim().length > 0) {
+    if (rawBody.trim()) {
       try {
         body = JSON.parse(rawBody) as unknown;
       } catch {
         return NextResponse.json(
-          {
-            error: 'Invalid input',
-            message: 'Request body must be valid JSON.',
-          },
+          { error: 'Invalid input', message: 'Request body must be valid JSON.' },
           { status: 400 }
         );
       }
@@ -172,51 +172,18 @@ export async function POST(request: NextRequest) {
       user = { id: authResult.user.id };
     }
 
-    const { mode, k = 20, useSemanticMatching = false } = validatedData;
+    const { k = 20, useSemanticMatching = false } = validatedData;
     const assignmentScanLimit = resolveAssignmentScanLimit(k);
     const twoStageEnabled = resolveTwoStageEnabled(useSemanticMatching);
 
     const eligibility = await evaluateIndividualMatchability(user.id);
     if (!eligibility.eligible) {
-      log.info('matching.gated.not_matchable', {
-        userId: user.id,
-        endpoint: '/api/core/matching/profile',
-        tier: eligibility.tier,
-        unmetCriteria: eligibility.unmetCriteria,
-        counts: eligibility.counts,
-      });
-
-      emitAnalyticsEventAsync({
-        eventType: 'matching_gated_not_matchable',
-        userId: user.id,
-        profileId: user.id,
-        entityType: 'api',
-        entityId: '/api/core/matching/profile',
-        properties: {
-          unmetCriteria: eligibility.unmetCriteria,
-          unmetCriteriaCount: eligibility.unmetCriteria.length,
-          tier: eligibility.tier,
-          nextTierTarget: eligibility.nextTierTarget?.tier || null,
-          counts: eligibility.counts,
-          states: eligibility.readiness.states,
-        },
-      });
-
       return NextResponse.json(toSoftGatedPayload(eligibility), { status: 200 });
     }
 
-    // Fetch user's matching profile (with caching)
-    const cacheKeyProfile = `${CACHE_KEYS.PROFILE}matching:${user.id}`;
-    const profile = await getOrSet(
-      cacheKeyProfile,
-      async () => {
-        return await db.query.matchingProfiles.findFirst({
-          where: eq(matchingProfiles.profileId, user.id),
-        });
-      },
-      CACHE_TTL.PROFILE
-    );
-
+    const profile = await db.query.matchingProfiles.findFirst({
+      where: eq(matchingProfiles.profileId, user.id),
+    });
     if (!profile) {
       return NextResponse.json(
         { error: 'Matching profile not found. Please set up your matching profile first.' },
@@ -224,31 +191,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch user's skills (with caching)
-    const cacheKeySkills = `${CACHE_KEYS.USER_SKILLS}${user.id}`;
-    const userSkills = await getOrSet(
-      cacheKeySkills,
-      async () => {
-        return await db.query.skills.findMany({
-          where: eq(skills.profileId, user.id),
-        });
-      },
-      CACHE_TTL.USER_SKILLS
-    );
-
+    const userSkills = await db.query.skills.findMany({
+      where: eq(skills.profileId, user.id),
+    });
     const skillsMap: Record<string, Skill> = {};
-    for (const skill of userSkills) {
-      skillsMap[skill.skillId] = {
-        id: skill.skillId,
-        level: skill.level,
-        months: skill.monthsExperience,
-        // Enhanced attributes for PRD-compliant scoring
-        evidenceStrength: skill.evidenceStrength ? parseFloat(skill.evidenceStrength) : undefined,
-        recencyMultiplier: skill.recencyMultiplier
-          ? parseFloat(skill.recencyMultiplier)
-          : undefined,
-        impactScore: skill.impactScore ? parseFloat(skill.impactScore) : undefined,
-        lastUsedAt: skill.lastUsedAt || undefined,
+    for (const row of userSkills) {
+      skillsMap[row.skillId] = {
+        id: row.skillId,
+        level: row.level,
+        months: row.monthsExperience,
+        evidenceStrength: row.evidenceStrength ? parseFloat(row.evidenceStrength) : undefined,
+        recencyMultiplier: row.recencyMultiplier ? parseFloat(row.recencyMultiplier) : undefined,
+        impactScore: row.impactScore ? parseFloat(row.impactScore) : undefined,
+        lastUsedAt: row.lastUsedAt || undefined,
       };
     }
 
@@ -277,16 +232,14 @@ export async function POST(request: NextRequest) {
     const atlasLanguageLevels = deriveAtlasLanguageLevels(userSkills, userSkillTaxonomyRows);
     const legacyLanguageLevels = parseLegacyLanguageLevels(profile.languages);
 
-    // Determine weights
-    const weights = validatedData.weights
-      ? normalizeWeights(validatedData.weights)
-      : mode
-        ? getPreset(mode as PresetKey)
-        : profile.weights
-          ? normalizeWeights(profile.weights as Record<string, number>)
-          : getPreset('balanced');
+    const activeMatchingConsent = await db.query.consentObligations.findFirst({
+      where: and(
+        eq(consentObligations.profileId, user.id),
+        eq(consentObligations.consentType, CONSENT_TYPES.ML_MATCHING),
+        eq(consentObligations.state, 'active')
+      ),
+    });
 
-    // Fetch active assignments with a safe column subset (skip columns that may not exist in older DBs)
     const assignmentSelect = {
       id: assignments.id,
       orgId: assignments.orgId,
@@ -308,36 +261,11 @@ export async function POST(request: NextRequest) {
       startEarliest: assignments.startEarliest,
       startLatest: assignments.startLatest,
       verificationGates: assignments.verificationGates,
-      weights: assignments.weights,
       canSponsorVisa: assignments.canSponsorVisa,
-      sponsorshipCountries: assignments.sponsorshipCountries,
+      updatedAt: assignments.updatedAt,
     };
 
-    let activeAssignments: Array<{
-      id: string;
-      orgId: string;
-      role: string;
-      description: string | null;
-      status: 'draft' | 'active' | 'hold' | 'paused' | 'closed';
-      valuesRequired: string[] | null;
-      causeTags: string[] | null;
-      mustHaveSkills: unknown;
-      niceToHaveSkills: unknown;
-      minLanguage: unknown;
-      locationMode: string | null;
-      country: string | null;
-      compMin: number | null;
-      compMax: number | null;
-      currency: string | null;
-      hoursMin: number | null;
-      hoursMax: number | null;
-      startEarliest: string | Date | null;
-      startLatest: string | Date | null;
-      verificationGates: string[] | null;
-      weights: unknown;
-      canSponsorVisa: boolean | null;
-      sponsorshipCountries: string[] | null;
-    }> = [];
+    let activeAssignments: Array<any> = [];
     let candidatePoolSource: CandidatePoolSource = 'full_scan';
 
     if (twoStageEnabled) {
@@ -352,7 +280,9 @@ export async function POST(request: NextRequest) {
           .where(and(eq(assignments.status, 'active'), inArray(assignments.id, annAssignmentIds)));
 
         const annOrder = new Map(annAssignmentIds.map((id, index) => [id, index]));
-        annAssignments.sort((a, b) => (annOrder.get(a.id) ?? 0) - (annOrder.get(b.id) ?? 0));
+        annAssignments.sort(
+          (left, right) => (annOrder.get(left.id) ?? 0) - (annOrder.get(right.id) ?? 0)
+        );
 
         activeAssignments = annAssignments.slice(0, assignmentScanLimit);
 
@@ -368,7 +298,6 @@ export async function POST(request: NextRequest) {
                 : eq(assignments.status, 'active')
             )
             .limit(remaining);
-
           activeAssignments = [...activeAssignments, ...fallbackAssignments];
         }
       }
@@ -380,7 +309,6 @@ export async function POST(request: NextRequest) {
         .from(assignments)
         .where(eq(assignments.status, 'active'))
         .limit(assignmentScanLimit);
-      candidatePoolSource = 'full_scan';
     }
 
     const matrixRows = activeAssignments.length
@@ -398,82 +326,30 @@ export async function POST(request: NextRequest) {
       matrixRowsByAssignment.set(row.assignmentId, existing);
     }
 
-    const orgIds = Array.from(new Set(activeAssignments.map((assignment) => assignment.orgId)));
-    const orgRows =
-      orgIds.length > 0
-        ? await db
-            .select({
-              id: organizations.id,
-              type: organizations.type,
-              industryKey: organizations.industryKey,
-              industry: organizations.industry,
-            })
-            .from(organizations)
-            .where(inArray(organizations.id, orgIds))
-        : [];
-    const orgById = new Map(orgRows.map((row) => [row.id, row]));
-
-    // Batch fetch mission/vision scores for PAC (if using semantic matching)
-    let missionVisionScores: Map<string, number> = new Map();
-    if (useSemanticMatching && activeAssignments.length > 0) {
-      const assignmentIds = activeAssignments.map((a) => a.id);
-      missionVisionScores = await batchGetMissionVisionScoresForProfile(user.id, assignmentIds);
-    }
-
-    // Compute scores
-    const results: MatchResult[] = [];
-
-    // Fetch all existing matches for this user (for IDs and snooze status)
     const existingMatches = await db.query.matches.findMany({
       where: eq(matches.profileId, user.id),
     });
     const hadMatchesBefore = existingMatches.length > 0;
-
-    // Map assignmentId to matchId for returning with results
-    const matchIdMap = new Map(existingMatches.map((m) => [m.assignmentId, m.id]));
-
-    // Filter snoozed or hidden matches
+    const matchByAssignmentId = new Map(
+      existingMatches.map((match) => [match.assignmentId, match])
+    );
     const snoozedAssignmentIds = new Set(
       existingMatches
-        .filter((m) => m.snoozedUntil && new Date(m.snoozedUntil) >= new Date())
-        .map((m) => m.assignmentId)
+        .filter((match) => match.snoozedUntil && new Date(match.snoozedUntil) >= new Date())
+        .map((match) => match.assignmentId)
     );
     const hiddenAssignmentIds = new Set(
       existingMatches
-        .filter((m: any) => {
-          const vector = (m as any).vector as any;
-          return vector && vector.hidden;
-        })
-        .map((m) => m.assignmentId)
+        .filter((match) => Boolean(parseVector(match.vector).hidden))
+        .map((match) => match.assignmentId)
     );
-    const focusPreferences = {
-      desiredRoles: (profile.desiredRoles as string[] | null) || [],
-      desiredIndustries: (profile.desiredIndustries as string[] | null) || [],
-      preferredIndustryKeys: (profile.preferredIndustryKeys as string[] | null) || [],
-      avoidIndustryKeys: (profile.avoidIndustryKeys as string[] | null) || [],
-      orgTypes: (profile.orgTypes as string[] | null) || [],
-    };
 
+    const results: MatchResult[] = [];
     for (const assignment of activeAssignments) {
-      // Skip snoozed matches
-      if (snoozedAssignmentIds.has(assignment.id)) {
-        continue;
-      }
-      // Skip hidden matches
-      if (hiddenAssignmentIds.has(assignment.id)) {
-        continue;
-      }
-      const organization = orgById.get(assignment.orgId);
-      if (
-        isIndustryAvoided(focusPreferences, {
-          orgIndustryKey: organization?.industryKey,
-          orgIndustry: organization?.industry,
-        })
-      ) {
+      if (snoozedAssignmentIds.has(assignment.id) || hiddenAssignmentIds.has(assignment.id)) {
         continue;
       }
 
-      // Apply hard filters
       const matrixRowsForAssignment = matrixRowsByAssignment.get(assignment.id) || [];
       const matrixRequirements =
         matrixRowsForAssignment.length > 0
@@ -492,215 +368,160 @@ export async function POST(request: NextRequest) {
         ? (matrixRequirements.niceToHaveSkills as Skill[])
         : (assignment.niceToHaveSkills as Skill[]) || [];
 
-      // Use enhanced skills scoring with recency/evidence/impact
-      const enhancedSkillScore = scoreSkillsEnhanced(mustHaveSkills, niceToHaveSkills, skillsMap);
-
-      if (enhancedSkillScore.hardFail) {
-        continue; // Skip assignments where user doesn't meet must-haves
-      }
-
-      // Calculate PAC (Purpose-Alignment Contribution) with semantic matching
-      // Use mission/vision score from embeddings if available
-      const missionVisionScore = missionVisionScores.get(assignment.id);
-      const pacScore = scorePAC(
-        profile.valuesTags || [],
-        profile.causeTags || [],
-        assignment.valuesRequired || [],
-        assignment.causeTags || [],
-        missionVisionScore // Semantic similarity from embeddings (Phase 3)
-      );
-
-      // Calculate work authorization score
-      const workAuthScore = scoreWorkAuthorization({
-        candidateNeedsSponsorship: profile.needsSponsorship ?? false,
-        candidateWishesSponsorship: profile.wishesSponsorship ?? false,
-        orgCanSponsor: (assignment as any).canSponsor ?? true, // Default to true if not specified
-      });
-
-      // Compute subscores with new PRD-aligned metrics
-      const subscores: Record<string, number> = {
-        // Legacy scores (for backward compatibility)
-        values: pacScore.valuesScore,
-        causes: pacScore.causesScore,
-        // Core skills (using enhanced weighted score)
-        skills: enhancedSkillScore.weightedScore,
-        experience: scoreExperience(
-          Object.values(skillsMap).reduce((sum, s) => sum + (s.months || 0), 0) /
-            Math.max(Object.keys(skillsMap).length, 1)
-        ),
-        verifications: scoreVerifications(
-          assignment.verificationGates || [],
-          (profile.verified as Record<string, boolean>) || {}
-        ),
-        // New PRD-aligned scores
-        pac: pacScore.total, // Purpose-Alignment Contribution
-        recency: enhancedSkillScore.recencyScore,
-        evidence: enhancedSkillScore.evidenceScore,
-        workAuthorization: workAuthScore,
-      };
-
-      // Availability
-      if (assignment.startEarliest && assignment.startLatest && profile.availabilityEarliest) {
-        subscores.availability = scoreAvailability(
-          {
-            earliest: new Date(assignment.startEarliest),
-            latest: new Date(assignment.startLatest),
-          } as DateWindow,
-          new Date(profile.availabilityEarliest),
-          {
-            min: assignment.hoursMin || 0,
-            max: assignment.hoursMax || 40,
-          } as Range,
-          {
-            min: profile.hoursMin || 0,
-            max: profile.hoursMax || 40,
-          } as Range
-        );
-      } else {
-        subscores.availability = 1.0;
-      }
-
-      // Location
-      if (assignment.locationMode && profile.workMode) {
-        subscores.location = scoreLocation(
-          assignment.locationMode as LocationMode,
-          profile.workMode as LocationMode,
-          assignment.country || undefined,
-          profile.country || undefined
-        );
-      } else {
-        subscores.location = 1.0;
-      }
-
-      // Compensation
+      const minLanguage = assignment.minLanguage as { code: string; level: string } | null;
+      const candidateLanguageLevel = minLanguage
+        ? resolveLanguageLevel(minLanguage.code, atlasLanguageLevels, legacyLanguageLevels)
+        : null;
       const profileAnnualComp = toAnnualCompensationRange({
         min: profile.compMin,
         max: profile.compMax,
         period: profile.compPeriod,
       });
-      if (assignment.compMin && assignment.compMax && profileAnnualComp) {
-        subscores.compensation = scoreCompensation(
-          { min: assignment.compMin, max: assignment.compMax } as Range,
-          profileAnnualComp as Range
-        );
-      } else {
-        subscores.compensation = 1.0;
-      }
 
-      // Language
-      if (assignment.minLanguage) {
-        const minLang = assignment.minLanguage as { code: string; level: string };
-        const candidateLevel = resolveLanguageLevel(
-          minLang.code,
-          atlasLanguageLevels,
-          legacyLanguageLevels
-        );
-        subscores.language = candidateLevel ? scoreLanguage(minLang.level, candidateLevel) : 0;
-      } else {
-        subscores.language = 1.0;
-      }
-
-      // Compose weighted score
-      const composed = composeWeighted(subscores, weights);
-      const focusBoost = calculateFocusBoost(focusPreferences, {
-        assignmentRole: assignment.role,
-        orgIndustryKey: organization?.industryKey,
-        orgIndustry: organization?.industry,
-        orgType: organization?.type,
-      });
-      const finalScore = Math.min(1, composed.total + focusBoost.boost);
-
-      // Scrub org-identifying info from assignment
-      const scrubbedAssignment = scrubDisallowedFields(assignment);
-
-      // Include match ID if one exists in the database
-      const existingMatchId = matchIdMap.get(assignment.id);
-
-      results.push({
-        ...(existingMatchId && { id: existingMatchId }),
+      const previousMatch = matchByAssignmentId.get(assignment.id);
+      const artifact = buildCanonicalMatchScoreArtifact({
         assignmentId: assignment.id,
-        score: finalScore,
-        subscores,
-        contributions: {
-          ...composed.contributions,
-          focusBoost: focusBoost.boost,
+        profileId: user.id,
+        assignmentOrgId: assignment.orgId,
+        assignmentStatus: assignment.status,
+        matchabilityEligible: eligibility.eligible,
+        matchingConsentActive: Boolean(activeMatchingConsent),
+        requiredSkills: mustHaveSkills.map((entry) => ({ id: entry.id, level: entry.level })),
+        niceToHaveSkills: niceToHaveSkills.map((entry) => ({ id: entry.id, level: entry.level })),
+        candidateSkills: skillsMap,
+        assignmentValuesTags: assignment.valuesRequired || [],
+        assignmentCauseTags: assignment.causeTags || [],
+        profileValuesTags: profile.valuesTags || [],
+        profileCauseTags: profile.causeTags || [],
+        assignmentStartEarliest: assignment.startEarliest,
+        assignmentStartLatest: assignment.startLatest,
+        profileAvailabilityEarliest: profile.availabilityEarliest,
+        assignmentHoursMin: assignment.hoursMin,
+        assignmentHoursMax: assignment.hoursMax,
+        profileHoursMin: profile.hoursMin,
+        profileHoursMax: profile.hoursMax,
+        assignmentLocationMode: assignment.locationMode,
+        profileWorkMode: profile.workMode,
+        assignmentCountry: assignment.country,
+        profileCountry: profile.country,
+        assignmentCompMin: assignment.compMin,
+        assignmentCompMax: assignment.compMax,
+        profileCompAnnualRange: profileAnnualComp,
+        assignmentMinLanguage: minLanguage,
+        candidateLanguageLevel,
+        assignmentCanSponsorVisa: assignment.canSponsorVisa,
+        profileNeedsSponsorship: profile.needsSponsorship,
+        profileWishesSponsorship: profile.wishesSponsorship,
+        verificationGates: assignment.verificationGates || [],
+        verifiedFlags: (profile.verified as Record<string, boolean> | null) || {},
+        previousScoreState: previousMatch?.scoreState ?? null,
+        sourceRefs: {
+          assignmentUpdatedAt: assignment.updatedAt?.toISOString?.() ?? null,
+          profileUpdatedAt: profile.updatedAt?.toISOString?.() ?? null,
         },
-        gaps: enhancedSkillScore.gaps,
-        missing: enhancedSkillScore.missing,
-        assignment: scrubbedAssignment,
-        // PRD: Include PAC breakdown for analytics and "Why this match" transparency
+      });
+
+      if (!artifact) {
+        continue;
+      }
+
+      const legacySubscores = toLegacySubscores(artifact.subscoresJson);
+      results.push({
+        ...(previousMatch ? { id: previousMatch.id } : {}),
+        assignmentId: assignment.id,
+        score: artifact.scoreNormalized,
+        scoreTotal: artifact.scoreTotal,
+        subscores: legacySubscores,
+        contributions: {
+          skills_fit: Number(artifact.subscoresJson.skills_fit ?? 0) / 10000,
+          proof_fit: Number(artifact.subscoresJson.proof_fit ?? 0) / 10000,
+          constraints_fit: Number(artifact.subscoresJson.constraints_fit ?? 0) / 10000,
+          verification_fit: Number(artifact.subscoresJson.verification_fit ?? 0) / 10000,
+          purpose_fit: Number(artifact.subscoresJson.purpose_fit ?? 0) / 10000,
+        },
+        gaps: [],
+        missing: [],
+        assignment: scrubDisallowedFields(assignment),
         pac: {
-          total: pacScore.total,
-          valuesScore: pacScore.valuesScore,
-          causesScore: pacScore.causesScore,
-          missionVisionScore: pacScore.missionVisionScore,
+          total: legacySubscores.pac ?? 0,
+          valuesScore: legacySubscores.values ?? 0,
+          causesScore: legacySubscores.causes ?? 0,
+          missionVisionScore: 0,
         },
         focusBoost: {
-          total: focusBoost.boost,
-          matched: focusBoost.matched,
-          contributions: focusBoost.contributions,
+          total: 0,
+          matched: {
+            role: false,
+            industry: false,
+            orgType: false,
+          },
+          contributions: {
+            role: 0,
+            industry: 0,
+            orgType: 0,
+          },
         },
+        artifact,
       });
     }
 
-    // Sort by score (descending) with tie-breaking
-    results.sort((a, b) =>
-      compareMatches(
-        { score: a.score, assignmentId: a.assignmentId, profileId: user.id },
-        { score: b.score, assignmentId: b.assignmentId, profileId: user.id }
+    results.sort((left, right) =>
+      compareCanonicalMatchOrder(
+        {
+          scoreTotal: left.scoreTotal,
+          subscoresJson: left.artifact?.subscoresJson ?? {},
+          counterpartId: left.assignmentId,
+        },
+        {
+          scoreTotal: right.scoreTotal,
+          subscoresJson: right.artifact?.subscoresJson ?? {},
+          counterpartId: right.assignmentId,
+        }
       )
     );
 
-    // Return top k
     const topK = results.slice(0, k);
-
-    // Ensure returned matches exist in DB and capture their IDs
-    const upsertPayload = topK.map((match) => {
-      const assignment = activeAssignments.find((candidate) => candidate.id === match.assignmentId);
-      const auditFields = buildMatchAuditFields({
-        scoreVersion: CANONICAL_MATCH_SCORE_VERSION,
-        assignmentId: match.assignmentId,
-        profileId: user.id,
-        weights: weights as Record<string, number>,
-        subscores: match.subscores,
-        missing: match.missing,
-        gaps: match.gaps,
-        focusBoost: {
-          matched: match.focusBoost?.matched,
-        },
-        verificationGates: assignment?.verificationGates || [],
-      });
-      return {
-        assignmentId: match.assignmentId,
-        profileId: user.id,
-        score: match.score.toString(),
-        scoreVersion: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.scoreVersion : null,
-        inputsHash: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.inputsHash : null,
-        reasonCodes: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.reasonCodes : [],
-        generatedAt: CANONICAL_MATCH_AUDIT_FIELDS_ENABLED ? auditFields.generatedAt : null,
-        vector: {
-          subscores: match.subscores,
-          contributions: match.contributions,
-          gaps: match.gaps,
-          missing: match.missing,
-        },
-        weights,
-      };
-    });
-
     const upsertedMatches =
-      upsertPayload.length > 0
+      topK.length > 0
         ? await db
             .insert(matches)
-            .values(upsertPayload)
+            .values(
+              topK.map((match) => ({
+                assignmentId: match.assignmentId,
+                profileId: user.id,
+                ...buildCanonicalMatchPersistenceFields({
+                  artifact: match.artifact,
+                }),
+                vector: {
+                  hidden: Boolean(
+                    parseVector(matchByAssignmentId.get(match.assignmentId)?.vector).hidden
+                  ),
+                },
+                weights: {},
+              }))
+            )
             .onConflictDoUpdate({
               target: [matches.assignmentId, matches.profileId],
               set: {
                 score: sql`excluded.score`,
+                scoreTotal: sql`excluded.score_total`,
+                scoreState: sql`excluded.score_state`,
                 scoreVersion: sql`excluded.score_version`,
+                modelVersion: sql`excluded.model_version`,
+                explanationVersion: sql`excluded.explanation_version`,
+                fairnessCheckVersion: sql`excluded.fairness_check_version`,
+                fairnessStatus: sql`excluded.fairness_status`,
+                fairnessEvaluatedAt: sql`excluded.fairness_evaluated_at`,
                 inputsHash: sql`excluded.inputs_hash`,
                 reasonCodes: sql`excluded.reason_codes`,
+                staleReasonCodes: sql`excluded.stale_reason_codes`,
                 generatedAt: sql`excluded.generated_at`,
+                staleAt: sql`excluded.stale_at`,
+                recomputedAt: sql`excluded.recomputed_at`,
+                hiddenDueToPolicyAt: sql`excluded.hidden_due_to_policy_at`,
+                hiddenDueToPolicyReasonCodes: sql`excluded.hidden_due_to_policy_reason_codes`,
+                subscoresJson: sql`excluded.subscores_json`,
+                scoreSnapshotJson: sql`excluded.score_snapshot_json`,
                 vector: sql`excluded.vector`,
                 weights: sql`excluded.weights`,
               },
@@ -708,19 +529,18 @@ export async function POST(request: NextRequest) {
             .returning({ id: matches.id, assignmentId: matches.assignmentId })
         : [];
 
-    // Merge returned IDs into response payload
     upsertedMatches.forEach((row) => {
-      matchIdMap.set(row.assignmentId, row.id);
+      matchByAssignmentId.set(row.assignmentId, {
+        ...(matchByAssignmentId.get(row.assignmentId) || {}),
+        id: row.id,
+      } as (typeof existingMatches)[number]);
     });
 
     const topKWithIds = topK.map((match) => ({
       ...match,
-      id: match.id || matchIdMap.get(match.assignmentId),
+      id: match.id || matchByAssignmentId.get(match.assignmentId)?.id,
     }));
 
-    const duration = Date.now() - startTime;
-
-    // Emit first match shown event for TTFQI tracking (only if there are matches)
     if (topKWithIds.length > 0) {
       try {
         const firstMatch = topKWithIds[0];
@@ -734,24 +554,21 @@ export async function POST(request: NextRequest) {
               AND COALESCE(properties->>'idempotency_key', '') = ${idempotencyKey}
             LIMIT 1
           `);
-          const alreadyEmitted = getRows(existingEventResult).length > 0;
-
-          if (!alreadyEmitted) {
+          if (getRows(existingEventResult).length === 0) {
             await emitFirstMatchShown(user.id, firstMatch.id, {
               assignment_id: firstMatch.assignmentId,
               score: firstMatch.score,
-              mode,
-              pac_contribution: firstMatch.pac.total,
+              score_total: firstMatch.scoreTotal,
               idempotency_key: idempotencyKey,
             });
           }
         }
       } catch (analyticsError) {
         console.error('Failed to emit first match shown event:', analyticsError);
-        // Don't fail the request if analytics fails
       }
     }
 
+    const duration = Date.now() - startTime;
     log.info('match.profile.computed', {
       userId: user.id,
       poolSize: activeAssignments.length,
@@ -763,12 +580,25 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({
-      items: topKWithIds,
+      items: topKWithIds.map((item) => ({
+        id: item.id,
+        assignmentId: item.assignmentId,
+        score: item.score,
+        scoreTotal: item.scoreTotal,
+        subscores: item.subscores,
+        contributions: item.contributions,
+        gaps: item.gaps,
+        missing: item.missing,
+        assignment: item.assignment,
+        pac: item.pac,
+        focusBoost: item.focusBoost,
+        reasonCodes: item.artifact.reasonCodes,
+      })),
       meta: {
         total: results.length,
         returned: topKWithIds.length,
         durationMs: duration,
-        weights: weights,
+        weights: {},
         candidatePoolSource,
         candidatePoolSize: activeAssignments.length,
         twoStageEnabled,
@@ -779,54 +609,9 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      log.error('match.profile.validation.failed', {
-        errors: error.errors,
-      });
-      return NextResponse.json(
-        {
-          error: 'Invalid input',
-          details: error.errors,
-          message: 'Invalid matching parameters. Please check your matching profile settings.',
-        },
-        { status: 400 }
-      );
-    }
-
-    // Database connection errors
-    if (
-      error instanceof Error &&
-      (error.message.includes('connect') ||
-        error.message.includes('ECONNREFUSED') ||
-        error.message.includes('timeout'))
-    ) {
-      log.error('match.profile.db.connection.failed', {
-        error: error.message,
-        stack: error.stack,
-      });
-      return NextResponse.json(
-        {
-          error: 'Database connection failed',
-          message: 'Unable to connect to database. Please try again later.',
-        },
-        { status: 503 }
-      );
-    }
-
     log.error('match.profile.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
     });
-
-    return NextResponse.json(
-      {
-        error: 'Failed to compute matches',
-        message:
-          error instanceof Error
-            ? error.message
-            : 'An unexpected error occurred while computing matches.',
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to compute matches' }, { status: 500 });
   }
 }

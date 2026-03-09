@@ -11,21 +11,22 @@ import {
   normalizeFairnessStatus,
   renderExplanationFromReasonCodes,
 } from '@/lib/matching/review-contract';
+import { resolveEffectiveScoreState } from '@/lib/matching/match-score-contract';
 
 export const dynamic = 'force-dynamic';
 
-function parseVector(vector: unknown) {
-  if (!vector) {
+function parseJsonObject(value: unknown) {
+  if (!value) {
     return {};
   }
-  if (typeof vector === 'string') {
+  if (typeof value === 'string') {
     try {
-      return JSON.parse(vector);
+      return JSON.parse(value);
     } catch {
       return {};
     }
   }
-  return vector as Record<string, unknown>;
+  return value as Record<string, unknown>;
 }
 
 export async function GET(
@@ -45,6 +46,8 @@ export async function GET(
         profileId: matches.profileId,
         assignmentId: matches.assignmentId,
         score: matches.score,
+        scoreTotal: matches.scoreTotal,
+        scoreState: matches.scoreState,
         scoreVersion: matches.scoreVersion,
         modelVersion: matches.modelVersion,
         explanationVersion: matches.explanationVersion,
@@ -54,7 +57,9 @@ export async function GET(
         inputsHash: matches.inputsHash,
         reasonCodes: matches.reasonCodes,
         generatedAt: matches.generatedAt,
-        vector: matches.vector,
+        staleAt: matches.staleAt,
+        subscoresJson: matches.subscoresJson,
+        scoreSnapshotJson: matches.scoreSnapshotJson,
         assignmentOrgId: assignments.orgId,
       })
       .from(matches)
@@ -80,10 +85,8 @@ export async function GET(
       return mobileError('forbidden', 'You do not have access to this match', 403);
     }
 
-    const vector = parseVector(row.vector);
-    const subscores =
-      (vector['subscores'] as Record<string, number> | undefined) ??
-      (vector as Record<string, number>);
+    const subscores = parseJsonObject(row.subscoresJson);
+    const snapshot = parseJsonObject(row.scoreSnapshotJson);
     const fairnessStatus = normalizeFairnessStatus(row.fairnessStatus);
     const fairnessUi = buildFairnessUiContract(fairnessStatus);
     const ledgerEntries = await getReasonLedgerEntries(row.id);
@@ -108,6 +111,12 @@ export async function GET(
       matchId: row.id,
       assignmentId: row.assignmentId,
       compositeScore: Number(row.score),
+      scoreTotal: row.scoreTotal,
+      scoreState: resolveEffectiveScoreState({
+        scoreState: row.scoreState,
+        generatedAt: row.generatedAt,
+        staleAt: row.staleAt,
+      }),
       scoreVersion: row.scoreVersion,
       modelVersion: row.modelVersion,
       explanationVersion: row.explanationVersion,
@@ -123,17 +132,16 @@ export async function GET(
       reasonSummary: renderedExplanation.summary,
       reasonSections: renderedExplanation.sections,
       subscores: {
-        skills: Number(subscores?.skills ?? 0),
-        pac: Number(subscores?.pac ?? subscores?.purpose_alignment ?? 0),
-        constraints: Number(subscores?.constraints ?? 0),
-        verification: Number(subscores?.verification ?? 0),
-        recency: Number(subscores?.recency ?? 0),
+        skills: Number(subscores?.skills_fit ?? 0) / 10000,
+        pac: Number(subscores?.purpose_fit ?? 0) / 10000,
+        constraints: Number(subscores?.constraints_fit ?? 0) / 10000,
+        verification: Number(subscores?.verification_fit ?? 0) / 10000,
+        recency: Number(subscores?.proof_fit ?? 0) / 10000,
       },
-      weights: (vector['weights'] as Record<string, number> | undefined) ?? null,
-      missing: (vector['missing'] as string[] | undefined) ?? [],
-      gaps:
-        (vector['gaps'] as Array<{ id: string; required: number; have: number }> | undefined) ?? [],
-      suggestions: (vector['suggestions'] as string[] | undefined) ?? [
+      weights: (snapshot['component_weights'] as Record<string, number> | undefined) ?? null,
+      missing: [],
+      gaps: [],
+      suggestions: [
         'Add more verified proof to strengthen top skills.',
         'Complete matching preferences for better logistics scoring.',
       ],

@@ -18,6 +18,7 @@ import {
   getRankBand,
   getVisibleIdentityFields,
   normalizeFairnessStatus,
+  shouldSuppressExactRank,
 } from '@/lib/matching/review-contract';
 
 export const dynamic = 'force-dynamic';
@@ -76,6 +77,9 @@ export async function GET(request: NextRequest) {
         revealScope: matchReviewStates.revealScope,
         shortlistedAt: matchReviewStates.shortlistedAt,
         fairnessStatus: matches.fairnessStatus,
+        scoreState: matches.scoreState,
+        generatedAt: matches.generatedAt,
+        staleAt: matches.staleAt,
       })
       .from(matchReviewStates)
       .innerJoin(matches, eq(matches.id, matchReviewStates.matchId))
@@ -86,7 +90,7 @@ export async function GET(request: NextRequest) {
       .where(
         and(eq(matchReviewStates.orgId, orgId), eq(matchReviewStates.reviewStage, 'shortlisted'))
       )
-      .orderBy(desc(matchReviewStates.shortlistedAt), desc(matches.score))
+      .orderBy(desc(matchReviewStates.shortlistedAt), desc(matches.scoreTotal), desc(matches.score))
       .limit(100);
 
     const assignmentIds = Array.from(new Set(shortlist.map((row) => row.assignmentId)));
@@ -96,11 +100,16 @@ export async function GET(request: NextRequest) {
             .select({
               matchId: matches.id,
               assignmentId: matches.assignmentId,
-              score: matches.score,
+              score: matches.scoreTotal,
             })
             .from(matches)
             .where(inArray(matches.assignmentId, assignmentIds))
-            .orderBy(matches.assignmentId, desc(matches.score), matches.id)
+            .orderBy(
+              matches.assignmentId,
+              desc(matches.scoreTotal),
+              desc(matches.score),
+              matches.id
+            )
         : [];
 
     const rankMap = new Map<string, { rank: number; total: number }>();
@@ -122,6 +131,12 @@ export async function GET(request: NextRequest) {
       items: shortlist.map((row) => {
         const fairnessStatus = normalizeFairnessStatus(row.fairnessStatus);
         const rankInfo = rankMap.get(row.matchId);
+        const suppressExactRank = shouldSuppressExactRank(
+          fairnessStatus,
+          row.scoreState,
+          row.generatedAt,
+          row.staleAt
+        );
         return {
           id: row.matchId,
           assignmentId: row.assignmentId,
@@ -152,7 +167,7 @@ export async function GET(request: NextRequest) {
             status: fairnessStatus,
           },
           rankBand:
-            rankInfo && fairnessStatus === 'pass'
+            rankInfo && !suppressExactRank
               ? getRankBand(rankInfo.rank, rankInfo.total)
               : 'Shortlisted',
           shortlistedAt: row.shortlistedAt,

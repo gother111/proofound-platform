@@ -18,6 +18,7 @@ import {
   getRankBand,
   getVisibleIdentityFields,
   normalizeFairnessStatus,
+  shouldSuppressExactRank,
 } from '@/lib/matching/review-contract';
 import { authorize, type OrgRole } from '@/lib/authz';
 
@@ -108,6 +109,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         revealScope: matchReviewStates.revealScope,
         shortlistedAt: matchReviewStates.shortlistedAt,
         fairnessStatus: matches.fairnessStatus,
+        scoreState: matches.scoreState,
+        generatedAt: matches.generatedAt,
+        staleAt: matches.staleAt,
       })
       .from(matchReviewStates)
       .innerJoin(matches, eq(matches.id, matchReviewStates.matchId))
@@ -118,7 +122,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       .where(
         and(eq(matchReviewStates.orgId, org.id), eq(matchReviewStates.reviewStage, 'shortlisted'))
       )
-      .orderBy(desc(matchReviewStates.shortlistedAt), desc(matches.score))
+      .orderBy(desc(matchReviewStates.shortlistedAt), desc(matches.scoreTotal), desc(matches.score))
       .limit(100);
 
     const assignmentIds = Array.from(new Set(shortlist.map((row) => row.assignmentId)));
@@ -128,11 +132,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             .select({
               matchId: matches.id,
               assignmentId: matches.assignmentId,
-              score: matches.score,
+              score: matches.scoreTotal,
             })
             .from(matches)
             .where(inArray(matches.assignmentId, assignmentIds))
-            .orderBy(matches.assignmentId, desc(matches.score), matches.id)
+            .orderBy(
+              matches.assignmentId,
+              desc(matches.scoreTotal),
+              desc(matches.score),
+              matches.id
+            )
         : [];
 
     const rankMap = new Map<string, { rank: number; total: number }>();
@@ -155,6 +164,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         const fairnessStatus = normalizeFairnessStatus(row.fairnessStatus);
         const rankInfo = rankMap.get(row.matchId);
         const projectionPolicy = getShortlistProjectionPolicy(orgRole, row.revealScope);
+        const suppressExactRank = shouldSuppressExactRank(
+          fairnessStatus,
+          row.scoreState,
+          row.generatedAt,
+          row.staleAt
+        );
+
         return {
           id: row.matchId,
           assignmentId: row.assignmentId,
@@ -188,7 +204,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             status: fairnessStatus,
           },
           rankBand:
-            rankInfo && fairnessStatus === 'pass' && orgRole !== 'viewer'
+            rankInfo && !suppressExactRank && orgRole !== 'viewer'
               ? getRankBand(rankInfo.rank, rankInfo.total)
               : 'Shortlisted',
           shortlistedAt: row.shortlistedAt,

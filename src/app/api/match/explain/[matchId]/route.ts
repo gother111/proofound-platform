@@ -19,6 +19,7 @@ import {
   normalizeFairnessStatus,
   renderExplanationFromReasonCodes,
 } from '@/lib/matching/review-contract';
+import { resolveEffectiveScoreState } from '@/lib/matching/match-score-contract';
 
 type SkillRequirement = {
   id?: string;
@@ -58,6 +59,8 @@ export async function GET(
         m.assignment_id,
         m.profile_id,
         m.score,
+        m.score_total,
+        m.score_state,
         m.score_version,
         m.model_version,
         m.explanation_version,
@@ -67,7 +70,9 @@ export async function GET(
         m.inputs_hash,
         m.reason_codes,
         m.generated_at,
-        m.vector,
+        m.stale_at,
+        m.subscores_json,
+        m.score_snapshot_json,
         m.weights,
         a.role,
         a.values_required,
@@ -96,6 +101,8 @@ export async function GET(
       assignment_id: string;
       profile_id: string;
       score: string | number;
+      score_total: number | null;
+      score_state: string | null;
       score_version: string | null;
       model_version: string | null;
       explanation_version: string | null;
@@ -105,7 +112,9 @@ export async function GET(
       inputs_hash: string | null;
       reason_codes: string[] | null;
       generated_at: string | null;
-      vector: unknown;
+      stale_at: string | null;
+      subscores_json: Record<string, unknown> | null;
+      score_snapshot_json: Record<string, unknown> | null;
       weights: unknown;
       role: string | null;
       values_required: unknown;
@@ -268,7 +277,7 @@ export async function GET(
       SELECT id, score
       FROM matches
       WHERE assignment_id = ${match.assignment_id}
-      ORDER BY score DESC
+      ORDER BY score_total DESC NULLS LAST, score DESC
     `);
 
     const allMatches = getRows(allMatchesResult) as Array<{ id: string; score: string | number }>;
@@ -304,12 +313,17 @@ export async function GET(
       audience: match.profile_id === authResult.user.id ? 'candidate' : 'org',
     });
 
-    const vector = (match.vector as Record<string, any> | null) || {};
-    const vectorSubscores = (vector.subscores as Record<string, number> | undefined) || {};
+    const subscores = (match.subscores_json as Record<string, number> | null) || {};
 
     const explanation = {
       matchId: match.id,
       compositeScore: Number(match.score) || 0,
+      scoreTotal: match.score_total,
+      scoreState: resolveEffectiveScoreState({
+        scoreState: match.score_state as any,
+        generatedAt: match.generated_at,
+        staleAt: match.stale_at,
+      }),
       scoreVersion: match.score_version,
       modelVersion: match.model_version,
       explanationVersion: match.explanation_version,
@@ -334,11 +348,11 @@ export async function GET(
         canRevealExactRank(orgRole, fairnessStatus) &&
         !fairnessUi.suppressExactRank,
       subscores: {
-        skills: Number(vectorSubscores.skills ?? vector.skills ?? 0),
-        pac: Number(vectorSubscores.pac ?? vector.pac ?? 0),
-        constraints: Number(vectorSubscores.constraints ?? vector.constraints ?? 0),
-        recency: Number(vectorSubscores.recency ?? vector.recency ?? 0),
-        evidence: Number(vectorSubscores.evidence ?? vector.evidence ?? 0),
+        skills: Number(subscores.skills_fit ?? 0) / 10000,
+        pac: Number(subscores.purpose_fit ?? 0) / 10000,
+        constraints: Number(subscores.constraints_fit ?? 0) / 10000,
+        recency: Number(subscores.proof_fit ?? 0) / 10000,
+        evidence: Number(subscores.proof_fit ?? 0) / 10000,
       },
       skillsMatch,
       pac,

@@ -59,6 +59,33 @@ export const canonicalProofPackKinds = [
   'organization_export',
   'verification_bundle',
 ] as const;
+export const canonicalSubmissionKinds = [
+  'assignment_section',
+  'proof_card',
+  'application_proof',
+  'intro_proof',
+  'verification_response_payload',
+  'manual_upload',
+] as const;
+export const canonicalSubmissionStatuses = [
+  'draft',
+  'submitted',
+  'under_review',
+  'accepted',
+  'rejected',
+  'withdrawn',
+  'superseded',
+] as const;
+export const canonicalSubmissionContextTypes = [
+  'assignment',
+  'assignment_invitation',
+  'candidate_invite',
+  'match',
+  'intro',
+  'application',
+  'verification_request',
+  'manual',
+] as const;
 export const canonicalVerificationKinds = [
   'veriff_identity',
   'linkedin_identity',
@@ -212,6 +239,22 @@ export const canonicalDisputeResolutionActions = [
   'downgrade',
   'revoke',
   'supersede_with_corrected_record',
+] as const;
+export const verificationLogEntryTypes = [
+  'record_created',
+  'state_transition',
+  'refresh_requested',
+  'refresh_completed',
+  'expired',
+  'downgraded',
+  'contradiction_detected',
+  'dispute_opened',
+  'dispute_updated',
+  'dispute_resolved',
+  'revoked',
+  'superseded',
+  'restored',
+  'recomputed',
 ] as const;
 export const matchReviewStageValues = [
   'blind_review',
@@ -891,16 +934,6 @@ export const featureFlags = pgTable('feature_flags', {
   key: text('key').primaryKey(),
   enabled: boolean('enabled').default(false).notNull(),
   audience: jsonb('audience'), // rules for targeting
-  description: text('description'),
-  taxonomy: text('taxonomy'),
-  controlType: text('control_type'),
-  owner: text('owner'),
-  reason: text('reason'),
-  revisitAfter: timestamp('revisit_after', { withTimezone: true }),
-  metadata: jsonb('metadata')
-    .default(sql`'{}'::jsonb`)
-    .notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
 // Rate limiter table for tracking rate limits
@@ -1177,6 +1210,104 @@ export const proofPackItems = pgTable(
     packIdx: index('idx_proof_pack_items_pack').on(table.packId, table.position),
     artifactIdx: index('idx_proof_pack_items_artifact').on(table.artifactId),
     packArtifactUnique: unique().on(table.packId, table.artifactId),
+  })
+);
+
+export const submissions = pgTable(
+  'submissions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    submissionKind: text('submission_kind', {
+      enum: canonicalSubmissionKinds,
+    }).notNull(),
+    status: text('status', {
+      enum: canonicalSubmissionStatuses,
+    })
+      .default('submitted')
+      .notNull(),
+    ownerType: text('owner_type', {
+      enum: canonicalOwnerTypes,
+    }).notNull(),
+    ownerId: uuid('owner_id').notNull(),
+    submittedByUserId: uuid('submitted_by_user_id').references(() => profiles.id, {
+      onDelete: 'set null',
+    }),
+    submittedByOrgId: uuid('submitted_by_org_id').references(() => organizations.id, {
+      onDelete: 'set null',
+    }),
+    assignmentId: uuid('assignment_id').references(() => assignments.id, {
+      onDelete: 'set null',
+    }),
+    proofPackId: uuid('proof_pack_id').references(() => proofPacks.id, {
+      onDelete: 'set null',
+    }),
+    requestContextType: text('request_context_type', {
+      enum: canonicalSubmissionContextTypes,
+    }).notNull(),
+    requestContextId: uuid('request_context_id'),
+    matchId: uuid('match_id').references(() => matches.id, {
+      onDelete: 'set null',
+    }),
+    introId: uuid('intro_id').references(() => introWorkflows.id, {
+      onDelete: 'set null',
+    }),
+    applicationId: uuid('application_id'),
+    legacySourceTable: text('legacy_source_table'),
+    legacySourceId: uuid('legacy_source_id'),
+    submittedAt: timestamp('submitted_at', { withTimezone: true }).defaultNow().notNull(),
+    reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+    withdrawnAt: timestamp('withdrawn_at', { withTimezone: true }),
+    supersededAt: timestamp('superseded_at', { withTimezone: true }),
+    supersededBySubmissionId: uuid('superseded_by_submission_id'),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    ownerSubmittedIdx: index('idx_submissions_owner_submitted').on(
+      table.ownerType,
+      table.ownerId,
+      table.submittedAt
+    ),
+    assignmentSubmittedIdx: index('idx_submissions_assignment_submitted').on(
+      table.assignmentId,
+      table.submittedAt
+    ),
+    requestContextIdx: index('idx_submissions_request_context').on(
+      table.requestContextType,
+      table.requestContextId
+    ),
+    proofPackIdx: index('idx_submissions_proof_pack').on(table.proofPackId),
+    legacySourceUnique: unique().on(table.legacySourceTable, table.legacySourceId),
+  })
+);
+
+export const submissionArtifacts = pgTable(
+  'submission_artifacts',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    submissionId: uuid('submission_id')
+      .references(() => submissions.id, { onDelete: 'cascade' })
+      .notNull(),
+    artifactId: uuid('artifact_id')
+      .references(() => proofArtifacts.id, { onDelete: 'cascade' })
+      .notNull(),
+    position: integer('position').default(0).notNull(),
+    includedFields: jsonb('included_fields')
+      .default(sql`'[]'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    submissionIdx: index('idx_submission_artifacts_submission').on(
+      table.submissionId,
+      table.position
+    ),
+    artifactIdx: index('idx_submission_artifacts_artifact').on(table.artifactId),
+    submissionArtifactUnique: unique().on(table.submissionId, table.artifactId),
   })
 );
 
@@ -1619,6 +1750,59 @@ export const verificationStateTransitions = pgTable(
     verificationCreatedAtIdx: index(
       'verification_state_transitions_verification_created_at_idx'
     ).on(table.verificationRecordId, table.createdAt),
+  })
+);
+
+export const verificationLogEntries = pgTable(
+  'verification_log_entries',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    verificationRecordId: uuid('verification_record_id')
+      .references(() => verificationRecords.id, { onDelete: 'cascade' })
+      .notNull(),
+    sequenceNumber: integer('sequence_number').notNull(),
+    entryType: text('entry_type', {
+      enum: verificationLogEntryTypes,
+    }).notNull(),
+    fromStatus: text('from_status', {
+      enum: canonicalVerificationStatuses,
+    }),
+    toStatus: text('to_status', {
+      enum: canonicalVerificationStatuses,
+    }),
+    reasonCode: text('reason_code'),
+    actorType: text('actor_type', {
+      enum: canonicalWorkflowActorTypes,
+    }).notNull(),
+    actorId: uuid('actor_id').references(() => profiles.id, { onDelete: 'set null' }),
+    relatedContradictionId: uuid('related_contradiction_id').references(
+      () => verificationContradictions.id,
+      { onDelete: 'set null' }
+    ),
+    relatedDisputeId: uuid('related_dispute_id').references(() => verificationDisputes.id, {
+      onDelete: 'set null',
+    }),
+    relatedVerificationRecordId: uuid('related_verification_record_id').references(
+      () => verificationRecords.id,
+      { onDelete: 'set null' }
+    ),
+    recomputeBatchId: text('recompute_batch_id'),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    occurredAt: timestamp('occurred_at', { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    verificationSequenceUnique: unique().on(table.verificationRecordId, table.sequenceNumber),
+    verificationOccurredIdx: index('idx_verification_log_entries_verification_occurred').on(
+      table.verificationRecordId,
+      table.occurredAt
+    ),
+    entryTypeOccurredIdx: index('idx_verification_log_entries_entry_type_occurred').on(
+      table.entryType,
+      table.occurredAt
+    ),
   })
 );
 
@@ -4173,6 +4357,12 @@ export type ProofTrustSnapshot = typeof proofTrustSnapshots.$inferSelect;
 export type InsertProofTrustSnapshot = typeof proofTrustSnapshots.$inferInsert;
 export type PortfolioPublicationState = typeof portfolioPublicationStates.$inferSelect;
 export type InsertPortfolioPublicationState = typeof portfolioPublicationStates.$inferInsert;
+export type Submission = typeof submissions.$inferSelect;
+export type InsertSubmission = typeof submissions.$inferInsert;
+export type SubmissionArtifact = typeof submissionArtifacts.$inferSelect;
+export type InsertSubmissionArtifact = typeof submissionArtifacts.$inferInsert;
+export type VerificationLogEntry = typeof verificationLogEntries.$inferSelect;
+export type InsertVerificationLogEntry = typeof verificationLogEntries.$inferInsert;
 
 // Contracts & metrics types
 export type Contract = typeof contracts.$inferSelect;
