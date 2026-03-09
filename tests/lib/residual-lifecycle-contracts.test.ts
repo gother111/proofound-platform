@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { deriveLegacyMatchLifecycleState } from '@/lib/lifecycle/residual';
 import {
   APPLICATION_VS_INTRO_CONTRACT,
+  CANONICAL_RELATIONSHIP_LIFECYCLE_CONTRACT,
   RESIDUAL_LIFECYCLE_APPENDIX,
 } from '@/lib/workflow/contracts';
 
@@ -31,6 +32,57 @@ describe('APPLICATION_VS_INTRO_CONTRACT', () => {
     expect(APPLICATION_VS_INTRO_CONTRACT.currentMvpPolicy).toContain('Intro');
     expect(APPLICATION_VS_INTRO_CONTRACT.duplicationRules).toContain(
       'At most one active intro may exist per candidate_profile_id and assignment_id.'
+    );
+  });
+
+  it('documents launch-safe reentry instead of reopening withdrawn or no-show records in place', () => {
+    expect(APPLICATION_VS_INTRO_CONTRACT.reopenRules).toContain(
+      'Withdrawn intros do not reopen in place. Re-entry requires a new intro attempt after a terminal loss state.'
+    );
+    expect(APPLICATION_VS_INTRO_CONTRACT.reopenRules).toContain(
+      'No-show interview records remain terminal. Recovery uses a new interview attempt, not a state mutation on the same no-show record.'
+    );
+  });
+});
+
+describe('CANONICAL_RELATIONSHIP_LIFECYCLE_CONTRACT', () => {
+  it('defines the launch-safe lifecycle objects and timers', () => {
+    expect(CANONICAL_RELATIONSHIP_LIFECYCLE_CONTRACT.objects.introWorkflow.productStates).toContain(
+      'intro_pending'
+    );
+    expect(CANONICAL_RELATIONSHIP_LIFECYCLE_CONTRACT.objects.revealRequest.productStates).toEqual([
+      'reveal_pending',
+      'reveal_completed',
+    ]);
+    expect(CANONICAL_RELATIONSHIP_LIFECYCLE_CONTRACT.timers.introExpiryDays).toBe(14);
+    expect(CANONICAL_RELATIONSHIP_LIFECYCLE_CONTRACT.policy.reveal.timeoutHours).toBe(72);
+    expect(CANONICAL_RELATIONSHIP_LIFECYCLE_CONTRACT.policy.feedback.tokenTtlDays).toBe(7);
+  });
+
+  it('keeps reveal candidate-approved and duplicate intros blocked', () => {
+    expect(CANONICAL_RELATIONSHIP_LIFECYCLE_CONTRACT.policy.reveal.requiresCandidateApproval).toBe(
+      true
+    );
+    expect(CANONICAL_RELATIONSHIP_LIFECYCLE_CONTRACT.policy.reveal.autoRevealOnMutualIntro).toBe(
+      false
+    );
+    expect(
+      CANONICAL_RELATIONSHIP_LIFECYCLE_CONTRACT.policy.intro.singleActiveIntroPerCandidateAssignment
+    ).toBe(true);
+  });
+
+  it('maps non-hire terminal outcomes to closed_lost and supersedes reopen loops', () => {
+    expect(CANONICAL_RELATIONSHIP_LIFECYCLE_CONTRACT.aggregateOutcomeMapping.hire).toBe(
+      'closed_won'
+    );
+    expect(CANONICAL_RELATIONSHIP_LIFECYCLE_CONTRACT.aggregateOutcomeMapping.reject).toBe(
+      'closed_lost'
+    );
+    expect(CANONICAL_RELATIONSHIP_LIFECYCLE_CONTRACT.supersedesLegacyReopenLoops).toContain(
+      'withdrawn -> pending_*'
+    );
+    expect(CANONICAL_RELATIONSHIP_LIFECYCLE_CONTRACT.supersedesLegacyReopenLoops).toContain(
+      'no_show -> scheduled'
     );
   });
 });

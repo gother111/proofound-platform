@@ -120,6 +120,7 @@
 - ✅ Matching and shortlist review are blind-by-default. Identity, contact, exact location, compensation specifics, public portfolio links, and other bias-sensitive signals remain hidden unless a later reveal stage explicitly permits them.
 - ✅ Public portfolio publication is a separate explicit-public surface and does not weaken blind review inside matching surfaces.
 - ✅ Candidate approval is required for any identity-bearing reveal, including name, photo, employer or school names, direct portfolio access, exact location, exact compensation, or contact details.
+- ✅ The end-to-end launch-safe relationship lifecycle, including intro expiry, reveal timeout, interview scheduling, decision SLA, feedback obligations, withdrawal, no-show, and terminal outcome mapping, is defined in Section 7 and supersedes any older partial lifecycle language.
 - ✅ Existing implementation reveal scopes remain the canonical technical contract:
   - `blind` maps to product Stage 0 anonymous review and Stage 1 capability + proof review.
   - `shortlist_identity` maps to product Stage 2 contextual reveal.
@@ -2430,6 +2431,154 @@ This appendix is the single implementation-ready launch contract. It turns prior
 - It matches the code that already exists, avoids adding new trust boundaries late in launch prep, and reduces operational surface area.
 - It keeps the security model server-enforced and testable.
 - It preserves proof-first and privacy-first product intent without forcing enterprise-grade infrastructure before the MVP proves load or workflow needs.
+
+### A1. Canonical relationship lifecycle contract
+
+This subsection is the launch-authoritative lifecycle contract for shortlist, intro, reveal, scheduling, interview, decision, feedback, withdrawal, expiry, no-show, and closed outcomes. It is intended to be consumed directly by backend contracts, UI state rendering, and QA.
+
+**Objects and ownership**
+
+- `match_review_state`
+  - Purpose: blind review and shortlist posture only
+  - Current aggregate states: `generated`, `shortlisted`, `passed`, `closed`
+- `intro_workflow`
+  - Purpose: bilateral intro intent
+  - Product states: `intro_pending`, `intro_accepted`, `intro_declined`, `intro_expired`, `withdraw`
+- `reveal_request`
+  - Purpose: identity-bearing reveal gate
+  - Product states: `reveal_pending`, `reveal_completed`
+- `interview`
+  - Purpose: scheduling and attendance
+  - Product states: `interview_pending`, `interview_scheduled`, `interview_rescheduled`, `interview_cancelled`, `interview_completed`, `no_show_reported`
+- `decision`
+  - Purpose: org outcome after interview
+  - Product states: `decision_pending`, `advance`, `hold`, `reject`, `hire`, `withdraw`
+- `feedback_record`
+  - Purpose: candidate-visible closure record
+  - Product states: `feedback_pending`, `feedback_submitted`, `feedback_delivered`, `feedback_acknowledged`, `feedback_expired`
+
+**Deterministic transition contract**
+
+- `generated -> shortlisted`
+  - Trigger: org reviewer explicitly saves the candidate
+  - Trigger actor: organization member
+  - Notification: org in-app only
+- `shortlisted -> intro_pending`
+  - Trigger: org requests intro
+  - Trigger actor: organization member
+  - Guard: only one active intro per `candidate_profile_id + assignment_id`; repeated requests return the active intro and emit `duplicate_intro_blocked`
+- `intro_pending -> intro_accepted`
+  - Trigger: counterparty accepts
+  - Trigger actor: candidate or organization member, whichever was asked to respond
+- `intro_pending -> intro_declined`
+  - Trigger: counterparty declines
+  - Trigger actor: candidate or organization member
+  - Outcome: terminal intro loss, aggregate `closed_lost`
+- `intro_pending -> intro_expired`
+  - Trigger: system expiry after 14 days
+  - Trigger actor: system
+  - Outcome: terminal intro loss, aggregate `closed_lost`
+- `intro_accepted -> reveal_pending`
+  - Trigger: org requests identity-bearing reveal
+  - Trigger actor: organization member
+  - Policy: reveal is not automatic on mutual intro
+- `reveal_pending -> reveal_completed`
+  - Trigger: candidate approves reveal
+  - Trigger actor: candidate
+  - Policy: candidate approval is mandatory before identity-bearing reveal
+- `reveal_pending -> intro_accepted`
+  - Trigger: candidate declines reveal or reveal times out after 72 hours
+  - Trigger actor: candidate or system
+- `reveal_completed -> interview_pending`
+  - Trigger: either side requests to move to interview
+  - Trigger actor: candidate or organization member
+- `interview_pending -> interview_scheduled`
+  - Trigger: slot confirmed
+  - Trigger actor: organization member or candidate via coordinated scheduling surface
+  - Timing rule: scheduling window is measured from `intro_accepted_at`
+- `interview_scheduled -> interview_rescheduled`
+  - Trigger: scheduled time changes before start
+  - Trigger actor: organization member
+  - Record rule: same `interview_id`, increment `reschedule_count`, preserve history, max one reschedule
+- `interview_scheduled|interview_rescheduled -> interview_cancelled`
+  - Trigger: org cancels before interview
+  - Trigger actor: organization owner/admin
+  - Recovery: new interview attempt begins from `interview_pending`; cancelled record stays terminal
+- `interview_scheduled|interview_rescheduled -> interview_completed`
+  - Trigger: host marks completion
+  - Trigger actor: organization member host
+  - Outcome: creates or resumes `decision_pending`
+- `interview_scheduled|interview_rescheduled -> no_show_reported`
+  - Trigger: org reports no-show within 24 hours of the scheduled time
+  - Trigger actor: organization owner/admin
+  - Recovery: new interview attempt begins from `interview_pending`; no-show record stays terminal and auditable
+- `decision_pending -> advance|hold|reject|hire|withdraw`
+  - Trigger actor: organization owner/admin only
+- `hold -> advance|hire|reject`
+  - Trigger actor: organization owner/admin
+- `hold -> closed_lost`
+  - Trigger: `hold_until` expires without follow-up
+  - Trigger actor: system
+- `advance -> interview_pending`
+  - Trigger: org advances candidate to another interview step
+  - Trigger actor: organization owner/admin
+- Any active pre-hire state -> `withdraw`
+  - Trigger actor: candidate or organization owner/admin
+  - Outcome rule: pre-interview withdrawal closes immediately as `closed_lost`; post-interview withdrawal still owes candidate-visible feedback inside the decision SLA
+
+**Timeouts, expiry, and SLA**
+
+- Intro expiry timer
+  - Starts: `intro_pending_at`
+  - Stops: `intro_accepted`, `intro_declined`, `intro_expired`, `withdraw`
+  - Default expiry: 14 days
+  - Reminder: T-48h
+- Reveal timer
+  - Starts: `reveal_pending_at`
+  - Stops: `reveal_completed`, explicit decline, timeout
+  - Timeout: 72 hours
+- Scheduling window
+  - Starts: `intro_accepted_at`
+  - Presets: `startup 7d`, `enterprise 14d`, `volunteer 21d`, default `startup`
+  - Rule: rescheduling does not reset the window; replacement interview attempts inherit the remaining time
+- Decision SLA
+  - Starts: `interview_completed_at`
+  - Stops: org submits both a decision and candidate-visible feedback
+  - Reminder cadence: 24h, 40h, 48h deadline, 54h overdue escalation
+- Hold SLA rule
+  - `hold` satisfies the decision SLA only if the org sends candidate-visible hold feedback plus `hold_until`
+  - `internal_note` alone never satisfies the SLA
+- Feedback token TTL
+  - Starts: token issuance
+  - Expires: 7 days
+  - Rule: token expiry does not erase already-submitted feedback
+
+**Notifications**
+
+- Shortlisted: in-app only for org, no candidate email
+- Intro requested, accepted, declined, expired, withdrawn: in-app + email to affected party; both parties notified when state becomes terminal
+- Reveal requested: in-app + email to candidate only
+- Reveal completed: in-app + email to both
+- Interview scheduled and rescheduled: in-app + email to both, include meeting details and reschedule count
+- Interview cancelled and no-show reported: in-app + email to both; no-show notice includes supported recovery path when enabled
+- Decision reminders: org only
+- Feedback delivered: candidate in-app + email; org sees delivery and acknowledgement state
+- Private notes: never candidate-facing
+
+**Analytics and audit**
+
+- Reuse existing names where possible: `shortlist_generated`, `reveal_requested`, `reveal_granted`, `reveal_denied`, `intro_workflow_expired`, `intro_workflow_withdrawn`, `interview_no_show_recorded`, `structured_feedback_submitted`
+- Canonical additional events: `intro_requested`, `intro_accepted`, `intro_declined`, `reveal_request_expired`, `interview_requested`, `interview_rescheduled`, `decision_pending_started`, `decision_recorded`, `feedback_delivered`, `feedback_acknowledged`, `feedback_sla_breached`, `duplicate_intro_blocked`, `pipeline_reentered`
+- Every lifecycle event must include: `assignment_id`, `candidate_profile_id`, `org_id`, active object id, actor type, actor id when available, prior state, next state, reason code, timestamp
+
+**Edge cases and recovery**
+
+- Duplicate intros: hard guard on one active intro per `candidate_profile_id + assignment_id`; parallel intros across different assignments are allowed
+- Re-entry: allowed only through a new intro attempt after `intro_declined`, `intro_expired`, `reject`, `withdraw`, or aggregate `closed_lost`
+- Same-record reopen is forbidden for withdrawn intros and no-show interviews
+- Private notes vs visible feedback: `internal_note` remains org/operator-only; `personalized_note` and `suggested_next_step` are the candidate-visible closure surface
+- Assignment closed mid-pipeline: all open non-hire intros, interviews, and decisions terminate with reason `assignment_closed`
+- Aggregate outcome mapping: `hire -> closed_won`; `reject`, `withdraw`, `intro_declined`, `intro_expired`, assignment closure without hire, and unrecovered no-show -> `closed_lost`
 
 ### B. Authentication, session, and cookie model
 

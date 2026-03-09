@@ -362,15 +362,16 @@ export const APPLICATION_VS_INTRO_CONTRACT = {
   relationship:
     'Match is a scored eligibility record. Intro is the bilateral workflow that begins when a scored match or candidate invite is actively pursued. Application is explicit candidate intent submitted through an application surface and may create at most one intro for a candidate-assignment pair.',
   currentMvpPolicy:
-    'Intro remains the canonical pursuit workflow until a first-class self-serve application object ships.',
+    'Intro remains the canonical pursuit workflow until a first-class self-serve application object ships. Launch-safe lifecycle behavior is defined by the canonical relationship lifecycle contract below.',
   duplicationRules: [
     'At most one active intro may exist per candidate_profile_id and assignment_id.',
     'Duplicate applications may only exist as resubmissions after a terminal outcome.',
     'A duplicate application must never create a second active intro.',
   ],
   reopenRules: [
-    'Withdrawn intros may reopen to a pending state.',
+    'Withdrawn intros do not reopen in place. Re-entry requires a new intro attempt after a terminal loss state.',
     'Expired, duplicate_candidate, and closed intros remain terminal and require a new intro attempt.',
+    'No-show interview records remain terminal. Recovery uses a new interview attempt, not a state mutation on the same no-show record.',
   ],
   ownership: {
     candidate: ['submit_application', 'withdraw_application', 'express_intro_interest'],
@@ -382,6 +383,121 @@ export const APPLICATION_VS_INTRO_CONTRACT = {
     ],
     system: ['expire_intro', 'mark_match_stale', 'enforce_duplicate_intro_guard'],
   },
+} as const;
+
+export const CANONICAL_RELATIONSHIP_LIFECYCLE_CONTRACT = {
+  version: 'relationship-lifecycle/v1',
+  sourceOfTruth:
+    'PRD_TECHNICAL_REQUIREMENTS.md Section 7 and PRD_for_a_web_platform_MVP.master-latest.md O11.1',
+  aggregateOutcomeStates: ['active', 'closed_won', 'closed_lost'] as const,
+  objects: {
+    matchReviewState: {
+      purpose: 'Blind review and shortlist posture only.',
+      productStates: ['generated', 'shortlisted', 'passed', 'closed'] as const,
+    },
+    introWorkflow: {
+      purpose: 'Bilateral intro intent.',
+      productStates: [
+        'intro_pending',
+        'intro_accepted',
+        'intro_declined',
+        'intro_expired',
+        'withdraw',
+      ] as const,
+      backendMapping: {
+        intro_pending: ['pending_candidate_interest', 'pending_org_interest'],
+        intro_accepted: ['mutual'],
+        intro_declined: ['closed'],
+        intro_expired: ['expired'],
+        withdraw: ['withdrawn'],
+      },
+    },
+    revealRequest: {
+      purpose: 'Identity-bearing reveal gate.',
+      productStates: ['reveal_pending', 'reveal_completed'] as const,
+    },
+    interview: {
+      purpose: 'Scheduling and attendance.',
+      productStates: [
+        'interview_pending',
+        'interview_scheduled',
+        'interview_rescheduled',
+        'interview_cancelled',
+        'interview_completed',
+        'no_show_reported',
+      ] as const,
+    },
+    decision: {
+      purpose: 'Organization outcome after interview.',
+      productStates: ['decision_pending', 'advance', 'hold', 'reject', 'hire', 'withdraw'] as const,
+    },
+    feedbackRecord: {
+      purpose: 'Candidate-visible closure and acknowledgement tracking.',
+      productStates: [
+        'feedback_pending',
+        'feedback_submitted',
+        'feedback_delivered',
+        'feedback_acknowledged',
+        'feedback_expired',
+      ] as const,
+    },
+  },
+  policy: {
+    reveal: {
+      trigger: 'organization_member_request',
+      requiresCandidateApproval: true,
+      autoRevealOnMutualIntro: false,
+      declineOrTimeoutReturnsTo: 'intro_accepted',
+      timeoutHours: 72,
+    },
+    intro: {
+      singleActiveIntroPerCandidateAssignment: true,
+      parallelAcrossAssignmentsAllowed: true,
+      reentryRequiresNewIntroAttempt: true,
+      terminalLossStates: [
+        'intro_declined',
+        'intro_expired',
+        'reject',
+        'withdraw',
+        'closed_lost',
+      ] as const,
+    },
+    interview: {
+      rescheduleUsesSameInterviewId: true,
+      maxReschedules: 1,
+      cancellationRecoveryStartsAt: 'interview_pending',
+      noShowRecoveryStartsAt: 'interview_pending',
+      noShowRecordReopensInPlace: false,
+    },
+    feedback: {
+      candidateVisibleFields: ['personalized_note', 'suggested_next_step'] as const,
+      internalOnlyFields: ['internal_note'] as const,
+      tokenTtlDays: 7,
+      postInterviewWithdrawalStillRequiresVisibleFeedback: true,
+    },
+  },
+  timers: {
+    introExpiryDays: 14,
+    introReminderHoursBeforeExpiry: 48,
+    schedulingWindowFrom: 'intro_accepted_at',
+    schedulingPresetDays: {
+      startup: 7,
+      enterprise: 14,
+      volunteer: 21,
+      default: 7,
+    },
+    decisionReminderHours: [24, 40, 48, 54] as const,
+  },
+  aggregateOutcomeMapping: {
+    hire: 'closed_won',
+    reject: 'closed_lost',
+    withdraw: 'closed_lost',
+    intro_declined: 'closed_lost',
+    intro_expired: 'closed_lost',
+    assignment_closed_without_hire: 'closed_lost',
+    unrecovered_no_show: 'closed_lost',
+  },
+  supersedesLegacyReopenLoops: ['withdrawn -> pending_*', 'no_show -> scheduled'] as const,
 } as const;
 
 export const WORKFLOW_LABELS = {

@@ -1967,6 +1967,88 @@ Each flow includes:
 - Candidates receive feedback via in-app/email and see status in their view; orgs see which candidates have acknowledged receipt.  
   **MoSCoW:** **Must** (SLA enforcement + templated feedback).
 
+### O11.1 — **Canonical Relationship Lifecycle Contract (Launch)**
+
+**Why Now:** The qualified-intro corridor must behave as one deterministic lifecycle, not as separate reveal, interview, and feedback fragments. This contract supersedes any older reopen behavior that allowed the same withdrawn or no-show record to re-enter in place.
+
+**Objects involved:**
+
+- `match_review_state` controls blind review only: `generated -> shortlisted -> passed|closed`.
+- `intro_workflow` controls bilateral intro intent: `intro_pending -> intro_accepted|intro_declined|intro_expired|withdraw`.
+- `reveal_request` controls identity-bearing reveal only: `reveal_pending -> reveal_completed`.
+- `interview` controls scheduling and attendance: `interview_pending -> interview_scheduled -> interview_rescheduled|interview_cancelled|interview_completed|no_show_reported`.
+- `decision` controls org outcome: `decision_pending -> advance|hold|reject|hire|withdraw`.
+- `feedback_record` controls candidate-visible closure: `feedback_pending -> feedback_submitted -> feedback_delivered -> feedback_acknowledged|feedback_expired`.
+
+**Deterministic state machine overview:**
+
+- `generated -> shortlisted` when an org reviewer explicitly saves a candidate. Candidate is not emailed; org UI may show “under deeper review”.
+- `shortlisted -> intro_pending` when an org reviewer requests an intro. This creates the `intro_workflow`, starts intro expiry, and must block any second active intro for the same `candidate_profile_id + assignment_id`.
+- `intro_pending -> intro_accepted` when the counterparty accepts. Both sides are mutually interested, but identity remains masked.
+- `intro_pending -> intro_declined` when the counterparty declines. This is terminal for that intro attempt and maps to aggregate `closed_lost`.
+- `intro_pending -> intro_expired` when no acceptance arrives within 14 days. This is terminal for that intro attempt and maps to aggregate `closed_lost`.
+- Any active pre-hire state -> `withdraw` when candidate or org withdraws. If this happens before `interview_completed`, the relationship closes immediately as `closed_lost`. If it happens after `interview_completed`, candidate-visible feedback is still owed within the 48h decision SLA.
+- `intro_accepted -> reveal_pending` when the org requests identity-bearing reveal. Policy is fixed for launch: org requests, candidate approves. Denial or timeout returns the relationship to `intro_accepted`, not `intro_declined`.
+- `reveal_pending -> reveal_completed` when the candidate approves. This unlocks only coordination-safe identity fields: name, photo, portfolio link if published, and the contact scope needed for the next step.
+- `reveal_pending -> intro_accepted` when the candidate declines reveal or the request times out after 72 hours.
+- `reveal_completed -> interview_pending` when either side requests to move forward to interview coordination.
+- `interview_pending -> interview_scheduled` when a slot is confirmed. The scheduling window is measured from `intro_accepted_at`, not shortlist time, and follows the policy preset: `startup 7d`, `enterprise 14d`, `volunteer 21d`, default `startup`.
+- `interview_scheduled -> interview_rescheduled` when time changes before the interview occurs. The same `interview_id` is retained, `reschedule_count` increments, full history is preserved, and only one reschedule is allowed.
+- `interview_scheduled|interview_rescheduled -> interview_cancelled` when an org owner/admin cancels before the event. Recovery requires a new interview attempt from `interview_pending`; the cancelled record stays terminal.
+- `interview_scheduled|interview_rescheduled -> interview_completed` when the host marks completion. This immediately starts `decision_pending` and feedback issuance.
+- `interview_scheduled|interview_rescheduled -> no_show_reported` when an org owner/admin reports a no-show within 24 hours of the scheduled time. Recovery requires a new interview attempt from `interview_pending`; the no-show record stays terminal and auditable.
+- `decision_pending -> advance|hold|reject|hire|withdraw` by org owner/admin only.
+- `hold -> advance|hire|reject` by org owner/admin, or `hold -> closed_lost` when `hold_until` expires without follow-up.
+- `advance` is non-terminal and opens a new `interview_pending`.
+- `hire` is terminal and maps aggregate status to `closed_won`.
+- `reject`, `withdraw`, `intro_declined`, `intro_expired`, assignment closure without hire, and unrecovered no-show map aggregate status to `closed_lost`.
+
+**SLA logic:**
+
+- Intro expiry starts at `intro_pending_at` and stops at `intro_accepted`, `intro_declined`, `intro_expired`, or `withdraw`. Default expiry is 14 days; reminder is at T-48h.
+- Reveal expiry starts at `reveal_pending_at` and stops at `reveal_completed`, explicit decline, or 72h timeout.
+- Scheduling window starts at `intro_accepted_at`. Rescheduling does not reset the window; replacement interviews inherit the remaining window.
+- Decision SLA starts at `interview_completed_at` and stops only when the org submits both a decision and candidate-visible feedback. Reminder schedule is 24h, 40h, 48h deadline, and 54h overdue escalation.
+- `hold` satisfies the decision SLA only when the org sends a candidate-visible hold message plus `hold_until`. Internal notes alone do not satisfy the SLA.
+- Feedback token TTL is 7 days from issuance. Token expiry never erases already-submitted feedback.
+
+**Notification rules:**
+
+- Shortlisted: in-app only for org; no candidate email.
+- Intro requested, accepted, declined, expired, withdrawn: in-app + email to the affected party; both parties are notified once the state becomes terminal.
+- Reveal requested: in-app + email to candidate only. Reveal completed: in-app + email to both.
+- Interview scheduled and rescheduled: in-app + email to both, including meeting details and reschedule count.
+- Interview cancelled and no-show reported: in-app + email to both. No-show notices include the supported recovery path when enabled.
+- Decision reminders: org only.
+- Candidate-visible feedback delivered: candidate in-app + email. Org sees delivery and acknowledgement status.
+- Private notes never trigger candidate-facing notifications.
+
+**Event tracking:**
+
+- Reuse existing event names where possible: `shortlist_generated`, `reveal_requested`, `reveal_granted`, `reveal_denied`, `intro_workflow_expired`, `intro_workflow_withdrawn`, `interview_no_show_recorded`, `structured_feedback_submitted`.
+- Standardize or add: `intro_requested`, `intro_accepted`, `intro_declined`, `reveal_request_expired`, `interview_requested`, `interview_rescheduled`, `decision_pending_started`, `decision_recorded`, `feedback_delivered`, `feedback_acknowledged`, `feedback_sla_breached`, `duplicate_intro_blocked`, `pipeline_reentered`.
+- Every event must include: `assignment_id`, `candidate_profile_id`, `org_id`, active object id, actor type/id, prior state, next state, reason code, and timestamp.
+
+**Edge cases and recovery paths:**
+
+- Duplicate intros: hard unique guard for one active intro per `candidate_profile_id + assignment_id`. Repeated clicks return the active intro and must not create a second active record. Parallel intros across different assignments are allowed.
+- Re-entry: allowed only through a new intro attempt after `intro_declined`, `intro_expired`, `reject`, `withdraw`, or `closed_lost`. The same withdrawn or no-show record must not reopen in place.
+- Withdrawal and feedback: if withdrawal happens before interview completion, a structured withdrawal reason is required and candidate-visible personalized feedback is optional. If withdrawal happens after interview completion, candidate-visible feedback remains mandatory inside the 48h SLA.
+- Private notes vs visible feedback: `internal_note` is org/operator-only and never shown to the other party. `personalized_note` and `suggested_next_step` are recipient-visible and are the only fields that satisfy feedback SLA.
+- Assignment closes mid-pipeline: all open non-hire intros, interviews, and decisions transition to terminal loss with reason `assignment_closed`.
+
+**Acceptance criteria:**
+
+- Backend can derive one current aggregate relationship status without losing child-object history.
+- UI can render every required lifecycle state without ambiguous reopen behavior.
+- Candidate-visible reveal never happens without candidate approval after an org request.
+- Intro expiry, reveal timeout, scheduling window, decision SLA, hold expiry, and feedback token TTL are explicit and independently testable.
+- Duplicate active intros for the same `candidate_profile_id + assignment_id` are impossible at the contract layer.
+- Reschedule and replacement interview behavior are distinct and deterministic.
+- Candidate-visible feedback and org-private notes are stored separately and enforced separately.
+- `hire` reports as `closed_won`; all other non-hire terminal outcomes report as `closed_lost`.
+- This contract explicitly supersedes older reopen loops such as `withdrawn -> pending_*` and `no_show -> scheduled`.
+
 ---
 
 ### O12 — **Assignment Templates**
