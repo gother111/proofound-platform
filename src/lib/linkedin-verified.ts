@@ -2,6 +2,11 @@ const LINKEDIN_REST_BASE_URL = 'https://api.linkedin.com/rest';
 const LINKEDIN_RESTLI_PROTOCOL_VERSION = '2.0.0';
 const DEFAULT_LINKEDIN_API_VERSION = '202510';
 
+function isLinkedInHostname(hostname: string): boolean {
+  const normalizedHost = hostname.trim().toLowerCase().replace(/\.+$/, '');
+  return normalizedHost === 'linkedin.com' || normalizedHost.endsWith('.linkedin.com');
+}
+
 function normalizeHttpUrl(value: string | null | undefined): string | null {
   if (!value) return null;
   const trimmed = value.trim();
@@ -12,6 +17,7 @@ function normalizeHttpUrl(value: string | null | undefined): string | null {
   try {
     const parsed = new URL(withScheme);
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null;
+    if (!isLinkedInHostname(parsed.hostname)) return null;
     return parsed.toString();
   } catch {
     return null;
