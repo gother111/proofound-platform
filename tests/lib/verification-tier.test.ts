@@ -72,6 +72,23 @@ describe('verification tier resolution', () => {
     expect(result.linkedinVerificationLevel).toBe('unverified');
   });
 
+  it('does not trust stored identity tier without veriff or linkedin identity evidence', () => {
+    const result = resolveCanonicalVerificationTier({
+      currentTier: 'identity_verified',
+      currentTierSource: 'veriff',
+      verificationMethod: null,
+      verificationStatus: 'unverified',
+      verified: false,
+      linkedinVerificationStatus: 'unverified',
+      linkedinVerificationData: null,
+      workEmailCurrentlyVerified: false,
+    });
+
+    expect(result.verificationTier).toBe('unverified');
+    expect(result.verificationTierSource).toBe('unknown');
+    expect(result.linkedinVerificationLevel).toBe('unverified');
+  });
+
   it('resolves pending LinkedIn level when no official signals exist', () => {
     const level = resolveLinkedInVerificationLevel({
       linkedinVerificationStatus: 'pending',
