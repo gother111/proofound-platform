@@ -1,5 +1,3 @@
-import type { NextRequest } from 'next/server';
-
 import { getInternalApiSecret } from '@/lib/api/auth';
 import { resolvePythonInternalServiceBaseUrl } from '@/lib/python-internal/service';
 
@@ -43,7 +41,6 @@ export function resolvePythonInternalWorkerWakeTimeoutMs(): number {
 
 export async function triggerPythonInternalWorker(
   params: {
-    request?: NextRequest;
     timeoutMs?: number;
   } = {}
 ): Promise<boolean> {
@@ -52,7 +49,7 @@ export async function triggerPythonInternalWorker(
     return false;
   }
 
-  const baseUrl = resolvePythonInternalServiceBaseUrl(params.request);
+  const baseUrl = resolvePythonInternalServiceBaseUrl();
   const targetUrl = new URL('/api/cron/python-internal-worker', `${baseUrl}/`);
 
   try {

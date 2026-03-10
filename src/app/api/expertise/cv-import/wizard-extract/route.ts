@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
       },
     ]);
 
-    await triggerPythonInternalWorker({ request });
+    await triggerPythonInternalWorker();
 
     return jsonWithRequestId(
       requestId,
