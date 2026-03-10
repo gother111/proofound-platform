@@ -29,7 +29,7 @@ describe('python-cv-proxy', () => {
     vi.restoreAllMocks();
   });
 
-  it('builds endpoint query URL and forwards csrf context headers', async () => {
+  it('builds endpoint query URL without forwarding client auth headers', async () => {
     const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
       new Response(JSON.stringify(validSuggestPayload), {
         status: 200,
@@ -59,8 +59,8 @@ describe('python-cv-proxy', () => {
 
     expect(targetUrl).toContain('/api/python/cv_import?endpoint=wizard-suggest');
     expect(targetUrl).toContain('a=1');
-    expect(headers['x-csrf-token']).toBe('csrf-token-value');
-    expect(headers.cookie).toContain('csrf_token=csrf-token-value');
+    expect(headers['x-csrf-token']).toBeUndefined();
+    expect(headers.cookie).toBeUndefined();
     expect(headers['x-proofound-contract-version']).toBe(PYTHON_INTERNAL_CONTRACT_VERSION);
     expect(headers['x-python-service-secret']).toBeTruthy();
   });
@@ -92,6 +92,34 @@ describe('python-cv-proxy', () => {
     const [, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
     const headers = init.headers as Record<string, string>;
     expect(headers['content-type']).toBe(multipartContentType);
+  });
+
+  it('uses request origin instead of x-forwarded host for upstream URL', async () => {
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify(validSuggestPayload), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+
+    const request = new NextRequest('http://localhost/api/expertise/cv-import/suggest', {
+      method: 'POST',
+      body: JSON.stringify({ documents: [] }),
+      headers: {
+        'content-type': 'application/json',
+        'x-forwarded-proto': 'http',
+        'x-forwarded-host': 'attacker.example:8080',
+      },
+    });
+
+    const response = await proxyCvRequestToPython(request, '/suggest');
+
+    expect(response.status).toBe(200);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+    const [targetUrl] = fetchSpy.mock.calls[0] as [string, RequestInit];
+    expect(targetUrl).toContain('http://localhost/api/python/cv_import');
+    expect(targetUrl).not.toContain('attacker.example');
   });
 
   it('maps python csrf 403 failures to proxy unavailable response', async () => {
