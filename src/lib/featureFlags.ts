@@ -26,6 +26,18 @@ export const FEATURE_FLAG_KEYS = {
   KILL_SWITCH_EXACT_RANK: 'FF_KILL_SWITCH_EXACT_RANK',
 } as const;
 
+export const CLIENT_FEATURE_FLAG_RESPONSE_MAP = {
+  activationTiering: FEATURE_FLAG_KEYS.ACTIVATION_TIERING,
+  assignmentBasicMode: FEATURE_FLAG_KEYS.ASSIGNMENT_BASIC_MODE,
+  uiVocabPlain: FEATURE_FLAG_KEYS.UI_VOCAB_PLAIN,
+  privacySummary: FEATURE_FLAG_KEYS.PRIVACY_SUMMARY,
+  qualifiedIntroCorridor: FEATURE_FLAG_KEYS.QUALIFIED_INTRO_CORRIDOR,
+  structuredFeedbackRequired: FEATURE_FLAG_KEYS.STRUCTURED_FEEDBACK_REQUIRED,
+  exactRankExposure: FEATURE_FLAG_KEYS.EXACT_RANK_EXPOSURE,
+  killSwitchIntros: FEATURE_FLAG_KEYS.KILL_SWITCH_INTROS,
+  killSwitchExactRank: FEATURE_FLAG_KEYS.KILL_SWITCH_EXACT_RANK,
+} as const;
+
 // Legacy env gate retained for compatibility.
 export const MATCHING_ENABLED = process.env.MATCHING_FEATURE_ENABLED === 'true';
 

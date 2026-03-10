@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   AUTHZ_MATRIX,
   AUTHZ_RESOURCE_VALUES,
+  assertExplicitPrincipalContext,
   authorize,
   getAuditMetadataVisibility,
   getEffectiveReviewRevealScope,
@@ -95,59 +96,83 @@ describe('canonical authz policy', () => {
     `);
   });
 
-  it('keeps viewer access blind and non-exporting', () => {
+  it('keeps reviewer access narrow and non-exporting', () => {
     expect(
       authorize({
         resource: 'candidate_shortlist_cards',
         action: 'read',
-        orgRole: 'viewer',
+        orgRole: 'org_reviewer',
       }).allowed
     ).toBe(true);
     expect(
       authorize({
         resource: 'candidate_full_review',
         action: 'read',
-        orgRole: 'viewer',
+        orgRole: 'org_reviewer',
       }).allowed
-    ).toBe(false);
+    ).toBe(true);
     expect(
       authorize({
         resource: 'exports',
         action: 'export',
-        orgRole: 'viewer',
+        orgRole: 'org_reviewer',
       }).allowed
     ).toBe(false);
-    expect(getEffectiveShortlistRevealScope('viewer', 'full_identity')).toBe('blind');
-    expect(getVerificationSummaryVisibility('viewer')).toBe('none');
-    expect(getAuditMetadataVisibility('viewer')).toBe('none');
+    expect(getEffectiveShortlistRevealScope('org_reviewer', 'full_identity')).toBe(
+      'shortlist_identity'
+    );
+    expect(getVerificationSummaryVisibility('org_reviewer')).toBe('redacted');
+    expect(getAuditMetadataVisibility('org_reviewer')).toBe('none');
   });
 
-  it('keeps member access operational but not privileged', () => {
+  it('keeps manager access operational but not ownership privileged', () => {
     expect(
       authorize({
         resource: 'candidate_full_review',
         action: 'update',
-        orgRole: 'member',
+        orgRole: 'org_manager',
       }).allowed
     ).toBe(true);
     expect(
       authorize({
         resource: 'team_invites_memberships',
         action: 'invite',
-        orgRole: 'member',
+        orgRole: 'org_manager',
       }).allowed
-    ).toBe(false);
+    ).toBe(true);
     expect(
       authorize({
         resource: 'org_audit_logs',
         action: 'read',
-        orgRole: 'member',
+        orgRole: 'org_manager',
+      }).allowed
+    ).toBe(true);
+    expect(
+      authorize({
+        resource: 'team_invites_memberships',
+        action: 'manage',
+        orgRole: 'org_manager',
       }).allowed
     ).toBe(false);
-    expect(getEffectiveReviewRevealScope('member', 'shortlist_identity')).toBe(
+    expect(getEffectiveReviewRevealScope('org_manager', 'shortlist_identity')).toBe(
       'shortlist_identity'
     );
-    expect(getVerificationSummaryVisibility('member')).toBe('redacted');
+    expect(getVerificationSummaryVisibility('org_manager')).toBe('detailed');
+  });
+
+  it('rejects mutating org actions without explicit organization principal context', () => {
+    expect(assertExplicitPrincipalContext(undefined).ok).toBe(false);
+    expect(
+      assertExplicitPrincipalContext({
+        principalType: 'organization',
+      } as any).ok
+    ).toBe(false);
+    expect(
+      assertExplicitPrincipalContext({
+        principalType: 'organization',
+        orgId: '11111111-1111-4111-8111-111111111111',
+      }).ok
+    ).toBe(true);
   });
 
   it('requires break-glass for platform admins on org-scoped sensitive access', () => {

@@ -19,7 +19,7 @@
 
 ---
 
-> Canonical scope note: `PRD_for_a_web_platform_MVP.master-latest.md` is the normative product source of truth. This document is the implementation-oriented technical companion. Section 7 is the authoritative technical launch contract for security, auth, storage, privacy, accessibility, reliability, and operational readiness. Where older sections in this document describe broader, earlier, or post-MVP assumptions, the canonical master PRD and Section 7 override them.
+> Canonical scope note: `PRD_for_a_web_platform_MVP.master-latest.md` is the normative product source of truth for product behavior and scope. This document is the implementation-oriented technical companion. Section 7 is the only authoritative technical launch contract for security, auth, storage, privacy, accessibility, reliability, and operational readiness. Sections 1 through 6 are context only where they agree with Section 7 and the master PRD; if they conflict, the master PRD and Section 7 win immediately.
 
 ## 1. NON-FUNCTIONAL REQUIREMENTS
 
@@ -231,7 +231,7 @@
 - Browser cache: Static assets (1 year)
 - CDN cache: Vercel Edge Network (automatic)
 - Application cache: React Query (5-minute stale time)
-- ⚠️ Redis cache (Post-MVP): Sessions, matching scores, taxonomy data
+- Redis cache is post-launch only and not part of the canonical MVP launch stack
 
 **Optimization Techniques**:
 
@@ -249,10 +249,10 @@
 - Semantic search with pgvector (ANN index for <3s matching)
 - Read replicas (separate read/write traffic)
 - Database partitioning (analytics_events, messages by month)
-- Redis caching layer (sessions, matching results)
+- Redis caching layer only if measured bottlenecks justify added infrastructure
 - CDN for user-generated content
 - Worker threads for matching computation
-- GraphQL for flexible queries (reduce over-fetching)
+- GraphQL remains non-canonical for launch and is not a required near-term API surface
 
 **Scale Targets** (500K+ users):
 
@@ -279,7 +279,7 @@
 - ✅ User-friendly error messages
 - ✅ Automatic retries (3 attempts with exponential backoff)
 - ✅ Circuit breakers for external services
-- ⚠️ Error tracking (Sentry integration needed)
+- ✅ Error tracking via Sentry in the canonical launch stack
 
 **Data Durability**:
 
@@ -295,15 +295,15 @@
 - ✅ Vercel Analytics (web vitals)
 - ✅ Supabase Dashboard (database metrics)
 - ✅ Sentry (error tracking and release health)
-- ⚠️ Uptime monitoring (single external checker for `/` and `/api/health`)
-- ⚠️ Custom metrics via OpenTelemetry (post-launch, non-canonical for MVP)
+- ✅ One external uptime monitor for launch-critical checks
+- Custom metrics via OpenTelemetry are post-launch only and non-canonical for MVP
 
 **Incident Response**:
 
 - Severity levels: Sev-1 (critical), Sev-2 (high), Sev-3 (medium), Sev-4 (low)
 - Sev-1 response time: <1 hour
 - Postmortem for all Sev-1/2 incidents within 72 hours
-- Status page for user communication
+- Status-page style communication is optional and post-launch unless explicitly enabled
 
 #### Future Reliability Enhancements
 
@@ -407,9 +407,9 @@
 
 **Internationalization** (i18n):
 
-- ✅ next-intl configured for an English launch baseline
-- ✅ Message files structure created
-- ⚠️ Swedish runtime parity deferred until post-launch
+- ✅ English-only runtime baseline for launch
+- ✅ Locale-ready message structure may remain in source
+- Swedish runtime parity is deferred until post-launch and must not be represented as launch-ready
 - ⚠️ RTL support (Arabic, Hebrew) - Post-MVP
 - ⚠️ CJK support (Chinese, Japanese, Korean) - Post-MVP
 
@@ -1477,7 +1477,7 @@ opportunities (1) ←→ (many) applications
 
 - **PostgreSQL 15**: Primary database with 30+ tables
 - **Auth**: Email/password + OAuth (Google, LinkedIn)
-- **Storage**: File uploads for proofs, avatars, covers (buckets: `proofs`, `avatars`, `covers`, `logos`)
+- **Storage**: Quarantine-first uploads with private-by-default storage and public promotion only for approved safe media classes
 - **Realtime**: WebSocket subscriptions (future use for messaging)
 
 **Configuration**:
@@ -1811,7 +1811,7 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 
 **Runtime & Framework**:
 
-- Node.js: ≥18.x (LTS)
+- Node.js: `20.20.0` launch baseline
 - Next.js: 15.5.4 (App Router)
 - React: 19.x
 - TypeScript: 5.x
@@ -1905,7 +1905,7 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 
 - Skills level: 0-5 (CHECK constraint)
 - Persona: individual | org_member | unknown
-- Organization role: owner | admin | member | viewer
+- Organization membership role: org_owner | org_manager | org_reviewer
 - RLS: All tables must have policies (security requirement)
 
 ---
@@ -1915,9 +1915,10 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 **Platform Limits**:
 
 - General: 60 requests/min per IP
-- Authenticated: 120 requests/min per user token
+- Authenticated: 120 requests/min per authenticated principal
 - Auth endpoints: 10 requests/min per IP (stricter)
 - Burst: 2× limit for 10 seconds
+- Exact production thresholds may be tuned, but launch behavior must remain within the rate-limit and abuse-prevention model defined in Section 7.G
 
 **External Service Limits**:
 
@@ -1935,8 +1936,10 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 - Max files per batch: 10
 - Max aggregate uploaded evidence per Proof Pack: 100MB
 - Max total storage (Pro): 100GB
-- Allowed MIME types: `application/pdf`, `image/jpeg`, `image/png`, `image/webp`, `text/plain`, `text/markdown`
-- Rejected in MVP: archives, executables, macro-enabled office files, spreadsheets, presentations, audio, video
+- Launch-safe file classes:
+  - proof and resume documents: `application/pdf`
+  - public-safe image media: `image/jpeg`, `image/png`, `image/webp`
+- Rejected in MVP: archives, executables, macro-enabled office files, spreadsheets, presentations, audio, video, HTML, SVG, and ambiguous active content
 - Upload path: quarantine-first upload, metadata validation, then server-side attach or rejection
 - Safety rule: unsafe uploads fail closed and never attach to proof, matching, or public surfaces
 
@@ -1952,7 +1955,7 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 
 #### Data Residency
 
-**MVP**: Single region (US-East or EU-West, Supabase default)
+**MVP**: Single Supabase region for launch, selected operationally and not marketed as multi-region parity
 
 **Post-MVP**: Multi-region support
 
@@ -2027,7 +2030,7 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 **Session Security**:
 
 - Interactive sessions use Supabase-managed SSR cookies
-- No app-issued access/refresh JWT contract is documented for launch
+- No parallel app-managed token lifecycle is documented for launch
 - Logout, password reset, and admin invalidation must revoke the active session server-side
 - Cookie-auth mutating requests require CSRF validation
 
@@ -2064,14 +2067,14 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 - URL: `proofound.io` (+ `www.proofound.io`)
 - Database: Supabase Production project
 - Purpose: Live users
-- Access: Public (gated by beta codes initially)
+- Access: Public public-safe routes plus curated pilot participants on workflow surfaces
 - Data: Real user data (GDPR/CCPA compliant)
 
 ---
 
 ### 5.2 Deployment Strategy
 
-**MVP Launch (Private Beta)**:
+**Proof-first MVP Launch**:
 
 - Deployment: Vercel (main branch → production)
 - Database: Supabase Pro tier
@@ -2098,15 +2101,14 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 
 #### Core Metrics (MVP)
 
-**North Star Metric**:
-
-- **Time-to-First-Accepted-Match** (median)
-- Target: <24 hours
-
-**North Star #2**:
-
-- **% assignments with ≥3 qualified matches in 7 days**
-- Target: ≥50%
+- The canonical launch KPI family is defined in the master PRD Section 7.6 and mirrored here only as implementation context.
+- Launch-critical KPIs:
+  - **TTSC**: Time-to-Signed-Contract
+  - **TTFQI**: Time-to-First Qualified Intro
+  - **TTV**: Time-to-Value
+  - **PAC**: Purpose-Alignment Contribution
+  - **SUS**: System Usability Scale
+  - **Fairness note status**: privacy-safe fairness reporting state
 
 **First 10 Minutes Activation Success (MVP)**:
 
@@ -2127,19 +2129,23 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
   - `GET /app/i/portfolio` -> redirect to `/portfolio/{handle}`
   - `GET /app/o/{slug}/portfolio` -> redirect to `/portfolio/org/{slug}`
 
-**Day-1 Admin Dashboard**:
+**Launch operations dashboard**:
 
-1. Time-to-first-match (median)
-2. % profiles "Ready for Match" within 24h of signup
-3. Organization verification completion rate
-4. Match acceptance rate (+ decline reasons)
-5. Safety: Report rate & resolution SLA
-6. Individual first-10-minute activation rate
-7. Company first-10-minute activation rate
+- Internal only
+- Must not expose raw PII
+- Prioritizes:
+  - TTSC and TTFQI
+  - publish and visibility correctness
+  - trust and verification queue health
+  - fallback-state volume
+  - export and delete correctness
 
 ---
 
 #### Event Tracking
+
+- Current event names in this section may remain as compatibility aliases.
+- The canonical launch event taxonomy lives in `PRD_for_a_web_platform_MVP.master-latest.md` Section 7. Any older event list here must map into that canonical taxonomy rather than compete with it.
 
 **Core Events** (instrumented via `analytics_events` table):
 
@@ -2181,17 +2187,17 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
     "actorType": "individual"
   },
   "sessionId": "session_uuid",
-  "ipAddress": "xxx.xxx.xxx.xxx",
-  "userAgent": "Mozilla/5.0...",
+  "networkHash": "opaque_hash",
+  "deviceFamily": "browser_family",
   "createdAt": "2025-10-30T12:00:00Z"
 }
 ```
 
 **Privacy**:
 
-- IP addresses auto-deleted after 90 days
-- Analytics events anonymized for ML training (hash userId)
-- Users can opt-out (no tracking except critical security events)
+- No raw PII in analytics payloads
+- Any retained network marker must be hashed or minimized and time-bounded
+- Users can opt out of non-critical analytics; security and audit events remain mandatory
 
 ---
 
@@ -2226,28 +2232,28 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 
 **Uptime Monitoring**:
 
-- Tool: UptimeRobot (free) or Pingdom ($15/month)
-- Endpoints: `/`, `/api/health` (needs creation)
+- Tool: one external uptime monitor
+- Endpoints: `/`, `/api/health`, plus launch-critical workflow checks as defined in Section 7
 - Frequency: 5-minute checks
-- Alerts: Email + SMS for downtime >5 minutes
+- Alerts: operator channel for launch-critical downtime or repeated failure
 
 **Error Tracking**:
 
-- Tool: Sentry (needs setup)
+- Tool: Sentry
 - Coverage: Frontend + API routes
-- Alert: Email for error rate >5% or new critical errors
+- Alert: operator channel for critical errors or elevated failure rate
 
 **Performance Monitoring**:
 
 - Tool: Vercel Analytics (built-in)
 - Metrics: LCP, INP, CLS, TTFB
-- Alert: Slack notification if P75 exceeds targets
+- Alerting remains narrow and launch-focused
 
 **Database Monitoring**:
 
 - Tool: Supabase Dashboard
 - Metrics: CPU usage, connection count, query performance
-- Alert: Email if CPU >80% for 10 minutes
+- Alert: investigate sustained health degradation or queue backlog affecting launch-critical paths
 
 ---
 
@@ -2257,7 +2263,7 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 
 - Email: support@proofound.io
 - In-app feedback form (future)
-- Status page: status.proofound.io (future)
+- Public status page is optional and not required for launch
 
 **Response SLAs**:
 
@@ -2418,7 +2424,7 @@ This appendix is the single implementation-ready launch contract. It turns prior
 
 **Reconciled launch decision**
 
-- Canonical auth and session model is Supabase-managed SSR cookies. Launch does not document or require an app-managed access-token plus refresh-token contract.
+- Canonical auth and session model is Supabase-managed SSR cookies. Launch does not document or require a separate app-managed token lifecycle for interactive web auth.
 - Canonical async architecture is Postgres-backed queues with retries and terminal-failure states. Redis session brokers, Redis Pub/Sub, and external queue brokers are non-canonical for launch.
 - Canonical monitoring stack is Sentry, Vercel Analytics, Supabase dashboard, and one external uptime monitor. Datadog, LogDNA, and broader observability stacks are post-launch only.
 - Canonical locale baseline is English only. Swedish assets may remain in source, but Swedish runtime parity is deferred and must not be represented as launch-ready.
@@ -2920,6 +2926,65 @@ This subsection is the launch-authoritative lifecycle contract for shortlist, in
   - Metadata preview fetch: 2 MB maximum body read.
 - The fetcher must use a dedicated outbound client with redirects, size, and timeout limits enforced in code rather than by convention.
 
+### D1. Proof Pack portability, provenance, and public trust status
+
+**Canonical launch stance**
+
+- Proof Pack portability is required at the product-policy level, but launch keeps it intentionally narrow.
+- `proof_packs` are the canonical reviewable proof object. `proof_artifacts`, `proof_pack_items`, `verification_records`, and `submissions` remain distinct supporting objects.
+- Launch portability requires:
+  - versioned export metadata
+  - explicit export scope
+  - deterministic `portability_hash`
+  - provenance summary fields
+  - coarse public verification status behavior where policy allows it
+- Launch portability does not require:
+  - detached signatures
+  - public verification ledgers
+  - hosted JSON-LD infrastructure
+  - third-party trust registries or cryptographic verification networks
+
+**Export and provenance rules**
+
+- Supported launch export scopes:
+  - `owner_full`
+  - `public_safe`
+- `public_safe` exports must never include owner-private, reveal-gated, or verifier-private content.
+- Every exported Proof Pack must retain:
+  - `export_schema_version`
+  - `export_scope`
+  - `portability_hash`
+  - `generated_at`
+  - `verification_status`
+  - `freshness_state`
+  - `provenance_summary`
+- Provenance summary must answer:
+  - how the pack entered the system
+  - which source workflow or upstream object it came from when known
+  - when it was captured or last refreshed
+  - which actor class captured or confirmed it
+
+**Public trust rendering**
+
+- Launch public trust rendering is coarse and scoped.
+- A public-safe proof or portfolio surface may show only:
+  - current verification status
+  - current freshness state
+  - latest public-safe effective date
+  - a short provenance label already allowed by public policy
+- Launch does not require a full public verification log.
+- If proof is withdrawn, deleted, hidden by policy, or no longer public, any public-safe trust rendering must disappear or downgrade immediately.
+
+**Algorithm and scoring transparency**
+
+- Launch transparency for scoring changes is a plain-language product-policy changelog only.
+- It may include:
+  - version label
+  - effective date
+  - affected surface
+  - short public-safe summary
+- It must not include raw weights, thresholds, exploit-enabling detail, hidden feature inventory, or private fairness analysis.
+
 ### E. Privacy, PII isolation, and logging standards
 
 **What data may appear in logs, analytics, traces, and alerts**
@@ -3114,7 +3179,7 @@ Launch is not complete until the following checks pass:
 
 **Session security**
 
-- Interactive browser login uses Supabase SSR cookies and no parallel app-managed JWT refresh flow is required for web auth.
+- Interactive browser login uses Supabase SSR cookies and no parallel app-managed token refresh flow is required for web auth.
 - Logout invalidates the current session and subsequent authenticated requests fail until re-authentication.
 - Password reset invalidates prior sessions.
 
@@ -3261,5 +3326,11 @@ Launch is not complete until the following checks pass:
 
 **Document Status**: ✅ Complete  
 **Sources**: 10 architecture documents, codebase analysis (30+ tables, 89 dependencies, 13 API routes)  
-**Coverage**: MVP through 500K+ user scale  
+**Coverage**: MVP launch contract plus post-launch technical context  
 **Compliance**: GDPR, CCPA, WCAG 2.1 AA, OWASP Top 10
+
+## Final Reconciliation Note
+
+- This document is authoritative for implementation-oriented launch requirements only, with Section 7 as the binding technical launch contract.
+- It defers product behavior, scope, lifecycle, visibility, and trust semantics to `PRD_for_a_web_platform_MVP.master-latest.md`.
+- Archived, deprecated, or broader assumptions outside Section 7 must not drive MVP launch implementation.

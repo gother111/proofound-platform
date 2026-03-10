@@ -10,12 +10,14 @@ import { computeAssignmentMatches } from '@/lib/core/matching/assignmentMatcher'
 import { getPreset, normalizeWeights, type PresetKey } from '@/lib/core/matching/presets';
 import {
   appendSystemReasonLedger,
+  buildVisibilitySafeWhy,
   buildCanonicalMatchPersistenceFields,
   ensureMatchReviewState,
   getRankBand,
   getVisibleIdentityFields,
   normalizeFairnessStatus,
   persistFairnessEvaluationForAssignment,
+  resolveCanonicalCorridor,
 } from '@/lib/matching/review-contract';
 
 export const dynamic = 'force-dynamic';
@@ -166,10 +168,23 @@ export async function POST(request: NextRequest) {
       reviewStage: 'blind_review',
       revealScope: 'blind',
       visibleIdentityFields: getVisibleIdentityFields('blind'),
+      ...resolveCanonicalCorridor({
+        reviewStage: 'blind_review',
+        revealScope: 'blind',
+        surface: 'assignment_card',
+        fairnessStatus,
+        operationalFallbackMode: fairnessStatus === 'pass' ? null : 'fairness_suppressed_ranking',
+      }),
       fairness: {
         status: fairnessStatus,
       },
       rankBand: getRankBand(index + 1, items.length),
+      why: buildVisibilitySafeWhy({
+        reasonCodes: item.reasonCodes,
+        fairnessStatus,
+        fallbackState: fairnessStatus === 'pass' ? null : 'fairness_suppressed_ranking',
+        rankBand: getRankBand(index + 1, items.length),
+      }),
     }));
 
     return mobileSuccess({

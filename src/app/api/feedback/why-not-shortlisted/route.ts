@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
-import { matches, assignments, skills, skillsTaxonomy, profiles } from '@/db/schema';
-import { eq, and, sql, desc } from 'drizzle-orm';
+import { matches, assignments, organizations, skills, skillsTaxonomy } from '@/db/schema';
+import { eq, and } from 'drizzle-orm';
+import { evaluateAssignmentPolicy } from '@/lib/assignments/policy';
+import { checkVerificationGates } from '@/lib/verification/gates';
 
 /**
  * POST /api/feedback/why-not-shortlisted
@@ -24,7 +26,9 @@ import { eq, and, sql, desc } from 'drizzle-orm';
  */
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -34,9 +38,12 @@ export async function POST(request: NextRequest) {
     const { assignmentId } = await request.json();
 
     if (!assignmentId) {
-      return NextResponse.json({
-        error: 'Missing assignmentId',
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Missing assignmentId',
+        },
+        { status: 400 }
+      );
     }
 
     // 1. Get assignment details
@@ -45,17 +52,17 @@ export async function POST(request: NextRequest) {
     });
 
     if (!assignment) {
-      return NextResponse.json({
-        error: 'Assignment not found',
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          error: 'Assignment not found',
+        },
+        { status: 404 }
+      );
     }
 
     // 2. Get candidate's match record (if exists)
     const matchRecord = await db.query.matches.findFirst({
-      where: and(
-        eq(matches.assignmentId, assignmentId),
-        eq(matches.profileId, user.id)
-      ),
+      where: and(eq(matches.assignmentId, assignmentId), eq(matches.profileId, user.id)),
     });
 
     // 3. Get candidate's current skills
@@ -63,9 +70,7 @@ export async function POST(request: NextRequest) {
       where: eq(skills.profileId, user.id),
     });
 
-    const userSkillsMap = new Map(
-      userSkills.map(s => [s.skillCode || s.skillId, s])
-    );
+    const userSkillsMap = new Map(userSkills.map((s) => [s.skillCode || s.skillId, s]));
 
     // 4. Analyze gaps and generate feedback
     interface FeedbackItem {
@@ -96,9 +101,9 @@ export async function POST(request: NextRequest) {
         missingSkills.push({
           skillCode: required.id || required.skillCode,
           skillName: skillDetails
-            ? (typeof skillDetails.nameI18n === 'object' && skillDetails.nameI18n !== null
-                ? (skillDetails.nameI18n as any).en
-                : required.id)
+            ? typeof skillDetails.nameI18n === 'object' && skillDetails.nameI18n !== null
+              ? (skillDetails.nameI18n as any).en
+              : required.id
             : required.id,
           requiredLevel: required.level || 3,
         });
@@ -111,9 +116,9 @@ export async function POST(request: NextRequest) {
         underLevelSkills.push({
           skillCode: required.id || required.skillCode,
           skillName: skillDetails
-            ? (typeof skillDetails.nameI18n === 'object' && skillDetails.nameI18n !== null
-                ? (skillDetails.nameI18n as any).en
-                : required.id)
+            ? typeof skillDetails.nameI18n === 'object' && skillDetails.nameI18n !== null
+              ? (skillDetails.nameI18n as any).en
+              : required.id
             : required.id,
           currentLevel: userSkill.level,
           requiredLevel: required.level || 3,
@@ -129,7 +134,7 @@ export async function POST(request: NextRequest) {
         category: 'skills',
         priority: 'critical',
         issue: `You're missing ${missingSkills.length} required skill${missingSkills.length > 1 ? 's' : ''}`,
-        action: `Add these skills to your profile: ${topMissing.map(s => s.skillName).join(', ')}${missingSkills.length > 3 ? ` and ${missingSkills.length - 3} more` : ''}`,
+        action: `Add these skills to your profile: ${topMissing.map((s) => s.skillName).join(', ')}${missingSkills.length > 3 ? ` and ${missingSkills.length - 3} more` : ''}`,
         estimatedImpact: Math.min(missingSkills.length * 15, 60),
         details: {
           missingSkills,
@@ -145,8 +150,11 @@ export async function POST(request: NextRequest) {
         category: 'skills',
         priority: 'high',
         issue: `${underLevelSkills.length} skill${underLevelSkills.length > 1 ? 's are' : ' is'} below the required level`,
-        action: `Increase your proficiency in: ${topUnderLevel.map(s => `${s.skillName} (L${s.currentLevel} → L${s.requiredLevel})`).join(', ')}`,
-        estimatedImpact: Math.min(underLevelSkills.reduce((sum, s) => sum + s.gap * 5, 0), 40),
+        action: `Increase your proficiency in: ${topUnderLevel.map((s) => `${s.skillName} (L${s.currentLevel} → L${s.requiredLevel})`).join(', ')}`,
+        estimatedImpact: Math.min(
+          underLevelSkills.reduce((sum, s) => sum + s.gap * 5, 0),
+          40
+        ),
         details: {
           underLevelSkills,
           link: '/profile/skills',
@@ -154,20 +162,47 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    const [organization, gateCheck] = await Promise.all([
+      db.query.organizations.findFirst({
+        where: eq(organizations.id, assignment.orgId),
+      }),
+      checkVerificationGates(user.id, assignmentId),
+    ]);
+    const assignmentPolicy = evaluateAssignmentPolicy({
+      assignment,
+      organization: organization ?? null,
+    });
+
     // Check verification gates
     const requiredGates = assignment.verificationGates || [];
-    if (requiredGates.length > 0) {
-      // Get user's verifications (simplified for MVP)
-      // TODO: Check actual verification records
+    if (requiredGates.length > 0 && !gateCheck.passed) {
       feedback.push({
         category: 'verification',
         priority: 'high',
-        issue: `This role requires ${requiredGates.length} verification${requiredGates.length > 1 ? 's' : ''}`,
-        action: `Complete verification: ${requiredGates.join(', ')}`,
+        issue: `This role requires ${gateCheck.unmetGates.length} more trust check${gateCheck.unmetGates.length > 1 ? 's' : ''}`,
+        action: `Complete or refresh: ${gateCheck.unmetGates.map((gate) => gate.type).join(', ')}`,
         estimatedImpact: 25,
         details: {
           requiredGates,
+          unmetGates: gateCheck.unmetGates,
           link: '/verifications',
+        },
+      });
+    }
+
+    if (assignmentPolicy.decision !== 'allow') {
+      feedback.push({
+        category: 'verification',
+        priority: assignmentPolicy.decision === 'blocked' ? 'critical' : 'high',
+        issue:
+          assignmentPolicy.decision === 'blocked'
+            ? 'This assignment is currently blocked by trust or policy.'
+            : 'This assignment is on hold pending trust or policy review.',
+        action: assignmentPolicy.reasons.map((reason) => reason.message).join(' '),
+        estimatedImpact: assignmentPolicy.decision === 'blocked' ? 0 : 10,
+        details: {
+          orgTrustTier: assignmentPolicy.orgTrustTier,
+          reasons: assignmentPolicy.reasons,
         },
       });
     }
@@ -180,7 +215,7 @@ export async function POST(request: NextRequest) {
         category: 'availability',
         priority: 'medium',
         issue: 'Your availability may not match the role requirements',
-        action: 'Update your availability calendar to show when you\'re free',
+        action: "Update your availability calendar to show when you're free",
         estimatedImpact: 15,
         details: {
           link: '/profile/availability',
@@ -195,7 +230,7 @@ export async function POST(request: NextRequest) {
         category: 'location',
         priority: 'low',
         issue: `This role requires on-site presence in ${assignment.city}`,
-        action: 'Update your location preferences if you\'re willing to relocate or work on-site',
+        action: "Update your location preferences if you're willing to relocate or work on-site",
         estimatedImpact: 10,
         details: {
           link: '/profile/preferences',
@@ -219,7 +254,8 @@ export async function POST(request: NextRequest) {
     // 6. Generate summary message
     let summary = '';
     if (feedback.length === 0) {
-      summary = 'Your profile matches most requirements. You may not have been shortlisted due to a high volume of qualified candidates.';
+      summary =
+        'Your profile matches most requirements. You may not have been shortlisted due to a high volume of qualified candidates.';
     } else if (feedback[0].priority === 'critical') {
       summary = `You weren't shortlisted because you're missing critical requirements. Focus on the actions below to significantly improve your chances.`;
     } else {
@@ -241,13 +277,15 @@ export async function POST(request: NextRequest) {
         totalFeedbackItems: feedback.length,
       },
     });
-
   } catch (error) {
     console.error('Feedback generation error:', error);
-    return NextResponse.json({
-      error: 'Failed to generate feedback',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to generate feedback',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }
 
@@ -261,9 +299,12 @@ export async function GET(request: NextRequest) {
   const assignmentId = searchParams.get('assignmentId');
 
   if (!assignmentId) {
-    return NextResponse.json({
-      error: 'Missing assignmentId parameter',
-    }, { status: 400 });
+    return NextResponse.json(
+      {
+        error: 'Missing assignmentId parameter',
+      },
+      { status: 400 }
+    );
   }
 
   // Reuse POST logic

@@ -15,11 +15,11 @@
 Source precedence for this runbook:
 
 1. `PRD_for_a_web_platform_MVP.master-latest.md`
-2. `docs/launch-operations-mvp.md`
-3. `PRD_TECHNICAL_REQUIREMENTS.md` Section 7
-4. This runbook
+2. `PRD_TECHNICAL_REQUIREMENTS.md` Section 7
+3. This runbook
 
 This runbook is an execution summary of the canonical launch contract. It must not override the master PRD on product behavior, visibility, reveal, deletion, fallback, or rollout scope.
+`docs/launch-operations-mvp.md` may be used as supporting background, but it is not part of the active source-precedence chain for launch decisions.
 
 ### MVP-safe operating principles
 
@@ -334,3 +334,9 @@ Outcomes:
 | 2026-03-10 | 2.0     | Rewrote the runbook to align with the canonical master PRD, Block 9 launch operations, and March 2026 audit findings |
 | 2026-03-08 | 1.1     | Prior runbook revision                                                                                               |
 | 2025-11-05 | 1.0     | Initial runbook created                                                                                              |
+
+## 10. Final Reconciliation Note
+
+- This document is authoritative for operator procedure, launch checks, fallback handling, incident response, and rollback execution only.
+- It defers product behavior and scope to `PRD_for_a_web_platform_MVP.master-latest.md` and defers technical launch hardening to `PRD_TECHNICAL_REQUIREMENTS.md` Section 7.
+- Deprecated or archived assumptions elsewhere must not be used for active launch operations.

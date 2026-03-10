@@ -3,14 +3,21 @@
  */
 
 import { getUserErrorMessage, logError } from '@/lib/error-handler';
-import {
-  MAX_PROOF_UPLOAD_SIZE_BYTES,
-  PROOF_ALLOWED_EXTENSIONS_LABEL,
-  isAllowedProofFile,
-} from '@/lib/proofs/constants';
 
 export type UploadType = 'avatar' | 'cover' | 'document';
 export type DocumentCategory = 'proof' | 'certificate' | 'artifact';
+
+const CANONICAL_DOCUMENT_MIMES = [
+  'application/pdf',
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'text/plain',
+  'text/markdown',
+] as const;
+const CANONICAL_DOCUMENT_LABEL = 'PDF, PNG, JPG, JPEG, WebP, TXT, or Markdown';
+const CANONICAL_DOCUMENT_MAX_BYTES = 25 * 1024 * 1024;
 
 export interface UploadOptions {
   file: File;
@@ -23,6 +30,7 @@ export interface UploadOptions {
 
 export interface UploadResult {
   success: boolean;
+  uploadedFileId?: string;
   url?: string;
   path?: string;
   fileName?: string;
@@ -152,35 +160,29 @@ export function validateFile(
   const MAX_SIZES: Record<UploadType, number> = {
     avatar: 5 * 1024 * 1024, // 5MB
     cover: 10 * 1024 * 1024, // 10MB
-    document: 10 * 1024 * 1024, // 10MB
+    document: CANONICAL_DOCUMENT_MAX_BYTES,
   };
 
   const ACCEPTED_TYPES: Record<UploadType, string[]> = {
     avatar: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
     cover: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
-    document: [
-      'application/pdf',
-      'image/jpeg',
-      'image/jpg',
-      'image/png',
-      'image/webp',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    ],
+    document: [...CANONICAL_DOCUMENT_MIMES],
   };
 
   if (type === 'document' && options?.category === 'proof') {
-    if (!isAllowedProofFile(file.type, file.name)) {
+    if (
+      !CANONICAL_DOCUMENT_MIMES.includes(file.type as (typeof CANONICAL_DOCUMENT_MIMES)[number])
+    ) {
       return {
         valid: false,
-        error: `Invalid file type. Please upload ${PROOF_ALLOWED_EXTENSIONS_LABEL}`,
+        error: `Invalid file type. Please upload ${CANONICAL_DOCUMENT_LABEL}`,
       };
     }
 
-    if (file.size > MAX_PROOF_UPLOAD_SIZE_BYTES) {
+    if (file.size > CANONICAL_DOCUMENT_MAX_BYTES) {
       return {
         valid: false,
-        error: `File size exceeds ${MAX_PROOF_UPLOAD_SIZE_BYTES / (1024 * 1024)}MB limit`,
+        error: `File size exceeds ${CANONICAL_DOCUMENT_MAX_BYTES / (1024 * 1024)}MB limit`,
       };
     }
 
@@ -194,7 +196,7 @@ export function validateFile(
     const typeLabels = {
       avatar: 'JPG, PNG, or WebP',
       cover: 'JPG, PNG, or WebP',
-      document: 'PDF, images, or Word documents',
+      document: CANONICAL_DOCUMENT_LABEL,
     };
     return {
       valid: false,

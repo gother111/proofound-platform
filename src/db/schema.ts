@@ -5,6 +5,7 @@ import {
   timestamp,
   boolean,
   jsonb,
+  bigint,
   bigserial,
   primaryKey,
   integer,
@@ -58,6 +59,21 @@ export const canonicalProofPackKinds = [
   'profile_export',
   'organization_export',
   'verification_bundle',
+] as const;
+export const canonicalProofPackLifecycleStates = [
+  'draft',
+  'ready',
+  'published',
+  'submitted',
+  'withdrawn',
+  'superseded',
+  'archived',
+] as const;
+export const canonicalProofPackVerificationStatuses = [
+  'unverified',
+  'partially_verified',
+  'verified',
+  'disputed',
 ] as const;
 export const canonicalSubmissionKinds = [
   'assignment_section',
@@ -206,6 +222,41 @@ export const canonicalOrgInviteLifecycleStates = [
   'expired',
   'revoked',
 ] as const;
+export const canonicalCapabilityTokenStates = ['issued', 'redeemed', 'expired', 'revoked'] as const;
+export const canonicalUploadMetadataStates = [
+  'pending',
+  'extracted',
+  'suppressed',
+  'failed',
+] as const;
+export const canonicalUploadAttachStates = [
+  'pending',
+  'attachable',
+  'attached',
+  'rejected',
+] as const;
+export const canonicalOrgRoleValues = [
+  'org_owner',
+  'org_manager',
+  'org_reviewer',
+  'individual',
+  'trust_admin',
+  'owner',
+  'admin',
+  'member',
+  'viewer',
+] as const;
+export const canonicalOrgMembershipStates = [
+  'invited_pending',
+  'active',
+  'inactive',
+  'ownership_transfer_pending',
+  'suspended',
+  'removed',
+  'declined',
+  'expired',
+  'revoked',
+] as const;
 export const canonicalExportLifecycleStates = [
   'requested',
   'preparing',
@@ -279,6 +330,56 @@ export const orgTrustStatusValues = [
   'domain_verified',
   'platform_reviewed',
 ] as const;
+export const orgTrustTierValues = [
+  'unreviewed',
+  'basic_trusted',
+  'reviewed',
+  'restricted',
+] as const;
+export const assignmentCreatorRightsValues = ['default_creator_rights', 'alternate_terms'] as const;
+export const assignmentOrgUsageRightsValues = [
+  'default_org_usage_rights',
+  'alternate_terms',
+] as const;
+export const assignmentCompensationTypeValues = [
+  'unknown',
+  'paid',
+  'unpaid',
+  'volunteer',
+  'sponsored',
+] as const;
+export const assignmentCommercialityValues = [
+  'unknown',
+  'non_commercial',
+  'commercial',
+  'operationally_significant',
+] as const;
+export const assignmentSponsorCommercialStatusValues = [
+  'not_required',
+  'required',
+  'satisfied',
+] as const;
+export const assignmentCrossBorderStatusValues = [
+  'not_required',
+  'required',
+  'approved',
+  'restricted',
+] as const;
+export const assignmentJurisdictionStatusValues = ['allowed', 'restricted'] as const;
+export const assignmentSensitiveDomainValues = [
+  'standard',
+  'child_facing',
+  'healthcare_care',
+  'housing_crisis',
+  'legal_immigration',
+  'vulnerable_population',
+] as const;
+export const assignmentSensitiveDomainReviewValues = [
+  'not_required',
+  'required',
+  'approved',
+] as const;
+export const assignmentPolicyAuditStateValues = ['clear', 'hold', 'blocked'] as const;
 export const canonicalVerifierPrincipalTypes = [
   'user_account',
   'organization',
@@ -575,6 +676,13 @@ export const organizations = pgTable('organizations', {
   })
     .default('unverified')
     .notNull(),
+  orgTrustTier: text('org_trust_tier', {
+    enum: orgTrustTierValues,
+  })
+    .default('unreviewed')
+    .notNull(),
+  orgTrustTierReasonCode: text('org_trust_tier_reason_code'),
+  orgTrustTierUpdatedAt: timestamp('org_trust_tier_updated_at'),
   trustStatusUpdatedAt: timestamp('trust_status_updated_at'),
   websiteVerifiedAt: timestamp('website_verified_at'),
   operatingRegion: text('operating_region'),
@@ -629,10 +737,42 @@ export const organizations = pgTable('organizations', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+export const organizationTrustTierTransitions = pgTable(
+  'organization_trust_tier_transitions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    orgId: uuid('org_id')
+      .references(() => organizations.id, { onDelete: 'cascade' })
+      .notNull(),
+    previousTier: text('previous_tier', {
+      enum: orgTrustTierValues,
+    }),
+    newTier: text('new_tier', {
+      enum: orgTrustTierValues,
+    }).notNull(),
+    reasonCode: text('reason_code'),
+    actorType: text('actor_type', {
+      enum: canonicalWorkflowActorTypes,
+    }).notNull(),
+    actorId: uuid('actor_id').references(() => profiles.id, { onDelete: 'set null' }),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    orgCreatedIdx: index('organization_trust_tier_transitions_org_created_idx').on(
+      table.orgId,
+      table.createdAt
+    ),
+  })
+);
+
 // Organization members
-export const organizationMembers = pgTable(
+const organizationMembersBase = pgTable(
   'organization_members',
   {
+    id: uuid('id').defaultRandom().notNull().unique(),
     orgId: uuid('org_id')
       .references(() => organizations.id, { onDelete: 'cascade' })
       .notNull(),
@@ -640,17 +780,52 @@ export const organizationMembers = pgTable(
       .references(() => profiles.id, { onDelete: 'cascade' })
       .notNull(),
     role: text('role', {
-      enum: ['owner', 'admin', 'member', 'viewer'],
+      enum: canonicalOrgRoleValues,
     }).notNull(),
-    status: text('status', {
-      enum: ['active', 'invited', 'suspended'],
-    }).default('active'),
-    joinedAt: timestamp('joined_at').defaultNow().notNull(),
+    state: text('state', {
+      enum: canonicalOrgMembershipStates,
+    })
+      .default('invited_pending')
+      .notNull(),
+    invitedBy: uuid('invited_by').references(() => profiles.id, { onDelete: 'set null' }),
+    acceptedAt: timestamp('accepted_at', { withTimezone: true }),
+    joinedAt: timestamp('joined_at', { withTimezone: true }).defaultNow().notNull(),
+    inactiveAt: timestamp('inactive_at', { withTimezone: true }),
+    suspendedAt: timestamp('suspended_at', { withTimezone: true }),
+    removedAt: timestamp('removed_at', { withTimezone: true }),
+    removedBy: uuid('removed_by').references(() => profiles.id, { onDelete: 'set null' }),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    declinedAt: timestamp('declined_at', { withTimezone: true }),
+    expiredAt: timestamp('expired_at', { withTimezone: true }),
+    ownershipTransferInitiatedAt: timestamp('ownership_transfer_initiated_at', {
+      withTimezone: true,
+    }),
+    ownershipTransferAcceptedAt: timestamp('ownership_transfer_accepted_at', {
+      withTimezone: true,
+    }),
+    ownershipTransferFromMembershipId: uuid('ownership_transfer_from_membership_id'),
+    ownershipTransferTargetUserId: uuid('ownership_transfer_target_user_id').references(
+      () => profiles.id,
+      {
+        onDelete: 'set null',
+      }
+    ),
+    metadata: jsonb('metadata'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => ({
-    pk: primaryKey({ columns: [table.orgId, table.userId] }),
+    pk: primaryKey({ columns: [table.id] }),
+    orgUserIdx: index('idx_organization_members_org_user').on(table.orgId, table.userId),
+    orgStateIdx: index('idx_organization_members_org_state').on(table.orgId, table.state),
+    userStateIdx: index('idx_organization_members_user_state').on(table.userId, table.state),
   })
 );
+
+export const organizationMembers = Object.assign(organizationMembersBase, {
+  // Compatibility alias while callers migrate from status -> state.
+  status: organizationMembersBase.state,
+});
 
 // Organization invitations
 export const orgInvitations = pgTable('org_invitations', {
@@ -658,9 +833,12 @@ export const orgInvitations = pgTable('org_invitations', {
   orgId: uuid('org_id')
     .references(() => organizations.id, { onDelete: 'cascade' })
     .notNull(),
+  membershipId: uuid('membership_id').references(() => organizationMembers.id, {
+    onDelete: 'set null',
+  }),
   email: text('email').notNull(),
   role: text('role', {
-    enum: ['admin', 'member', 'viewer'],
+    enum: canonicalOrgRoleValues,
   }).notNull(),
   status: text('status', {
     enum: canonicalOrgInviteLifecycleStates,
@@ -721,9 +899,12 @@ export const orgCandidateInvites = pgTable(
       onDelete: 'set null',
     }),
     proofSnippetId: uuid('proof_snippet_id'),
+    capabilityTokenId: uuid('capability_token_id'),
+    proofCapabilityTokenId: uuid('proof_capability_token_id'),
     proofShareToken: text('proof_share_token'),
     proofSubmittedAt: timestamp('proof_submitted_at'),
     revokedAt: timestamp('revoked_at'),
+    publicSurfaceDisabledAt: timestamp('public_surface_disabled_at'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
@@ -1049,6 +1230,213 @@ export const rateLimits = pgTable('rate_limits', {
   resetAt: timestamp('reset_at').notNull(),
 });
 
+export const capabilityTokens = pgTable(
+  'capability_tokens',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    tokenClass: text('token_class').notNull(),
+    tokenHash: text('token_hash').notNull().unique(),
+    state: text('state', {
+      enum: canonicalCapabilityTokenStates,
+    })
+      .default('issued')
+      .notNull(),
+    sourceTable: text('source_table'),
+    sourceId: uuid('source_id'),
+    actionScope: text('action_scope').notNull(),
+    scopeKey: text('scope_key'),
+    subjectType: text('subject_type').notNull(),
+    subjectId: uuid('subject_id'),
+    actorBinding: text('actor_binding', {
+      enum: [
+        'none',
+        'email_hash',
+        'authenticated_profile',
+        'authenticated_principal',
+        'email_then_profile_lock',
+      ],
+    })
+      .default('none')
+      .notNull(),
+    actorEmailHash: text('actor_email_hash'),
+    actorProfileId: uuid('actor_profile_id').references(() => profiles.id, {
+      onDelete: 'set null',
+    }),
+    actorOrgId: uuid('actor_org_id').references(() => organizations.id, {
+      onDelete: 'set null',
+    }),
+    principalType: text('principal_type', {
+      enum: ['user_account', 'organization', 'external_email', 'platform_admin', 'system'],
+    }),
+    singleUse: boolean('single_use').default(true).notNull(),
+    maxUses: integer('max_uses').default(1).notNull(),
+    redeemedCount: integer('redeemed_count').default(0).notNull(),
+    attemptCount: integer('attempt_count').default(0).notNull(),
+    lastAttemptAt: timestamp('last_attempt_at', { withTimezone: true }),
+    suspiciousFlag: boolean('suspicious_flag').default(false).notNull(),
+    redeemSessionNonceHash: text('redeem_session_nonce_hash'),
+    redeemSessionNonceExpiresAt: timestamp('redeem_session_nonce_expires_at', {
+      withTimezone: true,
+    }),
+    issuedAt: timestamp('issued_at', { withTimezone: true }).defaultNow().notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    firstRedeemedAt: timestamp('first_redeemed_at', { withTimezone: true }),
+    lastRedeemedAt: timestamp('last_redeemed_at', { withTimezone: true }),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    revokedReason: text('revoked_reason'),
+    lastSeenAt: timestamp('last_seen_at', { withTimezone: true }),
+    lastSeenIpHash: text('last_seen_ip_hash'),
+    lastSeenUserAgentHash: text('last_seen_user_agent_hash'),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    classHashIdx: index('capability_tokens_class_hash_idx').on(table.tokenClass, table.tokenHash),
+    sourceIdx: index('capability_tokens_source_idx').on(table.sourceTable, table.sourceId),
+    subjectIdx: index('capability_tokens_subject_idx').on(table.subjectType, table.subjectId),
+    expiryIdx: index('capability_tokens_expiry_idx').on(table.expiresAt, table.revokedAt),
+    stateIdx: index('capability_tokens_state_idx').on(
+      table.state,
+      table.tokenClass,
+      table.expiresAt
+    ),
+    scopeIdx: index('capability_tokens_scope_idx').on(
+      table.tokenClass,
+      table.scopeKey,
+      table.actorEmailHash
+    ),
+  })
+);
+
+export const capabilityTokenEvents = pgTable(
+  'capability_token_events',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    capabilityTokenId: uuid('capability_token_id').references(() => capabilityTokens.id, {
+      onDelete: 'set null',
+    }),
+    eventType: text('event_type').notNull(),
+    actorProfileId: uuid('actor_profile_id').references(() => profiles.id, {
+      onDelete: 'set null',
+    }),
+    actorOrgId: uuid('actor_org_id').references(() => organizations.id, {
+      onDelete: 'set null',
+    }),
+    actorEmailHash: text('actor_email_hash'),
+    ipHash: text('ip_hash'),
+    userAgentHash: text('user_agent_hash'),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    tokenCreatedIdx: index('capability_token_events_token_created_idx').on(
+      table.capabilityTokenId,
+      table.createdAt
+    ),
+    typeCreatedIdx: index('capability_token_events_type_created_idx').on(
+      table.eventType,
+      table.createdAt
+    ),
+  })
+);
+
+export const uploadedFiles = pgTable(
+  'uploaded_files',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    ownerType: text('owner_type').notNull(),
+    ownerId: uuid('owner_id').notNull(),
+    sourceSurface: text('source_surface').notNull(),
+    uploadKind: text('upload_kind').notNull(),
+    originalFilename: text('original_filename').notNull(),
+    sanitizedFilename: text('sanitized_filename').notNull(),
+    declaredMime: text('declared_mime'),
+    detectedMime: text('detected_mime'),
+    sizeBytes: bigint('size_bytes', { mode: 'number' }).notNull(),
+    sha256: text('sha256').notNull(),
+    quarantineBucket: text('quarantine_bucket'),
+    quarantinePath: text('quarantine_path'),
+    durableBucket: text('durable_bucket'),
+    durablePath: text('durable_path'),
+    publicBucket: text('public_bucket'),
+    publicPath: text('public_path'),
+    lifecycleState: text('lifecycle_state').notNull(),
+    safetyStatus: text('safety_status').default('pending').notNull(),
+    safetyReason: text('safety_reason'),
+    scanEngine: text('scan_engine'),
+    scanCompletedAt: timestamp('scan_completed_at', { withTimezone: true }),
+    metadataStatus: text('metadata_status', {
+      enum: canonicalUploadMetadataStates,
+    })
+      .default('pending')
+      .notNull(),
+    attachStatus: text('attach_status', {
+      enum: canonicalUploadAttachStates,
+    })
+      .default('pending')
+      .notNull(),
+    safeForPublic: boolean('safe_for_public').default(false).notNull(),
+    metadataExtractedAt: timestamp('metadata_extracted_at', { withTimezone: true }),
+    promotedAt: timestamp('promoted_at', { withTimezone: true }),
+    attachedAt: timestamp('attached_at', { withTimezone: true }),
+    attachedSubjectType: text('attached_subject_type'),
+    attachedSubjectId: uuid('attached_subject_id'),
+    proofPackId: uuid('proof_pack_id').references(() => proofPacks.id, { onDelete: 'set null' }),
+    replacedByFileId: uuid('replaced_by_file_id'),
+    deleteRequestedAt: timestamp('delete_requested_at', { withTimezone: true }),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    ownerIdx: index('uploaded_files_owner_idx').on(table.ownerType, table.ownerId, table.createdAt),
+    lifecycleIdx: index('uploaded_files_lifecycle_idx').on(
+      table.lifecycleState,
+      table.safetyStatus,
+      table.createdAt
+    ),
+    subjectIdx: index('uploaded_files_subject_idx').on(
+      table.attachedSubjectType,
+      table.attachedSubjectId
+    ),
+    attachStatusIdx: index('uploaded_files_attach_status_idx').on(
+      table.attachStatus,
+      table.metadataStatus,
+      table.lifecycleState,
+      table.createdAt
+    ),
+  })
+);
+
+export const uploadedFileEvents = pgTable(
+  'uploaded_file_events',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    uploadedFileId: uuid('uploaded_file_id')
+      .references(() => uploadedFiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    eventType: text('event_type').notNull(),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    fileCreatedIdx: index('uploaded_file_events_file_created_idx').on(
+      table.uploadedFileId,
+      table.createdAt
+    ),
+  })
+);
+
 // ============================================================================
 // MATCHING SYSTEM TABLES
 // ============================================================================
@@ -1279,8 +1667,22 @@ export const proofPacks = pgTable(
     packKind: text('pack_kind', {
       enum: canonicalProofPackKinds,
     }).notNull(),
+    primarySubjectType: text('primary_subject_type', {
+      enum: canonicalProofSubjectTypes,
+    }),
+    primarySubjectId: uuid('primary_subject_id'),
+    lifecycleState: text('lifecycle_state', {
+      enum: canonicalProofPackLifecycleStates,
+    })
+      .default('draft')
+      .notNull(),
     title: text('title').notNull(),
     summary: text('summary'),
+    contextJson: jsonb('context_json')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    evidenceSummary: text('evidence_summary'),
+    outcomesSummary: text('outcomes_summary'),
     visibility: text('visibility', {
       enum: canonicalVisibilityLevels,
     })
@@ -1294,6 +1696,27 @@ export const proofPacks = pgTable(
     shareTokenHash: text('share_token_hash'),
     shareExpiresAt: timestamp('share_expires_at', { withTimezone: true }),
     createdBy: uuid('created_by').references(() => profiles.id, { onDelete: 'set null' }),
+    verificationStatus: text('verification_status', {
+      enum: canonicalProofPackVerificationStatuses,
+    })
+      .default('unverified')
+      .notNull(),
+    freshnessState: text('freshness_state', {
+      enum: proofFreshnessStates,
+    })
+      .default('stale')
+      .notNull(),
+    freshnessEvaluatedAt: timestamp('freshness_evaluated_at', { withTimezone: true }),
+    lastVerifiedAt: timestamp('last_verified_at', { withTimezone: true }),
+    lastRefreshedAt: timestamp('last_refreshed_at', { withTimezone: true }),
+    publishedAt: timestamp('published_at', { withTimezone: true }),
+    submittedAt: timestamp('submitted_at', { withTimezone: true }),
+    withdrawnAt: timestamp('withdrawn_at', { withTimezone: true }),
+    supersededAt: timestamp('superseded_at', { withTimezone: true }),
+    archivedAt: timestamp('archived_at', { withTimezone: true }),
+    portabilityMeta: jsonb('portability_meta')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
     metadata: jsonb('metadata')
       .default(sql`'{}'::jsonb`)
       .notNull(),
@@ -1310,6 +1733,10 @@ export const proofPacks = pgTable(
   },
   (table) => ({
     ownerIdx: index('idx_proof_packs_owner').on(table.ownerType, table.ownerId),
+    subjectIdx: index('idx_proof_packs_primary_subject').on(
+      table.primarySubjectType,
+      table.primarySubjectId
+    ),
     visibilityIdx: index('idx_proof_packs_visibility').on(table.visibility, table.revealGate),
     shareTokenHashIdx: index('idx_proof_packs_share_token_hash').on(table.shareTokenHash),
     legacySourceUnique: unique().on(table.legacySourceTable, table.legacySourceId),
@@ -2188,6 +2615,69 @@ export const assignments = pgTable('assignments', {
   verificationGates: text('verification_gates')
     .array()
     .default(sql`'{}'::text[]`),
+  policyVersion: text('policy_version').default('mvp_trust_v1').notNull(),
+  creatorRightsPolicy: text('creator_rights_policy', {
+    enum: assignmentCreatorRightsValues,
+  })
+    .default('default_creator_rights')
+    .notNull(),
+  orgUsageRightsPolicy: text('org_usage_rights_policy', {
+    enum: assignmentOrgUsageRightsValues,
+  })
+    .default('default_org_usage_rights')
+    .notNull(),
+  alternateTermsRecordedAt: timestamp('alternate_terms_recorded_at', { withTimezone: true }),
+  alternateTermsSummary: text('alternate_terms_summary'),
+  compensationType: text('compensation_type', {
+    enum: assignmentCompensationTypeValues,
+  })
+    .default('unknown')
+    .notNull(),
+  commerciality: text('commerciality', {
+    enum: assignmentCommercialityValues,
+  })
+    .default('unknown')
+    .notNull(),
+  sponsorCommercialStatus: text('sponsor_commercial_status', {
+    enum: assignmentSponsorCommercialStatusValues,
+  })
+    .default('not_required')
+    .notNull(),
+  crossBorderStatus: text('cross_border_status', {
+    enum: assignmentCrossBorderStatusValues,
+  })
+    .default('not_required')
+    .notNull(),
+  jurisdictionStatus: text('jurisdiction_status', {
+    enum: assignmentJurisdictionStatusValues,
+  })
+    .default('allowed')
+    .notNull(),
+  sensitiveDomain: text('sensitive_domain', {
+    enum: assignmentSensitiveDomainValues,
+  })
+    .default('standard')
+    .notNull(),
+  sensitiveDomainReviewStatus: text('sensitive_domain_review_status', {
+    enum: assignmentSensitiveDomainReviewValues,
+  })
+    .default('not_required')
+    .notNull(),
+  policyAuditState: text('policy_audit_state', {
+    enum: assignmentPolicyAuditStateValues,
+  })
+    .default('clear')
+    .notNull(),
+  policyReasonCodes: text('policy_reason_codes')
+    .array()
+    .default(sql`'{}'::text[]`)
+    .notNull(),
+  policyAuditMeta: jsonb('policy_audit_meta')
+    .default(sql`'{}'::jsonb`)
+    .notNull(),
+  operationalFallbackMode: text('operational_fallback_mode'),
+  introHoldTargetCount: integer('intro_hold_target_count'),
+  introHoldCurrentCount: integer('intro_hold_current_count'),
   weights: jsonb('weights'), // Assignment-specific weights
   // Sponsorship & relocation fields
   canSponsorVisa: boolean('can_sponsor_visa').default(false),
@@ -2346,6 +2836,7 @@ export const matchReviewStates = pgTable(
     fullIdentityUnlockTrigger: text('full_identity_unlock_trigger', {
       enum: matchFullIdentityUnlockTriggerValues,
     }),
+    operationalFallbackMode: text('operational_fallback_mode'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
@@ -2357,6 +2848,10 @@ export const matchReviewStates = pgTable(
     orgStageIdx: index('match_review_states_org_stage_idx').on(table.orgId, table.reviewStage),
     profileIdx: index('match_review_states_profile_idx').on(table.profileId),
     revealScopeIdx: index('match_review_states_reveal_scope_idx').on(table.revealScope),
+    fallbackModeIdx: index('match_review_states_operational_fallback_mode_idx').on(
+      table.operationalFallbackMode,
+      table.updatedAt
+    ),
   })
 );
 
@@ -4474,6 +4969,8 @@ export const adminInvitations = pgTable('admin_invitations', {
     enum: ['platform_admin', 'super_admin'],
   }).notNull(),
   token: text('token').unique().notNull(),
+  tokenHash: text('token_hash'),
+  capabilityTokenId: uuid('capability_token_id'),
   invitedBy: uuid('invited_by')
     .references(() => profiles.id)
     .notNull(),
@@ -4724,6 +5221,8 @@ export const assignmentInvitations = pgTable('assignment_invitations', {
     .references(() => organizations.id, { onDelete: 'cascade' })
     .notNull(),
   token: text('token').notNull().unique(),
+  tokenHash: text('token_hash'),
+  capabilityTokenId: uuid('capability_token_id'),
   stakeholderEmail: text('stakeholder_email').notNull(),
   stakeholderName: text('stakeholder_name'),
   assignedSections: jsonb('assigned_sections').notNull(), // Array of section names
@@ -5029,6 +5528,8 @@ export const verificationRequests = pgTable('verification_requests', {
 
   // Privacy protection
   token: text('token').unique().notNull(),
+  tokenHash: text('token_hash'),
+  capabilityTokenId: uuid('capability_token_id'),
   expiresAt: timestamp('expires_at').notNull(), // 14 days from creation
   oneTimeUse: boolean('one_time_use').default(true),
   usedAt: timestamp('used_at'),

@@ -51,6 +51,7 @@ describe('EditSkillWindow proof refresh behavior', () => {
     validateFileMock.mockReturnValue({ valid: true });
     uploadFileMock.mockResolvedValue({
       success: true,
+      uploadedFileId: '11111111-1111-4111-8111-111111111111',
       url: 'https://example.com/doc.pdf',
       path: 'proof/user-1/doc.pdf',
       fileName: 'doc.pdf',
@@ -151,7 +152,7 @@ describe('EditSkillWindow proof refresh behavior', () => {
     await waitFor(() => expect(onSkillUpdated).toHaveBeenCalledTimes(1));
   });
 
-  it('uploads a document proof and includes filePath payload', async () => {
+  it('uploads a document proof and includes the uploaded file id payload', async () => {
     apiFetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
       if (url.endsWith('/proofs') && !init?.method) {
         return mockResponse({ proofs: [] });
@@ -201,12 +202,14 @@ describe('EditSkillWindow proof refresh behavior', () => {
     const addButtons = screen.getAllByRole('button', { name: 'Add Proof' });
     fireEvent.click(addButtons[addButtons.length - 1]);
 
-    await waitFor(() =>
-      expect(apiFetchMock).toHaveBeenCalledWith(
-        '/api/expertise/user-skills/skill-1/proofs',
-        expect.objectContaining({ method: 'POST' })
-      )
-    );
+    await waitFor(() => {
+      const proofPostCall = apiFetchMock.mock.calls.find(
+        ([url, init]) =>
+          url === '/api/expertise/user-skills/skill-1/proofs' &&
+          (init as RequestInit | undefined)?.method === 'POST'
+      );
+      expect(proofPostCall).toBeTruthy();
+    });
 
     const proofPostCall = apiFetchMock.mock.calls.find(
       ([url, init]) =>
@@ -220,6 +223,7 @@ describe('EditSkillWindow proof refresh behavior', () => {
 
     expect(payload.proofType).toBe('document');
     expect(payload.filePath).toBe('proof/user-1/doc.pdf');
+    expect(payload.uploadedFileId).toBe('11111111-1111-4111-8111-111111111111');
     expect(payload.url).toBe('https://example.com/doc.pdf');
   });
 

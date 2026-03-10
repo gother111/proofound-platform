@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,6 @@ interface CandidateInviteRow {
   claimedByProfileId: string | null;
   claimedAt: string | null;
   proofSnippetId: string | null;
-  proofShareToken: string | null;
   proofSubmittedAt: string | null;
   revokedAt: string | null;
   createdAt: string;
@@ -284,17 +282,6 @@ export function OrgCandidateInvitesPanel({ orgId }: OrgCandidateInvitesPanelProp
                     </span>
                   </p>
                 ) : null}
-
-                {invite.proofShareToken ? (
-                  <div className="flex items-center gap-2">
-                    <Link href={`/p/${invite.proofShareToken}`} target="_blank">
-                      <Button variant="outline" size="sm">
-                        Open Proof Card
-                      </Button>
-                    </Link>
-                  </div>
-                ) : null}
-
                 <div className="flex items-center gap-2">
                   {canResend ? (
                     <Button

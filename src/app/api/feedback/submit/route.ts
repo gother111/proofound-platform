@@ -1,14 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { markTokenUsed } from '@/lib/feedback/service';
+import { markTokenUsed, resolveFeedbackFollowUpState } from '@/lib/feedback/service';
 import { SubmitPayloadSchema } from '@/lib/feedback/schema';
 import { emitLifecycleEvent } from '@/lib/analytics/lifecycle-events';
 import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
 import { isFeatureEnabled } from '@/lib/feature-flags/server';
-import { CAPABILITY_TOKEN_CLASSES, inspectCapabilityToken } from '@/lib/security/capability-tokens';
+import {
+  CAPABILITY_TOKEN_CLASSES,
+  getCapabilityRedeemSessionCookieName,
+  inspectCapabilityToken,
+} from '@/lib/security/capability-tokens';
+import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
 
 export async function POST(request: NextRequest) {
+  const trace = startLaunchTrace({
+    flow: 'feedback_submission',
+    requestId: request.headers.get('x-request-id'),
+    actorType: 'anonymous',
+  });
+
   try {
     const body = SubmitPayloadSchema.parse(await request.json());
     const supabase = await createClient();
@@ -28,9 +39,16 @@ export async function POST(request: NextRequest) {
       } = await supabase.auth.getUser();
 
       if (authError || !user) {
+        emitLaunchTrace(trace, {
+          outcome: 'rejected',
+          state: 'feedback_submit_unauthorized',
+          failureClass: 'unauthorized',
+        });
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
       userId = user.id;
+      trace.actorId = user.id;
+      trace.actorType = 'user_account';
       actorEmail = user.email ?? null;
     }
 
@@ -39,6 +57,10 @@ export async function POST(request: NextRequest) {
       useAdminClient = true;
       const inspected = await inspectCapabilityToken(body.token, {
         tokenClass: CAPABILITY_TOKEN_CLASSES.FEEDBACK_RESPONSE,
+        actor: {
+          ip: request.headers.get('x-forwarded-for'),
+          userAgent: request.headers.get('user-agent'),
+        },
         metadata: { surface: 'feedback_submit' },
       });
 
@@ -76,14 +98,20 @@ export async function POST(request: NextRequest) {
     }
 
     if (!interviewId) {
+      emitLaunchTrace(trace, {
+        outcome: 'rejected',
+        state: 'feedback_submit_missing_interview',
+        failureClass: 'missing_interview_id',
+      });
       return NextResponse.json({ error: 'Missing interview id' }, { status: 400 });
     }
+    trace.objectRefs.interviewId = interviewId;
 
     // Validate interview access for authenticated users
     if (!useAdminClient) {
       const { data: interview, error: interviewError } = await supabase
         .from('interviews')
-        .select('host_user_id, participant_user_ids, status')
+        .select('host_user_id, participant_user_ids, status, completed_at')
         .eq('id', interviewId)
         .maybeSingle();
 
@@ -143,6 +171,11 @@ export async function POST(request: NextRequest) {
     }
 
     const client = useAdminClient ? admin : supabase;
+    const { data: interviewTiming } = await admin
+      .from('interviews')
+      .select('completed_at')
+      .eq('id', interviewId)
+      .maybeSingle();
 
     // Prevent duplicate token submissions for a side
     if (useAdminClient) {
@@ -221,9 +254,22 @@ export async function POST(request: NextRequest) {
     }
 
     if (body.token) {
-      const markUsed = await markTokenUsed(body.token);
+      const redeemSessionNonce =
+        request.cookies.get(
+          getCapabilityRedeemSessionCookieName(CAPABILITY_TOKEN_CLASSES.FEEDBACK_RESPONSE)
+        )?.value ?? null;
+      const markUsed = await markTokenUsed(body.token, {
+        email: actorEmail,
+        redeemSessionNonce,
+      });
       if (!markUsed.ok) {
-        return NextResponse.json({ error: `Token ${markUsed.reason}` }, { status: 409 });
+        const status =
+          markUsed.reason === 'replayed'
+            ? 409
+            : markUsed.reason === 'expired' || markUsed.reason === 'revoked'
+              ? 410
+              : 404;
+        return NextResponse.json({ error: 'Invalid token' }, { status });
       }
     }
 
@@ -256,21 +302,72 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const { data: feedbackResponses } = await admin
+      .from('feedback_responses')
+      .select('direction, shared_at')
+      .eq('interview_id', interviewId);
+    const candidateSubmittedAt =
+      feedbackResponses?.find(
+        (row: { direction?: string | null; shared_at?: string | null }) =>
+          row.direction === 'candidate_to_org'
+      )?.shared_at ?? null;
+    const organizationSubmittedAt =
+      feedbackResponses?.find(
+        (row: { direction?: string | null; shared_at?: string | null }) =>
+          row.direction === 'org_to_candidate'
+      )?.shared_at ?? null;
+    const feedbackFollowUp = resolveFeedbackFollowUpState({
+      completedAt: interviewTiming?.completed_at ?? null,
+      candidateSubmittedAt,
+      organizationSubmittedAt,
+    });
+    emitLaunchTrace(trace, {
+      outcome: 'success',
+      state: 'structured_feedback_submitted',
+      details: {
+        responseId: response.id,
+      },
+    });
+
     return NextResponse.json({
       success: true,
       responseId: response.id,
       structuredFeedbackRequired,
+      feedbackFollowUp: {
+        dueAt: feedbackFollowUp.dueAt?.toISOString() ?? null,
+        overallState: feedbackFollowUp.overallState,
+        candidateToOrg: feedbackFollowUp.candidateToOrg,
+        orgToCandidate: feedbackFollowUp.orgToCandidate,
+        slaBreached: feedbackFollowUp.slaBreached,
+      },
+    });
+    emitLaunchTrace(trace, {
+      outcome: 'success',
+      state: 'structured_feedback_submitted',
+      details: {
+        responseId: response.id,
+      },
     });
   } catch (error: any) {
     console.error('Feedback submit failed', error);
 
     if (error.name === 'ZodError') {
+      emitLaunchTrace(trace, {
+        outcome: 'rejected',
+        state: 'feedback_submit_validation_failed',
+        failureClass: 'invalid_feedback_payload',
+      });
       return NextResponse.json(
         { error: 'Invalid payload', details: error.issues },
         { status: 400 }
       );
     }
 
+    emitLaunchTrace(trace, {
+      outcome: 'failure',
+      state: 'feedback_submit_failed',
+      failureClass: error instanceof Error ? error.message : 'feedback_submit_failed',
+    });
     return NextResponse.json({ error: 'Unexpected error' }, { status: 500 });
   }
 }

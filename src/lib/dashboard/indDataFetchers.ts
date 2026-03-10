@@ -5,8 +5,6 @@ import {
   growthPlans,
   profiles,
   skills,
-  skillProofs,
-  skillVerificationRequests,
   experiences,
   individualProfiles,
   matchingProfiles,

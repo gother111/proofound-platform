@@ -3,8 +3,13 @@ import { NextResponse, NextRequest } from 'next/server';
 import { emitSkillProofDeletedAsync } from '@/lib/analytics/events';
 import {
   CANONICAL_PROOFS_WRITE_ENABLED,
+  deleteCanonicalProofArtifactById,
   deleteCanonicalProofArtifactForSkillProof,
 } from '@/lib/canonical/repository';
+import { revalidatePublicPortfolioByProfileId } from '@/lib/portfolio/public-invalidation';
+import { db } from '@/db';
+import { proofArtifacts } from '@/db/schema';
+import { and, eq, or } from 'drizzle-orm';
 
 /**
  * DELETE /api/expertise/user-skills/[id]/proofs/[proofId]
@@ -34,7 +39,39 @@ export async function DELETE(
       .single();
 
     if (proofError || !proof) {
-      return NextResponse.json({ error: 'Proof not found' }, { status: 404 });
+      const canonicalProof = await db.query.proofArtifacts.findFirst({
+        where: and(
+          eq(proofArtifacts.ownerType, 'individual_profile'),
+          eq(proofArtifacts.ownerId, user.id),
+          eq(proofArtifacts.subjectType, 'skill'),
+          eq(proofArtifacts.subjectId, skillId),
+          or(eq(proofArtifacts.id, proofId), eq(proofArtifacts.legacySourceId, proofId))
+        ),
+      });
+
+      if (!canonicalProof) {
+        return NextResponse.json({ error: 'Proof not found' }, { status: 404 });
+      }
+
+      await deleteCanonicalProofArtifactById(canonicalProof.id);
+
+      if (canonicalProof.storagePath && canonicalProof.storagePath.includes(user.id)) {
+        const { error: storageDeleteError } = await supabase.storage
+          .from('user-uploads')
+          .remove([canonicalProof.storagePath]);
+        if (storageDeleteError) {
+          console.warn('Failed to delete canonical proof file from storage:', storageDeleteError);
+        }
+      }
+
+      await revalidatePublicPortfolioByProfileId(user.id);
+
+      emitSkillProofDeletedAsync(user.id, skillId, proofId, {
+        skill_name: canonicalProof.title || 'Unknown',
+        proof_type: canonicalProof.artifactKind || 'unknown',
+      });
+
+      return NextResponse.json({ success: true });
     }
 
     // Delete the proof
@@ -64,6 +101,8 @@ export async function DELETE(
       skill_name: proof.title || 'Unknown',
       proof_type: proof.proof_type || 'unknown',
     });
+
+    await revalidatePublicPortfolioByProfileId(user.id);
 
     return NextResponse.json({
       success: true,

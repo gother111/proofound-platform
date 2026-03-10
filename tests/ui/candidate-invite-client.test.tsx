@@ -37,7 +37,6 @@ describe('CandidateInviteClient test_match flow', () => {
               matchId: 'match-1',
               conversationId: 'conversation-1',
               proofSubmittedAt: null,
-              proofShareToken: null,
             },
             organization: {
               id: 'org-1',

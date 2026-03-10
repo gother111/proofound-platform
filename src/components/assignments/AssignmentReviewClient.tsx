@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, Edit, ChevronRight } from 'lucide-react';
+import { AlertCircle, Check, Edit, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 interface Assignment {
   id: string;
+  orgId?: string;
   role: string;
   businessValue: string;
   expectedImpact?: string;
@@ -43,12 +44,20 @@ type Props = {
   slug: string;
 };
 
+type PublishBlock = {
+  blockCode: string;
+  field: string;
+  message: string;
+  details?: Record<string, unknown>;
+};
+
 export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }: Props) {
   const router = useRouter();
   const [assignment, setAssignment] = useState<Assignment | null>(initialAssignment);
   const [isLoading, setIsLoading] = useState(!initialAssignment);
   const [hasFetched, setHasFetched] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [publishBlocks, setPublishBlocks] = useState<PublishBlock[]>([]);
 
   // Fallback fetch only if server fetch returned nothing
   useEffect(() => {
@@ -80,25 +89,52 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
     if (!confirm('Are you ready to publish this assignment and start matching?')) return;
 
     setIsPublishing(true);
+    setPublishBlocks([]);
     try {
-      const response = await fetch(`/api/assignments/${assignmentId}/publish`, {
+      const response = await fetch(`/api/assignments/${assignmentId}/publish?orgSlug=${slug}`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          principalContext: assignment?.orgId
+            ? {
+                principalType: 'organization',
+                orgId: assignment.orgId,
+              }
+            : undefined,
+        }),
       });
 
       if (response.ok) {
         router.push(`/app/o/${slug}/matching`);
       } else {
         const errorData = await response.json().catch(() => ({}));
-        const reason =
-          (errorData.details?.missing as string[] | undefined)?.join(', ') ||
-          errorData.message ||
-          errorData.error ||
-          'Failed to publish assignment';
-        alert(reason);
+        const blocks = Array.isArray(errorData.details?.blocks)
+          ? (errorData.details.blocks as PublishBlock[])
+          : [];
+        setPublishBlocks(
+          blocks.length > 0
+            ? blocks
+            : [
+                {
+                  blockCode: 'publish_blocked',
+                  field: 'publish',
+                  message:
+                    errorData.message ||
+                    errorData.error ||
+                    'Assignment publishing is currently blocked.',
+                },
+              ]
+        );
       }
     } catch (error) {
       console.error('Failed to publish:', error);
-      alert('Failed to publish assignment');
+      setPublishBlocks([
+        {
+          blockCode: 'publish_request_failed',
+          field: 'publish',
+          message: 'Failed to publish assignment. Try again.',
+        },
+      ]);
     } finally {
       setIsPublishing(false);
     }
@@ -148,6 +184,22 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
             </Button>
           </div>
         </div>
+
+        {publishBlocks.length > 0 ? (
+          <Card className="border-amber-300 bg-amber-50 p-5">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="mt-0.5 h-5 w-5 text-amber-700" />
+              <div className="space-y-2">
+                <h2 className="text-base font-semibold text-amber-900">Publishing is blocked</h2>
+                <ul className="space-y-1 text-sm text-amber-900">
+                  {publishBlocks.map((block) => (
+                    <li key={`${block.field}-${block.blockCode}`}>{block.message}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </Card>
+        ) : null}
 
         {/* Business Value */}
         <Card className="p-6">

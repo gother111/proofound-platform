@@ -10,7 +10,9 @@ import {
   mapLegacyProofVisibility,
   stableHashPayload,
 } from '@/lib/contracts/canonical-domain';
-import { computeProofTrustSnapshot, getProofFreshnessState } from '@/lib/proof-trust/snapshots';
+import { getProofFreshnessState, syncCanonicalProofPackState } from '@/lib/proofs/canonical-pack';
+import { revalidatePublicPortfolioByProfileId } from '@/lib/portfolio/public-invalidation';
+import { computeProofTrustSnapshot } from '@/lib/proof-trust/snapshots';
 import { and, eq, sql } from 'drizzle-orm';
 
 type SkillProofInput = {
@@ -157,7 +159,132 @@ async function refreshIndividualProofTrustSnapshots(profileId: string) {
   await Promise.all([
     computeProofTrustSnapshot('individual_profile', profileId, 'portfolio'),
     computeProofTrustSnapshot('individual_profile', profileId, 'matching'),
+    revalidatePublicPortfolioByProfileId(profileId),
   ]);
+}
+
+async function ensureCompatibilityProofPackForArtifact(params: {
+  proofId: string;
+  profileId: string;
+  skillId: string;
+  title: string;
+  summary?: string | null;
+  createdBy?: string | null;
+  artifactId: string;
+  visibility: (typeof proofPacks.$inferInsert)['visibility'];
+  revealGate: (typeof proofPacks.$inferInsert)['revealGate'];
+  metadata?: Record<string, unknown> | null;
+}) {
+  const existing = await db.query.proofPacks.findFirst({
+    where: and(
+      eq(proofPacks.legacySourceTable, 'skill_proofs'),
+      eq(proofPacks.legacySourceId, params.proofId)
+    ),
+  });
+
+  const [pack] = await db
+    .insert(proofPacks)
+    .values({
+      ownerType: 'individual_profile',
+      ownerId: params.profileId,
+      packKind: 'verification_bundle',
+      primarySubjectType: 'skill',
+      primarySubjectId: params.skillId,
+      lifecycleState: 'published',
+      title: params.title,
+      summary: params.summary ?? null,
+      contextJson: {
+        compatibilitySource: 'skill_proofs',
+      },
+      evidenceSummary: params.summary ?? null,
+      outcomesSummary: null,
+      visibility: params.visibility,
+      revealGate: params.revealGate,
+      createdBy: params.createdBy ?? params.profileId,
+      portabilityMeta: {
+        originType: 'legacy_skill_proof',
+        originRef: params.proofId,
+        completenessState: 'compatibility_minimal',
+      },
+      metadata: params.metadata ?? {},
+      legacySourceTable: 'skill_proofs',
+      legacySourceId: params.proofId,
+    })
+    .onConflictDoUpdate({
+      target: [proofPacks.legacySourceTable, proofPacks.legacySourceId],
+      set: {
+        ownerType: sql`excluded.owner_type`,
+        ownerId: sql`excluded.owner_id`,
+        primarySubjectType: sql`excluded.primary_subject_type`,
+        primarySubjectId: sql`excluded.primary_subject_id`,
+        lifecycleState: sql`excluded.lifecycle_state`,
+        title: sql`excluded.title`,
+        summary: sql`excluded.summary`,
+        contextJson: sql`excluded.context_json`,
+        evidenceSummary: sql`excluded.evidence_summary`,
+        visibility: sql`excluded.visibility`,
+        revealGate: sql`excluded.reveal_gate`,
+        metadata: sql`excluded.metadata`,
+        updatedAt: new Date(),
+      },
+    })
+    .returning();
+
+  await db
+    .insert(proofPackItems)
+    .values({
+      packId: pack.id,
+      artifactId: params.artifactId,
+      position: 0,
+      includedFields: ['title', 'description', 'sourceUrl', 'issuedAt', 'expiresAt'],
+    })
+    .onConflictDoNothing();
+
+  if (!existing) {
+    await emitLifecycleEvent(
+      'proof_pack_created',
+      {
+        proof_pack_id: pack.id,
+        owner_type: pack.ownerType,
+        owner_id: pack.ownerId,
+        primary_subject_type: pack.primarySubjectType,
+        primary_subject_id: pack.primarySubjectId,
+        pack_kind: pack.packKind,
+        visibility: pack.visibility,
+        reveal_gate: pack.revealGate,
+        actor_type: 'candidate',
+        source: 'canonical.repository',
+      },
+      {
+        userId: params.profileId,
+        entityType: 'profile',
+        entityId: pack.id,
+      }
+    );
+  }
+
+  const previousFreshnessState = existing?.freshnessState ?? null;
+  const syncedPack = await syncCanonicalProofPackState(pack.id);
+  if (syncedPack && previousFreshnessState !== syncedPack.freshnessState) {
+    await emitLifecycleEvent(
+      'proof_pack_freshness_state_changed',
+      {
+        proof_pack_id: syncedPack.id,
+        subject_id: params.profileId,
+        freshness_state: syncedPack.freshnessState,
+        trigger: existing ? 'proof_pack_updated' : 'proof_pack_created',
+        actor_type: 'candidate',
+        source: 'canonical.repository',
+      },
+      {
+        userId: params.profileId,
+        entityType: 'profile',
+        entityId: syncedPack.id,
+      }
+    );
+  }
+
+  return syncedPack ?? pack;
 }
 
 function getArtifactChangedFields(
@@ -397,46 +524,135 @@ export async function upsertCanonicalProofArtifactFromSkillProof(input: SkillPro
     );
   }
 
+  await ensureCompatibilityProofPackForArtifact({
+    proofId: input.id,
+    profileId: input.profileId,
+    skillId: input.skillId,
+    title: input.title,
+    summary: input.description ?? null,
+    createdBy: input.profileId,
+    artifactId: row.id,
+    visibility: row.visibility,
+    revealGate: row.revealGate,
+    metadata: {
+      ...(input.metadata ?? {}),
+      compatibilitySource: 'skill_proofs',
+    },
+  });
+
   await refreshIndividualProofTrustSnapshots(input.profileId);
 
   return row;
 }
 
 export async function deleteCanonicalProofArtifactForSkillProof(proofId: string) {
+  const row = await db.query.proofArtifacts.findFirst({
+    where: and(
+      eq(proofArtifacts.legacySourceTable, 'skill_proofs'),
+      eq(proofArtifacts.legacySourceId, proofId)
+    ),
+  });
+  if (!row) {
+    return null;
+  }
+
+  return deleteCanonicalProofArtifactById(row.id);
+}
+
+export async function deleteCanonicalProofArtifactById(artifactId: string) {
+  const row = await db.query.proofArtifacts.findFirst({
+    where: eq(proofArtifacts.id, artifactId),
+  });
+  if (!row) {
+    return null;
+  }
+
+  const linkedPackItems = await db
+    .select()
+    .from(proofPackItems)
+    .where(eq(proofPackItems.artifactId, artifactId));
+  const linkedPackIds = [...new Set(linkedPackItems.map((item) => item.packId))];
+
+  await db.delete(proofPackItems).where(eq(proofPackItems.artifactId, artifactId));
+
   const deletedResult = await db.execute(sql`
     DELETE FROM proof_artifacts
-    WHERE legacy_source_table = 'skill_proofs'
-      AND legacy_source_id = ${proofId}::uuid
+    WHERE id = ${artifactId}::uuid
     RETURNING *
   `);
-
-  const row = (getRows(deletedResult)[0] ?? null) as typeof proofArtifacts.$inferSelect | null;
-  if (!row) {
-    return;
+  const deletedRow = (getRows(deletedResult)[0] ?? null) as
+    | typeof proofArtifacts.$inferSelect
+    | null;
+  if (!deletedRow) {
+    return null;
   }
 
   await emitLifecycleEvent(
     'proof_artifact_deleted',
     {
-      proof_artifact_id: row.id,
-      owner_type: row.ownerType,
-      owner_id: row.ownerId,
-      subject_type: row.subjectType,
-      subject_id: row.subjectId,
-      artifact_kind: row.artifactKind,
-      visibility: row.visibility,
-      reveal_gate: row.revealGate,
+      proof_artifact_id: deletedRow.id,
+      owner_type: deletedRow.ownerType,
+      owner_id: deletedRow.ownerId,
+      subject_type: deletedRow.subjectType,
+      subject_id: deletedRow.subjectId,
+      artifact_kind: deletedRow.artifactKind,
+      visibility: deletedRow.visibility,
+      reveal_gate: deletedRow.revealGate,
       actor_type: 'candidate',
       source: 'canonical.repository',
     },
     {
-      userId: row.ownerId,
+      userId: deletedRow.ownerId,
       entityType: 'profile',
-      entityId: row.id,
+      entityId: deletedRow.id,
     }
   );
 
-  await refreshIndividualProofTrustSnapshots(row.ownerId);
+  for (const packId of linkedPackIds) {
+    const linkedPack = await db.query.proofPacks.findFirst({
+      where: eq(proofPacks.id, packId),
+    });
+    if (!linkedPack) {
+      continue;
+    }
+
+    const remainingItems = await db
+      .select({ id: proofPackItems.id })
+      .from(proofPackItems)
+      .where(eq(proofPackItems.packId, packId))
+      .limit(1);
+
+    if (remainingItems.length === 0) {
+      await db.execute(sql`
+        DELETE FROM proof_packs
+        WHERE id = ${packId}::uuid
+      `);
+
+      await emitLifecycleEvent(
+        'proof_pack_deleted',
+        {
+          proof_pack_id: linkedPack.id,
+          owner_type: linkedPack.ownerType,
+          owner_id: linkedPack.ownerId,
+          primary_subject_type: linkedPack.primarySubjectType,
+          primary_subject_id: linkedPack.primarySubjectId,
+          pack_kind: linkedPack.packKind,
+          actor_type: 'candidate',
+          source: 'canonical.repository',
+        },
+        {
+          userId: linkedPack.ownerId,
+          entityType: 'profile',
+          entityId: linkedPack.id,
+        }
+      );
+    } else {
+      await syncCanonicalProofPackState(packId);
+    }
+  }
+
+  await refreshIndividualProofTrustSnapshots(deletedRow.ownerId);
+  return deletedRow;
 }
 
 export async function upsertCanonicalProofPackForSnippet(input: SnippetPackInput) {

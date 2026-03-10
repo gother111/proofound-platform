@@ -22,11 +22,11 @@ import { generateOrganizationProfilePdf } from '@/lib/portfolio/pdf';
 function mockSupabase({
   user,
   organization = { id: 'org-1', slug: 'acme' },
-  membership = { role: 'admin' },
+  membership = { role: 'admin', state: 'active' },
 }: {
   user: { id: string } | null;
   organization?: { id: string; slug: string } | null;
-  membership?: { role: string } | null;
+  membership?: { role: string; state?: string } | null;
 }) {
   (createClient as any).mockResolvedValue({
     auth: {
@@ -42,8 +42,7 @@ function mockSupabase({
 
       if (table === 'organization_members') {
         const maybeSingle = vi.fn().mockResolvedValue({ data: membership });
-        const eqStatus = vi.fn().mockReturnValue({ maybeSingle });
-        const eqUser = vi.fn().mockReturnValue({ eq: eqStatus });
+        const eqUser = vi.fn().mockReturnValue({ maybeSingle });
         const eqOrg = vi.fn().mockReturnValue({ eq: eqUser });
         const select = vi.fn().mockReturnValue({ eq: eqOrg });
         return { select };
@@ -138,7 +137,7 @@ describe('/api/portfolio/org/[slug]/export', () => {
   });
 
   it('returns 403 for viewer membership', async () => {
-    mockSupabase({ user: { id: 'user-1' }, membership: { role: 'viewer' } });
+    mockSupabase({ user: { id: 'user-1' }, membership: { role: 'viewer', state: 'active' } });
 
     const response = await GET(new Request('http://localhost/api/portfolio/org/acme/export'), {
       params: Promise.resolve({ slug: 'acme' }),
@@ -149,7 +148,7 @@ describe('/api/portfolio/org/[slug]/export', () => {
   });
 
   it('returns 403 for member membership', async () => {
-    mockSupabase({ user: { id: 'user-1' }, membership: { role: 'member' } });
+    mockSupabase({ user: { id: 'user-1' }, membership: { role: 'member', state: 'active' } });
 
     const response = await GET(new Request('http://localhost/api/portfolio/org/acme/export'), {
       params: Promise.resolve({ slug: 'acme' }),

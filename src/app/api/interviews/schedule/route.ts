@@ -1,7 +1,7 @@
 /**
  * Interview Scheduling API
  * GET /api/interviews/schedule - List scheduled interviews for current user
- * POST /api/interviews/schedule - Create interview with Zoom or Google Meet
+ * POST /api/interviews/schedule - Create interview with Google Meet or a manual meeting link
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -284,7 +284,7 @@ export async function POST(request: NextRequest) {
   const scheduleFailureContext: {
     matchId?: string;
     userId?: string;
-    provider?: 'zoom' | 'google_meet';
+    provider?: 'google_meet';
     step?: InterviewScheduleStep;
   } = {};
 
@@ -377,7 +377,8 @@ export async function POST(request: NextRequest) {
       hasBlockingInterview = Boolean(legacyExistingInterview);
     } else {
       hasBlockingInterview = (interviewsForMatch ?? []).some(
-        (interview: { status?: string | null }) => interview.status !== 'cancelled'
+        (interview: { status?: string | null }) =>
+          interview.status !== 'cancelled' && interview.status !== 'no_show'
       );
     }
 
@@ -556,6 +557,14 @@ export async function POST(request: NextRequest) {
       participant_user_ids: participantUserIds,
     };
 
+    const recoverySourceInterviewId =
+      (interviewsForMatch ?? [])
+        .filter(
+          (interview: { status?: string | null; id: string }) => interview.status === 'no_show'
+        )
+        .map((interview: { id: string }) => interview.id)
+        .at(-1) ?? null;
+
     let interview: any = null;
 
     const insertPayload: Record<string, unknown> = {
@@ -637,6 +646,7 @@ export async function POST(request: NextRequest) {
         platform: persistedPlatform,
         scheduledAt: data.scheduledAt,
         timezone: data.timezone,
+        recoveryFromInterviewId: recoverySourceInterviewId,
       },
     });
 

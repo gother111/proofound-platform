@@ -2,8 +2,9 @@ import { and, eq } from 'drizzle-orm';
 
 import { db } from '@/db';
 import { assignments, organizationMembers, organizations } from '@/db/schema';
+import { CANONICAL_ORG_ROLE_VALUES, normalizeAuthorizedOrgRole, type OrgRole } from '@/lib/authz';
 
-export const ASSIGNMENT_MUTATION_ROLES = ['owner', 'admin'] as const;
+export const ASSIGNMENT_MUTATION_ROLES = ['org_manager', 'org_owner'] as const;
 export type AssignmentMutationRole = (typeof ASSIGNMENT_MUTATION_ROLES)[number];
 
 type MembershipContext = {
@@ -20,10 +21,11 @@ type AssignmentAccessStatus =
 export type AssignmentMutationAccessResult = {
   status: AssignmentAccessStatus;
   orgId?: string;
-  role?: string;
+  role?: OrgRole;
+  membershipId?: string;
 };
 
-function hasRequiredRole(role: string, requiredRoles: readonly string[] | undefined) {
+function hasRequiredRole(role: OrgRole, requiredRoles: readonly OrgRole[] | undefined) {
   if (!requiredRoles || requiredRoles.length === 0) {
     return true;
   }
@@ -33,13 +35,13 @@ function hasRequiredRole(role: string, requiredRoles: readonly string[] | undefi
 async function findActiveMembership(
   userId: string,
   orgId: string,
-  requiredRoles?: readonly string[]
+  requiredRoles?: readonly OrgRole[]
 ) {
   const membership = await db.query.organizationMembers.findFirst({
     where: and(
       eq(organizationMembers.userId, userId),
       eq(organizationMembers.orgId, orgId),
-      eq(organizationMembers.status, 'active')
+      eq(organizationMembers.state, 'active')
     ),
   });
 
@@ -47,11 +49,12 @@ async function findActiveMembership(
     return null;
   }
 
-  if (!hasRequiredRole(membership.role, requiredRoles)) {
+  const normalizedRole = normalizeAuthorizedOrgRole(membership.role);
+  if (!normalizedRole || !hasRequiredRole(normalizedRole, requiredRoles)) {
     return null;
   }
 
-  return membership;
+  return { ...membership, role: normalizedRole };
 }
 
 /**
@@ -73,7 +76,7 @@ export async function verifyAssignmentAccess(
     where: and(
       eq(organizationMembers.userId, userId),
       eq(organizationMembers.orgId, assignment.orgId),
-      eq(organizationMembers.status, 'active')
+      eq(organizationMembers.state, 'active')
     ),
   });
 
@@ -86,7 +89,7 @@ export async function verifyAssignmentAccess(
 export async function verifyAssignmentMutationAccess(
   userId: string,
   assignmentId: string,
-  requiredRoles: readonly string[] = ASSIGNMENT_MUTATION_ROLES
+  requiredRoles: readonly OrgRole[] = ASSIGNMENT_MUTATION_ROLES
 ): Promise<AssignmentMutationAccessResult> {
   const assignment = await db.query.assignments.findFirst({
     where: eq(assignments.id, assignmentId),
@@ -101,27 +104,30 @@ export async function verifyAssignmentMutationAccess(
     where: and(
       eq(organizationMembers.userId, userId),
       eq(organizationMembers.orgId, assignment.orgId),
-      eq(organizationMembers.status, 'active')
+      eq(organizationMembers.state, 'active')
     ),
-    columns: { role: true, orgId: true },
+    columns: { id: true, role: true, orgId: true },
   });
 
   if (!membership) {
     return { status: 'membership_not_found' };
   }
 
-  if (!hasRequiredRole(membership.role, requiredRoles)) {
+  const normalizedRole = normalizeAuthorizedOrgRole(membership.role);
+  if (!normalizedRole || !hasRequiredRole(normalizedRole, requiredRoles)) {
     return {
       status: 'insufficient_role',
       orgId: membership.orgId,
-      role: membership.role,
+      role: normalizedRole ?? undefined,
+      membershipId: membership.id,
     };
   }
 
   return {
     status: 'ok',
     orgId: membership.orgId,
-    role: membership.role,
+    role: normalizedRole,
+    membershipId: membership.id,
   };
 }
 
@@ -132,7 +138,7 @@ export async function verifyAssignmentMutationAccess(
 export async function resolveUserOrgContext(
   userId: string,
   context?: MembershipContext,
-  requiredRoles?: readonly string[]
+  requiredRoles?: readonly OrgRole[]
 ): Promise<string | null> {
   if (context?.orgId) {
     const membership = await findActiveMembership(userId, context.orgId, requiredRoles);
@@ -154,14 +160,15 @@ export async function resolveUserOrgContext(
   }
 
   const membership = await db.query.organizationMembers.findFirst({
-    where: and(eq(organizationMembers.userId, userId), eq(organizationMembers.status, 'active')),
+    where: and(eq(organizationMembers.userId, userId), eq(organizationMembers.state, 'active')),
   });
 
   if (!membership) {
     return null;
   }
 
-  if (!hasRequiredRole(membership.role, requiredRoles)) {
+  const normalizedRole = normalizeAuthorizedOrgRole(membership.role);
+  if (!normalizedRole || !hasRequiredRole(normalizedRole, requiredRoles)) {
     return null;
   }
 
@@ -175,11 +182,44 @@ export async function resolveUserOrgContext(
 export async function resolveExplicitUserOrgContext(
   userId: string,
   context?: MembershipContext,
-  requiredRoles?: readonly string[]
+  requiredRoles?: readonly OrgRole[]
 ): Promise<string | null> {
   if (!context?.orgId && !context?.orgSlug) {
     return null;
   }
 
   return resolveUserOrgContext(userId, context, requiredRoles);
+}
+
+export async function verifyExplicitAssignmentMutationAccess(
+  userId: string,
+  assignmentId: string,
+  context?: MembershipContext,
+  requiredRoles: readonly OrgRole[] = ASSIGNMENT_MUTATION_ROLES
+): Promise<AssignmentMutationAccessResult> {
+  if (!context?.orgId && !context?.orgSlug) {
+    return { status: 'membership_not_found' };
+  }
+
+  const assignment = await db.query.assignments.findFirst({
+    where: eq(assignments.id, assignmentId),
+    columns: { id: true, orgId: true },
+  });
+
+  if (!assignment) {
+    return { status: 'assignment_not_found' };
+  }
+
+  const explicitOrgId = await resolveExplicitUserOrgContext(userId, context, requiredRoles);
+  if (!explicitOrgId || explicitOrgId !== assignment.orgId) {
+    return { status: 'membership_not_found' };
+  }
+
+  return verifyAssignmentMutationAccess(userId, assignmentId, requiredRoles);
+}
+
+export function isCanonicalOrgRole(value: string | null | undefined): value is OrgRole {
+  return Boolean(
+    value && CANONICAL_ORG_ROLE_VALUES.includes(value as (typeof CANONICAL_ORG_ROLE_VALUES)[number])
+  );
 }

@@ -1,5 +1,15 @@
 import { z } from 'zod';
 
+import {
+  ProofArtifactSchema,
+  ProofPackItemSchema,
+  ProofPackSchema,
+  SubmissionArtifactSchema,
+  SubmissionSchema,
+  VerificationLogEntrySchema,
+  VerificationRecordSchema,
+} from '@/lib/contracts/canonical-domain';
+
 const ProfileImportSchema = z.object({
   headline: z.string().optional(),
   bio: z.string().optional(),
@@ -37,11 +47,23 @@ const VolunteeringImportSchema = z.object({
   hoursPerWeek: z.number().optional(),
 });
 
-export const UserDataImportV3Schema = z.object({
+const ProofOwnerFullImportSchema = z.object({
+  scope: z.literal('owner_full'),
+  schemaVersion: z.string().min(1).default('4.0.0'),
+  packs: z.array(ProofPackSchema).optional().default([]),
+  artifacts: z.array(ProofArtifactSchema).optional().default([]),
+  packItems: z.array(ProofPackItemSchema).optional().default([]),
+  submissions: z.array(SubmissionSchema).optional().default([]),
+  submissionArtifacts: z.array(SubmissionArtifactSchema).optional().default([]),
+  verificationReferences: z.array(VerificationRecordSchema).optional().default([]),
+  verificationLogEntries: z.array(VerificationLogEntrySchema).optional().default([]),
+});
+
+export const UserDataImportV4Schema = z.object({
   version: z
     .string()
     .min(1)
-    .refine((value) => value.split('.')[0] === '3', {
+    .refine((value) => value.split('.')[0] === '4', {
       message: 'Incompatible schema version',
     }),
   exportedAt: z.string().min(1),
@@ -49,9 +71,20 @@ export const UserDataImportV3Schema = z.object({
   skills: z.array(SkillImportSchema).optional().default([]),
   experiences: z.array(ExperienceImportSchema).optional().default([]),
   volunteering: z.array(VolunteeringImportSchema).optional().default([]),
+  proof: ProofOwnerFullImportSchema.optional().default({
+    scope: 'owner_full',
+    schemaVersion: '4.0.0',
+    packs: [],
+    artifacts: [],
+    packItems: [],
+    submissions: [],
+    submissionArtifacts: [],
+    verificationReferences: [],
+    verificationLogEntries: [],
+  }),
 });
 
-export type UserDataImportV3 = z.infer<typeof UserDataImportV3Schema>;
+export type UserDataImportV4 = z.infer<typeof UserDataImportV4Schema>;
 
 export const UserDataImportModeSchema = z.enum(['replace', 'merge']);
 export type UserDataImportMode = z.infer<typeof UserDataImportModeSchema>;
@@ -62,7 +95,7 @@ const ImportEnvelopeSchema = z.object({
   consentAcknowledged: z.boolean().optional(),
 });
 
-function normalizeLegacyExportToV3(raw: any): UserDataImportV3 {
+function normalizeLegacyExportToV4(raw: any): UserDataImportV4 {
   const individual = raw?.profile?.individual ?? {};
 
   const skills = (raw?.skills?.skills ?? [])
@@ -103,8 +136,10 @@ function normalizeLegacyExportToV3(raw: any): UserDataImportV3 {
     hoursPerWeek: typeof entry?.hoursPerWeek === 'number' ? entry.hoursPerWeek : undefined,
   }));
 
+  const canonical = raw?.legacy?.canonical ?? {};
+
   return {
-    version: '3.0.0',
+    version: '4.0.0',
     exportedAt: raw?.exportDate || raw?.exportedAt || new Date().toISOString(),
     profile: {
       headline: individual?.headline,
@@ -119,10 +154,27 @@ function normalizeLegacyExportToV3(raw: any): UserDataImportV3 {
     skills,
     experiences,
     volunteering,
+    proof: {
+      scope: 'owner_full',
+      schemaVersion: '4.0.0',
+      packs: Array.isArray(canonical?.proofPacks) ? canonical.proofPacks : [],
+      artifacts: Array.isArray(canonical?.proofArtifacts) ? canonical.proofArtifacts : [],
+      packItems: Array.isArray(canonical?.proofPackItems) ? canonical.proofPackItems : [],
+      submissions: Array.isArray(canonical?.submissions) ? canonical.submissions : [],
+      submissionArtifacts: Array.isArray(canonical?.submissionArtifacts)
+        ? canonical.submissionArtifacts
+        : [],
+      verificationReferences: Array.isArray(canonical?.verificationRecords)
+        ? canonical.verificationRecords
+        : [],
+      verificationLogEntries: Array.isArray(canonical?.verificationLogEntries)
+        ? canonical.verificationLogEntries
+        : [],
+    },
   };
 }
 
-function coerceToV3Payload(raw: unknown): unknown {
+function coerceToV4Payload(raw: unknown): unknown {
   if (!raw || typeof raw !== 'object') {
     return raw;
   }
@@ -130,7 +182,25 @@ function coerceToV3Payload(raw: unknown): unknown {
   const record = raw as Record<string, any>;
 
   if (record.portability && typeof record.portability === 'object') {
-    return record.portability;
+    return coerceToV4Payload(record.portability);
+  }
+
+  if (typeof record.version === 'string' && record.version.split('.')[0] === '3') {
+    return {
+      ...record,
+      version: '4.0.0',
+      proof: {
+        scope: 'owner_full',
+        schemaVersion: '4.0.0',
+        packs: [],
+        artifacts: [],
+        packItems: [],
+        submissions: [],
+        submissionArtifacts: [],
+        verificationReferences: [],
+        verificationLogEntries: [],
+      },
+    };
   }
 
   const hasLegacyShape =
@@ -141,14 +211,14 @@ function coerceToV3Payload(raw: unknown): unknown {
     !!record.skills?.skills;
 
   if (hasLegacyShape) {
-    return normalizeLegacyExportToV3(record);
+    return normalizeLegacyExportToV4(record);
   }
 
   return raw;
 }
 
 export interface NormalizedImportRequest {
-  data: UserDataImportV3;
+  data: UserDataImportV4;
   mode: UserDataImportMode;
   consentAcknowledged: boolean;
 }
@@ -176,8 +246,12 @@ export function normalizeImportRequest(
     throw new Error('CONSENT_REQUIRED');
   }
 
-  const payload = coerceToV3Payload(payloadSource);
-  const data = UserDataImportV3Schema.parse(payload);
+  const payload = coerceToV4Payload(payloadSource);
+  const data = UserDataImportV4Schema.parse(payload);
+
+  if (data.proof.scope !== 'owner_full') {
+    throw new Error('ONLY_OWNER_FULL_PROOF_IMPORT_SUPPORTED');
+  }
 
   return {
     data,

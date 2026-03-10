@@ -124,6 +124,7 @@ describe('summarizeVerificationPolicy', () => {
 
     expect(summary.slots.organizationPlatformReview.state).toBe('contradicted');
     expect(summary.slots.organizationPlatformReview.publicLabel).toBe('Trust review changed');
+    expect(summary.compatibility.orgTrustTier).toBe('unreviewed');
     expect(summary.compatibility.orgTrustStatus).toBe('unverified');
     expect(summary.publicBadges.some((badge) => badge.key === 'trust_review_changed')).toBe(false);
     expect(summary.orgReviewBadges.some((badge) => badge.key === 'trust_review_changed')).toBe(

@@ -9,6 +9,7 @@
 - [ ] `npm run typecheck`
 - [ ] `npm run test`
 - [ ] `npm run build`
+- [ ] `npm run test:launch:smoke`
 - [ ] `npm run test:e2e:landing`
 - [ ] `npm run test:e2e:auth:real`
 - [ ] `npm run test:a11y:strict`
@@ -27,15 +28,17 @@
 
 ## Performance and Go / No-Go
 
+- [ ] `BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run monitor:launch`
 - [ ] `BASE_URL=http://localhost:3000 npm run perf:budgets`
-- [ ] `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go`
-- [ ] `/api/health` and `/api/monitoring/perf-status` healthy.
+- [ ] `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
+- [ ] `/api/health`, `/api/monitoring/perf-status`, and `/api/monitoring/launch-status` healthy.
 
 ## Migration and Data Safety
 
 - [ ] `npm run db:drift-check`
 - [ ] `npm run db:migrate` (when migration files changed)
 - [ ] `npm run db:backup:checkpoint` (before high-risk DDL)
+- [ ] `npm run db:restore:verify -- --checkpoint <dir>` after a restore rehearsal
 - [ ] Never use `npm run db:push` in production migration workflow.
 
 ## Environment and Integrations

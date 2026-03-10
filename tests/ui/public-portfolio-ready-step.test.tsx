@@ -60,8 +60,8 @@ describe('PublicPortfolioReadyStep', () => {
     );
 
     expect(screen.getByText(/organization portfolio is live/i)).toBeInTheDocument();
-    expect(screen.getByText(/team, partners, and candidates/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /view portfolio/i })).toHaveAttribute(
+    expect(screen.getByText(/public organization link is shareable now/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /preview portfolio/i })).toHaveAttribute(
       'href',
       'https://proofound.io/portfolio/org/acme'
     );

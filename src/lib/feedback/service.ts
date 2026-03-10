@@ -11,6 +11,73 @@ import {
 type Direction = 'candidate_to_org' | 'org_to_candidate';
 
 const FEEDBACK_EXPIRY_DAYS = 7;
+const FEEDBACK_SLA_HOURS = 48;
+
+export type FeedbackFollowUpState =
+  | 'not_due'
+  | 'due'
+  | 'submitted'
+  | 'breached'
+  | 'feedback_delivered'
+  | 'closed';
+
+export function getFeedbackDueAt(completedAt: Date | string) {
+  const base = completedAt instanceof Date ? completedAt : new Date(completedAt);
+  return new Date(base.getTime() + FEEDBACK_SLA_HOURS * 60 * 60 * 1000);
+}
+
+export function getFeedbackReminderSchedule(completedAt: Date | string) {
+  const base = completedAt instanceof Date ? completedAt : new Date(completedAt);
+  return [
+    { checkpoint: '24h', scheduledAt: new Date(base.getTime() + 24 * 60 * 60 * 1000) },
+    { checkpoint: '40h', scheduledAt: new Date(base.getTime() + 40 * 60 * 60 * 1000) },
+    { checkpoint: '48h', scheduledAt: getFeedbackDueAt(base) },
+  ] as const;
+}
+
+export function resolveFeedbackFollowUpState(input: {
+  completedAt?: Date | string | null;
+  candidateSubmittedAt?: Date | string | null;
+  organizationSubmittedAt?: Date | string | null;
+  now?: Date;
+}) {
+  if (!input.completedAt) {
+    return {
+      dueAt: null,
+      overallState: 'not_due' as const,
+      candidateToOrg: 'not_due' as const,
+      orgToCandidate: 'not_due' as const,
+      slaBreached: false,
+    };
+  }
+
+  const dueAt = getFeedbackDueAt(input.completedAt);
+  const now = input.now ?? new Date();
+  const candidateSubmitted = Boolean(input.candidateSubmittedAt);
+  const organizationSubmitted = Boolean(input.organizationSubmittedAt);
+
+  const perSideState = (submitted: boolean) => {
+    if (submitted) return 'submitted' as const;
+    if (now > dueAt) return 'breached' as const;
+    return 'due' as const;
+  };
+
+  const candidateToOrg = perSideState(candidateSubmitted);
+  const orgToCandidate = perSideState(organizationSubmitted);
+  const allDelivered = candidateSubmitted && organizationSubmitted;
+
+  return {
+    dueAt,
+    overallState: allDelivered
+      ? ('feedback_delivered' as const)
+      : now > dueAt
+        ? ('breached' as const)
+        : ('due' as const),
+    candidateToOrg,
+    orgToCandidate,
+    slaBreached: !allDelivered && now > dueAt,
+  };
+}
 
 const addDays = (days: number) => {
   const dt = new Date();
@@ -49,34 +116,6 @@ const getUserEmail = async (
   }
 };
 
-const findReusableToken = async (
-  admin: ReturnType<typeof createAdminClient>,
-  interviewId: string,
-  direction: Direction
-) => {
-  const nowIso = new Date().toISOString();
-  const { data } = await admin
-    .from('feedback_tokens')
-    .select('id, capability_token_id, token, template_id, expires_at')
-    .eq('interview_id', interviewId)
-    .eq('direction', direction)
-    .is('used_at', null)
-    .gt('expires_at', nowIso)
-    .limit(1)
-    .maybeSingle();
-
-  if (!data) return null;
-  if (!data.token) return null;
-
-  return data as {
-    id: string;
-    capability_token_id?: string | null;
-    token: string;
-    template_id: string;
-    expires_at: string;
-  };
-};
-
 const createToken = async (
   admin: ReturnType<typeof createAdminClient>,
   params: {
@@ -102,6 +141,8 @@ const createToken = async (
     expiresAt: new Date(expiresAt),
     singleUse: true,
     maxUses: 1,
+    scopeKey: `feedback:${params.interviewId}:${params.direction}`,
+    revokePriorActiveTokensForScope: true,
     metadata: {
       direction: params.direction,
       templateId: params.templateId,
@@ -124,11 +165,16 @@ const createToken = async (
   return { token: issued.rawToken, expiresAt };
 };
 
-export const markTokenUsed = async (token: string, actor?: { email?: string | null }) => {
+export const markTokenUsed = async (
+  token: string,
+  actor?: { email?: string | null; redeemSessionNonce?: string | null }
+) => {
   const redeemed = await redeemCapabilityToken(token, {
     tokenClass: CAPABILITY_TOKEN_CLASSES.FEEDBACK_RESPONSE,
     actor: { email: actor?.email ?? null },
     consume: true,
+    requireRedeemSessionNonce: true,
+    redeemSessionNonce: actor?.redeemSessionNonce ?? null,
     metadata: { surface: 'feedback_submit' },
   });
 
@@ -176,41 +222,35 @@ export const issueFeedbackInvites = async (interviewId: string) => {
   }[] = [];
 
   if (candidateTemplateId) {
-    const existing = await findReusableToken(admin, interviewId, 'candidate_to_org');
     const candidateEmail = await getUserEmail(admin, candidateId);
-    const tokenData =
-      existing ??
-      (await createToken(admin, {
-        interviewId,
-        templateId: candidateTemplateId,
-        direction: 'candidate_to_org',
-        recipientEmail: candidateEmail,
-        createdBy: hostId,
-      }));
+    const tokenData = await createToken(admin, {
+      interviewId,
+      templateId: candidateTemplateId,
+      direction: 'candidate_to_org',
+      recipientEmail: candidateEmail,
+      createdBy: hostId,
+    });
     tokens.push({
       direction: 'candidate_to_org',
       token: tokenData.token,
-      expiresAt: 'expiresAt' in tokenData ? tokenData.expiresAt : tokenData.expires_at,
+      expiresAt: tokenData.expiresAt,
       recipientEmail: candidateEmail,
     });
   }
 
   if (orgTemplateId) {
-    const existing = await findReusableToken(admin, interviewId, 'org_to_candidate');
     const orgEmail = await getUserEmail(admin, hostId);
-    const tokenData =
-      existing ??
-      (await createToken(admin, {
-        interviewId,
-        templateId: orgTemplateId,
-        direction: 'org_to_candidate',
-        recipientEmail: orgEmail,
-        createdBy: hostId,
-      }));
+    const tokenData = await createToken(admin, {
+      interviewId,
+      templateId: orgTemplateId,
+      direction: 'org_to_candidate',
+      recipientEmail: orgEmail,
+      createdBy: hostId,
+    });
     tokens.push({
       direction: 'org_to_candidate',
       token: tokenData.token,
-      expiresAt: 'expiresAt' in tokenData ? tokenData.expiresAt : tokenData.expires_at,
+      expiresAt: tokenData.expiresAt,
       recipientEmail: orgEmail,
     });
   }

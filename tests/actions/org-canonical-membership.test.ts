@@ -1,0 +1,130 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { acceptOwnershipTransfer, initiateOwnershipTransfer } from '@/actions/org';
+import { requireAuth } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/server';
+
+vi.mock('@/lib/auth', () => ({
+  requireAuth: vi.fn(),
+}));
+
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: vi.fn(),
+}));
+
+vi.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: vi.fn(),
+}));
+
+vi.mock('@/lib/email', () => ({
+  sendOrgInviteEmail: vi.fn(),
+}));
+
+vi.mock('next/cache', () => ({
+  revalidatePath: vi.fn(),
+}));
+
+vi.mock('@/lib/security/capability-tokens', () => ({
+  CAPABILITY_BINDINGS: {},
+  CAPABILITY_TOKEN_CLASSES: {},
+  issueCapabilityToken: vi.fn(),
+  redeemCapabilityToken: vi.fn(),
+}));
+
+function buildSupabaseMock(config: {
+  membershipLookups?: Array<any>;
+  membershipLists?: Array<any>;
+  updates?: Array<{ error: any }>;
+}) {
+  let membershipLookupIndex = 0;
+  let membershipListIndex = 0;
+  let updateIndex = 0;
+
+  return {
+    from(table: string) {
+      if (table === 'organization_members') {
+        return {
+          select() {
+            return {
+              eq(_column: string, _value: unknown) {
+                return {
+                  eq(_column2: string, _value2: unknown) {
+                    return {
+                      maybeSingle: vi.fn().mockResolvedValue({
+                        data: config.membershipLookups?.[membershipLookupIndex++] ?? null,
+                        error: null,
+                      }),
+                    };
+                  },
+                  in: vi.fn().mockResolvedValue({
+                    data: config.membershipLists?.[membershipListIndex++] ?? [],
+                    error: null,
+                  }),
+                };
+              },
+            };
+          },
+          update() {
+            return {
+              eq() {
+                return {
+                  eq: vi.fn().mockResolvedValue(config.updates?.[updateIndex++] ?? { error: null }),
+                };
+              },
+            };
+          },
+        };
+      }
+
+      if (table === 'audit_logs') {
+        return {
+          insert: vi.fn().mockResolvedValue({ error: null }),
+        };
+      }
+
+      throw new Error(`Unexpected table ${table}`);
+    },
+  };
+}
+
+describe('canonical organization membership actions', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('rejects ownership transfer when the actor is not the org owner', async () => {
+    (requireAuth as any).mockResolvedValue({ id: 'reviewer-user' });
+    vi.mocked(createClient).mockResolvedValue(
+      buildSupabaseMock({
+        membershipLookups: [{ id: 'reviewer-membership', role: 'org_reviewer', state: 'active' }],
+      }) as any
+    );
+
+    const result = await initiateOwnershipTransfer('org-1', 'target-user');
+
+    expect(result).toEqual({ error: 'Only organization owners can transfer ownership' });
+  });
+
+  it('accepts ownership transfer and activates the pending owner', async () => {
+    (requireAuth as any).mockResolvedValue({ id: 'target-user' });
+    vi.mocked(createClient).mockResolvedValue(
+      buildSupabaseMock({
+        membershipLookups: [
+          {
+            id: 'target-membership',
+            user_id: 'target-user',
+            role: 'org_owner',
+            state: 'ownership_transfer_pending',
+            ownership_transfer_from_membership_id: 'owner-membership',
+            ownership_transfer_target_user_id: 'target-user',
+          },
+        ],
+        updates: [{ error: null }, { error: null }],
+      }) as any
+    );
+
+    const result = await acceptOwnershipTransfer('org-1');
+
+    expect(result).toEqual({ success: true });
+  });
+});

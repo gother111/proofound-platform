@@ -63,7 +63,7 @@ export function buildUnavailablePublicProfileMetadata(
     description:
       'This public profile link is unavailable. It may be expired, hidden, or no longer active.',
     path,
-    canonicalPath: options?.canonicalPath,
+    canonicalPath: options?.canonicalPath ?? null,
     ogTitle: 'Public Profile Unavailable',
     ogDescription:
       'This public profile link is unavailable. Ask the owner to share a new Proofound link.',

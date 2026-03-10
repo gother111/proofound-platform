@@ -6,6 +6,15 @@ import {
 } from '@/lib/portfolio/public-contract';
 import { mergeVisibilityFlags } from '@/lib/portfolio/visibility';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
+import {
+  listCanonicalProofPackAggregatesForOwner,
+  summarizeCanonicalProofOwnerAggregates,
+} from '@/lib/proofs/canonical-pack';
+import { getPublicIndividualPortfolioProjectionByHandle } from '@/lib/portfolio/public-projection';
+import {
+  listVerificationRecordsForOwner,
+  summarizeVerificationPolicy,
+} from '@/lib/verification/policy';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export type TrustExportData = {
@@ -24,6 +33,14 @@ export type TrustExportData = {
   };
   signals: ReturnType<typeof buildTrustSignals>;
   skills: Array<{ id: string; name: string; level: number }>;
+  proofPacks: Array<{
+    id: string;
+    scope: 'owner_full' | 'public_safe';
+    title: string;
+    verificationStatus: string;
+    freshnessState: string;
+    artifactCount: number;
+  }>;
   visibility: ReturnType<typeof mergeVisibilityFlags>;
 };
 
@@ -128,55 +145,63 @@ function toStringList(value: unknown): string[] {
     .slice(0, 8);
 }
 
-async function loadTrustCounts(
-  supabase: SupabaseClient,
-  profileId: string
+async function loadCanonicalTrustState(
+  profileId: string,
+  scope: 'owner_full' | 'public_safe'
 ): Promise<{
   proofsCount: number;
   acceptedVerificationsCount: number;
   attestationCount: number;
+  proofPacks: TrustExportData['proofPacks'];
+  verificationSummary: ReturnType<typeof summarizeVerificationPolicy>;
 }> {
-  let proofsCount = 0;
-  let acceptedVerificationsCount = 0;
-  let attestationCount = 0;
+  const [aggregates, verificationRecords] = await Promise.all([
+    listCanonicalProofPackAggregatesForOwner('individual_profile', profileId),
+    listVerificationRecordsForOwner('individual_profile', profileId).catch(() => []),
+  ]);
 
-  try {
-    const { count } = await supabase
-      .from('skill_proofs')
-      .select('id', { count: 'exact', head: true })
-      .eq('profile_id', profileId);
-    proofsCount = count || 0;
-  } catch {
-    proofsCount = 0;
-  }
-
-  try {
-    const { count } = await supabase
-      .from('skill_verification_requests')
-      .select('id', { count: 'exact', head: true })
-      .eq('requester_profile_id', profileId)
-      .eq('status', 'accepted')
-      .eq('integrity_status', 'clear');
-    acceptedVerificationsCount = count || 0;
-  } catch {
-    acceptedVerificationsCount = 0;
-  }
-
-  try {
-    const { count } = await supabase
-      .from('attestations')
-      .select('id', { count: 'exact', head: true })
-      .eq('subject_user_id', profileId)
-      .eq('status', 'verified');
-    attestationCount = count || 0;
-  } catch {
-    attestationCount = 0;
-  }
+  const scopedAggregates =
+    scope === 'public_safe'
+      ? aggregates.filter((aggregate) => aggregate.publicSafe !== null)
+      : aggregates;
+  const summary = summarizeCanonicalProofOwnerAggregates(scopedAggregates);
+  const verifiedReferences = new Map(
+    scopedAggregates
+      .flatMap((aggregate) => aggregate.verificationReferences)
+      .filter((record) => record.status === 'verified')
+      .map((record) => [record.id, record])
+  );
+  const attestationKinds = new Set([
+    'skill_attestation_peer',
+    'skill_attestation_manager',
+    'impact_attestation',
+  ]);
+  const acceptedVerificationsCount = [...verifiedReferences.values()].filter(
+    (record) => !attestationKinds.has(record.verificationKind)
+  ).length;
+  const attestationCount = [...verifiedReferences.values()].filter((record) =>
+    attestationKinds.has(record.verificationKind)
+  ).length;
+  const verificationSummary = summarizeVerificationPolicy({
+    records: verificationRecords,
+  });
 
   return {
-    proofsCount,
+    proofsCount: summary.packCount,
     acceptedVerificationsCount,
     attestationCount,
+    proofPacks: scopedAggregates.map((aggregate) => ({
+      id: aggregate.pack.id,
+      scope,
+      title: aggregate.pack.title,
+      verificationStatus: aggregate.verificationStatus,
+      freshnessState: aggregate.freshnessState,
+      artifactCount:
+        scope === 'public_safe'
+          ? (aggregate.publicSafe?.items.length ?? 0)
+          : aggregate.ownerFull.items.length,
+    })),
+    verificationSummary,
   };
 }
 
@@ -240,6 +265,8 @@ function buildTrustExportPayload(
     proofsCount: number;
     acceptedVerificationsCount: number;
     attestationCount: number;
+    proofPacks: TrustExportData['proofPacks'];
+    verificationSummary: ReturnType<typeof summarizeVerificationPolicy>;
   },
   skills: Array<{ id: string; name: string; level: number }>,
   visibilityOverride?: ReturnType<typeof mergeVisibilityFlags>
@@ -247,11 +274,15 @@ function buildTrustExportPayload(
   const visibility = visibilityOverride ?? toVisibility(profile);
   const individual = toIndividual(profile);
 
-  const signals = buildTrustSignals(profile as any, {
-    proofsCount: visibility.counts ? counts.proofsCount : 0,
-    acceptedVerificationsCount: visibility.counts ? counts.acceptedVerificationsCount : 0,
-    attestationCount: visibility.counts ? counts.attestationCount : 0,
-  });
+  const signals = buildTrustSignals(
+    profile as any,
+    {
+      proofsCount: visibility.counts ? counts.proofsCount : 0,
+      acceptedVerificationsCount: visibility.counts ? counts.acceptedVerificationsCount : 0,
+      attestationCount: visibility.counts ? counts.attestationCount : 0,
+    },
+    counts.verificationSummary
+  );
 
   const safeHeadline =
     visibility.header && (individual?.headline || individual?.tagline)
@@ -293,6 +324,7 @@ function buildTrustExportPayload(
     },
     signals,
     skills: visibility.skills ? skills : [],
+    proofPacks: visibility.counts ? counts.proofPacks : [],
     visibility,
   };
 }
@@ -334,7 +366,7 @@ export async function fetchTrustExportData(
 
   if (!profile || !profile.handle) return null;
 
-  const counts = await loadTrustCounts(supabase, profile.id);
+  const counts = await loadCanonicalTrustState(profile.id, 'owner_full');
   const skills = await loadTopSkills(supabase, profile.id);
   return buildTrustExportPayload(profile as ProfileExportRow, counts, skills) ?? null;
 }
@@ -343,44 +375,10 @@ export async function fetchPublicTrustExportDataByHandle(
   supabase: SupabaseClient,
   handle: string
 ): Promise<TrustExportData | null> {
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select(
-      `
-        id,
-        handle,
-        display_name,
-        public_portfolio_state,
-        search_indexing_enabled_at,
-        individual_profiles (
-          headline,
-          bio,
-          tagline,
-          skills,
-          redact_mode,
-          verification_status,
-          verification_method,
-          verified_at,
-          work_email,
-          work_email_verified,
-          linkedin_verification_status,
-          linkedin_verified_at,
-          linkedin_verification_data,
-          verified
-        ),
-        field_visibility: individual_profiles ( field_visibility )
-      `
-    )
-    .eq('handle', handle)
-    .maybeSingle();
+  void supabase;
 
-  if (!profile || !profile.handle) {
-    return null;
-  }
-
-  const counts = await loadTrustCounts(supabase, profile.id);
-  const skills = await loadTopSkills(supabase, profile.id);
-  return buildTrustExportPayload(profile as ProfileExportRow, counts, skills) ?? null;
+  const projection = await getPublicIndividualPortfolioProjectionByHandle(handle);
+  return projection?.exportData ?? null;
 }
 
 export async function fetchOrganizationTrustExportData(

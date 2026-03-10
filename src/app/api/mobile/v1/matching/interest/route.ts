@@ -1,12 +1,17 @@
 import { and, eq, isNull } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
-import { nanoid } from 'nanoid';
 import { z } from 'zod';
 
 import { db } from '@/db';
-import { assignments, conversations, matchInterest, matches } from '@/db/schema';
+import { assignments, matchInterest, matchReviewStates, matches } from '@/db/schema';
 import { mobileError, mobileSuccess } from '@/lib/api/mobile/response';
 import { requireMobileAuth } from '@/lib/api/mobile/auth';
+import {
+  buildVisibilitySafeWhy,
+  normalizeFairnessStatus,
+  resolveCanonicalCorridor,
+  resolveCanonicalFallbackState,
+} from '@/lib/matching/review-contract';
 
 export const dynamic = 'force-dynamic';
 
@@ -91,7 +96,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!mutual) {
-      return mobileSuccess({ revealed: false });
+      return mobileSuccess({ revealed: false, mutual: false });
     }
 
     const profileId = targetProfileId || auth.user.id;
@@ -100,49 +105,47 @@ export async function POST(request: NextRequest) {
         id: matches.id,
         assignmentId: matches.assignmentId,
         profileId: matches.profileId,
+        fairnessStatus: matches.fairnessStatus,
+        reviewStage: matchReviewStates.reviewStage,
+        revealScope: matchReviewStates.revealScope,
+        operationalFallbackMode: matchReviewStates.operationalFallbackMode,
       })
       .from(matches)
+      .leftJoin(matchReviewStates, eq(matchReviewStates.matchId, matches.id))
       .where(and(eq(matches.assignmentId, assignmentId), eq(matches.profileId, profileId)))
       .limit(1);
 
-    if (!match) {
-      return mobileSuccess({ revealed: true, conversationId: null });
-    }
-
-    const [existingConversation] = await db
-      .select({ id: conversations.id })
-      .from(conversations)
-      .where(eq(conversations.matchId, match.id))
-      .limit(1);
-
-    if (existingConversation) {
-      return mobileSuccess({
-        revealed: true,
-        conversationId: existingConversation.id,
-        matchId: match.id,
-      });
-    }
-
-    const individualId = match.profileId;
-    const representativeId = orgRepresentativeId ?? auth.user.id;
-    const [createdConversation] = await db
-      .insert(conversations)
-      .values({
-        matchId: match.id,
-        assignmentId: match.assignmentId,
-        participantOneId: individualId,
-        participantTwoId: representativeId,
-        stage: 'masked',
-        maskedHandleOne: `Candidate #${nanoid(6).toUpperCase()}`,
-        maskedHandleTwo: `Organization #${nanoid(6).toUpperCase()}`,
-        lastMessageAt: new Date(),
-      })
-      .returning();
+    const fairnessStatus = normalizeFairnessStatus(match?.fairnessStatus);
+    const fallbackState = resolveCanonicalFallbackState({
+      operationalFallbackMode: match?.operationalFallbackMode,
+      fairnessStatus,
+    });
 
     return mobileSuccess({
-      revealed: true,
-      conversationId: createdConversation.id,
-      matchId: match.id,
+      revealed: false,
+      mutual: true,
+      introApproved: false,
+      requiresIntroApproval: true,
+      ...(match
+        ? {
+            matchId: match.id,
+            ...resolveCanonicalCorridor({
+              reviewStage: match.reviewStage ?? 'blind_review',
+              revealScope: match.revealScope ?? 'blind',
+              surface: 'review_detail',
+              fairnessStatus,
+              operationalFallbackMode: match.operationalFallbackMode,
+              introRequested: true,
+            }),
+            why: buildVisibilitySafeWhy({
+              reasonCodes: ['shortlist_selected'],
+              fairnessStatus,
+              fallbackState,
+            }),
+          }
+        : {}),
+      message:
+        'Interest is mutual. The organization still needs to approve the introduction from the shortlist corridor.',
     });
   } catch (error) {
     console.error('[mobile.matching.interest.post] failed', error);

@@ -53,6 +53,7 @@ describe('/api/portfolio/public/[handle]/summary', () => {
         attestations: { count: 0 },
       },
       skills: [],
+      proofPacks: [],
       visibility: {
         header: true,
         proofBar: true,

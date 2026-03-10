@@ -145,6 +145,7 @@ export function EditSkillWindow({
     description: '',
     url: '',
     filePath: '',
+    uploadedFileId: '',
     issuedDate: '',
     expiresDate: '',
   });
@@ -314,8 +315,9 @@ export function EditSkillWindow({
     const hasTitle = Boolean(newProof.title?.trim());
     const hasUrl = Boolean(newProof.url?.trim());
     const hasFilePath = Boolean(newProof.filePath?.trim());
+    const hasUploadedFileId = Boolean(newProof.uploadedFileId?.trim());
 
-    if (!hasTitle && !hasUrl && !hasFilePath) {
+    if (!hasTitle && !hasUrl && !hasFilePath && !hasUploadedFileId) {
       toast({
         title: 'Missing proof details',
         description: 'Add a title, URL, or uploaded file before submitting a proof.',
@@ -343,6 +345,7 @@ export function EditSkillWindow({
       description: newProof.description?.trim() || '',
       url: newProof.url?.trim() || '',
       filePath: newProof.filePath?.trim() || '',
+      uploadedFileId: newProof.uploadedFileId?.trim() || '',
     };
 
     setAddingProof(true);
@@ -366,6 +369,7 @@ export function EditSkillWindow({
           description: '',
           url: '',
           filePath: '',
+          uploadedFileId: '',
           issuedDate: '',
           expiresDate: '',
         });
@@ -414,7 +418,7 @@ export function EditSkillWindow({
         category: 'proof',
       });
 
-      if (!result.success || !result.path) {
+      if (!result.success || !result.uploadedFileId) {
         setProofUploadError(result.error || result.message || 'Upload failed');
         return;
       }
@@ -424,6 +428,7 @@ export function EditSkillWindow({
         proofType: 'document',
         url: result.url || current.url,
         filePath: result.path || '',
+        uploadedFileId: result.uploadedFileId || '',
         title: current.title.trim() || result.fileName || file.name || '',
       }));
       setProofUploadError(null);

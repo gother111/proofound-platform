@@ -2,16 +2,21 @@
  * Redaction utilities for privacy controls
  *
  * Determines which profile fields should be visible based on:
- * 1. Field visibility settings (public, network_only, match_only, private)
- * 2. Viewer context (public, link-holder/network, matched-org, self)
+ * 1. Canonical field visibility settings
+ * 2. Viewer context (public, link-holder, matched-org, self)
  */
 
 import { db } from '@/db';
 import { profileFieldVisibility } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import {
+  canAudienceAccessVisibility,
+  normalizeEffectiveVisibility,
+  type EffectiveVisibility,
+} from './effective-visibility';
 
-export type ViewerContext = 'public' | 'network_only' | 'match_only' | 'self';
-export type VisibilityLevel = 'public' | 'network_only' | 'match_only' | 'private';
+export type ViewerContext = 'public' | 'link_only' | 'matched_org' | 'self';
+export type VisibilityLevel = EffectiveVisibility;
 
 /**
  * Fetch visibility settings for a profile
@@ -33,19 +38,22 @@ export async function getProfileVisibilitySettings(
   // profile_field_visibility is a single row per profile with per-field columns.
   // This map normalizes those columns back into the profile object keys used by redaction.
   return new Map<string, VisibilityLevel>([
-    ['display_name', row.displayName as VisibilityLevel],
-    ['avatar_url', row.avatar as VisibilityLevel],
-    ['headline', row.headline as VisibilityLevel],
-    ['location', row.location as VisibilityLevel],
-    ['mission', row.mission as VisibilityLevel],
-    ['vision', row.vision as VisibilityLevel],
-    ['values', row.values as VisibilityLevel],
-    ['causes', row.causes as VisibilityLevel],
-    ['experiences', row.experiences as VisibilityLevel],
-    ['education', row.education as VisibilityLevel],
-    ['volunteering', row.volunteering as VisibilityLevel],
-    ['skills', row.skills as VisibilityLevel],
-    ['impact_stories', row.impactStories as VisibilityLevel],
+    ['display_name', normalizeEffectiveVisibility(row.displayName as string | null | undefined)],
+    ['avatar_url', normalizeEffectiveVisibility(row.avatar as string | null | undefined)],
+    ['headline', normalizeEffectiveVisibility(row.headline as string | null | undefined)],
+    ['location', normalizeEffectiveVisibility(row.location as string | null | undefined)],
+    ['mission', normalizeEffectiveVisibility(row.mission as string | null | undefined)],
+    ['vision', normalizeEffectiveVisibility(row.vision as string | null | undefined)],
+    ['values', normalizeEffectiveVisibility(row.values as string | null | undefined)],
+    ['causes', normalizeEffectiveVisibility(row.causes as string | null | undefined)],
+    ['experiences', normalizeEffectiveVisibility(row.experiences as string | null | undefined)],
+    ['education', normalizeEffectiveVisibility(row.education as string | null | undefined)],
+    ['volunteering', normalizeEffectiveVisibility(row.volunteering as string | null | undefined)],
+    ['skills', normalizeEffectiveVisibility(row.skills as string | null | undefined)],
+    [
+      'impact_stories',
+      normalizeEffectiveVisibility(row.impactStories as string | null | undefined),
+    ],
   ]);
 }
 
@@ -56,32 +64,18 @@ export function isFieldVisible(
   fieldVisibility: VisibilityLevel,
   viewerContext: ViewerContext
 ): boolean {
-  // Self can always see everything
   if (viewerContext === 'self') {
     return true;
   }
 
-  // Private fields are never visible to others
-  if (fieldVisibility === 'private') {
-    return false;
-  }
-
-  // Match-only fields are visible to matched orgs and self
-  if (fieldVisibility === 'match_only') {
-    return viewerContext === 'match_only';
-  }
-
-  // Link-only fields are visible to link-holders, matched orgs, and self
-  if (fieldVisibility === 'network_only') {
-    return viewerContext === 'network_only' || viewerContext === 'match_only';
-  }
-
-  // Public fields are visible to everyone
-  if (fieldVisibility === 'public') {
-    return true;
-  }
-
-  return false;
+  return canAudienceAccessVisibility(
+    normalizeEffectiveVisibility(fieldVisibility),
+    viewerContext === 'link_only'
+      ? 'link_holder'
+      : viewerContext === 'matched_org'
+        ? 'matched_org'
+        : 'public'
+  );
 }
 
 /**
@@ -99,25 +93,25 @@ export const DEFAULT_FIELD_VISIBILITY: Record<string, VisibilityLevel> = {
   mission: 'public',
 
   // Matching profile
-  location: 'match_only',
-  preferred_locations: 'match_only',
-  remote_preference: 'match_only',
-  desired_roles: 'match_only',
-  desired_industries: 'match_only',
-  min_salary: 'private',
-  max_salary: 'private',
+  location: 'matched_org',
+  preferred_locations: 'matched_org',
+  remote_preference: 'matched_org',
+  desired_roles: 'matched_org',
+  desired_industries: 'matched_org',
+  min_salary: 'owner_only',
+  max_salary: 'owner_only',
 
   // Skills & expertise
   skills: 'public',
-  skill_proofs: 'match_only',
+  skill_proofs: 'matched_org',
   experiences: 'public',
 
   // Contact info
-  email: 'private',
-  phone: 'private',
-  linkedin_url: 'network_only',
-  github_url: 'network_only',
-  website_url: 'network_only',
+  email: 'owner_only',
+  phone: 'owner_only',
+  linkedin_url: 'link_only',
+  github_url: 'link_only',
+  website_url: 'link_only',
 };
 
 /**
@@ -179,11 +173,11 @@ export function determineViewerContext(params: {
   }
 
   if (params.isMatchedOrg) {
-    return 'match_only';
+    return 'matched_org';
   }
 
   if (params.hasProfileLink) {
-    return 'network_only';
+    return 'link_only';
   }
 
   return 'public';

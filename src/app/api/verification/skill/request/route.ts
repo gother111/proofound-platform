@@ -11,6 +11,7 @@ import {
   CAPABILITY_TOKEN_CLASSES,
   issueCapabilityToken,
 } from '@/lib/security/capability-tokens';
+import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
 
 const SkillVerificationRequestSchema = z.object({
   skillId: z.string().min(1),
@@ -24,6 +25,12 @@ const SkillVerificationRequestSchema = z.object({
  * Sends a skill verification request to a peer/referee
  */
 export async function POST(request: NextRequest) {
+  const trace = startLaunchTrace({
+    flow: 'verification_request',
+    requestId: request.headers.get('x-request-id'),
+    actorType: 'anonymous',
+  });
+
   try {
     const supabase = await createClient();
     const {
@@ -32,14 +39,26 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      emitLaunchTrace(trace, {
+        outcome: 'rejected',
+        state: 'verification_request_unauthorized',
+        failureClass: 'unauthorized',
+      });
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    trace.actorId = user.id;
+    trace.actorType = 'user_account';
 
     // Validate request body
     const body = await request.json();
     const validation = SkillVerificationRequestSchema.safeParse(body);
 
     if (!validation.success) {
+      emitLaunchTrace(trace, {
+        outcome: 'rejected',
+        state: 'verification_request_validation_failed',
+        failureClass: 'invalid_verification_request',
+      });
       return NextResponse.json(
         { error: 'Invalid request data', details: validation.error.errors },
         { status: 400 }
@@ -47,10 +66,16 @@ export async function POST(request: NextRequest) {
     }
 
     const { skillId, verifierEmail, message } = validation.data;
+    trace.objectRefs.skillId = skillId;
 
     // Check rate limit (5/hour, 20/day)
     const rateLimit = await checkVerificationRateLimit(user.id);
     if (!rateLimit.allowed) {
+      emitLaunchTrace(trace, {
+        outcome: 'rejected',
+        state: 'verification_request_rate_limited',
+        failureClass: 'rate_limited',
+      });
       return NextResponse.json(
         {
           error: rateLimit.reason,
@@ -106,6 +131,11 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     if (existingRequest) {
+      emitLaunchTrace(trace, {
+        outcome: 'rejected',
+        state: 'verification_request_duplicate_pending',
+        failureClass: 'duplicate_pending_request',
+      });
       return NextResponse.json(
         { error: 'A pending verification request already exists for this skill and verifier' },
         { status: 400 }
@@ -126,6 +156,8 @@ export async function POST(request: NextRequest) {
       expiresAt,
       singleUse: true,
       maxUses: 1,
+      scopeKey: `skill_verification:${skillId}:${verifierEmail.toLowerCase()}`,
+      revokePriorActiveTokensForScope: true,
       metadata: {
         verifierSource: 'external',
         skillId,
@@ -180,6 +212,13 @@ export async function POST(request: NextRequest) {
       skillId,
       verifierEmail,
     });
+    emitLaunchTrace(trace, {
+      outcome: 'success',
+      state: 'verification_request_created',
+      details: {
+        requestId: verificationRequest.id,
+      },
+    });
 
     // Send in-app notification if verifier has a Proofound account
     try {
@@ -213,6 +252,11 @@ export async function POST(request: NextRequest) {
     console.error('Error in skill verification request:', error);
     log.error('verification.skill.request.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    emitLaunchTrace(trace, {
+      outcome: 'failure',
+      state: 'verification_request_failed',
+      failureClass: error instanceof Error ? error.message : 'verification_request_failed',
     });
 
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

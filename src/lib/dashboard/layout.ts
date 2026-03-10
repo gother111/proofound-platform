@@ -138,6 +138,14 @@ export const AVAILABLE_WIDGETS: Record<string, WidgetConfig> = {
     defaultSize: 'default',
     availableSizes: ['default', 'large'],
   },
+  'zen-snapshot': {
+    id: 'zen-snapshot',
+    name: 'Zen Snapshot',
+    description: 'Private milestone and wellbeing check-ins',
+    category: 'insights',
+    defaultSize: 'default',
+    availableSizes: ['default', 'large'],
+  },
   notifications: {
     id: 'notifications',
     name: 'Inbox',
@@ -164,8 +172,9 @@ export const DEFAULT_LAYOUT: DashboardWidget[] = [
   { widgetId: 'matching-readiness', position: 1, visible: true, size: 'default', settings: {} },
   { widgetId: 'interviews-feedback', position: 2, visible: true, size: 'default', settings: {} },
   { widgetId: 'momentum-metrics', position: 3, visible: true, size: 'default', settings: {} },
-  { widgetId: 'notifications', position: 4, visible: true, size: 'small', settings: {} },
-  { widgetId: 'next-best-actions', position: 5, visible: true, size: 'full', settings: {} },
+  { widgetId: 'zen-snapshot', position: 4, visible: true, size: 'default', settings: {} },
+  { widgetId: 'notifications', position: 5, visible: true, size: 'small', settings: {} },
+  { widgetId: 'next-best-actions', position: 6, visible: true, size: 'full', settings: {} },
 ];
 
 /**

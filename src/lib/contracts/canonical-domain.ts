@@ -51,6 +51,28 @@ export const PROOF_PACK_KIND_VALUES = [
 ] as const;
 export type ProofPackKind = (typeof PROOF_PACK_KIND_VALUES)[number];
 export const ProofPackKindSchema = z.enum(PROOF_PACK_KIND_VALUES);
+export const PROOF_PACK_LIFECYCLE_STATE_VALUES = [
+  'draft',
+  'ready',
+  'published',
+  'submitted',
+  'withdrawn',
+  'superseded',
+  'archived',
+] as const;
+export type ProofPackLifecycleState = (typeof PROOF_PACK_LIFECYCLE_STATE_VALUES)[number];
+export const ProofPackLifecycleStateSchema = z.enum(PROOF_PACK_LIFECYCLE_STATE_VALUES);
+export const PROOF_PACK_VERIFICATION_STATUS_VALUES = [
+  'unverified',
+  'partially_verified',
+  'verified',
+  'disputed',
+] as const;
+export type ProofPackVerificationStatus = (typeof PROOF_PACK_VERIFICATION_STATUS_VALUES)[number];
+export const ProofPackVerificationStatusSchema = z.enum(PROOF_PACK_VERIFICATION_STATUS_VALUES);
+export const PROOF_FRESHNESS_STATE_VALUES = ['fresh', 'review_soon', 'stale', 'expired'] as const;
+export type ProofFreshnessState = (typeof PROOF_FRESHNESS_STATE_VALUES)[number];
+export const ProofFreshnessStateSchema = z.enum(PROOF_FRESHNESS_STATE_VALUES);
 
 export const SUBMISSION_KIND_VALUES = [
   'assignment_section',
@@ -263,13 +285,30 @@ export const ProofPackSchema = z.object({
   ownerType: OwnerTypeSchema,
   ownerId: z.string().uuid(),
   packKind: ProofPackKindSchema,
+  primarySubjectType: ProofSubjectTypeSchema.nullable(),
+  primarySubjectId: z.string().uuid().nullable(),
+  lifecycleState: ProofPackLifecycleStateSchema,
   title: z.string().min(1),
   summary: z.string().nullable(),
+  contextJson: z.record(z.any()),
+  evidenceSummary: z.string().nullable(),
+  outcomesSummary: z.string().nullable(),
   visibility: VisibilityLevelSchema,
   revealGate: RevealGateSchema,
   shareTokenHash: z.string().nullable(),
   shareExpiresAt: z.string().datetime().nullable(),
   createdBy: z.string().uuid().nullable(),
+  verificationStatus: ProofPackVerificationStatusSchema,
+  freshnessState: ProofFreshnessStateSchema,
+  freshnessEvaluatedAt: z.string().datetime().nullable(),
+  lastVerifiedAt: z.string().datetime().nullable(),
+  lastRefreshedAt: z.string().datetime().nullable(),
+  publishedAt: z.string().datetime().nullable(),
+  submittedAt: z.string().datetime().nullable(),
+  withdrawnAt: z.string().datetime().nullable(),
+  supersededAt: z.string().datetime().nullable(),
+  archivedAt: z.string().datetime().nullable(),
+  portabilityMeta: z.record(z.any()),
   metadata: z.record(z.any()),
   legacySourceTable: z.string().nullable(),
   legacySourceId: z.string().uuid().nullable(),

@@ -105,4 +105,27 @@ describe('LeftNav portfolio gating', () => {
 
     expect(screen.getByText(/beta testing/i)).toBeInTheDocument();
   });
+
+  it('shows only the MVP org navigation corridor', () => {
+    usePathnameMock.mockReturnValue('/app/o/acme/home');
+
+    render(<LeftNav basePath="/app/o/acme" />);
+
+    expect(screen.getAllByRole('link', { name: /overview/i })[0]).toHaveAttribute(
+      'href',
+      '/app/o/acme/home'
+    );
+    expect(screen.getAllByRole('link', { name: /assignments & matches/i })[0]).toHaveAttribute(
+      'href',
+      '/app/o/acme/matching'
+    );
+    expect(screen.getAllByRole('link', { name: /trust profile/i })[0]).toHaveAttribute(
+      'href',
+      '/app/o/acme/profile'
+    );
+    expect(screen.queryByRole('link', { name: /candidates/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /shortlist/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /team/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /^settings$/i })).not.toBeInTheDocument();
+  });
 });

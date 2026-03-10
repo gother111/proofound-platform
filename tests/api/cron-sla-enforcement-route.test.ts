@@ -6,9 +6,11 @@ const mocks = vi.hoisted(() => ({
   matchWhere: vi.fn(),
   matchFrom: vi.fn(),
   select: vi.fn(),
+  execute: vi.fn(),
   updateWhere: vi.fn(),
   updateSet: vi.fn(),
   update: vi.fn(),
+  getRows: vi.fn(),
   logInfo: vi.fn(),
   logWarn: vi.fn(),
   logError: vi.fn(),
@@ -17,8 +19,13 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/db', () => ({
   db: {
     select: (...args: unknown[]) => mocks.select(...args),
+    execute: (...args: unknown[]) => mocks.execute(...args),
     update: (...args: unknown[]) => mocks.update(...args),
   },
+}));
+
+vi.mock('@/lib/db/rows', () => ({
+  getRows: (...args: unknown[]) => mocks.getRows(...args),
 }));
 
 vi.mock('@/lib/log', () => ({
@@ -44,12 +51,31 @@ describe('GET /api/cron/sla-enforcement', () => {
     mocks.updateWhere.mockResolvedValue(undefined);
     mocks.updateSet.mockReturnValue({ where: mocks.updateWhere });
     mocks.update.mockReturnValue({ set: mocks.updateSet });
+    mocks.execute.mockResolvedValue({} as any);
+    mocks.getRows.mockReturnValue([]);
   });
 
   it('flags completed interviews that do not have a decision maker recorded', async () => {
+    const dueCompletedAt = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const breachedCompletedAt = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
+
     mocks.matchLimit
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([{ id: 'interview-1' }, { id: 'interview-2' }]);
+    mocks.getRows.mockReturnValue([
+      {
+        interview_id: 'interview-1',
+        completed_at: dueCompletedAt,
+        candidate_submitted_at: null,
+        organization_submitted_at: null,
+      },
+      {
+        interview_id: 'interview-2',
+        completed_at: breachedCompletedAt,
+        candidate_submitted_at: new Date(Date.now() - 70 * 60 * 60 * 1000).toISOString(),
+        organization_submitted_at: null,
+      },
+    ]);
 
     const response = await GET(
       new NextRequest('https://example.com/api/cron/sla-enforcement', {
@@ -64,6 +90,9 @@ describe('GET /api/cron/sla-enforcement', () => {
     expect(body.expiredInterviews).toBe(2);
     expect(body.flaggedOverdueDecisions).toBe(2);
     expect(body.interviewIds).toEqual(['interview-1', 'interview-2']);
+    expect(body.feedbackDue).toBe(1);
+    expect(body.feedbackBreached).toBe(1);
+    expect(body.feedbackInterviewIds).toEqual(['interview-1', 'interview-2']);
     expect(mocks.update).not.toHaveBeenCalled();
   });
 

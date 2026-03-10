@@ -9,8 +9,12 @@ import {
   deriveRequirementsFromMatrix,
 } from '@/lib/assignments/expertise-matrix';
 import { checkAndEmitAssignmentActivation } from '@/lib/assignments/activation';
-import { verifyAssignmentAccess, verifyAssignmentMutationAccess } from '@/lib/assignments/access';
+import {
+  verifyAssignmentAccess,
+  verifyExplicitAssignmentMutationAccess,
+} from '@/lib/assignments/access';
 import { requireApiAuthContext } from '@/lib/auth';
+import { ensureOrganizationPrincipal, PrincipalContextSchema } from '@/lib/authz';
 import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
@@ -122,6 +126,9 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 }
 
 const AssignmentUpdateSchema = z.object({
+  principalContext: PrincipalContextSchema.optional(),
+  orgId: z.string().uuid().optional(),
+  orgSlug: z.string().min(1).optional(),
   builderMode: z.enum(['basic', 'advanced']).optional(),
   role: z.string().min(1).optional(),
   description: z.string().optional(),
@@ -187,19 +194,32 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const resolvedParams = await params;
     assignmentId = resolvedParams.id;
 
-    const access = await verifyAssignmentMutationAccess(user.id, assignmentId);
+    const body = await request.json();
+    const validatedData = AssignmentUpdateSchema.parse(body);
+    const principal = validatedData.principalContext
+      ? ensureOrganizationPrincipal(validatedData.principalContext)
+      : null;
+    if (validatedData.principalContext && (!principal || !principal.ok)) {
+      const principalError =
+        principal && 'error' in principal ? principal.error : 'Invalid organization principal';
+      return NextResponse.json({ error: principalError }, { status: 403 });
+    }
+
+    const access = await verifyExplicitAssignmentMutationAccess(user.id, assignmentId, {
+      orgId: principal?.ok ? principal.context.orgId : validatedData.orgId,
+      orgSlug: validatedData.orgSlug,
+    });
     if (access.status === 'assignment_not_found' || access.status === 'membership_not_found') {
       return NextResponse.json({ error: 'Assignment not found or access denied' }, { status: 404 });
     }
     if (access.status === 'insufficient_role') {
       return NextResponse.json(
-        { error: 'Forbidden. Owner or admin role is required to update assignments.' },
+        {
+          error: 'Forbidden. Organization manager or owner role is required to update assignments.',
+        },
         { status: 403 }
       );
     }
-
-    const body = await request.json();
-    const validatedData = AssignmentUpdateSchema.parse(body);
     const targetAssignmentId = assignmentId;
 
     if (!targetAssignmentId) {
@@ -217,9 +237,15 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       : [];
     const derivedRequirements = shouldSyncMatrix ? deriveRequirementsFromMatrix(matrixRows) : null;
 
+    const {
+      principalContext: _principalContext,
+      orgId: _orgId,
+      orgSlug: _orgSlug,
+      ...updatePayload
+    } = validatedData;
     const updateData = {
-      ...validatedData,
-      status: validatedData.status,
+      ...updatePayload,
+      status: updatePayload.status,
       ...(derivedRequirements
         ? {
             mustHaveSkills: derivedRequirements.mustHaveSkills,
@@ -263,6 +289,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     log.info('assignment.updated', {
       assignmentId,
       userId: user.id,
+      principalType: principal?.ok ? principal.context.principalType : 'organization',
+      orgId: access.orgId,
+      membershipId: access.membershipId,
     });
 
     if (validatedData.status === 'active' || updatedAssignment.status === 'active') {
@@ -295,7 +324,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
  * Deletes an assignment.
  */
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   let assignmentId: string | undefined;
@@ -309,13 +338,33 @@ export async function DELETE(
     const resolvedParams = await params;
     assignmentId = resolvedParams.id;
 
-    const access = await verifyAssignmentMutationAccess(user.id, assignmentId);
+    let principalPayload: unknown = null;
+    try {
+      principalPayload = await request.json();
+    } catch {
+      principalPayload = null;
+    }
+
+    const principal = ensureOrganizationPrincipal(
+      principalPayload && typeof principalPayload === 'object'
+        ? (principalPayload as Record<string, unknown>).principalContext
+        : null
+    );
+    if (!principal.ok) {
+      return NextResponse.json({ error: principal.error }, { status: 403 });
+    }
+
+    const access = await verifyExplicitAssignmentMutationAccess(user.id, assignmentId, {
+      orgId: principal.context.orgId,
+    });
     if (access.status === 'assignment_not_found' || access.status === 'membership_not_found') {
       return NextResponse.json({ error: 'Assignment not found or access denied' }, { status: 404 });
     }
     if (access.status === 'insufficient_role') {
       return NextResponse.json(
-        { error: 'Forbidden. Owner or admin role is required to delete assignments.' },
+        {
+          error: 'Forbidden. Organization manager or owner role is required to delete assignments.',
+        },
         { status: 403 }
       );
     }
@@ -325,6 +374,9 @@ export async function DELETE(
     log.info('assignment.deleted', {
       assignmentId,
       userId: user.id,
+      principalType: principal.context.principalType,
+      orgId: access.orgId,
+      membershipId: access.membershipId,
     });
 
     return NextResponse.json({ success: true });

@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-03-10T16:48:20.061Z",
+  "overallStatus": "pass",
+  "checks": [
+    {
+      "id": "signup_auth",
+      "label": "Signup and auth",
+      "status": "pass",
+      "expectedState": "auth_flow_completed",
+      "durationMs": 2441,
+      "testFiles": ["tests/actions/auth.test.ts"],
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops\n\n ✓ tests/actions/auth.test.ts  (10 tests) 9ms\n\n Test Files  1 passed (1)\n      Tests  10 passed (10)\n   Start at  17:48:07\n   Duration  1.72s (transform 172ms, setup 808ms, collect 339ms, tests 9ms, environment 184ms, prepare 38ms)\n\n\nWebSocket server error: Port 24678 is already in use\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`\nstderr | tests/actions/auth.test.ts > Auth Actions > signUp > should sign up an organization member and create profile\nProfile trigger did not fire, creating profile manually\n\nstderr | tests/actions/auth.test.ts > Auth Actions > signUp > should return error for invalid input\nSignUp Validation Failed: { _errors: [], email: { _errors: [ 'Invalid email' ] } }\n\nstderr | tests/actions/auth.test.ts > Auth Actions > signUp > returns retry-safe error and keeps email verification semantics when signup is rate-limited\nSupabase SignUp Error: { message: 'Over the email limit', status: 429 }\n\nstderr | tests/actions/auth.test.ts > Auth Actions > signUp > falls back to admin generateLink + Resend API when Supabase cannot send confirmation email\nSupabase SignUp Error: { message: 'Error sending confirmation email', status: 500 }\n\nstderr | tests/actions/auth.test.ts > Auth Actions > requestPasswordReset > returns success even when provider reset call errors\nPassword reset request throttled or masked: { status: 429, message: 'Too many requests' }",
+      "generatedAt": "2026-03-10T16:48:09.068Z"
+    },
+    {
+      "id": "portfolio_publish_render",
+      "label": "Portfolio publish and render",
+      "status": "pass",
+      "expectedState": "public_portfolio_live",
+      "durationMs": 1538,
+      "testFiles": [
+        "tests/actions/onboarding.test.ts",
+        "tests/api/public-portfolio-summary-route.test.ts"
+      ],
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit\n\n ✓ tests/api/public-portfolio-summary-route.test.ts  (2 tests) 4ms\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild\n\n ✓ tests/actions/onboarding.test.ts  (2 tests) 4ms\n\n Test Files  2 passed (2)\n      Tests  4 passed (4)\n   Start at  17:48:09\n   Duration  851ms (transform 131ms, setup 101ms, collect 257ms, tests 8ms, environment 181ms, prepare 78ms)\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
+      "generatedAt": "2026-03-10T16:48:10.608Z"
+    },
+    {
+      "id": "assignment_publish",
+      "label": "Assignment publish",
+      "status": "pass",
+      "expectedState": "assignment_published",
+      "durationMs": 1588,
+      "testFiles": ["tests/api/assignments-publish-route.test.ts"],
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }\n\n ✓ tests/api/assignments-publish-route.test.ts  (8 tests) 13ms\n\n Test Files  1 passed (1)\n      Tests  8 passed (8)\n   Start at  17:48:11\n   Duration  831ms (transform 140ms, setup 91ms, collect 290ms, tests 13ms, environment 177ms, prepare 35ms)\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`\n(node:47763) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n(node:47763) Warning: `--localstorage-file` was provided without a valid path",
+      "generatedAt": "2026-03-10T16:48:12.196Z"
+    },
+    {
+      "id": "shortlist_generation",
+      "label": "Shortlist generation or named fallback",
+      "status": "pass",
+      "expectedState": "shortlist_or_named_fallback",
+      "durationMs": 1241,
+      "testFiles": ["tests/api/core-matching-assignment-route.test.ts"],
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com\n\n ✓ tests/api/core-matching-assignment-route.test.ts  (1 test) 5ms\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n   Start at  17:48:12\n   Duration  588ms (transform 110ms, setup 17ms, collect 222ms, tests 5ms, environment 0ms, prepare 37ms)\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
+      "generatedAt": "2026-03-10T16:48:13.437Z"
+    },
+    {
+      "id": "invite_redemption",
+      "label": "Invite redemption",
+      "status": "pass",
+      "expectedState": "invite_redeemed",
+      "durationMs": 1697,
+      "testFiles": ["tests/api/candidate-invite-claim-route.test.ts"],
+      "outputSnippet": "viteId\":\"invite-1\",\"assignmentId\":\"assignment-1\",\"orgId\":\"org-1\"},\"outcome\":\"success\",\"state\":\"invite_redeemed\",\"latencyMs\":1,\"failureClass\":null,\"flowType\":\"test_match\"}\n\n ✓ tests/api/candidate-invite-claim-route.test.ts  (6 tests) 11ms\n\n Test Files  1 passed (1)\n      Tests  6 passed (6)\n   Start at  17:48:14\n   Duration  1.04s (transform 119ms, setup 91ms, collect 409ms, tests 11ms, environment 180ms, prepare 36ms)\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`\nstderr | tests/api/candidate-invite-claim-route.test.ts > POST /api/candidate-invites/[token]/claim > returns 401 for unauthenticated user\n{\"level\":\"warn\",\"event\":\"launch.trace\",\"timestamp\":\"2026-03-10T16:48:15.072Z\",\"flow\":\"invite_redemption\",\"requestId\":\"Hr9e2e0zCVn-\",\"actorId\":null,\"actorType\":\"anonymous\",\"objectRefs\":{},\"outcome\":\"rejected\",\"state\":\"invite_claim_unauthorized\",\"latencyMs\":0,\"failureClass\":\"unauthorized\"}\n\nstderr | tests/api/candidate-invite-claim-route.test.ts > POST /api/candidate-invites/[token]/claim > fails closed when capability redemption rejects the invite recipient\n{\"level\":\"warn\",\"event\":\"launch.trace\",\"timestamp\":\"2026-03-10T16:48:15.079Z\",\"flow\":\"invite_redemption\",\"requestId\":\"eHc2A5h8NvOY\",\"actorId\":\"11111111-1111-1111-1111-111111111111\",\"actorType\":\"user_account\",\"objectRefs\":{},\"outcome\":\"rejected\",\"state\":\"invite_claim_token_rejected\",\"latencyMs\":0,\"failureClass\":\"actor_mismatch\"}\n\nstderr | tests/api/candidate-invite-claim-route.test.ts > POST /api/candidate-invites/[token]/claim > returns replay failure on second redemption attempt\n{\"level\":\"warn\",\"event\":\"launch.trace\",\"timestamp\":\"2026-03-10T16:48:15.080Z\",\"flow\":\"invite_redemption\",\"requestId\":\"4bCjHgLLAZMu\",\"actorId\":\"11111111-1111-1111-1111-111111111111\",\"actorType\":\"user_account\",\"objectRefs\":{},\"outcome\":\"rejected\",\"state\":\"invite_claim_token_rejected\",\"latencyMs\":0,\"failureClass\":\"replayed\"}",
+      "generatedAt": "2026-03-10T16:48:15.134Z"
+    },
+    {
+      "id": "verification_request",
+      "label": "Verification request",
+      "status": "pass",
+      "expectedState": "verification_request_created",
+      "durationMs": 1078,
+      "testFiles": ["tests/api/verification-skill-request-route.test.ts"],
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild\n\n ✓ tests/api/verification-skill-request-route.test.ts  (1 test) 6ms\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n   Start at  17:48:15\n   Duration  309ms (transform 33ms, setup 17ms, collect 36ms, tests 6ms, environment 0ms, prepare 37ms)\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
+      "generatedAt": "2026-03-10T16:48:16.212Z"
+    },
+    {
+      "id": "feedback_submission",
+      "label": "Feedback submission",
+      "status": "pass",
+      "expectedState": "structured_feedback_submitted",
+      "durationMs": 1079,
+      "testFiles": ["tests/api/feedback-submit-route.test.ts"],
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }\n\n ✓ tests/api/feedback-submit-route.test.ts  (1 test) 7ms\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n   Start at  17:48:16\n   Duration  328ms (transform 44ms, setup 17ms, collect 53ms, tests 7ms, environment 0ms, prepare 35ms)\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
+      "generatedAt": "2026-03-10T16:48:17.291Z"
+    },
+    {
+      "id": "export",
+      "label": "Export visibility",
+      "status": "pass",
+      "expectedState": "export_visible_and_safe",
+      "durationMs": 1384,
+      "testFiles": [
+        "tests/api/portfolio-export-route.test.ts",
+        "tests/api/portfolio-org-export-route.test.ts",
+        "tests/api/public-portfolio-export-route.test.ts"
+      ],
+      "outputSnippet": "8.650Z\",\"flow\":\"export\",\"requestId\":\"pS2ZRU0RJCOp\",\"actorId\":\"user-1\",\"actorType\":\"organization_member\",\"objectRefs\":{},\"outcome\":\"rejected\",\"state\":\"org_export_org_missing\",\"latencyMs\":0,\"failureClass\":\"organization_not_found\"}\n\nstderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 403 when user is not an active org member\n{\"level\":\"warn\",\"event\":\"launch.trace\",\"timestamp\":\"2026-03-10T16:48:18.651Z\",\"flow\":\"export\",\"requestId\":\"_Kf0PnITHdtT\",\"actorId\":\"user-1\",\"actorType\":\"organization_member\",\"objectRefs\":{\"orgId\":\"org-1\"},\"outcome\":\"rejected\",\"state\":\"org_export_forbidden\",\"latencyMs\":0,\"failureClass\":\"forbidden\"}\n\nstderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 404 when organization export data is unavailable\n{\"level\":\"warn\",\"event\":\"launch.trace\",\"timestamp\":\"2026-03-10T16:48:18.651Z\",\"flow\":\"export\",\"requestId\":\"o1OHCiuiEZ-X\",\"actorId\":\"user-1\",\"actorType\":\"organization_member\",\"objectRefs\":{\"orgId\":\"org-1\"},\"outcome\":\"rejected\",\"state\":\"org_export_profile_unavailable\",\"latencyMs\":0,\"failureClass\":\"organization_profile_unavailable\"}\n\nstderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 403 for viewer membership\n{\"level\":\"warn\",\"event\":\"launch.trace\",\"timestamp\":\"2026-03-10T16:48:18.652Z\",\"flow\":\"export\",\"requestId\":\"4_XYahbm5_zf\",\"actorId\":\"user-1\",\"actorType\":\"organization_member\",\"objectRefs\":{\"orgId\":\"org-1\"},\"outcome\":\"rejected\",\"state\":\"org_export_forbidden\",\"latencyMs\":0,\"failureClass\":\"forbidden\"}\n\nstderr | tests/api/portfolio-org-export-route.test.ts > /api/portfolio/org/[slug]/export > returns 403 for member membership\n{\"level\":\"warn\",\"event\":\"launch.trace\",\"timestamp\":\"2026-03-10T16:48:18.653Z\",\"flow\":\"export\",\"requestId\":\"D5mN2txdLgZk\",\"actorId\":\"user-1\",\"actorType\":\"organization_member\",\"objectRefs\":{\"orgId\":\"org-1\"},\"outcome\":\"rejected\",\"state\":\"org_export_forbidden\",\"latencyMs\":1,\"failureClass\":\"forbidden\"}",
+      "generatedAt": "2026-03-10T16:48:18.675Z"
+    },
+    {
+      "id": "delete_unpublish",
+      "label": "Delete and unpublish",
+      "status": "pass",
+      "expectedState": "public_projection_removed",
+      "durationMs": 1386,
+      "testFiles": ["tests/lib/lifecycle-reconciliation.test.ts"],
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com\n\n ✓ tests/lib/lifecycle-reconciliation.test.ts  (1 test) 3ms\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n   Start at  17:48:19\n   Duration  632ms (transform 34ms, setup 96ms, collect 104ms, tests 3ms, environment 179ms, prepare 37ms)\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
+      "generatedAt": "2026-03-10T16:48:20.061Z"
+    }
+  ]
+}

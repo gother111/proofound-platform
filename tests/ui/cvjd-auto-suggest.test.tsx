@@ -21,6 +21,13 @@ vi.mock('sonner', () => ({
   },
 }));
 
+function jsonResponse(payload: unknown, status = 200) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
 describe('CVJDAutoSuggest', () => {
   const originalFlag = process.env.NEXT_PUBLIC_CV_IMPORT_V2;
 
@@ -59,34 +66,56 @@ describe('CVJDAutoSuggest', () => {
   });
 
   it('uploads multiple PDFs and sends structured wizard payload for CV analysis', async () => {
-    apiFetchMock.mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          documents: [
-            {
-              document_id: 'doc-1',
-              file_name: 'cv-1.pdf',
-              context: 'cv',
-              work_experiences: [],
-              learning_experiences: [],
-              volunteering: [],
-              languages: [],
-              skill_candidates: [],
-            },
-            {
-              document_id: 'doc-2',
-              file_name: 'cv-2.pdf',
-              context: 'cv',
-              work_experiences: [],
-              learning_experiences: [],
-              volunteering: [],
-              languages: [],
-              skill_candidates: [],
-            },
-          ],
+    let requestDocumentIds: string[] = [];
+    let requestFileNames: string[] = [];
+
+    apiFetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (url === '/api/expertise/cv-import/wizard-extract') {
+        const formData = init?.body as FormData;
+        requestDocumentIds = formData
+          .getAll('document_ids')
+          .map((value) => String(value))
+          .filter(Boolean);
+        requestFileNames = formData
+          .getAll('files')
+          .map((value) => (value instanceof File ? value.name : 'cv.pdf'));
+        return jsonResponse({ job_id: 'job-1', status: 'queued', poll_after_ms: 1 }, 202);
+      }
+
+      if (url.startsWith('/api/expertise/cv-import/wizard-extract/status')) {
+        return jsonResponse({
+          job_id: 'job-1',
+          status: 'completed',
+          documents: requestDocumentIds.map((documentId, index) => ({
+            document_id: documentId,
+            file_name: requestFileNames[index] ?? `cv-${index + 1}.pdf`,
+            text: 'React TypeScript',
+            context: 'cv',
+          })),
+          failed_documents: [],
+        });
+      }
+
+      if (url === '/api/expertise/cv-import/wizard-suggest?engine=gemini') {
+        return jsonResponse({
+          documents: requestDocumentIds.map((documentId, index) => ({
+            document_id: documentId,
+            file_name: requestFileNames[index] ?? `cv-${index + 1}.pdf`,
+            context: 'cv',
+            parsed_text: 'React TypeScript',
+            parse_error: null,
+            parse_error_code: null,
+            work_experiences: [],
+            learning_experiences: [],
+            volunteering: [],
+            languages: [],
+            skill_candidates: [],
+          })),
           metadata: {
             semantic_used: false,
             semantic_fallback_triggered: false,
+            fallback_stage: 'none',
+            candidate_only_fallback_triggered: false,
             unmapped_candidates_count: 0,
             limits: {
               max_documents: 5,
@@ -94,13 +123,19 @@ describe('CVJDAutoSuggest', () => {
               max_total_chars: 90000,
             },
           },
-        }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      )
-    );
+        });
+      }
+
+      if (url === '/api/analytics/track') {
+        return jsonResponse({ ok: true });
+      }
+
+      if (String(url).startsWith('/api/expertise/taxonomy')) {
+        return jsonResponse({ l4_skills: [] });
+      }
+
+      throw new Error(`Unexpected apiFetch call: ${url}`);
+    });
 
     render(<CVJDAutoSuggest />);
 
@@ -119,16 +154,23 @@ describe('CVJDAutoSuggest', () => {
 
     await waitFor(() => {
       expect(apiFetchMock).toHaveBeenCalledWith(
+        '/api/expertise/cv-import/wizard-extract',
+        expect.objectContaining({ method: 'POST', body: expect.any(FormData) })
+      );
+    });
+
+    await waitFor(() => {
+      expect(apiFetchMock).toHaveBeenCalledWith(
         '/api/expertise/cv-import/wizard-suggest?engine=gemini',
         expect.objectContaining({ method: 'POST' })
       );
     });
 
-    const suggestCall = apiFetchMock.mock.calls.find(
-      ([url]) => url === '/api/expertise/cv-import/wizard-suggest?engine=gemini'
+    const extractCall = apiFetchMock.mock.calls.find(
+      ([url]) => url === '/api/expertise/cv-import/wizard-extract'
     );
-    expect(suggestCall).toBeDefined();
-    const body = suggestCall?.[1]?.body;
+    expect(extractCall).toBeDefined();
+    const body = extractCall?.[1]?.body;
     expect(body).toBeInstanceOf(FormData);
     const formData = body as FormData;
     expect(formData.getAll('files')).toHaveLength(2);

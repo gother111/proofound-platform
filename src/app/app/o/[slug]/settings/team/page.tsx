@@ -1,27 +1,24 @@
-import { getActiveOrg, requireAuth } from '@/lib/auth';
-import { notFound, redirect } from 'next/navigation';
-import OrganizationMembersPage from '../../members/page';
+import { OrgScopeNotice } from '@/components/organization/OrgScopeNotice';
+import { getOrgSurfaceFallbackHref } from '@/lib/org/mvp-surface-policy';
 
 export const dynamic = 'force-dynamic';
 
-export default async function OrganizationTeamSettingsPage({
+export default async function OrganizationSettingsTeamPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const user = await requireAuth();
   const { slug } = await params;
-  const result = await getActiveOrg(slug, user.id);
 
-  if (!result) {
-    notFound();
-  }
-
-  const { membership } = result;
-  const canManageSettings = membership.role === 'owner' || membership.role === 'admin';
-  if (!canManageSettings) {
-    redirect(`/app/o/${slug}/home`);
-  }
-
-  return <OrganizationMembersPage params={Promise.resolve({ slug })} />;
+  return (
+    <OrgScopeNotice
+      title="Team settings are gated for launch"
+      description="The org MVP keeps access narrow and review-focused. Full team settings remain outside the launch corridor."
+      slug={slug}
+      primaryHref={getOrgSurfaceFallbackHref(slug, 'settings')}
+      primaryLabel="Back to overview"
+      secondaryHref={`/app/o/${slug}/matching`}
+      secondaryLabel="Open review queue"
+    />
+  );
 }

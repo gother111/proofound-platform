@@ -72,4 +72,36 @@ describe('buildTrustSignals', () => {
     expect(signals.verifications.count).toBe(0);
     expect(signals.attestations.count).toBe(0);
   });
+
+  it('keeps public badge payloads coarse', () => {
+    const buildTrustSignals = loadBuildTrustSignals();
+    const signals = buildTrustSignals(null, {}, {
+      compatibility: {
+        verified: false,
+        workEmailVerified: false,
+      },
+      slots: {
+        identity: { publicLabel: null },
+        workplace: { publicLabel: null },
+      },
+      publicBadges: [
+        {
+          key: 'identity_checked',
+          label: 'Identity checked',
+          state: 'verified',
+          meaning: 'should not be exposed',
+          doesNotMean: 'should not be exposed',
+        },
+      ],
+      activeIssues: [],
+    } as any);
+
+    expect(signals.badges).toEqual([
+      {
+        key: 'identity_checked',
+        label: 'Identity checked',
+        state: 'verified',
+      },
+    ]);
+  });
 });

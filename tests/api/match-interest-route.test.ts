@@ -5,6 +5,7 @@ import { POST } from '@/app/api/core/matching/interest/route';
 import { db } from '@/db';
 import { requireApiAuthContext, requireAuth } from '@/lib/auth';
 import { getIndividualReadinessState } from '@/lib/readiness/individual-state';
+import { checkVerificationGates } from '@/lib/verification/gates';
 
 vi.mock('@/lib/auth', () => ({
   requireApiAuthContext: vi.fn(),
@@ -16,10 +17,10 @@ vi.mock('@/db', () => ({
     query: {
       assignments: { findFirst: vi.fn() },
       organizationMembers: { findFirst: vi.fn(), findMany: vi.fn() },
+      organizations: { findFirst: vi.fn() },
       conversations: { findFirst: vi.fn() },
       profiles: { findFirst: vi.fn() },
       skills: { findMany: vi.fn() },
-      skillProofs: { findMany: vi.fn() },
     },
     transaction: vi.fn(),
     select: vi.fn(),
@@ -30,6 +31,7 @@ vi.mock('@/db', () => ({
 vi.mock('@/lib/analytics/events', () => ({
   emitAnalyticsEventAsync: vi.fn(),
   emitMatchActioned: vi.fn(),
+  emitFirstQualifiedIntroAsync: vi.fn(),
 }));
 
 vi.mock('@/lib/notifications', () => ({
@@ -46,6 +48,17 @@ vi.mock('@/lib/log', () => ({
 
 vi.mock('@/lib/readiness/individual-state', () => ({
   getIndividualReadinessState: vi.fn(),
+}));
+
+vi.mock('@/lib/verification/gates', () => ({
+  checkVerificationGates: vi.fn(),
+}));
+
+vi.mock('@/lib/proofs/canonical-pack', () => ({
+  listCanonicalProofPackAggregatesForOwner: vi.fn().mockResolvedValue([]),
+  summarizeCanonicalProofOwnerAggregates: vi.fn().mockReturnValue({
+    subjectSummaries: [],
+  }),
 }));
 
 vi.mock('@/lib/workflow/service', () => ({
@@ -108,7 +121,18 @@ describe('match interest route', () => {
       },
     });
     (db.query.skills.findMany as any).mockResolvedValue([]);
-    (db.query.skillProofs.findMany as any).mockResolvedValue([]);
+    (db.query.organizations.findFirst as any).mockResolvedValue({
+      id: orgId,
+      trustStatus: 'platform_reviewed',
+      orgTrustTier: 'reviewed',
+      verified: true,
+    });
+    (checkVerificationGates as any).mockResolvedValue({
+      passed: true,
+      unmetGates: [],
+      userVerifications: [],
+      canIntroduce: true,
+    });
     (requireApiAuthContext as any).mockImplementation(async () => {
       const user = await (requireAuth as any)();
       return user ? { user, supabase: {} } : null;
@@ -187,7 +211,7 @@ describe('match interest route', () => {
     expect(payload.copy.title).toContain('You can keep browsing');
   });
 
-  it('creates conversation when candidate interest meets existing org interest', async () => {
+  it('keeps mutual interest pending until org intro approval', async () => {
     (requireAuth as any).mockResolvedValue({ id: candidateId });
     (db.query.assignments.findFirst as any).mockResolvedValue({ id: assignmentId, orgId });
     (db.query.conversations.findFirst as any).mockResolvedValue(null);
@@ -213,14 +237,23 @@ describe('match interest route', () => {
       })
     );
 
-    const selectLimit = vi.fn().mockResolvedValue([]);
-    const selectWhere = vi.fn().mockReturnValue({ limit: selectLimit });
-    const selectFrom = vi.fn().mockReturnValue({ where: selectWhere });
+    const selectMatchLimit = vi.fn().mockResolvedValue([
+      {
+        id: 'match-1',
+        assignmentId,
+        profileId: candidateId,
+        score: 0.87,
+        fairnessStatus: 'pass',
+        reviewStage: 'shortlisted',
+        revealScope: 'shortlist_identity',
+        operationalFallbackMode: null,
+        vector: { subscores: { purpose_alignment: 0.81 } },
+      },
+    ]);
+    const selectWhere = vi.fn().mockReturnValue({ limit: selectMatchLimit });
+    const selectLeftJoin = vi.fn().mockReturnValue({ where: selectWhere });
+    const selectFrom = vi.fn().mockReturnValue({ leftJoin: selectLeftJoin });
     (db.select as any).mockReturnValue({ from: selectFrom });
-
-    const insertReturning = vi.fn().mockResolvedValue([{ id: 'conv-1' }]);
-    const insertValues = vi.fn().mockReturnValue({ returning: insertReturning });
-    (db.insert as any).mockReturnValue({ values: insertValues });
 
     const req = new NextRequest('http://localhost/api/match/interest', {
       method: 'POST',
@@ -231,8 +264,12 @@ describe('match interest route', () => {
     const payload = await res.json();
 
     expect(res.status).toBe(200);
-    expect(payload.revealed).toBe(true);
-    expect(payload.conversationId).toBe('conv-1');
+    expect(payload.revealed).toBe(false);
+    expect(payload.mutual).toBe(true);
+    expect(payload.requiresIntroApproval).toBe(true);
+    expect(payload.introApproved).toBe(false);
+    expect(payload.introWorkflowId).toBe('intro-1');
+    expect(payload.matchId).toBe('match-1');
     expect(txInsertValues).toHaveBeenCalledWith({
       actorProfileId: candidateId,
       assignmentId,
@@ -241,5 +278,54 @@ describe('match interest route', () => {
     expect(txOnConflictDoNothing).toHaveBeenCalledWith(
       expect.objectContaining({ target: expect.any(Array) })
     );
+  });
+
+  it('blocks intro when required verification gates are not met', async () => {
+    (requireAuth as any).mockResolvedValue({ id: candidateId });
+    (db.query.assignments.findFirst as any).mockResolvedValue({ id: assignmentId, orgId });
+    (checkVerificationGates as any).mockResolvedValue({
+      passed: false,
+      unmetGates: [{ type: 'identity', required: true }],
+      userVerifications: [{ type: 'identity', verified: false }],
+      canIntroduce: false,
+      blockingMessage: 'Verification gates are not satisfied for this assignment.',
+    });
+
+    const req = new NextRequest('http://localhost/api/match/interest', {
+      method: 'POST',
+      body: JSON.stringify({ assignmentId }),
+    });
+
+    const res = await POST(req);
+    const payload = await res.json();
+
+    expect(res.status).toBe(409);
+    expect(payload.error).toBe('INTRO_VERIFICATION_GATE_BLOCKED');
+    expect(payload.unmetGates).toEqual(
+      expect.arrayContaining([expect.objectContaining({ type: 'identity' })])
+    );
+  });
+
+  it('blocks intro when the organization is restricted', async () => {
+    (requireAuth as any).mockResolvedValue({ id: candidateId });
+    (db.query.assignments.findFirst as any).mockResolvedValue({ id: assignmentId, orgId });
+    (db.query.organizations.findFirst as any).mockResolvedValue({
+      id: orgId,
+      trustStatus: 'unverified',
+      orgTrustTier: 'restricted',
+      verified: false,
+    });
+
+    const req = new NextRequest('http://localhost/api/match/interest', {
+      method: 'POST',
+      body: JSON.stringify({ assignmentId }),
+    });
+
+    const res = await POST(req);
+    const payload = await res.json();
+
+    expect(res.status).toBe(403);
+    expect(payload.error).toBe('INTRO_BLOCKED_BY_POLICY');
+    expect(payload.reasonCodes).toContain('org_trust_restricted');
   });
 });

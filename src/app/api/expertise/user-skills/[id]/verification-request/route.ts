@@ -223,6 +223,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       expiresAt,
       singleUse: true,
       maxUses: 1,
+      scopeKey: `skill_verification:${skillId}:${normalizedVerifierEmail}`,
+      revokePriorActiveTokensForScope: true,
       metadata: {
         verifierSource: validated.verifierSource,
         skillId,

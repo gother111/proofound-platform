@@ -3,15 +3,13 @@ import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 import { emitSkillProofAddedAsync } from '@/lib/analytics/events';
 import { MAX_PROOFS_PER_SKILL } from '@/lib/proofs/constants';
-import { db } from '@/db';
-import { proofArtifacts } from '@/db/schema';
 import {
-  CANONICAL_PROOFS_READ_ENABLED,
   CANONICAL_PROOFS_WRITE_ENABLED,
-  mapCanonicalProofRowToLegacySkillProof,
   upsertCanonicalProofArtifactFromSkillProof,
 } from '@/lib/canonical/repository';
-import { inArray } from 'drizzle-orm';
+import { attachUploadedFile } from '@/lib/uploads/lifecycle';
+import { revalidatePublicPortfolioByProfileId } from '@/lib/portfolio/public-invalidation';
+import { listCanonicalSkillProofRowsForOwnerSkill } from '@/lib/proofs/canonical-pack';
 
 function deriveProofTitleFromUrl(rawUrl: string): string {
   try {
@@ -46,7 +44,7 @@ const CreateProofSchema = z
     title: z.string().trim().optional(),
     description: z.string().optional(),
     url: z.string().url().optional().or(z.literal('')),
-    filePath: z.string().trim().optional().or(z.literal('')),
+    uploadedFileId: z.string().uuid().optional(),
     issuedDate: z.string().optional(),
     expiresDate: z.string().optional(),
     metadata: z.record(z.any()).optional(),
@@ -54,12 +52,12 @@ const CreateProofSchema = z
   .superRefine((data, ctx) => {
     const hasTitle = Boolean(data.title?.trim());
     const hasUrl = Boolean(data.url);
-    const hasFilePath = Boolean(data.filePath?.trim());
+    const hasUploadedFile = Boolean(data.uploadedFileId);
 
-    if (!hasTitle && !hasUrl && !hasFilePath) {
+    if (!hasTitle && !hasUrl && !hasUploadedFile) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Title, URL, or uploaded file is required',
+        message: 'Title, URL, or uploaded file id is required',
         path: ['title'],
       });
     }
@@ -94,10 +92,29 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     // Validate input
     const validated = CreateProofSchema.parse(body);
+    const attachedUpload = validated.uploadedFileId
+      ? await attachUploadedFile(validated.uploadedFileId, user.id, 'skill_proof', skillId)
+      : null;
+
+    if (validated.uploadedFileId && !attachedUpload) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          message: 'Uploaded file is still quarantined or failed checks',
+        },
+        { status: 409 }
+      );
+    }
+
+    const resolvedFilePath =
+      attachedUpload?.quarantine_path ||
+      attachedUpload?.durable_path ||
+      attachedUpload?.public_path ||
+      null;
     const proofTitle =
       validated.title?.trim() ||
       (validated.url ? deriveProofTitleFromUrl(validated.url) : '') ||
-      (validated.filePath ? deriveProofTitleFromFilePath(validated.filePath) : '') ||
+      (resolvedFilePath ? deriveProofTitleFromFilePath(resolvedFilePath) : '') ||
       'Proof Link';
 
     // Verify skill belongs to user
@@ -111,16 +128,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'Skill not found' }, { status: 404 });
     }
 
-    const { data: existingProofs, error: existingProofsError } = await supabase
-      .from('skill_proofs')
-      .select('id')
-      .eq('skill_id', skillId)
-      .eq('profile_id', user.id);
-
-    if (existingProofsError) {
-      console.error('Error checking proof limit:', existingProofsError);
-      return NextResponse.json({ error: 'Failed to validate proof limit' }, { status: 500 });
-    }
+    const existingProofs = await listCanonicalSkillProofRowsForOwnerSkill(user.id, skillId);
 
     if ((existingProofs || []).length >= MAX_PROOFS_PER_SKILL) {
       return NextResponse.json(
@@ -142,11 +150,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         title: proofTitle,
         description: validated.description?.trim() || null,
         url: validated.url || null,
-        file_path: validated.filePath || null,
+        file_path: resolvedFilePath,
         issued_date: validated.issuedDate || null,
         expires_date: validated.expiresDate || null,
         metadata: {
           visibility: 'match-only', // default privacy guardrail
+          uploadedFileId: validated.uploadedFileId ?? null,
           ...(validated.metadata || {}),
         },
       })
@@ -197,6 +206,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         console.error('Failed to sync readiness milestones after proof creation:', readinessError);
       });
 
+    await revalidatePublicPortfolioByProfileId(user.id);
+
     return NextResponse.json(
       {
         proof: {
@@ -244,44 +255,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Skill not found' }, { status: 404 });
     }
 
-    // Fetch proofs for this skill
-    const { data: proofs, error: proofsError } = await supabase
-      .from('skill_proofs')
-      .select('*')
-      .eq('skill_id', skillId)
-      .eq('profile_id', user.id)
-      .order('created_at', { ascending: false });
+    const proofs = await listCanonicalSkillProofRowsForOwnerSkill(user.id, skillId);
 
-    if (proofsError) {
-      console.error('Error fetching proofs:', proofsError);
-      return NextResponse.json({ error: 'Failed to fetch proofs' }, { status: 500 });
-    }
-
-    const proofRows = proofs || [];
-    const legacyIds = proofRows.map((proof) => proof.id).filter(Boolean);
-    const canonicalRows =
-      legacyIds.length > 0
-        ? await db
-            .select()
-            .from(proofArtifacts)
-            .where(inArray(proofArtifacts.legacySourceId, legacyIds))
-        : [];
-    const canonicalByLegacyId = new Map(canonicalRows.map((row) => [row.legacySourceId, row]));
-    const normalizedProofs = proofRows.map((proof) => {
-      const canonicalRow = canonicalByLegacyId.get(proof.id);
-      if (CANONICAL_PROOFS_READ_ENABLED && canonicalRow) {
-        return mapCanonicalProofRowToLegacySkillProof(canonicalRow);
-      }
-
-      return {
-        ...proof,
-        canonicalArtifactId: canonicalRow?.id ?? null,
-      };
-    });
-
-    return NextResponse.json({
-      proofs: normalizedProofs,
-    });
+    return NextResponse.json({ proofs });
   } catch (error) {
     console.error('Proof GET error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

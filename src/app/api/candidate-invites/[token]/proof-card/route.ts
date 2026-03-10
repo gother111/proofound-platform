@@ -8,13 +8,20 @@ import { getRows } from '@/lib/db/rows';
 import {
   CANDIDATE_INVITE_FLOW_TYPE,
   CANDIDATE_INVITE_STATUS,
-  hashCandidateInviteToken,
   isInviteExpired,
 } from '@/lib/candidate-invites';
 import { buildPublicProfileURL } from '@/lib/profile/snippet-generator';
 import { emitAnalyticsEventAsync } from '@/lib/analytics/events';
 import { createClient } from '@/lib/supabase/server';
-import { CAPABILITY_TOKEN_CLASSES, redeemCapabilityToken } from '@/lib/security/capability-tokens';
+import {
+  buildCandidateInvitePolicyError,
+  resolveCandidateInvitePolicyContext,
+} from '@/lib/candidate-invite-policy';
+import {
+  CAPABILITY_TOKEN_CLASSES,
+  inspectCapabilityToken,
+  redeemCapabilityToken,
+} from '@/lib/security/capability-tokens';
 import { upsertCanonicalProofCardSubmission } from '@/lib/canonical/submissions';
 
 export const dynamic = 'force-dynamic';
@@ -52,7 +59,21 @@ export async function POST(
     }
 
     const { token } = await params;
-    const tokenHash = hashCandidateInviteToken(token);
+    const inspectedInviteToken = await inspectCapabilityToken(token, {
+      tokenClass: CAPABILITY_TOKEN_CLASSES.CANDIDATE_INVITE_CLAIM,
+      actor: {
+        email: user.email ?? null,
+        profileId: user.id,
+        principalType: 'user_account',
+        ip: request.headers.get('x-forwarded-for'),
+        userAgent: request.headers.get('user-agent'),
+      },
+      metadata: { surface: 'candidate_invite.proof_card' },
+    });
+
+    if (!inspectedInviteToken.ok) {
+      return NextResponse.json({ error: 'Invite not found' }, { status: 404 });
+    }
     const body = await request.json();
     const parsed = submitProofCardSchema.safeParse(body);
 
@@ -76,7 +97,7 @@ export async function POST(
         conversationId: orgCandidateInvites.conversationId,
       })
       .from(orgCandidateInvites)
-      .where(eq(orgCandidateInvites.tokenHash, tokenHash))
+      .where(eq(orgCandidateInvites.capabilityTokenId, inspectedInviteToken.token.id))
       .limit(1);
 
     if (!invite || invite.status === CANDIDATE_INVITE_STATUS.REVOKED) {
@@ -105,6 +126,33 @@ export async function POST(
 
     if (!invite.claimedByProfileId || invite.claimedByProfileId !== user.id) {
       return NextResponse.json({ error: 'Invite must be claimed first.' }, { status: 403 });
+    }
+
+    const { assignment, policyEvaluation } = await resolveCandidateInvitePolicyContext(
+      invite.orgId,
+      invite.assignmentId
+    );
+
+    if (invite.assignmentId && !assignment) {
+      return NextResponse.json({ error: 'Assignment not found.' }, { status: 404 });
+    }
+
+    if (policyEvaluation.decision !== 'allow') {
+      return NextResponse.json(
+        {
+          error: buildCandidateInvitePolicyError(policyEvaluation.decision, invite.flowType),
+          code:
+            policyEvaluation.decision === 'blocked'
+              ? 'INVITE_PROOF_SUBMISSION_BLOCKED'
+              : 'INVITE_PROOF_SUBMISSION_ON_HOLD',
+          details: {
+            decision: policyEvaluation.decision,
+            orgTrustTier: policyEvaluation.orgTrustTier,
+            reasons: policyEvaluation.reasons.map((reason) => reason.code),
+          },
+        },
+        { status: policyEvaluation.decision === 'blocked' ? 403 : 409 }
+      );
     }
 
     if (

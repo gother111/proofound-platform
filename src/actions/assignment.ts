@@ -72,7 +72,7 @@ export type AssignmentData = z.infer<typeof AssignmentSchema>;
 
 export async function createAssignment(orgId: string, data: AssignmentData) {
   const user = await requireAuth();
-  await assertOrgRole(orgId, user.id, ['owner', 'admin', 'member']);
+  await assertOrgRole(orgId, user.id, ['org_owner', 'org_manager', 'org_reviewer']);
 
   const result = AssignmentSchema.safeParse(data);
   if (!result.success) {
@@ -146,7 +146,7 @@ export async function updateAssignment(
   data: Partial<AssignmentData>
 ) {
   const user = await requireAuth();
-  await assertOrgRole(orgId, user.id, ['owner', 'admin', 'member']);
+  await assertOrgRole(orgId, user.id, ['org_owner', 'org_manager', 'org_reviewer']);
 
   // We use partial schema for updates
   const result = AssignmentSchema.partial().safeParse(data);

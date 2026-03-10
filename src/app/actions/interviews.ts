@@ -324,7 +324,8 @@ export async function scheduleInterview(input: z.input<typeof ScheduleInterviewS
       hasBlockingInterview = Boolean(legacyExistingInterview);
     } else {
       hasBlockingInterview = (interviewsForMatch ?? []).some(
-        (interview: { status?: string | null }) => interview.status !== 'cancelled'
+        (interview: { status?: string | null }) =>
+          interview.status !== 'cancelled' && interview.status !== 'no_show'
       );
     }
 
@@ -410,7 +411,11 @@ export async function scheduleInterview(input: z.input<typeof ScheduleInterviewS
       }
 
       const { createGoogleMeet } = await import('@/lib/integrations/google-meet');
-      const participantSet = new Set<string>([match.profile_id, user.id, ...data.participantUserIds]);
+      const participantSet = new Set<string>([
+        match.profile_id,
+        user.id,
+        ...data.participantUserIds,
+      ]);
       const participantEmails: string[] = [];
 
       for (const participantId of participantSet) {

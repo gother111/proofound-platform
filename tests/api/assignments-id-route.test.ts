@@ -4,7 +4,7 @@ import { NextRequest } from 'next/server';
 import { DELETE, PUT } from '@/app/api/assignments/[id]/route';
 import { db } from '@/db';
 import { requireApiAuthContext, requireAuth } from '@/lib/auth';
-import { verifyAssignmentMutationAccess } from '@/lib/assignments/access';
+import { verifyExplicitAssignmentMutationAccess } from '@/lib/assignments/access';
 import { checkAndEmitAssignmentActivation } from '@/lib/assignments/activation';
 
 vi.mock('@/lib/auth', () => ({
@@ -14,7 +14,7 @@ vi.mock('@/lib/auth', () => ({
 
 vi.mock('@/lib/assignments/access', () => ({
   verifyAssignmentAccess: vi.fn(),
-  verifyAssignmentMutationAccess: vi.fn(),
+  verifyExplicitAssignmentMutationAccess: vi.fn(),
 }));
 
 vi.mock('@/lib/assignments/activation', () => ({
@@ -53,6 +53,7 @@ vi.mock('@/lib/log', () => ({
 }));
 
 const params = { params: Promise.resolve({ id: 'assignment-1' }) };
+const principalOrgId = '11111111-1111-4111-8111-111111111111';
 
 describe('assignment [id] mutation routes', () => {
   beforeEach(() => {
@@ -64,15 +65,18 @@ describe('assignment [id] mutation routes', () => {
     (requireAuth as any).mockResolvedValue({ id: 'user-1' });
   });
 
-  it('PUT returns 403 for member/viewer roles', async () => {
-    (verifyAssignmentMutationAccess as any).mockResolvedValue({
+  it('PUT returns 403 for reviewer role', async () => {
+    (verifyExplicitAssignmentMutationAccess as any).mockResolvedValue({
       status: 'insufficient_role',
-      role: 'member',
+      role: 'org_reviewer',
     });
 
     const req = new NextRequest('http://localhost/api/assignments/assignment-1', {
       method: 'PUT',
-      body: JSON.stringify({ role: 'Updated role' }),
+      body: JSON.stringify({
+        role: 'Updated role',
+        principalContext: { principalType: 'organization', orgId: principalOrgId },
+      }),
     });
 
     const res = await PUT(req, params);
@@ -80,24 +84,28 @@ describe('assignment [id] mutation routes', () => {
   });
 
   it('PUT returns 404 for non-members', async () => {
-    (verifyAssignmentMutationAccess as any).mockResolvedValue({
+    (verifyExplicitAssignmentMutationAccess as any).mockResolvedValue({
       status: 'membership_not_found',
     });
 
     const req = new NextRequest('http://localhost/api/assignments/assignment-1', {
       method: 'PUT',
-      body: JSON.stringify({ role: 'Updated role' }),
+      body: JSON.stringify({
+        role: 'Updated role',
+        principalContext: { principalType: 'organization', orgId: principalOrgId },
+      }),
     });
 
     const res = await PUT(req, params);
     expect(res.status).toBe(404);
   });
 
-  it('PUT updates assignment for owner/admin', async () => {
-    (verifyAssignmentMutationAccess as any).mockResolvedValue({
+  it('PUT updates assignment for org owner', async () => {
+    (verifyExplicitAssignmentMutationAccess as any).mockResolvedValue({
       status: 'ok',
-      role: 'owner',
-      orgId: 'org-1',
+      role: 'org_owner',
+      orgId: principalOrgId,
+      membershipId: 'membership-1',
     });
     const returningMock = vi.fn().mockResolvedValue([
       {
@@ -114,7 +122,11 @@ describe('assignment [id] mutation routes', () => {
 
     const req = new NextRequest('http://localhost/api/assignments/assignment-1', {
       method: 'PUT',
-      body: JSON.stringify({ role: 'Updated role', status: 'active' }),
+      body: JSON.stringify({
+        role: 'Updated role',
+        status: 'active',
+        principalContext: { principalType: 'organization', orgId: principalOrgId },
+      }),
     });
 
     const res = await PUT(req, params);
@@ -125,14 +137,17 @@ describe('assignment [id] mutation routes', () => {
     expect(checkAndEmitAssignmentActivation).toHaveBeenCalledTimes(1);
   });
 
-  it('DELETE returns 403 for member/viewer roles', async () => {
-    (verifyAssignmentMutationAccess as any).mockResolvedValue({
+  it('DELETE returns 403 for reviewer role', async () => {
+    (verifyExplicitAssignmentMutationAccess as any).mockResolvedValue({
       status: 'insufficient_role',
-      role: 'viewer',
+      role: 'org_reviewer',
     });
 
     const req = new NextRequest('http://localhost/api/assignments/assignment-1', {
       method: 'DELETE',
+      body: JSON.stringify({
+        principalContext: { principalType: 'organization', orgId: principalOrgId },
+      }),
     });
 
     const res = await DELETE(req, params);
@@ -140,29 +155,36 @@ describe('assignment [id] mutation routes', () => {
   });
 
   it('DELETE returns 404 for non-members', async () => {
-    (verifyAssignmentMutationAccess as any).mockResolvedValue({
+    (verifyExplicitAssignmentMutationAccess as any).mockResolvedValue({
       status: 'membership_not_found',
     });
 
     const req = new NextRequest('http://localhost/api/assignments/assignment-1', {
       method: 'DELETE',
+      body: JSON.stringify({
+        principalContext: { principalType: 'organization', orgId: principalOrgId },
+      }),
     });
 
     const res = await DELETE(req, params);
     expect(res.status).toBe(404);
   });
 
-  it('DELETE succeeds for owner/admin', async () => {
-    (verifyAssignmentMutationAccess as any).mockResolvedValue({
+  it('DELETE succeeds for org manager', async () => {
+    (verifyExplicitAssignmentMutationAccess as any).mockResolvedValue({
       status: 'ok',
-      role: 'admin',
-      orgId: 'org-1',
+      role: 'org_manager',
+      orgId: principalOrgId,
+      membershipId: 'membership-1',
     });
     const whereMock = vi.fn().mockResolvedValue(undefined);
     (db.delete as any).mockReturnValue({ where: whereMock });
 
     const req = new NextRequest('http://localhost/api/assignments/assignment-1', {
       method: 'DELETE',
+      body: JSON.stringify({
+        principalContext: { principalType: 'organization', orgId: principalOrgId },
+      }),
     });
 
     const res = await DELETE(req, params);

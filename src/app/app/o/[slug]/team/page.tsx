@@ -1,29 +1,20 @@
-import OrganizationMembersPage from '../members/page';
-import Link from 'next/link';
-import { AppSurface } from '@/components/ui/v2/AppSurface';
+import { OrgScopeNotice } from '@/components/organization/OrgScopeNotice';
+import { getOrgSurfaceFallbackHref } from '@/lib/org/mvp-surface-policy';
 
 export const dynamic = 'force-dynamic';
 
-export default async function OrgTeamAliasPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function OrgTeamPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+
   return (
-    <AppSurface>
-      <div className="space-y-4">
-        <header className="px-1">
-          <nav className="text-xs text-neutral-dark-500 mb-2">
-            <Link href={`/app/o/${slug}/home`} className="hover:underline">
-              Organization
-            </Link>{' '}
-            / Team
-          </nav>
-          <h1 className="text-2xl font-semibold text-primary-500">Team</h1>
-          <p className="text-sm text-neutral-dark-600">
-            Team administration is provided through the members workspace to keep role permissions
-            in one place.
-          </p>
-        </header>
-        <OrganizationMembersPage params={params} />
-      </div>
-    </AppSurface>
+    <OrgScopeNotice
+      title="Broad team management is gated for launch"
+      description="Launch access is intentionally lean: owner, manager, and reviewer roles only. Full team administration stays out of the corridor."
+      slug={slug}
+      primaryHref={getOrgSurfaceFallbackHref(slug, 'team')}
+      primaryLabel="Back to overview"
+      secondaryHref={`/app/o/${slug}/matching`}
+      secondaryLabel="Open review queue"
+    />
   );
 }

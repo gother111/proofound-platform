@@ -43,6 +43,8 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       PII_HASH_SALT: ${{ secrets.PII_HASH_SALT || 'ci-playwright-test-salt' }}
+      CRON_SECRET: ci-launch-cron-secret
+      SUS_STUDY_COMPLETE: "true"
       ZOOM_CLIENT_ID: ${{ secrets.ZOOM_CLIENT_ID }}
       ZOOM_CLIENT_SECRET: ${{ secrets.ZOOM_CLIENT_SECRET }}
       ZOOM_REDIRECT_URI: ${{ secrets.ZOOM_REDIRECT_URI }}
@@ -108,8 +110,37 @@ jobs:
       - name: Run unit tests
         run: npm run test
 
+      - name: Run launch smoke contract
+        run: npm run test:launch:smoke
+
       - name: Build application
         run: npm run build
+
+      - name: Start application for go/no-go
+        run: |
+          npm run start > /tmp/proofound-go-no-go.log 2>&1 &
+          echo $! > /tmp/proofound-go-no-go.pid
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://localhost:3000/api/health >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "App failed to start for go/no-go"
+          cat /tmp/proofound-go-no-go.log
+          exit 1
+
+      - name: Run go/no-go gate
+        run: npm run go:no-go
+        env:
+          BASE_URL: http://localhost:3000
+
+      - name: Stop go/no-go application
+        if: always()
+        run: |
+          if [ -f /tmp/proofound-go-no-go.pid ]; then
+            kill $(cat /tmp/proofound-go-no-go.pid) || true
+          fi
 
       - name: Run auth E2E real contract
         run: npm run test:e2e:auth:real
@@ -129,4 +160,6 @@ jobs:
           path: |
             playwright-report/
             test-results/
+            .artifacts/launch-smoke-report.json
+            /tmp/proofound-go-no-go.log
           retention-days: 14

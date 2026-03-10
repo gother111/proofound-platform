@@ -70,7 +70,7 @@ describe('organizations assignments route', () => {
     expect(response.status).toBe(403);
   });
 
-  it('returns 403 when caller role is member/viewer', async () => {
+  it('returns 403 when caller role is org reviewer', async () => {
     vi.mocked(createClient).mockResolvedValue({
       auth: {
         getUser: vi.fn().mockResolvedValue({
@@ -79,7 +79,7 @@ describe('organizations assignments route', () => {
         }),
       },
     } as any);
-    (db.query.organizationMembers.findFirst as any).mockResolvedValue({ role: 'member' });
+    (db.query.organizationMembers.findFirst as any).mockResolvedValue({ role: 'org_reviewer' });
 
     const response = await GET(
       new NextRequest('http://localhost/api/organizations/org-1/assignments'),
@@ -89,7 +89,7 @@ describe('organizations assignments route', () => {
     expect(response.status).toBe(403);
   });
 
-  it('returns assignments for owner/admin members', async () => {
+  it('returns assignments for org manager members', async () => {
     vi.mocked(createClient).mockResolvedValue({
       auth: {
         getUser: vi.fn().mockResolvedValue({
@@ -98,7 +98,7 @@ describe('organizations assignments route', () => {
         }),
       },
     } as any);
-    (db.query.organizationMembers.findFirst as any).mockResolvedValue({ role: 'owner' });
+    (db.query.organizationMembers.findFirst as any).mockResolvedValue({ role: 'org_manager' });
     (db.query.assignmentInvitations.findMany as any).mockResolvedValue([
       { id: 'invite-1', orgId: 'org-1' },
     ]);

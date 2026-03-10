@@ -4,7 +4,6 @@ import { nanoid } from 'nanoid';
 
 import { db } from '@/db';
 import {
-  assignments,
   conversations,
   matches,
   orgCandidateInvites,
@@ -12,13 +11,22 @@ import {
   profiles,
 } from '@/db/schema';
 import {
+  CAPABILITY_TOKEN_CLASSES,
+  getCapabilityRedeemSessionCookieName,
+  redeemCapabilityToken,
+} from '@/lib/security/capability-tokens';
+import {
   CANDIDATE_INVITE_FLOW_TYPE,
   CANDIDATE_INVITE_STATUS,
-  hashCandidateInviteToken,
   isInviteExpired,
   normalizeInviteEmail,
 } from '@/lib/candidate-invites';
 import { emitAnalyticsEventAsync } from '@/lib/analytics/events';
+import {
+  buildCandidateInvitePolicyError,
+  resolveCandidateInvitePolicyContext,
+} from '@/lib/candidate-invite-policy';
+import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
 import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -35,14 +43,59 @@ export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ token: string }> }
 ) {
+  const trace = startLaunchTrace({
+    flow: 'invite_redemption',
+    requestId: _request.headers.get('x-request-id'),
+    actorType: 'anonymous',
+  });
+
   try {
     const user = await getAuthenticatedUser();
     if (!user) {
+      emitLaunchTrace(trace, {
+        outcome: 'rejected',
+        state: 'invite_claim_unauthorized',
+        failureClass: 'unauthorized',
+      });
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    trace.actorId = user.id;
+    trace.actorType = 'user_account';
 
     const { token } = await params;
-    const tokenHash = hashCandidateInviteToken(token);
+    const redeemSessionNonce =
+      _request.cookies.get(
+        getCapabilityRedeemSessionCookieName(CAPABILITY_TOKEN_CLASSES.CANDIDATE_INVITE_CLAIM)
+      )?.value ?? null;
+    const redeemed = await redeemCapabilityToken(token, {
+      tokenClass: CAPABILITY_TOKEN_CLASSES.CANDIDATE_INVITE_CLAIM,
+      actor: {
+        email: user.email ?? null,
+        profileId: user.id,
+        principalType: 'user_account',
+        ip: _request.headers.get('x-forwarded-for'),
+        userAgent: _request.headers.get('user-agent'),
+      },
+      consume: true,
+      requireRedeemSessionNonce: true,
+      redeemSessionNonce,
+      metadata: { surface: 'candidate_invite.claim' },
+    });
+
+    if (!redeemed.ok) {
+      emitLaunchTrace(trace, {
+        outcome: 'rejected',
+        state: 'invite_claim_token_rejected',
+        failureClass: redeemed.reason,
+      });
+      const status =
+        redeemed.reason === 'replayed'
+          ? 409
+          : redeemed.reason === 'expired' || redeemed.reason === 'revoked'
+            ? 410
+            : 404;
+      return NextResponse.json({ error: 'Invite not found' }, { status });
+    }
 
     const [invite] = await db
       .select({
@@ -61,12 +114,20 @@ export async function POST(
         conversationId: orgCandidateInvites.conversationId,
       })
       .from(orgCandidateInvites)
-      .where(eq(orgCandidateInvites.tokenHash, tokenHash))
+      .where(eq(orgCandidateInvites.capabilityTokenId, redeemed.token.id))
       .limit(1);
 
     if (!invite || invite.status === CANDIDATE_INVITE_STATUS.REVOKED) {
+      emitLaunchTrace(trace, {
+        outcome: 'rejected',
+        state: 'invite_claim_not_found',
+        failureClass: 'invite_not_found',
+      });
       return NextResponse.json({ error: 'Invite not found' }, { status: 404 });
     }
+    trace.objectRefs.inviteId = invite.id;
+    trace.objectRefs.assignmentId = invite.assignmentId ?? null;
+    trace.objectRefs.orgId = invite.orgId;
 
     if (isInviteExpired(invite.expiresAt)) {
       if (invite.status !== CANDIDATE_INVITE_STATUS.EXPIRED) {
@@ -87,12 +148,7 @@ export async function POST(
 
     const userEmail = normalizeInviteEmail(user.email ?? '');
     if (!userEmail || userEmail !== invite.inviteeEmailNormalized) {
-      return NextResponse.json(
-        {
-          error: 'You must sign in with the same email address that received this invite.',
-        },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Invite not found' }, { status: 404 });
     }
 
     const [profile] = await db
@@ -116,9 +172,33 @@ export async function POST(
     }
 
     if (invite.claimedByProfileId && invite.claimedByProfileId !== user.id) {
+      return NextResponse.json({ error: 'Invite not found' }, { status: 404 });
+    }
+
+    const { assignment, policyEvaluation } = await resolveCandidateInvitePolicyContext(
+      invite.orgId,
+      invite.assignmentId
+    );
+
+    if (invite.assignmentId && !assignment) {
+      return NextResponse.json({ error: 'Assignment not found.' }, { status: 404 });
+    }
+
+    if (policyEvaluation.decision !== 'allow') {
       return NextResponse.json(
-        { error: 'Invite already claimed by another user.' },
-        { status: 409 }
+        {
+          error: buildCandidateInvitePolicyError(policyEvaluation.decision, invite.flowType),
+          code:
+            policyEvaluation.decision === 'blocked'
+              ? 'INVITE_CLAIM_BLOCKED'
+              : 'INVITE_CLAIM_ON_HOLD',
+          details: {
+            decision: policyEvaluation.decision,
+            orgTrustTier: policyEvaluation.orgTrustTier,
+            reasons: policyEvaluation.reasons.map((reason) => reason.code),
+          },
+        },
+        { status: policyEvaluation.decision === 'blocked' ? 403 : 409 }
       );
     }
 
@@ -151,6 +231,11 @@ export async function POST(
         entityId: invite.id,
       });
 
+      emitLaunchTrace(trace, {
+        outcome: 'success',
+        state: 'invite_redeemed',
+      });
+
       return NextResponse.json({
         success: true,
         status: CANDIDATE_INVITE_STATUS.CLAIMED,
@@ -180,19 +265,6 @@ export async function POST(
     }
 
     const result = await db.transaction(async (tx) => {
-      const [assignment] = await tx
-        .select({
-          id: assignments.id,
-          orgId: assignments.orgId,
-        })
-        .from(assignments)
-        .where(and(eq(assignments.id, assignmentId), eq(assignments.orgId, invite.orgId)))
-        .limit(1);
-
-      if (!assignment) {
-        throw new Error('ASSIGNMENT_NOT_FOUND');
-      }
-
       const orgLeads = await tx
         .select({
           userId: organizationMembers.userId,
@@ -330,6 +402,14 @@ export async function POST(
       },
     });
 
+    emitLaunchTrace(trace, {
+      outcome: 'success',
+      state: 'invite_redeemed',
+      details: {
+        flowType: CANDIDATE_INVITE_FLOW_TYPE.TEST_MATCH,
+      },
+    });
+
     return NextResponse.json({
       success: true,
       status: CANDIDATE_INVITE_STATUS.CLAIMED,
@@ -349,6 +429,11 @@ export async function POST(
     }
 
     console.error('Failed to claim candidate invite:', error);
+    emitLaunchTrace(trace, {
+      outcome: 'failure',
+      state: 'invite_claim_failed',
+      failureClass: error instanceof Error ? error.message : 'invite_claim_failed',
+    });
     return NextResponse.json({ error: 'Failed to claim invite' }, { status: 500 });
   }
 }

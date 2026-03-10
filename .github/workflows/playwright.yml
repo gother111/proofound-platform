@@ -16,6 +16,8 @@ jobs:
       run: npm ci
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
+    - name: Run launch smoke contract
+      run: npm run test:launch:smoke
     - name: Run Playwright smoke contracts (auth + landing)
       run: |
         # Fall back to local Postgres when the secret is not provided

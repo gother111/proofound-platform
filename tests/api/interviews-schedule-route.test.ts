@@ -406,4 +406,26 @@ describe('POST /api/interviews/schedule', () => {
       })
     );
   });
+
+  it('allows recovery scheduling after a recorded no-show by creating a new interview', async () => {
+    const { supabase } = createSupabaseMock({
+      interviewsForMatch: [{ id: 'interview-no-show', status: 'no_show' }],
+    });
+    vi.mocked(createClient).mockResolvedValue(supabase);
+
+    const response = await POST(
+      createScheduleRequest({
+        platform: 'manual',
+        manualMeetingLink: 'https://example.com/manual-room',
+        manualMeetingProvider: 'google_meet',
+      })
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual(
+      expect.objectContaining({
+        success: true,
+      })
+    );
+  });
 });

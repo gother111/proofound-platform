@@ -16,6 +16,7 @@ export type ProofDraft = {
   description: string;
   url: string;
   filePath: string;
+  uploadedFileId?: string;
   issuedDate: string;
   expiresDate: string;
 };

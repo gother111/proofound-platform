@@ -70,6 +70,9 @@ vi.mock('@/db', () => ({
       skills: {
         findMany: vi.fn(async () => []),
       },
+      consentObligations: {
+        findFirst: vi.fn(async () => null),
+      },
       assignmentExpertiseMatrix: {
         findMany: vi.fn(async () => []),
       },

@@ -10,24 +10,26 @@ describe('validateFile proof constraints', () => {
   });
 
   it('rejects unsupported proof file types', () => {
-    const file = new File(['proof'], 'evidence.webp', { type: 'image/webp' });
+    const file = new File(['proof'], 'evidence.docx', {
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    });
     const validation = validateFile(file, 'document', { category: 'proof' });
     expect(validation.valid).toBe(false);
-    expect(validation.error).toContain('PNG, JPG, JPEG, HEIF, HEIC, PDF');
+    expect(validation.error).toContain('PDF, PNG, JPG, JPEG, WebP, TXT, or Markdown');
   });
 
   it('rejects oversized proof files', () => {
-    const oversized = new File([new Uint8Array(10 * 1024 * 1024 + 1)], 'evidence.pdf', {
+    const oversized = new File([new Uint8Array(25 * 1024 * 1024 + 1)], 'evidence.pdf', {
       type: 'application/pdf',
     });
     const validation = validateFile(oversized, 'document', { category: 'proof' });
     expect(validation.valid).toBe(false);
-    expect(validation.error).toContain('10MB');
+    expect(validation.error).toContain('25MB');
   });
 
-  it('keeps non-proof document uploads compatible with doc/docx', () => {
-    const docFile = new File(['doc'], 'artifact.docx', {
-      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  it('accepts markdown for lower-trust evidence links', () => {
+    const docFile = new File(['# note'], 'artifact.md', {
+      type: 'text/markdown',
     });
     const validation = validateFile(docFile, 'document', { category: 'artifact' });
     expect(validation.valid).toBe(true);

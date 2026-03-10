@@ -4,72 +4,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { assignmentOutcomes, assignments, organizations } from '@/db/schema';
 import { checkAndEmitAssignmentActivation } from '@/lib/assignments/activation';
-import { verifyAssignmentMutationAccess } from '@/lib/assignments/access';
+import { verifyExplicitAssignmentMutationAccess } from '@/lib/assignments/access';
 import { emitAssignmentPublishSucceeded } from '@/lib/analytics/events';
+import { validateAssignmentPublishReadiness } from '@/lib/assignments/publish-validation';
 import { requireApiAuthContext } from '@/lib/auth';
+import { ensureOrganizationPrincipal } from '@/lib/authz';
 import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
 import { isFeatureEnabled } from '@/lib/feature-flags/server';
 import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
-
-type PublishValidationResult = {
-  canPublish: boolean;
-  missing: string[];
-};
-
-function validatePublishReadiness(
-  assignment: typeof assignments.$inferSelect,
-  outcomesCount: number,
-  assignmentBasicModeEnabled: boolean
-): PublishValidationResult {
-  const builderMode =
-    assignmentBasicModeEnabled && assignment.builderMode === 'basic' ? 'basic' : 'advanced';
-  const enforceAdvancedWeights =
-    assignment.builderMode === 'advanced' || !assignmentBasicModeEnabled;
-  const missing: string[] = [];
-
-  if (!assignment.role?.trim()) missing.push('role');
-  if (!assignment.businessValue?.trim()) missing.push('businessValue');
-
-  const mustHaveSkills = Array.isArray(assignment.mustHaveSkills) ? assignment.mustHaveSkills : [];
-  const minimumSkills = builderMode === 'basic' ? 3 : 1;
-  if (mustHaveSkills.length < minimumSkills) missing.push('mustHaveSkills');
-
-  if (!assignment.locationMode && !assignment.city && !assignment.country) {
-    missing.push('location');
-  }
-
-  if (
-    assignment.compMin == null ||
-    assignment.compMax == null ||
-    assignment.compMax <= assignment.compMin
-  ) {
-    missing.push('compensation');
-  }
-
-  if (outcomesCount === 0) missing.push('outcomes');
-
-  if (builderMode === 'advanced' && enforceAdvancedWeights) {
-    const weights = assignment.weights as Record<string, unknown> | null;
-    const mission = typeof weights?.mission === 'number' ? weights.mission : null;
-    const expertise = typeof weights?.expertise === 'number' ? weights.expertise : null;
-    const workMode = typeof weights?.workMode === 'number' ? weights.workMode : null;
-    if (
-      mission === null ||
-      expertise === null ||
-      workMode === null ||
-      mission + expertise + workMode !== 100
-    ) {
-      missing.push('weights');
-    }
-  }
-
-  return {
-    canPublish: missing.length === 0,
-    missing,
-  };
-}
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   let assignmentId: string | undefined;
@@ -83,13 +27,30 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const resolved = await params;
     assignmentId = resolved.id;
 
-    const access = await verifyAssignmentMutationAccess(user.id, assignmentId);
+    let body: Record<string, unknown> = {};
+    try {
+      body = await request.json();
+    } catch {
+      body = {};
+    }
+
+    const principal = ensureOrganizationPrincipal(body.principalContext);
+    if (!principal.ok) {
+      return NextResponse.json({ error: principal.error }, { status: 403 });
+    }
+
+    const access = await verifyExplicitAssignmentMutationAccess(user.id, assignmentId, {
+      orgId: principal.context.orgId,
+    });
     if (access.status === 'assignment_not_found' || access.status === 'membership_not_found') {
       return NextResponse.json({ error: 'Assignment not found or access denied' }, { status: 404 });
     }
     if (access.status === 'insufficient_role') {
       return NextResponse.json(
-        { error: 'Forbidden. Owner or admin role is required to publish assignments.' },
+        {
+          error:
+            'Forbidden. Organization manager or owner role is required to publish assignments.',
+        },
         { status: 403 }
       );
     }
@@ -102,15 +63,20 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'Assignment not found' }, { status: 404 });
     }
 
-    const orgSlug = request.nextUrl.searchParams.get('orgSlug');
-    if (orgSlug) {
-      const org = await db.query.organizations.findFirst({
-        where: eq(organizations.slug, orgSlug),
-      });
+    const org = await db.query.organizations.findFirst({
+      where: eq(organizations.id, assignment.orgId),
+      columns: {
+        id: true,
+        slug: true,
+        trustStatus: true,
+        orgTrustTier: true,
+        verified: true,
+      },
+    });
 
-      if (!org || org.id !== assignment.orgId) {
-        return NextResponse.json({ error: 'Organization context mismatch' }, { status: 403 });
-      }
+    const orgSlug = request.nextUrl.searchParams.get('orgSlug');
+    if (orgSlug && (!org || org.slug !== orgSlug)) {
+      return NextResponse.json({ error: 'Organization context mismatch' }, { status: 403 });
     }
 
     const outcomes = await db.query.assignmentOutcomes.findMany({
@@ -124,19 +90,53 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       true
     );
 
-    const readiness = validatePublishReadiness(
+    const readiness = validateAssignmentPublishReadiness({
       assignment,
-      outcomes.length,
-      assignmentBasicModeEnabled
-    );
+      outcomesCount: outcomes.length,
+      assignmentBasicModeEnabled,
+      organization: org ?? null,
+    });
     if (!readiness.canPublish) {
+      const hasPolicyBlock = readiness.blocks.some((block) =>
+        [
+          'org_trust_restricted',
+          'assignment_policy_blocked',
+          'unpaid_commercial_assignment_blocked',
+          'sponsor_commercial_path_required',
+          'restricted_jurisdiction',
+          'cross_border_restricted',
+        ].includes(block.blockCode)
+      );
+      const hasPolicyHold =
+        !hasPolicyBlock &&
+        readiness.blocks.some((block) =>
+          [
+            'assignment_policy_hold',
+            'alternate_terms_record_required',
+            'sensitive_domain_review_required',
+            'cross_border_review_required',
+          ].includes(block.blockCode)
+        );
+
       return NextResponse.json(
         {
-          error: 'Assignment is not ready to publish',
-          message: 'Complete all required sections before publishing.',
-          details: { missing: readiness.missing, builderMode: assignment.builderMode || 'basic' },
+          error: hasPolicyBlock
+            ? 'ASSIGNMENT_PUBLISH_BLOCKED'
+            : hasPolicyHold
+              ? 'ASSIGNMENT_PUBLISH_ON_HOLD'
+              : 'Assignment is not ready to publish',
+          message: hasPolicyBlock
+            ? 'Publishing is blocked by trust or policy requirements.'
+            : hasPolicyHold
+              ? 'Publishing is on hold pending trust or policy review.'
+              : 'Complete all required sections before publishing.',
+          details: {
+            builderMode: readiness.builderMode,
+            blocks: readiness.blocks,
+            missing: readiness.missing,
+          },
         },
-        { status: 400 }
+        { status: hasPolicyBlock ? 403 : hasPolicyHold ? 409 : 400 }
       );
     }
 
@@ -166,6 +166,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       assignmentId,
       orgId: publishedAssignment.orgId,
       userId: user.id,
+      principalType: principal.context.principalType,
+      membershipId: access.membershipId,
     });
 
     return NextResponse.json({ assignment: publishedAssignment });

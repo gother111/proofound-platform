@@ -109,6 +109,7 @@ describe('AddSkillDrawer proof + verification flow', () => {
     validateFileMock.mockReturnValue({ valid: true });
     uploadFileMock.mockResolvedValue({
       success: true,
+      uploadedFileId: 'uploaded-file-1',
       url: 'https://example.com/doc.pdf',
       path: 'proof/user-1/doc.pdf',
       fileName: 'doc.pdf',
@@ -163,6 +164,7 @@ describe('AddSkillDrawer proof + verification flow', () => {
       expect.objectContaining({
         proofType: 'document',
         filePath: 'proof/user-1/doc.pdf',
+        uploadedFileId: 'uploaded-file-1',
         url: 'https://example.com/doc.pdf',
         issuedDate: '2025-01-01',
         expiresDate: '2028-01-01',

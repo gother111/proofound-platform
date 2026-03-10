@@ -11,6 +11,7 @@ import { db } from '@/db';
 import { profiles, organizationMembers, adminInvitations } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { createClient } from '@/lib/supabase/server';
+import { isActiveMembershipState, normalizeAuthorizedOrgRole } from '@/lib/authz';
 import { redirect } from 'next/navigation';
 
 export type AdminLevel = 'super_admin' | 'platform_admin' | 'org_admin' | 'none';
@@ -84,17 +85,17 @@ export async function isSuperAdmin(userId: string): Promise<boolean> {
 export async function isOrgAdmin(userId: string, orgId: string): Promise<boolean> {
   try {
     const membership = await db.query.organizationMembers.findFirst({
-      where: and(
-        eq(organizationMembers.userId, userId),
-        eq(organizationMembers.orgId, orgId),
-        eq(organizationMembers.status, 'active')
-      ),
+      where: and(eq(organizationMembers.userId, userId), eq(organizationMembers.orgId, orgId)),
       columns: {
         role: true,
+        state: true,
       },
     });
 
-    return membership?.role === 'admin' || membership?.role === 'owner';
+    const role = normalizeAuthorizedOrgRole(membership?.role);
+    return (
+      isActiveMembershipState(membership?.state) && (role === 'org_manager' || role === 'org_owner')
+    );
   } catch (error) {
     console.error('Error checking org admin status:', error);
     return false;
@@ -123,13 +124,18 @@ export async function getAdminLevel(userId: string): Promise<AdminLevel> {
 
     // Check if user is admin of any organization
     const orgMembership = await db.query.organizationMembers.findFirst({
-      where: and(eq(organizationMembers.userId, userId), eq(organizationMembers.status, 'active')),
+      where: eq(organizationMembers.userId, userId),
       columns: {
         role: true,
+        state: true,
       },
     });
 
-    if (orgMembership?.role === 'admin' || orgMembership?.role === 'owner') {
+    const role = normalizeAuthorizedOrgRole(orgMembership?.role);
+    if (
+      isActiveMembershipState(orgMembership?.state) &&
+      (role === 'org_manager' || role === 'org_owner')
+    ) {
       return 'org_admin';
     }
 

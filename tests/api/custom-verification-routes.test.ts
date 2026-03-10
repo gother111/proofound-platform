@@ -29,6 +29,42 @@ vi.mock('@/lib/email/sender', () => ({
   sendEmail: vi.fn(),
 }));
 
+vi.mock('@/lib/security/capability-tokens', () => ({
+  CAPABILITY_BINDINGS: {
+    EMAIL_HASH: 'email_hash',
+    EMAIL_THEN_PROFILE_LOCK: 'email_then_profile_lock',
+  },
+  CAPABILITY_TOKEN_CLASSES: {
+    CUSTOM_VERIFICATION_RESPONSE: 'custom_verification_response',
+  },
+  CAPABILITY_REDEEM_SESSION_MAX_AGE_SECONDS: 600,
+  getCapabilityRedeemSessionCookieName: vi.fn(() => 'pf_rsn_custom_verification_response'),
+  issueCapabilityToken: vi.fn(async () => ({
+    rawToken: 'issued-custom-token',
+    tokenHash: 'issued-custom-token-hash',
+    token: { id: 'cap-custom-token-1', source_id: 'request-generated-id' },
+  })),
+  beginCapabilityTokenRedeemSession: vi.fn(async () => ({
+    ok: true,
+    token: { id: 'cap-custom-token-1' },
+    redeemSessionNonce: 'nonce-123',
+    maxAgeSeconds: 600,
+  })),
+  redeemCapabilityToken: vi.fn(async () => ({
+    ok: true,
+    token: { id: 'cap-custom-token-1', source_id: 'request-generated-id' },
+  })),
+}));
+
+vi.mock('@/lib/canonical/repository', () => ({
+  CANONICAL_PROOFS_WRITE_ENABLED: true,
+  upsertCanonicalVerificationRecord: vi.fn(async () => ({
+    id: 'canonical-verification-record-1',
+  })),
+}));
+
+const AUTH_USER_ID = '11111111-1111-4111-8111-111111111111';
+
 function thenableResult<T>(result: T) {
   const query: any = {
     eq: vi.fn(() => query),
@@ -48,7 +84,7 @@ function thenableResult<T>(result: T) {
 describe('custom verification API routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(requireAuth).mockResolvedValue({ id: 'user-1' } as any);
+    vi.mocked(requireAuth).mockResolvedValue({ id: AUTH_USER_ID } as any);
     vi.mocked(sendEmail).mockResolvedValue({ success: true });
   });
 

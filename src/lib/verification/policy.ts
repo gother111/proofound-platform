@@ -34,6 +34,7 @@ type LegacyProfileCompatInput = {
 
 type LegacyOrgCompatInput = {
   trustStatus?: 'unverified' | 'pending' | 'domain_verified' | 'platform_reviewed' | null;
+  orgTrustTier?: 'unreviewed' | 'basic_trusted' | 'reviewed' | 'restricted' | null;
   verified?: boolean | null;
 };
 
@@ -123,6 +124,7 @@ export type VerificationPolicySummary = {
     verified: boolean;
     workEmailVerified: boolean;
     workEmailNeedsReverify: boolean;
+    orgTrustTier: 'unreviewed' | 'basic_trusted' | 'reviewed' | 'restricted';
     orgTrustStatus: 'unverified' | 'pending' | 'domain_verified' | 'platform_reviewed';
     orgVerified: boolean;
   };
@@ -755,9 +757,13 @@ export function summarizeVerificationPolicy(input: {
 
   let orgTrustStatus: 'unverified' | 'pending' | 'domain_verified' | 'platform_reviewed' =
     input.legacyOrganization?.trustStatus ?? 'unverified';
+  let orgTrustTier: 'unreviewed' | 'basic_trusted' | 'reviewed' | 'restricted' =
+    input.legacyOrganization?.orgTrustTier ?? 'unreviewed';
   if (organizationPlatformReview.activeTrust) {
+    orgTrustTier = 'reviewed';
     orgTrustStatus = 'platform_reviewed';
   } else if (organizationDomain.activeTrust) {
+    orgTrustTier = 'basic_trusted';
     orgTrustStatus = 'domain_verified';
   } else if (
     organizationPlatformReview.state === 'pending' ||
@@ -765,6 +771,12 @@ export function summarizeVerificationPolicy(input: {
     organizationPlatformReview.state === 'disputed'
   ) {
     orgTrustStatus = 'pending';
+  } else if (input.legacyOrganization?.verified) {
+    orgTrustTier = 'reviewed';
+  } else if (orgTrustStatus === 'domain_verified') {
+    orgTrustTier = 'basic_trusted';
+  } else if (orgTrustStatus === 'platform_reviewed') {
+    orgTrustTier = 'reviewed';
   }
 
   const workEmailVerified = workplace.activeTrust && workplace.kind === 'work_email';
@@ -796,8 +808,10 @@ export function summarizeVerificationPolicy(input: {
       verified: identity.activeTrust,
       workEmailVerified,
       workEmailNeedsReverify,
+      orgTrustTier,
       orgTrustStatus,
-      orgVerified: organizationPlatformReview.activeTrust,
+      orgVerified:
+        organizationPlatformReview.activeTrust || Boolean(input.legacyOrganization?.verified),
     },
   };
 }

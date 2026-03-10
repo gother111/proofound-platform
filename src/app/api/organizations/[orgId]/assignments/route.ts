@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { normalizeAuthorizedOrgRole } from '@/lib/authz';
 import { db } from '@/db';
 import { assignmentInvitations, organizationMembers } from '@/db/schema';
 import { and, eq } from 'drizzle-orm';
@@ -40,16 +41,17 @@ export async function GET(
       where: and(
         eq(organizationMembers.orgId, orgId),
         eq(organizationMembers.userId, user.id),
-        eq(organizationMembers.status, 'active')
+        eq(organizationMembers.state, 'active')
       ),
       columns: { role: true },
     });
 
-    if (!membership || !['owner', 'admin'].includes(membership.role)) {
+    const orgRole = normalizeAuthorizedOrgRole(membership?.role);
+    if (!membership || !orgRole || !['org_owner', 'org_manager'].includes(orgRole)) {
       log.warn('org.assignments.list.forbidden', {
         orgId,
         userId: user.id,
-        role: membership?.role || null,
+        role: orgRole ?? membership?.role ?? null,
       });
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }

@@ -11,11 +11,12 @@ import { JsonLdScripts } from '@/components/seo/JsonLdScripts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
+  getHistoricalOrganizationPublicSlugRedirect,
+  getPublicOrganizationPortfolioProjectionBySlug,
+} from '@/lib/portfolio/public-projection';
+import {
   buildPortfolioRobots,
-  deriveEffectivePublicPortfolioState,
   isAccessiblePublicPortfolioState,
-  resolveRequestedPublicPortfolioState,
-  shouldUseGenericSharePreview,
 } from '@/lib/portfolio/public-contract';
 import { sanitizeReturnPath } from '@/lib/navigation/sanitize-return-path';
 import {
@@ -28,190 +29,11 @@ import {
   buildPublicOrganizationPortfolioJsonLd,
   buildWebPageJsonLd,
 } from '@/lib/seo/json-ld';
-import { getPublicSiteUrl } from '@/lib/seo/public-metadata';
 import { createClient } from '@/lib/supabase/server';
-import {
-  listVerificationRecordsForOwner,
-  summarizeVerificationPolicy,
-} from '@/lib/verification/policy';
 
 import { ShareLinkButton } from '../../[handle]/ShareLinkButton';
 import { ViewCounterClient } from '../../[handle]/ViewCounterClient';
 import { DownloadOrganizationPdfButton } from './DownloadOrganizationPdfButton';
-
-type OrganizationRow = {
-  id: string;
-  slug: string;
-  display_name: string;
-  public_portfolio_state?: string | null;
-  search_indexing_enabled_at?: string | null;
-  trust_status?: string | null;
-  trust_status_updated_at?: string | null;
-  website_verified_at?: string | null;
-  operating_region?: string | null;
-  verified?: boolean | null;
-  website?: string | null;
-  tagline?: string | null;
-  mission?: string | null;
-  type?: string | null;
-};
-
-type AssignmentSummaryRow = {
-  id: string;
-  role?: string | null;
-  business_value?: string | null;
-  location_mode?: string | null;
-};
-
-type OrganizationVisibilityRow = {
-  display_name?: string | null;
-  mission?: string | null;
-};
-
-type OrgContractData = {
-  organization: OrganizationRow;
-  assignment: AssignmentSummaryRow | null;
-  visibility: OrganizationVisibilityRow | null;
-  publicDisplayName: string;
-  publicSummary: string;
-  effectiveState: ReturnType<typeof deriveEffectivePublicPortfolioState>;
-  shareUrl: string;
-  verificationSummary: ReturnType<typeof summarizeVerificationPolicy>;
-};
-
-const SITE_URL = getPublicSiteUrl();
-
-function hasTrustBasics(
-  organization: OrganizationRow,
-  visibility: OrganizationVisibilityRow | null
-) {
-  return Boolean(
-    organization.slug &&
-      organization.display_name &&
-      (organization.website?.trim() ||
-        organization.tagline?.trim() ||
-        (visibility?.mission === 'public' ? organization.mission?.trim() : null) ||
-        organization.verified ||
-        organization.trust_status === 'domain_verified' ||
-        organization.trust_status === 'platform_reviewed')
-  );
-}
-
-function resolvePublicOrganizationName(
-  organization: OrganizationRow,
-  visibility: OrganizationVisibilityRow | null
-) {
-  if ((visibility?.display_name ?? 'public') === 'public' && organization.display_name?.trim()) {
-    return organization.display_name.trim();
-  }
-
-  if (organization.slug?.trim()) {
-    return organization.slug.trim();
-  }
-
-  return 'Proofound organization';
-}
-
-async function loadOrganizationBySlug(slug: string): Promise<OrganizationRow | null> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from('organizations')
-    .select(
-      'id, slug, display_name, public_portfolio_state, search_indexing_enabled_at, trust_status, trust_status_updated_at, website_verified_at, operating_region, verified, website, tagline, mission, type'
-    )
-    .eq('slug', slug)
-    .maybeSingle();
-
-  return (data as OrganizationRow | null) ?? null;
-}
-
-async function loadHistoricalSlug(slug: string): Promise<string | null> {
-  try {
-    const supabase = await createClient();
-    const { data } = await supabase
-      .from('organization_slug_history')
-      .select('redirect_target_slug, is_active')
-      .eq('slug', slug)
-      .maybeSingle();
-
-    if (!data || data.is_active === true) {
-      return null;
-    }
-
-    return typeof data.redirect_target_slug === 'string' ? data.redirect_target_slug : null;
-  } catch {
-    return null;
-  }
-}
-
-async function loadOrgContractData(slug: string): Promise<OrgContractData | null> {
-  const supabase = await createClient();
-  const organization = await loadOrganizationBySlug(slug);
-  if (!organization) {
-    return null;
-  }
-
-  const [visibilityResult, assignmentResult] = await Promise.all([
-    supabase
-      .from('organization_field_visibility')
-      .select('display_name, mission')
-      .eq('org_id', organization.id)
-      .maybeSingle(),
-    supabase
-      .from('assignments')
-      .select('id, role, business_value, location_mode')
-      .eq('org_id', organization.id)
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-  ]);
-
-  const visibility = (visibilityResult.data as OrganizationVisibilityRow | null) ?? null;
-  const minimumContentMet = hasTrustBasics(organization, visibility);
-  const verificationRecords = await listVerificationRecordsForOwner(
-    'organization',
-    organization.id
-  ).catch(() => []);
-  const verificationSummary = summarizeVerificationPolicy({
-    records: verificationRecords,
-    legacyOrganization: {
-      trustStatus:
-        organization.trust_status === 'unverified' ||
-        organization.trust_status === 'pending' ||
-        organization.trust_status === 'domain_verified' ||
-        organization.trust_status === 'platform_reviewed'
-          ? organization.trust_status
-          : 'unverified',
-      verified: organization.verified,
-    },
-  });
-  const effectiveState = deriveEffectivePublicPortfolioState({
-    requestedState: resolveRequestedPublicPortfolioState(organization.public_portfolio_state),
-    searchIndexingEnabled: Boolean(organization.search_indexing_enabled_at),
-    minimumContentMet,
-    hasLinkOnlyContent: false,
-  });
-  const publicDisplayName = resolvePublicOrganizationName(organization, visibility);
-  const publicSummary =
-    (visibility?.mission === 'public'
-      ? organization.mission?.trim()
-      : organization.tagline?.trim()) ||
-    organization.tagline?.trim() ||
-    organization.website?.trim() ||
-    'Public organization trust card on Proofound.';
-
-  return {
-    organization,
-    assignment: (assignmentResult.data as AssignmentSummaryRow | null) ?? null,
-    visibility,
-    publicDisplayName,
-    publicSummary,
-    effectiveState,
-    shareUrl: `${SITE_URL}/portfolio/org/${encodeURIComponent(organization.slug)}`,
-    verificationSummary,
-  };
-}
 
 function renderUnavailablePage(slug: string) {
   return (
@@ -237,30 +59,18 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const safePath = `/portfolio/org/${encodeURIComponent(slug)}`;
-  const data = await loadOrgContractData(slug);
+  const data = await getPublicOrganizationPortfolioProjectionBySlug(slug);
 
   if (!data || !isAccessiblePublicPortfolioState(data.effectiveState)) {
-    return buildUnavailablePublicProfileMetadata(safePath);
+    return buildUnavailablePublicProfileMetadata(`/portfolio/org/${encodeURIComponent(slug)}`);
   }
 
-  const genericPreview = shouldUseGenericSharePreview(data.effectiveState);
-
   return buildPublicProfileMetadata({
-    title: genericPreview
-      ? 'Proofound organization portfolio'
-      : `${data.publicDisplayName} | Proofound Organization Portfolio`,
-    description: genericPreview
-      ? 'Shareable organization trust card on Proofound.'
-      : data.publicSummary ||
-        `Explore ${data.publicDisplayName}'s public organization portfolio on Proofound.`,
-    path: safePath,
-    ogTitle: genericPreview
-      ? 'Proofound organization portfolio'
-      : `${data.publicDisplayName} on Proofound`,
-    ogDescription: genericPreview
-      ? 'Shareable organization trust card on Proofound.'
-      : data.publicSummary || `View ${data.publicDisplayName}'s public trust card on Proofound.`,
+    title: data.metadata.title,
+    description: data.metadata.description,
+    path: data.metadata.path,
+    ogTitle: data.metadata.ogTitle,
+    ogDescription: data.metadata.ogDescription,
     robots: buildPortfolioRobots(data.effectiveState),
   });
 }
@@ -282,12 +92,12 @@ export default async function OrganizationPortfolioPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const data = await loadOrgContractData(slug);
+  const data = await getPublicOrganizationPortfolioProjectionBySlug(slug);
 
   if (!data) {
-    const redirectTarget = await loadHistoricalSlug(slug);
+    const redirectTarget = await getHistoricalOrganizationPublicSlugRedirect(slug);
     if (redirectTarget && redirectTarget !== slug) {
-      const redirectData = await loadOrgContractData(redirectTarget);
+      const redirectData = await getPublicOrganizationPortfolioProjectionBySlug(redirectTarget);
       if (redirectData && isAccessiblePublicPortfolioState(redirectData.effectiveState)) {
         permanentRedirect(`/portfolio/org/${encodeURIComponent(redirectTarget)}`);
       }
@@ -305,7 +115,7 @@ export default async function OrganizationPortfolioPage({
     ? await supabase
         .from('organization_members')
         .select('user_id', { count: 'exact', head: true })
-        .eq('org_id', data.organization.id)
+        .eq('org_id', data.organizationId)
         .eq('user_id', user.id)
         .eq('status', 'active')
     : { count: 0 };
@@ -315,6 +125,7 @@ export default async function OrganizationPortfolioPage({
     .filter((badge) => badge.key === 'domain_confirmed' || badge.key === 'platform_reviewed')
     .map((badge) => badge.label)
     .slice(0, 2);
+
   if (trustSignals.length === 0) {
     if (data.organization.verified || data.organization.trust_status === 'platform_reviewed') {
       trustSignals.push('Platform reviewed');
@@ -327,14 +138,13 @@ export default async function OrganizationPortfolioPage({
     }
   }
 
-  const pagePath = `/portfolio/org/${encodeURIComponent(slug)}`;
-  const jsonLdDescription = data.publicSummary;
+  const pagePath = `/portfolio/org/${encodeURIComponent(data.slug)}`;
   const jsonLdItems = [
     buildProofoundWebsiteJsonLd(),
     buildWebPageJsonLd({
       path: pagePath,
       title: `${data.publicDisplayName} | Proofound Organization Portfolio`,
-      description: jsonLdDescription,
+      description: data.jsonLd.description,
     }),
     buildBreadcrumbJsonLd([
       { name: 'Home', path: '/' },
@@ -343,7 +153,7 @@ export default async function OrganizationPortfolioPage({
     buildPublicOrganizationPortfolioJsonLd({
       path: pagePath,
       name: data.publicDisplayName,
-      description: jsonLdDescription,
+      description: data.jsonLd.description,
       operatingRegion: data.organization.operating_region,
     }),
   ];
@@ -411,7 +221,7 @@ export default async function OrganizationPortfolioPage({
       }
     >
       {!viewerIsMember ? (
-        <ViewCounterClient subjectType="organization" slugOrHandle={data.organization.slug} />
+        <ViewCounterClient subjectType="organization" slugOrHandle={data.slug} />
       ) : null}
       <JsonLdScripts items={jsonLdItems} idPrefix="public-org-portfolio-jsonld" />
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">

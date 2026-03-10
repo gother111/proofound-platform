@@ -1,17 +1,14 @@
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 
 import { db } from '@/db';
-import {
-  individualProfiles,
-  matches,
-  profiles,
-  skillProofs,
-  skills,
-  skillVerificationRequests,
-} from '@/db/schema';
+import { individualProfiles, matches, profiles, skills, verificationRecords } from '@/db/schema';
 import { computeSkillGaps } from '@/lib/skills/gap-service';
 import { getOrSetTtlCache, PLATFORM_PERF_CACHE_TTL_MS } from '@/lib/performance/ttl-cache';
 import { getIndividualReadinessState } from '@/lib/readiness/individual-state';
+import {
+  listCanonicalProofPackAggregatesForOwner,
+  summarizeCanonicalProofOwnerAggregates,
+} from '@/lib/proofs/canonical-pack';
 import type {
   IndividualReadiness,
   ReadinessAction,
@@ -26,7 +23,7 @@ function clamp(value: number, min: number, max: number): number {
 
 export async function getIndividualReadiness(userId: string): Promise<IndividualReadiness> {
   const readinessState = await getIndividualReadinessState(userId);
-  const [profileRow, individualRow, proofStatsRow, verificationStatsRow, matchStatsRow] =
+  const [profileRow, individualRow, canonicalAggregates, verificationStatsRow, matchStatsRow] =
     await Promise.all([
       db.query.profiles.findFirst({
         where: eq(profiles.id, userId),
@@ -34,20 +31,19 @@ export async function getIndividualReadiness(userId: string): Promise<Individual
       db.query.individualProfiles.findFirst({
         where: eq(individualProfiles.userId, userId),
       }),
+      listCanonicalProofPackAggregatesForOwner('individual_profile', userId),
       db
         .select({
-          totalProofs: sql<number>`count(${skillProofs.id})::int`,
-          verifiedProofs: sql<number>`count(${skillProofs.id}) filter (where ${skillProofs.verified} = true)::int`,
+          pending: sql<number>`count(${verificationRecords.id}) filter (where ${verificationRecords.status} = 'pending')::int`,
+          accepted: sql<number>`count(${verificationRecords.id}) filter (where ${verificationRecords.status} = 'verified' and ${verificationRecords.integrityStatus} = 'clear')::int`,
         })
-        .from(skillProofs)
-        .where(eq(skillProofs.profileId, userId)),
-      db
-        .select({
-          pending: sql<number>`count(${skillVerificationRequests.id}) filter (where ${skillVerificationRequests.status} = 'pending')::int`,
-          accepted: sql<number>`count(${skillVerificationRequests.id}) filter (where ${skillVerificationRequests.status} = 'accepted' and ${skillVerificationRequests.integrityStatus} = 'clear')::int`,
-        })
-        .from(skillVerificationRequests)
-        .where(eq(skillVerificationRequests.requesterProfileId, userId)),
+        .from(verificationRecords)
+        .where(
+          and(
+            eq(verificationRecords.ownerType, 'individual_profile'),
+            eq(verificationRecords.ownerId, userId)
+          )
+        ),
       db
         .select({
           totalMatches: sql<number>`count(${matches.id})::int`,
@@ -58,8 +54,13 @@ export async function getIndividualReadiness(userId: string): Promise<Individual
     ]);
 
   const skillsCount = readinessState.counts.skillsCount;
-  const totalProofs = proofStatsRow[0]?.totalProofs ?? 0;
-  const verifiedProofs = proofStatsRow[0]?.verifiedProofs ?? 0;
+  const canonicalSummary = summarizeCanonicalProofOwnerAggregates(canonicalAggregates);
+  const totalProofs = canonicalSummary.packCount;
+  const verifiedProofs = canonicalAggregates.filter(
+    (aggregate) =>
+      aggregate.verificationStatus === 'verified' ||
+      aggregate.verificationStatus === 'partially_verified'
+  ).length;
   const pendingVerifications = verificationStatsRow[0]?.pending ?? 0;
   const acceptedVerifications = verificationStatsRow[0]?.accepted ?? 0;
   const totalMatches = matchStatsRow[0]?.totalMatches ?? 0;

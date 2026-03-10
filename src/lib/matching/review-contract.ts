@@ -20,6 +20,7 @@ import {
   getEffectiveReviewRevealScope,
   getEffectiveShortlistRevealScope,
   getVerificationSummaryVisibility,
+  normalizeAuthorizedOrgRole,
   type OrgRole,
 } from '@/lib/authz';
 import { EMAIL_CONFIG } from '@/lib/email/config';
@@ -34,6 +35,7 @@ import {
   type MatchReasonCode,
 } from '@/lib/contracts/canonical-domain';
 import { hashOpaqueToken } from '@/lib/contracts/canonical-domain';
+import { type OperationalFallbackMode } from '@/lib/contracts/launch-operations';
 import { log } from '@/lib/log';
 
 export const CANONICAL_EXPLANATION_VERSION = 'reason-ledger/v1';
@@ -56,6 +58,34 @@ export type RevealScope = 'blind' | 'shortlist_identity' | 'full_identity';
 export type FairnessStatus = 'pass' | 'unavailable' | 'elevated' | 'breach';
 export type OrgReviewRole = OrgRole;
 export type RevealActorType = 'user_account' | 'organization' | 'platform_admin' | 'system';
+export type ProgressiveRevealStage =
+  | 'stage0_anonymous'
+  | 'stage1_capability_and_proof'
+  | 'stage2_contextual_reveal'
+  | 'stage3_intro_approved'
+  | 'stage4_interview_coordination';
+export type CanonicalCorridorState =
+  | 'shortlist'
+  | 'pass'
+  | 'request_reveal'
+  | 'request_intro'
+  | 'intro_approved'
+  | 'intro_hold'
+  | 'interview_scheduled'
+  | 'no_show'
+  | 'withdrawn'
+  | 'decision_pending'
+  | 'feedback_pending'
+  | 'feedback_delivered'
+  | 'terminal_close';
+export type CanonicalFallbackState =
+  | 'low_supply'
+  | 'weak_shortlist'
+  | 'fairness_suppressed_ranking'
+  | 'intro_hold'
+  | null;
+
+type RevealSurface = 'assignment_card' | 'review_detail' | 'shortlist' | 'intro' | 'interview';
 
 type ReasonDictionaryEntry = {
   category: MatchReasonCategory;
@@ -235,7 +265,6 @@ const ALWAYS_BLIND_FIELDS = [
 ] as const;
 
 const SHORTLIST_VISIBLE_FIELDS = [
-  'displayName',
   'headline',
   'tagline',
   'desiredRoles',
@@ -319,6 +348,166 @@ export function getVisibleIdentityFields(scope: RevealScope): string[] {
     return [...SHORTLIST_VISIBLE_FIELDS];
   }
   return [...FULL_VISIBLE_FIELDS];
+}
+
+export function resolveProgressiveRevealStage(input: {
+  scope: RevealScope;
+  surface: RevealSurface;
+}): ProgressiveRevealStage {
+  if (input.scope === 'blind') {
+    return input.surface === 'review_detail' ? 'stage1_capability_and_proof' : 'stage0_anonymous';
+  }
+
+  if (input.scope === 'shortlist_identity') {
+    return 'stage2_contextual_reveal';
+  }
+
+  return input.surface === 'interview' ? 'stage4_interview_coordination' : 'stage3_intro_approved';
+}
+
+export function mapOperationalFallbackModeToCanonical(
+  mode: OperationalFallbackMode | string | null | undefined
+): CanonicalFallbackState {
+  switch (mode) {
+    case 'browse_only_low_candidate_supply':
+    case 'browse_only_low_assignment_supply':
+      return 'low_supply';
+    case 'proof_building_weak_coverage':
+    case 'trust_pending_verification':
+      return 'weak_shortlist';
+    case 'fairness_suppressed_ranking':
+      return 'fairness_suppressed_ranking';
+    case 'intro_hold_insufficient_qualified_intros':
+      return 'intro_hold';
+    default:
+      return null;
+  }
+}
+
+export function resolveCanonicalFallbackState(input: {
+  operationalFallbackMode?: OperationalFallbackMode | string | null;
+  fairnessStatus?: FairnessStatus | null;
+}): CanonicalFallbackState {
+  const mappedFallback = mapOperationalFallbackModeToCanonical(input.operationalFallbackMode);
+  if (mappedFallback) {
+    return mappedFallback;
+  }
+
+  if (input.fairnessStatus && input.fairnessStatus !== 'pass') {
+    return 'fairness_suppressed_ranking' as const;
+  }
+
+  return null;
+}
+
+export function buildVisibilitySafeWhy(input: {
+  reasonCodes: string[];
+  fairnessStatus: FairnessStatus;
+  fallbackState: CanonicalFallbackState;
+  rankBand?: string | null;
+}) {
+  const rendered = renderExplanationFromReasonCodes({
+    reasonCodes: input.reasonCodes,
+    fairnessStatus: input.fairnessStatus,
+    audience: 'org',
+  });
+
+  const fallbackReasonCode =
+    input.fallbackState === 'fairness_suppressed_ranking'
+      ? 'fairness_ranking_suppressed'
+      : input.fallbackState === 'low_supply'
+        ? 'low_supply'
+        : input.fallbackState === 'weak_shortlist'
+          ? 'weak_shortlist'
+          : input.fallbackState === 'intro_hold'
+            ? 'intro_hold'
+            : null;
+
+  const summary = [...rendered.summary];
+
+  if (input.rankBand) {
+    summary.push(`Rank band: ${input.rankBand}`);
+  }
+
+  if (input.fallbackState === 'low_supply') {
+    summary.push('Low supply fallback keeps introductions conservative.');
+  } else if (input.fallbackState === 'weak_shortlist') {
+    summary.push('Weak shortlist fallback keeps review contextual and identity-safe.');
+  } else if (input.fallbackState === 'intro_hold') {
+    summary.push('Intro hold is active until qualified introduction capacity recovers.');
+  }
+
+  return {
+    explanationVersion: CANONICAL_EXPLANATION_VERSION,
+    reasonCodes: fallbackReasonCode
+      ? Array.from(new Set([...input.reasonCodes, fallbackReasonCode]))
+      : input.reasonCodes,
+    fairnessStatus: input.fairnessStatus,
+    fallbackState: input.fallbackState,
+    rankBand: input.rankBand ?? null,
+    summary,
+  };
+}
+
+export function resolveCanonicalCorridor(input: {
+  reviewStage: ReviewStage;
+  revealScope: RevealScope;
+  surface: RevealSurface;
+  fairnessStatus?: FairnessStatus | null;
+  operationalFallbackMode?: OperationalFallbackMode | string | null;
+  revealRequestPending?: boolean;
+  introRequested?: boolean;
+  introApproved?: boolean;
+  interviewScheduled?: boolean;
+  noShow?: boolean;
+  withdrawn?: boolean;
+  decisionPending?: boolean;
+  feedbackDelivered?: boolean;
+  feedbackPending?: boolean;
+}) {
+  const fallbackState = resolveCanonicalFallbackState({
+    operationalFallbackMode: input.operationalFallbackMode,
+    fairnessStatus: input.fairnessStatus ?? null,
+  });
+
+  let corridorState: CanonicalCorridorState;
+
+  if (input.noShow) {
+    corridorState = 'no_show';
+  } else if (input.withdrawn) {
+    corridorState = 'withdrawn';
+  } else if (input.feedbackDelivered) {
+    corridorState = 'feedback_delivered';
+  } else if (input.feedbackPending) {
+    corridorState = 'feedback_pending';
+  } else if (input.decisionPending) {
+    corridorState = 'decision_pending';
+  } else if (input.interviewScheduled) {
+    corridorState = 'interview_scheduled';
+  } else if (fallbackState) {
+    corridorState = 'intro_hold';
+  } else if (input.introApproved || input.revealScope === 'full_identity') {
+    corridorState = 'intro_approved';
+  } else if (input.introRequested) {
+    corridorState = 'request_intro';
+  } else if (input.revealRequestPending) {
+    corridorState = 'request_reveal';
+  } else if (input.reviewStage === 'passed') {
+    corridorState = 'pass';
+  } else if (input.reviewStage === 'rejected' || input.reviewStage === 'closed') {
+    corridorState = 'terminal_close';
+  } else {
+    corridorState = 'shortlist';
+  }
+
+  return {
+    progressiveRevealStage: resolveProgressiveRevealStage({
+      scope: input.revealScope,
+      surface: input.surface,
+    }),
+    corridorState,
+    fallbackState,
+  };
 }
 
 export function getReasonCategory(reasonCode: MatchReasonCode | string): MatchReasonCategory {
@@ -604,7 +793,11 @@ export function canRevealExactRank(
   role: OrgReviewRole | null,
   fairnessStatus: FairnessStatus
 ): boolean {
-  return fairnessStatus === 'pass' && (role === 'owner' || role === 'admin' || role === 'member');
+  const normalizedRole = normalizeAuthorizedOrgRole(role);
+  return (
+    fairnessStatus === 'pass' &&
+    (normalizedRole === 'org_owner' || normalizedRole === 'org_manager')
+  );
 }
 
 export function getRankBand(rank: number, totalCandidates: number): string {
@@ -660,12 +853,12 @@ export function buildCandidateReviewProjection(
   if (scope === 'shortlist_identity') {
     return {
       ...base,
-      displayName: source.displayName ?? 'Candidate',
+      displayName: null,
       headline: source.headline ?? null,
       tagline: source.tagline ?? null,
       handle: null,
       avatarUrl: null,
-      hiddenFields: ['handle', 'avatarUrl', 'city', 'country'],
+      hiddenFields: ['displayName', 'handle', 'avatarUrl', 'city', 'country'],
     };
   }
 

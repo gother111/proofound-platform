@@ -1,15 +1,12 @@
 import { eq } from 'drizzle-orm';
 
 import { db } from '@/db';
-import {
-  individualProfiles,
-  matchingProfiles,
-  profiles,
-  skillProofs,
-  skills,
-  skillVerificationRequests,
-} from '@/db/schema';
+import { individualProfiles, matchingProfiles, profiles, skills } from '@/db/schema';
 import type { ReadinessAction } from '@/lib/momentum/types';
+import {
+  listCanonicalProofPackAggregatesForOwner,
+  summarizeCanonicalProofOwnerAggregates,
+} from '@/lib/proofs/canonical-pack';
 import {
   listVerificationRecordsForOwner,
   summarizeVerificationPolicy,
@@ -221,10 +218,6 @@ function hasArrayContent(value: unknown): boolean {
   return Array.isArray(value) && value.length > 0;
 }
 
-function isPublicProofVisibility(value: unknown): boolean {
-  return value === 'public' || value === 'network' || value === 'network_only';
-}
-
 function buildRequirement(
   id: string,
   label: string,
@@ -373,52 +366,41 @@ function toIsoString(value: Date | string | null | undefined): string | null | u
   return value instanceof Date ? value.toISOString() : value;
 }
 
-function normalizeProofFingerprint(proof: typeof skillProofs.$inferSelect): string {
-  return [
-    proof.url?.trim().toLowerCase() || '',
-    proof.filePath?.trim().toLowerCase() || '',
-    proof.title.trim().toLowerCase(),
-    proof.proofType,
-  ].join('|');
-}
-
 export async function getIndividualReadinessState(
   userId: string
 ): Promise<IndividualReadinessStateSnapshot> {
   const queryDb = db as any;
-  const [profileRow, individualRow, matchingRow, skillRows, proofRows, verificationRows] =
-    await Promise.all([
-      safeFindFirst(() =>
-        queryDb.query?.profiles?.findFirst?.({
-          where: eq(profiles.id, userId),
-        })
-      ),
-      safeFindFirst(() =>
-        queryDb.query?.individualProfiles?.findFirst?.({
-          where: eq(individualProfiles.userId, userId),
-        })
-      ),
-      safeFindFirst(() =>
-        queryDb.query?.matchingProfiles?.findFirst?.({
-          where: eq(matchingProfiles.profileId, userId),
-        })
-      ),
-      safeSelectRows(() =>
-        queryDb.query?.skills?.findMany?.({
-          where: eq(skills.profileId, userId),
-        })
-      ),
-      safeSelectRows(() =>
-        queryDb.query?.skillProofs?.findMany?.({
-          where: eq(skillProofs.profileId, userId),
-        })
-      ),
-      safeSelectRows(() =>
-        queryDb.query?.skillVerificationRequests?.findMany?.({
-          where: eq(skillVerificationRequests.requesterProfileId, userId),
-        })
-      ),
-    ]);
+  const [
+    profileRow,
+    individualRow,
+    matchingRow,
+    skillRows,
+    canonicalAggregates,
+    verificationRecords,
+  ] = await Promise.all([
+    safeFindFirst(() =>
+      queryDb.query?.profiles?.findFirst?.({
+        where: eq(profiles.id, userId),
+      })
+    ),
+    safeFindFirst(() =>
+      queryDb.query?.individualProfiles?.findFirst?.({
+        where: eq(individualProfiles.userId, userId),
+      })
+    ),
+    safeFindFirst(() =>
+      queryDb.query?.matchingProfiles?.findFirst?.({
+        where: eq(matchingProfiles.profileId, userId),
+      })
+    ),
+    safeSelectRows(() =>
+      queryDb.query?.skills?.findMany?.({
+        where: eq(skills.profileId, userId),
+      })
+    ),
+    listCanonicalProofPackAggregatesForOwner('individual_profile', userId),
+    listVerificationRecordsForOwner('individual_profile', userId).catch(() => []),
+  ]);
 
   const profile = profileRow as ProfileRow;
   const individual = individualRow as IndividualProfileRow;
@@ -426,30 +408,12 @@ export async function getIndividualReadinessState(
   const nowMs = Date.now();
 
   const skillRowsTyped = skillRows as Array<typeof skills.$inferSelect>;
-  const proofRowsTyped = proofRows as Array<typeof skillProofs.$inferSelect>;
-  const verificationRowsTyped = verificationRows as Array<
-    typeof skillVerificationRequests.$inferSelect
-  >;
+  const canonicalSummary = summarizeCanonicalProofOwnerAggregates(canonicalAggregates);
 
   const skillsCount = skillRowsTyped.length;
-  const proofCount = proofRowsTyped.length;
-
-  const publicProofCount = proofRowsTyped.filter((proof) =>
-    isPublicProofVisibility((proof.metadata as Record<string, unknown> | null)?.visibility)
-  ).length;
-
-  const activeAcceptedVerificationRows = verificationRowsTyped.filter(
-    (row) =>
-      row.status === 'accepted' &&
-      row.integrityStatus === 'clear' &&
-      !row.revokedAt &&
-      !row.cancelledAt &&
-      isWithinWindow(row.respondedAt || row.createdAt, FRESH_PROOF_WINDOW_MS, nowMs)
-  );
-
-  const acceptedVerificationCount = verificationRowsTyped.filter(
-    (row) => row.status === 'accepted' && row.integrityStatus === 'clear'
-  ).length;
+  const proofCount = canonicalSummary.packCount;
+  const publicProofCount = canonicalSummary.publicProofSignalCount;
+  const acceptedVerificationCount = canonicalSummary.verifiedVerificationCount;
 
   const recentSkillIds = new Set(
     skillRowsTyped
@@ -463,18 +427,6 @@ export async function getIndividualReadinessState(
   );
   const recentActiveSkillCount = recentSkillIds.size;
 
-  const uniqueProofs = new Map<string, typeof skillProofs.$inferSelect>();
-  for (const proof of proofRowsTyped) {
-    if (proof.expiresDate && new Date(proof.expiresDate).getTime() < nowMs) {
-      continue;
-    }
-
-    const fingerprint = normalizeProofFingerprint(proof);
-    if (!uniqueProofs.has(fingerprint)) {
-      uniqueProofs.set(fingerprint, proof);
-    }
-  }
-
   const proofSummaryBySkillId = new Map<
     string,
     {
@@ -485,27 +437,17 @@ export async function getIndividualReadinessState(
     }
   >();
 
-  for (const proof of uniqueProofs.values()) {
-    const latestProofAtMs = toTimestamp(proof.issuedDate || proof.createdAt);
-    const existing = proofSummaryBySkillId.get(proof.skillId) || {
-      proofCount: 0,
-      latestProofAtMs: null,
-      hasFresh24: false,
-      hasFresh12: false,
-    };
+  for (const summary of canonicalSummary.subjectSummaries) {
+    if (summary.subjectType !== 'skill') {
+      continue;
+    }
 
-    proofSummaryBySkillId.set(proof.skillId, {
-      proofCount: existing.proofCount + 1,
-      latestProofAtMs:
-        existing.latestProofAtMs === null || (latestProofAtMs ?? 0) > existing.latestProofAtMs
-          ? latestProofAtMs
-          : existing.latestProofAtMs,
-      hasFresh24:
-        existing.hasFresh24 ||
-        isWithinWindow(proof.issuedDate || proof.createdAt, FRESH_PROOF_WINDOW_MS, nowMs),
-      hasFresh12:
-        existing.hasFresh12 ||
-        isWithinWindow(proof.issuedDate || proof.createdAt, VERY_FRESH_PROOF_WINDOW_MS, nowMs),
+    const latestProofAtMs = toTimestamp(summary.latestEvidenceAt);
+    proofSummaryBySkillId.set(summary.subjectId, {
+      proofCount: summary.packCount,
+      latestProofAtMs,
+      hasFresh24: isWithinWindow(summary.latestEvidenceAt, FRESH_PROOF_WINDOW_MS, nowMs),
+      hasFresh12: isWithinWindow(summary.latestEvidenceAt, VERY_FRESH_PROOF_WINDOW_MS, nowMs),
     });
   }
 
@@ -528,9 +470,27 @@ export async function getIndividualReadinessState(
       .map(([skillId]) => skillId)
   );
 
-  const attestedSkillIds = new Set(activeAcceptedVerificationRows.map((row) => row.skillId));
+  const attestedSkillIds = new Set(
+    verificationRecords
+      .filter(
+        (record) =>
+          record.status === 'verified' &&
+          record.subjectType === 'skill' &&
+          ['skill_attestation_peer', 'skill_attestation_manager', 'impact_attestation'].includes(
+            record.verificationKind
+          )
+      )
+      .map((record) => record.subjectId)
+  );
   const verifiedProofSkillIds = new Set(
-    proofRowsTyped.filter((proof) => proof.verified).map((proof) => proof.skillId)
+    canonicalSummary.subjectSummaries
+      .filter(
+        (summary) =>
+          summary.subjectType === 'skill' &&
+          (summary.verificationStatus === 'verified' ||
+            summary.verificationStatus === 'partially_verified')
+      )
+      .map((summary) => summary.subjectId)
   );
   const trustedProofSkillIds = new Set([...attestedSkillIds, ...verifiedProofSkillIds]);
   const attestedProofLinkedSkillCount = [...attestedSkillIds].filter((skillId) =>
@@ -559,10 +519,6 @@ export async function getIndividualReadinessState(
     work_email_reverify_due_at: toIsoString(individual?.workEmailReverifyDueAt),
     verified_at: toIsoString(individual?.verifiedAt),
   });
-  const verificationRecords = await listVerificationRecordsForOwner(
-    'individual_profile',
-    userId
-  ).catch(() => []);
   const verificationPolicy = summarizeVerificationPolicy({
     records: verificationRecords,
     legacyProfile: {

@@ -17,6 +17,7 @@ import {
   getLatestProfileDeletionRequest,
   updateProfileDeletionRequestState,
 } from '@/lib/lifecycle/residual';
+import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,13 +42,26 @@ const AccountDeletionSchema = z.object({
 export async function DELETE(request: NextRequest) {
   let deletionRequest: { id: string } | null = null;
   let lifecycleOperation: { id: string } | null = null;
+  const trace = startLaunchTrace({
+    flow: 'delete_unpublish',
+    requestId: request.headers.get('x-request-id'),
+    actorType: 'anonymous',
+  });
 
   try {
     const authContext = await requireApiAuthContext();
     if (!authContext) {
+      emitLaunchTrace(trace, {
+        outcome: 'rejected',
+        state: 'account_delete_unauthorized',
+        failureClass: 'unauthorized',
+      });
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { user } = authContext;
+    trace.actorId = user.id;
+    trace.actorType = 'user_account';
+    trace.objectRefs.profileId = user.id;
 
     // Parse and validate request body
     const body = await request.json();
@@ -273,6 +287,14 @@ export async function DELETE(request: NextRequest) {
       userId: user.id,
       reason: parsed.reason || 'Not provided',
     });
+    emitLaunchTrace(trace, {
+      outcome: 'success',
+      state: 'public_projection_removed',
+      details: {
+        deletionRequestId: deletionRequest.id,
+        operationId: lifecycleOperation.id,
+      },
+    });
 
     return NextResponse.json({
       status: 'deleted',
@@ -282,6 +304,11 @@ export async function DELETE(request: NextRequest) {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
+      emitLaunchTrace(trace, {
+        outcome: 'rejected',
+        state: 'account_delete_validation_failed',
+        failureClass: 'invalid_deletion_request',
+      });
       return NextResponse.json(
         {
           error: 'Invalid deletion request',
@@ -294,6 +321,11 @@ export async function DELETE(request: NextRequest) {
     log.error('privacy.account_deletion.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
+    });
+    emitLaunchTrace(trace, {
+      outcome: 'failure',
+      state: 'account_delete_failed',
+      failureClass: error instanceof Error ? error.name : 'account_delete_failed',
     });
     if (deletionRequest) {
       await updateProfileDeletionRequestState({

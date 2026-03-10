@@ -3,12 +3,18 @@ import { createClient } from '@/lib/supabase/server';
 import { fetchTrustExportData } from '@/lib/portfolio/export-data';
 import { generateTrustPdf } from '@/lib/portfolio/pdf';
 import { emitPortfolioPdfExportSucceeded } from '@/lib/analytics/events';
+import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
 
 const FALLBACK_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  const trace = startLaunchTrace({
+    flow: 'export',
+    actorType: 'anonymous',
+  });
+
   try {
     const supabase = await createClient();
     const {
@@ -16,13 +22,26 @@ export async function GET() {
     } = await supabase.auth.getUser();
 
     if (!user) {
+      emitLaunchTrace(trace, {
+        outcome: 'rejected',
+        state: 'portfolio_export_unauthorized',
+        failureClass: 'unauthorized',
+      });
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    trace.actorId = user.id;
+    trace.actorType = 'user_account';
 
     const data = await fetchTrustExportData(supabase, user.id);
     if (!data) {
+      emitLaunchTrace(trace, {
+        outcome: 'rejected',
+        state: 'portfolio_export_profile_missing',
+        failureClass: 'profile_not_found',
+      });
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
+    trace.objectRefs.profileId = data.profile.id;
 
     const shareUrl = `${FALLBACK_URL.replace(/\/$/, '')}/portfolio/${data.profile.handle}`;
 
@@ -49,6 +68,15 @@ export async function GET() {
       console.error('portfolio export analytics failed', analyticsError);
     });
 
+    const exportedHandle = data.profile.handle;
+    emitLaunchTrace(trace, {
+      outcome: 'success',
+      state: 'portfolio_export_ready',
+      details: {
+        handle: exportedHandle,
+      },
+    });
+
     return new NextResponse(bytes, {
       status: 200,
       headers: {
@@ -62,6 +90,11 @@ export async function GET() {
       name: error instanceof Error ? error.name : 'UnknownError',
       message: error instanceof Error ? error.message : 'Unknown error',
       error,
+    });
+    emitLaunchTrace(trace, {
+      outcome: 'failure',
+      state: 'portfolio_export_failed',
+      failureClass: error instanceof Error ? error.message : 'portfolio_export_failed',
     });
     return NextResponse.json({ error: 'Failed to generate PDF' }, { status: 500 });
   }

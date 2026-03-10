@@ -1,65 +1,20 @@
-import { headers } from 'next/headers';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { OrgShortlistClient } from '@/components/shortlist/OrgShortlistClient';
-import type { ShortlistItem } from '@/components/shortlist/OrgShortlistClient';
-import { AppSurface } from '@/components/ui/v2/AppSurface';
+import { OrgScopeNotice } from '@/components/organization/OrgScopeNotice';
+import { getOrgSurfaceFallbackHref } from '@/lib/org/mvp-surface-policy';
 
 export const dynamic = 'force-dynamic';
 
 export default async function OrgShortlistPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const headersList = await headers();
-  const host = headersList.get('host');
-  const protocol = headersList.get('x-forwarded-proto') ?? 'http';
-  const baseUrl = host ? `${protocol}://${host}` : '';
-
-  const response = await fetch(`${baseUrl}/api/org/${slug}/shortlist`, {
-    headers: {
-      cookie: headersList.get('cookie') ?? '',
-    },
-    cache: 'no-store',
-  });
-
-  if (!response.ok) {
-    return (
-      <AppSurface>
-        <div className="p-6">
-          <Card className="p-6">
-            <h1 className="text-xl font-semibold text-proofound-charcoal mb-2">Shortlist</h1>
-            <p className="text-sm text-muted-foreground">
-              Unable to load shortlist right now. Please refresh and try again.
-            </p>
-          </Card>
-        </div>
-      </AppSurface>
-    );
-  }
-
-  const data = (await response.json()) as { items?: ShortlistItem[] };
-  const items = data.items ?? [];
 
   return (
-    <AppSurface>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-proofound-charcoal">Shortlist</h1>
-          <Badge variant="outline">
-            {items.length} candidate{items.length === 1 ? '' : 's'}
-          </Badge>
-        </div>
-
-        {items.length === 0 ? (
-          <Card className="p-6">
-            <p className="text-sm text-muted-foreground">
-              No candidates shortlisted yet. Start with one assignment, review blind matches, and
-              move only the strongest candidates into shortlist.
-            </p>
-          </Card>
-        ) : (
-          <OrgShortlistClient items={items} />
-        )}
-      </div>
-    </AppSurface>
+    <OrgScopeNotice
+      title="Separate shortlist views are gated for launch"
+      description="Launch uses one queue for assignments, matches, and review. Separate shortlist storytelling is intentionally out of scope."
+      slug={slug}
+      primaryHref={getOrgSurfaceFallbackHref(slug, 'shortlist')}
+      primaryLabel="Open assignments & matches"
+      secondaryHref={`/app/o/${slug}/profile`}
+      secondaryLabel="Open trust profile"
+    />
   );
 }

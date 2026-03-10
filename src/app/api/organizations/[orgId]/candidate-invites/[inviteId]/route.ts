@@ -8,12 +8,16 @@ import {
   buildCandidateInviteUrl,
   CANDIDATE_INVITE_EXPIRY_DAYS,
   CANDIDATE_INVITE_STATUS,
-  generateCandidateInviteToken,
-  hashCandidateInviteToken,
 } from '@/lib/candidate-invites';
 import { sendCandidateInviteEmail } from '@/lib/email';
 import { emitAnalyticsEventAsync } from '@/lib/analytics/events';
 import { createClient } from '@/lib/supabase/server';
+import {
+  CAPABILITY_BINDINGS,
+  CAPABILITY_TOKEN_CLASSES,
+  issueCapabilityToken,
+  revokeCapabilityTokenById,
+} from '@/lib/security/capability-tokens';
 
 export const dynamic = 'force-dynamic';
 
@@ -117,6 +121,7 @@ export async function PATCH(
         orgId: orgCandidateInvites.orgId,
         inviteeEmail: orgCandidateInvites.inviteeEmail,
         status: orgCandidateInvites.status,
+        capabilityTokenId: orgCandidateInvites.capabilityTokenId,
       })
       .from(orgCandidateInvites)
       .where(and(eq(orgCandidateInvites.id, inviteId), eq(orgCandidateInvites.orgId, orgId)))
@@ -143,6 +148,16 @@ export async function PATCH(
         })
         .where(eq(orgCandidateInvites.id, invite.id));
 
+      if (invite.capabilityTokenId) {
+        await revokeCapabilityTokenById(invite.capabilityTokenId, {
+          reason: 'candidate_invite_revoked',
+          metadata: {
+            inviteId: invite.id,
+            orgId,
+          },
+        });
+      }
+
       return NextResponse.json({ success: true, status: CANDIDATE_INVITE_STATUS.REVOKED });
     }
 
@@ -150,15 +165,34 @@ export async function PATCH(
       return NextResponse.json({ error: 'Only pending invites can be resent.' }, { status: 409 });
     }
 
-    const rawToken = generateCandidateInviteToken();
-    const tokenHash = hashCandidateInviteToken(rawToken);
     const expiresAt = new Date(Date.now() + CANDIDATE_INVITE_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
-    const inviteUrl = buildCandidateInviteUrl(rawToken);
+    const issued = await issueCapabilityToken({
+      tokenClass: CAPABILITY_TOKEN_CLASSES.CANDIDATE_INVITE_CLAIM,
+      sourceTable: 'org_candidate_invites',
+      sourceId: invite.id,
+      actionScope: 'candidate_invite.claim',
+      scopeKey: `candidate_invite:${orgId}:${invite.id}:${invite.inviteeEmail.toLowerCase()}`,
+      subjectType: 'org_candidate_invite',
+      subjectId: invite.id,
+      actorBinding: CAPABILITY_BINDINGS.EMAIL_HASH,
+      actorEmail: invite.inviteeEmail,
+      expiresAt,
+      singleUse: true,
+      maxUses: 1,
+      revokePriorActiveTokensForScope: true,
+      metadata: {
+        orgId,
+        inviteId: invite.id,
+        resend: true,
+      },
+    });
+    const inviteUrl = buildCandidateInviteUrl(issued.rawToken);
 
     await db
       .update(orgCandidateInvites)
       .set({
-        tokenHash,
+        tokenHash: issued.tokenHash,
+        capabilityTokenId: issued.token.id,
         expiresAt,
         updatedAt: new Date(),
       })

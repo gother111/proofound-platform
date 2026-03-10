@@ -36,13 +36,14 @@ describe('org audit access routes', () => {
     vi.clearAllMocks();
   });
 
-  it('allows owner org audit export', async () => {
+  it('allows org owner audit export', async () => {
     (requireApiAuthContext as any).mockResolvedValue({
       user: { id: 'user-1' },
     });
     (db.query.organizationMembers.findFirst as any).mockResolvedValue({
-      role: 'owner',
-      status: 'active',
+      id: 'membership-1',
+      role: 'org_owner',
+      state: 'active',
     });
     (db.query.auditLogs.findMany as any).mockResolvedValue([
       { id: 1, action: 'assignment.created', orgId: 'org-1' },
@@ -59,13 +60,14 @@ describe('org audit access routes', () => {
     expect(response.headers.get('content-disposition')).toContain('proofound-org-audit-org-1.json');
   });
 
-  it('denies member org audit export', async () => {
+  it('denies reviewer org audit export', async () => {
     (requireApiAuthContext as any).mockResolvedValue({
       user: { id: 'user-1' },
     });
     (db.query.organizationMembers.findFirst as any).mockResolvedValue({
-      role: 'member',
-      status: 'active',
+      id: 'membership-2',
+      role: 'org_reviewer',
+      state: 'active',
     });
 
     const response = await ownerAuditExportGET(
@@ -100,6 +102,7 @@ describe('org audit access routes', () => {
 
     expect(response.status).toBe(200);
     expect(payload.breakGlassReason).toBe('Investigating confirmed privacy incident');
+    expect(payload.principalType).toBe('trust_admin');
     expect(db.query.auditLogs.findMany).toHaveBeenCalledTimes(1);
   });
 });

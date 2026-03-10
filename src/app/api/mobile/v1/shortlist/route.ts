@@ -15,9 +15,12 @@ import { isActiveOrgMember, requireMobileAuth } from '@/lib/api/mobile/auth';
 import { mobileError, mobileSuccess } from '@/lib/api/mobile/response';
 import {
   buildCandidateReviewProjection,
+  buildVisibilitySafeWhy,
   getRankBand,
   getVisibleIdentityFields,
   normalizeFairnessStatus,
+  resolveCanonicalCorridor,
+  resolveCanonicalFallbackState,
   shouldSuppressExactRank,
 } from '@/lib/matching/review-contract';
 
@@ -75,6 +78,7 @@ export async function GET(request: NextRequest) {
         verified: matchingProfiles.verified,
         reviewStage: matchReviewStates.reviewStage,
         revealScope: matchReviewStates.revealScope,
+        operationalFallbackMode: matchReviewStates.operationalFallbackMode,
         shortlistedAt: matchReviewStates.shortlistedAt,
         fairnessStatus: matches.fairnessStatus,
         scoreState: matches.scoreState,
@@ -137,6 +141,10 @@ export async function GET(request: NextRequest) {
           row.generatedAt,
           row.staleAt
         );
+        const fallbackState = resolveCanonicalFallbackState({
+          operationalFallbackMode: row.operationalFallbackMode,
+          fairnessStatus,
+        });
         return {
           id: row.matchId,
           assignmentId: row.assignmentId,
@@ -145,6 +153,13 @@ export async function GET(request: NextRequest) {
           reviewStage: row.reviewStage,
           revealScope: row.revealScope,
           visibleIdentityFields: getVisibleIdentityFields(row.revealScope),
+          ...resolveCanonicalCorridor({
+            reviewStage: row.reviewStage,
+            revealScope: row.revealScope,
+            surface: 'shortlist',
+            fairnessStatus,
+            operationalFallbackMode: row.operationalFallbackMode,
+          }),
           candidate: buildCandidateReviewProjection(
             {
               profileId: row.profileId,
@@ -170,6 +185,15 @@ export async function GET(request: NextRequest) {
             rankInfo && !suppressExactRank
               ? getRankBand(rankInfo.rank, rankInfo.total)
               : 'Shortlisted',
+          why: buildVisibilitySafeWhy({
+            reasonCodes: ['shortlist_selected'],
+            fairnessStatus,
+            fallbackState,
+            rankBand:
+              rankInfo && !suppressExactRank
+                ? getRankBand(rankInfo.rank, rankInfo.total)
+                : 'Shortlisted',
+          }),
           shortlistedAt: row.shortlistedAt,
         };
       }),

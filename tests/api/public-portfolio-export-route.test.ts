@@ -55,6 +55,7 @@ describe('/api/portfolio/public/[handle]/export', () => {
         attestations: { count: 0 },
       },
       skills: [{ id: 'skill-1', name: 'Product Strategy', level: 4 }],
+      proofPacks: [],
       visibility: {
         header: true,
         proofBar: true,

@@ -15,7 +15,15 @@ import {
   verificationRecords,
 } from '@/db/schema';
 import { getRows } from '@/lib/db/rows';
+import {
+  getPublicIndividualPortfolioProjectionForPublicationState,
+  getPublicOrganizationPortfolioProjectionForPublicationState,
+} from '@/lib/portfolio/public-projection';
 import { deriveEffectivePublicPortfolioState } from '@/lib/portfolio/public-contract';
+import {
+  listCanonicalProofPackAggregatesForOwner,
+  summarizeCanonicalProofOwnerAggregates,
+} from '@/lib/proofs/canonical-pack';
 
 export type ProofFreshnessState = 'fresh' | 'review_soon' | 'stale' | 'expired';
 export type ProofTrustSnapshotContext = 'portfolio' | 'matching';
@@ -90,6 +98,7 @@ function summarizeFreshness(states: ProofFreshnessState[]): {
     distribution[state] += 1;
   }
 
+  if (states.length === 0) return { rollup: 'stale', distribution };
   if (distribution.expired > 0) return { rollup: 'expired', distribution };
   if (distribution.stale > 0) return { rollup: 'stale', distribution };
   if (distribution.review_soon > 0) return { rollup: 'review_soon', distribution };
@@ -196,19 +205,12 @@ export async function computeProofTrustSnapshot(
     return emptySnapshot;
   }
 
-  const [publicSkillCountResult, artifactRows, verificationRows, medianRow, profileRow] =
+  const [publicSkillCountResult, verificationRows, medianRow, profileRow, canonicalAggregates] =
     await Promise.all([
       db
         .select({ count: sql<number>`count(*)::int` })
         .from(skills)
         .where(eq(skills.profileId, subjectId)),
-      db.query.proofArtifacts.findMany({
-        where: and(
-          eq(proofArtifacts.ownerType, 'individual_profile'),
-          eq(proofArtifacts.ownerId, subjectId)
-        ),
-        orderBy: [desc(proofArtifacts.updatedAt)],
-      }),
       db.query.verificationRecords.findMany({
         where: and(
           eq(verificationRecords.ownerType, 'individual_profile'),
@@ -252,39 +254,37 @@ export async function computeProofTrustSnapshot(
         .leftJoin(individualProfiles, eq(individualProfiles.userId, profiles.id))
         .where(eq(profiles.id, subjectId))
         .limit(1),
+      listCanonicalProofPackAggregatesForOwner('individual_profile', subjectId),
     ]);
 
   const publicSkillCount = Number(publicSkillCountResult[0]?.count || 0);
-  const artifactBySkill = new Set(
-    artifactRows
-      .filter((row) => row.subjectType === 'skill' && row.subjectId)
-      .map((row) => row.subjectId as string)
+  const canonicalSummary = summarizeCanonicalProofOwnerAggregates(canonicalAggregates);
+  const skillSubjectSummaries = canonicalSummary.subjectSummaries.filter(
+    (summary) => summary.subjectType === 'skill'
   );
-  const proofBackedSkillCount = artifactBySkill.size;
+  const proofBackedSkillCount = skillSubjectSummaries.length;
   const proofCoverageRatio = clampRatio(
     publicSkillCount > 0 ? proofBackedSkillCount / publicSkillCount : 0
   );
 
-  const freshnessStates = artifactRows.map((row) =>
-    getProofFreshnessState({
-      issuedAt: row.issuedAt,
-      expiresAt: row.expiresAt,
-      updatedAt: row.updatedAt,
-    })
-  );
+  const freshnessStates = canonicalAggregates.map((aggregate) => aggregate.freshnessState);
   const freshnessSummary = summarizeFreshness(freshnessStates);
   const freshnessRatio =
-    artifactRows.length > 0
+    canonicalAggregates.length > 0
       ? clampRatio(
           (freshnessSummary.distribution.fresh + freshnessSummary.distribution.review_soon * 0.5) /
-            artifactRows.length
+            canonicalAggregates.length
         )
       : 0;
 
   const verifiedVerificationSkillIds = new Set(
-    verificationRows
-      .filter((row) => row.status === 'verified' && row.subjectType === 'skill')
-      .map((row) => row.subjectId)
+    skillSubjectSummaries
+      .filter(
+        (summary) =>
+          summary.verificationStatus === 'verified' ||
+          summary.verificationStatus === 'partially_verified'
+      )
+      .map((summary) => summary.subjectId)
   );
   const verificationCoverageRatio = clampRatio(
     proofBackedSkillCount > 0 ? verifiedVerificationSkillIds.size / proofBackedSkillCount : 0
@@ -322,11 +322,21 @@ export async function computeProofTrustSnapshot(
   }
 
   const artifactCompletenessRatio =
-    artifactRows.length > 0
+    canonicalSummary.artifactCount > 0
       ? clampRatio(
-          artifactRows.filter((row) =>
-            Boolean(row.title && (row.sourceUrl || row.storagePath || row.description))
-          ).length / artifactRows.length
+          canonicalAggregates.reduce(
+            (count, aggregate) =>
+              count +
+              aggregate.ownerFull.items.filter((item) =>
+                Boolean(
+                  item.artifact.title &&
+                    (item.artifact.sourceUrl ||
+                      item.artifact.storagePath ||
+                      item.artifact.description)
+                )
+              ).length,
+            0
+          ) / canonicalSummary.artifactCount
         )
       : 0;
 
@@ -337,7 +347,7 @@ export async function computeProofTrustSnapshot(
     completenessRatio: artifactCompletenessRatio,
   };
   const proofQualitySummary =
-    artifactRows.length > 0 || publicSkillCount > 0
+    canonicalSummary.artifactCount > 0 || publicSkillCount > 0
       ? roundMetric(
           proofCoverageRatio * 35 +
             freshnessRatio * 25 +
@@ -442,60 +452,14 @@ export async function computePortfolioPublicationState(
   const now = new Date();
 
   if (subjectType === 'individual_profile') {
-    const [profileRows, publicProofCountResult] = await Promise.all([
-      db
-        .select({
-          requestedState: profiles.publicPortfolioState,
-          searchIndexingEnabledAt: profiles.searchIndexingEnabledAt,
-          handle: profiles.handle,
-          displayName: profiles.displayName,
-          headline: individualProfiles.headline,
-          bio: individualProfiles.bio,
-          verificationStatus: individualProfiles.verificationStatus,
-          workEmailVerified: individualProfiles.workEmailVerified,
-          linkedinVerificationStatus: individualProfiles.linkedinVerificationStatus,
-          redactMode: individualProfiles.redactMode,
-        })
-        .from(profiles)
-        .leftJoin(individualProfiles, eq(individualProfiles.userId, profiles.id))
-        .where(eq(profiles.id, subjectId))
-        .limit(1),
-      db.execute(sql`
-        SELECT COUNT(*)::int AS count
-        FROM skill_proofs
-        WHERE profile_id = ${subjectId}::uuid
-          AND (
-            COALESCE(metadata->>'visibility', '') = 'public'
-            OR verified = true
-          )
-      `),
-    ]);
+    const projection = await getPublicIndividualPortfolioProjectionForPublicationState(subjectId);
 
-    const row = profileRows[0];
-
-    if (!row) {
+    if (!projection) {
       throw new Error('Profile not found');
     }
 
-    const publicProofCount = Number(
-      getRows<{ count?: number }>(publicProofCountResult as any)[0]?.count ?? 0
-    );
-    const hasDurableTrustSignal = Boolean(
-      row.verificationStatus === 'verified' ||
-        row.workEmailVerified ||
-        row.linkedinVerificationStatus === 'verified'
-    );
-    const minimumContentMet = Boolean(
-      row.handle &&
-        (row.displayName || row.handle) &&
-        (row.headline?.trim() || row.bio?.trim() || publicProofCount > 0 || hasDurableTrustSignal)
-    );
-    const effectiveState = deriveEffectivePublicPortfolioState({
-      requestedState: row.requestedState,
-      searchIndexingEnabled: Boolean(row.searchIndexingEnabledAt),
-      minimumContentMet,
-      redactMode: Boolean(row.redactMode),
-    });
+    const minimumContentMet = projection.minimumContentMet;
+    const effectiveState = projection.effectiveState;
 
     const indexingState: PortfolioIndexingState =
       effectiveState === 'public_indexable'
@@ -509,8 +473,10 @@ export async function computePortfolioPublicationState(
       effectiveState === 'public_indexable' ? 'included' : 'excluded';
     const reasonCodes = [
       !minimumContentMet ? 'minimum_content_missing' : null,
-      row.redactMode ? 'redact_mode_enabled' : null,
-      !row.searchIndexingEnabledAt && effectiveState !== 'unavailable'
+      projection.exportData.publication.searchIndexingEnabled && effectiveState === 'public_noindex'
+        ? 'public_safety_noindex'
+        : null,
+      !projection.exportData.publication.searchIndexingEnabled && effectiveState !== 'unavailable'
         ? 'search_indexing_disabled'
         : null,
     ].filter((value): value is string => Boolean(value));
@@ -518,7 +484,7 @@ export async function computePortfolioPublicationState(
     const state: PortfolioPublicationStateInsert = {
       subjectType,
       subjectId,
-      requestedState: row.requestedState,
+      requestedState: projection.requestedState,
       effectiveState,
       publicationState: effectiveState,
       indexingState,
@@ -527,7 +493,10 @@ export async function computePortfolioPublicationState(
       reasonCodes,
       metadata: {
         minimumContentMet,
-        handlePresent: Boolean(row.handle),
+        handlePresent: Boolean(projection.handle),
+        publicProofCount: projection.publicProofCount,
+        hasLinkOnlyContent: projection.hasLinkOnlyContent,
+        hasRevealGatedContent: projection.hasRevealGatedContent,
       },
       lastComputedAt: now,
     };
@@ -558,41 +527,13 @@ export async function computePortfolioPublicationState(
     return state;
   }
 
-  const [organization] = await db
-    .select({
-      requestedState: organizations.publicPortfolioState,
-      searchIndexingEnabledAt: organizations.searchIndexingEnabledAt,
-      slug: organizations.slug,
-      displayName: organizations.displayName,
-      trustStatus: organizations.trustStatus,
-      verified: organizations.verified,
-      mission: organizations.mission,
-      tagline: organizations.tagline,
-      website: organizations.website,
-    })
-    .from(organizations)
-    .where(eq(organizations.id, subjectId))
-    .limit(1);
-
-  if (!organization) {
+  const projection = await getPublicOrganizationPortfolioProjectionForPublicationState(subjectId);
+  if (!projection) {
     throw new Error('Organization not found');
   }
 
-  const minimumContentMet = Boolean(
-    organization.slug &&
-      organization.displayName &&
-      (organization.tagline ||
-        organization.mission ||
-        organization.website ||
-        organization.trustStatus === 'domain_verified' ||
-        organization.trustStatus === 'platform_reviewed' ||
-        organization.verified)
-  );
-  const effectiveState = deriveEffectivePublicPortfolioState({
-    requestedState: organization.requestedState,
-    searchIndexingEnabled: Boolean(organization.searchIndexingEnabledAt),
-    minimumContentMet,
-  });
+  const minimumContentMet = projection.minimumContentMet;
+  const effectiveState = projection.effectiveState;
 
   const indexingState: PortfolioIndexingState =
     effectiveState === 'public_indexable'
@@ -606,7 +547,10 @@ export async function computePortfolioPublicationState(
     effectiveState === 'public_indexable' ? 'included' : 'excluded';
   const reasonCodes = [
     !minimumContentMet ? 'minimum_content_missing' : null,
-    !organization.searchIndexingEnabledAt && effectiveState !== 'unavailable'
+    projection.organization.search_indexing_enabled_at && effectiveState === 'public_noindex'
+      ? 'public_safety_noindex'
+      : null,
+    !projection.organization.search_indexing_enabled_at && effectiveState !== 'unavailable'
       ? 'search_indexing_disabled'
       : null,
   ].filter((value): value is string => Boolean(value));
@@ -614,7 +558,7 @@ export async function computePortfolioPublicationState(
   const state: PortfolioPublicationStateInsert = {
     subjectType,
     subjectId,
-    requestedState: organization.requestedState,
+    requestedState: projection.requestedState,
     effectiveState,
     publicationState: effectiveState,
     indexingState,
@@ -623,7 +567,7 @@ export async function computePortfolioPublicationState(
     reasonCodes,
     metadata: {
       minimumContentMet,
-      slugPresent: Boolean(organization.slug),
+      slugPresent: Boolean(projection.slug),
     },
     lastComputedAt: now,
   };

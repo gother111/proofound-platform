@@ -36,6 +36,7 @@ import {
   type WorkflowMachineName,
 } from '@/lib/workflow/contracts';
 import { cancelWorkflowJobs, enqueueWorkflowJob } from '@/lib/workflow/queue';
+import { revalidatePublicPortfolioByProfileId } from '@/lib/portfolio/public-invalidation';
 import { computeProofTrustSnapshot } from '@/lib/proof-trust/snapshots';
 import {
   appendVerificationLogEntry,
@@ -108,6 +109,7 @@ async function refreshIndividualProofTrustSnapshots(profileId: string) {
   await Promise.all([
     computeProofTrustSnapshot('individual_profile', profileId, 'portfolio'),
     computeProofTrustSnapshot('individual_profile', profileId, 'matching'),
+    revalidatePublicPortfolioByProfileId(profileId),
   ]);
 }
 
@@ -541,7 +543,10 @@ export async function getOrCreateIntroWorkflow(params: {
     orderBy: [desc(introWorkflows.createdAt)],
   });
 
-  if (existing) {
+  if (
+    existing &&
+    !['withdrawn', 'expired', 'duplicate_candidate', 'closed'].includes(existing.state)
+  ) {
     return existing;
   }
 
@@ -554,9 +559,14 @@ export async function getOrCreateIntroWorkflow(params: {
       state: params.initialState,
       matchId: params.matchId ?? null,
       candidateInviteId: params.candidateInviteId ?? null,
+      duplicateOfIntroId: existing?.id ?? null,
       expiresAt: resolvedExpiry,
       lastActivityAt: new Date(),
-      metadata: params.metadata ?? {},
+      metadata: {
+        ...(params.metadata ?? {}),
+        recoveryFromIntroWorkflowId: existing?.id ?? null,
+        recoveryFromState: existing?.state ?? null,
+      },
       createdAt: new Date(),
       updatedAt: new Date(),
     })

@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { createAdminClient } from '@/lib/supabase/admin';
-import { hashVerificationToken } from '@/lib/verification/custom-verification';
+import {
+  beginCapabilityTokenRedeemSession,
+  CAPABILITY_REDEEM_SESSION_MAX_AGE_SECONDS,
+  CAPABILITY_TOKEN_CLASSES,
+  getCapabilityRedeemSessionCookieName,
+  redeemCapabilityToken,
+} from '@/lib/security/capability-tokens';
 import type { CustomVerificationRelationship } from '@/lib/verification/custom-verification';
 
 const RespondSchema = z.object({
@@ -94,7 +100,20 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid verification token' }, { status: 400 });
     }
 
-    const tokenHash = hashVerificationToken(token);
+    const preview = await beginCapabilityTokenRedeemSession(token, {
+      tokenClass: CAPABILITY_TOKEN_CLASSES.CUSTOM_VERIFICATION_RESPONSE,
+      actor: {
+        ip: request.headers.get('x-forwarded-for'),
+        userAgent: request.headers.get('user-agent'),
+      },
+      metadata: { surface: 'custom_verification.preview' },
+      maxAgeSeconds: CAPABILITY_REDEEM_SESSION_MAX_AGE_SECONDS,
+    });
+
+    if (!preview.ok) {
+      const status = preview.reason === 'invalid' ? 404 : 410;
+      return NextResponse.json({ error: 'Verification request not found' }, { status });
+    }
 
     const { data: customRequestRaw, error } = await admin
       .from('custom_verification_requests')
@@ -121,7 +140,7 @@ export async function GET(
         )
       `
       )
-      .eq('token_hash', tokenHash)
+      .eq('capability_token_id', preview.token.id)
       .single();
 
     if (error || !customRequestRaw) {
@@ -142,7 +161,7 @@ export async function GET(
       }
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       request: {
         id: customRequest.id,
         requester_name: customRequest.profiles?.display_name || 'A Proofound user',
@@ -165,6 +184,20 @@ export async function GET(
         ),
       },
     });
+
+    response.cookies.set(
+      getCapabilityRedeemSessionCookieName(CAPABILITY_TOKEN_CLASSES.CUSTOM_VERIFICATION_RESPONSE),
+      preview.redeemSessionNonce,
+      {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        path: '/',
+        maxAge: preview.maxAgeSeconds,
+      }
+    );
+
+    return response;
   } catch (error) {
     console.error('Custom verify GET error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -197,7 +230,28 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid verification token' }, { status: 400 });
     }
 
-    const tokenHash = hashVerificationToken(token);
+    const redeemSessionNonce =
+      request.cookies.get(
+        getCapabilityRedeemSessionCookieName(CAPABILITY_TOKEN_CLASSES.CUSTOM_VERIFICATION_RESPONSE)
+      )?.value ?? null;
+    const redeemed = await redeemCapabilityToken(token, {
+      tokenClass: CAPABILITY_TOKEN_CLASSES.CUSTOM_VERIFICATION_RESPONSE,
+      actor: {
+        ip: request.headers.get('x-forwarded-for'),
+        userAgent: request.headers.get('user-agent'),
+        principalType: 'external_email',
+      },
+      consume: true,
+      requireRedeemSessionNonce: true,
+      redeemSessionNonce,
+      metadata: { surface: 'custom_verification.respond', action: parsed.data.action },
+    });
+
+    if (!redeemed.ok) {
+      const status =
+        redeemed.reason === 'replayed' ? 409 : redeemed.reason === 'invalid' ? 404 : 410;
+      return NextResponse.json({ error: 'Verification request not found' }, { status });
+    }
 
     const { data: customRequestRaw, error: requestError } = await admin
       .from('custom_verification_requests')
@@ -213,7 +267,7 @@ export async function POST(
         )
       `
       )
-      .eq('token_hash', tokenHash)
+      .eq('capability_token_id', redeemed.token.id)
       .single();
 
     if (requestError || !customRequestRaw) {

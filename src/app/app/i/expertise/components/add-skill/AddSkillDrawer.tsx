@@ -66,6 +66,7 @@ export function AddSkillDrawer({
   const [proofSource, setProofSource] = useState<SkillProofSource>('url');
   const [proofUrl, setProofUrl] = useState('');
   const [proofFilePath, setProofFilePath] = useState('');
+  const [proofUploadedFileId, setProofUploadedFileId] = useState('');
   const [proofFileName, setProofFileName] = useState('');
   const [proofUploadError, setProofUploadError] = useState('');
   const [proofUploading, setProofUploading] = useState(false);
@@ -159,6 +160,7 @@ export function AddSkillDrawer({
         setProofSource('url');
         setProofUrl('');
         setProofFilePath('');
+        setProofUploadedFileId('');
         setProofFileName('');
         setProofUploadError('');
         setProofUploading(false);
@@ -592,13 +594,14 @@ export function AddSkillDrawer({
         category: 'proof',
       });
 
-      if (!result.success || !result.path) {
+      if (!result.success || !result.uploadedFileId) {
         setProofUploadError(result.error || result.message || 'Upload failed');
         return;
       }
 
       setProofSource('document');
       setProofFilePath(result.path || '');
+      setProofUploadedFileId(result.uploadedFileId || '');
       setProofUrl(result.url || '');
       setProofUploadError('');
       if (!proofNotes.trim()) {
@@ -734,9 +737,12 @@ export function AddSkillDrawer({
         let proofAttachError: string | null = null;
         const trimmedProofUrl = proofUrl.trim();
         const trimmedProofFilePath = proofFilePath.trim();
+        const trimmedProofUploadedFileId = proofUploadedFileId.trim();
         const shouldAttachProof = Boolean(
           skillData.skill?.id &&
-            (proofSource === 'url' ? trimmedProofUrl : trimmedProofFilePath || trimmedProofUrl)
+            (proofSource === 'url'
+              ? trimmedProofUrl
+              : trimmedProofUploadedFileId || trimmedProofFilePath || trimmedProofUrl)
         );
 
         if (shouldAttachProof) {
@@ -753,6 +759,7 @@ export function AddSkillDrawer({
               description: proofNotes.trim() || '',
               url: trimmedProofUrl,
               filePath: proofSource === 'document' ? trimmedProofFilePath : '',
+              uploadedFileId: proofSource === 'document' ? trimmedProofUploadedFileId : '',
               issuedDate: proofIssuedDate || '',
               expiresDate: proofExpiresDate || '',
             });
@@ -885,6 +892,7 @@ export function AddSkillDrawer({
           setProofSource('url');
           setProofUrl('');
           setProofFilePath('');
+          setProofUploadedFileId('');
           setProofFileName('');
           setProofUploadError('');
           setProofUploading(false);

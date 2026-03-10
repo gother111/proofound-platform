@@ -529,19 +529,17 @@ export default function MatchingPage() {
                   }
 
                   const data = await response.json();
-                  if (data.revealed) {
-                    // Mutual interest detected - navigate to conversation
-                    if (data.conversationId) {
-                      toast.success('Mutual interest! Starting conversation...');
-                      // Small delay to let the toast be visible
-                      setTimeout(() => {
-                        router.push(`/app/i/messages?conversation=${data.conversationId}`);
-                      }, 500);
-                    } else {
-                      toast.success('Mutual interest! Go to Messages to start chatting.');
-                    }
+                  if (data.introApproved && data.conversationId) {
+                    toast.success('Introduction approved. Opening messages...');
+                    setTimeout(() => {
+                      router.push(`/app/i/messages?conversation=${data.conversationId}`);
+                    }, 500);
+                  } else if (data.requiresIntroApproval) {
+                    toast.success(
+                      'Interest is mutual. Proofound will open the introduction after shortlist approval.'
+                    );
                   } else {
-                    toast.success('Interest recorded! Waiting for org response.');
+                    toast.success('Interest recorded. Waiting for shortlist review.');
                   }
                 } catch (error) {
                   toast.error('Failed to record interest');

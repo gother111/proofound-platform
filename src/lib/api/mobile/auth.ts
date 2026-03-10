@@ -1,13 +1,14 @@
 import type { User } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 import { db } from '@/db';
 import { organizationMembers, profiles } from '@/db/schema';
+import { isActiveMembershipState, normalizeAuthorizedOrgRole, type OrgRole } from '@/lib/authz';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { mobileError } from '@/lib/api/mobile/response';
 
-type AllowedOrgRole = 'owner' | 'admin' | 'member' | 'viewer';
+type AllowedOrgRole = OrgRole;
 
 type MobileProfile = {
   id: string;
@@ -129,14 +130,20 @@ export async function isActiveOrgMember(
   }
 
   const membership = await db.query.organizationMembers.findFirst({
-    where:
-      roles && roles.length > 0
-        ? and(whereBase, inArray(organizationMembers.role, roles))
-        : whereBase,
-    columns: { role: true },
+    where: roles && roles.length > 0 ? whereBase : whereBase,
+    columns: { role: true, state: true },
   });
 
-  return !!membership;
+  const role = normalizeAuthorizedOrgRole(membership?.role);
+  if (!membership || !isActiveMembershipState(membership.state)) {
+    return false;
+  }
+
+  if (roles && roles.length > 0) {
+    return Boolean(role && roles.includes(role));
+  }
+
+  return Boolean(role);
 }
 
 export function requireMobilePlatformAdmin(

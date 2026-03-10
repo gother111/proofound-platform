@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
-import { issueFeedbackInvites } from '@/lib/feedback/service';
+import {
+  getFeedbackReminderSchedule,
+  issueFeedbackInvites,
+  resolveFeedbackFollowUpState,
+} from '@/lib/feedback/service';
 import { buildWorkflowView, recordInterviewTransition } from '@/lib/workflow/service';
 
 const CompleteSchema = z.object({
@@ -57,7 +61,10 @@ export async function POST(request: NextRequest) {
       trigger: 'host_marked_complete',
     });
 
-    await issueFeedbackInvites(body.interviewId);
+    const feedbackInvites = await issueFeedbackInvites(body.interviewId);
+    const feedbackFollowUp = resolveFeedbackFollowUpState({
+      completedAt: updatedInterview.completedAt ?? new Date(),
+    });
 
     return NextResponse.json({
       success: true,
@@ -72,6 +79,20 @@ export async function POST(request: NextRequest) {
           updatedAt: updatedInterview.updatedAt?.toISOString(),
         },
       }),
+      feedbackFollowUp: {
+        dueAt: feedbackFollowUp.dueAt?.toISOString() ?? null,
+        overallState: feedbackFollowUp.overallState,
+        candidateToOrg: feedbackFollowUp.candidateToOrg,
+        orgToCandidate: feedbackFollowUp.orgToCandidate,
+        slaBreached: feedbackFollowUp.slaBreached,
+        reminderSchedule: getFeedbackReminderSchedule(
+          updatedInterview.completedAt ?? new Date()
+        ).map((entry) => ({
+          checkpoint: entry.checkpoint,
+          scheduledAt: entry.scheduledAt.toISOString(),
+        })),
+        issuedInvites: feedbackInvites.length,
+      },
     });
   } catch (error: any) {
     console.error('Interview completion failed', error);

@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { matches, interviews } from '@/db/schema';
 import { lt, and, eq, isNull, sql } from 'drizzle-orm';
+import { getRows } from '@/lib/db/rows';
 import {
   MATCHING_CONSTRAINTS,
   DECISION_CONSTRAINTS,
   getDecisionDeadline,
 } from '@/lib/sla/constraints';
 import { log } from '@/lib/log';
+import { resolveFeedbackFollowUpState } from '@/lib/feedback/service';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,6 +39,9 @@ export async function GET(request: NextRequest) {
       matchIds: [] as string[],
       interviewIds: [] as string[],
       flaggedOverdueDecisions: 0,
+      feedbackDue: 0,
+      feedbackBreached: 0,
+      feedbackInterviewIds: [] as string[],
     };
 
     // 1. Expire matches past 72-hour review window (PRD I-23)
@@ -121,9 +126,50 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    const feedbackFollowUpsResult = await db.execute(sql`
+      SELECT
+        i.id AS interview_id,
+        i.completed_at,
+        MAX(CASE WHEN fr.direction = 'candidate_to_org' THEN fr.shared_at END) AS candidate_submitted_at,
+        MAX(CASE WHEN fr.direction = 'org_to_candidate' THEN fr.shared_at END) AS organization_submitted_at
+      FROM interviews i
+      LEFT JOIN feedback_responses fr ON fr.interview_id = i.id
+      WHERE i.status = 'completed'
+        AND i.completed_at IS NOT NULL
+      GROUP BY i.id, i.completed_at
+      ORDER BY i.completed_at ASC
+      LIMIT 200
+    `);
+
+    const feedbackWindows = (
+      getRows(feedbackFollowUpsResult) as Array<{
+        interview_id: string;
+        completed_at: string;
+        candidate_submitted_at: string | null;
+        organization_submitted_at: string | null;
+      }>
+    ).map((row) => ({
+      interviewId: row.interview_id,
+      state: resolveFeedbackFollowUpState({
+        completedAt: row.completed_at,
+        candidateSubmittedAt: row.candidate_submitted_at,
+        organizationSubmittedAt: row.organization_submitted_at,
+      }),
+    }));
+
+    results.feedbackDue = feedbackWindows.filter((row) => row.state.overallState === 'due').length;
+    results.feedbackBreached = feedbackWindows.filter(
+      (row) => row.state.overallState === 'breached'
+    ).length;
+    results.feedbackInterviewIds = feedbackWindows
+      .filter((row) => row.state.overallState === 'due' || row.state.overallState === 'breached')
+      .map((row) => row.interviewId);
+
     log.info('sla.cron.completed', {
       expiredMatches: results.expiredMatches,
       expiredInterviews: results.expiredInterviews,
+      feedbackDue: results.feedbackDue,
+      feedbackBreached: results.feedbackBreached,
     });
 
     return NextResponse.json({

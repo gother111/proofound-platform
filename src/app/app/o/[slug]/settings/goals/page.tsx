@@ -1,43 +1,24 @@
-import { GoalsManager } from '@/components/organization/GoalsManager';
-import { getActiveOrg, requireAuth } from '@/lib/auth';
-import { notFound, redirect } from 'next/navigation';
-import { AppSurface } from '@/components/ui/v2/AppSurface';
+import { OrgScopeNotice } from '@/components/organization/OrgScopeNotice';
+import { getOrgSurfaceFallbackHref } from '@/lib/org/mvp-surface-policy';
 
 export const dynamic = 'force-dynamic';
 
-export default async function OrganizationGoalsSettingsPage({
+export default async function OrganizationSettingsGoalsPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const user = await requireAuth();
   const { slug } = await params;
-  const result = await getActiveOrg(slug, user.id);
-
-  if (!result) {
-    notFound();
-  }
-
-  const { org, membership } = result;
-  const canManageSettings = membership.role === 'owner' || membership.role === 'admin';
-  if (!canManageSettings) {
-    redirect(`/app/o/${slug}/home`);
-  }
 
   return (
-    <AppSurface>
-      <div className="max-w-5xl mx-auto space-y-6 w-full">
-        <div>
-          <h1 className="text-3xl font-['Crimson_Pro'] font-semibold text-proofound-forest dark:text-primary mb-2">
-            Goal Settings
-          </h1>
-          <p className="text-proofound-charcoal/70 dark:text-muted-foreground">
-            Manage organizational goals and track progress.
-          </p>
-        </div>
-
-        <GoalsManager orgId={org.id} canEdit={canManageSettings} />
-      </div>
-    </AppSurface>
+    <OrgScopeNotice
+      title="Goal dashboards are gated for launch"
+      description="The launch corridor does not include broad goal or admin dashboards. Keep work focused on trust profile, assignments, and review."
+      slug={slug}
+      primaryHref={getOrgSurfaceFallbackHref(slug, 'settings')}
+      primaryLabel="Back to overview"
+      secondaryHref={`/app/o/${slug}/matching`}
+      secondaryLabel="Open assignments & matches"
+    />
   );
 }

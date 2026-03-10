@@ -3,17 +3,20 @@ import { describe, expect, it } from 'vitest';
 import {
   buildCandidateReviewProjection,
   buildFairnessUiContract,
+  buildVisibilitySafeWhy,
   canRevealExactRank,
   evaluateFairnessCohortAvailability,
   getReviewProjectionPolicy,
   getShortlistProjectionPolicy,
   getVisibleIdentityFields,
   renderExplanationFromReasonCodes,
+  resolveCanonicalCorridor,
+  resolveProgressiveRevealStage,
   shouldSuppressExactRank,
 } from '@/lib/matching/review-contract';
 
 describe('matching review contract', () => {
-  it('keeps identity hidden in blind review and limited at shortlist', () => {
+  it('keeps identity hidden in blind review and contextual reveal', () => {
     const blind = buildCandidateReviewProjection(
       {
         profileId: 'profile-1',
@@ -38,7 +41,7 @@ describe('matching review contract', () => {
     expect(blind.avatarUrl).toBeNull();
     expect(blind.locationSummary).toBe('Location hidden');
 
-    const shortlisted = buildCandidateReviewProjection(
+    const contextualReveal = buildCandidateReviewProjection(
       {
         profileId: 'profile-1',
         displayName: 'Casey Candidate',
@@ -57,16 +60,17 @@ describe('matching review contract', () => {
       'shortlist_identity'
     );
 
-    expect(shortlisted.displayName).toBe('Casey Candidate');
-    expect(shortlisted.handle).toBeNull();
-    expect(shortlisted.avatarUrl).toBeNull();
+    expect(contextualReveal.displayName).toBeNull();
+    expect(contextualReveal.handle).toBeNull();
+    expect(contextualReveal.avatarUrl).toBeNull();
+    expect(getVisibleIdentityFields('shortlist_identity')).not.toContain('displayName');
     expect(getVisibleIdentityFields('shortlist_identity')).not.toContain('handle');
   });
 
-  it('downgrades viewer shortlist access to blind-only summaries', () => {
-    const shortlistPolicy = getShortlistProjectionPolicy('viewer', 'full_identity');
-    expect(shortlistPolicy.effectiveScope).toBe('blind');
-    expect(shortlistPolicy.verificationSummaryVisibility).toBe('none');
+  it('keeps reviewer shortlist access below full identity', () => {
+    const shortlistPolicy = getShortlistProjectionPolicy('org_reviewer', 'full_identity');
+    expect(shortlistPolicy.effectiveScope).toBe('shortlist_identity');
+    expect(shortlistPolicy.verificationSummaryVisibility).toBe('redacted');
 
     const projected = buildCandidateReviewProjection(
       {
@@ -91,19 +95,20 @@ describe('matching review contract', () => {
     );
 
     expect(projected.displayName).toBeNull();
-    expect(projected.verificationSummary).toBeNull();
+    expect(projected.handle).toBeNull();
+    expect(projected.verificationSummary).not.toBeNull();
   });
 
-  it('blocks full review reads for viewers while keeping member scope intact', () => {
-    expect(getReviewProjectionPolicy('viewer', 'shortlist_identity')).toEqual({
-      allowed: false,
-      effectiveScope: 'blind',
-      verificationSummaryVisibility: 'none',
-    });
-    expect(getReviewProjectionPolicy('member', 'shortlist_identity')).toEqual({
+  it('keeps reviewer full review reads narrow while manager scope stays intact', () => {
+    expect(getReviewProjectionPolicy('org_reviewer', 'full_identity')).toEqual({
       allowed: true,
       effectiveScope: 'shortlist_identity',
       verificationSummaryVisibility: 'redacted',
+    });
+    expect(getReviewProjectionPolicy('org_manager', 'shortlist_identity')).toEqual({
+      allowed: true,
+      effectiveScope: 'shortlist_identity',
+      verificationSummaryVisibility: 'detailed',
     });
   });
 
@@ -137,9 +142,9 @@ describe('matching review contract', () => {
   });
 
   it('suppresses exact rank unless fairness passes and reviewer role allows it', () => {
-    expect(canRevealExactRank('viewer', 'pass')).toBe(false);
-    expect(canRevealExactRank('member', 'unavailable')).toBe(false);
-    expect(canRevealExactRank('member', 'pass')).toBe(true);
+    expect(canRevealExactRank('org_reviewer', 'pass')).toBe(false);
+    expect(canRevealExactRank('org_manager', 'unavailable')).toBe(false);
+    expect(canRevealExactRank('org_manager', 'pass')).toBe(true);
     expect(
       shouldSuppressExactRank('pass', 'stale', new Date('2026-03-01T00:00:00Z'), new Date())
     ).toBe(true);
@@ -150,6 +155,66 @@ describe('matching review contract', () => {
         suppressExactRank: true,
       })
     );
+  });
+
+  it('maps all five progressive reveal stages and fallback-safe corridor states', () => {
+    expect(resolveProgressiveRevealStage({ scope: 'blind', surface: 'assignment_card' })).toBe(
+      'stage0_anonymous'
+    );
+    expect(resolveProgressiveRevealStage({ scope: 'blind', surface: 'review_detail' })).toBe(
+      'stage1_capability_and_proof'
+    );
+    expect(
+      resolveProgressiveRevealStage({ scope: 'shortlist_identity', surface: 'shortlist' })
+    ).toBe('stage2_contextual_reveal');
+    expect(resolveProgressiveRevealStage({ scope: 'full_identity', surface: 'intro' })).toBe(
+      'stage3_intro_approved'
+    );
+    expect(resolveProgressiveRevealStage({ scope: 'full_identity', surface: 'interview' })).toBe(
+      'stage4_interview_coordination'
+    );
+
+    expect(
+      resolveCanonicalCorridor({
+        reviewStage: 'shortlisted',
+        revealScope: 'shortlist_identity',
+        surface: 'review_detail',
+        fairnessStatus: 'pass',
+        introRequested: true,
+      })
+    ).toEqual(
+      expect.objectContaining({
+        progressiveRevealStage: 'stage2_contextual_reveal',
+        corridorState: 'request_intro',
+        fallbackState: null,
+      })
+    );
+
+    expect(
+      resolveCanonicalCorridor({
+        reviewStage: 'shortlisted',
+        revealScope: 'shortlist_identity',
+        surface: 'review_detail',
+        fairnessStatus: 'breach',
+      })
+    ).toEqual(
+      expect.objectContaining({
+        corridorState: 'intro_hold',
+        fallbackState: 'fairness_suppressed_ranking',
+      })
+    );
+  });
+
+  it('builds visibility-safe why payloads with rank bands instead of exact ranking', () => {
+    const why = buildVisibilitySafeWhy({
+      reasonCodes: ['skills_strong', 'verification_ready'],
+      fairnessStatus: 'elevated',
+      fallbackState: 'fairness_suppressed_ranking',
+      rankBand: 'Top 10',
+    });
+
+    expect(why.reasonCodes).toContain('fairness_ranking_suppressed');
+    expect(why.summary).toContain('Rank band: Top 10');
   });
 
   it('keeps fairness cohort checks separate from Zen opt-in state', () => {

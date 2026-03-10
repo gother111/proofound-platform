@@ -14,10 +14,13 @@ import {
 } from '@/db/schema';
 import {
   buildCandidateReviewProjection,
+  buildVisibilitySafeWhy,
   getShortlistProjectionPolicy,
   getRankBand,
   getVisibleIdentityFields,
   normalizeFairnessStatus,
+  resolveCanonicalCorridor,
+  resolveCanonicalFallbackState,
   shouldSuppressExactRank,
 } from '@/lib/matching/review-contract';
 import { authorize, type OrgRole } from '@/lib/authz';
@@ -107,6 +110,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         verified: matchingProfiles.verified,
         reviewStage: matchReviewStates.reviewStage,
         revealScope: matchReviewStates.revealScope,
+        operationalFallbackMode: matchReviewStates.operationalFallbackMode,
         shortlistedAt: matchReviewStates.shortlistedAt,
         fairnessStatus: matches.fairnessStatus,
         scoreState: matches.scoreState,
@@ -171,6 +175,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           row.staleAt
         );
 
+        const fallbackState = resolveCanonicalFallbackState({
+          operationalFallbackMode: row.operationalFallbackMode,
+          fairnessStatus,
+        });
+
         return {
           id: row.matchId,
           assignmentId: row.assignmentId,
@@ -179,6 +188,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           reviewStage: row.reviewStage,
           revealScope: projectionPolicy.effectiveScope,
           visibleIdentityFields: getVisibleIdentityFields(projectionPolicy.effectiveScope),
+          ...resolveCanonicalCorridor({
+            reviewStage: row.reviewStage,
+            revealScope: projectionPolicy.effectiveScope,
+            surface: 'shortlist',
+            fairnessStatus,
+            operationalFallbackMode: row.operationalFallbackMode,
+          }),
           candidate: buildCandidateReviewProjection(
             {
               profileId: row.profileId,
@@ -207,6 +223,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             rankInfo && !suppressExactRank && orgRole !== 'viewer'
               ? getRankBand(rankInfo.rank, rankInfo.total)
               : 'Shortlisted',
+          why: buildVisibilitySafeWhy({
+            reasonCodes: ['shortlist_selected'],
+            fairnessStatus,
+            fallbackState,
+            rankBand:
+              rankInfo && !suppressExactRank && orgRole !== 'viewer'
+                ? getRankBand(rankInfo.rank, rankInfo.total)
+                : 'Shortlisted',
+          }),
           shortlistedAt: row.shortlistedAt,
         };
       }),

@@ -58,6 +58,11 @@ MVP excludes:
 
 - The canonical MVP corridor is: Proofound MVP is a proof-first, portfolio-first, privacy-first corridor for creating proof, publishing public trust surfaces, verifying credibility, explaining matches, and moving both sides toward qualified intros.
 - This section is a governance override for the full PRD, including later org, analytics, Zen, export, and monetization references.
+- Source precedence for launch:
+  - `PRD_for_a_web_platform_MVP.master-latest.md` defines canonical product behavior and scope.
+  - `PRD_TECHNICAL_REQUIREMENTS.md` Section 7 defines the authoritative technical launch contract and hardening decisions.
+  - `LAUNCH_RUNBOOK.md` is operator-facing execution guidance only and must not redefine product or technical behavior.
+  - mirrored, archived, and executive-summary docs are reference-only and non-authoritative.
 - Contradiction rule:
   - newer canonical section wins
   - older conflicting text is deprecated and must be removed, rewritten, or moved to a post-MVP appendix
@@ -147,6 +152,8 @@ This section is now a short override note only. The full final reconciliation ma
 ### Facts & Decisions
 
 - The canonical master PRD remains the only normative product document.
+- `PRD_TECHNICAL_REQUIREMENTS.md` Section 7 is the authoritative technical launch companion for auth, storage, privacy, observability, reliability, and rollout hardening.
+- `LAUNCH_RUNBOOK.md` is execution-only and may summarize launch operations, but it cannot override product scope, visibility, reveal, export, delete, or rollback rules defined in the master PRD and Section 7.
 - The compatibility mirror is summary-only.
 - Executive summary and archived legacy docs are reference-only.
 - If this section and Section 12 ever overlap, Section 12 wins immediately.
@@ -891,14 +898,19 @@ Canonical events:
 - Individual onboarding collects display name, handle, headline, bio, and location.
 - Onboarding ends with a dedicated **Public portfolio ready** step.
 - Public individual URL: `/portfolio/{handle}`
-- Public portfolio defaults to a minimal safe allowlist:
+- Public portfolio is created as a day-1 public URL when minimum publishable threshold is met.
+- Default publication state is `public_link_only`:
+  - live and shareable
+  - non-indexed by default
+  - separately controlled from matching reveal
+- Public portfolio defaults to a minimal safe allowlist controlled by field-level visibility and public-safety ceilings:
   - header on
   - proof bar on
   - work email off
   - contact off
   - skills off
   - bio off
-- Search indexing is disabled by default.
+- Search indexing is disabled by default and requires an explicit separate opt-in.
 
 ### B. Profile, Skills, and Proof Packs
 
@@ -946,6 +958,7 @@ Canonical events:
 - Zen data is visible only to the user.
 - Zen data is excluded from ranking, reveal, org review, fairness workflows, public rendering, and user-facing analytics.
 - Zen supports export and delete.
+- Zen does not expand into local-resource discovery, coaching, therapy-style support, or outbound wellbeing journeys in MVP.
 
 ### F. Settings, Export, and Delete
 
@@ -964,6 +977,7 @@ Canonical events:
   - public organization portfolio route
 - Public org URL: `/portfolio/org/{slug}`
 - Onboarding ends with an **Organization portfolio ready** step that emphasizes copy and share actions.
+- The default public state is `public_link_only`, with indexing opt-in handled separately and public rendering constrained by field-level visibility and policy ceilings.
 
 ### B. Organization Trust Profile
 
@@ -1003,6 +1017,7 @@ Canonical events:
   - one owner
   - optional reviewer access
 - Multi-layer admin suites, templates, org maps, donor reporting, and heavy operations tooling are out of scope.
+- Broader employer, community, discovery, and operations surfaces remain later-corridor material and must not be read as launch scope.
 
 ### F. BYOC Candidate Invites
 
@@ -1427,8 +1442,10 @@ Analytics for events are internal only and must remain lightweight. They exist t
 ### Purpose of public portfolio pages in MVP
 
 - Public portfolio pages give individuals and organizations one clean, shareable trust surface on day 1.
+- Day-1 public publication defaults to `public_link_only`: live and shareable, but non-indexed unless the owner later opts in and public-safety checks pass.
 - The page helps a public viewer quickly understand who this person or organization is, what public proof exists, and how current that proof is.
 - The page is not a public marketplace listing, not a social feed, and not a directory page.
+- Public publication is separate from matching reveal. A public page never widens blind review or reveal-stage permissions inside matching workflows.
 
 ### Public page types
 
@@ -1499,10 +1516,12 @@ Structured data rules:
 Safe default behavior:
 
 - A newly public page is shareable by direct link but not indexable.
+- This default state is `public_link_only`.
 
 Indexable state:
 
 - A page may become indexable only when the owner explicitly enables indexing and the current page content passes public-safety checks.
+- Field-level visibility, policy ceilings, moderation state, and withdrawn or withheld proof state all apply before the page may become indexable.
 
 Noindex states:
 
@@ -1530,6 +1549,7 @@ Withdrawal and depublish behavior:
 - Public snippets and previews must not keep exposing withdrawn or private proof text or thumbnails.
 - Cache invalidation is required on publish and depublish, indexing toggle, proof withdrawal or deletion, handle or slug rename, and proof summary or public preview image changes.
 - Stale external caches may persist briefly, but Proofound-controlled page responses, metadata, and preview generation must update immediately after the state change.
+- Matching reveal state must not influence signed-out public page rendering, copied links, or metadata generation.
 
 ### Public verification summary behavior
 
@@ -1581,9 +1601,12 @@ Boundaries:
 ### Facts & Decisions
 
 - Public portfolio is a day-1 share surface.
+- The default stable public state is `public_link_only`.
 - One clean template is the MVP default across individual and organization pages.
 - Direct-link sharing is the primary distribution mode.
 - Indexing is separate and opt-in only.
+- Public rendering is controlled by field-level visibility plus policy ceilings, with the narrowest safe result winning.
+- Public publication is not a reveal shortcut and must never weaken blind review or stage-based consent rules.
 - Public trust language must stay scoped and honest.
 - Private, withdrawn, and reveal-gated content never leaks into public pages, metadata, previews, or exports.
 - Proofound does not ship a public directory or SEO-farm surface in MVP.
@@ -1597,7 +1620,9 @@ Boundaries:
 ### Acceptance Criteria
 
 - A public viewer can understand identity, proof presence, proof freshness, and scoped verification quickly.
+- Day-1 public pages default to `public_link_only` and remain non-indexed unless explicit opt-in and public-safety checks pass.
 - No private reviewer notes or reveal-only fields appear on any public surface.
+- Field-level visibility and policy ceilings govern stable public rendering.
 - Copied links always resolve according to current visibility.
 - Noindex and depublish behavior works for pages that are link-only, withdrawn, or blocked.
 - Deleted or withdrawn proofs disappear from page body, previews, counts, and proof detail surfaces.
@@ -1693,416 +1718,124 @@ Rules:
 
 ### Facts & Decisions
 
-- The Proof Pack is the canonical portable proof object for profile credibility, public portfolio rendering, matching summaries, org review, and owner export.
-- MVP portability must increase trust and reuse without introducing standards complexity. The export format is versioned JSON with a JSON-LD shape, deterministic hashing, explicit provenance, and explicit freshness.
-- MVP does not promise blockchain, wallets, decentralized credential exchange, or third-party signature networks.
+- The Proof Pack is the canonical portable proof object for portfolio credibility, matching summaries, org review, owner export, and bring-your-own-candidate proof-card flows.
+- MVP portability must improve trust and reuse without introducing heavyweight infrastructure.
+- Launch portability is structured and versioned, but intentionally narrow:
+  - deterministic export metadata
+  - explicit provenance
+  - scoped public verification status
+  - export portability across owner-visible and public-safe views
+- Launch does not require detached signatures, public verification ledgers, wallet infrastructure, third-party credential registries, or cryptographic verification networks.
+
+### Canonical object relationships
+
+- `proof_artifacts`
+  - Atomic evidence objects such as files, links, images, credentials, references, or assessments.
+- `proof_packs`
+  - Canonical reviewable proof objects that group claims, context, evidence, outcomes, trust state, privacy, and portability.
+- `proof_pack_items`
+  - Ordered membership rows that connect artifacts into a pack.
+- `verification_records`
+  - Trust judgments, refresh state, contradiction state, dispute state, and verification outcomes linked to the relevant pack or artifact.
+- `submissions`
+  - Contextual proof delivery into assignment, invite, match, intro, verification, or manual review flows.
+- `proof_card`
+  - A render surface derived from a selected Proof Pack for submission, review, invite, or export contexts. It is not a separate canonical stored object.
+
+### Launch portability contract
+
 - MVP supports two export scopes only:
-  - `owner_full` for owner-visible export and trusted re-import
-  - `public_safe` for public portfolio sharing and machine-readable public portability
-- The canonical export contract is stable even if MVP persistence uses a mix of first-class columns and canonical metadata fields internally.
-
-### Canonical Object Model
-
-Every Proof Pack must resolve to one canonical object with these top-level fields:
-
-- `proof_pack_id`
-  - Stable UUID for the pack.
-- `owner_user_id`
-  - UUID of the owning individual profile. Present in `owner_full`. Omitted from `public_safe` unless separately public-safe by future policy.
-- `source_artifact_id`
-  - Nullable UUID. Must be set when the pack is directly derived from one canonical source artifact.
-- `source_submission_id`
-  - Nullable UUID. Must be set when the pack is directly derived from one canonical submission or delivery event.
-- `title`
-  - Required short label for the pack.
-- `summary`
-  - Required concise narrative of what the proof shows and why it matters.
-- `capability_tags`
-  - Required array of normalized capability or taxonomy tags.
-- `l4_links`
-  - Required array of linked L4 skill or taxonomy references. Empty array allowed.
-- `tools_used`
-  - Required array of user-visible tools, systems, or methods used in the work.
-- `context`
-  - Required object with:
-    - `subject_type`: `role`, `assignment`, `capability`, `domain`, or `general`
-    - `subject_id`: string or `null`
-    - `role_label`: string or `null`
-    - `organization_label`: string or `null`
-    - `timeframe_label`: string or `null`
-    - `brief`: string or `null`
-    - `owner_confirmed_refreshed_at`: ISO timestamp or `null`
-- `evidence[]`
-  - Required ordered array. Each item contains:
-    - `evidence_id`
-    - `artifact_id`
-    - `type`: `file`, `link`, `image`, `video`, `credential`, `reference`, `assessment`, or `other`
-    - `title`
-    - `summary`
-    - `url`
-    - `issued_at`
-    - `updated_at`
-    - `expires_at`
-    - `visibility`
-    - `withheld`
-    - `withheld_reason`
-- `outcomes[]`
-  - Required ordered array. Each item contains:
-    - `outcome_id`
-    - `label`
-    - `summary`
-    - `metric_label`
-    - `metric_value`
-    - `metric_unit`
-    - `evidence_ids[]`
-- `links[]`
-  - Required ordered array. Each item contains:
-    - `link_id`
-    - `label`
-    - `url`
-    - `link_kind`
-- `created_at`
-  - Required ISO timestamp.
-- `updated_at`
-  - Required ISO timestamp.
-- `freshness_score`
-  - Required deterministic integer: `100`, `70`, `40`, or `10`.
-- `freshness_updated_at`
-  - Required ISO timestamp for the latest freshness recalculation.
-- `provenance`
-  - Required object defined below.
-- `verifier_records`
-  - Required ordered array defined below.
-- `visibility`
-  - Required pack-level maximum visibility: `owner_only`, `matched_org`, `link_only`, or `public`.
-- `export_schema_version`
-  - Required export contract version. MVP starts at `1.0.0`.
-- `portability_hash`
-  - Required SHA-256 hash of the canonical export payload for the selected export scope.
-- `signature_status`
-  - Required MVP enum: `unsigned`, `hash_verified`, or `invalid`.
-
-Additional canonical object rules:
-
-- `source_artifact_id` and `source_submission_id` are both nullable.
-- If a pack is derived from an existing artifact, `source_artifact_id` must be set.
-- If a pack is derived from a submission or assignment delivery, `source_submission_id` must be set.
-- If a pack is composed directly by the owner without one upstream source object, both source pointers may be `null`, but `provenance.origin_type` must be `manual_pack_builder`.
-- `evidence[]`, `outcomes[]`, `links[]`, and `verifier_records` must be emitted in stable order. When explicit product order exists, that order is canonical. Otherwise, sort by stable ID ascending.
-
-`provenance` is a required object with:
-
-- `origin_type`: `upload`, `assignment_delivery`, `org_verification`, `human_review`, `auto_check`, `manual_pack_builder`, or `import`
-- `origin_ref_id`
-- `captured_at`
-- `captured_by_actor_type`: `candidate`, `organization_member`, `platform_admin`, `system`, `service_account`, or `verifier`
-- `captured_by_actor_id`
-- `capture_surface`
-- `review_reference_ids[]`
-- `auto_check_ids[]`
-- `completeness_state`: `complete`, `partial`, or `missing_references`
-
-`verifier_records` is a required array. Each item contains:
-
-- `verifier_record_id`
-- `verification_kind`
-- `status`
-- `verifier_class`
-- `verified_at`
-- `expires_at`
-- `last_refreshed_at`
-- `source`
-- `issue_state`
-
-### JSON-LD Export Model
-
-- MVP export uses a JSON-LD-shaped document with an inline `@context`.
-- MVP export must not depend on a hosted context URL, wallet runtime, or external credential registry.
-- `@type` is always `ProofPack`.
-- JSON-LD in MVP exists for machine-readable portability and public interoperability only.
-
-Canonical export shape:
-
-```json
-{
-  "@context": {
-    "proof_pack_id": "https://proofound.io/ns/proof-pack-id",
-    "owner_user_id": "https://proofound.io/ns/owner-user-id",
-    "capability_tags": "https://proofound.io/ns/capability-tags",
-    "l4_links": "https://proofound.io/ns/l4-links",
-    "tools_used": "https://proofound.io/ns/tools-used",
-    "freshness_score": "https://proofound.io/ns/freshness-score",
-    "provenance": "https://proofound.io/ns/provenance",
-    "verifier_records": "https://proofound.io/ns/verifier-records"
-  },
-  "@type": "ProofPack",
-  "proof_pack_id": "uuid",
-  "owner_user_id": "uuid",
-  "source_artifact_id": null,
-  "source_submission_id": null,
-  "title": "Migration delivery for regional civic platform",
-  "summary": "Led delivery and left auditable evidence of scope, launch, and measurable outcome.",
-  "capability_tags": ["service-design", "delivery-management"],
-  "l4_links": ["l4:service-design", "l4:delivery-management"],
-  "tools_used": ["Notion", "Figma", "PostgreSQL"],
-  "context": {
-    "subject_type": "assignment",
-    "subject_id": "uuid",
-    "role_label": "Delivery Lead",
-    "organization_label": "Proofound",
-    "timeframe_label": "Q4 2025",
-    "brief": "Delivered MVP launch corridor",
-    "owner_confirmed_refreshed_at": "2026-03-01T00:00:00Z"
-  },
-  "evidence": [],
-  "outcomes": [],
-  "links": [],
-  "created_at": "2026-02-01T10:00:00Z",
-  "updated_at": "2026-03-01T10:00:00Z",
-  "freshness_score": 70,
-  "freshness_updated_at": "2026-03-09T00:00:00Z",
-  "provenance": {
-    "origin_type": "assignment_delivery",
-    "origin_ref_id": "uuid",
-    "captured_at": "2026-02-01T10:00:00Z",
-    "captured_by_actor_type": "candidate",
-    "captured_by_actor_id": "uuid",
-    "capture_surface": "assignment_submit_flow",
-    "review_reference_ids": [],
-    "auto_check_ids": [],
-    "completeness_state": "complete"
-  },
-  "verifier_records": [],
-  "visibility": "public",
-  "export_schema_version": "1.0.0",
-  "portability_hash": "sha256-hex",
-  "signature_status": "hash_verified"
-}
-```
-
-### Portability Hash & Signature Rules
-
-- `export_schema_version` starts at `1.0.0` for Proof Pack exports.
-- `portability_hash` is SHA-256 over the canonical JSON serialization of the selected export payload.
-- Canonical serialization rules for MVP:
-  - UTF-8 encoding
-  - recursive key sorting
-  - arrays preserved in canonical emitted order
-  - ISO timestamps normalized to UTC `Z` form
-  - no pretty-printing assumptions
-  - `null` and empty arrays must be emitted explicitly when the field is part of the canonical object for that scope
-- What is hashed now:
-  - the full JSON-LD-shaped Proof Pack payload for the selected scope after visibility filtering
-- What is excluded from the hash now:
-  - download metadata
-  - request metadata
-  - audit metadata
-  - transport wrapper fields
-  - any future detached signature blob
-- Scope affects the hash:
-  - `owner_full` and `public_safe` exports of the same pack produce different hashes when their payloads differ
-- What is signed now:
-  - no detached cryptographic signature is required in MVP
-  - the system stores the deterministic `portability_hash` and any export checksum in server records
-  - `signature_status = hash_verified` only means the exported or imported payload re-hashed to the stored `portability_hash`
-- `signature_status = unsigned` means no verification has been performed yet for that payload instance.
-- `signature_status = invalid` means a supplied or stored payload failed hash verification against the declared `portability_hash`.
-- Deferred post-MVP:
-  - detached Ed25519 signatures
-  - signer identity metadata
-  - key rotation
-  - countersigning
-  - third-party verification workflows
-
-### Freshness Rules
-
-- Proof Pack freshness reuses the MVP repo thresholds already used for proof freshness reasoning.
-- Pack freshness uses only:
-  - child evidence timestamps
-  - verifier refresh timestamps
-  - explicit evidence expiries
-  - `context.owner_confirmed_refreshed_at`
-- For each qualifying evidence item, compute a freshness basis timestamp as the most recent of:
-  - `evidence.updated_at`
-  - `evidence.issued_at`
-  - related verifier `last_refreshed_at`
-  - `context.owner_confirmed_refreshed_at`, when the owner explicitly confirms the evidence is still current
-- Pack freshness is determined by the oldest qualifying evidence basis across the pack, with explicit expiry taking precedence.
-- Freshness states:
-  - `fresh`: no qualifying evidence older than 90 days
-  - `review_soon`: oldest qualifying evidence 91 to 180 days old
-  - `stale`: oldest qualifying evidence 181 to 365 days old
-  - `expired`: any required qualifying evidence explicitly expired, or oldest qualifying evidence older than 365 days
-- `freshness_score` maps deterministically:
-  - `fresh` -> `100`
-  - `review_soon` -> `70`
-  - `stale` -> `40`
-  - `expired` -> `10`
-- Freshness decays daily.
-- Refresh nudges trigger:
-  - once when a pack enters `review_soon`
-  - once when a pack enters `stale`
-  - every 30 days while the pack remains `stale` or `expired`
-- Product treatment:
-  - owner surfaces show the current freshness state, the last refresh date, and a clear refresh action
-  - org review surfaces show muted stale treatment and stop counting the pack as fresh proof
-  - public portfolio surfaces may still show the pack historically, but must label `stale` or `expired` clearly and remove any fresh-proof lift
-
-### Provenance Rules
-
-- Every pack must store where it came from and how it entered the system.
-- One primary `provenance.origin_type` is required per pack:
-  - `upload`
-  - `assignment_delivery`
-  - `org_verification`
-  - `human_review`
-  - `auto_check`
-  - `manual_pack_builder`
-  - `import`
-- Provenance must capture:
-  - source reference ID
-  - capture timestamp
-  - capture actor type and actor ID
-  - capture surface
-  - linked review references
-  - linked auto-check references
-  - completeness state
-- Provenance semantics:
-  - `upload` means the pack originated from candidate-uploaded evidence
-  - `assignment_delivery` means the pack originated from assignment submission or delivery flow
-  - `org_verification` means the pack was materially created or enriched by an org verification workflow
-  - `human_review` means a platform reviewer materially created or confirmed the pack representation
-  - `auto_check` means a system-generated check materially created or enriched the pack
-  - `manual_pack_builder` means the owner composed the pack directly without one single upstream source object
-  - `import` means the pack originated from a prior portability import
-- If pack-level provenance and child evidence provenance differ, child evidence may narrow source detail, but pack-level provenance remains the canonical summary.
-
-### Import / Export Rules
-
-- Export scopes:
   - `owner_full`
-    - includes all owner-visible canonical fields
-    - importable as a trusted owner pack
+    - owner-visible structured export for reuse, download, and later re-import validation
   - `public_safe`
-    - includes only public-visible fields
-    - may include withheld placeholders
-    - is not importable as a trusted owner pack
-- Schema versioning:
-  - imports accept the same major `export_schema_version`
-  - imports reject different major versions
-  - minor and patch versions within major `1` must remain backwards-compatible
-- Dry-run validation is mandatory before apply.
-- Dry-run validation must return:
-  - `errors[]`
-  - `warnings[]`
-  - `conflicts[]`
-  - `missing_references[]`
-- Conflict precedence is deterministic:
-  - exact `proof_pack_id`
-  - then exact `portability_hash`
-  - then source pointer match using `source_artifact_id` or `source_submission_id`
-- Conflict handling rules:
-  - same `proof_pack_id` and same `portability_hash` -> duplicate, safe no-op
-  - same `proof_pack_id` and different `portability_hash` -> reject as `id_conflict`
-  - different `proof_pack_id` and same `portability_hash` -> duplicate content, safe no-op
-  - source pointer match with different `portability_hash` -> reject as `source_conflict`
-- Invalid import behavior:
-  - invalid packs are rejected atomically per pack
-  - the system must not silently drop invalid fields and continue as trusted import
-  - apply may proceed only for packs that pass dry-run validation
-- Missing evidence behavior:
-  - if an `owner_full` import references required evidence that is missing, reject the pack and report `missing_references`
-  - if a `public_safe` export intentionally withholds evidence, the payload must use `withheld = true` and `withheld_reason`, and the pack remains non-importable as trusted owner proof
-
-### Visibility Rules
-
-- Default visibility is private. New packs default to `owner_only` unless explicitly changed by the owner.
-- Pack-level visibility is the maximum outward visibility. Child evidence can narrow visibility but never widen it.
-- `public_safe` exports and public product surfaces must apply field visibility before serialization.
-- Public-safe behavior:
-  - include only public-safe top-level fields and public-safe child items
-  - withhold hidden evidence rather than leaking private metadata
-  - never expose private filenames, hidden URLs, private verifier identity, internal moderation notes, or hidden source references
-- Private-by-default behavior:
-  - `owner_user_id`, `source_submission_id`, internal provenance references, and non-public verifier detail are owner-only unless a later policy explicitly marks them public-safe
-- If a pack is public but a child evidence item is more private, the child item must be withheld from public surfaces and public exports without widening visibility through pack membership.
-
-### Public Portfolio Relationship
-
-- Public portfolio pages render Proof Packs as public-safe portfolio cards derived from the canonical Proof Pack object.
-- Public cards may show only:
-  - `title`
-  - `summary`
-  - allowed `capability_tags`
-  - visible `outcomes`
-  - freshness state
-  - active positive trust cues allowed by the verification policy
-- Public cards must not expose:
-  - private evidence content
-  - hidden evidence counts that reveal withheld material
-  - hidden source links
-  - verifier PII
-  - internal provenance or moderation notes
-- Hidden or private child evidence is withheld entirely from public portfolio pages. Public pages must not render a broken placeholder, private filename, or direct asset URL for withheld evidence.
-
-### API / Data Model Implications
-
-- Proof Pack read APIs must expose the canonical Proof Pack DTO with the field names defined in this block.
-- Export APIs must support:
-  - scope selection: `owner_full` or `public_safe`
-  - explicit `export_schema_version`
-  - deterministic `portability_hash`
-  - `signature_status`
-- Import APIs must support:
-  - dry-run validation
-  - conflict reporting
-  - per-pack apply results
-- MVP storage may continue to compose the canonical object from:
-  - `proof_packs`
-  - `proof_pack_items`
-  - `proof_artifacts`
-  - `verification_records`
-  - `submissions`
-- If MVP persistence does not yet promote all canonical fields to first-class columns, the API contract still must expose them deterministically from canonical metadata or derived fields.
-- The canonical data model implications for MVP are:
-  - `freshness_score`, `freshness_updated_at`, `provenance`, `export_schema_version`, `portability_hash`, and `signature_status` become required pack-level contract fields
-  - `owner_full` and `public_safe` become explicit export scopes
-  - pack-level freshness and signature events become required even if current implementation still emits artifact-level freshness events internally
-
-### Event Tracking
-
-- Required Proof Pack lifecycle and portability events:
-  - `proof_pack_created`
-  - `proof_pack_updated`
-  - `proof_pack_exported`
-  - `proof_pack_import_validated`
-  - `proof_pack_import_completed`
-  - `proof_pack_freshness_changed`
-  - `proof_pack_signature_status_changed`
-- Required minimum payload fields for these events:
-  - `proof_pack_id`
-  - `owner_user_id`
-  - `scope` when export or import applies
+    - public-safe projection suitable for public portfolio rendering or public-safe portability
+- Every exported Proof Pack must carry launch-safe metadata:
   - `export_schema_version`
+  - `export_scope`
   - `portability_hash`
-  - previous and next freshness or signature state when applicable
-  - reason code or validation result
-- Current implementation note:
-  - the repo currently emits mostly artifact-level freshness events
-  - MVP implementation must add pack-level events or a documented pack-level projection so analytics, QA, and product copy stay aligned with this PRD
+  - `verification_status`
+  - `freshness_state`
+  - `generated_at`
+  - `provenance_summary`
+- The launch export format is versioned structured JSON.
+- A JSON-LD-compatible mapping may be added later, but full JSON-LD infrastructure is not required for launch and must not be treated as a launch dependency.
+- Deterministic hashing is required at the product-policy level:
+  - the same unchanged export scope produces the same `portability_hash`
+  - a change to included canonical content changes the `portability_hash`
+  - transport metadata and delivery wrappers do not affect the hash
 
-### Open Questions
+### Provenance and integrity fields
 
-- Post-MVP: should public-safe exports include a stable public owner reference, or should owner identity remain omitted unless the portfolio page itself already publishes it?
-- Post-MVP: should detached signatures be generated only on owner_full exports, or on both export scopes?
-- Post-MVP: should import conflict resolution offer explicit replace or fork actions, or remain reject-or-skip only?
+- Every Proof Pack must retain a canonical provenance summary that answers:
+  - how the pack entered the system
+  - which workflow or source object it came from when known
+  - when it was captured or last refreshed
+  - which actor class captured or confirmed it
+  - whether required references are complete, partial, or missing
+- Launch-safe provenance fields include:
+  - `origin_type`
+  - `origin_ref`
+  - `captured_at`
+  - `captured_by_actor_type`
+  - `capture_surface`
+  - `completeness_state`
+  - `last_verified_at`
+  - `last_refreshed_at`
+- Launch integrity behavior is limited to deterministic hashing and export-version tracking.
+- Detached signatures, signer identity chains, public signature verification, countersigning, and external trust registries are post-launch extensions only.
+
+### Public verification status behavior
+
+- Launch public trust behavior is coarse and scoped.
+- Public-safe surfaces may show only:
+  - current verification status
+  - current freshness state
+  - a latest public-safe effective date
+  - a plain-language provenance summary already allowed by policy
+- Launch does not require a full public verification log.
+- When proof is withdrawn, deleted, disputed beyond public-safe scope, or no longer public, the public-safe status must downgrade or disappear immediately according to visibility rules.
+
+### Import and export rules
+
+- `owner_full` exports may be used for owner-directed portability and later validation.
+- `public_safe` exports must never include owner-private, reveal-gated, or verifier-private data.
+- Import validation must be explicit and fail closed when required canonical fields or references are missing.
+- Trusted attach or reuse must not occur silently from incomplete or scope-mismatched exports.
+- Launch may support import preview and validation before attach; it does not require generalized cross-platform import automation.
+
+### Visibility rules
+
+- Default Proof Pack visibility is private.
+- Pack-level visibility is the maximum outward visibility; child artifacts may only narrow exposure.
+- Public-safe exports and public portfolio cards must apply field-level visibility and policy ceilings before serialization.
+- If a pack is public but a child artifact is more private, the child artifact is withheld without leaking filenames, source URLs, counts, or other private metadata.
+
+### API and product implications
+
+- APIs and product surfaces must reason over `proof_packs`, `proof_artifacts`, `proof_pack_items`, `verification_records`, and `submissions` as the canonical proof model.
+- Compatibility tables or metadata fields may still exist internally, but they must map into this model rather than compete with it.
+- Launch product surfaces that rely on Proof Packs include:
+  - public portfolio
+  - matching summaries
+  - org review
+  - exports
+  - BYOC proof-card flows
+
+### Deferred post-launch extensions
+
+- Full JSON-LD export infrastructure with hosted contexts
+- Detached signatures and signature verification UX
+- Public verification ledgers or public event feeds
+- Third-party credential network interoperability
+- Rich public methodology or integrity reports
 
 ### Acceptance Criteria
 
-- Exporting the same unchanged Proof Pack twice produces the same `portability_hash`.
-- Changing any hashed field changes the `portability_hash`.
-- Changing excluded transport metadata does not change the `portability_hash`.
-- A `public_safe` export never includes private child evidence or verifier PII.
+- Proof Packs remain the canonical proof object across portfolio, matching, org review, exports, and BYOC.
+- `proof_artifacts`, `proof_pack_items`, `verification_records`, and `submissions` have distinct roles and are described without overlap.
+- `owner_full` and `public_safe` exports are defined clearly and do not widen visibility.
+- Launch portability uses explicit versioning, provenance, and deterministic export metadata without promising heavyweight trust infrastructure.
+- Public-safe trust rendering stays coarse, honest, and immediately responsive to visibility or withdrawal changes.
 - A `public_safe` export cannot be imported as a trusted owner pack.
 - Dry-run validation reports missing evidence, version incompatibility, and ID or hash conflicts deterministically.
 - A stale pack remains visible historically but is marked stale and stops satisfying fresh-proof gates.
@@ -3164,14 +2897,19 @@ Stage 0 and Stage 1 may include only:
 ### 6.3 Visibility and Redaction
 
 - Field-level visibility applies everywhere.
-- Redaction is a control that affects previews and allowed renders.
-- Hidden fields must not leak copy actions, deep links, filenames, metadata, or identity-bearing preview data.
+- Effective visibility follows the narrowest-wins rule across pack scope, child-artifact scope, workflow reveal ceiling, moderation state, and policy ceiling.
+- Redaction is a supporting control for previews and allowed renders. It is not a separate reveal system.
+- Matching reveal, public publication, owner preview, export, and operator review are separate render contexts and must not widen one another implicitly.
+- Minimal data collection and PII minimization are launch requirements. Raw PII must not appear in logs, traces, analytics, or public-safe rendering.
+- Hidden fields must not leak through copy actions, deep links, filenames, metadata, or identity-bearing preview data.
 - Manually uploaded artifacts with identifying metadata must render as sanitized, withheld, or requires-review until a later allowed reveal stage.
 
 ### 6.4 Public Portfolio Interaction with Matching
 
 - Public portfolios are explicit publication surfaces.
 - Matching review must not expose a direct portfolio route, handle, or identity-bearing URL before the allowed reveal stage.
+- Public portfolio publication never overrides blind review, stage-based reveal, or consent-gated identity exposure.
+- Reveal remains stage-based, bias-aware, and consent-gated even when a public portfolio exists.
 - Sanitized Proof Pack summaries may appear in matching without exposing the public route.
 
 ### 6.5 Explainable Matching Reason Codes, Overrides, and Fairness Operations (MVP)
@@ -3991,139 +3729,80 @@ These rows are illustrative MVP launch examples. They show how the framework sta
 
 #### Why this exists
 
-- Build trust without turning Proofound into a public audit dump.
-- Make verification provenance legible to a public viewer, proof owner, and authorized reviewer.
-- Show that the matching system evolves over time without black-box vibes.
-- Preserve privacy-safe, scoped transparency rather than full internal disclosure.
+- Build trust without turning launch into a public audit product.
+- Keep public verification behavior legible, coarse, and privacy-safe.
+- Make scoring or policy changes explainable at the product-policy level without exposing raw model internals.
 
-#### Public verification log requirements
+#### Launch-safe public trust behavior
 
-- The public verification log is a public-safe surface attached to a proof, artifact, or public proof summary when that item is visible publicly.
-- It may show only coarse, scoped, public-safe status information:
-  - current verification state
+- Launch may show a coarse public verification summary only where proof is already public and policy allows it.
+- That public-safe summary may include only:
+  - current verification status
   - current freshness state
-  - latest public-safe effective date or timestamp
-  - high-level event labels such as `verified`, `freshness updated`, `verification no longer active`, `withdrawn`, or `imported from older schema`
-  - plain-language provenance summaries such as uploaded by owner, confirmed by organization, reviewed by Proofound, or imported from an earlier Proof Pack export version
-- Public badge changes must render as scoped status transitions, not as dramatic warnings or fraud language.
-- Freshness changes must render as state updates, not as numeric score dumps or raw recalculation traces.
-- Revocations must render as a calm statement that a prior verification is no longer active. They must not expose internal accusations, reviewer disagreement details, or private rationale.
-- When a proof is no longer public, the public verification log must stop showing that proof content immediately. A coarse public-safe withdrawn or unavailable state may remain only when policy explicitly allows it.
+  - latest public-safe effective date
+  - short provenance language already allowed by the public proof policy
+- Launch does not require a full public verification log, full public event history, or public reviewer ledger.
+- If the proof is withdrawn, deleted, disputed beyond public-safe scope, or no longer public, any public-safe trust summary must downgrade or disappear immediately.
+
+#### Internal versus public scope
+
+| Audience          | Launch-safe scope                                                                                                              |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Public viewer     | current public-safe verification status, freshness state, latest public-safe date, and a short provenance label only           |
+| Proof owner       | full owner-visible history, richer provenance, non-public verification records, portability metadata, and remediation guidance |
+| Org reviewer      | workflow-scoped verification and freshness detail for proof already visible in the current review corridor                     |
+| Admin / trust ops | full audit trail, disputes, review reasons, internal version metadata, and private investigation context                       |
+
+- Public, owner, reviewer, and admin transparency surfaces are different products and must not collapse into one another.
+
+#### Algorithm and scoring change transparency
+
+- Proofound should maintain a plain-language product-policy changelog for meaningful matching or scoring changes.
+- Launch changelog entries may include:
+  - version label
+  - effective date
+  - affected surface
+  - short summary of what changed in plain language
+- Launch changelog entries must not include:
+  - raw weights
+  - exploit-enabling thresholds
+  - hidden feature inventory
+  - private cohort analysis
+  - reviewer heuristics or private moderation logic
+- Public phrasing stays scoped and calm, for example:
+  - `matching system updated`
+  - `proof freshness treatment updated`
+  - `explanation wording refined`
 
 #### What remains private
 
 - reviewer private notes
 - admin reason text
-- protected-class or inferred protected-signal content
-- raw internal scoring traces
-- full raw score disclosure unless a future policy explicitly intends it
-- verifier identity details beyond already-approved public-safe scope
-- hidden field values, reveal-gated identity, and workflow-specific private context
+- verifier identity beyond already approved public-safe scope
+- hidden field values and reveal-gated identity
+- raw scoring traces, raw weights, and sensitive fairness operations data
+- protected-class inference or protected-signal discussion
 
-#### Internal vs public transparency split
+#### Deferred post-launch extensions
 
-| Audience          | What they may see                                                                                                                                                                     |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Public viewer     | Current public-safe verification state, freshness state, latest public-safe effective date, coarse provenance language, and narrow lifecycle labels only                              |
-| Proof owner       | Full lifecycle history for their own proof, including private timestamps, richer provenance, non-public verification records, superseded history, and owner-safe remediation guidance |
-| Org reviewer      | Workflow-scoped verification and freshness detail for proofs visible in the relevant review corridor, without unrelated owner-private notes or broader admin-only trust context       |
-| Admin / trust ops | Full audit trail including internal reason codes, reviewer actions, dispute context, revocation context, model and weights metadata, and private investigation notes                  |
-
-- This split is mandatory. The public verification log is not the same surface as owner history, reviewer tooling, or admin audit tooling.
-- Proof owners and authorized reviewers may see fuller history, but public viewers get only the narrow public-safe summary needed to understand provenance and current status.
-
-#### Algorithm changelog requirements
-
-- Proofound must maintain a public-facing algorithm changelog for the matching system.
-- The changelog is a plain-language public change log, not full model documentation.
-- Every public changelog entry must include:
-  - version label
-  - effective date
-  - plain-language summary of what changed
-  - expected user-facing effect category when relevant, such as fairness tuning, proof freshness weighting adjustment, explanation wording improvement, or ranking-policy cleanup
-- Public entries may reference existing internal version concepts such as `score_version`, `model_version`, and `weights_version`, but they must explain the change in plain language.
-- Public changelog entries must avoid black-box phrasing. Use language such as `matching system updated` rather than `the algorithm decided`.
-- The changelog must intentionally not expose:
-  - raw weights
-  - exploit-enabling thresholds
-  - hidden-feature inventory
-  - security-sensitive abuse-detection logic
-  - internal reviewer heuristics
-  - private fairness-slice details
-
-#### Privacy boundaries
-
-- No protected-class inference may appear in the public verification log, public algorithm changelog, counterpart-facing explanations, or related public analytics.
-- No reviewer private notes may appear outside owner-authorized, reviewer-authorized, or admin-authorized surfaces.
-- No full raw score disclosure is allowed in MVP unless a later policy explicitly intends a narrow public contract for it.
-- No hidden field values or reveal-gated identity may leak through status labels, provenance text, or changelog summaries.
-- Transparency must remain honest and scoped. It must not overstate verification coverage, compliance posture, or review certainty.
-
-#### Edge cases
-
-- **Revoked verification**
-  - Public viewer sees that the prior verification is no longer active.
-  - Proof owner sees fuller lifecycle context and next-step guidance.
-  - Org reviewer sees the workflow-relevant status change if the proof remains in scope.
-  - Admin / trust ops see the full internal revocation record and reason context.
-- **Withdrawn proof**
-  - Public rendering of the proof stops immediately.
-  - Public verification log may show a coarse withdrawn or unavailable state only if policy allows it.
-  - Owner retains authorized auditability and export visibility according to existing lifecycle rules.
-- **Imported proof with old version schema**
-  - Public surface may show imported or legacy-version provenance in plain language.
-  - Owner and admins retain the exact `export_schema_version` and import-validation context.
-  - Public surface must not dump compatibility warnings or low-level schema details.
-- **Changed scoring weights**
-  - Public changelog shows version label, effective date, and plain-language summary.
-  - Public surface does not expose raw weights, exact thresholds, or adversarially useful tuning detail.
-  - Admin and fairness review surfaces retain the full versioned metadata needed for audit and analysis.
-
-#### Events and retention
-
-- Public-safe lifecycle events are append-only in intent and must remain legible over time.
-- Public verification log entries should map to existing canonical lifecycle events where possible, including:
-  - `proof_pack_freshness_changed`
-  - `proof_pack_withdrawn`
-  - `verification_revoked`
-  - related import, verification, and trust-tier events already defined elsewhere in this PRD
-- Public retention keeps only user-safe lifecycle history for active and historically relevant states. It is not required to mirror the full internal audit record.
-- Internal audit retention may exceed public retention when needed for dispute handling, fairness review, abuse review, or historical traceability.
-- Withdrawals, deletions, and removals must stop public rendering of affected proof content immediately while preserving authorized internal auditability.
+- Full public verification log or public event ledger
+- Rich public methodology notes or accountability reports
+- Public score-trace or ranking-trace disclosure
+- Broader trust-report publishing infrastructure
 
 #### Facts & Decisions
 
-- Proofound ships a public verification log as a surface, not as a legal record, compliance artifact, or full internal review ledger.
-- Proofound ships a public algorithm changelog for the matching system as a plain-language trust surface, not as full model documentation.
-- Public wording stays scoped and calm:
-  - `verification no longer active`
-  - `matching system updated`
-  - `freshness updated`
-- The public verification log reuses existing PRD vocabulary for verification state, freshness state, provenance, and version metadata rather than inventing a parallel naming system.
-- Public transparency is intentionally incomplete where fuller disclosure would weaken privacy, reviewer safety, abuse resistance, or security posture.
-- Public log granularity is coarse lifecycle state plus date-oriented legibility, not full event payload disclosure.
-- Algorithm transparency defaults to system-level matching changes, not per-user scoring decomposition.
-
-#### Open Questions
-
-- Whether the public verification log should appear first at the proof-detail level only, or also in compact form on portfolio-level proof summaries at launch
-- Whether withdrawn proofs should always show a coarse historical marker publicly, or disappear entirely on some surfaces
-- Whether the public algorithm changelog should group multiple low-risk wording or fairness-tuning changes into one release note entry when they ship together
+- Launch transparency is summary-first, scoped, and privacy-boundaried.
+- Proofound may ship a coarse public verification summary, but not a full public verification log unless already supported as a minimal surface.
+- Launch algorithm or scoring transparency is a plain-language product-policy changelog, not raw model disclosure.
+- Public transparency reuses existing verification, freshness, provenance, and version vocabulary instead of inventing a parallel system.
 
 #### Acceptance Criteria
 
-- Scenario: a public viewer opens a proof with active verification history.
-  - Result: they can see current verification status, freshness, latest public-safe change timing, and coarse provenance language without seeing reviewer notes, raw evidence internals, or raw scoring traces.
-- Scenario: a verification is revoked.
-  - Result: the public surface shows that the verification is no longer active, while owner and authorized reviewer surfaces retain fuller lifecycle context and private notes remain private.
-- Scenario: a proof is withdrawn.
-  - Result: public proof content disappears immediately, and any remaining public log state stays coarse and reveals no hidden proof content.
-- Scenario: a proof imported from an older schema version is displayed.
-  - Result: the public surface may show imported or legacy-version provenance language, while exact schema compatibility detail remains owner-only or internal.
-- Scenario: matching scoring weights change.
-  - Result: the public changelog shows version label, effective date, and a plain-language summary, while raw weights, thresholds, and exploit-sensitive internals remain non-public.
-- Scenario: a counterpart-facing surface renders transparency information.
-  - Result: it never exposes protected-class inference, hidden field values, reveal-gated identity, reviewer private notes, or admin reason text.
+- Public-safe trust rendering stays coarse and never exposes reviewer notes, hidden fields, reveal-gated identity, or raw score internals.
+- Withdrawn, deleted, or no-longer-public proof loses public-safe trust rendering immediately or downgrades to a coarse unavailable state where policy allows it.
+- Any launch changelog for scoring or matching changes uses plain language, version label, and effective date without exposing raw weights or thresholds.
+- The section cannot be read as requiring a full public verification log, public audit ledger, or broader accountability infrastructure at launch.
 
 ---
 
@@ -4709,7 +4388,8 @@ Record the compact implementation-oriented foundation that all PRD behavior assu
 ### Facts & Decisions
 
 - Launch stack is implementation-driven and intentionally narrow.
-- This appendix complements, and does not replace, the technical launch contract already referenced elsewhere.
+- This appendix summarizes the product-facing technical baseline only.
+- `PRD_TECHNICAL_REQUIREMENTS.md` Section 7 remains the authoritative technical launch contract and wins on implementation detail if wording ever overlaps.
 
 ### Canonical Technical Foundation
 
@@ -4725,6 +4405,7 @@ Record the compact implementation-oriented foundation that all PRD behavior assu
 - Database and storage:
   - Postgres via Supabase
   - Drizzle schema and SQL migrations
+  - RLS plus server-side authorization checks
   - append-only audit and lifecycle records for sensitive actions
 - Auth model:
   - Supabase Auth
@@ -4735,12 +4416,14 @@ Record the compact implementation-oriented foundation that all PRD behavior assu
   - quarantine-first upload path
   - public-safe promotion only for allowed safe media
 - Async model:
-  - canonical job queue backed by durable launch-safe storage
+  - Postgres-backed queue tables backed by durable launch-safe storage
   - idempotent workers and cron-triggered processing
 - Observability:
   - structured app logs
-  - Sentry for errors and tracing
-  - Vercel analytics and runtime logs
+  - Sentry for errors and release health
+  - Vercel Analytics for web vitals
+  - Supabase dashboard for database health
+  - one uptime monitor
   - internal audit routes for trust and security review
 - Export and import endpoints:
   - owner export endpoints for versioned JSON
@@ -4777,6 +4460,7 @@ Record the compact implementation-oriented foundation that all PRD behavior assu
 ### Acceptance Criteria
 
 - The appendix matches the current product direction: Next.js, Supabase, Drizzle, scoped tokens, private-by-default storage, structured observability.
+- Supabase SSR cookie auth, RLS plus server-side authorization, English-only runtime, Postgres-backed workers, and the narrow observability stack all match the technical launch contract.
 - No appendix text implies a broader infra stack than launch actually requires.
 - Export/import and upload behaviors align with the canonical visibility and ingest contracts.
 
@@ -4791,6 +4475,7 @@ Define launch gates, smoke tests, synthetic monitors, SLOs, alert thresholds, tr
 - Launch is blocked by failures on trust-critical and privacy-critical paths, not by every non-core feature.
 - Synthetic monitoring must test both success and safe fallback.
 - Rollback is required when a release breaks core trust or privacy paths.
+- This appendix stays aligned with `PRD_TECHNICAL_REQUIREMENTS.md` Section 7 and `LAUNCH_RUNBOOK.md`; it does not redefine the technical launch stack.
 
 ### Pre-Launch Gates
 
@@ -5233,11 +4918,12 @@ Capture the broader operating plan while keeping launch scope disciplined and te
 #### Facts & Decisions
 
 - The pilot plan exists to validate Proofound through curated proof-first use, not open-market scale.
+- This appendix is planning guidance only. It is not launch scope and it does not create launch-blocking requirements beyond Sections 9.2 and 9.3.
 - The roadmap is split into:
   - launch-blocking MVP
   - early post-launch corridor
   - later expansion
-- Foundation and proof-hardening work come before reviewer marketplace, sponsor, and employer-discovery expansion.
+- Foundation and proof-hardening work come before reviewer marketplace, sponsor, employer, university, or community expansion.
 - Community, university, and ambassador concepts are operating corridors, not launch dependencies.
 
 #### Scope tag
@@ -5248,13 +4934,13 @@ Capture the broader operating plan while keeping launch scope disciplined and te
 
 ##### 12-week phased roadmap
 
-| phase / weeks                     | corridor                                  | classification             | required focus                                                                                                                                                            |
-| --------------------------------- | ----------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Foundation, Weeks 1-2             | canonical launch foundation               | launch-blocking MVP        | principals and memberships, visibility matrix, permission matrix, token security, upload quarantine, publish-safe portfolio and org trust surfaces                        |
-| Verification hardening, Weeks 3-4 | proof and trust hardening                 | launch-blocking MVP        | verification flow quality, attestations, structured feedback, reconciliation ledger, explainable matching consistency, launch monitors                                    |
-| Weeks 5-8                         | curated operating pilots                  | early post-launch corridor | 2 NGOs + 1 commune or equivalent, 2 to 3 public events or missions with multiple assignments, early public outcome case studies, thin-market fallback tuning              |
-| Weeks 9-10                        | reviewer and bounty incubation            | later expansion            | reviewer network incubation, reviewer assignment alpha, bounty and sponsor metadata readiness, lightweight dispute intake                                                 |
-| Weeks 11-12                       | employer, university, community corridors | later expansion            | university or first-proof partnership corridor, employer pilot corridor, community ambassador or local chapter concept, early employer discovery and analytics validation |
+| phase / weeks                     | corridor                                  | classification             | required focus                                                                                                                                               |
+| --------------------------------- | ----------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Foundation, Weeks 1-2             | canonical launch foundation               | launch-blocking MVP        | principals and memberships, visibility matrix, permission matrix, token security, upload quarantine, publish-safe portfolio and org trust surfaces           |
+| Verification hardening, Weeks 3-4 | proof and trust hardening                 | launch-blocking MVP        | verification flow quality, attestations, structured feedback, reconciliation ledger, explainable matching consistency, launch monitors                       |
+| Weeks 5-8                         | curated operating pilots                  | early post-launch corridor | 2 NGOs + 1 commune or equivalent, 2 to 3 public events or missions with multiple assignments, early public outcome case studies, thin-market fallback tuning |
+| Weeks 9-10                        | reviewer and bounty incubation            | later expansion            | reviewer network incubation, reviewer assignment alpha, bounty and sponsor metadata readiness, lightweight dispute intake                                    |
+| Weeks 11-12                       | employer, university, community corridors | later expansion            | university or first-proof partnership corridor, narrow employer proof-fit learning corridor, community ambassador or local chapter concept                   |
 
 ##### corridor split
 
@@ -5273,7 +4959,7 @@ Capture the broader operating plan while keeping launch scope disciplined and te
   - reviewer marketplace alpha
   - sponsor and bounty corridor
   - university first-proof programs
-  - employer pilot analytics corridor
+  - employer proof-fit learning corridor
   - ambassador or local chapter experiments
 
 ##### pilot assumptions
@@ -5284,7 +4970,7 @@ Capture the broader operating plan while keeping launch scope disciplined and te
 - early public outcome case studies based on verified public-safe proof
 - reviewer network incubation begins only after launch stability
 - university or first-proof partnership corridor is later, not launch-blocking
-- employer pilot corridor is narrow and proof-first
+- employer corridor is narrow, proof-first, and non-generic
 - community ambassador or local chapter concept remains exploratory
 
 ##### operating checkpoints and risks
@@ -5351,6 +5037,7 @@ Define the disciplined post-MVP alpha corridor that reduces review bottlenecks a
   - reduce reviewer exploitation
   - support social-good and sponsored proof work later
 - This corridor is explicitly **not launch-blocking**.
+- This corridor is post-launch planning only and must not be read as active MVP launch scope.
 - The corridor is internal or scoped alpha infrastructure first, not a public two-sided marketplace.
 - Full payouts, escrow, payroll, legal automation, and generalized billing remain out of scope.
 
@@ -5584,6 +5271,7 @@ Complement the MVP analytics contract with broader ambition metrics without repl
 
 - Section 7.6 remains the detailed MVP trust analytics contract.
 - This appendix clarifies broader ambition KPIs, audience split, privacy rules, and launch-versus-post-launch tracking status.
+- Nothing in this appendix adds a launch KPI or launch dashboard requirement beyond Section 7.6.
 - User-facing analytics remain calm, bounded, and non-BI.
 
 #### Scope tag
@@ -5796,6 +5484,7 @@ Make public trust ambitions explicit while preserving privacy, reviewer safety, 
 - Proofound should be publicly legible about verification and scoring changes without exposing private internals.
 - Public transparency must remain narrower than owner history, reviewer tooling, or trust-ops audit tooling.
 - Launch-safe transparency is summary-first, versioned, and privacy-boundaried.
+- Launch does not require a broader public accountability surface than the coarse public-safe trust behavior already defined elsewhere in this PRD.
 
 #### Scope tag
 
@@ -5991,6 +5680,7 @@ Close the reconciliation pass with one explicit operating recommendation about w
   - ATS or HRIS expansion
   - donor, investor, or enterprise reporting suites
 - This division is correct because Proofound’s credibility depends on a narrow trustworthy launch corridor, not on prematurely simulating an all-in-one labor, funding, analytics, or recruiting platform.
+- This section is a reading aid only. It must not be used to widen launch scope beyond the canonical MVP sections and Section 7 technical contract.
 
 #### Scope tag
 
@@ -6036,3 +5726,9 @@ Close the reconciliation pass with one explicit operating recommendation about w
 - Acceptance criteria match analytics rules and event names.
 - Out-of-scope language matches the included MVP features.
 - User journeys do not reintroduce removed scope.
+
+## 14. Final Reconciliation Note
+
+- This document is authoritative for Proofound MVP product behavior, scope, vocabulary, lifecycle rules, visibility rules, and launch-safe user experience.
+- It defers launch implementation and hardening detail to `PRD_TECHNICAL_REQUIREMENTS.md` Section 7 and defers operator procedure to `LAUNCH_RUNBOOK.md`.
+- Archived, mirrored, summary, or deprecated assumptions must not be used for MVP launch implementation.

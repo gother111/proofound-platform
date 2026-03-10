@@ -206,8 +206,8 @@ describe('Extended RLS Privacy Policies', () => {
       const { error: membershipError } = await serviceClient.from('organization_members').insert({
         org_id: org!.id,
         user_id: userId,
-        role: 'owner',
-        status: 'active',
+        role: 'org_owner',
+        state: 'active',
       });
 
       expect(membershipError).toBeNull();
@@ -255,7 +255,7 @@ describe('Extended RLS Privacy Policies', () => {
 
       expectAuthorized(activeAssignment, createError, 'Setup should create an active assignment');
 
-      // Bob should be able to see active assignments
+      // Active assignments remain discoverable to authenticated users.
       const bobClient = await createAuthenticatedClient(bob.email, bob.password);
 
       const { data, error } = await bobClient
@@ -384,14 +384,15 @@ describe('Extended RLS Privacy Policies', () => {
       orgId = data!.id;
       expect(data?.slug.startsWith('test-org-privacy-')).toBe(true);
 
-      // Add Alice as owner
-      const { data: ownerMembership, error: ownerMembershipError } = await aliceClient
+      // Bootstrap ownership through the trusted setup path.
+      const serviceClient = createServiceRoleClient();
+      const { data: ownerMembership, error: ownerMembershipError } = await serviceClient
         .from('organization_members')
         .insert({
           org_id: orgId,
           user_id: alice.id,
-          role: 'owner',
-          status: 'active',
+          role: 'org_owner',
+          state: 'active',
         })
         .select()
         .single();
@@ -399,7 +400,7 @@ describe('Extended RLS Privacy Policies', () => {
       expectAuthorized(
         ownerMembership,
         ownerMembershipError,
-        'Alice should be able to add herself as org owner'
+        'Setup should add Alice as org owner'
       );
     });
 
@@ -410,8 +411,8 @@ describe('Extended RLS Privacy Policies', () => {
       await serviceClient.from('organization_members').insert({
         org_id: orgId,
         user_id: bob.id,
-        role: 'member',
-        status: 'active',
+        role: 'org_reviewer',
+        state: 'active',
       });
 
       // Alice (owner) should see Bob in members list
@@ -438,7 +439,7 @@ describe('Extended RLS Privacy Policies', () => {
       expectEmpty(data, error, 'Carol should not see organization members');
     });
 
-    test('✅ Only admins/owners can manage organization members', async () => {
+    test('✅ Only managers/owners can manage organization members', async () => {
       const aliceClient = await createAuthenticatedClient(alice.email, alice.password);
 
       // Alice (owner) can invite new members
@@ -447,7 +448,7 @@ describe('Extended RLS Privacy Policies', () => {
         .insert({
           org_id: orgId,
           email: 'newuser@test.com',
-          role: 'member',
+          role: 'org_reviewer',
           token: 'test-invite-token-' + Date.now(),
           expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
           invited_by: alice.id,

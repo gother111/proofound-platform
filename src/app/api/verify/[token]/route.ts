@@ -12,9 +12,12 @@ import {
 } from '@/lib/verification/integrity';
 import {
   CAPABILITY_TOKEN_CLASSES,
+  beginCapabilityTokenRedeemSession,
+  getCapabilityRedeemSessionCookieName,
   inspectCapabilityToken,
   redeemCapabilityToken,
 } from '@/lib/security/capability-tokens';
+import { listCanonicalSkillProofRowsForOwnerSkill } from '@/lib/proofs/canonical-pack';
 
 const VerifyResponseSchema = z.object({
   action: z.enum(['accept', 'decline']),
@@ -87,21 +90,6 @@ function isSkillRelationQueryError(error: unknown): boolean {
     errorText.includes('skills_taxonomy') ||
     errorText.includes('skills') ||
     errorText.includes('relationship')
-  );
-}
-
-function isUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
-}
-
-function shouldFallbackToLegacyRequestIdLookup(token: string, tokenLookupError: unknown): boolean {
-  if (!isUuid(token)) {
-    return false;
-  }
-
-  return (
-    isMissingColumnError(tokenLookupError, 'verification_token') ||
-    isNotFoundError(tokenLookupError)
   );
 }
 
@@ -208,7 +196,7 @@ async function getSkillVerificationByTokenOrLegacyId(
     return false;
   };
 
-  const runLookup = async (column: 'verification_token' | 'id', value: string) => {
+  const runLookupById = async (value: string) => {
     const selectClauses = [selectClause, ...fallbackSelectClauses];
     let lastError: unknown = null;
 
@@ -217,7 +205,7 @@ async function getSkillVerificationByTokenOrLegacyId(
       const lookup = await client
         .from('skill_verification_requests')
         .select(currentSelectClause)
-        .eq(column, value)
+        .eq('id', value)
         .single();
 
       if (lookup.data) {
@@ -244,29 +232,13 @@ async function getSkillVerificationByTokenOrLegacyId(
     capabilityLookup.token.source_table === 'skill_verification_requests' &&
     capabilityLookup.token.source_id
   ) {
-    const capabilityIdLookup = await runLookup('id', capabilityLookup.token.source_id);
+    const capabilityIdLookup = await runLookupById(capabilityLookup.token.source_id);
     if (capabilityIdLookup.data) {
       return { data: capabilityIdLookup.data as any, error: null };
     }
   }
 
-  const tokenLookup = await runLookup('verification_token', token);
-
-  if (tokenLookup.data) {
-    return { data: tokenLookup.data as any, error: null };
-  }
-
-  if (!shouldFallbackToLegacyRequestIdLookup(token, tokenLookup.error)) {
-    return { data: null, error: tokenLookup.error };
-  }
-
-  const idLookup = await runLookup('id', token);
-
-  if (idLookup.data) {
-    return { data: idLookup.data as any, error: null };
-  }
-
-  return { data: null, error: idLookup.error || tokenLookup.error };
+  return { data: null, error: capabilityLookup.ok ? null : capabilityLookup.reason };
 }
 
 function normalizeBaseUrl(url?: string | null) {
@@ -848,17 +820,24 @@ async function getImpactVerificationRequestByToken(
     return { data, error };
   }
 
-  const { data, error } = await adminClient
-    .from('impact_story_verification_requests')
-    .select('*')
-    .eq('token', token)
-    .maybeSingle();
+  return { data: null, error: capabilityLookup.ok ? null : capabilityLookup.reason };
+}
 
-  if (error && isRelationMissingError(error)) {
-    return { data: null, error: null };
+function toNeutralCapabilityTokenError(reason: unknown) {
+  switch (reason) {
+    case 'expired':
+      return NextResponse.json({ error: 'Verification request has expired' }, { status: 410 });
+    case 'replayed':
+      return NextResponse.json(
+        { error: 'Verification request has already been used' },
+        { status: 409 }
+      );
+    default:
+      return NextResponse.json(
+        { error: 'Verification request not found or invalid token' },
+        { status: 404 }
+      );
   }
-
-  return { data, error };
 }
 
 /**
@@ -873,6 +852,7 @@ export async function GET(
   try {
     const supabase = await createClient();
     const { token } = await params;
+    const authIdentity = await getOptionalAuthIdentity(supabase);
     let skillDataClient:
       | ReturnType<typeof createAdminClient>
       | Awaited<ReturnType<typeof createClient>> = supabase;
@@ -884,6 +864,17 @@ export async function GET(
     // 1) Try impact story verification first (new flow)
     try {
       const adminClient = createAdminClient();
+      const impactPreview = await beginCapabilityTokenRedeemSession(token, {
+        tokenClass: CAPABILITY_TOKEN_CLASSES.IMPACT_VERIFICATION_RESPONSE,
+        actor: {
+          email: authIdentity.email,
+          profileId: authIdentity.profileId,
+          principalType: authIdentity.isAuthenticated ? 'user_account' : 'external_email',
+          ip: request.headers.get('x-forwarded-for'),
+          userAgent: request.headers.get('user-agent'),
+        },
+        metadata: { surface: 'verify_impact_preview' },
+      });
       const { data: impactVerification, error: impactVerificationError } =
         await getImpactVerificationRequestByToken(adminClient, token);
 
@@ -899,7 +890,11 @@ export async function GET(
         ) {
           await adminClient
             .from('impact_story_verification_requests')
-            .update({ status: 'expired', updated_at: new Date().toISOString() })
+            .update({
+              status: 'expired',
+              expired_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
             .eq('id', impactVerification.id);
 
           impactVerification.status = 'expired';
@@ -935,7 +930,7 @@ export async function GET(
           toStringOrNull(impactStory?.affiliation_details) ||
           toStringOrNull(impactStory?.org_description);
 
-        return NextResponse.json({
+        const response = NextResponse.json({
           verification: {
             id: impactVerification.id,
             verification_type: 'impact_story',
@@ -968,6 +963,24 @@ export async function GET(
             expires_at: impactVerification.expires_at,
           },
         });
+
+        if (impactPreview.ok) {
+          response.cookies.set(
+            getCapabilityRedeemSessionCookieName(
+              CAPABILITY_TOKEN_CLASSES.IMPACT_VERIFICATION_RESPONSE
+            ),
+            impactPreview.redeemSessionNonce,
+            {
+              httpOnly: true,
+              sameSite: 'lax',
+              secure: process.env.NODE_ENV === 'production',
+              maxAge: impactPreview.maxAgeSeconds,
+              path: '/',
+            }
+          );
+        }
+
+        return response;
       }
     } catch (impactError) {
       console.error('Impact verification lookup failed, continuing to skill lookup:', impactError);
@@ -983,6 +996,17 @@ export async function GET(
     }
 
     // 2) Fallback to existing skill verification flow
+    const skillPreview = await beginCapabilityTokenRedeemSession(token, {
+      tokenClass: CAPABILITY_TOKEN_CLASSES.SKILL_VERIFICATION_RESPONSE,
+      actor: {
+        email: authIdentity.email,
+        profileId: authIdentity.profileId,
+        principalType: authIdentity.isAuthenticated ? 'user_account' : 'external_email',
+        ip: request.headers.get('x-forwarded-for'),
+        userAgent: request.headers.get('user-agent'),
+      },
+      metadata: { surface: 'verify_skill_preview' },
+    });
     const { data: verification, error: verificationError } =
       await getSkillVerificationByTokenOrLegacyId(
         skillDataClient,
@@ -1055,7 +1079,7 @@ export async function GET(
       );
 
     if (verificationError) {
-      if (isNotFoundError(verificationError)) {
+      if (verificationError === 'invalid' || isNotFoundError(verificationError)) {
         return NextResponse.json(
           { error: 'Verification request not found or invalid token' },
           { status: 404 }
@@ -1082,7 +1106,10 @@ export async function GET(
       if (normalizedVerification.status === 'pending') {
         await skillDataClient
           .from('skill_verification_requests')
-          .update({ status: 'expired' })
+          .update({
+            status: 'expired',
+            expired_at: new Date().toISOString(),
+          })
           .eq('id', normalizedVerification.id);
       }
 
@@ -1104,12 +1131,13 @@ export async function GET(
       console.error('Skill requester profile lookup error:', requesterProfileError);
     }
 
-    const { data: skillProofs, error: skillProofsError } = await skillDataClient
-      .from('skill_proofs')
-      .select('id, proof_type, title, description, url, file_path, issued_date, expires_date')
-      .eq('skill_id', normalizedVerification.skill_id)
-      .eq('profile_id', normalizedVerification.requester_profile_id);
-    if (skillProofsError) {
+    let skillProofs: SkillProofContext[] = [];
+    try {
+      skillProofs = await listCanonicalSkillProofRowsForOwnerSkill(
+        normalizedVerification.requester_profile_id,
+        normalizedVerification.skill_id
+      );
+    } catch (skillProofsError) {
       console.error('Skill proof lookup error:', skillProofsError);
     }
 
@@ -1134,7 +1162,7 @@ export async function GET(
       }
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       verification: {
         id: normalizedVerification.id,
         verification_type: 'skill',
@@ -1155,11 +1183,25 @@ export async function GET(
             : null,
         created_at: normalizedVerification.created_at,
         expires_at: normalizedVerification.expires_at,
-        proofs: Array.isArray(skillProofs)
-          ? skillProofs.map((proof) => sanitizeSkillProofForResponse(proof as SkillProofContext))
-          : [],
+        proofs: skillProofs.map((proof) => sanitizeSkillProofForResponse(proof)),
       },
     });
+
+    if (skillPreview.ok) {
+      response.cookies.set(
+        getCapabilityRedeemSessionCookieName(CAPABILITY_TOKEN_CLASSES.SKILL_VERIFICATION_RESPONSE),
+        skillPreview.redeemSessionNonce,
+        {
+          httpOnly: true,
+          sameSite: 'lax',
+          secure: process.env.NODE_ENV === 'production',
+          maxAge: skillPreview.maxAgeSeconds,
+          path: '/',
+        }
+      );
+    }
+
+    return response;
   } catch (error) {
     console.error('Verify GET error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -1184,6 +1226,14 @@ export async function POST(
       | Awaited<ReturnType<typeof createClient>> = supabase;
 
     const validated = VerifyResponseSchema.parse(body);
+    const impactRedeemSessionNonce =
+      request.cookies.get(
+        getCapabilityRedeemSessionCookieName(CAPABILITY_TOKEN_CLASSES.IMPACT_VERIFICATION_RESPONSE)
+      )?.value ?? null;
+    const skillRedeemSessionNonce =
+      request.cookies.get(
+        getCapabilityRedeemSessionCookieName(CAPABILITY_TOKEN_CLASSES.SKILL_VERIFICATION_RESPONSE)
+      )?.value ?? null;
 
     if (!token || token.length < 32) {
       return NextResponse.json({ error: 'Invalid verification token' }, { status: 400 });
@@ -1213,7 +1263,11 @@ export async function POST(
         if (impactVerification.expires_at && new Date(impactVerification.expires_at) < new Date()) {
           await adminClient
             .from('impact_story_verification_requests')
-            .update({ status: 'expired', updated_at: new Date().toISOString() })
+            .update({
+              status: 'expired',
+              expired_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
             .eq('id', impactVerification.id);
 
           return NextResponse.json(
@@ -1236,13 +1290,32 @@ export async function POST(
 
           if (!normalizedVerifierEmail || authIdentity.email !== normalizedVerifierEmail) {
             return NextResponse.json(
-              {
-                error: 'Signed-in account does not match the intended verifier.',
-                code: 'VERIFIER_IDENTITY_MISMATCH',
-              },
-              { status: 403 }
+              { error: 'Verification request not found or invalid token' },
+              { status: 404 }
             );
           }
+        }
+
+        const redeemedImpactToken = await redeemCapabilityToken(token, {
+          tokenClass: CAPABILITY_TOKEN_CLASSES.IMPACT_VERIFICATION_RESPONSE,
+          actor: {
+            email: authIdentity.email,
+            profileId: authIdentity.profileId,
+            principalType: authIdentity.isAuthenticated ? 'user_account' : 'external_email',
+            ip: request.headers.get('x-forwarded-for'),
+            userAgent: request.headers.get('user-agent'),
+          },
+          consume: true,
+          requireRedeemSessionNonce: true,
+          redeemSessionNonce: impactRedeemSessionNonce,
+          metadata: {
+            requestId: impactVerification.id,
+            action: validated.action,
+          },
+        });
+
+        if (!redeemedImpactToken.ok) {
+          return toNeutralCapabilityTokenError(redeemedImpactToken.reason);
         }
 
         const { data: impactStory, error: impactStoryError } = await getImpactStoryContext(
@@ -1357,22 +1430,6 @@ export async function POST(
             { status: 500 }
           );
         }
-
-        await redeemCapabilityToken(token, {
-          tokenClass: CAPABILITY_TOKEN_CLASSES.IMPACT_VERIFICATION_RESPONSE,
-          actor: {
-            email: authIdentity.email,
-            profileId: authIdentity.profileId,
-            principalType: authIdentity.isAuthenticated ? 'user_account' : 'external_email',
-            ip: request.headers.get('x-forwarded-for'),
-            userAgent: request.headers.get('user-agent'),
-          },
-          consume: true,
-          metadata: {
-            requestId: impactVerification.id,
-            action: validated.action,
-          },
-        });
 
         if (
           validated.action === 'accept' &&
@@ -1566,7 +1623,7 @@ export async function POST(
       );
 
     if (verificationError) {
-      if (isNotFoundError(verificationError)) {
+      if (verificationError === 'invalid' || isNotFoundError(verificationError)) {
         return NextResponse.json(
           { error: 'Verification request not found or invalid token' },
           { status: 404 }
@@ -1600,11 +1657,8 @@ export async function POST(
 
       if (!normalizedSkillVerifierEmail || authIdentity.email !== normalizedSkillVerifierEmail) {
         return NextResponse.json(
-          {
-            error: 'Signed-in account does not match the intended verifier.',
-            code: 'VERIFIER_IDENTITY_MISMATCH',
-          },
-          { status: 403 }
+          { error: 'Verification request not found or invalid token' },
+          { status: 404 }
         );
       }
     }
@@ -1622,10 +1676,35 @@ export async function POST(
     ) {
       await supabase
         .from('skill_verification_requests')
-        .update({ status: 'expired' })
+        .update({
+          status: 'expired',
+          expired_at: new Date().toISOString(),
+        })
         .eq('id', normalizedVerification.id);
 
       return NextResponse.json({ error: 'This verification request has expired' }, { status: 400 });
+    }
+
+    const redeemedSkillToken = await redeemCapabilityToken(token, {
+      tokenClass: CAPABILITY_TOKEN_CLASSES.SKILL_VERIFICATION_RESPONSE,
+      actor: {
+        email: authIdentity.email,
+        profileId: authIdentity.profileId,
+        principalType: authIdentity.isAuthenticated ? 'user_account' : 'external_email',
+        ip: request.headers.get('x-forwarded-for'),
+        userAgent: request.headers.get('user-agent'),
+      },
+      consume: true,
+      requireRedeemSessionNonce: true,
+      redeemSessionNonce: skillRedeemSessionNonce,
+      metadata: {
+        requestId: normalizedVerification.id,
+        action: validated.action,
+      },
+    });
+
+    if (!redeemedSkillToken.ok) {
+      return toNeutralCapabilityTokenError(redeemedSkillToken.reason);
     }
 
     const newStatus = validated.action === 'accept' ? 'accepted' : 'declined';
@@ -1708,22 +1787,6 @@ export async function POST(
       console.error('Error updating verification:', updateError);
       return NextResponse.json({ error: 'Failed to update verification status' }, { status: 500 });
     }
-
-    await redeemCapabilityToken(token, {
-      tokenClass: CAPABILITY_TOKEN_CLASSES.SKILL_VERIFICATION_RESPONSE,
-      actor: {
-        email: authIdentity.email,
-        profileId: authIdentity.profileId,
-        principalType: authIdentity.isAuthenticated ? 'user_account' : 'external_email',
-        ip: request.headers.get('x-forwarded-for'),
-        userAgent: request.headers.get('user-agent'),
-      },
-      consume: true,
-      metadata: {
-        requestId: normalizedVerification.id,
-        action: validated.action,
-      },
-    });
 
     if (validated.action === 'accept' && mergedIntegrity.integrityStatus === 'clear') {
       const { data: skill } = await skillDataClient

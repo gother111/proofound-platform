@@ -28,7 +28,6 @@ type InviteState = {
   matchId: string | null;
   conversationId: string | null;
   proofSubmittedAt: string | null;
-  proofShareToken: string | null;
 };
 
 type OrganizationState = {
@@ -391,11 +390,6 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
               <p className="text-sm text-emerald-700">
                 Proof Card submitted. The company can now review it.
               </p>
-              {invite.proofShareToken ? (
-                <Link href={`/p/${invite.proofShareToken}`} target="_blank">
-                  <Button variant="outline">Open submitted Proof Card</Button>
-                </Link>
-              ) : null}
             </div>
           ) : null}
         </CardContent>

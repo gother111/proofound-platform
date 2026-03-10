@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { revalidatePublicPortfolioByProfileId } from '@/lib/portfolio/public-invalidation';
 import { headers } from 'next/headers';
 import { eq, and, or } from 'drizzle-orm';
 import { randomBytes } from 'node:crypto';
@@ -16,8 +17,6 @@ import {
   volunteering,
   skills as skillsTable,
   skillsTaxonomy,
-  skillProofs,
-  skillVerificationRequests,
 } from '@/db/schema';
 import { requireAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -41,6 +40,7 @@ import {
   pruneIndividualPurposeLinks,
 } from '@/lib/profile/normalizePurposeLinks';
 import { hasRequiredPurposeLinks } from '@/lib/purpose/normalizePurposeLinks';
+import { listCanonicalSkillProofSummariesForOwner } from '@/lib/proofs/canonical-pack';
 import {
   VERIFICATION_INTEGRITY_REASONS,
   assessVerificationRequestIntegrity,
@@ -211,6 +211,7 @@ async function updatePurposeTextField(
   await checkAndEmitProfileActivation(user.id);
 
   revalidatePath('/app/i/profile');
+  await revalidatePublicPortfolioByProfileId(user.id);
 }
 
 async function replacePurposeListField(field: PurposeListField, values: Value[] | string[]) {
@@ -275,6 +276,7 @@ async function replacePurposeListField(field: PurposeListField, values: Value[] 
   });
 
   revalidatePath('/app/i/profile');
+  await revalidatePublicPortfolioByProfileId(user.id);
 }
 
 /**
@@ -485,35 +487,26 @@ export async function getProfileData(): Promise<ProfileData> {
 
     // Transform L4 skills to profile format
     // Check for proofs to determine verified status
-    let proofCounts: Record<string, number> = {};
+    let trustedSkillIds = new Set<string>();
     let proofArtifactCount = 0;
     let acceptedVerificationCount = 0;
     try {
-      const proofs = await db
-        .select({ skillId: skillProofs.skillId })
-        .from(skillProofs)
-        .where(eq(skillProofs.profileId, user.id));
-      proofArtifactCount = proofs.length;
-      proofs.forEach((p) => {
-        proofCounts[p.skillId] = (proofCounts[p.skillId] || 0) + 1;
-      });
+      const skillProofSummaries = await listCanonicalSkillProofSummariesForOwner(user.id);
+      proofArtifactCount = skillProofSummaries.reduce(
+        (sum, summary) => sum + summary.proofCount,
+        0
+      );
+      acceptedVerificationCount = skillProofSummaries.reduce(
+        (sum, summary) => sum + summary.verificationCount,
+        0
+      );
+      trustedSkillIds = new Set(
+        skillProofSummaries
+          .filter((summary) => summary.hasTrustedSignal)
+          .map((summary) => summary.skillId)
+      );
     } catch {
       // Continue without proof counts
-    }
-
-    try {
-      const verificationRows = await db
-        .select({ id: skillVerificationRequests.id })
-        .from(skillVerificationRequests)
-        .where(
-          and(
-            eq(skillVerificationRequests.requesterProfileId, user.id),
-            eq(skillVerificationRequests.status, 'accepted')
-          )
-        );
-      acceptedVerificationCount = verificationRows.length;
-    } catch {
-      // Continue without accepted verification count
     }
 
     const mappedSkills: Skill[] = skillRows.map((row: any) => {
@@ -522,7 +515,7 @@ export async function getProfileData(): Promise<ProfileData> {
       return {
         id: row.id,
         name: skillName,
-        verified: (proofCounts[row.id] || 0) > 0,
+        verified: trustedSkillIds.has(row.id),
       };
     });
 
@@ -741,6 +734,7 @@ export async function updateBasicInfo(updates: Partial<BasicInfo>) {
   }
 
   revalidatePath('/app/i/profile');
+  await revalidatePublicPortfolioByProfileId(user.id);
 }
 
 export async function updateMission(
@@ -778,6 +772,7 @@ export async function replaceSkills(skills: Skill[]) {
   await checkAndEmitProfileActivation(user.id);
 
   revalidatePath('/app/i/profile');
+  await revalidatePublicPortfolioByProfileId(user.id);
 }
 
 const ROLE_SCOPE_LABELS: Record<ImpactStoryRoleScope, string> = {

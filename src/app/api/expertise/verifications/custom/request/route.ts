@@ -3,13 +3,17 @@ import { z } from 'zod';
 
 import { requireAuth } from '@/lib/auth';
 import { sendEmail } from '@/lib/email/sender';
+import {
+  CAPABILITY_BINDINGS,
+  CAPABILITY_TOKEN_CLASSES,
+  issueCapabilityToken,
+} from '@/lib/security/capability-tokens';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import {
   CUSTOM_VERIFICATION_ARTIFACT_TYPES,
   CUSTOM_VERIFICATION_RELATIONSHIPS,
   artifactTypeLabel,
-  generateVerificationToken,
   hashVerificationToken,
   mapCustomRelationshipToSkillVerifierSource,
   normalizeVerifierEmail,
@@ -518,8 +522,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const token = generateVerificationToken();
-    const tokenHash = hashVerificationToken(token);
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 14);
 
@@ -536,15 +538,41 @@ export async function POST(request: NextRequest) {
       console.warn('Could not resolve verifier profile via admin client');
     }
 
+    const requestId = crypto.randomUUID();
+    const issued = await issueCapabilityToken({
+      tokenClass: CAPABILITY_TOKEN_CLASSES.CUSTOM_VERIFICATION_RESPONSE,
+      sourceTable: 'custom_verification_requests',
+      sourceId: requestId,
+      actionScope: 'custom_verification.respond',
+      subjectType: 'custom_verification_request',
+      subjectId: requestId,
+      actorBinding: verifierProfileId
+        ? CAPABILITY_BINDINGS.EMAIL_THEN_PROFILE_LOCK
+        : CAPABILITY_BINDINGS.EMAIL_HASH,
+      actorEmail: verifierEmail,
+      actorProfileId: verifierProfileId,
+      expiresAt,
+      singleUse: true,
+      maxUses: 1,
+      scopeKey: `custom_verification:${user.id}:${verifierEmail}`,
+      revokePriorActiveTokensForScope: true,
+      metadata: {
+        relationship: parsed.data.relationship,
+        artifactCount: selectedArtifacts.length,
+      },
+    });
+
     const { data: customRequest, error: customRequestError } = await supabase
       .from('custom_verification_requests')
       .insert({
+        id: requestId,
         requester_profile_id: user.id,
         verifier_email: verifierEmail,
         verifier_profile_id: verifierProfileId,
         verifier_relationship: parsed.data.relationship,
         message: parsed.data.message?.trim() || null,
-        token_hash: tokenHash,
+        token_hash: issued.tokenHash,
+        capability_token_id: issued.token.id,
         status: 'pending',
         expires_at: expiresAt.toISOString(),
       })
@@ -657,7 +685,7 @@ export async function POST(request: NextRequest) {
       process.env.NEXT_PUBLIC_APP_URL ||
       process.env.NEXT_PUBLIC_SITE_URL ||
       'http://localhost:3000';
-    const verifyUrl = `${baseUrl}/verify/custom/${token}`;
+    const verifyUrl = `${baseUrl}/verify/custom/${issued.rawToken}`;
 
     const artifactLines = selectedArtifacts
       .slice(0, 12)

@@ -73,8 +73,7 @@ export type TrustSignals = {
   badges: Array<{
     key: string;
     label: string;
-    meaning: string;
-    doesNotMean: string;
+    state: string;
   }>;
   activeIssues: Array<{
     slot: string;
@@ -175,8 +174,7 @@ export function buildTrustSignals(
     badges: (policySummary?.publicBadges ?? []).map((badge) => ({
       key: badge.key,
       label: badge.label,
-      meaning: badge.meaning,
-      doesNotMean: badge.doesNotMean,
+      state: badge.state,
     })),
     activeIssues: (policySummary?.activeIssues ?? []).map((issue) => ({
       slot: issue.slot,

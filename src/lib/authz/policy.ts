@@ -1,8 +1,21 @@
-export const ORG_ROLE_VALUES = ['owner', 'admin', 'member', 'viewer'] as const;
+export const CANONICAL_ORG_ROLE_VALUES = ['org_owner', 'org_manager', 'org_reviewer'] as const;
+export const LEGACY_ORG_ROLE_VALUES = ['owner', 'admin', 'member', 'viewer'] as const;
+export const ORG_ROLE_VALUES = [...CANONICAL_ORG_ROLE_VALUES, ...LEGACY_ORG_ROLE_VALUES] as const;
 export type OrgRole = (typeof ORG_ROLE_VALUES)[number];
+
+export const ORG_ACTIVE_MEMBERSHIP_STATES = ['active'] as const;
+export type ActiveMembershipState = (typeof ORG_ACTIVE_MEMBERSHIP_STATES)[number];
 
 export const PLATFORM_ROLE_VALUES = ['platform_admin', 'super_admin'] as const;
 export type PlatformRole = (typeof PLATFORM_ROLE_VALUES)[number];
+
+export const PRINCIPAL_TYPE_VALUES = ['individual', 'organization', 'trust_admin'] as const;
+export type PrincipalType = (typeof PRINCIPAL_TYPE_VALUES)[number];
+
+export type PrincipalContext = {
+  principalType: PrincipalType;
+  orgId?: string | null;
+};
 
 export const AUTHZ_RESOURCE_VALUES = [
   'org_profile',
@@ -63,74 +76,94 @@ export type AuthzDecision = {
 };
 
 type MatrixRule = {
-  orgRoles?: readonly OrgRole[];
+  orgRoles?: readonly (typeof CANONICAL_ORG_ROLE_VALUES)[number][];
   platformRoles?: readonly PlatformRole[];
   breakGlassOnly?: boolean;
   notes?: string;
 };
 
+function normalizePolicyOrgRole(
+  orgRole?: OrgRole | null
+): (typeof CANONICAL_ORG_ROLE_VALUES)[number] | null {
+  switch (orgRole) {
+    case 'owner':
+      return 'org_owner';
+    case 'admin':
+      return 'org_manager';
+    case 'member':
+    case 'viewer':
+      return 'org_reviewer';
+    case 'org_owner':
+    case 'org_manager':
+    case 'org_reviewer':
+      return orgRole;
+    default:
+      return null;
+  }
+}
+
 export const AUTHZ_MATRIX = {
   org_profile: {
     read: {
-      orgRoles: ['viewer', 'member', 'admin', 'owner'],
+      orgRoles: ['org_reviewer', 'org_manager', 'org_owner'],
     },
     update: {
-      orgRoles: ['admin', 'owner'],
+      orgRoles: ['org_manager', 'org_owner'],
       notes: 'Non-governance presentation fields only.',
     },
     update_governance: {
-      orgRoles: ['owner'],
-      notes: 'Legal and ownership fields stay owner-only.',
+      orgRoles: ['org_owner'],
+      notes: 'Ownership and trust-tier-sensitive fields stay owner-only.',
     },
   },
   org_trust_fields: {
     read_redacted: {
-      orgRoles: ['member', 'admin', 'owner'],
+      orgRoles: ['org_reviewer', 'org_manager', 'org_owner'],
     },
     read_detailed: {
-      orgRoles: ['admin', 'owner'],
+      orgRoles: ['org_manager', 'org_owner'],
     },
     update: {
       platformRoles: ['platform_admin', 'super_admin'],
       breakGlassOnly: true,
-      notes: 'Trust adjudication uses dedicated platform admin flow.',
+      notes: 'Trust adjudication uses audited trust-admin access.',
     },
   },
   assignments: {
     read: {
-      orgRoles: ['viewer', 'member', 'admin', 'owner'],
+      orgRoles: ['org_reviewer', 'org_manager', 'org_owner'],
     },
     create: {
-      orgRoles: ['admin', 'owner'],
+      orgRoles: ['org_manager', 'org_owner'],
     },
     update: {
-      orgRoles: ['admin', 'owner'],
+      orgRoles: ['org_manager', 'org_owner'],
     },
     archive: {
-      orgRoles: ['admin', 'owner'],
+      orgRoles: ['org_manager', 'org_owner'],
     },
     export: {
-      orgRoles: ['admin', 'owner'],
+      orgRoles: ['org_manager', 'org_owner'],
     },
   },
   candidate_shortlist_cards: {
     read: {
-      orgRoles: ['viewer', 'member', 'admin', 'owner'],
-      notes: 'Viewer sees blind-only shortlist summaries.',
+      orgRoles: ['org_reviewer', 'org_manager', 'org_owner'],
+      notes: 'Reviewer scope stays blind or shortlist-limited based on reveal policy.',
     },
   },
   candidate_full_review: {
     read: {
-      orgRoles: ['member', 'admin', 'owner'],
+      orgRoles: ['org_reviewer', 'org_manager', 'org_owner'],
     },
     update: {
-      orgRoles: ['member', 'admin', 'owner'],
+      orgRoles: ['org_reviewer', 'org_manager', 'org_owner'],
     },
   },
   reveal_actions: {
     reveal: {
-      orgRoles: ['member', 'admin', 'owner'],
-      notes: 'Shortlist reveal is automatic. Full reveal needs downstream trigger.',
+      orgRoles: ['org_reviewer', 'org_manager', 'org_owner'],
+      notes: 'Reveal remains bounded by workflow and visibility ceilings.',
     },
     break_glass: {
       platformRoles: ['platform_admin', 'super_admin'],
@@ -139,70 +172,70 @@ export const AUTHZ_MATRIX = {
   },
   interviews: {
     read: {
-      orgRoles: ['member', 'admin', 'owner'],
+      orgRoles: ['org_reviewer', 'org_manager', 'org_owner'],
     },
     schedule: {
-      orgRoles: ['member', 'admin', 'owner'],
+      orgRoles: ['org_reviewer', 'org_manager', 'org_owner'],
     },
     update: {
-      orgRoles: ['member', 'admin', 'owner'],
+      orgRoles: ['org_reviewer', 'org_manager', 'org_owner'],
     },
   },
   intros_decisions_feedback: {
     read: {
-      orgRoles: ['member', 'admin', 'owner'],
+      orgRoles: ['org_reviewer', 'org_manager', 'org_owner'],
     },
     create: {
-      orgRoles: ['member', 'admin', 'owner'],
+      orgRoles: ['org_reviewer', 'org_manager', 'org_owner'],
     },
     decide: {
-      orgRoles: ['member', 'admin', 'owner'],
+      orgRoles: ['org_reviewer', 'org_manager', 'org_owner'],
     },
   },
   team_invites_memberships: {
     read: {
-      orgRoles: ['admin', 'owner'],
+      orgRoles: ['org_manager', 'org_owner'],
     },
     invite: {
-      orgRoles: ['admin', 'owner'],
+      orgRoles: ['org_manager', 'org_owner'],
     },
     manage: {
-      orgRoles: ['admin', 'owner'],
-      notes: 'Owner transfer/reassignment remains owner-only.',
+      orgRoles: ['org_owner'],
+      notes: 'Ownership transfer and membership-state changes remain owner-only.',
     },
   },
   settings_privacy_defaults: {
     read: {
-      orgRoles: ['admin', 'owner'],
+      orgRoles: ['org_manager', 'org_owner'],
     },
     update: {
-      orgRoles: ['admin', 'owner'],
+      orgRoles: ['org_manager', 'org_owner'],
     },
   },
   exports: {
     export: {
-      orgRoles: ['admin', 'owner'],
+      orgRoles: ['org_manager', 'org_owner'],
     },
     export_sensitive: {
-      orgRoles: ['owner'],
+      orgRoles: ['org_owner'],
       platformRoles: ['platform_admin', 'super_admin'],
       breakGlassOnly: true,
     },
   },
   verification_summaries: {
     read_redacted: {
-      orgRoles: ['member', 'admin', 'owner'],
+      orgRoles: ['org_reviewer', 'org_manager', 'org_owner'],
     },
     read_detailed: {
-      orgRoles: ['admin', 'owner'],
+      orgRoles: ['org_manager', 'org_owner'],
     },
   },
   org_audit_logs: {
     read: {
-      orgRoles: ['admin', 'owner'],
+      orgRoles: ['org_manager', 'org_owner'],
     },
     export: {
-      orgRoles: ['owner'],
+      orgRoles: ['org_owner'],
     },
     break_glass: {
       platformRoles: ['platform_admin', 'super_admin'],
@@ -239,7 +272,8 @@ function allowsRule(
     return true;
   }
 
-  if (input.orgRole && rule.orgRoles?.includes(input.orgRole)) {
+  const normalizedOrgRole = normalizePolicyOrgRole(input.orgRole);
+  if (normalizedOrgRole && rule.orgRoles?.includes(normalizedOrgRole)) {
     return true;
   }
 
@@ -268,20 +302,22 @@ export function authorize(input: {
 export function getVerificationSummaryVisibility(
   orgRole?: OrgRole | null
 ): VerificationSummaryVisibility {
-  if (orgRole === 'admin' || orgRole === 'owner') {
+  const normalizedRole = normalizePolicyOrgRole(orgRole);
+  if (normalizedRole === 'org_manager' || normalizedRole === 'org_owner') {
     return 'detailed';
   }
-  if (orgRole === 'member') {
+  if (normalizedRole === 'org_reviewer') {
     return 'redacted';
   }
   return 'none';
 }
 
 export function getAuditMetadataVisibility(orgRole?: OrgRole | null): AuditMetadataVisibility {
-  if (orgRole === 'owner') {
+  const normalizedRole = normalizePolicyOrgRole(orgRole);
+  if (normalizedRole === 'org_owner') {
     return 'sensitive';
   }
-  if (orgRole === 'admin') {
+  if (normalizedRole === 'org_manager') {
     return 'standard';
   }
   return 'none';
@@ -291,8 +327,8 @@ export function getEffectiveShortlistRevealScope(
   orgRole: OrgRole | null | undefined,
   storedScope: CandidateIdentityScope
 ): CandidateIdentityScope {
-  if (orgRole === 'viewer') {
-    return 'blind';
+  if (normalizePolicyOrgRole(orgRole) === 'org_reviewer' && storedScope === 'full_identity') {
+    return 'shortlist_identity';
   }
   return storedScope;
 }
@@ -303,6 +339,10 @@ export function getEffectiveReviewRevealScope(
 ): CandidateIdentityScope | null {
   if (!authorize({ resource: 'candidate_full_review', action: 'read', orgRole }).allowed) {
     return null;
+  }
+
+  if (normalizePolicyOrgRole(orgRole) === 'org_reviewer' && storedScope === 'full_identity') {
+    return 'shortlist_identity';
   }
 
   return storedScope;
@@ -363,4 +403,38 @@ export function canPlatformBreakGlass(
     platformRole,
     breakGlass: true,
   }).allowed;
+}
+
+export function isTrustAdminPlatformRole(platformRole?: PlatformRole | null) {
+  return Boolean(platformRole && PLATFORM_ROLE_VALUES.includes(platformRole));
+}
+
+export function assertExplicitPrincipalContext(
+  context: PrincipalContext | null | undefined,
+  options: { allowTrustAdmin?: boolean } = {}
+) {
+  if (!context) {
+    return {
+      ok: false as const,
+      reason: 'missing_principal_context',
+    };
+  }
+
+  if (context.principalType === 'trust_admin' && !options.allowTrustAdmin) {
+    return {
+      ok: false as const,
+      reason: 'trust_admin_not_allowed',
+    };
+  }
+
+  if (context.principalType === 'organization' && !context.orgId) {
+    return {
+      ok: false as const,
+      reason: 'organization_principal_requires_org_id',
+    };
+  }
+
+  return {
+    ok: true as const,
+  };
 }

@@ -11,6 +11,13 @@ vi.mock('next/cache', () => ({
 }));
 
 vi.mock('@/lib/env', () => ({
+  getEnv: vi.fn(() => ({
+    SUPABASE_URL: 'https://example.supabase.co',
+    SUPABASE_ANON_KEY: 'anon-key',
+    SUPABASE_SERVICE_ROLE_KEY: 'service-role-key',
+    SITE_URL: 'http://localhost',
+    DATABASE_URL: 'postgresql://localhost/proofound_test',
+  })),
   resolveSiteUrlFromHeaders: vi.fn(() => 'http://localhost'),
   normalizeSiteUrl: vi.fn(() => 'http://localhost'),
   stripTrailingSlash: vi.fn((url) => url),
@@ -71,9 +78,18 @@ vi.mock('@/lib/email/sender', () => ({
   sendEmail: sendEmailMock,
 }));
 
+vi.mock('@/lib/launch/trace', () => ({
+  startLaunchTrace: vi.fn(() => ({
+    objectRefs: {},
+    startedAtMs: 0,
+  })),
+  emitLaunchTrace: vi.fn(),
+}));
+
 describe('Auth Actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE = 'false';
     mockSupabase.auth.resetPasswordForEmail.mockResolvedValue({ error: null });
     mockSupabase.auth.verifyOtp.mockResolvedValue({ error: null });
     mockSupabase.auth.resend.mockResolvedValue({ error: null });
@@ -90,6 +106,7 @@ describe('Auth Actions', () => {
 
   describe('signUp', () => {
     it('should sign up an organization member and create profile', async () => {
+      process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE = 'true';
       // Mock successful auth signup
       mockSupabase.auth.signUp.mockResolvedValue({
         data: {

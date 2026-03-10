@@ -71,7 +71,13 @@ export function CultureEditor({ orgId, initialCulture, canEdit = true }: Culture
       const response = await apiFetch(`/api/organizations/${orgId}/culture`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(culture),
+        body: JSON.stringify({
+          principalContext: {
+            principalType: 'organization',
+            orgId,
+          },
+          ...culture,
+        }),
       });
 
       if (!response.ok) {

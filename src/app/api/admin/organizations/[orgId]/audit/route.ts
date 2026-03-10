@@ -34,6 +34,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ orgI
 
   const payload = {
     orgId,
+    principalType: 'trust_admin',
     breakGlassReason: breakGlass.reason,
     accessedAt: new Date().toISOString(),
     logs,

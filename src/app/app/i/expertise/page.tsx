@@ -2,6 +2,7 @@ import { requireAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ExpertiseAtlasClient } from './ExpertiseAtlasClient';
 import { createLogger } from '@/lib/logger';
+import { listCanonicalSkillProofSummariesForOwner } from '@/lib/proofs/canonical-pack';
 
 const logger = createLogger('ExpertisePage');
 
@@ -34,6 +35,10 @@ export default async function ExpertiseAtlasPage({ searchParams }: ExpertiseAtla
 
     const user = await requireAuth();
     const supabase = await createClient();
+    const proofSummaries = await listCanonicalSkillProofSummariesForOwner(user.id);
+    const proofSummaryBySkillId = new Map(
+      proofSummaries.map((summary) => [summary.skillId, summary])
+    );
 
     logger.debug('Fetching expertise data for user', { userId: user.id });
 
@@ -79,60 +84,27 @@ export default async function ExpertiseAtlasPage({ searchParams }: ExpertiseAtla
       // Continue with empty array if skills query fails
     }
 
-    // Fetch proof counts (aggregation) - handle errors gracefully
-    const { data: proofs, error: proofsError } = await supabase
-      .from('skill_proofs')
-      .select('skill_id')
-      .eq('profile_id', user.id);
-
-    if (proofsError) {
-      logger.error('Failed to fetch skill proofs', proofsError);
-    }
-
-    const proofCountMap: Record<string, number> = {};
-    proofs?.forEach(({ skill_id }) => {
-      proofCountMap[skill_id] = (proofCountMap[skill_id] || 0) + 1;
-    });
-
-    // Fetch verification counts (only accepted) - handle errors gracefully
-    const { data: verifications, error: verificationsError } = await supabase
-      .from('skill_verification_requests')
-      .select('skill_id, verifier_source, status')
-      .eq('requester_profile_id', user.id)
-      .eq('status', 'accepted')
-      .eq('integrity_status', 'clear');
-
-    if (verificationsError) {
-      logger.error('Failed to fetch skill verifications', verificationsError);
-    }
-
-    const verificationCountMap: Record<string, number> = {};
-    const verificationSourcesMap: Record<string, Array<{ source: string }>> = {};
-
-    verifications?.forEach(({ skill_id, verifier_source }) => {
-      verificationCountMap[skill_id] = (verificationCountMap[skill_id] || 0) + 1;
-      if (!verificationSourcesMap[skill_id]) {
-        verificationSourcesMap[skill_id] = [];
-      }
-      verificationSourcesMap[skill_id].push({ source: verifier_source });
-    });
-
     // Enrich skills with counts and taxonomy
-    const enrichedSkills = (userSkills || []).map((skill) => ({
-      ...skill,
-      taxonomy: skill.skill_code ? taxonomyMap[skill.skill_code] : null,
-      proof_count: proofCountMap[skill.id] || 0,
-      verification_count: verificationCountMap[skill.id] || 0,
-      verification_sources: verificationSourcesMap[skill.id] || [],
-      // Map database field names to component expected names
-      evidenceStrength: skill.evidence_strength
-        ? parseFloat(skill.evidence_strength.toString())
-        : 0,
-      impactScore: skill.impact_score ? parseFloat(skill.impact_score.toString()) : 0,
-      monthsExperience: skill.months_experience || 0,
-      skillCode: skill.skill_code || skill.skill_id || '',
-      lastUsedAt: skill.last_used_at || null,
-    }));
+    const enrichedSkills = (userSkills || []).map((skill) => {
+      const proofSummary = proofSummaryBySkillId.get(skill.id);
+
+      return {
+        ...skill,
+        taxonomy: skill.skill_code ? taxonomyMap[skill.skill_code] : null,
+        proof_count: proofSummary?.proofCount ?? 0,
+        verification_count: proofSummary?.verificationCount ?? 0,
+        verification_sources:
+          proofSummary?.verificationSources.map(({ source }) => ({ source })) ?? [],
+        // Map database field names to component expected names
+        evidenceStrength: skill.evidence_strength
+          ? parseFloat(skill.evidence_strength.toString())
+          : 0,
+        impactScore: skill.impact_score ? parseFloat(skill.impact_score.toString()) : 0,
+        monthsExperience: skill.months_experience || 0,
+        skillCode: skill.skill_code || skill.skill_id || '',
+        lastUsedAt: skill.last_used_at || null,
+      };
+    });
 
     // Fetch L1 domains - handle errors gracefully
     const { data: l1Domains, error: domainsError } = await supabase

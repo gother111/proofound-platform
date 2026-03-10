@@ -7,7 +7,12 @@ import { eq, and, inArray, sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { jsonErrorWithRequest, withApiObservability } from '@/lib/api/observability';
 import { emitAnalyticsEvent } from '@/lib/analytics/events';
-import { ASSIGNMENT_MUTATION_ROLES, resolveUserOrgContext } from '@/lib/assignments/access';
+import {
+  ASSIGNMENT_MUTATION_ROLES,
+  resolveExplicitUserOrgContext,
+  resolveUserOrgContext,
+} from '@/lib/assignments/access';
+import { ensureOrganizationPrincipal, PrincipalContextSchema } from '@/lib/authz';
 import {
   checkAndEmitAssignmentActivation,
   evaluateAssignmentActivationCriteria,
@@ -79,8 +84,9 @@ const AssignmentSchema = z.object({
 const AssignmentCreateSchema = AssignmentSchema.extend({
   orgId: z.string().uuid().optional(),
   orgSlug: z.string().min(1).optional(),
+  principalContext: PrincipalContextSchema.optional(),
 }).superRefine((value, ctx) => {
-  if (!value.orgId && !value.orgSlug) {
+  if (!value.orgId && !value.orgSlug && !value.principalContext?.orgId) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: 'Organization context is required',
@@ -262,10 +268,19 @@ export async function POST(request: NextRequest) {
 
       // Validate input
       const validatedData = AssignmentCreateSchema.parse(body);
-      const orgId = await resolveUserOrgContext(
+      const principal = validatedData.principalContext
+        ? ensureOrganizationPrincipal(validatedData.principalContext)
+        : null;
+      if (validatedData.principalContext && (!principal || !principal.ok)) {
+        const principalError =
+          principal && 'error' in principal ? principal.error : 'Invalid organization principal';
+        return jsonErrorWithRequest(ctx.requestId, principalError, 403);
+      }
+
+      const orgId = await resolveExplicitUserOrgContext(
         user.id,
         {
-          orgId: validatedData.orgId,
+          orgId: principal?.ok ? principal.context.orgId : validatedData.orgId,
           orgSlug: validatedData.orgSlug,
         },
         ASSIGNMENT_MUTATION_ROLES
@@ -276,7 +291,7 @@ export async function POST(request: NextRequest) {
           ctx.requestId,
           'Organization not found or access denied',
           403,
-          'Only organization owner/admin members can create assignments.'
+          'Only active organization managers or owners can create assignments.'
         );
       }
 
@@ -321,10 +336,15 @@ export async function POST(request: NextRequest) {
       }
 
       const derivedRequirements = deriveRequirementsFromMatrix(matrixTemplateRows);
+      const {
+        principalContext: _principalContext,
+        orgSlug: _orgSlug,
+        ...assignmentInput
+      } = validatedData;
 
       const assignmentData = {
         orgId,
-        ...validatedData,
+        ...assignmentInput,
         builderMode: (await isFeatureEnabled(
           FEATURE_FLAG_KEYS.ASSIGNMENT_BASIC_MODE,
           { userId: user.id, orgId },
@@ -364,6 +384,7 @@ export async function POST(request: NextRequest) {
         assignmentId: newAssignment.id,
         orgId,
         role: newAssignment.role,
+        principalType: principal?.ok ? principal.context.principalType : 'organization',
       });
 
       // Check if this is the organization's first assignment and trigger SUS survey

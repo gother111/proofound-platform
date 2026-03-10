@@ -120,6 +120,64 @@ const lifecycleEventSchemas = {
       source: sourceSchema,
     })
     .strict(),
+  proof_pack_created: z
+    .object({
+      proof_pack_id: uuidSchema,
+      owner_type: z.enum(['individual_profile', 'organization']),
+      owner_id: uuidSchema,
+      primary_subject_type: z
+        .enum([
+          'individual_profile',
+          'skill',
+          'project',
+          'impact_story',
+          'experience',
+          'education',
+          'volunteering',
+          'organization',
+        ])
+        .nullable(),
+      primary_subject_id: uuidSchema.nullable(),
+      pack_kind: z.enum(['profile_export', 'organization_export', 'verification_bundle']),
+      visibility: z.enum(['public', 'link_only', 'matched_org', 'owner_only']),
+      reveal_gate: z.enum(['none', 'match_exists', 'conversation_started']),
+      actor_type: actorTypeSchema,
+      source: sourceSchema,
+    })
+    .strict(),
+  proof_pack_deleted: z
+    .object({
+      proof_pack_id: uuidSchema,
+      owner_type: z.enum(['individual_profile', 'organization']),
+      owner_id: uuidSchema,
+      primary_subject_type: z
+        .enum([
+          'individual_profile',
+          'skill',
+          'project',
+          'impact_story',
+          'experience',
+          'education',
+          'volunteering',
+          'organization',
+        ])
+        .nullable(),
+      primary_subject_id: uuidSchema.nullable(),
+      pack_kind: z.enum(['profile_export', 'organization_export', 'verification_bundle']),
+      actor_type: actorTypeSchema,
+      source: sourceSchema,
+    })
+    .strict(),
+  proof_pack_freshness_state_changed: z
+    .object({
+      proof_pack_id: uuidSchema,
+      subject_id: uuidSchema,
+      freshness_state: z.enum(['fresh', 'review_soon', 'stale', 'expired']),
+      trigger: z.string().min(1).max(60),
+      actor_type: actorTypeSchema,
+      source: sourceSchema,
+    })
+    .strict(),
   proof_freshness_state_changed: z
     .object({
       proof_artifact_id: uuidSchema,

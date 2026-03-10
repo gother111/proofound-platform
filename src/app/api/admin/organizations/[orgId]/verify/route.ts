@@ -1,16 +1,80 @@
 /**
  * POST /api/admin/organizations/[orgId]/verify
  *
- * Verify or unverify an organization
+ * Transition an organization trust tier.
  * Requires: platform_admin or super_admin
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { requirePlatformAdmin } from '@/lib/auth/admin';
 import { db } from '@/db';
-import { organizations } from '@/db/schema';
+import { organizations, organizationTrustTierTransitions } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { logAdminAction } from '@/lib/audit/admin-logger';
+
+const OrgTrustTierSchema = z.object({
+  trustTier: z.enum(['unreviewed', 'basic_trusted', 'reviewed', 'restricted']).optional(),
+  verified: z.boolean().optional(),
+  reasonCode: z.string().trim().min(1).max(120).optional(),
+  note: z.string().trim().max(500).optional(),
+});
+
+function coerceCurrentTier(org: {
+  orgTrustTier?: string | null;
+  trustStatus?: string | null;
+  verified?: boolean | null;
+}) {
+  if (
+    org.orgTrustTier === 'unreviewed' ||
+    org.orgTrustTier === 'basic_trusted' ||
+    org.orgTrustTier === 'reviewed' ||
+    org.orgTrustTier === 'restricted'
+  ) {
+    return org.orgTrustTier;
+  }
+
+  if (org.verified || org.trustStatus === 'platform_reviewed') {
+    return 'reviewed';
+  }
+
+  if (org.trustStatus === 'domain_verified') {
+    return 'basic_trusted';
+  }
+
+  return 'unreviewed';
+}
+
+function mapCompatibilityTrustStatus(
+  trustTier: 'unreviewed' | 'basic_trusted' | 'reviewed' | 'restricted'
+) {
+  switch (trustTier) {
+    case 'reviewed':
+      return 'platform_reviewed' as const;
+    case 'basic_trusted':
+      return 'domain_verified' as const;
+    case 'restricted':
+    case 'unreviewed':
+    default:
+      return 'unverified' as const;
+  }
+}
+
+function buildTrustTierMessage(
+  trustTier: 'unreviewed' | 'basic_trusted' | 'reviewed' | 'restricted'
+) {
+  switch (trustTier) {
+    case 'basic_trusted':
+      return 'Organization set to Basic trusted.';
+    case 'reviewed':
+      return 'Organization set to Reviewed.';
+    case 'restricted':
+      return 'Organization set to Restricted. Publish and intro actions are paused.';
+    case 'unreviewed':
+    default:
+      return 'Organization set to Unreviewed.';
+  }
+}
 
 export async function POST(
   request: NextRequest,
@@ -19,8 +83,15 @@ export async function POST(
   try {
     const adminUser = await requirePlatformAdmin();
     const { orgId } = await params;
-    const body = await request.json();
-    const { verified } = body;
+    const rawBody = await request.json();
+    const body = OrgTrustTierSchema.parse(rawBody);
+    const trustTier =
+      body.trustTier ??
+      (body.verified === true ? 'reviewed' : body.verified === false ? 'unreviewed' : null);
+
+    if (!trustTier) {
+      return NextResponse.json({ error: 'trustTier or verified is required' }, { status: 400 });
+    }
 
     // Get current organization
     const org = await db.query.organizations.findFirst({
@@ -31,33 +102,60 @@ export async function POST(
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
     }
 
-    // Update verification status
+    const previousTier = coerceCurrentTier(org);
+    const compatibilityTrustStatus = mapCompatibilityTrustStatus(trustTier);
+    const now = new Date();
+
     await db
       .update(organizations)
       .set({
-        verified,
-        updatedAt: new Date(),
+        verified: trustTier === 'reviewed',
+        trustStatus: compatibilityTrustStatus,
+        trustStatusUpdatedAt: now,
+        orgTrustTier: trustTier,
+        orgTrustTierReasonCode: body.reasonCode ?? null,
+        orgTrustTierUpdatedAt: now,
+        updatedAt: now,
       })
       .where(eq(organizations.id, orgId));
+
+    await db.insert(organizationTrustTierTransitions).values({
+      orgId,
+      previousTier,
+      newTier: trustTier,
+      reasonCode: body.reasonCode ?? null,
+      actorType: 'platform_admin',
+      actorId: adminUser.userId,
+      metadata: {
+        note: body.note ?? null,
+        compatibilityTrustStatus,
+      },
+      createdAt: now,
+    });
 
     // Log the action
     await logAdminAction({
       adminId: adminUser.userId,
-      action: verified ? 'verify_organization' : 'unverify_organization',
+      action: 'set_org_trust_tier',
       targetType: 'organization',
       targetId: orgId,
       changes: {
-        previousStatus: org.verified ? 'verified' : 'unverified',
-        newStatus: verified ? 'verified' : 'unverified',
+        previousTier,
+        newTier: trustTier,
+        previousCompatibilityStatus: org.trustStatus ?? 'unverified',
+        newCompatibilityStatus: compatibilityTrustStatus,
       },
       metadata: {
         organizationName: org.displayName,
+        reasonCode: body.reasonCode ?? null,
+        note: body.note ?? null,
       },
     });
 
     return NextResponse.json({
       success: true,
-      message: verified ? 'Organization verified' : 'Verification removed',
+      trustTier,
+      message: buildTrustTierMessage(trustTier),
     });
   } catch (error) {
     console.error('Failed to update organization verification:', error);

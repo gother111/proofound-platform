@@ -1,9 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
-import { POST } from '@/app/api/expertise/user-skills/[id]/proofs/route';
+import { GET, POST } from '@/app/api/expertise/user-skills/[id]/proofs/route';
 import { requireApiAuthContext } from '@/lib/auth';
 import { emitSkillProofAddedAsync } from '@/lib/analytics/events';
+import { revalidatePublicPortfolioByProfileId } from '@/lib/portfolio/public-invalidation';
+import { attachUploadedFile } from '@/lib/uploads/lifecycle';
+import { listCanonicalSkillProofRowsForOwnerSkill } from '@/lib/proofs/canonical-pack';
 
 vi.mock('@/lib/auth', () => ({
   requireApiAuthContext: vi.fn(),
@@ -13,10 +16,25 @@ vi.mock('@/lib/analytics/events', () => ({
   emitSkillProofAddedAsync: vi.fn(),
 }));
 
+vi.mock('@/lib/uploads/lifecycle', () => ({
+  attachUploadedFile: vi.fn(),
+}));
+
+vi.mock('@/lib/portfolio/public-invalidation', () => ({
+  revalidatePublicPortfolioByProfileId: vi.fn(),
+}));
+
+vi.mock('@/lib/canonical/repository', () => ({
+  CANONICAL_PROOFS_WRITE_ENABLED: false,
+  upsertCanonicalProofArtifactFromSkillProof: vi.fn(),
+}));
+
+vi.mock('@/lib/proofs/canonical-pack', () => ({
+  listCanonicalSkillProofRowsForOwnerSkill: vi.fn(),
+}));
+
 function createSupabaseMock() {
   let insertedProofPayload: Record<string, any> | null = null;
-  let existingProofCount = 0;
-
   const skillsQuery = {
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
@@ -47,9 +65,6 @@ function createSupabaseMock() {
   const skillProofsTable = {
     select: vi.fn((columns: string) => {
       if (columns === 'id') {
-        proofCountQuery.data = Array.from({ length: existingProofCount }, (_, index) => ({
-          id: `proof-${index + 1}`,
-        }));
         return proofCountQuery;
       }
       throw new Error(`Unexpected select columns: ${columns}`);
@@ -69,9 +84,6 @@ function createSupabaseMock() {
     supabase,
     skillsQuery,
     proofInsertQuery,
-    setExistingProofCount: (value: number) => {
-      existingProofCount = value;
-    },
   };
 }
 
@@ -84,6 +96,8 @@ describe('expertise user-skill proofs route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(requireApiAuthContext).mockImplementation(async () => authContext as any);
+    vi.mocked(attachUploadedFile).mockResolvedValue(null as any);
+    vi.mocked(listCanonicalSkillProofRowsForOwnerSkill).mockResolvedValue([]);
   });
 
   it('creates proof with deterministic title fallback when only URL is provided', async () => {
@@ -103,6 +117,7 @@ describe('expertise user-skill proofs route', () => {
     const payload = await response.json();
 
     expect(response.status).toBe(201);
+    expect(revalidatePublicPortfolioByProfileId).toHaveBeenCalledWith('user-1');
     expect(proofInsertQuery.insert).toHaveBeenCalledWith(
       expect.objectContaining({
         title: 'project alpha',
@@ -121,16 +136,21 @@ describe('expertise user-skill proofs route', () => {
     );
   });
 
-  it('creates a document proof when uploaded file path is provided', async () => {
+  it('creates a document proof when a validated uploaded file id is provided', async () => {
     const { supabase, proofInsertQuery } = createSupabaseMock();
     authContext.supabase = supabase;
+    vi.mocked(attachUploadedFile).mockResolvedValue({
+      quarantine_path: 'proof/user-1/portfolio.pdf',
+      durable_path: null,
+      public_path: null,
+    } as any);
 
     const request = new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         proofType: 'document',
-        filePath: 'proof/user-1/portfolio.pdf',
+        uploadedFileId: '11111111-1111-4111-8111-111111111111',
         url: '',
         title: '',
       }),
@@ -144,6 +164,9 @@ describe('expertise user-skill proofs route', () => {
       expect.objectContaining({
         proof_type: 'document',
         file_path: 'proof/user-1/portfolio.pdf',
+        metadata: expect.objectContaining({
+          uploadedFileId: '11111111-1111-4111-8111-111111111111',
+        }),
       })
     );
     expect(payload.proof.title).toBe('portfolio.pdf');
@@ -195,7 +218,7 @@ describe('expertise user-skill proofs route', () => {
 
     expect(response.status).toBe(400);
     expect(payload.error).toBe('Validation failed');
-    expect(payload.message).toBe('Title, URL, or uploaded file is required');
+    expect(payload.message).toBe('Title, URL, or uploaded file id is required');
   });
 
   it('returns validation error when expiration date is before issued date', async () => {
@@ -222,9 +245,13 @@ describe('expertise user-skill proofs route', () => {
   });
 
   it('rejects proof creation when skill already has the maximum number of proofs', async () => {
-    const { supabase, proofInsertQuery, setExistingProofCount } = createSupabaseMock();
-    setExistingProofCount(5);
+    const { supabase, proofInsertQuery } = createSupabaseMock();
     authContext.supabase = supabase;
+    vi.mocked(listCanonicalSkillProofRowsForOwnerSkill).mockResolvedValue(
+      Array.from({ length: 5 }, (_, index) => ({
+        id: `proof-${index + 1}`,
+      })) as any
+    );
 
     const request = new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs', {
       method: 'POST',
@@ -243,5 +270,66 @@ describe('expertise user-skill proofs route', () => {
     expect(payload.error).toBe('Proof limit reached');
     expect(payload.message).toContain('maximum of 5 proofs');
     expect(proofInsertQuery.insert).not.toHaveBeenCalled();
+  });
+
+  it('rejects proof creation when the uploaded file has not passed quarantine checks', async () => {
+    const { supabase, proofInsertQuery } = createSupabaseMock();
+    authContext.supabase = supabase;
+    vi.mocked(attachUploadedFile).mockResolvedValue(null as any);
+
+    const request = new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        proofType: 'document',
+        uploadedFileId: '11111111-1111-4111-8111-111111111111',
+      }),
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ id: 'skill-1' }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(payload.message).toBe('Uploaded file is still quarantined or failed checks');
+    expect(proofInsertQuery.insert).not.toHaveBeenCalled();
+  });
+
+  it('reads proof list from canonical proof rows', async () => {
+    const { supabase } = createSupabaseMock();
+    authContext.supabase = supabase;
+
+    vi.mocked(listCanonicalSkillProofRowsForOwnerSkill).mockResolvedValue([
+      {
+        id: 'proof-1',
+        skill_id: 'skill-1',
+        profile_id: 'user-1',
+        proof_type: 'link',
+        title: 'Canonical proof',
+        description: 'Canonical description',
+        url: 'https://example.com/canonical-proof',
+        file_path: null,
+        issued_date: null,
+        expires_date: null,
+        created_at: '2026-03-10T10:00:00.000Z',
+        updated_at: '2026-03-10T10:00:00.000Z',
+        metadata: {},
+        canonical_artifact_id: 'artifact-1',
+      },
+    ] as any);
+
+    const response = await GET(
+      new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs'),
+      { params: Promise.resolve({ id: 'skill-1' }) }
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.proofs).toEqual([
+      expect.objectContaining({
+        id: 'proof-1',
+        title: 'Canonical proof',
+        canonical_artifact_id: 'artifact-1',
+      }),
+    ]);
   });
 });

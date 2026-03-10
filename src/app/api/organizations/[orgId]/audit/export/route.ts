@@ -4,7 +4,12 @@ import { and, desc, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { auditLogs, organizationMembers } from '@/db/schema';
 import { requireApiAuthContext } from '@/lib/auth';
-import { authorize, type OrgRole } from '@/lib/authz';
+import {
+  authorize,
+  isActiveMembershipState,
+  normalizeAuthorizedOrgRole,
+  type OrgRole,
+} from '@/lib/authz';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,11 +25,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ orgI
       eq(organizationMembers.orgId, orgId),
       eq(organizationMembers.userId, authContext.user.id)
     ),
-    columns: { role: true, status: true },
+    columns: { id: true, role: true, state: true },
   });
 
-  const orgRole =
-    membership?.status === 'active' ? ((membership.role as OrgRole | undefined) ?? null) : null;
+  const orgRole = isActiveMembershipState(membership?.state)
+    ? (normalizeAuthorizedOrgRole(membership?.role) as OrgRole | null)
+    : null;
 
   if (
     !authorize({
@@ -50,6 +56,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ orgI
       orgId,
       exportedAt: new Date().toISOString(),
       exportedBy: authContext.user.id,
+      principalType: 'organization',
+      actorMembershipId: membership?.id ?? null,
       logs,
     },
     null,

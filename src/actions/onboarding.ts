@@ -11,6 +11,8 @@ import { reconcileVerifierContradictions } from '@/lib/verification/contradictio
 import { emitIndividualOnboardingCompleted } from '@/lib/analytics/events';
 import { syncReadinessMilestones } from '@/lib/readiness/analytics';
 import { getIndividualReadinessState } from '@/lib/readiness/individual-state';
+import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
+import { upsertCanonicalProofArtifactFromSkillProof } from '@/lib/canonical/repository';
 
 const choosePersonaSchema = z.object({
   persona: z.enum(['individual', 'org_member']),
@@ -96,6 +98,11 @@ export async function choosePersona(formData: FormData) {
 
 export async function completeIndividualOnboarding(formData: FormData) {
   const user = await requireAuth();
+  const trace = startLaunchTrace({
+    flow: 'portfolio_publish',
+    actorId: user.id,
+    actorType: 'user_account',
+  });
 
   const displayName = formData.get('displayName') as string;
   const handle = formData.get('handle') as string;
@@ -107,12 +114,22 @@ export async function completeIndividualOnboarding(formData: FormData) {
   const proofSkillLabel = String(formData.get('proofSkillLabel') || '').trim();
 
   if (!displayName || !handle) {
+    emitLaunchTrace(trace, {
+      outcome: 'rejected',
+      state: 'portfolio_publish_validation_failed',
+      failureClass: 'missing_required_fields',
+    });
     return { error: 'Display name and handle are required' };
   }
 
   const normalizedHandle = normalizeHandle(handle);
   const slugError = validateHandle(handle);
   if (slugError) {
+    emitLaunchTrace(trace, {
+      outcome: 'rejected',
+      state: 'portfolio_publish_validation_failed',
+      failureClass: 'invalid_handle',
+    });
     return { error: slugError };
   }
 
@@ -132,10 +149,20 @@ export async function completeIndividualOnboarding(formData: FormData) {
 
     if (profileUpdate.error) {
       if (profileUpdate.error.code === '23505') {
+        emitLaunchTrace(trace, {
+          outcome: 'rejected',
+          state: 'portfolio_publish_conflict',
+          failureClass: 'handle_conflict',
+        });
         return { error: 'Handle already taken. Please choose another.' };
       }
 
       console.error('Failed to update profile during onboarding:', profileUpdate.error);
+      emitLaunchTrace(trace, {
+        outcome: 'failure',
+        state: 'portfolio_publish_profile_update_failed',
+        failureClass: 'profile_update_failed',
+      });
       return { error: 'Failed to complete setup. Please try again.' };
     }
 
@@ -153,6 +180,11 @@ export async function completeIndividualOnboarding(formData: FormData) {
         'Failed to create individual profile during onboarding:',
         individualInsert.error
       );
+      emitLaunchTrace(trace, {
+        outcome: 'failure',
+        state: 'portfolio_publish_profile_insert_failed',
+        failureClass: 'profile_insert_failed',
+      });
       return { error: 'Failed to complete setup. Please try again.' };
     }
 
@@ -175,30 +207,63 @@ export async function completeIndividualOnboarding(formData: FormData) {
 
       if (skillInsert.error) {
         console.error('Failed to seed onboarding skill:', skillInsert.error);
+        emitLaunchTrace(trace, {
+          outcome: 'failure',
+          state: 'portfolio_publish_skill_seed_failed',
+          failureClass: 'skill_seed_failed',
+        });
         return { error: 'Failed to save your first proof. Please try again.' };
       }
 
-      const proofInsert = await supabase.from('skill_proofs').insert({
-        id: randomUUID(),
-        skill_id: onboardingSkillId,
-        profile_id: user.id,
-        proof_type: 'link',
-        title: proofTitle || proofSkillLabel || 'Proof link',
-        description: `Imported during onboarding for ${proofSkillLabel}.`,
-        url: proofUrl,
-        verified: false,
-        metadata: {
-          visibility: 'public',
-          imported_from: 'onboarding',
-          candidate_evidence: true,
-          topic_label: proofSkillLabel,
-        },
-      });
+      const proofInsert = await supabase
+        .from('skill_proofs')
+        .insert({
+          id: randomUUID(),
+          skill_id: onboardingSkillId,
+          profile_id: user.id,
+          proof_type: 'link',
+          title: proofTitle || proofSkillLabel || 'Proof link',
+          description: `Imported during onboarding for ${proofSkillLabel}.`,
+          url: proofUrl,
+          verified: false,
+          metadata: {
+            visibility: 'public',
+            imported_from: 'onboarding',
+            candidate_evidence: true,
+            topic_label: proofSkillLabel,
+          },
+        })
+        .select()
+        .single();
 
-      if (proofInsert.error) {
+      if (proofInsert.error || !proofInsert.data) {
         console.error('Failed to seed onboarding proof:', proofInsert.error);
+        emitLaunchTrace(trace, {
+          outcome: 'failure',
+          state: 'portfolio_publish_proof_seed_failed',
+          failureClass: 'proof_seed_failed',
+        });
         return { error: 'Failed to save your first proof. Please try again.' };
       }
+
+      await upsertCanonicalProofArtifactFromSkillProof({
+        id: proofInsert.data.id,
+        skillId: onboardingSkillId,
+        profileId: user.id,
+        proofType: 'link',
+        title: proofInsert.data.title,
+        description: proofInsert.data.description,
+        url: proofInsert.data.url,
+        filePath: proofInsert.data.file_path,
+        issuedDate: proofInsert.data.issued_date,
+        expiresDate: proofInsert.data.expires_date,
+        metadata:
+          proofInsert.data.metadata && typeof proofInsert.data.metadata === 'object'
+            ? (proofInsert.data.metadata as Record<string, unknown>)
+            : {},
+        createdAt: proofInsert.data.created_at,
+        updatedAt: proofInsert.data.updated_at,
+      });
     }
 
     revalidatePath('/app/i');
@@ -223,6 +288,14 @@ export async function completeIndividualOnboarding(formData: FormData) {
       proofImported: Boolean(proofUrl && proofSkillLabel),
     });
 
+    emitLaunchTrace(trace, {
+      outcome: 'success',
+      state: 'public_portfolio_live',
+      details: {
+        highestState: readiness.highestState,
+      },
+    });
+
     return {
       success: true,
       handle: normalizedHandle,
@@ -233,12 +306,22 @@ export async function completeIndividualOnboarding(formData: FormData) {
     };
   } catch (error: any) {
     console.error('Individual onboarding error:', error);
+    emitLaunchTrace(trace, {
+      outcome: 'failure',
+      state: 'portfolio_publish_unhandled_error',
+      failureClass: 'unhandled_portfolio_publish_error',
+    });
     return { error: 'Failed to complete setup. Please try again.' };
   }
 }
 
 export async function completeOrganizationOnboarding(formData: FormData) {
   const user = await requireAuth();
+  const trace = startLaunchTrace({
+    flow: 'portfolio_publish',
+    actorId: user.id,
+    actorType: 'organization_member',
+  });
 
   const displayName = formData.get('displayName') as string;
   const slug = formData.get('slug') as string;
@@ -248,12 +331,22 @@ export async function completeOrganizationOnboarding(formData: FormData) {
   const website = formData.get('website') as string;
 
   if (!displayName || !slug || !type) {
+    emitLaunchTrace(trace, {
+      outcome: 'rejected',
+      state: 'org_portfolio_publish_validation_failed',
+      failureClass: 'missing_required_fields',
+    });
     return { error: 'Organization name, slug, and type are required' };
   }
 
   const orgSlug = normalizeOrganizationSlug(slug);
   const orgSlugError = validateOrganizationSlug(orgSlug);
   if (orgSlugError) {
+    emitLaunchTrace(trace, {
+      outcome: 'rejected',
+      state: 'org_portfolio_publish_validation_failed',
+      failureClass: 'invalid_slug',
+    });
     return { error: orgSlugError };
   }
 
@@ -271,7 +364,7 @@ export async function completeOrganizationOnboarding(formData: FormData) {
       .from('organization_members')
       .select('org_id')
       .eq('user_id', user.id)
-      .eq('status', 'active')
+      .eq('state', 'active')
       .limit(1);
 
     // If they already have an org, get the org slug and redirect to it
@@ -284,6 +377,14 @@ export async function completeOrganizationOnboarding(formData: FormData) {
 
       if (orgData?.slug) {
         revalidatePath(`/app/o/${orgData.slug}`);
+        emitLaunchTrace(trace, {
+          outcome: 'success',
+          state: 'public_portfolio_live',
+          details: {
+            orgSlug: orgData.slug,
+            redirected: true,
+          },
+        });
         return {
           success: true,
           orgSlug: orgData.slug,
@@ -338,8 +439,12 @@ export async function completeOrganizationOnboarding(formData: FormData) {
     const memberInsert = await supabase.from('organization_members').insert({
       org_id: orgId,
       user_id: user.id,
-      role: 'owner',
-      status: 'active',
+      role: 'org_owner',
+      state: 'active',
+      accepted_at: new Date().toISOString(),
+      joined_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     });
 
     if (memberInsert.error) {
@@ -381,6 +486,13 @@ export async function completeOrganizationOnboarding(formData: FormData) {
     const publicPortfolioPath = `/portfolio/org/${encodeURIComponent(orgSlug)}`;
     revalidatePath(`/app/o/${orgSlug}`);
     revalidatePath(publicPortfolioPath);
+    emitLaunchTrace(trace, {
+      outcome: 'success',
+      state: 'public_portfolio_live',
+      details: {
+        orgSlug,
+      },
+    });
     return {
       success: true,
       orgSlug,
@@ -388,6 +500,11 @@ export async function completeOrganizationOnboarding(formData: FormData) {
     };
   } catch (error: any) {
     console.error('Organization onboarding error:', error);
+    emitLaunchTrace(trace, {
+      outcome: 'failure',
+      state: 'org_portfolio_publish_unhandled_error',
+      failureClass: 'unhandled_portfolio_publish_error',
+    });
     return { error: 'Failed to create organization. Please try again.' };
   }
 }

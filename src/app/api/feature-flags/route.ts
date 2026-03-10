@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { organizationMembers } from '@/db/schema';
 import { createClient } from '@/lib/supabase/server';
-import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
+import { CLIENT_FEATURE_FLAG_RESPONSE_MAP } from '@/lib/featureFlags';
 import { resolveFeatureFlags } from '@/lib/feature-flags/server';
 
 export const dynamic = 'force-dynamic';
@@ -34,15 +34,7 @@ export async function GET() {
     const orgIds = memberships.map((item) => item.orgId);
     const roles = memberships.map((item) => item.role);
 
-    const keys = [
-      FEATURE_FLAG_KEYS.ACTIVATION_TIERING,
-      FEATURE_FLAG_KEYS.ASSIGNMENT_BASIC_MODE,
-      FEATURE_FLAG_KEYS.UI_VOCAB_PLAIN,
-      FEATURE_FLAG_KEYS.PRIVACY_SUMMARY,
-      FEATURE_FLAG_KEYS.QUALIFIED_INTRO_CORRIDOR,
-      FEATURE_FLAG_KEYS.STRUCTURED_FEEDBACK_REQUIRED,
-      FEATURE_FLAG_KEYS.EXACT_RANK_EXPOSURE,
-    ];
+    const keys = Object.values(CLIENT_FEATURE_FLAG_RESPONSE_MAP);
 
     const resolved = await resolveFeatureFlags(
       keys,
@@ -57,13 +49,16 @@ export async function GET() {
 
     return NextResponse.json({
       flags: {
-        activationTiering: resolved[FEATURE_FLAG_KEYS.ACTIVATION_TIERING],
-        assignmentBasicMode: resolved[FEATURE_FLAG_KEYS.ASSIGNMENT_BASIC_MODE],
-        uiVocabPlain: resolved[FEATURE_FLAG_KEYS.UI_VOCAB_PLAIN],
-        privacySummary: resolved[FEATURE_FLAG_KEYS.PRIVACY_SUMMARY],
-        qualifiedIntroCorridor: resolved[FEATURE_FLAG_KEYS.QUALIFIED_INTRO_CORRIDOR],
-        structuredFeedbackRequired: resolved[FEATURE_FLAG_KEYS.STRUCTURED_FEEDBACK_REQUIRED],
-        exactRankExposure: resolved[FEATURE_FLAG_KEYS.EXACT_RANK_EXPOSURE],
+        activationTiering: resolved[CLIENT_FEATURE_FLAG_RESPONSE_MAP.activationTiering],
+        assignmentBasicMode: resolved[CLIENT_FEATURE_FLAG_RESPONSE_MAP.assignmentBasicMode],
+        uiVocabPlain: resolved[CLIENT_FEATURE_FLAG_RESPONSE_MAP.uiVocabPlain],
+        privacySummary: resolved[CLIENT_FEATURE_FLAG_RESPONSE_MAP.privacySummary],
+        qualifiedIntroCorridor: resolved[CLIENT_FEATURE_FLAG_RESPONSE_MAP.qualifiedIntroCorridor],
+        structuredFeedbackRequired:
+          resolved[CLIENT_FEATURE_FLAG_RESPONSE_MAP.structuredFeedbackRequired],
+        exactRankExposure: resolved[CLIENT_FEATURE_FLAG_RESPONSE_MAP.exactRankExposure],
+        killSwitchIntros: resolved[CLIENT_FEATURE_FLAG_RESPONSE_MAP.killSwitchIntros],
+        killSwitchExactRank: resolved[CLIENT_FEATURE_FLAG_RESPONSE_MAP.killSwitchExactRank],
       },
     });
   } catch (error) {

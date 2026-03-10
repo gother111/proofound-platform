@@ -2,6 +2,7 @@ import { requireApiAuthContext } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import { getIndividualReadinessState } from '@/lib/readiness/individual-state';
 import { toExpertiseStatsPresentation } from '@/lib/readiness/presentation';
+import { listCanonicalSkillProofSummariesForOwner } from '@/lib/proofs/canonical-pack';
 
 /**
  * GET /api/expertise/stats
@@ -23,10 +24,13 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { user, supabase } = authContext;
-    const readiness = await getIndividualReadinessState(user.id);
+    const [readiness, proofSummaries] = await Promise.all([
+      getIndividualReadinessState(user.id),
+      listCanonicalSkillProofSummariesForOwner(user.id),
+    ]);
 
     // Fetch user's skills
-    const { data: userSkills, error: skillsError } = await supabase
+    const { error: skillsError } = await supabase
       .from('skills')
       .select('id,last_used_at')
       .eq('profile_id', user.id);
@@ -36,40 +40,10 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to fetch skills' }, { status: 500 });
     }
 
-    // Fetch proof counts
-    const { data: proofs, error: proofsError } = await supabase
-      .from('skill_proofs')
-      .select('skill_id')
-      .eq('profile_id', user.id);
-
-    if (proofsError) {
-      console.error('Error fetching skill proofs:', proofsError);
-    }
-
-    const proofCountMap: Record<string, number> = {};
-    proofs?.forEach(({ skill_id }) => {
-      proofCountMap[skill_id] = (proofCountMap[skill_id] || 0) + 1;
-    });
-
-    // Fetch verification counts (only accepted)
-    const { data: verifications, error: verificationsError } = await supabase
-      .from('skill_verification_requests')
-      .select('skill_id')
-      .eq('requester_profile_id', user.id)
-      .eq('status', 'accepted')
-      .eq('integrity_status', 'clear');
-
-    if (verificationsError) {
-      console.error('Error fetching skill verifications:', verificationsError);
-    }
-
-    const verificationCountMap: Record<string, number> = {};
-    verifications?.forEach(({ skill_id }) => {
-      verificationCountMap[skill_id] = (verificationCountMap[skill_id] || 0) + 1;
-    });
-
-    const skillsWithProofs = Object.keys(proofCountMap).length;
-    const skillsWithVerifications = Object.keys(verificationCountMap).length;
+    const skillsWithProofs = proofSummaries.filter((summary) => summary.proofCount > 0).length;
+    const skillsWithVerifications = proofSummaries.filter(
+      (summary) => summary.verificationCount > 0
+    ).length;
     return NextResponse.json(
       toExpertiseStatsPresentation(readiness, skillsWithProofs, skillsWithVerifications)
     );

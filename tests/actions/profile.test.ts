@@ -32,6 +32,7 @@ const mockCreateClient = vi.hoisted(() => vi.fn());
 const mockHeaders = vi.hoisted(() => vi.fn());
 const mockAssessVerificationRequestIntegrity = vi.hoisted(() => vi.fn());
 const mockWriteVerificationAuditLog = vi.hoisted(() => vi.fn());
+const mockListCanonicalSkillProofSummariesForOwner = vi.hoisted(() => vi.fn());
 
 vi.mock('@/db', () => ({
   db: {
@@ -74,6 +75,18 @@ vi.mock('@/lib/verification/integrity', () => ({
   },
   writeVerificationAuditLog: mockWriteVerificationAuditLog,
 }));
+
+vi.mock('@/lib/proofs/canonical-pack', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/proofs/canonical-pack')>(
+    '@/lib/proofs/canonical-pack'
+  );
+
+  return {
+    ...actual,
+    listCanonicalProofPackAggregatesForOwner: vi.fn().mockResolvedValue([]),
+    listCanonicalSkillProofSummariesForOwner: mockListCanonicalSkillProofSummariesForOwner,
+  };
+});
 
 vi.mock('@/lib/analytics/events', () => ({
   emitEvent: vi.fn(),
@@ -141,6 +154,9 @@ function mockSelectWithWhere(result: unknown[]) {
 describe('profile purpose actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockDb.select.mockReset();
+    mockDb.update.mockReset();
+    mockDb.insert.mockReset();
     mockRequireAuth.mockResolvedValue({ id: 'test-user-id' });
     mockSendEmail.mockResolvedValue({ success: true, id: 'email-1' });
     mockCreateClient.mockResolvedValue({
@@ -170,6 +186,7 @@ describe('profile purpose actions', () => {
       },
     });
     mockWriteVerificationAuditLog.mockResolvedValue(undefined);
+    mockListCanonicalSkillProofSummariesForOwner.mockResolvedValue([]);
   });
 
   it('updates mission when at least one value and one cause exist', async () => {
@@ -639,6 +656,7 @@ describe('profile purpose actions', () => {
       const selectWhereMock = vi.fn().mockReturnValue({ limit: selectLimitMock });
       const selectFromMock = vi.fn().mockReturnValue({ where: selectWhereMock });
       mockDb.select.mockReturnValueOnce({ from: selectFromMock });
+      mockSelectWithLimit([]);
 
       const insertPayloads: any[] = [];
       mockDb.insert.mockImplementation((table: unknown) => ({
@@ -655,6 +673,8 @@ describe('profile purpose actions', () => {
           };
         }),
       }));
+
+      mockSelectWithLimit([]);
 
       const updateWhereMock = vi.fn().mockResolvedValue(undefined);
       const updateSetMock = vi.fn().mockReturnValue({ where: updateWhereMock });
@@ -770,6 +790,7 @@ describe('profile purpose actions', () => {
           };
         }),
       }));
+      mockSelectWithLimit([]);
 
       const result = await requestImpactStoryVerification({
         storyId: 'impact-3',
@@ -874,6 +895,7 @@ describe('profile purpose actions', () => {
       const selectWhereMock = vi.fn().mockReturnValue({ limit: selectLimitMock });
       const selectFromMock = vi.fn().mockReturnValue({ where: selectWhereMock });
       mockDb.select.mockReturnValueOnce({ from: selectFromMock });
+      mockSelectWithLimit([]);
 
       mockDb.insert.mockReturnValue({
         values: vi.fn(() => ({

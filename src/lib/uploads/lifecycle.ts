@@ -37,11 +37,17 @@ type UploadedFileRow = {
   lifecycle_state: string;
   safety_status: string;
   safety_reason: string | null;
+  metadata_status: string;
+  attach_status: string;
   public_bucket: string | null;
   public_path: string | null;
+  quarantine_bucket: string | null;
+  quarantine_path: string | null;
   durable_bucket: string | null;
   durable_path: string | null;
   owner_id: string;
+  size_bytes?: number;
+  proof_pack_id?: string | null;
 };
 
 type UploadLifecycleResult = {
@@ -56,10 +62,10 @@ type UploadLifecycleResult = {
 const MAX_SIZE_BYTES_BY_KIND: Record<UploadKind, number> = {
   avatar: 5 * 1024 * 1024,
   cover: 10 * 1024 * 1024,
-  proof: 10 * 1024 * 1024,
-  certificate: 10 * 1024 * 1024,
-  artifact: 10 * 1024 * 1024,
-  document: 10 * 1024 * 1024,
+  proof: 25 * 1024 * 1024,
+  certificate: 25 * 1024 * 1024,
+  artifact: 25 * 1024 * 1024,
+  document: 25 * 1024 * 1024,
 };
 
 const PUBLIC_IMAGE_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -68,10 +74,17 @@ const PRIVATE_ALLOWED_MIMES = new Set([
   'image/jpeg',
   'image/png',
   'image/webp',
-  'image/heif',
-  'image/heic',
-  'application/msword',
+  'text/plain',
+  'text/markdown',
 ]);
+const EVIDENCE_UPLOAD_KINDS = new Set<UploadKind>([
+  UPLOAD_KINDS.PROOF,
+  UPLOAD_KINDS.CERTIFICATE,
+  UPLOAD_KINDS.ARTIFACT,
+  UPLOAD_KINDS.DOCUMENT,
+]);
+export const MAX_PROOF_PACK_FILES = 10;
+export const MAX_PROOF_PACK_AGGREGATE_BYTES = 100 * 1024 * 1024;
 
 function sanitizeFilename(fileName: string): string {
   const ext = path.extname(fileName).toLowerCase();
@@ -118,31 +131,41 @@ function detectMimeFromBuffer(buffer: Buffer): string | null {
     return 'image/webp';
   }
 
-  if (buffer.length >= 12 && buffer.subarray(4, 8).toString('ascii') === 'ftyp') {
-    const brand = buffer.subarray(8, 12).toString('ascii').toLowerCase();
-    if (['heic', 'heix', 'hevc', 'hevx'].includes(brand)) {
-      return 'image/heic';
-    }
-    if (['mif1', 'msf1', 'heif'].includes(brand)) {
-      return 'image/heif';
-    }
-  }
-
-  if (
-    buffer.length >= 8 &&
-    buffer[0] === 0xd0 &&
-    buffer[1] === 0xcf &&
-    buffer[2] === 0x11 &&
-    buffer[3] === 0xe0 &&
-    buffer[4] === 0xa1 &&
-    buffer[5] === 0xb1 &&
-    buffer[6] === 0x1a &&
-    buffer[7] === 0xe1
-  ) {
-    return 'application/msword';
+  if (looksLikeTextBuffer(buffer)) {
+    return 'text/plain';
   }
 
   return null;
+}
+
+function looksLikeTextBuffer(buffer: Buffer): boolean {
+  if (buffer.length === 0) {
+    return true;
+  }
+
+  let controlBytes = 0;
+  for (const byte of buffer.subarray(0, Math.min(buffer.length, 4096))) {
+    const allowedControl = byte === 0x09 || byte === 0x0a || byte === 0x0d;
+    if (byte === 0x00) {
+      return false;
+    }
+    if (byte < 0x20 && !allowedControl) {
+      controlBytes += 1;
+      if (controlBytes > 4) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+function normalizeDetectedMime(declaredMime: string | null, detectedMime: string | null) {
+  if (detectedMime !== 'text/plain') {
+    return detectedMime;
+  }
+
+  return declaredMime === 'text/markdown' ? 'text/markdown' : detectedMime;
 }
 
 function validateMimeForKind(
@@ -187,7 +210,22 @@ async function recordUploadEvent(
 
 async function loadUploadedFile(uploadedFileId: string): Promise<UploadedFileRow | null> {
   const result = await db.execute(sql`
-    SELECT id, lifecycle_state, safety_status, safety_reason, public_bucket, public_path, durable_bucket, durable_path, owner_id
+    SELECT
+      id,
+      size_bytes,
+      lifecycle_state,
+      safety_status,
+      safety_reason,
+      metadata_status,
+      attach_status,
+      public_bucket,
+      public_path,
+      quarantine_bucket,
+      quarantine_path,
+      durable_bucket,
+      durable_path,
+      owner_id,
+      proof_pack_id
     FROM uploaded_files
     WHERE id = ${uploadedFileId}
     LIMIT 1
@@ -195,6 +233,102 @@ async function loadUploadedFile(uploadedFileId: string): Promise<UploadedFileRow
 
   const [row] = getRows<UploadedFileRow>(result as any);
   return row ?? null;
+}
+
+function collectMetadataFlags(buffer: Buffer, detectedMime: string | null) {
+  const utf8Preview = buffer.subarray(0, Math.min(buffer.length, 16384)).toString('utf8');
+  const asciiPreview = buffer.subarray(0, Math.min(buffer.length, 16384)).toString('latin1');
+
+  const hasExif = asciiPreview.includes('Exif');
+  const hasGps = /GPS|gps/i.test(asciiPreview);
+  const hasAuthorMetadata = /\/Author|author[:=]/i.test(utf8Preview);
+  const hasHiddenDocumentProperties = /xmp:|<rdf:|photoshop|icc_profile/i.test(utf8Preview);
+
+  return {
+    detectedMime,
+    hasExif,
+    hasGps,
+    hasAuthorMetadata,
+    hasHiddenDocumentProperties,
+    publicSafeEligible: !hasExif && !hasGps && !hasAuthorMetadata && !hasHiddenDocumentProperties,
+  };
+}
+
+export async function getAttachableUploadedFile(uploadedFileId: string, ownerId: string) {
+  const row = await loadUploadedFile(uploadedFileId);
+  if (!row || row.owner_id !== ownerId) {
+    return null;
+  }
+
+  if (
+    row.lifecycle_state !== 'attachable' ||
+    row.safety_status !== 'clean' ||
+    row.metadata_status !== 'extracted' ||
+    row.attach_status !== 'attachable'
+  ) {
+    return null;
+  }
+
+  return row;
+}
+
+export async function attachUploadedFile(
+  uploadedFileId: string,
+  ownerId: string,
+  attachedSubjectType: string,
+  attachedSubjectId: string
+) {
+  const row = await getAttachableUploadedFile(uploadedFileId, ownerId);
+  if (!row) {
+    return null;
+  }
+
+  if (attachedSubjectType === 'proof_pack') {
+    const result = await db.execute(sql`
+      SELECT
+        COUNT(*)::int AS file_count,
+        COALESCE(SUM(size_bytes), 0)::bigint AS total_size_bytes
+      FROM uploaded_files
+      WHERE proof_pack_id = ${attachedSubjectId}::uuid
+        AND id <> ${uploadedFileId}::uuid
+        AND deleted_at IS NULL
+        AND attach_status IN ('attachable', 'attached')
+    `);
+
+    const [usage] = getRows<{ file_count: number; total_size_bytes: number }>(result as any);
+    const nextFileCount = (usage?.file_count ?? 0) + 1;
+    const nextAggregateBytes = (usage?.total_size_bytes ?? 0) + (row.size_bytes ?? 0);
+
+    if (nextFileCount > MAX_PROOF_PACK_FILES) {
+      throw new Error(`Proof Pack upload limit exceeds ${MAX_PROOF_PACK_FILES} files`);
+    }
+
+    if (nextAggregateBytes > MAX_PROOF_PACK_AGGREGATE_BYTES) {
+      throw new Error('Proof Pack upload aggregate exceeds 100MB limit');
+    }
+  }
+
+  await db.execute(sql`
+    UPDATE uploaded_files
+    SET
+      attached_subject_type = ${attachedSubjectType},
+      attached_subject_id = ${attachedSubjectId}::uuid,
+      proof_pack_id = CASE
+        WHEN ${attachedSubjectType} = 'proof_pack' THEN ${attachedSubjectId}::uuid
+        ELSE proof_pack_id
+      END,
+      lifecycle_state = 'attached',
+      attach_status = 'attached',
+      attached_at = NOW(),
+      updated_at = NOW()
+    WHERE id = ${uploadedFileId}
+  `);
+  await recordUploadEvent(uploadedFileId, 'attached', {
+    attachedSubjectType,
+    attachedSubjectId,
+  });
+
+  return row;
 }
 
 export async function ingestUploadedFile(
@@ -209,8 +343,9 @@ export async function ingestUploadedFile(
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const detectedMime = detectMimeFromBuffer(buffer);
+  const detectedMime = normalizeDetectedMime(declaredMime, detectMimeFromBuffer(buffer));
   const validation = validateMimeForKind(context.uploadKind, declaredMime, detectedMime);
+  const isEvidenceUpload = EVIDENCE_UPLOAD_KINDS.has(context.uploadKind);
   const sanitizedFilename = sanitizeFilename(file.name);
   const fileHash = sha256Buffer(buffer);
   const now = Date.now();
@@ -280,6 +415,8 @@ export async function ingestUploadedFile(
         lifecycle_state = 'rejected',
         safety_status = 'failed',
         safety_reason = ${uploadResult.error.message},
+        metadata_status = 'failed',
+        attach_status = 'rejected',
         updated_at = NOW()
       WHERE id = ${inserted.id}
     `);
@@ -301,9 +438,11 @@ export async function ingestUploadedFile(
     await db.execute(sql`
       UPDATE uploaded_files
       SET
-        lifecycle_state = 'rejected',
+        lifecycle_state = 'scan_failed',
         safety_status = 'rejected',
         safety_reason = ${validation.safetyReason},
+        metadata_status = 'failed',
+        attach_status = 'rejected',
         scan_engine = 'signature_v1',
         scan_completed_at = NOW(),
         deleted_at = NOW(),
@@ -324,22 +463,63 @@ export async function ingestUploadedFile(
     };
   }
 
-  await recordUploadEvent(inserted.id, 'validated', {
-    detectedMime,
-    promotePublic: validation.promotePublic,
-  });
-
   await db.execute(sql`
     UPDATE uploaded_files
     SET
-      lifecycle_state = 'validated',
+      lifecycle_state = 'scan_passed',
       safety_status = 'clean',
       scan_engine = 'signature_v1',
       scan_completed_at = NOW(),
       updated_at = NOW()
     WHERE id = ${inserted.id}
   `);
-  await recordUploadEvent(inserted.id, 'scan_clean', { detectedMime });
+  await recordUploadEvent(inserted.id, 'scan_passed', {
+    detectedMime,
+    promotePublic: validation.promotePublic,
+  });
+
+  const metadataFlags = collectMetadataFlags(buffer, detectedMime);
+
+  await db.execute(sql`
+    UPDATE uploaded_files
+    SET
+      lifecycle_state = 'metadata_extracted',
+      metadata_status = 'extracted',
+      safe_for_public = ${validation.promotePublic && metadataFlags.publicSafeEligible},
+      metadata_extracted_at = NOW(),
+      metadata = COALESCE(metadata, '{}'::jsonb) || ${JSON.stringify({
+        metadataFlags,
+      })}::jsonb,
+      updated_at = NOW()
+    WHERE id = ${inserted.id}
+  `);
+  await recordUploadEvent(inserted.id, 'metadata_extracted', {
+    metadataFlags,
+  });
+
+  if (isEvidenceUpload) {
+    await db.execute(sql`
+      UPDATE uploaded_files
+      SET
+        lifecycle_state = 'attachable',
+        attach_status = 'attachable',
+        updated_at = NOW()
+      WHERE id = ${inserted.id}
+    `);
+    await recordUploadEvent(inserted.id, 'attachable', {
+      safeForPublic: validation.promotePublic && metadataFlags.publicSafeEligible,
+    });
+
+    return {
+      uploadedFileId: inserted.id,
+      status: 'ready',
+      url: null,
+      storagePath: quarantinePath,
+      safetyReason: null,
+      detectedMime,
+    };
+  }
+
   await recordUploadEvent(inserted.id, 'promotion_started', {
     promotePublic: validation.promotePublic,
   });
@@ -368,6 +548,8 @@ export async function ingestUploadedFile(
         lifecycle_state = 'rejected',
         safety_status = 'failed',
         safety_reason = ${promotionResult.error.message},
+        metadata_status = 'failed',
+        attach_status = 'rejected',
         updated_at = NOW()
       WHERE id = ${inserted.id}
     `);
@@ -389,6 +571,8 @@ export async function ingestUploadedFile(
       public_path = ${validation.promotePublic ? destinationPath : null},
       lifecycle_state = ${validation.promotePublic ? 'ready_public' : 'ready_private'},
       promoted_at = NOW(),
+      attach_status = 'attachable',
+      safe_for_public = ${metadataFlags.publicSafeEligible},
       updated_at = NOW()
     WHERE id = ${inserted.id}
   `);
@@ -424,6 +608,7 @@ export async function deleteUploadedFile(uploadedFileId: string) {
 
   const admin = createAdminClient();
   const paths: Array<{ bucket: string | null; path: string | null }> = [
+    { bucket: row.quarantine_bucket, path: row.quarantine_path },
     { bucket: row.public_bucket, path: row.public_path },
     { bucket: row.durable_bucket, path: row.durable_path },
   ];
@@ -468,5 +653,7 @@ export async function getUploadedFileStatus(uploadedFileId: string, ownerId: str
     status: row.lifecycle_state,
     safetyStatus: row.safety_status,
     safetyReason: row.safety_reason,
+    metadataStatus: row.metadata_status,
+    attachStatus: row.attach_status,
   };
 }

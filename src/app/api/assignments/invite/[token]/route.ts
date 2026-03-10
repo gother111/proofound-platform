@@ -8,6 +8,7 @@ import {
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { upsertCanonicalAssignmentSectionSubmission } from '@/lib/canonical/submissions';
+import { inspectCapabilityToken } from '@/lib/security/capability-tokens';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,11 +27,22 @@ export async function GET(
 ) {
   try {
     const { token } = await params;
+    const inspected = await inspectCapabilityToken(token, {
+      actor: {
+        ip: request.headers.get('x-forwarded-for'),
+        userAgent: request.headers.get('user-agent'),
+      },
+      metadata: { surface: 'assignment_invite_get' },
+    });
+
+    if (!inspected.ok || inspected.token.source_table !== 'assignment_invitations') {
+      return NextResponse.json({ error: 'Invalid invitation token' }, { status: 404 });
+    }
 
     const [invitation] = await db
       .select()
       .from(assignmentInvitations)
-      .where(eq(assignmentInvitations.token, token))
+      .where(eq(assignmentInvitations.id, inspected.token.source_id ?? ''))
       .limit(1);
 
     if (!invitation) {
@@ -77,12 +89,23 @@ export async function POST(
     const { token } = await params;
     const body = await request.json();
     const validated = SubmissionSchema.parse(body);
+    const inspected = await inspectCapabilityToken(token, {
+      actor: {
+        ip: request.headers.get('x-forwarded-for'),
+        userAgent: request.headers.get('user-agent'),
+      },
+      metadata: { surface: 'assignment_invite_post' },
+    });
+
+    if (!inspected.ok || inspected.token.source_table !== 'assignment_invitations') {
+      return NextResponse.json({ error: 'Invalid invitation token' }, { status: 404 });
+    }
 
     // Fetch invitation
     const [invitation] = await db
       .select()
       .from(assignmentInvitations)
-      .where(eq(assignmentInvitations.token, token))
+      .where(eq(assignmentInvitations.id, inspected.token.source_id ?? ''))
       .limit(1);
 
     if (!invitation) {

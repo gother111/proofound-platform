@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
         FROM organization_members
         WHERE org_id = ${orgId}
           AND user_id = ${user.id}
-          AND status = 'active'
+          AND state = 'active'
         LIMIT 1
       `);
 

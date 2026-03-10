@@ -16,7 +16,10 @@ import {
   listVerificationRecordsForOwner,
   summarizeVerificationPolicy,
 } from '@/lib/verification/policy';
-import { resolveWorkEmailValidity } from '@/lib/verification/work-email-validity';
+import {
+  listCanonicalProofPackAggregatesForOwner,
+  summarizeCanonicalProofOwnerAggregates,
+} from '@/lib/proofs/canonical-pack';
 
 // Re-export types from client-safe utils
 export type {
@@ -95,6 +98,8 @@ export async function checkVerificationGates(
   userId: string,
   assignmentId: string
 ): Promise<GateCheckResult> {
+  let gates: VerificationGate[] = [];
+
   try {
     // Get assignment's required verification gates
     const assignment = await db.execute(sql`
@@ -113,7 +118,7 @@ export async function checkVerificationGates(
       };
     }
 
-    const gates = normalizeVerificationGates((assignmentRows[0] as any).verification_gates);
+    gates = normalizeVerificationGates((assignmentRows[0] as any).verification_gates);
 
     if (gates.length === 0) {
       // No gates required
@@ -166,12 +171,13 @@ export async function checkVerificationGates(
       error: error instanceof Error ? error.message : 'Unknown error',
     });
 
-    // Fail-safe: allow if check fails (don't block user)
     return {
-      passed: true,
-      unmetGates: [],
+      passed: false,
+      unmetGates: gates,
       userVerifications: [],
-      canIntroduce: true,
+      canIntroduce: false,
+      blockingMessage:
+        'Verification checks could not be completed. Introductions are paused until trust checks succeed.',
     };
   }
 }
@@ -181,105 +187,76 @@ export async function checkVerificationGates(
  */
 async function getUserVerifications(userId: string): Promise<VerificationStatus[]> {
   const verifications: VerificationStatus[] = [];
+  const [records, proofAggregates] = await Promise.all([
+    listVerificationRecordsForOwner('individual_profile', userId).catch(() => []),
+    listCanonicalProofPackAggregatesForOwner('individual_profile', userId).catch(() => []),
+  ]);
+  const policySummary = summarizeVerificationPolicy({ records });
+  const proofSummary = summarizeCanonicalProofOwnerAggregates(proofAggregates);
 
-  // Get individual profile data
-  const profile = await db.execute(sql`
-    SELECT
-      verification_tier,
-      verification_tier_source,
-      verification_status,
-      verification_method,
-      verified,
-      verified_at,
-      work_email_verified,
-      work_email_verified_at,
-      work_email_reverify_due_at,
-      linkedin_verification_status,
-      linkedin_verification_data
-    FROM individual_profiles
-    WHERE user_id = ${userId}
-  `);
+  verifications.push({
+    type: 'identity',
+    verified: policySummary.slots.identity.activeTrust,
+    verifiedAt: policySummary.slots.identity.verifiedAt
+      ? new Date(policySummary.slots.identity.verifiedAt)
+      : undefined,
+    provider:
+      policySummary.slots.identity.kind === 'veriff_identity'
+        ? 'veriff'
+        : policySummary.slots.identity.kind === 'linkedin_identity'
+          ? 'linkedin'
+          : undefined,
+  });
 
-  const profileRows = getRows(profile as any) as any[];
-  if (profileRows.length > 0) {
-    const row = profileRows[0] as any;
-    const workEmailValidity = resolveWorkEmailValidity({
-      work_email_verified: row.work_email_verified,
-      work_email_verified_at: row.work_email_verified_at,
-      work_email_reverify_due_at: row.work_email_reverify_due_at,
-      verified_at: row.verified_at,
-    });
-    const policySummary = summarizeVerificationPolicy({
-      records: await listVerificationRecordsForOwner('individual_profile', userId).catch(() => []),
-      legacyProfile: {
-        verified: row.verified,
-        verificationMethod: row.verification_method,
-        verificationStatus: row.verification_status,
-        verificationTier: row.verification_tier,
-        verificationTierSource: row.verification_tier_source,
-        workEmailCurrentlyVerified: workEmailValidity.isCurrentlyVerified,
-        linkedinVerificationStatus: row.linkedin_verification_status,
-      },
-    });
+  verifications.push({
+    type: 'work_email',
+    verified: policySummary.slots.workplace.activeTrust,
+    verifiedAt: policySummary.slots.workplace.verifiedAt
+      ? new Date(policySummary.slots.workplace.verifiedAt)
+      : undefined,
+    provider:
+      policySummary.slots.workplace.kind === 'linkedin_workplace' ? 'linkedin' : 'work_email',
+  });
 
-    // Identity verification
-    if (policySummary.compatibility.verificationTier === 'identity_verified') {
-      verifications.push({
-        type: 'identity',
-        verified: true,
-        verifiedAt: row.verified_at ? new Date(row.verified_at) : undefined,
-        provider:
-          policySummary.compatibility.verificationTierSource === 'veriff' ? 'veriff' : 'linkedin',
-      });
-    }
+  const linkedinVerified =
+    policySummary.slots.identity.activeTrust &&
+    policySummary.slots.identity.kind === 'linkedin_identity'
+      ? true
+      : policySummary.slots.workplace.activeTrust &&
+        policySummary.slots.workplace.kind === 'linkedin_workplace';
+  verifications.push({
+    type: 'linkedin',
+    verified: linkedinVerified,
+    verifiedAt:
+      policySummary.slots.identity.kind === 'linkedin_identity'
+        ? policySummary.slots.identity.verifiedAt
+          ? new Date(policySummary.slots.identity.verifiedAt)
+          : undefined
+        : policySummary.slots.workplace.verifiedAt
+          ? new Date(policySummary.slots.workplace.verifiedAt)
+          : undefined,
+    provider: linkedinVerified ? 'linkedin' : undefined,
+  });
 
-    // Work email verification
-    if (workEmailValidity.isCurrentlyVerified || policySummary.compatibility.workEmailVerified) {
-      verifications.push({
-        type: 'work_email',
-        verified: true,
-      });
-    }
-  }
+  verifications.push({
+    type: 'peer_attestation',
+    verified: policySummary.evidence.verifiedCount > 0,
+    verifiedAt: policySummary.evidence.latestVerifiedAt
+      ? new Date(policySummary.evidence.latestVerifiedAt)
+      : undefined,
+  });
 
-  // Check for attestations
-  const attestations = await db.execute(sql`
-    SELECT COUNT(*) as count
-    FROM attestations
-    WHERE subject_user_id = ${userId}
-      AND status = 'verified'
-  `);
-
-  const attestationRows = getRows(attestations as any) as any[];
-  if (attestationRows.length > 0) {
-    const count = parseInt((attestationRows[0] as any).count || '0');
-    if (count > 0) {
-      verifications.push({
-        type: 'peer_attestation',
-        verified: true,
-      });
-    }
-  }
-
-  // Check for skill proofs (projects with evidence)
-  const skillProofs = await db.execute(sql`
-    SELECT COUNT(*) as count
-    FROM experiences
-    WHERE user_id = ${userId}
-      AND evidence_urls IS NOT NULL
-      AND jsonb_array_length(evidence_urls) > 0
-  `);
-
-  const skillProofRows = getRows(skillProofs as any) as any[];
-  if (skillProofRows.length > 0) {
-    const count = parseInt((skillProofRows[0] as any).count || '0');
-    if (count > 0) {
-      verifications.push({
-        type: 'skill_proof',
-        verified: true,
-      });
-    }
-  }
+  const hasVerifiedProofPack = proofSummary.subjectSummaries.some(
+    (summary) =>
+      (summary.verificationStatus === 'verified' ||
+        summary.verificationStatus === 'partially_verified') &&
+      summary.freshnessState !== 'expired'
+  );
+  verifications.push({
+    type: 'skill_proof',
+    verified: hasVerifiedProofPack,
+    provider: hasVerifiedProofPack ? 'proof_pack' : undefined,
+  });
 
   return verifications;
 }

@@ -9,6 +9,7 @@ import { buildFallbackAuthTemplate } from '@/lib/email/auth-templates';
 import { headers } from 'next/headers';
 import type { AuthError } from '@supabase/supabase-js';
 import { resolveUserHomePath } from '@/lib/auth';
+import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
 import { z } from 'zod';
 import { mapSignUpValidationError, signUpSchema } from './auth.schema';
 import { CONSENT_TYPES, getPolicyVersionForConsentType } from '@/lib/privacy/consent-contract';
@@ -78,15 +79,22 @@ export async function signUp(
   prevState: SignUpState | undefined,
   formData: FormData
 ): Promise<SignUpState> {
+  const personaChoice = (formData.get('persona') as string | null)?.trim();
+  const normalizedPersona = personaChoice === 'organization' ? 'org_member' : personaChoice;
+  const trace = startLaunchTrace({
+    flow: 'auth',
+    actorType: 'anonymous',
+    objectRefs: {
+      persona: normalizedPersona ?? null,
+    },
+  });
+
   try {
     const headersList = await headers();
 
     const rawEmail = (formData.get('email') as string | null) ?? '';
     const email = rawEmail.trim().toLowerCase();
     const nextPath = sanitizeNextPath((formData.get('next') as string | null) ?? null);
-
-    const personaChoice = (formData.get('persona') as string | null)?.trim();
-    const normalizedPersona = personaChoice === 'organization' ? 'org_member' : personaChoice;
 
     // Parse consent fields from form
     const gdprConsentRaw = formData.get('gdprConsent') as string | null;
@@ -103,6 +111,11 @@ export async function signUp(
     const result = signUpSchema.safeParse(data);
     if (!result.success) {
       console.error('SignUp Validation Failed:', result.error.format());
+      emitLaunchTrace(trace, {
+        outcome: 'rejected',
+        state: 'signup_validation_failed',
+        failureClass: 'invalid_signup_payload',
+      });
       return {
         error: mapSignUpValidationError(result.error),
         success: false,
@@ -111,6 +124,11 @@ export async function signUp(
 
     const siteUrl = resolveRequestSiteUrl(headersList);
     if (!siteUrl) {
+      emitLaunchTrace(trace, {
+        outcome: 'failure',
+        state: 'signup_site_url_missing',
+        failureClass: 'site_url_unavailable',
+      });
       return {
         error: 'Unable to complete signup. Please try again later or contact support.',
         success: false,
@@ -136,6 +154,11 @@ export async function signUp(
     if (error) {
       console.error('Supabase SignUp Error:', error);
       if (/already registered/i.test(error.message)) {
+        emitLaunchTrace(trace, {
+          outcome: 'rejected',
+          state: 'signup_duplicate_account',
+          failureClass: 'duplicate_account',
+        });
         return {
           error: 'An account with this email already exists. Try logging in instead.',
           success: false,
@@ -153,11 +176,20 @@ export async function signUp(
         });
 
         if (fallbackSent) {
+          emitLaunchTrace(trace, {
+            outcome: 'success',
+            state: 'signup_fallback_email_sent',
+          });
           return { error: null, success: true };
         }
       }
 
       if (shouldTreatSignUpErrorAsRetry(error)) {
+        emitLaunchTrace(trace, {
+          outcome: 'failure',
+          state: 'signup_email_delivery_retryable',
+          failureClass: 'email_delivery_retryable',
+        });
         return {
           error:
             'We are temporarily unable to send verification emails. Please wait a minute and try again.',
@@ -165,6 +197,11 @@ export async function signUp(
         };
       }
 
+      emitLaunchTrace(trace, {
+        outcome: 'failure',
+        state: 'signup_provider_failed',
+        failureClass: 'provider_signup_failed',
+      });
       return {
         error: error.message || 'We could not sign you up. Please try again.',
         success: false,
@@ -175,6 +212,11 @@ export async function signUp(
     if (identities.length === 0) {
       const verificationEmail = signUpResult.user?.email ?? result.data.email;
       const resent = await resendVerificationEmail(supabase, verificationEmail, siteUrl, nextPath);
+      emitLaunchTrace(trace, {
+        outcome: resent ? 'success' : 'failure',
+        state: resent ? 'verification_resent' : 'verification_resend_failed',
+        failureClass: resent ? null : 'verification_resend_failed',
+      });
       return {
         error: resent
           ? 'An account with this email already exists. We just sent a fresh verification link to your inbox.'
@@ -308,12 +350,25 @@ export async function signUp(
 
     revalidatePath('/', 'layout');
 
+    emitLaunchTrace(trace, {
+      outcome: 'success',
+      state: 'signup_completed',
+      details: {
+        persona: result.data.persona,
+      },
+    });
+
     return {
       error: null,
       success: true,
     };
   } catch (error) {
     console.error('Sign-up failed:', error);
+    emitLaunchTrace(trace, {
+      outcome: 'failure',
+      state: 'signup_unhandled_error',
+      failureClass: 'unhandled_auth_error',
+    });
     if (error instanceof Error && error.message.includes('ENV_MISCONFIG')) {
       return {
         error:

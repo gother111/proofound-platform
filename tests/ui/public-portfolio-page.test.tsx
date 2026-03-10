@@ -10,118 +10,153 @@ const { notFoundMock } = vi.hoisted(() => ({
 
 vi.mock('next/navigation', () => ({
   notFound: notFoundMock,
+  permanentRedirect: vi.fn(),
 }));
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }));
 
+vi.mock('@/lib/portfolio/public-projection', () => ({
+  getPublicIndividualPortfolioProjectionByHandle: vi.fn(),
+  getHistoricalPublicProfileHandleRedirect: vi.fn(),
+}));
+
 import { createClient } from '@/lib/supabase/server';
-import PortfolioPage from '@/app/portfolio/[handle]/page';
+import {
+  getHistoricalPublicProfileHandleRedirect,
+  getPublicIndividualPortfolioProjectionByHandle,
+} from '@/lib/portfolio/public-projection';
+import PortfolioPage, { generateMetadata } from '@/app/portfolio/[handle]/page';
 
-type Fixtures = {
-  authUser: { id: string } | null;
-  profile: any;
-  profileFieldVisibility?: any;
-  historicalHandle?: any;
-  fallbackSkillProofs?: any[];
-};
-
-function mockSupabaseClient(fixtures: Fixtures) {
-  const {
-    authUser,
-    profile,
-    profileFieldVisibility = null,
-    historicalHandle = null,
-    fallbackSkillProofs = [],
-  } = fixtures;
-
+function buildProjection(overrides: Partial<any> = {}) {
   return {
-    auth: {
-      getUser: vi.fn().mockResolvedValue({ data: { user: authUser } }),
+    profileId: 'user-1',
+    handle: 'jane',
+    requestedState: 'public_link_only',
+    effectiveState: 'public_link_only',
+    shareUrl: 'https://proofound.io/portfolio/jane',
+    publicDisplayName: 'Jane Doe',
+    publicHeadline: 'Impact builder',
+    publicBio: 'I build measurable change.',
+    publicSkills: ['Strategy', 'Research ops'],
+    publicProofCount: 1,
+    featuredProofs: [
+      {
+        id: 'proof-1',
+        title: 'Verified proof item',
+        role: 'Project',
+        timeframe: 'Jan 15, 2026',
+        outcomes: ['Delivered measurable outcomes'],
+        evidence: [],
+        verifiedBy: 'Evidence attested',
+        proofPackHref: null,
+      },
+    ],
+    visibility: {
+      header: true,
+      proofBar: true,
+      workEmail: true,
+      linkedin: true,
+      identity: true,
+      counts: true,
+      skills: true,
+      bio: true,
+      contact: true,
     },
-    from: vi.fn((table: string) => {
-      if (table === 'profiles') {
-        const maybeSingle = vi.fn().mockResolvedValue({ data: profile });
-        const eq = vi.fn().mockReturnValue({ maybeSingle });
-        const select = vi.fn().mockReturnValue({ eq });
-        return { select };
-      }
-
-      if (table === 'skill_proofs') {
-        const select = vi.fn((query: string, options?: { head?: boolean; count?: string }) => {
-          return {
-            eq: vi.fn().mockReturnValue({
-              order: vi.fn().mockReturnValue({
-                limit: vi.fn().mockResolvedValue({ data: fallbackSkillProofs }),
-              }),
-            }),
-          };
-        });
-
-        return { select };
-      }
-
-      if (table === 'profile_field_visibility') {
-        return {
-          select: vi.fn(() => ({
-            eq: vi.fn().mockReturnValue({
-              maybeSingle: vi.fn().mockResolvedValue({ data: profileFieldVisibility }),
-            }),
-          })),
-        };
-      }
-
-      if (table === 'profile_handle_history') {
-        return {
-          select: vi.fn(() => ({
-            eq: vi.fn().mockReturnValue({
-              maybeSingle: vi.fn().mockResolvedValue({ data: historicalHandle }),
-            }),
-          })),
-        };
-      }
-
-      throw new Error(`Unexpected table ${table}`);
-    }),
+    individual: {
+      work_email: 'jane@example.com',
+    },
+    signals: {
+      identity: { verified: true, method: 'veriff' },
+      workEmail: { verified: true },
+      linkedin: { verificationStatus: 'verified', hasIdentityVerification: true },
+      proofs: { count: 1 },
+      verifications: { count: 1 },
+      attestations: { count: 1 },
+      badges: [
+        {
+          key: 'identity_checked',
+          label: 'Identity checked',
+          meaning: '',
+          doesNotMean: '',
+        },
+      ],
+      activeIssues: [],
+    },
+    verificationSummary: {
+      publicBadges: [],
+    },
+    exportData: {
+      profile: {
+        id: 'user-1',
+        handle: 'jane',
+        displayName: 'Jane Doe',
+        headline: 'Impact builder',
+      },
+      publication: {
+        requestedState: 'public_link_only',
+        effectiveState: 'public_link_only',
+        searchIndexingEnabled: false,
+      },
+      signals: {
+        identity: { verified: true, method: 'veriff' },
+        workEmail: { verified: true },
+        linkedin: { verificationStatus: 'verified', hasIdentityVerification: true },
+        proofs: { count: 1 },
+        verifications: { count: 1 },
+        attestations: { count: 1 },
+        badges: [],
+        activeIssues: [],
+      },
+      skills: [],
+      proofPacks: [],
+      visibility: {
+        header: true,
+        proofBar: true,
+        workEmail: true,
+        linkedin: true,
+        identity: true,
+        counts: true,
+        skills: true,
+        bio: true,
+        contact: true,
+      },
+    },
+    metadata: {
+      path: '/portfolio/jane',
+      title: 'Proofound public portfolio',
+      description: 'Shareable by direct link on Proofound.',
+      ogTitle: 'Proofound public portfolio',
+      ogDescription: 'Shareable by direct link on Proofound.',
+      useGenericPreview: true,
+    },
+    jsonLd: {
+      description: 'I build measurable change.',
+    },
+    minimumContentMet: true,
+    hasLinkOnlyContent: false,
+    hasRevealGatedContent: false,
+    ...overrides,
   };
 }
 
 describe('Public individual portfolio page', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(createClient).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: null } }),
+      },
+    } as any);
+    vi.mocked(getHistoricalPublicProfileHandleRedirect).mockResolvedValue(null);
+  });
+
   it('falls back to the public handle when display name is not public', async () => {
-    vi.mocked(createClient).mockResolvedValue(
-      mockSupabaseClient({
-        authUser: null,
-        profileFieldVisibility: {
-          display_name: 'network_only',
-          headline: 'public',
-          skills: 'public',
-        },
-        profile: {
-          id: 'user-1',
-          handle: 'jane-hidden',
-          display_name: 'Jane Hidden',
-          public_portfolio_state: 'public_link_only',
-          search_indexing_enabled_at: null,
-          avatar_url: null,
-          individual_profiles: [
-            {
-              headline: 'Proof-first builder',
-              bio: null,
-              tagline: null,
-              verification_status: null,
-              verification_method: null,
-              verified_at: null,
-              work_email: null,
-              work_email_verified: false,
-              linkedin_verification_status: null,
-              linkedin_verified_at: null,
-              linkedin_verification_data: null,
-              verified: false,
-            },
-          ],
-          field_visibility: [{ field_visibility: {} }],
-        },
+    vi.mocked(getPublicIndividualPortfolioProjectionByHandle).mockResolvedValue(
+      buildProjection({
+        handle: 'jane-hidden',
+        publicDisplayName: 'jane-hidden',
       }) as any
     );
 
@@ -137,38 +172,23 @@ describe('Public individual portfolio page', () => {
   });
 
   it('renders public read-only view with updated sections and no owner-only details', async () => {
-    vi.mocked(createClient).mockResolvedValue(
-      mockSupabaseClient({
-        authUser: null,
-        profileFieldVisibility: {
-          headline: 'public',
-          skills: 'owner_only',
+    vi.mocked(getPublicIndividualPortfolioProjectionByHandle).mockResolvedValue(
+      buildProjection({
+        publicBio: null,
+        publicSkills: [],
+        individual: { work_email: null },
+        visibility: {
+          header: true,
+          proofBar: true,
+          workEmail: false,
+          linkedin: true,
+          identity: true,
+          counts: true,
+          skills: false,
+          bio: true,
+          contact: false,
         },
-        profile: {
-          id: 'user-1',
-          handle: 'jane',
-          display_name: 'Jane Doe',
-          public_portfolio_state: 'public_link_only',
-          search_indexing_enabled_at: null,
-          avatar_url: null,
-          individual_profiles: [
-            {
-              headline: 'Proof-first builder',
-              bio: null,
-              tagline: null,
-              verification_status: null,
-              verification_method: null,
-              verified_at: null,
-              work_email: null,
-              work_email_verified: false,
-              linkedin_verification_status: null,
-              linkedin_verified_at: null,
-              linkedin_verification_data: null,
-              verified: false,
-            },
-          ],
-          field_visibility: [{ field_visibility: {} }],
-        },
+        featuredProofs: [],
       }) as any
     );
 
@@ -200,62 +220,13 @@ describe('Public individual portfolio page', () => {
   });
 
   it('renders owner-safe public preview and allows return link when provided', async () => {
-    vi.mocked(createClient).mockResolvedValue(
-      mockSupabaseClient({
-        authUser: { id: 'user-1' },
-        profileFieldVisibility: {
-          headline: 'public',
-          skills: 'public',
-        },
-        fallbackSkillProofs: [
-          {
-            id: 'proof-verified',
-            title: 'Verified proof item',
-            proof_type: 'project',
-            description: 'Delivered measurable outcomes',
-            url: 'https://example.com/verified',
-            verified: true,
-            created_at: '2026-01-15T00:00:00.000Z',
-          },
-          {
-            id: 'proof-pending',
-            title: 'Pending proof item',
-            proof_type: 'project',
-            description: 'Pending outcome',
-            url: 'https://example.com/pending',
-            verified: false,
-            created_at: '2026-01-16T00:00:00.000Z',
-          },
-        ],
-        profile: {
-          id: 'user-1',
-          handle: 'jane',
-          display_name: 'Jane Doe',
-          public_portfolio_state: 'public_link_only',
-          search_indexing_enabled_at: null,
-          avatar_url: null,
-          individual_profiles: [
-            {
-              headline: 'Impact builder',
-              bio: 'I build measurable change.',
-              tagline: null,
-              skills: ['Strategy', 'Research ops'],
-              verification_status: 'verified',
-              verification_method: 'veriff',
-              verified_at: null,
-              work_email: 'jane@example.com',
-              work_email_verified: true,
-              linkedin_verification_status: 'verified',
-              linkedin_verified_at: null,
-              linkedin_verification_data: { hasIdentityVerification: true },
-              verified: true,
-            },
-          ],
-          field_visibility: [
-            { field_visibility: { contact: true, workEmail: true, bio: true, skills: true } },
-          ],
-        },
-      }) as any
+    vi.mocked(createClient).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-1' } } }),
+      },
+    } as any);
+    vi.mocked(getPublicIndividualPortfolioProjectionByHandle).mockResolvedValue(
+      buildProjection() as any
     );
 
     const element = await PortfolioPage({
@@ -265,34 +236,90 @@ describe('Public individual portfolio page', () => {
 
     render(element);
 
+    expect(screen.getByRole('heading', { name: 'Jane Doe' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /return to menu/i })).toHaveAttribute(
       'href',
       '/app/i/home'
     );
-    expect(screen.getAllByText('I build measurable change.').length).toBeGreaterThan(0);
-    expect(screen.getByText('Verified proof item')).toBeInTheDocument();
-    expect(screen.getByText('Strategy')).toBeInTheDocument();
-    expect(screen.getByText('Research ops')).toBeInTheDocument();
-    expect(screen.queryByText('Pending proof item')).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /work email/i })).toHaveAttribute(
-      'href',
-      'mailto:jane@example.com'
-    );
-    expect(screen.queryByText(/stockholm, sweden/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/mission & vision/i)).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /edit profile/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /add proof/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /request verification/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/search engines are off by default/i)).toBeInTheDocument();
+    expect(screen.getByText(/work email/i)).toBeInTheDocument();
   });
 
-  it('calls notFound when handle does not resolve to a profile', async () => {
-    vi.mocked(createClient).mockResolvedValue(
-      mockSupabaseClient({
-        authUser: null,
-        profile: null,
-        historicalHandle: null,
+  it('does not widen visibility when a public proof has no safe evidence URL', async () => {
+    vi.mocked(getPublicIndividualPortfolioProjectionByHandle).mockResolvedValue(
+      buildProjection({
+        featuredProofs: [
+          {
+            id: 'proof-1',
+            title: 'Hidden asset proof',
+            role: 'Project',
+            timeframe: 'Jan 15, 2026',
+            outcomes: ['Internal child asset omitted'],
+            evidence: [],
+            verifiedBy: 'Public evidence',
+            proofPackHref: null,
+          },
+        ],
       }) as any
     );
+
+    const element = await PortfolioPage({
+      params: Promise.resolve({ handle: 'jane' }),
+      searchParams: Promise.resolve({}),
+    });
+
+    render(element);
+
+    expect(screen.getByText('Hidden asset proof')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /open evidence/i })).not.toBeInTheDocument();
+  });
+
+  it('returns generic noindex metadata by default', async () => {
+    vi.mocked(getPublicIndividualPortfolioProjectionByHandle).mockResolvedValue(
+      buildProjection() as any
+    );
+
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ handle: 'jane' }),
+    });
+
+    expect(metadata.robots).toMatchObject({
+      index: false,
+      follow: false,
+    });
+    expect(metadata.title).toBe('Proofound public portfolio');
+    expect(metadata.alternates?.canonical).toContain('/portfolio/jane');
+  });
+
+  it('returns page-specific metadata when indexing is explicitly enabled', async () => {
+    vi.mocked(getPublicIndividualPortfolioProjectionByHandle).mockResolvedValue(
+      buildProjection({
+        effectiveState: 'public_indexable',
+        metadata: {
+          path: '/portfolio/jane',
+          title: 'Jane Doe | Proofound',
+          description: 'Impact builder',
+          ogTitle: 'Jane Doe on Proofound',
+          ogDescription: 'Impact builder Explore proof-backed work.',
+          useGenericPreview: false,
+        },
+      }) as any
+    );
+
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ handle: 'jane' }),
+    });
+
+    expect(metadata.robots).toMatchObject({
+      index: true,
+      follow: true,
+    });
+    expect(metadata.title).toBe('Jane Doe | Proofound');
+    expect(metadata.openGraph?.title).toBe('Jane Doe on Proofound');
+  });
+
+  it('calls notFound when handle has no public portfolio', async () => {
+    vi.mocked(getPublicIndividualPortfolioProjectionByHandle).mockResolvedValue(null);
 
     await expect(PortfolioPage({ params: Promise.resolve({ handle: 'missing' }) })).rejects.toThrow(
       'NOT_FOUND'

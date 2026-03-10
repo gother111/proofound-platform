@@ -1,4 +1,4 @@
-import { randomBytes, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireApiAuthContext } from '@/lib/auth';
@@ -7,7 +7,6 @@ import { resolveSiteUrlFromHeaders } from '@/lib/env';
 import { createAdminClient } from '@/lib/supabase/admin';
 import {
   artifactTypeLabel,
-  hashVerificationToken,
   mapCustomRelationshipToSkillVerifierSource,
   parseCustomSkillName,
   relationshipDisplayLabel,
@@ -35,7 +34,6 @@ type SkillVerificationRequestRow = {
   requester_profile_id: string;
   requester_email_snapshot: string | null;
   requester_domain_snapshot: string | null;
-  verification_token?: string | null;
   verifier_email: string;
   verifier_domain_snapshot: string | null;
   verifier_profile_id: string | null;
@@ -153,10 +151,6 @@ type BundleResendResult = {
   emailSent: boolean;
 };
 
-function generateSecureToken(): string {
-  return randomBytes(32).toString('hex');
-}
-
 function normalizeBaseUrl(value: string | null | undefined): string {
   const trimmed = (value || '').trim();
   if (!trimmed) {
@@ -197,17 +191,6 @@ function isImpactResendAllowedStatus(status: string): status is ImpactResendElig
 
 function isBundleResendAllowedStatus(status: string): status is BundleResendEligibility {
   return status === 'pending' || status === 'declined' || status === 'expired';
-}
-
-function isMissingVerificationTokenColumnError(error: unknown): boolean {
-  if (!error || typeof error !== 'object') {
-    return false;
-  }
-
-  const e = error as { code?: string; message?: string; details?: string; hint?: string };
-  const errorText = `${e.message || ''} ${e.details || ''} ${e.hint || ''}`.toLowerCase();
-
-  return (e.code === 'PGRST204' || e.code === '42703') && errorText.includes('verification_token');
 }
 
 function isUniqueViolationError(error: unknown): boolean {
@@ -321,6 +304,18 @@ function buildBaseUrl(request: NextRequest): string {
   return normalizeBaseUrl(
     fromHeaders || process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL
   );
+}
+
+function buildSkillVerificationScopeKey(skillId: string, verifierEmail: string) {
+  return `skill_verification:${skillId}:${normalizeEmail(verifierEmail) ?? 'unknown'}`;
+}
+
+function buildImpactVerificationScopeKey(impactStoryId: string, verifierEmail: string) {
+  return `impact_verification:${impactStoryId}:${normalizeEmail(verifierEmail) ?? 'unknown'}`;
+}
+
+function buildCustomVerificationScopeKey(requestId: string, verifierEmail: string) {
+  return `custom_verification:${requestId}:${normalizeEmail(verifierEmail) ?? 'unknown'}`;
 }
 
 async function insertSkillRowsWithOptionalToken(
@@ -491,16 +486,41 @@ async function resendCustomBundleRequest(
   const nowIso = new Date().toISOString();
   const expiresAtIso = computeExpiresAt(14);
 
-  let resendToken = generateSecureToken();
+  let resendToken = '';
   let resentRequestId = customRequest.id;
   let reusedRecord = customRequest.status === 'pending';
   let insertedLinkedSkillRequestIds: string[] = [];
+  const issued = await issueCapabilityToken({
+    tokenClass: CAPABILITY_TOKEN_CLASSES.CUSTOM_VERIFICATION_RESPONSE,
+    sourceTable: 'custom_verification_requests',
+    sourceId: reusedRecord ? customRequest.id : randomUUID(),
+    actionScope: 'custom_verification.respond',
+    subjectType: 'custom_verification_request',
+    subjectId: reusedRecord ? customRequest.id : null,
+    actorBinding: customRequest.verifier_profile_id
+      ? CAPABILITY_BINDINGS.EMAIL_THEN_PROFILE_LOCK
+      : CAPABILITY_BINDINGS.EMAIL_HASH,
+    actorEmail: customRequest.verifier_email,
+    actorProfileId: customRequest.verifier_profile_id,
+    expiresAt: new Date(expiresAtIso),
+    singleUse: true,
+    maxUses: 1,
+    scopeKey: buildCustomVerificationScopeKey(customRequest.id, customRequest.verifier_email),
+    revokePriorActiveTokensForScope: true,
+    metadata: {
+      resend: true,
+      requestId: customRequest.id,
+      artifactCount: bundleItems.length,
+    },
+  });
+  resendToken = issued.rawToken;
 
   if (reusedRecord) {
     const { error: updateBundleError } = await admin
       .from('custom_verification_requests')
       .update({
-        token_hash: hashVerificationToken(resendToken),
+        token_hash: issued.tokenHash,
+        capability_token_id: issued.token.id,
         expires_at: expiresAtIso,
         updated_at: nowIso,
       })
@@ -532,7 +552,7 @@ async function resendCustomBundleRequest(
       );
     }
   } else {
-    resentRequestId = randomUUID();
+    resentRequestId = issued.token.source_id || randomUUID();
 
     const { error: insertBundleError } = await admin.from('custom_verification_requests').insert({
       id: resentRequestId,
@@ -541,7 +561,8 @@ async function resendCustomBundleRequest(
       verifier_profile_id: customRequest.verifier_profile_id,
       verifier_relationship: customRequest.verifier_relationship,
       message: customRequest.message,
-      token_hash: hashVerificationToken(resendToken),
+      token_hash: issued.tokenHash,
+      capability_token_id: issued.token.id,
       status: 'pending',
       expires_at: expiresAtIso,
       created_at: nowIso,
@@ -775,37 +796,60 @@ async function handleSkillResend(context: ResendContext, requestId: string): Pro
   const skillName = await fetchSkillName(admin, verificationRequest.skill_id);
   const baseUrl = buildBaseUrl(request);
 
-  const reusedRecord =
-    verificationRequest.status === 'pending' && Boolean(verificationRequest.verification_token);
+  const reusedRecord = verificationRequest.status === 'pending';
   let resentRequestId = verificationRequest.id;
-  let resendToken = verificationRequest.verification_token || verificationRequest.id;
+  let resendToken = '';
+  const issued = await issueCapabilityToken({
+    tokenClass: CAPABILITY_TOKEN_CLASSES.SKILL_VERIFICATION_RESPONSE,
+    sourceTable: 'skill_verification_requests',
+    sourceId: reusedRecord ? verificationRequest.id : randomUUID(),
+    actionScope: 'skill_verification.respond',
+    subjectType: 'skill_verification_request',
+    subjectId: reusedRecord ? verificationRequest.id : null,
+    actorBinding: verificationRequest.requires_authenticated_verifier
+      ? CAPABILITY_BINDINGS.EMAIL_THEN_PROFILE_LOCK
+      : CAPABILITY_BINDINGS.EMAIL_HASH,
+    actorEmail: verificationRequest.verifier_email,
+    actorProfileId: verificationRequest.verifier_profile_id,
+    expiresAt: new Date(computeExpiresAt(7)),
+    singleUse: true,
+    maxUses: 1,
+    scopeKey: buildSkillVerificationScopeKey(
+      verificationRequest.skill_id,
+      verificationRequest.verifier_email
+    ),
+    revokePriorActiveTokensForScope: true,
+    metadata: {
+      verifierSource: verificationRequest.verifier_source,
+      skillId: verificationRequest.skill_id,
+      resend: true,
+    },
+  });
+  resendToken = issued.rawToken;
 
-  if (!reusedRecord) {
-    resentRequestId = randomUUID();
+  if (reusedRecord) {
+    const updateResult = await admin
+      .from('skill_verification_requests')
+      .update({
+        capability_token_id: issued.token.id,
+        expires_at: computeExpiresAt(7),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', verificationRequest.id)
+      .eq('requester_profile_id', userId)
+      .eq('status', 'pending');
+
+    if (updateResult.error) {
+      console.error(
+        'Failed to rotate skill verification request capability token:',
+        updateResult.error
+      );
+      return NextResponse.json({ error: 'Failed to resend verification request' }, { status: 500 });
+    }
+  } else {
+    resentRequestId = issued.token.source_id || randomUUID();
     const nowIso = new Date().toISOString();
     const expiresAtIso = computeExpiresAt(7);
-    const issued = await issueCapabilityToken({
-      tokenClass: CAPABILITY_TOKEN_CLASSES.SKILL_VERIFICATION_RESPONSE,
-      sourceTable: 'skill_verification_requests',
-      sourceId: resentRequestId,
-      actionScope: 'skill_verification.respond',
-      subjectType: 'skill_verification_request',
-      subjectId: resentRequestId,
-      actorBinding: verificationRequest.requires_authenticated_verifier
-        ? CAPABILITY_BINDINGS.EMAIL_THEN_PROFILE_LOCK
-        : CAPABILITY_BINDINGS.EMAIL_HASH,
-      actorEmail: verificationRequest.verifier_email,
-      actorProfileId: verificationRequest.verifier_profile_id,
-      expiresAt: new Date(expiresAtIso),
-      singleUse: true,
-      maxUses: 1,
-      metadata: {
-        verifierSource: verificationRequest.verifier_source,
-        skillId: verificationRequest.skill_id,
-        resend: true,
-      },
-    });
-    resendToken = issued.rawToken;
 
     const insertRows = [
       {
@@ -967,36 +1011,59 @@ async function handleImpactResend(
       ? String((storyTitleData as { title?: unknown }).title || 'Impact Story')
       : 'Impact Story';
 
-  const reusedRecord =
-    verificationRequest.status === 'pending' && Boolean(verificationRequest.token);
+  const reusedRecord = verificationRequest.status === 'pending';
   let resentRequestId = verificationRequest.id;
-  let resendToken = verificationRequest.token;
+  let resendToken = '';
+  const issued = await issueCapabilityToken({
+    tokenClass: CAPABILITY_TOKEN_CLASSES.IMPACT_VERIFICATION_RESPONSE,
+    sourceTable: 'impact_story_verification_requests',
+    sourceId: reusedRecord ? verificationRequest.id : randomUUID(),
+    actionScope: 'impact_verification.respond',
+    subjectType: 'impact_verification_request',
+    subjectId: reusedRecord ? verificationRequest.id : null,
+    actorBinding: verificationRequest.requires_authenticated_verifier
+      ? CAPABILITY_BINDINGS.EMAIL_THEN_PROFILE_LOCK
+      : CAPABILITY_BINDINGS.EMAIL_HASH,
+    actorEmail: verificationRequest.verifier_email,
+    actorProfileId: verificationRequest.verifier_profile_id,
+    expiresAt: new Date(computeExpiresAt(14)),
+    singleUse: true,
+    maxUses: 1,
+    scopeKey: buildImpactVerificationScopeKey(
+      verificationRequest.impact_story_id,
+      verificationRequest.verifier_email
+    ),
+    revokePriorActiveTokensForScope: true,
+    metadata: {
+      impactStoryId: verificationRequest.impact_story_id,
+      resend: true,
+    },
+  });
+  resendToken = issued.rawToken;
 
-  if (!reusedRecord) {
-    resentRequestId = randomUUID();
+  if (reusedRecord) {
+    const updateResult = await admin
+      .from('impact_story_verification_requests')
+      .update({
+        capability_token_id: issued.token.id,
+        expires_at: computeExpiresAt(14),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', verificationRequest.id)
+      .eq('requester_profile_id', userId)
+      .eq('status', 'pending');
+
+    if (updateResult.error) {
+      console.error(
+        'Failed to rotate impact verification request capability token:',
+        updateResult.error
+      );
+      return NextResponse.json({ error: 'Failed to resend verification request' }, { status: 500 });
+    }
+  } else {
+    resentRequestId = issued.token.source_id || randomUUID();
     const nowIso = new Date().toISOString();
     const expiresAtIso = computeExpiresAt(14);
-    const issued = await issueCapabilityToken({
-      tokenClass: CAPABILITY_TOKEN_CLASSES.IMPACT_VERIFICATION_RESPONSE,
-      sourceTable: 'impact_story_verification_requests',
-      sourceId: resentRequestId,
-      actionScope: 'impact_verification.respond',
-      subjectType: 'impact_verification_request',
-      subjectId: resentRequestId,
-      actorBinding: verificationRequest.requires_authenticated_verifier
-        ? CAPABILITY_BINDINGS.EMAIL_THEN_PROFILE_LOCK
-        : CAPABILITY_BINDINGS.EMAIL_HASH,
-      actorEmail: verificationRequest.verifier_email,
-      actorProfileId: verificationRequest.verifier_profile_id,
-      expiresAt: new Date(expiresAtIso),
-      singleUse: true,
-      maxUses: 1,
-      metadata: {
-        impactStoryId: verificationRequest.impact_story_id,
-        resend: true,
-      },
-    });
-    resendToken = issued.rawToken;
 
     const { error: insertError } = await admin.from('impact_story_verification_requests').insert({
       id: resentRequestId,

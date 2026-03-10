@@ -38,6 +38,7 @@ import {
 } from '@/lib/lifecycle/residual';
 import { getRows } from '@/lib/db/rows';
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { listCanonicalProofPackAggregatesForOwner } from '@/lib/proofs/canonical-pack';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,7 +76,7 @@ function toDateOnlyString(value: unknown): string | null {
 /**
  * GET /api/user/export
  *
- * Canonical data portability contract: v3.0.0
+ * Canonical data portability contract: v4.0.0
  */
 export async function GET() {
   let exportRecord: { id: string } | null = null;
@@ -175,6 +176,7 @@ export async function GET() {
       canonicalProofPacks,
       canonicalVerificationRecords,
       canonicalSubmissions,
+      canonicalProofAggregates,
     ] = await Promise.all([
       db.select().from(profiles).where(eq(profiles.id, user.id)).limit(1),
       db.select().from(individualProfiles).where(eq(individualProfiles.userId, user.id)).limit(1),
@@ -238,6 +240,7 @@ export async function GET() {
         .where(
           and(eq(submissions.ownerType, 'individual_profile'), eq(submissions.ownerId, user.id))
         ),
+      listCanonicalProofPackAggregatesForOwner('individual_profile', user.id),
     ]);
 
     const canonicalProofPackIds = canonicalProofPacks.map((pack) => pack.id);
@@ -293,8 +296,15 @@ export async function GET() {
         storagePath: file.durable_path || file.public_path || null,
       }));
 
+    const serializeForExport = <T>(value: T): T =>
+      JSON.parse(
+        JSON.stringify(value, (_key, entry) =>
+          entry instanceof Date ? entry.toISOString() : entry
+        )
+      ) as T;
+
     const portability = {
-      version: '3.0.0',
+      version: '4.0.0',
       exportedAt,
       profile: {
         headline: individualProfile?.headline || undefined,
@@ -345,12 +355,35 @@ export async function GET() {
         description: entry.impact || undefined,
         hoursPerWeek: undefined,
       })),
+      proof: {
+        scope: 'owner_full' as const,
+        schemaVersion: '4.0.0',
+        ownerType: 'individual_profile' as const,
+        ownerId: user.id,
+        packs: serializeForExport(canonicalProofPacks),
+        artifacts: serializeForExport(canonicalProofArtifacts),
+        packItems: serializeForExport(canonicalProofPackItems),
+        submissions: serializeForExport(canonicalSubmissions),
+        submissionArtifacts: serializeForExport(canonicalSubmissionArtifacts),
+        verificationReferences: serializeForExport(canonicalVerificationRecords),
+        verificationLogEntries: serializeForExport(canonicalVerificationLogEntries),
+        ownerProjections: serializeForExport(
+          canonicalProofAggregates.map((aggregate) => aggregate.ownerFull)
+        ),
+        publicSafeProjections: serializeForExport(
+          canonicalProofAggregates
+            .map((aggregate) => aggregate.publicSafe)
+            .filter((projection): projection is NonNullable<typeof projection> =>
+              Boolean(projection)
+            )
+        ),
+      },
     };
 
     const legacy = {
       exportDate: exportedAt,
       userId: user.id,
-      exportVersion: '3.0.0',
+      exportVersion: '4.0.0',
       profile: {
         basic: profileData[0] || null,
         individual: individualProfile,
@@ -396,7 +429,7 @@ export async function GET() {
     const exportData = {
       ...portability,
       exportDate: exportedAt,
-      exportVersion: '3.0.0',
+      exportVersion: '4.0.0',
       userId: user.id,
       operationId: operation.id,
       exportId: exportRecord.id,

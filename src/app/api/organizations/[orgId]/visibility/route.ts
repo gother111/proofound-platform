@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { db } from '@/db';
+import { computePortfolioPublicationState } from '@/lib/proof-trust/snapshots';
+import { revalidatePublicOrganizationPortfolioById } from '@/lib/portfolio/public-invalidation';
+import { resolveRequestedPublicPortfolioState } from '@/lib/portfolio/public-contract';
+import { and, eq } from 'drizzle-orm';
+import { portfolioPublicationStates } from '@/db/schema';
 
 type VisibilityLevel = 'public' | 'post_match' | 'post_conversation_start' | 'internal_only';
 
@@ -103,6 +109,10 @@ function mapClientToDbVisibility(settings: VisibilitySettings): Record<string, s
   };
 }
 
+function canManageVisibility(role: string | null | undefined) {
+  return role === 'owner' || role === 'admin' || role === 'org_owner' || role === 'org_manager';
+}
+
 /**
  * GET /api/organizations/[orgId]/visibility
  *
@@ -141,12 +151,27 @@ export async function GET(
       .eq('org_id', orgId)
       .single();
 
+    const { data: organization } = await supabase
+      .from('organizations')
+      .select('public_portfolio_state, search_indexing_enabled_at')
+      .eq('id', orgId)
+      .maybeSingle();
+
     if (error && error.code !== 'PGRST116') {
       console.error('Error fetching visibility settings:', error);
       return NextResponse.json({ error: 'Failed to fetch visibility settings' }, { status: 500 });
     }
 
+    const requestedState = resolveRequestedPublicPortfolioState(
+      (organization as { public_portfolio_state?: string | null } | null)?.public_portfolio_state
+    );
+
     return NextResponse.json({
+      publicPageEnabled: requestedState !== 'unavailable',
+      searchIndexingEnabled: Boolean(
+        (organization as { search_indexing_enabled_at?: string | null } | null)
+          ?.search_indexing_enabled_at
+      ),
       visibility: mapRowToClientVisibility(visibility as Record<string, unknown> | null),
     });
   } catch (error) {
@@ -183,13 +208,17 @@ export async function PUT(
       .eq('user_id', user.id)
       .single();
 
-    if (!membership || (membership.role !== 'owner' && membership.role !== 'admin')) {
+    if (!membership || !canManageVisibility(membership.role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const body = await request.json();
     const input =
       typeof body === 'object' && body !== null ? (body as Record<string, unknown>) : {};
+    const publicPageEnabled =
+      typeof input.publicPageEnabled === 'boolean' ? input.publicPageEnabled : true;
+    const searchIndexingEnabled =
+      typeof input.searchIndexingEnabled === 'boolean' ? input.searchIndexingEnabled : false;
     const { partial, invalidField } = parseIncomingVisibility(input);
 
     if (invalidField) {
@@ -212,6 +241,12 @@ export async function PUT(
     };
 
     const dbPayload = mapClientToDbVisibility(merged);
+    const previousPublicationState = await db.query.portfolioPublicationStates.findFirst({
+      where: and(
+        eq(portfolioPublicationStates.subjectType, 'organization'),
+        eq(portfolioPublicationStates.subjectId, orgId)
+      ),
+    });
 
     if (existing) {
       const { error } = await supabase
@@ -250,7 +285,39 @@ export async function PUT(
       }
     }
 
-    return NextResponse.json({ visibility: merged });
+    const organizationUpdate = await supabase
+      .from('organizations')
+      .update({
+        public_portfolio_state: publicPageEnabled
+          ? searchIndexingEnabled
+            ? 'public_indexable'
+            : 'public_link_only'
+          : 'unavailable',
+        search_indexing_enabled_at: searchIndexingEnabled ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', orgId);
+
+    if (organizationUpdate.error) {
+      console.error('Error updating org publication settings:', organizationUpdate.error);
+      return NextResponse.json(
+        { error: 'Failed to update organization visibility settings' },
+        { status: 500 }
+      );
+    }
+
+    const publication = await computePortfolioPublicationState('organization', orgId);
+    await revalidatePublicOrganizationPortfolioById(orgId);
+
+    return NextResponse.json({
+      publicPageEnabled,
+      searchIndexingEnabled,
+      visibility: merged,
+      publication,
+      publicationChanged:
+        previousPublicationState?.publicationState !== publication.publicationState ||
+        previousPublicationState?.indexingState !== publication.indexingState,
+    });
   } catch (error) {
     console.error('Error in visibility PUT:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

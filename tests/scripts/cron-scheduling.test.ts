@@ -29,6 +29,7 @@ describe('cron scheduling ownership', () => {
 
     expect(urls).toEqual([
       'https://proofound.io/api/cron/python-internal-worker',
+      'https://proofound.io/api/cron/cv-import-temp-cleanup',
       'https://proofound.io/api/cron/fairness-note',
       'https://proofound.io/api/cron/health-check',
       'https://proofound.io/api/cron/performance-check',

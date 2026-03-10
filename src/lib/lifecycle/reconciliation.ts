@@ -3,6 +3,7 @@ import { sql } from 'drizzle-orm';
 
 import { db, profiles } from '@/db';
 import { getRows } from '@/lib/db/rows';
+import { revalidatePublicPortfolioByProfileId } from '@/lib/portfolio/public-invalidation';
 import { deleteUploadedFile } from '@/lib/uploads/lifecycle';
 import { revokeCapabilityTokensBySource } from '@/lib/security/capability-tokens';
 
@@ -286,6 +287,7 @@ export async function executeAccountDeletionLifecycle(params: {
     `profiles:${params.userId}`,
     'disabled'
   );
+  await revalidatePublicPortfolioByProfileId(params.userId);
   await resolveLifecycleTarget(
     params.operationId,
     'search_index_state',

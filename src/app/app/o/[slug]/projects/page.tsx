@@ -1,35 +1,20 @@
-/**
- * Projects Page - Organization
- *
- * Manage organization-wide projects
- */
-
-import { requireAuth, getActiveOrg } from '@/lib/auth';
-import { notFound } from 'next/navigation';
-import { ProjectsList } from '@/components/organization/ProjectsList';
-import { AppSurface } from '@/components/ui/v2/AppSurface';
+import { OrgScopeNotice } from '@/components/organization/OrgScopeNotice';
+import { getOrgSurfaceFallbackHref } from '@/lib/org/mvp-surface-policy';
 
 export const dynamic = 'force-dynamic';
 
 export default async function OrgProjectsPage({ params }: { params: Promise<{ slug: string }> }) {
-  const user = await requireAuth();
   const { slug } = await params;
-  const result = await getActiveOrg(slug, user.id);
-
-  if (!result) {
-    notFound();
-  }
-
-  const { org, membership } = result;
-
-  // Check if user can edit
-  const canEdit = membership.role === 'owner' || membership.role === 'admin';
 
   return (
-    <AppSurface>
-      <div className="max-w-7xl mx-auto w-full">
-        <ProjectsList orgId={org.id} canEdit={canEdit} />
-      </div>
-    </AppSurface>
+    <OrgScopeNotice
+      title="Project libraries are not part of the launch MVP"
+      description="The launch corridor keeps org activity focused on one trust profile and one assignment path. Project libraries remain safely isolated."
+      slug={slug}
+      primaryHref={getOrgSurfaceFallbackHref(slug, 'projects')}
+      primaryLabel="Back to overview"
+      secondaryHref={`/app/o/${slug}/matching`}
+      secondaryLabel="Open assignments & matches"
+    />
   );
 }

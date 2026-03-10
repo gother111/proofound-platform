@@ -88,6 +88,7 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - `npm run typecheck`
   - `npm run test`
   - `npm run build`
+  - `npm run test:launch:smoke`
   - `npm run test:e2e:landing`
   - `npm run test:e2e:auth:real`
   - `npm run test:a11y:strict`
@@ -100,8 +101,10 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go`
 - CI also runs perf budgets and go/no-go gates after starting the app. (source: .github/workflows/ci.yml)
 - Perf budgets: `BASE_URL=http://localhost:3000 npm run perf:budgets` (source: scripts/perf-budgets.mjs)
-- Go/no-go: `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go` (source: scripts/go-no-go-check.mjs)
-  - TODO: Ensure required evidence files exist before relying on this gate; do not invent missing evidence. (source: scripts/go-no-go-check.mjs)
+- Launch smoke artifact: `BASE_URL=http://localhost:3000 npm run test:launch:smoke` (source: package.json, scripts/launch-smoke-runner.ts)
+- Launch synthetic monitors: `BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run monitor:launch` (source: package.json, scripts/run-launch-synthetic-monitors.ts)
+- Go/no-go: `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go` (source: scripts/go-no-go-check.ts)
+  - Requires a fresh launch smoke artifact, healthy `/api/monitoring/perf-status`, healthy `/api/monitoring/launch-status`, required evidence files, required safe-mode flags, and restore-drill assets. (source: scripts/go-no-go-check.ts)
 
 ## Migration and Data Safety (Before Production DDL)
 
@@ -168,6 +171,8 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 
 - If changes touch launch operations, feature flags, feedback contracts, fallback states, or admin rollout metrics:
   - Run `npx vitest run tests/api/feedback-schema.test.ts`
+  - Run `npm run test:launch:smoke`
+  - Run `BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run monitor:launch`
   - Run `npm run docs:freshness`
 - Manual smoke expectations for launch-safe behavior:
   - qualified intro corridor can be disabled without breaking portfolio, browse, export, delete, or unpublish
@@ -175,6 +180,17 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - feedback submission rejects empty payloads when both answers and structured feedback are missing
   - admin rollout metrics returns fallback states, queue health, and synthetic monitor health
   - fairness suppression never exposes exact ranking when the kill switch or suppression state is active
+  - delete or unpublish removes the public projection and prevents public render
+  - export surfaces only return the visibility-safe shape for the caller surface
+
+## Restore Drill
+
+- Before launch or high-risk rollback rehearsal:
+  - Run `npm run db:backup:checkpoint`
+  - Restore into a recovery target using platform restore tooling
+  - Run `npm run db:restore:verify -- --checkpoint <dir>`
+- Runbook:
+  - `docs/launch-restore-drill.md`
 
 ## Husky / lint-staged Policy
 

@@ -1,24 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { and, eq, inArray, isNull, or } from 'drizzle-orm';
-import { nanoid } from 'nanoid';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 
 import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import {
   assignments,
-  conversations,
   matchInterest,
+  matchReviewStates,
   matches,
   organizationMembers,
-  profiles,
-  skillProofs,
+  organizations,
   skills,
 } from '@/db/schema';
-import { emitAnalyticsEventAsync, emitMatchActioned } from '@/lib/analytics/events';
+import { evaluateAssignmentPolicy } from '@/lib/assignments/policy';
+import { emitAnalyticsEventAsync } from '@/lib/analytics/events';
 import { log } from '@/lib/log';
-import { notifyIntroAccepted } from '@/lib/notifications';
+import {
+  listCanonicalProofPackAggregatesForOwner,
+  summarizeCanonicalProofOwnerAggregates,
+} from '@/lib/proofs/canonical-pack';
 import { getIndividualReadinessState } from '@/lib/readiness/individual-state';
+import { checkVerificationGates } from '@/lib/verification/gates';
+import {
+  buildVisibilitySafeWhy,
+  normalizeFairnessStatus,
+  resolveCanonicalCorridor,
+  resolveCanonicalFallbackState,
+} from '@/lib/matching/review-contract';
+import { syncIntroWorkflowFromInterest } from '@/lib/workflow/service';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,6 +47,25 @@ async function hasOrgAccess(userId: string, orgId: string) {
   });
 
   return !!membership;
+}
+
+function buildPendingApprovalCopy(isOrgAction: boolean, mutual: boolean) {
+  if (mutual) {
+    return {
+      title: 'Interest is mutual. Introduction approval is still gated.',
+      body: 'Both sides are interested, but Proofound only opens the introduction after contextual review and intro approval.',
+    };
+  }
+
+  return isOrgAction
+    ? {
+        title: 'Interest recorded.',
+        body: 'The candidate will only see the introduction after the review corridor allows it.',
+      }
+    : {
+        title: 'Interest recorded.',
+        body: 'If the organization shortlists you and approves the introduction, the corridor will move forward from there.',
+      };
 }
 
 type AssignmentSkillRequirement = {
@@ -87,19 +116,20 @@ async function getAssignmentRelevantProofLinkedSkillCount(
     db.query?.skills?.findMany?.({
       where: eq(skills.profileId, profileId),
     }) ?? [],
-    db.query?.skillProofs?.findMany?.({
-      where: eq(skillProofs.profileId, profileId),
-    }) ?? [],
+    listCanonicalProofPackAggregatesForOwner('individual_profile', profileId),
   ]);
 
   const nowMs = Date.now();
+  const canonicalSummary = summarizeCanonicalProofOwnerAggregates(proofRows || []);
   const proofBackedSkillIds = new Set(
-    (proofRows || [])
-      .filter((proof) => {
-        const expiresAt = proof.expiresDate ? new Date(proof.expiresDate).getTime() : null;
-        return expiresAt === null || expiresAt >= nowMs;
-      })
-      .map((proof) => proof.skillId)
+    canonicalSummary.subjectSummaries
+      .filter(
+        (summary) =>
+          summary.subjectType === 'skill' &&
+          summary.freshnessState !== 'expired' &&
+          summary.subjectId
+      )
+      .map((summary) => summary.subjectId)
   );
 
   const recentProofLinkedSkillKeys = new Set(
@@ -159,6 +189,25 @@ function buildIntroBlockedCopy(
   };
 }
 
+function buildPolicyBlockedCopy(decision: 'hold' | 'blocked') {
+  return decision === 'blocked'
+    ? {
+        title: 'Introductions are blocked for this assignment.',
+        body: 'Proofound is blocking new introductions until the organization or assignment policy issue is resolved.',
+      }
+    : {
+        title: 'Introductions are on hold for this assignment.',
+        body: 'Proofound is holding new introductions until the required trust or policy review is completed.',
+      };
+}
+
+function buildGateBlockedCopy() {
+  return {
+    title: 'Introductions are blocked by trust requirements.',
+    body: 'Proofound is pausing this introduction until the required verification gates are satisfied.',
+  };
+}
+
 export async function POST(request: NextRequest) {
   try {
     const authContext = await requireApiAuthContext();
@@ -193,13 +242,68 @@ export async function POST(request: NextRequest) {
     }
 
     const introductionProfileId = isOrgAction ? targetProfileId! : user.id;
-    const [introductionReadiness, assignmentQualification] = await Promise.all([
-      getIndividualReadinessState(introductionProfileId),
-      getAssignmentRelevantProofLinkedSkillCount(
-        introductionProfileId,
-        assignment as typeof assignments.$inferSelect
-      ),
-    ]);
+    const [organization, gateCheck, introductionReadiness, assignmentQualification] =
+      await Promise.all([
+        db.query.organizations.findFirst({
+          where: eq(organizations.id, assignment.orgId),
+          columns: {
+            id: true,
+            trustStatus: true,
+            orgTrustTier: true,
+            verified: true,
+          },
+        }),
+        checkVerificationGates(introductionProfileId, assignmentId),
+        getIndividualReadinessState(introductionProfileId),
+        getAssignmentRelevantProofLinkedSkillCount(
+          introductionProfileId,
+          assignment as typeof assignments.$inferSelect
+        ),
+      ]);
+
+    const assignmentPolicy = evaluateAssignmentPolicy({
+      assignment,
+      organization: organization ?? null,
+    });
+
+    if (assignmentPolicy.decision !== 'allow') {
+      const copy = buildPolicyBlockedCopy(
+        assignmentPolicy.decision === 'blocked' ? 'blocked' : 'hold'
+      );
+      return NextResponse.json(
+        {
+          error:
+            assignmentPolicy.decision === 'blocked'
+              ? 'INTRO_BLOCKED_BY_POLICY'
+              : 'INTRO_ON_HOLD_BY_POLICY',
+          decision: assignmentPolicy.decision,
+          browseStillAvailable: true,
+          copy,
+          reasonCodes: assignmentPolicy.reasons.map((reason) => reason.code),
+          policy: assignmentPolicy,
+          message: copy.body,
+        },
+        { status: assignmentPolicy.decision === 'blocked' ? 403 : 409 }
+      );
+    }
+
+    if (!gateCheck.canIntroduce) {
+      const copy = buildGateBlockedCopy();
+      return NextResponse.json(
+        {
+          error: 'INTRO_VERIFICATION_GATE_BLOCKED',
+          decision: 'blocked',
+          browseStillAvailable: true,
+          copy,
+          unmetGates: gateCheck.unmetGates,
+          userVerifications: gateCheck.userVerifications,
+          message:
+            gateCheck.blockingMessage ||
+            'Verification gates are not satisfied for this assignment.',
+        },
+        { status: 409 }
+      );
+    }
     const profileEligible = introductionReadiness.introEligibility.profileEligible;
     const assignmentEligible =
       assignmentQualification.requiredSkillKeys.length === 0
@@ -368,118 +472,101 @@ export async function POST(request: NextRequest) {
     }
 
     const [match] = await db
-      .select()
+      .select({
+        id: matches.id,
+        assignmentId: matches.assignmentId,
+        profileId: matches.profileId,
+        score: matches.score,
+        vector: matches.vector,
+        fairnessStatus: matches.fairnessStatus,
+        reviewStage: matchReviewStates.reviewStage,
+        revealScope: matchReviewStates.revealScope,
+        operationalFallbackMode: matchReviewStates.operationalFallbackMode,
+      })
       .from(matches)
+      .leftJoin(matchReviewStates, eq(matchReviewStates.matchId, matches.id))
       .where(and(eq(matches.assignmentId, assignmentId), eq(matches.profileId, individualId)))
       .limit(1);
 
     const counterpartId = isOrgAction ? individualId : orgRepId;
 
-    if (match) {
-      const vector = (match.vector as Record<string, unknown>) || {};
-      const subscores = (vector.subscores as Record<string, number>) || {};
-      const pacScore = subscores.purpose_alignment || subscores.pac || 0;
-      const score = Number(match.score);
-      const qualificationMet = score >= 0.7;
+    const fairnessStatus = normalizeFairnessStatus(match?.fairnessStatus);
+    const fallbackState = resolveCanonicalFallbackState({
+      operationalFallbackMode: match?.operationalFallbackMode,
+      fairnessStatus,
+    });
+    const introAllowed =
+      Boolean(match) &&
+      match?.reviewStage === 'shortlisted' &&
+      match?.revealScope === 'shortlist_identity' &&
+      !fallbackState;
 
-      await emitMatchActioned(user.id, match.id, {
-        match_id: match.id,
-        action: 'introduce',
-        match_score: score,
-        pac_value: pacScore,
+    if (!match || !introAllowed) {
+      const copy = buildPendingApprovalCopy(isOrgAction, interestResult.mutual);
+      return NextResponse.json({
+        revealed: false,
+        mutual: interestResult.mutual,
+        introApproved: false,
+        requiresIntroApproval: true,
+        ...(match
+          ? {
+              matchId: match.id,
+              ...resolveCanonicalCorridor({
+                reviewStage: match.reviewStage ?? 'blind_review',
+                revealScope: match.revealScope ?? 'blind',
+                surface: 'review_detail',
+                fairnessStatus,
+                operationalFallbackMode: match.operationalFallbackMode,
+                introRequested: interestResult.mutual,
+              }),
+              why: buildVisibilitySafeWhy({
+                reasonCodes: ['shortlist_selected'],
+                fairnessStatus,
+                fallbackState,
+              }),
+            }
+          : {}),
+        copy,
+        message: copy.body,
       });
-
-      if (counterpartId !== user.id) {
-        await emitMatchActioned(counterpartId, match.id, {
-          match_id: match.id,
-          action: 'introduce',
-          match_score: score,
-          pac_value: pacScore,
-        });
-      }
-
-      if (qualificationMet) {
-        const { emitFirstQualifiedIntroAsync } = await import('@/lib/analytics/events');
-        emitFirstQualifiedIntroAsync(user.id, match.id, assignmentId);
-      }
-
-      try {
-        const [actorProfile, counterpartProfile] = await Promise.all([
-          db.query.profiles.findFirst({ where: eq(profiles.id, user.id) }),
-          db.query.profiles.findFirst({ where: eq(profiles.id, counterpartId) }),
-        ]);
-
-        const actorName = actorProfile?.displayName || actorProfile?.handle || 'Someone';
-        const counterpartName =
-          counterpartProfile?.displayName || counterpartProfile?.handle || 'Someone';
-
-        await notifyIntroAccepted(user.id, match.id, counterpartName);
-        if (counterpartId !== user.id) {
-          await notifyIntroAccepted(counterpartId, match.id, actorName);
-        }
-      } catch (notifError) {
-        log.error('mutual-interest-notification.failed', {
-          error: notifError instanceof Error ? notifError.message : 'Unknown error',
-        });
-      }
     }
 
-    try {
-      const existingConversation = await db.query.conversations.findFirst({
-        where: and(
-          eq(conversations.assignmentId, assignmentId),
-          or(
-            and(
-              eq(conversations.participantOneId, individualId),
-              eq(conversations.participantTwoId, orgRepId)
-            ),
-            and(
-              eq(conversations.participantOneId, orgRepId),
-              eq(conversations.participantTwoId, individualId)
-            )
-          )
-        ),
-      });
+    const intro = await syncIntroWorkflowFromInterest({
+      assignmentId,
+      candidateProfileId: individualId,
+      orgId: assignment.orgId,
+      actorType: isOrgAction ? 'organization_member' : 'candidate',
+      actorId: user.id,
+      mutual: true,
+      matchId: match.id,
+    });
 
-      let conversationId: string;
-
-      if (existingConversation) {
-        conversationId = existingConversation.id;
-      } else {
-        const [newConversation] = await db
-          .insert(conversations)
-          .values({
-            matchId: match?.id ?? null,
-            assignmentId,
-            participantOneId: individualId,
-            participantTwoId: orgRepId,
-            stage: 'masked',
-            maskedHandleOne: `Candidate #${nanoid(6).toUpperCase()}`,
-            maskedHandleTwo: `Organization #${nanoid(6).toUpperCase()}`,
-            lastMessageAt: new Date(),
-          })
-          .returning();
-
-        conversationId = newConversation.id;
-      }
-
-      return NextResponse.json({
-        revealed: true,
-        conversationId,
-        ...(match ? { matchId: match.id } : {}),
-      });
-    } catch (convError) {
-      log.error('conversation.creation.failed', {
-        assignmentId,
-        userId: user.id,
-        error: convError instanceof Error ? convError.message : 'Unknown error',
-      });
-
-      return NextResponse.json({
-        revealed: true,
-        ...(match ? { matchId: match.id } : {}),
-      });
-    }
+    return NextResponse.json({
+      revealed: false,
+      mutual: true,
+      introApproved: false,
+      requiresIntroApproval: true,
+      matchId: match.id,
+      counterpartId,
+      introWorkflowId: intro.id,
+      introWorkflowState: intro.state,
+      ...resolveCanonicalCorridor({
+        reviewStage: match.reviewStage ?? 'blind_review',
+        revealScope: match.revealScope ?? 'blind',
+        surface: 'review_detail',
+        fairnessStatus,
+        operationalFallbackMode: match.operationalFallbackMode,
+        introRequested: true,
+      }),
+      why: buildVisibilitySafeWhy({
+        reasonCodes: ['shortlist_selected'],
+        fairnessStatus,
+        fallbackState,
+      }),
+      copy: buildPendingApprovalCopy(isOrgAction, true),
+      message:
+        'Interest is mutual. The organization still needs to approve the introduction from the shortlist corridor.',
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Invalid input', details: error.errors }, { status: 400 });

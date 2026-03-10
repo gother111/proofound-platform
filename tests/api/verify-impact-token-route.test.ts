@@ -5,6 +5,10 @@ import { GET, POST } from '@/app/api/verify/[token]/route';
 const createClientMock = vi.fn();
 const createAdminClientMock = vi.fn();
 const sendEmailMock = vi.fn();
+const inspectCapabilityTokenMock = vi.fn();
+const beginCapabilityTokenRedeemSessionMock = vi.fn();
+const redeemCapabilityTokenMock = vi.fn();
+const listCanonicalSkillProofRowsForOwnerSkillMock = vi.fn();
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: () => createClientMock(),
@@ -16,6 +20,23 @@ vi.mock('@/lib/supabase/admin', () => ({
 
 vi.mock('@/lib/email/sender', () => ({
   sendEmail: (...args: any[]) => sendEmailMock(...args),
+}));
+
+vi.mock('@/lib/security/capability-tokens', () => ({
+  CAPABILITY_TOKEN_CLASSES: {
+    SKILL_VERIFICATION_RESPONSE: 'skill_verification_response',
+    IMPACT_VERIFICATION_RESPONSE: 'impact_verification_response',
+  },
+  getCapabilityRedeemSessionCookieName: (tokenClass: string) => `pf_cap_${tokenClass}`,
+  inspectCapabilityToken: (...args: any[]) => inspectCapabilityTokenMock(...args),
+  beginCapabilityTokenRedeemSession: (...args: any[]) =>
+    beginCapabilityTokenRedeemSessionMock(...args),
+  redeemCapabilityToken: (...args: any[]) => redeemCapabilityTokenMock(...args),
+}));
+
+vi.mock('@/lib/proofs/canonical-pack', () => ({
+  listCanonicalSkillProofRowsForOwnerSkill: (...args: any[]) =>
+    listCanonicalSkillProofRowsForOwnerSkillMock(...args),
 }));
 
 const TOKEN = 'a'.repeat(64);
@@ -250,10 +271,9 @@ function buildAdminClientForSkillFlow(overrides?: {
     overrides?.verificationByToken === undefined
       ? SKILL_VERIFICATION_RECORD
       : overrides.verificationByToken;
-  const verificationById =
-    overrides?.verificationById === undefined
-      ? SKILL_VERIFICATION_RECORD
-      : overrides.verificationById;
+  const verificationById = Object.prototype.hasOwnProperty.call(overrides || {}, 'verificationById')
+    ? overrides?.verificationById
+    : verificationByToken;
   const requesterProfile = overrides?.requesterProfile || {
     display_name: 'Requester',
     avatar_url: null,
@@ -263,7 +283,6 @@ function buildAdminClientForSkillFlow(overrides?: {
     display_name: requesterProfile.display_name,
     avatar_url: requesterProfile.avatar_url,
   };
-  const skillProofs = overrides?.skillProofs || [];
   const skillEvidenceStrength = overrides?.skillEvidenceStrength || '0.3';
 
   return {
@@ -285,37 +304,20 @@ function buildAdminClientForSkillFlow(overrides?: {
         return {
           select: vi.fn().mockReturnValue({
             eq: vi.fn((column: string) => {
-              if (column === 'verification_token') {
-                return {
-                  single: vi.fn().mockResolvedValue(
-                    overrides?.tokenLookupError
-                      ? { data: null, error: overrides.tokenLookupError }
-                      : {
-                          data: verificationByToken,
-                          error: verificationByToken
-                            ? null
-                            : {
-                                code: 'PGRST116',
-                                message: 'No rows found',
-                              },
-                        }
-                  ),
-                };
-              }
-
               if (column === 'id') {
                 return {
                   single: vi.fn().mockResolvedValue(
                     overrides?.idLookupError
                       ? { data: null, error: overrides.idLookupError }
                       : {
-                          data: verificationById,
-                          error: verificationById
-                            ? null
-                            : {
-                                code: 'PGRST116',
-                                message: 'No rows found',
-                              },
+                          data: verificationById ?? verificationByToken,
+                          error:
+                            (verificationById ?? verificationByToken)
+                              ? null
+                              : {
+                                  code: 'PGRST116',
+                                  message: 'No rows found',
+                                },
                         }
                   ),
                 };
@@ -374,19 +376,6 @@ function buildAdminClientForSkillFlow(overrides?: {
         };
       }
 
-      if (table === 'skill_proofs') {
-        return {
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn(() => ({
-              eq: vi.fn().mockResolvedValue({
-                data: skillProofs,
-                error: null,
-              }),
-            })),
-          }),
-        };
-      }
-
       throw new Error(`Unexpected table: ${table}`);
     }),
   };
@@ -395,6 +384,54 @@ function buildAdminClientForSkillFlow(overrides?: {
 describe('verify impact token route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    inspectCapabilityTokenMock.mockImplementation(
+      async (_token: string, params?: { tokenClass?: string }) => {
+        if (params?.tokenClass === 'impact_verification_response') {
+          return {
+            ok: true,
+            token: {
+              id: 'cap-impact',
+              source_table: 'impact_story_verification_requests',
+              source_id: 'req-1',
+            },
+          };
+        }
+
+        return {
+          ok: true,
+          token: {
+            id: 'cap-skill',
+            source_table: 'skill_verification_requests',
+            source_id: SKILL_VERIFICATION_RECORD.id,
+          },
+        };
+      }
+    );
+    beginCapabilityTokenRedeemSessionMock.mockImplementation(
+      async (_token: string, params?: { tokenClass?: string }) => ({
+        ok: true,
+        token: {
+          id: params?.tokenClass === 'impact_verification_response' ? 'cap-impact' : 'cap-skill',
+          source_table:
+            params?.tokenClass === 'impact_verification_response'
+              ? 'impact_story_verification_requests'
+              : 'skill_verification_requests',
+          source_id:
+            params?.tokenClass === 'impact_verification_response'
+              ? 'req-1'
+              : SKILL_VERIFICATION_RECORD.id,
+        },
+        redeemSessionNonce: 'redeem-session-nonce',
+        maxAgeSeconds: 600,
+      })
+    );
+    redeemCapabilityTokenMock.mockResolvedValue({
+      ok: true,
+      token: {
+        id: 'cap-redeemed',
+      },
+    });
+    listCanonicalSkillProofRowsForOwnerSkillMock.mockResolvedValue([]);
     createClientMock.mockReturnValue({
       from: vi.fn(),
       auth: {
@@ -858,10 +895,7 @@ describe('verify impact token route', () => {
       { params: Promise.resolve({ token: TOKEN }) }
     );
 
-    expect(response.status).toBe(403);
-    await expect(response.json()).resolves.toMatchObject({
-      code: 'VERIFIER_IDENTITY_MISMATCH',
-    });
+    expect(response.status).toBe(404);
   });
 
   it('POST allows matching authenticated verifier and records authenticated response method', async () => {
@@ -920,21 +954,9 @@ describe('verify impact token route', () => {
     });
   });
 
-  it('GET falls back to legacy request id lookup when verification_token column is unavailable', async () => {
-    createAdminClientMock.mockReturnValue(
-      buildAdminClientForSkillFlow({
-        verificationByToken: null,
-        tokenLookupError: {
-          code: 'PGRST204',
-          message:
-            "Could not find the 'verification_token' column of 'skill_verification_requests' in the schema cache",
-        },
-        verificationById: {
-          ...SKILL_VERIFICATION_RECORD,
-          id: LEGACY_REQUEST_ID,
-        },
-      })
-    );
+  it('GET returns 404 when a legacy request id is not backed by a capability token', async () => {
+    inspectCapabilityTokenMock.mockResolvedValue({ ok: false, reason: 'invalid' });
+    createAdminClientMock.mockReturnValue(buildAdminClientForSkillFlow());
 
     const response = await GET(
       new NextRequest(`http://localhost/api/verify/${LEGACY_REQUEST_ID}`),
@@ -943,11 +965,7 @@ describe('verify impact token route', () => {
       }
     );
 
-    expect(response.status).toBe(200);
-    const body = await response.json();
-    expect(body.verification.verification_type).toBe('skill');
-    expect(body.verification.id).toBe(LEGACY_REQUEST_ID);
-    expect(body.verification.skill_name).toBe('System Design');
+    expect(response.status).toBe(404);
   });
 
   it('GET resolves skill verification token through admin client for signed-out verifier', async () => {
@@ -976,6 +994,44 @@ describe('verify impact token route', () => {
     const body = await response.json();
     expect(body.verification.verification_type).toBe('skill');
     expect(body.verification.id).toBe('skill-req-token');
+  });
+
+  it('GET expires stale skill verification requests and records expired_at', async () => {
+    let skillRequestUpdatePayload: any = null;
+
+    createAdminClientMock.mockReturnValue(
+      buildAdminClientForSkillFlow({
+        verificationByToken: {
+          ...SKILL_VERIFICATION_RECORD,
+          id: 'skill-req-expired',
+          status: 'pending',
+          expires_at: '2020-01-01T00:00:00.000Z',
+        },
+        onSkillVerificationUpdate: (payload) => {
+          skillRequestUpdatePayload = payload;
+        },
+      })
+    );
+    createClientMock.mockReturnValue({
+      from: vi.fn(() => {
+        throw new Error('createClient.from should not be used for skill token lookup');
+      }),
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
+      },
+    });
+
+    const response = await GET(new NextRequest(`http://localhost/api/verify/${TOKEN}`), {
+      params: Promise.resolve({ token: TOKEN }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.verification.status).toBe('expired');
+    expect(skillRequestUpdatePayload).toMatchObject({
+      status: 'expired',
+    });
+    expect(skillRequestUpdatePayload.expired_at).toBeTruthy();
   });
 
   it('GET skill flow falls back to compatibility select when requester_email_snapshot column is unavailable', async () => {
@@ -1009,7 +1065,7 @@ describe('verify impact token route', () => {
             select: vi.fn((query: string) => ({
               eq: vi.fn((column: string) => ({
                 single: vi.fn().mockResolvedValue(
-                  column === 'verification_token'
+                  column === 'id'
                     ? query.includes('requester_email_snapshot')
                       ? { data: null, error: MISSING_REQUESTER_EMAIL_SNAPSHOT_COLUMN_ERROR }
                       : { data: verificationWithoutEmbeddedSkill, error: null }
@@ -1110,7 +1166,7 @@ describe('verify impact token route', () => {
     expect(body.verification.requester_email).toBe('snapshot.person@example.com');
   });
 
-  it('GET returns 500 for non-not-found skill lookup errors', async () => {
+  it('GET returns 404 when skill capability token lookup fails closed', async () => {
     createAdminClientMock.mockReturnValue(
       buildAdminClientForSkillFlow({
         verificationByToken: null,
@@ -1125,39 +1181,36 @@ describe('verify impact token route', () => {
       params: Promise.resolve({ token: TOKEN }),
     });
 
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(404);
     await expect(response.json()).resolves.toMatchObject({
-      error: 'Internal server error',
+      error: 'Verification request not found or invalid token',
     });
   });
 
   it('GET skill flow returns attached proof metadata for verifier context', async () => {
-    createAdminClientMock.mockReturnValue(
-      buildAdminClientForSkillFlow({
-        skillProofs: [
-          {
-            id: 'proof-cert-1',
-            proof_type: 'certification',
-            title: 'Swedish B2 Certificate',
-            description: 'Official language certificate',
-            url: 'https://cdn.proofound.test/certificates/swedish-b2.png',
-            file_path: 'proof/user-1/swedish-b2.png',
-            issued_date: '2024-01-01',
-            expires_date: '2028-01-01',
-          },
-          {
-            id: 'proof-link-2',
-            proof_type: 'link',
-            title: 'Project demo',
-            description: null,
-            url: 'https://example.com/demo',
-            file_path: null,
-            issued_date: null,
-            expires_date: null,
-          },
-        ],
-      })
-    );
+    listCanonicalSkillProofRowsForOwnerSkillMock.mockResolvedValue([
+      {
+        id: 'proof-cert-1',
+        proof_type: 'certification',
+        title: 'Swedish B2 Certificate',
+        description: 'Official language certificate',
+        url: 'https://cdn.proofound.test/certificates/swedish-b2.png',
+        file_path: 'proof/user-1/swedish-b2.png',
+        issued_date: '2024-01-01',
+        expires_date: '2028-01-01',
+      },
+      {
+        id: 'proof-link-2',
+        proof_type: 'link',
+        title: 'Project demo',
+        description: null,
+        url: 'https://example.com/demo',
+        file_path: null,
+        issued_date: null,
+        expires_date: null,
+      },
+    ]);
+    createAdminClientMock.mockReturnValue(buildAdminClientForSkillFlow());
 
     const response = await GET(new NextRequest(`http://localhost/api/verify/${TOKEN}`), {
       params: Promise.resolve({ token: TOKEN }),
@@ -1211,7 +1264,7 @@ describe('verify impact token route', () => {
             select: vi.fn((query: string) => ({
               eq: vi.fn((column: string) => ({
                 single: vi.fn().mockResolvedValue(
-                  column === 'verification_token'
+                  column === 'id'
                     ? query.includes('skills!skill_verification_requests_skill_id_fkey')
                       ? { data: null, error: SKILL_RELATION_AMBIGUITY_ERROR }
                       : { data: verificationWithoutEmbeddedSkill, error: null }
@@ -1316,7 +1369,7 @@ describe('verify impact token route', () => {
             select: vi.fn((query: string) => ({
               eq: vi.fn((column: string) => ({
                 single: vi.fn().mockResolvedValue(
-                  column === 'verification_token'
+                  column === 'id'
                     ? query.includes('skills!skill_verification_requests_skill_id_fkey')
                       ? { data: null, error: SKILL_RELATION_AMBIGUITY_ERROR }
                       : { data: verificationWithoutEmbeddedSkill, error: null }
@@ -1483,7 +1536,7 @@ describe('verify impact token route', () => {
             select: vi.fn((query: string) => ({
               eq: vi.fn((column: string) => ({
                 single: vi.fn().mockResolvedValue(
-                  column === 'verification_token'
+                  column === 'id'
                     ? query.includes('integrity_status')
                       ? { data: null, error: MISSING_INTEGRITY_STATUS_COLUMN_ERROR }
                       : { data: legacyVerificationRecord, error: null }
@@ -1587,7 +1640,7 @@ describe('verify impact token route', () => {
     expect(skillVerificationUpdatePayloads[1].response_auth_method).toBeUndefined();
   });
 
-  it('POST returns 500 for non-not-found skill lookup errors', async () => {
+  it('POST returns 404 when skill capability token lookup fails closed', async () => {
     createAdminClientMock.mockReturnValue(
       buildAdminClientForSkillFlow({
         verificationByToken: null,
@@ -1609,9 +1662,9 @@ describe('verify impact token route', () => {
       { params: Promise.resolve({ token: TOKEN }) }
     );
 
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(404);
     await expect(response.json()).resolves.toMatchObject({
-      error: 'Internal server error',
+      error: 'Verification request not found or invalid token',
     });
   });
 

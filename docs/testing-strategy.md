@@ -77,6 +77,10 @@ This document defines the current testing architecture for Proofound and the com
 
 ### 7) Ops Gates
 
+- Launch smoke:
+  - `npm run test:launch:smoke`
+- Launch synthetic monitors:
+  - `npm run monitor:launch`
 - Performance budgets:
   - `npm run perf:budgets`
 - Go / No-Go:
@@ -99,26 +103,28 @@ This document defines the current testing architecture for Proofound and the com
 
 ## Command Matrix
 
-| Goal                   | Command                                                                   |
-| ---------------------- | ------------------------------------------------------------------------- |
-| Lint                   | `npm run lint`                                                            |
-| Typecheck              | `npm run typecheck`                                                       |
-| Unit/API baseline      | `npm run test`                                                            |
-| Build                  | `npm run build`                                                           |
-| E2E full suite         | `npm run test:e2e`                                                        |
-| Auth contract (mock)   | `npm run test:e2e:auth`                                                   |
-| Auth contract (real)   | `npm run test:e2e:auth:real`                                              |
-| A11y baseline          | `npm run test:a11y`                                                       |
-| A11y strict            | `npm run test:a11y:strict`                                                |
-| Strict quality guard   | `npm run test:strict:quality`                                             |
-| Strict individual flow | `npm run test:e2e:individual:strict`                                      |
-| Strict org flow        | `npm run test:e2e:org:strict`                                             |
-| Strict privacy flow    | `npm run test:e2e:privacy:strict`                                         |
-| Strict providers flow  | `npm run test:e2e:providers:strict`                                       |
-| Privacy/RLS baseline   | `npm run test:privacy`                                                    |
-| Privacy/RLS extended   | `npm run test:privacy:extended`                                           |
-| Perf budget gate       | `BASE_URL=http://localhost:3000 npm run perf:budgets`                     |
-| Go/No-Go gate          | `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go` |
+| Goal                   | Command                                                                                        |
+| ---------------------- | ---------------------------------------------------------------------------------------------- |
+| Lint                   | `npm run lint`                                                                                 |
+| Typecheck              | `npm run typecheck`                                                                            |
+| Unit/API baseline      | `npm run test`                                                                                 |
+| Build                  | `npm run build`                                                                                |
+| E2E full suite         | `npm run test:e2e`                                                                             |
+| Auth contract (mock)   | `npm run test:e2e:auth`                                                                        |
+| Auth contract (real)   | `npm run test:e2e:auth:real`                                                                   |
+| A11y baseline          | `npm run test:a11y`                                                                            |
+| A11y strict            | `npm run test:a11y:strict`                                                                     |
+| Strict quality guard   | `npm run test:strict:quality`                                                                  |
+| Strict individual flow | `npm run test:e2e:individual:strict`                                                           |
+| Strict org flow        | `npm run test:e2e:org:strict`                                                                  |
+| Strict privacy flow    | `npm run test:e2e:privacy:strict`                                                              |
+| Strict providers flow  | `npm run test:e2e:providers:strict`                                                            |
+| Privacy/RLS baseline   | `npm run test:privacy`                                                                         |
+| Privacy/RLS extended   | `npm run test:privacy:extended`                                                                |
+| Launch smoke contract  | `npm run test:launch:smoke`                                                                    |
+| Launch monitor sweep   | `BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run monitor:launch`                   |
+| Perf budget gate       | `BASE_URL=http://localhost:3000 npm run perf:budgets`                                          |
+| Go/No-Go gate          | `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go` |
 
 ## Launch Gate Baseline (Local Parity)
 
@@ -128,16 +134,18 @@ Default sequence for high-confidence release validation:
 2. `npm run typecheck`
 3. `npm run test`
 4. `npm run build`
-5. `npm run test:e2e:landing`
-6. `npm run test:e2e:auth:real`
-7. `npm run test:a11y:strict`
-8. `npm run test:strict:quality`
-9. `npm run test:e2e:individual:strict`
-10. `npm run test:e2e:org:strict`
-11. `npm run test:e2e:privacy:strict`
-12. `npm run test:e2e:providers:strict`
-13. `BASE_URL=http://localhost:3000 npm run perf:budgets`
-14. `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go`
+5. `npm run test:launch:smoke`
+6. `npm run test:e2e:landing`
+7. `npm run test:e2e:auth:real`
+8. `npm run test:a11y:strict`
+9. `npm run test:strict:quality`
+10. `npm run test:e2e:individual:strict`
+11. `npm run test:e2e:org:strict`
+12. `npm run test:e2e:privacy:strict`
+13. `npm run test:e2e:providers:strict`
+14. `BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run monitor:launch`
+15. `BASE_URL=http://localhost:3000 npm run perf:budgets`
+16. `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
 
 ## Environment Requirements for Strict Flows
 

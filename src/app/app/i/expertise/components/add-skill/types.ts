@@ -59,6 +59,7 @@ export type AddSkillProofDraft = {
   source: SkillProofSource;
   url: string;
   filePath: string;
+  uploadedFileId?: string;
   notes: string;
   issuedDate: string;
   expiresDate: string;

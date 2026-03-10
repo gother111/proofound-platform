@@ -1,26 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 import { db } from '@/db';
-import { assignments, orgCandidateInvites, organizations } from '@/db/schema';
+import { orgCandidateInvites } from '@/db/schema';
 import {
-  CANDIDATE_INVITE_FLOW_TYPE,
-  CANDIDATE_INVITE_STATUS,
-  hashCandidateInviteToken,
-  isInviteExpired,
-  maskInviteEmail,
-} from '@/lib/candidate-invites';
+  beginCapabilityTokenRedeemSession,
+  CAPABILITY_REDEEM_SESSION_MAX_AGE_SECONDS,
+  CAPABILITY_TOKEN_CLASSES,
+  getCapabilityRedeemSessionCookieName,
+} from '@/lib/security/capability-tokens';
+import { CANDIDATE_INVITE_STATUS, isInviteExpired, maskInviteEmail } from '@/lib/candidate-invites';
 import { emitAnalyticsEventAsync } from '@/lib/analytics/events';
+import {
+  buildCandidateInvitePolicyError,
+  resolveCandidateInvitePolicyContext,
+} from '@/lib/candidate-invite-policy';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ token: string }> }
 ) {
   try {
     const { token } = await params;
-    const tokenHash = hashCandidateInviteToken(token);
+    const preview = await beginCapabilityTokenRedeemSession(token, {
+      tokenClass: CAPABILITY_TOKEN_CLASSES.CANDIDATE_INVITE_CLAIM,
+      actor: {
+        ip: request.headers.get('x-forwarded-for'),
+        userAgent: request.headers.get('user-agent'),
+      },
+      metadata: { surface: 'candidate_invite.preview' },
+      maxAgeSeconds: CAPABILITY_REDEEM_SESSION_MAX_AGE_SECONDS,
+    });
+
+    if (!preview.ok) {
+      const status = preview.reason === 'expired' ? 410 : preview.reason === 'revoked' ? 410 : 404;
+      return NextResponse.json({ error: 'Invite not found' }, { status });
+    }
 
     const [invite] = await db
       .select({
@@ -37,11 +54,10 @@ export async function GET(
         acceptedAt: orgCandidateInvites.acceptedAt,
         matchId: orgCandidateInvites.matchId,
         conversationId: orgCandidateInvites.conversationId,
-        proofShareToken: orgCandidateInvites.proofShareToken,
         proofSubmittedAt: orgCandidateInvites.proofSubmittedAt,
       })
       .from(orgCandidateInvites)
-      .where(eq(orgCandidateInvites.tokenHash, tokenHash))
+      .where(eq(orgCandidateInvites.capabilityTokenId, preview.token.id))
       .limit(1);
 
     if (!invite || invite.status === CANDIDATE_INVITE_STATUS.REVOKED) {
@@ -64,41 +80,32 @@ export async function GET(
       return NextResponse.json({ error: 'Invite has expired' }, { status: 410 });
     }
 
-    const [org] = await db
-      .select({
-        id: organizations.id,
-        slug: organizations.slug,
-        displayName: organizations.displayName,
-        logoUrl: organizations.logoUrl,
-      })
-      .from(organizations)
-      .where(eq(organizations.id, invite.orgId))
-      .limit(1);
+    const {
+      organization: org,
+      assignment,
+      policyEvaluation,
+    } = await resolveCandidateInvitePolicyContext(invite.orgId, invite.assignmentId);
 
     if (!org) {
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
     }
 
-    let assignment: {
-      id: string;
-      role: string | null;
-      status: string;
-      createdAt: Date;
-    } | null = null;
-
-    if (invite.flowType === CANDIDATE_INVITE_FLOW_TYPE.TEST_MATCH && invite.assignmentId) {
-      const [resolvedAssignment] = await db
-        .select({
-          id: assignments.id,
-          role: assignments.role,
-          status: assignments.status,
-          createdAt: assignments.createdAt,
-        })
-        .from(assignments)
-        .where(and(eq(assignments.id, invite.assignmentId), eq(assignments.orgId, org.id)))
-        .limit(1);
-
-      assignment = resolvedAssignment ?? null;
+    if (policyEvaluation.decision !== 'allow') {
+      return NextResponse.json(
+        {
+          error: buildCandidateInvitePolicyError(policyEvaluation.decision, invite.flowType),
+          code:
+            policyEvaluation.decision === 'blocked'
+              ? 'CANDIDATE_INVITE_BLOCKED'
+              : 'CANDIDATE_INVITE_ON_HOLD',
+          details: {
+            decision: policyEvaluation.decision,
+            orgTrustTier: policyEvaluation.orgTrustTier,
+            reasons: policyEvaluation.reasons.map((reason) => reason.code),
+          },
+        },
+        { status: policyEvaluation.decision === 'blocked' ? 403 : 409 }
+      );
     }
 
     emitAnalyticsEventAsync({
@@ -108,7 +115,7 @@ export async function GET(
       entityId: invite.id,
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       invite: {
         id: invite.id,
         status: invite.status,
@@ -123,11 +130,31 @@ export async function GET(
         matchId: invite.matchId,
         conversationId: invite.conversationId,
         proofSubmittedAt: invite.proofSubmittedAt,
-        proofShareToken: invite.proofShareToken,
       },
       organization: org,
-      assignment,
+      assignment: assignment
+        ? {
+            id: assignment.id,
+            role: assignment.role,
+            status: assignment.status,
+            createdAt: assignment.createdAt,
+          }
+        : null,
     });
+
+    response.cookies.set(
+      getCapabilityRedeemSessionCookieName(CAPABILITY_TOKEN_CLASSES.CANDIDATE_INVITE_CLAIM),
+      preview.redeemSessionNonce,
+      {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        path: '/',
+        maxAge: preview.maxAgeSeconds,
+      }
+    );
+
+    return response;
   } catch (error) {
     console.error('Failed to fetch candidate invite:', error);
     return NextResponse.json({ error: 'Failed to fetch invite' }, { status: 500 });

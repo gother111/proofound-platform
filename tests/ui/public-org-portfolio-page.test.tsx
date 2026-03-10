@@ -10,104 +10,123 @@ const { notFoundMock } = vi.hoisted(() => ({
 
 vi.mock('next/navigation', () => ({
   notFound: notFoundMock,
+  permanentRedirect: vi.fn(),
 }));
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }));
 
+vi.mock('@/lib/portfolio/public-projection', () => ({
+  getPublicOrganizationPortfolioProjectionBySlug: vi.fn(),
+  getHistoricalOrganizationPublicSlugRedirect: vi.fn(),
+}));
+
 import { createClient } from '@/lib/supabase/server';
-import OrganizationPortfolioPublicPage from '@/app/portfolio/org/[slug]/page';
+import {
+  getHistoricalOrganizationPublicSlugRedirect,
+  getPublicOrganizationPortfolioProjectionBySlug,
+} from '@/lib/portfolio/public-projection';
+import OrganizationPortfolioPublicPage, { generateMetadata } from '@/app/portfolio/org/[slug]/page';
 
-function mockSupabaseClient({
-  organization,
-  assignment = null,
-  organizationVisibility = null,
-  historicalSlug = null,
-}: {
-  organization: any;
-  assignment?: any;
-  organizationVisibility?: any;
-  historicalSlug?: any;
-}) {
+function buildProjection(overrides: Partial<any> = {}) {
   return {
-    auth: {
-      getUser: vi.fn().mockResolvedValue({ data: { user: null } }),
+    organizationId: 'org-1',
+    slug: 'acme',
+    requestedState: 'public_link_only',
+    effectiveState: 'public_link_only',
+    shareUrl: 'https://proofound.io/portfolio/org/acme',
+    publicDisplayName: 'Acme',
+    publicSummary: 'Build trust',
+    visibility: {
+      display_name: 'public',
+      mission: 'public',
     },
-    from: vi.fn((table: string) => {
-      if (table === 'organizations') {
-        const maybeSingle = vi.fn().mockResolvedValue({ data: organization });
-        const eq = vi.fn().mockReturnValue({ maybeSingle });
-        const select = vi.fn().mockReturnValue({ eq });
-        return { select };
-      }
-
-      if (table === 'assignments') {
-        const maybeSingle = vi.fn().mockResolvedValue({ data: assignment });
-        const limit = vi.fn().mockReturnValue({ maybeSingle });
-        const order = vi.fn().mockReturnValue({ limit });
-        const eqStatus = vi.fn().mockReturnValue({ order });
-        const eqOrgId = vi.fn().mockReturnValue({ eq: eqStatus });
-        const select = vi.fn().mockReturnValue({ eq: eqOrgId });
-        return { select };
-      }
-
-      if (table === 'organization_field_visibility') {
-        return {
-          select: vi.fn(() => ({
-            eq: vi.fn().mockReturnValue({
-              maybeSingle: vi.fn().mockResolvedValue({ data: organizationVisibility }),
-            }),
-          })),
-        };
-      }
-
-      if (table === 'organization_slug_history') {
-        return {
-          select: vi.fn(() => ({
-            eq: vi.fn().mockReturnValue({
-              maybeSingle: vi.fn().mockResolvedValue({ data: historicalSlug }),
-            }),
-          })),
-        };
-      }
-
-      throw new Error(`Unexpected table ${table}`);
-    }),
+    organization: {
+      id: 'org-1',
+      slug: 'acme',
+      display_name: 'Acme',
+      public_portfolio_state: 'public_link_only',
+      search_indexing_enabled_at: null,
+      trust_status: 'platform_reviewed',
+      trust_status_updated_at: '2026-03-01T00:00:00.000Z',
+      website_verified_at: '2026-03-01T00:00:00.000Z',
+      operating_region: 'EU',
+      verified: true,
+      website: 'https://acme.org/',
+      tagline: 'Build trust',
+      mission: 'Ship impact',
+      type: 'company',
+    },
+    assignment: {
+      id: 'assignment-1',
+      role: 'Founding product engineer',
+      business_value: 'Ship the first trustworthy shortlist',
+      location_mode: 'remote',
+    },
+    verificationSummary: {
+      publicBadges: [
+        { key: 'platform_reviewed', label: 'Platform reviewed' },
+        { key: 'domain_confirmed', label: 'Domain verified' },
+      ],
+    },
+    metadata: {
+      path: '/portfolio/org/acme',
+      title: 'Proofound organization portfolio',
+      description: 'Shareable organization trust card on Proofound.',
+      ogTitle: 'Proofound organization portfolio',
+      ogDescription: 'Shareable organization trust card on Proofound.',
+      useGenericPreview: true,
+    },
+    jsonLd: {
+      description: 'Build trust',
+    },
+    exportData: {
+      organization: {
+        id: 'org-1',
+        slug: 'acme',
+        displayName: 'Acme',
+        tagline: 'Build trust',
+        mission: 'Ship impact',
+        website: 'https://acme.org/',
+        type: 'company',
+        verified: true,
+        values: [],
+        causes: [],
+      },
+      metrics: {
+        activeAssignments: 1,
+        teamMembers: 2,
+      },
+    },
+    minimumContentMet: true,
+    ...overrides,
   };
 }
 
 describe('Organization public portfolio page', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(createClient).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: null } }),
+      },
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          eq: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({ count: 0 }),
+            }),
+          }),
+        })),
+      })),
+    } as any);
+    vi.mocked(getHistoricalOrganizationPublicSlugRedirect).mockResolvedValue(null);
+  });
+
   it('renders public org content with return-to-menu link when returnTo is safe', async () => {
-    vi.mocked(createClient).mockResolvedValue(
-      mockSupabaseClient({
-        assignment: {
-          id: 'assignment-1',
-          role: 'Founding product engineer',
-          business_value: 'Ship the first trustworthy shortlist',
-          location_mode: 'remote',
-        },
-        organizationVisibility: {
-          display_name: 'public',
-          mission: 'public',
-        },
-        organization: {
-          id: 'org-1',
-          slug: 'acme',
-          display_name: 'Acme',
-          public_portfolio_state: 'public_link_only',
-          search_indexing_enabled_at: null,
-          trust_status: 'platform_reviewed',
-          trust_status_updated_at: '2026-03-01T00:00:00.000Z',
-          website_verified_at: '2026-03-01T00:00:00.000Z',
-          operating_region: 'EU',
-          tagline: 'Build trust',
-          mission: 'Ship impact',
-          website: 'https://acme.org/',
-          type: 'company',
-          verified: true,
-        },
-      }) as any
+    vi.mocked(getPublicOrganizationPortfolioProjectionBySlug).mockResolvedValue(
+      buildProjection() as any
     );
 
     const element = await OrganizationPortfolioPublicPage({
@@ -133,10 +152,10 @@ describe('Organization public portfolio page', () => {
   });
 
   it('falls back to return-home link when returnTo is unsafe', async () => {
-    vi.mocked(createClient).mockResolvedValue(
-      mockSupabaseClient({
+    vi.mocked(getPublicOrganizationPortfolioProjectionBySlug).mockResolvedValue(
+      buildProjection({
         assignment: null,
-        organizationVisibility: {
+        visibility: {
           display_name: 'public',
           mission: 'owner_only',
         },
@@ -147,11 +166,14 @@ describe('Organization public portfolio page', () => {
           public_portfolio_state: 'public_link_only',
           search_indexing_enabled_at: null,
           trust_status: 'pending',
+          trust_status_updated_at: null,
+          website_verified_at: null,
+          operating_region: null,
+          verified: false,
+          website: 'https://acme.org/',
           tagline: 'Build trust',
           mission: null,
-          website: 'https://acme.org/',
           type: 'company',
-          verified: false,
         },
       }) as any
     );
@@ -168,13 +190,22 @@ describe('Organization public portfolio page', () => {
     expect(screen.getByText(/no active assignment yet/i)).toBeInTheDocument();
   });
 
-  it('calls notFound when slug has no public portfolio', async () => {
-    vi.mocked(createClient).mockResolvedValue(
-      mockSupabaseClient({
-        organization: null,
-        historicalSlug: null,
-      }) as any
+  it('returns generic noindex metadata by default', async () => {
+    vi.mocked(getPublicOrganizationPortfolioProjectionBySlug).mockResolvedValue(
+      buildProjection() as any
     );
+
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ slug: 'acme' }),
+    });
+
+    expect(metadata.robots).toMatchObject({ index: false, follow: false });
+    expect(metadata.title).toBe('Proofound organization portfolio');
+    expect(metadata.alternates?.canonical).toContain('/portfolio/org/acme');
+  });
+
+  it('calls notFound when slug has no public portfolio', async () => {
+    vi.mocked(getPublicOrganizationPortfolioProjectionBySlug).mockResolvedValue(null);
 
     await expect(
       OrganizationPortfolioPublicPage({ params: Promise.resolve({ slug: 'missing' }) })

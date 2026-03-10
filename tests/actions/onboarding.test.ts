@@ -36,6 +36,14 @@ vi.mock('@/lib/analytics/events', () => ({
   emitIndividualOnboardingCompleted: vi.fn(),
 }));
 
+vi.mock('@/lib/launch/trace', () => ({
+  startLaunchTrace: vi.fn(() => ({
+    objectRefs: {},
+    startedAtMs: 0,
+  })),
+  emitLaunchTrace: vi.fn(),
+}));
+
 describe('onboarding actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();

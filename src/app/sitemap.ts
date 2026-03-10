@@ -32,17 +32,23 @@ async function fetchPortfolioSitemapRows(): Promise<{
   try {
     const [individualRowsResult, organizationRowsResult] = await Promise.all([
       db.execute(sql`
-        SELECT handle, updated_at
-        FROM profiles
-        WHERE handle IS NOT NULL
-          AND public_portfolio_state = 'public_indexable'
-          AND deleted = false
+        SELECT p.handle, p.updated_at
+        FROM profiles p
+        INNER JOIN portfolio_publication_states s
+          ON s.subject_type = 'individual_profile'
+         AND s.subject_id = p.id
+        WHERE p.handle IS NOT NULL
+          AND COALESCE(p.deleted, false) = false
+          AND s.sitemap_state = 'included'
       `),
       db.execute(sql`
-        SELECT slug, updated_at
-        FROM organizations
-        WHERE slug IS NOT NULL
-          AND public_portfolio_state = 'public_indexable'
+        SELECT o.slug, o.updated_at
+        FROM organizations o
+        INNER JOIN portfolio_publication_states s
+          ON s.subject_type = 'organization'
+         AND s.subject_id = o.id
+        WHERE o.slug IS NOT NULL
+          AND s.sitemap_state = 'included'
       `),
     ]);
 
@@ -53,8 +59,8 @@ async function fetchPortfolioSitemapRows(): Promise<{
   } catch (error) {
     if (
       isSchemaCompatibilityError(error, {
-        columns: ['public_portfolio_state'],
-        relations: ['profiles', 'organizations'],
+        columns: ['public_portfolio_state', 'sitemap_state'],
+        relations: ['profiles', 'organizations', 'portfolio_publication_states'],
       })
     ) {
       log.warn('seo.sitemap.schema_compatibility_fallback', {

@@ -1,9 +1,9 @@
 /**
  * 🏭 Test Data Factory
- * 
+ *
  * This module provides functions to create test data for RLS policy testing.
  * All functions use the service role client to bypass RLS when creating test data.
- * 
+ *
  * Test data is prefixed with 'test_' for easy identification and cleanup.
  */
 
@@ -12,9 +12,9 @@ import { createServiceRoleClient } from './supabase-test-client';
 
 /**
  * 📝 Create a test profile
- * 
+ *
  * Creates a profile record linked to a Supabase Auth user.
- * 
+ *
  * @param userId - Auth user ID (from createTestUser)
  * @param data - Profile data (display_name, handle, etc.)
  * @returns Created profile
@@ -52,9 +52,9 @@ export async function createTestProfile(
 
 /**
  * 💰 Create a test matching profile with compensation data
- * 
+ *
  * Creates a matching profile with compensation ranges (sensitive data).
- * 
+ *
  * @param userId - Profile/User ID
  * @param compData - Compensation range
  * @returns Created matching profile
@@ -92,10 +92,10 @@ export async function createTestMatchingProfile(
 
 /**
  * ✅ Create a test verification request
- * 
+ *
  * Creates a verification request with a verifier email (Tier 1 PII).
  * This tests that verifier emails are properly protected by RLS.
- * 
+ *
  * @param profileId - User requesting verification
  * @param claimType - Type of claim being verified
  * @param verifierEmail - Email of the verifier (should be protected)
@@ -138,10 +138,10 @@ export async function createTestVerificationRequest(
 
 /**
  * 💬 Create a test conversation between two users
- * 
+ *
  * Creates a conversation linked to a match and assignment.
  * This tests that users can only see their own conversations.
- * 
+ *
  * @param participantOneId - First participant user ID
  * @param participantTwoId - Second participant user ID
  * @param stage - Conversation stage (1 = masked, 2 = revealed)
@@ -172,23 +172,25 @@ export async function createTestConversation(
   }
 
   // Add both participants as members for assignment/match visibility
-  await client.from('organization_members').delete().eq('org_id', org.id).in('user_id', [participantOneId, participantTwoId]);
   await client
     .from('organization_members')
-    .insert([
-      {
-        org_id: org.id,
-        user_id: participantOneId,
-        role: 'admin',
-        status: 'active',
-      },
-      {
-        org_id: org.id,
-        user_id: participantTwoId,
-        role: 'member',
-        status: 'active',
-      },
-    ]);
+    .delete()
+    .eq('org_id', org.id)
+    .in('user_id', [participantOneId, participantTwoId]);
+  await client.from('organization_members').insert([
+    {
+      org_id: org.id,
+      user_id: participantOneId,
+      role: 'org_manager',
+      state: 'active',
+    },
+    {
+      org_id: org.id,
+      user_id: participantTwoId,
+      role: 'org_reviewer',
+      state: 'active',
+    },
+  ]);
 
   // First create a dummy assignment (required by FK)
   const { data: assignment, error: assignmentError } = await client
@@ -250,20 +252,16 @@ export async function createTestConversation(
 
 /**
  * 💬 Create a test message in a conversation
- * 
+ *
  * Creates a message in an existing conversation.
  * Tests that users can only read messages from their own conversations.
- * 
+ *
  * @param conversationId - Conversation ID
  * @param senderId - User sending the message
  * @param content - Message content
  * @returns Created message
  */
-export async function createTestMessage(
-  conversationId: string,
-  senderId: string,
-  content: string
-) {
+export async function createTestMessage(conversationId: string, senderId: string, content: string) {
   const client = createServiceRoleClient();
 
   const { data: message, error } = await client
@@ -285,10 +283,10 @@ export async function createTestMessage(
 
 /**
  * 📊 Create a test analytics event
- * 
+ *
  * Creates an analytics event with hashed IP (GDPR-compliant).
  * Tests that users can only see their own analytics data.
- * 
+ *
  * @param userId - User ID for the event
  * @param eventType - Type of event (e.g., 'page_view', 'match_accepted')
  * @param properties - Additional event properties
@@ -320,10 +318,10 @@ export async function createTestAnalyticsEvent(
 
 /**
  * 🗑️ Cleanup all test data for a user
- * 
+ *
  * Deletes all test data associated with a user ID.
  * Call this in afterAll hooks to clean up.
- * 
+ *
  * @param userId - User ID to cleanup
  */
 export async function cleanupTestData(userId: string): Promise<void> {
@@ -380,9 +378,9 @@ export async function cleanupTestData(userId: string): Promise<void> {
 
 /**
  * 🗑️ Cleanup specific test data items
- * 
+ *
  * Deletes specific records by ID.
- * 
+ *
  * @param table - Table name
  * @param ids - Array of record IDs to delete
  */
@@ -397,4 +395,3 @@ export async function cleanupTestRecords(table: string, ids: string[]): Promise<
     console.warn(`Warning: Failed to cleanup ${table} records:`, error);
   }
 }
-

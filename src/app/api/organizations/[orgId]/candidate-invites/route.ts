@@ -1,26 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'node:crypto';
 import { and, desc, eq, inArray, lt } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db';
-import {
-  assignments,
-  orgCandidateInvites,
-  organizationMembers,
-  organizations,
-  profiles,
-} from '@/db/schema';
+import { orgCandidateInvites, organizationMembers, organizations, profiles } from '@/db/schema';
 import {
   buildCandidateInviteUrl,
   CANDIDATE_INVITE_EXPIRY_DAYS,
   CANDIDATE_INVITE_FLOW_TYPE,
   CANDIDATE_INVITE_STATUS,
-  generateCandidateInviteToken,
-  hashCandidateInviteToken,
   normalizeInviteEmail,
 } from '@/lib/candidate-invites';
 import { sendCandidateInviteEmail } from '@/lib/email';
 import { emitAnalyticsEventAsync } from '@/lib/analytics/events';
+import {
+  CAPABILITY_BINDINGS,
+  CAPABILITY_TOKEN_CLASSES,
+  issueCapabilityToken,
+} from '@/lib/security/capability-tokens';
+import { resolveCandidateInvitePolicyContext } from '@/lib/candidate-invite-policy';
 import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -89,6 +88,9 @@ async function getOrganization(orgId: string) {
       id: organizations.id,
       displayName: organizations.displayName,
       slug: organizations.slug,
+      trustStatus: organizations.trustStatus,
+      orgTrustTier: organizations.orgTrustTier,
+      verified: organizations.verified,
     })
     .from(organizations)
     .where(eq(organizations.id, orgId))
@@ -177,7 +179,6 @@ export async function GET(
         matchId: orgCandidateInvites.matchId,
         conversationId: orgCandidateInvites.conversationId,
         proofSnippetId: orgCandidateInvites.proofSnippetId,
-        proofShareToken: orgCandidateInvites.proofShareToken,
         proofSubmittedAt: orgCandidateInvites.proofSubmittedAt,
         revokedAt: orgCandidateInvites.revokedAt,
         createdAt: orgCandidateInvites.createdAt,
@@ -253,21 +254,46 @@ export async function POST(
       }
     }
 
-    if (flowType === CANDIDATE_INVITE_FLOW_TYPE.TEST_MATCH && assignmentId) {
-      const [assignment] = await db
-        .select({
-          id: assignments.id,
-        })
-        .from(assignments)
-        .where(and(eq(assignments.id, assignmentId), eq(assignments.orgId, orgId)))
-        .limit(1);
+    const { assignment, policyEvaluation } = await resolveCandidateInvitePolicyContext(
+      orgId,
+      assignmentId
+    );
 
-      if (!assignment) {
-        return NextResponse.json(
-          { error: 'Assignment not found for this organization.' },
-          { status: 404 }
-        );
-      }
+    if (flowType === CANDIDATE_INVITE_FLOW_TYPE.TEST_MATCH && assignmentId && !assignment) {
+      return NextResponse.json(
+        { error: 'Assignment not found for this organization.' },
+        { status: 404 }
+      );
+    }
+
+    if (policyEvaluation.decision === 'blocked') {
+      return NextResponse.json(
+        {
+          error: 'CANDIDATE_INVITE_BLOCKED',
+          message: 'Invite creation is blocked by organization or assignment policy.',
+          details: {
+            decision: policyEvaluation.decision,
+            orgTrustTier: policyEvaluation.orgTrustTier,
+            reasons: policyEvaluation.reasons.map((reason) => reason.code),
+          },
+        },
+        { status: 403 }
+      );
+    }
+
+    if (policyEvaluation.decision === 'hold') {
+      return NextResponse.json(
+        {
+          error: 'CANDIDATE_INVITE_ON_HOLD',
+          message: 'Invite creation is on hold pending policy review.',
+          details: {
+            decision: policyEvaluation.decision,
+            orgTrustTier: policyEvaluation.orgTrustTier,
+            reasons: policyEvaluation.reasons.map((reason) => reason.code),
+          },
+        },
+        { status: 409 }
+      );
     }
 
     const normalizedEmails = dedupeEmails(parsed.data);
@@ -330,22 +356,49 @@ export async function POST(
 
     const expiryDays = parsed.data.expiryDays ?? CANDIDATE_INVITE_EXPIRY_DAYS;
     const expiresAt = new Date(Date.now() + expiryDays * 24 * 60 * 60 * 1000);
-    const tokenMaterial = creatableEmails.map((email) => {
-      const rawToken = generateCandidateInviteToken();
-      return {
-        email,
-        rawToken,
-        tokenHash: hashCandidateInviteToken(rawToken),
-        inviteUrl: buildCandidateInviteUrl(rawToken),
-      };
-    });
+    const tokenMaterial = await Promise.all(
+      creatableEmails.map(async (email) => {
+        const inviteId = crypto.randomUUID();
+        const issued = await issueCapabilityToken({
+          tokenClass: CAPABILITY_TOKEN_CLASSES.CANDIDATE_INVITE_CLAIM,
+          sourceTable: 'org_candidate_invites',
+          sourceId: inviteId,
+          actionScope: 'candidate_invite.claim',
+          scopeKey: `candidate_invite:${orgId}:${flowType}:${assignmentId ?? 'none'}:${email}`,
+          subjectType: 'org_candidate_invite',
+          subjectId: inviteId,
+          actorBinding: CAPABILITY_BINDINGS.EMAIL_HASH,
+          actorEmail: email,
+          expiresAt,
+          singleUse: true,
+          maxUses: 1,
+          revokePriorActiveTokensForScope: true,
+          metadata: {
+            orgId,
+            flowType,
+            assignmentId: assignmentId ?? null,
+          },
+        });
+
+        return {
+          inviteId,
+          email,
+          rawToken: issued.rawToken,
+          tokenHash: issued.tokenHash,
+          capabilityTokenId: issued.token.id,
+          inviteUrl: buildCandidateInviteUrl(issued.rawToken),
+        };
+      })
+    );
 
     await db.insert(orgCandidateInvites).values(
       tokenMaterial.map((item) => ({
+        id: item.inviteId,
         orgId,
         inviteeEmail: item.email,
         inviteeEmailNormalized: item.email,
         tokenHash: item.tokenHash,
+        capabilityTokenId: item.capabilityTokenId,
         status: CANDIDATE_INVITE_STATUS.PENDING,
         flowType,
         assignmentId,

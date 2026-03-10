@@ -26,10 +26,24 @@ export const CAPABILITY_BINDINGS = {
   EMAIL_THEN_PROFILE_LOCK: 'email_then_profile_lock',
 } as const;
 
+export const CAPABILITY_TOKEN_STATES = {
+  ISSUED: 'issued',
+  REDEEMED: 'redeemed',
+  EXPIRED: 'expired',
+  REVOKED: 'revoked',
+} as const;
+
+export const CAPABILITY_REDEEM_SESSION_MAX_AGE_SECONDS = 10 * 60;
+const CAPABILITY_TOKEN_ATTEMPT_THRESHOLD = 5;
+const CAPABILITY_IP_ATTEMPT_THRESHOLD = 10;
+const CAPABILITY_IP_ATTEMPT_WINDOW_MS = 60 * 60 * 1000;
+
 export type CapabilityTokenClass =
   (typeof CAPABILITY_TOKEN_CLASSES)[keyof typeof CAPABILITY_TOKEN_CLASSES];
 
 export type CapabilityBinding = (typeof CAPABILITY_BINDINGS)[keyof typeof CAPABILITY_BINDINGS];
+export type CapabilityTokenState =
+  (typeof CAPABILITY_TOKEN_STATES)[keyof typeof CAPABILITY_TOKEN_STATES];
 
 export type CapabilityActorContext = {
   email?: string | null;
@@ -54,9 +68,16 @@ export type CapabilityTokenRow = {
   actor_profile_id: string | null;
   actor_org_id: string | null;
   principal_type: string | null;
+  state: CapabilityTokenState;
   single_use: boolean;
   max_uses: number;
   redeemed_count: number;
+  attempt_count: number;
+  last_attempt_at: string | null;
+  suspicious_flag: boolean;
+  scope_key: string | null;
+  redeem_session_nonce_hash: string | null;
+  redeem_session_nonce_expires_at: string | null;
   issued_at: string;
   expires_at: string;
   first_redeemed_at: string | null;
@@ -83,6 +104,8 @@ type IssueCapabilityTokenParams = {
   principalType?: string | null;
   singleUse?: boolean;
   maxUses?: number;
+  scopeKey?: string | null;
+  revokePriorActiveTokensForScope?: boolean;
   expiresAt: Date;
   metadata?: Record<string, unknown>;
 };
@@ -105,6 +128,10 @@ type TrackCapabilityEventParams = {
 
 export type InspectCapabilityTokenResult =
   | { ok: true; token: CapabilityTokenRow }
+  | { ok: false; reason: 'invalid' | 'expired' | 'revoked' };
+
+export type BeginCapabilityTokenRedeemSessionResult =
+  | { ok: true; token: CapabilityTokenRow; redeemSessionNonce: string; maxAgeSeconds: number }
   | { ok: false; reason: 'invalid' | 'expired' | 'revoked' };
 
 export type RedeemCapabilityTokenResult =
@@ -150,6 +177,25 @@ export function hashCapabilityToken(rawToken: string): string {
   return hashOpaqueToken(rawToken.trim());
 }
 
+export function hashCapabilityRedeemSessionNonce(rawNonce: string): string {
+  return hashOpaqueToken(rawNonce.trim());
+}
+
+export function generateCapabilityRedeemSessionNonce(): string {
+  return crypto.randomBytes(32).toString('base64url');
+}
+
+export function getCapabilityRedeemSessionCookieName(tokenClass: CapabilityTokenClass | string) {
+  const safeClass = tokenClass.replace(/[^a-z0-9_]+/gi, '_').toLowerCase();
+  return `pf_rsn_${safeClass}`;
+}
+
+function buildCapabilityIpThrottleKey(tokenClass?: CapabilityTokenClass, ip?: string | null) {
+  const ipHash = hashIp(ip);
+  if (!ipHash) return null;
+  return `capability:${tokenClass ?? 'any'}:${ipHash}`;
+}
+
 async function trackCapabilityTokenEvent(params: TrackCapabilityEventParams) {
   const actorEmailHash = hashEmail(params.actor?.email);
   const ipHash = hashIp(params.actor?.ip);
@@ -178,6 +224,102 @@ async function trackCapabilityTokenEvent(params: TrackCapabilityEventParams) {
   `);
 }
 
+async function getCapabilityIpThrottleState(key: string) {
+  const result = await db.execute(sql`
+    SELECT attempts, reset_at
+    FROM rate_limits
+    WHERE id = ${key}
+    LIMIT 1
+  `);
+
+  const [row] = getRows<{ attempts: number; reset_at: string }>(result as any);
+  if (!row) {
+    return { blocked: false, attempts: 0 };
+  }
+
+  if (new Date(row.reset_at).getTime() <= Date.now()) {
+    return { blocked: false, attempts: 0 };
+  }
+
+  return {
+    blocked: row.attempts >= CAPABILITY_IP_ATTEMPT_THRESHOLD,
+    attempts: row.attempts,
+  };
+}
+
+async function recordCapabilityIpFailure(key: string) {
+  const resetAt = new Date(Date.now() + CAPABILITY_IP_ATTEMPT_WINDOW_MS).toISOString();
+  const result = await db.execute(sql`
+    INSERT INTO rate_limits (id, attempts, reset_at)
+    VALUES (${key}, 1, ${resetAt})
+    ON CONFLICT (id) DO UPDATE
+    SET
+      attempts = CASE
+        WHEN rate_limits.reset_at <= NOW() THEN 1
+        ELSE rate_limits.attempts + 1
+      END,
+      reset_at = CASE
+        WHEN rate_limits.reset_at <= NOW() THEN ${resetAt}
+        ELSE rate_limits.reset_at
+      END
+    RETURNING attempts, reset_at
+  `);
+
+  const [row] = getRows<{ attempts: number; reset_at: string }>(result as any);
+  return {
+    blocked:
+      Boolean(row) &&
+      new Date(row.reset_at).getTime() > Date.now() &&
+      row.attempts >= CAPABILITY_IP_ATTEMPT_THRESHOLD,
+    attempts: row?.attempts ?? 0,
+  };
+}
+
+async function recordCapabilityTokenFailure(
+  tokenId: string,
+  metadata?: Record<string, unknown>
+): Promise<{ suspicious: boolean; attemptCount: number }> {
+  const result = await db.execute(sql`
+    UPDATE capability_tokens
+    SET
+      attempt_count = CASE
+        WHEN last_attempt_at IS NULL
+          OR last_attempt_at <= NOW() - INTERVAL '15 minutes'
+          THEN 1
+        ELSE attempt_count + 1
+      END,
+      last_attempt_at = NOW(),
+      suspicious_flag = CASE
+        WHEN (
+          CASE
+            WHEN last_attempt_at IS NULL
+              OR last_attempt_at <= NOW() - INTERVAL '15 minutes'
+              THEN 1
+            ELSE attempt_count + 1
+          END
+        ) >= ${CAPABILITY_TOKEN_ATTEMPT_THRESHOLD}
+          THEN TRUE
+        ELSE suspicious_flag
+      END,
+      updated_at = NOW()
+    WHERE id = ${tokenId}
+    RETURNING attempt_count, suspicious_flag
+  `);
+
+  const [row] = getRows<{ attempt_count: number; suspicious_flag: boolean }>(result as any);
+
+  await trackCapabilityTokenEvent({
+    capabilityTokenId: tokenId,
+    eventType: 'invalid_blocked',
+    metadata,
+  });
+
+  return {
+    suspicious: row?.suspicious_flag ?? false,
+    attemptCount: row?.attempt_count ?? 0,
+  };
+}
+
 async function loadCapabilityTokenByHash(
   tokenHash: string,
   tokenClass?: CapabilityTokenClass
@@ -202,10 +344,17 @@ async function loadCapabilityTokenByHash(
 }
 
 function isExpiredToken(token: CapabilityTokenRow): boolean {
-  return Boolean(token.expires_at && new Date(token.expires_at).getTime() <= Date.now());
+  return (
+    token.state === CAPABILITY_TOKEN_STATES.EXPIRED ||
+    Boolean(token.expires_at && new Date(token.expires_at).getTime() <= Date.now())
+  );
 }
 
 function isReplayBlocked(token: CapabilityTokenRow): boolean {
+  if (token.state === CAPABILITY_TOKEN_STATES.REDEEMED && token.single_use) {
+    return true;
+  }
+
   if (token.single_use) {
     return token.redeemed_count >= 1;
   }
@@ -234,7 +383,9 @@ async function markCapabilityTokenExpired(
 ) {
   await db.execute(sql`
     UPDATE capability_tokens
-    SET updated_at = NOW()
+    SET
+      state = ${CAPABILITY_TOKEN_STATES.EXPIRED},
+      updated_at = NOW()
     WHERE id = ${token.id}
   `);
 
@@ -299,16 +450,23 @@ async function maybeLockProfileBoundToken(
 async function consumeCapabilityToken(token: CapabilityTokenRow, actor?: CapabilityActorContext) {
   const ipHash = hashIp(actor?.ip);
   const userAgentHash = hashUserAgent(actor?.userAgent);
+  const shouldMarkRedeemed = token.single_use || token.max_uses <= 1;
 
   await db.execute(sql`
     UPDATE capability_tokens
     SET
+      state = CASE
+        WHEN ${shouldMarkRedeemed} THEN ${CAPABILITY_TOKEN_STATES.REDEEMED}
+        ELSE state
+      END,
       redeemed_count = redeemed_count + 1,
       first_redeemed_at = COALESCE(first_redeemed_at, NOW()),
       last_redeemed_at = NOW(),
       last_seen_at = NOW(),
       last_seen_ip_hash = COALESCE(${ipHash}, last_seen_ip_hash),
       last_seen_user_agent_hash = COALESCE(${userAgentHash}, last_seen_user_agent_hash),
+      redeem_session_nonce_hash = NULL,
+      redeem_session_nonce_expires_at = NULL,
       updated_at = NOW()
     WHERE id = ${token.id}
   `);
@@ -321,13 +479,52 @@ export async function issueCapabilityToken(params: IssueCapabilityTokenParams) {
   const singleUse = params.singleUse ?? true;
   const maxUses = params.maxUses ?? (singleUse ? 1 : 2147483647);
 
+  if (params.revokePriorActiveTokensForScope && params.scopeKey) {
+    const revokedResult = await db.execute(sql`
+      UPDATE capability_tokens
+      SET
+        state = ${CAPABILITY_TOKEN_STATES.REVOKED},
+        revoked_at = COALESCE(revoked_at, NOW()),
+        revoked_reason = COALESCE(revoked_reason, 'regenerated'),
+        updated_at = NOW()
+      WHERE token_class = ${params.tokenClass}
+        AND scope_key = ${params.scopeKey}
+        AND COALESCE(actor_email_hash, '') = COALESCE(${actorEmailHash}, '')
+        AND state = ${CAPABILITY_TOKEN_STATES.ISSUED}
+        AND revoked_at IS NULL
+        AND expires_at > NOW()
+      RETURNING id
+    `);
+
+    const revokedRows = getRows<{ id: string }>(revokedResult as any);
+    for (const row of revokedRows) {
+      await trackCapabilityTokenEvent({
+        capabilityTokenId: row.id,
+        eventType: 'revoked',
+        actor: {
+          email: params.actorEmail,
+          profileId: params.actorProfileId,
+          orgId: params.actorOrgId,
+          principalType: params.principalType,
+        },
+        metadata: {
+          reason: 'regenerated',
+          tokenClass: params.tokenClass,
+          scopeKey: params.scopeKey,
+        },
+      });
+    }
+  }
+
   const result = await db.execute(sql`
     INSERT INTO capability_tokens (
       token_class,
       token_hash,
+      state,
       source_table,
       source_id,
       action_scope,
+      scope_key,
       subject_type,
       subject_id,
       actor_binding,
@@ -342,9 +539,11 @@ export async function issueCapabilityToken(params: IssueCapabilityTokenParams) {
     ) VALUES (
       ${params.tokenClass},
       ${tokenHash},
+      ${CAPABILITY_TOKEN_STATES.ISSUED},
       ${params.sourceTable},
       ${params.sourceId},
       ${params.actionScope},
+      ${params.scopeKey ?? null},
       ${params.subjectType},
       ${params.subjectId ?? null},
       ${params.actorBinding},
@@ -392,10 +591,30 @@ export async function inspectCapabilityToken(
     metadata?: Record<string, unknown>;
   } = {}
 ): Promise<InspectCapabilityTokenResult> {
+  const ipThrottleKey = buildCapabilityIpThrottleKey(params.tokenClass, params.actor?.ip);
+  if (ipThrottleKey) {
+    const throttleState = await getCapabilityIpThrottleState(ipThrottleKey);
+    if (throttleState.blocked) {
+      await trackCapabilityTokenEvent({
+        eventType: 'invalid_blocked',
+        actor: params.actor,
+        metadata: {
+          tokenClass: params.tokenClass ?? null,
+          reason: 'ip_rate_limited',
+          ...params.metadata,
+        },
+      });
+      return { ok: false, reason: 'invalid' };
+    }
+  }
+
   const tokenHash = hashCapabilityToken(rawToken);
   const token = await loadCapabilityTokenByHash(tokenHash, params.tokenClass);
 
   if (!token) {
+    if (ipThrottleKey) {
+      await recordCapabilityIpFailure(ipThrottleKey);
+    }
     await trackCapabilityTokenEvent({
       eventType: 'invalid_blocked',
       actor: params.actor,
@@ -446,6 +665,8 @@ export async function redeemCapabilityToken(
     tokenClass?: CapabilityTokenClass;
     actor?: CapabilityActorContext;
     consume?: boolean;
+    requireRedeemSessionNonce?: boolean;
+    redeemSessionNonce?: string | null;
     metadata?: Record<string, unknown>;
   } = {}
 ): Promise<RedeemCapabilityTokenResult> {
@@ -455,8 +676,17 @@ export async function redeemCapabilityToken(
   }
 
   const token = inspected.token;
+  const ipThrottleKey = buildCapabilityIpThrottleKey(token.token_class, params.actor?.ip);
 
   if (!isActorAuthorized(token, params.actor)) {
+    await recordCapabilityTokenFailure(token.id, {
+      tokenClass: token.token_class,
+      reason: 'actor_mismatch',
+      ...params.metadata,
+    });
+    if (ipThrottleKey) {
+      await recordCapabilityIpFailure(ipThrottleKey);
+    }
     await trackCapabilityTokenEvent({
       capabilityTokenId: token.id,
       eventType: 'actor_mismatch_blocked',
@@ -472,6 +702,28 @@ export async function redeemCapabilityToken(
 
   await maybeLockProfileBoundToken(token, params.actor);
 
+  if (params.requireRedeemSessionNonce) {
+    const nonce = params.redeemSessionNonce?.trim() ?? '';
+    const nonceValid =
+      nonce.length > 0 &&
+      Boolean(token.redeem_session_nonce_hash) &&
+      Boolean(token.redeem_session_nonce_expires_at) &&
+      new Date(token.redeem_session_nonce_expires_at as string).getTime() > Date.now() &&
+      token.redeem_session_nonce_hash === hashCapabilityRedeemSessionNonce(nonce);
+
+    if (!nonceValid) {
+      await recordCapabilityTokenFailure(token.id, {
+        tokenClass: token.token_class,
+        reason: 'redeem_session_nonce_invalid',
+        ...params.metadata,
+      });
+      if (ipThrottleKey) {
+        await recordCapabilityIpFailure(ipThrottleKey);
+      }
+      return { ok: false, reason: 'invalid' };
+    }
+  }
+
   const shouldConsume = params.consume ?? token.single_use;
   await trackCapabilityTokenEvent({
     capabilityTokenId: token.id,
@@ -485,6 +737,15 @@ export async function redeemCapabilityToken(
   });
 
   if (shouldConsume && isReplayBlocked(token)) {
+    await recordCapabilityTokenFailure(token.id, {
+      tokenClass: token.token_class,
+      reason: 'replay_blocked',
+      redeemedCount: token.redeemed_count,
+      ...params.metadata,
+    });
+    if (ipThrottleKey) {
+      await recordCapabilityIpFailure(ipThrottleKey);
+    }
     await trackCapabilityTokenEvent({
       capabilityTokenId: token.id,
       eventType: 'replay_blocked',
@@ -522,6 +783,47 @@ export async function redeemCapabilityToken(
   return { ok: true, token: freshToken ?? token };
 }
 
+export async function beginCapabilityTokenRedeemSession(
+  rawToken: string,
+  params: {
+    tokenClass?: CapabilityTokenClass;
+    actor?: CapabilityActorContext;
+    metadata?: Record<string, unknown>;
+    maxAgeSeconds?: number;
+  } = {}
+): Promise<BeginCapabilityTokenRedeemSessionResult> {
+  const inspected = await inspectCapabilityToken(rawToken, params);
+  if (!inspected.ok) {
+    return inspected;
+  }
+
+  const redeemSessionNonce = generateCapabilityRedeemSessionNonce();
+  const maxAgeSeconds = params.maxAgeSeconds ?? CAPABILITY_REDEEM_SESSION_MAX_AGE_SECONDS;
+  const redeemSessionNonceHash = hashCapabilityRedeemSessionNonce(redeemSessionNonce);
+  const redeemSessionNonceExpiresAt = new Date(Date.now() + maxAgeSeconds * 1000).toISOString();
+
+  await db.execute(sql`
+    UPDATE capability_tokens
+    SET
+      redeem_session_nonce_hash = ${redeemSessionNonceHash},
+      redeem_session_nonce_expires_at = ${redeemSessionNonceExpiresAt},
+      updated_at = NOW()
+    WHERE id = ${inspected.token.id}
+  `);
+
+  const freshToken = await loadCapabilityTokenByHash(
+    hashCapabilityToken(rawToken),
+    params.tokenClass
+  );
+
+  return {
+    ok: true,
+    token: freshToken ?? inspected.token,
+    redeemSessionNonce,
+    maxAgeSeconds,
+  };
+}
+
 export async function revokeCapabilityTokenById(
   capabilityTokenId: string,
   params: {
@@ -533,8 +835,11 @@ export async function revokeCapabilityTokenById(
   await db.execute(sql`
     UPDATE capability_tokens
     SET
+      state = ${CAPABILITY_TOKEN_STATES.REVOKED},
       revoked_at = COALESCE(revoked_at, NOW()),
       revoked_reason = ${params.reason},
+      redeem_session_nonce_hash = NULL,
+      redeem_session_nonce_expires_at = NULL,
       updated_at = NOW()
     WHERE id = ${capabilityTokenId}
   `);
@@ -578,6 +883,7 @@ export async function expireDueCapabilityTokens(limit = 200) {
     SELECT id
     FROM capability_tokens
     WHERE revoked_at IS NULL
+      AND state = ${CAPABILITY_TOKEN_STATES.ISSUED}
       AND expires_at <= NOW()
     ORDER BY expires_at ASC
     LIMIT ${limit}
@@ -585,6 +891,13 @@ export async function expireDueCapabilityTokens(limit = 200) {
 
   const rows = getRows<{ id: string }>(result as any);
   for (const row of rows) {
+    await db.execute(sql`
+      UPDATE capability_tokens
+      SET
+        state = ${CAPABILITY_TOKEN_STATES.EXPIRED},
+        updated_at = NOW()
+      WHERE id = ${row.id}
+    `);
     await trackCapabilityTokenEvent({
       capabilityTokenId: row.id,
       eventType: 'expired',

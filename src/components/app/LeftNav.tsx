@@ -20,11 +20,11 @@ import {
   Building,
   ClipboardList,
   MessageCircle,
-  UserCheck,
   UserRound,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import { ORG_MVP_NAV_ITEMS } from '@/lib/org/mvp-surface-policy';
 import { toast } from 'sonner';
 
 /**
@@ -116,38 +116,26 @@ export function LeftNav({
     { href: `${basePath}/settings`, icon: Settings, label: 'Settings', dataTour: 'settings-link' },
   ];
 
-  const orgNavItems: NavItem[] = [
-    { href: `${basePath}/home`, icon: Home, label: 'Dashboard', dataTour: 'home-link' },
-    {
-      href: `${basePath}/assignments`,
-      icon: Briefcase,
-      label: 'Assignments',
-      dataTour: 'assignments',
-    },
-    { href: `${basePath}/candidates`, icon: Users, label: 'Candidates', dataTour: 'candidates' },
-    { href: `${basePath}/shortlist`, icon: UserCheck, label: 'Shortlist', dataTour: 'shortlist' },
-    {
-      href: `${basePath}/messages`,
-      icon: MessageCircle,
-      label: 'Messages',
-      dataTour: 'messages-link',
-    },
-    {
-      href: `${basePath}/interviews`,
-      icon: Video,
-      label: 'Interviews',
-      dataTour: 'interviews-link',
-    },
-    {
-      href: `${basePath}/portfolio`,
-      icon: ClipboardList,
-      label: 'Public Portfolio',
-      dataTour: 'portfolio-link',
-    },
-    { href: `${basePath}/profile`, icon: Building, label: 'Org Profile', dataTour: 'org-profile' },
-    { href: `${basePath}/team`, icon: Users, label: 'Team', dataTour: 'team-link' },
-    { href: `${basePath}/settings`, icon: Settings, label: 'Settings', dataTour: 'settings-link' },
-  ];
+  const orgIconMap = {
+    home: Home,
+    briefcase: Briefcase,
+    building: Building,
+    clipboard: ClipboardList,
+  } as const;
+
+  const orgNavItems: NavItem[] = ORG_MVP_NAV_ITEMS.map((item) => ({
+    href: `${basePath}${item.hrefSuffix}`,
+    icon: orgIconMap[item.icon],
+    label: item.label,
+    dataTour:
+      item.hrefSuffix === '/home'
+        ? 'home-link'
+        : item.hrefSuffix === '/matching'
+          ? 'matching-link'
+          : item.hrefSuffix === '/profile'
+            ? 'org-profile'
+            : 'portfolio-link',
+  }));
 
   const navItems = isOrg ? orgNavItems : individualNavItems;
   const filteredNavItems = isPortfolioLocked

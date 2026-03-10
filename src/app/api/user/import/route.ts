@@ -1,12 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
-import { individualProfiles, skills, experiences, volunteering, auditLogs } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import {
+  auditLogs,
+  experiences,
+  individualProfiles,
+  proofArtifacts,
+  proofPackItems,
+  proofPacks,
+  skills,
+  submissionArtifacts,
+  submissions,
+  verificationLogEntries,
+  verificationRecords,
+  volunteering,
+} from '@/db/schema';
+import { and, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { detectPII } from '@/lib/privacy/pii-detection';
 import { normalizeImportRequest } from '@/lib/contracts/data-portability';
 import { buildExperienceTimeline } from '@/lib/profile/experience-timeline';
+import { syncCanonicalProofPackState } from '@/lib/proofs/canonical-pack';
 
 function parseOptionalDate(value?: string | null): Date | null {
   if (!value) {
@@ -89,6 +103,16 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      if (error instanceof Error && error.message === 'ONLY_OWNER_FULL_PROOF_IMPORT_SUPPORTED') {
+        return NextResponse.json(
+          {
+            error: 'Unsupported proof import scope',
+            message: 'Only owner_full proof exports can be re-imported.',
+          },
+          { status: 400 }
+        );
+      }
+
       return NextResponse.json(
         {
           error: 'Invalid data format',
@@ -128,7 +152,13 @@ export async function POST(request: NextRequest) {
       skills: 0,
       experiences: 0,
       volunteering: 0,
+      proofPacks: 0,
+      proofArtifacts: 0,
+      proofPackItems: 0,
+      verificationReferences: 0,
+      submissions: 0,
     };
+    const syncedPackIds = new Set<string>();
 
     await db.transaction(async (tx) => {
       if (data.profile && Object.keys(data.profile).length > 0) {
@@ -168,6 +198,88 @@ export async function POST(request: NextRequest) {
         await tx.delete(skills).where(eq(skills.profileId, user.id));
         await tx.delete(experiences).where(eq(experiences.userId, user.id));
         await tx.delete(volunteering).where(eq(volunteering.userId, user.id));
+
+        const [existingPacks, existingArtifacts, existingSubmissions, existingVerifications] =
+          await Promise.all([
+            tx
+              .select({ id: proofPacks.id })
+              .from(proofPacks)
+              .where(
+                and(eq(proofPacks.ownerType, 'individual_profile'), eq(proofPacks.ownerId, user.id))
+              ),
+            tx
+              .select({ id: proofArtifacts.id })
+              .from(proofArtifacts)
+              .where(
+                and(
+                  eq(proofArtifacts.ownerType, 'individual_profile'),
+                  eq(proofArtifacts.ownerId, user.id)
+                )
+              ),
+            tx
+              .select({ id: submissions.id })
+              .from(submissions)
+              .where(
+                and(
+                  eq(submissions.ownerType, 'individual_profile'),
+                  eq(submissions.ownerId, user.id)
+                )
+              ),
+            tx
+              .select({ id: verificationRecords.id })
+              .from(verificationRecords)
+              .where(
+                and(
+                  eq(verificationRecords.ownerType, 'individual_profile'),
+                  eq(verificationRecords.ownerId, user.id)
+                )
+              ),
+          ]);
+
+        const existingPackIds = existingPacks.map((row) => row.id);
+        const existingSubmissionIds = existingSubmissions.map((row) => row.id);
+        const existingVerificationIds = existingVerifications.map((row) => row.id);
+
+        if (existingSubmissionIds.length > 0) {
+          await tx
+            .delete(submissionArtifacts)
+            .where(inArray(submissionArtifacts.submissionId, existingSubmissionIds));
+        }
+        if (existingPackIds.length > 0) {
+          await tx.delete(proofPackItems).where(inArray(proofPackItems.packId, existingPackIds));
+        }
+        if (existingVerificationIds.length > 0) {
+          await tx
+            .delete(verificationLogEntries)
+            .where(inArray(verificationLogEntries.verificationRecordId, existingVerificationIds));
+        }
+
+        await tx
+          .delete(submissions)
+          .where(
+            and(eq(submissions.ownerType, 'individual_profile'), eq(submissions.ownerId, user.id))
+          );
+        await tx
+          .delete(verificationRecords)
+          .where(
+            and(
+              eq(verificationRecords.ownerType, 'individual_profile'),
+              eq(verificationRecords.ownerId, user.id)
+            )
+          );
+        await tx
+          .delete(proofPacks)
+          .where(
+            and(eq(proofPacks.ownerType, 'individual_profile'), eq(proofPacks.ownerId, user.id))
+          );
+        await tx
+          .delete(proofArtifacts)
+          .where(
+            and(
+              eq(proofArtifacts.ownerType, 'individual_profile'),
+              eq(proofArtifacts.ownerId, user.id)
+            )
+          );
       }
 
       for (const skill of data.skills) {
@@ -241,7 +353,466 @@ export async function POST(request: NextRequest) {
         );
       }
       importedCounts.volunteering = data.volunteering.length;
+
+      const existingPacks = await tx
+        .select({
+          id: proofPacks.id,
+          legacySourceTable: proofPacks.legacySourceTable,
+          legacySourceId: proofPacks.legacySourceId,
+          portabilityMeta: proofPacks.portabilityMeta,
+        })
+        .from(proofPacks)
+        .where(
+          and(eq(proofPacks.ownerType, 'individual_profile'), eq(proofPacks.ownerId, user.id))
+        );
+      const existingArtifacts = await tx
+        .select({
+          id: proofArtifacts.id,
+          legacySourceTable: proofArtifacts.legacySourceTable,
+          legacySourceId: proofArtifacts.legacySourceId,
+          legacySourcePath: proofArtifacts.legacySourcePath,
+        })
+        .from(proofArtifacts)
+        .where(
+          and(
+            eq(proofArtifacts.ownerType, 'individual_profile'),
+            eq(proofArtifacts.ownerId, user.id)
+          )
+        );
+
+      const packIdByKey = new Map<string, string>();
+      const packIdByPortabilityHash = new Map<string, string>();
+      for (const pack of existingPacks) {
+        if (pack.legacySourceTable && pack.legacySourceId) {
+          packIdByKey.set(`${pack.legacySourceTable}:${pack.legacySourceId}`, pack.id);
+        }
+        const portabilityHash =
+          pack.portabilityMeta &&
+          typeof pack.portabilityMeta === 'object' &&
+          typeof (pack.portabilityMeta as Record<string, unknown>).portabilityHash === 'string'
+            ? ((pack.portabilityMeta as Record<string, unknown>).portabilityHash as string)
+            : null;
+        if (portabilityHash) {
+          packIdByPortabilityHash.set(portabilityHash, pack.id);
+        }
+      }
+
+      const artifactIdByKey = new Map<string, string>();
+      for (const artifact of existingArtifacts) {
+        const key = [
+          artifact.legacySourceTable ?? '',
+          artifact.legacySourceId ?? '',
+          artifact.legacySourcePath ?? '',
+        ].join(':');
+        if (key !== '::') {
+          artifactIdByKey.set(key, artifact.id);
+        }
+      }
+
+      const importedArtifactIdMap = new Map<string, string>();
+      for (const artifact of data.proof.artifacts) {
+        const artifactKey = [
+          artifact.legacySourceTable ?? '',
+          artifact.legacySourceId ?? '',
+          artifact.legacySourcePath ?? '',
+        ].join(':');
+        const resolvedArtifactId =
+          artifactIdByKey.get(artifactKey) || (mode === 'merge' ? artifact.id : artifact.id);
+
+        importedArtifactIdMap.set(artifact.id, resolvedArtifactId);
+
+        await tx
+          .insert(proofArtifacts)
+          .values({
+            id: resolvedArtifactId,
+            ownerType: 'individual_profile',
+            ownerId: user.id,
+            subjectType: artifact.subjectType,
+            subjectId: artifact.subjectId,
+            artifactKind: artifact.artifactKind,
+            lifecycleState: 'active',
+            title: artifact.title,
+            description: artifact.description,
+            sourceUrl: artifact.sourceUrl,
+            storagePath: artifact.storagePath,
+            mimeType: artifact.mimeType,
+            issuedAt: parseOptionalDate(artifact.issuedAt),
+            expiresAt: parseOptionalDate(artifact.expiresAt),
+            visibility: artifact.visibility,
+            revealGate: artifact.revealGate,
+            metadata: artifact.metadata,
+            legacySourceTable: artifact.legacySourceTable,
+            legacySourceId: artifact.legacySourceId,
+            legacySourcePath: artifact.legacySourcePath,
+          })
+          .onConflictDoUpdate({
+            target: proofArtifacts.id,
+            set: {
+              ownerType: 'individual_profile',
+              ownerId: user.id,
+              subjectType: artifact.subjectType,
+              subjectId: artifact.subjectId,
+              artifactKind: artifact.artifactKind,
+              title: artifact.title,
+              description: artifact.description,
+              sourceUrl: artifact.sourceUrl,
+              storagePath: artifact.storagePath,
+              mimeType: artifact.mimeType,
+              issuedAt: parseOptionalDate(artifact.issuedAt),
+              expiresAt: parseOptionalDate(artifact.expiresAt),
+              visibility: artifact.visibility,
+              revealGate: artifact.revealGate,
+              metadata: artifact.metadata,
+              legacySourceTable: artifact.legacySourceTable,
+              legacySourceId: artifact.legacySourceId,
+              legacySourcePath: artifact.legacySourcePath,
+              updatedAt: new Date(),
+            },
+          });
+      }
+      importedCounts.proofArtifacts = data.proof.artifacts.length;
+
+      const importedPackIdMap = new Map<string, string>();
+      for (const pack of data.proof.packs) {
+        const portabilityHash =
+          typeof pack.portabilityMeta?.portabilityHash === 'string'
+            ? pack.portabilityMeta.portabilityHash
+            : null;
+        const resolvedPackId =
+          (pack.legacySourceTable && pack.legacySourceId
+            ? packIdByKey.get(`${pack.legacySourceTable}:${pack.legacySourceId}`)
+            : null) ||
+          (portabilityHash ? packIdByPortabilityHash.get(portabilityHash) : null) ||
+          pack.id;
+
+        importedPackIdMap.set(pack.id, resolvedPackId);
+        syncedPackIds.add(resolvedPackId);
+
+        await tx
+          .insert(proofPacks)
+          .values({
+            id: resolvedPackId,
+            ownerType: 'individual_profile',
+            ownerId: user.id,
+            packKind: pack.packKind,
+            primarySubjectType: pack.primarySubjectType,
+            primarySubjectId: pack.primarySubjectId,
+            lifecycleState: pack.lifecycleState,
+            title: pack.title,
+            summary: pack.summary,
+            contextJson: pack.contextJson,
+            evidenceSummary: pack.evidenceSummary,
+            outcomesSummary: pack.outcomesSummary,
+            visibility: pack.visibility,
+            revealGate: pack.revealGate,
+            shareTokenHash: pack.shareTokenHash,
+            shareExpiresAt: parseOptionalDate(pack.shareExpiresAt),
+            createdBy: user.id,
+            verificationStatus: pack.verificationStatus,
+            freshnessState: pack.freshnessState,
+            freshnessEvaluatedAt: parseOptionalDate(pack.freshnessEvaluatedAt),
+            lastVerifiedAt: parseOptionalDate(pack.lastVerifiedAt),
+            lastRefreshedAt: parseOptionalDate(pack.lastRefreshedAt),
+            publishedAt: parseOptionalDate(pack.publishedAt),
+            submittedAt: parseOptionalDate(pack.submittedAt),
+            withdrawnAt: parseOptionalDate(pack.withdrawnAt),
+            supersededAt: parseOptionalDate(pack.supersededAt),
+            archivedAt: parseOptionalDate(pack.archivedAt),
+            portabilityMeta: pack.portabilityMeta,
+            metadata: pack.metadata,
+            legacySourceTable: pack.legacySourceTable,
+            legacySourceId: pack.legacySourceId,
+          })
+          .onConflictDoUpdate({
+            target: proofPacks.id,
+            set: {
+              ownerType: 'individual_profile',
+              ownerId: user.id,
+              packKind: pack.packKind,
+              primarySubjectType: pack.primarySubjectType,
+              primarySubjectId: pack.primarySubjectId,
+              lifecycleState: pack.lifecycleState,
+              title: pack.title,
+              summary: pack.summary,
+              contextJson: pack.contextJson,
+              evidenceSummary: pack.evidenceSummary,
+              outcomesSummary: pack.outcomesSummary,
+              visibility: pack.visibility,
+              revealGate: pack.revealGate,
+              shareTokenHash: pack.shareTokenHash,
+              shareExpiresAt: parseOptionalDate(pack.shareExpiresAt),
+              verificationStatus: pack.verificationStatus,
+              freshnessState: pack.freshnessState,
+              freshnessEvaluatedAt: parseOptionalDate(pack.freshnessEvaluatedAt),
+              lastVerifiedAt: parseOptionalDate(pack.lastVerifiedAt),
+              lastRefreshedAt: parseOptionalDate(pack.lastRefreshedAt),
+              publishedAt: parseOptionalDate(pack.publishedAt),
+              submittedAt: parseOptionalDate(pack.submittedAt),
+              withdrawnAt: parseOptionalDate(pack.withdrawnAt),
+              supersededAt: parseOptionalDate(pack.supersededAt),
+              archivedAt: parseOptionalDate(pack.archivedAt),
+              portabilityMeta: pack.portabilityMeta,
+              metadata: pack.metadata,
+              legacySourceTable: pack.legacySourceTable,
+              legacySourceId: pack.legacySourceId,
+              updatedAt: new Date(),
+            },
+          });
+      }
+      importedCounts.proofPacks = data.proof.packs.length;
+
+      for (const item of data.proof.packItems) {
+        const resolvedPackId = importedPackIdMap.get(item.packId);
+        const resolvedArtifactId = importedArtifactIdMap.get(item.artifactId);
+        if (!resolvedPackId || !resolvedArtifactId) {
+          continue;
+        }
+
+        await tx
+          .insert(proofPackItems)
+          .values({
+            id: item.id,
+            packId: resolvedPackId,
+            artifactId: resolvedArtifactId,
+            position: item.position,
+            includedFields: item.includedFields,
+          })
+          .onConflictDoUpdate({
+            target: proofPackItems.id,
+            set: {
+              packId: resolvedPackId,
+              artifactId: resolvedArtifactId,
+              position: item.position,
+              includedFields: item.includedFields,
+              updatedAt: new Date(),
+            },
+          });
+      }
+      importedCounts.proofPackItems = data.proof.packItems.length;
+
+      const importedVerificationIdSet = new Set<string>();
+      for (const record of data.proof.verificationReferences) {
+        const resolvedArtifactId = record.proofArtifactId
+          ? (importedArtifactIdMap.get(record.proofArtifactId) ?? null)
+          : null;
+        importedVerificationIdSet.add(record.id);
+
+        await tx
+          .insert(verificationRecords)
+          .values({
+            id: record.id,
+            ownerType: 'individual_profile',
+            ownerId: user.id,
+            subjectType: record.subjectType,
+            subjectId: record.subjectId,
+            proofArtifactId: resolvedArtifactId,
+            verificationSlot: record.verificationSlot,
+            verificationKind: record.verificationKind,
+            status: record.status,
+            verifierPrincipalType: record.verifierPrincipalType,
+            verifierClass: record.verifierClass,
+            verifierProfileId: record.verifierProfileId,
+            verifierOrgId: record.verifierOrgId,
+            verifierEmailHash: record.verifierEmailHash,
+            verifierDomainSnapshot: record.verifierDomainSnapshot,
+            integrityStatus: record.integrityStatus,
+            integrityReason: record.integrityReason,
+            disputeState: record.disputeState,
+            badgeSemanticsVersion: record.badgeSemanticsVersion,
+            riskSignals: record.riskSignals,
+            claimSnapshot: record.claimSnapshot,
+            sourceRequestTable: record.sourceRequestTable,
+            sourceRequestId: record.sourceRequestId,
+            sourceResponseTable: record.sourceResponseTable,
+            sourceResponseId: record.sourceResponseId,
+            requestedAt: parseOptionalDate(record.requestedAt),
+            lastRefreshedAt: parseOptionalDate(record.lastRefreshedAt),
+            verifiedAt: parseOptionalDate(record.verifiedAt),
+            expiresAt: parseOptionalDate(record.expiresAt),
+            supersededAt: parseOptionalDate(record.supersededAt),
+            supersededByVerificationId: record.supersededByVerificationId,
+            downgradedAt: parseOptionalDate(record.downgradedAt),
+            contradictedAt: parseOptionalDate(record.contradictedAt),
+            contradictedByVerificationId: record.contradictedByVerificationId,
+            disputedAt: parseOptionalDate(record.disputedAt),
+            revokedAt: parseOptionalDate(record.revokedAt),
+            metadata: record.metadata,
+          })
+          .onConflictDoUpdate({
+            target: verificationRecords.id,
+            set: {
+              ownerType: 'individual_profile',
+              ownerId: user.id,
+              subjectType: record.subjectType,
+              subjectId: record.subjectId,
+              proofArtifactId: resolvedArtifactId,
+              verificationSlot: record.verificationSlot,
+              verificationKind: record.verificationKind,
+              status: record.status,
+              verifierPrincipalType: record.verifierPrincipalType,
+              verifierClass: record.verifierClass,
+              verifierProfileId: record.verifierProfileId,
+              verifierOrgId: record.verifierOrgId,
+              verifierEmailHash: record.verifierEmailHash,
+              verifierDomainSnapshot: record.verifierDomainSnapshot,
+              integrityStatus: record.integrityStatus,
+              integrityReason: record.integrityReason,
+              disputeState: record.disputeState,
+              badgeSemanticsVersion: record.badgeSemanticsVersion,
+              riskSignals: record.riskSignals,
+              claimSnapshot: record.claimSnapshot,
+              sourceRequestTable: record.sourceRequestTable,
+              sourceRequestId: record.sourceRequestId,
+              sourceResponseTable: record.sourceResponseTable,
+              sourceResponseId: record.sourceResponseId,
+              requestedAt: parseOptionalDate(record.requestedAt),
+              lastRefreshedAt: parseOptionalDate(record.lastRefreshedAt),
+              verifiedAt: parseOptionalDate(record.verifiedAt),
+              expiresAt: parseOptionalDate(record.expiresAt),
+              supersededAt: parseOptionalDate(record.supersededAt),
+              supersededByVerificationId: record.supersededByVerificationId,
+              downgradedAt: parseOptionalDate(record.downgradedAt),
+              contradictedAt: parseOptionalDate(record.contradictedAt),
+              contradictedByVerificationId: record.contradictedByVerificationId,
+              disputedAt: parseOptionalDate(record.disputedAt),
+              revokedAt: parseOptionalDate(record.revokedAt),
+              metadata: record.metadata,
+              updatedAt: new Date(),
+            },
+          });
+      }
+      importedCounts.verificationReferences = data.proof.verificationReferences.length;
+
+      for (const entry of data.proof.verificationLogEntries.filter((entry) =>
+        importedVerificationIdSet.has(entry.verificationRecordId)
+      )) {
+        await tx
+          .insert(verificationLogEntries)
+          .values({
+            id: entry.id,
+            verificationRecordId: entry.verificationRecordId,
+            sequenceNumber: entry.sequenceNumber,
+            entryType: entry.entryType,
+            fromStatus: entry.fromStatus,
+            toStatus: entry.toStatus,
+            reasonCode: entry.reasonCode,
+            actorType: entry.actorType,
+            actorId: entry.actorId,
+            relatedContradictionId: entry.relatedContradictionId,
+            relatedDisputeId: entry.relatedDisputeId,
+            relatedVerificationRecordId: entry.relatedVerificationRecordId,
+            recomputeBatchId: entry.recomputeBatchId,
+            metadata: entry.metadata,
+            occurredAt: parseOptionalDate(entry.occurredAt) ?? new Date(),
+          })
+          .onConflictDoUpdate({
+            target: verificationLogEntries.id,
+            set: {
+              sequenceNumber: entry.sequenceNumber,
+              entryType: entry.entryType,
+              fromStatus: entry.fromStatus,
+              toStatus: entry.toStatus,
+              reasonCode: entry.reasonCode,
+              actorType: entry.actorType,
+              actorId: entry.actorId,
+              relatedContradictionId: entry.relatedContradictionId,
+              relatedDisputeId: entry.relatedDisputeId,
+              relatedVerificationRecordId: entry.relatedVerificationRecordId,
+              recomputeBatchId: entry.recomputeBatchId,
+              metadata: entry.metadata,
+              occurredAt: parseOptionalDate(entry.occurredAt) ?? new Date(),
+            },
+          });
+      }
+
+      const importedSubmissionIdSet = new Set<string>();
+      for (const submission of data.proof.submissions) {
+        importedSubmissionIdSet.add(submission.id);
+        await tx
+          .insert(submissions)
+          .values({
+            id: submission.id,
+            submissionKind: submission.submissionKind,
+            status: submission.status,
+            ownerType: 'individual_profile',
+            ownerId: user.id,
+            submittedByUserId: user.id,
+            submittedByOrgId: submission.submittedByOrgId,
+            assignmentId: submission.assignmentId,
+            proofPackId: submission.proofPackId
+              ? (importedPackIdMap.get(submission.proofPackId) ?? null)
+              : null,
+            requestContextType: submission.requestContextType,
+            requestContextId: submission.requestContextId,
+            matchId: submission.matchId,
+            introId: submission.introId,
+            applicationId: submission.applicationId,
+            legacySourceTable: submission.legacySourceTable,
+            legacySourceId: submission.legacySourceId,
+            submittedAt: parseOptionalDate(submission.submittedAt) ?? new Date(),
+            reviewedAt: parseOptionalDate(submission.reviewedAt),
+            withdrawnAt: parseOptionalDate(submission.withdrawnAt),
+            supersededAt: parseOptionalDate(submission.supersededAt),
+            supersededBySubmissionId: submission.supersededBySubmissionId,
+            metadata: submission.metadata,
+          })
+          .onConflictDoUpdate({
+            target: submissions.id,
+            set: {
+              status: submission.status,
+              proofPackId: submission.proofPackId
+                ? (importedPackIdMap.get(submission.proofPackId) ?? null)
+                : null,
+              requestContextType: submission.requestContextType,
+              requestContextId: submission.requestContextId,
+              matchId: submission.matchId,
+              introId: submission.introId,
+              applicationId: submission.applicationId,
+              legacySourceTable: submission.legacySourceTable,
+              legacySourceId: submission.legacySourceId,
+              submittedAt: parseOptionalDate(submission.submittedAt) ?? new Date(),
+              reviewedAt: parseOptionalDate(submission.reviewedAt),
+              withdrawnAt: parseOptionalDate(submission.withdrawnAt),
+              supersededAt: parseOptionalDate(submission.supersededAt),
+              supersededBySubmissionId: submission.supersededBySubmissionId,
+              metadata: submission.metadata,
+              updatedAt: new Date(),
+            },
+          });
+      }
+      importedCounts.submissions = data.proof.submissions.length;
+
+      for (const item of data.proof.submissionArtifacts.filter((entry) =>
+        importedSubmissionIdSet.has(entry.submissionId)
+      )) {
+        const resolvedArtifactId = importedArtifactIdMap.get(item.artifactId);
+        if (!resolvedArtifactId) {
+          continue;
+        }
+
+        await tx
+          .insert(submissionArtifacts)
+          .values({
+            id: item.id,
+            submissionId: item.submissionId,
+            artifactId: resolvedArtifactId,
+            position: item.position,
+            includedFields: item.includedFields,
+          })
+          .onConflictDoUpdate({
+            target: submissionArtifacts.id,
+            set: {
+              artifactId: resolvedArtifactId,
+              position: item.position,
+              includedFields: item.includedFields,
+            },
+          });
+      }
     });
+
+    for (const packId of syncedPackIds) {
+      await syncCanonicalProofPackState(packId).catch(() => null);
+    }
 
     await db.insert(auditLogs).values({
       actorId: user.id,

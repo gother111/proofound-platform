@@ -1,13 +1,11 @@
-import { and, count, eq, sql } from 'drizzle-orm';
+import { count, eq } from 'drizzle-orm';
 
 import { db } from '@/db';
+import { individualProfiles, profiles, skills } from '@/db/schema';
 import {
-  individualProfiles,
-  profiles,
-  skillProofs,
-  skills,
-  skillVerificationRequests,
-} from '@/db/schema';
+  listCanonicalProofPackAggregatesForOwner,
+  summarizeCanonicalProofOwnerAggregates,
+} from '@/lib/proofs/canonical-pack';
 import {
   evaluateIndividualProfileCompletion,
   type IndividualProfileCompletionState,
@@ -20,14 +18,7 @@ function countItems(value: unknown): number {
 export async function getIndividualProfileCompletionState(
   userId: string
 ): Promise<IndividualProfileCompletionState> {
-  const [
-    profileRow,
-    individualRow,
-    skillsCountRow,
-    proofCountRow,
-    publicProofCountRow,
-    acceptedVerificationCountRow,
-  ] = await Promise.all([
+  const [profileRow, individualRow, skillsCountRow, canonicalAggregates] = await Promise.all([
     db
       .select({
         displayName: profiles.displayName,
@@ -47,23 +38,7 @@ export async function getIndividualProfileCompletionState(
       .where(eq(individualProfiles.userId, userId))
       .limit(1),
     db.select({ count: count() }).from(skills).where(eq(skills.profileId, userId)),
-    db.select({ count: count() }).from(skillProofs).where(eq(skillProofs.profileId, userId)),
-    db
-      .select({
-        count: sql<number>`count(${skillProofs.id}) filter (where coalesce(${skillProofs.metadata}->>'visibility', 'private') in ('public', 'network', 'network_only'))::int`,
-      })
-      .from(skillProofs)
-      .where(eq(skillProofs.profileId, userId)),
-    db
-      .select({ count: count() })
-      .from(skillVerificationRequests)
-      .where(
-        and(
-          eq(skillVerificationRequests.requesterProfileId, userId),
-          eq(skillVerificationRequests.status, 'accepted'),
-          eq(skillVerificationRequests.integrityStatus, 'clear')
-        )
-      ),
+    listCanonicalProofPackAggregatesForOwner('individual_profile', userId),
   ]);
 
   const displayName = profileRow[0]?.displayName ?? null;
@@ -73,9 +48,10 @@ export async function getIndividualProfileCompletionState(
   const valuesCount = countItems(individualRow[0]?.values);
   const causesCount = countItems(individualRow[0]?.causes);
   const skillsCount = skillsCountRow[0]?.count ?? 0;
-  const proofCount = proofCountRow[0]?.count ?? 0;
-  const publicProofCount = publicProofCountRow[0]?.count ?? 0;
-  const acceptedVerificationCount = acceptedVerificationCountRow[0]?.count ?? 0;
+  const canonicalSummary = summarizeCanonicalProofOwnerAggregates(canonicalAggregates);
+  const proofCount = canonicalSummary.packCount;
+  const publicProofCount = canonicalSummary.publicProofSignalCount;
+  const acceptedVerificationCount = canonicalSummary.verifiedVerificationCount;
 
   return evaluateIndividualProfileCompletion({
     displayName,

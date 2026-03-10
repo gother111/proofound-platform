@@ -54,6 +54,6 @@ describe('public profile metadata helpers', () => {
     const metadata = buildUnavailablePublicProfileMetadata('/p/missing-token');
     expect(metadata.title).toBe('Public Profile Unavailable | Proofound');
     expect(String(metadata.description)).toContain('unavailable');
-    expect(metadata.alternates?.canonical).toContain('/p/missing-token');
+    expect(metadata.alternates?.canonical).toBeUndefined();
   });
 });

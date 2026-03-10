@@ -5,6 +5,7 @@ import { db } from '@/db';
 import { portfolioPublicationStates } from '@/db/schema';
 import { emitLifecycleEvent } from '@/lib/analytics/lifecycle-events';
 import { computePortfolioPublicationState } from '@/lib/proof-trust/snapshots';
+import { revalidatePublicPortfolioByProfileId } from '@/lib/portfolio/public-invalidation';
 import { mergeVisibilityFlags } from '@/lib/portfolio/visibility';
 import { resolveRequestedPublicPortfolioState } from '@/lib/portfolio/public-contract';
 import { and, eq } from 'drizzle-orm';
@@ -195,6 +196,8 @@ export async function POST(request: Request) {
         }
       );
     }
+
+    await revalidatePublicPortfolioByProfileId(user.id);
 
     return NextResponse.json({
       publicPageEnabled,

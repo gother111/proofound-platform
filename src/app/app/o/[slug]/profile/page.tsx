@@ -1,44 +1,17 @@
-import { requireAuth, getActiveOrg } from '@/lib/auth';
+import Link from 'next/link';
+import { Globe2, ShieldCheck, Users } from 'lucide-react';
 import { notFound } from 'next/navigation';
-import { OrganizationProfileView } from '@/components/profile/OrganizationProfileView';
+
+import { OrgTrustProfileEditor } from '@/components/organization/OrgTrustProfileEditor';
+import { CultureEditor } from '@/components/organization/CultureEditor';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { AppSurface } from '@/components/ui/v2/AppSurface';
+import { getActiveOrg, requireAuth } from '@/lib/auth';
+import { normalizeAuthorizedOrgRole } from '@/lib/authz';
 import { normalizeOrganizationValues } from '@/lib/organizations/normalizeValues';
-import type { PurposeLinks } from '@/types/profile';
-import {
-  createOrganizationDefaultPurposeLinks,
-  normalizeOrganizationPurposeLinks,
-  pruneOrganizationPurposeLinks,
-} from '@/lib/organizations/normalizePurposeLinks';
 
 export const dynamic = 'force-dynamic';
-
-type ClientOrganizationProfile = {
-  id: string;
-  slug: string;
-  displayName: string;
-  legalName: string | null;
-  type: string | null;
-  verified: boolean;
-  logoUrl: string | null;
-  coverImageUrl: string | null;
-  tagline: string | null;
-  mission: string | null;
-  vision: string | null;
-  missionLinks: PurposeLinks;
-  visionLinks: PurposeLinks;
-  website: string | null;
-  foundedDate: string | null;
-  industry: string | null;
-  industryKey: string | null;
-  industryLabel: string | null;
-  industryLegacyText: string | null;
-  organizationSize: string | null;
-  impactArea: string | null;
-  legalForm: string | null;
-  values: string[] | null;
-  causes: string[] | null;
-  workCulture: unknown;
-  locations: string[] | null;
-};
 
 export default async function OrganizationProfilePage({
   params,
@@ -54,108 +27,100 @@ export default async function OrganizationProfilePage({
   }
 
   const { org, membership } = result;
-  const normalizedValues = normalizeOrganizationValues(org.values);
-
-  // Check if user can edit
-  const canEdit = membership.role === 'owner' || membership.role === 'admin';
-
-  // Check if organization profile is empty (has minimal data beyond required fields)
-  const hasBasicInfo = Boolean(org.tagline || org.mission || org.vision || org.website);
-  const hasBusinessDetails = Boolean(
-    org.industryLabel || org.industry || org.organizationSize || org.impactArea || org.legalForm
-  );
-  const hasExtendedInfo = Boolean(normalizedValues.length > 0 || org.workCulture || org.legalName);
-
-  const isEmptyProfile = !hasBasicInfo && !hasBusinessDetails && !hasExtendedInfo;
-
-  // Calculate profile completion percentage
-  const completionFields = [
-    org.logoUrl,
-    org.tagline,
-    org.mission,
-    org.vision,
-    org.industryLabel || org.industry,
-    org.organizationSize,
-    org.impactArea,
-    org.legalForm,
-    org.foundedDate,
-    org.legalName,
-    org.website,
-    normalizedValues.length > 0 ? normalizedValues : null,
-    org.workCulture,
-  ];
-  const completedFields = completionFields.filter((field) => Boolean(field)).length;
-  const profileCompletion = Math.round((completedFields / completionFields.length) * 100);
-  const orgVerified = Boolean((org as Record<string, unknown>).verified);
-
-  const clientOrg: ClientOrganizationProfile = {
-    id: org.id,
-    slug: org.slug,
-    displayName: org.displayName,
-    legalName: org.legalName,
-    type: org.type,
-    verified: orgVerified,
-    logoUrl: org.logoUrl,
-    coverImageUrl: org.coverImageUrl,
-    tagline: org.tagline,
-    mission: org.mission,
-    vision: org.vision,
-    missionLinks: pruneOrganizationPurposeLinks(
-      normalizeOrganizationPurposeLinks(org.missionLinks),
-      normalizedValues,
-      org.causes ?? []
-    ),
-    visionLinks: pruneOrganizationPurposeLinks(
-      normalizeOrganizationPurposeLinks(org.visionLinks),
-      normalizedValues,
-      org.causes ?? []
-    ),
-    website: org.website,
-    foundedDate:
-      typeof org.foundedDate === 'string'
-        ? org.foundedDate
-        : org.foundedDate
-          ? String(org.foundedDate)
-          : null,
-    industry: org.industryLabel || org.industry,
-    industryKey: org.industryKey,
-    industryLabel: org.industryLabel,
-    industryLegacyText: org.industryLegacyText,
-    organizationSize: org.organizationSize,
-    impactArea: org.impactArea,
-    legalForm: org.legalForm,
-    values: normalizedValues.length > 0 ? normalizedValues : null,
-    causes: org.causes ?? null,
-    workCulture: org.workCulture ?? null,
-    locations: org.locations ?? null,
-  };
-
-  if (
-    org.mission &&
-    (clientOrg.missionLinks.values.length === 0 || clientOrg.missionLinks.causes.length === 0)
-  ) {
-    clientOrg.missionLinks = createOrganizationDefaultPurposeLinks(
-      normalizedValues,
-      org.causes ?? []
-    );
-  }
-
-  if (
-    org.vision &&
-    (clientOrg.visionLinks.values.length === 0 || clientOrg.visionLinks.causes.length === 0)
-  ) {
-    clientOrg.visionLinks = createOrganizationDefaultPurposeLinks(
-      normalizedValues,
-      org.causes ?? []
-    );
-  }
+  const membershipRole = normalizeAuthorizedOrgRole(membership.role);
+  const canEdit = membershipRole === 'org_owner' || membershipRole === 'org_manager';
+  const values = normalizeOrganizationValues(org.values);
 
   return (
-    <OrganizationProfileView
-      org={clientOrg}
-      canEdit={canEdit}
-      isEmptyProfile={isEmptyProfile}
-      profileCompletion={Math.max(profileCompletion, 5)}
-    />
+    <AppSurface>
+      <div className="mx-auto flex max-w-5xl flex-col gap-6">
+        <section className="grid gap-4 md:grid-cols-[2fr_1fr]">
+          <Card className="border-proofound-stone/60">
+            <CardHeader>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <CardTitle className="text-2xl">Organization trust profile</CardTitle>
+                  <CardDescription>
+                    This is the launch-facing org profile used to support one assignment path and a
+                    clean review queue.
+                  </CardDescription>
+                </div>
+                <Badge variant={canEdit ? 'default' : 'secondary'}>
+                  {canEdit ? 'Editable' : 'Review only'}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-muted-foreground">
+              <p>
+                Keep this page limited to trust basics. Broader org administration stays outside the
+                MVP corridor.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {values.map((value) => (
+                  <Badge key={value} variant="secondary">
+                    {value}
+                  </Badge>
+                ))}
+                {values.length === 0 ? <span>No core values added yet.</span> : null}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-proofound-stone/60">
+            <CardHeader>
+              <CardTitle className="text-lg">Launch corridor</CardTitle>
+              <CardDescription>
+                These are the only org surfaces that stay launch-binding.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm text-muted-foreground">
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="mt-0.5 h-4 w-4 text-proofound-forest" />
+                <div>
+                  <p className="font-medium text-foreground">Trust profile</p>
+                  <p>Mission, values, website, why join, and lightweight work norms.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Users className="mt-0.5 h-4 w-4 text-proofound-forest" />
+                <div>
+                  <p className="font-medium text-foreground">Assignments & matches</p>
+                  <p>One assignment path and one review queue for published work and candidates.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Globe2 className="mt-0.5 h-4 w-4 text-proofound-forest" />
+                <div>
+                  <p className="font-medium text-foreground">Public trust profile</p>
+                  <p>
+                    <Link
+                      className="underline underline-offset-4"
+                      href={`/app/o/${slug}/portfolio`}
+                    >
+                      View the public org page
+                    </Link>{' '}
+                    to confirm the launch story.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        <OrgTrustProfileEditor
+          org={{
+            id: org.id,
+            displayName: org.displayName,
+            tagline: org.tagline,
+            mission: org.mission,
+            website: org.website,
+            values: Array.isArray(org.values) ? org.values : null,
+          }}
+          canEdit={canEdit}
+        />
+
+        <CultureEditor orgId={org.id} initialCulture={org.workCulture ?? {}} canEdit={canEdit} />
+      </div>
+    </AppSurface>
   );
 }

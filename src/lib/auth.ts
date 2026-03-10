@@ -1,6 +1,11 @@
 import { createClient } from './supabase/server';
 import type { Organization, OrganizationMember, Profile } from '@/db/schema';
 import type { OrgRole } from '@/lib/authz';
+import {
+  isActiveMembershipState,
+  normalizeAuthorizedOrgRole,
+  normalizeMembershipState,
+} from '@/lib/authz';
 import { redirect } from 'next/navigation';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import * as React from 'react';
@@ -56,7 +61,7 @@ type OrganizationRow = Pick<
 
 type OrganizationMemberRow = Pick<
   OrganizationMember,
-  'orgId' | 'userId' | 'role' | 'status' | 'joinedAt'
+  'id' | 'orgId' | 'userId' | 'role' | 'state' | 'joinedAt'
 >;
 
 export type ApiAuthContext = {
@@ -159,10 +164,12 @@ function mapMembership(
   row: Partial<OrganizationMemberRow> & { orgId: string; userId: string }
 ): OrganizationMemberRow {
   return {
+    id: row.id ?? '',
     orgId: row.orgId,
     userId: row.userId,
-    role: (row.role as OrganizationMemberRow['role']) ?? 'member',
-    status: (row.status as OrganizationMemberRow['status']) ?? 'active',
+    role: (normalizeAuthorizedOrgRole(row.role as string | null | undefined) ??
+      'org_reviewer') as OrganizationMemberRow['role'],
+    state: normalizeMembershipState(row.state as string | null | undefined),
     joinedAt: row.joinedAt ? new Date(row.joinedAt as unknown as string | number) : new Date(),
   };
 }
@@ -239,9 +246,10 @@ const getUserOrganizationsCached = cache(async (userId: string) => {
     .select(
       `
         orgId:org_id,
+        id,
         userId:user_id,
         role,
-        status,
+        state,
         joinedAt:joined_at,
         org:organizations (
           id,
@@ -280,7 +288,7 @@ const getUserOrganizationsCached = cache(async (userId: string) => {
       `
     )
     .eq('user_id', userId)
-    .eq('status', 'active');
+    .eq('state', 'active');
 
   if (error) {
     console.error('Failed to load organizations for user:', error);
@@ -289,10 +297,11 @@ const getUserOrganizationsCached = cache(async (userId: string) => {
 
   type SupabaseOrgMembership = {
     org: OrganizationRow | OrganizationRow[] | null;
+    id: string;
     orgId: string;
     userId: string;
     role: OrganizationMemberRow['role'];
-    status: OrganizationMemberRow['status'];
+    state: OrganizationMemberRow['state'];
     joinedAt?: string | null;
   };
 
@@ -306,10 +315,11 @@ const getUserOrganizationsCached = cache(async (userId: string) => {
       return {
         org: mapOrganization(orgRecord as OrganizationRow),
         membership: mapMembership({
+          id: item.id as string,
           orgId: item.orgId as string,
           userId: item.userId as string,
           role: item.role as OrganizationMemberRow['role'],
-          status: item.status as OrganizationMemberRow['status'],
+          state: item.state as OrganizationMemberRow['state'],
           joinedAt: item.joinedAt
             ? new Date(item.joinedAt as unknown as string | number)
             : undefined,
@@ -363,16 +373,17 @@ const getActiveOrgCached = cache(async (slug: string, userId: string) => {
         updatedAt:updated_at,
         membership:organization_members!inner (
           orgId:org_id,
+          id,
           userId:user_id,
           role,
-          status,
+          state,
           joinedAt:joined_at
         )
       `
     )
     .eq('slug', slug)
     .eq('organization_members.user_id', userId)
-    .eq('organization_members.status', 'active')
+    .eq('organization_members.state', 'active')
     .maybeSingle();
 
   if (error) {
@@ -445,10 +456,11 @@ const getActiveOrgCached = cache(async (slug: string, userId: string) => {
       updatedAt: data.updatedAt,
     } as Partial<OrganizationRow> & { id: string; slug: string }),
     membership: mapMembership({
+      id: membershipRow.id as string,
       orgId: membershipRow.orgId as string,
       userId: membershipRow.userId as string,
       role: membershipRow.role as OrganizationMemberRow['role'],
-      status: membershipRow.status as OrganizationMemberRow['status'],
+      state: membershipRow.state as OrganizationMemberRow['state'],
       joinedAt: membershipRow.joinedAt
         ? new Date(membershipRow.joinedAt as unknown as string | number)
         : undefined,
@@ -460,14 +472,13 @@ export async function getActiveOrg(slug: string, userId: string) {
   return getActiveOrgCached(slug, userId);
 }
 
-export async function assertOrgRole(orgId: string, userId: string, roles: string[]) {
+export async function assertOrgRole(orgId: string, userId: string, roles: OrgRole[]) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('organization_members')
-    .select('orgId:org_id, userId:user_id, role, status, joinedAt:joined_at')
+    .select('id, orgId:org_id, userId:user_id, role, state, joinedAt:joined_at')
     .eq('org_id', orgId)
     .eq('user_id', userId)
-    .eq('status', 'active')
     .maybeSingle();
 
   if (error) {
@@ -475,15 +486,24 @@ export async function assertOrgRole(orgId: string, userId: string, roles: string
     throw new Error('Unable to verify permissions');
   }
 
-  if (!data || !roles.includes(data.role as string)) {
+  const normalizedState = normalizeMembershipState(data?.state as string | null | undefined);
+  const normalizedRole = normalizeAuthorizedOrgRole(data?.role as string | null | undefined);
+
+  if (
+    !data ||
+    !isActiveMembershipState(normalizedState) ||
+    !normalizedRole ||
+    !roles.includes(normalizedRole)
+  ) {
     throw new Error('Insufficient permissions');
   }
 
   return mapMembership({
+    id: data.id as string,
     orgId,
     userId,
-    role: data.role as OrganizationMemberRow['role'],
-    status: data.status as OrganizationMemberRow['status'],
+    role: normalizedRole as OrganizationMemberRow['role'],
+    state: normalizedState,
     joinedAt: data.joinedAt ? new Date(data.joinedAt as unknown as string | number) : undefined,
   });
 }

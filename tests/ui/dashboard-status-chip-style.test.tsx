@@ -27,7 +27,7 @@ describe('Dashboard status badge styling', () => {
   it('uses shared status chip classes in matching readiness header', () => {
     render(<MatchingReadinessCard useMockData />);
 
-    const badge = screen.getByText('Soft-gated');
+    const badge = screen.getByText('Discoverable');
     expectClassTokens(badge.className, DASHBOARD_STATUS_CHIP_CLASS);
     expect(badge.className).toContain('whitespace-nowrap');
     expect(badge.className).toContain('shrink-0');
@@ -55,9 +55,12 @@ describe('Dashboard status badge styling', () => {
       <InterviewsFeedbackCard initialData={{ interviews: [{ id: '1', status: 'scheduled' }] }} />
     );
 
-    const badge = screen.getByText('On track');
-    expectClassTokens(badge.className, DASHBOARD_STATUS_CHIP_CLASS);
-    expect(badge.className).toContain('whitespace-nowrap');
-    expect(badge.className).toContain('shrink-0');
+    const badge = screen
+      .getAllByText('On track')
+      .find((node) => node.className.includes('shrink-0'));
+    expect(badge).toBeDefined();
+    expectClassTokens(badge!.className, DASHBOARD_STATUS_CHIP_CLASS);
+    expect(badge!.className).toContain('whitespace-nowrap');
+    expect(badge!.className).toContain('shrink-0');
   });
 });

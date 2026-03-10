@@ -8,11 +8,9 @@ const TYPE_LABELS: Record<string, string> = {
   'image/jpeg': 'JPEG',
   'image/jpg': 'JPEG',
   'image/png': 'PNG',
-  'image/heif': 'HEIF',
-  'image/heic': 'HEIC',
   'image/webp': 'WebP',
-  'application/msword': 'DOC',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCX',
+  'text/plain': 'TXT',
+  'text/markdown': 'Markdown',
 };
 
 export async function POST(request: NextRequest) {
@@ -64,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      status: 'ready',
+      status: 'attachable',
       uploadedFileId: upload.uploadedFileId,
       url: upload.url,
       path: upload.storagePath,
@@ -74,12 +72,17 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Document upload error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    const isValidationError =
+      message.includes('File size exceeds') ||
+      message.includes('batch') ||
+      message.includes('limit');
     return NextResponse.json(
       {
-        error: 'Upload failed',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        error: isValidationError ? 'Upload rejected' : 'Upload failed',
+        message,
       },
-      { status: 500 }
+      { status: isValidationError ? 400 : 500 }
     );
   }
 }

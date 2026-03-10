@@ -1,23 +1,29 @@
-/**
- * Organization Home Page
- *
- * Displays the organization dashboard with customizable widgets
- * PRD Reference: O8 - Company Dashboard
- */
-
-import { requireAuth, getActiveOrg } from '@/lib/auth';
-import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { ArrowRight, Building2, ClipboardCheck, ShieldCheck, Users } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Briefcase, Users, Target, TrendingUp, ArrowRight, Building2 } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
-import { Suspense } from 'react';
-import { WidgetGridSkeleton } from '@/components/dashboard/WidgetGridSkeleton';
-import { SuspendedOrgDashboardClient } from './SuspendedOrgDashboardClient';
-import { getOrgDashboardMetrics } from '@/lib/dashboard/orgDataFetchers';
+import { getActiveOrg, requireAuth } from '@/lib/auth';
+import { normalizeAuthorizedOrgRole } from '@/lib/authz';
+import { normalizeOrganizationValues } from '@/lib/organizations/normalizeValues';
 
 export const dynamic = 'force-dynamic';
+
+function getRoleLabel(role: string | null | undefined) {
+  const normalized = normalizeAuthorizedOrgRole(role);
+  switch (normalized) {
+    case 'org_owner':
+      return 'Owner';
+    case 'org_manager':
+      return 'Manager';
+    case 'org_reviewer':
+      return 'Reviewer';
+    default:
+      return 'Member';
+  }
+}
 
 export default async function OrganizationHomePage({
   params,
@@ -33,135 +39,129 @@ export default async function OrganizationHomePage({
   }
 
   const { org, membership } = result;
-
-  // Fetch dashboard metrics for the KPI grid immediately
-  let dashboardMetrics: any = null;
-  let metrics = {
-    activeAssignments: 0,
-    totalMatches: 0,
-    teamMembers: 0,
-    shortlists: 0,
-  };
-
-  try {
-    dashboardMetrics = await getOrgDashboardMetrics(org.id, user.id);
-
-    metrics = {
-      activeAssignments: dashboardMetrics?.pipeline?.openAssignments || 0,
-      totalMatches: dashboardMetrics?.pipeline?.matches?.totalMatches || 0,
-      teamMembers: 0, // Fetched inside SuspendedOrgDashboardClient
-      shortlists: dashboardMetrics?.pipeline?.shortlists || 0,
-    };
-  } catch (error) {
-    console.error('Failed to fetch org dashboard metrics:', error);
-  }
+  const values = normalizeOrganizationValues(org.values);
+  const roleLabel = getRoleLabel(membership.role);
+  const canEditTrustProfile = ['org_owner', 'org_manager'].includes(
+    normalizeAuthorizedOrgRole(membership.role) ?? ''
+  );
 
   return (
     <AppSurface>
-      <div className="max-w-[1400px] mx-auto px-4 py-4">
-        <div className="space-y-4">
-          {/* Hero Section */}
-          <section
-            className="rounded-2xl p-6 text-white"
-            style={{
-              background: 'linear-gradient(135deg, #1C4D3A 0%, #2D5F4A 45%, #1C4D3A 100%)',
-            }}
-          >
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div className="space-y-3 max-w-xl">
-                <div className="flex items-center gap-2">
-                  <Building2 className="w-6 h-6" />
-                  <h1 className="text-3xl font-['Crimson_Pro']">{org.displayName}</h1>
-                </div>
-                <p className="text-white/90 text-sm leading-relaxed">
-                  {metrics.activeAssignments > 0
-                    ? `Your public organization link is live. Keep the flow narrow: refine trust basics, review your shortlist, and move active assignments toward introductions and feedback.`
-                    : 'Your day-1 win is live: a clean public organization link. Next, confirm trust basics and create one assignment.'}
-                </p>
-                <Link href={`/app/o/${slug}/portfolio`}>
-                  <Button className="text-sm mt-1 bg-white text-proofound-forest hover:bg-japandi-bg min-h-[44px]">
-                    Open public portfolio
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
+      <div className="mx-auto flex max-w-5xl flex-col gap-6">
+        <section
+          className="rounded-3xl px-6 py-8 text-white"
+          style={{
+            background: 'linear-gradient(135deg, #1C4D3A 0%, #2D5F4A 45%, #1C4D3A 100%)',
+          }}
+        >
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-2xl space-y-3">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-6 w-6" />
+                <h1 className="text-3xl font-['Crimson_Pro']">{org.displayName}</h1>
               </div>
+              <p className="text-sm text-white/90">
+                The org launch corridor is intentionally narrow: keep the trust profile current,
+                publish one assignment, and review matches from one queue.
+              </p>
+              {org.tagline ? <p className="text-sm text-white/75">{org.tagline}</p> : null}
             </div>
-          </section>
-
-          {/* KPI Grid */}
-          <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <Card className="p-4" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
-              <div className="flex items-center justify-between mb-3">
-                <Briefcase className="w-5 h-5" style={{ color: '#1C4D3A' }} />
-                <TrendingUp className="w-4 h-4" style={{ color: '#7A9278' }} />
-              </div>
-              <p className="text-3xl font-['Crimson_Pro']" style={{ color: '#2D3330' }}>
-                {metrics.activeAssignments}
-              </p>
-              <p className="text-xs" style={{ color: '#6B6760' }}>
-                Active assignments
-              </p>
-              <Link
-                href={`/app/o/${slug}/assignments/new`}
-                className="mt-3 inline-flex min-h-[44px] items-center px-3 -mx-3 rounded-md text-xs font-medium"
-                style={{ color: '#1C4D3A' }}
+            <div className="flex flex-wrap gap-3">
+              <Button asChild className="bg-white text-proofound-forest hover:bg-japandi-bg">
+                <Link href={`/app/o/${slug}/profile`}>
+                  Open trust profile
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="border-white/30 bg-white/10 text-white hover:bg-white/15"
               >
-                Create one <ArrowRight className="w-3 h-3 ml-1" />
-              </Link>
-            </Card>
+                <Link href={`/app/o/${slug}/matching`}>
+                  Open assignments & matches
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </section>
 
-            <Card className="p-4" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
-              <div className="flex items-center justify-between mb-3">
-                <Users className="w-5 h-5" style={{ color: '#1C4D3A' }} />
-                <TrendingUp className="w-4 h-4" style={{ color: '#7A9278' }} />
-              </div>
-              <p className="text-3xl font-['Crimson_Pro']" style={{ color: '#2D3330' }}>
-                {metrics.totalMatches}
+        <section className="grid gap-4 md:grid-cols-3">
+          <Card className="border-proofound-stone/60">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <ShieldCheck className="h-5 w-5 text-proofound-forest" />
+                Trust Profile
+              </CardTitle>
+              <CardDescription>
+                Mission, why join, public website, core values, and lightweight work norms.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-muted-foreground">
+              <p>
+                {org.mission?.trim() ? 'Mission is present.' : 'Mission still needs to be added.'}
               </p>
-              <p className="text-xs" style={{ color: '#6B6760' }}>
-                Total matches
+              <p>
+                {values.length > 0
+                  ? `${values.length} core value${values.length === 1 ? '' : 's'} set.`
+                  : 'Core values still need to be added.'}
               </p>
-              <Link
-                href={`/app/o/${slug}/matching`}
-                className="mt-3 inline-flex min-h-[44px] items-center px-3 -mx-3 rounded-md text-xs font-medium"
-                style={{ color: '#1C4D3A' }}
-              >
-                Review candidates <ArrowRight className="w-3 h-3 ml-1" />
-              </Link>
-            </Card>
+              <Button asChild variant="outline" className="w-full justify-between">
+                <Link href={`/app/o/${slug}/profile`}>
+                  {canEditTrustProfile ? 'Edit trust profile' : 'Review trust profile'}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
 
-            <Card className="p-4" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
-              <div className="flex items-center justify-between mb-3">
-                <Target className="w-5 h-5" style={{ color: '#1C4D3A' }} />
-                <TrendingUp className="w-4 h-4" style={{ color: '#7A9278' }} />
-              </div>
-              <p className="text-3xl font-['Crimson_Pro']" style={{ color: '#2D3330' }}>
-                {metrics.shortlists}
-              </p>
-              <p className="text-xs" style={{ color: '#6B6760' }}>
-                In shortlist
-              </p>
-              <Link
-                href={`/app/o/${slug}/shortlist`}
-                className="mt-3 inline-flex min-h-[44px] items-center px-3 -mx-3 rounded-md text-xs font-medium"
-                style={{ color: '#1C4D3A' }}
-              >
-                Review shortlist <ArrowRight className="w-3 h-3 ml-1" />
-              </Link>
-            </Card>
-          </section>
+          <Card className="border-proofound-stone/60">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <ClipboardCheck className="h-5 w-5 text-proofound-forest" />
+                One Assignment Path
+              </CardTitle>
+              <CardDescription>
+                Create and refine assignments from a single flow, with Basic mode as the default.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-muted-foreground">
+              <p>Basic mode stays the default. Advanced mode only appears after explicit opt-in.</p>
+              <Button asChild variant="outline" className="w-full justify-between">
+                <Link href={`/app/o/${slug}/assignments/new`}>
+                  Create or continue assignment
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
 
-          {/* Customizable Dashboard */}
-          <Suspense fallback={<WidgetGridSkeleton variant="organizationDashboard" />}>
-            <SuspendedOrgDashboardClient
-              orgId={org.id}
-              orgSlug={slug}
-              userId={user.id}
-              userRole={membership.role}
-              dashboardMetricsPipeline={dashboardMetrics?.pipeline || null}
-            />
-          </Suspense>
-        </div>
+          <Card className="border-proofound-stone/60">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Users className="h-5 w-5 text-proofound-forest" />
+                Minimal Access
+              </CardTitle>
+              <CardDescription>
+                Launch roles are limited to owner, manager, and reviewer.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-muted-foreground">
+              <p>You are currently signed in as {roleLabel}.</p>
+              <p>
+                Reviewers can review the queue and published work, but they cannot change org
+                settings outside the launch corridor.
+              </p>
+              <Button asChild variant="outline" className="w-full justify-between">
+                <Link href={`/app/o/${slug}/matching`}>
+                  Open review queue
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </section>
       </div>
     </AppSurface>
   );
