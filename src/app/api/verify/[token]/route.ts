@@ -808,13 +808,33 @@ function resolveSkillRequesterIdentity(args: {
   };
 }
 
+function sanitizeProofUrl(url: unknown): string | null {
+  const value = toStringOrNull(url)?.trim();
+
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(value);
+
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+      return null;
+    }
+
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+}
+
 function sanitizeSkillProofForResponse(proof: SkillProofContext) {
   return {
     id: toStringOrNull(proof.id) || '',
     proof_type: toStringOrNull(proof.proof_type) || 'link',
     title: toStringOrNull(proof.title) || 'Proof',
     description: toStringOrNull(proof.description),
-    url: toStringOrNull(proof.url),
+    url: sanitizeProofUrl(proof.url),
     file_path: toStringOrNull(proof.file_path),
     issued_date: toStringOrNull(proof.issued_date),
     expires_date: toStringOrNull(proof.expires_date),

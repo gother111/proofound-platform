@@ -100,6 +100,19 @@ function skillProofTypeLabel(value: string): string {
   }
 }
 
+function sanitizeProofUrl(url: string | null | undefined): string | null {
+  if (!url) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? parsed.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
 function isImageProof(url: string | null | undefined): boolean {
   if (!url) {
     return false;
@@ -472,55 +485,59 @@ export default function VerifySkillPage() {
                 <p className="text-sm font-medium text-muted-foreground">Supporting proof(s)</p>
                 {Array.isArray(data.proofs) && data.proofs.length > 0 ? (
                   <div className="space-y-2 rounded-lg border p-3 bg-white">
-                    {data.proofs.map((proof) => (
-                      <div
-                        key={proof.id}
-                        className="rounded-md border border-proofound-stone px-3 py-2 space-y-2"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <p className="text-sm font-medium text-foreground">{proof.title}</p>
-                          <Badge variant="outline" className="text-xs whitespace-nowrap">
-                            {skillProofTypeLabel(proof.proof_type)}
-                          </Badge>
+                    {data.proofs.map((proof) => {
+                      const safeProofUrl = sanitizeProofUrl(proof.url);
+
+                      return (
+                        <div
+                          key={proof.id}
+                          className="rounded-md border border-proofound-stone px-3 py-2 space-y-2"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <p className="text-sm font-medium text-foreground">{proof.title}</p>
+                            <Badge variant="outline" className="text-xs whitespace-nowrap">
+                              {skillProofTypeLabel(proof.proof_type)}
+                            </Badge>
+                          </div>
+
+                          {proof.description && (
+                            <p className="text-xs text-muted-foreground">{proof.description}</p>
+                          )}
+
+                          {(proof.issued_date || proof.expires_date) && (
+                            <p className="text-xs text-muted-foreground">
+                              {proof.issued_date
+                                ? `Issued: ${new Date(proof.issued_date).toLocaleDateString()}`
+                                : ''}
+                              {proof.issued_date && proof.expires_date ? ' • ' : ''}
+                              {proof.expires_date
+                                ? `Expires: ${new Date(proof.expires_date).toLocaleDateString()}`
+                                : ''}
+                            </p>
+                          )}
+
+                          {safeProofUrl && isImageProof(safeProofUrl) && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={safeProofUrl}
+                              alt={`Proof image: ${proof.title}`}
+                              className="max-h-40 rounded border border-proofound-stone"
+                            />
+                          )}
+
+                          {safeProofUrl && (
+                            <a
+                              href={safeProofUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-proofound-forest hover:underline"
+                            >
+                              Open proof
+                            </a>
+                          )}
                         </div>
-
-                        {proof.description && (
-                          <p className="text-xs text-muted-foreground">{proof.description}</p>
-                        )}
-
-                        {(proof.issued_date || proof.expires_date) && (
-                          <p className="text-xs text-muted-foreground">
-                            {proof.issued_date
-                              ? `Issued: ${new Date(proof.issued_date).toLocaleDateString()}`
-                              : ''}
-                            {proof.issued_date && proof.expires_date ? ' • ' : ''}
-                            {proof.expires_date
-                              ? `Expires: ${new Date(proof.expires_date).toLocaleDateString()}`
-                              : ''}
-                          </p>
-                        )}
-
-                        {proof.url && isImageProof(proof.url) && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={proof.url}
-                            alt={`Proof image: ${proof.title}`}
-                            className="max-h-40 rounded border border-proofound-stone"
-                          />
-                        )}
-
-                        {proof.url && (
-                          <a
-                            href={proof.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-proofound-forest hover:underline"
-                          >
-                            Open proof
-                          </a>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="rounded-lg border border-dashed border-proofound-stone bg-white p-3">

@@ -1155,6 +1155,16 @@ describe('verify impact token route', () => {
             issued_date: null,
             expires_date: null,
           },
+          {
+            id: 'proof-link-3',
+            proof_type: 'link',
+            title: 'Malicious link',
+            description: null,
+            url: 'javascript:alert(1)',
+            file_path: null,
+            issued_date: null,
+            expires_date: null,
+          },
         ],
       })
     );
@@ -1166,7 +1176,7 @@ describe('verify impact token route', () => {
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body.verification.verification_type).toBe('skill');
-    expect(body.verification.proofs).toHaveLength(2);
+    expect(body.verification.proofs).toHaveLength(3);
     expect(body.verification.proofs[0]).toMatchObject({
       id: 'proof-cert-1',
       proof_type: 'certification',
@@ -1177,6 +1187,13 @@ describe('verify impact token route', () => {
       id: 'proof-link-2',
       proof_type: 'link',
       title: 'Project demo',
+    });
+
+    expect(body.verification.proofs[2]).toMatchObject({
+      id: 'proof-link-3',
+      proof_type: 'link',
+      title: 'Malicious link',
+      url: null,
     });
   });
 
