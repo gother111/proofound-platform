@@ -100,7 +100,7 @@ function cache<TArgs extends unknown[], TResult>(
   return dedupeInFlight(fn);
 }
 
-const getRequestScopedClient = cache(async () => createClient());
+const getRequestScopedClient = async () => createClient();
 
 function mapProfile(row: Partial<ProfileRow> & { id: string }): ProfileRow {
   return {
@@ -204,10 +204,10 @@ async function getCurrentUserWithClient(supabase: SupabaseClient): Promise<Profi
   return mapProfile(data as ProfileRow);
 }
 
-const getCurrentUserCached = cache(async () => {
+const getCurrentUserCached = async () => {
   const supabase = await getRequestScopedClient();
   return getCurrentUserWithClient(supabase);
-});
+};
 
 export async function getCurrentUser() {
   return getCurrentUserCached();
