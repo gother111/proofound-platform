@@ -99,10 +99,7 @@ function shouldFallbackToLegacyRequestIdLookup(token: string, tokenLookupError: 
     return false;
   }
 
-  return (
-    isMissingColumnError(tokenLookupError, 'verification_token') ||
-    isNotFoundError(tokenLookupError)
-  );
+  return isMissingColumnError(tokenLookupError, 'verification_token');
 }
 
 async function getSkillVerificationByTokenOrLegacyId(

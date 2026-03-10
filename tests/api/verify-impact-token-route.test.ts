@@ -18,6 +18,15 @@ vi.mock('@/lib/email/sender', () => ({
   sendEmail: (...args: any[]) => sendEmailMock(...args),
 }));
 
+vi.mock('@/lib/security/capability-tokens', () => ({
+  CAPABILITY_TOKEN_CLASSES: {
+    SKILL_VERIFICATION_RESPONSE: 'skill_verification_response',
+    IMPACT_VERIFICATION_RESPONSE: 'impact_verification_response',
+  },
+  inspectCapabilityToken: vi.fn().mockResolvedValue({ ok: false }),
+  redeemCapabilityToken: vi.fn().mockResolvedValue({ ok: false }),
+}));
+
 const TOKEN = 'a'.repeat(64);
 const LEGACY_REQUEST_ID = '123e4567-e89b-42d3-a456-426614174000';
 const SKILL_VERIFICATION_RECORD = {
@@ -950,6 +959,31 @@ describe('verify impact token route', () => {
     expect(body.verification.skill_name).toBe('System Design');
   });
 
+  it('GET does not treat request id as token when verification_token lookup is not found', async () => {
+    createAdminClientMock.mockReturnValue(
+      buildAdminClientForSkillFlow({
+        verificationByToken: null,
+        tokenLookupError: {
+          code: 'PGRST116',
+          message: 'No rows found',
+        },
+        verificationById: {
+          ...SKILL_VERIFICATION_RECORD,
+          id: LEGACY_REQUEST_ID,
+        },
+      })
+    );
+
+    const response = await GET(
+      new NextRequest(`http://localhost/api/verify/${LEGACY_REQUEST_ID}`),
+      {
+        params: Promise.resolve({ token: LEGACY_REQUEST_ID }),
+      }
+    );
+
+    expect(response.status).toBe(404);
+  });
+
   it('GET resolves skill verification token through admin client for signed-out verifier', async () => {
     createAdminClientMock.mockReturnValue(
       buildAdminClientForSkillFlow({
@@ -1438,6 +1472,34 @@ describe('verify impact token route', () => {
       response_auth_method: 'token',
       response_actor_email: null,
     });
+  });
+
+  it('POST does not treat request id as token when verification_token lookup is not found', async () => {
+    createAdminClientMock.mockReturnValue(
+      buildAdminClientForSkillFlow({
+        verificationByToken: null,
+        tokenLookupError: {
+          code: 'PGRST116',
+          message: 'No rows found',
+        },
+        verificationById: {
+          ...SKILL_VERIFICATION_RECORD,
+          id: LEGACY_REQUEST_ID,
+        },
+      })
+    );
+
+    const response = await POST(
+      new NextRequest(`http://localhost/api/verify/${LEGACY_REQUEST_ID}`, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'accept' }),
+      }),
+      {
+        params: Promise.resolve({ token: LEGACY_REQUEST_ID }),
+      }
+    );
+
+    expect(response.status).toBe(404);
   });
 
   it('POST skill flow falls back to compatibility select and legacy update payload when integrity columns are unavailable', async () => {
