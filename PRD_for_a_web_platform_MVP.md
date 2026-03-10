@@ -38,7 +38,11 @@ This file is a compatibility mirror for consumers that still open `PRD_for_a_web
   - `Reviewed`
   - `Restricted`
 - Sensitive-domain and child-safety review exist in MVP-lite form for higher-risk organization contexts.
+- Assignment workflows now include canonical MVP guardrails for default license posture, creator portfolio rights, unpaid-scope blocking, sponsor or commercial-path escalation, and cross-border review restrictions.
+- Events & Missions exist as an MVP-light organization container for grouping multiple assignments under one shared initiative and producing public-safe outcome summaries when eligible.
+- Reviewer marketplace, sponsors, impact bounties, and anti-exploitation guardrails exist only as a post-MVP alpha corridor in the canonical PRD and do not expand MVP launch scope.
 - Proof Pack portability uses a versioned JSON-LD-shaped export, deterministic `portability_hash`, explicit provenance, explicit freshness, and an MVP-safe `signature_status`.
+- Canonical lifecycle state machines for assignment, application, submission, verification, Proof Pack, intro, interview, and engagement verification exist only in the master PRD.
 - Workflow objects are:
   - `match`
   - `intro`
@@ -102,6 +106,8 @@ This file is a compatibility mirror for consumers that still open `PRD_for_a_web
 ## Mirror Usage Rules
 
 - Use `PRD_for_a_web_platform_MVP.master-latest.md` for implementation details, analytics taxonomy, lifecycle states, acceptance criteria, and QA handoff.
+- Treat the canonical lifecycle state-machine block as master-only detail. This mirror should not duplicate those tables, edge-case rules, timestamps, or payload examples.
 - Treat organization trust tiers, sensitive-domain review rules, and child-safety guardrails as canonical only in the master PRD. This mirror summarizes their presence but does not duplicate the full operating detail.
+- Treat Events & Missions operating detail as canonical only in the master PRD. This mirror records only the lightweight container contract and does not duplicate the full corridor behavior.
 - Use this mirror only when an older file path is hard-coded into a workflow that still expects `PRD_for_a_web_platform_MVP.md`.
 - If this file and the canonical PRD ever differ, the canonical PRD wins immediately.

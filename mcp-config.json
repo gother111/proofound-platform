@@ -3,6 +3,10 @@
     "FigmaMCP": {
       "url": "http://127.0.0.1:3845/mcp"
     },
+    "html-to-design": {
+      "type": "http",
+      "url": "https://h2d-mcp.divriots.com/6540a2d3-51b2-4a42-996d-211f3031113c/mcp"
+    },
     "supabase-mcp-server": {
       "type": "http",
       "url": "https://mcp.supabase.com/mcp?project_ref=cjpfrgmsxwxhuomnvciq"

@@ -124,10 +124,13 @@ export function OrganizationSetup() {
 
             <div className="space-y-2">
               <h2 className="text-2xl font-['Crimson_Pro'] font-semibold text-proofound-forest dark:text-primary">
-                Public portfolio ready
+                Organization link ready
               </h2>
               <p className="text-3xl font-bold text-proofound-charcoal dark:text-foreground">
                 Welcome to {success.orgName}!
+              </p>
+              <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
+                Shareable by link on day 1. Search engines stay off until you opt in.
               </p>
             </div>
 
@@ -149,8 +152,11 @@ export function OrganizationSetup() {
                   Open portfolio
                 </a>
               </Button>
-              <Button type="button" onClick={() => router.push(`/app/o/${success.orgSlug}/home`)}>
-                Continue to app
+              <Button
+                type="button"
+                onClick={() => router.push(`/app/o/${success.orgSlug}/assignments/new`)}
+              >
+                Create first assignment
               </Button>
             </div>
           </div>
@@ -163,10 +169,10 @@ export function OrganizationSetup() {
     <Card className="max-w-2xl mx-auto border-proofound-stone dark:border-border rounded-2xl">
       <CardHeader>
         <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
-          Create Your Organization
+          Create your organization
         </CardTitle>
         <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-          Set up your organization to start collaborating with your team
+          Add the basics candidates need to trust you, then create one assignment.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -184,7 +190,7 @@ export function OrganizationSetup() {
               className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
             />
             <p className="text-xs text-proofound-charcoal/70 dark:text-muted-foreground mt-1">
-              The public-facing name of your organization
+              This appears on your public trust card.
             </p>
           </div>
 
@@ -243,7 +249,7 @@ export function OrganizationSetup() {
               className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
             />
             <p className="text-xs text-proofound-charcoal/70 dark:text-muted-foreground mt-1">
-              Official registered name (optional)
+              Optional for launch. Add it now only if it helps people verify you.
             </p>
           </div>
 
@@ -260,7 +266,7 @@ export function OrganizationSetup() {
               className="flex min-h-[120px] w-full rounded-lg border border-proofound-stone dark:border-border bg-white dark:bg-background px-4 py-2 text-base transition-colors placeholder:text-proofound-charcoal/40 dark:placeholder:text-muted-foreground/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:border-proofound-forest disabled:cursor-not-allowed disabled:opacity-50 text-proofound-charcoal dark:text-foreground"
             />
             <p className="text-xs text-proofound-charcoal/70 dark:text-muted-foreground mt-1">
-              Describe your organization&apos;s purpose and goals (optional)
+              A short purpose statement is enough for launch.
             </p>
           </div>
 
@@ -277,7 +283,7 @@ export function OrganizationSetup() {
               className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
             />
             <p className="text-xs text-proofound-charcoal/70 dark:text-muted-foreground mt-1">
-              You can add this later in your organization profile
+              Used for trust basics. Search engines stay off by default.
             </p>
           </div>
 

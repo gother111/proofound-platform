@@ -1,10 +1,33 @@
 > Doc Class: `governance`
 > Sync Pair: `Documentation.md`
-> Last Verified: `2026-03-09`
+> Last Verified: `2026-03-10`
 
 # Documentation (Status + Index)
 
 ## Status
+
+## 2026-03-10: Canonical Lifecycle State Machines and Edge-Case Rules PRD Extension
+
+What changed:
+
+- Added `5.10A Canonical Lifecycle State Machines and Edge-Case Rules (MVP)` to `PRD_for_a_web_platform_MVP.master-latest.md`.
+- Unified deterministic state handling across assignment, application, submission, verification, Proof Pack, introduction, interview, and contract / engagement verification.
+- Added explicit edge-case rules, lifecycle-effects rules, canonical timestamps and retention guidance, launch acceptance criteria, and example transition payloads.
+- Synced `PRD_for_a_web_platform_MVP.md` with a mirror-only pointer so lifecycle implementation detail remains canonical in the master PRD.
+- Tightened `8.4 Lifecycle and State Acceptance` so the launch acceptance summary now reflects the expanded canonical lifecycle contract.
+
+Why:
+
+- The PRD already had partial lifecycle rules across proof, verification, intro, interview, and technical appendix language, but it still lacked one canonical, implementation-safe state contract spanning the full MVP corridor.
+
+How to verify:
+
+- `npm run docs:freshness`
+- `rg -n "Canonical Lifecycle State Machines and Edge-Case Rules \\(MVP\\)|duplicate_application_blocked|reported_unverified|decision overdue" PRD_for_a_web_platform_MVP.master-latest.md PRD_for_a_web_platform_MVP.md`
+
+Open risks/TODO:
+
+- Existing schema enums and older appendix aliases still use some different names, so any future implementation should either normalize to this block or document an explicit product-to-storage mapping.
 
 This folder is the durable “project memory” surface for Proofound. It is meant to be read first by humans and agents before making changes.
 

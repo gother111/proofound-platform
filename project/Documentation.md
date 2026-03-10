@@ -2,6 +2,113 @@
 > Sync Pair: `Documentation.md`
 > Last Verified: `2026-03-10`
 
+## 2026-03-10: Canonical Lifecycle State Machines and Edge-Case Rules PRD Extension
+
+What changed:
+
+- Added `5.10A Canonical Lifecycle State Machines and Edge-Case Rules (MVP)` to `PRD_for_a_web_platform_MVP.master-latest.md`.
+- Unified deterministic state handling across assignment, application, submission, verification, Proof Pack, introduction, interview, and contract / engagement verification.
+- Added explicit edge-case rules, lifecycle-effects rules, canonical timestamps and retention guidance, launch acceptance criteria, and example transition payloads.
+- Synced `PRD_for_a_web_platform_MVP.md` with a mirror-only pointer so lifecycle implementation detail remains canonical in the master PRD.
+- Tightened `8.4 Lifecycle and State Acceptance` so the launch acceptance summary now reflects the expanded canonical lifecycle contract.
+
+Why:
+
+- The PRD already had partial lifecycle rules across proof, verification, intro, interview, and technical appendix language, but it still lacked one canonical, implementation-safe state contract spanning the full MVP corridor.
+
+How to verify:
+
+- `npm run docs:freshness`
+- `rg -n "Canonical Lifecycle State Machines and Edge-Case Rules \\(MVP\\)|duplicate_application_blocked|reported_unverified|decision overdue" PRD_for_a_web_platform_MVP.master-latest.md PRD_for_a_web_platform_MVP.md`
+
+Open risks/TODO:
+
+- Existing schema enums and older appendix aliases still use some different names, so any future implementation should either normalize to this block or document an explicit product-to-storage mapping.
+
+## 2026-03-10: Capability Band Rubrics by Domain PRD Extension
+
+What changed:
+
+- Added `6.6 Capability Band Rubrics by Domain (MVP)` to `PRD_for_a_web_platform_MVP.master-latest.md`.
+- Defined the shared four-band ladder, the lean rubric schema, launch domains, provenance states, reviewer guidance, versioning rules, sample rubric tables, and scenario-style acceptance criteria.
+
+Why:
+
+- Explainable matching already depends on capability judgments, but the canonical PRD still lacked a concrete MVP rubric contract and risked drifting back toward generic years-of-experience logic.
+
+How to verify:
+
+- `npm run docs:freshness`
+- `rg -n "Capability Band Rubrics by Domain|years-of-experience|rubric_version|run-of-show execution|design systems" PRD_for_a_web_platform_MVP.master-latest.md`
+
+Open risks/TODO:
+
+- The section intentionally leaves the first canonical per-domain capability row set for later curation, so implementation work should define `rubric_version = v1` rows without expanding into a large ontology.
+
+## 2026-03-10: Trust-First Analytics PRD Rewrite
+
+What changed:
+
+- Rewrote `7.6 Trust, Proof Quality, and Verification Lifecycle Analytics (MVP)` in `PRD_for_a_web_platform_MVP.master-latest.md` to make trust a first-class analytics concern with a fuller verification lifecycle, explicit metric definitions, concrete event names, and launch ETL thresholds.
+- Tightened `8.5 Analytics and Privacy Acceptance` so launch readiness now calls out launch-blocking trust metrics, non-blocking trust metrics, and concrete null, schema, privacy, reconciliation, and dashboard-variance thresholds.
+
+Why:
+
+- The prior analytics block had the right direction but still centered too narrowly on proof and verification internals. The canonical PRD now makes trust, fulfillment, reuse, reviewer SLA, and lifecycle quality operational for product, ops, and engineering.
+
+How to verify:
+
+- `npm run docs:freshness`
+- `npm run lint`
+- `npm run typecheck`
+- `rg -n "assignment fulfillment rate|proof reuse rate|reviewer SLA adherence|sponsor conversion rate|organization repeat rate|learner retention after first verified artifact|assignment_viewed|application_started|proof_pack_issued|proof_used_in_contract" PRD_for_a_web_platform_MVP.master-latest.md`
+
+Open risks/TODO:
+
+- The canonical PRD now standardizes explicit lifecycle event names that may not match every existing instrumentation path yet, so implementation should document any temporary alias mapping clearly.
+
+## 2026-03-10: Reviewer Marketplace, Sponsors, and Anti-Exploitation Corridor PRD Rewrite
+
+What changed:
+
+- Rewrote Section 11 in `PRD_for_a_web_platform_MVP.master-latest.md` as `Reviewer Marketplace, Impact Bounties, Sponsors, and Anti-Exploitation Guardrails (Post-MVP Alpha Corridor)`.
+- Added explicit reviewer model, sponsor object, bounty model, anti-exploitation rules, dispute flow, metrics, and a 3-way launch recommendation split.
+- Synced `PRD_for_a_web_platform_MVP.md` with a summary-only note that keeps the detail canonical in the master PRD.
+
+Why:
+
+- The prior corridor was directionally correct but too light on sponsor modeling, launch sequencing, and anti-exploitation detail for the current master brief.
+
+How to verify:
+
+- `rg -n "Reviewer Marketplace, Impact Bounties, Sponsors, and Anti-Exploitation Guardrails|Sponsor Object|Impact Bounty Model|Anti-Exploitation Guardrails|sponsor conversion" PRD_for_a_web_platform_MVP.master-latest.md PRD_for_a_web_platform_MVP.md`
+- `npm run docs:freshness`
+
+Open risks/TODO:
+
+- Numeric pro-bono caps, bounty pricing bands, and visibility defaults for bounty amounts still need later policy calibration before any alpha implementation.
+
+## 2026-03-10: Events & Missions Container PRD Extension
+
+What changed:
+
+- Added `4.3.H Events & Missions Container (MVP-light / Early Corridor)` to `PRD_for_a_web_platform_MVP.master-latest.md`.
+- Defined the MVP-light event object, supported behaviors, privacy-safe public case-study rules, discovery and storytelling impact, event analytics, and acceptance criteria.
+- Synced `PRD_for_a_web_platform_MVP.md` so the compatibility mirror records Events & Missions as a lightweight org container while deferring the operating detail to the canonical PRD.
+
+Why:
+
+- The master product direction already expects an events container, but the canonical org corridor still needed an explicit lightweight contract that groups multiple assignments under one initiative without expanding into event-management software.
+
+How to verify:
+
+- `npm run docs:freshness`
+- `rg -n "Events & Missions Container|event_id|assignment_ids|case_study_status|public_visibility" PRD_for_a_web_platform_MVP.master-latest.md PRD_for_a_web_platform_MVP.md`
+
+Open risks/TODO:
+
+- Future iterations may need narrower definitions for `public_visibility` and `case_study_status`, but MVP-light keeps them intentionally coarse to avoid premature workflow expansion.
+
 ## 2026-03-10: Organization Trust Tiers and Sensitive-Domain Safety PRD Extension
 
 What changed:

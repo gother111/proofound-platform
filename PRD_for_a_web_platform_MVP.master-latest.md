@@ -52,6 +52,91 @@ MVP excludes:
 - gamified profile maintenance, public counters, leaderboards, or streak mechanics
 - Zen Hub expansion beyond optional private check-ins and reflections
 
+### 1.5 Canonical Scope Cleanup and Legacy Section Reconciliation
+
+#### Facts & Decisions
+
+- The canonical MVP corridor is: Proofound MVP is a proof-first, portfolio-first, privacy-first corridor for creating proof, publishing public trust surfaces, verifying credibility, explaining matches, and moving both sides toward qualified intros.
+- This section is a governance override for the full PRD, including later org, analytics, Zen, export, and monetization references.
+- Contradiction rule:
+  - newer canonical section wins
+  - older conflicting text is deprecated and must be removed, rewritten, or moved to a post-MVP appendix
+  - historical language is reference-only and not launch-binding
+- This section does not add scope. It removes ambiguity and prevents older narrative blocks from redefining MVP.
+
+#### Legacy pattern resolutions
+
+- **Micro-wins, streaks, and momentum loops**
+  - Remove from MVP requirements.
+  - If motivational copy remains, rewrite it as calm progress guidance with no loop, streak, score, badge, recovery mechanic, or retention mechanic.
+- **Public profile or portfolio view counters**
+  - Remove from owner-facing and public-facing product requirements.
+  - Internal diagnostics may still count views operationally, but those counts must not appear as vanity surfaces.
+- **Expanded Zen Hub or local-resource flows**
+  - Keep Zen only in reduced form as optional private check-ins and reflections.
+  - Move local-resource discovery, coaching, therapy-style flows, outbound wellbeing journeys, and similar resource-expansion behavior to post-MVP appendix material.
+- **Org Structure, Culture, Projects, and Enterprise Expertise Hub bloat**
+  - Remove as MVP requirements.
+  - Rewrite surviving org-facing text to the lean org corridor already defined in this PRD:
+    - trust profile
+    - one assignment path
+    - match review queue
+    - minimal access
+  - Move org maps, project libraries, expertise hubs, templates, heavy operations tooling, and enterprise-style admin surfaces to post-MVP appendix material.
+- **Donor or investor export surfaces beyond launch needs**
+  - Move to post-MVP appendix material.
+  - Retain only canonical owner export and public-safe export already required for proof portability or public portfolio trust.
+- **Premium-pack or purchase-journey assumptions**
+  - Remove from canonical MVP unless directly required for launch.
+  - If business context must remain in the document, move pricing, packaging, checkout, or purchase assumptions to a separate commercial appendix or post-MVP note rather than product requirements.
+
+#### Deprecated / Moved / Retained
+
+| Legacy section or pattern          | Disposition                       | Canonical replacement                                                                                                       |
+| ---------------------------------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Micro-wins streaks                 | Deprecated                        | Calm progress guidance based on publication state, readiness state, trust state, or share state                             |
+| Portfolio or profile counters      | Deprecated                        | Internal diagnostics only, never owner-facing or public-facing vanity metrics                                               |
+| Expanded Zen Hub                   | Retained in reduced form          | Optional private check-ins and reflections only, excluded from ranking, reveal, public rendering, and user-facing analytics |
+| Local-resource flows               | Moved to post-MVP appendix        | None in MVP beyond reduced Zen privacy rules                                                                                |
+| Org Structure / Culture / Projects | Deprecated                        | Lean org trust profile plus one assignment path, match review queue, and minimal access                                     |
+| Enterprise Expertise Hub           | Moved to post-MVP appendix        | No expertise-hub product surface in MVP                                                                                     |
+| Donor or investor exports          | Moved to post-MVP appendix        | Owner export and public-safe export only where already required for proof and portfolio trust                               |
+| Premium pack or purchase journey   | Deprecated unless launch-critical | No canonical MVP requirement; commercial framing belongs outside the product contract                                       |
+
+#### Exact rewrite guidance
+
+- Replace any `dashboard`, `hub`, `ops center`, `command center`, or `analytics surface` framing on user-facing MVP surfaces with calm workflow, status, queue, or review language.
+- Replace any org section promising structure maps, project catalogs, culture systems, expertise hubs, donor reporting, investor reporting, or enterprise admin tooling with the existing lean org trust-profile and assignment-review model.
+- Replace any counter-based success language with publication state, readiness state, trust state, reveal state, or share state.
+- Rewrite Zen text to private optional reflection only, with explicit exclusion from ranking, reveal, org review, public rendering, fairness workflows, and user-facing analytics.
+- Rewrite monetization, pricing, packaging, checkout, or purchase-flow wording as non-canonical for MVP unless the section is explicitly post-MVP.
+- Where deletion is cleaner than rewrite, delete the older text instead of preserving downgraded legacy concepts.
+
+#### Out of Scope
+
+- Vanity counters on owner-facing or public-facing surfaces
+- Streaks, momentum loops, leaderboards, or other gamified behavior mechanics
+- Broad org admin suites, org operating-system surfaces, or enterprise expertise surfaces
+- Donor or investor reporting exports beyond canonical owner export and public-safe export
+- Expanded Zen resource flows, local-resource journeys, coaching product behavior, or therapy-style product branches
+- Premium purchase journeys, checkout flows, or packaging assumptions unless they are launch-critical and explicitly approved elsewhere
+
+#### Acceptance Criteria
+
+- No contradictory MVP scope statements remain anywhere in the canonical PRD.
+- No vanity metrics remain on owner-facing surfaces.
+- No gamified behavior loops remain unless explicitly justified in a scoped exception.
+- No old broad org admin surfaces remain as MVP requirements.
+- Every retained legacy concept is either reduced to the canonical corridor or moved to a post-MVP appendix.
+
+#### Editing Pass Checklist
+
+- Search for: `streak`, `counter`, `views`, `dashboard`, `hub`, `org structure`, `projects`, `expertise`, `donor`, `investor`, `premium`, `purchase`, `Zen`, `local resource`.
+- Classify each hit as remove, rewrite, move to post-MVP appendix, or retain in reduced form.
+- Ensure every user-facing surface maps back to the canonical MVP corridor defined above.
+- Ensure no section reintroduces public people-index behavior, analytics-product behavior, or enterprise-suite behavior.
+- Recheck `Out of Scope` and `Acceptance Criteria` after cleanup edits so later wording does not reintroduce deprecated scope.
+
 ---
 
 ## 2. Canonical Vocabulary
@@ -459,6 +544,271 @@ Post-MVP corridor:
   - Result: internal admins and authorized reviewers can see the notes, while org-facing surfaces receive only coarse status and next step.
 - Scenario: analytics reporting is generated for org trust and safety.
   - Result: trust tier distribution, escalation rates, and abuse flags are available internally only and do not create a user-facing analytics product.
+
+### H. Legal, Licensing, Cross-Border, and Assignment Guardrails (MVP)
+
+- This block connects assignment publishing, assignment acceptance, proof ownership, trust review, and dispute handling to a clear MVP policy posture.
+- It is product policy for how Proofound behaves in assignment workflows. It is not a substitute for local legal advice, not a full sanctions engine, and not a custom contract builder.
+- The goal is to keep creator rights, org usage rights, unpaid-work limits, cross-border restrictions, and privacy-safe auditability explicit before work starts.
+
+#### Creator rights and default license posture
+
+- Default license posture is narrow and explicit.
+- The creator keeps ownership of pre-existing materials and keeps portfolio rights to show public-safe proof of the work according to Proofound visibility and trust rules.
+- The organization receives defined usage rights only for accepted assignment work:
+  - evaluate submitted work for selection or review
+  - run, use, and internally share the accepted deliverable for the assignment, engagement, or pilot it was created for
+- MVP does not assume exclusive transfer, blanket work-for-hire treatment, or silent ownership assignment by default.
+- If both parties agree to different terms, the system must record that as `alternate license terms recorded` at assignment acceptance with explicit acknowledgement from both sides.
+- Assignment copy alone must not silently override the default posture.
+- Proofound may continue to store and render public-safe proof according to current visibility, trust, and audit policy unless the recorded alternate terms explicitly narrow that allowed surface.
+
+#### Assignment guardrails
+
+- Unpaid test work must not turn into unpaid production, unpaid client-deliverable work, or unpaid commercially used work.
+- Unpaid scope is allowed only when the assignment is clearly bounded, evaluative, or genuinely pro-bono or public-interest in nature.
+- Pro-bono is allowed only when:
+  - the organization declares non-commercial or social-good use
+  - the requested scope is limited and time-bounded
+  - the deliverable is not the organization's real operating output, client output, or production substitute
+- A paid, sponsor-backed, bounty-backed, or otherwise commercial path is required when the work is:
+  - revenue-linked
+  - production-bound
+  - operationally significant
+  - client-deliverable
+  - broader than a bounded evaluation task
+- The system may label such cases `sponsor/commercial path required` or `unpaid scope blocked`.
+
+#### Enforcement points
+
+- Assignment draft:
+  - flag scope patterns that look like unpaid commercial or operational work
+  - require the org to classify the assignment as evaluative, pro-bono, or commercial-backed
+- Assignment publish:
+  - block publish when unpaid commercial use appears unresolved
+  - queue policy-sensitive cases for manual review where needed
+- Assignment acceptance:
+  - show the creator the current rights and usage summary before they accept
+  - prevent acceptance if the assignment is blocked for unpaid-use or jurisdiction reasons
+
+Canonical warning language should remain calm and explicit, for example:
+
+- `This assignment exceeds Proofound's unpaid evaluation corridor and requires a paid, sponsor-backed, or otherwise commercial path before it can proceed.`
+- `Proofound allows limited pro-bono work only when the scope is bounded and the work is not being used as unpaid commercial output.`
+
+#### Cross-border constraints
+
+- MVP cross-border handling is a review-and-restriction layer, not a promise of full automated sanctions screening.
+- The system may raise `cross-border review required` when:
+  - the organization, creator, assignment location, or deliverable category sits in a sanctioned or export-sensitive corridor
+  - the assignment carries geography restrictions that affect lawful participation
+  - policy requires manual review before work, proof sharing, or acceptance may proceed
+- Geography restrictions may apply by assignment, organization, creator location, or deliverable category when the workflow is not allowed in a given jurisdiction.
+- A `restricted jurisdiction` outcome means the product must:
+  - block publish
+  - hold acceptance
+  - or suppress the restricted workflow step
+  - while showing neutral copy and a reason code
+- Restricted cases route to manual review or a do-not-proceed outcome. MVP must not rely on soft warnings alone when the corridor is policy-blocked.
+
+#### Privacy, compliance, and residency posture
+
+- MVP behavior remains GDPR and CCPA aligned in product terms:
+  - collect the minimum necessary assignment and trust data
+  - show policy-versioned notice and acceptance where rights or restrictions matter
+  - support export and deletion rights through the existing privacy surfaces
+  - keep policy-sensitive actions append-only and auditable
+- Residency posture remains MVP single-region hosting, with current residency disclosed honestly when relevant.
+- MVP does not promise country-by-country localization or automatic regional pinning.
+- If a residency-sensitive case cannot proceed under the current posture, the system routes it to manual review or blocks it with neutral copy rather than implying unsupported coverage.
+
+#### Dispute-policy hooks
+
+- Policy is referenced from:
+  - assignment draft and publish validation
+  - assignment details before acceptance
+  - the assignment acceptance summary
+  - the public policy pages for terms, privacy, and dispute handling
+- At assignment acceptance, users must see a concise rights and policy summary that covers:
+  - creator portfolio rights
+  - org usage rights
+  - whether alternate terms are recorded
+  - unpaid-work limits
+  - jurisdiction restrictions when present
+  - where to open a dispute
+- Disputes remain intake-first and lightweight in MVP, but every dispute must link back to auditable assignment state and policy context.
+- Dispute and policy audit records must share the same minimum reference set:
+  - `assignment_id`
+  - actor
+  - counterpart reference when available
+  - policy version
+  - reason code
+  - linked proof or evidence reference when present
+  - timestamp
+  - resolution state
+
+#### Product copy requirements
+
+- Assignment publish, acceptance, and restriction copy must use operational language, not legal threat language.
+- Users should understand:
+  - what rights they keep
+  - what rights the other party receives
+  - why an unpaid path is limited
+  - why a cross-border restriction or manual review exists
+  - where to go if they disagree
+- Avoid copy that implies:
+  - automatic IP transfer by default
+  - full legal clearance
+  - full sanctions screening
+  - full compliance certification
+
+#### Facts & Decisions
+
+- MVP default license posture is non-exclusive and assignment-bounded.
+- Creators keep portfolio rights by default.
+- Organizations receive defined usage rights for accepted work, not blanket ownership by default.
+- Alternate terms are allowed only through explicit recorded acknowledgement at assignment acceptance.
+- Unpaid test work must not become unpaid commercial or operational work.
+- Pro-bono is allowed only for bounded, genuinely non-commercial or public-interest use.
+- Cross-border policy in MVP is a manual review and restriction framework, not a definitive screening guarantee.
+- Privacy and dispute hooks reuse the existing append-only auditability posture already defined elsewhere in the PRD.
+- Residency posture for MVP remains single-region unless a future product posture explicitly expands it.
+
+#### Out of Scope
+
+- default work-for-hire or blanket exclusive-transfer assumptions
+- custom contract drafting
+- payroll, escrow, or payout handling
+- full sanctions screening
+- export-law certification
+- country-by-country data residency promises
+- full legal adjudication workflow
+
+#### Acceptance Criteria
+
+- Scenario: a creator accepts a standard assignment with no alternate terms.
+  - Result: the acceptance summary states that the creator keeps portfolio rights, the organization receives assignment-bounded usage rights, and the action records policy version, actor, timestamp, and assignment reference.
+- Scenario: both parties agree to different rights than the default posture.
+  - Result: the system records `alternate license terms recorded`, requires explicit acknowledgement, and does not rely on assignment copy alone to override the default.
+- Scenario: an organization attempts to publish unpaid work that is really production or client-deliverable work.
+  - Result: the workflow is blocked as `unpaid scope blocked` or routed to `sponsor/commercial path required` before publish or acceptance can proceed.
+- Scenario: an organization posts a bounded social-good task with limited evaluative scope.
+  - Result: the assignment may proceed as pro-bono when the declared use, scope, and guardrails stay inside the allowed corridor.
+- Scenario: a cross-border restriction applies to the organization, creator, assignment, or deliverable category.
+  - Result: the system raises `cross-border review required` or `restricted jurisdiction`, blocks or holds the affected step, and shows neutral reason-coded copy rather than a soft warning only.
+- Scenario: a user disputes assignment terms, cross-border handling, or policy enforcement.
+  - Result: the dispute links to the assignment and policy audit trail using shared references for assignment, actor, policy version, reason code, timestamps, and resolution state.
+- Scenario: privacy or residency posture is questioned at acceptance time.
+  - Result: the product discloses the current MVP single-region posture honestly, does not promise unsupported localization, and routes unsupported residency-sensitive cases to review or a block.
+
+### I. Events & Missions Container (MVP-light / Early Corridor)
+
+- Events & Missions exist to let an organization group multiple assignments under one shared real-world initiative without turning Proofound into a full event-management suite.
+- The container gives assignments richer proof context, makes related submissions easier to interpret as part of one initiative, and enables a lightweight public outcome case-study surface when public-safe evidence exists.
+- This is a calm extension of assignment publishing, portfolio trust, and pilot storytelling. It is not a second operating system for event logistics.
+
+#### Why Events & Missions exist in Proofound
+
+- group multiple assignments under a shared real-world initiative
+- create richer proof context across related assignments and public trust surfaces
+- enable public outcome case studies that show what an initiative produced without exposing hidden evidence
+
+#### Minimal MVP-light event object
+
+- `event_id`
+- `organization_id`
+- `title`
+- `summary`
+- `start_date`
+- `end_date`
+- `locale`
+- `timezone`
+- `cause_tags`
+- `assignment_ids[]`
+- `public_visibility`
+- `case_study_status`
+
+#### Supported behaviors
+
+- An organization can create one event or mission as a lightweight container around a real-world initiative.
+- The organization can attach multiple assignments to that event.
+- Submissions, proof review, and verification still happen per assignment, Proof Pack, and artifact. The event does not replace assignment-level workflow.
+- The event may generate a lightweight public outcome summary when enough public-safe proof exists.
+
+#### Public case-study output
+
+- Public case-study output is a privacy-safe summary, not a raw evidence dump.
+- Proof highlights may use only already public-safe proof or artifact summaries that are allowed on the relevant public surface.
+- Hidden or private evidence must never leak through event copy, proof highlights, metadata, or deep links.
+- If public-safe evidence becomes hidden later, the event summary and proof highlights must immediately stop showing that evidence while the broader event page may remain public if its remaining summary is still safe.
+
+#### Discovery, portfolio context, and pilot storytelling
+
+- Events improve discovery by giving assignments a clearer real-world context, such as a program, campaign, field mission, cohort, or pilot.
+- Events strengthen portfolio context by connecting multiple assignment outcomes back to one recognizable initiative.
+- Events support pilot storytelling by letting Proofound show what happened across related assignments without promising a heavy analytics or event-operations product.
+
+#### Edge cases
+
+- If an assignment is removed from an event, the event keeps the remaining assignment links and public summary must recalculate without assuming the removed assignment still belongs.
+- If an event is cancelled, its historical context may remain visible, but it must no longer behave like an active initiative.
+- If an event remains public after some proofs are hidden, the public event surface must degrade gracefully to the remaining public-safe summary and proof highlights only.
+
+#### Event analytics
+
+- internal events created
+- assignments attached per event
+- lightweight public outcome summaries published
+- case-study views
+- proof-highlight usage
+
+Analytics for events are internal only and must remain lightweight. They exist to understand adoption, discovery context, and storytelling utility, not to create a user-facing event dashboard.
+
+#### Facts & Decisions
+
+- Events & Missions are a lightweight container for grouping multiple assignments under one shared initiative.
+- The event object in MVP-light is limited to:
+  - `event_id`
+  - `organization_id`
+  - `title`
+  - `summary`
+  - `start_date`
+  - `end_date`
+  - `locale`
+  - `timezone`
+  - `cause_tags`
+  - `assignment_ids[]`
+  - `public_visibility`
+  - `case_study_status`
+- Assignment submission, proof verification, and artifact-level review remain assignment-scoped and evidence-scoped. The event container does not replace those contracts.
+- Public event output is limited to a lightweight privacy-safe outcome summary plus public-safe proof highlights where available.
+- Event discovery value is contextual, narrative, and proof-oriented. It is not a marketplace browse layer and not an analytics product.
+- `public_visibility` and `case_study_status` remain coarse controls in MVP-light, not a large workflow state machine.
+
+#### Out of Scope
+
+- ticketing
+- attendee CRM
+- calendar suite behavior
+- registration, RSVP, or attendee management
+- complex logistics management
+- scheduling orchestration across participants
+- turning Events & Missions into a standalone event-management SaaS
+
+#### Acceptance Criteria
+
+- Scenario: an organization creates one event and links multiple assignments under a shared initiative.
+  - Result: the event gives those assignments shared context, while submission and verification still happen per assignment, Proof Pack, and artifact.
+- Scenario: an event generates a public outcome summary.
+  - Result: the summary uses only privacy-safe copy and public-safe proof highlights, with no hidden or private evidence leakage.
+- Scenario: an assignment is removed from an event.
+  - Result: the event updates its assignment list and outcome summary without breaking the remaining linked assignments or their proofs.
+- Scenario: an event is cancelled.
+  - Result: the event may remain as historical context, but it no longer presents itself as active ongoing work.
+- Scenario: some proofs tied to a public event later become hidden.
+  - Result: the event may stay public, but all summary text and proof highlights immediately stop referencing the hidden proofs.
+- Scenario: event analytics are reviewed internally.
+  - Result: Proofound can see event creation, assignment grouping, case-study publication, case-study views, and proof-highlight usage without creating a user-facing dashboard.
 
 ## 4.4 Public Portfolio Trust Layer, Share Metadata, and Indexing Rules (MVP)
 
@@ -1618,6 +1968,346 @@ Rules:
 - Safety rules may block or depublish a public surface.
 - Public-view data remains internal diagnostics only and never becomes an owner-facing vanity counter.
 
+## 5.10A Canonical Lifecycle State Machines and Edge-Case Rules (MVP)
+
+This block is the canonical lifecycle contract for backend implementation, UI state rendering, QA, and analytics. It supersedes fragmented lifecycle wording elsewhere in Section 5 wherever wording conflicts, and must remain consistent with `PRD_TECHNICAL_REQUIREMENTS.md` Appendix A1.
+
+### Canonical rules
+
+- One active state exists per object record at a time.
+- Transitions are append-only in audit history and must preserve prior state, next state, actor, trigger, reason code, and timestamp.
+- Terminal records are not reopened in place. Recovery uses either a new record or an explicit superseding record.
+- Edge cases must never be hidden behind calm UI wording. They require explicit `reason_code` values and canonical timestamps.
+- `application` is the candidate-intent object. `submission` is the proof-delivery object. Passive matching alone does not create an application.
+- `verification`, `proof freshness`, `Proof Pack lifecycle`, `public portfolio distribution`, and `contract / engagement verification` remain separate state systems even when they influence one another.
+
+### State machines
+
+#### Assignment
+
+| Valid state | Allowed transitions | Transition triggers                                                                 | Who can cause transition                      | Audit requirements                                                                                                                          |
+| ----------- | ------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `draft`     | `active`, `closed`  | Org publishes after readiness checks pass, or closes before publish                 | Org owner/admin                               | `assignment_id`, `from_state`, `to_state`, `reason_code`, actor class/id, `created_at`, `state_changed_at`, `published_at` or `closed_at`   |
+| `active`    | `hold`, `closed`    | Org pauses, system expiry fires, assignment is filled, manual close, org withdrawal | Org owner/admin, system for expiry            | Include immutable `closure_reason` when closing: `expired`, `filled`, `cancelled`, `withdrawn_by_org`; include `expires_at` when applicable |
+| `hold`      | `active`, `closed`  | Org resumes, org closes manually, or hold policy closes it                          | Org owner/admin, system if a hold auto-closes | `held_at`, `resumed_at` or `closed_at`, actor, reason code                                                                                  |
+| `closed`    | None                | Terminal                                                                            | None                                          | Preserve final `closure_reason`, downstream termination references, and `closed_at`                                                         |
+
+#### Application
+
+Application is a first-class object for explicit candidate intent. It exists only when a candidate applies or claims an assignment-linked invite.
+
+| Valid state    | Allowed transitions                           | Transition triggers                                                                          | Who can cause transition                       | Audit requirements                                                                                                               |
+| -------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `draft`        | `submitted`, `withdrawn`                      | Candidate starts then submits, or abandons before submit                                     | Candidate                                      | `application_id`, `assignment_id`, `candidate_profile_id`, `created_at`, `submitted_at` or `withdrawn_at`, actor, source surface |
+| `submitted`    | `under_review`, `withdrawn`, `closed`         | Org opens review, candidate withdraws, or assignment closes                                  | Org owner/admin or reviewer, candidate, system | `submitted_at`, `state_changed_at`, reason code, actor                                                                           |
+| `under_review` | `advanced`, `rejected`, `withdrawn`, `closed` | Org advances to intro/interview corridor, rejects, candidate withdraws, or assignment closes | Org owner/admin or reviewer, candidate, system | `review_started_at`, `advanced_at` or `rejected_at`, reason code, actor                                                          |
+| `advanced`     | `closed`                                      | Downstream intro/interview corridor takes over or assignment closes                          | System, org owner/admin                        | `advanced_at`, downstream object reference, `closed_at`                                                                          |
+| `rejected`     | `closed`                                      | Rejection finalized and application corridor ends                                            | System                                         | `rejected_at`, `closed_at`, rejection reason                                                                                     |
+| `withdrawn`    | `closed`                                      | Withdrawal finalized                                                                         | System                                         | `withdrawn_at`, withdrawal actor, `closed_at`                                                                                    |
+| `closed`       | None                                          | Terminal                                                                                     | None                                           | Preserve terminal reason and linked downstream object ids                                                                        |
+
+Duplicate rule:
+
+- A candidate may have only one non-terminal application per `assignment_id`.
+- A repeated apply attempt returns the existing active record and emits `duplicate_application_blocked`.
+
+#### Submission
+
+Submission is the proof-delivery object tied to assignment, application, intro, verification, or manual review context.
+
+| Valid state    | Allowed transitions                                   | Transition triggers                                                                                                      | Who can cause transition                      | Audit requirements                                                                                                                        |
+| -------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `draft`        | `submitted`, `withdrawn`                              | Owner saves draft then submits, or discards before send                                                                  | Candidate, org submitter, or authorized owner | `submission_id`, `submission_kind`, context ids, `created_at`, `submitted_at` or `withdrawn_at`, actor                                    |
+| `submitted`    | `under_review`, `withdrawn`, `rejected`, `superseded` | Reviewer opens review, owner withdraws, system auto-rejects late or invalid submission, or newer replacement is accepted | Reviewer, owner, system                       | `submitted_at`, `submission_deadline_at` when used, `state_changed_at`, reason code, late flag if `submitted_at > submission_deadline_at` |
+| `under_review` | `accepted`, `rejected`, `withdrawn`, `superseded`     | Reviewer accepts or rejects, owner withdraws, or newer submission replaces it                                            | Reviewer, owner                               | `review_started_at`, `reviewed_at`, `accepted_at` or `rejected_at`, actor, reason                                                         |
+| `accepted`     | `superseded`                                          | Newer accepted submission replaces current accepted record                                                               | Reviewer, system                              | `accepted_at`, `superseded_at`, `superseded_by_submission_id`                                                                             |
+| `rejected`     | `superseded`                                          | Newer accepted submission replaces historical rejected record                                                            | Reviewer, system                              | `rejected_at`, `superseded_at`, reason                                                                                                    |
+| `withdrawn`    | None                                                  | Terminal                                                                                                                 | None                                          | Preserve `withdrawn_at` and withdrawing actor                                                                                             |
+| `superseded`   | None                                                  | Terminal                                                                                                                 | None                                          | Preserve replacement reference and `superseded_at`                                                                                        |
+
+Late submission rule:
+
+- Late delivery is deterministic, not subjective.
+- The system must derive lateness from `submitted_at > submission_deadline_at`.
+- The transition must log `reason_code = late_submission`, whether the final state remains `submitted` for manual review or moves immediately to `rejected`.
+
+#### Verification
+
+Verification uses the verification-record model as the canonical source of truth.
+
+| Valid state                                     | Allowed transitions                                                          | Transition triggers                                                                                                                                          | Who can cause transition                           | Audit requirements                                                                                                    |
+| ----------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `pending`                                       | `verified`, `expired`, `declined`, `cancelled`, `failed`, `disputed`         | Attestor responds positively, request times out, attestor declines, requester cancels, verification fails, or conflicting evidence arrives before completion | Attestor, requester, system, internal reviewer     | `verification_record_id`, `verification_kind`, `subject_type/id`, `requested_at`, `request_expires_at`, actor, reason |
+| `verified`                                      | `expired`, `superseded`, `downgraded`, `contradicted`, `disputed`, `revoked` | Freshness expires, newer record replaces it, material edits reduce confidence, conflicting evidence is accepted, dispute opens, or reviewer/admin revokes    | System, internal reviewer, authorized org verifier | `verified_at`, `expires_at`, `superseded_at`, `contradicted_at`, `disputed_at`, `revoked_at`, reason                  |
+| `expired`                                       | `superseded`, `verified`                                                     | Newer record refreshes it, or explicit re-verification completes                                                                                             | System, attestor, internal reviewer                | `expired_at`, replacement reference, actor                                                                            |
+| `superseded`                                    | None                                                                         | Terminal history state                                                                                                                                       | None                                               | Preserve `superseded_by_verification_id`                                                                              |
+| `downgraded`                                    | `verified`, `superseded`, `revoked`, `disputed`                              | Stronger supporting evidence arrives, replacement record takes over, revocation occurs, or dispute opens                                                     | Internal reviewer, system                          | `downgraded_at`, reason, actor                                                                                        |
+| `contradicted`                                  | `disputed`, `superseded`, `revoked`                                          | Material contradiction confirmed, dispute opened for review, replacement record created, or revoked permanently                                              | Internal reviewer, system                          | `contradicted_at`, contradiction reference, reason                                                                    |
+| `disputed`                                      | `verified`, `contradicted`, `revoked`, `superseded`                          | Reviewer resolves in favor of the claim, against the claim, revokes it, or replaces it                                                                       | Internal reviewer, admin                           | `dispute_state`, `disputed_at`, resolution actor, reason                                                              |
+| `revoked` / `declined` / `cancelled` / `failed` | None                                                                         | Terminal                                                                                                                                                     | None                                               | Preserve terminal timestamp, actor, and failure or decline reason                                                     |
+
+Conflict rule:
+
+- Conflicting attestations do not average out.
+- Material conflicts move the affected record to `disputed` while under review, or directly to `contradicted` once the contradictory evidence is accepted.
+- Public-positive trust lift stops immediately at the first material conflict.
+
+#### Proof Pack
+
+Proof Pack lifecycle remains distinct from verification status, freshness, and portfolio distribution.
+
+| Valid state  | Allowed transitions                                | Transition triggers                                                                                | Who can cause transition                              | Audit requirements                                                      |
+| ------------ | -------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------- |
+| `draft`      | `ready`, `archived`                                | Owner completes minimum required fields, or archives unused draft                                  | Owner                                                 | `proof_pack_id`, `created_at`, `state_changed_at`, actor                |
+| `ready`      | `published`, `submitted`, `withdrawn`, `archived`  | Owner publishes, uses it in a workflow, withdraws it, or archives it                               | Owner                                                 | `published_at`, `submitted_at`, `withdrawn_at`, actor, visibility scope |
+| `published`  | `submitted`, `withdrawn`, `superseded`, `archived` | Pack is used in workflow, owner withdraws public use, newer pack replaces it, or owner archives it | Owner, system when superseded by explicit replacement | `published_at`, `withdrawn_at`, `superseded_at`, replacement reference  |
+| `submitted`  | `withdrawn`, `superseded`, `archived`              | Owner withdraws from future use, newer pack replaces it, or owner archives residual history        | Owner, system                                         | linked `submission_id`, `state_changed_at`, reason                      |
+| `withdrawn`  | `superseded`, `archived`                           | Owner replaces it with a successor or archives it                                                  | Owner                                                 | `withdrawn_at`, actor, reason                                           |
+| `superseded` | `archived`                                         | Historical successor relationship is finalized                                                     | System, owner                                         | `superseded_at`, `superseded_by_pack_id`                                |
+| `archived`   | None                                               | Terminal                                                                                           | None                                                  | Preserve full audit trail and exportability                             |
+
+#### Introduction
+
+The introduction lifecycle is the canonical product layer aligned to Appendix A1. Existing event names such as `intro_pending` and `intro_accepted` remain valid machine-stable aliases.
+
+| Valid state | Allowed transitions                                      | Transition triggers                                                                            | Who can cause transition      | Audit requirements                                                                                                                         |
+| ----------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pending`   | `accepted`, `declined`, `expired`, `withdrawn`, `closed` | Counterparty accepts, declines, intro timer expires, requester withdraws, or assignment closes | Candidate, org member, system | `intro_id`, `assignment_id`, `candidate_profile_id`, `org_id`, `created_at`, `accepted_at` or `declined_at` or `expires_at`, actor, reason |
+| `accepted`  | `handoff`, `withdrawn`, `closed`                         | Reveal is approved and interview corridor starts, either party withdraws, or assignment closes | Candidate, org member, system | `accepted_at`, reveal reference if used, actor, reason                                                                                     |
+| `declined`  | `closed`                                                 | Decline is finalized                                                                           | System                        | `declined_at`, reason                                                                                                                      |
+| `expired`   | `closed`                                                 | 14-day intro timer ends without response                                                       | System                        | `expires_at`, reminder log, reason `intro_expired`                                                                                         |
+| `withdrawn` | `closed`                                                 | Requester or counterparty withdraws active intro                                               | Candidate, org member         | `withdrawn_at`, actor, reason                                                                                                              |
+| `handoff`   | `closed`                                                 | Interview object created or the handoff corridor otherwise terminates                          | System                        | downstream `interview_id`, `state_changed_at`                                                                                              |
+| `closed`    | None                                                     | Terminal                                                                                       | None                          | Preserve terminal reason and downstream references                                                                                         |
+
+Reveal rule:
+
+- Reveal remains an audited gate between `accepted` and `handoff`.
+- Reveal approval is required before any identity-bearing move into interview coordination.
+
+#### Interview
+
+Decision-overdue is a derived SLA condition on interview completion, not a separate interview state.
+
+| Valid state   | Allowed transitions                                          | Transition triggers                                                                                       | Who can cause transition      | Audit requirements                                                                                            |
+| ------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `pending`     | `scheduled`, `closed`                                        | Either side requests interview and slot is being coordinated, or the corridor closes before scheduling    | Candidate, org member, system | `interview_id`, `assignment_id`, `intro_id`, `created_at`, `state_changed_at`, actor                          |
+| `scheduled`   | `rescheduled`, `completed`, `cancelled`, `no_show`, `closed` | Time changes, host marks complete, org cancels, org reports no-show, or assignment closes                 | Org owner/admin, host, system | `scheduled_for`, `reschedule_count`, `completed_at` or `cancelled_at` or `no_show_reported_at`, actor, reason |
+| `rescheduled` | `completed`, `cancelled`, `no_show`, `closed`                | Updated slot occurs, cancellation, no-show, or assignment closes                                          | Org owner/admin, host, system | Preserve prior schedule history and incremented `reschedule_count`                                            |
+| `completed`   | `closed`                                                     | Decision and candidate-visible feedback obligations are satisfied, or the corridor is otherwise finalized | Org owner/admin, system       | `completed_at`, `decision_due_at`, `feedback_due_at`, `closed_at`, decision reference                         |
+| `cancelled`   | `closed`                                                     | Cancellation finalized                                                                                    | System                        | `cancelled_at`, actor, reason                                                                                 |
+| `no_show`     | `closed`                                                     | No-show is finalized or recovered by a new interview record                                               | Org owner/admin, system       | `no_show_reported_at`, reporter, reason, recovery interview reference if any                                  |
+| `closed`      | None                                                         | Terminal                                                                                                  | None                          | Preserve terminal reason and any replacement interview id                                                     |
+
+Decision-overdue rule:
+
+- `decision overdue` is a derived SLA breach when an interview is `completed` and no candidate-visible decision plus required feedback is recorded by `decision_due_at`.
+- The system must emit an auditable overdue event and reminder cadence, but the interview remains `completed` until a final closure transition occurs.
+
+#### Contract / engagement verification
+
+This model is the MVP trust contract for engagement confirmation. It is not legal contract enforcement, payroll proof, or enterprise compliance.
+
+| Valid state                        | Allowed transitions                                                                                              | Transition triggers                                                                                                                                    | Who can cause transition                                 | Audit requirements                                                                                |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `reported`                         | `pending_counterparty_attestation`, `pending_document_review`, `reported_unverified`, `withdrawn`, `superseded`  | One side reports engagement, sends counterparty request, uploads evidence for review, leaves it as unverified report, withdraws, or replaces it        | Candidate, org representative, internal reviewer         | `engagement_verification_id`, `engagement_id`, `created_at`, `reported_at`, actor, source surface |
+| `pending_counterparty_attestation` | `verified`, `reported_unverified`, `disputed`, `withdrawn`, `superseded`                                         | Counterparty attests, request expires without corroboration, counterparty disputes, reporter withdraws, or record is replaced                          | Candidate, org representative, system, internal reviewer | `counterparty_requested_at`, `counterparty_responded_at`, `request_expires_at`, actor, reason     |
+| `pending_document_review`          | `verified`, `reported_unverified`, `disputed`, `withdrawn`, `superseded`                                         | Reviewer or authorized org verifies uploaded document, review fails to corroborate, dispute opens, reporter withdraws, or record is replaced           | Internal reviewer, authorized org verifier, system       | `document_uploaded_at`, `review_started_at`, `reviewed_at`, actor, reason                         |
+| `reported_unverified`              | `pending_counterparty_attestation`, `pending_document_review`, `verified`, `disputed`, `withdrawn`, `superseded` | More corroboration is requested later, document review starts, stronger evidence verifies it, dispute opens, reporter withdraws, or replacement occurs | Candidate, org representative, internal reviewer, system | `reported_unverified_at`, actor, reason                                                           |
+| `verified`                         | `disputed`, `withdrawn`, `superseded`                                                                            | Later contradiction or withdrawal opens dispute, owner retracts record, or newer verified record replaces it                                           | Candidate, org representative, internal reviewer         | `verified_at`, verification method, actor, reason                                                 |
+| `disputed`                         | `verified`, `reported_unverified`, `withdrawn`, `superseded`                                                     | Review resolves positively, degrades to unverified report, reporter withdraws, or replacement record takes over                                        | Internal reviewer, admin                                 | `disputed_at`, resolution actor, reason                                                           |
+| `withdrawn`                        | None                                                                                                             | Terminal                                                                                                                                               | None                                                     | Preserve `withdrawn_at`, withdrawing actor, reason                                                |
+| `superseded`                       | None                                                                                                             | Terminal                                                                                                                                               | None                                                     | Preserve successor reference and `superseded_at`                                                  |
+
+Verification threshold:
+
+- `verified` requires either:
+  - mutual attestation from both sides on the same engagement record, or
+  - at least one uploaded document plus org verification or human review
+- One-sided claims, one-sided attestation, or uploaded evidence without corroboration remain `reported_unverified`.
+
+### Edge-case matrix
+
+| Edge case                                   | Canonical handling                                                                                                                                                                                            |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Withdrawn application                       | Move `draft`, `submitted`, or `under_review` application to `withdrawn`, then `closed`; preserve `withdrawn_at`, actor, and reason; do not delete related submissions                                         |
+| Duplicate application                       | Return existing non-terminal application for that `assignment_id`; emit `duplicate_application_blocked`; do not create a second active record                                                                 |
+| Expired assignment                          | Move assignment to `closed` with `closure_reason = expired`; terminate open applications, intros, and interviews with explicit `assignment_closed` or `assignment_expired` reasons                            |
+| Late submission                             | Compare `submitted_at` to `submission_deadline_at`; log `reason_code = late_submission`; route to manual review or deterministic rejection according to assignment policy                                     |
+| Verification requested but no response      | Keep verification in `pending` until `request_expires_at`; then move to `expired`; trust lift never begins; emit `verification_request_expired`                                                               |
+| Conflicting attestations                    | Remove active trust lift immediately; move to `disputed` while under review or `contradicted` once material conflict is accepted                                                                              |
+| Intro expired                               | Keep intro in `pending` until expiry timer ends, then move to `expired`, then `closed`; re-entry requires a new intro record                                                                                  |
+| Intro declined                              | Move intro to `declined`, then `closed`; preserve actor and decline reason; same record may not be reopened                                                                                                   |
+| Interview no-show                           | Move active scheduled or rescheduled interview to `no_show`, then `closed`; any recovery starts a new interview record and links back to the prior no-show                                                    |
+| Decision overdue                            | Treat as derived SLA breach on `completed` interview with missing candidate-visible decision and feedback by `decision_due_at`; emit escalation events; do not fabricate a new hidden state                   |
+| Offer or engagement accepted then withdrawn | If not yet corroborated, move engagement verification to `withdrawn`; if previously `verified`, move immediately to `disputed` until the withdrawal claim is resolved                                         |
+| Contract claimed but not yet verified       | Keep engagement verification in `reported`, `pending_counterparty_attestation`, `pending_document_review`, or `reported_unverified`; it may be analytics-visible but must not satisfy hard verification gates |
+
+### Lifecycle effects matrix
+
+| State or condition                                      | Trust visibility                                            | Public portfolio display                                                                            | Matching eligibility                                                | Analytics treatment                                 |
+| ------------------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------- |
+| `assignment.active`                                     | Neutral                                                     | Not a portfolio signal                                                                              | Eligible for matching and application                               | Counts as open assignment inventory                 |
+| `assignment.closed`                                     | Neutral                                                     | Public assignment page may remain historical if separately allowed                                  | Stops new applications, intros, and interview progression           | Counts in closure reasons and time-to-close metrics |
+| `application.withdrawn` or `application.rejected`       | Neutral to mildly negative only in private workflow context | Never public                                                                                        | Candidate is no longer eligible for that application corridor       | Counts as funnel drop-off with explicit reason      |
+| `submission.accepted`                                   | Supports workflow readiness only                            | May strengthen linked public-safe proof if the linked Proof Pack is public                          | Can satisfy workflow delivery requirements                          | Counts as accepted delivery event                   |
+| `submission.rejected` with `late_submission`            | No positive trust lift                                      | Never public on its own                                                                             | Does not satisfy workflow requirement                               | Counts separately as late-delivery failure          |
+| `verification.verified`                                 | Positive scoped trust signal                                | Public only as narrow, privacy-safe trust language                                                  | May satisfy hard verification gates                                 | Counts as successful verification                   |
+| `verification.expired` or `downgraded`                  | Stops active gate satisfaction and reduces trust lift       | Public-safe freshness language only, if allowed                                                     | May block gates or reduce ranking depending on requirement type     | Counts in expiry and refresh backlog metrics        |
+| `verification.disputed`, `contradicted`, or `revoked`   | Positive trust lift removed immediately                     | No public-positive badge                                                                            | Hard-blocks any gate that depended on that verification             | Counts as integrity or dispute event                |
+| `proof_pack.published`                                  | Positive only if linked proof is otherwise strong           | Eligible for public rendering according to visibility rules                                         | Eligible for matching use if visibility and readiness pass          | Counts as publication event                         |
+| `proof_pack.withdrawn` or `superseded`                  | Stops positive lift from that pack immediately              | Removed from public rendering immediately                                                           | No longer satisfies future workflow needs unless replacement exists | Counts as withdrawal or replacement event           |
+| `intro.accepted`                                        | Neutral                                                     | Never public                                                                                        | Eligible to proceed to reveal and interview corridor                | Counts as successful intro conversion               |
+| `intro.expired`, `intro.declined`, or `intro.withdrawn` | Neutral in public, visible privately for workflow history   | Never public                                                                                        | Stops that intro corridor; re-entry requires new intro              | Counts as terminal intro outcome                    |
+| `interview.no_show`                                     | Negative workflow signal, not a public fraud claim          | Never public                                                                                        | Stops that interview record; recovery requires new interview        | Counts in no-show rate and recovery metrics         |
+| `interview.completed` with decision overdue             | Neutral publicly; operationally negative for org SLA health | Never public                                                                                        | Candidate remains pending outcome; no automatic disqualification    | Counts as SLA breach and escalation                 |
+| `engagement.reported_unverified`                        | Reported only; no strong trust lift                         | May appear only as owner-private or authorized-review reported history, not a public verified claim | Must not satisfy hard contract or proof gates                       | Counts as reported but unverified engagement        |
+| `engagement.verified`                                   | Positive scoped trust signal for engagement completion      | Public-safe summary allowed only if the linked proof is public and privacy-safe                     | May satisfy engagement-confirmation gates                           | Counts as verified engagement outcome               |
+| `engagement.disputed` or `engagement.withdrawn`         | Positive lift removed immediately                           | Public verified language removed immediately                                                        | No longer satisfies any engagement gate                             | Counts as dispute or withdrawal event               |
+
+### Canonical timestamps and retention
+
+Common timestamps required on every lifecycle object:
+
+- `created_at`
+- `updated_at`
+- `state_changed_at`
+
+Object-specific timestamps:
+
+- Assignment: `published_at`, `held_at`, `resumed_at`, `closed_at`, `expires_at`
+- Application: `submitted_at`, `review_started_at`, `advanced_at`, `rejected_at`, `withdrawn_at`, `closed_at`
+- Submission: `submission_deadline_at`, `submitted_at`, `reviewed_at`, `accepted_at`, `rejected_at`, `withdrawn_at`, `superseded_at`
+- Verification: `requested_at`, `request_expires_at`, `verified_at`, `expired_at`, `superseded_at`, `downgraded_at`, `contradicted_at`, `disputed_at`, `revoked_at`, `cancelled_at`
+- Proof Pack: `published_at`, `submitted_at`, `withdrawn_at`, `superseded_at`, `archived_at`
+- Introduction: `accepted_at`, `declined_at`, `withdrawn_at`, `expires_at`, `handoff_at`, `closed_at`
+- Interview: `scheduled_for`, `rescheduled_at`, `completed_at`, `cancelled_at`, `no_show_reported_at`, `decision_due_at`, `feedback_due_at`, `closed_at`
+- Contract / engagement verification: `reported_at`, `counterparty_requested_at`, `counterparty_responded_at`, `document_uploaded_at`, `reviewed_at`, `reported_unverified_at`, `verified_at`, `disputed_at`, `withdrawn_at`, `superseded_at`
+
+Retention rules:
+
+- Auth and application logs: retain 180 days
+- Audit logs: retain 2 years
+- Analytics events: retain 2 years, then anonymize and archive
+- Withdrawn, disputed, superseded, and closed records remain auditable and owner-exportable for their retention window even when they no longer count toward trust, visibility, or eligibility
+
+### Example transition payloads
+
+`application_submitted`
+
+```json
+{
+  "event": "application_submitted",
+  "application_id": "app_123",
+  "assignment_id": "asg_456",
+  "candidate_profile_id": "pro_789",
+  "from_state": "draft",
+  "to_state": "submitted",
+  "actor_type": "candidate",
+  "actor_id": "pro_789",
+  "reason_code": "candidate_submit",
+  "occurred_at": "2026-03-10T10:30:00Z"
+}
+```
+
+`submission_rejected_late`
+
+```json
+{
+  "event": "submission_rejected",
+  "submission_id": "sub_123",
+  "assignment_id": "asg_456",
+  "application_id": "app_123",
+  "from_state": "submitted",
+  "to_state": "rejected",
+  "actor_type": "system",
+  "reason_code": "late_submission",
+  "submitted_at": "2026-03-10T10:35:00Z",
+  "submission_deadline_at": "2026-03-10T10:00:00Z",
+  "occurred_at": "2026-03-10T10:35:01Z"
+}
+```
+
+`verification_expired_no_response`
+
+```json
+{
+  "event": "verification_request_expired",
+  "verification_record_id": "ver_123",
+  "verification_kind": "skill_attestation_peer",
+  "subject_type": "proof_artifact",
+  "subject_id": "art_456",
+  "from_state": "pending",
+  "to_state": "expired",
+  "actor_type": "system",
+  "reason_code": "no_response",
+  "request_expires_at": "2026-03-24T12:00:00Z",
+  "occurred_at": "2026-03-24T12:00:01Z"
+}
+```
+
+`intro_expired`
+
+```json
+{
+  "event": "intro_expired",
+  "intro_id": "intro_123",
+  "assignment_id": "asg_456",
+  "candidate_profile_id": "pro_789",
+  "org_id": "org_321",
+  "from_state": "pending",
+  "to_state": "expired",
+  "actor_type": "system",
+  "reason_code": "intro_timeout",
+  "expires_at": "2026-03-24T12:00:00Z",
+  "occurred_at": "2026-03-24T12:00:01Z"
+}
+```
+
+`engagement_verified`
+
+```json
+{
+  "event": "engagement_verified",
+  "engagement_verification_id": "eng_123",
+  "engagement_id": "engagement_456",
+  "from_state": "pending_document_review",
+  "to_state": "verified",
+  "actor_type": "manual_platform_reviewer",
+  "actor_id": "rev_789",
+  "reason_code": "document_plus_org_confirmation",
+  "verification_method": "uploaded_agreement_and_org_confirmation",
+  "verified_at": "2026-03-25T09:15:00Z",
+  "occurred_at": "2026-03-25T09:15:00Z"
+}
+```
+
+### Facts & Decisions
+
+- The master PRD now contains one canonical lifecycle contract for assignment, application, submission, verification, Proof Pack, introduction, interview, and contract / engagement verification.
+- `application` is first-class and remains separate from `submission`.
+- Calm UI language must never erase deterministic backend state, auditability, or edge-case handling.
+- Contract / engagement verification is a trust signal only. It is not legal contract enforcement, payroll verification, or enterprise compliance.
+- `decision overdue` is modeled as a derived SLA condition, not a competing persisted lifecycle state.
+- Existing machine-stable events from Appendix A1 remain valid and should map cleanly to this block.
+
+### Open Questions
+
+- Should the later implementation standardize one storage enum family directly to these product-state names, or keep explicit alias mapping where current schema names differ?
+- Which engagement document classes, if any, should automatically qualify for human-review priority at launch?
+- Should future post-MVP policy distinguish offer acceptance from engagement completion as separate trust objects, or keep one engagement-verification object with richer reason codes?
+
+### Acceptance Criteria
+
+- Backend and QA can derive one legal transition map for each of the eight lifecycle objects without relying on implied product behavior.
+- Illegal transitions are explicitly rejectable for each object.
+- Duplicate-guard behavior is deterministic for applications, verification requests, and active intros.
+- Assignment closure deterministically terminates open downstream records with explicit reasons.
+- Withdrawn, disputed, contradicted, superseded, and closed records remain auditable and exportable for their retention window.
+- `reported_unverified` engagement never satisfies a hard verification gate.
+- `verified` engagement affects trust visibility and analytics without implying legal enforceability.
+- Timeout handling is explicit for intro expiry, verification no-response expiry, and decision-overdue SLA breach.
+
 ---
 
 ## 6. Matching and Privacy Contract
@@ -1660,200 +2350,193 @@ Stage 0 and Stage 1 may include only:
 - Matching review must not expose a direct portfolio route, handle, or identity-bearing URL before the allowed reveal stage.
 - Sanitized Proof Pack summaries may appear in matching without exposing the public route.
 
-### 6.5 Explainable Matching Reason Codes, Overrides, and Fairness Ledger (MVP)
+### 6.5 Explainable Matching Reason Codes, Overrides, and Fairness Operations (MVP)
 
-This section defines the MVP contract for deterministic shortlist explanations, reviewer overrides, and fairness-audit traceability. It extends the current repo enum style and must not introduce a second naming system.
+This section defines the canonical MVP contract for deterministic shortlist explanations, reviewer and manager actions, override governance, and fairness operations. It is normative for product, design, analytics, and QA. Current repo enums and events may remain in compatibility mode temporarily, but they must map into this contract rather than compete with it.
 
 #### Facts & Decisions
 
-- One canonical explainability record must exist for every shortlist decision, pass decision, intro-eligibility block, reveal denial, assignment closure or expiry effect, and manual snooze or override.
-- The canonical explainability record uses these fixed fields:
-  - `reason_group`
-  - `reason_code`
-  - `decision_surface`
-  - `decision_state`
-  - `source`
-- `reason_code` values must stay concise, reusable, and analytics-safe.
-- Reasons are append-only in the ledger. Manual actions add to system-generated reasons and must not erase the original system reasons.
-- The explanation order is deterministic and fixed:
-  1. capability
-  2. proof
-  3. freshness
-  4. verification
-  5. availability
-  6. timezone or language
-  7. compensation
-  8. privacy or reveal
-  9. assignment state
-  10. manual decision
-  11. fairness or policy
-- Tie scores must resolve deterministically using the canonical tie-break order already stored in the score trace. The same structured inputs must produce the same rank order and the same ordered reason list.
+- One canonical explainability record must exist for every scoring output, shortlist decision, intro-eligibility failure, shortlist rejection, manual pass, manual snooze, manual hold, reveal denial, assignment expiry effect, and post-review override.
+- The canonical explainability record is append-only and must preserve both:
+  - the automatic system reasons produced at score time
+  - the manual reviewer or manager reasons added later
+- Manual reasons and overrides never erase the original automatic reasons.
+- User-visible explanation order is deterministic and follows the canonical score-factor order below. The same structured inputs must produce the same factor order, reason-code order, and tie-break result.
+- Score factors define explanation and audit order only. They do not promise user-visible numeric weights.
+- PAC remains a bounded positive contribution inside `mission_values_alignment`, consistent with the technical requirements contract.
+- Forbidden inputs remain protected attributes and their proxies, Zen or wellbeing data, identity prestige signals, popularity or engagement metrics, and reviewer notes or overrides as score inputs.
+- Fairness operations are required MVP system behavior, not an optional analytics add-on. At minimum they include weekly snapshots for active review pools and a release-candidate snapshot before launch or any material scoring change.
+
+#### Canonical scoring frame
+
+```ts
+type MatchScoreFactor =
+  | 'capability_band_fit'
+  | 'tool_fluency'
+  | 'mission_values_alignment'
+  | 'freshness'
+  | 'availability_deadline_fit'
+  | 'language_timezone_fit';
+```
+
+- User-facing "Why this match" ordering must always follow `MatchScoreFactor`.
+- `capability_band_fit` is the launch-safe replacement for broad skill and depth fit language.
+- `tool_fluency` is canonical in the PRD even if current implementation still represents some of it indirectly through skills, proof fit, or role evidence.
+- `mission_values_alignment` covers purpose and values overlap only when real overlap exists. Missing data remains neutral.
+- `availability_deadline_fit` covers practical timing fit, not compensation or recruiter preference.
+- `language_timezone_fit` combines communication and coordination fit for explanation ordering.
+
+Compatibility note with current repo codes:
+
+| Canonical factor            | Current repo aliases or partial representations                          |
+| --------------------------- | ------------------------------------------------------------------------ |
+| `capability_band_fit`       | `skills_strong`, `skills_gap`, parts of current proof-fit language       |
+| `tool_fluency`              | currently partial through `skills_strong`, proof evidence, focus signals |
+| `mission_values_alignment`  | `purpose_alignment_strong`, `purpose_alignment_partial`                  |
+| `freshness`                 | current freshness and stale-policy trace fields                          |
+| `availability_deadline_fit` | `logistics_fit`, `availability_mismatch`                                 |
+| `language_timezone_fit`     | `language_fit`, `language_mismatch`, `timezone_mismatch`                 |
 
 #### Canonical reason-code taxonomy
 
 ```ts
-type ReasonGroup =
-  | 'capability'
-  | 'proof'
-  | 'freshness'
-  | 'verification'
-  | 'availability'
-  | 'timezone_language'
-  | 'compensation'
-  | 'privacy_reveal'
-  | 'assignment_state'
-  | 'manual_decision'
-  | 'fairness_policy';
-
-type MatchReasonCode =
-  | 'skills_strong'
-  | 'skills_gap'
-  | 'proof_coverage_insufficient'
-  | 'proof_stale'
-  | 'proof_expired'
-  | 'verification_ready'
-  | 'verification_gap'
-  | 'availability_mismatch'
-  | 'logistics_fit'
-  | 'timezone_mismatch'
-  | 'language_fit'
-  | 'language_mismatch'
-  | 'compensation_fit'
-  | 'compensation_mismatch'
-  | 'reveal_not_granted'
-  | 'reveal_shortlist_identity'
-  | 'reveal_full_identity'
-  | 'assignment_closed'
-  | 'assignment_expired'
-  | 'shortlist_selected'
-  | 'passed_for_now'
-  | 'rejected_constraints'
-  | 'snoozed_manual'
-  | 'override_keep_under_review'
-  | 'override_shortlist_manual'
-  | 'override_reject_manual'
+type AutoMatchReasonCode =
+  | 'include_capability_band_fit'
+  | 'include_tool_fluency_fit'
+  | 'include_mission_values_alignment'
+  | 'include_freshness_current'
+  | 'include_deadline_fit'
+  | 'include_language_timezone_fit'
+  | 'intro_block_capability_gap'
+  | 'intro_block_tool_gap'
+  | 'intro_block_freshness'
+  | 'intro_block_deadline_conflict'
+  | 'intro_block_language_timezone_mismatch'
+  | 'intro_block_reveal_policy'
+  | 'intro_block_assignment_expired'
+  | 'reject_capability_gap'
+  | 'reject_tool_gap'
+  | 'reject_values_mismatch'
+  | 'reject_stale_proof'
+  | 'reject_deadline_conflict'
+  | 'reject_language_timezone_mismatch'
+  | 'block_assignment_closed'
+  | 'block_assignment_expired'
+  | 'block_reveal_policy'
+  | 'block_private_proof_unusable'
   | 'fairness_warning_active'
   | 'fairness_ranking_suppressed';
+
+type ManualReviewReasonCode = 'manual_pass_for_now' | 'manual_snooze' | 'manual_hold_for_review';
+
+type PostReviewOverrideReasonCode =
+  | 'override_keep_under_review'
+  | 'override_shortlist_manual'
+  | 'override_reject_manual';
 ```
 
-- Capability mismatch:
-  - `skills_gap`
-- Proof insufficiency:
-  - `proof_coverage_insufficient`
-- Freshness too low:
-  - `proof_stale`
-  - `proof_expired`
-- Verification gate unmet:
-  - `verification_gap`
-- Availability mismatch:
-  - `availability_mismatch`
-- Timezone or language mismatch:
-  - `timezone_mismatch`
-  - `language_mismatch`
-- Compensation mismatch:
-  - `compensation_mismatch`
-- Privacy or reveal not granted:
-  - `reveal_not_granted`
-- Assignment closed or expired:
-  - `assignment_closed`
-  - `assignment_expired`
-- Manual pass, snooze, or override:
-  - `passed_for_now`
-  - `snoozed_manual`
-  - `override_keep_under_review`
-  - `override_shortlist_manual`
-  - `override_reject_manual`
+- Automatic codes are used for:
+  - shortlist inclusion
+  - intro eligibility failure
+  - shortlist rejection
+  - reveal or assignment blockers
+- Manual review codes are used only for reviewer or manager actions such as pass, snooze, and hold.
+- Post-review override codes are used only when a human changes the review-state outcome after seeing the automatic result.
+- Every rejection, pass, hold, snooze, intro block, or reveal block must include at least one blocker code. Supportive inclusion codes may also be present when they clarify what was strong.
 
-The existing positive-fit codes such as `skills_strong`, `verification_ready`, `logistics_fit`, `compensation_fit`, `language_fit`, `purpose_alignment_strong`, `purpose_alignment_partial`, `focus_role`, `focus_industry`, and `focus_org_type` remain valid. MVP uses them to explain why a shortlist exists, while the mismatch and state codes explain why a shortlist, intro, or reveal did not advance.
+Automatic versus manual sources:
 
-#### Match outcomes, shortlist decisions, intro eligibility, and pass or rejection states
+- `source = system`
+  - derivable from structured assignment inputs, structured profile inputs, freshness state, reveal policy, fairness status, and assignment lifecycle state
+- `source = reviewer` or `source = manager`
+  - limited to `ManualReviewReasonCode`
+- `source = override`
+  - limited to `PostReviewOverrideReasonCode`
 
-- Match outcome reasons explain whether the candidate is a strong fit, a partial fit, or a blocked fit.
-- Shortlist decision reasons explain why the candidate was shortlisted, passed for now, rejected, or manually snoozed.
-- Intro eligibility reasons explain whether the match may proceed into intro creation or remains blocked on proof, freshness, verification, availability, privacy, or assignment state.
-- Rejection and pass states must always include at least one canonical blocker code and may include supportive positive codes if they clarify what was strong.
+Compatibility note with current repo enums:
 
-#### Automatic vs manual generation rules
+| Current repo code             | Canonical bucket or likely alias                                |
+| ----------------------------- | --------------------------------------------------------------- |
+| `skills_strong`               | `include_capability_band_fit`                                   |
+| `skills_gap`                  | `intro_block_capability_gap` or `reject_capability_gap`         |
+| `verification_ready`          | launch-safe support signal inside shortlist inclusion           |
+| `logistics_fit`               | `include_deadline_fit`                                          |
+| `language_fit`                | `include_language_timezone_fit`                                 |
+| `shortlist_selected`          | shortlist inclusion state, not a score factor                   |
+| `passed_for_now`              | `manual_pass_for_now`                                           |
+| `rejected_constraints`        | `reject_capability_gap`, `reject_deadline_conflict`, or related |
+| `override_keep_under_review`  | `override_keep_under_review`                                    |
+| `override_shortlist_manual`   | `override_shortlist_manual`                                     |
+| `override_reject_manual`      | `override_reject_manual`                                        |
+| `fairness_warning_active`     | `fairness_warning_active`                                       |
+| `fairness_ranking_suppressed` | `fairness_ranking_suppressed`                                   |
 
-- Generated automatically when the reason is derivable from:
-  - structured assignment inputs
-  - structured profile inputs
-  - proof freshness state
-  - verification status
-  - reveal policy
-  - fairness status
-  - assignment lifecycle state
-- Selected manually only for:
-  - `passed_for_now`
-  - `snoozed_manual`
-  - `override_keep_under_review`
-  - `override_shortlist_manual`
-  - `override_reject_manual`
-  - explicit reveal or policy exceptions that are not produced by the normal rules path
-- Manual selection requires one canonical manual code and an internal justification.
-- Manual notes are private. They may be hashed and audited, but they must not be shown to the counterpart.
-
-#### User-facing behavior
+#### Exact user-visible behavior
 
 - Individuals see:
-  - plain-language top reasons only
-  - the next best action
-  - current reveal or intro status
-  - no internal reviewer notes
-  - no protected-signal language
+  - the top 1 to 3 plain-language reasons only
+  - current shortlist, reveal, or intro state
+  - the next best action, such as refresh proof, widen availability, or wait for review
+  - no reviewer notes, no protected-class language, and no concealed proof details
 - Organizations see:
-  - ranked or banded rationale where policy allows
-  - blockers and intro-eligibility state
-  - no hidden personal notes
-  - no protected-class or inferred protected-signal language
-  - no hidden field values when the field itself is not revealable
+  - deterministic ordered reasons grouped by "why this match" and "what may hold it back"
+  - shortlist or intro blockers
+  - generic language for manual states such as "kept under review"
+  - no hidden candidate notes and no hidden field values
 - Admins and auditors see:
-  - the full reason ledger
-  - source and actor
-  - timestamps
-  - score, model, and weight versions
-  - tie-break trace
-  - reveal-stage transitions
-  - override counts
+  - full ledger rows
+  - source, actor, and timestamps
+  - `score_version`, `model_version`, `weights_version`, `explanation_version`
+  - override linkage
+  - reveal-stage transition history
   - fairness snapshot references
 
-#### Override system
+#### Privacy boundaries
+
+- No protected-class inference leakage is allowed in counterpart-facing explanations, analytics payloads, or fairness dashboards.
+- No hidden reviewer or manager notes may be shown cross-party.
+- Free-text justification must not be used directly in fairness dashboards when coded or hashed alternatives suffice.
+- Hidden or private proofs that would improve ranking but cannot be used may surface only as a generic policy-safe explanation such as "additional non-shareable evidence exists but cannot be used at this stage." They must never reveal the concealed content, owner intent, filename, source URL, or identity-bearing metadata.
+- Public portfolio publication does not weaken blind-by-default review or reveal policy.
+
+#### Override rules
 
 - Allowed override actors:
   - organization `owner`
   - organization `admin`
   - organization `member`
-- Not allowed:
+  - platform admin for policy remediation or fairness remediation only
+- Disallowed override actors:
   - organization `viewer`
-  - platform admins performing routine shortlist preference changes
-- Platform admins remain limited to fairness remediation, policy remediation, and audit surfaces.
+  - platform admin performing routine shortlist steering
 - Override is allowed only when:
-  - the assignment is still open
+  - the assignment is still active
   - the match is still live
-  - the override does not bypass protected-class boundaries
-  - the override does not expose hidden notes or hidden identity outside the allowed reveal corridor
-- Mandatory override justification rules:
-  - exactly one override reason code
-  - non-empty internal justification text
-  - actor and role recorded
-  - previous state and new state recorded
-  - previous reveal scope and new reveal scope recorded
-- Audit logging requirements:
-  - log to the reason ledger
-  - log the private note hash
-  - retain the full private note in a private audit surface only
-  - emit the existing lifecycle override event
-- Overrides affect analytics and fairness notes:
-  - override counts are reported separately from system decisions
-  - fairness reviews must be able to segment override-heavy assignments
-  - override-driven outcomes must not be blended silently into system-only quality claims
+  - no protected-boundary or reveal-policy bypass occurs
+  - the override does not expose hidden identity or hidden notes outside the allowed reveal corridor
+- Mandatory override justification:
+  - exactly one `PostReviewOverrideReasonCode`
+  - non-empty internal justification
+  - actor id and actor role
+  - prior state and new state
+  - prior reveal scope and new reveal scope
+- Logging requirements:
+  - append the override to the reason ledger
+  - retain a note hash for analytics-safe joins
+  - retain raw justification only in a private audit surface
+  - emit the override lifecycle event
+- Ranking effect:
+  - override changes review state and allowed workflow state
+  - override does not rewrite the system score, factor values, or original score trace
+  - any manual display ordering must be logged as display-state override metadata rather than ranking recomputation
 
-#### Fairness ledger requirements
+#### Fairness operations and audit data
 
-- Each decisionable match must be auditable through a deterministic ledger that includes at minimum:
+- Each reviewable match must remain auditable through deterministic operations data containing at minimum:
   - `score_version`
   - `model_version`
   - `weights_version`
+  - `explanation_version`
   - `inputs_hash`
   - `tie_break_vector`
   - `reason_codes`
@@ -1861,33 +2544,28 @@ The existing positive-fit codes such as `skills_strong`, `verification_ready`, `
   - `decision_state`
   - `source`
   - `override_count`
-  - `reveal_stage`
+  - `reveal_stage_transitions`
+  - `reason_code_distribution`
   - `fairness_status`
   - `fairness_snapshot_id`
-- The ledger must support:
-  - versioned scoring-weight review
+  - periodic snapshot metadata including cadence, snapshot window, and generated timestamp
+- Fairness operations must support:
   - reason-code distribution reporting
   - override count reporting
-  - reveal-stage transition logging
-  - cohort reporting hooks for approved internal fairness audit slices only
-- Fairness ledger outputs are internal only and must never expose protected attributes on counterpart-facing surfaces.
-
-#### Privacy boundaries
-
-- No protected-class leakage in explanations, analytics payloads, or counterpart-facing logs.
-- No hidden personal notes shown to the other side.
-- Hidden fields may influence score only when matching consent and policy allow it, and the explanation must stay generic if the field value itself cannot be revealed.
-- Reveal-stage movement must never imply that public portfolio publication overrides blind-by-default review.
+  - reveal-stage transition reporting
+  - score-version and weights-version review
+  - approved internal cohort analysis only when privacy thresholds pass
+- Fairness outputs are internal only and must remain aggregate-first.
 
 #### "Why this match" UX contract
 
-- Explanations must be plain language.
-- Explanation ordering must follow the canonical deterministic order above.
-- No black-box phrasing such as "the model thinks" or "the algorithm decided."
-- No numeric decomposition promise to the user.
-- No exact comparative language when fairness suppression is active.
-- The explanation should answer:
-  - what was strong
+- Plain language only.
+- Deterministic order following `MatchScoreFactor`.
+- No black-box wording such as "the model thinks" or "the algorithm decided."
+- No promise of numeric decomposition on counterpart-facing surfaces.
+- No comparative ranking language when fairness suppression is active.
+- The explanation must answer:
+  - what looks strong
   - what is missing or blocked
   - what the next best step is
 
@@ -1895,76 +2573,530 @@ The existing positive-fit codes such as `skills_strong`, `verification_ready`, `
 
 - Empty shortlist:
   - show a calm empty state with explicit blocker reasons
-  - log the shortlist decision surface and at least one blocker code
-- Tie scores:
-  - resolve through the canonical tie-break vector
-  - preserve the same explanation order for tied candidates
+  - log `shortlist_decision_logged` with at least one blocker code
+- Ties:
+  - resolve with the canonical tie-break vector already stored in the score trace
+  - preserve the same factor and reason ordering for tied candidates
 - Stale proofs:
-  - `proof_stale` reduces confidence and must appear before any manual decision reason
-- Expired proofs:
-  - `proof_expired` blocks stronger intro language until refreshed or replaced
-- Hidden fields needed for better scoring:
-  - scoring may use them when permitted
-  - explanation must refer to a generic stored constraint or requirement rather than exposing the hidden field value
+  - must produce `intro_block_freshness` or `reject_stale_proof` as appropriate
+  - must appear before any manual reason in user-facing ordering
+- Private proofs that would improve ranking but cannot be used:
+  - log `block_private_proof_unusable`
+  - keep explanation generic and policy-safe
+- Expired assignment:
+  - log `intro_block_assignment_expired` or `block_assignment_expired`
+  - do not allow shortlist advancement or intro creation
 
-#### Events and analytics mapping
+#### Canonical events and payloads
 
-| Requested concept                 | MVP mapping                                                          |
-| --------------------------------- | -------------------------------------------------------------------- |
-| `match_reason_code_generated`     | `match_generated` plus `match_reason_ledger` insert                  |
-| `shortlist_decision_logged`       | `match_shortlisted` or `match_passed` plus review-state ledger write |
-| `override_applied`                | `review_override_applied`                                            |
-| `override_revoked`                | `review_override_reverted`                                           |
-| `reveal_stage_changed`            | `reveal_requested` plus `reveal_granted` or `reveal_denied`          |
-| `fairness_audit_snapshot_created` | fairness evaluation snapshot persisted in `fairness_evaluations`     |
-
-#### Example API payloads
+- `match_scored`
+  - minimum fields: `match_id`, `assignment_id`, `profile_id`, `org_id`, `score_version`, `model_version`, `weights_version`, `explanation_version`, `factor_order`, `reason_codes`, `inputs_hash`, `source`, `occurred_at`
 
 ```json
 {
+  "event": "match_scored",
   "match_id": "9a5c6d63-5a8f-4f2d-b20a-4d67f7d3ef91",
   "assignment_id": "f0fb23a3-d601-40ce-b0c7-4f320d5ef6bb",
-  "decision_surface": "org_review_queue",
-  "decision_state": "shortlisted",
-  "source": "system",
-  "reason_codes": ["skills_strong", "verification_ready", "shortlist_selected"],
+  "profile_id": "5f997dc7-8151-4bb0-bb63-7c31cb9e6d02",
+  "org_id": "fb6390ce-00d4-47e1-a317-3e9d8ec7bf78",
+  "score_version": "match-score/v1",
+  "model_version": "core-rules/v1",
   "weights_version": "core-rules/v1",
-  "inputs_hash": "6df0d3d64b7d1f45c3c4d5a0d88b44f58d40f6a3b1e9185df21d4bbf5d5f928a"
+  "explanation_version": "reason-codes/v1",
+  "factor_order": [
+    "capability_band_fit",
+    "tool_fluency",
+    "mission_values_alignment",
+    "freshness",
+    "availability_deadline_fit",
+    "language_timezone_fit"
+  ],
+  "reason_codes": [
+    "include_capability_band_fit",
+    "include_mission_values_alignment",
+    "include_deadline_fit"
+  ],
+  "inputs_hash": "6df0d3d64b7d1f45c3c4d5a0d88b44f58d40f6a3b1e9185df21d4bbf5d5f928a",
+  "source": "system",
+  "occurred_at": "2026-03-10T10:00:00Z"
 }
 ```
 
+- `reason_code_assigned`
+  - minimum fields: `match_id`, `reason_code`, `reason_family`, `decision_surface`, `decision_state`, `source`, `actor_type`, `score_version`, `occurred_at`
+
 ```json
 {
+  "event": "reason_code_assigned",
+  "match_id": "9a5c6d63-5a8f-4f2d-b20a-4d67f7d3ef91",
+  "reason_code": "intro_block_freshness",
+  "reason_family": "automatic",
+  "decision_surface": "org_review_queue",
+  "decision_state": "intro_blocked",
+  "source": "system",
+  "actor_type": "system",
+  "score_version": "match-score/v1",
+  "occurred_at": "2026-03-10T10:00:00Z"
+}
+```
+
+- `shortlist_decision_logged`
+  - minimum fields: `match_id`, `assignment_id`, `decision_state`, `reason_codes`, `decision_surface`, `source`, `actor_type`, `occurred_at`
+
+```json
+{
+  "event": "shortlist_decision_logged",
   "match_id": "9a5c6d63-5a8f-4f2d-b20a-4d67f7d3ef91",
   "assignment_id": "f0fb23a3-d601-40ce-b0c7-4f320d5ef6bb",
-  "decision_surface": "org_review_queue",
   "decision_state": "shortlisted",
-  "source": "reviewer",
+  "reason_codes": [
+    "include_capability_band_fit",
+    "include_tool_fluency_fit",
+    "include_deadline_fit"
+  ],
+  "decision_surface": "org_review_queue",
+  "source": "system",
+  "actor_type": "system",
+  "occurred_at": "2026-03-10T10:01:00Z"
+}
+```
+
+- `override_applied`
+  - minimum fields: `match_id`, `assignment_id`, `org_id`, `override_reason_code`, `previous_state`, `new_state`, `previous_reveal_scope`, `new_reveal_scope`, `actor_type`, `actor_role`, `source`, `occurred_at`
+
+```json
+{
+  "event": "override_applied",
+  "match_id": "9a5c6d63-5a8f-4f2d-b20a-4d67f7d3ef91",
+  "assignment_id": "f0fb23a3-d601-40ce-b0c7-4f320d5ef6bb",
+  "org_id": "fb6390ce-00d4-47e1-a317-3e9d8ec7bf78",
   "override_reason_code": "override_shortlist_manual",
-  "justification": "Candidate has recent private proof under review that is not yet reflected in the automated score.",
-  "previous_state": "blind_review",
+  "previous_state": "passed",
   "new_state": "shortlisted",
   "previous_reveal_scope": "blind",
   "new_reveal_scope": "shortlist_identity",
-  "fairness_impact_flag": true
+  "actor_type": "organization_member",
+  "actor_role": "admin",
+  "source": "reviewer",
+  "occurred_at": "2026-03-10T10:03:00Z"
 }
 ```
 
+- `override_revoked`
+  - minimum fields: `match_id`, `assignment_id`, `org_id`, `override_reason_code`, `previous_state`, `new_state`, `previous_reveal_scope`, `new_reveal_scope`, `actor_type`, `actor_role`, `source`, `occurred_at`
+
+```json
+{
+  "event": "override_revoked",
+  "match_id": "9a5c6d63-5a8f-4f2d-b20a-4d67f7d3ef91",
+  "assignment_id": "f0fb23a3-d601-40ce-b0c7-4f320d5ef6bb",
+  "org_id": "fb6390ce-00d4-47e1-a317-3e9d8ec7bf78",
+  "override_reason_code": "override_shortlist_manual",
+  "previous_state": "shortlisted",
+  "new_state": "passed",
+  "previous_reveal_scope": "shortlist_identity",
+  "new_reveal_scope": "blind",
+  "actor_type": "organization_member",
+  "actor_role": "admin",
+  "source": "reviewer",
+  "occurred_at": "2026-03-10T10:08:00Z"
+}
+```
+
+- `fairness_snapshot_created`
+  - minimum fields: `fairness_snapshot_id`, `assignment_id`, `score_version`, `weights_version`, `snapshot_cadence`, `window_start`, `window_end`, `reason_code_distribution`, `override_counts`, `reveal_stage_transitions`, `source`, `occurred_at`
+
+```json
+{
+  "event": "fairness_snapshot_created",
+  "fairness_snapshot_id": "6c0f4b71-c417-4308-91ff-39d869cc4dc0",
+  "assignment_id": "f0fb23a3-d601-40ce-b0c7-4f320d5ef6bb",
+  "score_version": "match-score/v1",
+  "weights_version": "core-rules/v1",
+  "snapshot_cadence": "weekly",
+  "window_start": "2026-03-03T00:00:00Z",
+  "window_end": "2026-03-10T00:00:00Z",
+  "reason_code_distribution": {
+    "include_capability_band_fit": 18,
+    "intro_block_freshness": 4,
+    "reject_deadline_conflict": 3
+  },
+  "override_counts": {
+    "override_shortlist_manual": 2,
+    "override_reject_manual": 1
+  },
+  "reveal_stage_transitions": {
+    "blind_to_shortlist_identity": 6,
+    "shortlist_identity_to_full_identity": 2
+  },
+  "source": "system",
+  "occurred_at": "2026-03-10T10:15:00Z"
+}
+```
+
+Payload rules:
+
+- No protected attributes or protected-attribute proxies.
+- No raw internal notes.
+- `reason_code_distribution`, `override_counts`, and transition reporting must remain aggregate-first.
+
+Compatibility aliases to current implementation events:
+
+| Canonical event             | Current implementation alias                                              |
+| --------------------------- | ------------------------------------------------------------------------- |
+| `match_scored`              | `match_generated` plus score trace persistence                            |
+| `reason_code_assigned`      | reason-ledger insert tied to scoring or review mutation                   |
+| `shortlist_decision_logged` | `match_shortlisted` or `match_passed` plus review-state ledger write      |
+| `override_applied`          | `review_override_applied`                                                 |
+| `override_revoked`          | `review_override_reverted`                                                |
+| `fairness_snapshot_created` | `fairness_evaluations` persistence plus optional internal analytics event |
+
 #### Open Questions
 
-- Should `proof_coverage_insufficient` replace older wording such as `proof_strength_incomplete` everywhere later, or can those remain parallel for feedback-only surfaces?
-- Should `timezone_mismatch` and `language_mismatch` remain separate codes in live scoring, or collapse into a single `communication_mismatch` if code churn becomes too high?
-- Should fairness snapshot creation get its own first-class lifecycle event later, or remain a persisted-table contract only for MVP?
+- When should `tool_fluency` split into dedicated persisted code enums instead of compatibility mapping through existing skills and proof signals?
+- Does MVP need a second fairness snapshot cadence beyond weekly active-pool snapshots and release-candidate checkpoints?
+- Should the compatibility mirror PRD later carry a condensed version of this section, or remain source-of-truth light?
 
 #### Acceptance Criteria
 
-- Every shortlist, pass, rejection, intro block, reveal denial, assignment closure, and manual snooze produces at least one canonical reason code and a ledgered decision record.
-- The same structured inputs produce the same reason-code order and tie-break result.
-- Overrides cannot be saved without an allowed actor, one override code, and a non-empty internal justification.
-- Counterpart-facing surfaces never expose internal notes, protected-class data, or hidden personal notes.
-- "Why this match" explanations remain plain-language, deterministic, and non-comparative.
-- Fairness review can inspect reason distributions, override counts, reveal transitions, and versioned score or weight metadata without reconstructing raw decision history.
-- Empty shortlist, stale proof, tie score, and reveal-blocked states all have explicit user-facing copy and logged reason codes.
+- The `6.5` section exists only once and uses the heading `Explainable Matching Reason Codes, Overrides, and Fairness Operations (MVP)`.
+- All six canonical score factors are defined and the explanation order matches them exactly.
+- Automatic reason codes, manual review reason codes, and post-review override reason codes are defined separately.
+- Counterpart-facing behavior is specified separately for individuals, organizations, and admins or auditors.
+- Overrides cannot be saved without an allowed actor, exactly one override code, and a non-empty internal justification.
+- Overrides change decision state and permitted workflow state only. They do not rewrite the original system score or factor trace.
+- Fairness operations require `score_version`, reason-code distribution, override counts, reveal-stage transitions, `fairness_snapshot_id`, and periodic snapshot metadata.
+- Counterpart-facing surfaces never expose hidden reviewer notes, protected-class language, or concealed proof details.
+- The "Why this match" contract remains plain-language, deterministic, and free of black-box wording.
+- Empty shortlist, ties, stale proof, private-proof-unusable, and expired-assignment states all have explicit logged behavior.
+- The section defines the canonical events `match_scored`, `reason_code_assigned`, `shortlist_decision_logged`, `override_applied`, `override_revoked`, and `fairness_snapshot_created` with example payloads and compatibility aliases.
+
+---
+
+### 6.6 Capability Band Rubrics by Domain (MVP)
+
+This block defines the lean MVP rubric contract for capability bands by domain. It exists because explainable matching cannot depend forever on undefined future rubrics, yet MVP also cannot ship an enormous ontology. The launch contract is a small shared band ladder plus domain-specific evidence expectations.
+
+Capability bands exist instead of generic years-of-experience logic because years served is a weak cross-domain proxy. Ten years in hospitality, software, design, or event operations does not mean the same observable capability, independence, or proof quality. Proofound therefore uses capability bands to summarize what a person appears able to do in a scoped domain capability, based on evidence quality and corroboration, not only elapsed time.
+
+The master brief still treats full domain rubric coverage as unfinished. MVP now locks a minimal version so explainable matching, proof review, and reviewer guidance do not rely on an abstract future system.
+
+#### Facts & Decisions
+
+- MVP uses one shared four-band ladder across launch domains:
+  - `Band 1`
+    - assisted / foundational execution
+  - `Band 2`
+    - working / reliable execution
+  - `Band 3`
+    - independent / end-to-end execution
+  - `Band 4`
+    - leading / shaping / mentoring execution
+- Capability bands measure observable scope, independence, repeatability, and evidence quality. They do not encode years served directly.
+- MVP uses a lean, extensible rubric framework rather than a giant universal capability ontology.
+- Launch-supported rubric domains are:
+  - `design`
+  - `software / data`
+  - `culinary / hospitality`
+  - `events / operations`
+- Each launch domain starts with a small curated list of high-signal capabilities only. Exhaustive domain coverage is explicitly out of scope for MVP.
+- Capability-band provenance states are:
+  - `self-claimed`
+  - `inferred`
+  - `attested`
+  - `verified`
+- These provenance states are not replacements for the canonical trust badge family elsewhere in the PRD. They are a rubric-specific way to describe how much support exists behind a capability-band assignment.
+- Every rubric row set carries a `rubric_version`.
+- Rubric edits must be additive or explicitly versioned. Rows must not be silently rewritten in ways that change prior meaning.
+
+#### Shared band semantics
+
+| band / range | domain-neutral meaning        | reviewer shorthand                                               |
+| ------------ | ----------------------------- | ---------------------------------------------------------------- |
+| `Band 1`     | assisted / foundational       | participates with supervision or constrained responsibility      |
+| `Band 2`     | working / reliable            | executes defined tasks or service moments consistently           |
+| `Band 3`     | independent / end-to-end      | owns delivery or accountable execution with limited supervision  |
+| `Band 4`     | leading / shaping / mentoring | shapes systems, standards, orchestration, or other people’s work |
+
+#### Lean rubric framework
+
+MVP rubric rows use this compact schema:
+
+| field                    | meaning                                                                                                                  |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| `domain`                 | one of the launch-supported rubric domains only                                                                          |
+| `capability`             | a lean, human-readable unit such as `interaction design`, `backend delivery`, `line service`, or `run-of-show execution` |
+| `band / range`           | one of the shared `Band 1` to `Band 4` values                                                                            |
+| `evidence expectations`  | the minimum observable proof or corroboration expected for that capability and band                                      |
+| `example artifact types` | illustrative artifact or evidence examples only, never a mandatory checklist                                             |
+
+#### Band-assignment provenance rules
+
+- `self-claimed`
+  - the owner selected the band directly
+  - no outside corroboration is yet required
+- `inferred`
+  - the system suggested a likely band based on structured evidence, artifacts, outcomes, and related profile signals
+  - this may support recall, reviewer triage, and next-best-action guidance
+  - this is not a standalone proof claim and must not be rendered as verified fact
+- `attested`
+  - the band is supported by scoped active non-self evidence such as `peer-attested`, `org-verified`, or `human-reviewed` records tied to the capability or its qualifying artifacts
+  - attestation is capability-scoped and must not silently upgrade unrelated claims
+- `verified`
+  - the capability-band assignment has enough active scoped evidence to satisfy the rubric threshold for that capability and band
+  - verification uses the existing verification model and evidence-layer rules already defined elsewhere in the PRD
+
+Reconciliation rule:
+
+- `self-claimed`, `inferred`, `attested`, and `verified` describe rubric provenance only.
+- The canonical verification badge family remains:
+  - `self-claimed`
+  - `peer-attested`
+  - `org-verified`
+  - `human-reviewed`
+  - `auto-checks-passed`
+- Matching and review may derive an `attested` or `verified` capability band from those underlying scoped badge records, but the rubric block does not replace or rename them.
+
+#### How capability bands feed matching and proofs
+
+Matching rules:
+
+- Matching may use `self-claimed` and `inferred` capability bands for recall, soft ranking, and next-best-action guidance.
+- Explainable shortlist reasons may reference capability bands only when the supporting provenance state is available internally or shown appropriately on the surface.
+- Hard gating, stronger shortlist confidence, or stronger intro language should require `attested` or `verified` support when the assignment asks for stronger proof.
+- Public-safe proof summaries must never present `inferred` as if it were verified fact.
+- Capability-band explanations must stay scoped to the specific capability and must not inflate into a whole-profile claim such as "senior across the board."
+
+Proof interpretation rules:
+
+- Proof strength is not identical to capability band.
+- A higher capability band with weak evidence remains weakly trusted.
+- A lower capability band with strong evidence may still be highly usable for matching when the assignment needs reliable execution more than leadership scope.
+- Capability band answers "at what observable level does this person appear able to perform this capability?"
+- Proof answers "how well-supported is that claim?"
+
+#### Reviewer guidance
+
+Reviewer principles:
+
+- Reviewers assess observable scope, independence, and repeatability, not polish, pedigree, or prestige.
+- One polished artifact should not imply `Band 4`.
+- Brand-name employers, years worked, titles, school prestige, follower counts, or aesthetic polish should not be treated as direct proxies for band.
+- Evidence must be read in domain context.
+- Reviewer confidence must remain scoped to the capability being judged.
+
+Band guidance:
+
+- `Band 1`
+  - enough evidence: participation, supervised execution, constrained contribution, or narrow task support
+  - do not over-interpret as independent ownership
+- `Band 2`
+  - enough evidence: reliable execution on defined tasks, repeatable delivery, or steady performance in bounded service moments
+  - do not over-interpret as system ownership or leadership
+- `Band 3`
+  - enough evidence: independent ownership, end-to-end delivery, or repeated accountable execution with clear outcomes
+  - do not over-interpret as mentoring, organization-wide standard setting, or strategy leadership without stronger proof
+- `Band 4`
+  - enough evidence: leadership, system-shaping decisions, mentoring, orchestration, or repeated high-stakes ownership with visible downstream effect
+  - do not infer from tenure alone or a single flagship artifact
+
+#### Change management
+
+- Each released rubric row set must declare a `rubric_version`.
+- Later edits must be additive or create a new explicit version when semantics change.
+- New domains may be added later without changing the shared four-band ladder.
+- Post-MVP domain expansion should begin with a small curated capability set and grow only when matching demand, review volume, or repeated evidence patterns justify expansion.
+
+#### Sample rubric rows
+
+These rows are illustrative MVP launch examples. They show how the framework stays lean and buildable without creating a giant ontology.
+
+| domain                   | capability              | band / range | evidence expectations                                                                                                                                          | example artifact types                                                                                        |
+| ------------------------ | ----------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `design`                 | `interaction design`    | `Band 2`     | Repeated evidence of designing bounded flows or screens that shipped, with rationale, iterations, or usability feedback showing reliable task-level execution. | shipped screen flows, annotated wireframes, usability notes, product handoff files                            |
+| `design`                 | `design systems`        | `Band 4`     | Strong evidence of system stewardship across teams, component governance, standards, adoption, and mentoring or shaping downstream design consistency.         | component library docs, governance guidelines, adoption metrics, review rituals, cross-team rollout artifacts |
+| `software / data`        | `backend delivery`      | `Band 3`     | Clear evidence of independently shipping services, APIs, or data pipelines end to end, with accountable outcomes and maintainable delivery.                    | merged PRs, service docs, runbooks, incident notes, architecture decision records                             |
+| `software / data`        | `data analysis`         | `Band 2`     | Evidence of reliable analysis on defined questions, including structured outputs, interpretation, and repeatable communication of findings.                    | analysis notebooks, dashboards, experiment readouts, SQL or model summaries                                   |
+| `culinary / hospitality` | `line service`          | `Band 2`     | Evidence of consistent execution during defined service periods, with repeatable station performance, timing, and standards adherence.                         | service logs, station checklists, menu service photos, supervisor attestations                                |
+| `culinary / hospitality` | `menu development`      | `Band 4`     | Strong evidence of shaping menu direction, testing, costing, mentoring kitchen execution, and repeated responsibility for high-stakes culinary decisions.      | menu iteration docs, costing sheets, launch menus, kitchen training materials, event or venue outcomes        |
+| `events / operations`    | `run-of-show execution` | `Band 3`     | Evidence of independently owning event execution from prep through live operations, including issue handling and accountable delivery outcomes.                | run sheets, live ops plans, postmortems, organizer confirmations, event outcome reports                       |
+| `events / operations`    | `vendor coordination`   | `Band 2`     | Evidence of reliably coordinating defined vendor workflows, timelines, or logistics across repeated engagements without implying total event ownership.        | vendor schedules, coordination checklists, timeline docs, delivery confirmations                              |
+
+#### Open Questions
+
+- Which capabilities inside each launch domain should become the first canonical curated row set for `rubric_version = v1`?
+- Whether `verified` capability bands should require a different evidence-count threshold by domain, or whether the first release can rely on reviewer judgment plus the shared band semantics above
+- Whether later post-MVP reviewer tooling should expose a private confidence score separate from the public-safe capability band
+- Whether some assignments should be allowed to require only `attested` support for a capability while reserving `verified` for more sensitive or higher-stakes contexts
+
+#### Acceptance Criteria
+
+- The canonical PRD defines capability bands as a replacement for generic years-of-experience logic, not as an extra label layered on top of years served.
+- The rubric model uses one shared four-band ladder across all MVP domains.
+- The lean rubric framework explicitly includes:
+  - `domain`
+  - `capability`
+  - `band / range`
+  - `evidence expectations`
+  - `example artifact types`
+- The launch-supported rubric domains are exactly:
+  - `design`
+  - `software / data`
+  - `culinary / hospitality`
+  - `events / operations`
+- The PRD defines `self-claimed`, `inferred`, `attested`, and `verified` as capability-band provenance states and states clearly that they do not replace the canonical trust badge family.
+- Matching and proof language stay distinct:
+  - capability band may inform ranking and explanation
+  - proof strength still depends on scoped evidence and verification quality
+- Reviewer guidance states what counts as enough evidence for each band and what must not be over-interpreted.
+- Change-management rules require `rubric_version`, additive change by default, and future domain additions without changing the shared band ladder.
+- Sample rubric tables are included and remain lean rather than attempting exhaustive ontology coverage.
+- Scenario: a user self-claims `Band 3` in `backend delivery` but provides only a vague repository link.
+  - Result: the band remains `self-claimed`, may inform recall or reviewer triage, and does not justify strong proof language by itself.
+- Scenario: a candidate provides repeated event run sheets and outcome evidence confirmed by an organizer.
+  - Result: `run-of-show execution` may qualify for `Band 3 attested`.
+- Scenario: a chef lists 12 years in hospitality with no scoped evidence.
+  - Result: years alone do not assign `Band 4`.
+- Scenario: a designer provides design-system governance docs, component-library artifacts, and cross-team adoption evidence.
+  - Result: `design systems` may qualify for `Band 4 verified` if the scoped evidence meets the rubric threshold.
+
+### 6.7 Public Verification Log and Algorithm Transparency Surface (MVP-safe)
+
+#### Why this exists
+
+- Build trust without turning Proofound into a public audit dump.
+- Make verification provenance legible to a public viewer, proof owner, and authorized reviewer.
+- Show that the matching system evolves over time without black-box vibes.
+- Preserve privacy-safe, scoped transparency rather than full internal disclosure.
+
+#### Public verification log requirements
+
+- The public verification log is a public-safe surface attached to a proof, artifact, or public proof summary when that item is visible publicly.
+- It may show only coarse, scoped, public-safe status information:
+  - current verification state
+  - current freshness state
+  - latest public-safe effective date or timestamp
+  - high-level event labels such as `verified`, `freshness updated`, `verification no longer active`, `withdrawn`, or `imported from older schema`
+  - plain-language provenance summaries such as uploaded by owner, confirmed by organization, reviewed by Proofound, or imported from an earlier Proof Pack export version
+- Public badge changes must render as scoped status transitions, not as dramatic warnings or fraud language.
+- Freshness changes must render as state updates, not as numeric score dumps or raw recalculation traces.
+- Revocations must render as a calm statement that a prior verification is no longer active. They must not expose internal accusations, reviewer disagreement details, or private rationale.
+- When a proof is no longer public, the public verification log must stop showing that proof content immediately. A coarse public-safe withdrawn or unavailable state may remain only when policy explicitly allows it.
+
+#### What remains private
+
+- reviewer private notes
+- admin reason text
+- protected-class or inferred protected-signal content
+- raw internal scoring traces
+- full raw score disclosure unless a future policy explicitly intends it
+- verifier identity details beyond already-approved public-safe scope
+- hidden field values, reveal-gated identity, and workflow-specific private context
+
+#### Internal vs public transparency split
+
+| Audience          | What they may see                                                                                                                                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public viewer     | Current public-safe verification state, freshness state, latest public-safe effective date, coarse provenance language, and narrow lifecycle labels only                              |
+| Proof owner       | Full lifecycle history for their own proof, including private timestamps, richer provenance, non-public verification records, superseded history, and owner-safe remediation guidance |
+| Org reviewer      | Workflow-scoped verification and freshness detail for proofs visible in the relevant review corridor, without unrelated owner-private notes or broader admin-only trust context       |
+| Admin / trust ops | Full audit trail including internal reason codes, reviewer actions, dispute context, revocation context, model and weights metadata, and private investigation notes                  |
+
+- This split is mandatory. The public verification log is not the same surface as owner history, reviewer tooling, or admin audit tooling.
+- Proof owners and authorized reviewers may see fuller history, but public viewers get only the narrow public-safe summary needed to understand provenance and current status.
+
+#### Algorithm changelog requirements
+
+- Proofound must maintain a public-facing algorithm changelog for the matching system.
+- The changelog is a plain-language public change log, not full model documentation.
+- Every public changelog entry must include:
+  - version label
+  - effective date
+  - plain-language summary of what changed
+  - expected user-facing effect category when relevant, such as fairness tuning, proof freshness weighting adjustment, explanation wording improvement, or ranking-policy cleanup
+- Public entries may reference existing internal version concepts such as `score_version`, `model_version`, and `weights_version`, but they must explain the change in plain language.
+- Public changelog entries must avoid black-box phrasing. Use language such as `matching system updated` rather than `the algorithm decided`.
+- The changelog must intentionally not expose:
+  - raw weights
+  - exploit-enabling thresholds
+  - hidden-feature inventory
+  - security-sensitive abuse-detection logic
+  - internal reviewer heuristics
+  - private fairness-slice details
+
+#### Privacy boundaries
+
+- No protected-class inference may appear in the public verification log, public algorithm changelog, counterpart-facing explanations, or related public analytics.
+- No reviewer private notes may appear outside owner-authorized, reviewer-authorized, or admin-authorized surfaces.
+- No full raw score disclosure is allowed in MVP unless a later policy explicitly intends a narrow public contract for it.
+- No hidden field values or reveal-gated identity may leak through status labels, provenance text, or changelog summaries.
+- Transparency must remain honest and scoped. It must not overstate verification coverage, compliance posture, or review certainty.
+
+#### Edge cases
+
+- **Revoked verification**
+  - Public viewer sees that the prior verification is no longer active.
+  - Proof owner sees fuller lifecycle context and next-step guidance.
+  - Org reviewer sees the workflow-relevant status change if the proof remains in scope.
+  - Admin / trust ops see the full internal revocation record and reason context.
+- **Withdrawn proof**
+  - Public rendering of the proof stops immediately.
+  - Public verification log may show a coarse withdrawn or unavailable state only if policy allows it.
+  - Owner retains authorized auditability and export visibility according to existing lifecycle rules.
+- **Imported proof with old version schema**
+  - Public surface may show imported or legacy-version provenance in plain language.
+  - Owner and admins retain the exact `export_schema_version` and import-validation context.
+  - Public surface must not dump compatibility warnings or low-level schema details.
+- **Changed scoring weights**
+  - Public changelog shows version label, effective date, and plain-language summary.
+  - Public surface does not expose raw weights, exact thresholds, or adversarially useful tuning detail.
+  - Admin and fairness review surfaces retain the full versioned metadata needed for audit and analysis.
+
+#### Events and retention
+
+- Public-safe lifecycle events are append-only in intent and must remain legible over time.
+- Public verification log entries should map to existing canonical lifecycle events where possible, including:
+  - `proof_pack_freshness_changed`
+  - `proof_pack_withdrawn`
+  - `verification_revoked`
+  - related import, verification, and trust-tier events already defined elsewhere in this PRD
+- Public retention keeps only user-safe lifecycle history for active and historically relevant states. It is not required to mirror the full internal audit record.
+- Internal audit retention may exceed public retention when needed for dispute handling, fairness review, abuse review, or historical traceability.
+- Withdrawals, deletions, and removals must stop public rendering of affected proof content immediately while preserving authorized internal auditability.
+
+#### Facts & Decisions
+
+- Proofound ships a public verification log as a surface, not as a legal record, compliance artifact, or full internal review ledger.
+- Proofound ships a public algorithm changelog for the matching system as a plain-language trust surface, not as full model documentation.
+- Public wording stays scoped and calm:
+  - `verification no longer active`
+  - `matching system updated`
+  - `freshness updated`
+- The public verification log reuses existing PRD vocabulary for verification state, freshness state, provenance, and version metadata rather than inventing a parallel naming system.
+- Public transparency is intentionally incomplete where fuller disclosure would weaken privacy, reviewer safety, abuse resistance, or security posture.
+- Public log granularity is coarse lifecycle state plus date-oriented legibility, not full event payload disclosure.
+- Algorithm transparency defaults to system-level matching changes, not per-user scoring decomposition.
+
+#### Open Questions
+
+- Whether the public verification log should appear first at the proof-detail level only, or also in compact form on portfolio-level proof summaries at launch
+- Whether withdrawn proofs should always show a coarse historical marker publicly, or disappear entirely on some surfaces
+- Whether the public algorithm changelog should group multiple low-risk wording or fairness-tuning changes into one release note entry when they ship together
+
+#### Acceptance Criteria
+
+- Scenario: a public viewer opens a proof with active verification history.
+  - Result: they can see current verification status, freshness, latest public-safe change timing, and coarse provenance language without seeing reviewer notes, raw evidence internals, or raw scoring traces.
+- Scenario: a verification is revoked.
+  - Result: the public surface shows that the verification is no longer active, while owner and authorized reviewer surfaces retain fuller lifecycle context and private notes remain private.
+- Scenario: a proof is withdrawn.
+  - Result: public proof content disappears immediately, and any remaining public log state stays coarse and reveals no hidden proof content.
+- Scenario: a proof imported from an older schema version is displayed.
+  - Result: the public surface may show imported or legacy-version provenance language, while exact schema compatibility detail remains owner-only or internal.
+- Scenario: matching scoring weights change.
+  - Result: the public changelog shows version label, effective date, and a plain-language summary, while raw weights, thresholds, and exploit-sensitive internals remain non-public.
+- Scenario: a counterpart-facing surface renders transparency information.
+  - Result: it never exposes protected-class inference, hidden field values, reveal-gated identity, reviewer private notes, or admin reason text.
 
 ---
 
@@ -2143,8 +3275,9 @@ These are the only launch KPIs promised across the PRD.
 ### Purpose
 
 - The MVP analytics plan must measure not only speed and workflow movement, but also whether Proofound is producing trustworthy, reusable, verifiable proof.
-- Trust and proof-value analytics are internal launch instrumentation, not a license to turn the product into a BI surface.
-- This block extends TTSC, TTFQI, TTV, PAC, SUS, and fairness note status with first-class proof quality, verification, freshness, and trust lifecycle metrics.
+- Trust must be first-class in analytics because Proofound is a trust-oriented product, not only a workflow product.
+- Trust and proof-value analytics are internal launch instrumentation for product, ops, and engineering, not a license to turn the product into a BI surface.
+- This block extends TTSC, TTFQI, TTV, PAC, SUS, and fairness note status with first-class proof quality, verification, freshness, fulfillment, reuse, and trust lifecycle metrics.
 
 ### Proof Quality Score (MVP)
 
@@ -2153,8 +3286,8 @@ These are the only launch KPIs promised across the PRD.
   - **evidence completeness**
   - **verifiability**
   - **outcomes clarity**
-  - **freshness**
   - **artifact clarity / structure**
+  - **freshness**
 - Each dimension is scored as:
   - `0`
     - missing, weak, or unusable
@@ -2173,251 +3306,228 @@ These are the only launch KPIs promised across the PRD.
   - `85-100`
     - excellent
 - User-facing product surfaces may show only a guidance band, readiness state, or next-best action by default, not a raw numeric score.
-- Internal product and ops dashboards may use the exact score, score distribution, and dimension-level breakdown.
+- Internal product and trust-ops dashboards may use the exact score, score distribution, and dimension-level breakdown.
 - The Proof Quality Score is a trust-quality heuristic only. It is not a ranking override, not a fairness substitute, and must not bypass verification gates, reveal rules, or privacy policy.
 
-### Time-to-Verified
+### Metric Definitions
 
 - **Time-to-Verified**
-  - Median elapsed time from `proof_pack_created` to the first successful `verification_record_completed` tied to that Proof Pack or its primary artifact.
-- Proof Packs without a completed verification remain in funnel drop-off and do not count as completed for this metric.
-- Where implementation currently records verification primarily at the artifact or verification-record layer, Time-to-Verified may be derived by joining Proof Pack lifecycle records to `verification_record_completed`.
+  - Median elapsed time from `proof_pack_created` to first successful `verification_completed` for that proof pack.
+  - If a workflow has no proof pack yet, use `submission_created` as the fallback start event.
+  - Proofound should prefer the proof-pack clock whenever a pack exists and only fall back to the submission clock when a pack has not yet been issued.
+- **Assignment fulfillment rate**
+  - Share of published assignments that reach at least one verified proof-backed completion outcome within the measurement window.
+- **Proof reuse rate**
+  - Share of issued proof packs that are later used in at least one downstream match, intro, interview, or contract event.
+- **Proof freshness distribution**
+  - Distribution of qualifying proof packs across `fresh`, `review_soon`, `stale`, and `expired`.
+- **Reviewer SLA adherence**
+  - Share of verification-review cases completed within the defined reviewer SLA target.
+- **Sponsor conversion rate**
+  - Share of sponsor-backed verification or review opportunities that convert to a completed verified artifact.
+- **Organization repeat rate**
+  - Share of organizations that publish, verify, or complete another proof-backed workflow after their first completed proof-backed workflow.
+- **Learner retention after first verified artifact**
+  - Share of learners who return after their first verified artifact and create, update, share, or reuse proof again within the measurement window.
+
+Launch-blocking internal trust metrics are:
+
+- Proof Quality Score coverage
+- Time-to-Verified
+- assignment fulfillment rate
+- proof reuse rate
+- proof freshness distribution
+- reviewer SLA adherence
+
+Tracked at launch but not launch-blocking because they require longer observation windows:
+
+- sponsor conversion rate
+- organization repeat rate
+- learner retention after first verified artifact
 
 ### Verification Lifecycle Funnel
 
 The canonical MVP verification lifecycle funnel is:
 
-1. proof created
-2. evidence attached
-3. attestation requested
-4. verification completed
-5. proof pack exported / shared
-6. proof used in match / intro / interview / contract
+1. assignment viewed
+2. application started
+3. application submitted
+4. submission created
+5. evidence attached
+6. attestation requested
+7. verification completed
+8. proof pack issued
+9. proof pack shared / exported
+10. proof used in match / intro / interview / contract
 
 Canonical stage-to-event mapping:
 
-- **proof created**
-  - `proof_pack_created`
+- **assignment viewed**
+  - `assignment_viewed`
+- **application started**
+  - `application_started`
+- **application submitted**
+  - `application_submitted`
+- **submission created**
+  - `submission_created`
 - **evidence attached**
-  - `proof_artifact_created`
+  - `evidence_attached`
 - **attestation requested**
-  - `attestation_requested`, `verification_request_created`
+  - `attestation_requested`
 - **verification completed**
-  - `verification_record_completed`
-- **proof pack exported / shared**
-  - `proof_pack_exported`, `portfolio_pdf_export_succeeded`, `portfolio_share_link_copied`
+  - `verification_completed`
+- **proof pack issued**
+  - `proof_pack_issued`
+- **proof pack shared / exported**
+  - `proof_pack_shared`, `proof_pack_exported`
 - **proof used in match / intro / interview / contract**
-  - `proof_pack_submitted`, `candidate_proof_card_submitted`, `intro_created`, `interview_scheduled`, `contract_signed`
-  - downstream events should include `proof_pack_id` or `proof_card_id` when available
+  - `proof_used_in_match`, `proof_used_in_intro`, `proof_used_in_interview`, `proof_used_in_contract`
 
-MVP may derive some later-stage reuse metrics by joining Proof Pack or Proof Card identifiers into downstream workflow records instead of requiring a brand-new event family for every usage surface.
-
-### Metric Catalog
-
-#### User-facing metrics
-
-- proof freshness state
-- verification status
-- trust or readiness state
-- proof quality guidance band or next-best-action hints only
-- public portfolio publication and indexability state
-
-User-facing surfaces remain calm workflow guidance, not dashboards.
-
-#### Internal product metrics
-
-- Proof Quality Score average, distribution, and dimension-level weakness trends
-- Time-to-Verified
-- verification lifecycle funnel conversion and drop-off
-- verification completion, expiry, and failure rates
-- proof freshness distribution across `fresh`, `review_soon`, `stale`, `expired`
-- proof reuse in qualified intros, interviews, and contracts
-- reveal event counts and rates for `reveal_requested`, `reveal_granted`, `reveal_denied`
-- intro expiry rate
-- interview no-show rate
-- public portfolio publication, indexing, share, and public view activity
-
-#### Admin-only trust / audit metrics
-
-- review override and operator override usage by reason code
-- verifier integrity status and verification failure patterns
-- reveal denials by policy or workflow reason
-- audit completeness for proof, reveal, verification, and downstream-use trails
-- suspicious, policy-sensitive, or operator-assisted trust events
-
-#### Canonical metric definitions
-
-- **Verification completion rate**
-  - `verification_record_completed / verification_request_created`
-- **Proof freshness distribution**
-  - Share of Proof Packs or qualifying proof artifacts in `fresh`, `review_soon`, `stale`, `expired`
-- **Proof reuse in successful matches**
-  - Share of successful downstream outcomes where a Proof Pack or Proof Card tied to the eventual match, intro, interview, or contract was actually used
-- **Reveal events**
-  - counts and rates for `reveal_requested`, `reveal_granted`, `reveal_denied`
-- **Intro expiry**
-  - expired intros as a share of intros created
-- **Interview no-show**
-  - no-shows as a share of interviews scheduled
-- **Override usage**
-  - review overrides and operator overrides as counts, rates, and reason-code breakdowns
-- **Public portfolio index / share status**
-  - publication state, indexing state, share activity, and public view activity
+The final stage may be rolled up for funnel reporting, but the machine-stable events must still stay separate so downstream usage can be measured by surface and outcome type.
 
 ### Dashboards
 
-Launch analytics must support these internal trust-oriented views:
+Launch analytics must support three separate analytics views by audience:
 
-- **Product trust dashboard**
+- **User-facing progress metrics**
+  - verification status
+  - proof freshness
+  - proof quality guidance band
+  - next-best action
+  - proof pack issued or shared state
+- **Internal product metrics**
   - Proof Quality Score distribution
   - Time-to-Verified
-  - verification lifecycle funnel
-  - freshness distribution
-  - proof reuse in successful intros, interviews, and contracts
-  - reveal and publication / indexing summary
-- **Operations dashboard**
-  - verification requests pending, completed, expired, failed
-  - stale or expiring proof backlog
-  - intro expiry rate
-  - interview no-show rate
-  - override usage trend
-  - publication or indexing incidents and share-state health
-- **Admin trust / audit dashboard**
-  - override reason breakdown
-  - reveal denial reason breakdown
-  - verification integrity anomalies
-  - audit-trail completeness and reconciliation status
+  - assignment, application, and submission funnel conversion
+  - proof reuse rate
+  - sponsor conversion rate
+  - organization repeat rate
+  - learner retention after first verified artifact
+- **Admin / trust ops metrics**
+  - reviewer queue depth
+  - reviewer SLA adherence
+  - verification completion, failure, and expiry
+  - stale-proof backlog
+  - trust anomalies and override reason codes
+  - audit completeness and ETL reconciliation health
 
-At launch, these remain internal or admin-only dashboards. They are not user-facing BI surfaces.
+The user-facing view must remain calm and progress-oriented. It is not a BI dashboard and must not expose internal trust scoring detail casually.
 
-### Event Taxonomy Updates
+### Event Taxonomy Additions
 
-This block extends the event taxonomy with payload guidance for trust, proof quality, and verification lifecycle reporting. Where the repo already defines a machine-stable event name, that name wins.
+This block extends the event taxonomy with explicit lifecycle and trust events for MVP analytics. Event payloads must use ID-like, enum-like, timestamp, or bounded reason-code fields only. They must not use free-text PII.
 
-#### Proof events
+- `assignment_viewed`
+  - `assignment_id`, `viewer_type`, `source_surface`, `org_id`
+- `application_started`
+  - `assignment_id`, `candidate_id`, `org_id`, `source_surface`
+- `application_submitted`
+  - `assignment_id`, `candidate_id`, `submission_id`, `org_id`
+- `submission_created`
+  - `submission_id`, `assignment_id`, `candidate_id`, `submission_type`
+- `evidence_attached`
+  - `submission_id`, `proof_pack_id`, `artifact_id`, `artifact_kind`, `visibility`
+- `attestation_requested`
+  - `submission_id`, `proof_pack_id`, `verification_request_id`, `attestation_type`, `requested_party_type`
+- `verification_completed`
+  - `verification_record_id`, `submission_id`, `proof_pack_id`, `verification_type`, `verification_result`, `time_to_verified_hours`
+- `proof_pack_issued`
+  - `proof_pack_id`, `submission_id`, `owner_id`, `proof_quality_score_band`, `freshness_state`
+- `proof_pack_shared`
+  - `proof_pack_id`, `share_method`, `destination_type`, `source_surface`
+- `proof_pack_exported`
+  - `proof_pack_id`, `export_format`, `export_scope`, `source_surface`
+- `proof_used_in_match`
+  - `proof_pack_id`, `match_id`, `assignment_id`, `org_id`
+- `proof_used_in_intro`
+  - `proof_pack_id`, `intro_id`, `assignment_id`, `org_id`
+- `proof_used_in_interview`
+  - `proof_pack_id`, `interview_id`, `assignment_id`, `org_id`
+- `proof_used_in_contract`
+  - `proof_pack_id`, `contract_id`, `assignment_id`, `org_id`
 
-- Canonical events include `proof_pack_created`, `proof_pack_submitted`, and implementation-level artifact events such as `proof_artifact_created`.
-- Minimum property groups:
-  - `proof_pack_id`
-  - `proof_artifact_id` when applicable
-  - `owner_type`
-  - `subject_type`
-  - `artifact_kind`
-  - `visibility`
-  - `reveal_gate`
-  - `actor_type`
-  - `source`
+Reviewer SLA reporting note:
 
-#### Verification events
-
-- Canonical machine-stable events include `verification_request_created`, `verification_request_resent`, `verification_request_expired`, `verification_response_recorded`, `verification_record_completed`, `verification_record_failed`.
-- Minimum property groups:
-  - `verification_record_id`
-  - `verification_kind`
-  - `subject_type`
-  - `subject_id`
-  - `proof_artifact_id`
-  - `status`
-  - `integrity_status`
-  - `expires_in_days`
-  - `time_to_verified_hours` when completed
-
-#### Reveal events
-
-- Canonical machine-stable events include `reveal_requested`, `reveal_granted`, `reveal_denied`.
-- Minimum property groups:
-  - `reveal_event_id`
-  - `match_id`
-  - `assignment_id`
-  - `profile_id`
-  - `org_id`
-  - `requested_scope`
-  - `granted_scope`
-  - `trigger_type`
-  - `reason_code`
-  - `source_surface`
-  - `outcome`
-
-#### Workflow outcome events
-
-- Canonical events include `intro_created`, `interview_scheduled`, `contract_signed`, plus machine-stable workflow events such as `intro_workflow_expired` and `interview_no_show_recorded`.
-- Minimum property groups:
-  - `intro_workflow_id` or `interview_id`
-  - `assignment_id`
-  - `org_id`
-  - `proof_pack_id` or `proof_card_id` when available
-  - `from_state`
-  - `reason_code`
-  - `actor_type`
-  - `source`
-
-#### Override events
-
-- Canonical machine-stable events include `review_override_applied`, `review_override_reverted`, `operator_override_logged`.
-- Minimum property groups:
-  - `match_id` or `target_id`
-  - `override_reason_code`
-  - `previous_stage`
-  - `new_stage`
-  - `requested_scope`
-  - `actor_type`
-  - `source`
-
-#### Public portfolio events
-
-- Canonical machine-stable events include `portfolio_publication_state_changed`, `portfolio_indexing_state_changed`, `portfolio_share_link_copied`, `portfolio_public_viewed`.
-- Minimum property groups:
-  - `subject_type`
-  - `subject_id`
-  - `publication_state`
-  - `indexing_state`
-  - `robots_state`
-  - `sitemap_state`
-  - `reason_code`
-  - `trigger`
-  - `source`
-
-Naming note:
-
-- The PRD may describe human-readable metrics such as verification completed, intro expiry, interview no-show, or portfolio publication state.
-- The canonical machine-stable event names remain concrete and implementation-safe, including `verification_record_completed`, `intro_workflow_expired`, `interview_no_show_recorded`, and `portfolio_publication_state_changed`.
+- MVP does not require a dedicated `reviewer_sla_breached` event if reviewer queue and completion timestamps already exist in source systems.
+- Reviewer SLA adherence may be warehouse-derived from review assignment and completion timestamps.
+- If the implementation already emits review-stage queue events, those events should be reused rather than duplicated.
 
 ### Privacy Rules
 
 - No PII in analytics events.
 - No raw message text, freeform feedback text, or direct public viewer identity.
-- Private Zen data is excluded from trust, product, reveal, and public analytics.
-- Demographic data is out of scope unless explicitly opt-in and used only in privacy-safe aggregate form.
-- No protected-attribute payloads in routine trust or product event streams.
-- Trust and proof-value analytics must not widen reveal scope or backdoor access to identity-bearing data.
+- No Zen or private wellbeing content in trust scoring.
+- Demographics are opt-in only and never used casually.
+- No demographic or protected-attribute fields in routine trust or product analytics streams.
+- Trust analytics must not widen reveal scope, reconstruct identity, or backdoor access to identity-bearing data.
+- Event payloads must use opaque IDs, enums, timestamps, and bounded reason codes only.
+
+### Data Quality and ETL Checks Required Before Launch
+
+- Schema validation is required for every launch-critical event.
+- Event ingestion must deduplicate idempotently by event key.
+- Lifecycle ordering must validate assignment -> application -> submission -> verification -> issue -> share or export -> downstream use.
+- Source-table reconciliation is required for launch-critical counts and status distributions.
+- Null-rate monitoring is required on all required fields.
+- Forbidden-payload scanning must block PII and Zen or private wellbeing leakage.
+- Freshness-state reconciliation must match source-of-truth verification and proof tables.
+- Dashboard aggregates must reconcile to warehouse and source-of-truth queries before launch.
+
+Launch thresholds:
+
+- forbidden payload violations: `0%`
+- schema validation failures on launch-critical events: `0%`
+- required-field null rate on launch-blocking metrics: `<=1%`
+- required-field null rate on non-blocking trust metrics: `<=3%`
+- event ordering or reconciliation mismatches on launch-blocking flows: `<=0.5%`
+- dashboard aggregate variance versus source-of-truth queries: `<=1%`
 
 ### Facts & Decisions
 
 - TTSC, TTFQI, TTV, PAC, SUS, and fairness note status remain the canonical launch KPI family.
-- Proof quality, freshness, verification, reuse, reveal, override, and publication metrics now become first-class internal trust metrics for MVP.
+- Proof quality, freshness, verification, fulfillment, reuse, and reviewer SLA metrics are first-class internal trust metrics for MVP.
+- Trust is a product value and must be treated as a first-class analytics dimension, not a side note to speed metrics.
 - User-facing surfaces remain status and guidance surfaces rather than analytics dashboards.
-- Existing machine-stable event names defined in the repo take precedence over looser human-readable phrasing.
+- The PRD now standardizes explicit lifecycle event names for this funnel. Implementation aliases may exist temporarily, but analytics handoff should map to the canonical names in this block.
+- Reviewer SLA adherence may be warehouse-derived at MVP if source timestamps are reliable.
 - Proof reuse may be measured through a combination of direct event emission and join-based attribution in MVP.
 
 ### Open Questions
 
-- Which downstream contract outcome should be treated as the canonical proof reuse success anchor when a workflow reaches both interview and contract stages?
-- What tolerance threshold should be enforced for event-to-source reconciliation in launch ETL validation?
+- Should sponsor-backed verification be modeled as its own first-class review opportunity object, or derived from funding metadata attached to review requests?
+- What exact observation windows should launch reporting use for organization repeat rate and learner retention after first verified artifact?
+- If implementation still emits older trust-lifecycle event names in some paths, where should the alias mapping live so engineering and analytics stay synchronized?
 
 ### Acceptance Criteria
 
 - Launch dashboards exist for:
-  - product trust dashboard
-  - operations dashboard
-  - admin trust / audit dashboard
-- Launch-critical trust events validate against required event schemas.
-- Sampled launch-critical trust events contain no forbidden payload classes.
-- freshness distribution, verification counts, override counts, and publication states reconcile to source-of-truth tables within a documented tolerance.
-- ETL validations confirm:
-  - duplicate events are deduplicated idempotently
-  - lifecycle ordering remains valid across proof -> verification -> downstream use
-  - proof-trust snapshots reconcile with raw events
-  - Zen and other private-partition data stay excluded from warehouse and dashboard outputs
+  - user-facing progress metrics surface
+  - internal product trust dashboard
+  - admin / trust ops dashboard
+- Launch-blocking metrics are:
+  - Proof Quality Score coverage
+  - Time-to-Verified
+  - assignment fulfillment rate
+  - proof reuse rate
+  - proof freshness distribution
+  - reviewer SLA adherence
+- Tracked at launch but not launch-blocking:
+  - sponsor conversion rate
+  - organization repeat rate
+  - learner retention after first verified artifact
+- Launch-critical trust events validate against required event schemas with `0%` schema failures.
+- Launch-critical trust events contain `0%` forbidden payload violations.
+- Required-field null rate stays at `<=1%` for launch-blocking metrics and `<=3%` for non-blocking trust metrics.
+- Event ordering or source reconciliation mismatches stay at `<=0.5%` on launch-blocking flows.
+- Dashboard aggregate variance versus source-of-truth queries stays at `<=1%`.
+- Privacy launch gates are:
+  - zero PII payload violations
+  - zero Zen or private wellbeing leakage into trust scoring
+  - no casual demographic use in trust or product dashboards
+- Manual review of the final section confirms:
+  - the KPI family still includes Proof Quality Score, Time-to-Verified, fulfillment rate, reviewer SLA adherence, sponsor conversion, and trust-oriented KPIs
+  - trust is first-class in analytics without turning the user product into a BI experience
+  - the funnel starts at assignment viewing and ends at downstream proof use
 
 ## 7.7 Explicit Analytics Exclusions
 
@@ -2438,6 +3548,7 @@ Those may exist operationally later, but they are not part of the MVP product co
 
 - Proof Pack, artifact, proof, and Proof Card are used consistently with non-overlapping meanings.
 - `PRD_for_a_web_platform_MVP.master-latest.md` is the canonical handoff PRD.
+- `1.5 Canonical Scope Cleanup and Legacy Section Reconciliation` governs contradictions across the full document, and newer canonical language overrides older conflicting text.
 - Public portfolio and portfolio indexing are explicit.
 - Public directory language is absent from the MVP contract.
 - Blind-by-default progressive reveal is the only canonical matching privacy model.
@@ -2465,7 +3576,7 @@ Those may exist operationally later, but they are not part of the MVP product co
 ## 8.4 Lifecycle and State Acceptance
 
 - Profile readiness tiers, user trust tier, Proof Pack verification status, and Proof Pack lifecycle are documented as separate state systems.
-- Match, intro, interview, feedback follow-up, and portfolio distribution each have one canonical lifecycle.
+- Assignment, application, submission, verification, Proof Pack, intro, interview, engagement verification, feedback follow-up, and portfolio distribution each have one canonical lifecycle or derived SLA contract.
 - Public portfolio publication does not weaken reveal restrictions in matching.
 
 ## 8.5 Analytics and Privacy Acceptance
@@ -2476,8 +3587,13 @@ Those may exist operationally later, but they are not part of the MVP product co
 - Zen Hub analytics rules match Zen Hub privacy rules everywhere in the PRD.
 - Org trust-tier distribution, escalation rates, and abuse flags remain internal-only and do not create user-facing trust dashboards or exposure surfaces.
 - Launch trust dashboards are defined for product, operations, and admin trust or audit use without changing the calm user-facing product surface.
-- Launch-critical trust events pass schema validation and forbidden-payload checks.
-- ETL validation covers idempotent deduplication, lifecycle ordering, proof-trust snapshot reconciliation, and exclusion of Zen or private-partition data from warehouse outputs.
+- Launch-blocking trust metrics are explicitly identified as Proof Quality Score coverage, Time-to-Verified, assignment fulfillment rate, proof reuse rate, proof freshness distribution, and reviewer SLA adherence.
+- Sponsor conversion rate, organization repeat rate, and learner retention after first verified artifact are tracked at launch but are not go or no-go blockers.
+- Launch-critical trust events pass schema validation with `0%` schema failures and `0%` forbidden-payload violations.
+- ETL validation covers idempotent deduplication, lifecycle ordering, proof-trust snapshot reconciliation, dashboard aggregate parity, and exclusion of Zen or private-partition data from warehouse outputs.
+- Required-field null rates stay within `<=1%` for launch-blocking trust metrics and `<=3%` for non-blocking trust metrics.
+- Event ordering or source reconciliation mismatches on launch-blocking flows stay within `<=0.5%`.
+- Dashboard aggregate variance versus source-of-truth queries stays within `<=1%`.
 
 ---
 
@@ -2506,48 +3622,67 @@ Those may exist operationally later, but they are not part of the MVP product co
 
 ---
 
-## 11. Reviewer Marketplace, Impact Bounties, and Anti-Exploitation Corridor (Post-MVP Alpha)
+## 11. Reviewer Marketplace, Impact Bounties, Sponsors, and Anti-Exploitation Guardrails (Post-MVP Alpha Corridor)
 
 ### Facts & Decisions
 
-- This corridor exists to reduce exploitation, reduce verification bottlenecks, and let sponsored or social-good work scale safely without expanding MVP into a full marketplace.
-- This corridor is **Post-MVP Alpha** only and is **not launch-blocking**.
+- This corridor exists for three reasons:
+  - reduce exploitation
+  - reduce verification bottlenecks
+  - unlock social-good work with funding support
+- This corridor is **Post-MVP Alpha** only and is **not launch-blocking for MVP**.
 - MVP remains unchanged:
   - no payments
   - no escrow
-  - no heavy marketplace mechanics
-- The alpha corridor is limited to:
-  - reviewer directory alpha
-  - manual reviewer assignment flow
-  - sponsor-funded bounty support as metadata and state only
-  - pro-bono caps and warnings
-  - lightweight dispute intake
-- Reviewer directory alpha is visible to org owners only, with limited reviewer profile data and no automated marketplace matching.
+  - no generalized billing
+  - no open marketplace liquidity mechanics
+- Launch recommendation uses a three-part split:
+  - **MVP launch-blocking:** none
+  - **recommended alpha-launch minimum:** reviewer directory alpha, manual reviewer assignment, reviewer SLA fields, sponsor object, impact bounty metadata and states, pro-bono caps and warnings, lightweight dispute intake, audit logging, and internal alpha metrics
+  - **later post-alpha:** liquidity systems, payouts, escrow, tax/legal automation, and generalized billing
 
-### Reviewer Marketplace Alpha
+### Corridor Scope
 
-Reviewer marketplace alpha is a constrained reviewer-selection layer, not an open two-sided liquidity system.
+This corridor stays narrow and operational. It is an alpha corridor for controlled reviewer coordination, not a full marketplace or payments platform.
 
-Reviewer profile fields:
+The corridor scope is limited to:
 
-- reviewer name or handle
+- reviewer directory alpha
+- manual reviewer assignment
+- reviewer SLA fields
+- sponsor object
+- impact bounty metadata and states
+- pro-bono caps and warnings
+- lightweight dispute intake
+  Reviewer directory alpha is visible only to org owners and internal Proofound operators, with no public reviewer browse surface and no automated marketplace matching.
+
+### Reviewer Model
+
+Reviewer alpha is a constrained reviewer-selection model, not an open two-sided marketplace.
+
+Reviewer fields:
+
+- reviewer ID or reference
+- display name or handle
 - headline or review specialty
 - expertise domains
 - sectors
 - geography or timezone
 - languages
-- review types supported
+- supported review types
 - availability status
 - active capacity
-- target SLA window
+- target first-response SLA
+- target review-complete SLA
 - conflict disclosures
+- visibility scope
 - trust indicators
 
 Eligibility:
 
 - verified account
 - accepted reviewer policy
-- completed onboarding for the reviewer role
+- completed reviewer onboarding
 - at least one qualifying expertise or trust signal
 - no active sanctions or unresolved abuse flags
 
@@ -2555,14 +3690,13 @@ Conflict rules:
 
 - no self-review
 - no current employer or reporting-line review
-- no direct sponsor conflict on the same bounty without explicit Proofound review approval
 - no undisclosed financial or personal conflict
+- no sponsor conflict on the same bounty without explicit Proofound approval
 
-SLA fields:
+Visibility:
 
-- target first-response window
-- target review-complete window
-- capacity status such as `available`, `limited`, `unavailable`
+- org-owner and internal-ops only in alpha
+- not visible as a public marketplace profile
 
 Trust indicators:
 
@@ -2570,89 +3704,98 @@ Trust indicators:
 - completed review count band
 - SLA adherence band
 - dispute-rate band
-- recent activity band
+- recent-activity band
 
-### Impact Bounties Alpha
+### Sponsor Object
 
-Impact bounties alpha exists to support sponsored or social-good review work as metadata and workflow state, not as a payout or escrow product.
+Sponsors are modeled as funding-support metadata so the system can support social-good and impact work later without forcing payments infrastructure now.
 
-Bounty metadata:
+Sponsor object fields:
 
-- bounty flag
-- sponsor linked or not
-- sponsor type or sponsor record reference
+- sponsor reference ID
+- sponsor type
+- sponsor display name
+- funding intent or program type
+- allowed impact categories
+- commitment band or amount-ceiling metadata
+- approval status
+- visibility scope
+- linked bounty references
+- internal notes or audit references
+
+Sponsor linkage is funding-support metadata only. In alpha it does **not** imply payout orchestration, escrow, payroll, invoicing, tax handling, or legal automation.
+
+### Impact Bounty Model
+
+Impact bounty alpha exists to support sponsored or social-good review work through metadata and workflow state, not through a payout or escrow engine.
+
+Bounty fields:
+
+- amount
+- currency
+- sponsor linkage
+- terms
+- assignment linkage
+- acceptance states
+- closing states
 - social-good or impact category
-- optional bounty amount or range text
-- bounty rationale
-- visibility setting
-- acceptance constraints
+- visibility scope
+- rationale or funding note
 
-Sponsor linkage:
+Acceptance conditions:
 
-- sponsor linkage is recorded as metadata, not as a payout engine
-- sponsor support may unlock review work but does not create escrow, payroll, or invoicing obligations in alpha
+- org must satisfy assignment completeness rules
+- reviewer must satisfy eligibility and conflict checks
+- sponsor linkage, if required, must be in a valid state before review starts
 
-Visibility:
-
-- default visibility is limited to the org owner, Proofound ops, and eligible reviewers when assigned or invited
-- bounties are not a public opportunity board
-
-Acceptance rules:
-
-- org must meet assignment completeness rules
-- reviewer must meet eligibility and conflict checks
-- bounty state must be valid before review begins
-
-Anti-abuse constraints:
-
-- no repeated unpaid commercial work beyond the pro-bono cap
-- no bait-and-switch after reviewer acceptance
-- no splitting one review into multiple unpaid requests to evade caps
-- no bounty activation without sponsor linkage or an explicit approved impact exception
-
-Alpha bounty states:
+Bounty states:
 
 - `none`
+- `draft`
 - `sponsor_pending`
 - `sponsor_confirmed`
-- `bounty_active`
-- `bounty_paused`
-- `bounty_closed`
+- `reviewer_invited`
+- `accepted`
+- `in_review`
+- `closed_completed`
+- `closed_cancelled`
+- `closed_disputed`
 
-### Anti-Exploitation Rules
+### Anti-Exploitation Guardrails
+
+Proofound must not let unpaid review drift into disguised commercial labor.
 
 Unpaid scope is blocked when:
 
-- the assignment is clearly commercial or revenue-linked
-- turnaround or complexity exceeds free review thresholds
-- the org has already consumed its pro-bono cap
-- the same org repeatedly requests unpaid review for similar work
+- the work is clearly commercial or revenue-linked and exceeds the free review corridor
+- turnaround, complexity, or expected labor exceeds unpaid review thresholds
+- the org has exhausted its pro-bono allowance
+- repeated unpaid review requests indicate labor substitution rather than occasional social-good review
 
 A bounty or sponsor unlock is required when:
 
-- the cap is exceeded
+- pro-bono caps are exceeded
 - review urgency exceeds the standard alpha SLA
-- specialized reviewer expertise is required beyond free corridor thresholds
-- Proofound flags exploitation risk based on prior use
+- scarce specialist reviewer expertise is required
+- Proofound flags elevated exploitation risk based on prior org behavior
 
-Warning language appears at:
+Pro-bono caps are enforced through:
 
-- assignment publish or edit
-- reviewer request or assignment step
-- cap threshold crossing
-- sponsor-linked bounty activation
+- rolling org-level counters
+- warning thresholds before the cap is reached
+- hard blocks at publish, assignment, and reviewer-acceptance checkpoints
+- logged internal overrides with rationale
+
+Explicit anti-exploitation protections:
+
+- Proofound blocks attempts to convert unpaid review into ongoing commercial labor
+- Proofound blocks splitting one commercial review need into multiple smaller unpaid requests to evade caps
+- Proofound blocks bait-and-switch scope changes after reviewer acceptance without re-evaluation
 
 Canonical warning language should remain calm and explicit, for example:
 
 - `This review request exceeds the current pro-bono corridor and requires sponsor-backed or bounty-backed support before it can proceed.`
 - `Proofound limits repeated unpaid commercial review requests to reduce reviewer exploitation.`
-
-Enforcement points:
-
-- pre-publish validation
-- reviewer assignment validation
-- reviewer acceptance validation
-- admin or ops override logging
 
 ### Dispute Flow
 
@@ -2660,65 +3803,66 @@ Dispute handling in this corridor is intake-first and lightweight. It is designe
 
 Intake:
 
-- dispute submitted with reason code, summary, optional evidence links, and related reviewer or bounty reference
+- reason code
+- summary
+- optional evidence links
+- linked reviewer
+- linked assignment
+- linked bounty
+- reporter role
 
 Review status:
 
 - `submitted`
+- `triaged`
 - `under_review`
 - `needs_more_info`
 
 Resolution states:
 
 - `resolved_upheld`
-- `resolved_rejected`
 - `resolved_adjusted`
+- `resolved_rejected`
+- `closed`
 
-Audit log requirements:
+Audit logging:
 
 - actor
 - timestamp
 - object reference
-- old and new status
+- status transition
 - rationale
 - linked evidence references
 - enforcement action taken
 
 ### Metrics
 
-These are internal alpha monitoring metrics only. They are not launch KPIs and are not required for MVP release.
+These are internal alpha monitoring metrics only. They are not MVP launch KPIs.
 
 - reviewer SLA adherence
-- reviewer assignment turnaround
-- bounty usage rate
-- sponsor-linked bounty share
-- dispute rate by review type
-- pro-bono cap trigger frequency
-- override frequency for anti-exploitation enforcement
-
-### Open Questions
-
-- exact numeric pro-bono cap thresholds by org type
-- whether bounty amount text is always hidden from reviewers until assignment
-- minimum completed-review threshold for stronger trust indicators
+- bounty usage
+- dispute rate
+- pro-bono cap triggers
+- sponsor conversion
 
 ### Out of Scope
 
 - full marketplace liquidity systems
 - complex payouts
-- invoicing or payroll
 - escrow engine
-- legal automation
+- tax/legal automation
+- generalized billing platform
 
 ### Acceptance Criteria
 
-- The section clearly labels itself as Post-MVP Alpha and explicitly states it is not required for MVP launch.
-- Reviewer directory alpha is limited to org-owner browsing plus manual assignment, with no automated liquidity mechanics.
-- Sponsor-funded bounty support is defined as metadata and state only, without payout or escrow commitments.
-- Pro-bono caps, warnings, and enforcement points are clearly defined.
-- Dispute intake, statuses, resolution states, and audit log requirements are specified.
-- Metrics are defined as internal alpha monitoring only.
-- The section does not reintroduce payments, payroll, escrow, or legal automation into MVP.
+- The section clearly labels itself as a Post-MVP Alpha corridor and explicitly states it is not required for MVP launch.
+- The corridor states why it exists: reducing exploitation, reducing verification bottlenecks, and unlocking social-good work with funding support.
+- Reviewer directory alpha is limited to org-owner and internal-ops visibility plus manual reviewer assignment only.
+- Reviewer SLA fields, sponsor object fields, bounty fields, and bounty states are defined without turning the corridor into a payouts or billing product.
+- Anti-exploitation rules clearly state when unpaid commercial scope is blocked, when bounty or sponsor support is required, and how pro-bono caps are enforced.
+- Dispute intake, review statuses, resolution states, and audit logging requirements are specified.
+- Metrics include reviewer SLA adherence, bounty usage, dispute rate, pro-bono cap triggers, and sponsor conversion.
+- The launch recommendation clearly distinguishes MVP launch-blocking from alpha-launch minimums and later post-alpha work.
 
 ---
 

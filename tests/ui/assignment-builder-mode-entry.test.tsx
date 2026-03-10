@@ -39,11 +39,13 @@ vi.mock('@/lib/templates/prefill', () => ({
 }));
 
 vi.mock('@/components/matching/assignment-steps', () => ({
-  Step1BusinessValue: ({ onOpenTemplatePicker }: any) => (
+  Step1BusinessValue: ({ onOpenTemplatePicker, templateAccessEnabled }: any) => (
     <div>
-      <button type="button" onClick={onOpenTemplatePicker}>
-        Open templates
-      </button>
+      {templateAccessEnabled ? (
+        <button type="button" onClick={onOpenTemplatePicker}>
+          Load template
+        </button>
+      ) : null}
     </div>
   ),
   Step2TargetOutcomes: () => <div>Step2</div>,
@@ -141,7 +143,7 @@ describe('Assignment builder mode entry behavior', () => {
     expect(screen.queryByText('Weight Matrix')).not.toBeInTheDocument();
   });
 
-  it('keeps Basic mode when applying an advanced template before opt-in', async () => {
+  it('keeps templates hidden until Advanced mode is explicitly enabled', async () => {
     setupFetch({
       templates: [
         {
@@ -156,19 +158,12 @@ describe('Assignment builder mode entry behavior', () => {
     render(<AssignmentBuilderPage />);
 
     expect(await screen.findByTestId('advanced-mode-opt-in')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Open templates' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Apply Advanced template' }));
-
-    await waitFor(() => {
-      expect(toastInfoMock).toHaveBeenCalledWith(
-        'This template includes advanced controls. Enable Advanced mode to use them.'
-      );
-    });
-
+    expect(screen.queryByRole('button', { name: 'Load template' })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('template-picker')).not.toBeInTheDocument();
     expect(screen.getByTestId('advanced-mode-opt-in')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Advanced' })).not.toBeInTheDocument();
     expect(screen.queryByText('Weight Matrix')).not.toBeInTheDocument();
+    expect(toastInfoMock).not.toHaveBeenCalled();
   });
 
   it('loads existing advanced draft with advanced controls already unlocked', async () => {

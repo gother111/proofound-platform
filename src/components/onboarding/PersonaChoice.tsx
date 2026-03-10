@@ -55,8 +55,8 @@ export function PersonaChoice({ onSelect }: PersonaChoiceProps) {
                 Organization
               </CardTitle>
               <CardDescription className="text-base text-proofound-charcoal/70 dark:text-muted-foreground">
-                Publish a clean public organization portfolio link on day 1, then manage hiring and
-                collaboration
+                Publish a clean public organization link on day 1, then create one assignment and
+                review a shortlist
               </CardDescription>
             </div>
             <Button

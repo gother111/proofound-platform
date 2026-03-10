@@ -1,10 +1,10 @@
 # Documentation Registry
 
 > Doc Class: `active`
-> Last Verified: `2026-03-01`
+> Last Verified: `2026-03-06`
 > Generated for documentation freshness governance.
-> Last Generated: `2026-03-01`
-> Latest Active Docs Sync: [PRO-119 revamp stabilization](../project/changes/entries/2026-03-01T09-42-33Z__master__d9a1a144.md)
+> Last Generated: `2026-03-06`
+> Latest Active Docs Sync: [Ticket finisher automation support](../project/changes/entries/2026-03-06T08-29-13Z__master__d3a4303d.md)
 
 Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified`, `archive-target`, `protected`.
 
@@ -36,7 +36,8 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 | `IMPLEMENTATION_STATUS_CURRENT.md`                                                                      | `historical`     | `root`        | `archive`           | `-`           | `docs/archive/status-reports/root-historical/IMPLEMENTATION_STATUS_CURRENT.md`                          | `false`   |
 | `INTEGRATION_TEST_PLAN.md`                                                                              | `reference-spec` | `root`        | `repo`              | `2026-02-12`  | `-`                                                                                                     | `false`   |
 | `Implement.md`                                                                                          | `active`         | `root`        | `repo+live`         | `2026-02-26`  | `-`                                                                                                     | `true`    |
-| `LAUNCH_RUNBOOK.md`                                                                                     | `active`         | `root`        | `repo+live`         | `2026-02-26`  | `-`                                                                                                     | `false`   |
+| `LAUNCH_RUNBOOK.md`                                                                                     | `active`         | `root`        | `repo+live`         | `2026-03-08`  | `-`                                                                                                     | `false`   |
+| `docs/launch-operations-mvp.md`                                                                         | `active`         | `docs`        | `repo+live`         | `2026-03-08`  | `-`                                                                                                     | `false`   |
 | `LINEAR_SETUP_INSTRUCTIONS.md`                                                                          | `active`         | `root`        | `repo+live`         | `2026-02-12`  | `-`                                                                                                     | `false`   |
 | `LOGGING_MIGRATION_GUIDE.md`                                                                            | `active`         | `root`        | `repo+live`         | `2026-02-12`  | `-`                                                                                                     | `false`   |
 | `MANUAL_TESTING_CHECKLIST.md`                                                                           | `reference-spec` | `root`        | `repo`              | `2026-02-12`  | `-`                                                                                                     | `false`   |
@@ -72,6 +73,7 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 | `agent/checklists/preflight.md`                                                                         | `active`         | `agent`       | `repo+live`         | `2026-02-26`  | `-`                                                                                                     | `true`    |
 | `agent/checklists/verification.md`                                                                      | `active`         | `agent`       | `repo+live`         | `2026-02-26`  | `-`                                                                                                     | `true`    |
 | `agent/runbooks/setup.md`                                                                               | `active`         | `agent`       | `repo+live`         | `2026-02-26`  | `-`                                                                                                     | `true`    |
+| `agent/runbooks/proofound-ticket-finisher.md`                                                           | `active`         | `agent`       | `repo+live`         | `2026-03-06`  | `-`                                                                                                     | `false`   |
 | `agent/scratchpad/README.md`                                                                            | `active`         | `agent`       | `repo+live`         | `2026-02-19`  | `-`                                                                                                     | `false`   |
 | `agent/scratchpad.md`                                                                                   | `active`         | `agent`       | `repo+live`         | `2026-02-12`  | `-`                                                                                                     | `true`    |
 | `data/README-EXPERTISE-ATLAS-SKILLS.md`                                                                 | `reference-spec` | `data`        | `repo`              | `2026-02-12`  | `-`                                                                                                     | `false`   |
@@ -236,6 +238,7 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 | `docs/sentry-setup.md`                                                                                  | `active`         | `docs`        | `repo+live`         | `2026-02-12`  | `-`                                                                                                     | `false`   |
 | `docs/structured-logging.md`                                                                            | `active`         | `docs`        | `repo+live`         | `2026-02-12`  | `-`                                                                                                     | `false`   |
 | `docs/testing-strategy.md`                                                                              | `active`         | `docs`        | `repo+live`         | `2026-03-01`  | `-`                                                                                                     | `false`   |
+| `docs/verification-policy-mvp.md`                                                                       | `active`         | `docs`        | `repo+live`         | `2026-03-08`  | `-`                                                                                                     | `false`   |
 | `docs/weeks-6-8-summary.md`                                                                             | `historical`     | `docs`        | `archive`           | `-`           | `docs/archive/status-reports/docs-historical/weeks-6-8-summary.md`                                      | `false`   |
 | `e2e/PRD_CRITERIA_VALIDATION.md`                                                                        | `reference-spec` | `e2e`         | `repo`              | `2026-02-12`  | `-`                                                                                                     | `false`   |
 | `metrics.md`                                                                                            | `active`         | `root`        | `repo+live`         | `2026-02-26`  | `-`                                                                                                     | `true`    |

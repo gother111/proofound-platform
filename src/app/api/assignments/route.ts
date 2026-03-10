@@ -17,11 +17,14 @@ import {
   deriveRequirementsFromMatrix,
 } from '@/lib/assignments/expertise-matrix';
 import { triggerFirstAssignmentSurvey } from '@/lib/surveys/sus-triggers';
-import { AssignmentStatusSchema } from '@/lib/contracts/domain';
 import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
 import { isFeatureEnabled } from '@/lib/feature-flags/server';
 
 export const dynamic = 'force-dynamic';
+
+const AssignmentStatusInputSchema = z
+  .enum(['draft', 'active', 'hold', 'paused', 'closed'])
+  .transform((value) => (value === 'paused' ? 'hold' : value));
 
 // Validation schemas
 const SkillRequirementSchema = z.object({
@@ -52,7 +55,7 @@ const AssignmentSchema = z.object({
   creationStatus: z
     .enum(['draft', 'pipeline_in_progress', 'pending_review', 'ready_to_publish', 'published'])
     .optional(),
-  status: AssignmentStatusSchema.optional(),
+  status: AssignmentStatusInputSchema.optional(),
   valuesRequired: z.array(z.string()).optional(),
   causeTags: z.array(z.string()).optional(),
   mustHaveSkills: z.array(SkillRequirementSchema).optional(),

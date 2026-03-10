@@ -75,8 +75,8 @@ export default async function OrganizationHomePage({
                 </div>
                 <p className="text-white/90 text-sm leading-relaxed">
                   {metrics.activeAssignments > 0
-                    ? `Your public organization portfolio is live. You also have ${metrics.activeAssignments} active assignment${metrics.activeAssignments > 1 ? 's' : ''} with ${metrics.totalMatches} candidate match${metrics.totalMatches > 1 ? 'es' : ''}.`
-                    : 'Your day-1 win is live: a clean public organization portfolio link. Next, create your first assignment when ready.'}
+                    ? `Your public organization link is live. Keep the flow narrow: refine trust basics, review your shortlist, and move active assignments toward introductions and feedback.`
+                    : 'Your day-1 win is live: a clean public organization link. Next, confirm trust basics and create one assignment.'}
                 </p>
                 <Link href={`/app/o/${slug}/portfolio`}>
                   <Button className="text-sm mt-1 bg-white text-proofound-forest hover:bg-japandi-bg min-h-[44px]">
@@ -102,11 +102,11 @@ export default async function OrganizationHomePage({
                 Active assignments
               </p>
               <Link
-                href={`/app/o/${slug}/assignments`}
+                href={`/app/o/${slug}/assignments/new`}
                 className="mt-3 inline-flex min-h-[44px] items-center px-3 -mx-3 rounded-md text-xs font-medium"
                 style={{ color: '#1C4D3A' }}
               >
-                View all <ArrowRight className="w-3 h-3 ml-1" />
+                Create one <ArrowRight className="w-3 h-3 ml-1" />
               </Link>
             </Card>
 

@@ -6,6 +6,7 @@ import { acceptInvitation } from '@/actions/org';
 import { Building2, Mail } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
+import { CAPABILITY_TOKEN_CLASSES, inspectCapabilityToken } from '@/lib/security/capability-tokens';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,6 +19,23 @@ export default async function AcceptInvitationPage({
   const { slug, token } = await params;
 
   const supabase = await createClient();
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+  const inspected = await inspectCapabilityToken(token, {
+    tokenClass: CAPABILITY_TOKEN_CLASSES.ORG_MEMBER_INVITE,
+    actor: {
+      email: authUser?.email ?? null,
+      profileId: user.id,
+      principalType: 'user_account',
+    },
+    metadata: { surface: 'org_invitation_page' },
+  });
+
+  if (!inspected.ok) {
+    notFound();
+  }
+
   const invitationQuery = await supabase
     .from('org_invitations')
     .select(
@@ -36,7 +54,7 @@ export default async function AcceptInvitationPage({
         )
       `
     )
-    .eq('token', token)
+    .eq('id', inspected.token.source_id)
     .eq('organizations.slug', slug)
     .gt('expires_at', new Date().toISOString())
     .maybeSingle();
