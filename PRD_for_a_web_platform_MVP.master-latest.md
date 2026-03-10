@@ -142,26 +142,19 @@ MVP excludes:
 ### Purpose
 
 Prevent older mirrored or legacy text from re-expanding Proofound into generic recruiting or HR software.
+This section is now a short override note only. The full final reconciliation matrix, operating appendices, and legacy cleanup rules live in `12. Final Reconciliation Addendum, Operating Appendices, and Legacy Cleanup`.
 
 ### Facts & Decisions
 
 - The canonical master PRD remains the only normative product document.
 - The compatibility mirror is summary-only.
 - Executive summary and archived legacy docs are reference-only.
+- If this section and Section 12 ever overlap, Section 12 wins immediately.
 
 ### Deprecated / Narrowed / Moved / Removed
 
-| Surface or older text pattern                                                                  | Disposition                      | Canonical outcome                                                                                                                               |
-| ---------------------------------------------------------------------------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Legacy org RBAC terms such as `owner/admin/member/viewer` in non-canonical docs                | `narrowed`                       | Canonical product roles are `org_owner`, `org_manager`, `org_reviewer`; implementation aliases may exist only if mapped to the canonical matrix |
-| Older soft-delete or delayed-delete product wording                                            | `deprecated`                     | Canonical product contract uses immediate product delete with reconciliation ledger, audit residue, and cache invalidation                      |
-| Any broad org-management, donor, investor, template-library, or expertise-hub wording          | `removed` or `moved to appendix` | Lean org trust profile, one assignment path, match review, minimal access only                                                                  |
-| Any public candidate directory, searchable people index, or dense-market browse language       | `removed`                        | Public portfolios exist, open people index does not                                                                                             |
-| Any generic ATS, HRIS, payroll, contract-generation, escrow, or milestone-billing logic        | `moved to appendix` or `removed` | Not canonical MVP                                                                                                                               |
-| Any text implying public counters, engagement loops, or generic recruiting funnel gamification | `deprecated`                     | Calm, proof-first, privacy-first workflow only                                                                                                  |
-| Mirror or executive-summary text that adds states, events, or scope beyond the master PRD      | `removed`                        | Mirror and summary remain summary-only                                                                                                          |
-| Legacy marketplace density assumptions in launch or ops docs                                   | `narrowed`                       | Thin-market fallback, BYOC, proof-building, and safe hold states are canonical                                                                  |
-| Old generic feedback language without structured rubric                                        | `deprecated`                     | Structured rubric and calm next-step guidance only                                                                                              |
+- Use the canonical cleanup table in Section 12.2 as the final disposition matrix.
+- Legacy or mirrored wording that conflicts with the master PRD is deprecated immediately even if not yet deleted from archived docs.
 
 ### Visibility / Privacy Implications
 
@@ -185,7 +178,7 @@ Prevent older mirrored or legacy text from re-expanding Proofound into generic r
 
 - No older broad org-management or recruiting-SaaS language can override the proof-first MVP.
 - Mirror and executive-summary docs remain secondary and summary-only.
-- Deprecated and moved concepts are explicitly labeled so future edits do not reintroduce them by accident.
+- Deprecated and moved concepts are explicitly labeled in Section 12 so future edits do not reintroduce them by accident.
 - Canonical role, visibility, deletion, fallback, and sponsor rules are the only launch-binding rules.
 
 ---
@@ -4931,26 +4924,24 @@ Monitor post-launch before rollback when:
 ### Purpose
 
 Capture the operating rollout plan without widening launch scope.
+This appendix is now summarized here only. The final operating roadmap, pilot assumptions, checkpoints, and exit criteria live in `12.3 Pilot, Rollout, and 12-Week Roadmap Appendix`.
 
 ### Facts & Decisions
 
 - MVP must launch narrow.
 - Post-launch learning should come from curated pilots, not open marketplace sprawl.
 - Reviewer network, sponsor corridor, university corridor, and employer corridor are phased expansions.
+- If this appendix and Section 12.3 overlap, Section 12.3 wins immediately.
 
 ### 12-Week Roadmap
 
-| Window     | Classification           | Focus                                                                                                                                                            |
-| ---------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Weeks 1-4  | launch-blocking          | principals and memberships, visibility matrix, permission matrix, token security, upload quarantine, structured feedback, reconciliation ledger, launch monitors |
-| Weeks 5-8  | early post-launch        | first curated org pilots, first public events or missions, case-study publishing from verified public-safe outcomes, thin-market fallback tuning                 |
-| Weeks 9-12 | later expansion corridor | reviewer network incubation, university first-proof corridor, employer pilot corridor, sponsor and bounty alpha readiness                                        |
+- See Section 12.3 for the final phased roadmap and corridor split.
 
 ### Initial Pilot Assumptions
 
-- 3 to 5 early organization partners.
+- 2 NGOs + 1 commune or equivalent early partners is the default pilot anchor.
 - 30 to 75 initial individuals across proof-ready and first-proof cohorts.
-- 1 to 2 flagship Events or Missions for public-safe case-study storytelling.
+- 2 to 3 public Events or Missions with multiple assignments is the working pilot target.
 - No open candidate marketplace and no public searchable people index.
 
 ### Target Early Partners
@@ -4959,51 +4950,27 @@ Capture the operating rollout plan without widening launch scope.
 - startups with bounded project work
 - NGOs with clear outcomes and limited hiring corridors
 - university or bootcamp partners only in the later first-proof corridor, not as a launch requirement
+- community ambassador or local chapter concepts are later corridor operating experiments, not launch scope
 
 ### First Public Events / Missions
 
-- 1 to 2 curated initiative pages only
-- each requires:
-  - bounded assignment set
-  - public-safe proof
-  - explicit consent for public outcome storytelling
-- no event-management workflow expansion
+- See Section 12.3 for the final events and missions corridor.
 
 ### Outcome Case-Study Publishing
 
-- launch-blocking: none
-- early post-launch:
-  - publish only when proof is public-safe and outcome claims are verifiable enough
-  - no private feedback, no hidden candidate identity, no sponsor over-claiming
-- later expansion:
-  - richer templates and sponsor linkage
+- See Section 12.3 for the final case-study publishing rules.
 
 ### Reviewer Network Incubation
 
-- not launch-blocking
-- weeks 9-12 focus:
-  - manual reviewer sourcing
-  - SLA tracking
-  - scoped reviewer assignment
-  - trust and dispute hooks
+- Not launch-blocking. Final reviewer incubation rules live in Sections 12.3 and 12.4.
 
 ### University / First-Proof Corridor
 
-- not launch-blocking
-- early post-launch or later corridor only
-- focus:
-  - first-proof evidence creation
-  - safe org introductions
-  - no resume-factory or campus-feed behavior
+- Not launch-blocking. Final first-proof corridor rules live in Section 12.3.
 
 ### Employer Pilot Corridor
 
-- not launch-blocking
-- later corridor focus:
-  - a handful of proof-first employers
-  - narrow assignment templates
-  - structured shortlist feedback
-  - no ATS integration
+- Not launch-blocking. Final employer pilot and analytics corridor rules live in Section 12.3.
 
 ### Out of Scope
 
@@ -5039,226 +5006,20 @@ Capture the operating rollout plan without widening launch scope.
 
 ## 11. Reviewer Marketplace, Impact Bounties, Sponsors, and Anti-Exploitation Guardrails (Post-MVP Alpha Corridor)
 
+### Purpose
+
+Keep the post-MVP alpha corridor visible without making this section a second competing spec.
+
 ### Facts & Decisions
 
-- This corridor exists for three reasons:
-  - reduce exploitation
-  - reduce verification bottlenecks
-  - unlock social-good work with funding support
-- This corridor is **Post-MVP Alpha** only and is **not launch-blocking for MVP**.
+- This corridor remains **Post-MVP Alpha** and **not launch-blocking**.
+- The full consolidated corridor now lives in `12.4 Reviewer Marketplace, Impact Bounties, Sponsor Corridor`.
+- If this section and Section 12.4 ever overlap, Section 12.4 wins immediately.
 - MVP remains unchanged:
   - no payments
   - no escrow
   - no generalized billing
   - no open marketplace liquidity mechanics
-- Launch recommendation uses a three-part split:
-  - **MVP launch-blocking:** none
-  - **recommended alpha-launch minimum:** reviewer directory alpha, manual reviewer assignment, reviewer SLA fields, sponsor object, impact bounty metadata and states, pro-bono caps and warnings, lightweight dispute intake, audit logging, and internal alpha metrics
-  - **later post-alpha:** liquidity systems, payouts, escrow, tax/legal automation, and generalized billing
-
-### Corridor Scope
-
-This corridor stays narrow and operational. It is an alpha corridor for controlled reviewer coordination, not a full marketplace or payments platform.
-
-The corridor scope is limited to:
-
-- reviewer directory alpha
-- manual reviewer assignment
-- reviewer SLA fields
-- sponsor object
-- impact bounty metadata and states
-- pro-bono caps and warnings
-- lightweight dispute intake
-  Reviewer directory alpha is visible only to org owners and internal Proofound operators, with no public reviewer browse surface and no automated marketplace matching.
-
-### Reviewer Model
-
-Reviewer alpha is a constrained reviewer-selection model, not an open two-sided marketplace.
-
-Reviewer fields:
-
-- reviewer ID or reference
-- display name or handle
-- headline or review specialty
-- expertise domains
-- sectors
-- geography or timezone
-- languages
-- supported review types
-- availability status
-- active capacity
-- target first-response SLA
-- target review-complete SLA
-- conflict disclosures
-- visibility scope
-- trust indicators
-
-Eligibility:
-
-- verified account
-- accepted reviewer policy
-- completed reviewer onboarding
-- at least one qualifying expertise or trust signal
-- no active sanctions or unresolved abuse flags
-
-Conflict rules:
-
-- no self-review
-- no current employer or reporting-line review
-- no undisclosed financial or personal conflict
-- no sponsor conflict on the same bounty without explicit Proofound approval
-
-Visibility:
-
-- org-owner and internal-ops only in alpha
-- not visible as a public marketplace profile
-
-Trust indicators:
-
-- admin-vetted flag
-- completed review count band
-- SLA adherence band
-- dispute-rate band
-- recent-activity band
-
-### Sponsor Object
-
-Sponsors are modeled as funding-support metadata so the system can support social-good and impact work later without forcing payments infrastructure now.
-
-Sponsor object fields:
-
-- sponsor reference ID
-- sponsor type
-- sponsor display name
-- funding intent or program type
-- allowed impact categories
-- commitment band or amount-ceiling metadata
-- approval status
-- visibility scope
-- linked bounty references
-- internal notes or audit references
-
-Sponsor linkage is funding-support metadata only. In alpha it does **not** imply payout orchestration, escrow, payroll, invoicing, tax handling, or legal automation.
-
-### Impact Bounty Model
-
-Impact bounty alpha exists to support sponsored or social-good review work through metadata and workflow state, not through a payout or escrow engine.
-
-Bounty fields:
-
-- amount
-- currency
-- sponsor linkage
-- terms
-- assignment linkage
-- acceptance states
-- closing states
-- social-good or impact category
-- visibility scope
-- rationale or funding note
-
-Acceptance conditions:
-
-- org must satisfy assignment completeness rules
-- reviewer must satisfy eligibility and conflict checks
-- sponsor linkage, if required, must be in a valid state before review starts
-
-Bounty states:
-
-- `none`
-- `draft`
-- `sponsor_pending`
-- `sponsor_confirmed`
-- `reviewer_invited`
-- `accepted`
-- `in_review`
-- `closed_completed`
-- `closed_cancelled`
-- `closed_disputed`
-
-### Anti-Exploitation Guardrails
-
-Proofound must not let unpaid review drift into disguised commercial labor.
-
-Unpaid scope is blocked when:
-
-- the work is clearly commercial or revenue-linked and exceeds the free review corridor
-- turnaround, complexity, or expected labor exceeds unpaid review thresholds
-- the org has exhausted its pro-bono allowance
-- repeated unpaid review requests indicate labor substitution rather than occasional social-good review
-
-A bounty or sponsor unlock is required when:
-
-- pro-bono caps are exceeded
-- review urgency exceeds the standard alpha SLA
-- scarce specialist reviewer expertise is required
-- Proofound flags elevated exploitation risk based on prior org behavior
-
-Pro-bono caps are enforced through:
-
-- rolling org-level counters
-- warning thresholds before the cap is reached
-- hard blocks at publish, assignment, and reviewer-acceptance checkpoints
-- logged internal overrides with rationale
-
-Explicit anti-exploitation protections:
-
-- Proofound blocks attempts to convert unpaid review into ongoing commercial labor
-- Proofound blocks splitting one commercial review need into multiple smaller unpaid requests to evade caps
-- Proofound blocks bait-and-switch scope changes after reviewer acceptance without re-evaluation
-
-Canonical warning language should remain calm and explicit, for example:
-
-- `This review request exceeds the current pro-bono corridor and requires sponsor-backed or bounty-backed support before it can proceed.`
-- `Proofound limits repeated unpaid commercial review requests to reduce reviewer exploitation.`
-
-### Dispute Flow
-
-Dispute handling in this corridor is intake-first and lightweight. It is designed to preserve auditability without creating a full legal-resolution system in alpha.
-
-Intake:
-
-- reason code
-- summary
-- optional evidence links
-- linked reviewer
-- linked assignment
-- linked bounty
-- reporter role
-
-Review status:
-
-- `submitted`
-- `triaged`
-- `under_review`
-- `needs_more_info`
-
-Resolution states:
-
-- `resolved_upheld`
-- `resolved_adjusted`
-- `resolved_rejected`
-- `closed`
-
-Audit logging:
-
-- actor
-- timestamp
-- object reference
-- status transition
-- rationale
-- linked evidence references
-- enforcement action taken
-
-### Metrics
-
-These are internal alpha monitoring metrics only. They are not MVP launch KPIs.
-
-- reviewer SLA adherence
-- bounty usage
-- dispute rate
-- pro-bono cap triggers
-- sponsor conversion
 
 ### Out of Scope
 
@@ -5267,85 +5028,26 @@ These are internal alpha monitoring metrics only. They are not MVP launch KPIs.
 - escrow engine
 - tax/legal automation
 - generalized billing platform
+- duplicating the consolidated corridor spec outside Section 12
 
 ### Acceptance Criteria
 
-- The section clearly labels itself as a Post-MVP Alpha corridor and explicitly states it is not required for MVP launch.
-- The corridor states why it exists: reducing exploitation, reducing verification bottlenecks, and unlocking social-good work with funding support.
-- Reviewer directory alpha is limited to org-owner and internal-ops visibility plus manual reviewer assignment only.
-- Reviewer SLA fields, sponsor object fields, bounty fields, and bounty states are defined without turning the corridor into a payouts or billing product.
-- Anti-exploitation rules clearly state when unpaid commercial scope is blocked, when bounty or sponsor support is required, and how pro-bono caps are enforced.
-- Dispute intake, review statuses, resolution states, and audit logging requirements are specified.
-- Metrics include reviewer SLA adherence, bounty usage, dispute rate, pro-bono cap triggers, and sponsor conversion.
-- The launch recommendation clearly distinguishes MVP launch-blocking from alpha-launch minimums and later post-alpha work.
+- This section clearly states it is a non-launch-blocking alpha corridor.
+- The detailed operating rules live in Section 12.4.
 
 ## 11.1 Reviewer SLA Defaults, Bounty Pricing Bands, Sponsor Corridor, and Legal Template Hooks (Post-MVP Alpha)
 
 ### Purpose
 
 Strengthen the post-MVP alpha corridor without making it launch-blocking.
+This section is now a short pointer only. Final SLA, pricing-band, sponsor metadata, and legal hook rules live in Sections 12.4 and 12.6.
 
 ### Facts & Decisions
 
 - This section is inactive unless the reviewer or sponsor corridor is enabled.
 - These defaults are placeholders for alpha operations, not launch promises.
 - No payout, escrow, or billing engine is implied.
-
-### Reviewer SLA Defaults
-
-- review accept or decline: within 3 business days
-- review completion after acceptance: within 5 business days
-- dispute intake acknowledgement: within 2 business days
-- dispute resolution target: within 10 business days
-- SLA breach state is internal and analytics-visible, not public
-
-### Bounty Pricing-Band Placeholders
-
-Canonical placeholder bands:
-
-- `band_a_micro`
-- `band_b_standard`
-- `band_c_complex`
-- `band_d_custom`
-
-Required stored fields:
-
-- `pricing_band_code`
-- `currency_code`
-- `display_range_min`
-- `display_range_max`
-- `pricing_source=manual|sponsor_defined`
-
-Rule:
-
-- alpha may store and show bands, not guaranteed payout mechanics
-
-### Sponsor Metadata Expectations
-
-Required sponsor fields:
-
-- `sponsor_id`
-- `sponsor_type`
-- `display_name`
-- `funding_state=pending|confirmed|withdrawn`
-- `purpose_tag`
-- `disclosure_scope`
-- `linked_review_or_bounty_ref`
-- `policy_version`
-
-### Legal Template Hooks
-
-Required hook references:
-
-- `assignment_terms_template_id`
-- `license_template_id`
-- `dispute_policy_version`
-- `sponsor_terms_template_id` where applicable
-
-Rule:
-
-- hooks reference templates and policy versions only
-- MVP and alpha do not become a contract authoring product
+- If this section and Sections 12.4 or 12.6 overlap, Section 12 wins immediately.
 
 ### Roles / Permissions Implications
 
@@ -5361,14 +5063,7 @@ Rule:
 
 ### Events / Analytics Implications
 
-Canonical events:
-
-- `review_sla_started`
-- `review_sla_breached`
-- `sponsor_metadata_confirmed`
-- `bounty_band_assigned`
-- `dispute_acknowledged`
-- `dispute_resolved`
+- Use the consolidated alpha events in Section 12.4.
 
 ### Out of Scope
 
@@ -5385,12 +5080,955 @@ Canonical events:
 ### Acceptance Criteria
 
 - The alpha corridor can operate with metadata, SLAs, and policy hooks without implying a billing product.
-- Reviewer SLAs, sponsor fields, and template hooks are defined even though they are not launch-blocking.
-- Sponsor or bounty activation cannot bypass dispute or anti-exploitation policy.
+- The detailed operating defaults are defined in Sections 12.4 and 12.6 rather than duplicated here.
 
 ---
 
-## 12. Final Approval Checklist
+## 12. Final Reconciliation Addendum, Operating Appendices, and Legacy Cleanup
+
+### 12.1 Canonical Scope Statement
+
+#### Purpose
+
+Restate the final MVP corridor in one decisive launch-safe block and prevent broader ambitions from becoming accidental blockers.
+
+#### Facts & Decisions
+
+- Proofound MVP is centered on:
+  - proof creation
+  - verification and provenance
+  - explainable matching
+  - privacy-safe progressive reveal
+  - intros, interviews, and feedback follow-up
+  - public portfolio trust
+  - lean organization assignment workflows
+- Proofound is proof-first, portfolio-first, privacy-first, bias-aware, explainable, and calm by design.
+- Proofound is not a generic recruitment SaaS, HR admin suite, engagement product, or gamified portfolio-maintenance tool.
+- Broader ambitions remain represented only as:
+  - appendices
+  - MVP-lite corridors
+  - Post-MVP Alpha corridors
+  - later expansion corridors
+- Broader ambition material must never override launch-blocking MVP sections.
+
+#### Scope tag
+
+`MVP`
+
+#### Core rules or object model
+
+- Canonical launch objects remain:
+  - `proof_pack`
+  - `artifact`
+  - `proof_card`
+  - `match`
+  - `intro`
+  - `interview`
+  - `feedback_follow_up`
+  - `assignment`
+- Launch-critical corridors are:
+  - proof building and publishing
+  - verification and attestations
+  - visibility and privacy controls
+  - explainable matching
+  - intro and interview workflow
+  - public trust surfaces
+  - lean org review and assignment handling
+- Any feature not directly strengthening those corridors is appendix-only unless another canonical MVP section explicitly marks it as required.
+
+#### Privacy / visibility implications
+
+- Blind-by-default reveal, narrowest-scope-wins visibility, and private-by-default evidence remain launch-binding.
+- Public portfolio trust must stay public-safe and must not leak reviewer notes, raw evidence internals, hidden identity, or private wellbeing content.
+
+#### Events / analytics implications
+
+- Launch-blocking instrumentation stays anchored to the canonical MVP event taxonomy and `7.6 Trust, Proof Quality, and Verification Lifecycle Analytics (MVP)`.
+- Appendix metrics may be tracked later without becoming launch gates unless explicitly promoted into the canonical KPI contract.
+
+#### Out of Scope
+
+- public people directory behavior
+- dense marketplace liquidity
+- ATS, HRIS, payroll, escrow, or generalized billing
+- vanity engagement loops
+- broad org operating-system surfaces
+- sponsor and reviewer marketplace mechanics as launch blockers
+
+#### Acceptance Criteria
+
+- The MVP corridor is stated once and unambiguously.
+- Broader ambition material is clearly labeled as appendix, MVP-lite, Post-MVP Alpha, or later.
+- No reader can reasonably interpret the master PRD as requiring generic recruiting-suite or engagement-product scope for launch.
+
+### 12.2 Final Contradiction Cleanup Table
+
+#### Purpose
+
+Resolve lingering legacy scope conflicts with one deterministic disposition table.
+
+#### Facts & Decisions
+
+- Newer canonical sections win immediately.
+- Older mirrored text, historical summaries, and archived legacy PRD language must never override this master PRD.
+- Anything still useful but non-core moves to an appendix or post-MVP corridor rather than remaining ambiguous in MVP.
+
+#### Scope tag
+
+`MVP`
+
+#### Core rules or object model
+
+- Disposition enums:
+  - `keep as-is`
+  - `rewrite and narrow`
+  - `move to appendix`
+  - `deprecate/remove`
+- Rule:
+  - exactly one primary disposition must apply to each legacy theme
+  - if ambiguity remains, the narrower launch-safe reading wins
+
+#### Final contradiction cleanup table
+
+| legacy section / theme                                                                                               | keep as-is | rewrite and narrow | move to appendix | deprecate/remove | reason                                                                                                                                                                               |
+| -------------------------------------------------------------------------------------------------------------------- | ---------- | ------------------ | ---------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Zen Hub mood-responsive UI                                                                                           |            | Yes                |                  |                  | Keep only optional private check-ins and reflections; remove mood-reactive product behavior, adaptive UX logic, and any implication that wellbeing changes ranking, trust, or reveal |
+| self-assessments                                                                                                     |            | Yes                |                  |                  | Self-claims may exist only as low-trust owner-entered profile input or rubric guidance; they must not act as standalone trust proof or ranking authority                             |
+| work schedule / burnout guardrails                                                                                   |            |                    | Yes              |                  | Useful for later safety and labor-boundary exploration, but not part of launch MVP trust or matching logic                                                                           |
+| local in-person discovery / external resource library                                                                |            |                    | Yes              |                  | These are discovery or support corridors, not proof-first launch requirements                                                                                                        |
+| micro-wins streaks                                                                                                   |            |                    |                  | Yes              | Streak mechanics contradict calm UX and create engagement-product drift                                                                                                              |
+| vanity / engagement loops                                                                                            |            |                    |                  | Yes              | Public counters, habit loops, leaderboards, and retention nudges are non-canonical and conflict with proof-first trust design                                                        |
+| over-expanded org surfaces such as structure, culture, impact hubs, project libraries, enterprise expertise surfaces |            | Yes                |                  |                  | Narrow to trust profile, assignment publishing, match review, minimal access, and approved MVP-lite corridors only                                                                   |
+| donor / investor export framing                                                                                      |            |                    | Yes              |                  | Broader funding and stakeholder reporting may matter later, but launch keeps only canonical owner export and public-safe trust export                                                |
+| premium-pack / purchase-journey assumptions                                                                          |            |                    |                  | Yes              | Pricing-packaging and purchase-flow assumptions are not canonical MVP product behavior                                                                                               |
+
+#### Privacy / visibility implications
+
+- No legacy theme may widen public visibility, reveal hidden identity, expose private wellbeing signals, or create sponsor disclosure by default.
+- Self-assessment and future support signals remain private or low-trust unless another canonical section explicitly narrows their use.
+
+#### Events / analytics implications
+
+- Deprecated engagement-loop concepts must not produce launch event requirements.
+- Zen or private wellbeing events remain segregated from trust, ranking, fairness, and public analytics.
+- Appendix-only corridors may define future instrumentation, but those events are not launch-blocking.
+
+#### Out of Scope
+
+- preserving conflicting legacy behavior for convenience
+- treating archived PRD wording as normative launch scope
+
+#### Acceptance Criteria
+
+- Each listed legacy theme has one unambiguous disposition.
+- No mirrored or archived wording can override this table.
+- Any still-useful non-core concept is clearly appendix-only or later-corridor only.
+
+### 12.3 Pilot, Rollout, and 12-Week Roadmap Appendix
+
+#### Purpose
+
+Capture the broader operating plan while keeping launch scope disciplined and testable.
+
+#### Facts & Decisions
+
+- The pilot plan exists to validate Proofound through curated proof-first use, not open-market scale.
+- The roadmap is split into:
+  - launch-blocking MVP
+  - early post-launch corridor
+  - later expansion
+- Foundation and proof-hardening work come before reviewer marketplace, sponsor, and employer-discovery expansion.
+- Community, university, and ambassador concepts are operating corridors, not launch dependencies.
+
+#### Scope tag
+
+`MVP-lite`
+
+#### Core rules or object model
+
+##### 12-week phased roadmap
+
+| phase / weeks                     | corridor                                  | classification             | required focus                                                                                                                                                            |
+| --------------------------------- | ----------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Foundation, Weeks 1-2             | canonical launch foundation               | launch-blocking MVP        | principals and memberships, visibility matrix, permission matrix, token security, upload quarantine, publish-safe portfolio and org trust surfaces                        |
+| Verification hardening, Weeks 3-4 | proof and trust hardening                 | launch-blocking MVP        | verification flow quality, attestations, structured feedback, reconciliation ledger, explainable matching consistency, launch monitors                                    |
+| Weeks 5-8                         | curated operating pilots                  | early post-launch corridor | 2 NGOs + 1 commune or equivalent, 2 to 3 public events or missions with multiple assignments, early public outcome case studies, thin-market fallback tuning              |
+| Weeks 9-10                        | reviewer and bounty incubation            | later expansion            | reviewer network incubation, reviewer assignment alpha, bounty and sponsor metadata readiness, lightweight dispute intake                                                 |
+| Weeks 11-12                       | employer, university, community corridors | later expansion            | university or first-proof partnership corridor, employer pilot corridor, community ambassador or local chapter concept, early employer discovery and analytics validation |
+
+##### corridor split
+
+- `launch-blocking MVP`
+  - proof creation and publishing
+  - verification and provenance hardening
+  - explainable matching and progressive reveal
+  - intros, interviews, feedback
+  - public portfolio trust
+  - lean org assignment workflows
+- `early post-launch corridor`
+  - curated partner pilots
+  - early public-safe case studies
+  - missions or events as grouped assignment containers
+- `later expansion`
+  - reviewer marketplace alpha
+  - sponsor and bounty corridor
+  - university first-proof programs
+  - employer pilot analytics corridor
+  - ambassador or local chapter experiments
+
+##### pilot assumptions
+
+- 2 NGOs + 1 commune or equivalent early partners
+- 30 to 75 initial individuals across proof-ready and first-proof cohorts
+- 2 to 3 public events or missions with multiple assignments
+- early public outcome case studies based on verified public-safe proof
+- reviewer network incubation begins only after launch stability
+- university or first-proof partnership corridor is later, not launch-blocking
+- employer pilot corridor is narrow and proof-first
+- community ambassador or local chapter concept remains exploratory
+
+##### operating checkpoints and risks
+
+| checkpoint                               | default timing | pass condition                                                   | primary risk if missed                                   |
+| ---------------------------------------- | -------------- | ---------------------------------------------------------------- | -------------------------------------------------------- |
+| foundation readiness                     | end of week 2  | privacy, visibility, and token controls stable                   | launch blocked by trust or security regression           |
+| verification hardening                   | end of week 4  | proof issuance, attestation, feedback, and reconciliation stable | weak proof trust and poor pilot credibility              |
+| first pilot activation                   | weeks 5-6      | first partners publish and complete bounded assignments          | partner onboarding drift into services-heavy ops         |
+| first public-safe case study             | weeks 7-8      | verified outcome can be published safely                         | storytelling pressure widens scope or leaks private data |
+| reviewer alpha readiness                 | weeks 9-10     | reviewer metadata, conflicts, SLA, and dispute intake defined    | exploitation or inconsistent review quality              |
+| employer and first-proof corridor review | weeks 11-12    | narrow hypotheses validated without ATS drift                    | product starts behaving like generic recruiting software |
+
+##### pilot exit criteria
+
+- at least 2 NGOs + 1 commune or equivalent have completed bounded assignment workflows
+- at least 2 public events or missions have multiple assignments with public-safe outcome summaries
+- early case studies are published without private leakage or over-claiming
+- first reviewer incubation rules exist and are internally operable
+- first-proof and employer pilot corridors remain narrow and non-generic
+
+#### Privacy / visibility implications
+
+- Public case studies require explicit consent, public-safe proof, and no hidden identity leakage.
+- Reviewer and sponsor corridor work must remain internal or scoped until later corridors are intentionally enabled.
+- Community and local chapter experiments must not create public people-index behavior.
+
+#### Events / analytics implications
+
+- Launch analytics track only launch-blocking metrics as defined in Section 7.6.
+- Early post-launch corridor may add:
+  - event or mission completion counts
+  - partner repeat activity
+  - case-study publication readiness
+- Later corridor may add:
+  - reviewer SLA readiness
+  - employer corridor signal quality
+  - first-proof corridor retention
+
+#### Out of Scope
+
+- broad consumer launch
+- self-serve employer analytics suites
+- open reviewer marketplace
+- event-management software expansion
+- campus social feed behavior
+
+#### Acceptance Criteria
+
+- Launch-blocking MVP work is clearly separated from early post-launch and later corridors.
+- Pilot assumptions match the requested partner and mission constraints.
+- Community, university, employer, reviewer, and sponsor ambitions are visible without becoming launch blockers.
+
+### 12.4 Reviewer Marketplace, Impact Bounties, Sponsor Corridor
+
+#### Purpose
+
+Define the disciplined post-MVP alpha corridor that reduces review bottlenecks and exploitation risk without turning Proofound into a payments or marketplace platform at launch.
+
+#### Facts & Decisions
+
+- This corridor exists to:
+  - reduce verification bottlenecks
+  - reduce reviewer exploitation
+  - support social-good and sponsored proof work later
+- This corridor is explicitly **not launch-blocking**.
+- The corridor is internal or scoped alpha infrastructure first, not a public two-sided marketplace.
+- Full payouts, escrow, payroll, legal automation, and generalized billing remain out of scope.
+
+#### Scope tag
+
+`Post-MVP Alpha`
+
+#### Core rules or object model
+
+##### launch status
+
+- `launch-blocking for MVP`: none
+- `alpha minimum once enabled`:
+  - reviewer directory alpha
+  - reviewer assignment model
+  - reviewer eligibility and conflict rules
+  - reviewer SLA defaults
+  - sponsor metadata model
+  - impact bounty metadata and states
+  - pro-bono caps and warnings
+  - lightweight dispute intake
+  - audit logging
+  - internal alpha metrics
+
+##### reviewer directory alpha
+
+- Visibility:
+  - org owners
+  - authorized internal Proofound operators
+- Not visible as:
+  - public browse directory
+  - candidate-facing marketplace
+  - automated liquidity feed
+
+##### reviewer assignment model
+
+- assignment mode:
+  - `manual_internal_match`
+  - `manual_org_selection_from_scoped_directory`
+- reviewer fields:
+  - `reviewer_id`
+  - `display_name`
+  - `specialty_headline`
+  - `expertise_domains[]`
+  - `sectors[]`
+  - `geography_or_timezone`
+  - `languages[]`
+  - `supported_review_types[]`
+  - `availability_state`
+  - `active_capacity_band`
+  - `target_first_response_sla`
+  - `target_completion_sla`
+  - `conflict_disclosures[]`
+  - `visibility_scope`
+  - `admin_vetted`
+  - `sla_adherence_band`
+  - `dispute_rate_band`
+
+##### reviewer eligibility and conflict rules
+
+- eligibility requirements:
+  - verified account
+  - accepted reviewer policy
+  - completed reviewer onboarding
+  - at least one qualifying expertise or trust signal
+  - no active sanctions
+  - no unresolved abuse flags
+- conflict rules:
+  - no self-review
+  - no direct current employer or reporting-line review
+  - no undisclosed financial or personal conflict
+  - no same-bounty sponsor conflict without explicit internal approval
+
+##### reviewer SLA defaults
+
+| SLA field                   | default                 |
+| --------------------------- | ----------------------- |
+| accept or decline           | within 3 business days  |
+| completion after acceptance | within 5 business days  |
+| dispute acknowledgement     | within 2 business days  |
+| dispute resolution target   | within 10 business days |
+
+- SLA breach state is internal and analytics-visible, not public by default.
+
+##### sponsor metadata model
+
+- sponsor fields:
+  - `sponsor_id`
+  - `sponsor_type`
+  - `display_name`
+  - `funding_state=pending|confirmed|withdrawn`
+  - `program_type`
+  - `purpose_tag`
+  - `allowed_impact_categories[]`
+  - `commitment_band_or_amount_ceiling`
+  - `disclosure_scope`
+  - `linked_review_or_bounty_ref`
+  - `policy_version`
+  - `internal_audit_refs[]`
+
+- sponsor conversion concepts:
+  - `sponsor_pending -> sponsor_confirmed`
+  - `sponsor_confirmed -> verified_artifact_completed`
+  - `sponsor_confirmed -> corridor_dropped`
+
+##### impact bounty model
+
+- bounty fields:
+  - `bounty_id`
+  - `pricing_band_code`
+  - `currency_code`
+  - `display_range_min`
+  - `display_range_max`
+  - `pricing_source=manual|sponsor_defined`
+  - `sponsor_id`
+  - `assignment_ref`
+  - `impact_category`
+  - `terms_ref`
+  - `visibility_scope`
+  - `rationale_note`
+- bounty states:
+  - `none`
+  - `draft`
+  - `sponsor_pending`
+  - `sponsor_confirmed`
+  - `reviewer_invited`
+  - `accepted`
+  - `in_review`
+  - `closed_completed`
+  - `closed_cancelled`
+  - `closed_disputed`
+- pricing-band placeholders:
+  - `band_a_micro`
+  - `band_b_standard`
+  - `band_c_complex`
+  - `band_d_custom`
+- fee placeholders:
+  - platform fee, reviewer fee, or sponsor fee may exist later as policy placeholders only
+  - no active fee engine is implied
+
+##### anti-exploitation logic
+
+- unpaid scope is blocked when:
+  - work is clearly commercial or revenue-linked and exceeds the free review corridor
+  - expected labor or urgency exceeds unpaid thresholds
+  - the org has exhausted pro-bono allowance
+  - repeated unpaid requests indicate labor substitution
+- bounty, sponsor, or commercial path is required when:
+  - pro-bono caps are exceeded
+  - scarce specialist reviewer expertise is required
+  - review urgency exceeds standard alpha SLA
+  - internal trust ops flags elevated exploitation risk
+- pro-bono enforcement:
+  - rolling org counters
+  - warning thresholds
+  - publish and acceptance blocks
+  - logged overrides with rationale
+- calm warning examples:
+  - `This review request exceeds the current pro-bono corridor and requires sponsor-backed or bounty-backed support before it can proceed.`
+  - `Proofound limits repeated unpaid commercial review requests to reduce reviewer exploitation.`
+
+##### lightweight dispute intake
+
+- intake fields:
+  - `reason_code`
+  - `summary`
+  - `evidence_links[]`
+  - `reviewer_ref`
+  - `assignment_ref`
+  - `bounty_ref`
+  - `reporter_role`
+- statuses:
+  - `submitted`
+  - `triaged`
+  - `under_review`
+  - `needs_more_info`
+- resolution states:
+  - `resolved_upheld`
+  - `resolved_adjusted`
+  - `resolved_rejected`
+  - `closed`
+
+#### Privacy / visibility implications
+
+- Reviewer profiles are scoped and non-public in alpha.
+- Exact bounty values remain optional and non-public by default.
+- Sponsor display is coarse unless future policy explicitly widens disclosure.
+- Disputes, conflict disclosures, and reviewer performance details remain internal or tightly scoped.
+
+#### Events / analytics implications
+
+- Canonical alpha events:
+  - `review_sla_started`
+  - `review_sla_breached`
+  - `reviewer_assigned`
+  - `sponsor_metadata_confirmed`
+  - `bounty_band_assigned`
+  - `dispute_acknowledged`
+  - `dispute_resolved`
+- Internal alpha metrics:
+  - reviewer SLA adherence
+  - bounty usage
+  - dispute rate
+  - pro-bono cap triggers
+  - sponsor conversion rate
+
+#### Out of Scope
+
+- full payouts engine
+- escrow engine
+- payroll
+- generalized billing platform
+- legal automation
+- public reviewer marketplace browsing
+- automated marketplace liquidity or dynamic pricing
+
+#### Acceptance Criteria
+
+- The corridor clearly states why it exists and that it is not launch-blocking.
+- Reviewer directory, assignment model, eligibility, conflicts, SLAs, sponsor fields, bounty states, and dispute intake are all defined.
+- Anti-exploitation rules, pro-bono caps, and sponsor or commercial-path triggers are explicit.
+- The corridor remains metadata-and-policy based and does not imply payments, escrow, or billing infrastructure.
+
+### 12.5 KPI and Analytics Appendix for Broader Master-Brief Ambitions
+
+#### Purpose
+
+Complement the MVP analytics contract with broader ambition metrics without replacing the launch-critical analytics defined in Section 7.6.
+
+#### Facts & Decisions
+
+- Section 7.6 remains the detailed MVP trust analytics contract.
+- This appendix clarifies broader ambition KPIs, audience split, privacy rules, and launch-versus-post-launch tracking status.
+- User-facing analytics remain calm, bounded, and non-BI.
+
+#### Scope tag
+
+`MVP-lite`
+
+#### Core rules or object model
+
+##### metric definitions
+
+| metric                                          | definition                                                                                                                        | audience class                                            | tracked at launch                             |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | --------------------------------------------- |
+| Proof Quality Score                             | Composite `0-100` trust-quality heuristic based on completeness, verifiability, outcomes clarity, artifact clarity, and freshness | internal product, trust ops; user sees guidance band only | Yes                                           |
+| Time-to-Verified                                | Median elapsed time from `proof_pack_created` or fallback `submission_created` to first successful `verification_completed`       | internal product, trust ops                               | Yes                                           |
+| Fulfillment Rate per assignment                 | Share of published assignments that reach at least one verified proof-backed completion outcome in the window                     | internal product, trust ops                               | Yes                                           |
+| Cause Coverage / NGO & geography diversity      | Distribution of active proof-backed work across cause categories, NGO participation, and geography bands                          | internal product, trust ops                               | Post-launch corridor                          |
+| learner retention after first verified artifact | Share of first-proof users who return to create, update, share, or reuse proof within the measurement window                      | internal product                                          | Tracked at launch, not launch-blocking        |
+| organization repeat rate                        | Share of orgs that publish, verify, or complete another proof-backed workflow after their first completed one                     | internal product                                          | Tracked at launch, not launch-blocking        |
+| sponsor conversion rate                         | Share of sponsor-backed review or verification opportunities that convert to a completed verified artifact                        | trust ops, alpha ops                                      | Tracked only when sponsor corridor is enabled |
+| reviewer SLA adherence                          | Share of review cases completed within defined reviewer SLA                                                                       | trust ops                                                 | Yes, where review corridor exists             |
+| proof reuse rate                                | Share of issued Proof Packs later used in a downstream match, intro, interview, or engagement event                               | internal product                                          | Yes                                           |
+| proof freshness distribution                    | Distribution of qualifying Proof Packs across `fresh`, `review_soon`, `stale`, `expired`                                          | user-facing guidance, internal product, trust ops         | Yes                                           |
+
+##### audience split
+
+- `user-facing metrics`
+  - verification status
+  - proof freshness state
+  - proof quality guidance band
+  - next-best action
+  - publication or share state
+- `internal product metrics`
+  - Proof Quality Score distribution
+  - Time-to-Verified
+  - Fulfillment Rate per assignment
+  - proof reuse rate
+  - learner retention after first verified artifact
+  - organization repeat rate
+  - Cause Coverage / NGO & geography diversity
+- `trust / ops metrics`
+  - reviewer SLA adherence
+  - sponsor conversion rate
+  - stale-proof backlog
+  - dispute rate
+  - audit and ETL health
+
+##### launch vs post-launch tracking
+
+- `launch-tracked and launch-critical`
+  - Proof Quality Score coverage
+  - Time-to-Verified
+  - Fulfillment Rate per assignment
+  - proof reuse rate
+  - proof freshness distribution
+  - reviewer SLA adherence where applicable
+- `launch-tracked but not launch-blocking`
+  - learner retention after first verified artifact
+  - organization repeat rate
+- `post-launch corridor metrics`
+  - Cause Coverage / NGO & geography diversity
+  - sponsor conversion rate unless sponsor corridor is enabled
+  - bounty usage and reviewer dispute metrics
+
+#### Privacy / visibility implications
+
+- Privacy-safe analytics only.
+- No PII in event properties.
+- No raw feedback text, no hidden identity, and no direct public viewer identity in analytics streams.
+- No Zen or private wellbeing signals may be used for trust, ranking, fairness, or public accountability metrics.
+- Cause or geography diversity metrics must use coarse bands and privacy-safe aggregation only.
+
+#### Events / analytics implications
+
+- This appendix depends on the canonical event taxonomy in Section 7.
+- If future corridor metrics need new events, those events must stay corridor-scoped until promoted into the canonical analytics contract.
+
+#### Out of Scope
+
+- user-facing BI dashboards
+- PII-rich analytics payloads
+- trust or ranking logic based on private wellbeing content
+- precise geography or protected-class exposure in public reporting
+
+#### Acceptance Criteria
+
+- All requested broader ambition metrics are defined.
+- User-facing, internal product, and trust-ops metrics are clearly separated.
+- Launch-tracked versus post-launch-only metrics are explicit.
+- Privacy rules prevent PII, Zen leakage, and wellbeing-derived trust or ranking.
+
+### 12.6 Legal Templates and Policy Hooks Appendix
+
+#### Purpose
+
+Translate legal and policy ambitions into product-operational implementation requirements without turning the PRD into legal prose.
+
+#### Facts & Decisions
+
+- Product flows must reference policy templates and versioned acceptance hooks rather than embedding bespoke legal drafting logic.
+- Creators retain portfolio rights by default.
+- Organizations receive defined non-exclusive usage rights unless otherwise agreed through approved template variants.
+- Anti-unpaid-commercial-work and sponsor-path routing are product enforcement requirements, not optional policy notes.
+
+#### Scope tag
+
+`MVP-lite`
+
+#### Core rules or object model
+
+##### required template and policy hooks
+
+- `assignment_terms_template_id`
+- `license_template_id`
+- `dispute_policy_version`
+- `privacy_notice_version`
+- `acceptance_copy_version`
+- `sponsor_terms_template_id` where corridor-enabled
+- `cross_border_review_flag`
+- `sanctions_or_export_review_flag`
+
+##### default licensing posture
+
+- creator retains portfolio rights
+- org receives defined non-exclusive usage rights for the accepted assignment, engagement, or pilot unless another approved agreement applies
+- broader exclusivity or transfer cannot be implied by default product copy
+
+##### anti-unpaid-commercial-work guardrails
+
+- block unpaid work when the assignment is clearly commercial and exceeds the unpaid evaluation corridor
+- block disguised free labor or repeated commercial review splitting
+- require sponsor, bounty, or paid commercial path when thresholds are exceeded
+
+##### pro-bono boundary conditions
+
+- allowed only within bounded non-commercial or social-good corridor
+- must respect review labor thresholds and org-level cap counters
+- must show warnings before hard block
+
+##### when bounty, sponsor, or commercial path is required
+
+- commercial work exceeds unpaid corridor
+- specialist review labor exceeds cap
+- urgency exceeds standard unpaid review path
+- repeated org behavior indicates labor substitution
+
+##### cross-border / export-control / sanctions hooks
+
+- assignment creation and acceptance must support a coarse compliance review flag
+- restricted jurisdictions or sanctions concerns may pause publish, acceptance, sponsor activation, or cross-border collaboration until manually cleared
+- product must support reason-coded hold states without exposing sensitive internal rationale publicly
+
+##### GDPR / CCPA aligned posture
+
+- data minimization by default
+- private-by-default evidence and identity
+- export and delete paths remain available
+- analytics use opaque IDs and bounded reason codes
+- consent and acceptance moments must reference current policy version
+
+##### EU data residency toggle
+
+- future corridor only unless separately made launch scope
+- represented as a platform capability toggle, not a launch promise
+
+##### product copy requirements
+
+- assignment publish and acceptance flows must plainly state:
+  - what rights the creator retains
+  - what rights the org receives
+  - whether the assignment is unpaid, sponsor-backed, or commercial-path required
+  - which dispute policy applies
+  - whether any cross-border restrictions or review holds apply
+
+#### Privacy / visibility implications
+
+- Legal and compliance holds must not expose sensitive review details publicly.
+- Acceptance and policy versions may be stored and audited internally while only coarse user-facing status is shown.
+
+#### Events / analytics implications
+
+- required product-policy events:
+  - `assignment_terms_presented`
+  - `assignment_terms_accepted`
+  - `license_template_bound`
+  - `commercial_path_required`
+  - `cross_border_review_flagged`
+  - `dispute_policy_bound`
+
+#### Out of Scope
+
+- legal automation
+- contract authoring platform behavior
+- escrow, invoicing, payroll, or tax handling
+- jurisdiction-specific legal prose in the product spec
+
+#### Acceptance Criteria
+
+- Assignment terms, licensing posture, dispute hooks, cross-border holds, and unpaid-work guardrails are implementation-ready.
+- Required acceptance-flow copy requirements are explicit.
+- The appendix remains product-policy oriented rather than legalistic.
+
+### 12.7 Transparency, Trust, and Public Accountability Appendix
+
+#### Purpose
+
+Make public trust ambitions explicit while preserving privacy, reviewer safety, and launch discipline.
+
+#### Facts & Decisions
+
+- Proofound should be publicly legible about verification and scoring changes without exposing private internals.
+- Public transparency must remain narrower than owner history, reviewer tooling, or trust-ops audit tooling.
+- Launch-safe transparency is summary-first, versioned, and privacy-boundaried.
+
+#### Scope tag
+
+`MVP-lite`
+
+#### Core rules or object model
+
+##### public verification log concept
+
+- public-safe fields:
+  - current verification status
+  - freshness state
+  - latest public-safe change timing
+  - coarse provenance summary
+  - revocation or expiry status where applicable
+
+##### algorithm / scoring changelog concept
+
+- required fields:
+  - `change_label`
+  - `effective_date`
+  - `version`
+  - `affected_surface`
+  - `public_summary`
+- changelog scope:
+  - matching explanation updates
+  - trust scoring heuristic updates
+  - rubric logic updates where public-safe
+
+##### what is visible publicly
+
+- public-safe verification status
+- public-safe freshness state
+- public-safe revocation state
+- version labels and effective dates for public scoring or transparency notes
+
+##### what remains private
+
+- reviewer private notes
+- trust-ops investigation details
+- hidden evidence internals
+- identity or reveal-gated private fields
+- protected-class inference or sensitive moderation rationale
+
+##### badge, revocation, and freshness transparency rules
+
+- badges must map to current verification state only
+- revocation must remove active verified language immediately
+- freshness changes may be shown publicly only in coarse public-safe form
+
+##### trust-ops visibility boundaries
+
+- trust ops sees full audit trail
+- org reviewer sees workflow-scoped trust detail only
+- public viewer sees only the narrow public-safe summary
+
+##### launch-safe vs later
+
+- `launch-safe`
+  - public verification log summary
+  - public scoring or algorithm changelog note
+  - version labels and effective dates
+- `later`
+  - richer public trust reports
+  - expanded public methodology notes
+  - broader accountability publishing
+
+#### Privacy / visibility implications
+
+- Public transparency is intentionally incomplete where fuller disclosure would weaken privacy, reviewer safety, or abuse resistance.
+- No public transparency surface may expose private evidence or reviewer rationale.
+
+#### Events / analytics implications
+
+- transparency events:
+  - `public_verification_log_viewed`
+  - `algorithm_changelog_viewed`
+  - `verification_public_state_changed`
+
+#### Out of Scope
+
+- public release of reviewer notes
+- public exposure of hidden evidence
+- public ranking traces or protected-attribute reasoning
+
+#### Acceptance Criteria
+
+- Public versus private visibility boundaries are explicit.
+- Version labels and effective dates are required.
+- Badge, revocation, and freshness transparency rules are deterministic.
+- Launch-safe transparency is clearly separated from later accountability expansions.
+
+### 12.8 Branding, Accessibility, and Product Identity Refinement
+
+#### Purpose
+
+Make the broader identity direction explicit enough for product and docs consistency without turning the PRD into a brand book.
+
+#### Facts & Decisions
+
+- Product name consistency matters across public portfolio, org trust, assignment, and export surfaces.
+- The interface and documentation tone must remain calm, decluttered, and trust-oriented.
+- Accessibility and multilingual readiness are product requirements, not optional polish.
+
+#### Scope tag
+
+`MVP-lite`
+
+#### Core rules or object model
+
+- product naming:
+  - use `Proofound` consistently
+  - avoid alternate product labels that imply generic recruiting suite, social feed, or engagement app
+- optional non-binding tagline examples:
+  - `Proof-first pathways to trusted work`
+  - `Show the work. Trust the proof.`
+  - `Credibility built from real evidence`
+- design language constraints:
+  - calm
+  - decluttered
+  - Japandi / Wabi-sabi minimalism
+  - high contrast support
+  - reduced motion option
+  - multilingual copy readiness
+- UI behavior implications:
+  - no noisy urgency mechanics
+  - no gamified celebratory loops
+  - clear hierarchy
+  - quiet reveal transitions
+  - explicit privacy language
+- documentation tone implications:
+  - calm
+  - plain
+  - trust-oriented
+  - non-hype
+  - non-legalese
+
+#### Privacy / visibility implications
+
+- Identity refinement must not encourage public oversharing, vanity counters, or coercive reveal behavior.
+- Accessibility and multilingual copy must preserve clarity around privacy, verification, and consent.
+
+#### Events / analytics implications
+
+- No brand or design requirement introduces vanity analytics or engagement loops.
+- Accessibility and reduced-motion preferences may be tracked only in privacy-safe product telemetry where already permitted.
+
+#### Out of Scope
+
+- full brand book
+- marketing campaign planning
+- motion-heavy identity systems
+- attention-maximizing growth UX patterns
+
+#### Acceptance Criteria
+
+- Product naming stays consistent.
+- Calm visual and copy constraints are explicit.
+- High contrast, reduced motion, and multilingual readiness are named as product-operational requirements.
+- Identity guidance reinforces Proofound’s calm, privacy-first posture rather than generic growth-product behavior.
+
+### 12.9 Launch Sufficiency vs Broader Ambition
+
+#### Purpose
+
+Close the reconciliation pass with one explicit operating recommendation about what is ready for launch and what remains intentionally corridor-only.
+
+#### Facts & Decisions
+
+- `fully launch-sufficient now`
+  - proof creation and proof publishing
+  - verification and provenance
+  - explainable matching
+  - privacy-safe progressive reveal
+  - intros, interviews, and structured feedback
+  - public portfolio trust
+  - lean org assignment workflows
+  - launch-safe analytics and privacy controls
+- `represented as appendix or corridor only`
+  - pilot roadmap and curated partner rollout
+  - reviewer directory alpha
+  - impact bounty and sponsor corridor
+  - broader KPI ambitions
+  - legal template hooks beyond launch core
+  - public accountability expansion
+  - employer, university, and community corridor concepts
+- `explicitly post-MVP`
+  - payouts
+  - escrow
+  - payroll
+  - generalized billing
+  - open reviewer marketplace
+  - ATS or HRIS expansion
+  - donor, investor, or enterprise reporting suites
+- This division is correct because Proofound’s credibility depends on a narrow trustworthy launch corridor, not on prematurely simulating an all-in-one labor, funding, analytics, or recruiting platform.
+
+#### Scope tag
+
+`MVP`
+
+#### Core rules or object model
+
+- launch recommendation enum:
+  - `launch-sufficient`
+  - `corridor-only`
+  - `post-mvp`
+- Any section not explicitly in `launch-sufficient` must not block MVP implementation or pilot launch readiness.
+
+#### Privacy / visibility implications
+
+- Corridor and later ambitions must not justify visibility expansion at launch.
+- Public trust surfaces stay narrower than internal or later accountability ambitions.
+
+#### Events / analytics implications
+
+- Only launch-sufficient metrics and event contracts are launch gates.
+- Corridor metrics may be collected later without changing launch readiness criteria.
+
+#### Out of Scope
+
+- re-expanding launch to satisfy every master-brief ambition immediately
+- treating appendix ambition as unfinished MVP scope
+
+#### Acceptance Criteria
+
+- The launch-sufficient corridor is explicit and defensible.
+- Appendix and corridor material is clearly identified as non-blocking.
+- Post-MVP exclusions remain explicit.
+- The final division matches Proofound’s proof-first, privacy-first, calm launch discipline.
+
+---
+
+## 13. Final Approval Checklist
 
 - One canonical PRD source exists.
 - Canonical vocabulary is stable and unambiguous.

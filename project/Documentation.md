@@ -2,6 +2,29 @@
 > Sync Pair: `Documentation.md`
 > Last Verified: `2026-03-10`
 
+## 2026-03-10: Canonicalize technical requirements and launch runbook
+
+What changed:
+
+- Rewrote `LAUNCH_RUNBOOK.md` into a compact operator-facing launch runbook aligned to the canonical PRD `9.2` and `9.3` plus `docs/launch-operations-mvp.md`.
+- Tightened `PRD_TECHNICAL_REQUIREMENTS.md` so older RBAC, visibility, deletion, upload, and rollout wording now defers to the canonical master PRD and its launch appendix instead of competing with it.
+
+Why:
+
+- The two active docs still carried older beta-marketplace and soft-delete assumptions that could override the proof-first MVP if read in isolation.
+
+How to verify:
+
+- `npm run docs:freshness`
+- `npm run lint`
+- `npm run typecheck`
+- `rg -n "org_owner|org_manager|org_reviewer|principal|membership|reconciliation ledger|synthetic monitors|rollback" PRD_TECHNICAL_REQUIREMENTS.md LAUNCH_RUNBOOK.md`
+- `rg -n "50 invite-only users|TTFQI|owner/admin/member/viewer|public/network/private" PRD_TECHNICAL_REQUIREMENTS.md LAUNCH_RUNBOOK.md`
+
+Open risks/TODO:
+
+- Other archived or non-canonical docs still contain older launch and deletion language, so future cleanup should continue narrowing them back to the master PRD.
+
 ## 2026-03-10: Canonical PRD Reconciliation Addendum
 
 What changed:

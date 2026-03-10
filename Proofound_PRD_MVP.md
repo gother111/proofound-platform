@@ -9,6 +9,7 @@
 ## Product Promise
 
 Proofound MVP is a proof-first credibility and connection platform for individuals and lean organizations. The MVP guarantees a day-1 shareable public portfolio, then moves both sides through privacy-safe, blind-by-default matching toward qualified intros.
+Broader roadmap, reviewer, sponsor, pilot, and public-accountability ambitions remain appendix or corridor material in the canonical master PRD and are not launch blockers.
 
 ## Canonical Vocabulary
 

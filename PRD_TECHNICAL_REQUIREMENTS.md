@@ -1,8 +1,8 @@
 # PROOFOUND — PRD TECHNICAL REQUIREMENTS & ARCHITECTURE
 
-**Document Version**: 1.0  
-**Last Updated**: 2026-03-09  
-**Scope**: Complete technical specifications for MVP → Future-proof architecture  
+**Document Version**: 1.1  
+**Last Updated**: 2026-03-10  
+**Scope**: Implementation-oriented technical companion to the canonical MVP PRD  
 **Audience**: Engineering, Product, Leadership
 
 ---
@@ -19,7 +19,7 @@
 
 ---
 
-> Canonical launch note: Section 7 is the authoritative launch contract for security, auth, storage, privacy, accessibility, reliability, and operational readiness. Where older sections in this document describe broader, earlier, or post-MVP assumptions, Section 7 overrides them for launch implementation.
+> Canonical scope note: `PRD_for_a_web_platform_MVP.master-latest.md` is the normative product source of truth. This document is the implementation-oriented technical companion. Section 7 is the authoritative technical launch contract for security, auth, storage, privacy, accessibility, reliability, and operational readiness. Where older sections in this document describe broader, earlier, or post-MVP assumptions, the canonical master PRD and Section 7 override them.
 
 ## 1. NON-FUNCTIONAL REQUIREMENTS
 
@@ -39,12 +39,12 @@
 **Authorization**:
 
 - ✅ Row-Level Security (RLS) policies on all 30+ database tables
-- ✅ Role-Based Access Control (RBAC) for organizations:
-  - `owner`: Full control
-  - `admin`: Manage members, assignments
-  - `member`: Create content
-  - `viewer`: Read-only
-- ✅ Persona-based routing (individual vs org_member)
+- ✅ Canonical org authorization uses principals, active memberships, object ownership, visibility ceilings, and workflow state together
+- ✅ Canonical org roles:
+  - `org_owner`: full org control, invites, ownership transfer
+  - `org_manager`: org operations without ownership transfer or trust-tier changes
+  - `org_reviewer`: shortlist and review actions only within allowed scope
+- ✅ Individual and org contexts are distinct principal selections for state-changing actions
 - ✅ Service role bypasses RLS (admin operations only)
 
 **Data Protection**:
@@ -92,12 +92,13 @@
 
 - ✅ Minimal data collection (only what's needed for matching)
 - ✅ Privacy-by-default settings:
-  - App profile visibility: `private` by default
+  - App profile visibility starts at the narrowest canonical scope needed for owner-only use
   - Public portfolio publication: auto-live on day 1 once minimum publishable threshold is met, with non-indexed direct-link sharing by default until the owner explicitly opts into indexing
-  - Contact/work email visibility: `private` by default
-  - Proof visibility: `private`
+  - Contact/work email visibility remains non-public unless a later reveal stage explicitly allows it
+  - Proof visibility starts owner-only and can narrow further at child-artifact level
   - Marketing emails: opt-in
-- ✅ Granular visibility controls (public/network/private)
+- ✅ Canonical visibility scopes are `owner_only`, `matched_org`, `link_only`, `public`, and `internal_only`
+- ✅ Effective visibility follows the narrowest-wins rule across parent scope, child scope, reveal ceiling, and policy ceiling
 - ✅ Opt-in for ML training, analytics, marketing
 
 **Data Classification** (4-tier system):
@@ -109,7 +110,7 @@
   - Access: User + explicitly shared organizations
   - Storage: Encrypted, masked in UI
 - 🟡 **Tier 3 (Semi-Public)**: Skills, experience, proofs (user-controlled)
-  - Access: User configurable (public/network/private)
+  - Access: User-controlled within canonical visibility scopes and reveal-stage rules
   - Storage: Standard encryption
 - 🟢 **Tier 4 (Public)**: Organization profiles, published assignments
   - Access: Anyone authenticated
@@ -156,9 +157,9 @@
 - ✅ Right to Access (Art. 15): Data export in JSON format, <48h SLA
 - ✅ Right to Rectification (Art. 16): Profile editing always available
 - ✅ Right to Erasure (Art. 17):
-  - Soft delete: 30-day grace period
-  - Hard delete: Permanent after 30 days
-  - Exceptions: Financial records (7 years), anonymized analytics
+  - Product-visible deletion follows the canonical reconciliation ledger contract in the master PRD
+  - Confirmed deletion blocks new export generation for the deleted object and removes public projections immediately
+  - Exceptions: legally required records and anonymized analytics remain governed by retention policy, not by public product visibility
 - ✅ Right to Portability (Art. 20): JSON export with all user data
 - ✅ Right to Object (Art. 21): Opt-out of ML training, marketing
 - ✅ Data Processing Agreements (DPAs) with organizations
@@ -175,7 +176,7 @@
 
 - Auth/application logs: 180 days
 - Audit logs: 2 years (compliance requirement)
-- Soft-deleted accounts: 30 days → purge
+- Deleted-account residuals retained only where legally required or needed for internal audit, never as a user-visible soft-delete product state
 - Messages: Retained until conversation closes (user can export)
 - Analytics events: 2 years → anonymize → archive
 
@@ -475,23 +476,26 @@ Relationships:
 
 ```
 Composite PK: (orgId, userId)
-Fields: role (owner/admin/member/viewer), status (active/invited/suspended), joinedAt
+Fields: role (org_owner/org_manager/org_reviewer), state (invited_pending/active/inactive/ownership_transfer_pending/suspended/removed/declined/expired/revoked), joinedAt, invitedBy, acceptedAt, inactiveAt, suspendedAt, removedAt
 Relationships:
   → organizations (many:1)
   → profiles (many:1)
+Rules:
+  → permissions are granted only through active membership
+  → ownership transfer is explicit and auditable
 ```
 
 **`org_candidate_invites`** (Bring-your-own-candidate intake):
 
 ```
 Primary Key: id (UUID)
-Fields: orgId, inviteeEmail, inviteeEmailNormalized, tokenHash, status (pending/claimed/proof_submitted/revoked/expired), expiresAt, invitedBy, claimedByProfileId, claimedAt, proofSnippetId, proofShareToken, proofSubmittedAt, revokedAt
-Constraints: one active invite per (orgId, inviteeEmailNormalized) for pending/claimed states
+Fields: orgId, inviteeEmail, inviteeEmailNormalized, tokenHash, status (issued/redeemed/revoked/expired), expiresAt, invitedBy, claimedByProfileId, claimedAt, proofSnippetId, proofSubmittedAt, revokedAt, attemptCount, lastAttemptAt, suspiciousFlag, redeemSessionNonce
+Constraints: one active invite per (orgId, inviteeEmailNormalized) for issued state
 Relationships:
   → organizations (many:1)
   → profiles (many:1, invitedBy)
   → profiles (many:1, claimedByProfileId)
-Security: tokenHash-only storage for invite links (raw tokens are never persisted)
+Security: tokenHash-only storage for invite links, single-use redemption, regeneration revokes prior active tokens for the same scope and target, suspicious retries are throttled and audited
 ```
 
 #### Proof & Verification
@@ -1927,10 +1931,14 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 
 **Supabase Storage**:
 
-- Max file size: 5MB (PDFs for proofs)
+- Max file size: 25MB per uploaded evidence file
+- Max files per batch: 10
+- Max aggregate uploaded evidence per Proof Pack: 100MB
 - Max total storage (Pro): 100GB
-- Allowed MIME types: PDF, JPEG, PNG, WebP
-- Virus scanning: Not included (manual review for MVP)
+- Allowed MIME types: `application/pdf`, `image/jpeg`, `image/png`, `image/webp`, `text/plain`, `text/markdown`
+- Rejected in MVP: archives, executables, macro-enabled office files, spreadsheets, presentations, audio, video
+- Upload path: quarantine-first upload, metadata validation, then server-side attach or rejection
+- Safety rule: unsafe uploads fail closed and never attach to proof, matching, or public surfaces
 
 **Image Optimization**:
 
@@ -1959,7 +1967,7 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 **Must-Have (Legal Obligation)**:
 
 - Data export within 30 days (we target <48h)
-- Data deletion within 30 days (we do 30-day grace + hard delete)
+- Data deletion requests must be honored within legal timelines, but product-visible delete, depublish, withdraw, export cancellation, and cache invalidation follow the canonical reconciliation ledger contract
 - Consent management (version tracking)
 - Data Processing Agreements with vendors
 - Privacy policy (clear, accessible)
@@ -2265,38 +2273,42 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 
 ---
 
-### 5.6 Beta Launch Criteria
+### 5.6 Launch Readiness and Rollout Alignment
 
-**MVP Exit Criteria** (before opening to public):
+This section is intentionally narrow. The canonical launch-readiness, synthetic-monitor, SLO, rollback, and rollout corridor rules live in the master PRD Sections `9.2` and `9.3`, with `LAUNCH_RUNBOOK.md` acting as the operator-facing execution summary.
 
-- ✅ All critical flows working (auth, onboarding, profile, matching, messaging)
-- ✅ RLS policies deployed and tested
-- ✅ Email flows tested (verification, invites, password reset)
-- ✅ Performance targets met (LCP <2.5s, API <1200ms)
-- ✅ Security audit passed (RLS, OWASP Top 10)
-- ✅ GDPR compliance features (export, delete, consent)
-- ✅ Monitoring set up (Sentry, uptime checks)
-- ✅ Privacy policy published
-- ✅ Terms of service published
+**Launch-blocking technical readiness**:
 
-**Beta Waves**:
+- ✅ Auth signup and login
+- ✅ Public portfolio publish and render
+- ✅ Assignment publish
+- ✅ Shortlist generation with explicit fallback states
+- ✅ Invite or token redemption
+- ✅ Verification request and response path
+- ✅ Structured feedback submission
+- ✅ Export
+- ✅ Delete or unpublish
+- ✅ Audit logging on sensitive actions
+- ✅ No privacy or visibility regression in core flows
 
-- **Wave 1**: 5 NGOs, 20 SMEs, 1,000 individuals (invite-only)
-- **Wave 2**: +10 NGOs, +30 SMEs, +2,000 individuals (referral codes)
+**Monitored but not launch-blocking**:
 
-**Public Launch Criteria** (after beta):
+- Wider analytics completeness beyond the required thresholds
+- Post-MVP alpha reviewer or sponsor corridor features
+- Non-core dashboard experiments
 
-- ≥50% assignments with ≥3 qualified matches in 7d
-- Match acceptance rate ≥20%
-- Report rate <1% with <24h resolution SLA
-- All SLOs met for 30 consecutive days
-- NPS (Net Promoter Score) ≥0
+**Rollout alignment**:
 
-**Kill/Pivot Criteria**:
+- Weeks 1-4: launch-blocking hardening for memberships, visibility, permissions, token security, upload quarantine, structured feedback, reconciliation, and monitors
+- Weeks 5-8: early post-launch curated pilots and case-study corridor
+- Weeks 9-12: later expansion corridor for reviewer network incubation, university first-proof, employer pilots, and sponsor/bounty alpha readiness
 
-- Match acceptance <10% after 2 iterations
-- Organization verification <30% after 2 outreach cycles
-- NPS <0 for 2 consecutive cycles
+**Pilot assumptions**:
+
+- 3 to 5 early organization partners
+- 30 to 75 initial individuals across proof-ready and first-proof cohorts
+- 1 to 2 flagship Events or Missions for public-safe outcome storytelling
+- No public candidate directory, dense-market launch, ATS, or HRIS commitments in MVP
 
 ---
 

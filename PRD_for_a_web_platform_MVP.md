@@ -10,6 +10,7 @@ This file is a compatibility mirror for consumers that still open `PRD_for_a_web
 
 ## Canonical MVP Contract
 
+- The full `Final Reconciliation Addendum, Operating Appendices, and Legacy Cleanup` exists only in `PRD_for_a_web_platform_MVP.master-latest.md` and remains canonical there.
 - Proof Pack is the canonical evidence object.
 - Artifact is an atomic evidence item inside a Proof Pack.
 - Proof is the claim and trust judgment attached to real work.
