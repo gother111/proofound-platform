@@ -1,151 +1,44 @@
-/**
- * Public Fairness Dashboard
- * /fairness
- *
- * Implements PRD Gap 3: Public-facing fairness reporting
- */
+import { ShieldCheck } from 'lucide-react';
 
-import { createClient } from '@/lib/supabase/server';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import ReactMarkdown from 'react-markdown';
 
 export const metadata = {
-  title: 'Fairness & Transparency | Proofound',
-  description: 'Our commitment to fair and equitable matching',
+  title: 'Transparency Note | Proofound',
+  description: 'Launch-safe note on fairness monitoring and privacy boundaries.',
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
-export default async function FairnessPage() {
-  // Fetch latest published fairness reports
-  const supabase = await createClient();
-  const { data: latestReports } = await supabase
-    .from('fairness_reports')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(3);
-
-  const latestReport = latestReports?.[0];
-
+export default function FairnessPage() {
   return (
-    <div className="container max-w-5xl py-12">
-      {/* Header */}
-      <div className="space-y-4 mb-12 text-center">
-        <Badge variant="secondary" className="mb-2">
-          Transparency & Fairness
-        </Badge>
-        <h1 className="text-4xl font-bold">Our Commitment to Fairness</h1>
-        <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-          We believe in transparent, equitable matching. Here's how we measure and maintain fairness
-          in our platform.
-        </p>
-      </div>
-
-      {/* Our Approach */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>How We Measure Fairness</CardTitle>
+    <div className="container max-w-3xl py-12">
+      <Card className="border-proofound-stone/60">
+        <CardHeader className="space-y-3">
+          <div className="inline-flex w-fit items-center gap-2 rounded-full bg-proofound-forest/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-proofound-forest">
+            <ShieldCheck className="h-4 w-4" />
+            Launch Transparency
+          </div>
+          <CardTitle className="text-3xl font-['Crimson_Pro'] text-proofound-charcoal">
+            Fairness is monitored, not productized
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 text-sm text-muted-foreground">
           <p>
-            Proofound is committed to ensuring that our matching algorithm treats all users fairly,
-            regardless of demographic characteristics. We:
+            Proofound launch does not expose a public fairness dashboard, public ranking analytics,
+            or any public people index. Fairness review stays internal and privacy-safe.
           </p>
-          <ul className="list-disc pl-6 space-y-2">
-            <li>
-              <strong>Measure gaps:</strong> We analyze acceptance and contract rates across
-              demographic groups (with opt-in data only)
-            </li>
-            <li>
-              <strong>Test significance:</strong> We use chi-square statistical tests to identify
-              meaningful differences
-            </li>
-            <li>
-              <strong>Report regularly:</strong> We generate automated fairness notes with each
-              release
-            </li>
-            <li>
-              <strong>Take action:</strong> When gaps are identified, we investigate and adjust our
-              algorithms
-            </li>
-            <li>
-              <strong>Protect privacy:</strong> All demographic data is optional and aggregate-only
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
-
-      {/* Latest Report */}
-      {latestReport && (
-        <Card className="mb-8">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Latest Fairness Note</CardTitle>
-              <Badge>{latestReport.release_version}</Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="prose prose-sm max-w-none">
-              <ReactMarkdown>{latestReport.report_markdown}</ReactMarkdown>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Historical Reports */}
-      {latestReports && latestReports.length > 1 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Historical Reports</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {latestReports.slice(1).map((report) => (
-                <div
-                  key={report.id}
-                  className="flex items-center justify-between p-3 border rounded-lg"
-                >
-                  <div>
-                    <div className="font-medium">{report.release_version}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {new Date(report.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
-                  <Badge variant="outline">View</Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Methodology */}
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle>Our Methodology</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <h3 className="font-semibold mb-2">Data Collection</h3>
-            <p className="text-sm text-muted-foreground">
-              Users can optionally share demographic information. This data is never required and
-              never shown to organizations. It exists solely for fairness monitoring.
-            </p>
-          </div>
-          <div>
-            <h3 className="font-semibold mb-2">Statistical Testing</h3>
-            <p className="text-sm text-muted-foreground">
-              We use chi-square tests (α=0.05) to determine if observed differences in outcomes are
-              statistically significant. We only flag gaps that are both significant and substantial
-              (&gt;5pp).
-            </p>
-          </div>
-          <div>
-            <h3 className="font-semibold mb-2">Continuous Improvement</h3>
-            <p className="text-sm text-muted-foreground">
-              When we identify significant fairness gaps, we investigate root causes and make
-              algorithm adjustments. All changes are documented in subsequent fairness notes.
-            </p>
-          </div>
+          <p>
+            Optional demographic data, when present, is used only for internal fairness monitoring
+            in aggregate. It is never shown to organizations and never used to publish public
+            comparisons.
+          </p>
+          <p>
+            The launch corridor remains proof-first, portfolio-first, privacy-first, and calm by
+            design. If you need more detail about policy or data handling, contact the team through
+            the support channel.
+          </p>
         </CardContent>
       </Card>
     </div>
