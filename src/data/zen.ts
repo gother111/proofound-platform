@@ -75,7 +75,7 @@ export const zenCheckInConfig: ZenCheckInConfig = {
     { score: 5, label: 'Very high', description: 'Clear plan; calm execution.' },
   ],
   privacyBanner:
-    'Private by default. Zen Hub data is never used to rank or match you and stays in a separate secure partition.',
+    'Private by default. Private check-in data is never used to rank or match you and stays in a separate secure partition.',
   moodUiDensityHints: [
     { state: 'support', uiHint: 'Hide non-essential panels and highlight 1-minute practice.' },
     { state: 'focus', uiHint: 'Show only next actions and one short practice suggestion.' },

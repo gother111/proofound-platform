@@ -17,6 +17,8 @@ import { growthPlans } from '@/db/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { toCanonicalGoal, toLegacyGoal } from '@/lib/goals/canonical';
+import { CLIENT_FF_DEFAULTS } from '@/lib/featureFlags';
+import { legacySurfaceJsonResponse } from '@/lib/mvp/nonLaunch';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,6 +55,12 @@ const UpdateGoalSchema = CreateGoalSchema.partial().extend({
  * - limit: Max number to return (default: 10)
  */
 export async function GET(request: NextRequest) {
+  if (!CLIENT_FF_DEFAULTS.legacyMvpSurfaces) {
+    return legacySurfaceJsonResponse(
+      'Goals API',
+      'Goal tracking is no longer part of the shipped MVP surface. Use the launch profile and skill-gap corridor instead.'
+    );
+  }
   try {
     const authContext = await requireApiAuthContext();
     if (!authContext) {
@@ -144,6 +152,12 @@ export async function GET(request: NextRequest) {
  * POST: Create a new goal
  */
 export async function POST(request: NextRequest) {
+  if (!CLIENT_FF_DEFAULTS.legacyMvpSurfaces) {
+    return legacySurfaceJsonResponse(
+      'Goals API',
+      'Goal tracking is no longer part of the shipped MVP surface. Use the launch profile and skill-gap corridor instead.'
+    );
+  }
   try {
     const authContext = await requireApiAuthContext();
     if (!authContext) {
@@ -202,6 +216,12 @@ export async function POST(request: NextRequest) {
  * PATCH: Update an existing goal
  */
 export async function PATCH(request: NextRequest) {
+  if (!CLIENT_FF_DEFAULTS.legacyMvpSurfaces) {
+    return legacySurfaceJsonResponse(
+      'Goals API',
+      'Goal tracking is no longer part of the shipped MVP surface. Use the launch profile and skill-gap corridor instead.'
+    );
+  }
   try {
     const authContext = await requireApiAuthContext();
     if (!authContext) {

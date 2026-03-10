@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
 
   if (!(await requireZenOptIn(user.id))) {
     return NextResponse.json(
-      { error: 'Zen Hub is disabled. Opt in before recording a check-in.' },
+      { error: 'Private check-ins are disabled. Opt in before recording a check-in.' },
       { status: 403 }
     );
   }
@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (!(await requireZenOptIn(user.id))) {
-    return NextResponse.json({ error: 'Zen Hub is disabled' }, { status: 403 });
+    return NextResponse.json({ error: 'Private check-ins are disabled' }, { status: 403 });
   }
 
   try {

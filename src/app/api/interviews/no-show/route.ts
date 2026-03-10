@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     if (!allowed) {
       return NextResponse.json(
-        { error: 'Only organization owners/admins can mark no-show' },
+        { error: 'Only organization owners/managers can mark no-show' },
         { status: 403 }
       );
     }

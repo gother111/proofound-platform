@@ -147,9 +147,9 @@ export function AboutSection() {
                   </div>
                 </div>
                 <div>
-                  <p className="font-medium text-foreground text-sm mb-1">5. Track on Dashboard</p>
+                  <p className="font-medium text-foreground text-sm mb-1">5. Review in Overview</p>
                   <p className="text-xs text-muted-foreground">
-                    Monitor credibility, coverage, relevance, and recency with 7 interactive widgets
+                    Monitor credibility, coverage, relevance, and recency in one calm overview
                   </p>
                 </div>
               </div>

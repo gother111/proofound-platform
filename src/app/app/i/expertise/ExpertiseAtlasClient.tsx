@@ -427,7 +427,7 @@ export function ExpertiseAtlasClient({
 
         {!taxonomyReady && (
           <div className="mb-6 rounded-lg border border-[#C76B4A] bg-[#FFF0F0] px-4 py-3 text-sm text-[#8B4A36]">
-            Expertise taxonomy data is currently unavailable. Dashboard coverage and add-skill
+            Expertise taxonomy data is currently unavailable. Readiness coverage and add-skill
             search will be limited until recovery completes.
           </div>
         )}
@@ -463,11 +463,11 @@ export function ExpertiseAtlasClient({
               emptyStateContent
             ) : (
               <>
-                {/* Dashboard Section */}
+                {/* Readiness overview section */}
                 {widgetData && (
                   <div className="mb-8 space-y-6">
                     <h2 className="text-2xl font-semibold text-proofound-charcoal font-display">
-                      Dashboard
+                      Proof readiness overview
                     </h2>
 
                     <div className="rounded-xl border border-white/40 bg-white/60 backdrop-blur-xl p-6 shadow-sm hover:shadow-md hover:bg-white/80 transition-all duration-300">
@@ -478,8 +478,8 @@ export function ExpertiseAtlasClient({
                             {readiness.score}% ready
                           </h3>
                           <p className="text-sm text-muted-foreground mt-1">
-                            Why this matters: solid signals (skills + proofs + recency) increase
-                            your rank transparency and intro quality.
+                            Why this matters: solid signals (skills + proofs + recency) improve
+                            trust and support more qualified introductions.
                           </p>
                         </div>
                         <Badge

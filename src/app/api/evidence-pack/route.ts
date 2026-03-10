@@ -9,6 +9,8 @@ import {
   type ImpactEntry,
   type Artifact,
 } from '@/lib/pdf/evidence-pack';
+import { CLIENT_FF_DEFAULTS } from '@/lib/featureFlags';
+import { legacySurfaceJsonResponse } from '@/lib/mvp/nonLaunch';
 
 /**
  * POST /api/evidence-pack
@@ -22,8 +24,16 @@ import {
  * - periodEnd?: ISO date string
  */
 export async function POST(request: NextRequest) {
+  if (!CLIENT_FF_DEFAULTS.legacyMvpSurfaces) {
+    return legacySurfaceJsonResponse(
+      'Evidence pack export',
+      'Evidence-pack exports are non-launch functionality and remain isolated from the MVP corridor.'
+    );
+  }
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -33,10 +43,13 @@ export async function POST(request: NextRequest) {
     const { organizationId, periodStart, periodEnd } = await request.json();
 
     if (!organizationId) {
-      return NextResponse.json({
-        error: 'Missing organizationId',
-        message: 'organizationId is required',
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Missing organizationId',
+          message: 'organizationId is required',
+        },
+        { status: 400 }
+      );
     }
 
     // Parse dates
@@ -48,10 +61,13 @@ export async function POST(request: NextRequest) {
     const organization = await fetchOrganization(organizationId);
 
     if (!organization) {
-      return NextResponse.json({
-        error: 'Organization not found',
-        message: `No organization found with ID: ${organizationId}`,
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          error: 'Organization not found',
+          message: `No organization found with ID: ${organizationId}`,
+        },
+        { status: 404 }
+      );
     }
 
     // Fetch impact entries
@@ -95,13 +111,15 @@ export async function POST(request: NextRequest) {
         'Content-Disposition': `inline; filename="evidence-pack-${organizationId}.html"`,
       },
     });
-
   } catch (error) {
     console.error('Evidence Pack generation error:', error);
-    return NextResponse.json({
-      error: 'Failed to generate Evidence Pack',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to generate Evidence Pack',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }
 
@@ -136,7 +154,8 @@ async function fetchImpactEntries(
     {
       id: '1',
       title: 'Volunteers Onboarded',
-      description: 'Successfully recruited and onboarded skilled volunteers through Proofound platform',
+      description:
+        'Successfully recruited and onboarded skilled volunteers through Proofound platform',
       metric: 'Total Volunteers',
       value: 42,
       unit: 'volunteers',

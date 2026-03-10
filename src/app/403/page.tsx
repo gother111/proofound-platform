@@ -24,7 +24,7 @@ export default function ForbiddenPage() {
 
         <div className="space-y-3">
           <Link href="/app/i/home">
-            <Button className="w-full">Go to Dashboard</Button>
+            <Button className="w-full">Go to Overview</Button>
           </Link>
           <Link href="/">
             <Button variant="outline" className="w-full">

@@ -2,7 +2,7 @@
  * First-Run Guided Tour (Flow I-03)
  *
  * PRD Requirement: First-run guided tour that progressively reveals UI
- * Steps: Navigation → Dashboard → Profile → Public Portfolio → Expertise Hub → Matching → Settings
+ * Steps: Navigation → Overview → Profile → Public Portfolio → Expertise Hub → Matching → Settings
  *
  * Features:
  * - Progressive reveal with styled background
@@ -59,7 +59,7 @@ const individualTourSteps: TourStep[] = [
     id: 'navigation',
     title: 'Your Navigation',
     description:
-      'This sidebar is your command center. Access your dashboard, profile, public portfolio link, matching, and more from here.',
+      'This sidebar is your command center. Access your overview, profile, public portfolio link, matching, and more from here.',
     icon: Compass,
     target: '[data-tour="left-nav"]',
     placement: 'right',
@@ -67,9 +67,9 @@ const individualTourSteps: TourStep[] = [
   },
   {
     id: 'dashboard',
-    title: 'Dashboard',
+    title: 'Overview',
     description:
-      'Your dashboard gives you a snapshot of your progress, including proof readiness and what to improve next.',
+      'Your overview gives you a snapshot of portfolio readiness, proof strength, and the next calm step to take.',
     icon: Home,
     target: '[data-tour="home-link"]',
     placement: 'right',
@@ -103,9 +103,9 @@ const individualTourSteps: TourStep[] = [
   },
   {
     id: 'matching',
-    title: 'Find Opportunities',
+    title: 'Matching',
     description:
-      'Matching is the next layer. Once your portfolio is published, discover assignments and roles aligned with your skills and values.',
+      'Matching stays secondary to your portfolio. Once your portfolio is published, review aligned assignments and qualified introductions.',
     icon: Target,
     target: '[data-tour="matching-link"]',
     placement: 'right',

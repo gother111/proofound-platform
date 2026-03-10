@@ -113,6 +113,9 @@ export default function AssignmentBuilderPage() {
   const [assignmentBasicModeEnabled, setAssignmentBasicModeEnabled] = useState(
     CLIENT_FF_DEFAULTS.assignmentBasicMode
   );
+  const [legacyMvpSurfacesEnabled, setLegacyMvpSurfacesEnabled] = useState(
+    CLIENT_FF_DEFAULTS.legacyMvpSurfaces
+  );
   const [advancedModeUnlocked, setAdvancedModeUnlocked] = useState(
     !CLIENT_FF_DEFAULTS.assignmentBasicMode
   );
@@ -130,7 +133,8 @@ export default function AssignmentBuilderPage() {
   const [appliedTemplateName, setAppliedTemplateName] = useState<string | null>(null);
   const assignmentIdRef = useRef<string | null>(null);
   const activeSteps = getActiveSteps(builderMode);
-  const templateAccessEnabled = advancedModeUnlocked && builderMode === 'advanced';
+  const templateAccessEnabled =
+    legacyMvpSurfacesEnabled && advancedModeUnlocked && builderMode === 'advanced';
 
   useEffect(() => {
     assignmentIdRef.current = assignmentId;
@@ -143,7 +147,9 @@ export default function AssignmentBuilderPage() {
         if (!response.ok) return;
         const payload = await response.json();
         const basicModeEnabled = payload?.flags?.assignmentBasicMode !== false;
+        const legacySurfacesEnabled = payload?.flags?.legacyMvpSurfaces === true;
         setAssignmentBasicModeEnabled(basicModeEnabled);
+        setLegacyMvpSurfacesEnabled(legacySurfacesEnabled);
 
         if (!basicModeEnabled) {
           setBuilderMode('advanced');

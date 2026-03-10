@@ -41,7 +41,7 @@ test.describe('Individual Flows - Unauthenticated Contract (I-00 to I-04)', () =
     await expectAuthRedirect(page, '/app/i/home');
   });
 
-  test('I-04: Home Dashboard loads with tiles', async ({ page }) => {
+  test('I-04: Home overview remains protected', async ({ page }) => {
     await expectAuthRedirect(page, '/app/i/home');
   });
 });
@@ -92,8 +92,8 @@ test.describe('Individual Flows - Unauthenticated Contract Matching (I-15 to I-1
   });
 });
 
-test.describe('Individual Flows - Unauthenticated Contract Zen Hub (I-26 to I-30)', () => {
-  test('I-26: Zen Hub page accessible', async ({ page }) => {
+test.describe('Individual Flows - Unauthenticated Contract Private Check-ins (I-26 to I-30)', () => {
+  test('I-26: Private check-ins page accessible', async ({ page }) => {
     await expectAuthRedirect(page, '/app/i/zen');
   });
 });

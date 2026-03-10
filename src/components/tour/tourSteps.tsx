@@ -20,7 +20,7 @@ import { UI_VOCABULARY } from '@/lib/copy/vocabulary';
  * PRD Flow I-03: progressive disclosure
  * 1. Blank canvas → Welcome
  * 2. Reveal Navigation
- * 3. Reveal Dashboard
+ * 3. Reveal Overview
  * 4. Jump to Profile (empty state)
  * 5. Show Public Portfolio
  * 6. Show Expertise Hub
@@ -52,7 +52,8 @@ export const individualTourSteps: Step[] = [
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-foreground">Your Navigation</h3>
         <p className="text-sm text-muted-foreground">
-          This sidebar is your home base. It helps you move between different sections of Proofound.
+          This sidebar is your home base. It helps you move between the narrow launch sections of
+          Proofound.
         </p>
       </div>
     ),
@@ -63,9 +64,9 @@ export const individualTourSteps: Step[] = [
     target: '[data-tour="dashboard"]',
     content: (
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-foreground">Your Dashboard</h3>
+        <h3 className="text-base font-semibold text-foreground">Your Overview</h3>
         <p className="text-sm text-muted-foreground">
-          Your dashboard shows key stats and actions. You can customize what appears here later.
+          Your overview shows portfolio readiness, proof signals, and the next launch-safe actions.
         </p>
       </div>
     ),
@@ -128,7 +129,7 @@ export const individualTourSteps: Step[] = [
         <h3 className="text-base font-semibold text-foreground">Matching Profile</h3>
         <p className="text-sm text-muted-foreground">
           Set your preferences for work: availability, compensation, location, and more. This helps
-          us find assignments that fit your life.
+          us review assignments that fit your life.
         </p>
         <p className="text-xs text-muted-foreground pt-2 border-t border-proofound-stone">
           <strong>Privacy first:</strong> Organizations only see what you choose to share.

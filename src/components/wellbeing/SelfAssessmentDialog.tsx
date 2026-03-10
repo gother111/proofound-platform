@@ -198,7 +198,8 @@ export function SelfAssessmentDialog({
                   <Info className="h-4 w-4 text-yellow-600" />
                   <AlertDescription>
                     <strong>Elevated strain:</strong> You may be carrying extra pressure recently.
-                    Consider using Zen Hub practices and checking in again within a few days.
+                    Consider using a short private check-in practice and checking in again within a
+                    few days.
                   </AlertDescription>
                 </Alert>
               )}
@@ -242,7 +243,8 @@ export function SelfAssessmentDialog({
                     2
                   </div>
                   <p className="text-sm">
-                    Practice grounding techniques and mindfulness exercises from the Zen Hub toolkit
+                    Practice grounding techniques and mindfulness exercises from the private
+                    check-in toolkit
                   </p>
                 </div>
                 {severity.level !== 'Low Strain' && (

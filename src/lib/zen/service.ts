@@ -178,7 +178,7 @@ export async function buildZenExport(userId: string) {
     version: 'zen-export/v1',
     exportedAt: new Date().toISOString(),
     privacyBoundary:
-      'Zen Hub is private to the individual and excluded from matching, ranking, reveal, fairness, and org analytics.',
+      'Private check-ins stay private to the individual and are excluded from matching, ranking, reveal, fairness, and org analytics.',
     optIn: optIn
       ? {
           optedIn: optIn.optedIn,

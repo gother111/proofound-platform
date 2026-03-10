@@ -5,6 +5,8 @@ import { db } from '@/db';
 import { assignmentTemplates, organizationMembers, organizations } from '@/db/schema';
 import { and, eq, or, desc } from 'drizzle-orm';
 import { log } from '@/lib/log';
+import { CLIENT_FF_DEFAULTS } from '@/lib/featureFlags';
+import { legacySurfaceJsonResponse } from '@/lib/mvp/nonLaunch';
 
 const DEFAULT_APPLIES_TO_STEPS = [
   'business_value',
@@ -115,6 +117,12 @@ async function resolveOrgIdForUser(userId: string, orgSlug?: string | null) {
 }
 
 export async function GET(request: NextRequest) {
+  if (!CLIENT_FF_DEFAULTS.legacyMvpSurfaces) {
+    return legacySurfaceJsonResponse(
+      'Assignment templates API',
+      'Template libraries are isolated from the launch MVP corridor.'
+    );
+  }
   try {
     const authContext = await requireApiAuthContext();
     if (!authContext) {
@@ -171,6 +179,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  if (!CLIENT_FF_DEFAULTS.legacyMvpSurfaces) {
+    return legacySurfaceJsonResponse(
+      'Assignment templates API',
+      'Template libraries are isolated from the launch MVP corridor.'
+    );
+  }
   try {
     const authContext = await requireApiAuthContext();
     if (!authContext) {

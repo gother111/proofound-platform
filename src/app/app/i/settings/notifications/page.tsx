@@ -63,7 +63,7 @@ const NOTIFICATION_TYPES = [
   },
   {
     id: 'AssignmentPublished',
-    label: 'New Opportunities',
+    label: 'New assignment matches',
     description: 'When a new assignment matches your profile',
   },
   {

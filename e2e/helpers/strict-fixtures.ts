@@ -288,8 +288,8 @@ export async function createRuntimeOrganization(
   const { error: memberError } = await supabase.from('organization_members').insert({
     org_id: org.id,
     user_id: ownerUserId,
-    role: 'owner',
-    status: 'active',
+    role: 'org_owner',
+    state: 'active',
   });
 
   if (memberError) {
@@ -510,7 +510,14 @@ export async function getCsrfToken(request: APIRequestContext): Promise<string> 
   return payload.token;
 }
 
-export async function apiPostJson(request: APIRequestContext, url: string, data: unknown) {
+export async function apiPostJson(
+  request: APIRequestContext,
+  url: string,
+  data: unknown,
+  options?: {
+    timeoutMs?: number;
+  }
+) {
   return withTransientRequestRetry(`POST ${url}`, async () => {
     const csrfToken = await getCsrfToken(request);
     return request.post(url, {
@@ -518,6 +525,7 @@ export async function apiPostJson(request: APIRequestContext, url: string, data:
       headers: {
         'x-csrf-token': csrfToken,
       },
+      timeout: options?.timeoutMs,
     });
   });
 }

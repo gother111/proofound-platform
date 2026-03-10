@@ -43,10 +43,10 @@ export function PrivacyBanner({ onOptIn, onDismiss }: PrivacyBannerProps) {
 
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-proofound-charcoal dark:text-foreground mb-2">
-              Welcome to Zen Hub
+              Private check-ins stay optional
             </h3>
             <p className="text-sm text-proofound-charcoal/80 dark:text-muted-foreground mb-4">
-              Zen Hub is an optional private space for brief check-ins and milestone reflections.
+              Private check-ins are an optional space for brief check-ins and milestone reflections.
               Your entries stay <strong>private to you</strong> and
               <strong>
                 {' '}
@@ -61,7 +61,7 @@ export function PrivacyBanner({ onOptIn, onDismiss }: PrivacyBannerProps) {
                 disabled={isLoading}
                 className="bg-[#7A9278] hover:bg-[#7A9278]/90 text-white"
               >
-                {isLoading ? 'Enabling...' : 'Enable Zen Hub'}
+                {isLoading ? 'Enabling...' : 'Enable private check-ins'}
               </Button>
 
               <Button
@@ -93,19 +93,21 @@ export function PrivacyBanner({ onOptIn, onDismiss }: PrivacyBannerProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-[#7A9278]" />
-              Zen Hub privacy boundary
+              Private check-ins privacy boundary
             </DialogTitle>
-            <DialogDescription>How Zen Hub stays narrow, private, and optional</DialogDescription>
+            <DialogDescription>
+              How private check-ins stay narrow, private, and optional
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4 text-sm">
             <div>
               <h4 className="font-semibold text-proofound-charcoal dark:text-foreground mb-2">
-                What is Zen Hub?
+                What are private check-ins?
               </h4>
               <p className="text-proofound-charcoal/80 dark:text-muted-foreground">
-                Zen Hub is a minimal private support surface for volatile work-search moments. In
-                MVP it includes only opt-in check-ins, milestone reflections, export, and deletion.
+                This is a minimal private support surface for volatile work-search moments. In MVP
+                it includes only opt-in check-ins, milestone reflections, export, and deletion.
               </p>
             </div>
 
@@ -116,7 +118,7 @@ export function PrivacyBanner({ onOptIn, onDismiss }: PrivacyBannerProps) {
               <ul className="list-disc list-inside space-y-2 text-proofound-charcoal/80 dark:text-muted-foreground">
                 <li>
                   <strong>Never used for matching:</strong> Your well-being data will never affect
-                  which opportunities you see or how you&apos;re ranked
+                  which introductions you see or how you&apos;re ranked
                 </li>
                 <li>
                   <strong>Never shared with organizations:</strong> Recruiters, hiring teams, and
@@ -128,8 +130,8 @@ export function PrivacyBanner({ onOptIn, onDismiss }: PrivacyBannerProps) {
                   analytics
                 </li>
                 <li>
-                  <strong>You control your data:</strong> You can export or delete all your Zen data
-                  at any time
+                  <strong>You control your data:</strong> You can export or delete all private
+                  check-in data at any time
                 </li>
               </ul>
             </div>
@@ -143,17 +145,20 @@ export function PrivacyBanner({ onOptIn, onDismiss }: PrivacyBannerProps) {
                 <li>
                   Write optional reflections linked to milestone tags such as rejection or offer
                 </li>
-                <li>Export your own Zen records as JSON or check-in CSV</li>
-                <li>Delete all Zen data without affecting your portfolio or matching state</li>
+                <li>Export your own records as JSON or check-in CSV</li>
+                <li>
+                  Delete all private check-in data without affecting your portfolio or matching
+                  state
+                </li>
               </ul>
             </div>
 
             <div>
               <h4 className="font-semibold text-proofound-charcoal dark:text-foreground mb-2">
-                What Zen Hub is not
+                What this is not
               </h4>
               <p className="text-proofound-charcoal/80 dark:text-muted-foreground">
-                Zen Hub is <strong>not</strong> a wellness feed, self-assessment center, burnout
+                This is <strong>not</strong> a wellness feed, self-assessment center, burnout
                 tracker, local resource directory, or diagnostic tool. It is intentionally narrow so
                 it remains calm, private, and optional.
               </p>
@@ -161,9 +166,9 @@ export function PrivacyBanner({ onOptIn, onDismiss }: PrivacyBannerProps) {
 
             <div className="bg-[#7A9278]/10 p-4 rounded-lg border border-[#7A9278]/20">
               <p className="text-sm text-proofound-charcoal/90 dark:text-foreground">
-                <strong>Your choice:</strong> Zen Hub is completely optional. You can opt out at any
-                time from your settings, and your professional profile and matching experience will
-                not be affected.
+                <strong>Your choice:</strong> Private check-ins are completely optional. You can opt
+                out at any time, and your professional profile and matching experience will not be
+                affected.
               </p>
             </div>
           </div>
@@ -180,7 +185,7 @@ export function PrivacyBanner({ onOptIn, onDismiss }: PrivacyBannerProps) {
               disabled={isLoading}
               className="bg-[#7A9278] hover:bg-[#7A9278]/90 text-white"
             >
-              {isLoading ? 'Enabling...' : 'Enable Zen Hub'}
+              {isLoading ? 'Enabling...' : 'Enable private check-ins'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -61,7 +61,7 @@ function milestoneLabel(value?: string | null) {
   }
 }
 
-export default function ZenHubPage() {
+export default function PrivateCheckInsPage() {
   const [optInState, setOptInState] = useState<OptInState | null>(null);
   const [checkins, setCheckins] = useState<CheckInEntry[]>([]);
   const [reflections, setReflections] = useState<ReflectionEntry[]>([]);
@@ -77,7 +77,7 @@ export default function ZenHubPage() {
     try {
       const optInResponse = await apiFetch('/api/wellbeing/opt-in');
       if (!optInResponse.ok) {
-        throw new Error('Failed to load Zen Hub status');
+        throw new Error('Failed to load private check-in status');
       }
       const optIn = (await optInResponse.json()) as OptInState;
       setOptInState(optIn);
@@ -108,7 +108,7 @@ export default function ZenHubPage() {
       }
     } catch (error) {
       console.error('zen.page.load.failed', error);
-      toast.error('Failed to load Zen Hub');
+      toast.error('Failed to load private check-ins');
     } finally {
       setLoading(false);
     }
@@ -149,10 +149,10 @@ export default function ZenHubPage() {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error(error.error || 'Failed to enable Zen Hub');
+      throw new Error(error.error || 'Failed to enable private check-ins');
     }
 
-    toast.success('Zen Hub enabled');
+    toast.success('Private check-ins enabled');
     await loadZenState();
   }
 
@@ -207,7 +207,7 @@ export default function ZenHubPage() {
     return (
       <AppSurface>
         <div className="mx-auto max-w-3xl py-12 text-center text-sm text-muted-foreground">
-          Loading Zen Hub...
+          Loading private check-ins...
         </div>
       </AppSurface>
     );
@@ -217,9 +217,9 @@ export default function ZenHubPage() {
     <AppSurface>
       <div className="mx-auto flex max-w-3xl flex-col gap-6 py-6">
         <div className="space-y-2">
-          <h1 className="font-serif text-3xl text-foreground">Zen Hub</h1>
+          <h1 className="font-serif text-3xl text-foreground">Private check-ins</h1>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            An optional private space for brief check-ins and milestone reflections. Zen Hub is
+            An optional private space for brief check-ins and milestone reflections. This area is
             never used for matching, ranking, reveal, or org analytics.
           </p>
         </div>
@@ -268,7 +268,7 @@ export default function ZenHubPage() {
                     disabled={busyAction === 'export'}
                   >
                     <Download className="mr-2 h-4 w-4" />
-                    {busyAction === 'export' ? 'Exporting...' : 'Export Zen data'}
+                    {busyAction === 'export' ? 'Exporting...' : 'Export private data'}
                   </Button>
                   <Button
                     variant="outline"
@@ -277,7 +277,7 @@ export default function ZenHubPage() {
                     disabled={busyAction === 'delete'}
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
-                    {busyAction === 'delete' ? 'Deleting...' : 'Delete Zen data'}
+                    {busyAction === 'delete' ? 'Deleting...' : 'Delete private data'}
                   </Button>
                 </div>
               </div>
@@ -318,7 +318,7 @@ export default function ZenHubPage() {
               </div>
               {recentEntries.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  No entries yet. Zen Hub stays quiet until you choose to use it.
+                  No entries yet. This space stays quiet until you choose to use it.
                 </p>
               ) : (
                 <div className="space-y-3">

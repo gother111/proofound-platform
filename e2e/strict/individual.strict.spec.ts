@@ -69,8 +69,8 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
         .insert({
           org_id: assignment.orgId,
           user_id: orgUser.id,
-          role: 'owner',
-          status: 'active',
+          role: 'org_owner',
+          state: 'active',
         });
 
       if (fallbackMembershipError && fallbackMembershipError.code !== '23505') {
@@ -169,7 +169,7 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
     expect(typeof verificationStatusPayload.verificationStatus).toBe('string');
   });
 
-  test('I-10..I-14 matching preferences, feed, opportunities, and interest action are real', async ({
+  test('I-10..I-14 matching preferences, overview, and interest action are real', async ({
     page,
   }) => {
     await loginWithUi(page, individualUser);
@@ -276,17 +276,25 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
     const interestResponse = await apiPostJson(page.request, '/api/match/interest', {
       assignmentId: assignment.id,
     });
-    expect(interestResponse.ok()).toBeTruthy();
-    const interestPayload = (await interestResponse.json()) as { revealed?: boolean };
-    expect(typeof interestPayload.revealed).toBe('boolean');
+    expect([200, 409]).toContain(interestResponse.status());
+    const interestPayload = (await interestResponse.json()) as {
+      revealed?: boolean;
+      browseStillAvailable?: boolean;
+      error?: string;
+    };
+    if (interestResponse.status() === 200) {
+      expect(typeof interestPayload.revealed).toBe('boolean');
+    } else {
+      expect(interestPayload.browseStillAvailable).toBe(true);
+      expect(interestPayload.error).toBeTruthy();
+    }
 
     await page.goto('/app/i/matching');
     await expect(page.getByRole('heading', { name: 'Matching' })).toBeVisible();
 
-    await page.goto('/app/i/opportunities');
-    await expect(
-      page.getByLabel('Main content').getByRole('heading', { name: 'Opportunities' })
-    ).toBeVisible();
+    await page.goto('/app/i/home');
+    await expect(page.getByRole('heading', { name: /welcome back/i })).toBeVisible();
+    await expect(page.getByText(/proof first\. portfolio first\./i)).toBeVisible();
   });
 
   test('I-15..I-17 messaging, interview scheduling, and offer attestation work', async ({
@@ -394,62 +402,12 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
     }
   });
 
-  test('I-18..I-20 projects, post-engagement artifacts, and privacy/account controls are real', async ({
-    page,
-  }) => {
+  test('I-18..I-20 private check-ins, privacy, and account controls are real', async ({ page }) => {
     await loginWithUi(page, individualUser);
 
-    let createProjectResponse = await apiPostJson(page.request, '/api/projects', {
-      title: 'Strict Delivery Project',
-      description: 'Strict project used for MVP readiness verification',
-      projectType: 'work',
-      status: 'ongoing',
-      startDate: new Date().toISOString(),
-      organizationName: organization.displayName,
-      roleTitle: 'Contract Engineer',
-      impactSummary: 'Delivered measurable MVP outcomes',
-      tags: ['strict', 'mvp'],
-      visibility: 'public',
-    });
-
-    if (createProjectResponse.status() === 403) {
-      await page.goto('/app/i/projects');
-      createProjectResponse = await apiPostJson(page.request, '/api/projects', {
-        title: 'Strict Delivery Project',
-        description: 'Strict project used for MVP readiness verification',
-        projectType: 'work',
-        status: 'ongoing',
-        startDate: new Date().toISOString(),
-        organizationName: organization.displayName,
-        roleTitle: 'Contract Engineer',
-        impactSummary: 'Delivered measurable MVP outcomes',
-        tags: ['strict', 'mvp'],
-        visibility: 'public',
-      });
-    }
-
-    const createProjectStatus = createProjectResponse.status();
-    expect([201, 403]).toContain(createProjectStatus);
-
-    let createdProjectId: string | undefined;
-    if (createProjectStatus === 201) {
-      const createProjectPayload = (await createProjectResponse.json()) as {
-        project?: { id?: string };
-      };
-      createdProjectId = createProjectPayload.project?.id;
-      if (createdProjectId) fixture.projectIds.add(createdProjectId);
-    }
-
-    const listProjectsResponse = await page.request.get('/api/projects');
-    expect(listProjectsResponse.ok()).toBeTruthy();
-    const listProjectsPayload = (await listProjectsResponse.json()) as {
-      projects?: Array<{ id?: string }>;
-    };
-    if (createdProjectId) {
-      expect(
-        (listProjectsPayload.projects ?? []).some((project) => project.id === createdProjectId)
-      ).toBeTruthy();
-    }
+    await page.goto('/app/i/zen');
+    await expect(page.getByRole('heading', { name: 'Private check-ins' })).toBeVisible();
+    await expect(page.getByText(/optional private space for brief check-ins/i)).toBeVisible();
 
     let updateVisibilityResponse = await apiPostJson(page.request, '/api/profile/visibility', {
       location: 'private',

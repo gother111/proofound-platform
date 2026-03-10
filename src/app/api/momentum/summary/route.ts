@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireApiAuthContext } from '@/lib/auth';
-import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
+import { CLIENT_FF_DEFAULTS, FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
 import { isFeatureEnabled } from '@/lib/feature-flags/server';
 import { getMomentumSummary, getMomentumSummaryCached } from '@/lib/momentum/summary';
+import { legacySurfaceJsonResponse } from '@/lib/mvp/nonLaunch';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
+  if (!CLIENT_FF_DEFAULTS.legacyMvpSurfaces) {
+    return legacySurfaceJsonResponse(
+      'Momentum summary API',
+      'Momentum summaries are gated out of the shipped MVP surface.'
+    );
+  }
   try {
     const authContext = await requireApiAuthContext();
     if (!authContext) {

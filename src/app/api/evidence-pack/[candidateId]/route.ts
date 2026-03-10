@@ -10,6 +10,8 @@ import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { generateEvidencePackPDF } from '@/lib/reports/evidence-pack-generator';
+import { CLIENT_FF_DEFAULTS } from '@/lib/featureFlags';
+import { legacySurfaceJsonResponse } from '@/lib/mvp/nonLaunch';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,6 +19,12 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ candidateId: string }> }
 ) {
+  if (!CLIENT_FF_DEFAULTS.legacyMvpSurfaces) {
+    return legacySurfaceJsonResponse(
+      'Evidence pack export',
+      'Evidence-pack exports are non-launch functionality and remain isolated from the MVP corridor.'
+    );
+  }
   try {
     const supabase = await createClient();
     const {

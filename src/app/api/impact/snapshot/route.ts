@@ -1,25 +1,25 @@
 /**
- * Impact Snapshot API
- * GET /api/impact/snapshot
- *
- * Aggregates impact metrics for the dashboard widget:
- * - Impact stories count
- * - Verified skills count
- * - Match score improvements
- * - Projects with verified outcomes
- *
- * PRD Reference: Part 7 - Dashboard tile data
+ * Legacy impact snapshot API.
+ * Kept for non-launch surfaces only.
  */
 
 import { NextResponse } from 'next/server';
 import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { impactStories, capabilities, matches, projects, verificationRequests } from '@/db/schema';
-import { eq, and, sql, desc, gte } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
+import { CLIENT_FF_DEFAULTS } from '@/lib/featureFlags';
+import { legacySurfaceJsonResponse } from '@/lib/mvp/nonLaunch';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  if (!CLIENT_FF_DEFAULTS.legacyMvpSurfaces) {
+    return legacySurfaceJsonResponse(
+      'Impact snapshot API',
+      'Impact snapshot tiles are not part of the launch MVP corridor.'
+    );
+  }
   try {
     const authContext = await requireApiAuthContext();
     if (!authContext) {
@@ -27,7 +27,6 @@ export async function GET() {
     }
     const { user } = authContext;
 
-    // Fetch multiple metrics concurrently for performance (PRD Part 7)
     const [
       impactStoriesResult,
       verifiedSkillsResult,
@@ -35,7 +34,6 @@ export async function GET() {
       matchesResult,
       pendingVerificationsResult,
     ] = await Promise.all([
-      // Count impact stories (verified and total)
       db
         .select({
           total: sql<number>`count(*)::int`,
@@ -44,7 +42,6 @@ export async function GET() {
         .from(impactStories)
         .where(eq(impactStories.userId, user.id)),
 
-      // Count verified skills/capabilities
       db
         .select({
           total: sql<number>`count(*)::int`,
@@ -54,7 +51,6 @@ export async function GET() {
         .from(capabilities)
         .where(eq(capabilities.profileId, user.id)),
 
-      // Count projects with verified outcomes
       db
         .select({
           total: sql<number>`count(*)::int`,
@@ -65,7 +61,6 @@ export async function GET() {
         .from(projects)
         .where(eq(projects.userId, user.id)),
 
-      // Get match score data
       db
         .select({
           count: sql<number>`count(*)::int`,
@@ -75,7 +70,6 @@ export async function GET() {
         .from(matches)
         .where(eq(matches.profileId, user.id)),
 
-      // Count pending verification requests
       db
         .select({
           count: sql<number>`count(*)::int`,
@@ -89,22 +83,17 @@ export async function GET() {
         ),
     ]);
 
-    // Calculate "Impact Score" - a composite metric
-    // Based on: verified skills, impact stories, verified projects
     const skillsData = verifiedSkillsResult[0] || { total: 0, verified: 0, pending: 0 };
     const storiesData = impactStoriesResult[0] || { total: 0, verified: 0 };
     const projectsData = projectsResult[0] || { total: 0, verified: 0, ongoing: 0, concluded: 0 };
     const matchesData = matchesResult[0] || { count: 0, avgScore: 0, highQualityMatches: 0 };
     const pendingData = pendingVerificationsResult[0] || { count: 0 };
 
-    // Calculate impact score (0-100)
-    // Weighted: 40% verified skills, 30% impact stories, 30% verified projects
     const maxSkillsScore = Math.min(skillsData.verified * 5, 40); // Max 8 verified skills = 40 points
     const maxStoriesScore = Math.min(storiesData.verified * 10, 30); // Max 3 verified stories = 30 points
     const maxProjectsScore = Math.min(projectsData.verified * 10, 30); // Max 3 verified projects = 30 points
     const impactScore = Math.round(maxSkillsScore + maxStoriesScore + maxProjectsScore);
 
-    // Get recent activity (last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -117,7 +106,6 @@ export async function GET() {
 
     const activityData = recentActivity[0] || { recentStories: 0 };
 
-    // Build response with metrics
     const snapshot = {
       impactScore,
       impactStories: {
@@ -142,7 +130,6 @@ export async function GET() {
       },
       pendingVerifications: pendingData.count,
       recentActivity: activityData.recentStories,
-      // Suggestions for improvement
       suggestions: generateSuggestions({
         verifiedSkills: skillsData.verified,
         impactStories: storiesData.total,
@@ -164,7 +151,6 @@ export async function GET() {
   }
 }
 
-// Generate improvement suggestions based on current metrics
 function generateSuggestions(data: {
   verifiedSkills: number;
   impactStories: number;
@@ -191,10 +177,9 @@ function generateSuggestions(data: {
     );
   }
 
-  // If doing well, provide encouragement
   if (suggestions.length === 0) {
     suggestions.push('Your impact profile is looking strong! Keep it up.');
   }
 
-  return suggestions.slice(0, 3); // Max 3 suggestions
+  return suggestions.slice(0, 3);
 }

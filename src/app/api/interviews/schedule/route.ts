@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
         ON om.org_id = a.org_id
         AND om.user_id = ${user.id}
         AND om.status = 'active'
-        AND om.role IN ('owner', 'admin')
+        AND om.role IN ('org_owner', 'org_manager')
       WHERE m.profile_id = ${user.id}
          OR om.user_id IS NOT NULL
     `);
@@ -338,13 +338,13 @@ export async function POST(request: NextRequest) {
     }
 
     const canScheduleForOrg = await isActiveOrgMember(supabase, user.id, match.org_id, [
-      'owner',
-      'admin',
+      'org_owner',
+      'org_manager',
     ]);
 
     if (!canScheduleForOrg) {
       return NextResponse.json(
-        { error: 'Only organization owners/admins can schedule interviews' },
+        { error: 'Only organization owners/managers can schedule interviews' },
         { status: 403 }
       );
     }

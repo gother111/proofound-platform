@@ -109,8 +109,8 @@ export function CheckInDialog({
             Private check-in
           </DialogTitle>
           <DialogDescription>
-            Record a brief private check-in. It stays inside Zen Hub and does not affect matching,
-            ranking, or org visibility.
+            Record a brief private check-in. It stays in your private reflection area and does not
+            affect matching, ranking, or org visibility.
           </DialogDescription>
         </DialogHeader>
 

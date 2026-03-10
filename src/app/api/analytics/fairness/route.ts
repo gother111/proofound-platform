@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { fairnessNotes } from '@/db/schema';
 import { and, desc, gte, lte } from 'drizzle-orm';
+import { requirePlatformAdminJson } from '@/lib/api/route-helpers';
 
 type DashboardFairnessNote = {
   reportDate: string;
@@ -87,13 +87,9 @@ const buildRecommendations = (recommendations: any[]): string[] => {
  * - endDate: ISO date string (default: today)
  */
 export async function GET(request: NextRequest) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const adminUser = await requirePlatformAdminJson();
+  if (adminUser instanceof NextResponse) {
+    return adminUser;
   }
 
   try {

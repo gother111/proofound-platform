@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     if (!allowed) {
       return NextResponse.json(
-        { error: 'Only organization owners/admins can cancel interviews' },
+        { error: 'Only organization owners/managers can cancel interviews' },
         { status: 403 }
       );
     }

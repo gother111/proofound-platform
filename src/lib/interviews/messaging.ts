@@ -153,7 +153,10 @@ export async function canManageInterviewAsOrgAdmin(
     return { allowed: false, context: null };
   }
 
-  const allowed = await isActiveOrgMember(supabase, userId, context.orgId, ['owner', 'admin']);
+  const allowed = await isActiveOrgMember(supabase, userId, context.orgId, [
+    'org_owner',
+    'org_manager',
+  ]);
   return { allowed, context };
 }
 

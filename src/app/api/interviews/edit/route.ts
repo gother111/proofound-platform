@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     if (!allowed) {
       return NextResponse.json(
-        { error: 'Only organization owners/admins can edit interviews' },
+        { error: 'Only organization owners/managers can edit interviews' },
         { status: 403 }
       );
     }

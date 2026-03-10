@@ -14,7 +14,7 @@ export default async function SnoozedMatchesPage() {
           Snoozed Matches
         </h1>
         <p className="text-muted-foreground">
-          Opportunities you&apos;ve temporarily hidden. They&apos;ll automatically reappear when the
+          Matches you&apos;ve temporarily hidden. They&apos;ll automatically reappear when the
           snooze period ends.
         </p>
       </div>

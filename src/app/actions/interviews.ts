@@ -48,7 +48,7 @@ export async function getInterviews(params?: { status?: string; matchId?: string
       ON om.org_id = a.org_id
       AND om.user_id = ${user.id}
       AND om.status = 'active'
-      AND om.role IN ('owner', 'admin')
+      AND om.role IN ('org_owner', 'org_manager')
     WHERE m.profile_id = ${user.id}
        OR om.user_id IS NOT NULL
   `);
@@ -297,11 +297,11 @@ export async function scheduleInterview(input: z.input<typeof ScheduleInterviewS
     if (!match) throw new Error('Match not found');
 
     const canScheduleForOrg = await isActiveOrgMember(supabase, user.id, match.org_id, [
-      'owner',
-      'admin',
+      'org_owner',
+      'org_manager',
     ]);
     if (!canScheduleForOrg)
-      throw new Error('Only organization owners/admins can schedule interviews');
+      throw new Error('Only organization owners/managers can schedule interviews');
 
     const { data: interviewsForMatch, error: interviewsForMatchError } = await supabase
       .from('interviews')

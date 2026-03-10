@@ -18,12 +18,12 @@ type MatchVector = {
 };
 
 export interface DashboardMetrics {
-  profileScore: number;
-  impactStoryCount: number;
+  portfolioReadinessPercent: number;
+  proofStoriesCount: number;
   verifiedSkills: number;
   pendingVerifications: number;
-  qualityMatches: number;
-  activeApplications: number;
+  qualifiedMatches: number;
+  activeIntroductions: number;
 }
 
 export async function getDashboardMetrics(): Promise<DashboardMetrics> {
@@ -56,25 +56,25 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
     (capability) => capability.verificationStatus === 'pending'
   ).length;
 
-  const qualityMatches = matchRows.filter(
+  const qualifiedMatches = matchRows.filter(
     (match) => Number(match.score) >= QUALITY_MATCH_THRESHOLD
   ).length;
 
-  const activeApplications = matchRows.reduce((total, match) => {
+  const activeIntroductions = matchRows.reduce((total, match) => {
     const vector = (match.vector as MatchVector) ?? {};
     const highIntent = Number(vector.matches?.highIntent ?? 0);
     return total + highIntent;
   }, 0);
 
-  const profileScore = calculateProfileCompletion(profileData);
-  const impactStoryCount = profileData.impactStories.length;
+  const portfolioReadinessPercent = calculateProfileCompletion(profileData);
+  const proofStoriesCount = profileData.impactStories.length;
 
   return {
-    profileScore,
-    impactStoryCount,
+    portfolioReadinessPercent,
+    proofStoriesCount,
     verifiedSkills,
     pendingVerifications,
-    qualityMatches,
-    activeApplications,
+    qualifiedMatches,
+    activeIntroductions,
   };
 }

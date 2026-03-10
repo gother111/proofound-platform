@@ -55,13 +55,13 @@ export function IndividualMatchingEmpty({ onSetup }: IndividualMatchingEmptyProp
         {/* Heading */}
         <div className="relative z-10 space-y-3 mb-8">
           <h2 className="text-3xl font-semibold text-proofound-charcoal font-display tracking-tight">
-            Start Finding Meaningful Opportunities
+            Start Matching for Aligned Work
           </h2>
           {/* Description */}
           <p className="text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
-            Set up your matching profile to discover roles aligned with your skills, values, and
-            impact goals. Our blind-first matching ensures bias-free connections—organizations
-            won&apos;t see your name, photo, or background until there&apos;s mutual interest.
+            Set up your matching profile to review work aligned with your skills, values, and impact
+            goals. Our blind-first matching ensures bias-free connections. Organizations won&apos;t
+            see your name, photo, or background until there&apos;s mutual interest.
           </p>
         </div>
 

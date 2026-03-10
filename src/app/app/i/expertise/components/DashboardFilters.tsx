@@ -208,7 +208,7 @@ export function DashboardFilters({ filters, onFilterChange }: DashboardFiltersPr
       <DrawerContent>
         <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
         <DrawerHeader className="text-left mt-2">
-          <DrawerTitle>Dashboard Filters</DrawerTitle>
+          <DrawerTitle>Overview Filters</DrawerTitle>
         </DrawerHeader>
         <div className="px-4 pb-4 max-h-[70vh] overflow-y-auto">
           <FilterContent />

@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
     const { user } = authContext;
     if (!(await requireZenOptIn(user.id))) {
-      return NextResponse.json({ error: 'Zen Hub is disabled' }, { status: 403 });
+      return NextResponse.json({ error: 'Private check-ins are disabled' }, { status: 403 });
     }
 
     const days = Number.parseInt(request.nextUrl.searchParams.get('days') || '14', 10) || 14;

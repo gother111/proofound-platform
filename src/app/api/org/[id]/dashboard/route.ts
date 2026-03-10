@@ -28,6 +28,8 @@ import {
 } from '@/db/schema';
 import { eq, and, sql, gte, desc, count } from 'drizzle-orm';
 import { authorize, type OrgRole } from '@/lib/authz';
+import { CLIENT_FF_DEFAULTS } from '@/lib/featureFlags';
+import { legacySurfaceJsonResponse } from '@/lib/mvp/nonLaunch';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,6 +77,12 @@ async function getOrgWithAccess(orgIdOrSlug: string, userId: string) {
 }
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!CLIENT_FF_DEFAULTS.legacyMvpSurfaces) {
+    return legacySurfaceJsonResponse(
+      'Organization dashboard API',
+      'Organization dashboard aggregates remain isolated from the shipped MVP corridor.'
+    );
+  }
   try {
     const authContext = await requireApiAuthContext();
     if (!authContext) {

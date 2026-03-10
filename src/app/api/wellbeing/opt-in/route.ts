@@ -65,7 +65,10 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error('wellbeing.opt-in.post.failed', error);
-    return NextResponse.json({ error: 'Failed to update Zen Hub access' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to update private check-in access' },
+      { status: 500 }
+    );
   }
 }
 
@@ -91,10 +94,13 @@ export async function GET() {
       optedInAt: record?.optedInAt?.toISOString() ?? null,
       optedOutAt: record?.optedOutAt?.toISOString() ?? null,
       privacyBoundary:
-        'Zen Hub is private to you and excluded from matching, ranking, reveal, fairness, and org analytics.',
+        'Private check-ins stay private to you and are excluded from matching, ranking, reveal, fairness, and org analytics.',
     });
   } catch (error) {
     console.error('wellbeing.opt-in.get.failed', error);
-    return NextResponse.json({ error: 'Failed to retrieve Zen Hub access' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to retrieve private check-in access' },
+      { status: 500 }
+    );
   }
 }
