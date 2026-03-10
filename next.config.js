@@ -6,6 +6,22 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 const isVercelBuild = process.env.VERCEL === '1' || Boolean(process.env.VERCEL_ENV);
 const skipBuildValidation = process.env.NEXT_SKIP_BUILD_VALIDATION === '1' || isVercelBuild;
 const widenSentryClientUpload = process.env.SENTRY_WIDEN_CLIENT_FILE_UPLOAD === '1';
+const sentryBuildArtifacts = [
+  '.next/server/app/**/*.js',
+  '.next/server/app/**/*.js.map',
+  '.next/server/chunks/**/*.js',
+  '.next/server/chunks/**/*.js.map',
+  '.next/static/chunks/app/**/*.js',
+  '.next/static/chunks/app/**/*.js.map',
+];
+const sentryIgnoredArtifacts = [
+  '.next/static/chunks/webpack-*.js',
+  '.next/static/chunks/webpack-*.js.map',
+  '.next/static/chunks/framework-*.js',
+  '.next/static/chunks/framework-*.js.map',
+  '.next/static/chunks/main-*.js',
+  '.next/static/chunks/main-*.js.map',
+];
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -106,7 +122,14 @@ export default withSentryConfig(config, {
   // Keep the default upload surface narrow so Vercel deploys do not spend minutes
   // uploading hundreds of extra client source maps. Opt in only when needed.
   widenClientFileUpload: widenSentryClientUpload,
+  sourcemaps: {
+    assets: sentryBuildArtifacts,
+    ignore: sentryIgnoredArtifacts,
+  },
   hideSourceMaps: true, // Hides source maps from browser DevTools
   disableLogger: true, // Automatically tree-shake Sentry logger statements
-  automaticVercelMonitors: true, // Enable automatic Vercel cron monitoring
+  automaticVercelMonitors: false, // Avoid extra release-time work during Vercel builds
+  errorHandler(error) {
+    console.warn('[@sentry/nextjs] Non-fatal build warning:', error?.message ?? error);
+  },
 });
