@@ -11,10 +11,12 @@ import {
   matchingProfiles,
   profiles,
 } from '@/db/schema';
-import { isActiveOrgMember, requireMobileAuth } from '@/lib/api/mobile/auth';
+import { requireMobileAuth } from '@/lib/api/mobile/auth';
 import { mobileError, mobileSuccess } from '@/lib/api/mobile/response';
 import {
   buildCandidateReviewProjection,
+  getOrgMembershipRole,
+  getShortlistProjectionPolicy,
   getRankBand,
   getVisibleIdentityFields,
   normalizeFairnessStatus,
@@ -43,14 +45,9 @@ export async function GET(request: NextRequest) {
     }
 
     const { orgId } = parsedQuery.data;
-    const canAccess = await isActiveOrgMember(auth.user.id, orgId, [
-      'owner',
-      'admin',
-      'member',
-      'viewer',
-    ]);
+    const orgRole = await getOrgMembershipRole(auth.user.id, orgId);
 
-    if (!canAccess) {
+    if (!orgRole) {
       return mobileError('forbidden', 'Organization membership required', 403);
     }
 
@@ -131,6 +128,7 @@ export async function GET(request: NextRequest) {
       items: shortlist.map((row) => {
         const fairnessStatus = normalizeFairnessStatus(row.fairnessStatus);
         const rankInfo = rankMap.get(row.matchId);
+        const projectionPolicy = getShortlistProjectionPolicy(orgRole, row.revealScope);
         const suppressExactRank = shouldSuppressExactRank(
           fairnessStatus,
           row.scoreState,
@@ -143,8 +141,8 @@ export async function GET(request: NextRequest) {
           assignmentRole: row.assignmentRole,
           assignmentStatus: row.assignmentStatus,
           reviewStage: row.reviewStage,
-          revealScope: row.revealScope,
-          visibleIdentityFields: getVisibleIdentityFields(row.revealScope),
+          revealScope: projectionPolicy.effectiveScope,
+          visibleIdentityFields: getVisibleIdentityFields(projectionPolicy.effectiveScope),
           candidate: buildCandidateReviewProjection(
             {
               profileId: row.profileId,
@@ -161,7 +159,10 @@ export async function GET(request: NextRequest) {
               causeTags: row.causeTags,
               verified: (row.verified as Record<string, unknown> | null) ?? null,
             },
-            row.revealScope
+            projectionPolicy.effectiveScope,
+            {
+              verificationSummaryVisibility: projectionPolicy.verificationSummaryVisibility,
+            }
           ),
           fairness: {
             status: fairnessStatus,
