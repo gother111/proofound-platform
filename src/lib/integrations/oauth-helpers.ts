@@ -3,6 +3,15 @@ import { sanitizeReturnPath } from '@/lib/navigation/sanitize-return-path';
 
 export const DEFAULT_INTEGRATIONS_RETURN_PATH = '/app/i/settings?tab=integrations';
 
+function toInlineScriptJson(value: string): string {
+  return JSON.stringify(value)
+    .replace(/</g, '\\u003C')
+    .replace(/>/g, '\\u003E')
+    .replace(/&/g, '\\u0026')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
+}
+
 interface OAuthCallbackHtmlOptions {
   success?: string;
   error?: string;
@@ -30,6 +39,8 @@ export function buildOAuthCallbackHtml({
   const query = params.toString();
   const redirectPath = query ? `${basePath}?${query}` : basePath;
   const postMessageType = success || error || defaultType;
+  const safePostMessageType = toInlineScriptJson(postMessageType);
+  const safeRedirectPath = toInlineScriptJson(redirectPath);
 
   return `<!doctype html>
 <html>
@@ -39,12 +50,12 @@ export function buildOAuthCallbackHtml({
       (function () {
         try {
           if (window.opener && !window.opener.closed) {
-            window.opener.postMessage({ type: ${JSON.stringify(postMessageType)} }, '*');
+            window.opener.postMessage({ type: ${safePostMessageType} }, '*');
             window.close();
             return;
           }
         } catch (e) {}
-        window.location.assign(${JSON.stringify(redirectPath)});
+        window.location.assign(${safeRedirectPath});
       })();
     </script>
     <p>Returning to Proofound settings...</p>
