@@ -146,6 +146,7 @@ export default async function VerificationsPage() {
   // Get user's email
   const { data: authUser } = await supabase.auth.getUser();
   const userEmail = normalizeEmail(authUser.user?.email || null) || '';
+  const hasVerifiedEmail = Boolean(authUser.user?.email_confirmed_at);
 
   const verificationSelect = `
     id,
@@ -228,7 +229,7 @@ export default async function VerificationsPage() {
     data: [],
     error: null,
   };
-  if (userEmail) {
+  if (userEmail && hasVerifiedEmail) {
     try {
       const adminClient = createAdminClient();
       const adminResult = await adminClient

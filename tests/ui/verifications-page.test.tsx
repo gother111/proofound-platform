@@ -35,6 +35,7 @@ type QueryResult = { data: unknown[]; error: null };
 
 function createSupabaseClientMock(options: {
   userEmail: string;
+  emailConfirmedAt?: string | null;
   incomingSkill: unknown[];
   sentSkill: unknown[];
   sentImpact: unknown[];
@@ -56,7 +57,15 @@ function createSupabaseClientMock(options: {
   return {
     auth: {
       getUser: vi.fn().mockResolvedValue({
-        data: { user: { email: options.userEmail } },
+        data: {
+          user: {
+            email: options.userEmail,
+            email_confirmed_at:
+              options.emailConfirmedAt === undefined
+                ? '2026-02-01T00:00:00.000Z'
+                : options.emailConfirmedAt,
+          },
+        },
       }),
     },
     from: vi.fn((table: string) => ({
@@ -90,6 +99,7 @@ function createAdminClientMockResult(incomingImpact: unknown[]) {
 describe('VerificationsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    createAdminClientMock.mockReset();
     requireAuthMock.mockResolvedValue({ id: 'user-1' });
   });
 
@@ -231,5 +241,45 @@ describe('VerificationsPage', () => {
       request_type: 'skill',
     });
     expect(props.sentRequests).toHaveLength(0);
+  });
+
+  it('does not use admin client when session email is unconfirmed', async () => {
+    createAdminClientMock.mockReturnValue(createAdminClientMockResult([]));
+
+    createClientMock.mockResolvedValue(
+      createSupabaseClientMock({
+        userEmail: 'user@example.com',
+        emailConfirmedAt: null,
+        incomingSkill: [
+          {
+            id: 'skill-incoming-only',
+            skill_id: 'skill-1',
+            requester_profile_id: 'requester-1',
+            verifier_email: 'user@example.com',
+            verifier_source: 'peer',
+            status: 'pending',
+            created_at: '2026-02-25T10:00:00.000Z',
+          },
+        ],
+        sentSkill: [],
+        sentImpact: [],
+      })
+    );
+
+    const element = await VerificationsPage();
+    render(element);
+
+    expect(screen.getByTestId('verifications-client-proxy')).toBeInTheDocument();
+    expect(createAdminClientMock).not.toHaveBeenCalled();
+
+    const props = verificationsClientSpy.mock.calls[0]?.[0] as {
+      incomingRequests: Array<{ id: string; request_type: string }>;
+    };
+
+    expect(props.incomingRequests).toHaveLength(1);
+    expect(props.incomingRequests[0]).toMatchObject({
+      id: 'skill-incoming-only',
+      request_type: 'skill',
+    });
   });
 });
