@@ -1,13 +1,6 @@
 /**
- * Dashboard Layout API
- * GET/POST /api/dashboard/layout
- *
- * Manages user's customizable dashboard tile layout
- *
- * PRD References:
- * - Part 5: F2 - Dashboard Customization
- * - Part 7: Dashboard loads < 2.0s P75
- * - Part 12: Task success ≥90%, drop-off <10%
+ * Legacy dashboard layout API.
+ * Kept for non-launch surfaces only.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -16,12 +9,13 @@ import { db } from '@/db';
 import { dashboardLayouts } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
+import { CLIENT_FF_DEFAULTS } from '@/lib/featureFlags';
 import { AVAILABLE_WIDGETS, sanitizeLayout } from '@/lib/dashboard/layout';
+import { legacySurfaceJsonResponse } from '@/lib/mvp/nonLaunch';
 
 export const dynamic = 'force-dynamic';
 
-// Default dashboard layout for new users
-// Uses widgets from lib/dashboard/layout.ts
+// Default layout only applies when legacy MVP surfaces are explicitly enabled.
 const DEFAULT_LAYOUT = [
   { widgetId: 'while-away', position: 0, visible: true, size: 'default', settings: {} },
   { widgetId: 'next-best-actions', position: 1, visible: true, size: 'full', settings: {} },
@@ -43,6 +37,12 @@ const LayoutItemSchema = z.object({
  * GET: Fetch user's dashboard layout
  */
 export async function GET() {
+  if (!CLIENT_FF_DEFAULTS.legacyMvpSurfaces) {
+    return legacySurfaceJsonResponse(
+      'Dashboard layout API',
+      'Dashboard customization is not part of the launch MVP corridor.'
+    );
+  }
   try {
     const authContext = await requireApiAuthContext();
     if (!authContext) {
@@ -103,6 +103,12 @@ export async function GET() {
  * POST: Update user's dashboard layout
  */
 export async function POST(request: NextRequest) {
+  if (!CLIENT_FF_DEFAULTS.legacyMvpSurfaces) {
+    return legacySurfaceJsonResponse(
+      'Dashboard layout API',
+      'Dashboard customization is not part of the launch MVP corridor.'
+    );
+  }
   try {
     const authContext = await requireApiAuthContext();
     if (!authContext) {
@@ -155,7 +161,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Dashboard layout updated successfully',
+      message: 'Legacy dashboard layout updated successfully',
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

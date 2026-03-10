@@ -13,13 +13,13 @@ vi.mock('@/db', () => ({
 }));
 
 vi.mock('@/lib/feature-flags/server', () => ({
-  resolveFeatureFlags: vi.fn(),
+  isFeatureEnabled: vi.fn(),
 }));
 
 import { GET } from '@/app/api/feature-flags/route';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
-import { resolveFeatureFlags } from '@/lib/feature-flags/server';
+import { isFeatureEnabled } from '@/lib/feature-flags/server';
 
 describe('/api/feature-flags', () => {
   beforeEach(() => {
@@ -42,7 +42,8 @@ describe('/api/feature-flags', () => {
     const where = vi.fn().mockResolvedValue([{ orgId: 'org-1', role: 'owner' }]);
     const from = vi.fn().mockReturnValue({ where });
     (db.select as any).mockReturnValue({ from });
-    (resolveFeatureFlags as any).mockResolvedValue({
+
+    const defaults: Record<string, boolean> = {
       FF_ACTIVATION_TIERING: true,
       FF_ASSIGNMENT_BASIC_MODE: true,
       FF_UI_VOCAB_PLAIN: true,
@@ -52,19 +53,24 @@ describe('/api/feature-flags', () => {
       FF_EXACT_RANK_EXPOSURE: false,
       FF_KILL_SWITCH_INTROS: false,
       FF_KILL_SWITCH_EXACT_RANK: true,
-    });
+      FF_LEGACY_MVP_SURFACES: false,
+    };
+
+    (isFeatureEnabled as any).mockImplementation(async (key: string) => defaults[key]);
   });
 
-  it('returns client-safe launch flags including kill switches', async () => {
+  it('returns launch-safe defaults including disabled legacy surfaces', async () => {
     const response = await GET();
     const body = await response.json();
 
     expect(response.status).toBe(200);
     expect(body.flags).toMatchObject({
       qualifiedIntroCorridor: true,
+      structuredFeedbackRequired: true,
       exactRankExposure: false,
       killSwitchIntros: false,
       killSwitchExactRank: true,
+      legacyMvpSurfaces: false,
     });
   });
 });

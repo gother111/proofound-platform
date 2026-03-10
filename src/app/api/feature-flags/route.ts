@@ -4,8 +4,12 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { organizationMembers } from '@/db/schema';
 import { createClient } from '@/lib/supabase/server';
-import { CLIENT_FEATURE_FLAG_RESPONSE_MAP } from '@/lib/featureFlags';
-import { resolveFeatureFlags } from '@/lib/feature-flags/server';
+import {
+  CLIENT_FEATURE_FLAG_RESPONSE_MAP,
+  FEATURE_FLAG_KEYS,
+  getFeatureFlagDefault,
+} from '@/lib/featureFlags';
+import { isFeatureEnabled } from '@/lib/feature-flags/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,18 +38,24 @@ export async function GET() {
     const orgIds = memberships.map((item) => item.orgId);
     const roles = memberships.map((item) => item.role);
 
+    const context = {
+      userId: user.id,
+      userEmail: user.email ?? undefined,
+      orgIds,
+      roles,
+    };
     const keys = Object.values(CLIENT_FEATURE_FLAG_RESPONSE_MAP);
-
-    const resolved = await resolveFeatureFlags(
-      keys,
-      {
-        userId: user.id,
-        userEmail: user.email ?? undefined,
-        orgIds,
-        roles,
-      },
-      true
+    const resolvedEntries = await Promise.all(
+      keys.map(async (key) => [
+        key,
+        await isFeatureEnabled(
+          key,
+          context,
+          getFeatureFlagDefault(key as (typeof FEATURE_FLAG_KEYS)[keyof typeof FEATURE_FLAG_KEYS])
+        ),
+      ])
     );
+    const resolved = Object.fromEntries(resolvedEntries) as Record<string, boolean>;
 
     return NextResponse.json({
       flags: {
@@ -59,6 +69,7 @@ export async function GET() {
         exactRankExposure: resolved[CLIENT_FEATURE_FLAG_RESPONSE_MAP.exactRankExposure],
         killSwitchIntros: resolved[CLIENT_FEATURE_FLAG_RESPONSE_MAP.killSwitchIntros],
         killSwitchExactRank: resolved[CLIENT_FEATURE_FLAG_RESPONSE_MAP.killSwitchExactRank],
+        legacyMvpSurfaces: resolved[CLIENT_FEATURE_FLAG_RESPONSE_MAP.legacyMvpSurfaces],
       },
     });
   } catch (error) {

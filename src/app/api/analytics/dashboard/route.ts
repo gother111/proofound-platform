@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireApiAuthContext } from '@/lib/auth';
 import { trackEvent, AnalyticsEventType } from '@/lib/analytics';
 import { requireAnalyticsConsentForUser } from '@/lib/privacy/analytics-consent';
+import { CLIENT_FF_DEFAULTS } from '@/lib/featureFlags';
+import { legacySurfaceJsonResponse } from '@/lib/mvp/nonLaunch';
 
 const ALLOWED_EVENTS: AnalyticsEventType[] = [
   'dashboard_viewed',
@@ -35,6 +37,12 @@ function sanitizeProperties(raw: Record<string, unknown> = {}) {
 }
 
 export async function POST(request: NextRequest) {
+  if (!CLIENT_FF_DEFAULTS.legacyMvpSurfaces) {
+    return legacySurfaceJsonResponse(
+      'Dashboard analytics API',
+      'Dashboard telemetry is disabled in the launch MVP corridor.'
+    );
+  }
   try {
     const authContext = await requireApiAuthContext();
     if (!authContext) {

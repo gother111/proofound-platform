@@ -10,10 +10,18 @@ import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { requireAnalyticsConsentForUser } from '@/lib/privacy/analytics-consent';
+import { CLIENT_FF_DEFAULTS } from '@/lib/featureFlags';
+import { legacySurfaceJsonResponse } from '@/lib/mvp/nonLaunch';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
+  if (!CLIENT_FF_DEFAULTS.legacyMvpSurfaces) {
+    return legacySurfaceJsonResponse(
+      'Dashboard load telemetry API',
+      'Dashboard performance telemetry is disabled in the launch MVP corridor.'
+    );
+  }
   try {
     const supabase = await createClient();
     const {
