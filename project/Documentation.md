@@ -2,6 +2,26 @@
 > Sync Pair: `Documentation.md`
 > Last Verified: `2026-03-10`
 
+## 2026-03-10: Canonical PRD Reconciliation Addendum
+
+What changed:
+
+- Extended `PRD_for_a_web_platform_MVP.master-latest.md` with the remaining canonical contracts for principals and memberships, visibility, permissions, token security, ingest, structured feedback, reconciliation, fallback, async jobs, launch appendices, post-MVP alpha hooks, and contradiction cleanup.
+- Updated `PRD_for_a_web_platform_MVP.md` so the mirror stays summary-only while acknowledging the new master-only contracts.
+
+Why:
+
+- The canonical PRD already covered the proof-first core well, but the remaining operating contracts were still thin enough that older mirrored or legacy logic could drift back into launch scope.
+
+How to verify:
+
+- `npm run docs:freshness`
+- `rg -n "Canonical Principal, Identity, and Membership Model|Global Visibility Matrix and Conflict Rules|Canonical Role-Permission Matrix|Invite, Magic-Link, and Attestation-Link Security Contract|Upload Quarantine and File-Ingest Pipeline|Structured Feedback Rubric and Visibility Contract|Deletion, Withdrawal, Export, and Re-import Reconciliation Ledger|Operational Shortlist Fallback Contract|Overwhelm Watch and Next-Best-Action Layer|Canonical Async / Background Job Catalog|Canonical Technical Foundation Appendix|Launch Runbook, Synthetic Monitors, and SLO / Alert Contract|Pilot, Rollout, and Roadmap Appendix|Reviewer SLA Defaults, Bounty Pricing Bands, Sponsor Corridor, and Legal Template Hooks|Final Contradiction Cleanup and Canonical Override Matrix" PRD_for_a_web_platform_MVP.master-latest.md`
+
+Open risks/TODO:
+
+- Several non-canonical technical and ops docs still contain older RBAC or deletion wording, so future documentation cleanup should keep deferring to the master PRD until those references are narrowed or archived.
+
 ## 2026-03-10: Canonical Lifecycle State Machines and Edge-Case Rules PRD Extension
 
 What changed:

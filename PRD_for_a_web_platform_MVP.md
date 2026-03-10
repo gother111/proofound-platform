@@ -41,6 +41,21 @@ This file is a compatibility mirror for consumers that still open `PRD_for_a_web
 - Assignment workflows now include canonical MVP guardrails for default license posture, creator portfolio rights, unpaid-scope blocking, sponsor or commercial-path escalation, and cross-border review restrictions.
 - Events & Missions exist as an MVP-light organization container for grouping multiple assignments under one shared initiative and producing public-safe outcome summaries when eligible.
 - Reviewer marketplace, sponsors, impact bounties, and anti-exploitation guardrails exist only as a post-MVP alpha corridor in the canonical PRD and do not expand MVP launch scope.
+- Canonical principals now distinguish individual, organization, membership, reviewer, sponsor, and trust-ops actors, with permissions granted only through active principal context and active membership where applicable.
+- One canonical visibility matrix governs profile fields, Proof Packs, child evidence, attestations, intro artifacts, interview feedback, public pages, exports, and import validation. The narrowest applicable scope always wins.
+- Canonical product roles are:
+  - `individual`
+  - `org_owner`
+  - `org_manager`
+  - `org_reviewer`
+  - `sponsor_actor` post-MVP alpha only
+  - `trust_admin`
+- Invite, BYOC, and attestation links now share one single-use, hashed, revocable token contract with regeneration, replay protection, rate limiting, and audit logging.
+- Uploaded evidence follows a quarantine-first ingest path. Links-only evidence follows a separate lower-trust validation path and does not bypass proof or visibility controls.
+- Canonical structured feedback is rubric-first, calm, and private. No individual feedback becomes public in MVP.
+- Delete, withdraw, depublish, export, and re-import now use one deterministic reconciliation ledger in the canonical PRD.
+- Operational shortlist fallback and a minimal next-best-action layer are canonical MVP-safe operating behaviors, not optional UX flourishes.
+- Canonical launch appendices now cover the background job catalog, technical foundation, launch monitors and rollback rules, rollout corridor, and contradiction cleanup.
 - Proof Pack portability uses a versioned JSON-LD-shaped export, deterministic `portability_hash`, explicit provenance, explicit freshness, and an MVP-safe `signature_status`.
 - Canonical lifecycle state machines for assignment, application, submission, verification, Proof Pack, intro, interview, and engagement verification exist only in the master PRD.
 - Workflow objects are:
@@ -106,8 +121,10 @@ This file is a compatibility mirror for consumers that still open `PRD_for_a_web
 ## Mirror Usage Rules
 
 - Use `PRD_for_a_web_platform_MVP.master-latest.md` for implementation details, analytics taxonomy, lifecycle states, acceptance criteria, and QA handoff.
+- Treat principal identity, membership states, visibility matrices, permission matrices, token security, ingest contracts, reconciliation rules, fallback contracts, and launch appendices as canonical only in the master PRD.
 - Treat the canonical lifecycle state-machine block as master-only detail. This mirror should not duplicate those tables, edge-case rules, timestamps, or payload examples.
 - Treat organization trust tiers, sensitive-domain review rules, and child-safety guardrails as canonical only in the master PRD. This mirror summarizes their presence but does not duplicate the full operating detail.
 - Treat Events & Missions operating detail as canonical only in the master PRD. This mirror records only the lightweight container contract and does not duplicate the full corridor behavior.
+- Legacy org role aliases such as `owner/admin/member/viewer` must not be treated as canonical product vocabulary if they differ from the master PRD role matrix.
 - Use this mirror only when an older file path is hard-coded into a workflow that still expects `PRD_for_a_web_platform_MVP.md`.
 - If this file and the canonical PRD ever differ, the canonical PRD wins immediately.

@@ -137,6 +137,57 @@ MVP excludes:
 - Ensure no section reintroduces public people-index behavior, analytics-product behavior, or enterprise-suite behavior.
 - Recheck `Out of Scope` and `Acceptance Criteria` after cleanup edits so later wording does not reintroduce deprecated scope.
 
+### 1.5A Final Contradiction Cleanup and Canonical Override Matrix
+
+### Purpose
+
+Prevent older mirrored or legacy text from re-expanding Proofound into generic recruiting or HR software.
+
+### Facts & Decisions
+
+- The canonical master PRD remains the only normative product document.
+- The compatibility mirror is summary-only.
+- Executive summary and archived legacy docs are reference-only.
+
+### Deprecated / Narrowed / Moved / Removed
+
+| Surface or older text pattern                                                                  | Disposition                      | Canonical outcome                                                                                                                               |
+| ---------------------------------------------------------------------------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Legacy org RBAC terms such as `owner/admin/member/viewer` in non-canonical docs                | `narrowed`                       | Canonical product roles are `org_owner`, `org_manager`, `org_reviewer`; implementation aliases may exist only if mapped to the canonical matrix |
+| Older soft-delete or delayed-delete product wording                                            | `deprecated`                     | Canonical product contract uses immediate product delete with reconciliation ledger, audit residue, and cache invalidation                      |
+| Any broad org-management, donor, investor, template-library, or expertise-hub wording          | `removed` or `moved to appendix` | Lean org trust profile, one assignment path, match review, minimal access only                                                                  |
+| Any public candidate directory, searchable people index, or dense-market browse language       | `removed`                        | Public portfolios exist, open people index does not                                                                                             |
+| Any generic ATS, HRIS, payroll, contract-generation, escrow, or milestone-billing logic        | `moved to appendix` or `removed` | Not canonical MVP                                                                                                                               |
+| Any text implying public counters, engagement loops, or generic recruiting funnel gamification | `deprecated`                     | Calm, proof-first, privacy-first workflow only                                                                                                  |
+| Mirror or executive-summary text that adds states, events, or scope beyond the master PRD      | `removed`                        | Mirror and summary remain summary-only                                                                                                          |
+| Legacy marketplace density assumptions in launch or ops docs                                   | `narrowed`                       | Thin-market fallback, BYOC, proof-building, and safe hold states are canonical                                                                  |
+| Old generic feedback language without structured rubric                                        | `deprecated`                     | Structured rubric and calm next-step guidance only                                                                                              |
+
+### Visibility / Privacy Implications
+
+- No mirror or legacy doc may weaken blind-by-default reveal.
+- No legacy ops wording may widen public visibility, export scope, or sponsor disclosure.
+
+### Events / Analytics Implications
+
+- Legacy event names may persist only as compatibility aliases mapped into canonical events.
+- Analytics surfaces must not reintroduce BI-style user products or org admin expansion.
+
+### Out of Scope
+
+- preserving legacy semantics for backward documentation compatibility when they conflict with launch truth
+
+### Open Questions
+
+- None for MVP.
+
+### Acceptance Criteria
+
+- No older broad org-management or recruiting-SaaS language can override the proof-first MVP.
+- Mirror and executive-summary docs remain secondary and summary-only.
+- Deprecated and moved concepts are explicitly labeled so future edits do not reintroduce them by accident.
+- Canonical role, visibility, deletion, fallback, and sponsor rules are the only launch-binding rules.
+
 ---
 
 ## 2. Canonical Vocabulary
@@ -209,6 +260,108 @@ Canonical reveal stages:
 - **Zen Hub**
   - Optional private check-ins and reflections stored in a private partition and excluded from ranking, reveal, org review, fairness workflows, and public rendering.
 
+### 2.6 Canonical Principal, Identity, and Membership Model (MVP)
+
+### Purpose
+
+Define one canonical principal model for permissions, attribution, audit logs, invite flows, and public trust surfaces.
+
+### Facts & Decisions
+
+- Every action is performed by exactly one `principal`.
+- A human may hold multiple principals over time or concurrently, but permissions are evaluated per principal and per active membership.
+- Public attribution is narrower than audit attribution. Audit logs always record the acting principal. Public surfaces show only the minimum allowed attribution.
+
+### Canonical Definitions / Object Model
+
+| Object                 | Canonical definition                                                                                                                           | Key fields                                                                                                                      |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `individual_principal` | A human acting on their own profile, Proof Packs, portfolio, exports, intros, and feedback surfaces.                                           | `principal_id`, `user_id`, `principal_type=individual`, `status=active\|suspended\|deleted`                                     |
+| `org_principal`        | The organization entity used for org profile ownership, assignment publishing, trust tier, and public attribution.                             | `org_id`, `principal_type=organization`, `org_trust_tier`, `status=active\|restricted\|suspended`                               |
+| `org_membership`       | The relationship between a human principal and an org principal. Permissions are granted through this object, not through org existence alone. | `membership_id`, `org_id`, `user_id`, `role`, `state`, `invited_by`, `accepted_at`, `inactive_at`, `suspended_at`, `removed_at` |
+| `reviewer_principal`   | A human principal acting in a scoped review capacity for an org or a later reviewer-network corridor.                                          | `principal_id`, `reviewer_kind=org_reviewer\|network_reviewer`, `scope_ref`, `status`                                           |
+| `sponsor_principal`    | A human or org-side actor linked to sponsor metadata in the post-MVP alpha corridor only.                                                      | `principal_id`, `sponsor_id`, `status`, `scope_ref`                                                                             |
+| `trust_ops_principal`  | Internal admin or trust-ops actor for verification, disputes, moderation, trust tier changes, and audit review.                                | `principal_id`, `principal_type=trust_ops`, `capability_set`, `status`                                                          |
+
+### Membership States and Lifecycle Rules
+
+| State                        | Meaning                                                                        | Allowed next states                                              |
+| ---------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| `invited_pending`            | Invite issued, not yet accepted. No org permissions.                           | `active`, `declined`, `expired`, `revoked`                       |
+| `active`                     | Accepted membership with live permissions.                                     | `inactive`, `suspended`, `removed`, `ownership_transfer_pending` |
+| `inactive`                   | Membership kept for attribution history but not usable for new actions.        | `active`, `removed`                                              |
+| `ownership_transfer_pending` | Owner transfer initiated and awaiting explicit acceptance by the target owner. | `active`, `removed`                                              |
+| `suspended`                  | Membership temporarily blocked by owner or trust-ops.                          | `active`, `removed`                                              |
+| `removed`                    | Membership terminated. Historical attribution remains.                         | none                                                             |
+| `declined`                   | Invite recipient declined.                                                     | none                                                             |
+| `expired`                    | Invite expired without acceptance.                                             | none                                                             |
+| `revoked`                    | Invite or pending transfer revoked before acceptance.                          | none                                                             |
+
+### Canonical Rules
+
+- Only an `active` membership grants org permissions.
+- `inactive`, `suspended`, `removed`, `declined`, `expired`, and `revoked` memberships grant zero org permissions.
+- Ownership transfer requires:
+  - current owner initiates transfer
+  - target has `active` membership or accepts an owner-targeted invite
+  - target explicitly accepts transfer
+  - previous owner becomes `org_manager` or `inactive`, never silently removed
+- Org public attribution uses `org_principal.display_name` by default.
+- Human public attribution appears only when the relevant object is public-safe and the acting human's identity is allowed on that surface.
+- Audit logs always store:
+  - acting `principal_id`
+  - actor type
+  - acting membership if any
+  - target object
+  - prior state
+  - new state
+  - source surface
+  - timestamp
+
+### Roles / Permissions Implications
+
+- Permissions are evaluated as `principal capabilities + active membership + object ownership + visibility ceiling + workflow state`.
+- A human with both individual and org memberships must choose a principal context for each state-changing action.
+- No action may execute under an inferred org context.
+
+### Visibility / Privacy Implications
+
+- Public attribution defaults to org-level or owner-safe labels, not personal identity.
+- Removed or suspended memberships remain visible only in internal audit history.
+- Past org actions remain auditable even after membership removal.
+
+### Events / Analytics Implications
+
+Canonical events:
+
+- `principal_created`
+- `membership_invited`
+- `membership_accepted`
+- `membership_suspended`
+- `membership_reactivated`
+- `membership_removed`
+- `ownership_transfer_started`
+- `ownership_transfer_completed`
+
+### Out of Scope
+
+- SCIM
+- nested departments
+- delegated legal entities
+- shared mailbox principals
+- public org staff directories
+
+### Open Questions
+
+- None for MVP.
+
+### Acceptance Criteria
+
+- An org action without an `active` membership is rejected deterministically.
+- Ownership transfer is never implicit and always leaves an auditable before/after chain.
+- Public portfolio attribution never exposes a removed member purely because they acted historically.
+- Audit exports always show acting principal, membership, and target object together.
+
 ---
 
 ## 3. Users and Core Journeys
@@ -270,6 +423,472 @@ Canonical organization journey:
 - Privacy controls are field-level and must apply consistently across profile, public portfolio, matching, and reveal stages.
 - Export and delete flows are part of MVP.
 - Government ID verification is not exposed in the self-serve MVP UI.
+
+## 4.1A Global Visibility Matrix and Conflict Rules (MVP)
+
+### Purpose
+
+Define one enforceable visibility contract across profile fields, proof objects, attestations, intros, feedback, public pages, and export/import flows.
+
+### Facts & Decisions
+
+- Visibility is governed by one effective rule: the narrowest applicable rule wins.
+- Parent objects may set a maximum outward scope. Child objects may narrow but never widen that scope.
+- Public publication and matching reveal are separate systems. Public status never overrides reveal limits.
+
+### Canonical Definitions / Object Model
+
+Visibility scopes:
+
+- `owner_only`
+- `matched_org`
+- `link_only`
+- `public`
+- `internal_only` for Trust Ops and system-only records
+
+Effective visibility:
+
+- `effective_visibility = min(parent_max_visibility, child_visibility, workflow_reveal_ceiling, policy_ceiling)`
+
+Conflict rules:
+
+- Child evidence overrides pack visibility only by narrowing exposure.
+- Workflow objects use the stricter of object visibility and reveal stage.
+- `internal_only` is never user-configurable and never exported on public-safe surfaces.
+
+### Global Visibility Matrix
+
+Legend:
+
+- `F` full allowed view
+- `C` coarse or filtered view only
+- `N` no access
+- `A` audited internal access only
+
+| Object                    | Owner                                           | Org reviewer                                                                                          | Matched org                                                            | Public viewer                      | Admin / trust ops |
+| ------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------- | ----------------- |
+| Profile fields            | `F`                                             | `C/F` only for fields permitted by reveal stage and field scope                                       | `C/F` only when matched and allowed by reveal stage                    | `C` public-safe allowlist only     | `A`               |
+| Proof Packs               | `F`                                             | `C/F` only when pack scope and reveal stage allow                                                     | `C/F` only when pack scope and reveal stage allow                      | `C` public-safe projection only    | `A`               |
+| Child evidence            | `F`                                             | `C/F` only if child evidence scope permits                                                            | `C/F` only if child evidence scope permits                             | `C` public-safe evidence only      | `A`               |
+| Attestations              | `F`                                             | `C` verification result and scope, never raw verifier PII unless later reveal stage explicitly allows | `C` same rule as org reviewer                                          | `C` coarse public-safe status only | `A`               |
+| Intro artifacts           | `F` if party to intro                           | `F` if party to intro and active membership                                                           | `N` unless party to intro                                              | `N`                                | `A`               |
+| Interview feedback        | `F` candidate-visible subset plus owner export  | `F` own-org subset only                                                                               | `N` unless the matched org is the interviewing org                     | `N`                                | `A`               |
+| Public portfolio pages    | `F` current public-safe page plus owner preview | `C` same as public plus matched-only overlays where explicitly allowed                                | `C` same as public unless reveal stage allows more                     | `C` current public page only       | `A`               |
+| Owner export              | `F`                                             | `N` unless org owns the exported org object                                                           | `N`                                                                    | `N`                                | `A`               |
+| Public-safe export        | `F`                                             | `C` only if current object is public-safe and they already have access                                | `C` only if current object is public-safe and they already have access | `C` current public-safe state only | `A`               |
+| Import validation reports | `F` for importing owner                         | `N`                                                                                                   | `N`                                                                    | `N`                                | `A`               |
+
+### State Rules
+
+- `withdrawn`, `deleted`, `restricted`, `disputed`, and `contradicted` states immediately recalculate effective visibility.
+- Cached public pages, snippets, and public-safe exports must re-evaluate current effective visibility at access time or be invalidated immediately.
+
+### Roles / Permissions Implications
+
+- Viewing permission is insufficient without passing effective visibility.
+- Reveal grants may widen matched-org visibility only up to the approved reveal stage and never affect public visibility.
+
+### Visibility / Privacy Implications
+
+- Public-safe surfaces must suppress:
+  - raw filenames
+  - hidden child counts
+  - verifier identity
+  - private org notes
+  - reveal-only metadata
+- `link_only` is wider than `matched_org` for distribution, so `link_only` may never be auto-derived from a matched-org state.
+
+### Events / Analytics Implications
+
+Canonical events:
+
+- `visibility_scope_changed`
+- `effective_visibility_recalculated`
+- `public_projection_invalidated`
+- `reveal_ceiling_changed`
+
+### Out of Scope
+
+- field-by-field public customization beyond the existing allowlist model
+- public comments
+- public viewer identity tracking
+- social sharing counters
+
+### Open Questions
+
+- None for MVP.
+
+### Acceptance Criteria
+
+- A public Proof Pack with a private child artifact never exposes the child artifact publicly or in public-safe export.
+- A matched org never sees a field that exceeds both field scope and reveal stage.
+- A withdrawn or deleted object disappears from public surfaces immediately after invalidation.
+- Admin access is always audited and never changes public visibility by itself.
+
+## 4.1B Canonical Role-Permission Matrix (MVP)
+
+### Purpose
+
+Define deterministic, testable permissions across individual, org, sponsor, and trust roles.
+
+### Facts & Decisions
+
+- Roles are capability bundles, not labels for UI copy only.
+- Permissions are denied by default.
+- Membership state, object ownership, and workflow state are required inputs to every permission check.
+
+### Canonical Roles
+
+- `individual`
+- `org_owner`
+- `org_manager`
+- `org_reviewer`
+- `sponsor_actor` post-MVP alpha only
+- `trust_admin`
+
+### Role-Permission Matrix
+
+Legend:
+
+- `Y` allowed
+- `C` conditional
+- `N` not allowed
+
+| Permission                                   | Individual                          | Org owner                     | Org manager                     | Org reviewer                    | Sponsor actor                         | Trust admin                         |
+| -------------------------------------------- | ----------------------------------- | ----------------------------- | ------------------------------- | ------------------------------- | ------------------------------------- | ----------------------------------- |
+| Create or edit own profile and Proof Packs   | `Y`                                 | `N`                           | `N`                             | `N`                             | `N`                                   | `N`                                 |
+| Create or edit org profile                   | `N`                                 | `Y`                           | `C` org profile basics only     | `N`                             | `N`                                   | `C` only during trust action        |
+| Create or edit assignments                   | `N`                                 | `Y`                           | `Y`                             | `N`                             | `N`                                   | `N`                                 |
+| Review matches, shortlist, pass              | `N`                                 | `Y`                           | `Y`                             | `Y`                             | `N`                                   | `C` audit-only, no routine steering |
+| Request reveal or intro                      | `C` consent path only               | `Y`                           | `Y`                             | `C` if org policy grants        | `N`                                   | `N`                                 |
+| Submit or request attestation / verification | `Y` for own proof                   | `C` org-side attestation only | `C` org-side attestation only   | `C` assigned review only        | `N`                                   | `Y`                                 |
+| Invite org members or reviewers              | `N`                                 | `Y`                           | `C` no owner invite or transfer | `N`                             | `N`                                   | `C` only for admin recovery         |
+| Accept membership invite                     | `N` unless target user              | `N` unless target user        | `N` unless target user          | `N` unless target user          | `N` unless target user                | `N`                                 |
+| Transfer ownership                           | `N`                                 | `Y`                           | `N`                             | `N`                             | `N`                                   | `C` emergency recovery only         |
+| Export own data                              | `Y`                                 | `Y` for org-owned exports     | `C` org operational export only | `C` review packet export only   | `C` sponsor packet metadata only      | `Y` internal audit export           |
+| Delete own content                           | `Y`                                 | `Y` org-owned objects only    | `C` non-org-core drafts only    | `N`                             | `N`                                   | `C` trust or safety takedown only   |
+| Change org trust tier                        | `N`                                 | `N` request only              | `N`                             | `N`                             | `N`                                   | `Y`                                 |
+| Open or resolve dispute                      | `Y` own records                     | `Y` own org records           | `Y` own org records             | `C` can flag, not resolve       | `C` sponsor-linked cases only         | `Y`                                 |
+| View analytics                               | `C` own portfolio and progress only | `Y` org-safe analytics        | `Y` org-safe analytics          | `C` review-queue analytics only | `C` sponsor-linked alpha metrics only | `Y`                                 |
+| View internal moderation notes               | `N`                                 | `N`                           | `N`                             | `N`                             | `N`                                   | `Y`                                 |
+
+### Deterministic Conditional Rules
+
+- `org_manager` cannot:
+  - transfer ownership
+  - change org trust tier
+  - access internal moderation notes
+  - invite another owner
+- `org_reviewer` cannot:
+  - edit org profile
+  - manage membership
+  - export full org audit logs
+  - see hidden identity before reveal rules allow
+- `sponsor_actor` is inactive unless the sponsor corridor is enabled.
+- `trust_admin` may intervene only with reason-coded audit logging and never as a silent product-side reviewer override.
+
+### Visibility / Privacy Implications
+
+- Permission grants never bypass visibility ceilings.
+- Export permissions are scoped by current visibility, object ownership, and workflow role.
+
+### Events / Analytics Implications
+
+Canonical events:
+
+- `permission_denied`
+- `permission_granted_via_membership`
+- `role_capability_used`
+- `trust_admin_action_logged`
+
+### Out of Scope
+
+- custom org roles
+- per-user ACL editors
+- department inheritance
+- sponsor-side candidate browsing
+
+### Open Questions
+
+- None for MVP.
+
+### Acceptance Criteria
+
+- The same action requested by an `org_manager` and an `org_reviewer` yields different, testable outcomes where required.
+- A `trust_admin` action always logs reason code, prior state, new state, and source surface.
+- No role can widen visibility or reveal identity by permission alone.
+- Sponsor actions remain dormant unless the sponsor corridor is explicitly enabled.
+
+## 4.1C Invite, Magic-Link, and Attestation-Link Security Contract (MVP)
+
+### Purpose
+
+Define one secure contract for membership invites, BYOC invites, and attestation links.
+
+### Facts & Decisions
+
+- All invite and attestation tokens are opaque, single-use, hashed at rest, and revocable.
+- Token redemption is fail-closed.
+- Regeneration revokes all prior unredeemed tokens of the same type and scope.
+
+### Canonical Definitions / Object Model
+
+Token types:
+
+- `membership_invite_token`
+- `candidate_invite_token`
+- `attestation_request_token`
+
+Required fields:
+
+- `token_id`
+- `token_type`
+- `token_hash`
+- `target_email`
+- `scope_ref_id`
+- `issued_by_principal_id`
+- `issued_at`
+- `expires_at`
+- `revoked_at`
+- `redeemed_at`
+- `attempt_count`
+- `last_attempt_at`
+- `suspicious_flag`
+- `redeem_session_nonce`
+
+Token states:
+
+- `issued`
+- `redeemed`
+- `expired`
+- `revoked`
+
+### Lifecycle Rules
+
+| Token type            | Default expiry | Redemption rule                                                                       | Regeneration rule                                                                       |
+| --------------------- | -------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Membership invite     | 7 days         | Must be redeemed by the invited email identity                                        | New token revokes prior active membership invite tokens for the same org + target       |
+| BYOC candidate invite | 7 days         | Must be redeemed by the invited email identity                                        | New token revokes prior active candidate invite tokens for the same assignment + target |
+| Attestation request   | 14 days        | May be redeemed by the addressed counterparty without creating broader account access | New token revokes prior active attestation tokens for the same proof request            |
+
+### Replay Protection and Session Binding
+
+- First successful token lookup issues a short-lived `redeem_session_nonce` bound to the browser session for 15 minutes.
+- State-changing redemption requires both:
+  - valid opaque token
+  - matching `redeem_session_nonce`
+- After successful redemption:
+  - `redeemed_at` is written
+  - token state becomes `redeemed`
+  - all subsequent attempts return `invalid_or_consumed`
+- Token previews must not expose hidden object data before final validation.
+
+### Rate Limiting and Abuse Rules
+
+- Max 5 redemption attempts per token per 15 minutes.
+- Max 10 failed token attempts per IP per hour across invite-like flows.
+- Max 3 token regenerations per inviter per target per 24 hours.
+- Suspicious patterns:
+  - repeated wrong-recipient redemption attempts
+  - repeated expired-token retries
+  - fan-out attempts across many tokens from one IP
+  - repeated regenerate-and-redeem loops
+- Suspicious patterns set `suspicious_flag = true`, emit `token_abuse_flagged`, and may temporarily block the flow.
+
+### Failure Handling
+
+- Invalid recipient: return neutral failure, do not disclose intended recipient.
+- Expired token: offer resend or request-new-link path only if the requester is already authenticated or can prove control of target email.
+- Revoked token: fail closed with neutral copy.
+- Suspicious retries: throttle, audit, and optionally require authenticated re-entry by inviter.
+
+### Audit Logging
+
+Canonical events:
+
+- `token_issued`
+- `token_previewed`
+- `token_redeemed`
+- `token_revoked`
+- `token_expired`
+- `token_regenerated`
+- `token_abuse_flagged`
+
+Audit payload must include:
+
+- token type
+- scope ref
+- issuing principal
+- target email hash
+- IP hash
+- user agent hash
+- attempt outcome
+- timestamp
+
+### Out of Scope
+
+- passwordless platform login as a generic auth model
+- reusable invite links
+- unaudited admin backdoors
+- sharing invite URLs between recipients
+
+### Open Questions
+
+- None for MVP.
+
+### Acceptance Criteria
+
+- Regenerating an invite invalidates every prior active invite for that scope and target.
+- A redeemed token cannot be replayed in the same or another session.
+- The wrong recipient cannot learn who the invite was meant for.
+- Suspicious retry spikes are throttled and logged automatically.
+
+## 4.1D Upload Quarantine and File-Ingest Pipeline (MVP)
+
+### Purpose
+
+Define a minimal safe ingest path for uploaded evidence and a separate contract for links-only evidence.
+
+### Facts & Decisions
+
+- Uploaded files are private and quarantined by default.
+- No uploaded file may attach to a Proof Pack or public surface before scan and metadata checks pass.
+- Links-only evidence is not binary ingest. It is validated separately and remains lower-trust until corroborated.
+
+### Canonical Definitions / Object Model
+
+Required ingest fields:
+
+- `ingest_id`
+- `owner_principal_id`
+- `ingest_type=upload|link`
+- `source_ref`
+- `scan_status`
+- `metadata_status`
+- `attach_status`
+- `safe_for_public`
+- `rejection_reason`
+- `received_at`
+
+Upload ingest states:
+
+- `received`
+- `quarantined`
+- `scan_passed`
+- `scan_failed`
+- `metadata_extracted`
+- `attachable`
+- `attached`
+- `rejected`
+
+Link ingest states:
+
+- `received`
+- `validated`
+- `metadata_extracted`
+- `attachable`
+- `attached`
+- `rejected`
+
+### Allowed File Types and Limits
+
+Allowed upload MIME families in MVP:
+
+- `application/pdf`
+- `image/png`
+- `image/jpeg`
+- `image/webp`
+- `text/plain`
+- `text/markdown`
+
+Rejected in MVP:
+
+- archives
+- executables
+- office macro formats
+- spreadsheets
+- presentations
+- audio
+- video
+
+Limits:
+
+- max file size `25 MB`
+- max 10 files per batch
+- max aggregate uploaded evidence per Proof Pack `100 MB`
+
+### Canonical Upload Flow
+
+1. `received`
+2. `quarantined`
+3. malware or safety scan
+4. metadata extraction
+5. `attachable`
+6. user confirms attach to a draft Proof Pack or artifact
+7. attachment becomes eligible for later visibility rules
+
+Unsafe upload handling:
+
+- `scan_failed` or metadata violation moves record to `rejected`
+- rejected files are never attached
+- public-safe promotion is impossible
+- user sees a calm rejection reason
+- internal logs keep coarse rejection metadata only
+
+### Links-Only Evidence Rules
+
+- No binary quarantine step.
+- Link validation checks:
+  - scheme allowlist `https`
+  - resolvable URL
+  - content-type sniff if reachable
+  - preview metadata extraction where available
+- Links remain `public_link_unverified` until corroborated by other proof, attestation, or review.
+- Links can be attached after validation, but public rendering still follows pack visibility and public-safety review.
+
+### Roles / Permissions Implications
+
+- Individuals may upload and attach to their own drafts.
+- Org actors may upload only to org-owned assignment or review artifacts where explicitly permitted.
+- Trust Ops may inspect quarantined metadata and rejection reasons, not repurpose user files.
+
+### Visibility / Privacy Implications
+
+- Quarantined uploads are `owner_only` or `internal_only`.
+- Metadata extraction must suppress EXIF, GPS, author names, and hidden document properties before any public-safe use.
+- Public-safe image promotion is allowed only after explicit public eligibility review.
+
+### Events / Analytics Implications
+
+Canonical events:
+
+- `file_ingest_received`
+- `file_scan_passed`
+- `file_scan_failed`
+- `file_metadata_extracted`
+- `file_attached`
+- `file_rejected`
+- `link_validated`
+- `link_rejected`
+
+### Out of Scope
+
+- video portfolios
+- malware adjudication consoles
+- OCR-heavy review tooling
+- large media libraries
+- office document editing
+
+### Open Questions
+
+- None for MVP.
+
+### Acceptance Criteria
+
+- An uploaded PDF cannot be attached until scan and metadata extraction succeed.
+- An unsafe upload is rejected and never appears on profile, matching, or public surfaces.
+- A link-only artifact follows a separate lower-trust path and never bypasses proof or visibility rules.
+- Public-safe rendering strips identifying metadata from uploaded images and documents.
 
 ## 4.2 Individual Product Surfaces
 
@@ -1953,6 +2572,117 @@ Rules:
 - The default policy is a **48-hour feedback follow-up**.
 - Status must be visible to both relevant participants at the correct scope.
 
+## 5.9A Structured Feedback Rubric and Visibility Contract (MVP)
+
+### Purpose
+
+Define one calm, structured feedback rubric for assignment review, interview follow-up, and outcome follow-up.
+
+### Facts & Decisions
+
+- Feedback must be structured first and free text second.
+- Feedback must stay factual, scope-bound, and non-harmful.
+- No individual feedback becomes public in MVP.
+
+### Canonical Definitions / Object Model
+
+Required fields:
+
+- `feedback_id`
+- `feedback_type=assignment_review|interview_follow_up|outcome_follow_up`
+- `subject_ref_id`
+- `submitted_by_principal_id`
+- `visibility_scope=org_internal|candidate_visible|internal_only`
+- `reason_code`
+- `dimension_scores[]`
+- `next_step_code`
+- `free_text_optional`
+- `submitted_at`
+- `due_at`
+
+Canonical dimensions and allowed values:
+
+| Dimension                 | Allowed values                                                    |
+| ------------------------- | ----------------------------------------------------------------- |
+| `capability_fit`          | `strong_fit`, `developing_fit`, `not_yet_fit`                     |
+| `proof_strength`          | `clear_evidence`, `partial_evidence`, `insufficient_evidence`     |
+| `scope_alignment`         | `aligned`, `partially_aligned`, `not_aligned`                     |
+| `trust_readiness`         | `verified_enough`, `verification_pending`, `needs_stronger_proof` |
+| `communication_readiness` | `clear`, `adequate`, `unclear`                                    |
+| `logistics_alignment`     | `aligned`, `manageable_gap`, `blocking_gap`                       |
+
+Free-text rule:
+
+- optional
+- max 280 characters
+- factual and action-oriented only
+- forbidden content:
+  - protected-class commentary
+  - medical or mental-health inference
+  - personality diagnoses
+  - accent, age, family, or `culture fit` judgments
+  - vague insults or comparative ranking language
+
+### Visibility Rules
+
+| Feedback type       | Candidate sees                                        | Org sees              | Public | Admin / trust ops       |
+| ------------------- | ----------------------------------------------------- | --------------------- | ------ | ----------------------- |
+| Assignment review   | only when a final close decision is sent              | full org-owned record | none   | audited internal access |
+| Interview follow-up | candidate-visible structured result and optional note | full org-owned record | none   | audited internal access |
+| Outcome follow-up   | candidate-visible                                     | full org-owned record | none   | audited internal access |
+
+### Turnaround Expectations
+
+- Assignment review closeout: within 5 business days of final review state or assignment close.
+- Interview follow-up: within 48 hours of interview completion.
+- Outcome follow-up: within 7 calendar days of final decision or corridor close.
+
+### Roles / Permissions Implications
+
+- `org_reviewer`, `org_manager`, and `org_owner` may submit org-side structured feedback within scope.
+- `individual` may submit candidate-side outcome reflections only where the workflow explicitly allows it.
+- `trust_admin` may review or redact policy-violating feedback.
+
+### Events / Analytics Implications
+
+Canonical events:
+
+- `feedback_due`
+- `feedback_submitted`
+- `feedback_breached`
+- `feedback_redacted_for_policy`
+
+Analytics allowed:
+
+- completion rate
+- turnaround compliance
+- reason-code distribution
+- next-step distribution
+
+Analytics excluded:
+
+- raw free-text mining
+- public sentiment scoring
+
+### Out of Scope
+
+- public testimonials
+- freeform reviewer essays as the primary contract
+- star ratings
+- personality scoring
+- `culture fit` models
+
+### Open Questions
+
+- None for MVP.
+
+### Acceptance Criteria
+
+- Every closed interview or outcome requires structured feedback fields before the workflow is complete.
+- Public pages never expose interview or outcome feedback.
+- Free text exceeding policy bounds is rejected or redacted.
+- Feedback dashboards use reason codes and dimension values, not raw narrative text.
+
 ## 5.10 Public Portfolio Distribution Lifecycle
 
 - `disabled`
@@ -2307,6 +3037,107 @@ Retention rules:
 - `reported_unverified` engagement never satisfies a hard verification gate.
 - `verified` engagement affects trust visibility and analytics without implying legal enforceability.
 - Timeout handling is explicit for intro expiry, verification no-response expiry, and decision-overdue SLA breach.
+
+## 5.10B Deletion, Withdrawal, Export, and Re-import Reconciliation Ledger (MVP)
+
+### Purpose
+
+Define deterministic system behavior when content is deleted, withdrawn, depublished, exported, or re-imported.
+
+### Facts & Decisions
+
+- Reconciliation is an append-only ledger, not ad hoc cleanup.
+- Delete and withdraw affect trust, visibility, exportability, and downstream references separately.
+- Older soft-delete language in non-canonical docs is deprecated for product behavior.
+
+### Canonical Definitions / Object Model
+
+`reconciliation_ledger_entry` fields:
+
+- `ledger_entry_id`
+- `target_object_type`
+- `target_object_id`
+- `action_type=delete|withdraw|depublish|export|reimport`
+- `prior_state`
+- `new_state`
+- `initiated_by_principal_id`
+- `dependency_refs[]`
+- `public_cache_action`
+- `export_impact`
+- `import_impact`
+- `slug_lock_until`
+- `occurred_at`
+
+### Deterministic Reconciliation Rules
+
+- Deleted proof referenced elsewhere:
+  - parent Proof Pack recalculates immediately
+  - public page removes the proof immediately
+  - events or case studies queue rebuild
+  - historical references become `missing_source` internally, never public placeholders with hidden detail
+- Withdrawn verification:
+  - positive trust lift stops immediately
+  - public verification log becomes coarse withdrawn or unavailable state only if already allowed by policy
+  - matching gates recalculate immediately
+- Public page cache invalidation:
+  - issue purge or rebuild within 5 minutes
+  - fallback is `noindex` plus stale-content suppression if purge lags
+- Slug and handle reuse safety:
+  - deleted or depublished public handles and slugs are locked for 90 days before reuse
+  - exact reuse is blocked during the lock window
+- Export after delete request:
+  - once delete is confirmed, no new export jobs may start for that object
+  - in-flight export jobs are cancelled if they have not produced a final artifact
+  - already completed exports remain outside platform control
+- Re-import with missing child evidence from older exports:
+  - import succeeds only as `incomplete_import`
+  - missing children receive withheld references
+  - imported object gets no stronger trust lift than the surviving evidence supports
+- Depublish:
+  - removes public route, metadata, previews, and public-safe exports
+  - does not erase owner-visible audit history
+- Withdraw:
+  - removes future trust or public lift
+  - preserves owner auditability and permitted internal history
+
+### Roles / Permissions Implications
+
+- Owners may delete or withdraw only objects they own.
+- Org actors may depublish org-owned pages and withdraw org-owned proof or events within scope.
+- Trust Ops may force takedown or restricted visibility with audited reason codes.
+
+### Visibility / Privacy Implications
+
+- Public-safe export always reflects current public-safe state, never historical wider state.
+- Old exports are never treated as a license to republish deleted or withdrawn material inside the platform.
+
+### Events / Analytics Implications
+
+Canonical events:
+
+- `reconciliation_entry_written`
+- `public_cache_invalidation_requested`
+- `public_cache_invalidation_completed`
+- `export_cancelled_by_delete`
+- `reimport_marked_incomplete`
+
+### Out of Scope
+
+- remote deletion of user-downloaded files
+- public tombstone pages with detailed history
+- instant handle reuse
+- full legal hold system
+
+### Open Questions
+
+- None for MVP.
+
+### Acceptance Criteria
+
+- Deleting a proof that appears on a public page removes it from the page, previews, and public-safe export deterministically.
+- Re-importing an old export with missing child evidence does not recreate full trust or public lift.
+- Slug reuse is blocked for the defined safety window.
+- Withdrawn verification immediately removes positive trust lift without deleting audit history.
 
 ---
 
@@ -2770,6 +3601,209 @@ Compatibility aliases to current implementation events:
 - The "Why this match" contract remains plain-language, deterministic, and free of black-box wording.
 - Empty shortlist, ties, stale proof, private-proof-unusable, and expired-assignment states all have explicit logged behavior.
 - The section defines the canonical events `match_scored`, `reason_code_assigned`, `shortlist_decision_logged`, `override_applied`, `override_revoked`, and `fairness_snapshot_created` with example payloads and compatibility aliases.
+
+### 6.5A Operational Shortlist Fallback Contract (MVP)
+
+### Purpose
+
+Define system behavior when shortlist quality is low, no candidate clears threshold, only near-threshold candidates exist, assignment inputs are weak, or supply is thin.
+
+### Facts & Decisions
+
+- Empty or weak shortlist is an explicit operating state, not a silent failure.
+- The product must prefer calm fallback over false certainty.
+- Matching may widen only within explicit org-allowed settings.
+
+### Canonical Definitions / Object Model
+
+Operating states:
+
+- `qualified_shortlist_ready`
+- `near_threshold_only`
+- `no_qualified_candidates`
+- `assignment_under_specified`
+- `supply_thin`
+- `fairness_suppressed`
+
+Near-threshold candidate definition:
+
+- no hard policy block
+- no reveal-policy block
+- no fairness suppression block
+- only soft blockers such as small capability gap, proof thinness, or manageable logistics gap
+
+### System Behavior
+
+| Scenario                             | System behavior                                               | User-facing action                                                |
+| ------------------------------------ | ------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Shortlist quality too low            | show `near_threshold_only` or `no_qualified_candidates` state | explain blocker family and next best action                       |
+| No candidates pass threshold         | suppress intro creation, keep browse-safe review live         | suggest assignment edits, BYOC, or wait                           |
+| Only near-threshold candidates exist | show them in a clearly labeled near-threshold lane            | allow request for more proof, not direct auto-intro               |
+| Assignment under-specified           | block exact ranking and intro corridor                        | require role, outcomes, must-have skills, and constraints cleanup |
+| Supply too thin                      | keep portfolio and review corridor live, pause intro promises | offer BYOC and opt-in radius expansion if allowed                 |
+
+### Fallback UX Rules
+
+- Show near-threshold candidates only when the org has enabled `show near-threshold`.
+- Suggest assignment edits using reason-coded prompts:
+  - clarify must-have skills
+  - narrow or broaden constraints
+  - reduce proof strictness
+  - split one assignment into smaller scopes
+- BYOC prompt is shown when:
+  - supply is thin
+  - shortlist is empty
+  - org has a known candidate path
+- Radius expansion is allowed only if the org opted into wider geography or async work modes.
+- Request-more-proof prompt is shown only to candidates already in the corridor and only when stronger proof could plausibly change state.
+
+### Roles / Permissions Implications
+
+- `org_owner`, `org_manager`, and permitted `org_reviewer` roles may choose fallback actions within their review permissions.
+- `trust_admin` may observe fallback rates but not silently override them.
+
+### Visibility / Privacy Implications
+
+- Near-threshold lanes never widen reveal stage.
+- Under-specified-assignment warnings never expose hidden candidate detail.
+
+### Events / Analytics Implications
+
+Canonical events:
+
+- `shortlist_operating_state_entered`
+- `near_threshold_candidate_shown`
+- `assignment_edit_suggested`
+- `byoc_prompted`
+- `radius_expansion_prompted`
+- `more_proof_requested`
+
+### Out of Scope
+
+- auto-lowering thresholds without disclosure
+- fake waitlists
+- dense-market ranking theatrics
+- generic recruiting funnel dashboards
+
+### Open Questions
+
+- None for MVP.
+
+### Acceptance Criteria
+
+- An empty shortlist always renders a named operating state with explicit next actions.
+- Near-threshold candidates are clearly labeled and never presented as qualified intros.
+- Under-specified assignments are blocked from exact ranking until fixed.
+- Fallback analytics can distinguish thin supply from poor assignment definition.
+
+### 6.5B Overwhelm Watch and Next-Best-Action Layer (MVP-lite)
+
+### Purpose
+
+Provide one minimal cognitive-load reduction layer without re-expanding Zen or introducing behavioral surveillance.
+
+### Facts & Decisions
+
+- The system shows at most one primary next best action and one optional secondary action at a time.
+- Overwhelm watch is operational, not medical, diagnostic, or therapeutic.
+- No hidden psychological scoring is permitted.
+
+### Canonical Definitions / Object Model
+
+`next_best_action_record` fields:
+
+- `nba_id`
+- `principal_id`
+- `surface=individual|organization`
+- `primary_action_code`
+- `secondary_action_code`
+- `reason_family`
+- `generated_at`
+- `cooldown_until`
+
+Reason families:
+
+- `stalled_setup`
+- `proof_thin`
+- `verification_pending`
+- `assignment_under_specified`
+- `thin_supply`
+- `decision_overdue`
+- `fallback_active`
+
+### Overwhelm / Risk Signals
+
+Signals allowed:
+
+- 3 or more incomplete required steps after 7 days
+- repeated entry into fallback states
+- repeated draft abandonment
+- verification about to expire
+- decision or feedback overdue
+- assignment publish blocked twice for missing basics
+
+Signals intentionally not collected:
+
+- keystroke dynamics
+- emotion inference
+- mental-health inference
+- off-platform browsing
+- passive microphone or camera data
+- social graph activity
+
+### Nudge Rules
+
+- Max one in-product nudge per surface every 24 hours.
+- Email nudges allowed only for:
+  - verification pending expiry
+  - overdue feedback
+  - unclaimed invites nearing expiry
+- Copy must be calm and operational.
+- Nudges may not use scarcity theater, shame, or health framing.
+
+### Roles / Permissions Implications
+
+- Individuals see only their own next action.
+- Org roles see only org-relevant next actions according to their permissions.
+- Trust Ops can view aggregated reason families only.
+
+### Visibility / Privacy Implications
+
+- Next-best-action records are private to the principal context that owns them.
+- No public or matched-org surface may infer overwhelm state from missing activity.
+
+### Events / Analytics Implications
+
+Canonical events:
+
+- `next_best_action_generated`
+- `next_best_action_dismissed`
+- `next_best_action_completed`
+- `overwhelm_watch_signal_detected`
+
+Analytics allowed:
+
+- action completion rate
+- reason-family distribution
+- stale-state reduction
+
+### Out of Scope
+
+- mental wellness scoring
+- streak systems
+- gamified nudges
+- intervention chatbots
+
+### Open Questions
+
+- None for MVP.
+
+### Acceptance Criteria
+
+- The system never shows more than one primary action at once on a given surface.
+- No disallowed behavioral telemetry is collected.
+- Nudges remain calm and infrequent.
+- Overdue operational states can trigger next-best actions without exposing private workflow detail publicly.
 
 ---
 
@@ -3240,6 +4274,71 @@ These are the only launch KPIs promised across the PRD.
 - `zen_export_completed`
 - `zen_delete_completed`
 
+## 7.3A Canonical Async / Background Job Catalog (MVP)
+
+### Purpose
+
+Define the minimum job inventory, contracts, retries, idempotency, and observability rules for launch.
+
+### Facts & Decisions
+
+- Jobs are explicit product contracts, not implementation accidents.
+- Every job must be idempotent by key.
+- Failed jobs must degrade safely without widening visibility or trust.
+
+### Canonical Job Catalog
+
+| Job key                         | Trigger                                     | Inputs                                                               | Outputs                                            | Retry / idempotency                                            | Failure handling                                                     | Observability                                      |
+| ------------------------------- | ------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------- |
+| `attestation_reminder_dispatch` | attestation due window                      | `attestation_request_id`, contact refs, due state                    | reminder send record                               | retry 3x with backoff; idempotent by request + reminder window | stop after max retries, mark `reminder_failed`, keep request pending | queue depth, send success rate, aged pending count |
+| `proof_freshness_decay`         | daily schedule or proof state change        | `proof_pack_id`, freshness timestamps                                | updated freshness state, optional nudge task       | retry 5x; idempotent by pack + freshness window                | keep prior state, log error, no optimistic downgrade skip            | stale count, decay lag                             |
+| `public_page_indexing_sync`     | publish, depublish, noindex change          | route ref, page status                                               | index or deindex request, cache invalidation       | retry 5x; idempotent by route + target state                   | fall back to `noindex` and internal alert                            | invalidation latency, sync success                 |
+| `public_cache_invalidation`     | visibility, delete, withdraw, slug change   | object refs, affected routes                                         | cache purge or rebuild completion                  | retry 5x; idempotent by object + version                       | temporary stale suppression banner internally only                   | invalidation lag, stale-hit count                  |
+| `owner_export_generation`       | owner export request                        | object refs, export scope                                            | generated export artifact or error                 | retry 2x; idempotent by export request id                      | fail closed, never emit partial public-safe artifact as owner export | generation time, failure rate                      |
+| `import_validation`             | import upload                               | payload, schema version, actor                                       | validation result, importable or incomplete status | retry 2x; idempotent by payload hash                           | keep object unimported, emit validation error                        | validation error distribution                      |
+| `event_case_study_rebuild`      | event assignment set or public proof change | event id, assignment refs                                            | rebuilt public-safe event summary                  | retry 5x; idempotent by event + content version                | retain prior safe summary or remove unsafe highlights                | rebuild duration, stale summary count              |
+| `analytics_etl_projection`      | scheduled window close or event batch       | canonical event slice                                                | warehouse or reporting projection                  | retry 5x; idempotent by event window + checksum                | hold projection, mark reconciliation error                           | null rate, ordering mismatch rate                  |
+| `notification_retry`            | transient send failure                      | notification id, channel                                             | final send outcome                                 | retry 5x with channel backoff; idempotent by notification id   | mark `failed_permanent`, no duplicate user-facing fan-out            | retry depth, permanent fail rate                   |
+| `cleanup_retention_enforcement` | daily retention pass                        | expired tokens, temp files, stale drafts, cancelled export artifacts | removed temp assets and expired records            | retry 3x; idempotent by object + retention window              | log and retry later, never purge non-expired objects                 | retention lag, orphan count                        |
+
+### Roles / Permissions Implications
+
+- Jobs execute as system actors with scoped capabilities only.
+- System jobs may not silently create public visibility or trust lift.
+
+### Visibility / Privacy Implications
+
+- Jobs must re-evaluate effective visibility at execution time.
+- Export, indexing, and rebuild jobs must use current policy, not request-time assumptions only.
+
+### Events / Analytics Implications
+
+Canonical job events:
+
+- `job_enqueued`
+- `job_started`
+- `job_succeeded`
+- `job_failed`
+- `job_dead_lettered`
+- `job_retry_scheduled`
+
+### Out of Scope
+
+- generic background-worker marketplace
+- unbounded fan-out jobs
+- silent self-healing that changes user-visible state without audit
+
+### Open Questions
+
+- None for MVP.
+
+### Acceptance Criteria
+
+- Each canonical job has a stable job key, inputs, outputs, retry rule, and observability owner.
+- Re-running any job after partial failure is safe.
+- A failed job never widens visibility or publishes stale hidden content.
+- Analytics ETL reports reconciliation drift explicitly instead of silently dropping mismatches.
+
 ## 7.4 Event Privacy Rules
 
 - No PII in analytics properties.
@@ -3608,6 +4707,322 @@ Those may exist operationally later, but they are not part of the MVP product co
 - Verify 48-hour feedback follow-up appears as a workflow state, not just narrative text.
 - Verify Zen Hub export and delete work while Zen data stays absent from ranking and org-facing surfaces.
 
+## 9.1 Canonical Technical Foundation Appendix (MVP)
+
+### Purpose
+
+Record the compact implementation-oriented foundation that all PRD behavior assumes.
+
+### Facts & Decisions
+
+- Launch stack is implementation-driven and intentionally narrow.
+- This appendix complements, and does not replace, the technical launch contract already referenced elsewhere.
+
+### Canonical Technical Foundation
+
+- Web and app layer:
+  - Next.js App Router web application
+  - React and TypeScript
+  - route-driven individual, org, admin, and public portfolio surfaces
+- API and validation layer:
+  - App Router route handlers
+  - server-side auth checks
+  - schema validation at request boundaries
+  - reason-coded business rules
+- Database and storage:
+  - Postgres via Supabase
+  - Drizzle schema and SQL migrations
+  - append-only audit and lifecycle records for sensitive actions
+- Auth model:
+  - Supabase Auth
+  - SSR cookie sessions for interactive web use
+  - scoped capability tokens for invite, attestation, recovery, and review flows
+- File storage:
+  - private-by-default object storage
+  - quarantine-first upload path
+  - public-safe promotion only for allowed safe media
+- Async model:
+  - canonical job queue backed by durable launch-safe storage
+  - idempotent workers and cron-triggered processing
+- Observability:
+  - structured app logs
+  - Sentry for errors and tracing
+  - Vercel analytics and runtime logs
+  - internal audit routes for trust and security review
+- Export and import endpoints:
+  - owner export endpoints for versioned JSON
+  - public-safe export projection for public objects only
+  - import preview and validation before trusted attach
+
+### Roles / Permissions Implications
+
+- Auth, visibility, and audit concerns live at the API boundary, not just in UI code.
+- Internal admin and Trust Ops routes remain separate from public and user routes.
+
+### Visibility / Privacy Implications
+
+- No client-only trust or visibility enforcement is canonical.
+- Sensitive data, audit logs, and private files must remain server-enforced and policy-checked.
+
+### Events / Analytics Implications
+
+- Every state-changing API call must emit canonical product events or documented compatibility aliases.
+- Export, import, reveal, trust, and cache invalidation actions require audit logging.
+
+### Out of Scope
+
+- mobile native apps
+- GraphQL
+- Redis as a required launch dependency
+- enterprise SSO
+- multi-region residency at launch
+
+### Open Questions
+
+- None for MVP.
+
+### Acceptance Criteria
+
+- The appendix matches the current product direction: Next.js, Supabase, Drizzle, scoped tokens, private-by-default storage, structured observability.
+- No appendix text implies a broader infra stack than launch actually requires.
+- Export/import and upload behaviors align with the canonical visibility and ingest contracts.
+
+## 9.2 Launch Runbook, Synthetic Monitors, and SLO / Alert Contract (MVP)
+
+### Purpose
+
+Define launch gates, smoke tests, synthetic monitors, SLOs, alert thresholds, tracing, rollback, and incident ownership in one compact appendix.
+
+### Facts & Decisions
+
+- Launch is blocked by failures on trust-critical and privacy-critical paths, not by every non-core feature.
+- Synthetic monitoring must test both success and safe fallback.
+- Rollback is required when a release breaks core trust or privacy paths.
+
+### Pre-Launch Gates
+
+Launch-blocking before launch:
+
+- auth signup and login
+- public portfolio publish and render
+- assignment publish
+- shortlist generation with safe fallback
+- invite or token redemption
+- export
+- delete or unpublish
+- audit logging on sensitive actions
+- no privacy or visibility regression in core flows
+
+Non-blocking but monitored:
+
+- wider analytics completeness beyond required thresholds
+- post-MVP alpha sponsor or reviewer features
+- non-core dashboard experiments
+
+### Smoke-Test Matrix
+
+| Flow                 | Required result                                                 |
+| -------------------- | --------------------------------------------------------------- |
+| Signup / auth        | account creation or login succeeds, session established         |
+| Portfolio publish    | route resolves with correct visibility and metadata             |
+| Assignment publish   | assignment reaches live eligible state or explicit block reason |
+| Match shortlist      | shortlist or named fallback state appears, never silent empty   |
+| Invite redemption    | token redeemed once, scoped action succeeds                     |
+| Verification request | request recorded and pending state visible                      |
+| Feedback submission  | structured feedback stored and due state cleared                |
+| Export               | requested export generated or safely failed                     |
+| Delete / unpublish   | object removed from public projection and cache invalidated     |
+
+### Synthetic Monitors
+
+Required launch monitors:
+
+- `/`
+- `/login`
+- `/api/health` public-safe contract only
+- public portfolio render
+- assignment publish path
+- shortlist path
+- invite redemption path
+- export path
+- delete or unpublish path
+
+Monitor severity:
+
+- `P1` auth, token redemption, portfolio render, export, delete, unpublish
+- `P2` shortlist, verification queue, feedback, assignment publish
+- `P3` lagging analytics or monitor drift without user-visible breakage
+
+### SLO / Alert Thresholds
+
+Launch SLOs:
+
+- core auth and portfolio availability `99.5%`
+- export and delete successful completion `99%`
+- public cache invalidation after delete or withdraw within `5 minutes` p95
+- alert on:
+  - 2 consecutive `P1` monitor failures in 5 minutes
+  - 3 consecutive `P2` monitor failures in 15 minutes
+  - queue backlog older than 24 hours for verification or feedback
+  - public cache invalidation lag above 5 minutes p95
+
+### Critical-Path Tracing
+
+Trace these paths end to end:
+
+- auth
+- invite redemption
+- portfolio publish
+- shortlist generation
+- feedback submission
+- export
+- delete or unpublish
+
+Required trace dimensions:
+
+- request id
+- principal id or system actor
+- object refs
+- outcome state
+- latency
+- failure class
+
+### Rollback Rules
+
+Rollback immediately when:
+
+- auth or token redemption breaks
+- public deleted or withdrawn content remains publicly visible
+- export returns the wrong visibility projection
+- shortlist leaks identity or bypasses fairness-safe fallback
+- audit logging fails on sensitive actions
+
+Monitor post-launch before rollback when:
+
+- analytics ETL drifts without affecting user-visible correctness
+- optional provider integrations degrade while manual fallback remains safe
+
+### Incident Ownership
+
+- Engineering on-call owns P1 and P2 technical incidents.
+- Product or operations owner owns thin-market triage, structured feedback quality, and fallback-state review within 1 business day.
+- Trust Ops owns verification, disputes, and trust-tier queue response within 1 business day.
+
+### Out of Scope
+
+- 24/7 enterprise NOC
+- public status page automation
+- multi-region failover
+- complex SRE tooling
+
+### Open Questions
+
+- None for MVP.
+
+### Acceptance Criteria
+
+- Launch-blocking and monitor-only failures are explicitly separated.
+- Every critical path has a smoke test and synthetic monitor.
+- Rollback conditions are tied to trust, privacy, export, and visibility correctness.
+- Incident ownership is explicit and non-overlapping.
+
+## 9.3 Pilot, Rollout, and Roadmap Appendix (12-Week Corridor)
+
+### Purpose
+
+Capture the operating rollout plan without widening launch scope.
+
+### Facts & Decisions
+
+- MVP must launch narrow.
+- Post-launch learning should come from curated pilots, not open marketplace sprawl.
+- Reviewer network, sponsor corridor, university corridor, and employer corridor are phased expansions.
+
+### 12-Week Roadmap
+
+| Window     | Classification           | Focus                                                                                                                                                            |
+| ---------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Weeks 1-4  | launch-blocking          | principals and memberships, visibility matrix, permission matrix, token security, upload quarantine, structured feedback, reconciliation ledger, launch monitors |
+| Weeks 5-8  | early post-launch        | first curated org pilots, first public events or missions, case-study publishing from verified public-safe outcomes, thin-market fallback tuning                 |
+| Weeks 9-12 | later expansion corridor | reviewer network incubation, university first-proof corridor, employer pilot corridor, sponsor and bounty alpha readiness                                        |
+
+### Initial Pilot Assumptions
+
+- 3 to 5 early organization partners.
+- 30 to 75 initial individuals across proof-ready and first-proof cohorts.
+- 1 to 2 flagship Events or Missions for public-safe case-study storytelling.
+- No open candidate marketplace and no public searchable people index.
+
+### Target Early Partners
+
+- mission-driven SMEs
+- startups with bounded project work
+- NGOs with clear outcomes and limited hiring corridors
+- university or bootcamp partners only in the later first-proof corridor, not as a launch requirement
+
+### First Public Events / Missions
+
+- 1 to 2 curated initiative pages only
+- each requires:
+  - bounded assignment set
+  - public-safe proof
+  - explicit consent for public outcome storytelling
+- no event-management workflow expansion
+
+### Outcome Case-Study Publishing
+
+- launch-blocking: none
+- early post-launch:
+  - publish only when proof is public-safe and outcome claims are verifiable enough
+  - no private feedback, no hidden candidate identity, no sponsor over-claiming
+- later expansion:
+  - richer templates and sponsor linkage
+
+### Reviewer Network Incubation
+
+- not launch-blocking
+- weeks 9-12 focus:
+  - manual reviewer sourcing
+  - SLA tracking
+  - scoped reviewer assignment
+  - trust and dispute hooks
+
+### University / First-Proof Corridor
+
+- not launch-blocking
+- early post-launch or later corridor only
+- focus:
+  - first-proof evidence creation
+  - safe org introductions
+  - no resume-factory or campus-feed behavior
+
+### Employer Pilot Corridor
+
+- not launch-blocking
+- later corridor focus:
+  - a handful of proof-first employers
+  - narrow assignment templates
+  - structured shortlist feedback
+  - no ATS integration
+
+### Out of Scope
+
+- broad consumer launch
+- dense-market automation
+- recruiting marketplace expansion
+- employer self-serve analytics suites
+- campus social features
+
+### Open Questions
+
+- None for launch.
+
+### Acceptance Criteria
+
+- Launch-blocking work is clearly separated from early post-launch and later expansion.
+- Curated pilot assumptions stay narrow and credible.
+- Events, case studies, reviewer incubation, university corridor, and employer pilots do not backdoor generic recruiting-SaaS scope into launch.
+
 ---
 
 ## 10. Out of Scope
@@ -3863,6 +5278,115 @@ These are internal alpha monitoring metrics only. They are not MVP launch KPIs.
 - Dispute intake, review statuses, resolution states, and audit logging requirements are specified.
 - Metrics include reviewer SLA adherence, bounty usage, dispute rate, pro-bono cap triggers, and sponsor conversion.
 - The launch recommendation clearly distinguishes MVP launch-blocking from alpha-launch minimums and later post-alpha work.
+
+## 11.1 Reviewer SLA Defaults, Bounty Pricing Bands, Sponsor Corridor, and Legal Template Hooks (Post-MVP Alpha)
+
+### Purpose
+
+Strengthen the post-MVP alpha corridor without making it launch-blocking.
+
+### Facts & Decisions
+
+- This section is inactive unless the reviewer or sponsor corridor is enabled.
+- These defaults are placeholders for alpha operations, not launch promises.
+- No payout, escrow, or billing engine is implied.
+
+### Reviewer SLA Defaults
+
+- review accept or decline: within 3 business days
+- review completion after acceptance: within 5 business days
+- dispute intake acknowledgement: within 2 business days
+- dispute resolution target: within 10 business days
+- SLA breach state is internal and analytics-visible, not public
+
+### Bounty Pricing-Band Placeholders
+
+Canonical placeholder bands:
+
+- `band_a_micro`
+- `band_b_standard`
+- `band_c_complex`
+- `band_d_custom`
+
+Required stored fields:
+
+- `pricing_band_code`
+- `currency_code`
+- `display_range_min`
+- `display_range_max`
+- `pricing_source=manual|sponsor_defined`
+
+Rule:
+
+- alpha may store and show bands, not guaranteed payout mechanics
+
+### Sponsor Metadata Expectations
+
+Required sponsor fields:
+
+- `sponsor_id`
+- `sponsor_type`
+- `display_name`
+- `funding_state=pending|confirmed|withdrawn`
+- `purpose_tag`
+- `disclosure_scope`
+- `linked_review_or_bounty_ref`
+- `policy_version`
+
+### Legal Template Hooks
+
+Required hook references:
+
+- `assignment_terms_template_id`
+- `license_template_id`
+- `dispute_policy_version`
+- `sponsor_terms_template_id` where applicable
+
+Rule:
+
+- hooks reference templates and policy versions only
+- MVP and alpha do not become a contract authoring product
+
+### Roles / Permissions Implications
+
+- `sponsor_actor` may manage sponsor metadata only on linked sponsor objects.
+- `trust_admin` may review disputes and sponsor compliance state.
+- Org actors may link sponsor metadata only where their org owns the underlying assignment or review object.
+
+### Visibility / Privacy Implications
+
+- Sponsor display is coarse by default.
+- Reviewer SLA state is internal or org-owned only.
+- Bounty amount exact values remain optional and non-public unless future policy narrows otherwise.
+
+### Events / Analytics Implications
+
+Canonical events:
+
+- `review_sla_started`
+- `review_sla_breached`
+- `sponsor_metadata_confirmed`
+- `bounty_band_assigned`
+- `dispute_acknowledged`
+- `dispute_resolved`
+
+### Out of Scope
+
+- payouts
+- invoicing
+- escrow
+- legal negotiation workflow
+- public reviewer marketplace browsing
+
+### Open Questions
+
+- Exact public visibility of bounty bands may remain closed for alpha unless explicitly enabled.
+
+### Acceptance Criteria
+
+- The alpha corridor can operate with metadata, SLAs, and policy hooks without implying a billing product.
+- Reviewer SLAs, sponsor fields, and template hooks are defined even though they are not launch-blocking.
+- Sponsor or bounty activation cannot bypass dispute or anti-exploitation policy.
 
 ---
 
