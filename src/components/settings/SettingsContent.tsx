@@ -13,7 +13,6 @@ import { resetTour } from '@/actions/tour';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { RotateCcw, Loader2 } from 'lucide-react';
-import { CustomizableDashboard } from '../dashboard/CustomizableDashboard';
 import { VideoIntegrationsManager } from './VideoIntegrationsManager';
 import { PortfolioVisibilityCard } from './PortfolioVisibilityCard';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
@@ -22,7 +21,7 @@ interface SettingsContentProps {
   userId: string;
 }
 
-const ALLOWED_TABS = ['account', 'dashboard', 'integrations', 'notifications', 'privacy'] as const;
+const ALLOWED_TABS = ['account', 'integrations', 'notifications', 'privacy'] as const;
 type AllowedTab = (typeof ALLOWED_TABS)[number];
 
 export function SettingsContent({ userId }: SettingsContentProps) {
@@ -65,7 +64,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
       const result = await resetTour();
       if (result.success) {
         toast.success('Tour reset successfully!', {
-          description: 'Redirecting to dashboard to start the tour...',
+          description: 'Redirecting to overview to start the tour...',
         });
         // Wait a moment then redirect to home to trigger tour
         setTimeout(() => {
@@ -103,7 +102,6 @@ export function SettingsContent({ userId }: SettingsContentProps) {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-white dark:bg-card border border-proofound-stone dark:border-border">
             <TabsTrigger value="account">Account</TabsTrigger>
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="integrations">Integrations</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="privacy">Privacy & Data</TabsTrigger>
@@ -217,11 +215,6 @@ export function SettingsContent({ userId }: SettingsContentProps) {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-
-          {/* Dashboard Tab */}
-          <TabsContent value="dashboard" className="space-y-6">
-            <CustomizableDashboard userId={userId} persona="individual" />
           </TabsContent>
 
           {/* Integrations Tab */}

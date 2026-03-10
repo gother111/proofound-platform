@@ -47,10 +47,6 @@ vi.mock('@/components/settings/PrivacyOverview', () => ({
   PrivacyOverview: () => <div data-testid="privacy-overview" />,
 }));
 
-vi.mock('@/components/dashboard/CustomizableDashboard', () => ({
-  CustomizableDashboard: () => <div data-testid="customizable-dashboard" />,
-}));
-
 vi.mock('@/components/settings/VideoIntegrationsManager', () => ({
   VideoIntegrationsManager: () => <div data-testid="video-integrations-manager" />,
 }));
@@ -79,6 +75,7 @@ describe('Settings integrations discoverability', () => {
 
     expect(await screen.findByTestId('video-integrations-manager')).toBeInTheDocument();
     expect(screen.getByTestId('linkedin-connect')).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'Dashboard' })).not.toBeInTheDocument();
     expect(
       screen.queryByRole('link', { name: /manage zoom & google integrations/i })
     ).not.toBeInTheDocument();

@@ -35,6 +35,10 @@ describe('LeftNav portfolio gating', () => {
       />
     );
 
+    expect(screen.getAllByRole('link', { name: /overview/i })[0]).toHaveAttribute(
+      'href',
+      '/app/i/home'
+    );
     expect(screen.queryByRole('link', { name: /public portfolio/i })).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /public portfolio \(locked\)/i })
@@ -104,6 +108,10 @@ describe('LeftNav portfolio gating', () => {
     render(<LeftNav basePath="/app/i" isBetaTesting />);
 
     expect(screen.getByText(/beta testing/i)).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: /private check-ins/i })[0]).toHaveAttribute(
+      'href',
+      '/app/i/zen'
+    );
   });
 
   it('shows only the MVP org navigation corridor', () => {

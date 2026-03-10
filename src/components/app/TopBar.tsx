@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -41,7 +40,6 @@ interface TopBarProps {
 
 export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
   const pathname = usePathname();
-  const isDashboardTab = pathname?.includes('/home') ?? false;
 
   // V2 Feature Flag
   const isV2 = process.env.NEXT_PUBLIC_UI_REFACTOR_V2 === 'true';
@@ -52,20 +50,20 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
       return getRouteMeta(pathname).title;
     }
 
-    if (!pathname) return 'Dashboard';
+    if (!pathname) return 'Overview';
 
-    if (pathname.includes('/home')) return 'Dashboard';
+    if (pathname.includes('/home')) return 'Overview';
     if (pathname.includes('/matching')) return 'Matching';
     if (pathname.includes('/expertise')) return 'Expertise';
     if (pathname.includes('/interviews')) return 'Interviews';
     if (pathname.includes('/messages')) return 'Messages';
     if (pathname.includes('/notifications')) return 'Notifications';
-    if (pathname.includes('/opportunities')) return 'Opportunities';
+    if (pathname.includes('/opportunities')) return 'Launch note';
     if (pathname.includes('/profile')) return 'Profile';
-    if (pathname.includes('/zen')) return 'Zen Hub';
+    if (pathname.includes('/zen')) return 'Private check-ins';
     if (pathname.includes('/settings')) return 'Settings';
     if (pathname.includes('/verifications')) return 'Verifications';
-    if (pathname.includes('/projects')) return 'Projects';
+    if (pathname.includes('/projects')) return 'Launch note';
     if (pathname.includes('/experiences')) return 'Experiences';
     if (pathname.includes('/education')) return 'Education';
     if (pathname.includes('/volunteering')) return 'Volunteering';
@@ -73,7 +71,7 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
     if (pathname.includes('/partnerships')) return 'Partnerships';
     if (pathname.includes('/assignments')) return 'Assignments';
 
-    return 'Dashboard';
+    return 'Overview';
   };
 
   return (

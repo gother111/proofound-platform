@@ -25,19 +25,31 @@ export const getRouteMeta = (pathname: string): RouteMeta => {
   const path = pathname || '';
 
   if (path.includes('/home'))
-    return { title: 'Dashboard', description: 'Overview of your current activity', icon: Home };
+    return {
+      title: 'Overview',
+      description: 'Proof-first launch overview',
+      icon: Home,
+    };
   if (path.includes('/matching'))
-    return { title: 'Matching', description: 'Discover relevant matches', icon: Users };
+    return { title: 'Matching', description: 'Browse aligned introductions', icon: Users };
   if (path.includes('/expertise'))
-    return { title: 'Expertise', description: 'Manage your skills and domains', icon: Award };
+    return {
+      title: 'Expertise',
+      description: 'Manage proof-backed skills and domains',
+      icon: Award,
+    };
   if (path.includes('/interviews'))
-    return { title: 'Interviews', description: 'Upcoming and past interviews', icon: Calendar };
+    return { title: 'Interviews', description: 'Interview and feedback status', icon: Calendar };
   if (path.includes('/messages'))
     return { title: 'Messages', description: 'Your conversations', icon: MessageSquare };
   if (path.includes('/notifications'))
     return { title: 'Notifications', description: 'Recent alerts and updates', icon: Bell };
   if (path.includes('/opportunities'))
-    return { title: 'Opportunities', description: 'Explore available positions', icon: Briefcase };
+    return {
+      title: 'Launch note',
+      description: 'Opportunity browsing stays inside matching for the MVP corridor',
+      icon: Briefcase,
+    };
   if (path.includes('/profile'))
     return { title: 'Profile', description: 'Your core identity', icon: User };
   if (path.includes('/settings'))
@@ -49,13 +61,21 @@ export const getRouteMeta = (pathname: string): RouteMeta => {
   if (path.includes('/verifications'))
     return {
       title: 'Verifications',
-      description: 'Identity and credential status',
+      description: 'Proof and trust status',
       icon: CheckCircle,
     };
   if (path.includes('/projects'))
-    return { title: 'Projects', description: 'Active and completed projects', icon: Briefcase };
+    return {
+      title: 'Launch note',
+      description: 'Project libraries remain outside the MVP corridor',
+      icon: Briefcase,
+    };
   if (path.includes('/zen'))
-    return { title: 'Zen Hub', description: 'Focus and wellbeing', icon: Sparkles };
+    return {
+      title: 'Private check-ins',
+      description: 'Optional private check-ins and reflections',
+      icon: Sparkles,
+    };
   if (path.includes('/skill-gaps'))
     return { title: 'Skill Gaps', description: 'Areas for growth', icon: BookOpen };
   if (path.includes('/portfolio'))
@@ -73,5 +93,5 @@ export const getRouteMeta = (pathname: string): RouteMeta => {
     return { title: 'Fairness Analytics', description: 'Bias and equity tracking', icon: PieChart };
 
   // Fallback
-  return { title: 'Dashboard', description: 'Overview', icon: Home };
+  return { title: 'Overview', description: 'Proof-first launch overview', icon: Home };
 };

@@ -63,7 +63,7 @@ describe('TopBar header actions', () => {
   it('updates title based on route meta when navigating', () => {
     mockPathname = '/app/i/home';
     const { rerender } = render(<TopBar userName="Alex Doe" userInitials="AD" />);
-    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+    expect(screen.getByText('Overview')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Customize' })).not.toBeInTheDocument();
 
     mockPathname = '/app/i/profile';
@@ -73,7 +73,7 @@ describe('TopBar header actions', () => {
 
     mockPathname = '/app/i/home';
     rerender(<TopBar userName="Alex Doe" userInitials="AD" />);
-    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+    expect(screen.getByText('Overview')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Customize' })).not.toBeInTheDocument();
   });
 });

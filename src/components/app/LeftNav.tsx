@@ -77,7 +77,7 @@ export function LeftNav({
   const previousPortfolioLockRef = useRef(isPortfolioLocked);
 
   const individualNavItems: NavItem[] = [
-    { href: `${basePath}/home`, icon: Home, label: 'Dashboard', dataTour: 'home-link' },
+    { href: `${basePath}/home`, icon: Home, label: 'Overview', dataTour: 'home-link' },
     { href: `${basePath}/profile`, icon: User, label: 'Profile', dataTour: 'profile-link' },
     {
       href: `${basePath}/portfolio`,
@@ -112,7 +112,12 @@ export function LeftNav({
       label: 'Verifications',
       dataTour: 'verifications-link',
     },
-    { href: `${basePath}/zen`, icon: Sparkles, label: 'Zen Hub', dataTour: 'zen-link' },
+    {
+      href: `${basePath}/zen`,
+      icon: Sparkles,
+      label: 'Private check-ins',
+      dataTour: 'zen-link',
+    },
     { href: `${basePath}/settings`, icon: Settings, label: 'Settings', dataTour: 'settings-link' },
   ];
 

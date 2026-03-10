@@ -47,10 +47,6 @@ vi.mock('@/components/settings/PrivacyOverview', () => ({
   PrivacyOverview: () => <div data-testid="privacy-overview" />,
 }));
 
-vi.mock('@/components/dashboard/CustomizableDashboard', () => ({
-  CustomizableDashboard: () => <div data-testid="customizable-dashboard" />,
-}));
-
 vi.mock('@/components/settings/VideoIntegrationsManager', () => ({
   VideoIntegrationsManager: () => <div data-testid="video-integrations-manager" />,
 }));
@@ -79,5 +75,6 @@ describe('Settings privacy tab placement', () => {
 
     expect(await screen.findByTestId('portfolio-visibility-card')).toBeInTheDocument();
     expect(screen.getByTestId('privacy-overview')).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'Dashboard' })).not.toBeInTheDocument();
   });
 });
