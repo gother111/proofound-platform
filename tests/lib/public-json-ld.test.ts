@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { serializeJsonLdForHtml } from '@/components/seo/JsonLdScripts';
 import {
   buildBreadcrumbJsonLd,
   buildPublicOrganizationPortfolioJsonLd,
@@ -48,6 +49,17 @@ describe('public JSON-LD helpers', () => {
     expect(item.name).toBe('Acme');
     expect(item.areaServed).toBe('EU');
     expect(item.sameAs).toBeUndefined();
+  });
+
+  it('escapes script-closing sequences when serializing JSON-LD for HTML', () => {
+    const serialized = serializeJsonLdForHtml({
+      '@context': 'https://schema.org',
+      '@type': 'Thing',
+      name: '</script><script>alert(1)</script>',
+    });
+
+    expect(serialized).toContain('\\u003c/script>\\u003cscript>alert(1)\\u003c/script>');
+    expect(serialized).not.toContain('</script>');
   });
 
   it('builds breadcrumb lists with absolute item URLs', () => {

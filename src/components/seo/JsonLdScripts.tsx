@@ -1,5 +1,9 @@
 import type { JsonLd } from '@/lib/seo/json-ld';
 
+export function serializeJsonLdForHtml(value: JsonLd): string {
+  return JSON.stringify(value).replace(/</g, '\\u003c');
+}
+
 export function JsonLdScripts({
   items,
   idPrefix = 'jsonld',
@@ -18,7 +22,7 @@ export function JsonLdScripts({
           key={`${idPrefix}-${index}`}
           id={`${idPrefix}-${index}`}
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(item) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLdForHtml(item) }}
         />
       ))}
     </>
