@@ -65,6 +65,12 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Pull production project/env settings (creates `.vercel/`, which is gitignored): `npx vercel@latest pull --yes --environment=production` (source: .gitignore)
 - Run a prod-equivalent build locally: `npx vercel@latest build --prod`
   - If CLI auth is missing, use `--token` with a valid `VERCEL_TOKEN` (do not print it).
+- For the extracted API app project:
+  - `npm run build:api`
+  - `npm run vercel:api:ensure`
+  - `npm run vercel:api:sync-env`
+  - `npx -y vercel@latest deploy --cwd apps/api --yes --token "$VERCEL_TOKEN"`
+  - Confirm preview health with `/api/health` before adding same-domain rewrites.
 
 ## Production Sync Guard (Vercel Quota Recovery)
 
