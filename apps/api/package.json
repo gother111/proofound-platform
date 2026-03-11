@@ -1,0 +1,13 @@
+{
+  "name": "@proofound/api-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prebuild": "node ../../scripts/postbuild-cleanup.mjs && node ../../scripts/check-deploy-readiness.mjs",
+    "build": "SENTRY_SUPPRESS_INSTRUMENTATION_FILE_WARNING=1 SENTRY_SUPPRESS_GLOBAL_ERROR_HANDLER_FILE_WARNING=1 node ../../node_modules/next/dist/bin/next build",
+    "postbuild": "node ../../scripts/postbuild-cleanup.mjs",
+    "dev": "node ../../node_modules/next/dist/bin/next dev",
+    "start": "node ../../node_modules/next/dist/bin/next start",
+    "typecheck": "node ../../node_modules/typescript/bin/tsc --project tsconfig.json --noEmit --incremental false"
+  }
+}
