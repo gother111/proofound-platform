@@ -65,6 +65,34 @@ describe('python-cv-proxy', () => {
     expect(headers['x-python-service-secret']).toBeTruthy();
   });
 
+  it('ignores client-controlled forwarded host headers when building python target URL', async () => {
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify(validSuggestPayload), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+
+    const request = new NextRequest('https://proofound.io/api/expertise/cv-import/suggest?q=ssrf', {
+      method: 'POST',
+      body: JSON.stringify({ documents: [] }),
+      headers: {
+        'content-type': 'application/json',
+        'x-forwarded-proto': 'https',
+        'x-forwarded-host': 'attacker.example',
+      },
+    });
+
+    const response = await proxyCvRequestToPython(request, '/suggest');
+
+    expect(response.status).toBe(200);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+    const [targetUrl] = fetchSpy.mock.calls[0] as [string, RequestInit];
+    expect(targetUrl).toContain('/api/python/cv_import');
+    expect(targetUrl).not.toContain('attacker.example');
+  });
+
   it('forwards multipart content-type boundary to python runtime', async () => {
     const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
       new Response(JSON.stringify(validSuggestPayload), {

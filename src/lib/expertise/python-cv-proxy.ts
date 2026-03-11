@@ -145,7 +145,7 @@ export async function proxyCvRequestToPython(
   endpointPath: EndpointPath,
   timeoutMs = DEFAULT_PROXY_TIMEOUT_MS
 ): Promise<NextResponse> {
-  const baseUrl = resolvePythonInternalServiceBaseUrl(request);
+  const baseUrl = resolvePythonInternalServiceBaseUrl();
   const targetUrl = resolveTargetUrl(request, baseUrl, endpointPath);
 
   const contentType = resolveContentType(request);
