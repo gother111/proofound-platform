@@ -1144,6 +1144,18 @@ function buildSkillDependencyErrorCode(error: unknown): string {
   return 'SKILL_MATCHING_UNAVAILABLE';
 }
 
+function isSkillSuggestionLimitError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  return (
+    error.message.startsWith('Too many documents.') ||
+    error.message.startsWith('Total payload too large.') ||
+    error.message.includes('exceeds max size')
+  );
+}
+
 function buildSkillSuggestionFallback(
   input: CvImportWizardSuggestRequest,
   limits: CvImportLimits,
@@ -1253,6 +1265,10 @@ export async function suggestWizardForDocuments(
         }
       );
     } catch (error) {
+      if (isSkillSuggestionLimitError(error)) {
+        throw error;
+      }
+
       console.error(
         '[cv-import-wizard] skill suggestion dependency failed; continuing without skill candidates',
         error

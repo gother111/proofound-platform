@@ -259,4 +259,37 @@ describe('cv-import wizard extractor', () => {
       'SKILL_MATCH_DEPENDENCY_UNAVAILABLE'
     );
   });
+
+  it('rethrows skill suggestion limit errors instead of falling back', async () => {
+    mockSuggestSkillsForDocuments.mockRejectedValueOnce(
+      new Error('Total payload too large. Max allowed is 5 characters.')
+    );
+
+    const { suggestWizardForDocuments } = await import(
+      '@/lib/expertise/cv-import-wizard-extractor'
+    );
+
+    await expect(
+      suggestWizardForDocuments(
+        {
+          documents: [
+            {
+              document_id: 'doc-oversized',
+              file_name: 'cv.pdf',
+              context: 'cv',
+              text: '1234567890',
+            },
+          ],
+        },
+        {
+          maxDocuments: 5,
+          maxCharsPerDocument: 5,
+          maxTotalChars: 5,
+        },
+        {
+          semanticEnabled: false,
+        }
+      )
+    ).rejects.toThrow('Total payload too large. Max allowed is 5 characters.');
+  });
 });
