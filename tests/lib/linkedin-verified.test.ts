@@ -94,6 +94,22 @@ describe('linkedin-verified helpers', () => {
     );
   });
 
+  it('rejects non-LinkedIn profile URLs from identityMe payload', async () => {
+    fetchMock.mockResolvedValueOnce(
+      okJson({
+        basicInfo: {
+          profileUrl: 'https://attacker.example/internal',
+          publicIdentifier: 'trusted-candidate',
+        },
+      })
+    );
+
+    const result = await fetchLinkedInIdentityMe('token');
+
+    expect(result.profileUrl).toBe('https://www.linkedin.com/in/trusted-candidate');
+    expect(result.publicIdentifier).toBe('trusted-candidate');
+  });
+
   it('detects identity signal from verification report labels', async () => {
     fetchMock.mockResolvedValueOnce(
       okJson({
