@@ -1177,6 +1177,103 @@ describe('custom verification API routes', () => {
     await expect(response.json()).resolves.toEqual({ kind: 'proofound_user' });
   });
 
+  it('scopes artifact verification updates to the custom request requester profile', async () => {
+    const experienceEqSpy = vi.fn(() => experienceUpdateQuery);
+    const projectEqSpy = vi.fn(() => projectUpdateQuery);
+
+    const customRequestSelectQuery: any = {
+      eq: vi.fn(() => customRequestSelectQuery),
+      single: vi.fn().mockResolvedValue({
+        data: {
+          id: 'request-1',
+          requester_profile_id: 'requester-1',
+          status: 'pending',
+          expires_at: new Date(Date.now() + 60_000).toISOString(),
+          custom_verification_request_items: [
+            { id: 'item-1', artifact_type: 'experience', artifact_id: 'exp-1' },
+            { id: 'item-2', artifact_type: 'project', artifact_id: 'proj-1' },
+          ],
+        },
+        error: null,
+      }),
+    };
+
+    const simpleUpdateQuery = {
+      eq: vi.fn(function () {
+        return this;
+      }),
+      then: (resolve: (value: unknown) => unknown, reject?: (reason: unknown) => unknown) =>
+        Promise.resolve({ error: null }).then(resolve, reject),
+    };
+
+    const experienceUpdateQuery: any = {
+      eq: experienceEqSpy,
+      in: vi.fn(() => experienceUpdateQuery),
+      then: (resolve: (value: unknown) => unknown, reject?: (reason: unknown) => unknown) =>
+        Promise.resolve({ error: null }).then(resolve, reject),
+    };
+
+    const projectUpdateQuery: any = {
+      eq: projectEqSpy,
+      in: vi.fn(() => projectUpdateQuery),
+      then: (resolve: (value: unknown) => unknown, reject?: (reason: unknown) => unknown) =>
+        Promise.resolve({ error: null }).then(resolve, reject),
+    };
+
+    vi.mocked(createAdminClient).mockReturnValue({
+      from: vi.fn((table: string) => {
+        if (table === 'custom_verification_requests') {
+          return {
+            select: vi.fn(() => customRequestSelectQuery),
+            update: vi.fn(() => simpleUpdateQuery),
+          };
+        }
+
+        if (table === 'custom_verification_request_items') {
+          return {
+            update: vi.fn(() => simpleUpdateQuery),
+          };
+        }
+
+        if (table === 'skill_verification_requests') {
+          return {
+            update: vi.fn(() => simpleUpdateQuery),
+          };
+        }
+
+        if (table === 'experiences') {
+          return {
+            update: vi.fn(() => experienceUpdateQuery),
+          };
+        }
+
+        if (table === 'projects') {
+          return {
+            update: vi.fn(() => projectUpdateQuery),
+          };
+        }
+
+        return {
+          update: vi.fn(() => simpleUpdateQuery),
+        };
+      }),
+    } as any);
+
+    const response = await postVerifyCustom(
+      new NextRequest('http://localhost/api/verify/custom/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'accept' }),
+      }),
+      {
+        params: Promise.resolve({ token: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' }),
+      }
+    );
+
+    expect(response.status).toBe(200);
+    expect(experienceEqSpy).toHaveBeenCalledWith('user_id', 'requester-1');
+    expect(projectEqSpy).toHaveBeenCalledWith('user_id', 'requester-1');
+  });
+
   it('returns 400 for invalid custom verify token on GET', async () => {
     vi.mocked(createAdminClient).mockReturnValue({ from: vi.fn() } as any);
 

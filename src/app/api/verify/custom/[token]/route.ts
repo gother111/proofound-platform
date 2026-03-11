@@ -42,6 +42,7 @@ type CustomRequestGetRow = {
 
 type CustomRequestPostRow = {
   id: string;
+  requester_profile_id: string;
   status: string;
   expires_at: string;
   custom_verification_request_items?: CustomRequestItemRow[] | null;
@@ -258,6 +259,7 @@ export async function POST(
       .select(
         `
         id,
+        requester_profile_id,
         status,
         expires_at,
         custom_verification_request_items (
@@ -370,6 +372,7 @@ export async function POST(
         await admin
           .from('experiences')
           .update({ verified: true, updated_at: nowIso })
+          .eq('user_id', customRequest.requester_profile_id)
           .in('id', idsByType.experience);
       }
 
@@ -377,6 +380,7 @@ export async function POST(
         await admin
           .from('education')
           .update({ verified: true, updated_at: nowIso })
+          .eq('user_id', customRequest.requester_profile_id)
           .in('id', idsByType.education);
       }
 
@@ -384,6 +388,7 @@ export async function POST(
         await admin
           .from('impact_stories')
           .update({ verified: true, updated_at: nowIso })
+          .eq('user_id', customRequest.requester_profile_id)
           .in('id', idsByType.impact_story);
       }
 
@@ -396,6 +401,7 @@ export async function POST(
             verification_source: 'custom_request',
             updated_at: nowIso,
           })
+          .eq('user_id', customRequest.requester_profile_id)
           .in('id', idsByType.project);
       }
 
@@ -403,6 +409,7 @@ export async function POST(
         await admin
           .from('volunteering')
           .update({ verified: true, updated_at: nowIso })
+          .eq('user_id', customRequest.requester_profile_id)
           .in('id', idsByType.volunteering);
       }
     }
