@@ -8,7 +8,7 @@ permissions:
 
 concurrency:
   group: retry-vercel-production-deploy
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   retry-deploy:
@@ -20,9 +20,22 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
       - name: Read repository head SHA
         id: repo
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Delete stale production deployments
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_CANONICAL_PROJECT: proofound-platform
+        run: npm run vercel:cancel-stale -- --apply --target production --branch master --limit 100
 
       - name: Read production health SHA
         id: live
@@ -35,13 +48,67 @@ jobs:
           )"
           echo "sha=${live_sha}" >> "$GITHUB_OUTPUT"
 
+      - name: Detect active production deployment for repository SHA
+        id: pending
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_CANONICAL_PROJECT: proofound-platform
+          REPO_SHA: ${{ steps.repo.outputs.sha }}
+        run: |
+          node - <<'NODE' >> "$GITHUB_OUTPUT"
+          (async () => {
+            const token = process.env.VERCEL_TOKEN;
+            const projectId = process.env.VERCEL_PROJECT_ID;
+            const repoSha = process.env.REPO_SHA;
+
+            if (!token || !projectId || !repoSha) {
+              console.log('exists=false');
+              return;
+            }
+
+            const query = new URLSearchParams({
+              projectId,
+              limit: '100',
+              target: 'production',
+            });
+
+            const response = await fetch(`https://api.vercel.com/v6/deployments?${query.toString()}`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+
+            if (!response.ok) {
+              console.log('exists=false');
+              return;
+            }
+
+            const json = await response.json();
+            const hasActiveDeploy = (json.deployments ?? []).some((deployment) => {
+              const state = String(deployment.readyState || '').toUpperCase();
+              return (
+                deployment.source === 'git' &&
+                deployment.meta?.githubCommitRef === 'master' &&
+                deployment.meta?.githubCommitSha === repoSha &&
+                ['BUILDING', 'INITIALIZING', 'QUEUED'].includes(state)
+              );
+            });
+
+            console.log(`exists=${hasActiveDeploy ? 'true' : 'false'}`);
+          })().catch(() => {
+            console.log('exists=false');
+          });
+          NODE
+
       - name: Print sync status
         run: |
           echo "Repo SHA: ${{ steps.repo.outputs.sha }}"
           echo "Live SHA: ${{ steps.live.outputs.sha }}"
+          echo "Active deploy for repo SHA: ${{ steps.pending.outputs.exists }}"
 
       - name: Trigger production deploy
-        if: steps.repo.outputs.sha != steps.live.outputs.sha
+        if: steps.repo.outputs.sha != steps.live.outputs.sha && steps.pending.outputs.exists != 'true'
         env:
           VERCEL_CLI_VERSION: 41.7.3
           VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}

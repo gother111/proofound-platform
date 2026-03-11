@@ -1,12 +1,13 @@
 import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
-const isVercelBuild = process.env.VERCEL === '1' || Boolean(process.env.VERCEL_ENV);
-const shouldCleanupCache = process.env.NEXT_CLEAN_BUILD_CACHE === '1' || isVercelBuild;
+const shouldCleanupCache =
+  process.env.NEXT_CLEAN_BUILD_CACHE === '1' ||
+  process.env.NEXT_CLEAN_BUILD_CACHE === 'true';
 
 async function removeNextCache() {
   if (!shouldCleanupCache) {
-    console.log('ℹ️ Skipping Next.js cache cleanup outside Vercel build context.');
+    console.log('ℹ️ Skipping Next.js cache cleanup. Set NEXT_CLEAN_BUILD_CACHE=1 to force it.');
     return;
   }
 

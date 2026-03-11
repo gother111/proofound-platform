@@ -72,6 +72,8 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - `.github/workflows/retry-vercel-deploy.yml`
 - Required GitHub secret:
   - `VERCEL_DEPLOY_HOOK_URL` (production deploy hook URL for `proofound-platform`)
+- If the project has multiple queued or building deployments for the same branch, prune the stale ones before retrying:
+  - `npm run vercel:cancel-stale -- --apply --target production --branch master`
 - Validate live commit after pushing to `master`:
   - `curl -sS https://proofound.io/api/health`
   - Expect `version` in response to match the latest `master` commit SHA.
