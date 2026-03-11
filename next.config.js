@@ -4,8 +4,13 @@ import { withSentryConfig } from '@sentry/nextjs';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 const isVercelBuild = process.env.VERCEL === '1' || Boolean(process.env.VERCEL_ENV);
+const isVercelProductionBuild = isVercelBuild && process.env.VERCEL_ENV === 'production';
 const skipBuildValidation = process.env.NEXT_SKIP_BUILD_VALIDATION === '1' || isVercelBuild;
+const disableVercelWebpackFileSystemCache =
+  isVercelBuild && process.env.NEXT_DISABLE_VERCEL_WEBPACK_CACHE !== '0';
 const widenSentryClientUpload = process.env.SENTRY_WIDEN_CLIENT_FILE_UPLOAD === '1';
+const disableSentryProductionBuildArtifacts =
+  isVercelProductionBuild && process.env.SENTRY_ENABLE_BUILD_SOURCEMAPS !== '1';
 const sentryBuildArtifacts = [
   '.next/server/app/**/*.js',
   '.next/server/app/**/*.js.map',
@@ -53,6 +58,11 @@ const nextConfig = {
     ],
   },
   webpack: (config, { isServer }) => {
+    if (disableVercelWebpackFileSystemCache) {
+      // Vercel was restoring multi-GB pack files and OOMing before webpack finished.
+      config.cache = false;
+    }
+
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -123,6 +133,7 @@ export default withSentryConfig(config, {
   // uploading hundreds of extra client source maps. Opt in only when needed.
   widenClientFileUpload: widenSentryClientUpload,
   sourcemaps: {
+    disable: disableSentryProductionBuildArtifacts,
     assets: sentryBuildArtifacts,
     ignore: sentryIgnoredArtifacts,
   },
