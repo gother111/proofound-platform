@@ -40,13 +40,6 @@ export function resolvePythonInternalServiceBaseUrl(request?: Request | NextRequ
 
   if (request) {
     if ('nextUrl' in request) {
-      const forwardedProto = request.headers.get('x-forwarded-proto');
-      const forwardedHost = request.headers.get('x-forwarded-host');
-
-      if (forwardedProto && forwardedHost) {
-        return `${forwardedProto}://${forwardedHost}`;
-      }
-
       return request.nextUrl.origin;
     }
 
