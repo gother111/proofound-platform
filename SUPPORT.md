@@ -1,280 +1,132 @@
 # Proofound Support
 
-Welcome to Proofound! We're here to help you succeed on the platform.
+> Scope note: support guidance follows `Proofound_Project_Specification_2026-03-11.md` first, then the active PRD, technical requirements, and launch runbook.
 
----
+Proofound support covers account access, proof-building, portfolio publication, privacy-safe matching, and organization review workflows.
 
-## 📧 Contact Us
+## Contact
 
-### Email Support
-**hello@proofound.io**
+- Email: `hello@proofound.io`
+- Response window: within 24 hours on business days
+- Best for: account issues, bug reports, export or deletion requests, and launch-scope workflow questions
 
-- **Response time:** Within 24 hours (Monday-Friday, 9 AM - 6 PM UTC)
-- **Best for:** General questions, bug reports, feature requests, account issues
+## Common Help
 
-### In-App Chat
-Click the chat widget in the bottom-right corner (available Monday-Friday, 9 AM - 6 PM UTC)
+### I did not receive the verification email
 
-- **Response time:** Within 15 minutes during business hours
-- **Best for:** Quick questions, real-time help
+1. Check spam or junk.
+2. Add `hello@proofound.io` to contacts.
+3. Request a fresh email from the relevant sign-in or verification screen.
+4. If it still does not arrive, email support with the address you used.
 
----
+### I forgot my password
 
-## 🆘 Common Issues & Solutions
+1. Open `/login`.
+2. Choose `Forgot password?`.
+3. Submit your email address.
+4. Use the reset link from your inbox.
 
-### Authentication & Account
+### How do I delete my account?
 
-<details>
-<summary><strong>I didn't receive the verification email</strong></summary>
+1. Go to `Settings -> Account -> Delete Account`.
+2. Confirm the deletion request.
+3. Public projections are removed immediately and residual retention follows the platform deletion policy.
 
-1. Check your spam/junk folder
-2. Add hello@proofound.io to your contacts
-3. Try resending the verification email: [Resend verification](https://proofound.io/resend-verification)
-4. Still no luck? Contact us at hello@proofound.io with your email address
+### Why am I not seeing matches yet?
 
-</details>
+Check the launch-safe readiness path:
 
-<details>
-<summary><strong>I forgot my password</strong></summary>
+1. Make sure your portfolio basics are in place.
+   Add a clear headline, short summary, and the context you want reviewed.
+2. Build at least one usable Proof Pack.
+   Add 1 to 3 concrete proofs, outcomes, or artifacts that support a real capability claim.
+3. Confirm matching preferences and logistics.
+   Availability, work mode, timezone band, and assignment fit all affect visibility.
+4. Check whether you are still in a fallback or trust-pending state.
+   Proofound keeps matching blind-by-default and will pause stronger actions rather than overstate readiness.
 
-1. Go to [proofound.io/login](https://proofound.io/login)
-2. Click "Forgot password?"
-3. Enter your email address
-4. Check your email for the reset link (may take up to 5 minutes)
-5. Click the link and enter your new password
+Portfolio-ready is the easy day-1 win. Intro-eligible is a stricter threshold and may take more proof or trust signals.
 
-**Note:** If you don't receive the email, check your spam folder and try again in 5 minutes.
+### How do I get portfolio-ready?
 
-</details>
+For individuals:
 
-<details>
-<summary><strong>How do I delete my account?</strong></summary>
+1. Add a concise headline and summary.
+2. Build at least one strong Proof Pack with evidence and outcomes.
+3. Set your matching preferences and practical constraints.
+4. Review visibility so the right surfaces are shareable without oversharing.
+5. Publish your public portfolio if you want a direct-link trust surface.
 
-1. Go to **Settings** → **Account** → **Delete Account**
-2. Confirm deletion (this is permanent and cannot be undone)
-3. All your data will be deleted within 30 days per GDPR requirements
+For organizations:
 
-**Before you go:** Is something not working? We'd love to help fix it! Email us at hello@proofound.io
+1. Complete the public trust profile.
+2. Add your first assignment.
+3. Confirm the review team and roles.
+4. Publish only when the assignment is ready for blind-by-default review.
 
-</details>
+### How do I improve trust without oversharing?
 
----
+Use scoped verification and better proof quality:
 
-### Profile & Matching
+1. Attach clearer evidence to the specific claim or outcome.
+2. Request the narrowest useful trust signal, such as peer attestation or org-linked confirmation.
+3. Keep contact details and direct identity-bearing fields private until the workflow reaches the right reveal stage.
 
-<details>
-<summary><strong>Why aren't I seeing any matches?</strong></summary>
+## Messaging and Interviews
 
-A few things to check:
+### How does messaging work?
 
-1. **Is your profile complete?**
-   - At least 5 skills added (Expertise → Add Skills)
-   - Bio and professional headline filled out (Profile → Basics)
-   - Matching preferences set (Matching → Preferences)
+Proofound uses blind-by-default progressive reveal:
 
-2. **Have you activated your profile?**
-   - Go to Profile → Click "Activate Profile"
+1. Early review keeps identity, contact details, and other bias-sensitive signals hidden.
+2. Contextual reveal happens only when the workflow and consent allow it.
+3. Intro-approved and interview-coordination stages expose only the information needed for the next safe action.
 
-3. **Are there assignments in your area/skills?**
-   - Browse Matching Hub → Filter by location and skills
+### How do I schedule an interview?
 
-4. **Are your matching preferences too narrow?**
-   - Settings → Preferences → Adjust filters
+1. Open the relevant intro or review thread.
+2. Move to the interview coordination step.
+3. Choose a time and add the meeting details.
+4. Use the live provider path supported by the current launch contract, or add a manual meeting link if needed.
 
-If everything looks good, it may just take time for new assignments to be posted. We'll notify you as soon as new matches are available!
+Interview scheduling is available only after the workflow reaches the correct reveal stage.
 
-</details>
+## Privacy and Data
 
-<details>
-<summary><strong>How do I complete my profile?</strong></summary>
+### Who can see my profile?
 
-**For Individuals:**
-1. Add professional headline and bio (**Profile** → **Basics**)
-2. Add at least 5 skills (**Expertise** → **Add Skills**)
-3. Add work experience (**Profile** → **Experience**)
-4. Fill out mission and values (**Profile** → **Purpose**)
-5. Set matching preferences (**Matching** → **Preferences**)
+Proofound separates public publication from matching visibility:
 
-**For Organizations:**
-1. Complete organization profile (**Profile** → **Edit**)
-2. Add mission, vision, and values (**Profile** → **Purpose**)
-3. Create your first assignment (**Assignments** → **New Assignment**)
-4. Publish the assignment to start receiving matches
+- Public portfolio:
+  an explicit publication surface for portfolio-safe content
+- Matching review:
+  blind-by-default and reveal-gated
+- Private owner surfaces:
+  full editing, trust history, and export controls
 
-</details>
+Public publication does not automatically widen what organizations see during blind review.
 
-<details>
-<summary><strong>How do I add or edit skills?</strong></summary>
+### How do I export my data?
 
-1. Go to **Expertise** → **Add Skills**
-2. Search for skills or browse by category
-3. Select skills that match your expertise
-4. Click "Add to Profile"
-5. (Optional) Request verification from a trusted contact
+1. Go to `Settings -> Privacy -> Data Rights`.
+2. Request an export.
+3. Use the email link when it arrives.
 
-**Tip:** Add at least 5-10 skills for better matching!
+The export includes the data allowed by the current export policy, not hidden internal review notes or protected verifier data.
 
-</details>
+### Is my data secure?
 
----
+- Data is encrypted at rest and in transit.
+- The platform is privacy-first and blind-by-default in matching.
+- Proof and trust signals are scoped rather than flattened into one broad verified claim.
+- Public publication and private review are kept separate.
 
-### Messaging & Interviews
+## Bug Reports and Feature Requests
 
-<details>
-<summary><strong>How does messaging work?</strong></summary>
+- Report bugs to `hello@proofound.io` with the action you took, the result you saw, and your browser or device.
+- Send feature requests to `hello@proofound.io` with the problem you are trying to solve and the workflow where it appears.
 
-Proofound uses **staged identity reveal** to protect your privacy:
+## Support Hours
 
-**Stage 1 (Before acceptance):**
-- Messages are basic text only (no links, attachments, or images)
-- 500 character limit per message
-- Your full identity is masked (only basic info shared)
-
-**Stage 2 (After mutual acceptance):**
-- Full identity revealed
-- Schedule interviews
-- Exchange contact information
-
-**Why?** This prevents spam, phishing, and premature identity sharing.
-
-</details>
-
-<details>
-<summary><strong>How do I schedule an interview?</strong></summary>
-
-1. Go to your **Conversations** tab
-2. Open the conversation with the person you want to interview
-3. Click "Schedule Interview"
-4. Choose a date/time (within 7 days, max 30 minutes)
-5. Select video platform (Zoom or Google Meet)
-6. Send invitation
-
-**Note:** You can only schedule interviews after mutual match acceptance.
-
-</details>
-
----
-
-### Privacy & Data
-
-<details>
-<summary><strong>Who can see my profile?</strong></summary>
-
-You control profile visibility in **Settings** → **Privacy**:
-
-- **Public:** Anyone can see your profile
-- **Matches Only:** Only people you match with can see your full profile
-- **Private:** Your profile is hidden (won't appear in matches)
-
-By default, your profile visibility is **Matches Only** for privacy.
-
-</details>
-
-<details>
-<summary><strong>How do I export my data? (GDPR)</strong></summary>
-
-Under GDPR, you have the right to access your personal data:
-
-1. Go to **Settings** → **Privacy** → **Data Rights**
-2. Click "Request Data Export"
-3. You'll receive a download link via email within 30 days
-4. The link expires in 7 days
-
-**What's included:**
-- Profile information
-- Skills and expertise data
-- Matches and applications
-- Messages (with identities masked)
-- Account activity logs
-
-</details>
-
-<details>
-<summary><strong>Is my data secure?</strong></summary>
-
-Yes! We take your privacy seriously:
-
-- ✅ **Encrypted:** All data is encrypted at rest and in transit
-- ✅ **GDPR compliant:** Full data rights (access, export, deletion)
-- ✅ **No selling:** We never sell your data to third parties
-- ✅ **Minimal tracking:** We only track what's needed for the platform to work
-- ✅ **Private by default:** Staged identity reveal protects your privacy
-
-Learn more: [Privacy Policy](https://proofound.io/privacy)
-
-</details>
-
----
-
-## 🐛 Report a Bug
-
-Found a bug? We want to know!
-
-**Email us:** hello@proofound.io
-
-**Please include:**
-1. What were you trying to do?
-2. What happened instead?
-3. What browser/device are you using?
-4. Screenshot (if possible)
-
-We'll log it as a bug and update you on the fix timeline.
-
----
-
-## 💡 Request a Feature
-
-Have an idea to improve Proofound? We'd love to hear it!
-
-**Email us:** hello@proofound.io with "Feature Request" in the subject
-
-**Tell us:**
-1. What feature you'd like to see
-2. Why it would be useful
-3. How you'd use it
-
-We review all feature requests and consider them for our roadmap.
-
----
-
-## 📚 Help Center
-
-Visit our Help Center for more guides and tutorials:
-
-**[proofound.io/help](https://proofound.io/help)** (coming soon)
-
----
-
-## ⏰ Support Hours
-
-- **Email:** 24/7 (responses within 24 hours, Monday-Friday)
-- **In-App Chat:** Monday-Friday, 9 AM - 6 PM UTC
-- **Emergency:** For critical issues (site down, data loss), email hello@proofound.io with "URGENT" in the subject
-
----
-
-## 🌍 Community
-
-Join the Proofound community:
-
-- **Twitter:** [@proofound](https://twitter.com/proofound) (coming soon)
-- **LinkedIn:** [Proofound](https://linkedin.com/company/proofound) (coming soon)
-- **Discord:** [Community Server](https://discord.gg/proofound) (coming soon)
-
----
-
-## 📖 Additional Resources
-
-- **Privacy Policy:** [proofound.io/privacy](https://proofound.io/privacy)
-- **Terms of Service:** [proofound.io/terms](https://proofound.io/terms)
-- **Product Updates:** [proofound.io/changelog](https://proofound.io/changelog) (coming soon)
-
----
-
-**Still need help?**  
-Email us at **hello@proofound.io** - we're here to help!
-
----
-
-**Last Updated:** November 5, 2025
-
+- Email support: monitored daily on business days
+- Critical issues: include `URGENT` in the subject line

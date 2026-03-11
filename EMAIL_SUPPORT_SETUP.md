@@ -23,18 +23,21 @@
 ### Provider Options
 
 **Option A: Google Workspace (Recommended)**
+
 - **Cost:** $6/user/month
 - **Features:** Gmail interface, 30GB storage, custom domain
 - **Setup:** Add hello@proofound.io as an alias or separate user
 - **Link:** https://workspace.google.com
 
 **Option B: ProtonMail**
+
 - **Cost:** Free (1 custom domain) or $3.99/month
 - **Features:** Privacy-focused, custom domain
 - **Setup:** Configure hello@proofound.io
 - **Link:** https://proton.me/mail
 
 **Option C: Zoho Mail**
+
 - **Cost:** Free (5 users) or $1/user/month
 - **Features:** Ad-free, custom domain
 - **Setup:** Add hello@proofound.io mailbox
@@ -125,6 +128,7 @@ Need faster support? Use our in-app chat (available Mon-Fri 9 AM - 6 PM UTC).
 **Subject:** Re: Password reset help
 
 **Body:**
+
 ```
 Hi [Name],
 
@@ -154,6 +158,7 @@ Proofound Team
 **Subject:** Re: How to complete my profile?
 
 **Body:**
+
 ```
 Hi [Name],
 
@@ -161,18 +166,18 @@ Great question! Here's your step-by-step guide to completing your profile:
 
 **For Individuals:**
 1. Add your professional headline and bio (Profile → Basics)
-2. Add at least 5 skills (Expertise → Add Skills)
-3. Add your work experience (Profile → Experience)
+2. Build at least one strong Proof Pack with evidence and outcomes
+3. Add the experience or context that supports that proof
 4. Fill out your mission and values (Profile → Purpose)
-5. Set your matching preferences (Matching → Preferences)
+5. Set your matching preferences and practical constraints (Matching → Preferences)
 
-Once you complete these steps, your profile will be "ready to match" and you'll start seeing opportunities.
+The day-1 goal is to become portfolio-ready with a clear, shareable trust surface. Intro-eligible is a stricter later state and may require stronger proof or scoped trust signals.
 
 **For Organizations:**
 1. Complete your organization profile (Profile → Edit)
 2. Add your mission, vision, and values (Profile → Purpose)
 3. Create your first assignment (Assignments → New Assignment)
-4. Publish the assignment to start receiving matches
+4. Publish the assignment when it is ready for blind-by-default review
 
 Need help with a specific step? Just reply to this email.
 
@@ -188,6 +193,7 @@ Proofound Team
 **Subject:** Re: [Bug Description]
 
 **Body:**
+
 ```
 Hi [Name],
 
@@ -227,6 +233,7 @@ Bug Details (for our records):
 **Subject:** Re: Feature request - [Feature Name]
 
 **Body:**
+
 ```
 Hi [Name],
 
@@ -261,6 +268,7 @@ Have more ideas? We'd love to hear them: just reply to this email.
 **Subject:** Re: Account deletion request
 
 **Body:**
+
 ```
 Hi [Name],
 
@@ -292,6 +300,7 @@ Your privacy matters to us. Learn more: https://proofound.io/privacy
 **Subject:** Re: Data export request (GDPR)
 
 **Body:**
+
 ```
 Hi [Name],
 
@@ -329,6 +338,7 @@ Learn more about your data rights: https://proofound.io/privacy
 **Subject:** Re: [Original Subject]
 
 **Body:**
+
 ```
 Hi [Name],
 
@@ -356,16 +366,19 @@ Quick links:
 ### Google Workspace Forwarding
 
 **Option A: Forward all to both Pavlo and Yurii**
+
 1. Go to Settings → Forwarding and POP/IMAP
 2. Add forwarding address: pavlo@proofound.io, yurii@proofound.io
 3. Confirm forwarding via email
 
 **Option B: Filters for auto-routing**
+
 1. Technical keywords → Yurii
 2. Product/UX keywords → Pavlo
 3. All others → Both
 
 **Filter Example (Technical → Yurii):**
+
 ```
 From: *
 To: hello@proofound.io
@@ -374,6 +387,7 @@ Action: Forward to yurii@proofound.io, Skip Inbox
 ```
 
 **Filter Example (Product → Pavlo):**
+
 ```
 From: *
 To: hello@proofound.io
@@ -388,28 +402,33 @@ Action: Forward to pavlo@proofound.io, Skip Inbox
 ### Daily Email Triage (9 AM UTC)
 
 **Step 1: Review Inbox (5 min)**
+
 - Check hello@proofound.io for new emails
 - Count: How many new emails?
 - Categorize: Bug / Question / Feature Request / Other
 
 **Step 2: Prioritize (2 min)**
+
 - **P0 (Urgent):** Site down, data loss, security issue → Respond immediately
 - **P1 (High):** Feature broken, login issue → Respond within 4 hours
 - **P2 (Medium):** General question, minor bug → Respond within 24 hours
 - **P3 (Low):** Feature request, feedback → Respond within 1 week
 
 **Step 3: Assign Owner (1 min)**
+
 - Technical issues → Yurii
 - Product/UX questions → Pavlo
 - General inquiries → Whoever is available
 
 **Step 4: Respond (varies)**
+
 - Use email templates for common issues
 - Personalize greeting and closing
 - Keep responses friendly and concise
 - Offer next steps or alternatives
 
 **Step 5: Track (1 min)**
+
 - Log email in support tracker (spreadsheet or Linear)
 - Mark as: New / In Progress / Waiting / Resolved
 - Set follow-up reminder if needed
@@ -430,12 +449,12 @@ Action: Forward to pavlo@proofound.io, Skip Inbox
 
 ### Response Time SLAs
 
-| Priority | Response Time | Resolution Time | Owner |
-|----------|--------------|-----------------|-------|
-| **P0 - Urgent** | 1 hour | Same day | Yurii |
-| **P1 - High** | 4 hours | 1-2 days | Yurii |
-| **P2 - Medium** | 24 hours | 3-5 days | Pavlo/Yurii |
-| **P3 - Low** | 1 week | 2-4 weeks | Pavlo |
+| Priority        | Response Time | Resolution Time | Owner       |
+| --------------- | ------------- | --------------- | ----------- |
+| **P0 - Urgent** | 1 hour        | Same day        | Yurii       |
+| **P1 - High**   | 4 hours       | 1-2 days        | Yurii       |
+| **P2 - Medium** | 24 hours      | 3-5 days        | Pavlo/Yurii |
+| **P3 - Low**    | 1 week        | 2-4 weeks       | Pavlo       |
 
 ---
 
@@ -444,6 +463,7 @@ Action: Forward to pavlo@proofound.io, Skip Inbox
 ### Issue: "I didn't receive the verification email"
 
 **Quick Response:**
+
 ```
 Hi [Name],
 
@@ -462,6 +482,7 @@ Best,
 ### Issue: "Why aren't I seeing any matches?"
 
 **Quick Response:**
+
 ```
 Hi [Name],
 
@@ -482,6 +503,7 @@ Best,
 ### Issue: "How do I delete my account?"
 
 **Quick Response:**
+
 ```
 Hi [Name],
 
@@ -501,6 +523,7 @@ Best,
 ### Issue: "I think I found a bug"
 
 **Quick Response:**
+
 ```
 Hi [Name],
 
@@ -521,6 +544,7 @@ Best,
 ### Issue: "Can you add [feature]?"
 
 **Quick Response:**
+
 ```
 Hi [Name],
 
@@ -539,6 +563,7 @@ Best,
 ## Appendix A: Email Signature
 
 **Standard Signature:**
+
 ```
 Best regards,
 [Pavlo Samoshko / Yurii Bakurov]
@@ -555,6 +580,7 @@ Privacy Policy: https://proofound.io/privacy
 ## Appendix B: Email Etiquette
 
 **Guidelines:**
+
 1. **Tone:** Friendly, helpful, professional (not corporate)
 2. **Length:** Keep responses concise (max 200 words)
 3. **Personalization:** Use user's name, reference their specific issue
@@ -563,6 +589,7 @@ Privacy Policy: https://proofound.io/privacy
 6. **Follow-up:** Set reminder to follow up if no response in 3 days
 
 **Examples:**
+
 - ✅ Good: "Hi Maria, sorry for the confusion! Here's how..."
 - ❌ Bad: "Dear User, per your inquiry regarding..."
 
@@ -571,6 +598,7 @@ Privacy Policy: https://proofound.io/privacy
 ## Appendix C: Escalation Path
 
 **When to escalate:**
+
 - User threatens legal action
 - Data breach or security concern
 - Repeated complaints (3+ emails about same issue)
@@ -579,6 +607,7 @@ Privacy Policy: https://proofound.io/privacy
 - Angry user (3+ frustrated emails)
 
 **How to escalate:**
+
 - Forward email to Pavlo (CEO) with context
 - Mark as "Escalation" in support tracker
 - Respond to user: "I'm looping in our CEO to address this personally"
@@ -587,9 +616,9 @@ Privacy Policy: https://proofound.io/privacy
 
 ## Document Revision History
 
-| Date | Version | Changes | Author |
-|------|---------|---------|--------|
-| Nov 5, 2025 | 1.0 | Initial email support guide | Yurii Bakurov |
+| Date        | Version | Changes                     | Author        |
+| ----------- | ------- | --------------------------- | ------------- |
+| Nov 5, 2025 | 1.0     | Initial email support guide | Yurii Bakurov |
 
 ---
 
@@ -601,4 +630,3 @@ Privacy Policy: https://proofound.io/privacy
 
 **Questions?**  
 Contact: yurii@proofound.io or pavlo@proofound.io
-

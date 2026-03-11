@@ -1,24 +1,26 @@
 # Proofound Platform MVP
 
 > Doc Class: `active`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-03-11`
 
-Production-ready scaffold for a credibility and connection platform with Individual and Organization personas.
+Production-ready scaffold for a proof-first, privacy-first, portfolio-first credibility and hiring platform with one individual side and one organization side.
 
 ## Overview
 
 Proofound is a platform built for authenticity, not algorithms. It features:
 
-- **Dual Personas**: Individual contributors and Organizations (companies, NGOs, governments, networks)
-- **Proof-first Profiles**: Verifiable achievements and transparent operations
-- **Privacy by Design**: Row-level security, user-controlled visibility
-- **Steward-owned Governance**: Built for long-term sustainability
+- **Two MVP Corridors**: One clean Individual corridor and one clean Organization corridor
+- **Proof-first, Portfolio-first Profiles**: Verifiable achievements, public trust surfaces, and structured evidence of real work
+- **Privacy by Design**: Blind-by-default review, progressive reveal, row-level security, and user-controlled visibility
+- **Calm, Launchable Scope**: One clean individual side, one clean organization side, and no launch drift into ATS, HRIS, public-directory, or social-feed behavior
 
 Launch contract highlights:
 
+- The top source of truth is `Proofound_Project_Specification_2026-03-11.md`.
 - Interactive web auth uses Supabase SSR session cookies.
 - Public portfolio publication is explicit and non-indexed by default until publication criteria are met.
 - Uploads are quarantine-first and private by default, with public promotion limited to approved safe image types.
+- MVP excludes ATS or HRIS replacement, public people directories, open candidate indexes, and social or feed-driven product behavior.
 
 ## Visual Architecture (quick view)
 
@@ -60,7 +62,8 @@ flowchart LR
 
 ## Documentation map
 
-- Canonical launch contract: `PRD_TECHNICAL_REQUIREMENTS.md` Section 7, `project/Architecture.md`, `LAUNCH_RUNBOOK.md`, `PRODUCTION_CHECKLIST.md`.
+- Canonical launch contract precedence: `Proofound_Project_Specification_2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.md`, `PRD_for_a_web_platform_MVP.master-latest.md`, `LAUNCH_RUNBOOK.md`.
+- Repo-grounded architecture and implementation snapshots: `project/Architecture.md`, `README.md`, `PRODUCTION_CHECKLIST.md`.
 - Historical architecture context only: `SYSTEM_ARCHITECTURE_COMPREHENSIVE.md`, `SYSTEM_ARCHITECTURE_SUPPLEMENT.md`, `PRD_for_a_web_platform_MVP.md`.
 - APIs: `docs/API_REFERENCE.md` (generated from `src/app/api/**/route.ts` via `node scripts/generate-api-reference.mjs`; historical API specs remain archived under `docs/archive/legacy-platform/api-reference-history/`).
 - Runbooks: `LAUNCH_RUNBOOK.md`, `PRODUCTION_CHECKLIST.md`, `APPLY_MIGRATIONS_MANUAL.md`, `RUN_MIGRATIONS_GUIDE.md`, `OAUTH_SETUP_GUIDE.md`, `SETUP_SUPABASE.md`.
@@ -362,7 +365,7 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
 - `profiles` - User profiles (extends Supabase auth.users)
 - `individual_profiles` - Individual-specific data
 - `organizations` - Organization entities
-- `organization_members` - Membership with roles (owner/admin/member/viewer)
+- `organization_members` - Membership with canonical roles (`org_owner`, `org_manager`, `org_reviewer`)
 - `org_invitations` - Pending invitations
 - `audit_logs` - Audit trail for important actions
 - `feature_flags` - Feature toggle system

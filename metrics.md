@@ -1,10 +1,81 @@
 > Doc Class: `governance`
 > Sync Pair: `Documentation.md`
-> Last Verified: `2026-03-10`
+> Last Verified: `2026-03-11`
 
 # Documentation (Status + Index)
 
 ## Status
+
+## 2026-03-11: Rebased docs to the Project Specification source stack
+
+What changed:
+
+- Added `Proofound_Project_Specification_2026-03-11.md` plus the three aligned rewrite snapshots to the repo.
+- Rebased the stable canonical docs and active governance surfaces onto the new source stack.
+- Marked `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md` as superseded historical context rather than the active top authority.
+
+Why:
+
+- The source-of-truth stack changed. Active docs could not keep pointing to the old locked-MVP-first precedence without creating contradictory governance.
+
+How to verify:
+
+- `npm run docs:freshness`
+- `npm run lint`
+- `npm run typecheck`
+- `rg -n "Proofound_MVP_Locked_Source_of_Truth_2026-03-11|locked MVP doc first|locked launch contract lives" --glob '*.md'`
+- `rg -n "Proofound_Project_Specification_2026-03-11" README.md project/Prompt.md project/Architecture.md project/Plans.md PRD_TECHNICAL_REQUIREMENTS.md PRD_for_a_web_platform_MVP.master-latest.md LAUNCH_RUNBOOK.md docs/launch-operations-mvp.md docs/verification-policy-mvp.md SUPPORT.md IDENTITY_VERIFICATION_IMPLEMENTATION.md MCP_STATUS.md docs/DOCS_REGISTRY.md`
+
+Open risks/TODO:
+
+- Historical audits, prior change logs, and archived mirrors will still mention the old locked source stack. That is acceptable as historical context and should not be rewritten mechanically.
+
+## 2026-03-11: Follow-up missed-doc reconciliation
+
+What changed:
+
+- Tightened the remaining non-archived implementation and ops docs that still used pre-lock support or verification language, including `EMAIL_SUPPORT_SETUP.md`, `docs/LINKEDIN_VERIFICATION_SETUP.md`, `docs/DATA_PROCESSING_AGREEMENTS.md`, and `docs/SUPABASE_MCP_SETUP.md`.
+- Downgraded `Proofound_Core_User_Flows_v1.md` with a reference-only banner and removed the remaining broad verified-badge phrasing.
+- Normalized obvious legacy examples in the architecture reference docs and added the previously orphaned audit and runbook files to `docs/DOCS_REGISTRY.md`.
+
+Why:
+
+- The first pass aligned the main canonical chain, but adjacent non-archived docs could still leak old MVP assumptions around verification, government scope, or skills-first readiness.
+
+How to verify:
+
+- `npm run docs:freshness`
+- `npm run lint`
+- `npm run typecheck`
+- `rg -n "at least 5 skills|Activate Profile|Verified badge|verified badge|staged identity reveal|Veriff" --glob '*.md' --glob '!docs/archive/**'`
+- `rg -n "ATS|HRIS|marketplace|government" --glob '*.md' --glob '!docs/archive/**'`
+
+Open risks/TODO:
+
+- Some remaining grep hits will still appear in the locked MVP file itself, in explicit exclusions, in vendor URLs, or in historical and reference context. Those should stay intentional and not be removed mechanically.
+
+## 2026-03-11: Locked MVP source-of-truth reconciliation
+
+What changed:
+
+- Added `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md` to the repo and updated active docs so launch precedence now starts there.
+- Rewrote active summaries and support or verification notes to match the locked MVP scope, especially around proof-first corridors, blind-by-default review, and scoped verification.
+- Added non-canonical banners to older reference specs and refreshed `docs/DOCS_REGISTRY.md` to reflect the new precedence and verification dates.
+
+Why:
+
+- Non-archived docs were still competing with the locked MVP scope and could widen launch expectations if read in isolation.
+
+How to verify:
+
+- `npm run docs:freshness`
+- `npm run lint`
+- `npm run typecheck`
+- `rg -n "Proofound_MVP_Locked_Source_of_Truth_2026-03-11|public people index|ATS|HRIS|Activate Profile|at least 5 skills|Verified badge" README.md project/Prompt.md project/Architecture.md project/Plans.md PRD_TECHNICAL_REQUIREMENTS.md PRD_for_a_web_platform_MVP.master-latest.md PRD_for_a_web_platform_MVP.md LAUNCH_RUNBOOK.md docs/launch-operations-mvp.md Proofound_PRD_MVP.md SUPPORT.md IDENTITY_VERIFICATION_IMPLEMENTATION.md MCP_STATUS.md docs/verification-policy-mvp.md`
+
+Open risks/TODO:
+
+- Additional non-archived legacy docs outside this pass may still contain older scope language and should either be narrowed or archived in a later cleanup.
 
 ## 2026-03-10: Canonical Lifecycle State Machines and Edge-Case Rules PRD Extension
 

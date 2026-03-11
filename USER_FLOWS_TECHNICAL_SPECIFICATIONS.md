@@ -1,5 +1,8 @@
 # PROOFOUND USER FLOWS TECHNICAL SPECIFICATIONS
 
+> Reference note: this file is reference or historical design material. It is not the canonical MVP launch contract.
+> Current precedence: `Proofound_Project_Specification_2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.md`, `PRD_for_a_web_platform_MVP.master-latest.md`, `LAUNCH_RUNBOOK.md`.
+
 **Document Version**: 1.0
 **Purpose**: Detailed technical specifications for all 40 user flows with screens, validation, APIs, and OKRs
 **Audience**: Product Managers, Designers, Engineers
@@ -28,12 +31,14 @@ This document transforms the 40 core user flows into **production-ready technica
 ## TABLE OF CONTENTS
 
 ### Part 1: Specification Template & Guidelines
+
 1. [Detailed Spec Template](#1-detailed-spec-template)
 2. [Validation Standards](#2-validation-standards)
 3. [API Standards](#3-api-standards)
 4. [Copy Tone Guidelines](#4-copy-tone-guidelines)
 
 ### Part 2: Individual Flows (I-01 → I-20)
+
 - [I-01 Authenticate](#i-01-authenticate)
 - [I-02 Consent & Policies](#i-02-consent--policies)
 - [I-03 Guided Onboarding](#i-03-guided-onboarding)
@@ -56,6 +61,7 @@ This document transforms the 40 core user flows into **production-ready technica
 - [I-20 Account & Privacy](#i-20-account--privacy)
 
 ### Part 3: Organization Flows (O-01 → O-20)
+
 - [O-01 Authenticate](#o-01-authenticate)
 - [O-02 Org Setup & Team Roles](#o-02-org-setup--team-roles)
 - [O-03 Verify Org & Consent](#o-03-verify-org--consent)
@@ -86,20 +92,25 @@ This document transforms the 40 core user flows into **production-ready technica
 Each flow follows this structure:
 
 ### 1.1 Header
+
 - **Flow ID & Name**
 - **Purpose** (user intent and outcome)
 - **Entry Points** (where/when user enters this flow)
 - **Success Metrics & OKRs** (quantified targets)
 
 ### 1.2 Screen Breakdown
+
 For each screen:
+
 - **Screen Name** & ID (e.g., `auth-01-login`)
 - **Layout** (description or wireframe reference)
 - **Components** (forms, buttons, cards, etc.)
 - **States**: Default, Loading, Success, Error, Empty
 
 ### 1.3 Fields & Validation
+
 For each input field:
+
 - **Field Name** & ID
 - **Type** (text, email, select, file, etc.)
 - **Required/Optional**
@@ -108,6 +119,7 @@ For each input field:
 - **Helper Text** (guidance when needed)
 
 ### 1.4 API Contracts
+
 - **Endpoint** (method + path)
 - **Authentication** (required/optional, token type)
 - **Request Schema** (TypeScript interface)
@@ -115,17 +127,20 @@ For each input field:
 - **Status Codes** (200, 400, 401, 500, etc.)
 
 ### 1.5 Data Models
+
 - **Tables** used (database schema references)
 - **Relationships** (foreign keys, joins)
 - **Indexes** (for performance)
 
 ### 1.6 Copy & Guidance
+
 - **Headings** (clear, action-oriented)
 - **Body Copy** (empathetic, direct, max 2 sentences)
 - **CTAs** (verb-first, specific)
 - **Tooltips/Help** (for complex fields)
 
 ### 1.7 Edge Cases & Errors
+
 - **Empty States** (what user sees when no data)
 - **Error States** (validation, network, server errors)
 - **Recovery Paths** (how user gets back on track)
@@ -136,20 +151,21 @@ For each input field:
 
 ### 2.1 Global Rules
 
-| Field Type | Min Length | Max Length | Format | Required |
-|-----------|-----------|-----------|---------|----------|
-| **Email** | 3 | 254 | RFC 5322 | Context-dependent |
-| **Password** | 12 | 128 | 1 upper, 1 lower, 1 number | Yes (on signup) |
-| **Name** | 2 | 100 | Unicode letters, spaces, hyphens | Yes |
-| **Bio/Description** | 10 | 500 | Plain text or limited markdown | Context-dependent |
-| **URL** | 10 | 2048 | Valid HTTP/HTTPS | Context-dependent |
-| **Phone** | 10 | 20 | E.164 format | Optional |
+| Field Type          | Min Length | Max Length | Format                           | Required          |
+| ------------------- | ---------- | ---------- | -------------------------------- | ----------------- |
+| **Email**           | 3          | 254        | RFC 5322                         | Context-dependent |
+| **Password**        | 12         | 128        | 1 upper, 1 lower, 1 number       | Yes (on signup)   |
+| **Name**            | 2          | 100        | Unicode letters, spaces, hyphens | Yes               |
+| **Bio/Description** | 10         | 500        | Plain text or limited markdown   | Context-dependent |
+| **URL**             | 10         | 2048       | Valid HTTP/HTTPS                 | Context-dependent |
+| **Phone**           | 10         | 20         | E.164 format                     | Optional          |
 
 ### 2.2 Error Message Format
 
 **Pattern**: `[What's wrong] [Why it matters] [How to fix]`
 
 **Examples**:
+
 - ❌ Bad: "Invalid email"
 - ✅ Good: "This email format isn't recognized. Double-check for typos or try another email address."
 
@@ -174,17 +190,18 @@ For each input field:
 
 ### 3.1 REST Conventions
 
-| Method | Use Case | Success Code |
-|--------|----------|--------------|
-| `GET` | Fetch data | 200 |
-| `POST` | Create resource | 201 |
-| `PATCH` | Partial update | 200 |
-| `PUT` | Full replacement | 200 |
-| `DELETE` | Remove resource | 204 |
+| Method   | Use Case         | Success Code |
+| -------- | ---------------- | ------------ |
+| `GET`    | Fetch data       | 200          |
+| `POST`   | Create resource  | 201          |
+| `PATCH`  | Partial update   | 200          |
+| `PUT`    | Full replacement | 200          |
+| `DELETE` | Remove resource  | 204          |
 
 ### 3.2 Standard Response Format
 
 **Success**:
+
 ```typescript
 {
   success: true,
@@ -198,6 +215,7 @@ For each input field:
 ```
 
 **Error**:
+
 ```typescript
 {
   success: false,
@@ -212,11 +230,13 @@ For each input field:
 ### 3.3 Authentication
 
 All authenticated endpoints require:
+
 ```http
 Authorization: Bearer <JWT_TOKEN>
 ```
 
 Token contains:
+
 ```typescript
 {
   sub: string, // user_id
@@ -241,11 +261,13 @@ Token contains:
 ### 4.2 Voice & Tone
 
 **Voice** (consistent across platform):
+
 - Professional but warm
 - Confident but humble
 - Helpful but not patronizing
 
 **Tone** (varies by context):
+
 - **Onboarding**: Encouraging, welcoming
 - **Errors**: Apologetic, solution-focused
 - **Confirmations**: Clear, reassuring
@@ -254,6 +276,7 @@ Token contains:
 ### 4.3 Copy Templates
 
 **Headers**:
+
 ```
 Pattern: [Action] [Object]
 Examples:
@@ -263,6 +286,7 @@ Examples:
 ```
 
 **Body Copy**:
+
 ```
 Pattern: [Why this matters] [What you'll do]
 Examples:
@@ -271,6 +295,7 @@ Examples:
 ```
 
 **CTAs**:
+
 ```
 Pattern: [Verb] [Object]
 Examples:
@@ -280,6 +305,7 @@ Examples:
 ```
 
 **Tooltips** (use sparingly):
+
 ```
 Pattern: Brief explanation of non-obvious concepts
 Examples:
@@ -300,6 +326,7 @@ Examples:
 **Purpose**: Access Proofound securely without friction
 **Entry**: Landing page, deep link to protected resource, session expiry
 **Success Metrics**:
+
 - **OKR**: Sign-up completion rate ≥ 70% (industry: 50-60%)
 - **OKR**: Time to first session ≤ 90 seconds
 - **OKR**: Recovery success rate ≥ 85%
@@ -313,6 +340,7 @@ Examples:
 **URL**: `/login`
 
 **Layout**:
+
 ```
 ┌─────────────────────────────────────┐
 │     [Proofound Logo]                │
@@ -329,11 +357,13 @@ Examples:
 ```
 
 **States**:
+
 - **Default**: Both buttons enabled
 - **Loading**: Button shows spinner, disabled
 - **Error**: Red banner above buttons (e.g., "SSO failed. Try again or use email.")
 
 **Copy**:
+
 - **Heading**: "Welcome to Proofound"
 - **Subheading**: "Connect with purpose-driven organizations that match your values and skills."
 - **CTA Primary**: "Continue with Google"
@@ -348,22 +378,24 @@ Examples:
 
 **Fields**:
 
-| Field | Type | Required | Validation | Error Message |
-|-------|------|----------|-----------|---------------|
-| `email` | email | Yes | RFC 5322, max 254 chars | "This email format isn't recognized. Double-check for typos." |
-| `name` | text | Yes | 2-100 chars, Unicode letters | "Please enter your full name (2+ characters)." |
-| `password` | password | Yes | 12-128 chars, 1 upper, 1 lower, 1 number | "Password must be at least 12 characters with 1 uppercase, 1 lowercase, and 1 number." |
-| `agree_tos` | checkbox | Yes | Must be checked | "You must accept the Terms of Service to continue." |
-| `gdpr_consent` | checkbox | Yes | Must be checked | "You must agree to the Privacy Policy to continue." |
-| `marketing_opt_in` | checkbox | No | Optional | N/A |
+| Field              | Type     | Required | Validation                               | Error Message                                                                          |
+| ------------------ | -------- | -------- | ---------------------------------------- | -------------------------------------------------------------------------------------- |
+| `email`            | email    | Yes      | RFC 5322, max 254 chars                  | "This email format isn't recognized. Double-check for typos."                          |
+| `name`             | text     | Yes      | 2-100 chars, Unicode letters             | "Please enter your full name (2+ characters)."                                         |
+| `password`         | password | Yes      | 12-128 chars, 1 upper, 1 lower, 1 number | "Password must be at least 12 characters with 1 uppercase, 1 lowercase, and 1 number." |
+| `agree_tos`        | checkbox | Yes      | Must be checked                          | "You must accept the Terms of Service to continue."                                    |
+| `gdpr_consent`     | checkbox | Yes      | Must be checked                          | "You must agree to the Privacy Policy to continue."                                    |
+| `marketing_opt_in` | checkbox | No       | Optional                                 | N/A                                                                                    |
 
 **Real-time Validation**:
+
 - **Email**: Check availability via `POST /api/auth/check-email` (debounced 500ms)
   - ✅ Green checkmark if available
   - ⚠️ "This email is already registered. [Sign in instead?](#)"
 - **Password**: Show strength meter (weak/fair/good/strong)
 
 **GDPR Consent Checkboxes** (NEW):
+
 - **GDPR Consent** (required):
   - Label: "I agree to the [Privacy Policy](#) and understand how my data will be processed."
   - Must be checked to proceed
@@ -376,6 +408,7 @@ Examples:
   - Respects CAN-SPAM Act (US) and GDPR (EU)
 
 **API Contract**:
+
 ```typescript
 // POST /api/auth/signup
 interface SignupRequest {
@@ -395,18 +428,20 @@ interface SignupResponse {
     user_id: string;
     email: string;
     session_token: string;
-    redirect_to: "/onboarding/goals"; // Next step
-  }
+    redirect_to: '/onboarding/goals'; // Next step
+  };
 }
 ```
 
 **Copy**:
+
 - **Heading**: "Create your account"
 - **Body**: "Join thousands of purpose-driven professionals finding their next opportunity."
 - **CTA**: "Create account"
 - **Footer**: "By continuing, you agree to our [Terms of Service](#) and [Privacy Policy](#)."
 
 **Error States**:
+
 - **Network Error**: "Connection lost. Check your internet and try again."
 - **Server Error**: "Something went wrong on our end. We're fixing it—try again in a moment."
 - **Email Taken**: "This email is already registered. [Sign in instead?](#) or use a different email."
@@ -418,6 +453,7 @@ interface SignupResponse {
 **URL**: `/signup/check-email`
 
 **Layout**:
+
 ```
 ┌─────────────────────────────────────┐
 │     [Email Icon]                    │
@@ -432,12 +468,14 @@ interface SignupResponse {
 ```
 
 **Copy**:
+
 - **Heading**: "Check your email"
 - **Body**: "We sent a sign-in link to **{email}**. Click the link in the email to continue. It expires in 15 minutes."
 - **CTA**: "Resend email" (disabled for 60 seconds)
 - **Link**: "Use a different email"
 
 **API Contract**:
+
 ```typescript
 // POST /api/auth/magic-link
 interface MagicLinkRequest {
@@ -448,7 +486,7 @@ interface MagicLinkResponse {
   success: true;
   data: {
     expires_at: string; // ISO 8601
-  }
+  };
 }
 ```
 
@@ -460,22 +498,25 @@ interface MagicLinkResponse {
 
 **Fields**:
 
-| Field | Type | Required | Validation |
-|-------|------|----------|-----------|
-| `email` | email | Yes | RFC 5322 |
-| `password` | password | Yes | No validation (accept any for UX) |
+| Field      | Type     | Required | Validation                        |
+| ---------- | -------- | -------- | --------------------------------- |
+| `email`    | email    | Yes      | RFC 5322                          |
+| `password` | password | Yes      | No validation (accept any for UX) |
 
 **Copy**:
+
 - **Heading**: "Welcome back"
 - **Body**: None (streamlined for speed)
 - **CTA**: "Sign in"
 - **Link**: "Forgot password?" → Triggers magic link flow
 
 **Error States**:
+
 - **Invalid Credentials**: "Email or password is incorrect. [Forgot password?](#)"
 - **Account Locked**: "Your account has been temporarily locked due to too many failed attempts. Try again in 15 minutes or [reset your password](#)."
 
 **Rate Limiting**:
+
 - 5 attempts per email per 15 minutes
 - 10 attempts per IP per 15 minutes
 
@@ -484,10 +525,12 @@ interface MagicLinkResponse {
 ### Data Models
 
 **Tables**:
+
 - `auth.users` (Supabase built-in)
 - `profiles` (extends auth.users)
 
 **Schema**:
+
 ```sql
 -- profiles table
 CREATE TABLE profiles (
@@ -512,6 +555,7 @@ CREATE POLICY "Users can read own profile"
 ### Success Metrics & Tracking
 
 **Events to Track**:
+
 ```typescript
 // On signup
 trackEvent('signed_up', { method: 'email' | 'google' });
@@ -524,6 +568,7 @@ trackEvent('auth_failed', { reason: 'invalid_credentials' | 'network_error' });
 ```
 
 **OKR Measurement**:
+
 - **Sign-up completion**: `(signed_up events) / (signup_started events)`
 - **Time to session**: Median time from landing → `signed_in` event
 - **Recovery success**: `(password_reset_completed) / (forgot_password_clicked)`
@@ -546,6 +591,7 @@ trackEvent('auth_failed', { reason: 'invalid_credentials' | 'network_error' });
 **Purpose**: Understand and accept Terms of Service, Privacy Policy, and Verification Policy
 **Entry**: First login OR when policies are updated (flag on user record)
 **Success Metrics**:
+
 - **OKR**: Drop-off at consent ≤ 5% (industry: 10-15%)
 - **OKR**: Time on page ≤ 2 minutes (shows clarity)
 
@@ -558,6 +604,7 @@ trackEvent('auth_failed', { reason: 'invalid_credentials' | 'network_error' });
 **URL**: `/consent` (blocks access until completed)
 
 **Layout**:
+
 ```
 ┌─────────────────────────────────────┐
 │  Before we begin                    │
@@ -580,13 +627,14 @@ trackEvent('auth_failed', { reason: 'invalid_credentials' | 'network_error' });
 
 **Fields**:
 
-| Field | Type | Required | Validation |
-|-------|------|----------|-----------|
-| `agree_tos` | checkbox | Yes | Must be true |
-| `agree_privacy` | checkbox | Yes | Must be true |
-| `agree_verification` | checkbox | Yes | Must be true |
+| Field                | Type     | Required | Validation   |
+| -------------------- | -------- | -------- | ------------ |
+| `agree_tos`          | checkbox | Yes      | Must be true |
+| `agree_privacy`      | checkbox | Yes      | Must be true |
+| `agree_verification` | checkbox | Yes      | Must be true |
 
 **Copy**:
+
 - **Heading**: "Before we begin"
 - **Body**: "Please review and accept our policies. We've kept them clear and straightforward—most people read them in under 2 minutes."
 - **CTA**: "I agree to all"
@@ -595,6 +643,7 @@ trackEvent('auth_failed', { reason: 'invalid_credentials' | 'network_error' });
 **Summaries** (expandable accordions):
 
 **Terms of Service Summary** (3-4 bullets):
+
 - You must be 18+ to use Proofound
 - Be honest in your profile and verification claims
 - Respect others and don't share inappropriate content
@@ -602,6 +651,7 @@ trackEvent('auth_failed', { reason: 'invalid_credentials' | 'network_error' });
 - [Read full Terms →](#)
 
 **Privacy Policy Summary**:
+
 - We collect email, profile info, and usage data
 - We never sell your data to third parties
 - You control who sees your profile details
@@ -609,6 +659,7 @@ trackEvent('auth_failed', { reason: 'invalid_credentials' | 'network_error' });
 - [Read full Privacy Policy →](#)
 
 **Verification Policy Summary**:
+
 - Verifications are voluntary but boost your match score
 - Verifiers must have direct knowledge of your work
 - False claims may result in account suspension
@@ -616,6 +667,7 @@ trackEvent('auth_failed', { reason: 'invalid_credentials' | 'network_error' });
 - [Read full Verification Policy →](#)
 
 **API Contract**:
+
 ```typescript
 // POST /api/consent
 interface ConsentRequest {
@@ -629,8 +681,8 @@ interface ConsentResponse {
   success: true;
   data: {
     consent_recorded_at: string; // ISO 8601
-    next_step: "/onboarding/goals";
-  }
+    next_step: '/onboarding/goals';
+  };
 }
 ```
 
@@ -639,6 +691,7 @@ interface ConsentResponse {
 ### Data Models
 
 **Tables**:
+
 ```sql
 CREATE TABLE consent_records (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -659,6 +712,7 @@ CREATE INDEX idx_consent_user ON consent_records(user_id, consent_type);
 ### Success Metrics
 
 **Events**:
+
 ```typescript
 trackEvent('consent_viewed', { version: '1.0.2024' });
 trackEvent('consent_accepted', { time_on_page: 87 }); // seconds
@@ -666,6 +720,7 @@ trackEvent('consent_rejected', { exit_method: 'exit_button' | 'browser_close' })
 ```
 
 **OKR Measurement**:
+
 - **Drop-off rate**: `(consent_rejected) / (consent_viewed)`
 - **Clarity**: Median `time_on_page` (target: ≤ 120 seconds)
 
@@ -687,6 +742,7 @@ trackEvent('consent_rejected', { exit_method: 'exit_button' | 'browser_close' })
 **Purpose**: Capture goals, causes, availability, comp, and location mode to personalize matching
 **Entry**: Post-consent on first login OR when profile is incomplete (<60% complete)
 **Success Metrics**:
+
 - **OKR**: Completion rate ≥ 75% (industry: 40-60% for long onboarding)
 - **OKR**: Time to complete ≤ 5 minutes
 - **OKR**: Post-onboarding CTR on recommendations ≥ 40%
@@ -700,6 +756,7 @@ trackEvent('consent_rejected', { exit_method: 'exit_button' | 'browser_close' })
 **URL**: `/onboarding/welcome`
 
 **Layout**:
+
 ```
 ┌─────────────────────────────────────┐
 │  👋 Welcome, [Name]                 │
@@ -715,6 +772,7 @@ trackEvent('consent_rejected', { exit_method: 'exit_button' | 'browser_close' })
 ```
 
 **Copy**:
+
 - **Heading**: "Welcome, {firstName}"
 - **Body**: "Let's set up your profile. We'll ask 5 quick questions to personalize your experience. This takes most people 3 minutes."
 - **CTA**: "Let's go"
@@ -730,14 +788,15 @@ trackEvent('consent_rejected', { exit_method: 'exit_button' | 'browser_close' })
 
 **Fields**:
 
-| Field | Type | Required | Validation |
-|-------|------|----------|-----------|
-| `goals` | multi-select | Yes (≥1) | Max 5 selections |
+| Field    | Type         | Required | Validation       |
+| -------- | ------------ | -------- | ---------------- |
+| `goals`  | multi-select | Yes (≥1) | Max 5 selections |
 | `causes` | multi-select | Yes (≥1) | Max 5 selections |
 
 **Options**:
 
 **Goals** (multi-select, max 5):
+
 - [ ] Build new skills
 - [ ] Work on meaningful projects
 - [ ] Connect with like-minded people
@@ -748,6 +807,7 @@ trackEvent('consent_rejected', { exit_method: 'exit_button' | 'browser_close' })
 - [ ] Other: [text input]
 
 **Causes** (multi-select, max 5):
+
 - [ ] Climate & Environment
 - [ ] Education & Literacy
 - [ ] Health & Wellness
@@ -759,6 +819,7 @@ trackEvent('consent_rejected', { exit_method: 'exit_button' | 'browser_close' })
 - [ ] Other: [text input]
 
 **Copy**:
+
 - **Heading**: "What brings you to Proofound?"
 - **Body**: "We'll use your goals and interests to find the best-fit opportunities. Select up to 5 of each."
 - **Helper**: "You can always change these later in Settings."
@@ -766,6 +827,7 @@ trackEvent('consent_rejected', { exit_method: 'exit_button' | 'browser_close' })
 - **Link**: "Back"
 
 **API Contract**:
+
 ```typescript
 // PATCH /api/onboarding/goals
 interface GoalsRequest {
@@ -776,8 +838,8 @@ interface GoalsRequest {
 interface GoalsResponse {
   success: true;
   data: {
-    next_step: "/onboarding/availability";
-  }
+    next_step: '/onboarding/availability';
+  };
 }
 ```
 
@@ -791,20 +853,22 @@ interface GoalsResponse {
 
 **Fields**:
 
-| Field | Type | Required | Validation |
-|-------|------|----------|-----------|
-| `availability_hours` | select | Yes | 1-40 hrs/week |
-| `location_mode` | select | Yes | remote/hybrid/onsite |
-| `timezone` | select | Yes | IANA timezone |
-| `location` | text | Conditional | Required if hybrid/onsite |
+| Field                | Type   | Required    | Validation                |
+| -------------------- | ------ | ----------- | ------------------------- |
+| `availability_hours` | select | Yes         | 1-40 hrs/week             |
+| `location_mode`      | select | Yes         | remote/hybrid/onsite      |
+| `timezone`           | select | Yes         | IANA timezone             |
+| `location`           | text   | Conditional | Required if hybrid/onsite |
 
 **Copy**:
+
 - **Heading**: "When and where can you contribute?"
 - **Body**: "This helps us show you opportunities that fit your schedule and location preferences."
 
 **Fields Detail**:
 
 **Availability** (dropdown):
+
 - 1-5 hours/week
 - 5-10 hours/week
 - 10-20 hours/week
@@ -812,25 +876,29 @@ interface GoalsResponse {
 - Flexible (I'll decide per project)
 
 **Location Mode** (radio buttons):
+
 - 🌍 Remote only (work from anywhere)
 - 🏢 Hybrid (some in-person required)
 - 📍 Onsite (fully in-person)
 
 **Timezone** (searchable dropdown):
+
 - Auto-detected: `America/Los_Angeles` ✅
 - [Full IANA list...]
 
 **Location** (text input with autocomplete):
+
 - Placeholder: "City, State or Country"
 - Autocomplete via Mapbox/Google Places API
 - Only shown if Hybrid or Onsite selected
 
 **API Contract**:
+
 ```typescript
 // PATCH /api/onboarding/availability
 interface AvailabilityRequest {
-  availability_hours: "1-5" | "5-10" | "10-20" | "20-40" | "flexible";
-  location_mode: "remote" | "hybrid" | "onsite";
+  availability_hours: '1-5' | '5-10' | '10-20' | '20-40' | 'flexible';
+  location_mode: 'remote' | 'hybrid' | 'onsite';
   timezone: string; // IANA format
   location?: string; // Required for hybrid/onsite
   location_coords?: { lat: number; lng: number }; // Geocoded
@@ -847,36 +915,42 @@ interface AvailabilityRequest {
 
 **Fields**:
 
-| Field | Type | Required | Validation |
-|-------|------|----------|-----------|
-| `comp_preference` | radio | Yes | One of 3 options |
-| `hourly_rate_min` | number | Conditional | $0-500 if paid |
-| `hourly_rate_max` | number | Conditional | $0-500 if paid |
+| Field             | Type   | Required    | Validation       |
+| ----------------- | ------ | ----------- | ---------------- |
+| `comp_preference` | radio  | Yes         | One of 3 options |
+| `hourly_rate_min` | number | Conditional | $0-500 if paid   |
+| `hourly_rate_max` | number | Conditional | $0-500 if paid   |
 
 **Copy**:
+
 - **Heading**: "What are your compensation expectations?"
 - **Body**: "Be open about what works for you. There are great opportunities across all compensation models."
 
 **Options** (radio buttons):
 
 **Volunteer** (unpaid):
+
 - ⭕ I'm open to unpaid, volunteer opportunities
 - Helper: "Perfect for skill-building, cause-driven work, and networking."
 
 **Paid**:
+
 - ⭕ I'm looking for paid opportunities
 - [Min hourly rate] to [Max hourly rate]
 - Helper: "Most roles on Proofound range from $25-150/hour."
 
 **Both**:
+
 - ⭕ I'm open to both paid and volunteer opportunities
 
 **Validation**:
+
 - If "Paid" selected, both min and max required
 - Max must be ≥ min
 - Range must be ≤ $300 (sanity check)
 
 **Error Messages**:
+
 - "Please enter a minimum hourly rate."
 - "Maximum rate must be higher than minimum."
 - "This range seems unusually wide. Double-check your numbers."
@@ -891,15 +965,17 @@ interface AvailabilityRequest {
 
 **Fields**:
 
-| Field | Type | Required | Validation |
-|-------|------|----------|-----------|
-| `languages` | multi-select | Yes (≥1) | Max 10 |
+| Field       | Type         | Required | Validation |
+| ----------- | ------------ | -------- | ---------- |
+| `languages` | multi-select | Yes (≥1) | Max 10     |
 
 **Copy**:
+
 - **Heading**: "What languages do you speak?"
 - **Body**: "This helps match you with organizations that need your language skills."
 
 **Options** (searchable multi-select):
+
 - English
 - Spanish
 - French
@@ -918,6 +994,7 @@ interface AvailabilityRequest {
 **Progress**: Step 5 of 5
 
 **Layout**:
+
 ```
 ┌─────────────────────────────────────┐
 │  You're all set!                    │
@@ -938,12 +1015,14 @@ interface AvailabilityRequest {
 ```
 
 **Copy**:
+
 - **Heading**: "You're all set!"
 - **Body**: "Here's what we learned about you. We'll use this to find your best-fit opportunities."
 - **CTA**: "See my recommendations"
 - **Link**: "Edit any section"
 
 **API Contract**:
+
 ```typescript
 // POST /api/onboarding/complete
 interface OnboardingCompleteRequest {
@@ -954,9 +1033,9 @@ interface OnboardingCompleteResponse {
   success: true;
   data: {
     profile_completion: number; // 0-100
-    next_step: "/app/feed";
+    next_step: '/app/feed';
     recommendations_ready: boolean;
-  }
+  };
 }
 ```
 
@@ -965,6 +1044,7 @@ interface OnboardingCompleteResponse {
 ### Data Models
 
 **Tables**:
+
 ```sql
 CREATE TABLE matching_profiles (
   profile_id UUID PRIMARY KEY REFERENCES profiles(id),
@@ -991,6 +1071,7 @@ CREATE INDEX idx_matching_location ON matching_profiles USING GIST (location_coo
 ### Success Metrics
 
 **Events**:
+
 ```typescript
 trackEvent('onboarding_started');
 trackEvent('onboarding_step_completed', { step: 1, time_spent: 24 }); // seconds
@@ -999,6 +1080,7 @@ trackEvent('onboarding_skipped', { step: 2 });
 ```
 
 **OKRs**:
+
 - **Completion rate**: `(onboarding_completed) / (onboarding_started)` ≥ 75%
 - **Time to complete**: Median `total_time` ≤ 300 seconds (5 minutes)
 - **Post-onboarding engagement**: CTR on first recommendation ≥ 40%
@@ -1021,6 +1103,7 @@ trackEvent('onboarding_skipped', { step: 2 });
 **Purpose**: Create a credible public-facing profile foundation
 **Entry**: After onboarding OR from profile editing page OR from "incomplete profile" prompt
 **Success Metrics**:
+
 - **OKR**: Completion rate ≥ 85%
 - **OKR**: Profile view-through (other users viewing profile) ≥ 60%
 - **OKR**: Profile completeness ≥ 80% (defined as: avatar + bio + 2+ experiences)
@@ -1035,35 +1118,39 @@ trackEvent('onboarding_skipped', { step: 2 });
 
 **Fields**:
 
-| Field | Type | Required | Validation | Max Length |
-|-------|------|----------|-----------|-----------|
-| `display_name` | text | Yes | 2-100 chars | 100 |
-| `headline` | text | Yes | 10-120 chars | 120 |
-| `bio` | textarea | Yes | 50-500 chars | 500 |
-| `location` | text | Yes | Autocomplete | 100 |
-| `timezone` | select | Yes | IANA | N/A |
-| `languages` | multi-select | Yes (≥1) | ISO 639-1 | 10 items |
-| `avatar_url` | file | Optional | 2MB max, JPG/PNG/WebP | N/A |
-| `cover_url` | file | Optional | 5MB max, JPG/PNG/WebP | N/A |
+| Field          | Type         | Required | Validation            | Max Length |
+| -------------- | ------------ | -------- | --------------------- | ---------- |
+| `display_name` | text         | Yes      | 2-100 chars           | 100        |
+| `headline`     | text         | Yes      | 10-120 chars          | 120        |
+| `bio`          | textarea     | Yes      | 50-500 chars          | 500        |
+| `location`     | text         | Yes      | Autocomplete          | 100        |
+| `timezone`     | select       | Yes      | IANA                  | N/A        |
+| `languages`    | multi-select | Yes (≥1) | ISO 639-1             | 10 items   |
+| `avatar_url`   | file         | Optional | 2MB max, JPG/PNG/WebP | N/A        |
+| `cover_url`    | file         | Optional | 5MB max, JPG/PNG/WebP | N/A        |
 
 **Copy**:
+
 - **Heading**: "Tell us about yourself"
 - **Body**: "Your profile is the first thing organizations see. Be authentic and specific about what you bring."
 
 **Field Details**:
 
 **Display Name**:
+
 - Label: "Full name"
 - Placeholder: "Jane Smith"
 - Helper: "This is how organizations will see your name."
 
 **Headline**:
+
 - Label: "Professional headline"
 - Placeholder: "Product Designer passionate about climate tech"
 - Helper: "One line that captures what you do and care about. (10-120 characters)"
 - Character counter: "87 / 120"
 
 **Bio**:
+
 - Label: "About you"
 - Placeholder: "I'm a product designer with 5 years of experience building user-centered tools for sustainability..."
 - Helper: "Share your background, passions, and what you're looking for. (50-500 characters)"
@@ -1071,23 +1158,27 @@ trackEvent('onboarding_skipped', { step: 2 });
 - Validation: Real-time character count, red if <50 or >500
 
 **Location**:
+
 - Label: "Location"
 - Placeholder: "San Francisco, CA"
 - Autocomplete: Google Places / Mapbox
 - Helper: "Where are you based? (City and state/country)"
 
 **Timezone**:
+
 - Label: "Timezone"
 - Default: Auto-detected (browser)
 - Helper: "We use this to schedule meetings at convenient times."
 
 **Languages**:
+
 - Label: "Languages"
 - Multi-select with checkboxes
 - Default: English (pre-selected)
 - Helper: "What languages do you speak fluently?"
 
 **Avatar Upload**:
+
 - Label: "Profile photo"
 - UI: Circular dropzone with preview
 - Validation: 2MB max, JPG/PNG/WebP
@@ -1095,12 +1186,14 @@ trackEvent('onboarding_skipped', { step: 2 });
 - Crop: Built-in cropper for 1:1 aspect ratio
 
 **Cover Photo**:
+
 - Label: "Cover image"
 - UI: 16:9 rectangle dropzone with preview
 - Validation: 5MB max
 - Helper: "Optional banner image for your profile."
 
 **API Contract**:
+
 ```typescript
 // PATCH /api/profile/basics
 interface ProfileBasicsRequest {
@@ -1121,7 +1214,7 @@ interface ProfileBasicsResponse {
     profile_id: string;
     profile_completion: number; // 0-100
     preview_url: string; // e.g., "/profiles/jane-smith"
-  }
+  };
 }
 ```
 
@@ -1130,6 +1223,7 @@ interface ProfileBasicsResponse {
 ### Data Models
 
 **Tables**:
+
 ```sql
 -- profiles table (already defined in I-01)
 ALTER TABLE profiles
@@ -1149,13 +1243,14 @@ ALTER TABLE profiles
 ### File Upload Flow
 
 **Step 1: Client-side upload to Supabase Storage**:
+
 ```typescript
 // Frontend
 const file = event.target.files[0];
 
 // Validate
 if (file.size > 2 * 1024 * 1024) {
-  throw new Error("File must be under 2MB");
+  throw new Error('File must be under 2MB');
 }
 
 // Upload
@@ -1164,9 +1259,9 @@ const { data, error } = await supabase.storage
   .upload(`${userId}/${timestamp}-${file.name}`, file);
 
 // Get public URL
-const { data: { publicUrl } } = supabase.storage
-  .from('avatars')
-  .getPublicUrl(data.path);
+const {
+  data: { publicUrl },
+} = supabase.storage.from('avatars').getPublicUrl(data.path);
 
 // Save to profile
 await fetch('/api/profile/basics', {
@@ -1176,6 +1271,7 @@ await fetch('/api/profile/basics', {
 ```
 
 **Step 2: Image Processing** (optional, Phase 2):
+
 - Resize to 400x400 (avatar) or 1200x675 (cover)
 - Convert to WebP for smaller size
 - Generate thumbnail (100x100)
@@ -1185,6 +1281,7 @@ await fetch('/api/profile/basics', {
 ### Success Metrics
 
 **Events**:
+
 ```typescript
 trackEvent('profile_basics_started');
 trackEvent('profile_basics_saved', { fields_completed: 7, has_avatar: true });
@@ -1192,6 +1289,7 @@ trackEvent('profile_viewed', { viewer_type: 'org', source: 'match_feed' });
 ```
 
 **OKRs**:
+
 - **Completion rate**: `(profile_basics_saved) / (profile_basics_started)` ≥ 85%
 - **View-through**: `(profile_viewed by others) / (profile_basics_saved)` ≥ 60%
 - **Completeness**: Average `profile_completion` ≥ 80
@@ -1209,18 +1307,20 @@ trackEvent('profile_viewed', { viewer_type: 'org', source: 'match_feed' });
 
 ## I-05 EXPERIENCE & EDUCATION
 
-*Due to length constraints, I'll continue with a condensed format for remaining flows while maintaining all key details.*
+_Due to length constraints, I'll continue with a condensed format for remaining flows while maintaining all key details._
 
 ### Overview
 
 **Purpose**: Document career history to improve match quality
 **Success Metrics**:
+
 - **OKR**: ≥80% of users add ≥1 experience
 - **OKR**: CV import usage ≥40%
 
 ### Key Fields
 
 **Experience**:
+
 - `role_title` (required, 2-100 chars)
 - `organization` (required, 2-100 chars)
 - `start_date` / `end_date` (MM/YYYY, end can be "Present")
@@ -1228,11 +1328,13 @@ trackEvent('profile_viewed', { viewer_type: 'org', source: 'match_feed' });
 - `skills` (multi-select from taxonomy)
 
 **Education**:
+
 - `institution` (required)
 - `degree` (e.g., "BS Computer Science")
 - `dates` (start/end)
 
 **API**:
+
 ```typescript
 POST /api/profile/experience
 PATCH /api/profile/experience/:id
@@ -1240,6 +1342,7 @@ DELETE /api/profile/experience/:id
 ```
 
 **Copy Guidance**:
+
 - Heading: "Show what you've done"
 - Body: "Add your work history to help organizations understand your background."
 - CTA: "Add experience" / "Import from LinkedIn"
@@ -1252,6 +1355,7 @@ DELETE /api/profile/experience/:id
 
 **Purpose**: Express purpose alignment to power values-based matching
 **Success Metrics**:
+
 - **OKR**: ≥70% complete before first apply
 - **OKR**: Correlation with match uplift ≥15%
 
@@ -1262,6 +1366,7 @@ DELETE /api/profile/experience/:id
 - `priorities` (rank tags 1-5): Drag to reorder
 
 **API**:
+
 ```typescript
 PATCH /api/profile/values
 {
@@ -1279,12 +1384,14 @@ PATCH /api/profile/values
 
 **Purpose**: Declare skills/levels for matching algorithm
 **Success Metrics**:
+
 - **OKR**: Avg ≥8 skills per user
 - **OKR**: Match coverage (users with ≥1 match) ≥90%
 
 ### Key Fields
 
 **Skill**:
+
 - `skill_id` (from taxonomy)
 - `level` (0-5):
   - 0: Awareness
@@ -1296,12 +1403,14 @@ PATCH /api/profile/values
 - `months_experience` (1-600)
 
 **Level Rubric** (tooltip):
+
 ```
 Level 3 (Advanced): You can solve complex problems independently and guide others.
 Level 4 (Expert): You could teach this skill and handle the hardest edge cases.
 ```
 
 **API**:
+
 ```typescript
 POST /api/profile/skills
 {
@@ -1314,6 +1423,7 @@ POST /api/profile/skills
 ```
 
 **Validation**:
+
 - Min 5 skills required for "ready to match"
 - At least 3 must be level ≥3
 
@@ -1325,12 +1435,14 @@ POST /api/profile/skills
 
 **Purpose**: Back claims with evidence to gain trust
 **Success Metrics**:
+
 - **OKR**: ≥50% of users attach ≥1 proof
 - **OKR**: Proof-to-verification rate ≥30%
 
 ### Key Fields
 
 **Proof**:
+
 - `type`: "link" | "file"
 - `url` or `file_upload`
 - `title` (required, 10-100 chars)
@@ -1339,11 +1451,13 @@ POST /api/profile/skills
 - `visibility`: "public" | "private" (default: private)
 
 **File Upload**:
+
 - Max 5MB
 - Allowed: PDF, JPG, PNG, WebP
 - Bucket: `proofs` (private by default)
 
 **API**:
+
 ```typescript
 POST /api/profile/proofs
 {
@@ -1365,6 +1479,7 @@ POST /api/profile/proofs
 
 **Purpose**: Get third-party validation to boost match rank
 **Success Metrics**:
+
 - **OKR**: Approval rate ≥65%
 - **OKR**: Time-to-verification ≤7 days (median)
 - **OKR**: Impact on match score: +15-25 points
@@ -1372,15 +1487,18 @@ POST /api/profile/proofs
 ### Key Screens
 
 **I-09-A: Choose What to Verify**:
+
 - Select claim type: "Work experience" / "Skill" / "Education" / "Project outcome"
 - Select specific item from profile
 
 **I-09-B: Choose Verifier**:
+
 - Input verifier email + name
 - Relationship: "Manager" / "Colleague" / "Client" / "Professor"
 - Add personal message (optional, max 200 chars)
 
 **I-09-C: Request Sent**:
+
 - Confirmation screen
 - Email sent to verifier with:
   - What's being verified
@@ -1388,6 +1506,7 @@ POST /api/profile/proofs
   - Your personal message
 
 **API**:
+
 ```typescript
 POST /api/verification/request
 {
@@ -1407,6 +1526,7 @@ Response: {
 ```
 
 **Verifier Email** (sent via Resend):
+
 ```
 Subject: [Name] is requesting verification on Proofound
 
@@ -1431,23 +1551,27 @@ This link expires in 14 days.
 
 **Purpose**: Control what the matching engine prioritizes
 **Success Metrics**:
+
 - **OKR**: Preference edit frequency ≤1 per 30 days (shows good defaults)
 - **OKR**: Uplift in CTR after editing ≥20%
 
 ### Key Fields
 
 **Weights** (sliders, 0-100, must sum to 100):
+
 - Skills match: 60 (default)
 - Values/mission alignment: 25
 - Practical fit (hours/location/comp): 15
 
 **Hard Filters**:
+
 - Min hourly rate (if paid)
 - Max hours/week
 - Location mode (remote/hybrid/onsite)
 - Specific causes (multi-select)
 
 **Live Preview**:
+
 - Shows sample matches with current settings
 - "With these settings, you'd see ~47 matches"
 
@@ -1459,6 +1583,7 @@ This link expires in 14 days.
 
 **Purpose**: Discover best-fit opportunities
 **Success Metrics**:
+
 - **OKR**: CTR (click-through to detail) ≥25%
 - **OKR**: View→apply conversion ≥30%
 - **OKR**: Dwell time ≥30 seconds per item
@@ -1466,6 +1591,7 @@ This link expires in 14 days.
 ### Key Components
 
 **Match Card**:
+
 ```
 ┌─────────────────────────────────────┐
 │ [Org Logo] Climate Action Network   │
@@ -1486,6 +1612,7 @@ This link expires in 14 days.
 ```
 
 **Filters** (sidebar):
+
 - Sort: "Best match" / "Newest" / "Urgent"
 - Comp: "All" / "Paid" / "Volunteer"
 - Hours: "Any" / "1-10" / "10-20" / "20+"
@@ -1493,6 +1620,7 @@ This link expires in 14 days.
 - Causes: (multi-select from user's selected causes)
 
 **API**:
+
 ```typescript
 GET /api/matches/feed
 Query params:
@@ -1542,6 +1670,7 @@ Response: {
 
 **Purpose**: Intentional discovery beyond algorithmic feed
 **Success Metrics**:
+
 - **OKR**: Searches per session ≥1.5
 - **OKR**: Zero-result rate ≤15%
 - **OKR**: Saved search usage ≥20%
@@ -1549,20 +1678,24 @@ Response: {
 ### Key Features
 
 **Search Bar**:
+
 - Typeahead suggestions (skills, orgs, causes)
 - Search in: "Assignments" / "Organizations"
 - Full-text search on title, description, org name
 
 **Advanced Filters**:
+
 - All filters from I-11 feed
 - Plus: "Verified orgs only" checkbox
 - Plus: Date posted (Last 24h / 7d / 30d / All)
 
 **Save Search**:
+
 - "Save this search" button
 - Get email alerts when new matches appear
 
 **API**:
+
 ```typescript
 GET /api/search/assignments
 Query: ?q=UX+designer&causes=climate&comp=volunteer
@@ -1583,17 +1716,20 @@ POST /api/search/save
 
 **Purpose**: Decide fit quickly and confidently
 **Success Metrics**:
+
 - **OKR**: View→apply conversion ≥30%
 - **OKR**: Time on page: 90-180 seconds (engagement sweet spot)
 
 ### Key Sections
 
 **Header**:
+
 - Title, org name + logo
 - Match score + subscores
 - Posted date, deadline
 
 **"Why You Match"** (explainer):
+
 ```
 You match 87% with this role:
 
@@ -1612,17 +1748,20 @@ You match 87% with this role:
 ```
 
 **Role Description**:
+
 - What you'll do (bullet points)
 - Must-have skills (with levels)
 - Nice-to-have skills
 - Deliverables/outcomes
 
 **Organization Info**:
+
 - Mission statement
 - Quick stats (founded, size, impact)
 - Link to full org profile
 
 **CTA**:
+
 - Primary: "Apply to this role"
 - Secondary: "Save for later"
 - Tertiary: "Not for me" (dismiss)
@@ -1635,6 +1774,7 @@ You match 87% with this role:
 
 **Purpose**: Submit targeted, low-friction application
 **Success Metrics**:
+
 - **OKR**: Submission success rate ≥95%
 - **OKR**: Time-to-submit ≤3 minutes
 - **OKR**: Dropout at gating questions ≤20%
@@ -1642,6 +1782,7 @@ You match 87% with this role:
 ### Key Screens
 
 **I-14-A: Pre-Apply Check**:
+
 - Show match score + any red flags
 - "Before you apply, ensure:"
   - [ ] Profile is ≥80% complete
@@ -1650,6 +1791,7 @@ You match 87% with this role:
 - If incomplete, show prompt: "Complete your profile first to stand out"
 
 **I-14-B: Application Form**:
+
 - Auto-filled: Name, email, location from profile
 - Gating questions (from assignment):
   - Example: "Why are you interested in climate work?" (100-300 chars)
@@ -1658,6 +1800,7 @@ You match 87% with this role:
 - Consent: "Share my profile and proofs with [Org Name]"
 
 **I-14-C: Confirmation**:
+
 ```
 ✅ Application submitted!
 
@@ -1670,6 +1813,7 @@ What happens next:
 ```
 
 **API**:
+
 ```typescript
 POST /api/assignments/:id/apply
 {
@@ -1690,7 +1834,7 @@ Response: {
 
 ---
 
-*Due to length, I'll create summary specifications for remaining flows I-15 through I-20 and O-01 through O-20 in a condensed format:*
+_Due to length, I'll create summary specifications for remaining flows I-15 through I-20 and O-01 through O-20 in a condensed format:_
 
 ---
 
@@ -1741,6 +1885,7 @@ Response: {
 **Purpose**: Manage account settings, privacy controls, and data rights (GDPR compliance)
 **Entry**: Top navigation → Settings, or "Manage privacy" links throughout app
 **Success Metrics**:
+
 - **OKR**: Data export SLA <48h (GDPR compliance)
 - **OKR**: Marketing opt-out rate <5%
 - **OKR**: Privacy dashboard engagement ≥20% of users view within first month
@@ -1754,6 +1899,7 @@ Response: {
 **URL**: `/settings`
 
 **Tabs**:
+
 1. **Profile** - Basic info (name, email, avatar)
 2. **Account** - Password, email verification, 2FA
 3. **Notifications** - Email, push, in-app preferences
@@ -1768,6 +1914,7 @@ Response: {
 **URL**: `/settings/privacy`
 
 **Layout**:
+
 ```
 ┌─────────────────────────────────────────────────────┐
 │ Settings                                            │
@@ -1826,17 +1973,18 @@ Response: {
 
 **Fields**:
 
-| Field | Type | Default | Validation |
-|-------|------|---------|-----------|
-| `profile_visibility` | dropdown | "Public" | One of: Public, Verified Only, Private |
-| `show_compensation` | boolean | false | N/A |
-| `show_location` | boolean | true | N/A |
-| `show_skills` | boolean | true | N/A |
-| `email_notifications` | boolean | true | N/A |
-| `match_notifications` | boolean | true | N/A |
-| `marketing_emails` | boolean | false | Can't re-enable if initially declined GDPR consent |
+| Field                 | Type     | Default  | Validation                                         |
+| --------------------- | -------- | -------- | -------------------------------------------------- |
+| `profile_visibility`  | dropdown | "Public" | One of: Public, Verified Only, Private             |
+| `show_compensation`   | boolean  | false    | N/A                                                |
+| `show_location`       | boolean  | true     | N/A                                                |
+| `show_skills`         | boolean  | true     | N/A                                                |
+| `email_notifications` | boolean  | true     | N/A                                                |
+| `match_notifications` | boolean  | true     | N/A                                                |
+| `marketing_emails`    | boolean  | false    | Can't re-enable if initially declined GDPR consent |
 
 **Profile Visibility Definitions**:
+
 - **Public**: Anyone can view your profile (search engines, unauthenticated users)
 - **Verified Only**: Only users with verified skills can see your profile
 - **Private**: Only matched organizations can see your profile
@@ -1899,6 +2047,7 @@ interface DeleteAccountResponse {
 **Triggered by**: Click "Delete My Account" button
 
 **Layout**:
+
 ```
 ┌─────────────────────────────────────────┐
 │ ⚠️  Delete Your Account?                │
@@ -1924,11 +2073,13 @@ interface DeleteAccountResponse {
 ```
 
 **Validation**:
+
 - Confirmation text must exactly match "DELETE MY ACCOUNT" (case-sensitive)
 - Password must be correct
 - If either fails: "Confirmation failed. Check your password and confirmation text."
 
 **After Deletion**:
+
 - Redirect to `/goodbye` page
 - Email sent: "Account deletion scheduled. Cancel by logging in within 30 days."
 
@@ -1941,6 +2092,7 @@ interface DeleteAccountResponse {
 **URL**: `/settings/privacy/audit-log` (modal overlay)
 
 **Layout**:
+
 ```
 ┌──────────────────────────────────────────────────────┐
 │ Your Activity Log                            [Close]  │
@@ -1966,6 +2118,7 @@ interface DeleteAccountResponse {
 ```
 
 **API Contract**:
+
 ```typescript
 GET /api/user/audit-log?limit=50&offset=0
 interface AuditLogResponse {
@@ -2001,6 +2154,7 @@ interface AuditLogResponse {
 **Notification**: Email + in-app banner
 
 **Layout** (in-app banner):
+
 ```
 ┌─────────────────────────────────────────────┐
 │ ✅ Your data export is ready!               │
@@ -2013,6 +2167,7 @@ interface AuditLogResponse {
 ```
 
 **Export Format** (JSON):
+
 ```json
 {
   "export_version": "1.0",
@@ -2023,11 +2178,21 @@ interface AuditLogResponse {
     "name": "Jane Smith",
     "created_at": "2025-01-15T10:00:00Z"
   },
-  "profile": { /* ... */ },
-  "skills": [ /* ... */ ],
-  "experiences": [ /* ... */ ],
-  "messages": [ /* ... */ ],
-  "matches": [ /* ... */ ],
+  "profile": {
+    /* ... */
+  },
+  "skills": [
+    /* ... */
+  ],
+  "experiences": [
+    /* ... */
+  ],
+  "messages": [
+    /* ... */
+  ],
+  "matches": [
+    /* ... */
+  ],
   "analytics_summary": {
     "total_logins": 47,
     "profile_views": 342,
@@ -2061,6 +2226,7 @@ interface AuditLogResponse {
 **Purpose**: Educate users about data collection and provide transparent access to privacy controls
 **Entry**: Settings → Privacy & Data → "Learn more about your privacy", or footer "Privacy Center" link
 **Success Metrics**:
+
 - **OKR**: Privacy dashboard engagement ≥20% of users view within first month
 - **OKR**: Audit log views ≥5% of active users monthly
 - **OKR**: Data export request rate ≥2% (healthy transparency indicator)
@@ -2074,6 +2240,7 @@ interface AuditLogResponse {
 **URL**: `/privacy-dashboard`
 
 **Layout**:
+
 ```
 ┌─────────────────────────────────────────────────────┐
 │ [← Back to Settings]                                │
@@ -2122,6 +2289,7 @@ interface AuditLogResponse {
 ```
 
 **Copy**:
+
 - **Heading**: "Your Privacy Controls"
 - **Subheading**: "Proofound is built with privacy at its core. Here's what data we collect and how you control it."
 - **CTA Primary**: "Download My Data"
@@ -2136,6 +2304,7 @@ interface AuditLogResponse {
 **Triggered by**: Click "Learn more" in "Data We Collect" card
 
 **Layout**:
+
 ```
 ┌─────────────────────────────────────────────────────┐
 │ [← Back]                                            │
@@ -2213,6 +2382,7 @@ interface AuditLogResponse {
 **Triggered by**: Click "Manage your rights" in "Your Rights" card
 
 **Layout**:
+
 ```
 ┌─────────────────────────────────────────────────────┐
 │ [← Back]                                            │
@@ -2270,6 +2440,7 @@ interface AuditLogResponse {
 ```
 
 **Copy**:
+
 - **Heading**: "Your Data Rights"
 - **Subheading**: "Under GDPR (EU) and CCPA (California), you have the following rights:"
 - **Footer**: "Have questions? Contact us: privacy@proofound.io"
@@ -2283,12 +2454,14 @@ interface AuditLogResponse {
 **Same as Screen I-20-D** (Audit Log Modal), but as a standalone page
 
 **Additional Features**:
+
 - Pagination: 50 items per page
 - Filters: Filter by action type (login, profile_edit, message_sent, etc.)
 - Date range picker: View logs from specific time period
 - Export: Download full audit log as CSV
 
 **API Contract**:
+
 ```typescript
 GET /api/user/audit-log?limit=50&offset=0&action=login&start_date=2025-10-01&end_date=2025-10-30
 interface AuditLogRequest {
@@ -2341,6 +2514,7 @@ interface AuditLogResponse {
 ### Data Flow
 
 **Privacy Dashboard → Data Export**:
+
 1. User clicks "Download My Data" → Triggers `POST /api/user/export`
 2. Backend queues export job (async)
 3. User sees "Export in progress..." banner
@@ -2349,6 +2523,7 @@ interface AuditLogResponse {
 6. JSON file downloads (expires in 48 hours)
 
 **Privacy Dashboard → Account Deletion**:
+
 1. User clicks "Delete My Account" → Shows confirmation modal (Screen I-20-C)
 2. User types "DELETE MY ACCOUNT" + password → `DELETE /api/user/account`
 3. Backend schedules deletion for 30 days later
@@ -2362,6 +2537,7 @@ interface AuditLogResponse {
 ## O-01 AUTHENTICATE
 
 **Same as I-01** but with org context:
+
 - Role-aware redirects (Owner → Dashboard, Recruiter → Assignments)
 - Org switcher if user belongs to multiple orgs
 - **API**: `POST /api/auth/org-login?org_id=xxx`
@@ -2372,10 +2548,11 @@ interface AuditLogResponse {
 
 **OKRs**: Time to first assignment <30min, Invite acceptance ≥75%
 **Key Fields**:
+
 - `org_name`, `org_type` (nonprofit/social enterprise/benefit corp)
 - `region`, `size`
 - Team invites with roles: Owner / Steward / Recruiter / Viewer
-**API**: `POST /api/orgs`, `POST /api/orgs/:id/invite`
+  **API**: `POST /api/orgs`, `POST /api/orgs/:id/invite`
 
 ---
 
@@ -2383,9 +2560,10 @@ interface AuditLogResponse {
 
 **OKRs**: Approval rate ≥80%, Time-to-verify <3 days
 **Verification Methods**:
+
 - Domain email verification (automatic)
 - Document upload (501(c)(3) determination letter, etc.)
-**API**: `POST /api/orgs/:id/verify`, `GET /api/orgs/:id/verification-status`
+  **API**: `POST /api/orgs/:id/verify`, `GET /api/orgs/:id/verification-status`
 
 ---
 
@@ -2393,10 +2571,11 @@ interface AuditLogResponse {
 
 **OKRs**: Profile completeness ≥85%, Candidate view time ≥45sec
 **Key Fields**:
+
 - `mission`, `vision`, `values`, `impact_stats`
 - `sectors`, `causes`, `locations`
 - `media` (logo, cover, case studies)
-**API**: `PATCH /api/orgs/:id/profile`
+  **API**: `PATCH /api/orgs/:id/profile`
 
 ---
 
@@ -2404,10 +2583,11 @@ interface AuditLogResponse {
 
 **OKRs**: Time-to-draft <15min, Predicted match coverage ≥20 candidates
 **Key Fields**:
+
 - `title`, `description`, `must_have_skills`, `nice_to_have_skills`
 - `hours_per_week`, `location_mode`, `compensation`
 - `start_window`, `duration`, `gating_questions`
-**API**: `POST /api/assignments`
+  **API**: `POST /api/assignments`
 
 ---
 
@@ -2415,10 +2595,11 @@ interface AuditLogResponse {
 
 **OKRs**: Shortlist rate ≥15%, Candidate quality score ≥70
 **Key Features**:
+
 - Adjust skill/values/practical weights
 - Set verification gates (e.g., "Must have ≥1 verified skill")
 - Sample candidate preview
-**API**: `PATCH /api/assignments/:id/weights`
+  **API**: `PATCH /api/assignments/:id/weights`
 
 ---
 
@@ -2434,10 +2615,11 @@ interface AuditLogResponse {
 
 **OKRs**: View-to-action ≥30%, Time-to-first-outreach ≤2 days
 **Key Features**:
+
 - Ranked list with match scores + subscores
 - "Why this match" explainer
 - Quick actions: Shortlist / Message / Dismiss
-**API**: `GET /api/assignments/:id/matches`
+  **API**: `GET /api/assignments/:id/matches`
 
 ---
 
@@ -2445,10 +2627,11 @@ interface AuditLogResponse {
 
 **OKRs**: Time spent 2-4min (shows thorough review), Decision rate ≥80%
 **Key Sections**:
+
 - Profile overview, Skills atlas, Proofs, Verifications
 - Side-by-side with assignment requirements
 - Internal notes (private to org)
-**API**: `GET /api/candidates/:id`, `POST /api/candidates/:id/notes`
+  **API**: `GET /api/candidates/:id`, `POST /api/candidates/:id/notes`
 
 ---
 
@@ -2478,10 +2661,11 @@ interface AuditLogResponse {
 
 **OKRs**: Feedback completion ≥90%, Time-to-decision <3 days
 **Key Features**:
+
 - Scorecard (1-5 ratings on criteria)
 - Qualitative notes, Decision (advance/reject/hold)
 - Optional feedback sharing with candidate
-**API**: `POST /api/interviews/:id/feedback`
+  **API**: `POST /api/interviews/:id/feedback`
 
 ---
 
@@ -2489,9 +2673,10 @@ interface AuditLogResponse {
 
 **OKRs**: Offer accept rate ≥65%, Time-to-accept <5 days
 **Key Fields**:
+
 - Scope, Milestones, Hourly rate (if paid), Benefits
 - E-signature
-**API**: `POST /api/offers`
+  **API**: `POST /api/offers`
 
 ---
 
@@ -2499,8 +2684,9 @@ interface AuditLogResponse {
 
 **OKRs**: Revision cycles <2, Acceptance latency <48h
 **Key Features**:
+
 - Review deliverable, Comment/request changes, Accept/reject
-**API**: `POST /api/milestones/:id/review`
+  **API**: `POST /api/milestones/:id/review`
 
 ---
 
@@ -2508,8 +2694,9 @@ interface AuditLogResponse {
 
 **OKRs**: Verification issuance rate ≥60%, Testimonial coverage ≥40%
 **Key Features**:
+
 - One-click issuance, Template testimonials, Public/private toggle
-**API**: `POST /api/verifications/issue`
+  **API**: `POST /api/verifications/issue`
 
 ---
 
@@ -2533,8 +2720,9 @@ interface AuditLogResponse {
 
 **OKRs**: Time-to-fill trend (target: <21 days), Quality-of-hire proxies (retention ≥80% at 90 days)
 **Key Metrics**:
+
 - Time-to-fill, Stage conversion rates, Match quality, Diversity, Values alignment
-**API**: `GET /api/analytics/pipeline?assignment_id=xxx`
+  **API**: `GET /api/analytics/pipeline?assignment_id=xxx`
 
 ---
 
@@ -2542,55 +2730,56 @@ interface AuditLogResponse {
 
 **OKRs**: Billing failure rate <2%, Data export SLA <48h
 **Key Features**:
+
 - Billing entity + payment method, Invoices, Data export/delete, Policy updates
-**API**: `POST /api/orgs/:id/billing`, `POST /api/orgs/:id/export-data`
+  **API**: `POST /api/orgs/:id/billing`, `POST /api/orgs/:id/export-data`
 
 ---
 
 # APPENDIX: SUCCESS METRICS SUMMARY TABLE
 
-| Flow ID | Primary OKR | Target | Secondary OKR | Target |
-|---------|------------|--------|---------------|--------|
-| **I-01** | Sign-up completion | ≥70% | Time to first session | ≤90s |
-| **I-02** | Drop-off at consent | ≤5% | Time on page | ≤2min |
-| **I-03** | Onboarding completion | ≥75% | Time to complete | ≤5min |
-| **I-04** | Profile completion | ≥85% | View-through rate | ≥60% |
-| **I-05** | Add ≥1 experience | ≥80% | CV import usage | ≥40% |
-| **I-06** | Complete before apply | ≥70% | Match uplift | ≥15% |
-| **I-07** | Avg skills per user | ≥8 | Match coverage | ≥90% |
-| **I-08** | Attach ≥1 proof | ≥50% | Proof-to-verify rate | ≥30% |
-| **I-09** | Verification approval | ≥65% | Time-to-verify | ≤7d |
-| **I-10** | Edit frequency | ≤1/30d | CTR uplift | ≥20% |
-| **I-11** | CTR (feed → detail) | ≥25% | View → apply | ≥30% |
-| **I-12** | Searches per session | ≥1.5 | Zero-result rate | ≤15% |
-| **I-13** | View → apply | ≥30% | Time on page | 90-180s |
-| **I-14** | Submission success | ≥95% | Time-to-submit | ≤3min |
-| **I-15** | Response time | <24h | Messages-to-decision | ≤15 |
-| **I-16** | Invite → confirm | <48h | Reschedule rate | <15% |
-| **I-17** | Offer accept rate | ≥60% | Time-to-accept | <3d |
-| **I-18** | On-time delivery | ≥85% | Revision cycles | <2 |
-| **I-19** | Verify request rate | ≥70% | Testimonial rate | ≥50% |
-| **I-20** | Data export SLA | <48h | Opt-out rate | <5% |
-| **O-01** | Login success | ≥98% | Role-context errors | <2% |
-| **O-02** | Time to 1st assignment | <30min | Invite acceptance | ≥75% |
-| **O-03** | Verification approval | ≥80% | Time-to-verify | <3d |
-| **O-04** | Profile completeness | ≥85% | View time | ≥45s |
-| **O-05** | Time-to-draft | <15min | Match coverage | ≥20 |
-| **O-06** | Shortlist rate | ≥15% | Quality score | ≥70 |
-| **O-07** | Time-to-first-view | <2h | Impressions-to-apply | ≥5% |
-| **O-08** | View-to-action | ≥30% | Time-to-outreach | ≤2d |
-| **O-09** | Decision rate | ≥80% | Time spent | 2-4min |
-| **O-10** | Shortlist → interview | ≥50% | Time-in-stage | <7d |
-| **O-11** | Response time | <24h | Msg-to-interview | ≥40% |
-| **O-12** | Invite-to-confirm | <24h | No-show rate | <10% |
-| **O-13** | Feedback completion | ≥90% | Time-to-decision | <3d |
-| **O-14** | Offer accept rate | ≥65% | Time-to-accept | <5d |
-| **O-15** | Acceptance latency | <48h | Revision cycles | <2 |
-| **O-16** | Issuance rate | ≥60% | Testimonial rate | ≥40% |
-| **O-17** | Stale posting rate | <10% | Edit frequency | <1/wk |
-| **O-18** | Permission changes | <5/mo | Escalation events | <1% |
-| **O-19** | Time-to-fill | <21d | 90d retention | ≥80% |
-| **O-20** | Billing failure | <2% | Export SLA | <48h |
+| Flow ID  | Primary OKR            | Target | Secondary OKR         | Target  |
+| -------- | ---------------------- | ------ | --------------------- | ------- |
+| **I-01** | Sign-up completion     | ≥70%   | Time to first session | ≤90s    |
+| **I-02** | Drop-off at consent    | ≤5%    | Time on page          | ≤2min   |
+| **I-03** | Onboarding completion  | ≥75%   | Time to complete      | ≤5min   |
+| **I-04** | Profile completion     | ≥85%   | View-through rate     | ≥60%    |
+| **I-05** | Add ≥1 experience      | ≥80%   | CV import usage       | ≥40%    |
+| **I-06** | Complete before apply  | ≥70%   | Match uplift          | ≥15%    |
+| **I-07** | Avg skills per user    | ≥8     | Match coverage        | ≥90%    |
+| **I-08** | Attach ≥1 proof        | ≥50%   | Proof-to-verify rate  | ≥30%    |
+| **I-09** | Verification approval  | ≥65%   | Time-to-verify        | ≤7d     |
+| **I-10** | Edit frequency         | ≤1/30d | CTR uplift            | ≥20%    |
+| **I-11** | CTR (feed → detail)    | ≥25%   | View → apply          | ≥30%    |
+| **I-12** | Searches per session   | ≥1.5   | Zero-result rate      | ≤15%    |
+| **I-13** | View → apply           | ≥30%   | Time on page          | 90-180s |
+| **I-14** | Submission success     | ≥95%   | Time-to-submit        | ≤3min   |
+| **I-15** | Response time          | <24h   | Messages-to-decision  | ≤15     |
+| **I-16** | Invite → confirm       | <48h   | Reschedule rate       | <15%    |
+| **I-17** | Offer accept rate      | ≥60%   | Time-to-accept        | <3d     |
+| **I-18** | On-time delivery       | ≥85%   | Revision cycles       | <2      |
+| **I-19** | Verify request rate    | ≥70%   | Testimonial rate      | ≥50%    |
+| **I-20** | Data export SLA        | <48h   | Opt-out rate          | <5%     |
+| **O-01** | Login success          | ≥98%   | Role-context errors   | <2%     |
+| **O-02** | Time to 1st assignment | <30min | Invite acceptance     | ≥75%    |
+| **O-03** | Verification approval  | ≥80%   | Time-to-verify        | <3d     |
+| **O-04** | Profile completeness   | ≥85%   | View time             | ≥45s    |
+| **O-05** | Time-to-draft          | <15min | Match coverage        | ≥20     |
+| **O-06** | Shortlist rate         | ≥15%   | Quality score         | ≥70     |
+| **O-07** | Time-to-first-view     | <2h    | Impressions-to-apply  | ≥5%     |
+| **O-08** | View-to-action         | ≥30%   | Time-to-outreach      | ≤2d     |
+| **O-09** | Decision rate          | ≥80%   | Time spent            | 2-4min  |
+| **O-10** | Shortlist → interview  | ≥50%   | Time-in-stage         | <7d     |
+| **O-11** | Response time          | <24h   | Msg-to-interview      | ≥40%    |
+| **O-12** | Invite-to-confirm      | <24h   | No-show rate          | <10%    |
+| **O-13** | Feedback completion    | ≥90%   | Time-to-decision      | <3d     |
+| **O-14** | Offer accept rate      | ≥65%   | Time-to-accept        | <5d     |
+| **O-15** | Acceptance latency     | <48h   | Revision cycles       | <2      |
+| **O-16** | Issuance rate          | ≥60%   | Testimonial rate      | ≥40%    |
+| **O-17** | Stale posting rate     | <10%   | Edit frequency        | <1/wk   |
+| **O-18** | Permission changes     | <5/mo  | Escalation events     | <1%     |
+| **O-19** | Time-to-fill           | <21d   | 90d retention         | ≥80%    |
+| **O-20** | Billing failure        | <2%    | Export SLA            | <48h    |
 
 ---
 

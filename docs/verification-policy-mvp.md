@@ -1,7 +1,9 @@
 > Doc Class: `active`
-> Last Verified: `2026-03-10`
+> Last Verified: `2026-03-11`
 
 # Block 7: Launch-Safe Verification Trust Model
+
+> Canonical scope note: `Proofound_Project_Specification_2026-03-11.md` sets the launch promise. This policy defines the scoped trust model beneath that promise. It must not be read as a generic identity-verification or broad verified-badge spec.
 
 ## Recommendation summary
 

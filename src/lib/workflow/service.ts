@@ -17,6 +17,7 @@ import {
   workflowAsyncJobs,
 } from '@/db/schema';
 import { emitLifecycleEvent } from '@/lib/analytics/lifecycle-events';
+import { toIsoOrNull as toIso } from '@/lib/datetime/normalize';
 import { getRows } from '@/lib/db/rows';
 import { emitDecisionMade, emitInterviewCompleted } from '@/lib/analytics/events';
 import {
@@ -66,19 +67,6 @@ function buildWorkflowView(params: WorkflowViewParams) {
     timestamps: params.timestamps ?? {},
     allowedActions: getAllowedActions(params.machine, params.state),
   };
-}
-
-function toIso(value: Date | string | null | undefined) {
-  if (!value) {
-    return null;
-  }
-
-  if (value instanceof Date) {
-    return value.toISOString();
-  }
-
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
 }
 
 type LifecycleActorType =

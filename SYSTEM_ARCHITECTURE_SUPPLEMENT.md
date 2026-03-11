@@ -1,5 +1,8 @@
 # Proofound — System Architecture Supplement
 
+> Reference note: this file is reference or historical design material. It is not the canonical MVP launch contract.
+> Current precedence: `Proofound_Project_Specification_2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.md`, `PRD_for_a_web_platform_MVP.master-latest.md`, `LAUNCH_RUNBOOK.md`.
+
 **Document Version:** 1.0
 **Last Updated:** 2025-10-29
 **Purpose:** Supplementary documentation for new features and systems
@@ -25,6 +28,7 @@
 **Expertise Atlas** is Proofound's central skills management system that goes beyond traditional "skills lists" to provide a comprehensive, evidence-backed representation of a person's capabilities.
 
 **Key Differentiators:**
+
 - **4-Level Taxonomy**: L1 (6 domains) → L2 (categories) → L3 (subcategories) → L4 (10,000+ granular skills)
 - **Proof-Based**: Every skill requires evidence (projects, artifacts, verifications)
 - **Recency Tracking**: Automatically calculates skill freshness from project usage
@@ -69,19 +73,19 @@ L4: Granular Skills (10,000+ items)
 
 Each L4 skill in a user's atlas has:
 
-| Attribute | Description | Source | Example |
-|-----------|-------------|--------|---------|
-| **Competency Level** | C1-C5 proficiency | User self-assessment | C4 (Advanced) |
-| **Proof Artifacts** | Links, docs (≤5MB) | Projects, experiences | GitHub repo, certificate |
-| **Verifications** | Peer/employer verified | Verification workflow | Verified by CTO at Acme Corp |
-| **Recency** | Last used date | Project linkage (ongoing/concluded) | Last used: 2024-12 (ongoing) |
-| **Impact Score** | Contribution to outcomes | Project outcomes | 0.85 (high impact) |
-| **Evidence Strength** | Verification quality (0-1) | Count + type of verifications | 0.78 (3 verifications) |
-| **Total Experience** | Months of usage | Sum across projects | 24 months |
+| Attribute             | Description                | Source                              | Example                      |
+| --------------------- | -------------------------- | ----------------------------------- | ---------------------------- |
+| **Competency Level**  | C1-C5 proficiency          | User self-assessment                | C4 (Advanced)                |
+| **Proof Artifacts**   | Links, docs (≤5MB)         | Projects, experiences               | GitHub repo, certificate     |
+| **Verifications**     | Peer/employer verified     | Verification workflow               | Verified by CTO at Acme Corp |
+| **Recency**           | Last used date             | Project linkage (ongoing/concluded) | Last used: 2024-12 (ongoing) |
+| **Impact Score**      | Contribution to outcomes   | Project outcomes                    | 0.85 (high impact)           |
+| **Evidence Strength** | Verification quality (0-1) | Count + type of verifications       | 0.78 (3 verifications)       |
+| **Total Experience**  | Months of usage            | Sum across projects                 | 24 months                    |
 
 ### 1.3 Project-Skill Linkage
 
-**Core Concept**: Skills don't exist in isolation—they're always used *in context* (projects).
+**Core Concept**: Skills don't exist in isolation—they're always used _in context_ (projects).
 
 ```
 User creates Project:
@@ -97,6 +101,7 @@ User creates Project:
 ```
 
 **Recency Calculation**:
+
 ```typescript
 // Ongoing projects → recency = 1.0 (max)
 // Concluded projects → recency = exp(-α * months_since_end)
@@ -104,18 +109,17 @@ User creates Project:
 
 // Example:
 // Skill last used 6 months ago:
-recency = exp(-0.0578 * 6) = 0.71 (71% fresh)
+recency = exp(-0.0578 * 6) = 0.71(71 % fresh);
 
 // Skill last used 24 months ago:
-recency = exp(-0.0578 * 24) = 0.25 (25% fresh)
+recency = exp(-0.0578 * 24) = 0.25(25 % fresh);
 ```
 
 **Impact Score Calculation**:
+
 ```typescript
 // Average across all projects using this skill:
-impact_score = avg(
-  project_skill.outcome_contribution * project.outcomes.impact_score
-)
+impact_score = avg(project_skill.outcome_contribution * project.outcomes.impact_score);
 
 // Example:
 // Project A: contribution=0.9, impact=0.85 → 0.765
@@ -130,6 +134,7 @@ impact_score = avg(
 **Purpose**: Central hub for managing all projects across work, volunteer, education, side projects, and hobbies.
 
 **Features**:
+
 - Create projects with timeline (ongoing/concluded)
 - Link multiple L4 skills to each project
 - Define measurable outcomes and metrics
@@ -138,12 +143,14 @@ impact_score = avg(
 - Track impact and skill growth over time
 
 **Relationship to Other Proof Tables**:
+
 - `experiences` → can link to project_id
 - `education` → can link to project_id
 - `volunteering` → can link to project_id
 - `impact_stories` → can link to project_id
 
 **Example Flow**:
+
 ```
 1. User creates experience: "Senior Developer at Acme Corp (2022-2024)"
 2. User creates project: "Payment Gateway Integration (2023-Q2)"
@@ -174,6 +181,7 @@ impact_score = avg(
    - Shows skill acquisition and growth over time
 
 **Skill Card Components**:
+
 ```
 ┌─────────────────────────────────────────────────┐
 │ PostgreSQL                        01.03.01.001  │
@@ -200,7 +208,7 @@ impact_score = avg(
 1. **Skill Matching**: Uses L4 codes + adjacency graph for "nearby skills"
 2. **Level Matching**: Compares competency (C1-C5) against requirements
 3. **Evidence Weighting**: Higher evidence_strength = higher score
-4. **Recency Decay**: Recent skills weighted higher (exp(-α * months))
+4. **Recency Decay**: Recent skills weighted higher (exp(-α \* months))
 5. **Impact Bonus**: High-impact skills get slight boost
 6. **Outcome Linkage**: Skills tied to measurable outcomes score higher
 
@@ -215,6 +223,7 @@ impact_score = avg(
 Assignment creation is **not** a single-person, single-step process. It's a **multi-stakeholder pipeline** where different roles contribute their expertise to define what's needed.
 
 **Key Principles**:
+
 - Different stakeholders define different requirements
 - HR defines cultural fit and values
 - Tech Lead defines technical skills and tools
@@ -243,11 +252,14 @@ graph TD
 ### 2.3 Pipeline Steps (Example)
 
 #### Step 1: Business Value (Hiring Manager)
+
 **Input**:
+
 - What business problem does this role solve?
 - Expected ROI or impact
 
 **Example**:
+
 ```json
 {
   "business_value": "Increase sales outreach capacity by 50%",
@@ -257,12 +269,15 @@ graph TD
 ```
 
 #### Step 2: Expected Outcomes (Hiring Manager)
+
 **Input**:
+
 - Continuous metrics (tracked over time)
 - Milestones (one-time goals)
 - Success criteria
 
 **Example**:
+
 ```json
 {
   "outcomes": [
@@ -271,30 +286,29 @@ graph TD
       "title": "Launch new sales CRM",
       "success_criteria": "CRM deployed and team trained by Q2",
       "target_date": "2025-06-30",
-      "metrics": [
-        {"name": "User adoption", "target": 100, "unit": "percent"}
-      ]
+      "metrics": [{ "name": "User adoption", "target": 100, "unit": "percent" }]
     },
     {
       "type": "continuous",
       "title": "Monthly lead generation",
       "success_criteria": "Maintain 10k leads/month",
-      "metrics": [
-        {"name": "Qualified leads", "target": 10000, "unit": "leads/month"}
-      ]
+      "metrics": [{ "name": "Qualified leads", "target": 10000, "unit": "leads/month" }]
     }
   ]
 }
 ```
 
 #### Step 3: Cultural Fit (HR)
+
 **Input**:
+
 - Required values (from values taxonomy)
 - Required causes (from causes taxonomy)
 - Work style preferences
 - Team culture notes
 
 **Example**:
+
 ```json
 {
   "values_required": ["transparency", "sustainability", "innovation"],
@@ -305,13 +319,16 @@ graph TD
 ```
 
 #### Step 4: Technical Skills (Tech Lead)
+
 **Input**:
+
 - Required L4 skills with min levels
 - Nice-to-have L4 skills
 - Link each skill to outcomes (why needed?)
 - Provide examples of tasks
 
 **Example**:
+
 ```json
 {
   "expertise_matrix": [
@@ -348,18 +365,21 @@ graph TD
 ```
 
 #### Step 5: Strategic Add-ons (CEO)
+
 **Input**:
+
 - Additional strategic requirements
 - Growth opportunities
 - Long-term vision alignment
 
 **Example**:
+
 ```json
 {
   "strategic_notes": "Looking for someone who can grow into tech lead role within 2 years",
   "growth_opportunities": "Potential to lead team of 5 engineers by 2027",
   "additional_requirements": [
-    {"skill_code": "03.04.02.015", "skill_name": "Team Leadership", "min_level": 2}
+    { "skill_code": "03.04.02.015", "skill_name": "Team Leadership", "min_level": 2 }
   ]
 }
 ```
@@ -368,27 +388,28 @@ graph TD
 
 **Assignment States**:
 
-| State | Description | Who Can Transition | Next States |
-|-------|-------------|-------------------|-------------|
-| `draft` | Initial creation | Creator | `pipeline_in_progress`, `ready_to_publish` |
-| `pipeline_in_progress` | Going through steps | System (auto) | `pending_review` |
-| `pending_review` | Awaiting final approval | Admin/Owner | `ready_to_publish`, `draft` (reject) |
-| `ready_to_publish` | Approved, ready to go live | Admin/Owner | `published` (sets status=active) |
-| `published` | Live and matching | N/A | (status changes: active/paused/closed) |
+| State                  | Description                | Who Can Transition | Next States                                |
+| ---------------------- | -------------------------- | ------------------ | ------------------------------------------ |
+| `draft`                | Initial creation           | Creator            | `pipeline_in_progress`, `ready_to_publish` |
+| `pipeline_in_progress` | Going through steps        | System (auto)      | `pending_review`                           |
+| `pending_review`       | Awaiting final approval    | Admin/Owner        | `ready_to_publish`, `draft` (reject)       |
+| `ready_to_publish`     | Approved, ready to go live | Admin/Owner        | `published` (sets status=active)           |
+| `published`            | Live and matching          | N/A                | (status changes: active/paused/closed)     |
 
 **Pipeline Step States**:
 
-| State | Description |
-|-------|-------------|
-| `pending` | Awaiting stakeholder action |
-| `in_progress` | Stakeholder is working on it |
-| `completed` | Stakeholder finished |
-| `skipped` | Step bypassed (optional step) |
-| `rejected` | Stakeholder rejected, sends back to previous step |
+| State         | Description                                       |
+| ------------- | ------------------------------------------------- |
+| `pending`     | Awaiting stakeholder action                       |
+| `in_progress` | Stakeholder is working on it                      |
+| `completed`   | Stakeholder finished                              |
+| `skipped`     | Step bypassed (optional step)                     |
+| `rejected`    | Stakeholder rejected, sends back to previous step |
 
 ### 2.5 Notifications
 
 **Auto-notifications sent when**:
+
 - Stakeholder's step becomes active (`pending` → send email)
 - Step not started after 48 hours → reminder
 - Step not completed after 7 days → escalation to org admin
@@ -397,6 +418,7 @@ graph TD
 ### 2.6 Database Schema Reference
 
 **Tables**:
+
 - `assignment_outcomes` - Outcomes and milestones
 - `assignment_expertise_matrix` - Multi-stakeholder skill requirements
 - `assignment_creation_pipeline` - Pipeline state machine
@@ -411,6 +433,7 @@ graph TD
 ### 3.1 Concept
 
 **Problem**: Exact skill matching is too rigid.
+
 - Candidate has "Kubernetes" but job requires "Container Orchestration" → Should match!
 - Candidate has "PostgreSQL" but job requires "Relational Databases" → Should match!
 
@@ -418,13 +441,13 @@ graph TD
 
 ### 3.2 Adjacency Types
 
-| Type | Description | Distance | Example |
-|------|-------------|----------|---------|
-| **Exact** | Same L4 code | 0 | PostgreSQL = PostgreSQL |
-| **L3 Adjacent** | Same L1.L2.L3, different L4 | 1 | PostgreSQL ↔ MySQL |
-| **L2 Adjacent** | Same L1.L2, different L3 | 2 | PostgreSQL ↔ MongoDB (same DB domain) |
-| **L1 Adjacent** | Same L1, different L2 | 3 | PostgreSQL ↔ React (both technical) |
-| **Semantic** | Related via graph edge | 1-2 | "Kubernetes" ↔ "Container Orchestration" |
+| Type            | Description                 | Distance | Example                                   |
+| --------------- | --------------------------- | -------- | ----------------------------------------- |
+| **Exact**       | Same L4 code                | 0        | PostgreSQL = PostgreSQL                   |
+| **L3 Adjacent** | Same L1.L2.L3, different L4 | 1        | PostgreSQL ↔ MySQL                       |
+| **L2 Adjacent** | Same L1.L2, different L3    | 2        | PostgreSQL ↔ MongoDB (same DB domain)    |
+| **L1 Adjacent** | Same L1, different L2       | 3        | PostgreSQL ↔ React (both technical)      |
+| **Semantic**    | Related via graph edge      | 1-2      | "Kubernetes" ↔ "Container Orchestration" |
 
 ### 3.3 Adjacency Factor Calculation
 
@@ -433,6 +456,7 @@ graph TD
 **Default λ = 0.7** (decay constant)
 
 **Examples**:
+
 ```
 Distance 0 (exact):    adj = exp(-0.7 * 0) = 1.00   (100%)
 Distance 1 (L3 adj):   adj = exp(-0.7 * 1) = 0.497  (50%)
@@ -458,6 +482,7 @@ CREATE TABLE skill_adjacency (
 ```
 
 **Example Edges**:
+
 ```sql
 -- Same category: Container orchestration tools
 ('01.04.07.142', '01.04.07.089', 'related_to', 1, 0.85),  -- Kubernetes ↔ Docker Swarm
@@ -476,6 +501,7 @@ CREATE TABLE skill_adjacency (
 **Scenario**: Job requires "Container Orchestration (C4)", candidate has "Kubernetes (C4)"
 
 **Without Adjacency**:
+
 ```
 Required: "Container Orchestration" (code: 01.04.07.999)
 Candidate: "Kubernetes" (code: 01.04.07.142)
@@ -483,6 +509,7 @@ Match: ❌ No exact match → score = 0
 ```
 
 **With Adjacency**:
+
 ```
 Required: "Container Orchestration" (code: 01.04.07.999)
 Candidate: "Kubernetes" (code: 01.04.07.142)
@@ -496,6 +523,7 @@ Match: ✅ Partial credit (40-50% of full match)
 ### 3.6 Building the Adjacency Graph
 
 **Phase 1: Auto-generate from taxonomy**
+
 ```python
 # For all skills in same L3:
 for skill_a, skill_b in pairs_in_same_l3():
@@ -510,6 +538,7 @@ for skill_a, skill_b in pairs_in_same_l2():
 ```
 
 **Phase 2: Curate semantic relationships**
+
 ```sql
 -- Manual curation by domain experts
 INSERT INTO skill_adjacency VALUES
@@ -519,6 +548,7 @@ INSERT INTO skill_adjacency VALUES
 ```
 
 **Phase 3: Learn from matching outcomes**
+
 ```python
 # If users with skill_a consistently match well with jobs requiring skill_b:
 # → Infer adjacency relationship
@@ -530,6 +560,7 @@ INSERT INTO skill_adjacency VALUES
 **SQL Function**: `skill_adjacency_factor(code1, code2, lambda)`
 
 **TypeScript Function**:
+
 ```typescript
 function skillAdjacencyFactor(
   requiredCode: string,
@@ -540,13 +571,16 @@ function skillAdjacencyFactor(
   if (requiredCode === candidateCode) return 1.0;
 
   // 2. Look up explicit edge in graph
-  const edge = await db.query(`
+  const edge = await db.query(
+    `
     SELECT distance, strength
     FROM skill_adjacency
     WHERE (from_code = $1 AND to_code = $2)
        OR (from_code = $2 AND to_code = $1)
     LIMIT 1
-  `, [requiredCode, candidateCode]);
+  `,
+    [requiredCode, candidateCode]
+  );
 
   if (edge) {
     return Math.exp(-lambda * edge.distance) * (edge.strength || 1.0);
@@ -577,6 +611,7 @@ function taxonomyDistance(code1: string, code2: string): number | null {
 ### 4.1 Overview
 
 Every match shows **"Why this match?"** with:
+
 1. **Score breakdown** by component (skills, values, practical)
 2. **Top drivers** (what contributed most)
 3. **Improvement suggestions** with **numeric deltas** ("Add proof X → +8-12%")
@@ -584,6 +619,7 @@ Every match shows **"Why this match?"** with:
 ### 4.2 Explanation Structure
 
 **API Response**:
+
 ```json
 {
   "match_id": "uuid",
@@ -591,9 +627,9 @@ Every match shows **"Why this match?"** with:
   "profile_id": "uuid",
   "score": 0.86,
   "components": {
-    "skills": 0.62,      // Weighted by 55%
-    "mvv": 0.17,         // Weighted by 25%
-    "practical": 0.12    // Weighted by 20%
+    "skills": 0.62, // Weighted by 55%
+    "mvv": 0.17, // Weighted by 25%
+    "practical": 0.12 // Weighted by 20%
   },
   "explain": [
     {
@@ -601,9 +637,22 @@ Every match shows **"Why this match?"** with:
       "weight": 0.34,
       "detail": "Matched 7/9 required skills at level (React C4, PostgreSQL C4, Node.js C3, ...)",
       "matched_skills": [
-        {"code": "01.02.15.047", "name": "React", "required": 4, "candidate": 4, "match": 1.0},
-        {"code": "01.03.01.001", "name": "PostgreSQL", "required": 3, "candidate": 4, "match": 1.0},
-        {"code": "01.02.16.032", "name": "GraphQL", "required": 3, "candidate": 0, "match": 0.5, "adjacent": "REST API"}
+        { "code": "01.02.15.047", "name": "React", "required": 4, "candidate": 4, "match": 1.0 },
+        {
+          "code": "01.03.01.001",
+          "name": "PostgreSQL",
+          "required": 3,
+          "candidate": 4,
+          "match": 1.0
+        },
+        {
+          "code": "01.02.16.032",
+          "name": "GraphQL",
+          "required": 3,
+          "candidate": 0,
+          "match": 0.5,
+          "adjacent": "REST API"
+        }
       ],
       "coverage": 0.78
     },
@@ -658,6 +707,7 @@ Every match shows **"Why this match?"** with:
 **Goal**: Show users **exactly** how to improve their match score.
 
 **Algorithm**:
+
 ```typescript
 function calculateImprovementSuggestions(
   match: Match,
@@ -668,7 +718,7 @@ function calculateImprovementSuggestions(
 
   // 1. Missing required skills
   for (const req of assignment.required_skills) {
-    const hasSkill = profile.skills.some(s => s.code === req.code);
+    const hasSkill = profile.skills.some((s) => s.code === req.code);
     if (!hasSkill) {
       const impact = estimateSkillAddition(req, match.weights);
       suggestions.push({
@@ -714,10 +764,12 @@ function calculateImprovementSuggestions(
   }
 
   // Sort by estimated impact (descending)
-  return suggestions.sort((a, b) => extractMax(b.estimated_impact) - extractMax(a.estimated_impact));
+  return suggestions.sort(
+    (a, b) => extractMax(b.estimated_impact) - extractMax(a.estimated_impact)
+  );
 }
 
-function estimateSkillAddition(req: Requirement, weights: Weights): {min: number, max: number} {
+function estimateSkillAddition(req: Requirement, weights: Weights): { min: number; max: number } {
   // Simplified: contribution = (req.weight / total_req_weight) * W_skill * 100
   const skill_weight = weights.W_skill || 0.55;
   const contribution = (req.weight / assignment.total_req_weight) * skill_weight * 100;
@@ -735,6 +787,7 @@ function estimateSkillAddition(req: Requirement, weights: Weights): {min: number
 ### 4.4 UI Display
 
 **Explanation Card**:
+
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │ Match Score: 86/100                                    ⭐⭐⭐⭐  │
@@ -781,25 +834,27 @@ function estimateSkillAddition(req: Requirement, weights: Weights): {min: number
 
 **Practical Fit Score** combines 7 sub-scores:
 
-| Component | Weight | Description | Hard Gate? |
-|-----------|--------|-------------|------------|
-| **Compensation** | 25% | Salary target vs budget | Optional |
-| **Availability** | 20% | Schedule overlap (7×48 bitmap) | No |
-| **Timezone** | 10% | TZ compatibility for remote/hybrid | No |
-| **Location** | 20% | Distance for onsite/hybrid | Optional |
-| **Language** | 15% | Required language proficiency | Yes (default) |
-| **Work Auth** | 10% | Visa sponsorship compatibility | Yes (default) |
-| **Benefits** | 5% | Benefits match (required vs offered) | No |
+| Component        | Weight | Description                          | Hard Gate?    |
+| ---------------- | ------ | ------------------------------------ | ------------- |
+| **Compensation** | 25%    | Salary target vs budget              | Optional      |
+| **Availability** | 20%    | Schedule overlap (7×48 bitmap)       | No            |
+| **Timezone**     | 10%    | TZ compatibility for remote/hybrid   | No            |
+| **Location**     | 20%    | Distance for onsite/hybrid           | Optional      |
+| **Language**     | 15%    | Required language proficiency        | Yes (default) |
+| **Work Auth**    | 10%    | Visa sponsorship compatibility       | Yes (default) |
+| **Benefits**     | 5%     | Benefits match (required vs offered) | No            |
 
 **Total**: `w_comp * comp + w_avail * avail + w_tz * tz + w_dist * dist + w_lang * lang + w_auth * auth + w_benef * benef`
 
 ### 5.2 Compensation Scoring
 
 **Inputs**:
+
 - Candidate: `comp_target`, `comp_currency`
 - Assignment: `comp_min`, `comp_max`, `comp_currency`
 
 **Hard Gate** (optional):
+
 ```typescript
 if (candidate.comp_min > assignment.comp_max) {
   return REJECT; // Candidate's minimum exceeds budget
@@ -807,6 +862,7 @@ if (candidate.comp_min > assignment.comp_max) {
 ```
 
 **Sigmoid Score**:
+
 ```typescript
 function compensationScore(
   targetUSD: number,
@@ -825,6 +881,7 @@ function compensationScore(
 ```
 
 **Examples**:
+
 ```
 Target $55k, Budget $50-60k (mid $55k):
   diffRatio = 0 → score = 1 / (1 + exp(0)) = 0.5 → 50% (fair match)
@@ -839,6 +896,7 @@ Target $75k, Budget $50-60k (mid $55k):
 ### 5.3 Availability Scoring (7×48 Bitmap)
 
 **Bitmap Structure**:
+
 - 7 days × 48 half-hours = **336 bits**
 - Bit 0 = Monday 00:00-00:30
 - Bit 1 = Monday 00:30-01:00
@@ -846,6 +904,7 @@ Target $75k, Budget $50-60k (mid $55k):
 - Bit 335 = Sunday 23:30-00:00
 
 **Example**:
+
 ```
 Candidate available: Mon-Fri 9am-5pm (160 bits set)
 Role requires: Mon-Fri 10am-4pm (120 bits set)
@@ -854,6 +913,7 @@ Score: 120 / 120 = 1.0 (100%)
 ```
 
 **SQL Function**:
+
 ```sql
 CREATE FUNCTION calculate_availability_overlap(
   candidate_bitmap BIT(336),
@@ -866,6 +926,7 @@ $$;
 ```
 
 **TypeScript Equivalent**:
+
 ```typescript
 function availabilityOverlap(
   candidateBitmap: string, // '0101...' (336 bits)
@@ -882,16 +943,18 @@ function availabilityOverlap(
 ### 5.4 Timezone Scoring
 
 **Inputs**:
+
 - Candidate: `tz` (e.g., "America/New_York")
 - Assignment: `tz_required` (e.g., "Europe/Stockholm")
 
 **Calculation**:
+
 ```typescript
 function timezoneOverlap(
   candidateTz: string,
   requiredTz: string,
   workHoursStart: number = 9, // 9am
-  workHoursEnd: number = 17   // 5pm
+  workHoursEnd: number = 17 // 5pm
 ): number {
   const tzOffsetDiff = Math.abs(getTzOffset(candidateTz) - getTzOffset(requiredTz));
   const hoursPerDay = workHoursEnd - workHoursStart;
@@ -903,6 +966,7 @@ function timezoneOverlap(
 ```
 
 **Examples**:
+
 ```
 NYC (UTC-5) vs Stockholm (UTC+1) = 6 hours diff
   9am-5pm (8 hours) - 6 hours = 2 hours overlap
@@ -918,10 +982,11 @@ LA (UTC-8) vs London (UTC+0) = 8 hours diff
 **Only applies if** `location_mode IN ('onsite', 'hybrid')`
 
 **Calculation**:
+
 ```typescript
 function locationScore(
-  candidateGeo: {lat: number, lon: number},
-  roleGeo: {lat: number, lon: number},
+  candidateGeo: { lat: number; lon: number },
+  roleGeo: { lat: number; lon: number },
   radiusKm: number = 30
 ): number {
   const distKm = haversineDistance(candidateGeo, roleGeo);
@@ -934,6 +999,7 @@ function locationScore(
 ```
 
 **Examples**:
+
 ```
 Distance 10 km, Radius 30 km:
   Score = 1.0 (within radius)
@@ -948,72 +1014,75 @@ Distance 90 km, Radius 30 km:
 ### 5.6 Work Authorization & Sponsorship
 
 **Inputs**:
+
 - Candidate: `needs_sponsorship`, `wishes_sponsorship`, `work_authorization: {countries: []}`
 - Assignment: `can_sponsor`, `sponsorship_countries: []`
 
 **Logic**:
+
 ```typescript
 function workAuthScore(
-  candidate: {needsSponsor: boolean, wishesSponsor: boolean, authCountries: string[]},
-  assignment: {canSponsor: boolean, sponsorCountries: string[]}
-): {score: number, hardFail: boolean} {
+  candidate: { needsSponsor: boolean; wishesSponsor: boolean; authCountries: string[] },
+  assignment: { canSponsor: boolean; sponsorCountries: string[] }
+): { score: number; hardFail: boolean } {
   // If candidate doesn't need sponsorship, always compatible
   if (!candidate.needsSponsor) {
-    return {score: 1.0, hardFail: false};
+    return { score: 1.0, hardFail: false };
   }
 
   // If candidate needs but org can't sponsor → hard fail (if gate enabled)
   if (!assignment.canSponsor) {
-    return {score: 0.0, hardFail: true}; // Can be softened to 0.2 if gate disabled
+    return { score: 0.0, hardFail: true }; // Can be softened to 0.2 if gate disabled
   }
 
   // Check country compatibility
-  const overlap = candidate.authCountries.some(c =>
-    assignment.sponsorCountries.includes(c)
-  );
+  const overlap = candidate.authCountries.some((c) => assignment.sponsorCountries.includes(c));
 
   if (!overlap) {
-    return {score: 0.5, hardFail: false}; // Partial - may need relocation
+    return { score: 0.5, hardFail: false }; // Partial - may need relocation
   }
 
-  return {score: 1.0, hardFail: false}; // Perfect match
+  return { score: 1.0, hardFail: false }; // Perfect match
 }
 ```
 
 ### 5.7 Benefits Matching
 
 **Inputs**:
+
 - Candidate: `profile_benefits_prefs` (importance: required/preferred/nice_to_have)
 - Assignment: `assignment_benefits_offered`
 
 **Calculation**:
+
 ```typescript
 function benefitsScore(
-  candidatePrefs: {code: string, importance: string}[],
-  assignmentOffers: {code: string}[]
+  candidatePrefs: { code: string; importance: string }[],
+  assignmentOffers: { code: string }[]
 ): number {
-  const required = candidatePrefs.filter(p => p.importance === 'required');
-  const preferred = candidatePrefs.filter(p => p.importance === 'preferred');
+  const required = candidatePrefs.filter((p) => p.importance === 'required');
+  const preferred = candidatePrefs.filter((p) => p.importance === 'preferred');
 
   if (required.length === 0) return 1.0; // No requirements = perfect
 
-  const requiredMet = required.filter(r =>
-    assignmentOffers.some(o => o.code === r.code)
+  const requiredMet = required.filter((r) =>
+    assignmentOffers.some((o) => o.code === r.code)
   ).length;
 
-  const preferredMet = preferred.filter(p =>
-    assignmentOffers.some(o => o.code === p.code)
+  const preferredMet = preferred.filter((p) =>
+    assignmentOffers.some((o) => o.code === p.code)
   ).length;
 
   // 80% weight on required, 20% on preferred
   const reqScore = requiredMet / required.length;
-  const prefScore = preferred.length > 0 ? (preferredMet / preferred.length) : 1.0;
+  const prefScore = preferred.length > 0 ? preferredMet / preferred.length : 1.0;
 
   return 0.8 * reqScore + 0.2 * prefScore;
 }
 ```
 
 **Example**:
+
 ```
 Candidate requires: [health_insurance, dental_insurance]
 Candidate prefers: [gym_membership, learning_budget]
@@ -1035,6 +1104,7 @@ Organizations can mark certain assignment fields as **sensitive**—used in matc
 **Use Case**: "Mutual respect" - some info is important for finding the right match but shouldn't be public knowledge.
 
 **Examples of Sensitive Fields**:
+
 - Maximum compensation budget (don't want to anchor negotiations)
 - Internal job requisition code
 - Hiring manager personal notes
@@ -1042,23 +1112,23 @@ Organizations can mark certain assignment fields as **sensitive**—used in matc
 
 ### 6.2 Visibility Levels
 
-| Level | Description | When Visible | Used in Matching? |
-|-------|-------------|--------------|-------------------|
-| `public` | Visible to all | Always (in job listings) | Yes |
-| `post_match` | After mutual interest | After both parties express interest | Yes |
-| `post_conversation_start` | After messaging begins | After conversation created | Yes |
-| `hidden_used_for_matching` | Never shown to candidate | Never | Yes |
-| `internal_only` | Org members only | Never | No |
+| Level                      | Description              | When Visible                        | Used in Matching? |
+| -------------------------- | ------------------------ | ----------------------------------- | ----------------- |
+| `public`                   | Visible to all           | Always (in job listings)            | Yes               |
+| `post_match`               | After mutual interest    | After both parties express interest | Yes               |
+| `post_conversation_start`  | After messaging begins   | After conversation created          | Yes               |
+| `hidden_used_for_matching` | Never shown to candidate | Never                               | Yes               |
+| `internal_only`            | Org members only         | Never                               | No                |
 
 ### 6.3 Redaction Strategies
 
 When a field is not yet visible:
 
-| Strategy | Example | Display |
-|----------|---------|---------|
-| `hide` | Don't show at all | (Field omitted) |
-| `mask` | Partial info | "Salary: $XX,XXX - $XX,XXX" → "Competitive salary" |
-| `generic_label` | Replace with generic text | "$80,000 max" → "Budget allocated" |
+| Strategy        | Example                   | Display                                            |
+| --------------- | ------------------------- | -------------------------------------------------- |
+| `hide`          | Don't show at all         | (Field omitted)                                    |
+| `mask`          | Partial info              | "Salary: $XX,XXX - $XX,XXX" → "Competitive salary" |
+| `generic_label` | Replace with generic text | "$80,000 max" → "Budget allocated"                 |
 
 ### 6.4 Database Schema
 
@@ -1070,7 +1140,7 @@ CREATE TABLE assignment_field_visibility (
     field_name TEXT,              -- e.g., 'comp_max', 'hiring_manager_notes'
     field_category TEXT,          -- 'compensation', 'internal', 'strategic'
     visibility_level TEXT,        -- 'public', 'post_match', 'hidden_used_for_matching', 'internal_only'
-    reveal_stage INTEGER,         -- 1 or 2 (for staged identity reveal)
+    reveal_stage INTEGER,         -- 1 or 2 (for progressive reveal)
     redaction_type TEXT,          -- 'hide', 'mask', 'generic_label'
     generic_label TEXT,           -- e.g., "Competitive salary", "Confidential requirement met"
     conditional_rules JSONB,      -- {"show_if": "candidate_score > 0.8"}
@@ -1081,6 +1151,7 @@ CREATE TABLE assignment_field_visibility (
 ### 6.5 Auto-Population
 
 **On Assignment Creation**:
+
 ```typescript
 // Trigger: auto_populate_field_visibility()
 // Inserts default rules for all system fields
@@ -1109,12 +1180,13 @@ CREATE TABLE assignment_field_visibility (
 **Key Principle**: Sensitive fields **are used** in matching algorithm but **never exposed** in explanations.
 
 **Example**:
+
 ```typescript
 // Matching algorithm:
 const compScore = calculateCompensationScore(
   candidate.comp_target,
   assignment.comp_min,
-  assignment.comp_max  // ← Sensitive field used here
+  assignment.comp_max // ← Sensitive field used here
 );
 
 // Explanation generation:
@@ -1123,7 +1195,7 @@ const visibility = await getFieldVisibility(assignment.id, 'comp_max');
 if (visibility.level === 'hidden_used_for_matching') {
   explanation.push({
     type: 'practical',
-    detail: "Compensation target compatible", // Generic
+    detail: 'Compensation target compatible', // Generic
     // NO specific numbers shown
   });
 } else {
@@ -1140,6 +1212,7 @@ if (visibility.level === 'hidden_used_for_matching') {
 **Scenario**: Some fields become visible **after mutual interest** or **after conversation starts**.
 
 **Flow**:
+
 ```
 1. Candidate views match → sees "Competitive salary"
 2. Candidate clicks "Interested" → still hidden
@@ -1151,6 +1224,7 @@ if (visibility.level === 'hidden_used_for_matching') {
 ```
 
 **Implementation**:
+
 ```typescript
 async function getVisibleFields(
   assignmentId: string,
@@ -1189,7 +1263,7 @@ async function getVisibleFields(
 
     // Apply conditional rules
     if (rule.conditional_rules?.show_if) {
-      if (!evaluateCondition(rule.conditional_rules.show_if, {match, candidate})) {
+      if (!evaluateCondition(rule.conditional_rules.show_if, { match, candidate })) {
         visibleFields[field] = rule.generic_label || '[Redacted]';
       }
     }
@@ -1218,6 +1292,7 @@ CREATE TABLE assignment_field_access_log (
 ```
 
 **Use Cases**:
+
 - Audit: "Who saw the max budget?"
 - Debug: "Why is candidate not seeing salary range?"
 - Compliance: GDPR access logs

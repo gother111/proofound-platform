@@ -1,203 +1,64 @@
-# Supabase MCP Setup - Status Report
+# Supabase MCP Setup Status
 
-## ✅ What's Complete
+> This file is a technical setup and discovery note only.
+> It is not the MVP source of truth for product scope or launch promises.
+> Product scope precedence is `Proofound_Project_Specification_2026-03-11.md`, then `PRD_TECHNICAL_REQUIREMENTS.md`, then `PRD_for_a_web_platform_MVP.master-latest.md`, then `LAUNCH_RUNBOOK.md`.
 
-### 1. MCP Configuration
+## Current Status
 
-- **Status**: ✅ Already configured in `mcp-config.json`
-- **Connection**: Successfully connected to project `cjpfrgmsxwxhuomnvciq`
-- **URL**: `https://mcp.supabase.com/mcp?project_ref=cjpfrgmsxwxhuomnvciq`
+### MCP configuration
 
-### 2. Database Discovery
+- Status: configured in `mcp-config.json`
+- Connection target: Supabase MCP for project `cjpfrgmsxwxhuomnvciq`
 
-**Total Tables Found**: 23 tables in public schema
+### What this report is for
 
-#### User Profile Tables (7 rows across 2 tables)
+- confirming MCP connectivity
+- recording schema discovery snapshots
+- tracking Supabase advisor findings that affect local setup or database hygiene
 
-- `profiles` (4 rows) - Base user profiles
-- `individual_profiles` (3 rows) - Individual user extended data
+### What this report is not for
 
-#### Organization Tables
+- defining product scope
+- defining canonical user or organization personas
+- deciding what the MVP promises publicly
 
-- `organizations` - Company/NGO/government profiles
-- `organization_members` - Team membership
-- `org_invitations` - Pending invitations
+## Schema Discovery Snapshot
 
-#### Matching System
+Recent MCP discovery confirms the repo is connected to a live Supabase project and can inspect:
 
-- `assignments` - Job/role postings
-- `matches` - Matching algorithm results
-- `match_interest` - User interest tracking
-- `matching_profiles` - User preference settings
+- profile and organization tables
+- assignment and matching tables
+- skills, capabilities, evidence, and related proof tables
+- audit and feature-flag tables
 
-#### Skills & Proof
+Treat this as operational visibility only. Schema presence does not mean every table or route is part of the active Project Specification launch contract.
 
-- `skills` - User skill records
-- `capabilities` - Extended capability profiles
-- `evidence` - Proof/evidence of skills
-- `skill_endorsements` - Peer endorsements
-- `growth_plans` - Learning goals
+## Current Issues Worth Tracking
 
-#### Experience & Impact
+### Security advisor
 
-- `education` - Educational background
-- `experiences` - Work experience
-- `volunteering` - Volunteer work
-- `impact_stories` - Impact stories and case studies
+- leaked password protection was previously reported as disabled
+- action: verify the current Supabase dashboard setting and enable it if still off
 
-#### System Tables
+### Performance advisors
 
-- `audit_logs` - System audit trail
-- `rate_limits` - Rate limiting (25 rows)
-- `feature_flags` - Feature flags
+- unused indexes were previously reported across matching and evidence-related tables
+- action: review with query evidence before removing anything
 
-**All tables have Row Level Security (RLS) enabled** ✅
+## Local Setup Reminders
 
-### 3. Migration Status
+- keep `.env.local` untracked
+- use the Supabase dashboard for service-role and connection details
+- restart the local dev server after env changes
 
-**Total Migrations**: 15 migrations found
+## Recommended Use
 
-- All migrations appear to be security and performance optimization related
-- Recent focus on RLS policy optimization
+Use Supabase MCP for:
 
-## ⚠️ Issues Found
+- schema inspection
+- security and performance advisor checks
+- query debugging
+- migration and policy review support
 
-### Security Advisors: 1 Warning
-
-**Leaked Password Protection Disabled**
-
-- **Impact**: Users could use passwords that have been leaked in data breaches
-- **Fix**: [Enable in Supabase Dashboard](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection)
-- **Effort**: Low (5 minutes)
-
-### Performance Advisors: 26 Unused Indexes
-
-These indexes were created but never used in queries. They're safe to remove to improve write performance:
-
-#### Most Impacted Tables:
-
-- `matching_profiles` - 2 unused indexes
-- `assignments` - 3 unused indexes
-- `matches` - 2 unused indexes
-- `match_interest` - 3 unused indexes
-- `capabilities` - 2 unused indexes
-- `evidence` - 2 unused indexes
-- Plus 12 more across other tables
-
-**Recommendation**: These can be safely dropped to improve INSERT/UPDATE performance. They were likely created optimistically but the queries didn't use them.
-
-## 🪄 Manual Steps Required
-
-### Step 1: Create `.env.local` file
-
-Since `.env.local` is gitignored, you need to create it manually:
-
-```bash
-# In your project root
-touch .env.local
-```
-
-Then add this content:
-
-```env
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_URL=https://your-project-ref.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
-
-# Database connections
-DATABASE_URL=postgresql://postgres.your-project-ref:[PASSWORD]@aws-1-eu-west-1.pooler.supabase.com:6543/postgres
-DIRECT_URL=postgresql://postgres:[PASSWORD]@db.your-project-ref.supabase.co:5432/postgres
-
-# Get from Supabase Dashboard → Settings → API
-SUPABASE_SERVICE_ROLE_KEY=your-key-here
-
-# Site URL
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-SITE_URL=http://localhost:3000
-```
-
-### Step 2: Get Service Role Key
-
-1. Go to: [Supabase API Settings](https://supabase.com/dashboard/project/cjpfrgmsxwxhuomnvciq/settings/api)
-2. Find the **service_role** key (NOT the anon key)
-3. Copy the entire key
-4. Paste into `SUPABASE_SERVICE_ROLE_KEY=` in `.env.local`
-
-### Step 3: Restart Dev Server
-
-```bash
-npm run dev
-```
-
-## 📊 Database Schema Overview
-
-Your database is well-structured with a clear separation:
-
-```
-Profiles (Base)
-  ├── Individual Profiles (3 users)
-  ├── Organizations
-  │   ├── Members
-  │   └── Invitations
-  │
-  ├── Skills & Proof
-  │   ├── Skills
-  │   ├── Capabilities
-  │   ├── Evidence
-  │   ├── Endorsements
-  │   └── Growth Plans
-  │
-  ├── Experience
-  │   ├── Education
-  │   ├── Work Experience
-  │   ├── Volunteering
-  │   └── Impact Stories
-  │
-  └── Matching System
-      ├── Matching Profiles (user preferences)
-      ├── Assignments (job postings)
-      ├── Matches (algorithm results)
-      └── Match Interest (user tracking)
-```
-
-## 🎯 Next Actions
-
-### Immediate (Before Next Session)
-
-1. ✅ Create `.env.local` with all credentials
-2. ✅ Get service role key from Supabase Dashboard
-3. ✅ Restart dev server
-
-### Short Term (This Week)
-
-1. Enable leaked password protection in Supabase
-2. Review unused indexes - consider dropping them
-3. Test MCP by asking for database insights
-
-### Long Term (Ongoing)
-
-1. Regular security advisor checks (monthly)
-2. Monitor performance advisors
-3. Use MCP for debugging and monitoring
-
-## 📚 Documentation Created
-
-1. **`SETUP_SUPABASE.md`** - Quick setup instructions for you
-2. **`docs/SUPABASE_MCP_SETUP.md`** - Complete guide on using MCP
-3. **`MCP_STATUS.md`** - This status report
-
-## How to Use MCP
-
-Once `.env.local` is set up, try these commands:
-
-```
-"List all database tables"
-"Show me profiles table structure"
-"Check for security issues"
-"Show me recent migrations"
-"Execute: SELECT COUNT(*) FROM profiles"
-```
-
-I'll use Supabase MCP to answer these queries! 🚀
+Do not use this file as a substitute for the Project Specification, PRD, or launch runbook when making scope decisions.

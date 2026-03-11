@@ -1,5 +1,7 @@
 # Supabase MCP Setup Guide
 
+> Scope note: this guide is for local setup and database operations only. It must not be used to define MVP product scope or launch promises.
+
 This guide explains how to use Supabase Model Context Protocol (MCP) alongside Drizzle ORM in your Proofound Platform project.
 
 ## What is Supabase MCP?

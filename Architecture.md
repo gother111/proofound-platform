@@ -1,12 +1,15 @@
 > Doc Class: `governance`
 > Sync Pair: `Architecture.md`
-> Last Verified: `2026-03-08`
+> Last Verified: `2026-03-11`
 
 # Architecture Snapshot
 
 ## Canonical Launch Contract
 
-- The canonical MVP launch contract lives in `PRD_TECHNICAL_REQUIREMENTS.md` Section 7, "Block 12: Canonical Launch Security, NFR Hardening, and Spec Reconciliation Appendix".
+- The canonical MVP launch contract starts with `Proofound_Project_Specification_2026-03-11.md`.
+- `PRD_TECHNICAL_REQUIREMENTS.md` is the authoritative technical launch contract beneath the Project Specification.
+- `PRD_for_a_web_platform_MVP.master-latest.md` is the canonical supporting product PRD beneath the Project Specification.
+- `LAUNCH_RUNBOOK.md` is operator-facing execution guidance only.
 - This document is a repo-grounded snapshot, not a competing launch spec.
 - Historical references that describe app-managed JWT sessions, Redis-backed session or queue infrastructure, Datadog or LogDNA as launch dependencies, or Swedish runtime parity are non-canonical for launch.
 
@@ -23,6 +26,7 @@
 ## Launch Scope Boundaries
 
 - Interactive web auth uses Supabase SSR session cookies, not an app-managed JWT refresh model.
+- MVP keeps one clean individual corridor and one clean organization corridor rather than expanding into public directories, ATS or HRIS replacement, BI-style org suites, or social/feed behavior.
 - Public portfolio pages are explicit publication surfaces and remain non-indexed by default until publication criteria are met.
 - Uploads are quarantine-first and private by default, with public promotion limited to approved safe image types.
 - Postgres-backed queues are the canonical MVP async model. Redis and other brokers remain post-launch options only if measured bottlenecks justify them.

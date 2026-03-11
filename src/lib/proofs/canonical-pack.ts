@@ -18,6 +18,7 @@ import {
   isPublicSafeVisibility,
   type EffectiveVisibility,
 } from '@/lib/privacy/effective-visibility';
+import { toDateOrNull, toIsoOrNull } from '@/lib/datetime/normalize';
 import {
   revalidatePublicOrganizationPortfolioById,
   revalidatePublicPortfolioByProfileId,
@@ -215,31 +216,8 @@ function toStringArray(value: unknown): string[] {
   return value.filter((entry): entry is string => typeof entry === 'string');
 }
 
-function toIsoString(value: Date | string | null | undefined) {
-  if (!value) {
-    return null;
-  }
-
-  if (value instanceof Date) {
-    return value.toISOString();
-  }
-
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
-}
-
-function toDate(value: Date | string | null | undefined): Date | null {
-  if (!value) {
-    return null;
-  }
-
-  if (value instanceof Date) {
-    return Number.isNaN(value.getTime()) ? null : value;
-  }
-
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
+const toIsoString = toIsoOrNull;
+const toDate = toDateOrNull;
 
 function maxDate(values: Array<Date | null>): Date | null {
   return values.reduce<Date | null>((current, value) => {

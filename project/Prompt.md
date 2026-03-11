@@ -1,18 +1,19 @@
 > Doc Class: `governance`
 > Sync Pair: `Prompt.md`
-> Last Verified: `2026-02-26`
+> Last Verified: `2026-03-11`
 
 # Proofound: Project Prompt
 
 ## What This Product Is
 
-Proofound is a credibility and connection platform built for authenticity rather than engagement algorithms, with dual personas (Individuals and Organizations), proof-first profiles, and privacy by design. (source: README.md)
+Proofound is a proof-first, privacy-first, portfolio-first credibility and hiring platform with one clean individual side and one clean organization side. The canonical source stack starts with `Proofound_Project_Specification_2026-03-11.md`, then `PRD_TECHNICAL_REQUIREMENTS.md`, then `PRD_for_a_web_platform_MVP.master-latest.md`, then `LAUNCH_RUNBOOK.md`. Supporting docs can add implementation depth only when they do not conflict with that stack. (source: Proofound_Project_Specification_2026-03-11.md, PRD_TECHNICAL_REQUIREMENTS.md, PRD_for_a_web_platform_MVP.master-latest.md, LAUNCH_RUNBOOK.md)
 
 ## Repo Truth (Verified)
 
 - Web stack: Next.js + React + TypeScript. (source: package.json, src/app/)
 - Database + auth: Supabase (JS client) with Postgres; data access is guarded with Row Level Security (RLS). (source: README.md, package.json)
 - ORM/schema source of truth: Drizzle schema lives in `src/db/schema.ts`; Drizzle is configured via `drizzle.config.ts`. (source: src/db/schema.ts, drizzle.config.ts)
+- Canonical launch scope precedence is `Proofound_Project_Specification_2026-03-11.md`, then `PRD_TECHNICAL_REQUIREMENTS.md`, then `PRD_for_a_web_platform_MVP.master-latest.md`, then `LAUNCH_RUNBOOK.md`. (source: Proofound_Project_Specification_2026-03-11.md, PRD_TECHNICAL_REQUIREMENTS.md, PRD_for_a_web_platform_MVP.master-latest.md, LAUNCH_RUNBOOK.md)
 - API surface: server endpoints are implemented as App Router route handlers under `src/app/api/`. (source: src/app/api/)
 - Security middleware: CSP/security headers, CSRF protection, and optional edge rate limiting live in `src/middleware.ts`. (source: src/middleware.ts)
 - Deployment + cron: cron schedules are configured in `vercel.json` and target `/api/cron/*` routes. (source: vercel.json, src/app/api/cron/)
@@ -31,5 +32,5 @@ Proofound is a credibility and connection platform built for authenticity rather
 
 - TODO: Define the primary MVP success metric (e.g., time-to-first-qualified-intro, contracts signed, retention).
 - TODO: Confirm which persona flows are “must ship” for MVP vs “later” (repo contains many implemented features). (source: IMPLEMENTATION_STATUS_CURRENT.md)
-- TODO: Confirm which verification methods are required for MVP (work email, LinkedIn, Veriff). (source: IDENTITY_VERIFICATION_IMPLEMENTATION.md, docs/LINKEDIN_VERIFICATION_SETUP.md)
+- TODO: Confirm the smallest launch-safe verification surface still needed in code so implementation stays within scoped trust labels and non-KYC launch promises. (source: Proofound_Project_Specification_2026-03-11.md, docs/verification-policy-mvp.md)
 - TODO: Confirm target locales/regions (i18n exists; decide launch scope). (source: README.md)

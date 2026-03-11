@@ -1,5 +1,8 @@
 # Data Processing Agreements (DPAs)
 
+> Scope note: vendor coverage in this file does not imply a vendor is part of the active Project Specification launch dependency set.
+> If a vendor supports an optional or post-MVP feature, treat its DPA entry as conditional coverage only.
+
 **Last Updated**: November 6, 2025  
 **Owner**: Privacy & Legal Team  
 **Contact**: privacy@proofound.io
@@ -232,17 +235,17 @@ Supabase uses AWS (Amazon Web Services) as infrastructure provider:
 
 ---
 
-## 6. Veriff (Identity Verification - Optional Feature)
+## 6. Veriff (Conditional / Post-MVP Verification Coverage)
 
 **Vendor**: Veriff OÜ  
-**Service**: Identity verification for high-trust profiles  
+**Service**: Conditional identity-document verification coverage if a later scoped verification feature is enabled  
 **Data Location**: European Union (Estonia)  
 **DPA Status**: ✅ GDPR DPA in place
 
 ### Purpose of Data Sharing
 
-- **Identity Verification**: Verify government-issued ID for platform trust
-- **KYC/AML Compliance**: Anti-fraud and anti-money laundering checks
+- **Conditional identity-document checks**: Support a later optional verification path if separately enabled
+- **Not an active Project Specification dependency**: The current trust model does not require government-ID self-serve verification
 
 ### Data Categories Shared
 
@@ -251,7 +254,7 @@ Supabase uses AWS (Amazon Web Services) as infrastructure provider:
 
 ### User Consent
 
-- **Opt-in only**: Users explicitly choose to verify identity
+- **Opt-in only**: Users explicitly choose to use the optional verification flow if it is enabled
 - **Purpose explained**: Clear consent flow before verification starts
 - **Retention**: Verification results stored, raw ID images deleted after 90 days
 
@@ -265,7 +268,7 @@ Supabase uses AWS (Amazon Web Services) as infrastructure provider:
 
 ### Data Deletion Procedures
 
-- Verification result: Stored as badge (verified/not verified)
+- Verification result: Stored only as the scoped result required by the enabled feature
 - ID document images: Deleted after 90 days
 - Biometric data: Never stored (processed in real-time only)
 
@@ -316,7 +319,7 @@ Supabase uses AWS (Amazon Web Services) as infrastructure provider:
 ### Annual Review Cycle
 
 1. **Q1 (January-March)**: Review Supabase, Vercel, Resend DPAs
-2. **Q2 (April-June)**: Review OpenAI, Sentry, Veriff DPAs
+2. **Q2 (April-June)**: Review OpenAI, Sentry, and any enabled optional verification-vendor DPAs
 3. **Q3 (July-September)**: Assess new vendors, update this document
 4. **Q4 (October-December)**: Internal security audit, DPA compliance check
 

@@ -1,5 +1,8 @@
 # Proofound — Comprehensive System Architecture
 
+> Reference note: this file is reference or historical design material. It is not the canonical MVP launch contract.
+> Current precedence: `Proofound_Project_Specification_2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.md`, `PRD_for_a_web_platform_MVP.master-latest.md`, `LAUNCH_RUNBOOK.md`.
+
 **Document Version:** 1.0
 **Last Updated:** 2025-10-29
 **Status:** Complete MVP Schema + Partial Implementation
@@ -278,7 +281,7 @@ Extended profile data for individuals.
 
 #### `organizations`
 
-Organization entities (companies, NGOs, government, etc.).
+Organization entities (companies, NGOs, networks, and other lean organizations).
 
 ```typescript
 {
@@ -286,7 +289,7 @@ Organization entities (companies, NGOs, government, etc.).
   slug: text (unique, for routing)
   legalName: text
   displayName: text
-  type: 'company' | 'ngo' | 'government' | 'network' | 'other'
+  type: 'company' | 'ngo' | 'network' | 'other'
   logoUrl: text
   mission: text
   website: text
@@ -1151,7 +1154,7 @@ Capabilities have separate privacy levels:
 
 3. Create organization
    ├─> Enter legal name, display name, website
-   ├─> Choose type (company, NGO, government, network, other)
+   ├─> Choose type (company, NGO, network, other)
    ├─> System generates slug (e.g., "acme-corp")
    ├─> Create organizations record
    ├─> Create organization_members record (role: 'owner')

@@ -1,10 +1,14 @@
 # Proofound — Core User Flows v1.0
 
-*A concise, thorough blueprint for MVP software documentation. Forty (40) flows: 20 for Individuals and 20 for Organizations. Each flow uses the same mini-spec template to support design, product, and engineering.*
+> Reference note: this file is reference or historical design material. It is not the canonical MVP launch contract.
+> Current precedence: `Proofound_Project_Specification_2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.md`, `PRD_for_a_web_platform_MVP.master-latest.md`, `LAUNCH_RUNBOOK.md`.
+
+_A concise, thorough blueprint for MVP software documentation. Forty (40) flows: 20 for Individuals and 20 for Organizations. Each flow uses the same mini-spec template to support design, product, and engineering._
 
 ---
 
 ## Legend — Mini‑Spec Template
+
 - **Purpose**: The user’s intent and outcome.
 - **Entry**: Preconditions & triggers.
 - **Steps**: Happy‑path sequence (what the user does).
@@ -20,18 +24,21 @@
 # Individuals (I‑01 → I‑20)
 
 ## I‑01 Authenticate (Sign up / Sign in / Recovery)
+
 **Purpose**: Access Proofound securely without friction.
 **Entry**: User lands on login; deep link to protected page; session expired.
 **Steps**:
-1) Choose **Sign up** or **Sign in** (Email or Google SSO). 2) Enter email; verify via magic link or password. 3) (Optional) 2FA. 4) If new, proceed to onboarding; if returning, route to last context.
-**Inputs/Data**: Email, name (from SSO), minimal device info; session token.
-**Needs & Feelings**: Wants trust and speed; anxiety about lockouts.
-**System Support**: Clear errors; rate‑limit; suspicious login alerts; remember last org/role.
-**Done**: Authenticated session; redirected appropriately.
-**Metrics**: Conversion to authenticated; time‑to‑first session; recovery success rate.
-**Edge Cases**: Expired links; blocked SSO domain; passwordless fallback.
+
+1. Choose **Sign up** or **Sign in** (Email or Google SSO). 2) Enter email; verify via magic link or password. 3) (Optional) 2FA. 4) If new, proceed to onboarding; if returning, route to last context.
+   **Inputs/Data**: Email, name (from SSO), minimal device info; session token.
+   **Needs & Feelings**: Wants trust and speed; anxiety about lockouts.
+   **System Support**: Clear errors; rate‑limit; suspicious login alerts; remember last org/role.
+   **Done**: Authenticated session; redirected appropriately.
+   **Metrics**: Conversion to authenticated; time‑to‑first session; recovery success rate.
+   **Edge Cases**: Expired links; blocked SSO domain; passwordless fallback.
 
 ## I‑02 Consent & Policies
+
 **Purpose**: Understand and accept ToS, Privacy, and Verification policy.
 **Entry**: First login or when policies change.
 **Steps**: Read summaries → expand details → check required boxes → continue.
@@ -43,6 +50,7 @@
 **Edge Cases**: Underage/ineligible; jurisdiction‑specific terms.
 
 ## I‑03 Guided Onboarding
+
 **Purpose**: Capture goals, causes, availability, comp, and location mode to personalize.
 **Entry**: Post‑signup or when profile is incomplete.
 **Steps**: 1) Goals & causes → 2) Availability & location → 3) Compensation → 4) Languages/timezone → 5) Review.
@@ -54,6 +62,7 @@
 **Edge Cases**: Unknown comp; non‑standard availability.
 
 ## I‑04 Profile Basics
+
 **Purpose**: Create a credible public‑facing profile foundation.
 **Entry**: From onboarding or profile prompt.
 **Steps**: Fill bio/headline → location/timezone → languages → profile photo → preview.
@@ -65,6 +74,7 @@
 **Edge Cases**: Offensive content filter; missing avatar allowed.
 
 ## I‑05 Experience & Education
+
 **Purpose**: Document career history to improve match quality.
 **Entry**: From profile editor or nudge when empty.
 **Steps**: Add role → org → dates → highlights → impact metrics → save; repeat; add education.
@@ -76,6 +86,7 @@
 **Edge Cases**: Overlapping roles; non‑Gregorian dates.
 
 ## I‑06 Mission / Vision / Values
+
 **Purpose**: Express purpose alignment to power values‑based matching.
 **Entry**: From profile; nudge before first apply.
 **Steps**: Write statements → select value tags → reorder priority.
@@ -87,6 +98,7 @@
 **Edge Cases**: Empty allowed; later edits re‑score matches.
 
 ## I‑07 Build Expertise Atlas
+
 **Purpose**: Declare skills/levels for matching.
 **Entry**: From profile or onboarding.
 **Steps**: Browse domains → pick skills → set level (0–5) & months experience → save.
@@ -98,6 +110,7 @@
 **Edge Cases**: Duplicate skills; deprecated taxonomy entries.
 
 ## I‑08 Attach Proofs
+
 **Purpose**: Back claims with evidence to gain trust.
 **Entry**: From skills or experiences; after prompt to improve credibility.
 **Steps**: Choose artifact type (link/file) → attach → map to skill/experience → add context → submit.
@@ -109,6 +122,7 @@
 **Edge Cases**: Expired links; large files; NDA restrictions.
 
 ## I‑09 Request Verification
+
 **Purpose**: Get third‑party validation to boost match rank.
 **Entry**: After adding proofs or finishing an engagement.
 **Steps**: Select verifier (peer/org/auto) → send request with context → track status → receive result.
@@ -120,6 +134,7 @@
 **Edge Cases**: Conflict of interest; unreachable verifier; partial verifications.
 
 ## I‑10 Matching Preferences
+
 **Purpose**: Control what the engine prioritizes.
 **Entry**: From settings or nudges when matches are weak.
 **Steps**: Adjust values/causes/roles/location/availability/comp sliders → preview impact → save.
@@ -131,6 +146,7 @@
 **Edge Cases**: Conflicting hard constraints → show zero‑result warning.
 
 ## I‑11 Recommended Feed
+
 **Purpose**: Discover best‑fit opportunities.
 **Entry**: Home/dashboard.
 **Steps**: Scroll ranked list → inspect match chips → open details or save.
@@ -142,6 +158,7 @@
 **Edge Cases**: Cold start; stale postings.
 
 ## I‑12 Search & Filter
+
 **Purpose**: Intentional discovery beyond the feed.
 **Entry**: From nav or empty feed.
 **Steps**: Enter query → apply filters (tags, comp, mode, hours) → paginate → save search.
@@ -153,6 +170,7 @@
 **Edge Cases**: Over‑filtering; ambiguous terms.
 
 ## I‑13 Assignment Detail
+
 **Purpose**: Decide fit quickly and confidently.
 **Entry**: From feed/search.
 **Steps**: Review role, must‑haves/nice‑to‑haves, match subscores, values alignment → view org profile → decide.
@@ -164,6 +182,7 @@
 **Edge Cases**: Hidden comp; conflicting requirements.
 
 ## I‑14 Apply / Express Interest
+
 **Purpose**: Submit a targeted, low‑friction application.
 **Entry**: From assignment detail.
 **Steps**: Answer gating questions; attach tailored proofs; confirm profile sections; consent to share; submit.
@@ -175,6 +194,7 @@
 **Edge Cases**: Missing mandatory proof; eligibility gate fails.
 
 ## I‑15 Messaging
+
 **Purpose**: Communicate securely with the org.
 **Entry**: After apply or inbound outreach.
 **Steps**: Open thread → send message/file → read receipts → follow‑ups.
@@ -186,6 +206,7 @@
 **Edge Cases**: Spam; harassment → report/block.
 
 ## I‑16 Schedule Interview
+
 **Purpose**: Align on a time without timezone pain.
 **Entry**: Invite from org or suggestion from system.
 **Steps**: Propose slots → see org availability → confirm → calendar sync.
@@ -197,6 +218,7 @@
 **Edge Cases**: Calendar conflicts; daylight savings shifts.
 
 ## I‑17 Accept Offer
+
 **Purpose**: Formalize scope and terms.
 **Entry**: Post‑interview; offer available.
 **Steps**: Review scope/milestones/rate/benefits → accept or negotiate → e‑sign.
@@ -208,6 +230,7 @@
 **Edge Cases**: Conditional offers; background/verification pending.
 
 ## I‑18 Deliverables & Milestones
+
 **Purpose**: Execute and demonstrate progress.
 **Entry**: Engagement active.
 **Steps**: View milestone plan → upload deliverables → mark complete → request review.
@@ -219,6 +242,7 @@
 **Edge Cases**: Scope creep; blocked dependencies.
 
 ## I‑19 Post‑Engagement Verification & Review
+
 **Purpose**: Convert outcomes into verified credibility.
 **Entry**: Upon milestone or project completion.
 **Steps**: Trigger verification request → collect org attestation → publish badge → leave org review.
@@ -230,6 +254,7 @@
 **Edge Cases**: Negative reviews; partial success.
 
 ## I‑20 Account & Privacy
+
 **Purpose**: Control visibility, notifications, and data.
 **Entry**: Settings nav.
 **Steps**: Set availability status; tweak notification cadence; export or delete data.
@@ -245,6 +270,7 @@
 # Organizations (O‑01 → O‑20)
 
 ## O‑01 Authenticate (Org Access)
+
 **Purpose**: Secure entry for org users.
 **Entry**: Login page; invite link.
 **Steps**: Sign in/up via email/SSO → optional 2FA → route to org setup or dashboard.
@@ -256,9 +282,10 @@
 **Edge Cases**: Multiple orgs; expired invite.
 
 ## O‑02 Org Setup & Team Roles
+
 **Purpose**: Create org entity and delegate access.
 **Entry**: First admin login or “create org”.
-**Steps**: Name, type, region → invite team → assign roles (Owner/Steward/Recruiter/Viewer).
+**Steps**: Name, type, region → invite team → assign the current organization review roles supported by the launch contract.
 **Inputs/Data**: Org metadata; user emails; roles.
 **Needs & Feelings**: Control; clarity; safety.
 **System Support**: Role descriptions; least‑privilege defaults; audit trail.
@@ -267,17 +294,19 @@
 **Edge Cases**: Duplicate org; domain claim disputes.
 
 ## O‑03 Verify Org & Consent
+
 **Purpose**: Establish trust and compliance for postings.
 **Entry**: After org creation or before first publish.
 **Steps**: Domain email check or registry doc upload → review → approval; accept data processing terms.
 **Inputs/Data**: Proof docs; consent versions.
 **Needs & Feelings**: Predictable review; privacy.
 **System Support**: SLA indication; status tracking; sandbox until verified.
-**Done**: Verified badge; posting unlocked.
+**Done**: Required trust review state recorded; posting unlocked when the current launch rules allow it.
 **Metrics**: Approval rate; time‑to‑verify.
 **Edge Cases**: Rejection with reasons; appeal flow.
 
 ## O‑04 Org Profile
+
 **Purpose**: Communicate mission and context to candidates.
 **Entry**: From setup or prompt on first posting.
 **Steps**: Mission/vision/values → sectors/locations → media/case studies → save.
@@ -289,6 +318,7 @@
 **Edge Cases**: Sensitive data; brand approvals.
 
 ## O‑05 Create Assignment
+
 **Purpose**: Define a role/engagement clearly for matching.
 **Entry**: Click “New assignment”.
 **Steps**: Title → tags → must/nice skills → hours & mode → comp/budget → start window → gating questions.
@@ -300,6 +330,7 @@
 **Edge Cases**: Missing comp; legal wording flags.
 
 ## O‑06 Matching Weights & Gates
+
 **Purpose**: Tune what “fit” means for this assignment.
 **Entry**: Within assignment setup.
 **Steps**: Adjust skill/value weights; set verification gates; set hard vs soft requirements.
@@ -311,6 +342,7 @@
 **Edge Cases**: Zero candidates → suggest relaxations.
 
 ## O‑07 Publish Assignment
+
 **Purpose**: Make the assignment discoverable.
 **Entry**: From draft with minimum required fields.
 **Steps**: Final review → compliance check → publish.
@@ -322,6 +354,7 @@
 **Edge Cases**: Scheduled future publish; unpublish edits.
 
 ## O‑08 View Ranked Matches
+
 **Purpose**: Quickly see best candidates with reasons.
 **Entry**: After publish; on matches tab.
 **Steps**: Review ranked list → open subscores/explanations → take action (shortlist/message/dismiss).
@@ -333,6 +366,7 @@
 **Edge Cases**: Sparse matches; false positives.
 
 ## O‑09 Candidate Deep‑Dive
+
 **Purpose**: Evaluate an individual thoroughly.
 **Entry**: From matches or search.
 **Steps**: Inspect profile, proofs, verifications, history → compare to must/nice haves → notes.
@@ -344,6 +378,7 @@
 **Edge Cases**: Private proofs; request additional evidence.
 
 ## O‑10 Shortlist (Stages)
+
 **Purpose**: Move candidates through a clear pipeline.
 **Entry**: From matches or deep‑dive.
 **Steps**: Move to stage (new → shortlisted → interview → offer → closed) → add notes and owners.
@@ -355,6 +390,7 @@
 **Edge Cases**: Duplicate applications; withdraws.
 
 ## O‑11 Messaging
+
 **Purpose**: Communicate securely with candidates.
 **Entry**: From candidate card or stage action.
 **Steps**: Send message; request files; templates for FAQs; track responses.
@@ -366,6 +402,7 @@
 **Edge Cases**: Ghosting; inappropriate content → report.
 
 ## O‑12 Schedule Interviews
+
 **Purpose**: Coordinate times across time zones.
 **Entry**: From stage action or message thread.
 **Steps**: Propose slots; accept from candidate; calendar sync; reminders.
@@ -377,6 +414,7 @@
 **Edge Cases**: Panel interviews; reschedules.
 
 ## O‑13 Interview Feedback & Decision
+
 **Purpose**: Capture structured evaluation and decide next steps.
 **Entry**: After interview event.
 **Steps**: Submit scorecard; notes; decision (advance/reject/hold); share feedback (optional).
@@ -388,6 +426,7 @@
 **Edge Cases**: Conflicting feedback; late submissions.
 
 ## O‑14 Send Offer / Confirm Scope
+
 **Purpose**: Formalize engagement terms.
 **Entry**: Candidate selected.
 **Steps**: Draft scope/milestones/rate/benefits; approvals; send; e‑sign.
@@ -399,6 +438,7 @@
 **Edge Cases**: Conditional offers; counter‑proposals.
 
 ## O‑15 Approve Deliverables
+
 **Purpose**: Ensure work meets expectations.
 **Entry**: During active engagement.
 **Steps**: Review submission → comment/request changes → accept or reject → log decision.
@@ -410,6 +450,7 @@
 **Edge Cases**: Missed deadlines; scope ambiguity.
 
 ## O‑16 Issue Verifications
+
 **Purpose**: Convert outcomes into trusted credentials for the talent.
 **Entry**: On milestone or project completion.
 **Steps**: Select outcome → confirm evidence → choose visibility → issue verification → optional testimonial.
@@ -421,6 +462,7 @@
 **Edge Cases**: Disputes; sensitive work (private badge).
 
 ## O‑17 Manage Assignments
+
 **Purpose**: Keep postings accurate and tidy.
 **Entry**: From assignments list.
 **Steps**: Edit; duplicate; close/no‑fit; archive; reopen.
@@ -432,6 +474,7 @@
 **Edge Cases**: Closing with active candidates → notify flows.
 
 ## O‑18 Team & Permissions
+
 **Purpose**: Govern access safely.
 **Entry**: Settings → Team.
 **Steps**: Invite member; set role; transfer ownership; revoke access.
@@ -443,6 +486,7 @@
 **Edge Cases**: Departed admin; emergency lockout.
 
 ## O‑19 Analytics Snapshot
+
 **Purpose**: Understand pipeline health and match quality.
 **Entry**: Analytics tab.
 **Steps**: Review KPIs (time‑to‑fill, stage conversion, match quality, diversity/values alignment) → drill into bottlenecks.
@@ -454,6 +498,7 @@
 **Edge Cases**: Low data volumes; seasonality.
 
 ## O‑20 Org Admin & Compliance
+
 **Purpose**: Keep billing, data, and policies compliant.
 **Entry**: Settings → Admin.
 **Steps**: Billing entity & payment method → invoices → data export/delete → policy updates.
@@ -467,6 +512,7 @@
 ---
 
 ## Notes for Spec Authors
+
 - Turn each flow into a detailed spec by expanding **Steps** into screens & states, adding **Field‑level validation**, **Empty/Error states**, and **API/data contracts**.
 - Attach success metrics to OKRs (e.g., "I‑11 view→apply ≥ 30%"; "O‑08 time‑to‑first outreach ≤ 2 days").
 - Keep copy tone empathetic and direct; provide in‑product guidance where cognitive load is highest.

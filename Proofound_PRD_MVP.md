@@ -1,112 +1,53 @@
 > Doc Class: `reference-spec`
-> Last Verified: `2026-03-09`
+> Last Verified: `2026-03-11`
 
 # Proofound MVP Executive Summary
 
-**Canonical source of truth:** `PRD_for_a_web_platform_MVP.master-latest.md`  
+**Canonical source stack:** `Proofound_Project_Specification_2026-03-11.md`, then `PRD_TECHNICAL_REQUIREMENTS.md`, then `PRD_for_a_web_platform_MVP.master-latest.md`, then `LAUNCH_RUNBOOK.md`  
 **Purpose of this file:** Executive summary only. It does not define product behavior independently.
 
 ## Product Promise
 
-Proofound MVP is a proof-first credibility and connection platform for individuals and lean organizations. The MVP guarantees a day-1 shareable public portfolio, then moves both sides through privacy-safe, blind-by-default matching toward qualified intros.
-Broader roadmap, reviewer, sponsor, pilot, and public-accountability ambitions remain appendix or corridor material in the canonical master PRD and are not launch blockers.
+Proofound MVP is a proof-first, privacy-first, portfolio-first credibility and hiring platform for individuals and lean organizations. It helps individuals turn real work into structured proof and helps organizations review people through privacy-safe, explainable evidence instead of profile theater.
 
-## Canonical Vocabulary
+## Minimum Valuable Experience
 
-- **Proof Pack** is the canonical evidence object.
-- **Artifact** is a child evidence item attached to a Proof Pack.
-- **Proof** is the trust judgment about real work.
-- **Proof Card** is a submission-safe presentation of one selected Proof Pack.
-- **Public portfolio** is in scope.
-- **Portfolio indexing** is controlled and off by default.
-- **Public directory** behavior is out of scope.
+### Individual
 
-## Canonical State Models
+- create a safe profile shell
+- add at least one real context and one to three real proofs
+- publish a calm public portfolio
+- understand what remains to become match-visible and intro-eligible
 
-### Profile readiness tiers
+### Organization
 
-- `Discoverable`
-- `Match-visible`
-- `Intro-eligible`
-- `Strongly trusted`
+- publish a trust page
+- create one strong assignment
+- review privacy-safe proof-backed candidates
+- move one candidate through intro, reveal, interview, and decision
 
-### User trust tier
+## Canonical Launch Posture
 
-- `unverified`
-- `workplace_verified`
-- `identity_verified`
-
-### Proof Pack verification status
-
-- `unverified`
-- `partially_verified`
-- `verified`
-- `disputed`
-
-### Matching privacy model
-
-- `blind-by-default`
-- `progressive reveal`
-- reveal stages:
-  - `stage0_anonymous`
-  - `stage1_capability_and_proof`
-  - `stage2_contextual_reveal`
-  - `stage3_intro_approved`
-  - `stage4_interview_coordination`
-
-## Included MVP Surfaces
-
-### Individuals
-
-- portfolio-first onboarding
-- public portfolio link
-- proof-first profile with Proof Packs
-- consent-based matching that becomes org-visible at `Match-visible`
-- qualified intros starting at `Intro-eligible`
-- interviews and 48-hour feedback follow-up
-- optional private Zen Hub
-- export and delete controls
-
-### Organizations
-
-- portfolio-first onboarding
-- public trust profile
-- one lean assignment publishing path
-- Assignments and Matches queue
-- privacy-safe review with staged reveal
-- optional reviewer access
-- BYOC candidate invites using Proof Cards derived from Proof Packs
-
-## Canonical KPIs
-
-- **TTSC**
-- **TTFQI**
-- **TTV**
-- **PAC**
-- **SUS**
-- **Fairness note status**
-
-These are the only launch KPIs promised in the PRD.
-
-## Canonical Event Groups
-
-- account and onboarding
-- public portfolio distribution
-- Proof Pack lifecycle and trust evidence
-- matching and reveal
-- intro lifecycle
-- interview and feedback follow-up
-- organization workflow
-- Zen Hub private partition
-
-For exact event names and privacy rules, use `PRD_for_a_web_platform_MVP.master-latest.md`.
+- one clean individual side
+- one clean organization side
+- proof-first public presentation
+- blind-by-default review with progressive reveal
+- scoped verification, not generic identity certification
+- manual operations allowed where they protect trust and privacy
 
 ## MVP Exclusions
 
+- ATS, HRIS, payroll, or contract-signing integrations
 - public candidate directory
-- deep org analytics or BI-style analytics surfaces
-- ATS or HRIS integrations
-- payments and contracting
-- government ID self-serve verification
-- gamified counters, streaks, or badge-led product mechanics
-- Zen Hub expansion beyond optional private check-ins and reflections
+- social-feed behavior
+- reviewer marketplace UI
+- sponsor or bounty marketplace UI
+- enterprise org-suite sprawl
+- badge-led or gamified vanity mechanics
+
+## Reading Order
+
+1. `Proofound_Project_Specification_2026-03-11.md`
+2. `PRD_TECHNICAL_REQUIREMENTS.md`
+3. `PRD_for_a_web_platform_MVP.master-latest.md`
+4. `LAUNCH_RUNBOOK.md`

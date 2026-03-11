@@ -1,5 +1,8 @@
 # PROOFOUND DATA SECURITY & PRIVACY ARCHITECTURE
 
+> Reference note: this file is reference or historical design material. It is not the canonical MVP launch contract.
+> Current precedence: `Proofound_Project_Specification_2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.md`, `PRD_for_a_web_platform_MVP.master-latest.md`, `LAUNCH_RUNBOOK.md`.
+
 **Document Version**: 1.0
 **Purpose**: Comprehensive security and privacy architecture ensuring protection, transparency, and compliance at every stage
 **Audience**: Engineering, Security, Legal, Product Teams

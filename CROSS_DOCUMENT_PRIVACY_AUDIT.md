@@ -1,5 +1,8 @@
 # Cross-Document Privacy & Security Audit Report
 
+> Reference note: this file is reference or historical design material. It is not the canonical MVP launch contract.
+> Current precedence: `Proofound_Project_Specification_2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.md`, `PRD_for_a_web_platform_MVP.master-latest.md`, `LAUNCH_RUNBOOK.md`.
+
 **Date**: 2025-10-30
 **Auditor**: Claude Code Architecture Review
 **Reference Standard**: DATA_SECURITY_PRIVACY_ARCHITECTURE.md

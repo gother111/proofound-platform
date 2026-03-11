@@ -10,6 +10,7 @@ import type {
   IntegrityStatus,
   DisputeState,
 } from '@/lib/contracts/canonical-domain';
+import { toIsoOrNull, toTimestampOrNull } from '@/lib/datetime/normalize';
 
 export const BADGE_SEMANTICS_VERSION = 2;
 
@@ -156,18 +157,8 @@ const STALE_AFTER_MS: Partial<Record<VerificationKind, number | null>> = {
   impact_attestation: 730 * 24 * 60 * 60 * 1000,
 };
 
-function toIso(value: Date | string | null | undefined): string | null {
-  if (!value) return null;
-  const date = value instanceof Date ? value : new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date.toISOString();
-}
-
-function toMs(value: Date | string | null | undefined): number | null {
-  if (!value) return null;
-  const date = value instanceof Date ? value : new Date(value);
-  const timestamp = date.getTime();
-  return Number.isFinite(timestamp) ? timestamp : null;
-}
+const toIso = toIsoOrNull;
+const toMs = toTimestampOrNull;
 
 function mapKindToSlot(kind: VerificationKind): VerificationSlot {
   switch (kind) {

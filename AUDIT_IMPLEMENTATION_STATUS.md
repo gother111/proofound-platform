@@ -34,15 +34,16 @@ What keeps this below launch:
 
 Canonical docs used for this audit, in precedence order:
 
-1. `PRD_for_a_web_platform_MVP.master-latest.md`
+1. `Proofound_Project_Specification_2026-03-11.md`
 2. `PRD_TECHNICAL_REQUIREMENTS.md`
-3. `LAUNCH_RUNBOOK.md`
+3. `PRD_for_a_web_platform_MVP.master-latest.md`
+4. `LAUNCH_RUNBOOK.md`
 
 Audit rule used:
 
-- Older PRD mirrors, archived audits, earlier review notes, and prior briefs were ignored unless explicitly referenced by the three canonical documents above.
-- Where the three documents conflict, this audit follows the precedence order above.
-- This audit uses the current checked-out contents of those three files as the active baseline.
+- Older PRD mirrors, archived audits, earlier review notes, and prior briefs were ignored unless explicitly referenced by the four canonical documents above.
+- Where those documents conflict, this audit follows the precedence order above.
+- This audit uses the current checked-out contents of those four files as the active baseline.
 
 ## 3. Status Scorecard By Domain
 

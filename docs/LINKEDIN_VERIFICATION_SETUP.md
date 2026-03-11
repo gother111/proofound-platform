@@ -1,5 +1,8 @@
 # LinkedIn Identity Verification - Setup Guide
 
+> Scope note: this is an implementation or optional integration guide, not the canonical MVP product contract.
+> LinkedIn-derived verification is not required by `Proofound_Project_Specification_2026-03-11.md` unless a separate product decision promotes it.
+
 This guide explains how to set up and configure the LinkedIn identity verification feature.
 
 ## Overview
@@ -154,8 +157,8 @@ ngrok http 3000
    - If LinkedIn `verificationReport` includes `WORKPLACE` only, auto-approve as `workplace_verified`.
    - If no official LinkedIn signal exists, mark as pending for admin review.
 6. **Status**:
-   - Identity auto-approved path: user gets identity-tier verification and verified badge.
-   - Workplace auto-approved path: user gets workplace-tier verification (no identity badge).
+   - Identity auto-approved path: user gets identity-tier verification under the scoped trust model.
+   - Workplace auto-approved path: user gets workplace-tier verification.
    - Manual path: user sees pending admin review status.
 7. **Admin review** (manual path only): Admin dashboard shows request sorted by confidence.
 8. **Approval**: Admin approves/rejects pending requests (1-click for high confidence).
@@ -271,7 +274,7 @@ npx playwright install chromium
 - Verify LinkedIn profile is public (not private)
 - Check if profile has verification badge
 - Ensure profile is complete (photo, experience, etc.)
-- If confidence is genuinely low, suggest user try Veriff or Work Email instead
+- If confidence is genuinely low, suggest a narrower launch-safe verification route such as org-linked confirmation or another approved scoped trust method
 
 ### Admin dashboard shows "Forbidden"
 
@@ -322,5 +325,5 @@ For issues or questions:
 ---
 
 **Last Updated**: 2026-02-26  
-**Feature Status**: ✅ Fully Implemented  
+**Feature Status**: Optional implementation path, not an active Project Specification requirement  
 **Migration**: `src/db/migrations/20260226180000_add_linkedin_verification_status_tracking.sql`

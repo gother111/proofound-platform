@@ -13,12 +13,10 @@ import { userIntegrations } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { exchangeLinkedInCode } from '@/lib/linkedin';
 import { resolveOAuthRedirectUri } from '@/lib/integrations/oauth-helpers';
-
-type LinkedInOAuthContext = 'integrations' | 'verification';
-
-function parseOAuthContext(value: string | null): LinkedInOAuthContext {
-  return value === 'verification' ? 'verification' : 'integrations';
-}
+import {
+  parseLinkedInOAuthContext,
+  type LinkedInOAuthContext,
+} from '@/lib/integrations/linkedin-oauth-context';
 
 function buildSettingsRedirect(
   request: NextRequest,
@@ -61,7 +59,9 @@ function clearOAuthCookies(response: NextResponse) {
 }
 
 export async function GET(request: NextRequest) {
-  const context = parseOAuthContext(request.cookies.get('linkedin_oauth_context')?.value ?? null);
+  const context = parseLinkedInOAuthContext(
+    request.cookies.get('linkedin_oauth_context')?.value ?? null
+  );
 
   try {
     const searchParams = request.nextUrl.searchParams;

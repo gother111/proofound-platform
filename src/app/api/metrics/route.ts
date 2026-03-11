@@ -10,21 +10,13 @@ import {
   calculatePACLift,
   getAllMetrics,
 } from '@/lib/analytics/metrics';
+import { parseOptionalDate } from '@/lib/datetime/parse-optional-date';
 import { log } from '@/lib/log';
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit/index';
 
 export const dynamic = 'force-dynamic';
 
 const ALLOWED_METRICS = new Set(['ttsc', 'ttfqi', 'ttv', 'pac', 'all']);
-
-function parseOptionalDate(value: string | null): Date | null {
-  if (!value) return null;
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return null;
-  }
-  return parsed;
-}
 
 /**
  * GET /api/metrics

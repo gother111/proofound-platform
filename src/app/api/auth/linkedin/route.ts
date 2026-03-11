@@ -10,12 +10,10 @@ import { createClient } from '@/lib/supabase/server';
 import { generateLinkedInAuthUrl, getLinkedInAuthScopes } from '@/lib/linkedin';
 import { randomBytes } from 'crypto';
 import { resolveOAuthRedirectUri } from '@/lib/integrations/oauth-helpers';
-
-type LinkedInOAuthContext = 'integrations' | 'verification';
-
-function parseOAuthContext(value: string | null): LinkedInOAuthContext {
-  return value === 'verification' ? 'verification' : 'integrations';
-}
+import {
+  parseLinkedInOAuthContext,
+  type LinkedInOAuthContext,
+} from '@/lib/integrations/linkedin-oauth-context';
 
 function buildFailureRedirect(request: NextRequest, context: LinkedInOAuthContext): URL {
   if (context === 'verification') {
@@ -36,7 +34,7 @@ function buildFailureRedirect(request: NextRequest, context: LinkedInOAuthContex
 }
 
 export async function GET(request: NextRequest) {
-  const context = parseOAuthContext(request.nextUrl.searchParams.get('context'));
+  const context = parseLinkedInOAuthContext(request.nextUrl.searchParams.get('context'));
 
   try {
     // Check if user is authenticated

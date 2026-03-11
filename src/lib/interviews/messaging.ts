@@ -4,6 +4,7 @@ import { nanoid } from 'nanoid';
 import { db, conversations, matches, messages, profiles } from '@/db';
 import { isActiveOrgMember } from '@/lib/api/auth';
 import { getRows } from '@/lib/db/rows';
+import { toIsoOrNull as toIso } from '@/lib/datetime/normalize';
 import { log } from '@/lib/log';
 import { createClient } from '@/lib/supabase/server';
 
@@ -38,13 +39,6 @@ interface PostInterviewUpdateMessageParams {
   reason?: string | null;
   previous?: InterviewSnapshot;
   next?: InterviewSnapshot;
-}
-
-function toIso(value: string | Date | null | undefined): string | null {
-  if (!value) return null;
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toISOString();
 }
 
 function formatSnapshot(snapshot?: InterviewSnapshot): string {

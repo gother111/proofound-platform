@@ -19,17 +19,9 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { detectPII } from '@/lib/privacy/pii-detection';
 import { normalizeImportRequest } from '@/lib/contracts/data-portability';
+import { parseOptionalDate } from '@/lib/datetime/parse-optional-date';
 import { buildExperienceTimeline } from '@/lib/profile/experience-timeline';
 import { syncCanonicalProofPackState } from '@/lib/proofs/canonical-pack';
-
-function parseOptionalDate(value?: string | null): Date | null {
-  if (!value) {
-    return null;
-  }
-
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
 
 function collectPotentialPiiText(payload: {
   profile?: { bio?: string; mission?: string; vision?: string };

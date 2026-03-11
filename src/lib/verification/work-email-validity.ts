@@ -1,3 +1,5 @@
+import { toTimestampOrNull as toTimestamp } from '@/lib/datetime/normalize';
+
 const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
 
 type WorkEmailValidityInput = {
@@ -12,12 +14,6 @@ export type WorkEmailValidity = {
   needsReverify: boolean;
   reverifyDueAt: string | null;
 };
-
-function toTimestamp(value: string | null | undefined): number | null {
-  if (!value) return null;
-  const parsed = new Date(value).getTime();
-  return Number.isFinite(parsed) ? parsed : null;
-}
 
 function deriveReverifyDueAt(input: WorkEmailValidityInput): string | null {
   const explicitDueAtMs = toTimestamp(input.work_email_reverify_due_at);
