@@ -1,0 +1,93 @@
+name: Prepare Release Candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_name:
+        description: Short release label used in the branch name
+        required: true
+        type: string
+      commit_shas:
+        description: Comma-separated commit SHAs to cherry-pick onto the release branch
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create release branch
+        id: release
+        env:
+          RELEASE_NAME: ${{ inputs.release_name }}
+          COMMIT_SHAS: ${{ inputs.commit_shas }}
+        run: |
+          set -euo pipefail
+          release_slug="$(printf '%s' "$RELEASE_NAME" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g')"
+          if [ -z "$release_slug" ]; then
+            echo "Release name produced an empty slug."
+            exit 1
+          fi
+
+          branch_name="release/$(date -u +%Y%m%d)-${release_slug}"
+          echo "branch_name=${branch_name}" >> "$GITHUB_OUTPUT"
+
+          git fetch origin master
+          if git ls-remote --exit-code --heads origin "$branch_name" >/dev/null 2>&1; then
+            echo "Release branch $branch_name already exists on origin."
+            exit 1
+          fi
+
+          git checkout -b "$branch_name" origin/master
+
+          python3 - <<'PY' > /tmp/release-shas.txt
+from os import environ
+
+raw = environ["COMMIT_SHAS"].replace("\n", ",")
+items = [item.strip() for item in raw.split(",") if item.strip()]
+if not items:
+    raise SystemExit("No commit SHAs were provided.")
+for item in items:
+    print(item)
+PY
+
+          while IFS= read -r sha; do
+            git rev-parse --verify "${sha}^{commit}" >/dev/null 2>&1 || {
+              echo "Unknown commit SHA: $sha"
+              exit 1
+            }
+
+            if ! git cherry-pick -x "$sha"; then
+              git cherry-pick --abort || true
+              echo "Cherry-pick failed for $sha. Resolve manually."
+              exit 1
+            fi
+          done < /tmp/release-shas.txt
+
+          git push --set-upstream origin "$branch_name"
+
+      - name: Print release branch
+        run: |
+          echo "Release branch: ${{ steps.release.outputs.branch_name }}"
+          {
+            echo "## Release candidate prepared"
+            echo
+            echo "- Branch: \`${{ steps.release.outputs.branch_name }}\`"
+            echo "- Base: \`origin/master\`"
+            echo "- Selected commits: \`${{ inputs.commit_shas }}\`"
+            echo "- Next step: open a PR from \`${{ steps.release.outputs.branch_name }}\` to \`master\`"
+          } >> "$GITHUB_STEP_SUMMARY"

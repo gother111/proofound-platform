@@ -1,0 +1,29 @@
+name: Enforce Release Branches Into Master
+
+on:
+  pull_request:
+    branches: [master]
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+
+permissions:
+  contents: read
+
+jobs:
+  enforce-release-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require release/* head branch
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          if [[ "$HEAD_REF" =~ ^release/ ]]; then
+            echo "Accepted release branch: $HEAD_REF"
+            exit 0
+          fi
+
+          echo "::error::PRs into master must come from release/* branches. Current head: $HEAD_REF"
+          exit 1

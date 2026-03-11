@@ -65,12 +65,11 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Pull production project/env settings (creates `.vercel/`, which is gitignored): `npx vercel@latest pull --yes --environment=production` (source: .gitignore)
 - Run a prod-equivalent build locally: `npx vercel@latest build --prod`
   - If CLI auth is missing, use `--token` with a valid `VERCEL_TOKEN` (do not print it).
-- For the extracted API app project:
-  - `npm run build:api`
-  - `npm run vercel:api:ensure`
-  - `npm run vercel:api:sync-env`
-  - `npx -y vercel@latest deploy --cwd apps/api --yes --token "$VERCEL_TOKEN"`
-  - Confirm preview health with `/api/health` before adding same-domain rewrites.
+- Validate the ignored build step logic before relying on it:
+  - `npm run vercel:should-build -- --changed-files project/example.md` should exit `0` (skip)
+  - `npm run vercel:should-build -- --changed-files src/app/page.tsx` should exit `1` (build)
+  - `npm run vercel:should-build -- --changed-files next.config.js` should exit `1` (build)
+  - `npm run vercel:should-build` without a resolvable base SHA should exit `1` (safe build)
 
 ## Production Sync Guard (Vercel Quota Recovery)
 
@@ -87,6 +86,14 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - `gh workflow run "Retry Vercel Deploy Until Synced" --ref master`
 - Confirm latest workflow run:
   - `gh run list --workflow "Retry Vercel Deploy Until Synced" --limit 1`
+
+## Release Batch Flow (Single Vercel Project)
+
+- Create a release candidate branch with the manual workflow:
+  - `gh workflow run "Prepare Release Candidate" -f release_name=<name> -f commit_shas=<sha1,sha2>`
+- Confirm the workflow pushes a `release/<date>-<name>` branch.
+- Confirm the PR to `master` passes the release-branch gate only when the head branch matches `release/*`.
+- Confirm the release branch receives a normal preview deployment before merging to `master`.
 
 ## CI Gate Parity (When Appropriate)
 
