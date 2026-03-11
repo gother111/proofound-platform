@@ -10,6 +10,7 @@ import {
   getPythonInternalServiceSecret,
   resolvePythonInternalServiceBaseUrl,
 } from '@/lib/python-internal/service';
+import { withTimeout } from '@/lib/python-internal/request-utils';
 
 const DEFAULT_PROXY_TIMEOUT_MS = 10000;
 const PROXY_UNAVAILABLE_CODE = 'CV_IMPORT_PROXY_UNAVAILABLE';
@@ -21,22 +22,6 @@ const UPLOAD_METADATA_ENCODING_ERROR_MESSAGE =
 const UTF8_CODEC_ERROR_PATTERN =
   /utf-8['"]?\s+codec\s+can'?t\s+decode\s+byte|can't decode byte.*utf-8|invalid continuation byte/i;
 type EndpointPath = '/wizard-suggest' | '/suggest' | '/extract';
-
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Request timed out')), timeoutMs);
-
-    promise
-      .then((value) => {
-        clearTimeout(timer);
-        resolve(value);
-      })
-      .catch((error) => {
-        clearTimeout(timer);
-        reject(error);
-      });
-  });
-}
 
 function resolveContentType(request: NextRequest): string | null {
   const contentType = request.headers.get('content-type');

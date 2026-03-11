@@ -10,24 +10,9 @@ import {
   getPythonInternalServiceSecret,
   resolvePythonInternalServiceBaseUrl,
 } from '@/lib/python-internal/service';
+import { withTimeout } from '@/lib/python-internal/request-utils';
 
 const DEFAULT_PYTHON_INTERNAL_JOB_TIMEOUT_MS = 15000;
-
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Request timed out')), timeoutMs);
-
-    promise
-      .then((value) => {
-        clearTimeout(timer);
-        resolve(value);
-      })
-      .catch((error) => {
-        clearTimeout(timer);
-        reject(error);
-      });
-  });
-}
 
 export async function executePythonInternalJob(params: {
   request: NextRequest;

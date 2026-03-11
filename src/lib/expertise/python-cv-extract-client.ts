@@ -8,6 +8,7 @@ import {
   getPythonInternalServiceSecret,
   resolvePythonInternalServiceBaseUrl,
 } from '@/lib/python-internal/service';
+import { parsePositiveInt, withTimeout } from '@/lib/python-internal/request-utils';
 
 const DEFAULT_PYTHON_EXTRACT_TIMEOUT_MS = 55_000;
 
@@ -23,40 +24,11 @@ export class PythonCvExtractError extends Error {
   }
 }
 
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Request timed out')), timeoutMs);
-
-    promise
-      .then((value) => {
-        clearTimeout(timer);
-        resolve(value);
-      })
-      .catch((error) => {
-        clearTimeout(timer);
-        reject(error);
-      });
-  });
-}
-
 function resolveTargetUrl(request?: NextRequest): string {
   const baseUrl = resolvePythonInternalServiceBaseUrl(request);
   const targetUrl = new URL('/api/python/cv_import', `${baseUrl}/`);
   targetUrl.searchParams.set('endpoint', 'extract');
   return targetUrl.toString();
-}
-
-function parsePositiveInt(value: string | undefined, fallback: number): number {
-  if (!value) {
-    return fallback;
-  }
-
-  const parsed = Number.parseInt(value, 10);
-  if (!Number.isFinite(parsed) || parsed <= 0) {
-    return fallback;
-  }
-
-  return parsed;
 }
 
 export function resolvePythonExtractTimeoutMs(): number {
