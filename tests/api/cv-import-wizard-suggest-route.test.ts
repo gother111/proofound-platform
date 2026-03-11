@@ -239,8 +239,8 @@ describe('cv-import wizard suggest route', () => {
     const [targetUrl, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
     const headers = init.headers as Record<string, string>;
     expect(targetUrl).toContain('/api/python/cv_import?endpoint=wizard-suggest');
-    expect(headers['x-csrf-token']).toBe('csrf-token-value');
-    expect(headers.cookie).toContain('csrf_token=csrf-token-value');
+    expect(headers['x-csrf-token']).toBeUndefined();
+    expect(headers.cookie).toBeUndefined();
     expect(suggestWizardForDocuments).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
   });

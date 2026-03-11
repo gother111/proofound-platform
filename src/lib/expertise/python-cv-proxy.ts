@@ -160,16 +160,6 @@ export async function proxyCvRequestToPython(
     headers['content-type'] = contentType;
   }
 
-  const csrfToken = request.headers.get('x-csrf-token');
-  if (csrfToken && csrfToken.trim().length > 0) {
-    headers['x-csrf-token'] = csrfToken;
-  }
-
-  const cookieHeader = request.headers.get('cookie');
-  if (cookieHeader && cookieHeader.trim().length > 0) {
-    headers['cookie'] = cookieHeader;
-  }
-
   const internalSecret = getPythonInternalServiceSecret();
   if (!internalSecret) {
     return buildUnavailableResponse(
