@@ -147,7 +147,7 @@ describe('auth request-scoped caching', () => {
     vi.clearAllMocks();
   });
 
-  it('dedupes repeated current-user lookups within a request path', async () => {
+  it('does not share current-user lookups through process-global fallback cache', async () => {
     const { supabase, builders } = createSupabaseStub();
     createClientMock.mockResolvedValue(supabase);
     const auth = await loadAuthModule();
@@ -156,9 +156,9 @@ describe('auth request-scoped caching', () => {
 
     expect(first?.id).toBe('user-1');
     expect(second?.id).toBe('user-1');
-    expect(createClientMock).toHaveBeenCalledTimes(1);
-    expect(supabase.auth.getUser).toHaveBeenCalledTimes(1);
-    expect(builders.profileBuilder.maybeSingle).toHaveBeenCalledTimes(1);
+    expect(createClientMock).toHaveBeenCalledTimes(2);
+    expect(supabase.auth.getUser).toHaveBeenCalledTimes(2);
+    expect(builders.profileBuilder.maybeSingle).toHaveBeenCalledTimes(2);
   });
 
   it('dedupes repeated active-org lookups with the same slug and user', async () => {
