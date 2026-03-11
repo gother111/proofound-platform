@@ -20,8 +20,19 @@ describe('oauth helpers', () => {
       defaultType: 'zoom_oauth',
     });
 
-    expect(html).toContain('/app/i/settings?tab=integrations&success=zoom_connected');
+    expect(html).toContain('/app/i/settings?tab=integrations\\u0026success=zoom_connected');
     expect(html).toContain('zoom_connected');
+  });
+
+  it('escapes script-breaking characters in inline callback script payloads', () => {
+    const html = buildOAuthCallbackHtml({
+      defaultType: '</script><script>alert(1)</script>',
+      redirectBasePath: "/app/</script><script>alert('xss')</script>",
+    });
+
+    expect(html).not.toContain('</script><script>alert');
+    expect(html).toContain('\\u003C/script\\u003E\\u003Cscript\\u003Ealert(1)');
+    expect(html).toContain("\\u003C/script\\u003E\\u003Cscript\\u003Ealert('xss')");
   });
 
   it('uses absolute configured redirect uri as-is', () => {
