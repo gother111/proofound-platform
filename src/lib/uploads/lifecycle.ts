@@ -600,9 +600,13 @@ export async function ingestUploadedFile(
   };
 }
 
-export async function deleteUploadedFile(uploadedFileId: string) {
+export async function deleteUploadedFile(uploadedFileId: string, ownerId?: string) {
   const row = await loadUploadedFile(uploadedFileId);
   if (!row) {
+    return false;
+  }
+
+  if (ownerId && row.owner_id !== ownerId) {
     return false;
   }
 

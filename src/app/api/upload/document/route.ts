@@ -104,7 +104,10 @@ export async function DELETE(request: NextRequest) {
 
     const fileId = searchParams.get('fileId');
     if (fileId) {
-      await deleteUploadedFile(fileId);
+      const deleted = await deleteUploadedFile(fileId, user.id);
+      if (!deleted) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      }
       return NextResponse.json({ success: true });
     }
 
