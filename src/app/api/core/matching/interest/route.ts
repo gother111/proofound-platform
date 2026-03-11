@@ -239,6 +239,17 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
+
+      const assignmentMatch = await db.query.matches.findFirst({
+        where: and(eq(matches.assignmentId, assignmentId), eq(matches.profileId, targetProfileId!)),
+      });
+
+      if (!assignmentMatch) {
+        return NextResponse.json(
+          { error: 'Target profile not found for assignment' },
+          { status: 404 }
+        );
+      }
     }
 
     const introductionProfileId = isOrgAction ? targetProfileId! : user.id;
