@@ -35,7 +35,7 @@ export default async function OrganizationProfilePage({
     <AppSurface>
       <div className="mx-auto flex max-w-5xl flex-col gap-6">
         <section className="grid gap-4 md:grid-cols-[2fr_1fr]">
-          <Card className="border-proofound-stone/60">
+          <Card className="border-black/[0.04] dark:border-white/5">
             <CardHeader>
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -66,7 +66,7 @@ export default async function OrganizationProfilePage({
             </CardContent>
           </Card>
 
-          <Card className="border-proofound-stone/60">
+          <Card className="border-black/[0.04] dark:border-white/5">
             <CardHeader>
               <CardTitle className="text-lg">Launch corridor</CardTitle>
               <CardDescription>
@@ -75,21 +75,21 @@ export default async function OrganizationProfilePage({
             </CardHeader>
             <CardContent className="space-y-4 text-sm text-muted-foreground">
               <div className="flex items-start gap-3">
-                <ShieldCheck className="mt-0.5 h-4 w-4 text-proofound-forest" />
+                <ShieldCheck className="mt-0.5 h-4 w-4 text-foreground/70" />
                 <div>
                   <p className="font-medium text-foreground">Trust profile</p>
                   <p>Mission, values, website, why join, and lightweight work norms.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <Users className="mt-0.5 h-4 w-4 text-proofound-forest" />
+                <Users className="mt-0.5 h-4 w-4 text-foreground/70" />
                 <div>
                   <p className="font-medium text-foreground">Assignments & matches</p>
                   <p>One assignment path and one review queue for published work and candidates.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <Globe2 className="mt-0.5 h-4 w-4 text-proofound-forest" />
+                <Globe2 className="mt-0.5 h-4 w-4 text-foreground/70" />
                 <div>
                   <p className="font-medium text-foreground">Public trust profile</p>
                   <p>

@@ -130,7 +130,7 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2 rounded-xl border border-proofound-stone bg-white/70 p-4">
+        <div className="space-y-2 rounded-2xl border border-black/[0.04] bg-card p-5 shadow-sm dark:bg-card/50 dark:border-white/5">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-foreground">Milestones</p>
             <p className="text-xs text-muted-foreground">Trust ladder</p>
@@ -188,7 +188,7 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
               <Link
                 key={item.id}
                 href={item.actionUrl}
-                className="block rounded-lg border border-proofound-stone px-3 py-2 text-sm hover:border-proofound-forest hover:bg-japandi-bg"
+                className="block rounded-xl border border-black/[0.04] px-4 py-3 text-sm transition-colors hover:border-black/[0.08] hover:bg-black/[0.02] dark:border-white/5 dark:hover:border-white/10 dark:hover:bg-white/5"
               >
                 <p className="font-medium text-foreground">{item.label}</p>
                 <p className="text-xs text-muted-foreground">{item.detail}</p>

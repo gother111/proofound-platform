@@ -99,13 +99,11 @@ export function TasksCard({
   if (loading) {
     return (
       <Card variant="bento" className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
-            Tasks
-          </h5>
+        <div className="flex items-center justify-between mb-4">
+          <h5 className="text-base font-semibold text-foreground">Tasks</h5>
         </div>
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#1C4D3A' }} />
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
         </div>
       </Card>
     );
@@ -114,16 +112,12 @@ export function TasksCard({
   if (error) {
     return (
       <Card variant="bento" className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
-            Tasks
-          </h5>
+        <div className="flex items-center justify-between mb-4">
+          <h5 className="text-base font-semibold text-foreground">Tasks</h5>
         </div>
-        <div className="text-center py-4">
-          <AlertCircle className="w-8 h-8 mx-auto mb-2" style={{ color: '#DC2626' }} />
-          <p className="text-xs" style={{ color: '#6B6760' }}>
-            {error}
-          </p>
+        <div className="text-center py-6">
+          <AlertCircle className="w-8 h-8 mx-auto mb-3 text-destructive" />
+          <p className="text-sm text-muted-foreground">{error}</p>
         </div>
       </Card>
     );
@@ -132,28 +126,16 @@ export function TasksCard({
   if (actions.length === 0) {
     return (
       <Card variant="bento" className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
-            Tasks
-          </h5>
+        <div className="flex items-center justify-between mb-4">
+          <h5 className="text-base font-semibold text-foreground">Tasks</h5>
         </div>
-        <div className="text-center py-6">
-          <CheckCircle2 className="w-10 h-10 mx-auto mb-2" style={{ color: '#1C4D3A' }} />
-          <p className="text-xs mb-3" style={{ color: '#6B6760' }}>
+        <div className="text-center py-8">
+          <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30" />
+          <p className="text-sm mb-4 text-muted-foreground">
             No urgent tasks right now. Stay proactive with your next update.
           </p>
           <Link href={fallbackHref}>
-            <Button
-              size="sm"
-              className="h-7 text-xs"
-              style={{
-                backgroundColor: isHovered ? '#2D5F4A' : '#1C4D3A',
-                color: '#F7F6F1',
-                transition: 'background-color 200ms',
-              }}
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
-            >
+            <Button size="sm" variant="secondary" className="rounded-full">
               Open dashboard area
             </Button>
           </Link>
@@ -164,16 +146,10 @@ export function TasksCard({
 
   return (
     <Card variant="bento" className="p-4">
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
-            Tasks
-          </h5>
-          <Badge
-            variant="secondary"
-            className="text-[10px] px-1.5 py-0"
-            style={{ backgroundColor: '#D8EDE4', color: '#1C4D3A' }}
-          >
+          <h5 className="text-base font-semibold text-foreground">Tasks</h5>
+          <Badge variant="secondary" className="rounded-full px-2 py-0">
             {actions.length}
           </Badge>
         </div>
@@ -184,7 +160,7 @@ export function TasksCard({
           <Link
             key={action.id}
             href={action.actionUrl}
-            className="block rounded-lg border border-proofound-stone px-3 py-2 hover:border-proofound-forest hover:bg-japandi-bg"
+            className="block rounded-xl border border-black/[0.04] px-4 py-3 transition-colors hover:bg-black/[0.02] hover:border-black/[0.08] dark:border-white/5 dark:hover:bg-white/5 dark:hover:border-white/10"
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
@@ -205,22 +181,14 @@ export function TasksCard({
         ))}
       </div>
 
-      <div
-        className="mt-4 pt-3 border-t flex items-center justify-between"
-        style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}
-      >
-        <p className="text-xs text-muted-foreground truncate pr-2">
+      <div className="mt-6 pt-4 border-t border-black/[0.04] dark:border-white/5 flex items-center justify-between">
+        <p className="text-sm text-muted-foreground truncate pr-2">
           {summary?.summary || 'Stay on top of your highest-value actions.'}
         </p>
         <Link href={fallbackHref}>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-6 px-2 text-xs"
-            style={{ color: '#1C4D3A' }}
-          >
+          <Button size="sm" variant="ghost" className="rounded-full shrink-0">
             Open
-            <ArrowRight className="w-3 h-3 ml-1" />
+            <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
         </Link>
       </div>

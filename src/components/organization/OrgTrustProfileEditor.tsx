@@ -138,7 +138,7 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
   };
 
   return (
-    <Card className="border-proofound-stone/60">
+    <Card className="border-black/[0.04] dark:border-white/5">
       <CardHeader>
         <CardTitle>Trust profile</CardTitle>
         <CardDescription>

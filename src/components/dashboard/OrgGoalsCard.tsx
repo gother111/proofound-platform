@@ -146,13 +146,11 @@ export function OrgGoalsCard({
   if (isLoading) {
     return (
       <Card variant="bento" className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
-            Organization Goals
-          </h5>
+        <div className="flex items-center justify-between mb-4">
+          <h5 className="text-base font-semibold text-foreground">Organization Goals</h5>
         </div>
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#1C4D3A' }} />
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
         </div>
       </Card>
     );
@@ -162,16 +160,12 @@ export function OrgGoalsCard({
   if (error) {
     return (
       <Card variant="bento" className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
-            Organization Goals
-          </h5>
+        <div className="flex items-center justify-between mb-4">
+          <h5 className="text-base font-semibold text-foreground">Organization Goals</h5>
         </div>
-        <div className="text-center py-4">
-          <AlertCircle className="w-8 h-8 mx-auto mb-2" style={{ color: '#DC2626' }} />
-          <p className="text-xs" style={{ color: '#6B6760' }}>
-            {error}
-          </p>
+        <div className="text-center py-6">
+          <AlertCircle className="w-8 h-8 mx-auto mb-3 text-destructive" />
+          <p className="text-sm text-muted-foreground">{error}</p>
         </div>
       </Card>
     );
@@ -181,41 +175,24 @@ export function OrgGoalsCard({
   if (goals.length === 0) {
     return (
       <Card variant="bento" className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
-            Organization Goals
-          </h5>
+        <div className="flex items-center justify-between mb-4">
+          <h5 className="text-base font-semibold text-foreground">Organization Goals</h5>
         </div>
-        <div className="text-center py-6">
-          <Target className="w-10 h-10 mx-auto mb-2" style={{ color: '#E8E6DD' }} />
-          <p className="text-xs mb-3" style={{ color: '#6B6760' }}>
+        <div className="text-center py-8">
+          <Target className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30" />
+          <p className="text-sm mb-4 text-muted-foreground">
             Set organizational goals to track your progress and showcase your commitment.
           </p>
           {canManageSettings ? (
             <Link href={`/app/o/${orgSlug}/settings/goals`}>
-              <Button
-                size="sm"
-                className="h-7 text-xs"
-                style={{
-                  backgroundColor: isHovered ? '#2D5F4A' : '#1C4D3A',
-                  color: '#F7F6F1',
-                  transition: 'background-color 200ms',
-                }}
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-              >
-                <Plus className="w-3 h-3 mr-1" />
+              <Button size="sm" variant="secondary" className="rounded-full">
+                <Plus className="w-4 h-4 mr-1" />
                 Add Goal
               </Button>
             </Link>
           ) : (
             <Link href={`/app/o/${orgSlug}/profile`}>
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 text-xs border-border"
-                style={{ color: '#1C4D3A' }}
-              >
+              <Button size="sm" variant="outline" className="rounded-full">
                 View Profile
               </Button>
             </Link>
@@ -229,33 +206,27 @@ export function OrgGoalsCard({
   return (
     <Card variant="bento" className="p-4">
       {/* Header with stats */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
-            Organization Goals
-          </h5>
+          <h5 className="text-base font-semibold text-foreground">Organization Goals</h5>
           {stats.inProgress > 0 && (
-            <span
-              className="text-xs px-1.5 py-0.5 rounded"
-              style={{ backgroundColor: '#D8EDE4', color: '#1C4D3A' }}
-            >
+            <Badge variant="secondary" className="px-2 py-0 rounded-full">
               {stats.inProgress} active
-            </span>
+            </Badge>
           )}
         </div>
         <Link
           href={
             canManageSettings ? `/app/o/${orgSlug}/settings/goals` : `/app/o/${orgSlug}/profile`
           }
-          className="text-xs hover:underline"
-          style={{ color: '#1C4D3A' }}
+          className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
           {canManageSettings ? 'Manage' : 'View'}
         </Link>
       </div>
 
       {/* Goals list */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         {goals.map((goal) => {
           const typeConfig = goalTypeConfig[goal.goal_type];
           const TypeIcon = typeConfig.icon;
@@ -271,11 +242,9 @@ export function OrgGoalsCard({
                     style={{ color: typeConfig.color }}
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate" style={{ color: '#2D3330' }}>
-                      {goal.title}
-                    </p>
+                    <p className="text-sm font-medium truncate text-foreground">{goal.title}</p>
                     {goal.target_date && (
-                      <p className="text-xs" style={{ color: '#6B6760' }}>
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         Target:{' '}
                         {new Date(goal.target_date).toLocaleDateString('en-US', {
                           month: 'short',
@@ -312,25 +281,17 @@ export function OrgGoalsCard({
       </div>
 
       {/* Quick stats footer */}
-      <div
-        className="mt-4 pt-3 border-t flex items-center justify-between"
-        style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}
-      >
-        <div className="flex items-center gap-3 text-xs" style={{ color: '#6B6760' }}>
-          <span className="flex items-center gap-1">
-            <CheckCircle className="w-3 h-3" style={{ color: '#166534' }} />
+      <div className="mt-6 pt-4 border-t border-black/[0.04] dark:border-white/5 flex items-center justify-between">
+        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            <CheckCircle className="w-4 h-4 text-emerald-600" />
             {stats.achieved} achieved
           </span>
         </div>
         {canManageSettings && (
           <Link href={`/app/o/${orgSlug}/settings/goals`}>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-6 px-2 text-xs"
-              style={{ color: '#1C4D3A' }}
-            >
-              <Plus className="w-3 h-3 mr-1" />
+            <Button size="sm" variant="ghost" className="rounded-full shrink-0">
+              <Plus className="w-4 h-4 mr-1" />
               New
             </Button>
           </Link>

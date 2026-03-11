@@ -113,26 +113,21 @@ export function NotificationsCard({ useMockData, onVisibilityChange }: Notificat
               <Link
                 key={item.id}
                 href={item.actionUrl || '/app/i/home'}
-                className="block rounded-lg border border-proofound-stone px-3 py-2 hover:border-proofound-forest hover:bg-japandi-bg"
+                className="block rounded-xl border border-black/[0.04] px-4 py-3 transition-colors hover:bg-black/[0.02] hover:border-black/[0.08] dark:border-white/5 dark:hover:bg-white/5 dark:hover:border-white/10"
               >
                 <p className="text-sm font-medium text-foreground">{item.title}</p>
-                <p className="text-xs text-muted-foreground">{item.message}</p>
+                <p className="text-xs text-muted-foreground mt-1">{item.message}</p>
               </Link>
             ))}
 
           {!loading && items.length === 0 && (
-            <div className="rounded-lg border border-dashed border-proofound-stone px-3 py-6 text-center text-sm text-muted-foreground">
+            <div className="rounded-xl border border-dashed border-black/[0.08] dark:border-white/10 px-4 py-8 text-center text-sm text-muted-foreground">
               No unread notifications. You’re all caught up.
             </div>
           )}
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5"
-          asChild
-        >
+        <Button variant="secondary" size="sm" className="w-full rounded-xl" asChild>
           <Link href="/app/i/notifications">
             View all
             <ArrowRight className="h-4 w-4 ml-2" />

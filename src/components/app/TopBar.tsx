@@ -81,7 +81,7 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
         className={cn(
           'sticky top-0 z-40 min-h-14 px-4 flex items-center justify-between gap-2 md:gap-4 py-2 md:py-0 transition-all duration-300',
           isV2
-            ? 'glass-panel border-b-proofound-stone/30 shadow-sm rounded-none border-x-0 border-t-0'
+            ? 'bg-card/50 backdrop-blur-xl border-b border-black/[0.04] shadow-none rounded-none dark:border-white/5 dark:bg-card/80'
             : 'bg-neutral-light-50 border-b border-proofound-stone/60'
         )}
         role="banner"
@@ -105,7 +105,7 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
           {/* Current page indicator - hide on very small screens */}
           <h1
             className={cn(
-              'text-base hidden sm:block text-proofound-charcoal',
+              'text-lg hidden sm:block text-proofound-charcoal font-display',
               isV2 ? 'font-medium' : 'font-normal'
             )}
           >

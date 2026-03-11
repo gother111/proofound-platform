@@ -32,17 +32,19 @@ import { cn } from '@/lib/utils';
  */
 
 const cardVariants = cva(
-  'rounded-2xl border bg-card text-card-foreground transition-all duration-300 dark:bg-card dark:text-card-foreground',
+  'rounded-[24px] bg-card text-card-foreground transition-all duration-300 dark:bg-card dark:text-card-foreground',
   {
     variants: {
       variant: {
-        default: 'border-border shadow-sm dark:border-border',
+        default:
+          'border border-black/[0.04] shadow-[0_4px_24px_-8px_rgba(0,0,0,0.04)] dark:border-white/5',
         flat: 'card-flat',
-        elevated: 'border-border shadow-md dark:border-border',
+        elevated:
+          'border border-black/[0.04] shadow-[0_12px_40px_-12px_rgba(0,0,0,0.08)] dark:border-white/10 dark:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.2)]',
         interactive:
-          'border-border shadow-sm hover:shadow-md hover:-translate-y-1 hover:border-border cursor-pointer dark:border-border dark:hover:border-border/80',
-        glass: 'glass-panel',
-        bento: 'glass-panel-heavy',
+          'border border-black/[0.04] shadow-[0_4px_24px_-8px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.08)] hover:-translate-y-1 cursor-pointer dark:hover:border-white/10 dark:hover:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.2)]',
+        glass: 'glass-panel rounded-[24px]',
+        bento: 'glass-panel-heavy rounded-[24px]',
       },
     },
     defaultVariants: {
@@ -76,7 +78,11 @@ Card.displayName = 'Card';
 
 const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('flex flex-col space-y-1.5 p-4 sm:p-6', className)} {...props} />
+    <div
+      ref={ref}
+      className={cn('flex flex-col space-y-2 p-6 sm:p-8 sm:pb-6', className)}
+      {...props}
+    />
   )
 );
 CardHeader.displayName = 'CardHeader';
@@ -108,7 +114,7 @@ CardDescription.displayName = 'CardDescription';
 
 const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('p-4 pt-0 sm:p-6 sm:pt-0', className)} {...props} />
+    <div ref={ref} className={cn('p-6 pt-0 sm:p-8 sm:pt-0', className)} {...props} />
   )
 );
 CardContent.displayName = 'CardContent';
