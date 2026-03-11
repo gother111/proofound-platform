@@ -100,13 +100,8 @@ export function resolveCanonicalVerificationTier(input: {
     verificationMethod === 'veriff' &&
     (verificationStatus === 'verified' || input.verified === true);
 
-  if (
-    currentTier === 'identity_verified' ||
-    legacyVeriffIdentity ||
-    linkedinVerificationLevel === 'identity'
-  ) {
-    const source: VerificationTierSource =
-      legacyVeriffIdentity || input.currentTierSource === 'veriff' ? 'veriff' : 'linkedin_identity';
+  if (legacyVeriffIdentity || linkedinVerificationLevel === 'identity') {
+    const source: VerificationTierSource = legacyVeriffIdentity ? 'veriff' : 'linkedin_identity';
 
     return {
       verificationTier: 'identity_verified',
