@@ -162,7 +162,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (shouldWakeWorker(job)) {
-    await triggerPythonInternalWorker({ request });
+    await triggerPythonInternalWorker();
 
     const refreshedJob = await getPythonInternalJob(job.id);
     if (refreshedJob && refreshedJob.jobType === CV_IMPORT_EXTRACT_JOB_TYPE) {
