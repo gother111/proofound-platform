@@ -6,7 +6,7 @@ import {
 } from '@/lib/verification/tier';
 
 describe('verification tier resolution', () => {
-  it('maps LinkedIn IDENTITY to identity tier', () => {
+  it('keeps LinkedIn IDENTITY as a raw level without granting a tier', () => {
     const result = resolveCanonicalVerificationTier({
       verificationMethod: null,
       verificationStatus: 'unverified',
@@ -18,12 +18,12 @@ describe('verification tier resolution', () => {
       workEmailCurrentlyVerified: false,
     });
 
-    expect(result.verificationTier).toBe('identity_verified');
-    expect(result.verificationTierSource).toBe('linkedin_identity');
+    expect(result.verificationTier).toBe('unverified');
+    expect(result.verificationTierSource).toBe('unknown');
     expect(result.linkedinVerificationLevel).toBe('identity');
   });
 
-  it('maps WORKPLACE + active work email to workplace tier with work-email precedence', () => {
+  it('keeps WORKPLACE + active work email as compatibility only', () => {
     const result = resolveCanonicalVerificationTier({
       verificationMethod: 'work_email',
       verificationStatus: 'verified',
@@ -35,12 +35,12 @@ describe('verification tier resolution', () => {
       workEmailCurrentlyVerified: true,
     });
 
-    expect(result.verificationTier).toBe('workplace_verified');
-    expect(result.verificationTierSource).toBe('work_email');
+    expect(result.verificationTier).toBe('unverified');
+    expect(result.verificationTierSource).toBe('unknown');
     expect(result.linkedinVerificationLevel).toBe('workplace');
   });
 
-  it('maps WORKPLACE-only LinkedIn verification to workplace tier', () => {
+  it('keeps WORKPLACE-only LinkedIn verification as a raw level without a tier', () => {
     const result = resolveCanonicalVerificationTier({
       verificationMethod: null,
       verificationStatus: 'unverified',
@@ -52,12 +52,12 @@ describe('verification tier resolution', () => {
       workEmailCurrentlyVerified: false,
     });
 
-    expect(result.verificationTier).toBe('workplace_verified');
-    expect(result.verificationTierSource).toBe('linkedin_workplace');
+    expect(result.verificationTier).toBe('unverified');
+    expect(result.verificationTierSource).toBe('unknown');
     expect(result.linkedinVerificationLevel).toBe('workplace');
   });
 
-  it('keeps legacy Veriff verification as identity tier', () => {
+  it('keeps legacy Veriff verification as compatibility metadata only', () => {
     const result = resolveCanonicalVerificationTier({
       verificationMethod: 'veriff',
       verificationStatus: 'verified',
@@ -67,8 +67,8 @@ describe('verification tier resolution', () => {
       workEmailCurrentlyVerified: false,
     });
 
-    expect(result.verificationTier).toBe('identity_verified');
-    expect(result.verificationTierSource).toBe('veriff');
+    expect(result.verificationTier).toBe('unverified');
+    expect(result.verificationTierSource).toBe('unknown');
     expect(result.linkedinVerificationLevel).toBe('unverified');
   });
 

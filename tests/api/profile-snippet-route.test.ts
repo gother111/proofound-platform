@@ -109,6 +109,7 @@ describe('POST /api/profile/snippet', () => {
     expect(response.status).toBe(200);
     expect(body.snippet.profileType).toBe('individual');
     expect(body.snippet.orgId).toBeNull();
+    expect(body.snippet.canonicalPackId).toBeNull();
     expect(body.snippet.shareToken).toEqual(expect.any(String));
     expect(body.snippet.url).toContain(body.snippet.shareToken);
     expect(db.execute).toHaveBeenCalledTimes(3);
@@ -176,6 +177,7 @@ describe('POST /api/profile/snippet', () => {
     expect(response.status).toBe(200);
     expect(body.snippet.profileType).toBe('organization');
     expect(body.snippet.orgId).toBe(orgId);
+    expect(body.snippet.canonicalPackId).toBeNull();
     expect(body.snippet.shareToken).toEqual(expect.any(String));
     expect(db.execute).toHaveBeenCalledTimes(4);
   });

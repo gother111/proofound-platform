@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Interview assignment not found' }, { status: 404 });
     }
 
-    const canDecide = await isActiveOrgMember(supabase, user.id, orgId, ['owner', 'admin']);
+    const canDecide = await isActiveOrgMember(supabase, user.id, orgId, ['org_owner']);
 
     if (!canDecide) {
       log.warn('decision.unauthorized', {
@@ -115,6 +115,7 @@ export async function POST(req: NextRequest) {
         updatedAt: decisionRecord.updatedAt,
         workflow: decisionRecord.workflow,
       },
+      engagementVerification: decisionRecord.engagementVerification,
     });
   } catch (error) {
     log.error('decision.api.failed', {

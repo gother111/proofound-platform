@@ -54,8 +54,10 @@ function buildProjection(overrides: Partial<any> = {}) {
       operating_region: 'EU',
       verified: true,
       website: 'https://acme.org/',
-      tagline: 'Build trust',
+      tagline: 'This work matters because trustworthy hiring is still too rare.',
       mission: 'Ship impact',
+      working_context: 'Small distributed team across Europe with weekly async check-ins.',
+      hiring_process_summary: 'Every assignment goes through internal review before publish.',
       type: 'company',
     },
     assignment: {
@@ -140,11 +142,17 @@ describe('Organization public portfolio page', () => {
     expect(screen.getByText(/public organization trust card/i)).toBeInTheDocument();
     expect(screen.getByText('Shareable by direct link')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /trust basics/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /why the work matters/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /working context/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /hiring process clarity/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /durable trust signals/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /active assignment/i })).toBeInTheDocument();
     expect(screen.getAllByText('Platform reviewed').length).toBeGreaterThan(0);
     expect(screen.getByText('Domain verified')).toBeInTheDocument();
     expect(screen.getByText('Founding product engineer')).toBeInTheDocument();
+    expect(
+      screen.getByText(/every assignment goes through internal review before publish/i)
+    ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /return to menu/i })).toHaveAttribute(
       'href',
       '/app/o/acme/home'
@@ -173,6 +181,8 @@ describe('Organization public portfolio page', () => {
           website: 'https://acme.org/',
           tagline: 'Build trust',
           mission: null,
+          working_context: null,
+          hiring_process_summary: null,
           type: 'company',
         },
       }) as any

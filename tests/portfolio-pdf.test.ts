@@ -38,7 +38,8 @@ describe('generateTrustPdf', () => {
       linkedin: { confidence: 80, hasVerificationBadge: true },
       proofs: { count: 3 },
       verifications: { count: 2 },
-      attestations: { count: 1 },
+      badges: [],
+      activeIssues: [],
     };
 
     const buffer = await generateTrustPdf({
@@ -54,6 +55,14 @@ describe('generateTrustPdf', () => {
       skills: [
         { name: 'Next.js', level: 5 },
         { name: 'Supabase', level: 4 },
+      ],
+      proofPacks: [
+        {
+          title: 'Proof Pack: Product Strategy',
+          verificationStatus: 'verified',
+          freshnessState: 'fresh',
+          outcomesSummary: 'Shipped a trust-first MVP.',
+        },
       ],
       visibility: {
         header: true,

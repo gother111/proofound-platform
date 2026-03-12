@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { emitEvent, EVENT_TYPES, type EventType } from '@/lib/analytics/events';
-import { isActiveOrgMember, isTrustedInternalRequest, requireApiAuth } from '@/lib/api/auth';
-import { requireAnalyticsConsentForUser } from '@/lib/privacy/analytics-consent';
+import { resolveAnalyticsRequestContext } from '@/lib/analytics/request-context';
 
 type JsonRecord = Record<string, unknown>;
 
@@ -30,47 +29,15 @@ export async function POST(req: NextRequest) {
       ? (rawEventType as EventType)
       : 'custom';
 
-    const trustedInternalCall = isTrustedInternalRequest(req);
-    const authResult = await requireApiAuth();
-    if (!trustedInternalCall && authResult instanceof NextResponse) {
-      return authResult;
-    }
-
-    const authContext = authResult instanceof NextResponse ? null : authResult;
-    const resolvedUserId = trustedInternalCall
-      ? readString(body.userId) || readString(body.user_id)
-      : authContext!.user.id;
-
-    if (!trustedInternalCall && resolvedUserId) {
-      const hasAnalyticsConsent = await requireAnalyticsConsentForUser(resolvedUserId);
-      if (!hasAnalyticsConsent) {
-        return NextResponse.json(
-          { success: true, skipped: 'analytics_consent_missing' },
-          { status: 202 }
-        );
-      }
-    }
-
-    let resolvedOrgId: string | undefined;
     const requestedOrgId = readString(body.orgId) || readString(body.org_id);
-    if (requestedOrgId) {
-      if (trustedInternalCall) {
-        resolvedOrgId = requestedOrgId;
-      } else if (
-        await isActiveOrgMember(authContext!.supabase, authContext!.user.id, requestedOrgId, [
-          'owner',
-          'admin',
-          'member',
-        ])
-      ) {
-        resolvedOrgId = requestedOrgId;
-      } else {
-        return NextResponse.json(
-          { error: 'Forbidden: orgId is not accessible for current user' },
-          { status: 403 }
-        );
-      }
+    const contextResult = await resolveAnalyticsRequestContext(req, {
+      requestedUserId: readString(body.userId) || readString(body.user_id),
+      requestedOrgId,
+    });
+    if (contextResult instanceof NextResponse) {
+      return contextResult;
     }
+    const { resolvedUserId, resolvedOrgId } = contextResult;
 
     const mergedProperties: JsonRecord = {
       ...readRecord(body.event_data),

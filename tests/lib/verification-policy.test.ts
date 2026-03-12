@@ -55,7 +55,7 @@ function makeRecord(overrides: Record<string, unknown> = {}) {
 }
 
 describe('summarizeVerificationPolicy', () => {
-  it('maps verified identity records to the identity checked badge and compatibility tier', () => {
+  it('keeps veriff identity internal-only and removes compatibility trust tiers', () => {
     const summary = summarizeVerificationPolicy({
       records: [
         makeRecord({
@@ -73,9 +73,11 @@ describe('summarizeVerificationPolicy', () => {
 
     expect(summary.slots.identity.publicLabel).toBe('Identity checked');
     expect(summary.slots.identity.activeTrust).toBe(true);
-    expect(summary.compatibility.verificationTier).toBe('identity_verified');
+    expect(summary.compatibility.verificationTier).toBe('unverified');
     expect(summary.compatibility.verificationMethod).toBe('veriff');
-    expect(summary.publicBadges.some((badge) => badge.key === 'identity_checked')).toBe(true);
+    expect(summary.compatibility.verified).toBe(false);
+    expect(summary.publicBadges.some((badge) => badge.key === 'identity_checked')).toBe(false);
+    expect(summary.orgReviewBadges.some((badge) => badge.key === 'identity_checked')).toBe(false);
   });
 
   it('expires workplace confirmation after the freshness window without deleting history', () => {
@@ -132,7 +134,7 @@ describe('summarizeVerificationPolicy', () => {
     );
   });
 
-  it('uses the launch-safe workplace label only for active public trust', () => {
+  it('keeps workplace verification as compatibility only for public trust', () => {
     const summary = summarizeVerificationPolicy({
       records: [
         makeRecord({
@@ -149,8 +151,33 @@ describe('summarizeVerificationPolicy', () => {
     });
 
     expect(summary.slots.workplace.publicLabel).toBe('Workplace-verified');
-    expect(summary.publicBadges).toContainEqual(
+    expect(summary.compatibility.verificationTier).toBe('unverified');
+    expect(summary.compatibility.verificationMethod).toBe('work_email');
+    expect(summary.publicBadges).not.toContainEqual(
       expect.objectContaining({ key: 'workplace_confirmed', label: 'Workplace-verified' })
     );
+  });
+
+  it('does not let linkedin identity create a global compatibility tier', () => {
+    const summary = summarizeVerificationPolicy({
+      records: [
+        makeRecord({
+          verificationKind: 'linkedin_identity',
+          verificationSlot: 'individual.identity',
+          status: 'verified',
+          verifierClass: 'system_provider',
+          verifiedAt: new Date('2026-02-01T00:00:00.000Z'),
+          completedAt: new Date('2026-02-01T00:00:00.000Z'),
+          updatedAt: new Date('2026-02-01T00:00:00.000Z'),
+          lastRefreshedAt: new Date('2026-02-01T00:00:00.000Z'),
+        }),
+      ],
+    });
+
+    expect(summary.slots.identity.activeTrust).toBe(true);
+    expect(summary.compatibility.verificationTier).toBe('unverified');
+    expect(summary.compatibility.verified).toBe(false);
+    expect(summary.compatibility.verificationMethod).toBe('linkedin');
+    expect(summary.publicBadges).toEqual([]);
   });
 });

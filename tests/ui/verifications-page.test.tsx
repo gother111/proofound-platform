@@ -22,6 +22,20 @@ vi.mock('@/lib/supabase/admin', () => ({
   createAdminClient: createAdminClientMock,
 }));
 
+vi.mock('@/lib/proofs/canonical-pack', () => ({
+  listCanonicalProofPackAggregatesForOwner: vi.fn(),
+}));
+
+vi.mock('@/lib/verification/policy', () => ({
+  listVerificationRecordsForOwner: vi.fn(),
+}));
+
+vi.mock('@/lib/verification/canonical-requests', () => ({
+  listCanonicalSkillVerificationRequestsForOwner: vi.fn(),
+  listCanonicalSkillVerificationRequestsForVerifierEmail: vi.fn(),
+  mapCanonicalSkillVerificationRequestRecord: vi.fn((record: any) => record),
+}));
+
 vi.mock('@/app/app/i/verifications/VerificationsClient', () => ({
   VerificationsClient: (props: unknown) => {
     verificationsClientSpy(props);
@@ -30,6 +44,12 @@ vi.mock('@/app/app/i/verifications/VerificationsClient', () => ({
 }));
 
 import VerificationsPage from '@/app/app/i/verifications/page';
+import { listCanonicalProofPackAggregatesForOwner } from '@/lib/proofs/canonical-pack';
+import { listVerificationRecordsForOwner } from '@/lib/verification/policy';
+import {
+  listCanonicalSkillVerificationRequestsForOwner,
+  listCanonicalSkillVerificationRequestsForVerifierEmail,
+} from '@/lib/verification/canonical-requests';
 
 type QueryResult = { data: unknown[]; error: null };
 
@@ -39,6 +59,8 @@ function createSupabaseClientMock(options: {
   incomingSkill: unknown[];
   sentSkill: unknown[];
   sentImpact: unknown[];
+  canonicalSkillDetails?: unknown[];
+  canonicalRequesterProfiles?: unknown[];
   capturedSkillSelects?: string[];
 }) {
   const resolveQuery = (table: string, column: string): QueryResult => {
@@ -78,6 +100,15 @@ function createSupabaseClientMock(options: {
           eq: vi.fn((column: string) => ({
             order: vi.fn().mockResolvedValue(resolveQuery(table, column)),
           })),
+          in: vi.fn().mockResolvedValue({
+            data:
+              table === 'skills'
+                ? (options.canonicalSkillDetails ?? [])
+                : table === 'profiles'
+                  ? (options.canonicalRequesterProfiles ?? [])
+                  : [],
+            error: null,
+          }),
         };
       }),
     })),
@@ -101,6 +132,10 @@ describe('VerificationsPage', () => {
     vi.clearAllMocks();
     createAdminClientMock.mockReset();
     requireAuthMock.mockResolvedValue({ id: 'user-1' });
+    vi.mocked(listCanonicalProofPackAggregatesForOwner).mockResolvedValue([]);
+    vi.mocked(listVerificationRecordsForOwner).mockResolvedValue([]);
+    vi.mocked(listCanonicalSkillVerificationRequestsForOwner).mockResolvedValue([]);
+    vi.mocked(listCanonicalSkillVerificationRequestsForVerifierEmail).mockResolvedValue([]);
   });
 
   it('merges skill and impact requests for incoming and sent views', async () => {
@@ -146,6 +181,8 @@ describe('VerificationsPage', () => {
         capturedSkillSelects,
       })
     );
+    vi.mocked(listCanonicalSkillVerificationRequestsForVerifierEmail).mockResolvedValue([]);
+    vi.mocked(listCanonicalSkillVerificationRequestsForOwner).mockResolvedValue([]);
 
     createAdminClientMock.mockReturnValue(
       createAdminClientMockResult([
@@ -243,6 +280,155 @@ describe('VerificationsPage', () => {
     expect(props.sentRequests).toHaveLength(0);
   });
 
+  it('enriches verification requests with canonical proof-pack context when available', async () => {
+    createClientMock.mockResolvedValue(
+      createSupabaseClientMock({
+        userEmail: 'user@example.com',
+        incomingSkill: [
+          {
+            id: 'skill-incoming-1',
+            skill_id: 'skill-1',
+            requester_profile_id: 'requester-1',
+            verifier_email: 'user@example.com',
+            verifier_source: 'peer',
+            status: 'pending',
+            created_at: '2026-02-25T10:00:00.000Z',
+          },
+        ],
+        sentSkill: [],
+        sentImpact: [
+          {
+            id: 'impact-sent-1',
+            impact_story_id: 'story-2',
+            requester_profile_id: 'user-1',
+            verifier_email: 'impact-reviewer@example.com',
+            verifier_name: 'Alex Reviewer',
+            verifier_relationship: 'Client',
+            status: 'accepted',
+            created_at: '2026-02-24T10:00:00.000Z',
+            impact_stories: { id: 'story-2', title: 'Legacy Impact Story' },
+          },
+        ],
+        canonicalSkillDetails: [
+          {
+            id: 'skill-1',
+            competency_level: 4,
+            skills_taxonomy: {
+              name_i18n: {
+                en: 'Product Strategy',
+              },
+            },
+          },
+        ],
+        canonicalRequesterProfiles: [
+          {
+            id: 'requester-1',
+            display_name: 'Jordan Sender',
+            handle: 'jordan-sender',
+            avatar_url: null,
+          },
+        ],
+      })
+    );
+    createAdminClientMock.mockReturnValue(createAdminClientMockResult([]));
+    vi.mocked(listCanonicalSkillVerificationRequestsForVerifierEmail).mockResolvedValue([
+      {
+        id: 'canonical-skill-incoming-1',
+        skill_id: 'skill-1',
+        requester_profile_id: 'requester-1',
+        verifier_email: 'user@example.com',
+        verifier_source: 'peer',
+        status: 'pending',
+        created_at: '2026-02-25T11:00:00.000Z',
+      },
+    ] as any);
+    vi.mocked(listCanonicalProofPackAggregatesForOwner).mockResolvedValue([
+      {
+        pack: {
+          id: 'pack-skill-1',
+          title: 'Proof Pack: Product Strategy',
+          summary: 'Launch evidence for Product Strategy',
+          outcomesSummary: 'Shipped the portfolio launch in two weeks.',
+          primarySubjectType: 'skill',
+          primarySubjectId: 'skill-1',
+        },
+        ownerFull: {
+          title: 'Proof Pack: Product Strategy',
+          summary: 'Launch evidence for Product Strategy',
+          outcomesSummary: 'Shipped the portfolio launch in two weeks.',
+          items: [
+            {
+              artifact: {
+                title: 'Launch memo',
+              },
+            },
+          ],
+        },
+        verificationStatus: 'verified',
+        latestEvidenceAt: new Date('2026-02-24T10:00:00.000Z'),
+        verificationReferences: [],
+      },
+      {
+        pack: {
+          id: 'pack-impact-1',
+          title: 'Proof Pack: Climate Adaptation',
+          summary: 'External validation for climate adaptation work.',
+          outcomesSummary: 'Reduced planning time by 35%.',
+          primarySubjectType: 'impact_story',
+          primarySubjectId: 'story-2',
+        },
+        ownerFull: {
+          title: 'Proof Pack: Climate Adaptation',
+          summary: 'External validation for climate adaptation work.',
+          outcomesSummary: 'Reduced planning time by 35%.',
+          items: [
+            {
+              artifact: {
+                title: 'Client attestation',
+              },
+            },
+          ],
+        },
+        verificationStatus: 'partially_verified',
+        latestEvidenceAt: new Date('2026-02-24T10:00:00.000Z'),
+        verificationReferences: [{ id: 'verification-impact-1' }],
+      },
+    ] as any);
+    vi.mocked(listVerificationRecordsForOwner).mockResolvedValue([
+      {
+        id: 'verification-impact-1',
+        sourceRequestTable: 'impact_story_verification_requests',
+        sourceRequestId: 'impact-sent-1',
+      },
+    ] as any);
+
+    const element = await VerificationsPage();
+    render(element);
+
+    const props = verificationsClientSpy.mock.calls[0]?.[0] as {
+      incomingRequests: Array<{
+        canonical_pack_title?: string | null;
+        canonical_evidence_titles?: string[];
+      }>;
+      sentRequests: Array<{
+        id: string;
+        canonical_pack_title?: string | null;
+        canonical_verification_status?: string | null;
+        canonical_outcomes_summary?: string | null;
+      }>;
+    };
+
+    expect(props.incomingRequests[0]).toMatchObject({
+      canonical_pack_title: 'Proof Pack: Product Strategy',
+      canonical_evidence_titles: ['Launch memo'],
+    });
+    expect(props.sentRequests.find((request) => request.id === 'impact-sent-1')).toMatchObject({
+      canonical_pack_title: 'Proof Pack: Climate Adaptation',
+      canonical_verification_status: 'partially_verified',
+      canonical_outcomes_summary: 'Reduced planning time by 35%.',
+    });
+  });
+
   it('does not use admin client when session email is unconfirmed', async () => {
     createAdminClientMock.mockReturnValue(createAdminClientMockResult([]));
 
@@ -265,6 +451,8 @@ describe('VerificationsPage', () => {
         sentImpact: [],
       })
     );
+    vi.mocked(listCanonicalSkillVerificationRequestsForVerifierEmail).mockResolvedValue([]);
+    vi.mocked(listCanonicalSkillVerificationRequestsForOwner).mockResolvedValue([]);
 
     const element = await VerificationsPage();
     render(element);

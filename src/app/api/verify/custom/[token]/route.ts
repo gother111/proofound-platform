@@ -9,11 +9,22 @@ import {
   getCapabilityRedeemSessionCookieName,
   redeemCapabilityToken,
 } from '@/lib/security/capability-tokens';
+import {
+  CANONICAL_PROOFS_WRITE_ENABLED,
+  upsertCanonicalVerificationRecord,
+} from '@/lib/canonical/repository';
+import { hashOpaqueToken } from '@/lib/contracts/canonical-domain';
 import type { CustomVerificationRelationship } from '@/lib/verification/custom-verification';
+import {
+  applySkillVerificationTrustLift,
+  parseHumanObservedAttestationResponse,
+  type HumanObservedAttestationRequestPayload,
+} from '@/lib/verification/human-attestations';
 
 const RespondSchema = z.object({
   action: z.enum(['accept', 'decline']),
   message: z.string().max(2000).optional(),
+  attestation: z.unknown().optional(),
 });
 
 type CustomRequestItemRow = {
@@ -27,6 +38,9 @@ type CustomRequestItemRow = {
 type CustomRequestGetRow = {
   id: string;
   verifier_relationship: CustomVerificationRelationship;
+  request_kind?: string | null;
+  attestation_request?: unknown;
+  attestation_response?: unknown;
   message: string | null;
   status: string;
   created_at: string;
@@ -43,6 +57,11 @@ type CustomRequestGetRow = {
 type CustomRequestPostRow = {
   id: string;
   requester_profile_id: string;
+  verifier_email: string;
+  verifier_profile_id?: string | null;
+  verifier_relationship: CustomVerificationRelationship;
+  request_kind?: string | null;
+  attestation_request?: unknown;
   status: string;
   expires_at: string;
   custom_verification_request_items?: CustomRequestItemRow[] | null;
@@ -122,6 +141,9 @@ export async function GET(
         `
         id,
         verifier_relationship,
+        request_kind,
+        attestation_request,
+        attestation_response,
         message,
         status,
         created_at,
@@ -168,12 +190,25 @@ export async function GET(
         requester_name: customRequest.profiles?.display_name || 'A Proofound user',
         requester_avatar: customRequest.profiles?.avatar_url || null,
         relationship: customRequest.verifier_relationship,
+        request_kind:
+          customRequest.request_kind === 'human_observed_attestation'
+            ? 'human_observed_attestation'
+            : 'generic_verification',
+        attestation_request:
+          customRequest.attestation_request && typeof customRequest.attestation_request === 'object'
+            ? customRequest.attestation_request
+            : null,
         message: customRequest.message,
         status: toResponseStatus(customRequest.status),
         created_at: customRequest.created_at,
         expires_at: customRequest.expires_at,
         responded_at: customRequest.responded_at,
         response_message: customRequest.response_message,
+        attestation_response:
+          customRequest.attestation_response &&
+          typeof customRequest.attestation_response === 'object'
+            ? customRequest.attestation_response
+            : null,
         items: (customRequest.custom_verification_request_items || []).map(
           (item: CustomRequestItemRow) => ({
             id: item.id,
@@ -260,6 +295,11 @@ export async function POST(
         `
         id,
         requester_profile_id,
+        verifier_email,
+        verifier_profile_id,
+        verifier_relationship,
+        request_kind,
+        attestation_request,
         status,
         expires_at,
         custom_verification_request_items (
@@ -277,6 +317,39 @@ export async function POST(
     }
 
     const customRequest = customRequestRaw as CustomRequestPostRow;
+    const requestKind =
+      customRequest.request_kind === 'human_observed_attestation'
+        ? 'human_observed_attestation'
+        : 'generic_verification';
+    const attestationRequest =
+      requestKind === 'human_observed_attestation' &&
+      customRequest.attestation_request &&
+      typeof customRequest.attestation_request === 'object'
+        ? (customRequest.attestation_request as HumanObservedAttestationRequestPayload)
+        : null;
+
+    let attestationResponse: Record<string, unknown> | null = null;
+    if (requestKind === 'human_observed_attestation' && parsed.data.action === 'accept') {
+      if (!attestationRequest) {
+        return NextResponse.json(
+          { error: 'This attestation request is missing its bounded skill scope.' },
+          { status: 400 }
+        );
+      }
+
+      const parsedAttestation = parseHumanObservedAttestationResponse(
+        parsed.data.attestation,
+        attestationRequest
+      );
+      if (!parsedAttestation.success) {
+        return NextResponse.json(
+          { error: 'Validation failed', details: parsedAttestation.error.issues },
+          { status: 400 }
+        );
+      }
+
+      attestationResponse = parsedAttestation.data;
+    }
 
     if (customRequest.status !== 'pending') {
       return NextResponse.json(
@@ -299,6 +372,7 @@ export async function POST(
         status: nextStatus,
         responded_at: nowIso,
         response_message: parsed.data.message?.trim() || null,
+        attestation_response: attestationResponse,
         updated_at: nowIso,
       })
       .eq('id', customRequest.id);
@@ -346,15 +420,19 @@ export async function POST(
 
     const skillStatus = parsed.data.action === 'accept' ? 'accepted' : 'declined';
 
-    const { error: updateSkillVerificationError } = await admin
+    const { data: linkedSkillRows, error: updateSkillVerificationError } = await admin
       .from('skill_verification_requests')
       .update({
         status: skillStatus,
         responded_at: nowIso,
         response_message: parsed.data.message?.trim() || null,
+        attestation_response: attestationResponse,
       })
       .eq('custom_request_id', customRequest.id)
-      .eq('status', 'pending');
+      .eq('status', 'pending')
+      .select(
+        'id, skill_id, verifier_source, verifier_profile_id, verifier_domain_snapshot, integrity_status'
+      );
 
     if (updateSkillVerificationError) {
       console.error(
@@ -368,6 +446,34 @@ export async function POST(
     }
 
     if (parsed.data.action === 'accept') {
+      if (idsByType.skill.length > 0) {
+        const { data: skills } = await admin
+          .from('skills')
+          .select('id, evidence_strength')
+          .in('id', idsByType.skill);
+
+        for (const skill of skills || []) {
+          const currentStrength = Number.parseFloat(String(skill.evidence_strength || '0')) || 0;
+          const nextStrength = applySkillVerificationTrustLift({
+            currentStrength,
+            requestKind,
+            integrityStatus: 'clear',
+            status: 'accepted',
+            attestationResponse,
+          });
+
+          if (nextStrength !== currentStrength) {
+            await admin
+              .from('skills')
+              .update({
+                evidence_strength: nextStrength.toString(),
+                updated_at: nowIso,
+              })
+              .eq('id', skill.id);
+          }
+        }
+      }
+
       if (idsByType.experience.length > 0) {
         await admin
           .from('experiences')
@@ -414,12 +520,60 @@ export async function POST(
       }
     }
 
+    if (CANONICAL_PROOFS_WRITE_ENABLED) {
+      await Promise.all(
+        items.map((item) =>
+          upsertCanonicalVerificationRecord({
+            ownerType: 'individual_profile',
+            ownerId: customRequest.requester_profile_id,
+            subjectType: item.artifact_type,
+            subjectId: item.artifact_id,
+            verificationKind:
+              requestKind === 'human_observed_attestation' && item.artifact_type === 'skill'
+                ? customRequest.verifier_relationship === 'manager' ||
+                  customRequest.verifier_relationship === 'skip_level_manager' ||
+                  customRequest.verifier_relationship === 'direct_report'
+                  ? 'skill_attestation_manager'
+                  : 'skill_attestation_peer'
+                : 'platform_manual_review',
+            status: nextStatus === 'accepted' ? 'verified' : 'declined',
+            verifierPrincipalType: customRequest.verifier_profile_id
+              ? 'user_account'
+              : 'external_email',
+            verifierProfileId: customRequest.verifier_profile_id || null,
+            verifierEmailHash: customRequest.verifier_email
+              ? hashOpaqueToken(customRequest.verifier_email)
+              : null,
+            integrityStatus: 'clear',
+            sourceRequestTable: 'custom_verification_requests',
+            sourceRequestId: customRequest.id,
+            sourceResponseTable: 'custom_verification_requests',
+            sourceResponseId: customRequest.id,
+            verifiedAt: parsed.data.action === 'accept' ? nowIso : null,
+            metadata: {
+              relationship: customRequest.verifier_relationship,
+              requestKind,
+              responseMessage: parsed.data.message?.trim() || null,
+              attestation: attestationResponse,
+              evidenceClass:
+                requestKind === 'human_observed_attestation' ? 'human_observed' : 'generic',
+              linkedSkillVerificationIds: (linkedSkillRows || []).map(
+                (row: { id: string }) => row.id
+              ),
+            },
+          })
+        )
+      );
+    }
+
     return NextResponse.json({
       success: true,
       status: nextStatus,
       message:
         parsed.data.action === 'accept'
-          ? 'Thank you for verifying these artifacts!'
+          ? requestKind === 'human_observed_attestation'
+            ? 'Thank you for recording these observed-in-practice attestations.'
+            : 'Thank you for verifying these artifacts!'
           : 'Your response has been recorded.',
     });
   } catch (error) {

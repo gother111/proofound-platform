@@ -15,6 +15,7 @@ import { mergeVisibilityFlags } from '@/lib/portfolio/visibility';
 import { getPublicSiteUrl } from '@/lib/seo/public-metadata';
 import { resolveHasLinkedInIdentityVerification } from '@/lib/linkedin-verified';
 import {
+  hasPrimaryAnchorContext,
   listCanonicalProofPackAggregatesForOwner,
   type CanonicalPublicSafeProofPackProjection,
 } from '@/lib/proofs/canonical-pack';
@@ -44,9 +45,20 @@ export type PublicTrustExportData = {
     id: string;
     scope: 'owner_full' | 'public_safe';
     title: string;
+    summary: string | null;
+    evidenceSummary: string | null;
+    outcomesSummary: string | null;
     verificationStatus: string;
     freshnessState: string;
     artifactCount: number;
+    contextLabel: string | null;
+    selectedEvidence: Array<{
+      title: string;
+      href: string | null;
+      artifactKind: string | null;
+      issuedAt: string | null;
+      description: string | null;
+    }>;
   }>;
   visibility: ReturnType<typeof mergeVisibilityFlags>;
 };
@@ -58,6 +70,8 @@ export type PublicOrganizationTrustExportData = {
     displayName: string;
     tagline?: string;
     mission?: string;
+    workingContext?: string;
+    hiringProcessSummary?: string;
     website?: string;
     type?: string;
     verified: boolean;
@@ -116,6 +130,8 @@ type OrganizationRow = {
   website: string | null;
   tagline: string | null;
   mission: string | null;
+  working_context: string | null;
+  hiring_process_summary: string | null;
   type: string | null;
 };
 
@@ -144,6 +160,7 @@ type FeaturedProof = {
 
 type PublicProofOverview = {
   featuredProofs: FeaturedProof[];
+  publicProofPacks: PublicTrustExportData['proofPacks'];
   publicProofCount: number;
   publicSkillIds: string[];
   hasLinkOnlyContent: boolean;
@@ -184,6 +201,16 @@ export type PublicIndividualPortfolioProjection = {
   hasLinkOnlyContent: boolean;
   hasRevealGatedContent: boolean;
 };
+
+export type PublicIndividualPortfolioAccessResult =
+  | {
+      status: 'missing';
+      projection: null;
+    }
+  | {
+      status: 'unavailable' | 'accessible';
+      projection: PublicIndividualPortfolioProjection;
+    };
 
 export type PublicOrganizationPortfolioProjection = {
   organizationId: string;
@@ -247,6 +274,20 @@ function normalizeStringList(value: unknown, limit = 8): string[] {
     .map((entry) => entry.trim())
     .filter((entry) => entry.length > 0)
     .slice(0, limit);
+}
+
+function toRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function titleCase(value: string) {
+  return value
+    .split('_')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
 }
 
 function normalizeValueLabels(values: unknown): string[] {
@@ -313,6 +354,32 @@ function resolveSafeEvidenceUrl(input: { sourceUrl?: string | null }): string | 
   return null;
 }
 
+function resolvePublicProofPackContextLabel(input: {
+  pack: {
+    primarySubjectType?: string | null;
+    contextJson?: unknown;
+    metadata?: unknown;
+  };
+}): string | null {
+  const contextJson = toRecord(input.pack.contextJson);
+  const metadata = toRecord(input.pack.metadata);
+  const explicitLabel =
+    (typeof metadata.topic_label === 'string' && metadata.topic_label.trim()) ||
+    (typeof contextJson.topicLabel === 'string' && contextJson.topicLabel.trim()) ||
+    (typeof contextJson.primaryAnchorLabel === 'string' && contextJson.primaryAnchorLabel.trim()) ||
+    null;
+
+  if (explicitLabel) {
+    return explicitLabel;
+  }
+
+  if (typeof input.pack.primarySubjectType === 'string' && input.pack.primarySubjectType.trim()) {
+    return titleCase(input.pack.primarySubjectType);
+  }
+
+  return null;
+}
+
 function resolvePublicProofBadge(input: {
   artifactKind?: string | null;
   metadata?: Record<string, unknown> | null;
@@ -357,15 +424,10 @@ function resolvePublicPortfolioName(
 }
 
 function hasDurableTrustSignal(
-  profile: IndividualProfileRow,
+  _profile: IndividualProfileRow,
   verificationSummary: VerificationPolicySummary
 ) {
-  return Boolean(
-    verificationSummary.publicBadges.length > 0 ||
-      profile.verification_status === 'verified' ||
-      profile.work_email_verified ||
-      profile.linkedin_verification_status === 'verified'
-  );
+  return verificationSummary.publicBadges.length > 0;
 }
 
 async function loadIndividualProfileByHandle(handle: string): Promise<IndividualProfileRow | null> {
@@ -422,6 +484,51 @@ async function loadHistoricalHandle(handle: string): Promise<string | null> {
   return typeof row.redirect_target_slug === 'string' ? row.redirect_target_slug : null;
 }
 
+function collectPublicSafeSkillIds(aggregate: {
+  items: Array<{ artifact: { subjectType: string; subjectId: string | null } }>;
+  verificationReferences: Array<{ subjectType: string; subjectId: string }>;
+}) {
+  const skillIds = new Set<string>();
+
+  for (const item of aggregate.items) {
+    if (item.artifact.subjectType === 'skill' && typeof item.artifact.subjectId === 'string') {
+      skillIds.add(item.artifact.subjectId);
+    }
+  }
+
+  for (const record of aggregate.verificationReferences) {
+    if (record.subjectType === 'skill' && typeof record.subjectId === 'string') {
+      skillIds.add(record.subjectId);
+    }
+  }
+
+  return skillIds;
+}
+
+async function loadPublicSkillLabels(profileId: string, skillIds: string[]): Promise<string[]> {
+  if (skillIds.length === 0) {
+    return [];
+  }
+
+  const result = await db.execute(sql`
+    SELECT
+      s.id,
+      COALESCE(st.name_i18n ->> 'en', st.name_i18n ->> 'default', s.skill_code, s.skill_id) AS name
+    FROM skills s
+    LEFT JOIN skills_taxonomy st ON st.code = s.skill_code
+    WHERE s.profile_id = ${profileId}
+      AND s.id IN (${sql.join(
+        skillIds.map((skillId) => sql`${skillId}::uuid`),
+        sql`, `
+      )})
+    ORDER BY s.level DESC NULLS LAST, s.created_at DESC
+  `);
+
+  return getRows<{ name: string | null }>(result as any)
+    .map((row) => (typeof row.name === 'string' ? row.name.trim() : ''))
+    .filter((name) => name.length > 0);
+}
+
 async function loadIndividualProofOverview(profileId: string): Promise<PublicProofOverview> {
   const aggregates = await listCanonicalProofPackAggregatesForOwner(
     'individual_profile',
@@ -430,14 +537,19 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
 
   const publicSkillIds = new Set<string>();
   const featuredProofsByArtifactId = new Map<string, FeaturedProof & { sortKey: string }>();
+  const publicProofPacks: PublicTrustExportData['proofPacks'] = [];
 
   let hasLinkOnlyContent = false;
   let hasRevealGatedContent = false;
 
   for (const aggregate of aggregates) {
-    if (aggregate.pack.primarySubjectType === 'skill' && aggregate.pack.primarySubjectId) {
-      if ((aggregate.publicSafe?.items.length ?? 0) > 0) {
-        publicSkillIds.add(aggregate.pack.primarySubjectId);
+    if (!hasPrimaryAnchorContext(aggregate.pack)) {
+      continue;
+    }
+
+    if ((aggregate.publicSafe?.items.length ?? 0) > 0) {
+      for (const skillId of collectPublicSafeSkillIds(aggregate)) {
+        publicSkillIds.add(skillId);
       }
     }
 
@@ -454,6 +566,26 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
     if (!publicSafePack) {
       continue;
     }
+
+    publicProofPacks.push({
+      id: aggregate.pack.id,
+      scope: 'public_safe',
+      title: publicSafePack.title || aggregate.pack.title || 'Proof Pack',
+      summary: publicSafePack.summary ?? aggregate.pack.summary ?? null,
+      evidenceSummary: publicSafePack.evidenceSummary ?? aggregate.pack.evidenceSummary ?? null,
+      outcomesSummary: publicSafePack.outcomesSummary ?? aggregate.pack.outcomesSummary ?? null,
+      verificationStatus: aggregate.verificationStatus,
+      freshnessState: aggregate.freshnessState,
+      artifactCount: publicSafePack.items.length,
+      contextLabel: resolvePublicProofPackContextLabel({ pack: aggregate.pack }),
+      selectedEvidence: publicSafePack.items.slice(0, 3).map((item) => ({
+        title: item.title,
+        href: resolveSafeEvidenceUrl({ sourceUrl: item.sourceUrl }),
+        artifactKind: item.artifactKind ?? null,
+        issuedAt: item.issuedAt ?? null,
+        description: item.description ?? null,
+      })),
+    });
 
     for (const item of publicSafePack.items) {
       if (featuredProofsByArtifactId.has(item.artifactId)) {
@@ -479,6 +611,7 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
 
   return {
     featuredProofs,
+    publicProofPacks,
     publicProofCount: featuredProofsByArtifactId.size,
     publicSkillIds: [...publicSkillIds],
     hasLinkOnlyContent,
@@ -528,8 +661,8 @@ function buildIndividualExportData(input: {
   verificationSummary: VerificationPolicySummary;
   counts: {
     verifiedSkillCount: number;
-    attestationCount: number;
   };
+  proofPacks: PublicTrustExportData['proofPacks'];
 }): PublicTrustExportData {
   const profileCompat = {
     id: input.profile.id,
@@ -556,7 +689,6 @@ function buildIndividualExportData(input: {
     {
       proofsCount: input.visibility.counts ? input.publicProofCount : 0,
       acceptedVerificationsCount: input.visibility.counts ? input.counts.verifiedSkillCount : 0,
-      attestationCount: input.visibility.counts ? input.counts.attestationCount : 0,
     },
     input.verificationSummary
   );
@@ -586,9 +718,39 @@ function buildIndividualExportData(input: {
           level: 5,
         }))
       : [],
-    proofPacks: [],
+    proofPacks: input.proofPacks,
     visibility: input.visibility,
   };
+}
+
+function buildProofFirstDescription(input: {
+  publicDisplayName: string;
+  publicHeadline: string;
+  publicBio: string | null;
+  proofPacks: PublicTrustExportData['proofPacks'];
+}): string {
+  const leadPack = input.proofPacks[0];
+  if (leadPack) {
+    const leadDetail =
+      leadPack.outcomesSummary?.trim() ||
+      leadPack.summary?.trim() ||
+      leadPack.evidenceSummary?.trim() ||
+      null;
+
+    if (leadDetail) {
+      return `${input.publicDisplayName}: ${leadDetail}`;
+    }
+
+    if (leadPack.contextLabel) {
+      return `${input.publicDisplayName}: Proof-backed work in ${leadPack.contextLabel}.`;
+    }
+  }
+
+  return (
+    input.publicBio ||
+    input.publicHeadline ||
+    `${input.publicDisplayName}'s proof-first public portfolio on Proofound.`
+  );
 }
 
 export async function getPublicIndividualPortfolioProjectionByHandle(
@@ -646,7 +808,7 @@ export async function getPublicIndividualPortfolioProjectionByHandle(
   const publicBio = visibility.bio ? profile.bio?.trim() || null : null;
   const publicSkills =
     visibility.skills && isVisibleOnPublicPage(profile.skills_visibility ?? 'public')
-      ? normalizeStringList(profile.skills)
+      ? await loadPublicSkillLabels(profile.id, proofOverview.publicSkillIds)
       : [];
 
   const minimumContentMet = Boolean(
@@ -678,16 +840,6 @@ export async function getPublicIndividualPortfolioProjectionByHandle(
       )
       .map((row) => row.subjectId as string)
   );
-  const attestationCount = verificationRecords.filter(
-    (row) =>
-      row.status === 'verified' &&
-      row.subjectType === 'skill' &&
-      typeof row.subjectId === 'string' &&
-      proofOverview.publicSkillIds.includes(row.subjectId) &&
-      (row.verificationKind === 'skill_attestation_peer' ||
-        row.verificationKind === 'skill_attestation_manager')
-  ).length;
-
   const exportData = buildIndividualExportData({
     profile,
     publicDisplayName,
@@ -700,8 +852,14 @@ export async function getPublicIndividualPortfolioProjectionByHandle(
     verificationSummary,
     counts: {
       verifiedSkillCount: verifiedSkillIds.size,
-      attestationCount,
     },
+    proofPacks: proofOverview.publicProofPacks,
+  });
+  const proofFirstDescription = buildProofFirstDescription({
+    publicDisplayName,
+    publicHeadline,
+    publicBio,
+    proofPacks: proofOverview.publicProofPacks,
   });
 
   return {
@@ -730,19 +888,17 @@ export async function getPublicIndividualPortfolioProjectionByHandle(
         : `${publicDisplayName} | Proofound`,
       description: shouldUseGenericSharePreview(effectiveState)
         ? 'Shareable by direct link on Proofound.'
-        : publicHeadline || `${publicDisplayName}'s proof-first public portfolio on Proofound.`,
+        : proofFirstDescription,
       ogTitle: shouldUseGenericSharePreview(effectiveState)
         ? 'Proofound public portfolio'
         : `${publicDisplayName} on Proofound`,
       ogDescription: shouldUseGenericSharePreview(effectiveState)
         ? 'Shareable by direct link on Proofound.'
-        : publicHeadline
-          ? `${publicHeadline} Explore proof-backed work.`
-          : `Explore ${publicDisplayName}'s proof-first public portfolio.`,
+        : proofFirstDescription,
       useGenericPreview: shouldUseGenericSharePreview(effectiveState),
     },
     jsonLd: {
-      description: publicBio || publicHeadline || 'Proof-first public portfolio',
+      description: proofFirstDescription,
     },
     minimumContentMet,
     hasLinkOnlyContent: proofOverview.hasLinkOnlyContent,
@@ -752,6 +908,26 @@ export async function getPublicIndividualPortfolioProjectionByHandle(
 
 export async function getHistoricalPublicProfileHandleRedirect(handle: string) {
   return loadHistoricalHandle(handle);
+}
+
+export async function resolvePublicIndividualPortfolioAccessByHandle(
+  handle: string
+): Promise<PublicIndividualPortfolioAccessResult> {
+  const projection = await getPublicIndividualPortfolioProjectionByHandle(handle);
+
+  if (!projection) {
+    return {
+      status: 'missing',
+      projection: null,
+    };
+  }
+
+  return {
+    status: isAccessiblePublicPortfolioState(projection.effectiveState)
+      ? 'accessible'
+      : 'unavailable',
+    projection,
+  };
 }
 
 async function loadOrganizationBySlug(slug: string): Promise<OrganizationRow | null> {
@@ -770,6 +946,8 @@ async function loadOrganizationBySlug(slug: string): Promise<OrganizationRow | n
       website,
       tagline,
       mission,
+      working_context,
+      hiring_process_summary,
       type
     FROM organizations
     WHERE slug = ${slug}
@@ -934,6 +1112,8 @@ export async function getPublicOrganizationPortfolioProjectionBySlug(
         displayName: publicDisplayName,
         tagline: organization.tagline || undefined,
         mission: visibility?.mission === 'public' ? organization.mission || undefined : undefined,
+        workingContext: organization.working_context || undefined,
+        hiringProcessSummary: organization.hiring_process_summary || undefined,
         website: normalizeOrganizationWebsite(organization.website).value || undefined,
         type: organization.type || undefined,
         verified: Boolean(organization.verified),

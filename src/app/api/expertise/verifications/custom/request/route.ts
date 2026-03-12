@@ -20,6 +20,7 @@ import {
   parseCustomSkillName,
   relationshipLabel,
 } from '@/lib/verification/custom-verification';
+import { deriveAttestationRequestMode } from '@/lib/verification/human-attestations';
 import {
   CANONICAL_PROOFS_WRITE_ENABLED,
   upsertCanonicalVerificationRecord,
@@ -305,6 +306,7 @@ export async function POST(request: NextRequest) {
 
     const selectedArtifacts: SelectedArtifactRecord[] = [];
     const selectedSkillIds: string[] = [];
+    let selectedSkillRows: SelectedSkillRow[] = [];
 
     if (groupedArtifacts.skill.length > 0) {
       const { data: skills, error: skillsError } = await loadSelectedSkills(
@@ -325,6 +327,7 @@ export async function POST(request: NextRequest) {
       }
 
       const loadedSkills = skills || [];
+      selectedSkillRows = loadedSkills;
       const loadedSkillIds = new Set(loadedSkills.map((skill) => skill.id));
 
       for (const skillId of groupedArtifacts.skill) {
@@ -522,6 +525,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const attestationRequestMode = deriveAttestationRequestMode({
+      skills: selectedArtifacts
+        .filter((artifact) => artifact.type === 'skill')
+        .map((artifact) => {
+          const skill = selectedSkillRows.find((row) => row.id === artifact.id);
+          return {
+            id: artifact.id,
+            label: artifact.label,
+            skillCode: skill?.skill_code,
+            skillId: skill?.skill_id,
+          };
+        }),
+      totalArtifacts: dedupedArtifacts.length,
+    });
+
+    if ('error' in attestationRequestMode && attestationRequestMode.error) {
+      return NextResponse.json({ error: attestationRequestMode.error }, { status: 400 });
+    }
+
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 14);
 
@@ -559,6 +581,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         relationship: parsed.data.relationship,
         artifactCount: selectedArtifacts.length,
+        requestKind: attestationRequestMode.requestKind,
       },
     });
 
@@ -570,6 +593,8 @@ export async function POST(request: NextRequest) {
         verifier_email: verifierEmail,
         verifier_profile_id: verifierProfileId,
         verifier_relationship: parsed.data.relationship,
+        request_kind: attestationRequestMode.requestKind,
+        attestation_request: attestationRequestMode.requestPayload,
         message: parsed.data.message?.trim() || null,
         token_hash: issued.tokenHash,
         capability_token_id: issued.token.id,
@@ -612,7 +637,15 @@ export async function POST(request: NextRequest) {
               ownerId: user.id,
               subjectType: artifact.type,
               subjectId: artifact.id,
-              verificationKind: 'platform_manual_review',
+              verificationKind:
+                attestationRequestMode.requestKind === 'human_observed_attestation' &&
+                artifact.type === 'skill'
+                  ? parsed.data.relationship === 'manager' ||
+                    parsed.data.relationship === 'skip_level_manager' ||
+                    parsed.data.relationship === 'direct_report'
+                    ? 'skill_attestation_manager'
+                    : 'skill_attestation_peer'
+                  : 'platform_manual_review',
               status: 'pending',
               verifierPrincipalType: verifierProfileId ? 'user_account' : 'external_email',
               verifierProfileId,
@@ -628,6 +661,12 @@ export async function POST(request: NextRequest) {
               metadata: {
                 relationship: parsed.data.relationship,
                 message: parsed.data.message?.trim() || null,
+                requestKind: attestationRequestMode.requestKind,
+                attestation: attestationRequestMode.requestPayload,
+                evidenceClass:
+                  attestationRequestMode.requestKind === 'human_observed_attestation'
+                    ? 'human_observed'
+                    : 'generic',
               },
             })
           )
@@ -644,6 +683,9 @@ export async function POST(request: NextRequest) {
         verifier_email: verifierEmail,
         verifier_profile_id: verifierProfileId,
         verifier_source: mappedSkillVerifierSource,
+        verifier_relationship: parsed.data.relationship,
+        request_kind: attestationRequestMode.requestKind,
+        attestation_request: attestationRequestMode.requestPayload,
         message: parsed.data.message?.trim() || null,
         custom_request_id: customRequest.id,
         status: 'pending',
@@ -709,7 +751,11 @@ export async function POST(request: NextRequest) {
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 640px; margin: 0 auto; padding: 20px; color: #2D3330;">
           <h2 style="margin-top: 0;">Custom Verification Request</h2>
           <p>
-            <strong>${requesterName}</strong> listed you as ${relationshipDescription} and asked you to verify multiple profile artifacts.
+            <strong>${requesterName}</strong> listed you as ${relationshipDescription} and asked you to ${
+              attestationRequestMode.requestKind === 'human_observed_attestation'
+                ? 'record bounded observed-in-practice skill attestations'
+                : 'verify multiple profile artifacts'
+            }.
           </p>
           <ul>
             ${artifactLines}
@@ -722,7 +768,11 @@ export async function POST(request: NextRequest) {
           <p style="font-size: 12px; color: #6B7470;">This link expires in 14 days.</p>
         </div>
       `,
-      text: `Custom Verification Request\n\n${requesterName} listed you as ${relationshipDescription} and asked you to verify multiple artifacts:\n${artifactTextLines}\n\n${parsed.data.message ? `Message: ${parsed.data.message}\n\n` : ''}Review request: ${verifyUrl}\n\nThis link expires in 14 days.`,
+      text: `Custom Verification Request\n\n${requesterName} listed you as ${relationshipDescription} and asked you to ${
+        attestationRequestMode.requestKind === 'human_observed_attestation'
+          ? 'record bounded observed-in-practice skill attestations'
+          : 'verify multiple artifacts'
+      }:\n${artifactTextLines}\n\n${parsed.data.message ? `Message: ${parsed.data.message}\n\n` : ''}Review request: ${verifyUrl}\n\nThis link expires in 14 days.`,
     });
 
     if (!emailResult.success) {

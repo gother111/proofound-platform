@@ -7,6 +7,7 @@ import {
   listVerificationRecordsForOwner,
   summarizeVerificationPolicy,
 } from '@/lib/verification/policy';
+import { resolveLinkedInVerificationLevel } from '@/lib/verification/tier';
 import { buildWorkflowView } from '@/lib/workflow/service';
 
 function hasActiveWorkEmailToken(profile: {
@@ -189,16 +190,13 @@ export async function GET(request: NextRequest) {
         | 'identity'
         | 'failed'
         | null) ||
-      (policySummary.compatibility.verificationTier === 'identity_verified'
-        ? 'identity'
-        : policySummary.compatibility.verificationTier === 'workplace_verified'
-          ? 'workplace'
-          : 'unverified');
+      resolveLinkedInVerificationLevel({
+        linkedinVerificationStatus: profile.linkedin_verification_status,
+        linkedinVerificationData: profile.linkedin_verification_data,
+      });
     const linkedinHasIdentityVerification =
       linkedinVerificationLevel === 'identity' ||
       resolveHasLinkedInIdentityVerification(profile.linkedin_verification_data);
-    const effectiveIdentityVerified =
-      policySummary.compatibility.verificationTier === 'identity_verified';
     const verificationStatus =
       hasPendingToken && policySummary.compatibility.verificationStatus === 'unverified'
         ? 'pending'
@@ -215,12 +213,12 @@ export async function GET(request: NextRequest) {
         : (canonicalWorkEmailVerification?.status ?? 'pending');
 
     return NextResponse.json({
-      verified: effectiveIdentityVerified,
+      verified: false,
       verificationMethod,
       verificationStatus,
-      verificationTier: policySummary.compatibility.verificationTier,
-      verificationTierSource: policySummary.compatibility.verificationTierSource,
-      verifiedAt: profile.verified_at,
+      verificationTier: 'unverified',
+      verificationTierSource: 'unknown',
+      verifiedAt: null,
       linkedinVerificationStatus,
       linkedinVerificationLevel,
       linkedinHasIdentityVerification,

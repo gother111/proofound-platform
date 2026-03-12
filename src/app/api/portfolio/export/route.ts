@@ -56,6 +56,12 @@ export async function GET() {
       },
       signals: data.signals,
       skills: data.skills.map((s) => ({ name: s.name, level: s.level })),
+      proofPacks: data.proofPacks.map((pack) => ({
+        title: pack.title,
+        verificationStatus: pack.verificationStatus,
+        freshnessState: pack.freshnessState,
+        outcomesSummary: pack.outcomesSummary,
+      })),
       visibility: data.visibility,
     });
 

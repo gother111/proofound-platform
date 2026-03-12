@@ -43,6 +43,7 @@ import {
   appendVerificationLogEntry,
   appendVerificationTransitionLogEntry,
 } from '@/lib/verification/log-entries';
+import { ensureEngagementVerificationForDecision } from '@/lib/engagement-verifications/service';
 
 type TransitionContext = {
   trigger: string;
@@ -1232,8 +1233,18 @@ export async function recordDecisionTransition(params: {
     });
   }
 
+  const engagementVerification =
+    params.toState === 'hire'
+      ? await ensureEngagementVerificationForDecision({
+          decision: updated,
+          actorType: params.actorType,
+          actorId: params.actorId ?? null,
+        })
+      : null;
+
   return {
     ...updated,
+    engagementVerification,
     workflow: buildWorkflowView({
       machine: 'decision',
       state: updated.state,

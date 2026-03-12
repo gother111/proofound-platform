@@ -156,7 +156,7 @@ describe('POST /api/verification/linkedin/initiate', () => {
     mockIntegrationQuery();
   });
 
-  it('auto-approves and grants identity when LinkedIn identity signal exists', async () => {
+  it('stores linkedin identity as a compatibility signal without global trust inflation', async () => {
     const { supabase, updateSpy } = buildSupabaseMock();
     (createClient as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(supabase as any);
 
@@ -178,16 +178,16 @@ describe('POST /api/verification/linkedin/initiate', () => {
     expect(response.status).toBe(200);
     expect(body.linkedinVerificationStatus).toBe('verified');
     expect(body.linkedinVerificationLevel).toBe('identity');
-    expect(body.identityGranted).toBe(true);
+    expect(body.identityGranted).toBe(false);
     expect(updateSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         linkedin_verification_status: 'verified',
         linkedin_verification_level: 'identity',
-        verification_tier: 'identity_verified',
-        verification_tier_source: 'linkedin_identity',
-        verification_status: 'verified',
-        verification_method: 'linkedin',
-        verified: true,
+        verification_tier: 'unverified',
+        verification_tier_source: 'unknown',
+        verification_status: 'unverified',
+        verification_method: null,
+        verified: false,
       })
     );
     expect(checkLinkedInVerification).not.toHaveBeenCalled();
@@ -247,7 +247,7 @@ describe('POST /api/verification/linkedin/initiate', () => {
     );
   });
 
-  it('auto-approves workplace tier when LinkedIn workplace signal exists', async () => {
+  it('stores linkedin workplace as a compatibility signal without global trust inflation', async () => {
     const { supabase, updateSpy } = buildSupabaseMock();
     (createClient as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(supabase as any);
 
@@ -275,7 +275,11 @@ describe('POST /api/verification/linkedin/initiate', () => {
       expect.objectContaining({
         linkedin_verification_status: 'verified',
         linkedin_verification_level: 'workplace',
-        verification_tier: 'workplace_verified',
+        verification_tier: 'unverified',
+        verification_tier_source: 'unknown',
+        verification_status: 'unverified',
+        verification_method: null,
+        verified: false,
       })
     );
     expect(sendLinkedInVerificationPendingReviewEmail).not.toHaveBeenCalled();

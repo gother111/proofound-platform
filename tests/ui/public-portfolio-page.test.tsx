@@ -18,14 +18,14 @@ vi.mock('@/lib/supabase/server', () => ({
 }));
 
 vi.mock('@/lib/portfolio/public-projection', () => ({
-  getPublicIndividualPortfolioProjectionByHandle: vi.fn(),
+  resolvePublicIndividualPortfolioAccessByHandle: vi.fn(),
   getHistoricalPublicProfileHandleRedirect: vi.fn(),
 }));
 
 import { createClient } from '@/lib/supabase/server';
 import {
   getHistoricalPublicProfileHandleRedirect,
-  getPublicIndividualPortfolioProjectionByHandle,
+  resolvePublicIndividualPortfolioAccessByHandle,
 } from '@/lib/portfolio/public-projection';
 import PortfolioPage, { generateMetadata } from '@/app/portfolio/[handle]/page';
 
@@ -73,7 +73,8 @@ function buildProjection(overrides: Partial<any> = {}) {
       linkedin: { verificationStatus: 'verified', hasIdentityVerification: true },
       proofs: { count: 1 },
       verifications: { count: 1 },
-      attestations: { count: 1 },
+      badges: [],
+      activeIssues: [],
       badges: [
         {
           key: 'identity_checked',
@@ -105,7 +106,8 @@ function buildProjection(overrides: Partial<any> = {}) {
         linkedin: { verificationStatus: 'verified', hasIdentityVerification: true },
         proofs: { count: 1 },
         verifications: { count: 1 },
-        attestations: { count: 1 },
+        badges: [],
+        activeIssues: [],
         badges: [],
         activeIssues: [],
       },
@@ -153,12 +155,13 @@ describe('Public individual portfolio page', () => {
   });
 
   it('falls back to the public handle when display name is not public', async () => {
-    vi.mocked(getPublicIndividualPortfolioProjectionByHandle).mockResolvedValue(
-      buildProjection({
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
+      status: 'accessible',
+      projection: buildProjection({
         handle: 'jane-hidden',
         publicDisplayName: 'jane-hidden',
-      }) as any
-    );
+      }) as any,
+    });
 
     const element = await PortfolioPage({
       params: Promise.resolve({ handle: 'jane-hidden' }),
@@ -172,8 +175,9 @@ describe('Public individual portfolio page', () => {
   });
 
   it('renders public read-only view with updated sections and no owner-only details', async () => {
-    vi.mocked(getPublicIndividualPortfolioProjectionByHandle).mockResolvedValue(
-      buildProjection({
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
+      status: 'accessible',
+      projection: buildProjection({
         publicBio: null,
         publicSkills: [],
         individual: { work_email: null },
@@ -189,8 +193,8 @@ describe('Public individual portfolio page', () => {
           contact: false,
         },
         featuredProofs: [],
-      }) as any
-    );
+      }) as any,
+    });
 
     const element = await PortfolioPage({
       params: Promise.resolve({ handle: 'jane' }),
@@ -225,9 +229,10 @@ describe('Public individual portfolio page', () => {
         getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-1' } } }),
       },
     } as any);
-    vi.mocked(getPublicIndividualPortfolioProjectionByHandle).mockResolvedValue(
-      buildProjection() as any
-    );
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
+      status: 'accessible',
+      projection: buildProjection() as any,
+    });
 
     const element = await PortfolioPage({
       params: Promise.resolve({ handle: 'jane' }),
@@ -246,8 +251,9 @@ describe('Public individual portfolio page', () => {
   });
 
   it('does not widen visibility when a public proof has no safe evidence URL', async () => {
-    vi.mocked(getPublicIndividualPortfolioProjectionByHandle).mockResolvedValue(
-      buildProjection({
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
+      status: 'accessible',
+      projection: buildProjection({
         featuredProofs: [
           {
             id: 'proof-1',
@@ -260,8 +266,8 @@ describe('Public individual portfolio page', () => {
             proofPackHref: null,
           },
         ],
-      }) as any
-    );
+      }) as any,
+    });
 
     const element = await PortfolioPage({
       params: Promise.resolve({ handle: 'jane' }),
@@ -275,9 +281,10 @@ describe('Public individual portfolio page', () => {
   });
 
   it('returns generic noindex metadata by default', async () => {
-    vi.mocked(getPublicIndividualPortfolioProjectionByHandle).mockResolvedValue(
-      buildProjection() as any
-    );
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
+      status: 'accessible',
+      projection: buildProjection() as any,
+    });
 
     const metadata = await generateMetadata({
       params: Promise.resolve({ handle: 'jane' }),
@@ -292,8 +299,9 @@ describe('Public individual portfolio page', () => {
   });
 
   it('returns page-specific metadata when indexing is explicitly enabled', async () => {
-    vi.mocked(getPublicIndividualPortfolioProjectionByHandle).mockResolvedValue(
-      buildProjection({
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
+      status: 'accessible',
+      projection: buildProjection({
         effectiveState: 'public_indexable',
         metadata: {
           path: '/portfolio/jane',
@@ -303,8 +311,8 @@ describe('Public individual portfolio page', () => {
           ogDescription: 'Impact builder Explore proof-backed work.',
           useGenericPreview: false,
         },
-      }) as any
-    );
+      }) as any,
+    });
 
     const metadata = await generateMetadata({
       params: Promise.resolve({ handle: 'jane' }),
@@ -318,8 +326,31 @@ describe('Public individual portfolio page', () => {
     expect(metadata.openGraph?.title).toBe('Jane Doe on Proofound');
   });
 
+  it('renders the existing unavailable state when the portfolio is not publicly accessible', async () => {
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
+      status: 'unavailable',
+      projection: buildProjection({
+        effectiveState: 'unavailable',
+      }) as any,
+    });
+
+    const element = await PortfolioPage({
+      params: Promise.resolve({ handle: 'jane' }),
+      searchParams: Promise.resolve({}),
+    });
+
+    render(element);
+
+    expect(screen.getByRole('heading', { name: 'Portfolio unavailable' })).toBeInTheDocument();
+    expect(screen.getByText(/this public portfolio link is unavailable/i)).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Jane Doe' })).not.toBeInTheDocument();
+  });
+
   it('calls notFound when handle has no public portfolio', async () => {
-    vi.mocked(getPublicIndividualPortfolioProjectionByHandle).mockResolvedValue(null);
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
+      status: 'missing',
+      projection: null,
+    });
 
     await expect(PortfolioPage({ params: Promise.resolve({ handle: 'missing' }) })).rejects.toThrow(
       'NOT_FOUND'

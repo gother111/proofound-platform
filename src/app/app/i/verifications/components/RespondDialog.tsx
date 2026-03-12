@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import {
   Dialog,
@@ -14,6 +14,12 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { apiFetch } from '@/lib/api/fetch';
+import {
+  HumanObservedAttestationFields,
+  buildHumanObservedAttestationPayload,
+  createDefaultHumanObservedAttestationForm,
+  type HumanObservedAttestationFormValue,
+} from '@/components/verification/HumanObservedAttestationFields';
 
 interface RespondDialogProps {
   open: boolean;
@@ -41,6 +47,25 @@ export function RespondDialog({
   const [responseMessage, setResponseMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [attestationForm, setAttestationForm] = useState<HumanObservedAttestationFormValue>(
+    createDefaultHumanObservedAttestationForm()
+  );
+
+  const isAttestationRequest = request?.request_kind === 'human_observed_attestation';
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    setAttestationForm(
+      createDefaultHumanObservedAttestationForm(
+        isAttestationRequest ? request?.verifier_relationship || request?.verifier_source || '' : ''
+      )
+    );
+    setResponseMessage('');
+    setError(null);
+  }, [isAttestationRequest, open, request]);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -53,6 +78,14 @@ export function RespondDialog({
         body: JSON.stringify({
           action,
           responseMessage: responseMessage.trim() || undefined,
+          attestation:
+            isAttestationRequest && action === 'accept'
+              ? buildHumanObservedAttestationPayload({
+                  form: attestationForm,
+                  skillIds:
+                    request?.attestation_request?.skillIds || [request?.skill_id].filter(Boolean),
+                })
+              : undefined,
         }),
       });
 
@@ -79,7 +112,7 @@ export function RespondDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg" style={{ backgroundColor: '#FDFCFA' }}>
+      <DialogContent className="max-w-2xl" style={{ backgroundColor: '#FDFCFA' }}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2" style={{ color: '#2D3330' }}>
             {action === 'accept' ? (
@@ -160,6 +193,15 @@ export function RespondDialog({
             className="resize-none"
           />
         </div>
+
+        {isAttestationRequest && (
+          <HumanObservedAttestationFields
+            value={attestationForm}
+            onChange={setAttestationForm}
+            skillLabels={request?.attestation_request?.skillLabels || [skillName]}
+            disabled={isSubmitting}
+          />
+        )}
 
         {/* Error Message */}
         {error && (

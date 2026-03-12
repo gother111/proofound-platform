@@ -16,7 +16,7 @@ import { db } from '@/db';
 import { userIntegrations } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { constructLinkedInProfileUrl, fetchLinkedInProfile } from '@/lib/linkedin';
-import { checkLinkedInVerification } from '@/lib/linkedin-scraper';
+import type { AutomatedCheckResult } from '@/lib/linkedin-scraper';
 import { enrichLinkedInProfile, combineVerificationData } from '@/lib/linkedin-enrichment';
 import { sendLinkedInVerificationPendingReviewEmail } from '@/lib/email';
 import {
@@ -228,7 +228,7 @@ export async function POST(_request: NextRequest) {
       console.log('Starting LinkedIn verification check for:', profileUrl);
 
       let automatedCheck:
-        | Awaited<ReturnType<typeof checkLinkedInVerification>>
+        | AutomatedCheckResult
         | {
             success: true;
             confidence: number;
@@ -238,6 +238,7 @@ export async function POST(_request: NextRequest) {
           };
 
       if (profileUrl) {
+        const { checkLinkedInVerification } = await import('@/lib/linkedin-scraper');
         const scraped = await checkLinkedInVerification(profileUrl);
         if (!scraped.success) {
           warnings.push({
@@ -393,21 +394,22 @@ export async function POST(_request: NextRequest) {
 
     if (canonicalTier.verificationTier === 'identity_verified') {
       updatePayload.verification_status = 'verified';
-      updatePayload.verification_method =
-        canonicalTier.verificationTierSource === 'veriff' ? 'veriff' : 'linkedin';
+      updatePayload.verification_method = 'veriff';
       updatePayload.verified = true;
       updatePayload.verified_at = existingProfile?.verified_at || nowIso;
-      identityGranted = linkedinVerificationLevel === 'identity';
+      identityGranted = true;
     } else if (linkedinVerificationLevel === 'pending') {
       updatePayload.verification_status = 'pending';
       updatePayload.verification_method = 'linkedin';
       updatePayload.verified = false;
+      updatePayload.verified_at = null;
     } else {
-      // Workplace-tier and unverified states do not grant identity badge.
+      // LinkedIn remains a compatibility signal only unless an existing Veriff identity must be preserved.
       updatePayload.verification_status = 'unverified';
-      updatePayload.verification_method =
-        canonicalTier.verificationTierSource === 'work_email' ? 'work_email' : null;
+      updatePayload.verification_method = null;
       updatePayload.verified = false;
+      updatePayload.verified_at = null;
+      identityGranted = false;
     }
 
     // 7. Persist profile updates
@@ -457,9 +459,9 @@ export async function POST(_request: NextRequest) {
     const bestWarning = warnings[0]?.message || null;
     const message =
       linkedinVerificationLevel === 'identity'
-        ? 'LinkedIn identity verification signal detected. Your identity verification has been automatically approved.'
+        ? 'LinkedIn identity signal detected and stored as an account-level compatibility signal. It does not create a public trust badge or matching lift on its own.'
         : linkedinVerificationLevel === 'workplace'
-          ? 'LinkedIn workplace verification signal detected. Workplace verification has been automatically approved.'
+          ? 'LinkedIn workplace signal detected and stored as an account-level compatibility signal. It does not create a public trust badge or matching lift on its own.'
           : `Verification check complete. ${
               automatedSummary.confidence >= 80
                 ? 'High confidence - pending quick admin review (typically < 1 hour).'

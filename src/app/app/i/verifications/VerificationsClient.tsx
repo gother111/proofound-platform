@@ -39,12 +39,23 @@ interface VerificationRequest {
   verifier_source?: 'peer' | 'manager' | 'external';
   verifier_name?: string | null;
   verifier_relationship?: string | null;
+  request_kind?: 'generic_verification' | 'human_observed_attestation' | null;
+  attestation_request?: {
+    skillIds: string[];
+    skillLabels: string[];
+  } | null;
   message?: string | null;
   status: 'pending' | 'accepted' | 'declined' | 'expired' | 'failed';
   created_at: string;
   responded_at?: string | null;
   response_message?: string | null;
   expires_at?: string | null;
+  canonical_pack_id?: string | null;
+  canonical_pack_title?: string | null;
+  canonical_pack_summary?: string | null;
+  canonical_outcomes_summary?: string | null;
+  canonical_verification_status?: string | null;
+  canonical_evidence_titles?: string[];
   skills?: {
     id: string;
     competency_level: number;
@@ -303,10 +314,48 @@ export function VerificationsClient({
   };
 
   const getRequestSubject = (request: VerificationRequest): string => {
+    if (request.canonical_pack_title) {
+      return request.canonical_pack_title;
+    }
+
     if (request.request_type === 'impact_story') {
       return request.impact_story_title || 'Impact Story';
     }
     return getSkillName(request);
+  };
+
+  const renderCanonicalProofContext = (request: VerificationRequest) => {
+    if (
+      !request.canonical_pack_summary &&
+      !request.canonical_outcomes_summary &&
+      !request.canonical_verification_status &&
+      !(request.canonical_evidence_titles?.length ?? 0)
+    ) {
+      return null;
+    }
+
+    return (
+      <div className="mt-3 ml-6 rounded-md border border-proofound-stone/70 bg-white/70 p-3 dark:border-border dark:bg-background/50">
+        {request.canonical_verification_status && (
+          <p className="text-xs font-medium text-proofound-forest dark:text-primary">
+            Proof Pack status: {request.canonical_verification_status.replace(/_/g, ' ')}
+          </p>
+        )}
+        {request.canonical_pack_summary && (
+          <p className="mt-1 text-xs text-muted-foreground">{request.canonical_pack_summary}</p>
+        )}
+        {request.canonical_outcomes_summary && (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Outcomes: {request.canonical_outcomes_summary}
+          </p>
+        )}
+        {(request.canonical_evidence_titles?.length ?? 0) > 0 && (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Evidence: {request.canonical_evidence_titles?.join('; ')}
+          </p>
+        )}
+      </div>
+    );
   };
 
   const getBreadcrumb = (request: VerificationRequest): string => {
@@ -473,6 +522,7 @@ export function VerificationsClient({
                 Relationship: {request.verifier_relationship}
               </p>
             )}
+            {renderCanonicalProofContext(request)}
           </div>
 
           {request.message && (
@@ -565,6 +615,7 @@ export function VerificationsClient({
             Relationship: {request.verifier_relationship}
           </p>
         )}
+        {renderCanonicalProofContext(request)}
       </div>
 
       {request.message && (

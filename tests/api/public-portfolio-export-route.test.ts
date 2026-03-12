@@ -2,12 +2,8 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('@/lib/supabase/server', () => ({
-  createClient: vi.fn(),
-}));
-
-vi.mock('@/lib/portfolio/export-data', () => ({
-  fetchPublicTrustExportDataByHandle: vi.fn(),
+vi.mock('@/lib/portfolio/public-projection', () => ({
+  resolvePublicIndividualPortfolioAccessByHandle: vi.fn(),
 }));
 
 vi.mock('@/lib/portfolio/pdf', () => ({
@@ -15,18 +11,73 @@ vi.mock('@/lib/portfolio/pdf', () => ({
 }));
 
 import { GET } from '@/app/api/portfolio/public/[handle]/export/route';
-import { createClient } from '@/lib/supabase/server';
-import { fetchPublicTrustExportDataByHandle } from '@/lib/portfolio/export-data';
 import { generateTrustPdf } from '@/lib/portfolio/pdf';
+import { resolvePublicIndividualPortfolioAccessByHandle } from '@/lib/portfolio/public-projection';
+
+function buildAccessibleAccess() {
+  return {
+    status: 'accessible' as const,
+    projection: {
+      exportData: {
+        profile: {
+          id: 'user-1',
+          handle: 'jane',
+          displayName: 'Jane Doe',
+          headline: 'Impact builder',
+          bio: 'Proof-first profile',
+          contactEmail: undefined,
+        },
+        signals: {
+          identity: { verified: true, method: 'veriff', verifiedAt: '2026-01-01' },
+          workEmail: { verified: false },
+          linkedin: { verificationStatus: 'verified', hasIdentityVerification: true },
+          proofs: { count: 2 },
+          verifications: { count: 1 },
+          badges: [],
+          activeIssues: [],
+        },
+        skills: [{ id: 'skill-1', name: 'Product Strategy', level: 4 }],
+        proofPacks: [
+          {
+            id: 'pack-1',
+            scope: 'public_safe',
+            title: 'Proof Pack: Product Strategy',
+            summary: 'Launch evidence for Product Strategy',
+            evidenceSummary: 'Verified against a public launch memo.',
+            outcomesSummary: 'Shipped the MVP in two weeks.',
+            verificationStatus: 'verified',
+            freshnessState: 'fresh',
+            artifactCount: 1,
+            contextLabel: 'Product Strategy',
+            selectedEvidence: [],
+          },
+        ],
+        visibility: {
+          header: true,
+          proofBar: true,
+          workEmail: false,
+          linkedin: true,
+          identity: true,
+          counts: true,
+          skills: true,
+          bio: true,
+          contact: false,
+        },
+      },
+    },
+  };
+}
 
 describe('/api/portfolio/public/[handle]/export', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (createClient as any).mockResolvedValue({});
   });
 
   it('returns 404 when profile data cannot be loaded', async () => {
-    (fetchPublicTrustExportDataByHandle as any).mockResolvedValue(null);
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
+      status: 'missing',
+      projection: null,
+    });
 
     const response = await GET(new Request('http://localhost/api/portfolio/public/jane/export'), {
       params: Promise.resolve({ handle: 'jane' }),
@@ -37,38 +88,10 @@ describe('/api/portfolio/public/[handle]/export', () => {
   });
 
   it('returns a non-empty PDF response when public data exists', async () => {
-    (fetchPublicTrustExportDataByHandle as any).mockResolvedValue({
-      profile: {
-        id: 'user-1',
-        handle: 'jane',
-        displayName: 'Jane Doe',
-        headline: 'Impact builder',
-        bio: 'Proof-first profile',
-        contactEmail: undefined,
-      },
-      signals: {
-        identity: { verified: true, method: 'veriff', verifiedAt: '2026-01-01' },
-        workEmail: { verified: false },
-        linkedin: { verificationStatus: 'verified', hasIdentityVerification: true },
-        proofs: { count: 2 },
-        verifications: { count: 1 },
-        attestations: { count: 0 },
-      },
-      skills: [{ id: 'skill-1', name: 'Product Strategy', level: 4 }],
-      proofPacks: [],
-      visibility: {
-        header: true,
-        proofBar: true,
-        workEmail: false,
-        linkedin: true,
-        identity: true,
-        counts: true,
-        skills: true,
-        bio: true,
-        contact: false,
-      },
-    });
-    (generateTrustPdf as any).mockResolvedValue(Buffer.from('%PDF-1.4 public-profile'));
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue(
+      buildAccessibleAccess() as any
+    );
+    vi.mocked(generateTrustPdf).mockResolvedValue(Buffer.from('%PDF-1.4 public-profile'));
 
     const response = await GET(new Request('http://localhost/api/portfolio/public/jane/export'), {
       params: Promise.resolve({ handle: 'jane' }),
@@ -87,6 +110,12 @@ describe('/api/portfolio/public/[handle]/export', () => {
           handle: 'jane',
           contactEmail: undefined,
         }),
+        proofPacks: [
+          expect.objectContaining({
+            title: 'Proof Pack: Product Strategy',
+            verificationStatus: 'verified',
+          }),
+        ],
         visibility: expect.objectContaining({
           contact: false,
           workEmail: false,
@@ -94,4 +123,28 @@ describe('/api/portfolio/public/[handle]/export', () => {
       })
     );
   });
+
+  it.each(['unavailable', 'private', 'draft', 'unpublished', 'blocked'])(
+    'returns 404 for %s public state',
+    async (stateLabel) => {
+      vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
+        status: 'unavailable',
+        projection: {
+          effectiveState: 'unavailable',
+          exportData: buildAccessibleAccess().projection.exportData,
+        },
+      } as any);
+
+      const response = await GET(
+        new Request(`http://localhost/api/portfolio/public/${stateLabel}/export`),
+        {
+          params: Promise.resolve({ handle: stateLabel }),
+        }
+      );
+
+      expect(response.status).toBe(404);
+      expect(await response.json()).toEqual({ error: 'Profile not found' });
+      expect(generateTrustPdf).not.toHaveBeenCalled();
+    }
+  );
 });

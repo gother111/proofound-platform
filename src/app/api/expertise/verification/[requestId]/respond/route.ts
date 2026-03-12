@@ -14,6 +14,15 @@ import {
   upsertCanonicalVerificationRecord,
 } from '@/lib/canonical/repository';
 import { hashOpaqueToken } from '@/lib/contracts/canonical-domain';
+import {
+  parseHumanObservedAttestationResponse,
+  type HumanObservedAttestationRequestPayload,
+} from '@/lib/verification/human-attestations';
+import {
+  getCanonicalSkillVerificationRequestById,
+  mapCanonicalSkillVerificationRequestRecord,
+  updateCanonicalSkillVerificationRequest,
+} from '@/lib/verification/canonical-requests';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -24,6 +33,7 @@ function isUuid(value: unknown): value is string {
 const RespondSchema = z.object({
   action: z.enum(['accept', 'decline']),
   responseMessage: z.string().optional(),
+  attestation: z.unknown().optional(),
 });
 
 /**
@@ -47,15 +57,28 @@ export async function POST(
     const validated = RespondSchema.parse(body);
 
     // Fetch the verification request
-    const { data: verificationRequest, error: fetchError } = await supabase
+    const { data: legacyVerificationRequest, error: fetchError } = await supabase
       .from('skill_verification_requests')
       .select('*')
       .eq('id', requestId)
       .single();
 
-    if (fetchError || !verificationRequest) {
+    const canonicalVerificationRow =
+      fetchError || !legacyVerificationRequest
+        ? await getCanonicalSkillVerificationRequestById(requestId).catch(() => null)
+        : null;
+
+    const verificationRequest = legacyVerificationRequest
+      ? legacyVerificationRequest
+      : canonicalVerificationRow
+        ? mapCanonicalSkillVerificationRequestRecord(canonicalVerificationRow)
+        : null;
+
+    if (!verificationRequest) {
       return NextResponse.json({ error: 'Verification request not found' }, { status: 404 });
     }
+
+    const usingCanonicalRequest = Boolean(!legacyVerificationRequest && canonicalVerificationRow);
 
     // Get current user's email
     const { data: authUser } = await supabase.auth.getUser();
@@ -80,6 +103,41 @@ export async function POST(
         { error: `This verification request has already been ${verificationRequest.status}` },
         { status: 400 }
       );
+    }
+
+    const requestKind =
+      verificationRequest.request_kind === 'human_observed_attestation'
+        ? 'human_observed_attestation'
+        : 'generic_verification';
+    const attestationRequest =
+      requestKind === 'human_observed_attestation' &&
+      verificationRequest.attestation_request &&
+      typeof verificationRequest.attestation_request === 'object'
+        ? (verificationRequest.attestation_request as HumanObservedAttestationRequestPayload)
+        : null;
+
+    let attestationResponse: Record<string, unknown> | null = null;
+    if (requestKind === 'human_observed_attestation' && validated.action === 'accept') {
+      if (!attestationRequest) {
+        return NextResponse.json(
+          { error: 'This attestation request is missing its bounded skill scope.' },
+          { status: 400 }
+        );
+      }
+
+      const parsedAttestation = parseHumanObservedAttestationResponse(
+        validated.attestation,
+        attestationRequest
+      );
+
+      if (!parsedAttestation.success) {
+        return NextResponse.json(
+          { error: 'Validation failed', details: parsedAttestation.error.issues },
+          { status: 400 }
+        );
+      }
+
+      attestationResponse = parsedAttestation.data;
     }
 
     // Update verification request
@@ -111,38 +169,79 @@ export async function POST(
       },
     };
 
-    const { data: updated, error: updateError } = await supabase
-      .from('skill_verification_requests')
-      .update({
+    let updated = null;
+    if (usingCanonicalRequest) {
+      updated = await updateCanonicalSkillVerificationRequest({
+        requestId,
         status: validated.action === 'accept' ? 'accepted' : 'declined',
-        responded_at: respondedAt,
-        response_message: validated.responseMessage || null,
-        verifier_profile_id: user.id, // Link to user profile if they have one
-        responder_ip_hash: responderFingerprints.ipHash,
-        responder_user_agent_hash: responderFingerprints.userAgentHash,
-        response_auth_method: 'authenticated',
-        response_actor_email: userEmail,
-        risk_signals: mergedIntegrity.riskSignals,
-        integrity_status: mergedIntegrity.integrityStatus,
-        integrity_reason: mergedIntegrity.integrityReason,
-        integrity_meta: integrityMeta,
-        integrity_flagged_at:
+        respondedAt,
+        responseMessage: validated.responseMessage || null,
+        attestationResponse,
+        verifierProfileId: user.id,
+        verifierPrincipalType: 'user_account',
+        verifierEmail: userEmail || verificationRequest.verifier_email || null,
+        integrityStatus:
+          mergedIntegrity.integrityStatus === 'flagged'
+            ? 'warning'
+            : mergedIntegrity.integrityStatus,
+        integrityReason: mergedIntegrity.integrityReason,
+        riskSignals: mergedIntegrity.riskSignals,
+        integrityMeta,
+        integrityFlaggedAt:
           mergedIntegrity.integrityStatus === 'flagged'
             ? verificationRequest.integrity_flagged_at || mergedIntegrity.integrityFlaggedAt
             : null,
-      })
-      .eq('id', requestId)
-      .select()
-      .single();
+        responseAuthMethod: 'authenticated',
+        responseActorEmail: userEmail,
+      }).catch((error) => {
+        console.error('Error updating canonical verification request:', error);
+        return null;
+      });
+    } else {
+      const { data, error: updateError } = await supabase
+        .from('skill_verification_requests')
+        .update({
+          status: validated.action === 'accept' ? 'accepted' : 'declined',
+          responded_at: respondedAt,
+          response_message: validated.responseMessage || null,
+          attestation_response: attestationResponse,
+          verifier_profile_id: user.id, // Link to user profile if they have one
+          responder_ip_hash: responderFingerprints.ipHash,
+          responder_user_agent_hash: responderFingerprints.userAgentHash,
+          response_auth_method: 'authenticated',
+          response_actor_email: userEmail,
+          risk_signals: mergedIntegrity.riskSignals,
+          integrity_status: mergedIntegrity.integrityStatus,
+          integrity_reason: mergedIntegrity.integrityReason,
+          integrity_meta: integrityMeta,
+          integrity_flagged_at:
+            mergedIntegrity.integrityStatus === 'flagged'
+              ? verificationRequest.integrity_flagged_at || mergedIntegrity.integrityFlaggedAt
+              : null,
+        })
+        .eq('id', requestId)
+        .select()
+        .single();
 
-    if (updateError) {
-      console.error('Error updating verification request:', updateError);
+      if (updateError) {
+        console.error('Error updating verification request:', updateError);
+        return NextResponse.json(
+          { error: 'Failed to update verification request' },
+          { status: 500 }
+        );
+      }
+
+      updated = data;
+    }
+
+    if (!updated) {
       return NextResponse.json({ error: 'Failed to update verification request' }, { status: 500 });
     }
 
     let canonicalRecord = null;
     if (
       CANONICAL_PROOFS_WRITE_ENABLED &&
+      !usingCanonicalRequest &&
       isUuid(verificationRequest.requester_profile_id) &&
       isUuid(verificationRequest.skill_id) &&
       isUuid(user.id)
@@ -154,11 +253,15 @@ export async function POST(
           subjectType: 'skill',
           subjectId: verificationRequest.skill_id,
           verificationKind:
-            verificationRequest.verifier_source === 'manager'
-              ? 'skill_attestation_manager'
-              : verificationRequest.verifier_source === 'peer'
-                ? 'skill_attestation_peer'
-                : 'platform_manual_review',
+            requestKind === 'human_observed_attestation'
+              ? verificationRequest.verifier_source === 'manager'
+                ? 'skill_attestation_manager'
+                : 'skill_attestation_peer'
+              : verificationRequest.verifier_source === 'manager'
+                ? 'skill_attestation_manager'
+                : verificationRequest.verifier_source === 'peer'
+                  ? 'skill_attestation_peer'
+                  : 'platform_manual_review',
           status: updated.status,
           verifierPrincipalType: 'user_account',
           verifierProfileId: user.id,
@@ -181,6 +284,9 @@ export async function POST(
           metadata: {
             responseMessage: validated.responseMessage || null,
             responseAuthMethod: 'authenticated',
+            evidenceClass:
+              requestKind === 'human_observed_attestation' ? 'human_observed' : 'generic',
+            attestation: attestationResponse,
           },
         });
       } catch (canonicalError) {
@@ -219,6 +325,8 @@ export async function POST(
         response_action: validated.action,
         response_auth_method: 'authenticated',
         response_actor_email: userEmail,
+        request_kind: requestKind,
+        verifier_relationship: verificationRequest.verifier_relationship || null,
         integrity_status: updated.integrity_status || mergedIntegrity.integrityStatus,
         integrity_reason: updated.integrity_reason || mergedIntegrity.integrityReason,
         same_device_signal: sameDeviceSignal,

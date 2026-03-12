@@ -9,6 +9,21 @@ vi.mock('@/lib/notifications', () => ({
   notifyVerificationCompleted: vi.fn(),
 }));
 
+vi.mock('@/lib/canonical/repository', () => ({
+  CANONICAL_PROOFS_WRITE_ENABLED: true,
+  upsertCanonicalVerificationRecord: vi.fn(async () => ({ id: 'canonical-1' })),
+}));
+
+vi.mock('@/lib/contracts/canonical-domain', () => ({
+  hashOpaqueToken: vi.fn(() => 'hashed-email'),
+}));
+
+vi.mock('@/lib/verification/canonical-requests', () => ({
+  getCanonicalSkillVerificationRequestById: vi.fn(),
+  mapCanonicalSkillVerificationRequestRecord: vi.fn((record: any) => record),
+  updateCanonicalSkillVerificationRequest: vi.fn(),
+}));
+
 import { requireApiAuthContext } from '@/lib/auth';
 import { notifyVerificationCompleted } from '@/lib/notifications';
 import { POST } from '@/app/api/expertise/verification/[requestId]/respond/route';
@@ -122,5 +137,73 @@ describe('POST /api/expertise/verification/[requestId]/respond', () => {
       'Requester Person',
       true
     );
+  });
+
+  it('requires structured attestation payloads for human-observed requests', async () => {
+    const requestId = '11111111-1111-4111-8111-111111111111';
+    const verificationRequest = {
+      id: requestId,
+      requester_profile_id: '22222222-2222-4222-8222-222222222222',
+      verifier_profile_id: null,
+      verifier_email: 'verifier@example.com',
+      verifier_relationship: 'manager',
+      request_kind: 'human_observed_attestation',
+      attestation_request: {
+        requestKind: 'human_observed_attestation',
+        skillIds: ['33333333-3333-4333-8333-333333333333'],
+        skillLabels: ['Leadership'],
+        skillFamilies: ['leadership'],
+      },
+      status: 'pending',
+    };
+
+    const supabase = {
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: {
+            user: {
+              email: 'verifier@example.com',
+            },
+          },
+          error: null,
+        }),
+      },
+      from: vi.fn((table: string) => {
+        if (table === 'skill_verification_requests') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: verificationRequest,
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+
+        throw new Error(`Unexpected table: ${table}`);
+      }),
+    };
+
+    (requireApiAuthContext as any).mockResolvedValue({
+      user: { id: '44444444-4444-4444-8444-444444444444' },
+      supabase,
+    });
+
+    const response = await POST(
+      new NextRequest(`http://localhost/api/expertise/verification/${requestId}/respond`, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'accept',
+        }),
+      }),
+      { params: Promise.resolve({ requestId }) }
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: 'Validation failed',
+    });
   });
 });

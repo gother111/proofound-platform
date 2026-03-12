@@ -7,15 +7,36 @@ import {
 import { mergeVisibilityFlags } from '@/lib/portfolio/visibility';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
 import {
+  hasPrimaryAnchorContext,
   listCanonicalProofPackAggregatesForOwner,
   summarizeCanonicalProofOwnerAggregates,
 } from '@/lib/proofs/canonical-pack';
-import { getPublicIndividualPortfolioProjectionByHandle } from '@/lib/portfolio/public-projection';
+import { resolvePublicIndividualPortfolioAccessByHandle } from '@/lib/portfolio/public-projection';
 import {
   listVerificationRecordsForOwner,
   summarizeVerificationPolicy,
 } from '@/lib/verification/policy';
 import type { SupabaseClient } from '@supabase/supabase-js';
+
+type TrustExportProofPack = {
+  id: string;
+  scope: 'owner_full' | 'public_safe';
+  title: string;
+  summary: string | null;
+  evidenceSummary: string | null;
+  outcomesSummary: string | null;
+  verificationStatus: string;
+  freshnessState: string;
+  artifactCount: number;
+  contextLabel: string | null;
+  selectedEvidence: Array<{
+    title: string;
+    href: string | null;
+    artifactKind: string | null;
+    issuedAt: string | null;
+    description: string | null;
+  }>;
+};
 
 export type TrustExportData = {
   profile: {
@@ -33,14 +54,7 @@ export type TrustExportData = {
   };
   signals: ReturnType<typeof buildTrustSignals>;
   skills: Array<{ id: string; name: string; level: number }>;
-  proofPacks: Array<{
-    id: string;
-    scope: 'owner_full' | 'public_safe';
-    title: string;
-    verificationStatus: string;
-    freshnessState: string;
-    artifactCount: number;
-  }>;
+  proofPacks: TrustExportProofPack[];
   visibility: ReturnType<typeof mergeVisibilityFlags>;
 };
 
@@ -145,14 +159,104 @@ function toStringList(value: unknown): string[] {
     .slice(0, 8);
 }
 
+function toRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function titleCase(value: string) {
+  return value
+    .split('_')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function isPublicUrl(value: string | null | undefined): value is string {
+  if (!value) {
+    return false;
+  }
+
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+  } catch {
+    return false;
+  }
+}
+
+function resolveProofPackContextLabel(pack: {
+  primarySubjectType?: string | null;
+  contextJson?: unknown;
+  metadata?: unknown;
+}): string | null {
+  const contextJson = toRecord(pack.contextJson);
+  const metadata = toRecord(pack.metadata);
+  const explicitLabel =
+    (typeof metadata.topic_label === 'string' && metadata.topic_label.trim()) ||
+    (typeof contextJson.topicLabel === 'string' && contextJson.topicLabel.trim()) ||
+    (typeof contextJson.primaryAnchorLabel === 'string' && contextJson.primaryAnchorLabel.trim()) ||
+    null;
+
+  if (explicitLabel) {
+    return explicitLabel;
+  }
+
+  if (typeof pack.primarySubjectType === 'string' && pack.primarySubjectType.trim()) {
+    return titleCase(pack.primarySubjectType);
+  }
+
+  return null;
+}
+
+function buildExportProofPack(
+  aggregate: Awaited<ReturnType<typeof listCanonicalProofPackAggregatesForOwner>>[number],
+  scope: 'owner_full' | 'public_safe'
+): TrustExportProofPack {
+  const projection = scope === 'public_safe' ? aggregate.publicSafe : aggregate.ownerFull;
+  const ownerItems = aggregate.ownerFull.items ?? [];
+  const publicItems = aggregate.publicSafe?.items ?? [];
+  const selectedEvidence =
+    scope === 'public_safe'
+      ? publicItems.slice(0, 3).map((item) => ({
+          title: item.title,
+          href: isPublicUrl(item.sourceUrl) ? item.sourceUrl : null,
+          artifactKind: item.artifactKind ?? null,
+          issuedAt: item.issuedAt ?? null,
+          description: item.description ?? null,
+        }))
+      : ownerItems.slice(0, 3).map((item) => ({
+          title: item.artifact.title,
+          href: isPublicUrl(item.artifact.sourceUrl) ? item.artifact.sourceUrl : null,
+          artifactKind: item.artifact.artifactKind ?? null,
+          issuedAt: item.artifact.issuedAt ?? null,
+          description: item.artifact.description ?? null,
+        }));
+
+  return {
+    id: aggregate.pack.id,
+    scope,
+    title: projection?.title || aggregate.pack.title || selectedEvidence[0]?.title || 'Proof Pack',
+    summary: projection?.summary ?? aggregate.pack.summary ?? null,
+    evidenceSummary: projection?.evidenceSummary ?? aggregate.pack.evidenceSummary ?? null,
+    outcomesSummary: projection?.outcomesSummary ?? aggregate.pack.outcomesSummary ?? null,
+    verificationStatus: aggregate.verificationStatus,
+    freshnessState: aggregate.freshnessState,
+    artifactCount: scope === 'public_safe' ? publicItems.length : aggregate.ownerFull.items.length,
+    contextLabel: resolveProofPackContextLabel(aggregate.pack),
+    selectedEvidence,
+  };
+}
+
 async function loadCanonicalTrustState(
   profileId: string,
   scope: 'owner_full' | 'public_safe'
 ): Promise<{
   proofsCount: number;
   acceptedVerificationsCount: number;
-  attestationCount: number;
   proofPacks: TrustExportData['proofPacks'];
+  proofLinkedSkillIds: string[];
   verificationSummary: ReturnType<typeof summarizeVerificationPolicy>;
 }> {
   const [aggregates, verificationRecords] = await Promise.all([
@@ -171,17 +275,35 @@ async function loadCanonicalTrustState(
       .filter((record) => record.status === 'verified')
       .map((record) => [record.id, record])
   );
-  const attestationKinds = new Set([
-    'skill_attestation_peer',
-    'skill_attestation_manager',
-    'impact_attestation',
-  ]);
-  const acceptedVerificationsCount = [...verifiedReferences.values()].filter(
-    (record) => !attestationKinds.has(record.verificationKind)
-  ).length;
-  const attestationCount = [...verifiedReferences.values()].filter((record) =>
-    attestationKinds.has(record.verificationKind)
-  ).length;
+  const acceptedVerificationsCount = [...verifiedReferences.values()].length;
+  const proofLinkedSkillIds = new Set<string>();
+
+  for (const aggregate of scopedAggregates) {
+    if (!hasPrimaryAnchorContext(aggregate.pack)) {
+      continue;
+    }
+
+    for (const item of aggregate.ownerFull.items) {
+      if (
+        item.artifact.subjectType === 'skill' &&
+        typeof item.artifact.subjectId === 'string' &&
+        item.artifact.subjectId.length > 0
+      ) {
+        proofLinkedSkillIds.add(item.artifact.subjectId);
+      }
+    }
+
+    for (const record of aggregate.ownerFull.verificationReferences) {
+      if (
+        record.subjectType === 'skill' &&
+        typeof record.subjectId === 'string' &&
+        record.subjectId.length > 0
+      ) {
+        proofLinkedSkillIds.add(record.subjectId);
+      }
+    }
+  }
+
   const verificationSummary = summarizeVerificationPolicy({
     records: verificationRecords,
   });
@@ -189,26 +311,21 @@ async function loadCanonicalTrustState(
   return {
     proofsCount: summary.packCount,
     acceptedVerificationsCount,
-    attestationCount,
-    proofPacks: scopedAggregates.map((aggregate) => ({
-      id: aggregate.pack.id,
-      scope,
-      title: aggregate.pack.title,
-      verificationStatus: aggregate.verificationStatus,
-      freshnessState: aggregate.freshnessState,
-      artifactCount:
-        scope === 'public_safe'
-          ? (aggregate.publicSafe?.items.length ?? 0)
-          : aggregate.ownerFull.items.length,
-    })),
+    proofPacks: scopedAggregates.map((aggregate) => buildExportProofPack(aggregate, scope)),
+    proofLinkedSkillIds: [...proofLinkedSkillIds],
     verificationSummary,
   };
 }
 
-async function loadTopSkills(
+async function loadProofLinkedSkills(
   supabase: SupabaseClient,
-  profileId: string
+  profileId: string,
+  skillIds: string[]
 ): Promise<Array<{ id: string; name: string; level: number }>> {
+  if (skillIds.length === 0) {
+    return [];
+  }
+
   try {
     const { data } = await supabase
       .from('skills')
@@ -223,6 +340,7 @@ async function loadTopSkills(
         `
       )
       .eq('profile_id', profileId)
+      .in('id', skillIds)
       .order('level', { ascending: false })
       .limit(6);
 
@@ -264,7 +382,6 @@ function buildTrustExportPayload(
   counts: {
     proofsCount: number;
     acceptedVerificationsCount: number;
-    attestationCount: number;
     proofPacks: TrustExportData['proofPacks'];
     verificationSummary: ReturnType<typeof summarizeVerificationPolicy>;
   },
@@ -279,7 +396,6 @@ function buildTrustExportPayload(
     {
       proofsCount: visibility.counts ? counts.proofsCount : 0,
       acceptedVerificationsCount: visibility.counts ? counts.acceptedVerificationsCount : 0,
-      attestationCount: visibility.counts ? counts.attestationCount : 0,
     },
     counts.verificationSummary
   );
@@ -324,7 +440,7 @@ function buildTrustExportPayload(
     },
     signals,
     skills: visibility.skills ? skills : [],
-    proofPacks: visibility.counts ? counts.proofPacks : [],
+    proofPacks: counts.proofPacks,
     visibility,
   };
 }
@@ -367,7 +483,7 @@ export async function fetchTrustExportData(
   if (!profile || !profile.handle) return null;
 
   const counts = await loadCanonicalTrustState(profile.id, 'owner_full');
-  const skills = await loadTopSkills(supabase, profile.id);
+  const skills = await loadProofLinkedSkills(supabase, profile.id, counts.proofLinkedSkillIds);
   return buildTrustExportPayload(profile as ProfileExportRow, counts, skills) ?? null;
 }
 
@@ -377,8 +493,8 @@ export async function fetchPublicTrustExportDataByHandle(
 ): Promise<TrustExportData | null> {
   void supabase;
 
-  const projection = await getPublicIndividualPortfolioProjectionByHandle(handle);
-  return projection?.exportData ?? null;
+  const access = await resolvePublicIndividualPortfolioAccessByHandle(handle);
+  return access.status === 'accessible' ? access.projection.exportData : null;
 }
 
 export async function fetchOrganizationTrustExportData(

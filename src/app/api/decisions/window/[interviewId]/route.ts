@@ -63,7 +63,10 @@ export async function GET(
       return NextResponse.json({ error: 'Interview assignment not found' }, { status: 404 });
     }
 
-    const canViewWindow = await isActiveOrgMember(supabase, user.id, orgId, ['owner', 'admin']);
+    const canViewWindow = await isActiveOrgMember(supabase, user.id, orgId, [
+      'org_owner',
+      'org_manager',
+    ]);
 
     if (!canViewWindow) {
       return NextResponse.json(

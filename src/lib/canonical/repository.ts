@@ -10,7 +10,11 @@ import {
   mapLegacyProofVisibility,
   stableHashPayload,
 } from '@/lib/contracts/canonical-domain';
-import { getProofFreshnessState, syncCanonicalProofPackState } from '@/lib/proofs/canonical-pack';
+import {
+  getProofFreshnessState,
+  syncCanonicalProofPackState,
+  type PrimaryAnchorContextSubjectType,
+} from '@/lib/proofs/canonical-pack';
 import { revalidatePublicPortfolioByProfileId } from '@/lib/portfolio/public-invalidation';
 import { computeProofTrustSnapshot } from '@/lib/proof-trust/snapshots';
 import { and, eq, sql } from 'drizzle-orm';
@@ -19,6 +23,10 @@ type SkillProofInput = {
   id: string;
   skillId: string;
   profileId: string;
+  primaryAnchor: {
+    type: PrimaryAnchorContextSubjectType;
+    id: string;
+  };
   proofType: 'project' | 'certification' | 'media' | 'reference' | 'link' | 'document';
   title: string;
   description?: string | null;
@@ -29,6 +37,35 @@ type SkillProofInput = {
   metadata?: Record<string, unknown> | null;
   createdAt?: string | Date | null;
   updatedAt?: string | Date | null;
+};
+
+type CanonicalSkillProofInput = {
+  artifactId?: string;
+  packId?: string;
+  skillId: string;
+  profileId: string;
+  primaryAnchor?: SkillProofInput['primaryAnchor'] | null;
+  proofType: SkillProofInput['proofType'];
+  title: string;
+  description?: string | null;
+  url?: string | null;
+  filePath?: string | null;
+  uploadedFileId?: string | null;
+  issuedDate?: string | null;
+  expiresDate?: string | null;
+  metadata?: Record<string, unknown> | null;
+  createdAt?: string | Date | null;
+  updatedAt?: string | Date | null;
+  importedFrom?: string | null;
+};
+
+export type CanonicalSkillProofWriteResult = {
+  artifact: typeof proofArtifacts.$inferSelect;
+  pack: typeof proofPacks.$inferSelect;
+  legacyProof: ReturnType<typeof mapCanonicalProofRowToLegacySkillProof> & {
+    canonical_pack_id: string;
+    canonical_pack_title: string;
+  };
 };
 
 type SnippetPackInput = {
@@ -44,6 +81,7 @@ type SnippetPackInput = {
 };
 
 type VerificationRecordUpsertInput = {
+  id?: string;
   ownerType: 'individual_profile' | 'organization';
   ownerId: string;
   subjectType: ProofSubjectType;
@@ -117,7 +155,12 @@ type VerificationRecordUpsertInput = {
   sourceResponseId?: string | null;
   requestedAt?: string | Date | null;
   expiresAt?: string | Date | null;
+  requestExpiresAt?: string | Date | null;
+  followUpDueAt?: string | Date | null;
+  lastFollowUpAt?: string | Date | null;
   lastRefreshedAt?: string | Date | null;
+  completedAt?: string | Date | null;
+  expiredAt?: string | Date | null;
   verifiedAt?: string | Date | null;
   supersededAt?: string | Date | null;
   supersededByVerificationId?: string | null;
@@ -126,6 +169,8 @@ type VerificationRecordUpsertInput = {
   contradictedByVerificationId?: string | null;
   disputedAt?: string | Date | null;
   revokedAt?: string | Date | null;
+  cancelledAt?: string | Date | null;
+  failureCode?: string | null;
   metadata?: Record<string, unknown>;
 };
 
@@ -167,6 +212,7 @@ async function ensureCompatibilityProofPackForArtifact(params: {
   proofId: string;
   profileId: string;
   skillId: string;
+  primaryAnchor: SkillProofInput['primaryAnchor'];
   title: string;
   summary?: string | null;
   createdBy?: string | null;
@@ -182,19 +228,26 @@ async function ensureCompatibilityProofPackForArtifact(params: {
     ),
   });
 
+  if (!params.primaryAnchor?.id || !params.primaryAnchor?.type) {
+    throw new Error('Primary anchor context is required for canonical proof packs');
+  }
+
   const [pack] = await db
     .insert(proofPacks)
     .values({
       ownerType: 'individual_profile',
       ownerId: params.profileId,
       packKind: 'verification_bundle',
-      primarySubjectType: 'skill',
-      primarySubjectId: params.skillId,
+      primarySubjectType: params.primaryAnchor.type,
+      primarySubjectId: params.primaryAnchor.id,
       lifecycleState: 'published',
       title: params.title,
       summary: params.summary ?? null,
       contextJson: {
         compatibilitySource: 'skill_proofs',
+        primaryAnchorType: params.primaryAnchor.type,
+        primaryAnchorId: params.primaryAnchor.id,
+        linkedSkillId: params.skillId,
       },
       evidenceSummary: params.summary ?? null,
       outcomesSummary: null,
@@ -285,6 +338,131 @@ async function ensureCompatibilityProofPackForArtifact(params: {
   }
 
   return syncedPack ?? pack;
+}
+
+async function upsertCanonicalProofPackForArtifact(params: {
+  packId?: string;
+  profileId: string;
+  skillId: string;
+  primaryAnchor?: SkillProofInput['primaryAnchor'] | null;
+  title: string;
+  summary?: string | null;
+  artifactId: string;
+  visibility: (typeof proofPacks.$inferInsert)['visibility'];
+  revealGate: (typeof proofPacks.$inferInsert)['revealGate'];
+  metadata?: Record<string, unknown> | null;
+  importedFrom?: string | null;
+  freshnessState: ReturnType<typeof getProofFreshnessState>;
+  evidenceAt: Date | null;
+}) {
+  const existing = params.packId
+    ? await db.query.proofPacks.findFirst({
+        where: eq(proofPacks.id, params.packId),
+      })
+    : null;
+
+  if (!params.primaryAnchor?.id || !params.primaryAnchor?.type) {
+    throw new Error('Primary anchor context is required for canonical proof packs');
+  }
+
+  const packValues = {
+    ownerType: 'individual_profile' as const,
+    ownerId: params.profileId,
+    packKind: 'verification_bundle' as const,
+    primarySubjectType: params.primaryAnchor.type,
+    primarySubjectId: params.primaryAnchor.id,
+    lifecycleState: 'published' as const,
+    title: params.title,
+    summary: params.summary ?? null,
+    contextJson: {
+      primaryAnchorType: params.primaryAnchor.type,
+      primaryAnchorId: params.primaryAnchor.id,
+      linkedSkillId: params.skillId,
+      importedFrom: params.importedFrom ?? null,
+      primaryAnchorRequiredForIntroEligibility: true,
+    },
+    evidenceSummary: params.summary ?? null,
+    outcomesSummary: null,
+    visibility: params.visibility,
+    revealGate: params.revealGate,
+    createdBy: params.profileId,
+    verificationStatus: 'unverified' as const,
+    freshnessState: params.freshnessState,
+    freshnessEvaluatedAt: new Date(),
+    lastRefreshedAt: params.evidenceAt,
+    portabilityMeta: {
+      provenanceSummary: params.summary ?? params.title,
+      completenessState: 'context_anchored',
+    },
+    metadata: {
+      ...(params.metadata ?? {}),
+      canonicalWritePath: 'skill_proof',
+      primaryAnchorType: params.primaryAnchor.type,
+      primaryAnchorId: params.primaryAnchor.id,
+      linkedSkillId: params.skillId,
+      importedFrom: params.importedFrom ?? null,
+    },
+    publishedAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  const [pack] = existing
+    ? await db.update(proofPacks).set(packValues).where(eq(proofPacks.id, existing.id)).returning()
+    : await db.insert(proofPacks).values(packValues).returning();
+
+  await db
+    .insert(proofPackItems)
+    .values({
+      packId: pack.id,
+      artifactId: params.artifactId,
+      position: 0,
+      includedFields: ['title', 'description', 'sourceUrl', 'issuedAt', 'expiresAt'],
+    })
+    .onConflictDoNothing();
+
+  if (!existing) {
+    await emitLifecycleEvent(
+      'proof_pack_created',
+      {
+        proof_pack_id: pack.id,
+        owner_type: pack.ownerType,
+        owner_id: pack.ownerId,
+        primary_subject_type: pack.primarySubjectType,
+        primary_subject_id: pack.primarySubjectId,
+        pack_kind: pack.packKind,
+        visibility: pack.visibility,
+        reveal_gate: pack.revealGate,
+        actor_type: 'candidate',
+        source: 'canonical.repository',
+      },
+      {
+        userId: params.profileId,
+        entityType: 'profile',
+        entityId: pack.id,
+      }
+    );
+  }
+
+  if (!existing || existing.freshnessState !== pack.freshnessState) {
+    await emitLifecycleEvent(
+      'proof_pack_freshness_state_changed',
+      {
+        proof_pack_id: pack.id,
+        subject_id: params.profileId,
+        freshness_state: pack.freshnessState,
+        trigger: existing ? 'proof_pack_updated' : 'proof_pack_created',
+        actor_type: 'candidate',
+        source: 'canonical.repository',
+      },
+      {
+        userId: params.profileId,
+        entityType: 'profile',
+        entityId: pack.id,
+      }
+    );
+  }
+
+  return pack;
 }
 
 function getArtifactChangedFields(
@@ -385,6 +563,159 @@ function toLegacyDateString(value: string | Date | null | undefined): string | n
   if (!value) return null;
   const date = value instanceof Date ? value : new Date(value);
   return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
+}
+
+export async function upsertCanonicalSkillProof(
+  input: CanonicalSkillProofInput
+): Promise<CanonicalSkillProofWriteResult> {
+  const existingArtifact = input.artifactId
+    ? await db.query.proofArtifacts.findFirst({
+        where: eq(proofArtifacts.id, input.artifactId),
+      })
+    : null;
+  const visibility = mapLegacyProofVisibility(
+    typeof input.metadata?.visibility === 'string' ? input.metadata.visibility : null
+  );
+  const now = new Date();
+  const artifactValues = {
+    ownerType: 'individual_profile' as const,
+    ownerId: input.profileId,
+    subjectType: 'skill' as const,
+    subjectId: input.skillId,
+    artifactKind: mapSkillProofTypeToArtifactKind(input.proofType),
+    lifecycleState: 'active' as const,
+    title: input.title,
+    description: input.description || null,
+    sourceUrl: input.url || null,
+    storagePath: input.filePath || null,
+    uploadedFileId: input.uploadedFileId || null,
+    activatedAt: input.createdAt ? new Date(input.createdAt) : now,
+    issuedAt: input.issuedDate ? new Date(input.issuedDate) : null,
+    expiresAt: input.expiresDate ? new Date(input.expiresDate) : null,
+    visibility: visibility.visibility,
+    revealGate: visibility.revealGate,
+    metadata: {
+      ...(input.metadata ?? {}),
+      canonicalWritePath: 'skill_proof',
+      importedFrom: input.importedFrom ?? null,
+    },
+    updatedAt: input.updatedAt ? new Date(input.updatedAt) : now,
+  };
+
+  const [artifact] = existingArtifact
+    ? await db
+        .update(proofArtifacts)
+        .set(artifactValues)
+        .where(eq(proofArtifacts.id, existingArtifact.id))
+        .returning()
+    : await db
+        .insert(proofArtifacts)
+        .values({
+          ...artifactValues,
+          createdAt: input.createdAt ? new Date(input.createdAt) : now,
+        })
+        .returning();
+
+  const eventName = existingArtifact ? 'proof_artifact_updated' : 'proof_artifact_created';
+  const changedFields = getArtifactChangedFields(existingArtifact ?? null, artifact);
+
+  await emitLifecycleEvent(
+    eventName,
+    existingArtifact
+      ? {
+          proof_artifact_id: artifact.id,
+          owner_type: artifact.ownerType,
+          owner_id: artifact.ownerId,
+          subject_type: artifact.subjectType,
+          subject_id: artifact.subjectId,
+          artifact_kind: artifact.artifactKind,
+          visibility: artifact.visibility,
+          reveal_gate: artifact.revealGate,
+          changed_fields: changedFields,
+          actor_type: 'candidate',
+          source: 'canonical.repository',
+        }
+      : {
+          proof_artifact_id: artifact.id,
+          owner_type: artifact.ownerType,
+          owner_id: artifact.ownerId,
+          subject_type: artifact.subjectType,
+          subject_id: artifact.subjectId,
+          artifact_kind: artifact.artifactKind,
+          visibility: artifact.visibility,
+          reveal_gate: artifact.revealGate,
+          actor_type: 'candidate',
+          source: 'canonical.repository',
+        },
+    {
+      userId: input.profileId,
+      entityType: 'profile',
+      entityId: artifact.id,
+    }
+  );
+
+  const nextFreshnessState = getProofFreshnessState({
+    issuedAt: artifact.issuedAt,
+    expiresAt: artifact.expiresAt,
+    updatedAt: artifact.updatedAt,
+  });
+  const previousFreshnessState = existingArtifact
+    ? getProofFreshnessState({
+        issuedAt: existingArtifact.issuedAt,
+        expiresAt: existingArtifact.expiresAt,
+        updatedAt: existingArtifact.updatedAt,
+      })
+    : null;
+
+  if (!previousFreshnessState || previousFreshnessState !== nextFreshnessState) {
+    const freshnessBasis = artifact.updatedAt ?? artifact.issuedAt ?? null;
+    await emitLifecycleEvent(
+      'proof_freshness_state_changed',
+      {
+        proof_artifact_id: artifact.id,
+        subject_id: input.profileId,
+        freshness_state: nextFreshnessState,
+        age_bucket_days: getFreshnessAgeBucket(nextFreshnessState, freshnessBasis),
+        expiry_state: getExpiryState(artifact.expiresAt),
+        trigger: existingArtifact ? 'proof_artifact_updated' : 'proof_artifact_created',
+        actor_type: 'candidate',
+        source: 'canonical.repository',
+      },
+      {
+        userId: input.profileId,
+        entityType: 'profile',
+        entityId: artifact.id,
+      }
+    );
+  }
+
+  const pack = await upsertCanonicalProofPackForArtifact({
+    packId: input.packId,
+    profileId: input.profileId,
+    skillId: input.skillId,
+    primaryAnchor: input.primaryAnchor,
+    title: input.title,
+    summary: input.description ?? null,
+    artifactId: artifact.id,
+    visibility: artifact.visibility,
+    revealGate: artifact.revealGate,
+    metadata: input.metadata ?? {},
+    importedFrom: input.importedFrom ?? null,
+    freshnessState: nextFreshnessState,
+    evidenceAt: artifact.updatedAt ?? artifact.issuedAt ?? null,
+  });
+
+  await refreshIndividualProofTrustSnapshots(input.profileId);
+
+  return {
+    artifact,
+    pack,
+    legacyProof: {
+      ...mapCanonicalProofRowToLegacySkillProof(artifact),
+      canonical_pack_id: pack.id,
+      canonical_pack_title: pack.title,
+    },
+  };
 }
 
 export async function upsertCanonicalProofArtifactFromSkillProof(input: SkillProofInput) {
@@ -528,6 +859,7 @@ export async function upsertCanonicalProofArtifactFromSkillProof(input: SkillPro
     proofId: input.id,
     profileId: input.profileId,
     skillId: input.skillId,
+    primaryAnchor: input.primaryAnchor,
     title: input.title,
     summary: input.description ?? null,
     createdBy: input.profileId,
@@ -713,6 +1045,7 @@ export async function upsertCanonicalVerificationRecord(input: VerificationRecor
   const [row] = await db
     .insert(verificationRecords)
     .values({
+      id: input.id,
       ownerType: input.ownerType,
       ownerId: input.ownerId,
       subjectType: input.subjectType,
@@ -739,7 +1072,12 @@ export async function upsertCanonicalVerificationRecord(input: VerificationRecor
       sourceResponseId: input.sourceResponseId || null,
       requestedAt: input.requestedAt ? new Date(input.requestedAt) : null,
       expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
+      requestExpiresAt: input.requestExpiresAt ? new Date(input.requestExpiresAt) : null,
+      followUpDueAt: input.followUpDueAt ? new Date(input.followUpDueAt) : null,
+      lastFollowUpAt: input.lastFollowUpAt ? new Date(input.lastFollowUpAt) : null,
       lastRefreshedAt: input.lastRefreshedAt ? new Date(input.lastRefreshedAt) : null,
+      completedAt: input.completedAt ? new Date(input.completedAt) : null,
+      expiredAt: input.expiredAt ? new Date(input.expiredAt) : null,
       supersededAt: input.supersededAt ? new Date(input.supersededAt) : null,
       supersededByVerificationId: input.supersededByVerificationId || null,
       downgradedAt: input.downgradedAt ? new Date(input.downgradedAt) : null,
@@ -747,6 +1085,8 @@ export async function upsertCanonicalVerificationRecord(input: VerificationRecor
       contradictedByVerificationId: input.contradictedByVerificationId || null,
       disputedAt: input.disputedAt ? new Date(input.disputedAt) : null,
       revokedAt: input.revokedAt ? new Date(input.revokedAt) : null,
+      cancelledAt: input.cancelledAt ? new Date(input.cancelledAt) : null,
+      failureCode: input.failureCode || null,
       verifiedAt: input.verifiedAt ? new Date(input.verifiedAt) : null,
       metadata: input.metadata || {},
       updatedAt: new Date(),
@@ -779,7 +1119,12 @@ export async function upsertCanonicalVerificationRecord(input: VerificationRecor
         sourceResponseId: sql`excluded.source_response_id`,
         requestedAt: sql`excluded.requested_at`,
         expiresAt: sql`excluded.expires_at`,
+        requestExpiresAt: sql`excluded.request_expires_at`,
+        followUpDueAt: sql`excluded.follow_up_due_at`,
+        lastFollowUpAt: sql`excluded.last_follow_up_at`,
         lastRefreshedAt: sql`excluded.last_refreshed_at`,
+        completedAt: sql`excluded.completed_at`,
+        expiredAt: sql`excluded.expired_at`,
         supersededAt: sql`excluded.superseded_at`,
         supersededByVerificationId: sql`excluded.superseded_by_verification_id`,
         downgradedAt: sql`excluded.downgraded_at`,
@@ -787,6 +1132,8 @@ export async function upsertCanonicalVerificationRecord(input: VerificationRecor
         contradictedByVerificationId: sql`excluded.contradicted_by_verification_id`,
         disputedAt: sql`excluded.disputed_at`,
         revokedAt: sql`excluded.revoked_at`,
+        cancelledAt: sql`excluded.cancelled_at`,
+        failureCode: sql`excluded.failure_code`,
         verifiedAt: sql`excluded.verified_at`,
         metadata: sql`excluded.metadata`,
         updatedAt: sql`excluded.updated_at`,

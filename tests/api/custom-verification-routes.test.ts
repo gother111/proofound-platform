@@ -63,6 +63,10 @@ vi.mock('@/lib/canonical/repository', () => ({
   })),
 }));
 
+vi.mock('@/lib/contracts/canonical-domain', () => ({
+  hashOpaqueToken: vi.fn(() => 'hashed-email'),
+}));
+
 const AUTH_USER_ID = '11111111-1111-4111-8111-111111111111';
 
 function thenableResult<T>(result: T) {
@@ -1202,6 +1206,7 @@ describe('custom verification API routes', () => {
       eq: vi.fn(function () {
         return this;
       }),
+      select: vi.fn().mockResolvedValue({ data: [], error: null }),
       then: (resolve: (value: unknown) => unknown, reject?: (reason: unknown) => unknown) =>
         Promise.resolve({ error: null }).then(resolve, reject),
     };
@@ -1301,5 +1306,133 @@ describe('custom verification API routes', () => {
     );
 
     expect(response.status).toBe(400);
+  });
+
+  it('rejects attestation bundles with more than three interpersonal skills', async () => {
+    const skillIds = [
+      '11111111-1111-4111-8111-111111111111',
+      '22222222-2222-4222-8222-222222222222',
+      '33333333-3333-4333-8333-333333333333',
+      '44444444-4444-4444-8444-444444444444',
+    ];
+
+    vi.mocked(createClient).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { email: 'requester@example.com' } },
+          error: null,
+        }),
+      },
+      from: vi.fn((table: string) => {
+        if (table === 'skills') {
+          return {
+            select: vi.fn(() =>
+              thenableResult({
+                data: skillIds.map((id, index) => ({
+                  id,
+                  skill_id: `u-communication-${index + 1}`,
+                  skill_code: 'u-communication',
+                  name_i18n: { en: `Communication ${index + 1}` },
+                  taxonomy: {
+                    name_i18n: { en: `Communication ${index + 1}` },
+                  },
+                })),
+                error: null,
+              })
+            ),
+          };
+        }
+
+        if (table === 'skill_verification_requests') {
+          return {
+            select: vi.fn(() =>
+              thenableResult({
+                data: [],
+                error: null,
+              })
+            ),
+          };
+        }
+
+        return {
+          select: vi.fn(() => thenableResult({ data: [], error: null })),
+        };
+      }),
+    } as any);
+
+    const response = await postCustomRequest(
+      new NextRequest('http://localhost/api/expertise/verifications/custom/request', {
+        method: 'POST',
+        body: JSON.stringify({
+          verifierEmail: 'manager@example.com',
+          relationship: 'manager',
+          artifacts: skillIds.map((id) => ({ type: 'skill', id })),
+        }),
+      })
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: expect.stringContaining('limited to 3 skills'),
+    });
+  });
+
+  it('requires structured attestation fields for attestation-mode custom responses', async () => {
+    const customRequestSelectQuery: any = {
+      eq: vi.fn(() => customRequestSelectQuery),
+      single: vi.fn().mockResolvedValue({
+        data: {
+          id: 'request-1',
+          requester_profile_id: 'requester-1',
+          verifier_email: 'manager@example.com',
+          verifier_profile_id: null,
+          verifier_relationship: 'manager',
+          request_kind: 'human_observed_attestation',
+          attestation_request: {
+            requestKind: 'human_observed_attestation',
+            skillIds: ['11111111-1111-4111-8111-111111111111'],
+            skillLabels: ['Communication'],
+            skillFamilies: ['communication'],
+          },
+          status: 'pending',
+          expires_at: new Date(Date.now() + 60_000).toISOString(),
+          custom_verification_request_items: [
+            {
+              id: 'item-1',
+              artifact_type: 'skill',
+              artifact_id: '11111111-1111-4111-8111-111111111111',
+            },
+          ],
+        },
+        error: null,
+      }),
+    };
+
+    vi.mocked(createAdminClient).mockReturnValue({
+      from: vi.fn((table: string) => {
+        if (table === 'custom_verification_requests') {
+          return {
+            select: vi.fn(() => customRequestSelectQuery),
+          };
+        }
+
+        throw new Error(`Unexpected table: ${table}`);
+      }),
+    } as any);
+
+    const response = await postVerifyCustom(
+      new NextRequest('http://localhost/api/verify/custom/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'accept' }),
+      }),
+      {
+        params: Promise.resolve({ token: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' }),
+      }
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: 'Validation failed',
+    });
   });
 });

@@ -15,7 +15,6 @@ import {
   resolveHasLinkedInIdentityVerification,
   resolveHasLinkedInWorkplaceVerification,
 } from '@/lib/linkedin-verified';
-import { resolveWorkEmailValidity } from '@/lib/verification/work-email-validity';
 
 interface ReviewRequest {
   decision: 'approved' | 'rejected';
@@ -79,12 +78,10 @@ export async function POST(
     const hasWorkplaceVerification =
       resolveHasLinkedInWorkplaceVerification(updatedVerificationData);
     const shouldGrantIdentity = Boolean(hasIdentityVerification || grantIdentity === true);
-    const workEmailValidity = resolveWorkEmailValidity({
-      work_email_verified: currentProfile.work_email_verified,
-      work_email_verified_at: currentProfile.work_email_verified_at,
-      work_email_reverify_due_at: currentProfile.work_email_reverify_due_at,
-      verified_at: currentProfile.verified_at,
-    });
+    const preserveVeriffIdentity =
+      currentProfile.verification_tier_source === 'veriff' ||
+      (currentProfile.verification_method === 'veriff' &&
+        currentProfile.verification_status === 'verified');
 
     if (decision === 'approved') {
       updateData.linkedin_verification_status = 'verified';
@@ -92,21 +89,24 @@ export async function POST(
 
       if (shouldGrantIdentity) {
         updateData.linkedin_verification_level = 'identity';
-        updateData.verification_tier = 'identity_verified';
-        updateData.verification_tier_source = 'linkedin_identity';
-        updateData.verification_status = 'verified';
-        updateData.verification_method = 'linkedin';
-        updateData.verified = true;
-        updateData.verified_at = currentProfile.verified_at || nowIso;
+        updateData.verification_tier = preserveVeriffIdentity ? 'identity_verified' : 'unverified';
+        updateData.verification_tier_source = preserveVeriffIdentity ? 'veriff' : 'unknown';
+        updateData.verification_status = preserveVeriffIdentity ? 'verified' : 'unverified';
+        updateData.verification_method = preserveVeriffIdentity ? 'veriff' : null;
+        updateData.verified = preserveVeriffIdentity;
+        updateData.verified_at = preserveVeriffIdentity
+          ? currentProfile.verified_at || nowIso
+          : null;
       } else {
-        const isWorkEmailTier = workEmailValidity.isCurrentlyVerified;
         updateData.linkedin_verification_level = 'workplace';
-        updateData.verification_tier = 'workplace_verified';
-        updateData.verification_tier_source = isWorkEmailTier ? 'work_email' : 'linkedin_workplace';
-        updateData.verification_status = 'unverified';
-        updateData.verification_method = isWorkEmailTier ? 'work_email' : null;
-        updateData.verified = false;
-        updateData.verified_at = null;
+        updateData.verification_tier = preserveVeriffIdentity ? 'identity_verified' : 'unverified';
+        updateData.verification_tier_source = preserveVeriffIdentity ? 'veriff' : 'unknown';
+        updateData.verification_status = preserveVeriffIdentity ? 'verified' : 'unverified';
+        updateData.verification_method = preserveVeriffIdentity ? 'veriff' : null;
+        updateData.verified = preserveVeriffIdentity;
+        updateData.verified_at = preserveVeriffIdentity
+          ? currentProfile.verified_at || nowIso
+          : null;
       }
     } else {
       updateData.linkedin_verification_status = 'failed';
@@ -168,7 +168,7 @@ export async function POST(
       decision,
       hasIdentityVerification,
       hasWorkplaceVerification,
-      identityGranted: decision === 'approved' ? shouldGrantIdentity : false,
+      identityGranted: false,
       linkedinVerificationLevel:
         decision === 'approved' ? (shouldGrantIdentity ? 'identity' : 'workplace') : 'failed',
       message: `Verification ${decision} successfully`,

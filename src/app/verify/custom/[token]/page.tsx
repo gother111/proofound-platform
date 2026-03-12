@@ -9,6 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import {
+  HumanObservedAttestationFields,
+  buildHumanObservedAttestationPayload,
+  createDefaultHumanObservedAttestationForm,
+  type HumanObservedAttestationFormValue,
+} from '@/components/verification/HumanObservedAttestationFields';
+import {
   relationshipDisplayLabel,
   type CustomVerificationRelationship,
 } from '@/lib/verification/custom-verification';
@@ -26,6 +32,11 @@ type VerificationData = {
   requester_name: string;
   requester_avatar?: string | null;
   relationship: CustomVerificationRelationship;
+  request_kind?: 'generic_verification' | 'human_observed_attestation';
+  attestation_request?: {
+    skillIds: string[];
+    skillLabels: string[];
+  } | null;
   message?: string;
   status: 'pending' | 'accepted' | 'declined' | 'expired';
   created_at: string;
@@ -65,6 +76,9 @@ export default function VerifyCustomRequestPage() {
   const [responseMessage, setResponseMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [submittedAction, setSubmittedAction] = useState<'accepted' | 'declined' | null>(null);
+  const [attestationForm, setAttestationForm] = useState<HumanObservedAttestationFormValue>(
+    createDefaultHumanObservedAttestationForm()
+  );
 
   useEffect(() => {
     const loadData = async () => {
@@ -78,7 +92,15 @@ export default function VerifyCustomRequestPage() {
         }
 
         const result = await response.json();
-        setData(result.request);
+        const nextData = result.request as VerificationData;
+        setData(nextData);
+        if (nextData.request_kind === 'human_observed_attestation') {
+          setAttestationForm(
+            createDefaultHumanObservedAttestationForm(
+              relationshipDisplayLabel(nextData.relationship)
+            )
+          );
+        }
       } catch (_loadError) {
         setError('Failed to load verification request');
       } finally {
@@ -108,6 +130,13 @@ export default function VerifyCustomRequestPage() {
         body: JSON.stringify({
           action,
           message: responseMessage.trim() || undefined,
+          attestation:
+            data.request_kind === 'human_observed_attestation' && action === 'accept'
+              ? buildHumanObservedAttestationPayload({
+                  form: attestationForm,
+                  skillIds: data.attestation_request?.skillIds || [],
+                })
+              : undefined,
         }),
       });
 
@@ -208,8 +237,9 @@ export default function VerifyCustomRequestPage() {
                 <CheckCircle2 className="h-16 w-16 text-green-600 mx-auto mb-4" />
                 <h2 className="text-2xl font-semibold text-foreground mb-2">Thank You!</h2>
                 <p className="text-muted-foreground mb-4">
-                  You've verified <strong>{data?.requester_name}</strong>'s selected profile
-                  artifacts.
+                  {data?.request_kind === 'human_observed_attestation'
+                    ? `You've recorded a bounded observed-in-practice attestation for ${data?.requester_name}.`
+                    : `You've verified ${data?.requester_name}'s selected profile artifacts.`}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Your response helps strengthen trust and credibility on Proofound.
@@ -238,7 +268,11 @@ export default function VerifyCustomRequestPage() {
             <Shield className="h-8 w-8" />
             <CardTitle className="text-xl">Custom Verification Request</CardTitle>
           </div>
-          <p className="text-white/80 text-sm">Review one request that covers multiple artifacts</p>
+          <p className="text-white/80 text-sm">
+            {data?.request_kind === 'human_observed_attestation'
+              ? 'Review a bounded observed-in-practice attestation request.'
+              : 'Review one request that covers multiple artifacts'}
+          </p>
         </CardHeader>
 
         <CardContent className="pt-6 space-y-5">
@@ -248,7 +282,11 @@ export default function VerifyCustomRequestPage() {
             </div>
             <div>
               <p className="font-semibold text-foreground">{data?.requester_name}</p>
-              <p className="text-sm text-muted-foreground">is requesting your verification</p>
+              <p className="text-sm text-muted-foreground">
+                {data?.request_kind === 'human_observed_attestation'
+                  ? 'is requesting your bounded observation'
+                  : 'is requesting your verification'}
+              </p>
             </div>
           </div>
 
@@ -260,7 +298,11 @@ export default function VerifyCustomRequestPage() {
           </div>
 
           <div>
-            <p className="text-sm font-medium text-muted-foreground mb-2">Artifacts to Verify</p>
+            <p className="text-sm font-medium text-muted-foreground mb-2">
+              {data?.request_kind === 'human_observed_attestation'
+                ? 'Skills in scope'
+                : 'Artifacts to Verify'}
+            </p>
             <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
               {data?.items?.map((item) => (
                 <div
@@ -304,6 +346,20 @@ export default function VerifyCustomRequestPage() {
             />
           </div>
 
+          {data?.request_kind === 'human_observed_attestation' && (
+            <HumanObservedAttestationFields
+              value={attestationForm}
+              onChange={setAttestationForm}
+              skillLabels={
+                data.attestation_request?.skillLabels ||
+                data.items
+                  .filter((item) => item.artifact_type === 'skill')
+                  .map((item) => item.display_label)
+              }
+              disabled={submitting}
+            />
+          )}
+
           <p className="text-xs text-muted-foreground text-center">
             This request expires on {new Date(data?.expires_at || '').toLocaleDateString()}
           </p>
@@ -333,7 +389,9 @@ export default function VerifyCustomRequestPage() {
             ) : (
               <CheckCircle2 className="h-4 w-4 mr-2" />
             )}
-            Verify Artifacts
+            {data?.request_kind === 'human_observed_attestation'
+              ? 'Record Observation'
+              : 'Verify Artifacts'}
           </Button>
         </CardFooter>
       </Card>

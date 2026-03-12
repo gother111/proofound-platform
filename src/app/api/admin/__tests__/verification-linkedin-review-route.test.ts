@@ -106,7 +106,7 @@ describe('admin linkedin review route', () => {
     expect(createClient).not.toHaveBeenCalled();
   });
 
-  it('approves verification and sends notification from valid identity sources', async () => {
+  it('approves verification and keeps linkedin identity as a compatibility signal', async () => {
     vi.mocked(requirePlatformAdminJson).mockResolvedValue({
       adminLevel: 'platform_admin',
       userId: 'admin-1',
@@ -144,11 +144,11 @@ describe('admin linkedin review route', () => {
       expect.objectContaining({
         linkedin_verification_status: 'verified',
         linkedin_verification_level: 'identity',
-        verification_tier: 'identity_verified',
-        verification_tier_source: 'linkedin_identity',
-        verification_status: 'verified',
-        verification_method: 'linkedin',
-        verified: true,
+        verification_tier: 'unverified',
+        verification_tier_source: 'unknown',
+        verification_status: 'unverified',
+        verification_method: null,
+        verified: false,
       })
     );
     expect(sendVerificationApprovedEmail).toHaveBeenCalledWith(
@@ -243,9 +243,11 @@ describe('admin linkedin review route', () => {
       expect.objectContaining({
         linkedin_verification_status: 'verified',
         linkedin_verification_level: 'workplace',
-        verification_tier: 'workplace_verified',
-        verification_tier_source: 'linkedin_workplace',
+        verification_tier: 'unverified',
+        verification_tier_source: 'unknown',
         verification_status: 'unverified',
+        verification_method: null,
+        verified: false,
       })
     );
     expect(updateSpy).not.toHaveBeenCalledWith(
@@ -253,7 +255,7 @@ describe('admin linkedin review route', () => {
     );
   });
 
-  it('grants identity when admin override is explicitly requested', async () => {
+  it('keeps admin identity override narrow and compatibility-only', async () => {
     vi.mocked(requirePlatformAdminJson).mockResolvedValue({
       adminLevel: 'platform_admin',
       userId: 'admin-1',
@@ -337,11 +339,11 @@ describe('admin linkedin review route', () => {
       expect.objectContaining({
         linkedin_verification_status: 'verified',
         linkedin_verification_level: 'identity',
-        verification_tier: 'identity_verified',
-        verification_tier_source: 'linkedin_identity',
-        verification_status: 'verified',
-        verification_method: 'linkedin',
-        verified: true,
+        verification_tier: 'unverified',
+        verification_tier_source: 'unknown',
+        verification_status: 'unverified',
+        verification_method: null,
+        verified: false,
       })
     );
   });

@@ -48,16 +48,18 @@ function getLinkedInStatusText(status: VerificationStatusData) {
 
   if (status.linkedinVerificationLevel === 'identity') {
     return {
-      label: 'Verified (Identity)',
-      helper: 'Official LinkedIn identity verification detected.',
-      tone: 'positive' as const,
+      label: 'Identity signal detected',
+      helper:
+        'LinkedIn returned an identity signal. It is kept as an account-side compatibility signal only.',
+      tone: 'neutral' as const,
     };
   }
 
   if (status.linkedinVerificationLevel === 'workplace') {
     return {
-      label: 'Verified (Workplace)',
-      helper: 'LinkedIn workplace verification detected. Identity badge is not granted.',
+      label: 'Workplace signal detected',
+      helper:
+        'LinkedIn workplace verification was detected. It does not create a public trust badge or matching lift on its own.',
       tone: 'neutral' as const,
     };
   }
@@ -65,15 +67,17 @@ function getLinkedInStatusText(status: VerificationStatusData) {
   if (status.linkedinVerificationStatus === 'verified') {
     if (status.linkedinHasIdentityVerification) {
       return {
-        label: 'Verified (Identity badge)',
-        helper: 'Official LinkedIn identity verification detected.',
-        tone: 'positive' as const,
+        label: 'Identity signal detected',
+        helper:
+          'LinkedIn returned an identity signal. It is kept as an account-side compatibility signal only.',
+        tone: 'neutral' as const,
       };
     }
 
     return {
-      label: 'Verified (no identity badge)',
-      helper: 'LinkedIn verification is complete, but identity is not granted by default.',
+      label: 'Verification complete',
+      helper:
+        'LinkedIn verification is complete, but it remains an account-side compatibility signal only.',
       tone: 'neutral' as const,
     };
   }
@@ -88,7 +92,7 @@ function getLinkedInStatusText(status: VerificationStatusData) {
 
   return {
     label: 'Not checked',
-    helper: 'Run LinkedIn verification to add workplace or identity trust signals.',
+    helper: 'Run LinkedIn verification to add an account-side compatibility signal.',
     tone: 'neutral' as const,
   };
 }
@@ -96,18 +100,16 @@ function getLinkedInStatusText(status: VerificationStatusData) {
 function LinkedInStatusPanel({ status }: { status: VerificationStatusData }) {
   const linkedInStatus = getLinkedInStatusText(status);
   const statusToneClass =
-    linkedInStatus.tone === 'positive'
-      ? 'border-green-200 bg-green-50'
-      : linkedInStatus.tone === 'negative'
-        ? 'border-red-200 bg-red-50'
-        : 'border-slate-200 bg-slate-50';
+    linkedInStatus.tone === 'negative'
+      ? 'border-red-200 bg-red-50'
+      : 'border-slate-200 bg-slate-50';
 
   return (
     <div className={`rounded-xl border p-4 ${statusToneClass}`}>
       <div className="flex items-start gap-3">
         <Linkedin className="w-5 h-5 text-[#0A66C2] mt-0.5" />
         <div className="space-y-1">
-          <p className="text-sm font-medium">LinkedIn Trust Signal</p>
+          <p className="text-sm font-medium">LinkedIn Account Signal</p>
           <p className="text-sm">{linkedInStatus.label}</p>
           <p className="text-xs text-muted-foreground">{linkedInStatus.helper}</p>
           {status.linkedinVerifiedAt && (
@@ -320,68 +322,7 @@ export function VerificationStatus() {
     status.linkedinVerificationLevel !== 'identity' &&
     status.linkedinVerificationLevel !== 'pending';
 
-  // Show verification options based on identity status
-  if (status.verificationTier === 'identity_verified') {
-    return (
-      <div className="space-y-4">
-        {oauthFeedback && (
-          <Alert variant={oauthFeedback.type === 'error' ? 'destructive' : 'default'}>
-            {oauthFeedback.type === 'error' ? (
-              <AlertCircle className="h-4 w-4" />
-            ) : (
-              <CheckCircle2 className="h-4 w-4" />
-            )}
-            <AlertDescription>{oauthFeedback.message}</AlertDescription>
-          </Alert>
-        )}
-        <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-xl">
-          <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400 flex-shrink-0" />
-          <div className="flex-1">
-            <p className="font-medium text-green-900 dark:text-green-100">Identity checked</p>
-            <p className="text-sm text-green-700 dark:text-green-300">
-              Active via{' '}
-              {status.verificationTierSource === 'veriff' || status.verificationMethod === 'veriff'
-                ? 'Government ID'
-                : 'LinkedIn Identity'}
-              {status.verifiedAt && ` on ${new Date(status.verifiedAt).toLocaleDateString()}`}
-            </p>
-            {status.workEmail && (
-              <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                Work email: {status.workEmail}
-              </p>
-            )}
-          </div>
-        </div>
-
-        <LinkedInStatusPanel status={status} />
-
-        <p className="text-sm text-muted-foreground">
-          Your identity-check badge is now visible on your profile to organizations.
-        </p>
-        {status.workEmailNeedsReverify && (
-          <Alert className="border-amber-300 bg-amber-50 text-amber-900">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Your work email verification has expired. Re-verify to keep your work-email trust
-              signal active.
-            </AlertDescription>
-          </Alert>
-        )}
-        {canAddLinkedInVerification && (
-          <Button
-            variant="outline"
-            onClick={() => setShowLinkedInFlow(true)}
-            className="border-[#0A66C2] text-[#0A66C2] hover:bg-[#0A66C2]/10"
-          >
-            <Linkedin className="w-4 h-4 mr-2" />
-            Add LinkedIn Verification
-          </Button>
-        )}
-      </div>
-    );
-  }
-
-  if (status.verificationTier === 'workplace_verified' && status.verificationStatus !== 'pending') {
+  if (status.workEmailVerified && status.verificationStatus !== 'pending') {
     return (
       <div className="space-y-4">
         {oauthFeedback && (
@@ -397,27 +338,24 @@ export function VerificationStatus() {
         <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
           <CheckCircle2 className="w-6 h-6 text-blue-600 flex-shrink-0" />
           <div className="flex-1">
-            <p className="font-medium text-blue-900">Workplace-verified</p>
+            <p className="font-medium text-blue-900">Work email confirmed</p>
             <p className="text-sm text-blue-700">
-              Active via{' '}
-              {status.verificationTierSource === 'work_email'
-                ? 'Work Email'
-                : 'LinkedIn Workplace Verification'}
-              . This tier does not grant an identity-check badge.
+              The account has a workplace-linked compatibility signal. It does not create a public
+              trust badge or matching lift on its own.
             </p>
           </div>
         </div>
         <LinkedInStatusPanel status={status} />
         <p className="text-sm text-muted-foreground">
-          Upgrade to an identity check if you want a person-level trust badge in addition to this
-          workplace signal.
+          Add a stronger scoped verification only when it is actually needed for a specific proof or
+          workflow.
         </p>
         {status.workEmailNeedsReverify && (
           <Alert className="border-amber-300 bg-amber-50 text-amber-900">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Your work email verification has expired. Re-verify to keep workplace verification
-              active.
+              Your work email verification has expired. Re-verify to keep the account-side
+              compatibility signal current.
             </AlertDescription>
           </Alert>
         )}
@@ -536,11 +474,20 @@ export function VerificationStatus() {
           </AlertDescription>
         </Alert>
       )}
+      {status.workEmailVerified && (
+        <Alert>
+          <CheckCircle2 className="h-4 w-4" />
+          <AlertDescription>
+            Work email is confirmed for account and organization-linking compatibility. It does not
+            create a public trust badge or matching lift on its own.
+          </AlertDescription>
+        </Alert>
+      )}
       <LinkedInStatusPanel status={status} />
       <div className="space-y-2">
         <p className="text-sm text-muted-foreground">
-          Choose a verification method. Workplace verification improves trust, while identity checks
-          add a narrower person-level trust badge.
+          Choose a verification method only when you need an account-side signal or a narrower
+          scoped verification workflow.
         </p>
       </div>
 
@@ -557,8 +504,8 @@ export function VerificationStatus() {
               <div className="flex-1">
                 <h3 className="font-semibold mb-1">Work Email Verification</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Verify using your company email address for workplace verification. This also
-                  links your profile to your organization.
+                  Confirm your company email for contact and organization-linking compatibility.
+                  This does not create a public trust badge by itself.
                 </p>
                 <Button
                   onClick={() => setShowWorkEmailForm(true)}
@@ -584,8 +531,8 @@ export function VerificationStatus() {
               <div className="flex-1">
                 <h3 className="font-semibold mb-1">LinkedIn Verification</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  LinkedIn can auto-approve workplace or identity verification. If no official
-                  LinkedIn signal is detected, the request goes to admin review.
+                  LinkedIn can add an account-side signal for review and compatibility. If no
+                  official signal is detected, the request goes to admin review.
                 </p>
                 <Button
                   onClick={() => setShowLinkedInFlow(true)}
@@ -603,8 +550,8 @@ export function VerificationStatus() {
       <Alert>
         <CheckCircle2 className="h-4 w-4" />
         <AlertDescription>
-          <strong>Why verify?</strong> Workplace and identity verification increase trust for
-          organizations and improve match quality.
+          <strong>Why verify?</strong> Use these checks to keep account records and scoped
+          verification workflows accurate. They do not create broad trust lift on their own.
         </AlertDescription>
       </Alert>
     </div>

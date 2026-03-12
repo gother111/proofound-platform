@@ -522,27 +522,17 @@ function methodFromKind(
   }
 }
 
-function tierSourceFromKind(
-  kind: VerificationKind | null
-): 'linkedin_identity' | 'linkedin_workplace' | 'work_email' | 'veriff' | 'unknown' {
-  switch (kind) {
-    case 'veriff_identity':
-      return 'veriff';
-    case 'linkedin_identity':
-      return 'linkedin_identity';
-    case 'linkedin_workplace':
-      return 'linkedin_workplace';
-    case 'work_email':
-      return 'work_email';
-    default:
-      return 'unknown';
-  }
-}
-
 function buildBadge(
   summary: VerificationSlotSummary,
   surface: VerificationSurface
 ): VerificationBadgeSummary | null {
+  if (
+    (surface === 'public_portfolio' || surface === 'org_review') &&
+    (summary.slot === 'individual.identity' || summary.slot === 'individual.workplace')
+  ) {
+    return null;
+  }
+
   if (surface === 'public_portfolio' && !summary.activeTrust) {
     return null;
   }
@@ -690,48 +680,14 @@ export function summarizeVerificationPolicy(input: {
   if (evidenceOrgReviewBadge) orgReviewBadges.push(evidenceOrgReviewBadge);
   if (evidenceInternalBadge) internalBadges.push(evidenceInternalBadge);
 
-  const legacyIdentityVerified =
-    Boolean(input.legacyProfile?.linkedinHasIdentityVerification) ||
-    Boolean(
-      input.legacyProfile?.verificationMethod === 'veriff' &&
-        (input.legacyProfile?.verificationStatus === 'verified' || input.legacyProfile?.verified)
-    );
-  const legacyWorkplaceVerified =
-    Boolean(input.legacyProfile?.workEmailCurrentlyVerified) ||
-    Boolean(
-      input.legacyProfile?.verificationMethod === 'linkedin' &&
-        input.legacyProfile?.linkedinVerificationStatus === 'verified'
-    );
-
-  const verificationTier =
-    identity.activeTrust || legacyIdentityVerified
-      ? 'identity_verified'
-      : workplace.activeTrust || legacyWorkplaceVerified
-        ? 'workplace_verified'
-        : (input.legacyProfile?.verificationTier ?? 'unverified');
-
-  const verificationTierSource =
-    identity.activeTrust || workplace.activeTrust
-      ? tierSourceFromKind(identity.activeTrust ? identity.kind : workplace.kind)
-      : legacyIdentityVerified
-        ? input.legacyProfile?.verificationMethod === 'veriff'
-          ? 'veriff'
-          : 'linkedin_identity'
-        : legacyWorkplaceVerified
-          ? input.legacyProfile?.workEmailCurrentlyVerified
-            ? 'work_email'
-            : 'linkedin_workplace'
-          : (input.legacyProfile?.verificationTierSource ?? 'unknown');
-
-  const verificationMethod =
-    identity.activeTrust || workplace.activeTrust
-      ? methodFromKind(identity.activeTrust ? identity.kind : workplace.kind)
-      : (input.legacyProfile?.verificationMethod ?? null);
+  let verificationMethod: 'veriff' | 'work_email' | 'linkedin' | null =
+    input.legacyProfile?.verificationMethod ?? null;
+  if (identity.activeTrust || workplace.activeTrust) {
+    verificationMethod = methodFromKind(identity.activeTrust ? identity.kind : workplace.kind);
+  }
 
   let verificationStatus: 'unverified' | 'pending' | 'verified' | 'failed' = 'unverified';
-  if (identity.activeTrust) {
-    verificationStatus = 'verified';
-  } else if (
+  if (
     identity.state === 'pending' ||
     workplace.state === 'pending' ||
     identity.state === 'disputed' ||
@@ -792,11 +748,11 @@ export function summarizeVerificationPolicy(input: {
     orgReviewBadges,
     internalBadges,
     compatibility: {
-      verificationTier,
-      verificationTierSource,
+      verificationTier: 'unverified',
+      verificationTierSource: 'unknown',
       verificationStatus,
       verificationMethod,
-      verified: identity.activeTrust,
+      verified: false,
       workEmailVerified,
       workEmailNeedsReverify,
       orgTrustTier,

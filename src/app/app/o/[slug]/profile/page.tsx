@@ -3,13 +3,11 @@ import { Globe2, ShieldCheck, Users } from 'lucide-react';
 import { notFound } from 'next/navigation';
 
 import { OrgTrustProfileEditor } from '@/components/organization/OrgTrustProfileEditor';
-import { CultureEditor } from '@/components/organization/CultureEditor';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { getActiveOrg, requireAuth } from '@/lib/auth';
 import { normalizeAuthorizedOrgRole } from '@/lib/authz';
-import { normalizeOrganizationValues } from '@/lib/organizations/normalizeValues';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,7 +27,6 @@ export default async function OrganizationProfilePage({
   const { org, membership } = result;
   const membershipRole = normalizeAuthorizedOrgRole(membership.role);
   const canEdit = membershipRole === 'org_owner' || membershipRole === 'org_manager';
-  const values = normalizeOrganizationValues(org.values);
 
   return (
     <AppSurface>
@@ -52,17 +49,10 @@ export default async function OrganizationProfilePage({
             </CardHeader>
             <CardContent className="space-y-3 text-sm text-muted-foreground">
               <p>
-                Keep this page limited to trust basics. Broader org administration stays outside the
-                MVP corridor.
+                Keep this page limited to the calm trust story that supports one clear assignment
+                corridor. Culture hubs, governance showcases, and other org-suite surfaces stay
+                outside the MVP.
               </p>
-              <div className="flex flex-wrap gap-2">
-                {values.map((value) => (
-                  <Badge key={value} variant="secondary">
-                    {value}
-                  </Badge>
-                ))}
-                {values.length === 0 ? <span>No core values added yet.</span> : null}
-              </div>
             </CardContent>
           </Card>
 
@@ -78,7 +68,7 @@ export default async function OrganizationProfilePage({
                 <ShieldCheck className="mt-0.5 h-4 w-4 text-foreground/70" />
                 <div>
                   <p className="font-medium text-foreground">Trust profile</p>
-                  <p>Mission, values, website, why join, and lightweight work norms.</p>
+                  <p>Mission, why the work matters, working context, and hiring-process clarity.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -113,13 +103,12 @@ export default async function OrganizationProfilePage({
             displayName: org.displayName,
             tagline: org.tagline,
             mission: org.mission,
+            workingContext: org.workingContext ?? null,
+            hiringProcessSummary: org.hiringProcessSummary ?? null,
             website: org.website,
-            values: Array.isArray(org.values) ? org.values : null,
           }}
           canEdit={canEdit}
         />
-
-        <CultureEditor orgId={org.id} initialCulture={org.workCulture ?? {}} canEdit={canEdit} />
       </div>
     </AppSurface>
   );

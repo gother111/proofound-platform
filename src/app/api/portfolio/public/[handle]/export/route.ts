@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { fetchPublicTrustExportDataByHandle } from '@/lib/portfolio/export-data';
 import { generateTrustPdf } from '@/lib/portfolio/pdf';
+import { resolvePublicIndividualPortfolioAccessByHandle } from '@/lib/portfolio/public-projection';
 
 const FALLBACK_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
@@ -11,13 +10,12 @@ export const dynamic = 'force-dynamic';
 export async function GET(_request: Request, { params }: { params: Promise<{ handle: string }> }) {
   try {
     const { handle } = await params;
-    const supabase = await createClient();
-
-    const data = await fetchPublicTrustExportDataByHandle(supabase, handle);
-    if (!data) {
+    const access = await resolvePublicIndividualPortfolioAccessByHandle(handle);
+    if (access.status !== 'accessible') {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
+    const data = access.projection.exportData;
     const shareUrl = `${FALLBACK_URL.replace(/\/$/, '')}/portfolio/${encodeURIComponent(
       data.profile.handle
     )}`;
@@ -35,6 +33,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ han
       skills: data.skills.map((skill) => ({
         name: skill.name,
         level: skill.level,
+      })),
+      proofPacks: data.proofPacks.map((pack) => ({
+        title: pack.title,
+        verificationStatus: pack.verificationStatus,
+        freshnessState: pack.freshnessState,
+        outcomesSummary: pack.outcomesSummary,
       })),
       visibility: data.visibility,
     });

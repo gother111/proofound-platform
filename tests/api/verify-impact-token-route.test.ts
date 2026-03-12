@@ -39,6 +39,21 @@ vi.mock('@/lib/proofs/canonical-pack', () => ({
     listCanonicalSkillProofRowsForOwnerSkillMock(...args),
 }));
 
+vi.mock('@/lib/canonical/repository', () => ({
+  CANONICAL_PROOFS_WRITE_ENABLED: true,
+  upsertCanonicalVerificationRecord: vi.fn(async () => ({ id: 'canonical-verify-1' })),
+}));
+
+vi.mock('@/lib/contracts/canonical-domain', () => ({
+  hashOpaqueToken: vi.fn(() => 'hashed-email'),
+}));
+
+vi.mock('@/lib/verification/canonical-requests', () => ({
+  getCanonicalSkillVerificationRequestById: vi.fn(),
+  mapCanonicalSkillVerificationRequestRecord: vi.fn((record: any) => record),
+  updateCanonicalSkillVerificationRequest: vi.fn(),
+}));
+
 const TOKEN = 'a'.repeat(64);
 const LEGACY_REQUEST_ID = '123e4567-e89b-42d3-a456-426614174000';
 const SKILL_VERIFICATION_RECORD = {
@@ -1700,6 +1715,46 @@ describe('verify impact token route', () => {
     expect(response.status).toBe(401);
     await expect(response.json()).resolves.toMatchObject({
       code: 'AUTH_REQUIRED',
+    });
+  });
+
+  it('POST requires structured attestation fields for human-observed skill requests', async () => {
+    createAdminClientMock.mockReturnValue(
+      buildAdminClientForSkillFlow({
+        verificationByToken: {
+          ...SKILL_VERIFICATION_RECORD,
+          id: 'skill-req-attestation',
+          request_kind: 'human_observed_attestation',
+          verifier_relationship: 'manager',
+          attestation_request: {
+            requestKind: 'human_observed_attestation',
+            skillIds: ['skill-1'],
+            skillLabels: ['System Design'],
+            skillFamilies: ['communication'],
+          },
+        },
+      })
+    );
+    createClientMock.mockReturnValue({
+      from: vi.fn(),
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
+      },
+    });
+
+    const response = await POST(
+      new NextRequest(`http://localhost/api/verify/${TOKEN}`, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'accept',
+        }),
+      }),
+      { params: Promise.resolve({ token: TOKEN }) }
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: 'Validation failed',
     });
   });
 });

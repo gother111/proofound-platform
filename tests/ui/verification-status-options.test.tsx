@@ -65,18 +65,18 @@ describe('VerificationStatus', () => {
     expect(screen.queryByText(/Government ID Verification/i)).not.toBeInTheDocument();
   });
 
-  it('offers LinkedIn verification after work email verification is already complete', async () => {
+  it('shows confirmed work email as a compatibility signal after verification is already complete', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({
-          verified: true,
+          verified: false,
           verificationMethod: 'work_email',
-          verificationStatus: 'verified',
-          verificationTier: 'workplace_verified',
-          verificationTierSource: 'work_email',
-          verifiedAt: new Date().toISOString(),
+          verificationStatus: 'unverified',
+          verificationTier: 'unverified',
+          verificationTierSource: 'unknown',
+          verifiedAt: null,
           linkedinVerificationStatus: 'unverified',
           linkedinVerificationLevel: 'unverified',
           linkedinHasIdentityVerification: false,
@@ -92,7 +92,11 @@ describe('VerificationStatus', () => {
     render(<VerificationStatus />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Workplace-verified/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /The account has a workplace-linked compatibility signal\. It does not create a public trust badge or matching lift on its own\./i
+        )
+      ).toBeInTheDocument();
     });
     expect(screen.getByRole('button', { name: /Check LinkedIn Again/i })).toBeInTheDocument();
   });

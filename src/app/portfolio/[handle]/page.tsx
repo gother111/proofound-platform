@@ -22,12 +22,9 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
   getHistoricalPublicProfileHandleRedirect,
-  getPublicIndividualPortfolioProjectionByHandle,
+  resolvePublicIndividualPortfolioAccessByHandle,
 } from '@/lib/portfolio/public-projection';
-import {
-  buildPortfolioRobots,
-  isAccessiblePublicPortfolioState,
-} from '@/lib/portfolio/public-contract';
+import { buildPortfolioRobots } from '@/lib/portfolio/public-contract';
 import { sanitizeReturnPath } from '@/lib/navigation/sanitize-return-path';
 import {
   buildPublicProfileMetadata,
@@ -70,11 +67,13 @@ export async function generateMetadata({
   params: Promise<{ handle: string }>;
 }): Promise<Metadata> {
   const { handle } = await params;
-  const data = await getPublicIndividualPortfolioProjectionByHandle(handle);
+  const access = await resolvePublicIndividualPortfolioAccessByHandle(handle);
 
-  if (!data || !isAccessiblePublicPortfolioState(data.effectiveState)) {
+  if (access.status !== 'accessible') {
     return buildUnavailablePublicProfileMetadata(`/portfolio/${encodeURIComponent(handle)}`);
   }
+
+  const data = access.projection;
 
   return buildPublicProfileMetadata({
     title: data.metadata.title,
@@ -104,13 +103,13 @@ export default async function PortfolioPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const data = await getPublicIndividualPortfolioProjectionByHandle(handle);
+  const access = await resolvePublicIndividualPortfolioAccessByHandle(handle);
 
-  if (!data) {
+  if (access.status === 'missing') {
     const redirectTarget = await getHistoricalPublicProfileHandleRedirect(handle);
     if (redirectTarget && redirectTarget !== handle) {
-      const redirectData = await getPublicIndividualPortfolioProjectionByHandle(redirectTarget);
-      if (redirectData && isAccessiblePublicPortfolioState(redirectData.effectiveState)) {
+      const redirectAccess = await resolvePublicIndividualPortfolioAccessByHandle(redirectTarget);
+      if (redirectAccess.status === 'accessible') {
         permanentRedirect(`/portfolio/${encodeURIComponent(redirectTarget)}`);
       }
 
@@ -119,9 +118,11 @@ export default async function PortfolioPage({
     notFound();
   }
 
-  if (!isAccessiblePublicPortfolioState(data.effectiveState)) {
+  if (access.status === 'unavailable') {
     return renderUnavailablePage(handle);
   }
+
+  const data = access.projection;
 
   const viewerIsOwner = Boolean(user?.id && user.id === data.profileId);
   const displayName = data.publicDisplayName;

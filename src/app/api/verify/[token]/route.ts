@@ -18,11 +18,27 @@ import {
   redeemCapabilityToken,
 } from '@/lib/security/capability-tokens';
 import { listCanonicalSkillProofRowsForOwnerSkill } from '@/lib/proofs/canonical-pack';
+import {
+  applySkillVerificationTrustLift,
+  parseHumanObservedAttestationResponse,
+  type HumanObservedAttestationRequestPayload,
+} from '@/lib/verification/human-attestations';
+import {
+  getCanonicalSkillVerificationRequestById,
+  mapCanonicalSkillVerificationRequestRecord,
+  updateCanonicalSkillVerificationRequest,
+} from '@/lib/verification/canonical-requests';
+import {
+  CANONICAL_PROOFS_WRITE_ENABLED,
+  upsertCanonicalVerificationRecord,
+} from '@/lib/canonical/repository';
+import { hashOpaqueToken } from '@/lib/contracts/canonical-domain';
 
 const VerifyResponseSchema = z.object({
   action: z.enum(['accept', 'decline']),
   message: z.string().optional(),
   confirmedClaimIds: z.array(z.string()).optional(),
+  attestation: z.unknown().optional(),
 });
 
 function isRelationMissingError(error: unknown) {
@@ -235,6 +251,27 @@ async function getSkillVerificationByTokenOrLegacyId(
     const capabilityIdLookup = await runLookupById(capabilityLookup.token.source_id);
     if (capabilityIdLookup.data) {
       return { data: capabilityIdLookup.data as any, error: null };
+    }
+
+    let canonicalVerification = null;
+    try {
+      canonicalVerification = await getCanonicalSkillVerificationRequestById(
+        capabilityLookup.token.source_id
+      );
+    } catch {
+      canonicalVerification = null;
+    }
+
+    if (canonicalVerification) {
+      const hydratedCanonicalVerification = await hydrateSkill({
+        ...mapCanonicalSkillVerificationRequestRecord(canonicalVerification),
+        source_request_table: 'verification_records',
+        source_request_id: canonicalVerification.id,
+      });
+
+      if (hydratedCanonicalVerification.data) {
+        return { data: hydratedCanonicalVerification.data as any, error: null };
+      }
     }
   }
 
@@ -740,6 +777,19 @@ function normalizeSkillVerificationRecord(verification: any) {
 
   return {
     ...verification,
+    verifier_relationship: toStringOrNull(verification?.verifier_relationship),
+    request_kind:
+      verification?.request_kind === 'human_observed_attestation'
+        ? 'human_observed_attestation'
+        : 'generic_verification',
+    attestation_request:
+      verification?.attestation_request && typeof verification.attestation_request === 'object'
+        ? verification.attestation_request
+        : null,
+    attestation_response:
+      verification?.attestation_response && typeof verification.attestation_response === 'object'
+        ? verification.attestation_response
+        : null,
     requester_email_snapshot: toStringOrNull(verification?.requester_email_snapshot),
     requires_authenticated_verifier: Boolean(verification?.requires_authenticated_verifier),
     integrity_status: integrityStatus,
@@ -1018,6 +1068,10 @@ export async function GET(
         requester_email_snapshot,
         verifier_email,
         verifier_source,
+        verifier_relationship,
+        request_kind,
+        attestation_request,
+        attestation_response,
         message,
         status,
         requires_authenticated_verifier,
@@ -1042,6 +1096,10 @@ export async function GET(
               requester_email_snapshot,
               verifier_email,
               verifier_source,
+              verifier_relationship,
+              request_kind,
+              attestation_request,
+              attestation_response,
               message,
               status,
               requires_authenticated_verifier,
@@ -1098,6 +1156,8 @@ export async function GET(
     }
 
     const normalizedVerification = normalizeSkillVerificationRecord(verification);
+    const isCanonicalSkillRequest =
+      normalizedVerification.source_request_table === 'verification_records';
 
     if (
       normalizedVerification.expires_at &&
@@ -1172,6 +1232,9 @@ export async function GET(
         requester_email: requesterIdentity.requesterEmail,
         requester_avatar: requesterProfile?.avatar_url || null,
         verifier_source: normalizedVerification.verifier_source,
+        verifier_relationship: normalizedVerification.verifier_relationship,
+        request_kind: normalizedVerification.request_kind,
+        attestation_request: normalizedVerification.attestation_request,
         message: normalizedVerification.message,
         status: normalizedVerification.status,
         requires_authenticated_verifier:
@@ -1558,7 +1621,11 @@ export async function POST(
         requester_profile_id,
         verifier_email,
         verifier_source,
+        verifier_relationship,
         verifier_profile_id,
+        request_kind,
+        attestation_request,
+        attestation_response,
         requires_authenticated_verifier,
         integrity_status,
         integrity_reason,
@@ -1586,7 +1653,11 @@ export async function POST(
               requester_profile_id,
               verifier_email,
               verifier_source,
+              verifier_relationship,
               verifier_profile_id,
+              request_kind,
+              attestation_request,
+              attestation_response,
               requires_authenticated_verifier,
               integrity_status,
               integrity_reason,
@@ -1642,6 +1713,8 @@ export async function POST(
     }
 
     const normalizedVerification = normalizeSkillVerificationRecord(verification);
+    const isCanonicalSkillRequest =
+      normalizedVerification.source_request_table === 'verification_records';
 
     const normalizedSkillVerifierEmail = normalizeEmail(normalizedVerification.verifier_email);
     if (normalizedVerification.requires_authenticated_verifier) {
@@ -1674,15 +1747,54 @@ export async function POST(
       normalizedVerification.expires_at &&
       new Date(normalizedVerification.expires_at) < new Date()
     ) {
-      await supabase
-        .from('skill_verification_requests')
-        .update({
+      if (isCanonicalSkillRequest) {
+        await updateCanonicalSkillVerificationRequest({
+          requestId: normalizedVerification.id,
           status: 'expired',
-          expired_at: new Date().toISOString(),
-        })
-        .eq('id', normalizedVerification.id);
+          respondedAt: new Date().toISOString(),
+        });
+      } else {
+        await supabase
+          .from('skill_verification_requests')
+          .update({
+            status: 'expired',
+            expired_at: new Date().toISOString(),
+          })
+          .eq('id', normalizedVerification.id);
+      }
 
       return NextResponse.json({ error: 'This verification request has expired' }, { status: 400 });
+    }
+
+    const requestKind = normalizedVerification.request_kind;
+    const attestationRequest =
+      requestKind === 'human_observed_attestation' &&
+      normalizedVerification.attestation_request &&
+      typeof normalizedVerification.attestation_request === 'object'
+        ? (normalizedVerification.attestation_request as HumanObservedAttestationRequestPayload)
+        : null;
+
+    let attestationResponse: Record<string, unknown> | null = null;
+    if (requestKind === 'human_observed_attestation' && validated.action === 'accept') {
+      if (!attestationRequest) {
+        return NextResponse.json(
+          { error: 'This attestation request is missing its bounded skill scope.' },
+          { status: 400 }
+        );
+      }
+
+      const parsedAttestation = parseHumanObservedAttestationResponse(
+        validated.attestation,
+        attestationRequest
+      );
+      if (!parsedAttestation.success) {
+        return NextResponse.json(
+          { error: 'Validation failed', details: parsedAttestation.error.issues },
+          { status: 400 }
+        );
+      }
+
+      attestationResponse = parsedAttestation.data;
     }
 
     const redeemedSkillToken = await redeemCapabilityToken(token, {
@@ -1742,6 +1854,7 @@ export async function POST(
       status: newStatus,
       responded_at: respondedAt,
       response_message: validated.message || null,
+      attestation_response: attestationResponse,
       responder_ip_hash: responderFingerprints.ipHash,
       responder_user_agent_hash: responderFingerprints.userAgentHash,
       response_auth_method: getResponseAuthMethod(authIdentity),
@@ -1758,34 +1871,71 @@ export async function POST(
           : null,
     };
 
-    let { error: updateError } = await skillDataClient
-      .from('skill_verification_requests')
-      .update(fullUpdatePayload)
-      .eq('id', normalizedVerification.id);
-
-    if (updateError && isAnyMissingColumnError(updateError)) {
-      console.warn(
-        'Skill verification update falling back to legacy-compatible payload due to missing columns:',
-        updateError
-      );
-
-      const legacyUpdatePayload = {
-        status: newStatus,
-        responded_at: respondedAt,
-        response_message: validated.message || null,
-        verifier_profile_id:
+    if (isCanonicalSkillRequest) {
+      const updatedCanonicalRecord = await updateCanonicalSkillVerificationRequest({
+        requestId: normalizedVerification.id,
+        status: validated.action === 'accept' ? 'accepted' : 'declined',
+        respondedAt,
+        responseMessage: validated.message || null,
+        attestationResponse,
+        verifierProfileId:
           authIdentity.profileId || normalizedVerification.verifier_profile_id || null,
-      };
-      const legacyUpdateResult = await skillDataClient
-        .from('skill_verification_requests')
-        .update(legacyUpdatePayload)
-        .eq('id', normalizedVerification.id);
-      updateError = legacyUpdateResult.error;
-    }
+        verifierPrincipalType: authIdentity.isAuthenticated ? 'user_account' : 'external_email',
+        verifierEmail: authIdentity.email || normalizedSkillVerifierEmail || null,
+        integrityStatus: mergedIntegrity.integrityStatus === 'clear' ? 'clear' : 'warning',
+        integrityReason: mergedIntegrity.integrityReason,
+        riskSignals: mergedIntegrity.riskSignals,
+        integrityMeta: skillIntegrityMeta,
+        integrityFlaggedAt:
+          mergedIntegrity.integrityStatus === 'flagged'
+            ? normalizedVerification.integrity_flagged_at || mergedIntegrity.integrityFlaggedAt
+            : null,
+        responseAuthMethod: getResponseAuthMethod(authIdentity),
+        responseActorEmail: authIdentity.email,
+      }).catch((error) => {
+        console.error('Error updating canonical skill verification:', error);
+        return null;
+      });
 
-    if (updateError) {
-      console.error('Error updating verification:', updateError);
-      return NextResponse.json({ error: 'Failed to update verification status' }, { status: 500 });
+      if (!updatedCanonicalRecord) {
+        return NextResponse.json(
+          { error: 'Failed to update verification status' },
+          { status: 500 }
+        );
+      }
+    } else {
+      let { error: updateError } = await skillDataClient
+        .from('skill_verification_requests')
+        .update(fullUpdatePayload)
+        .eq('id', normalizedVerification.id);
+
+      if (updateError && isAnyMissingColumnError(updateError)) {
+        console.warn(
+          'Skill verification update falling back to legacy-compatible payload due to missing columns:',
+          updateError
+        );
+
+        const legacyUpdatePayload = {
+          status: newStatus,
+          responded_at: respondedAt,
+          response_message: validated.message || null,
+          verifier_profile_id:
+            authIdentity.profileId || normalizedVerification.verifier_profile_id || null,
+        };
+        const legacyUpdateResult = await skillDataClient
+          .from('skill_verification_requests')
+          .update(legacyUpdatePayload)
+          .eq('id', normalizedVerification.id);
+        updateError = legacyUpdateResult.error;
+      }
+
+      if (updateError) {
+        console.error('Error updating verification:', updateError);
+        return NextResponse.json(
+          { error: 'Failed to update verification status' },
+          { status: 500 }
+        );
+      }
     }
 
     if (validated.action === 'accept' && mergedIntegrity.integrityStatus === 'clear') {
@@ -1796,7 +1946,13 @@ export async function POST(
         .single();
 
       const currentStrength = parseFloat(skill?.evidence_strength || '0');
-      const newStrength = Math.min(currentStrength + 0.2, 1.0);
+      const newStrength = applySkillVerificationTrustLift({
+        currentStrength,
+        requestKind,
+        integrityStatus: mergedIntegrity.integrityStatus,
+        status: newStatus,
+        attestationResponse,
+      });
 
       await skillDataClient
         .from('skills')
@@ -1805,6 +1961,61 @@ export async function POST(
           updated_at: new Date().toISOString(),
         })
         .eq('id', normalizedVerification.skill_id);
+    }
+
+    let canonicalRecordId: string | null = null;
+    if (CANONICAL_PROOFS_WRITE_ENABLED && !isCanonicalSkillRequest) {
+      try {
+        const canonicalRecord = await upsertCanonicalVerificationRecord({
+          ownerType: 'individual_profile',
+          ownerId: normalizedVerification.requester_profile_id,
+          subjectType: 'skill',
+          subjectId: normalizedVerification.skill_id,
+          verificationKind:
+            requestKind === 'human_observed_attestation'
+              ? normalizedVerification.verifier_source === 'manager'
+                ? 'skill_attestation_manager'
+                : 'skill_attestation_peer'
+              : normalizedVerification.verifier_source === 'manager'
+                ? 'skill_attestation_manager'
+                : normalizedVerification.verifier_source === 'peer'
+                  ? 'skill_attestation_peer'
+                  : 'platform_manual_review',
+          status: validated.action === 'accept' ? 'verified' : 'declined',
+          verifierPrincipalType: authIdentity.isAuthenticated ? 'user_account' : 'external_email',
+          verifierProfileId:
+            authIdentity.profileId || normalizedVerification.verifier_profile_id || null,
+          verifierEmailHash:
+            authIdentity.email || normalizedSkillVerifierEmail
+              ? hashOpaqueToken(authIdentity.email || normalizedSkillVerifierEmail || '')
+              : null,
+          verifierDomainSnapshot:
+            typeof normalizedSkillVerifierEmail === 'string' &&
+            normalizedSkillVerifierEmail.includes('@')
+              ? normalizedSkillVerifierEmail.split('@')[1] || null
+              : null,
+          integrityStatus: mergedIntegrity.integrityStatus === 'clear' ? 'clear' : 'warning',
+          integrityReason: mergedIntegrity.integrityReason,
+          riskSignals: mergedIntegrity.riskSignals,
+          sourceRequestTable: 'skill_verification_requests',
+          sourceRequestId: normalizedVerification.id,
+          sourceResponseTable: 'skill_verification_requests',
+          sourceResponseId: normalizedVerification.id,
+          verifiedAt: validated.action === 'accept' ? respondedAt : null,
+          metadata: {
+            responseMessage: validated.message || null,
+            responseAuthMethod: getResponseAuthMethod(authIdentity),
+            requestKind,
+            verifierRelationship: normalizedVerification.verifier_relationship,
+            attestation: attestationResponse,
+            evidenceClass:
+              requestKind === 'human_observed_attestation' ? 'human_observed' : 'generic',
+          },
+        });
+        canonicalRecordId = canonicalRecord.id;
+      } catch (canonicalError) {
+        console.error('Failed to upsert canonical skill verification record:', canonicalError);
+      }
     }
 
     try {
@@ -1841,14 +2052,24 @@ export async function POST(
           skillName = skill.custom_skill_name;
         }
 
-        const actionText = validated.action === 'accept' ? 'verified' : 'declined to verify';
+        const actionText =
+          validated.action === 'accept'
+            ? requestKind === 'human_observed_attestation'
+              ? 'recorded an observed-in-practice attestation for'
+              : 'verified'
+            : requestKind === 'human_observed_attestation'
+              ? 'declined to record an attestation for'
+              : 'declined to verify';
         const actionEmoji = validated.action === 'accept' ? '✅' : '❌';
-        const relationshipText = normalizedVerification.verifier_source || 'your contact';
+        const relationshipText =
+          normalizedVerification.verifier_relationship ||
+          normalizedVerification.verifier_source ||
+          'your contact';
 
         const baseUrl = normalizeBaseUrl(
           process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL
         );
-        const expertiseUrl = `${baseUrl}/app/i/expertise`;
+        const expertiseUrl = `${baseUrl}/app/i/verifications`;
 
         await sendEmail({
           to: requesterProfile.email,
@@ -1902,9 +2123,12 @@ export async function POST(
           normalizedVerification.requires_authenticated_verifier || false,
         response_auth_method: getResponseAuthMethod(authIdentity),
         response_actor_email: authIdentity.email,
+        request_kind: requestKind,
+        verifier_relationship: normalizedVerification.verifier_relationship,
         integrity_status: mergedIntegrity.integrityStatus,
         integrity_reason: mergedIntegrity.integrityReason,
         same_device_signal: sameDeviceSignal,
+        canonical_record_id: canonicalRecordId,
       },
     });
 
@@ -1915,9 +2139,12 @@ export async function POST(
       integrity_status: mergedIntegrity.integrityStatus,
       integrity_reason:
         mergedIntegrity.integrityStatus === 'flagged' ? mergedIntegrity.integrityReason : null,
+      canonical_record_id: canonicalRecordId,
       message:
         validated.action === 'accept'
-          ? 'Thank you for verifying this skill!'
+          ? requestKind === 'human_observed_attestation'
+            ? 'Thank you for recording this observed-in-practice attestation.'
+            : 'Thank you for verifying this skill!'
           : 'Your response has been recorded.',
     });
   } catch (error) {
@@ -1957,6 +2184,10 @@ function formatVerificationResponse(verification: any) {
     skill_name: skillName,
     skill_code: skill?.skill_code || null,
     verifier_source: verification.verifier_source,
+    verifier_relationship: verification.verifier_relationship || null,
+    request_kind: verification.request_kind || 'generic_verification',
+    attestation_request: verification.attestation_request || null,
+    attestation_response: verification.attestation_response || null,
     message: verification.message,
     status: verification.status,
     requires_authenticated_verifier: verification.requires_authenticated_verifier || false,

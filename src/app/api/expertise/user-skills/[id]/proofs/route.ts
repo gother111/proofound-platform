@@ -3,13 +3,12 @@ import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 import { emitSkillProofAddedAsync } from '@/lib/analytics/events';
 import { MAX_PROOFS_PER_SKILL } from '@/lib/proofs/constants';
-import {
-  CANONICAL_PROOFS_WRITE_ENABLED,
-  upsertCanonicalProofArtifactFromSkillProof,
-} from '@/lib/canonical/repository';
+import { upsertCanonicalSkillProof } from '@/lib/canonical/repository';
 import { attachUploadedFile } from '@/lib/uploads/lifecycle';
 import { revalidatePublicPortfolioByProfileId } from '@/lib/portfolio/public-invalidation';
 import { listCanonicalSkillProofRowsForOwnerSkill } from '@/lib/proofs/canonical-pack';
+
+type ApiAuthContext = NonNullable<Awaited<ReturnType<typeof requireApiAuthContext>>>;
 
 function deriveProofTitleFromUrl(rawUrl: string): string {
   try {
@@ -45,6 +44,10 @@ const CreateProofSchema = z
     description: z.string().optional(),
     url: z.string().url().optional().or(z.literal('')),
     uploadedFileId: z.string().uuid().optional(),
+    primaryAnchor: z.object({
+      type: z.enum(['experience', 'education', 'volunteering']),
+      id: z.string().uuid(),
+    }),
     issuedDate: z.string().optional(),
     expiresDate: z.string().optional(),
     metadata: z.record(z.any()).optional(),
@@ -75,6 +78,26 @@ const CreateProofSchema = z
     }
   });
 
+const ANCHOR_TABLES = {
+  experience: 'experiences',
+  education: 'education',
+  volunteering: 'volunteering',
+} as const;
+
+async function validateOwnedPrimaryAnchor(
+  supabase: ApiAuthContext['supabase'],
+  userId: string,
+  anchor: z.infer<typeof CreateProofSchema>['primaryAnchor']
+) {
+  const { data, error } = await supabase
+    .from(ANCHOR_TABLES[anchor.type])
+    .select('id, user_id')
+    .eq('id', anchor.id)
+    .single();
+
+  return !error && Boolean(data) && data.user_id === userId;
+}
+
 /**
  * POST /api/expertise/user-skills/[id]/proofs
  *
@@ -92,6 +115,22 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     // Validate input
     const validated = CreateProofSchema.parse(body);
+    const hasValidPrimaryAnchor = await validateOwnedPrimaryAnchor(
+      supabase as any,
+      user.id,
+      validated.primaryAnchor
+    );
+
+    if (!hasValidPrimaryAnchor) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          message: 'A valid primary anchor context is required for every new proof.',
+        },
+        { status: 400 }
+      );
+    }
+
     const attachedUpload = validated.uploadedFileId
       ? await attachUploadedFile(validated.uploadedFileId, user.id, 'skill_proof', skillId)
       : null;
@@ -140,60 +179,36 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       );
     }
 
-    // Create proof
-    const { data: proof, error: proofError } = await supabase
-      .from('skill_proofs')
-      .insert({
-        skill_id: skillId,
-        profile_id: user.id,
-        proof_type: validated.proofType,
+    let canonicalProof;
+    try {
+      canonicalProof = await upsertCanonicalSkillProof({
+        skillId,
+        profileId: user.id,
+        primaryAnchor: validated.primaryAnchor,
+        proofType: validated.proofType,
         title: proofTitle,
         description: validated.description?.trim() || null,
         url: validated.url || null,
-        file_path: resolvedFilePath,
-        issued_date: validated.issuedDate || null,
-        expires_date: validated.expiresDate || null,
+        filePath: resolvedFilePath,
+        uploadedFileId: validated.uploadedFileId ?? null,
+        issuedDate: validated.issuedDate || null,
+        expiresDate: validated.expiresDate || null,
         metadata: {
-          visibility: 'match-only', // default privacy guardrail
+          visibility: 'match-only',
           uploadedFileId: validated.uploadedFileId ?? null,
+          primaryAnchorType: validated.primaryAnchor.type,
+          primaryAnchorId: validated.primaryAnchor.id,
           ...(validated.metadata || {}),
         },
-      })
-      .select()
-      .single();
-
-    if (proofError) {
-      console.error('Error creating proof:', proofError);
-      return NextResponse.json(
-        { error: 'Failed to create proof', message: proofError.message },
-        { status: 500 }
-      );
+        importedFrom: validated.uploadedFileId ? 'skill-proof-upload' : 'skill-proof-form',
+      });
+    } catch (proofError) {
+      console.error('Error creating canonical proof:', proofError);
+      return NextResponse.json({ error: 'Failed to create proof' }, { status: 500 });
     }
 
-    const canonicalProof =
-      CANONICAL_PROOFS_WRITE_ENABLED && proof
-        ? await upsertCanonicalProofArtifactFromSkillProof({
-            id: proof.id,
-            skillId,
-            profileId: user.id,
-            proofType: validated.proofType,
-            title: proof.title,
-            description: proof.description,
-            url: proof.url,
-            filePath: proof.file_path,
-            issuedDate: proof.issued_date,
-            expiresDate: proof.expires_date,
-            metadata:
-              proof.metadata && typeof proof.metadata === 'object'
-                ? (proof.metadata as Record<string, unknown>)
-                : {},
-            createdAt: proof.created_at,
-            updatedAt: proof.updated_at,
-          })
-        : null;
-
     // Emit analytics event for proof addition (PRD F3)
-    emitSkillProofAddedAsync(user.id, skillId, proof.id, {
+    emitSkillProofAddedAsync(user.id, skillId, canonicalProof.artifact.id, {
       skill_name: proofTitle,
       proof_type: validated.proofType,
     });
@@ -211,8 +226,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json(
       {
         proof: {
-          ...proof,
-          canonicalArtifactId: canonicalProof?.id ?? null,
+          ...canonicalProof.legacyProof,
+          canonicalArtifactId: canonicalProof.artifact.id,
+          canonicalPackId: canonicalProof.pack.id,
+          canonicalPackTitle: canonicalProof.pack.title,
         },
       },
       { status: 201 }

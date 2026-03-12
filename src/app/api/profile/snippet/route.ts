@@ -21,7 +21,6 @@ import {
 import {
   CANONICAL_PROOFS_WRITE_ENABLED,
   deleteCanonicalProofPackForSnippet,
-  upsertCanonicalProofPackForSnippet,
 } from '@/lib/canonical/repository';
 import { inArray } from 'drizzle-orm';
 import crypto from 'crypto';
@@ -152,21 +151,6 @@ export async function POST(req: NextRequest) {
 
     const [snippet] = getRows<any>(result as any);
 
-    const canonicalPack =
-      CANONICAL_PROOFS_WRITE_ENABLED && snippet
-        ? await upsertCanonicalProofPackForSnippet({
-            snippetId: snippet.id,
-            userId: user.id,
-            shareToken: issued.rawToken,
-            profileType,
-            orgId,
-            fields,
-            theme: (theme || 'auto') as 'light' | 'dark' | 'auto',
-            format: (format || 'card') as 'card' | 'mini' | 'full',
-            expiresAt: snippet.expires_at,
-          })
-        : null;
-
     log.info('profile.snippet.created', {
       userId: user.id,
       snippetId: snippet.id,
@@ -186,7 +170,7 @@ export async function POST(req: NextRequest) {
         format: snippet.format,
         profileType: snippet.profile_type,
         orgId: snippet.org_id,
-        canonicalPackId: canonicalPack?.id ?? null,
+        canonicalPackId: null,
         expiresAt: snippet.expires_at,
         createdAt: snippet.created_at,
       },

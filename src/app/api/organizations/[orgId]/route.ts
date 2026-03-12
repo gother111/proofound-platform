@@ -11,47 +11,11 @@ const TRUST_PROFILE_KEYS = new Set([
   'displayName',
   'tagline',
   'mission',
+  'workingContext',
+  'hiringProcessSummary',
   'website',
-  'values',
   'principalContext',
 ]);
-
-function parseValuesPayload(values: unknown): { value?: string[] | null; error?: string } {
-  if (values === undefined) {
-    return {};
-  }
-
-  if (values === null) {
-    return { value: null };
-  }
-
-  if (!Array.isArray(values)) {
-    return { error: 'Values must be an array of non-empty strings or null' };
-  }
-
-  if (values.length > 5) {
-    return { error: 'Maximum of 5 values allowed' };
-  }
-
-  const normalized: string[] = [];
-  const seen = new Set<string>();
-
-  for (const value of values) {
-    if (typeof value !== 'string' || !value.trim()) {
-      return { error: 'Values must contain non-empty strings only' };
-    }
-
-    const trimmed = value.trim();
-    if (seen.has(trimmed)) {
-      continue;
-    }
-
-    seen.add(trimmed);
-    normalized.push(trimmed);
-  }
-
-  return { value: normalized };
-}
 
 export async function GET(
   _request: NextRequest,
@@ -121,7 +85,7 @@ export async function PUT(
       return NextResponse.json(
         {
           error:
-            'Only launch trust profile fields can be updated from this endpoint: displayName, tagline, mission, website, and values.',
+            'Only launch trust profile fields can be updated from this endpoint: displayName, tagline, mission, workingContext, hiringProcessSummary, and website.',
           details: { unsupportedFields },
         },
         { status: 400 }
@@ -138,15 +102,11 @@ export async function PUT(
     });
 
     const membershipRole = normalizeAuthorizedOrgRole(membership?.role);
-    if (!membershipRole || !['org_owner', 'org_manager'].includes(membershipRole)) {
+    if (membershipRole !== 'org_owner') {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
-    const { displayName, tagline, mission, website, values } = body;
-    const parsedValues = parseValuesPayload(values);
-    if (parsedValues.error) {
-      return NextResponse.json({ error: parsedValues.error }, { status: 400 });
-    }
+    const { displayName, tagline, mission, workingContext, hiringProcessSummary, website } = body;
 
     if (displayName !== undefined && (typeof displayName !== 'string' || !displayName.trim())) {
       return NextResponse.json({ error: 'Organization name cannot be empty' }, { status: 400 });
@@ -158,6 +118,28 @@ export async function PUT(
 
     if (mission !== undefined && mission !== null && typeof mission !== 'string') {
       return NextResponse.json({ error: 'Mission must be a string or null' }, { status: 400 });
+    }
+
+    if (
+      workingContext !== undefined &&
+      workingContext !== null &&
+      typeof workingContext !== 'string'
+    ) {
+      return NextResponse.json(
+        { error: 'Working context must be a string or null' },
+        { status: 400 }
+      );
+    }
+
+    if (
+      hiringProcessSummary !== undefined &&
+      hiringProcessSummary !== null &&
+      typeof hiringProcessSummary !== 'string'
+    ) {
+      return NextResponse.json(
+        { error: 'Hiring process summary must be a string or null' },
+        { status: 400 }
+      );
     }
 
     if (website !== undefined) {
@@ -183,11 +165,14 @@ export async function PUT(
     if (mission !== undefined) {
       updateData.mission = mission?.trim() || null;
     }
+    if (workingContext !== undefined) {
+      updateData.workingContext = workingContext?.trim() || null;
+    }
+    if (hiringProcessSummary !== undefined) {
+      updateData.hiringProcessSummary = hiringProcessSummary?.trim() || null;
+    }
     if (website !== undefined) {
       updateData.website = normalizeOrganizationWebsite(website).value;
-    }
-    if (values !== undefined) {
-      updateData.values = parsedValues.value ?? null;
     }
 
     const [updatedOrg] = await db

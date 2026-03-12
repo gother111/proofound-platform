@@ -1,7 +1,6 @@
 import { requireApiAuthContext } from '@/lib/auth';
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
-import { randomUUID } from 'crypto';
 import { sendEmail } from '@/lib/email/sender';
 import { resolveSiteUrlFromHeaders } from '@/lib/env';
 import {
@@ -11,16 +10,41 @@ import {
   writeVerificationAuditLog,
 } from '@/lib/verification/integrity';
 import {
-  CAPABILITY_BINDINGS,
-  CAPABILITY_TOKEN_CLASSES,
-  issueCapabilityToken,
-} from '@/lib/security/capability-tokens';
+  CUSTOM_VERIFICATION_SELECTABLE_RELATIONSHIPS,
+  mapCustomRelationshipToSkillVerifierSource,
+  relationshipLabel,
+  type CustomVerificationRelationship,
+  type SelectableCustomVerificationRelationship,
+} from '@/lib/verification/custom-verification';
+import { deriveAttestationRequestMode } from '@/lib/verification/human-attestations';
+import {
+  createCanonicalSkillVerificationRequest,
+  findExistingCanonicalSkillVerificationRequest,
+  listCanonicalSkillVerificationRequestsForOwner,
+  mapCanonicalSkillVerificationRequestRecord,
+  updateCanonicalSkillVerificationRequest,
+} from '@/lib/verification/canonical-requests';
 
 const CreateVerificationRequestSchema = z.object({
-  verifierSource: z.enum(['peer', 'manager', 'external']),
+  verifierSource: z.enum(['peer', 'manager', 'external']).optional(),
+  relationship: z.enum(CUSTOM_VERIFICATION_SELECTABLE_RELATIONSHIPS).optional(),
   verifierEmail: z.string().trim().email('Valid email is required'),
   message: z.string().optional(),
 });
+
+function fallbackRelationshipForSource(
+  verifierSource: 'peer' | 'manager' | 'external'
+): CustomVerificationRelationship {
+  switch (verifierSource) {
+    case 'manager':
+      return 'manager';
+    case 'external':
+      return 'external';
+    case 'peer':
+    default:
+      return 'peer';
+  }
+}
 
 function isUniqueViolationError(error: unknown): boolean {
   if (!error || typeof error !== 'object') {
@@ -75,6 +99,22 @@ async function findExistingActiveVerificationRequest(params: {
   skillId: string;
   verifierEmail: string;
 }): Promise<ExistingActiveSkillVerificationRequest | null> {
+  const canonicalRow = await findExistingCanonicalSkillVerificationRequest({
+    ownerId: params.requesterProfileId,
+    skillId: params.skillId,
+    verifierEmail: params.verifierEmail,
+  });
+
+  if (canonicalRow) {
+    const mapped = mapCanonicalSkillVerificationRequestRecord(canonicalRow);
+    return {
+      id: mapped.id,
+      status: mapped.status === 'accepted' ? 'accepted' : 'pending',
+      verifier_email: mapped.verifier_email,
+      created_at: mapped.created_at,
+    };
+  }
+
   const { data, error } = await params.supabase
     .from('skill_verification_requests')
     .select('id, status, verifier_email, created_at')
@@ -125,6 +165,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     // Validate input
     const validated = CreateVerificationRequestSchema.parse(body);
+    const verifierRelationship =
+      validated.relationship ||
+      (validated.verifierSource
+        ? fallbackRelationshipForSource(validated.verifierSource)
+        : ('peer' as SelectableCustomVerificationRelationship));
+    const verifierSource = validated.relationship
+      ? mapCustomRelationshipToSkillVerifierSource(validated.relationship)
+      : validated.verifierSource || 'peer';
     const normalizedVerifierEmail = normalizeEmail(validated.verifierEmail);
     if (!normalizedVerifierEmail) {
       return NextResponse.json({ error: 'Valid email is required' }, { status: 400 });
@@ -151,6 +199,24 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'Skill not found' }, { status: 404 });
     }
 
+    const skillName =
+      (skill.taxonomy as any)?.name_i18n?.en || parseCustomSkillName(skill.skill_id) || 'a skill';
+    const requestMode = deriveAttestationRequestMode({
+      skills: [
+        {
+          id: skillId,
+          label: skillName,
+          skillCode: skill.skill_code,
+          skillId: skill.skill_id,
+        },
+      ],
+      totalArtifacts: 1,
+    });
+
+    if ('error' in requestMode && requestMode.error) {
+      return NextResponse.json({ error: requestMode.error }, { status: 400 });
+    }
+
     // Get requester profile info for the email
     const { data: requesterProfile } = await supabase
       .from('profiles')
@@ -165,7 +231,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       requesterProfileId: user.id,
       requesterEmail,
       verifierEmail: normalizedVerifierEmail,
-      verifierSource: validated.verifierSource,
+      verifierSource,
       headers: request.headers,
     });
 
@@ -178,7 +244,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         meta: {
           reason: VERIFICATION_INTEGRITY_REASONS.SELF_VERIFICATION_BLOCKED,
           verifier_email: normalizedVerifierEmail,
-          verifier_source: validated.verifierSource,
+          verifier_source: verifierSource,
+          verifier_relationship: verifierRelationship,
           risk_signals: integrityAssessment.riskSignals,
         },
       });
@@ -203,98 +270,55 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return toDuplicateVerificationResponse(existingRequest);
     }
 
-    // Generate secure verification token for magic link
-    const verificationRequestId = randomUUID();
-    // Calculate expiration (7 days from now per PRD F7)
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
-    const issued = await issueCapabilityToken({
-      tokenClass: CAPABILITY_TOKEN_CLASSES.SKILL_VERIFICATION_RESPONSE,
-      sourceTable: 'skill_verification_requests',
-      sourceId: verificationRequestId,
-      actionScope: 'skill_verification.respond',
-      subjectType: 'skill_verification_request',
-      subjectId: verificationRequestId,
-      actorBinding: integrityAssessment.policy.requiresAuthenticatedVerifier
-        ? CAPABILITY_BINDINGS.EMAIL_THEN_PROFILE_LOCK
-        : CAPABILITY_BINDINGS.EMAIL_HASH,
-      actorEmail: normalizedVerifierEmail,
-      actorProfileId: integrityAssessment.verifierProfileId,
-      expiresAt,
-      singleUse: true,
-      maxUses: 1,
-      scopeKey: `skill_verification:${skillId}:${normalizedVerifierEmail}`,
-      revokePriorActiveTokensForScope: true,
-      metadata: {
-        verifierSource: validated.verifierSource,
+    const requesterName =
+      requesterProfile?.display_name || (user as any).email?.split('@')[0] || 'Someone';
+
+    let linkToken = '';
+    let verificationRequest: ReturnType<typeof mapCanonicalSkillVerificationRequestRecord>;
+
+    try {
+      const createdRequest = await createCanonicalSkillVerificationRequest({
+        ownerId: user.id,
         skillId,
-      },
-    });
-
-    const verificationInsert = {
-      id: verificationRequestId,
-      skill_id: skillId,
-      requester_profile_id: user.id,
-      requester_email_snapshot: integrityAssessment.normalizedRequesterEmail,
-      requester_domain_snapshot: integrityAssessment.requesterDomain,
-      verifier_email: normalizedVerifierEmail,
-      verifier_domain_snapshot: integrityAssessment.verifierDomain,
-      verifier_profile_id: integrityAssessment.verifierProfileId,
-      verifier_source: validated.verifierSource,
-      message: validated.message || null,
-      risk_signals: integrityAssessment.riskSignals,
-      requires_authenticated_verifier: integrityAssessment.policy.requiresAuthenticatedVerifier,
-      integrity_status: integrityAssessment.policy.integrityStatus,
-      integrity_reason: integrityAssessment.policy.integrityReason,
-      integrity_meta: {
-        policy: {
-          requires_authenticated_verifier: integrityAssessment.policy.requiresAuthenticatedVerifier,
-          integrity_status: integrityAssessment.policy.integrityStatus,
-          integrity_reason: integrityAssessment.policy.integrityReason,
+        skillName,
+        requesterName,
+        requesterEmailSnapshot: requesterEmail,
+        verifierEmail: normalizedVerifierEmail,
+        verifierSource,
+        verifierRelationship,
+        verifierProfileId: integrityAssessment.verifierProfileId,
+        requestKind: requestMode.requestKind,
+        attestationRequest: requestMode.requestPayload,
+        message: validated.message || null,
+        integrityStatus: integrityAssessment.policy.integrityStatus as any,
+        integrityReason: integrityAssessment.policy.integrityReason,
+        riskSignals: {
+          ...integrityAssessment.riskSignals,
+          requesterEmailSnapshot: integrityAssessment.normalizedRequesterEmail,
+          requesterDomainSnapshot: integrityAssessment.requesterDomain,
+          verifierDomainSnapshot: integrityAssessment.verifierDomain,
+          requesterIpHash: integrityAssessment.requesterFingerprints.ipHash,
+          requesterUserAgentHash: integrityAssessment.requesterFingerprints.userAgentHash,
         },
-      },
-      requester_ip_hash: integrityAssessment.requesterFingerprints.ipHash,
-      requester_user_agent_hash: integrityAssessment.requesterFingerprints.userAgentHash,
-      capability_token_id: issued.token.id,
-      status: 'pending',
-      expires_at: expiresAt.toISOString(),
-    };
+        requiresAuthenticatedVerifier: integrityAssessment.policy.requiresAuthenticatedVerifier,
+      });
 
-    const { error: createWithTokenError } = await supabase
-      .from('skill_verification_requests')
-      .insert(verificationInsert);
-
-    let linkToken = issued.rawToken;
-    const verificationRequest = {
-      ...verificationInsert,
-      created_at: new Date().toISOString(),
-      responded_at: null,
-      response_message: null,
-    };
-
-    if (createWithTokenError) {
-      if (isDuplicateSkillVerificationConstraintError(createWithTokenError)) {
-        const existingDuringRace = await findExistingActiveVerificationRequest({
-          supabase,
-          requesterProfileId: user.id,
-          skillId,
-          verifierEmail: normalizedVerifierEmail,
-        });
+      linkToken = createdRequest.rawToken;
+      verificationRequest = mapCanonicalSkillVerificationRequestRecord(createdRequest.record);
+    } catch (createRequestError) {
+      console.error('Error creating canonical verification request:', createRequestError);
+      const existingDuringRace = await findExistingActiveVerificationRequest({
+        supabase,
+        requesterProfileId: user.id,
+        skillId,
+        verifierEmail: normalizedVerifierEmail,
+      });
+      if (existingDuringRace) {
         return toDuplicateVerificationResponse(existingDuringRace);
       }
 
-      console.error('Error creating verification request:', {
-        code: createWithTokenError?.code,
-        message: createWithTokenError?.message,
-        details: createWithTokenError?.details,
-        hint: createWithTokenError?.hint,
-      });
       return NextResponse.json({ error: 'Failed to create verification request' }, { status: 500 });
     }
-
-    // Get skill name for email
-    const skillName =
-      (skill.taxonomy as any)?.name_i18n?.en || parseCustomSkillName(skill.skill_id) || 'a skill';
 
     // Build magic link URL
     const baseUrl =
@@ -305,17 +329,20 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       'http://localhost:3000';
     const verifyUrl = `${baseUrl}/verify/${linkToken}`;
 
-    // Get requester name
-    const requesterName =
-      requesterProfile?.display_name || (user as any).email?.split('@')[0] || 'Someone';
-
     // Send verification email to verifier
-    const relationshipLabel =
-      validated.verifierSource === 'manager'
-        ? 'a manager'
-        : validated.verifierSource === 'external'
-          ? 'a client/external contact'
-          : 'a peer/colleague';
+    const relationshipDescription = relationshipLabel(verifierRelationship);
+    const requestVerb =
+      requestMode.requestKind === 'human_observed_attestation'
+        ? 'their observed-in-practice skill attestation for'
+        : 'your verification of their expertise in';
+    const confirmationCopy =
+      requestMode.requestKind === 'human_observed_attestation'
+        ? `By responding, you are describing how ${requesterName} demonstrated this skill in a real work, project, or learning context that you directly observed.`
+        : `By verifying, you're confirming that ${requesterName} has demonstrated this skill based on your professional interaction with them.`;
+    const reviewCta =
+      requestMode.requestKind === 'human_observed_attestation'
+        ? 'Review & Record Observation'
+        : 'Review & Verify Skill';
 
     const emailResult = await sendEmail({
       to: normalizedVerifierEmail,
@@ -338,7 +365,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
             </p>
             
             <p style="font-size: 16px; margin-bottom: 20px;">
-              <strong>${requesterName}</strong> has listed you as ${relationshipLabel} and is requesting your verification of their expertise in:
+              <strong>${requesterName}</strong> has listed you as ${relationshipDescription} and is requesting ${requestVerb}:
             </p>
             
             <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #1C4D3A; margin: 20px 0;">
@@ -359,13 +386,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
             }
             
             <p style="font-size: 16px; margin-bottom: 25px;">
-              By verifying, you're confirming that ${requesterName} has demonstrated this skill based on your professional interaction with them.
+              ${confirmationCopy}
             </p>
             
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${verifyUrl}" 
+                <a href="${verifyUrl}" 
                  style="display: inline-block; background: #1C4D3A; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                Review & Verify Skill
+                ${reviewCta}
               </a>
             </div>
             
@@ -388,11 +415,11 @@ Skill Verification Request
 
 Hi there,
 
-${requesterName} has listed you as ${relationshipLabel} and is requesting your verification of their expertise in: ${skillName}
+${requesterName} has listed you as ${relationshipDescription} and is requesting ${requestVerb}: ${skillName}
 
 ${validated.message ? `Message from ${requesterName}: "${validated.message}"` : ''}
 
-By verifying, you're confirming that ${requesterName} has demonstrated this skill based on your professional interaction with them.
+${confirmationCopy}
 
 Click here to review and verify: ${verifyUrl}
 
@@ -408,6 +435,15 @@ This email was sent by Proofound on behalf of ${requesterName}.
       // Don't fail the request - the verification request is created, email is optional
     }
 
+    await updateCanonicalSkillVerificationRequest({
+      requestId: verificationRequest.id,
+      status: verificationRequest.status,
+      emailSent: emailResult.success,
+      emailError: emailResult.success ? null : emailResult.error || 'unknown_email_delivery_error',
+    }).catch((updateError) => {
+      console.error('Failed to persist canonical verification email delivery state:', updateError);
+    });
+
     await writeVerificationAuditLog({
       actorId: user.id,
       action: 'verification.request.created',
@@ -416,11 +452,13 @@ This email was sent by Proofound on behalf of ${requesterName}.
       meta: {
         skill_id: skillId,
         verifier_email: normalizedVerifierEmail,
-        verifier_source: validated.verifierSource,
-        integrity_status: verificationRequest.integrity_status || 'clear',
+        verifier_source: verifierSource,
+        verifier_relationship: verifierRelationship,
+        request_kind: requestMode.requestKind,
+        integrity_status: integrityAssessment.policy.integrityStatus || 'unknown',
         requires_authenticated_verifier:
-          verificationRequest.requires_authenticated_verifier || false,
-        risk_signals: verificationRequest.risk_signals || {},
+          integrityAssessment.policy.requiresAuthenticatedVerifier || false,
+        risk_signals: integrityAssessment.riskSignals || {},
       },
     });
 
@@ -430,7 +468,9 @@ This email was sent by Proofound on behalf of ${requesterName}.
       emitVerificationRequestedAsync(user.id, verificationRequest.id, {
         skill_id: skillId,
         skill_name: skillName,
-        verifier_source: validated.verifierSource,
+        verifier_source: verifierSource,
+        verifier_relationship: verifierRelationship,
+        request_kind: requestMode.requestKind,
       });
     } catch (analyticsError) {
       console.error('Failed to emit attestation_requested event:', analyticsError);
@@ -440,9 +480,9 @@ This email was sent by Proofound on behalf of ${requesterName}.
       {
         request: verificationRequest,
         email_sent: emailResult.success,
-        integrity_status: verificationRequest.integrity_status || 'clear',
+        integrity_status: integrityAssessment.policy.integrityStatus || 'unknown',
         requires_authenticated_verifier:
-          verificationRequest.requires_authenticated_verifier || false,
+          integrityAssessment.policy.requiresAuthenticatedVerifier || false,
       },
       { status: 201 }
     );
@@ -510,15 +550,25 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Failed to fetch verification requests' }, { status: 500 });
     }
 
+    const canonicalRequests = (
+      await listCanonicalSkillVerificationRequestsForOwner(user.id).catch(() => [])
+    )
+      .map(mapCanonicalSkillVerificationRequestRecord)
+      .filter((record) => record.skill_id === skillId);
+
+    const combinedRequests = [...canonicalRequests, ...((requests as any[]) || [])];
+
     // Determine overall verification status
-    const hasAccepted = requests?.some(
-      (r) => r.status === 'accepted' && r.integrity_status === 'clear'
+    const hasAccepted = combinedRequests.some(
+      (r: any) =>
+        (r.status === 'accepted' || r.status === 'verified') &&
+        (r.integrity_status === 'clear' || r.integrity_status === undefined)
     );
     const verification_status = hasAccepted ? 'verified' : 'pending';
 
     return NextResponse.json({
       verification_status,
-      requests: requests || [],
+      requests: combinedRequests,
     });
   } catch (error) {
     console.error('Verification GET error:', error);

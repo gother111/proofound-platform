@@ -10,6 +10,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { CheckCircle2, XCircle, Clock, Shield, Loader2, AlertCircle } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
+import {
+  HumanObservedAttestationFields,
+  buildHumanObservedAttestationPayload,
+  createDefaultHumanObservedAttestationForm,
+  type HumanObservedAttestationFormValue,
+} from '@/components/verification/HumanObservedAttestationFields';
 
 type VerificationStatus = 'pending' | 'accepted' | 'declined' | 'expired' | 'failed';
 
@@ -23,6 +29,12 @@ interface SkillVerificationData {
   requester_email: string;
   requester_avatar?: string;
   verifier_source: 'peer' | 'manager' | 'external';
+  verifier_relationship?: string | null;
+  request_kind?: 'generic_verification' | 'human_observed_attestation';
+  attestation_request?: {
+    skillIds: string[];
+    skillLabels: string[];
+  } | null;
   message?: string;
   status: VerificationStatus;
   requires_authenticated_verifier?: boolean;
@@ -135,6 +147,9 @@ export default function VerifySkillPage() {
   const [submitted, setSubmitted] = useState(false);
   const [submittedAction, setSubmittedAction] = useState<'accepted' | 'declined' | null>(null);
   const [authRequired, setAuthRequired] = useState(false);
+  const [attestationForm, setAttestationForm] = useState<HumanObservedAttestationFormValue>(
+    createDefaultHumanObservedAttestationForm()
+  );
 
   useEffect(() => {
     const loadData = async () => {
@@ -153,7 +168,18 @@ export default function VerifySkillPage() {
         }
 
         const result = await response.json();
-        setData(result.verification as VerificationData);
+        const verification = result.verification as VerificationData;
+        setData(verification);
+        if (
+          !isImpactVerification(verification) &&
+          verification.request_kind === 'human_observed_attestation'
+        ) {
+          setAttestationForm(
+            createDefaultHumanObservedAttestationForm(
+              verification.verifier_relationship || getSourceLabel(verification.verifier_source)
+            )
+          );
+        }
       } catch {
         setError('Failed to load verification request');
       } finally {
@@ -210,6 +236,15 @@ export default function VerifySkillPage() {
           action,
           message: responseMessage || undefined,
           confirmedClaimIds: isImpactVerification(data) ? confirmedClaimIds : undefined,
+          attestation:
+            !isImpactVerification(data) &&
+            data.request_kind === 'human_observed_attestation' &&
+            action === 'accept'
+              ? buildHumanObservedAttestationPayload({
+                  form: attestationForm,
+                  skillIds: data.attestation_request?.skillIds || [],
+                })
+              : undefined,
         }),
       });
 
@@ -345,8 +380,11 @@ export default function VerifySkillPage() {
                 <CheckCircle2 className="h-16 w-16 text-green-600 mx-auto mb-4" />
                 <h2 className="text-2xl font-semibold text-foreground mb-2">Thank You!</h2>
                 <p className="text-muted-foreground mb-4">
-                  You've successfully submitted verification for{' '}
-                  <strong>{data.requester_name}</strong>.
+                  {isImpactVerification(data)
+                    ? `You've successfully submitted verification for ${data.requester_name}.`
+                    : data.request_kind === 'human_observed_attestation'
+                      ? `You've recorded a bounded observed-in-practice attestation for ${data.requester_name}.`
+                      : `You've successfully submitted verification for ${data.requester_name}.`}
                 </p>
               </>
             ) : (
@@ -379,7 +417,9 @@ export default function VerifySkillPage() {
           <p className="text-white/80 text-sm">
             {isImpactVerification(data)
               ? 'Review claims and tick only what you can confirm.'
-              : "You are being asked to verify someone's professional skill."}
+              : data.request_kind === 'human_observed_attestation'
+                ? 'Record bounded observed-in-practice evidence for a small skill set.'
+                : "You are being asked to verify someone's professional skill."}
           </p>
         </CardHeader>
 
@@ -459,12 +499,17 @@ export default function VerifySkillPage() {
                 <div className="p-4 border-l-4 border-proofound-forest bg-white rounded-r-lg">
                   <p className="font-semibold text-lg text-proofound-forest">{data.skill_name}</p>
                 </div>
+                {data.request_kind === 'human_observed_attestation' && (
+                  <p className="text-sm text-muted-foreground">
+                    This request is for structured observed behaviors, not a public endorsement.
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">Your Relationship</p>
                 <Badge variant="outline" className="text-proofound-forest border-proofound-forest">
-                  {getSourceLabel(data.verifier_source || 'peer')}
+                  {data.verifier_relationship || getSourceLabel(data.verifier_source || 'peer')}
                 </Badge>
               </div>
 
@@ -565,6 +610,15 @@ export default function VerifySkillPage() {
             />
           </div>
 
+          {!isImpactVerification(data) && data.request_kind === 'human_observed_attestation' && (
+            <HumanObservedAttestationFields
+              value={attestationForm}
+              onChange={setAttestationForm}
+              skillLabels={data.attestation_request?.skillLabels || [data.skill_name]}
+              disabled={submitting}
+            />
+          )}
+
           {error && <p className="text-sm text-red-600">{error}</p>}
 
           {authRequired && (
@@ -611,7 +665,11 @@ export default function VerifySkillPage() {
             ) : (
               <CheckCircle2 className="h-4 w-4 mr-2" />
             )}
-            {isImpactVerification(data) ? 'Confirm Claims' : 'Verify Skill'}
+            {isImpactVerification(data)
+              ? 'Confirm Claims'
+              : data.request_kind === 'human_observed_attestation'
+                ? 'Record Observation'
+                : 'Verify Skill'}
           </Button>
         </CardFooter>
       </Card>

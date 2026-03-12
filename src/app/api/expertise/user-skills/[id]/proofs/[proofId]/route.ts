@@ -2,7 +2,6 @@ import { requireApiAuthContext } from '@/lib/auth';
 import { NextResponse, NextRequest } from 'next/server';
 import { emitSkillProofDeletedAsync } from '@/lib/analytics/events';
 import {
-  CANONICAL_PROOFS_WRITE_ENABLED,
   deleteCanonicalProofArtifactById,
   deleteCanonicalProofArtifactForSkillProof,
 } from '@/lib/canonical/repository';
@@ -28,32 +27,31 @@ export async function DELETE(
     const { user, supabase } = authContext;
     const { id: skillId, proofId } = await params;
 
-    // Verify proof belongs to user and is for this skill
-    // Also fetch title and type for analytics
-    const { data: proof, error: proofError } = await supabase
-      .from('skill_proofs')
-      .select('id, skill_id, profile_id, title, proof_type, file_path')
-      .eq('id', proofId)
-      .eq('skill_id', skillId)
-      .eq('profile_id', user.id)
-      .single();
+    const canonicalProof = await db.query.proofArtifacts.findFirst({
+      where: and(
+        eq(proofArtifacts.ownerType, 'individual_profile'),
+        eq(proofArtifacts.ownerId, user.id),
+        eq(proofArtifacts.subjectType, 'skill'),
+        eq(proofArtifacts.subjectId, skillId),
+        or(eq(proofArtifacts.id, proofId), eq(proofArtifacts.legacySourceId, proofId))
+      ),
+    });
 
-    if (proofError || !proof) {
-      const canonicalProof = await db.query.proofArtifacts.findFirst({
-        where: and(
-          eq(proofArtifacts.ownerType, 'individual_profile'),
-          eq(proofArtifacts.ownerId, user.id),
-          eq(proofArtifacts.subjectType, 'skill'),
-          eq(proofArtifacts.subjectId, skillId),
-          or(eq(proofArtifacts.id, proofId), eq(proofArtifacts.legacySourceId, proofId))
-        ),
-      });
-
-      if (!canonicalProof) {
-        return NextResponse.json({ error: 'Proof not found' }, { status: 404 });
-      }
-
+    if (canonicalProof) {
       await deleteCanonicalProofArtifactById(canonicalProof.id);
+
+      if (canonicalProof.legacySourceId) {
+        const { error: legacyDeleteError } = await supabase
+          .from('skill_proofs')
+          .delete()
+          .eq('id', canonicalProof.legacySourceId)
+          .eq('skill_id', skillId)
+          .eq('profile_id', user.id);
+
+        if (legacyDeleteError) {
+          console.warn('Failed to delete compatibility skill_proofs row:', legacyDeleteError);
+        }
+      }
 
       if (canonicalProof.storagePath && canonicalProof.storagePath.includes(user.id)) {
         const { error: storageDeleteError } = await supabase.storage
@@ -64,17 +62,28 @@ export async function DELETE(
         }
       }
 
-      await revalidatePublicPortfolioByProfileId(user.id);
-
-      emitSkillProofDeletedAsync(user.id, skillId, proofId, {
+      emitSkillProofDeletedAsync(user.id, skillId, canonicalProof.id, {
         skill_name: canonicalProof.title || 'Unknown',
         proof_type: canonicalProof.artifactKind || 'unknown',
       });
 
+      await revalidatePublicPortfolioByProfileId(user.id);
+
       return NextResponse.json({ success: true });
     }
 
-    // Delete the proof
+    const { data: proof, error: proofError } = await supabase
+      .from('skill_proofs')
+      .select('id, skill_id, profile_id, title, proof_type, file_path')
+      .eq('id', proofId)
+      .eq('skill_id', skillId)
+      .eq('profile_id', user.id)
+      .single();
+
+    if (proofError || !proof) {
+      return NextResponse.json({ error: 'Proof not found' }, { status: 404 });
+    }
+
     const { error: deleteError } = await supabase.from('skill_proofs').delete().eq('id', proofId);
 
     if (deleteError) {
@@ -82,9 +91,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Failed to delete proof' }, { status: 500 });
     }
 
-    if (CANONICAL_PROOFS_WRITE_ENABLED) {
-      await deleteCanonicalProofArtifactForSkillProof(proofId);
-    }
+    await deleteCanonicalProofArtifactForSkillProof(proofId);
 
     // Best-effort cleanup for uploaded documents. Never fail DELETE because of storage cleanup.
     if (proof.file_path && proof.file_path.includes(user.id)) {

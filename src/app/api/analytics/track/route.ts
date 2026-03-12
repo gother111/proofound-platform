@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { emitEvent, EVENT_TYPES, type EventType } from '@/lib/analytics/events';
-import { isActiveOrgMember, isTrustedInternalRequest, requireApiAuth } from '@/lib/api/auth';
-import { requireAnalyticsConsentForUser } from '@/lib/privacy/analytics-consent';
+import { resolveAnalyticsRequestContext } from '@/lib/analytics/request-context';
 
 /**
  * POST /api/analytics/track
@@ -26,48 +25,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Invalid eventType: ${eventType}` }, { status: 400 });
     }
 
-    const trustedInternalCall = isTrustedInternalRequest(req);
-    const authResult = await requireApiAuth();
-    if (!trustedInternalCall && authResult instanceof NextResponse) {
-      return authResult;
+    const contextResult = await resolveAnalyticsRequestContext(req, {
+      requestedUserId: typeof userId === 'string' ? userId : undefined,
+      requestedOrgId: typeof orgId === 'string' && orgId.trim().length > 0 ? orgId : undefined,
+    });
+    if (contextResult instanceof NextResponse) {
+      return contextResult;
     }
-    const authContext = authResult instanceof NextResponse ? null : authResult;
-
-    const resolvedUserId = trustedInternalCall
-      ? typeof userId === 'string'
-        ? userId
-        : undefined
-      : authContext!.user.id;
-
-    if (!trustedInternalCall && resolvedUserId) {
-      const hasAnalyticsConsent = await requireAnalyticsConsentForUser(resolvedUserId);
-      if (!hasAnalyticsConsent) {
-        return NextResponse.json(
-          { success: true, skipped: 'analytics_consent_missing' },
-          { status: 202 }
-        );
-      }
-    }
-
-    let resolvedOrgId: string | undefined;
-    if (typeof orgId === 'string' && orgId.trim().length > 0) {
-      if (trustedInternalCall) {
-        resolvedOrgId = orgId;
-      } else if (
-        await isActiveOrgMember(authContext!.supabase, authContext!.user.id, orgId, [
-          'owner',
-          'admin',
-          'member',
-        ])
-      ) {
-        resolvedOrgId = orgId;
-      } else {
-        return NextResponse.json(
-          { error: 'Forbidden: orgId is not accessible for current user' },
-          { status: 403 }
-        );
-      }
-    }
+    const { resolvedUserId, resolvedOrgId } = contextResult;
 
     const eventId = await emitEvent({
       eventType: eventType as EventType,

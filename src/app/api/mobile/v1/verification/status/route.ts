@@ -10,6 +10,7 @@ import {
   listVerificationRecordsForOwner,
   summarizeVerificationPolicy,
 } from '@/lib/verification/policy';
+import { resolveLinkedInVerificationLevel } from '@/lib/verification/tier';
 import { resolveWorkEmailValidity } from '@/lib/verification/work-email-validity';
 
 export const dynamic = 'force-dynamic';
@@ -110,16 +111,13 @@ export async function GET(request: NextRequest) {
       },
     });
     const hasPendingToken = hasActiveWorkEmailToken(profile);
-    const effectiveIdentityVerified =
-      policySummary.compatibility.verificationTier === 'identity_verified';
     const linkedinVerificationStatus = profile.linkedinVerificationStatus || 'unverified';
     const linkedinVerificationLevel =
       profile.linkedinVerificationLevel ||
-      (policySummary.compatibility.verificationTier === 'identity_verified'
-        ? 'identity'
-        : policySummary.compatibility.verificationTier === 'workplace_verified'
-          ? 'workplace'
-          : 'unverified');
+      resolveLinkedInVerificationLevel({
+        linkedinVerificationStatus: profile.linkedinVerificationStatus,
+        linkedinVerificationData: profile.linkedinVerificationData,
+      });
     const linkedinHasIdentityVerification =
       linkedinVerificationLevel === 'identity' ||
       resolveHasLinkedInIdentityVerification(profile.linkedinVerificationData);
@@ -135,12 +133,12 @@ export async function GET(request: NextRequest) {
         : policySummary.compatibility.verificationMethod;
 
     return mobileSuccess({
-      verified: effectiveIdentityVerified,
+      verified: false,
       verificationMethod,
       verificationStatus,
-      verificationTier: policySummary.compatibility.verificationTier,
-      verificationTierSource: policySummary.compatibility.verificationTierSource,
-      verifiedAt: profile.verifiedAt,
+      verificationTier: 'unverified',
+      verificationTierSource: 'unknown',
+      verifiedAt: null,
       linkedinVerificationStatus,
       linkedinVerificationLevel,
       linkedinHasIdentityVerification,

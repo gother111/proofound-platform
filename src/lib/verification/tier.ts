@@ -74,60 +74,6 @@ export function resolveCanonicalVerificationTier(input: {
     linkedinVerificationData: input.linkedinVerificationData,
   });
 
-  const currentTier =
-    input.currentTier === 'identity_verified' ||
-    input.currentTier === 'workplace_verified' ||
-    input.currentTier === 'unverified'
-      ? (input.currentTier as VerificationTier)
-      : null;
-
-  const verificationMethod =
-    input.verificationMethod === 'veriff' ||
-    input.verificationMethod === 'work_email' ||
-    input.verificationMethod === 'linkedin'
-      ? (input.verificationMethod as LegacyVerificationMethod)
-      : null;
-
-  const verificationStatus =
-    input.verificationStatus === 'verified' ||
-    input.verificationStatus === 'pending' ||
-    input.verificationStatus === 'failed' ||
-    input.verificationStatus === 'unverified'
-      ? (input.verificationStatus as LegacyVerificationStatus)
-      : null;
-
-  const legacyVeriffIdentity =
-    verificationMethod === 'veriff' &&
-    (verificationStatus === 'verified' || input.verified === true);
-
-  if (legacyVeriffIdentity || linkedinVerificationLevel === 'identity') {
-    const source: VerificationTierSource = legacyVeriffIdentity ? 'veriff' : 'linkedin_identity';
-
-    return {
-      verificationTier: 'identity_verified',
-      verificationTierSource: source,
-      linkedinVerificationLevel,
-    };
-  }
-
-  const workEmailCurrentlyVerified = Boolean(input.workEmailCurrentlyVerified);
-
-  if (workEmailCurrentlyVerified) {
-    return {
-      verificationTier: 'workplace_verified',
-      verificationTierSource: 'work_email',
-      linkedinVerificationLevel,
-    };
-  }
-
-  if (linkedinVerificationLevel === 'workplace' || currentTier === 'workplace_verified') {
-    return {
-      verificationTier: 'workplace_verified',
-      verificationTierSource: 'linkedin_workplace',
-      linkedinVerificationLevel,
-    };
-  }
-
   return {
     verificationTier: 'unverified',
     verificationTierSource: 'unknown',

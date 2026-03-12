@@ -231,12 +231,13 @@ describe('GET /api/verification/status', () => {
     const body = await response.json();
     expect(body.verified).toBe(false);
     expect(body.verificationStatus).toBe('unverified');
-    expect(body.verificationTier).toBe('workplace_verified');
-    expect(body.verificationTierSource).toBe('work_email');
+    expect(body.verificationTier).toBe('unverified');
+    expect(body.verificationTierSource).toBe('unknown');
     expect(body.verificationMethod).toBe('work_email');
     expect(body.workEmailVerified).toBe(true);
     expect(body.workEmailNeedsReverify).toBe(false);
     expect(body.workEmailReverifyDueAt).toBe(futureDue);
+    expect(body.summary.publicBadges).toEqual([]);
   });
 
   it('falls back to legacy profile query when re-verification columns are missing', async () => {
@@ -282,7 +283,7 @@ describe('GET /api/verification/status', () => {
     expect(body.linkedinHasIdentityVerification).toBe(false);
   });
 
-  it('returns LinkedIn-specific status fields when present', async () => {
+  it('returns LinkedIn-specific compatibility fields without global trust inflation', async () => {
     const nowIso = new Date().toISOString();
     const supabase = createSupabaseMock({
       profile: {
@@ -313,8 +314,10 @@ describe('GET /api/verification/status', () => {
     expect(body.linkedinVerificationLevel).toBe('identity');
     expect(body.linkedinHasIdentityVerification).toBe(true);
     expect(body.linkedinVerifiedAt).toBe(nowIso);
-    expect(body.verificationTier).toBe('identity_verified');
-    expect(body.verificationTierSource).toBe('linkedin_identity');
-    expect(body.verified).toBe(true);
+    expect(body.verificationTier).toBe('unverified');
+    expect(body.verificationTierSource).toBe('unknown');
+    expect(body.verified).toBe(false);
+    expect(body.verifiedAt).toBeNull();
+    expect(body.summary.publicBadges).toEqual([]);
   });
 });

@@ -12,6 +12,11 @@ vi.mock('@/lib/verification/policy', () => ({
 }));
 
 vi.mock('@/lib/proofs/canonical-pack', () => ({
+  hasPrimaryAnchorContext: vi.fn(
+    (pack: { primarySubjectType?: string | null; primarySubjectId?: string | null }) =>
+      ['experience', 'education', 'volunteering'].includes(pack.primarySubjectType || '') &&
+      typeof pack.primarySubjectId === 'string'
+  ),
   listCanonicalProofPackAggregatesForOwner: vi.fn(),
 }));
 
@@ -56,228 +61,230 @@ function mockVerificationSummary() {
   };
 }
 
+function profileRow() {
+  return {
+    rows: [
+      {
+        id: 'user-1',
+        handle: 'jane',
+        display_name: 'Jane Doe',
+        public_portfolio_state: 'public_link_only',
+        search_indexing_enabled_at: null,
+        deleted: false,
+        headline: 'Impact builder',
+        bio: 'Public bio',
+        tagline: null,
+        skills: ['Floating Skill'],
+        redact_mode: false,
+        verification_status: 'unverified',
+        verification_method: null,
+        verified_at: null,
+        work_email: null,
+        work_email_verified: false,
+        linkedin_verification_status: 'unverified',
+        linkedin_verified_at: null,
+        linkedin_verification_data: null,
+        verified: false,
+        field_visibility: {
+          bio: true,
+          contact: false,
+          workEmail: false,
+          skills: true,
+          counts: true,
+          proofBar: true,
+          header: true,
+          identity: true,
+          linkedin: true,
+        },
+        display_name_visibility: 'public',
+        headline_visibility: 'public',
+        skills_visibility: 'public',
+      },
+    ],
+  };
+}
+
 describe('public portfolio projection', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(db.execute as any).mockReset();
-    vi.mocked(listVerificationRecordsForOwner as any).mockReset();
-    vi.mocked(listCanonicalProofPackAggregatesForOwner as any).mockReset();
     vi.mocked(summarizeVerificationPolicy as any).mockReturnValue(mockVerificationSummary());
+    vi.mocked(listVerificationRecordsForOwner as any).mockResolvedValue([]);
     vi.mocked(listCanonicalProofPackAggregatesForOwner as any).mockResolvedValue([]);
   });
 
-  it('counts only currently public proof in the shared projection and export payload', async () => {
-    vi.mocked(db.execute as any).mockResolvedValueOnce({
-      rows: [
-        {
-          id: 'user-1',
-          handle: 'jane',
-          display_name: 'Jane Doe',
-          public_portfolio_state: 'public_link_only',
-          search_indexing_enabled_at: null,
-          deleted: false,
-          headline: 'Impact builder',
-          bio: 'Public bio',
-          tagline: null,
-          skills: ['Strategy'],
-          redact_mode: false,
-          verification_status: 'unverified',
-          verification_method: null,
-          verified_at: null,
-          work_email: null,
-          work_email_verified: false,
-          linkedin_verification_status: 'unverified',
-          linkedin_verified_at: null,
-          linkedin_verification_data: null,
-          verified: false,
-          field_visibility: {
-            bio: true,
-            contact: false,
-            workEmail: false,
-            skills: true,
-            counts: true,
-            proofBar: true,
-            header: true,
-            identity: true,
-            linkedin: true,
-          },
-          display_name_visibility: 'public',
-          headline_visibility: 'public',
-          skills_visibility: 'public',
-        },
-      ],
-    });
+  it('projects only anchored public proof and its supported skills', async () => {
+    vi.mocked(db.execute as any)
+      .mockResolvedValueOnce(profileRow())
+      .mockResolvedValueOnce({
+        rows: [{ id: 'skill-anchored', name: 'Anchored Skill' }],
+      });
+
     vi.mocked(listCanonicalProofPackAggregatesForOwner as any).mockResolvedValue([
       {
         pack: {
+          id: 'pack-anchored',
           ownerId: 'user-1',
-          primarySubjectType: 'skill',
-          primarySubjectId: 'skill-public',
+          primarySubjectType: 'experience',
+          primarySubjectId: 'experience-1',
+          title: 'Anchored pack',
+          summary: null,
+          evidenceSummary: null,
+          outcomesSummary: 'Shipped a proof-first launch.',
         },
         items: [
           {
             effectiveVisibility: 'public',
             artifact: {
+              subjectType: 'skill',
+              subjectId: 'skill-anchored',
               revealGate: 'none',
             },
           },
-          {
-            effectiveVisibility: 'matched_org',
-            artifact: {
-              revealGate: 'match_exists',
-            },
-          },
         ],
+        verificationReferences: [],
         publicSafe: {
+          title: 'Anchored pack',
+          summary: null,
+          evidenceSummary: null,
+          outcomesSummary: 'Shipped a proof-first launch.',
           items: [
             {
               artifactId: 'artifact-public',
               artifactKind: 'link',
-              title: 'Public proof',
+              title: 'Anchored proof',
               description: 'Visible evidence',
               sourceUrl: 'https://example.com/public-proof',
               issuedAt: '2026-01-15T00:00:00.000Z',
               expiresAt: null,
             },
           ],
-          outcomesSummary: null,
         },
         verificationStatus: 'verified',
+        freshnessState: 'fresh',
         latestEvidenceAt: new Date('2026-01-15T00:00:00.000Z'),
       },
       {
         pack: {
+          id: 'pack-orphan',
           ownerId: 'user-1',
           primarySubjectType: 'skill',
-          primarySubjectId: 'skill-legacy-public',
+          primarySubjectId: 'skill-floating',
+          title: 'Floating pack',
+          summary: null,
+          evidenceSummary: null,
+          outcomesSummary: null,
         },
         items: [
           {
             effectiveVisibility: 'public',
             artifact: {
+              subjectType: 'skill',
+              subjectId: 'skill-floating',
               revealGate: 'none',
             },
           },
         ],
+        verificationReferences: [],
         publicSafe: {
+          title: 'Floating pack',
+          summary: null,
+          evidenceSummary: null,
+          outcomesSummary: null,
           items: [
             {
-              artifactId: 'legacy-public',
+              artifactId: 'artifact-orphan',
               artifactKind: 'link',
-              title: 'Legacy public proof',
-              description: 'Legacy visible evidence',
-              sourceUrl: 'https://example.com/legacy-public',
+              title: 'Floating proof',
+              description: 'Legacy evidence',
+              sourceUrl: 'https://example.com/floating-proof',
               issuedAt: '2026-01-12T00:00:00.000Z',
               expiresAt: null,
             },
           ],
-          outcomesSummary: null,
         },
-        verificationStatus: 'unverified',
+        verificationStatus: 'verified',
+        freshnessState: 'fresh',
         latestEvidenceAt: new Date('2026-01-12T00:00:00.000Z'),
-      },
-    ]);
-
-    vi.mocked(listVerificationRecordsForOwner as any).mockResolvedValue([
-      {
-        status: 'verified',
-        subjectType: 'skill',
-        subjectId: 'skill-public',
-        verificationKind: 'skill_attestation_manager',
-      },
-      {
-        status: 'verified',
-        subjectType: 'skill',
-        subjectId: 'skill-gated',
-        verificationKind: 'skill_attestation_manager',
       },
     ]);
 
     const projection = await getPublicIndividualPortfolioProjectionByHandle('jane');
 
     expect(projection).not.toBeNull();
-    expect(projection?.publicProofCount).toBe(2);
-    expect(projection?.featuredProofs.map((proof) => proof.title)).toEqual([
-      'Public proof',
-      'Legacy public proof',
+    expect(projection?.publicProofCount).toBe(1);
+    expect(projection?.featuredProofs.map((proof) => proof.title)).toEqual(['Anchored proof']);
+    expect(projection?.publicSkills).toEqual(['Anchored Skill']);
+    expect(projection?.exportData.signals.proofs.count).toBe(1);
+    expect(projection?.exportData.skills).toEqual([
+      expect.objectContaining({
+        name: 'Anchored Skill',
+      }),
     ]);
-    expect(
-      projection?.featuredProofs.find((proof) => proof.title === 'Reveal-gated proof')
-    ).toBeUndefined();
-    expect(projection?.hasRevealGatedContent).toBe(true);
-    expect(projection?.exportData.signals.proofs.count).toBe(2);
-    expect(projection?.exportData.signals.verifications.count).toBe(1);
+    expect(projection?.jsonLd.description).toContain('Shipped a proof-first launch.');
+    expect(projection?.exportData.signals).not.toHaveProperty('attestations');
+    expect(projection?.exportData.proofPacks).toEqual([
+      expect.objectContaining({
+        id: 'pack-anchored',
+      }),
+    ]);
   });
 
-  it('removes withdrawn or disabled proof from public projection immediately', async () => {
-    vi.mocked(db.execute as any).mockResolvedValueOnce({
-      rows: [
-        {
-          id: 'user-1',
-          handle: 'jane',
-          display_name: 'Jane Doe',
-          public_portfolio_state: 'public_link_only',
-          search_indexing_enabled_at: null,
-          deleted: false,
-          headline: 'Impact builder',
-          bio: 'Public bio',
-          tagline: null,
-          skills: ['Strategy'],
-          redact_mode: false,
-          verification_status: 'unverified',
-          verification_method: null,
-          verified_at: null,
-          work_email: null,
-          work_email_verified: false,
-          linkedin_verification_status: 'unverified',
-          linkedin_verified_at: null,
-          linkedin_verification_data: null,
-          verified: false,
-          field_visibility: {
-            bio: true,
-            contact: false,
-            workEmail: false,
-            skills: true,
-            counts: true,
-            proofBar: true,
-            header: true,
-            identity: true,
-            linkedin: true,
-          },
-          display_name_visibility: 'public',
-          headline_visibility: 'public',
-          skills_visibility: 'public',
-        },
-      ],
-    });
+  it('does not let orphan packs or floating skills raise public trust projections', async () => {
+    vi.mocked(db.execute as any).mockResolvedValueOnce(profileRow());
     vi.mocked(listCanonicalProofPackAggregatesForOwner as any).mockResolvedValue([
       {
         pack: {
+          id: 'pack-orphan',
           ownerId: 'user-1',
           primarySubjectType: 'skill',
-          primarySubjectId: 'skill-public',
+          primarySubjectId: 'skill-floating',
+          title: 'Floating pack',
+          summary: null,
+          evidenceSummary: null,
+          outcomesSummary: null,
         },
         items: [
           {
             effectiveVisibility: 'public',
             artifact: {
+              subjectType: 'skill',
+              subjectId: 'skill-floating',
               revealGate: 'none',
             },
           },
         ],
-        publicSafe: null,
-        verificationStatus: 'unverified',
-        latestEvidenceAt: null,
+        verificationReferences: [],
+        publicSafe: {
+          title: 'Floating pack',
+          summary: null,
+          evidenceSummary: null,
+          outcomesSummary: null,
+          items: [
+            {
+              artifactId: 'artifact-orphan',
+              artifactKind: 'link',
+              title: 'Floating proof',
+              description: 'Legacy evidence',
+              sourceUrl: 'https://example.com/floating-proof',
+              issuedAt: '2026-01-12T00:00:00.000Z',
+              expiresAt: null,
+            },
+          ],
+        },
+        verificationStatus: 'verified',
+        freshnessState: 'fresh',
+        latestEvidenceAt: new Date('2026-01-12T00:00:00.000Z'),
       },
     ]);
-
-    vi.mocked(listVerificationRecordsForOwner as any).mockResolvedValue([]);
 
     const projection = await getPublicIndividualPortfolioProjectionByHandle('jane');
 
     expect(projection).not.toBeNull();
     expect(projection?.publicProofCount).toBe(0);
     expect(projection?.featuredProofs).toEqual([]);
+    expect(projection?.publicSkills).toEqual([]);
+    expect(projection?.exportData.skills).toEqual([]);
     expect(projection?.exportData.signals.proofs.count).toBe(0);
+    expect(projection?.exportData.proofPacks).toEqual([]);
   });
 });

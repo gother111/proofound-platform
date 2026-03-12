@@ -45,11 +45,11 @@ describe('portfolio and compatibility shortcut routes', () => {
     (requireAuth as any).mockResolvedValue({ id: 'user-1', handle: 'strict-user' });
     (getIndividualProfileCompletionState as any).mockResolvedValue({
       isPortfolioReady: false,
-      portfolioLockCode: 'skills',
+      portfolioLockCode: 'proof',
     });
 
     await expect(IndividualPortfolioShortcutPage()).rejects.toThrow('NEXT_REDIRECT');
-    expect(redirectMock).toHaveBeenCalledWith('/app/i/profile?portfolioLocked=1&lockReason=skills');
+    expect(redirectMock).toHaveBeenCalledWith('/app/i/profile?portfolioLocked=1&lockReason=proof');
   });
 
   it('redirects individual shortcut to profile when handle is missing', async () => {

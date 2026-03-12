@@ -92,11 +92,11 @@ describe('GET /api/verification/work-email/verify', () => {
     expect(updatePayload?.work_email_verified).toBe(true);
     expect(updatePayload?.work_email_verified_at).toBeTruthy();
     expect(updatePayload?.work_email_reverify_due_at).toBeTruthy();
-    expect(updatePayload?.verification_tier).toBe('workplace_verified');
-    expect(updatePayload?.verification_tier_source).toBe('work_email');
+    expect(updatePayload?.verification_tier).toBe('unverified');
+    expect(updatePayload?.verification_tier_source).toBe('unknown');
     expect(updatePayload?.verified).toBe(false);
     expect(updatePayload?.verification_status).toBe('unverified');
-    expect(updatePayload?.verification_method).toBe('work_email');
+    expect(updatePayload?.verification_method).toBeNull();
 
     const verifiedAt = new Date(updatePayload!.work_email_verified_at).getTime();
     const reverifyDueAt = new Date(updatePayload!.work_email_reverify_due_at).getTime();

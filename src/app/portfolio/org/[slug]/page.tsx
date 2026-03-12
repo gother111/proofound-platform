@@ -261,9 +261,30 @@ export default async function OrganizationPortfolioPage({
                 'A short purpose statement has not been published yet.'}
             </p>
           </PublicProfileSection>
+
+          <PublicProfileSection title="Why the work matters">
+            <p className="whitespace-pre-line text-sm leading-6 text-foreground">
+              {data.organization.tagline?.trim() ||
+                'A concise explanation of why this work matters has not been published yet.'}
+            </p>
+          </PublicProfileSection>
+
+          <PublicProfileSection title="Working context">
+            <p className="whitespace-pre-line text-sm leading-6 text-foreground">
+              {data.organization.working_context?.trim() ||
+                'Working context will appear here once the organization publishes it.'}
+            </p>
+          </PublicProfileSection>
         </div>
 
         <div className="space-y-4">
+          <PublicProfileSection title="Hiring process clarity">
+            <p className="whitespace-pre-line text-sm leading-6 text-foreground">
+              {data.organization.hiring_process_summary?.trim() ||
+                'The organization has not published its review and publish process yet.'}
+            </p>
+          </PublicProfileSection>
+
           <PublicProfileSection title="Durable trust signals">
             {trustSignals.length > 0 ? (
               <div className="flex flex-wrap gap-2">

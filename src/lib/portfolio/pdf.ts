@@ -148,6 +148,12 @@ export type TrustPdfInput = {
   };
   signals: TrustSignals;
   skills: Array<{ name: string; level: number }>;
+  proofPacks: Array<{
+    title: string;
+    verificationStatus: string;
+    freshnessState: string;
+    outcomesSummary: string | null;
+  }>;
   visibility: {
     header: boolean;
     proofBar: boolean;
@@ -161,16 +167,17 @@ export type TrustPdfInput = {
   };
 };
 
-function linkedInLabel(signals: TrustSignals): string {
-  if (signals.linkedin.verificationStatus === 'pending') return 'Pending';
-  if (
-    signals.linkedin.verificationStatus === 'verified' &&
-    signals.linkedin.hasIdentityVerification
-  )
-    return 'Verified Badge';
-  if (signals.linkedin.verificationStatus === 'verified') return 'Verified';
-  if (signals.linkedin.verificationStatus === 'failed') return 'Failed';
-  return 'Not Checked';
+function formatPackStatus(status: string): string {
+  switch (status) {
+    case 'verified':
+      return 'Verified';
+    case 'partially_verified':
+      return 'Partial';
+    case 'disputed':
+      return 'Disputed';
+    default:
+      return 'Pending';
+  }
 }
 
 export async function generateTrustPdf(input: TrustPdfInput): Promise<Buffer> {
@@ -204,21 +211,11 @@ export async function generateTrustPdf(input: TrustPdfInput): Promise<Buffer> {
     const leftX = layout.contentX;
     const rightX = leftX + leftWidth + gap;
 
-    drawCard(doc, leftX, sectionTop, leftWidth, 108, 'Trust summary');
+    drawCard(doc, leftX, sectionTop, leftWidth, 108, 'Proof summary');
     let rowY = sectionTop + 28;
     const rows: Array<[string, string, boolean]> = [
-      [
-        'Identity',
-        input.signals.identity.verified ? 'Verified' : 'Not Verified',
-        input.visibility.identity,
-      ],
-      [
-        'Work Email',
-        input.signals.workEmail.verified ? 'Verified' : 'Not Verified',
-        input.visibility.workEmail,
-      ],
-      ['LinkedIn', linkedInLabel(input.signals), input.visibility.linkedin],
       ['Proofs Added', `${input.signals.proofs.count}`, input.visibility.counts],
+      ['Verified Items', `${input.signals.verifications.count}`, input.visibility.counts],
     ];
     rows.forEach(([label, value, visible]) => {
       if (!visible) return;
@@ -236,8 +233,39 @@ export async function generateTrustPdf(input: TrustPdfInput): Promise<Buffer> {
       rowY += 14;
     });
 
-    drawCard(doc, leftX, sectionTop + 118, leftWidth, 108, 'Skills snapshot');
-    if (input.visibility.skills) {
+    drawCard(
+      doc,
+      leftX,
+      sectionTop + 118,
+      leftWidth,
+      108,
+      input.proofPacks.length > 0 ? 'Selected Proof Packs' : 'Proof-linked skills'
+    );
+    if (input.proofPacks.length > 0) {
+      let packY = sectionTop + 144;
+      input.proofPacks.slice(0, 3).forEach((pack) => {
+        doc
+          .fillColor(COLORS.charcoal)
+          .fontSize(8)
+          .font('Helvetica-Bold')
+          .text(truncate(pack.title, 32), leftX + 10, packY, { width: leftWidth - 20 });
+        packY += 12;
+        doc
+          .fillColor(COLORS.muted)
+          .fontSize(7)
+          .font('Helvetica')
+          .text(
+            `${formatPackStatus(pack.verificationStatus)} • ${truncate(
+              pack.outcomesSummary || pack.freshnessState.replace(/_/g, ' '),
+              34
+            )}`,
+            leftX + 10,
+            packY,
+            { width: leftWidth - 20 }
+          );
+        packY += 18;
+      });
+    } else if (input.visibility.skills) {
       const topSkills = input.skills.slice(0, 3);
       let skillY = sectionTop + 144;
       topSkills.forEach((skill) => {
@@ -420,7 +448,7 @@ export async function generateOrganizationProfilePdf(
       drawTag(doc, truncate(entry, 12), leftX + 10 + idx * 68, sectionTop + 240, 'forest');
     });
 
-    drawCard(doc, rightX, sectionTop, rightWidth, 82, 'Trust summary');
+    drawCard(doc, rightX, sectionTop, rightWidth, 82, 'Proof summary');
     const orgRows: Array<[string, string]> = [
       ['Active assignments', `${input.metrics.activeAssignments}`],
       ['Team members', `${input.metrics.teamMembers}`],

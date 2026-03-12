@@ -1,7 +1,6 @@
 'use client';
 
 import { FormEvent, useMemo, useState } from 'react';
-import { Plus, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
@@ -9,10 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api/fetch';
-import { normalizeOrganizationValues } from '@/lib/organizations/normalizeValues';
 
 type OrgTrustProfileEditorProps = {
   org: {
@@ -20,8 +17,9 @@ type OrgTrustProfileEditorProps = {
     displayName: string;
     tagline: string | null;
     mission: string | null;
+    workingContext: string | null;
+    hiringProcessSummary: string | null;
     website: string | null;
-    values: string[] | null;
   };
   canEdit: boolean;
 };
@@ -32,9 +30,9 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
   const [displayName, setDisplayName] = useState(org.displayName);
   const [tagline, setTagline] = useState(org.tagline ?? '');
   const [mission, setMission] = useState(org.mission ?? '');
+  const [workingContext, setWorkingContext] = useState(org.workingContext ?? '');
+  const [hiringProcessSummary, setHiringProcessSummary] = useState(org.hiringProcessSummary ?? '');
   const [website, setWebsite] = useState(org.website ?? '');
-  const [values, setValues] = useState(() => normalizeOrganizationValues(org.values));
-  const [nextValue, setNextValue] = useState('');
   const [isPending, setIsPending] = useState(false);
 
   const hasUnsavedChanges = useMemo(() => {
@@ -42,46 +40,24 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
       displayName !== org.displayName ||
       tagline !== (org.tagline ?? '') ||
       mission !== (org.mission ?? '') ||
-      website !== (org.website ?? '') ||
-      JSON.stringify(values) !== JSON.stringify(normalizeOrganizationValues(org.values))
+      workingContext !== (org.workingContext ?? '') ||
+      hiringProcessSummary !== (org.hiringProcessSummary ?? '') ||
+      website !== (org.website ?? '')
     );
   }, [
     displayName,
+    hiringProcessSummary,
     mission,
     org.displayName,
+    org.hiringProcessSummary,
     org.mission,
     org.tagline,
-    org.values,
     org.website,
     tagline,
-    values,
     website,
+    workingContext,
+    org.workingContext,
   ]);
-
-  const handleAddValue = () => {
-    const normalized = nextValue.trim();
-    if (!normalized) {
-      return;
-    }
-    if (values.includes(normalized)) {
-      setNextValue('');
-      return;
-    }
-    if (values.length >= 5) {
-      toast({
-        title: 'Too many values',
-        description: 'Keep the launch trust profile to 5 values or fewer.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    setValues((current) => [...current, normalized]);
-    setNextValue('');
-  };
-
-  const handleRemoveValue = (value: string) => {
-    setValues((current) => current.filter((item) => item !== value));
-  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -111,8 +87,9 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
           displayName,
           tagline: tagline || null,
           mission: mission || null,
+          workingContext: workingContext || null,
+          hiringProcessSummary: hiringProcessSummary || null,
           website: website || null,
-          values,
         }),
       });
 
@@ -142,8 +119,8 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
       <CardHeader>
         <CardTitle>Trust profile</CardTitle>
         <CardDescription>
-          Keep the org launch story tight: what you do, why someone should join, the mission you are
-          advancing, and the values candidates should expect.
+          Keep the launch story narrow and practical: mission, why the work matters, working
+          context, and how seriously the team handles hiring.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -183,6 +160,30 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="org-working-context">Working context</Label>
+            <Textarea
+              id="org-working-context"
+              value={workingContext}
+              onChange={(event) => setWorkingContext(event.target.value)}
+              disabled={!canEdit || isPending}
+              rows={4}
+              placeholder="Describe the day-to-day context, team setup, or operating environment."
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="org-hiring-process-summary">Hiring process clarity</Label>
+            <Textarea
+              id="org-hiring-process-summary"
+              value={hiringProcessSummary}
+              onChange={(event) => setHiringProcessSummary(event.target.value)}
+              disabled={!canEdit || isPending}
+              rows={4}
+              placeholder="Explain how the team reviews assignments, evidence, and internal sign-off before publish."
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="org-website">Public website</Label>
             <Input
               id="org-website"
@@ -191,54 +192,6 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
               disabled={!canEdit || isPending}
               placeholder="https://example.org"
             />
-          </div>
-
-          <div className="space-y-3">
-            <div>
-              <Label>Core values</Label>
-              <p className="text-sm text-muted-foreground">
-                Keep the MVP profile to the values that should visibly shape selection and review.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {values.map((value) => (
-                <Badge key={value} variant="secondary" className="gap-1 pr-1">
-                  {value}
-                  {canEdit ? (
-                    <button
-                      type="button"
-                      className="rounded-full p-0.5 hover:bg-black/10"
-                      onClick={() => handleRemoveValue(value)}
-                      aria-label={`Remove ${value}`}
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  ) : null}
-                </Badge>
-              ))}
-              {values.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No core values added yet.</p>
-              ) : null}
-            </div>
-            {canEdit ? (
-              <div className="flex gap-2">
-                <Input
-                  value={nextValue}
-                  onChange={(event) => setNextValue(event.target.value)}
-                  disabled={isPending}
-                  placeholder="Add a core value"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleAddValue}
-                  disabled={isPending || values.length >= 5}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add
-                </Button>
-              </div>
-            ) : null}
           </div>
 
           {canEdit ? (

@@ -79,8 +79,16 @@ describe('organizations [orgId] route', () => {
     expect(body.details.unsupportedFields).toEqual(['industry']);
   });
 
-  it('normalizes website input and updates lean trust profile fields', async () => {
+  it('returns 403 when user role is manager', async () => {
     (db.query.organizationMembers.findFirst as any).mockResolvedValue({ role: 'org_manager' });
+
+    const response = await PUT(buildPutRequest({ displayName: 'Acme' }), params);
+
+    expect(response.status).toBe(403);
+  });
+
+  it('normalizes website input and updates lean trust profile fields for an owner', async () => {
+    (db.query.organizationMembers.findFirst as any).mockResolvedValue({ role: 'org_owner' });
     const { set } = mockUpdateReturningOrganization();
 
     const response = await PUT(
@@ -89,7 +97,8 @@ describe('organizations [orgId] route', () => {
         tagline: 'Join a focused team',
         mission: 'Ship trust-first hiring',
         website: 'example.com',
-        values: ['Clarity', 'Trust'],
+        workingContext: 'Remote-first collaboration',
+        hiringProcessSummary: 'Structured interviews with scorecards',
       }),
       params
     );
@@ -100,20 +109,22 @@ describe('organizations [orgId] route', () => {
         displayName: 'Acme Org',
         tagline: 'Join a focused team',
         mission: 'Ship trust-first hiring',
+        workingContext: 'Remote-first collaboration',
+        hiringProcessSummary: 'Structured interviews with scorecards',
         website: 'https://example.com/',
-        values: ['Clarity', 'Trust'],
       })
     );
   });
 
-  it('rejects invalid values payloads', async () => {
+  it('rejects unsupported non-MVP organization fields', async () => {
     (db.query.organizationMembers.findFirst as any).mockResolvedValue({ role: 'org_owner' });
 
     const response = await PUT(buildPutRequest({ values: ['Clarity', '', 123] as any }), params);
     const body = await response.json();
 
     expect(response.status).toBe(400);
-    expect(body.error).toBe('Values must contain non-empty strings only');
+    expect(body.error).toContain('Only launch trust profile fields can be updated');
+    expect(body.details.unsupportedFields).toEqual(['values']);
     expect(db.update).not.toHaveBeenCalled();
   });
 });

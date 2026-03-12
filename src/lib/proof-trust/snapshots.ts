@@ -291,19 +291,6 @@ export async function computeProofTrustSnapshot(
   );
 
   const trustSignalClassesPresent = new Set<string>();
-  const profile = profileRow[0];
-  if (profile?.verificationStatus === 'verified') {
-    trustSignalClassesPresent.add('identity_verified');
-  }
-  if (profile?.workEmailVerified) {
-    trustSignalClassesPresent.add('workplace_verified');
-  }
-  if (profile?.linkedinVerificationLevel === 'workplace') {
-    trustSignalClassesPresent.add('linkedin_workplace');
-  }
-  if (profile?.linkedinVerificationLevel === 'identity') {
-    trustSignalClassesPresent.add('linkedin_identity');
-  }
   if (
     verificationRows.some(
       (row) =>

@@ -1,20 +1,19 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { fetchPublicTrustExportDataByHandle } from '@/lib/portfolio/export-data';
 import { buildTextPack } from '@/lib/portfolio/text-pack';
+import { resolvePublicIndividualPortfolioAccessByHandle } from '@/lib/portfolio/public-projection';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(_request: Request, { params }: { params: Promise<{ handle: string }> }) {
   try {
     const { handle } = await params;
-    const supabase = await createClient();
-    const data = await fetchPublicTrustExportDataByHandle(supabase, handle);
+    const access = await resolvePublicIndividualPortfolioAccessByHandle(handle);
 
-    if (!data) {
+    if (access.status !== 'accessible') {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
+    const data = access.projection.exportData;
     const text = buildTextPack(data);
     return new NextResponse(text, {
       status: 200,

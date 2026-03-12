@@ -26,7 +26,7 @@ function loadBuildTrustSignals() {
 }
 
 describe('buildTrustSignals', () => {
-  it('maps verified identity, work email, linkedin confidence, and counts', () => {
+  it('keeps public trust signals narrow and count-based', () => {
     const buildTrustSignals = loadBuildTrustSignals();
     expect(typeof buildTrustSignals).toBe('function');
 
@@ -48,16 +48,15 @@ describe('buildTrustSignals', () => {
     const signals = buildTrustSignals(profile as any, {
       proofsCount: 3,
       acceptedVerificationsCount: 2,
-      attestationCount: 1,
     });
-    expect(signals.identity.verified).toBe(true);
-    expect(signals.identity.method).toBe('veriff');
-    expect(signals.workEmail.verified).toBe(true);
-    expect(signals.linkedin.confidence).toBe(82);
-    expect(signals.linkedin.hasVerificationBadge).toBe(true);
+    expect(signals.identity.verified).toBe(false);
+    expect(signals.identity.method).toBeNull();
+    expect(signals.workEmail.verified).toBe(false);
+    expect(signals.linkedin.confidence).toBeUndefined();
+    expect(signals.linkedin.hasVerificationBadge).toBe(false);
     expect(signals.proofs.count).toBe(3);
     expect(signals.verifications.count).toBe(2);
-    expect(signals.attestations.count).toBe(1);
+    expect(signals).not.toHaveProperty('attestations');
   });
 
   it('defaults to safe falsy values when data is missing', () => {
@@ -70,7 +69,7 @@ describe('buildTrustSignals', () => {
     expect(signals.linkedin.confidence).toBeUndefined();
     expect(signals.proofs.count).toBe(0);
     expect(signals.verifications.count).toBe(0);
-    expect(signals.attestations.count).toBe(0);
+    expect(signals).not.toHaveProperty('attestations');
   });
 
   it('keeps public badge payloads coarse', () => {
@@ -103,5 +102,7 @@ describe('buildTrustSignals', () => {
         state: 'verified',
       },
     ]);
+    expect(signals.identity.verified).toBe(false);
+    expect(signals.workEmail.verified).toBe(false);
   });
 });
