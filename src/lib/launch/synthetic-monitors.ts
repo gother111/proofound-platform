@@ -341,6 +341,7 @@ export async function getCurrentLaunchSyntheticStatus(
 }
 
 export async function getLatestLaunchSyntheticStatus(now = new Date()) {
+  const activeMonitorKeys = new Set(LAUNCH_MONITOR_DEFINITIONS.map((item) => item.monitorKey));
   const latestRuns = await db.execute(sql`
     SELECT DISTINCT ON (monitor_key)
       monitor_key,
@@ -357,38 +358,41 @@ export async function getLatestLaunchSyntheticStatus(now = new Date()) {
     ORDER BY monitor_key, checked_at DESC
   `);
 
-  const rows = getRows<Record<string, unknown>>(latestRuns as any).map((row) => {
-    const definition = LAUNCH_MONITOR_DEFINITIONS.find(
-      (item) => item.monitorKey === row.monitor_key
-    );
-    const checkedAt = row.checked_at ? new Date(String(row.checked_at)) : null;
-    const ageMinutes = checkedAt
-      ? Math.max(0, Math.round((now.getTime() - checkedAt.getTime()) / 60_000))
-      : null;
-    const stale = definition ? ageMinutes != null && ageMinutes > definition.maxAgeMinutes : true;
+  const rows = getRows<Record<string, unknown>>(latestRuns as any)
+    .filter((row) => activeMonitorKeys.has(String(row.monitor_key)))
+    .map((row) => {
+      const definition = LAUNCH_MONITOR_DEFINITIONS.find(
+        (item) => item.monitorKey === row.monitor_key
+      );
+      const checkedAt = row.checked_at ? new Date(String(row.checked_at)) : null;
+      const ageMinutes = checkedAt
+        ? Math.max(0, Math.round((now.getTime() - checkedAt.getTime()) / 60_000))
+        : null;
+      const stale =
+        definition != null ? ageMinutes != null && ageMinutes > definition.maxAgeMinutes : true;
 
-    return {
-      monitorKey: String(row.monitor_key),
-      monitorGroup: String(row.monitor_group),
-      status: stale ? 'fail' : String(row.status),
-      severity: String(row.severity),
-      responseTimeMs:
-        typeof row.response_time_ms === 'number'
-          ? row.response_time_ms
-          : Number(row.response_time_ms ?? 0),
-      expectedState: String(row.expected_state ?? ''),
-      observedState: stale ? 'stale' : String(row.observed_state ?? ''),
-      failureClass: stale
-        ? 'stale_monitor_result'
-        : row.failure_class
-          ? String(row.failure_class)
-          : null,
-      checkedAt: checkedAt?.toISOString() ?? null,
-      ageMinutes,
-      stale,
-      details: (row.details as Record<string, unknown> | null) ?? {},
-    };
-  });
+      return {
+        monitorKey: String(row.monitor_key),
+        monitorGroup: String(row.monitor_group),
+        status: stale ? 'fail' : String(row.status),
+        severity: String(row.severity),
+        responseTimeMs:
+          typeof row.response_time_ms === 'number'
+            ? row.response_time_ms
+            : Number(row.response_time_ms ?? 0),
+        expectedState: String(row.expected_state ?? ''),
+        observedState: stale ? 'stale' : String(row.observed_state ?? ''),
+        failureClass: stale
+          ? 'stale_monitor_result'
+          : row.failure_class
+            ? String(row.failure_class)
+            : null,
+        checkedAt: checkedAt?.toISOString() ?? null,
+        ageMinutes,
+        stale,
+        details: (row.details as Record<string, unknown> | null) ?? {},
+      };
+    });
 
   const missingMonitorKeys = LAUNCH_MONITOR_DEFINITIONS.map((item) => item.monitorKey).filter(
     (monitorKey) => !rows.some((row) => row.monitorKey === monitorKey)
