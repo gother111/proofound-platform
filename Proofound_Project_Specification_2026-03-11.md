@@ -1,5 +1,9 @@
 # Proofound Project Specification — MVP Build Specification
 
+> Reference-only note: this document captures broader strategy and implementation context.
+> Active MVP implementation authority lives in `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, then `PRD_for_a_web_platform_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, then this file.
+> This document must not override the locked MVP authority stack.
+
 **Status:** Project specification for implementation  
 **Date:** 2026-03-11  
 **Audience:** Founder, product, design, engineering, QA, ops  

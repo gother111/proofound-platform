@@ -1,10 +1,34 @@
 > Doc Class: `governance`
 > Sync Pair: `Documentation.md`
-> Last Verified: `2026-03-11`
+> Last Verified: `2026-03-12`
 
 # Documentation (Status + Index)
 
 ## Status
+
+## 2026-03-12: Restored locked MVP implementation authority
+
+What changed:
+
+- Reversed the 2026-03-11 governance move that promoted `Proofound_Project_Specification_2026-03-11.md` over the locked MVP source.
+- Reinstated `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md` as the top active implementation authority across `AGENTS.md`, `README.md`, and the governance mirrors.
+- Demoted the broader project specification, audits, and repo guidance docs to reference-only status for MVP build decisions.
+
+Why:
+
+- Block 12 requires the locked MVP docs to be the actual implementation authority so contributors do not widen scope from broader strategy material.
+
+How to verify:
+
+- `npm run docs:freshness`
+- `npm run lint`
+- `npm run typecheck`
+- `rg -n "Proofound_Project_Specification_2026-03-11.md.*first|starts with `Proofound_Project_Specification_2026-03-11.md`|superseded historical context" AGENTS.md README.md Prompt.md project/Prompt.md Architecture.md project/Architecture.md Plans.md project/Plans.md Implement.md project/Implement.md Documentation.md project/Documentation.md`
+- `rg -n "reference-only|must not override|Active MVP implementation authority" AGENTS.md README.md Prompt.md project/Prompt.md Architecture.md project/Architecture.md Plans.md project/Plans.md Implement.md project/Implement.md Proofound_Project_Specification_2026-03-11.md`
+
+Open risks/TODO:
+
+- Older historical change-log entries still describe the superseded project-spec-first phase. That history should stay intact and should not be rewritten mechanically.
 
 ## 2026-03-11: Rebased docs to the Project Specification source stack
 

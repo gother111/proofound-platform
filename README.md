@@ -1,7 +1,7 @@
 # Proofound Platform MVP
 
 > Doc Class: `active`
-> Last Verified: `2026-03-11`
+> Last Verified: `2026-03-12`
 
 Production-ready scaffold for a proof-first, privacy-first, portfolio-first credibility and hiring platform with one individual side and one organization side.
 
@@ -16,7 +16,7 @@ Proofound is a platform built for authenticity, not algorithms. It features:
 
 Launch contract highlights:
 
-- The top source of truth is `Proofound_Project_Specification_2026-03-11.md`.
+- Active MVP implementation authority starts with `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, then `PRD_for_a_web_platform_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, then `Proofound_Project_Specification_2026-03-11.md`.
 - Interactive web auth uses Supabase SSR session cookies.
 - Public portfolio publication is explicit and non-indexed by default until publication criteria are met.
 - Uploads are quarantine-first and private by default, with public promotion limited to approved safe image types.
@@ -62,11 +62,12 @@ flowchart LR
 
 ## Documentation map
 
-- Canonical launch contract precedence: `Proofound_Project_Specification_2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.md`, `PRD_for_a_web_platform_MVP.master-latest.md`, `LAUNCH_RUNBOOK.md`.
-- Repo-grounded architecture and implementation snapshots: `project/Architecture.md`, `README.md`, `PRODUCTION_CHECKLIST.md`.
+- MVP implementation authority: `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, `PRD_for_a_web_platform_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `Proofound_Project_Specification_2026-03-11.md`.
+- Reference-only broader strategy and diagnostics: `PRD_for_a_web_platform_MVP.master-latest.md`, `PRD_TECHNICAL_REQUIREMENTS.md`, `LAUNCH_RUNBOOK.md`, `docs/proofound-hard-audit-2026-03-12.md`, `project/Prompt.md`, `project/Architecture.md`, `README.md`.
+- Repo-grounded implementation snapshots and readiness aids: `project/Architecture.md`, `project/Plans.md`, `project/Implement.md`, `PRODUCTION_CHECKLIST.md`.
 - Historical architecture context only: `SYSTEM_ARCHITECTURE_COMPREHENSIVE.md`, `SYSTEM_ARCHITECTURE_SUPPLEMENT.md`, `PRD_for_a_web_platform_MVP.md`.
 - APIs: `docs/API_REFERENCE.md` (generated from `src/app/api/**/route.ts` via `node scripts/generate-api-reference.mjs`; historical API specs remain archived under `docs/archive/legacy-platform/api-reference-history/`).
-- Runbooks: `LAUNCH_RUNBOOK.md`, `PRODUCTION_CHECKLIST.md`, `APPLY_MIGRATIONS_MANUAL.md`, `RUN_MIGRATIONS_GUIDE.md`, `OAUTH_SETUP_GUIDE.md`, `SETUP_SUPABASE.md`.
+- Runbooks: `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `PRODUCTION_CHECKLIST.md`, `APPLY_MIGRATIONS_MANUAL.md`, `RUN_MIGRATIONS_GUIDE.md`, `OAUTH_SETUP_GUIDE.md`, `SETUP_SUPABASE.md`.
 - Archives: historical docs are grouped under `docs/archive/legacy-platform/`, status reports under `docs/archive/status-reports/`, demo artifacts under `docs/archive/demos/`.
 - Public/legal pages and metadata surfaces: `/about`, `/manifesto`, `/careers`, `/contact`, `/support`, `/privacy`, `/terms`, `/cookies`, `/cookies/settings`, `src/lib/seo/public-metadata.ts`, `src/app/sitemap.ts`, `src/app/layout.tsx`, and `public/favicon.svg`.
 
@@ -631,7 +632,7 @@ MIT License - see LICENSE file for details
 - **Open a GitHub Issue:** Report bugs or request features
 - **Review Documentation:**
   - [`PRODUCTION_CHECKLIST.md`](PRODUCTION_CHECKLIST.md) - Deployment checklist
-  - [`LAUNCH_RUNBOOK.md`](LAUNCH_RUNBOOK.md) - Operational procedures
+  - [`LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`](LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md) - Operational procedures
   - [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md) - API contracts and endpoint families
   - [`EMAIL_SUPPORT_SETUP.md`](EMAIL_SUPPORT_SETUP.md) - Email support configuration
 - **Third-Party Docs:** Supabase, Resend, Vercel documentation

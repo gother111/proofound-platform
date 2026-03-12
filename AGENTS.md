@@ -1,7 +1,17 @@
 > Doc Class: `governance`
-> Last Verified: `2026-02-19`
+> Last Verified: `2026-03-12`
 
 # Repository Agent Instructions
+
+## MVP Implementation Authority
+
+- For active MVP implementation, use this authority order:
+  1. `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`
+  2. `PRD_for_a_web_platform_MVP.aligned-rewrite.2026-03-11.md`
+  3. `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`
+  4. `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`
+  5. `Proofound_Project_Specification_2026-03-11.md`
+- `PRD_for_a_web_platform_MVP.master-latest.md`, `PRD_TECHNICAL_REQUIREMENTS.md`, `LAUNCH_RUNBOOK.md`, `README.md`, `project/Prompt.md`, `project/Architecture.md`, and audit docs are reference-only context. They must not broaden scope or override the stack above.
 
 ## Core Rule
 
@@ -11,14 +21,19 @@
 ## Read Order
 
 1. `AGENTS.md`
-2. `project/Implement.md`
-3. `project/Prompt.md`
-4. `project/Architecture.md`
-5. `project/Plans.md`
-6. `project/Documentation.md`
-7. `agent/runbooks/setup.md`
-8. `agent/checklists/preflight.md`
-9. `agent/checklists/verification.md`
+2. `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`
+3. `PRD_for_a_web_platform_MVP.aligned-rewrite.2026-03-11.md`
+4. `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`
+5. `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`
+6. `Proofound_Project_Specification_2026-03-11.md`
+7. `project/Implement.md`
+8. `project/Prompt.md`
+9. `project/Architecture.md`
+10. `project/Plans.md`
+11. `project/Documentation.md`
+12. `agent/runbooks/setup.md`
+13. `agent/checklists/preflight.md`
+14. `agent/checklists/verification.md`
 
 ## Logging Policy (Conflict Prevention)
 

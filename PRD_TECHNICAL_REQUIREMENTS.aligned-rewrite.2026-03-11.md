@@ -3,7 +3,7 @@
 **Status:** Aligned rewrite for current MVP  
 **Date:** 2026-03-11  
 **Audience:** Engineering, product, QA, operations  
-**Authority:** This document aligns to `Proofound_Project_Specification_2026-03-11.md`. If any implementation detail conflicts with the Project Specification, the Project Specification wins.
+**Authority:** This is the active technical contract beneath `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md` and `PRD_for_a_web_platform_MVP.aligned-rewrite.2026-03-11.md`. `Proofound_Project_Specification_2026-03-11.md` is reference-only implementation context and must not broaden this document.
 
 ---
 

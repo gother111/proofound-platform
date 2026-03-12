@@ -1,15 +1,17 @@
 > Doc Class: `governance`
 > Sync Pair: `Architecture.md`
-> Last Verified: `2026-03-11`
+> Last Verified: `2026-03-12`
 
 # Architecture Snapshot
 
 ## Canonical Launch Contract
 
-- The canonical MVP launch contract starts with `Proofound_Project_Specification_2026-03-11.md`.
-- `PRD_TECHNICAL_REQUIREMENTS.md` is the authoritative technical launch contract beneath the Project Specification.
-- `PRD_for_a_web_platform_MVP.master-latest.md` is the canonical supporting product PRD beneath the Project Specification.
-- `LAUNCH_RUNBOOK.md` is operator-facing execution guidance only.
+- The canonical MVP implementation contract starts with `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`.
+- `PRD_for_a_web_platform_MVP.aligned-rewrite.2026-03-11.md` is the authoritative supporting product PRD beneath the locked MVP document.
+- `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md` is the authoritative technical launch contract beneath the locked MVP document.
+- `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md` is operator-facing execution guidance only.
+- `Proofound_Project_Specification_2026-03-11.md` is the last reference layer in the active chain.
+- `PRD_for_a_web_platform_MVP.master-latest.md`, `PRD_TECHNICAL_REQUIREMENTS.md`, `LAUNCH_RUNBOOK.md`, audit docs, and repo governance docs are reference only and must not override the authority stack above.
 - This document is a repo-grounded snapshot, not a competing launch spec.
 - Historical references that describe app-managed JWT sessions, Redis-backed session or queue infrastructure, Datadog or LogDNA as launch dependencies, or Swedish runtime parity are non-canonical for launch.
 

@@ -1,7 +1,7 @@
 # Proofound MVP — Locked Source of Truth
 
-> Superseded note: this file is preserved for historical traceability only.
-> The active source-of-truth stack now starts with `Proofound_Project_Specification_2026-03-11.md`, then `PRD_TECHNICAL_REQUIREMENTS.md`, then `PRD_for_a_web_platform_MVP.master-latest.md`, then `LAUNCH_RUNBOOK.md`.
+> Doc Class: `active`
+> Last Verified: `2026-03-12`
 
 **Status:** Locked for MVP planning and implementation  
 **Date:** 2026-03-11  
@@ -17,10 +17,11 @@ When this document conflicts with older narrative or exploratory material, this 
 Precedence order:
 
 1. This locked source-of-truth document
-2. `PRD_TECHNICAL_REQUIREMENTS.md` for implementation details that do not conflict with this document
-3. `PRD_for_a_web_platform_MVP.master-latest.md` for supporting detail that does not conflict with this document
-4. `LAUNCH_RUNBOOK.md` for operating guidance only
-5. `proofound_mvp_reports_master.md` and other review documents as advisory only
+2. `PRD_for_a_web_platform_MVP.aligned-rewrite.2026-03-11.md` for launch-bound product detail that does not conflict with this document
+3. `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md` for implementation detail that does not conflict with this document
+4. `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md` for operating guidance only
+5. `Proofound_Project_Specification_2026-03-11.md` as reference-only strategic and implementation context
+6. Broader strategy, architecture, audit, repo-governance material, and historical wrappers as reference only, including `PRD_for_a_web_platform_MVP.master-latest.md`, `PRD_TECHNICAL_REQUIREMENTS.md`, `LAUNCH_RUNBOOK.md`, `docs/proofound-hard-audit-2026-03-12.md`, `README.md`, `project/Prompt.md`, and `project/Architecture.md`
 
 This document is intentionally narrower than the broader platform vision. It protects launch focus.
 

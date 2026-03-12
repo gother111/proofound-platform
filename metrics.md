@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `Documentation.md`
-> Last Verified: `2026-03-11`
+> Last Verified: `2026-03-12`
 
 # Documentation (Status + Index)
 

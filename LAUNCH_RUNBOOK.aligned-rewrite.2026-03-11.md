@@ -3,7 +3,7 @@
 **Status:** Aligned rewrite for current MVP  
 **Date:** 2026-03-11  
 **Audience:** Engineering, ops, QA, founder, product  
-**Authority:** This runbook aligns to `Proofound_Project_Specification_2026-03-11.md`. It provides operating guidance only and must not override product or technical scope.
+**Authority:** This is the active launch runbook beneath `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, `PRD_for_a_web_platform_MVP.aligned-rewrite.2026-03-11.md`, and `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`. `Proofound_Project_Specification_2026-03-11.md` is reference-only context and must not broaden this runbook.
 
 ---
 
