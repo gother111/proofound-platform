@@ -21,7 +21,7 @@ import { detectPII } from '@/lib/privacy/pii-detection';
 import { normalizeImportRequest } from '@/lib/contracts/data-portability';
 import { parseOptionalDate } from '@/lib/datetime/parse-optional-date';
 import { buildExperienceTimeline } from '@/lib/profile/experience-timeline';
-import { syncCanonicalProofPackState } from '@/lib/proofs/canonical-pack';
+import { hasPrimaryAnchorContext, syncCanonicalProofPackState } from '@/lib/proofs/canonical-pack';
 
 function collectPotentialPiiText(payload: {
   profile?: { bio?: string; mission?: string; vision?: string };
@@ -465,7 +465,12 @@ export async function POST(request: NextRequest) {
       importedCounts.proofArtifacts = data.proof.artifacts.length;
 
       const importedPackIdMap = new Map<string, string>();
+      let importedAnchoredPackCount = 0;
       for (const pack of data.proof.packs) {
+        if (!hasPrimaryAnchorContext(pack)) {
+          continue;
+        }
+
         const portabilityHash =
           typeof pack.portabilityMeta?.portabilityHash === 'string'
             ? pack.portabilityMeta.portabilityHash
@@ -479,6 +484,7 @@ export async function POST(request: NextRequest) {
 
         importedPackIdMap.set(pack.id, resolvedPackId);
         syncedPackIds.add(resolvedPackId);
+        importedAnchoredPackCount += 1;
 
         await tx
           .insert(proofPacks)
@@ -551,7 +557,7 @@ export async function POST(request: NextRequest) {
             },
           });
       }
-      importedCounts.proofPacks = data.proof.packs.length;
+      importedCounts.proofPacks = importedAnchoredPackCount;
 
       for (const item of data.proof.packItems) {
         const resolvedPackId = importedPackIdMap.get(item.packId);
@@ -580,7 +586,9 @@ export async function POST(request: NextRequest) {
             },
           });
       }
-      importedCounts.proofPackItems = data.proof.packItems.length;
+      importedCounts.proofPackItems = data.proof.packItems.filter((item) =>
+        importedPackIdMap.has(item.packId)
+      ).length;
 
       const importedVerificationIdSet = new Set<string>();
       for (const record of data.proof.verificationReferences) {

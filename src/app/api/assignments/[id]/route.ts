@@ -85,6 +85,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       id: assignment.id,
       orgId: assignment.orgId,
       role: assignment.role,
+      description: assignment.description ?? '',
       businessValue: assignment.businessValue ?? '',
       expectedImpact: assignment.expectedImpact ?? '',
       outcomes: normalizedOutcomes,
@@ -174,7 +175,7 @@ const AssignmentUpdateSchema = z.object({
   startEarliest: z.string().optional(),
   startLatest: z.string().optional(),
   verificationGates: z.array(z.string()).optional(),
-  weights: z.record(z.number()).optional(),
+  weights: z.record(z.number()).nullable().optional(),
 });
 
 /**

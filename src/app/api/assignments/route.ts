@@ -78,7 +78,7 @@ const AssignmentSchema = z.object({
   startEarliest: z.string().optional(), // ISO date string
   startLatest: z.string().optional(),
   verificationGates: z.array(z.string()).optional(),
-  weights: z.record(z.number()).optional(),
+  weights: z.record(z.number()).nullable().optional(),
 });
 
 const AssignmentCreateSchema = AssignmentSchema.extend({

@@ -23,7 +23,15 @@ export type ProofDraft = {
 
 export type VerificationDraft = {
   verifierEmail: string;
-  verifierSource: 'peer' | 'manager' | 'external';
+  relationship:
+    | 'colleague'
+    | 'peer'
+    | 'manager'
+    | 'skip_level_manager'
+    | 'direct_report'
+    | 'client'
+    | 'partner'
+    | 'mentor_coach';
   message: string;
 };
 
@@ -31,6 +39,12 @@ export type VerificationRequest = {
   id: string;
   status: 'pending' | 'accepted' | 'declined' | 'expired' | 'failed';
   verifier_source: 'peer' | 'manager' | 'external';
+  verifier_relationship?: string | null;
+  request_kind?: 'generic_verification' | 'human_observed_attestation' | null;
+  attestation_request?: {
+    skillIds: string[];
+    skillLabels: string[];
+  } | null;
   verifier_email: string;
   custom_request_id?: string | null;
   message?: string;

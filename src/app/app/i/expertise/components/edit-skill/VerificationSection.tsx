@@ -6,6 +6,10 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  CUSTOM_VERIFICATION_SELECTABLE_RELATIONSHIPS,
+  relationshipDisplayLabel,
+} from '@/lib/verification/custom-verification';
 
 import type { VerificationDraft, VerificationRequest } from './types';
 
@@ -40,7 +44,7 @@ export function VerificationSection({
         <div>
           <h3 className="font-medium text-foreground">Verification</h3>
           <p className="text-sm text-muted-foreground">
-            Request verification from peers or managers
+            Request bounded verification from someone who has observed this skill in practice
           </p>
         </div>
         <Button
@@ -76,23 +80,25 @@ export function VerificationSection({
               />
             </div>
             <div>
-              <Label htmlFor="verifier-source" className="text-foreground">
+              <Label htmlFor="verifier-relationship" className="text-foreground">
                 Relationship
               </Label>
               <select
-                id="verifier-source"
-                value={newVerificationRequest.verifierSource}
+                id="verifier-relationship"
+                value={newVerificationRequest.relationship}
                 onChange={(e) =>
                   setNewVerificationRequest({
                     ...newVerificationRequest,
-                    verifierSource: e.target.value as VerificationDraft['verifierSource'],
+                    relationship: e.target.value as VerificationDraft['relationship'],
                   })
                 }
                 className="mt-1 w-full px-3 py-2 border border-proofound-stone rounded-md"
               >
-                <option value="peer">Peer / Colleague</option>
-                <option value="manager">Manager / Supervisor</option>
-                <option value="external">External / Client</option>
+                {CUSTOM_VERIFICATION_SELECTABLE_RELATIONSHIPS.map((relationship) => (
+                  <option key={relationship} value={relationship}>
+                    {relationshipDisplayLabel(relationship)}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
@@ -168,7 +174,7 @@ export function VerificationSection({
                       {request.status}
                     </Badge>
                     <Badge variant="outline" className="text-xs capitalize">
-                      {request.verifier_source}
+                      {request.verifier_relationship || request.verifier_source}
                     </Badge>
                   </div>
                   <p className="text-sm text-foreground font-medium">{request.verifier_email}</p>

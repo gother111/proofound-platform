@@ -67,10 +67,8 @@ export async function POST(request: NextRequest) {
     }
 
     const canAccess = await isActiveOrgMember(auth.user.id, assignment.orgId, [
-      'owner',
-      'admin',
-      'member',
-      'viewer',
+      'org_owner',
+      'org_manager',
     ]);
 
     if (!canAccess) {

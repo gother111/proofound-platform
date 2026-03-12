@@ -76,5 +76,7 @@ describe('/api/expertise/stats', () => {
     expect(response.status).toBe(200);
     expect(body.skillsWithProofs).toBe(2);
     expect(body.skillsWithVerifications).toBe(1);
+    expect(body.eligibility.nextTierTarget.message).toContain('anchored proof');
+    expect(body.eligibility.nextTierTarget.message).not.toContain('add a few recent skills');
   });
 });

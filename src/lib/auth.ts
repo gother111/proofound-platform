@@ -35,6 +35,8 @@ type OrganizationRow = Pick<
   | 'coverImageUrl'
   | 'tagline'
   | 'mission'
+  | 'workingContext'
+  | 'hiringProcessSummary'
   | 'vision'
   | 'missionLinks'
   | 'visionLinks'
@@ -135,6 +137,8 @@ function mapOrganization(
     coverImageUrl: row.coverImageUrl ?? null,
     tagline: row.tagline ?? null,
     mission: row.mission ?? null,
+    workingContext: row.workingContext ?? null,
+    hiringProcessSummary: row.hiringProcessSummary ?? null,
     vision: row.vision ?? null,
     missionLinks: (row.missionLinks as OrganizationRow['missionLinks']) ?? null,
     visionLinks: (row.visionLinks as OrganizationRow['visionLinks']) ?? null,
@@ -262,6 +266,8 @@ const getUserOrganizationsCached = cache(async (userId: string) => {
           coverImageUrl:cover_image_url,
           tagline,
           mission,
+          workingContext:working_context,
+          hiringProcessSummary:hiring_process_summary,
           vision,
           missionLinks:mission_links,
           visionLinks:vision_links,

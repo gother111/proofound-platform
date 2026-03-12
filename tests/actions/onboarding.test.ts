@@ -62,27 +62,62 @@ describe('onboarding actions', () => {
     });
   });
 
+  function createSupabaseFromMap(entries: Record<string, Record<string, any>>) {
+    return {
+      from: vi.fn((table: string) => {
+        const entry = entries[table];
+        if (!entry) {
+          throw new Error(`Unexpected table: ${table}`);
+        }
+
+        return entry;
+      }),
+    };
+  }
+
   it('returns individual public portfolio URL and applies day-1 privacy defaults', async () => {
     const profileEq = vi.fn().mockResolvedValue({ error: null });
     const profileUpdate = vi.fn().mockReturnValue({ eq: profileEq });
     const individualUpsert = vi.fn().mockResolvedValue({ error: null });
+    const matchingProfileUpsert = vi.fn().mockResolvedValue({ error: null });
+    const experienceInsert = vi.fn().mockResolvedValue({ error: null });
+    const proofArtifactInsert = vi.fn().mockResolvedValue({ error: null });
+    const proofPackInsert = vi.fn().mockResolvedValue({ error: null });
+    const proofPackItemInsert = vi.fn().mockResolvedValue({ error: null });
 
-    (createClient as any).mockResolvedValue({
-      from: vi.fn((table: string) => {
-        if (table === 'profiles') {
-          return { update: profileUpdate };
-        }
-        if (table === 'individual_profiles') {
-          return { upsert: individualUpsert };
-        }
-        throw new Error(`Unexpected table: ${table}`);
-      }),
-    });
+    (createClient as any).mockResolvedValue(
+      createSupabaseFromMap({
+        profiles: { update: profileUpdate },
+        individual_profiles: { upsert: individualUpsert },
+        matching_profiles: { upsert: matchingProfileUpsert },
+        experiences: { insert: experienceInsert },
+        proof_artifacts: { insert: proofArtifactInsert },
+        proof_packs: { insert: proofPackInsert },
+        proof_pack_items: { insert: proofPackItemInsert },
+      })
+    );
 
     const formData = new FormData();
     formData.set('displayName', 'Jane Founder');
     formData.set('handle', 'Jane_Founder');
     formData.set('headline', 'Builder');
+    formData.set('location', 'Stockholm, Sweden');
+    formData.set('timezone', 'Europe/Stockholm');
+    formData.set('focusArea', 'Proof-first onboarding');
+    formData.set('workMode', 'remote');
+    formData.set('engagementType', 'contract');
+    formData.set('contextType', 'experience');
+    formData.set('contextTitle', 'Onboarding lead');
+    formData.set('contextOrganizationName', 'Proofound');
+    formData.set('contextSummary', 'Led the MVP onboarding corridor.');
+    formData.set('contextDuration', '2025 to present');
+    formData.set('contextOutcomes', 'Reduced the corridor to one calm proof-first path.');
+    formData.set('contextProjects', 'Published the first proof-first launch corridor.');
+    formData.set('contextCollaboration', 'Worked with product and design.');
+    formData.set('contextAchievement', 'Shipped the locked MVP onboarding block.');
+    formData.set('proofUrl', 'https://example.com/projects/proof-first');
+    formData.set('proofTitle', 'Proof-first corridor launch');
+    formData.set('proofSummary', 'Shows the first proof-backed onboarding launch.');
 
     const result = await completeIndividualOnboarding(formData);
 
@@ -104,6 +139,17 @@ describe('onboarding actions', () => {
         }),
       })
     );
+    expect(matchingProfileUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        desired_roles: ['Proof-first onboarding'],
+        work_mode: 'remote',
+        engagement_type: 'contract',
+      })
+    );
+    expect(experienceInsert).toHaveBeenCalledTimes(1);
+    expect(proofArtifactInsert).toHaveBeenCalledTimes(1);
+    expect(proofPackInsert).toHaveBeenCalledTimes(1);
+    expect(proofPackItemInsert).toHaveBeenCalledTimes(1);
     expect(reconcileVerifierContradictions).toHaveBeenCalledWith({
       verifierProfileId: 'user-1',
     });
@@ -172,5 +218,82 @@ describe('onboarding actions', () => {
       })
     );
     expect(revalidatePath).toHaveBeenCalledWith('/portfolio/org/acme-impact');
+  });
+
+  it('creates onboarding proof seeds through canonical proof packs instead of skill_proofs', async () => {
+    const profileEq = vi.fn().mockResolvedValue({ error: null });
+    const profileUpdate = vi.fn().mockReturnValue({ eq: profileEq });
+    const individualUpsert = vi.fn().mockResolvedValue({ error: null });
+    const matchingProfileUpsert = vi.fn().mockResolvedValue({ error: null });
+    const educationInsert = vi.fn().mockResolvedValue({ error: null });
+    const proofArtifactInsert = vi.fn().mockResolvedValue({ error: null });
+    const proofPackInsert = vi.fn().mockResolvedValue({ error: null });
+    const proofPackItemInsert = vi.fn().mockResolvedValue({ error: null });
+
+    (createClient as any).mockResolvedValue(
+      createSupabaseFromMap({
+        profiles: { update: profileUpdate },
+        individual_profiles: { upsert: individualUpsert },
+        matching_profiles: { upsert: matchingProfileUpsert },
+        education: { insert: educationInsert },
+        proof_artifacts: { insert: proofArtifactInsert },
+        proof_packs: { insert: proofPackInsert },
+        proof_pack_items: { insert: proofPackItemInsert },
+        skills: {
+          insert: vi.fn(() => {
+            throw new Error('onboarding should not write skills');
+          }),
+        },
+        skill_proofs: {
+          insert: vi.fn(() => {
+            throw new Error('onboarding should not write skill_proofs');
+          }),
+        },
+      })
+    );
+
+    const formData = new FormData();
+    formData.set('displayName', 'Jane Founder');
+    formData.set('handle', 'jane_founder');
+    formData.set('headline', 'Builder');
+    formData.set('location', 'Stockholm, Sweden');
+    formData.set('timezone', 'Europe/Stockholm');
+    formData.set('focusArea', 'Product strategy');
+    formData.set('workMode', 'remote');
+    formData.set('engagementType', 'fractional');
+    formData.set('contextType', 'education');
+    formData.set('contextTitle', 'Proof systems cohort');
+    formData.set('contextOrganizationName', 'Proof Academy');
+    formData.set('contextSummary', 'A focused learning program on proof systems.');
+    formData.set('contextDuration', 'Spring 2026');
+    formData.set('contextOutcomes', 'Built a proof-first onboarding prototype.');
+    formData.set('contextProjects', 'Structured a live Proof Pack from the course.');
+    formData.set('contextDegree', 'Independent fellowship');
+    formData.set('contextSkills', 'Proof systems, product strategy');
+    formData.set('proofUrl', 'https://example.com/projects/proof-pack');
+    formData.set('proofTitle', 'Proof Pack Launch');
+    formData.set('proofSummary', 'A live proof-backed launch artifact.');
+
+    const result = await completeIndividualOnboarding(formData);
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        handle: 'jane_founder',
+      })
+    );
+    expect(educationInsert).toHaveBeenCalledTimes(1);
+    expect(proofArtifactInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Proof Pack Launch',
+        source_url: 'https://example.com/projects/proof-pack',
+        metadata: expect.objectContaining({
+          imported_from: 'onboarding',
+          focus_area: 'Product strategy',
+        }),
+      })
+    );
+    expect(proofPackInsert).toHaveBeenCalledTimes(1);
+    expect(proofPackItemInsert).toHaveBeenCalledTimes(1);
   });
 });

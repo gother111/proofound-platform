@@ -117,7 +117,7 @@ export async function requireMobileAuth(
 export async function isActiveOrgMember(
   userId: string,
   orgId: string,
-  roles?: AllowedOrgRole[]
+  roles?: readonly AllowedOrgRole[]
 ): Promise<boolean> {
   const whereBase = and(
     eq(organizationMembers.userId, userId),

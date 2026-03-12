@@ -89,10 +89,10 @@ const baseEligibility = {
   },
   topActions: [
     {
-      id: 'update-expertise',
-      title: 'Update Expertise Atlas',
-      description: 'Add skills and proofs',
-      actionUrl: '/app/i/expertise',
+      id: 'update-public-portfolio',
+      title: 'Strengthen public portfolio',
+      description: 'Refresh proof-backed work examples and trust signals.',
+      actionUrl: '/app/i/portfolio',
     },
   ],
   readiness: {
@@ -129,7 +129,7 @@ describe('core matching gating routes', () => {
     expect(res.status).toBe(200);
     expect(payload.meta.softGated).toBe(true);
     expect(payload.eligibility.unmetCriteria).toEqual(baseEligibility.unmetCriteria);
-    expect(payload.topActions[0].actionUrl).toBe('/app/i/expertise');
+    expect(payload.topActions[0].actionUrl).toBe('/app/i/portfolio');
   });
 
   it('/api/core/matching/near-matches returns 200 with same soft-gate shape when browse requirements are incomplete', async () => {

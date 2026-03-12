@@ -2,7 +2,6 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { toast } from 'sonner';
 
 import { GuidedProfileSetupView } from './GuidedProfileSetupView';
 import { ProfileSkeleton } from './ProfileSkeleton';
@@ -22,14 +21,14 @@ import type { Education, Experience, ImpactStory, Volunteering } from '@/types/p
 
 function resolvePortfolioGateMessage(lockReason: string | null): string {
   switch (lockReason) {
-    case 'name':
-      return 'Public portfolio is locked until you add your display name, public handle, and a short headline.';
-    case 'purpose':
-      return 'Public portfolio is locked until you add your public handle and a short headline.';
-    case 'skills':
-      return 'Public portfolio is locked until you add at least one skill.';
-    case 'artifact':
-      return 'Public portfolio is locked until you add one public proof link or accepted verification.';
+    case 'safe_shell':
+      return 'Public portfolio is locked until your safe shell is complete.';
+    case 'context':
+      return 'Public portfolio is locked until you add one real context.';
+    case 'proof':
+      return 'Public portfolio is locked until you add and structure your first proof.';
+    case 'publish':
+      return 'Public portfolio is locked until you choose one proof-backed signal to publish.';
     default:
       return 'Complete the required profile steps to unlock your public portfolio.';
   }
@@ -99,13 +98,22 @@ export function EditableProfileView() {
     () =>
       evaluateIndividualProfileCompletion({
         displayName: profile?.basicInfo.name,
+        handle: profile?.guidedSetup.handle,
+        headline: profile?.guidedSetup.headline,
+        location: profile?.basicInfo.location,
+        timezone: profile?.guidedSetup.timezone,
+        desiredRolesCount: profile?.guidedSetup.desiredRoles.length ?? 0,
+        workPreference: profile?.guidedSetup.workMode,
+        engagementType: profile?.guidedSetup.engagementType,
+        contextCount:
+          (profile?.experiences.length ?? 0) +
+          (profile?.education.length ?? 0) +
+          (profile?.volunteering.length ?? 0),
         valuesCount: profile?.values.length ?? 0,
         causesCount: profile?.causes.length ?? 0,
         skillsCount: profile?.skills.length ?? 0,
-        proofCount:
-          profile?.proofArtifactCount ??
-          profile?.skills.filter((skill) => skill.verified).length ??
-          0,
+        proofCount: profile?.proofArtifactCount ?? 0,
+        proofArtifactCount: profile?.proofArtifactCount ?? 0,
         acceptedVerificationCount: profile?.acceptedVerificationCount ?? 0,
       }),
     [profile]
@@ -113,42 +121,13 @@ export function EditableProfileView() {
 
   const openPurposeEditor = useCallback(
     (field: 'mission' | 'vision') => {
-      if (!profile) {
-        return;
-      }
-
-      const hasValues = profile.values.length > 0;
-      const hasCauses = profile.causes.length > 0;
-
-      if (!hasValues) {
-        setIsValuesEditorOpen(true);
-        toast.info(
-          `Add at least one value before editing your ${field}. Values and causes must be completed first.`
-        );
-        return;
-      }
-
-      if (!hasCauses) {
-        setIsCausesEditorOpen(true);
-        toast.info(
-          `Add at least one cause before editing your ${field}. Values and causes must be completed first.`
-        );
-        return;
-      }
-
       if (field === 'mission') {
         setIsMissionEditorOpen(true);
       } else {
         setIsVisionEditorOpen(true);
       }
     },
-    [
-      profile,
-      setIsCausesEditorOpen,
-      setIsMissionEditorOpen,
-      setIsValuesEditorOpen,
-      setIsVisionEditorOpen,
-    ]
+    [setIsMissionEditorOpen, setIsVisionEditorOpen]
   );
 
   const openMissionEditor = useCallback(() => {
@@ -341,7 +320,7 @@ export function EditableProfileView() {
   }
 
   const showCompletionBanner = profileCompletion < 80;
-  const showGuidedFlow = completionState.stage !== 'step2_profile' && !fullProfileOverride;
+  const showGuidedFlow = !completionState.isPortfolioReady && !fullProfileOverride;
 
   if (showGuidedFlow) {
     return (
@@ -355,9 +334,13 @@ export function EditableProfileView() {
             completionState={completionState}
             onEditProfile={() => setIsEditProfileOpen(true)}
             onOpenFullProfile={openFullProfileView}
-            onOpenValues={() => setIsValuesEditorOpen(true)}
-            onOpenCauses={() => setIsCausesEditorOpen(true)}
-            onOpenSkills={() => router.push('/app/i/expertise')}
+            onAddExperience={openAddExperience}
+            onAddEducation={openAddEducation}
+            onAddVolunteering={openAddVolunteering}
+            onOpenProofs={() => router.push('/app/i/portfolio')}
+            onOpenVerification={() => router.push('/app/i/verifications')}
+            onOpenPortfolio={() => router.push('/app/i/portfolio')}
+            onOpenMatchingPreferences={() => router.push('/app/i/matching/preferences')}
           />
         </div>
         {profileDialogs}

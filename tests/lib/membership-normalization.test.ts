@@ -18,6 +18,7 @@ describe('membership normalization', () => {
     expect(normalizeAuthorizedOrgRole('owner')).toBe('org_owner');
     expect(normalizeAuthorizedOrgRole('admin')).toBe('org_manager');
     expect(normalizeAuthorizedOrgRole('member')).toBe('org_reviewer');
+    expect(normalizeAuthorizedOrgRole('viewer')).toBe('org_reviewer');
     expect(normalizeMembershipState('invited')).toBe('invited_pending');
   });
 });

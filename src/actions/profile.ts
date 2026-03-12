@@ -10,6 +10,7 @@ import { db } from '@/db';
 import {
   profiles,
   individualProfiles,
+  matchingProfiles,
   impactStories,
   impactStoryVerificationRequests,
   experiences,
@@ -51,6 +52,7 @@ import { syncReadinessMilestones } from '@/lib/readiness/analytics';
 import type {
   ProfileData,
   BasicInfo,
+  GuidedSetupState,
   PurposeLinks,
   Value,
   Skill,
@@ -348,6 +350,7 @@ export async function getProfileData(): Promise<ProfileData> {
       [profileBasics] = await db
         .select({
           displayName: profiles.displayName,
+          handle: profiles.handle,
           avatarUrl: profiles.avatarUrl,
           createdAt: profiles.createdAt,
         })
@@ -365,95 +368,108 @@ export async function getProfileData(): Promise<ProfileData> {
     let educationRows: any[] = [];
     let volunteeringRows: any[] = [];
     let skillRows: any[] = [];
+    let matchingProfileRow: Pick<
+      GuidedSetupState,
+      'timezone' | 'desiredRoles' | 'workMode' | 'engagementType'
+    > | null = null;
 
     try {
-      [impactRows, experienceRows, educationRows, volunteeringRows, skillRows] = await Promise.all([
-        db
-          .select({
-            id: impactStories.id,
-            title: impactStories.title,
-            orgDescription: impactStories.orgDescription,
-            impact: impactStories.impact,
-            businessValue: impactStories.businessValue,
-            outcomes: impactStories.outcomes,
-            timeline: impactStories.timeline,
-            timelineStructured: impactStories.timelineStructured,
-            affiliationType: impactStories.affiliationType,
-            affiliationDetails: impactStories.affiliationDetails,
-            roleTitle: impactStories.roleTitle,
-            roleScope: impactStories.roleScope,
-            primaryCause: impactStories.primaryCause,
-            secondaryCauses: impactStories.secondaryCauses,
-            measuredOutcomes: impactStories.measuredOutcomes,
-            supportingArtifacts: impactStories.supportingArtifacts,
-            verified: impactStories.verified,
-          })
-          .from(impactStories)
-          .where(eq(impactStories.userId, user.id)),
-        db
-          .select({
-            id: experiences.id,
-            title: experiences.title,
-            organizationName: experiences.organizationName,
-            organizationType: experiences.organizationType,
-            organizationIndustry: experiences.organizationIndustry,
-            organizationIndustryKey: experiences.organizationIndustryKey,
-            organizationIndustryLabel: experiences.organizationIndustryLabel,
-            organizationIndustryLegacyText: experiences.organizationIndustryLegacyText,
-            organizationEmployeeAmount: experiences.organizationEmployeeAmount,
-            orgDescription: experiences.orgDescription,
-            duration: experiences.duration,
-            startDate: experiences.startDate,
-            endDate: experiences.endDate,
-            outcomes: experiences.outcomes,
-            projects: experiences.projects,
-            measuredOutcomes: experiences.measuredOutcomes,
-            projectEntries: experiences.projectEntries,
-            colleagues: experiences.colleagues,
-            achievements: experiences.achievements,
-            verified: experiences.verified,
-          })
-          .from(experiences)
-          .where(eq(experiences.userId, user.id)),
-        db
-          .select({
-            id: education.id,
-            institution: education.institution,
-            degree: education.degree,
-            duration: education.duration,
-            skills: education.skills,
-            projects: education.projects,
-            verified: education.verified,
-          })
-          .from(education)
-          .where(eq(education.userId, user.id)),
-        db
-          .select({
-            id: volunteering.id,
-            title: volunteering.title,
-            orgDescription: volunteering.orgDescription,
-            duration: volunteering.duration,
-            cause: volunteering.cause,
-            impact: volunteering.impact,
-            skillsDeployed: volunteering.skillsDeployed,
-            personalWhy: volunteering.personalWhy,
-            verified: volunteering.verified,
-          })
-          .from(volunteering)
-          .where(eq(volunteering.userId, user.id)),
-        // Fetch L4 skills from the skills table with taxonomy data
-        db
-          .select({
-            id: skillsTable.id,
-            skillCode: skillsTable.skillCode,
-            skillId: skillsTable.skillId,
-            level: skillsTable.level,
-            nameI18n: skillsTaxonomy.nameI18n,
-          })
-          .from(skillsTable)
-          .leftJoin(skillsTaxonomy, eq(skillsTable.skillCode, skillsTaxonomy.code))
-          .where(eq(skillsTable.profileId, user.id)),
-      ]);
+      [impactRows, experienceRows, educationRows, volunteeringRows, skillRows, matchingProfileRow] =
+        await Promise.all([
+          db
+            .select({
+              id: impactStories.id,
+              title: impactStories.title,
+              orgDescription: impactStories.orgDescription,
+              impact: impactStories.impact,
+              businessValue: impactStories.businessValue,
+              outcomes: impactStories.outcomes,
+              timeline: impactStories.timeline,
+              timelineStructured: impactStories.timelineStructured,
+              affiliationType: impactStories.affiliationType,
+              affiliationDetails: impactStories.affiliationDetails,
+              roleTitle: impactStories.roleTitle,
+              roleScope: impactStories.roleScope,
+              primaryCause: impactStories.primaryCause,
+              secondaryCauses: impactStories.secondaryCauses,
+              measuredOutcomes: impactStories.measuredOutcomes,
+              supportingArtifacts: impactStories.supportingArtifacts,
+              verified: impactStories.verified,
+            })
+            .from(impactStories)
+            .where(eq(impactStories.userId, user.id)),
+          db
+            .select({
+              id: experiences.id,
+              title: experiences.title,
+              organizationName: experiences.organizationName,
+              organizationType: experiences.organizationType,
+              organizationIndustry: experiences.organizationIndustry,
+              organizationIndustryKey: experiences.organizationIndustryKey,
+              organizationIndustryLabel: experiences.organizationIndustryLabel,
+              organizationIndustryLegacyText: experiences.organizationIndustryLegacyText,
+              organizationEmployeeAmount: experiences.organizationEmployeeAmount,
+              orgDescription: experiences.orgDescription,
+              duration: experiences.duration,
+              startDate: experiences.startDate,
+              endDate: experiences.endDate,
+              outcomes: experiences.outcomes,
+              projects: experiences.projects,
+              measuredOutcomes: experiences.measuredOutcomes,
+              projectEntries: experiences.projectEntries,
+              colleagues: experiences.colleagues,
+              achievements: experiences.achievements,
+              verified: experiences.verified,
+            })
+            .from(experiences)
+            .where(eq(experiences.userId, user.id)),
+          db
+            .select({
+              id: education.id,
+              institution: education.institution,
+              degree: education.degree,
+              duration: education.duration,
+              skills: education.skills,
+              projects: education.projects,
+              verified: education.verified,
+            })
+            .from(education)
+            .where(eq(education.userId, user.id)),
+          db
+            .select({
+              id: volunteering.id,
+              title: volunteering.title,
+              orgDescription: volunteering.orgDescription,
+              duration: volunteering.duration,
+              cause: volunteering.cause,
+              impact: volunteering.impact,
+              skillsDeployed: volunteering.skillsDeployed,
+              personalWhy: volunteering.personalWhy,
+              verified: volunteering.verified,
+            })
+            .from(volunteering)
+            .where(eq(volunteering.userId, user.id)),
+          db
+            .select({
+              id: skillsTable.id,
+              skillCode: skillsTable.skillCode,
+              skillId: skillsTable.skillId,
+              level: skillsTable.level,
+              nameI18n: skillsTaxonomy.nameI18n,
+            })
+            .from(skillsTable)
+            .leftJoin(skillsTaxonomy, eq(skillsTable.skillCode, skillsTaxonomy.code))
+            .where(eq(skillsTable.profileId, user.id)),
+          db.query.matchingProfiles.findFirst({
+            where: eq(matchingProfiles.profileId, user.id),
+            columns: {
+              timezone: true,
+              desiredRoles: true,
+              workMode: true,
+              engagementType: true,
+            },
+          }) as Promise<any>,
+        ]);
     } catch (error) {
       console.error('Failed to fetch profile related data:', error);
       // Continue with empty arrays
@@ -664,6 +680,16 @@ export async function getProfileData(): Promise<ProfileData> {
           ? (profile.fieldVisibility as FieldVisibility)
           : {},
       redactMode: profile?.redactMode ?? false,
+      guidedSetup: {
+        handle: profileBasics?.handle ?? null,
+        headline: profile?.headline ?? null,
+        timezone: matchingProfileRow?.timezone ?? null,
+        desiredRoles: Array.isArray(matchingProfileRow?.desiredRoles)
+          ? matchingProfileRow.desiredRoles
+          : [],
+        workMode: matchingProfileRow?.workMode ?? null,
+        engagementType: matchingProfileRow?.engagementType ?? null,
+      },
     };
   } catch (error) {
     // Re-throw Next.js redirect/not-found errors - they must propagate
@@ -706,6 +732,14 @@ export async function getProfileData(): Promise<ProfileData> {
       volunteering: [],
       fieldVisibility: {},
       redactMode: false,
+      guidedSetup: {
+        handle: null,
+        headline: null,
+        timezone: null,
+        desiredRoles: [],
+        workMode: null,
+        engagementType: null,
+      },
     };
   }
 }
@@ -1276,6 +1310,23 @@ function buildLegacyBusinessValue(data: Omit<ImpactStory, 'id'>) {
     : 'Structured impact story recorded';
 }
 
+function prepareImpactStoryPersistenceFields(data: Omit<ImpactStory, 'id'>) {
+  const normalizedMeasuredOutcomes = normalizeMeasuredOutcomes(data.measuredOutcomes);
+  const normalizedData = {
+    ...data,
+    measuredOutcomes: normalizedMeasuredOutcomes,
+  };
+
+  return {
+    normalizedMeasuredOutcomes,
+    timelineText: formatTimelineForLegacy(data.timelineStructured, data.timeline),
+    outcomesText: formatOutcomesForLegacy(normalizedMeasuredOutcomes, data.outcomes),
+    legacyOrgDescription: buildLegacyOrgDescription(normalizedData),
+    legacyImpact: buildLegacyImpact(normalizedData),
+    legacyBusinessValue: buildLegacyBusinessValue(normalizedData),
+  };
+}
+
 function buildLegacyOutcomeClaimLabel(outcomesText: string | null | undefined) {
   if (!outcomesText) return null;
 
@@ -1775,16 +1826,14 @@ function isSchemaDriftError(error: unknown, markers: string[]): boolean {
 
 export async function createImpactStory(data: Omit<ImpactStory, 'id'>) {
   const user = await requireAuth();
-  const normalizedMeasuredOutcomes = normalizeMeasuredOutcomes(data.measuredOutcomes);
-  const normalizedData = {
-    ...data,
-    measuredOutcomes: normalizedMeasuredOutcomes,
-  };
-  const timelineText = formatTimelineForLegacy(data.timelineStructured, data.timeline);
-  const outcomesText = formatOutcomesForLegacy(normalizedMeasuredOutcomes, data.outcomes);
-  const legacyOrgDescription = buildLegacyOrgDescription(normalizedData);
-  const legacyImpact = buildLegacyImpact(normalizedData);
-  const legacyBusinessValue = buildLegacyBusinessValue(normalizedData);
+  const {
+    normalizedMeasuredOutcomes,
+    timelineText,
+    outcomesText,
+    legacyOrgDescription,
+    legacyImpact,
+    legacyBusinessValue,
+  } = prepareImpactStoryPersistenceFields(data);
   const structuredInsertPayload = {
     userId: user.id,
     title: data.title,
@@ -2079,16 +2128,14 @@ export async function requestImpactStoryVerification(
 
 export async function updateImpactStory(id: string, data: Omit<ImpactStory, 'id'>) {
   const user = await requireAuth();
-  const normalizedMeasuredOutcomes = normalizeMeasuredOutcomes(data.measuredOutcomes);
-  const normalizedData = {
-    ...data,
-    measuredOutcomes: normalizedMeasuredOutcomes,
-  };
-  const timelineText = formatTimelineForLegacy(data.timelineStructured, data.timeline);
-  const outcomesText = formatOutcomesForLegacy(normalizedMeasuredOutcomes, data.outcomes);
-  const legacyOrgDescription = buildLegacyOrgDescription(normalizedData);
-  const legacyImpact = buildLegacyImpact(normalizedData);
-  const legacyBusinessValue = buildLegacyBusinessValue(normalizedData);
+  const {
+    normalizedMeasuredOutcomes,
+    timelineText,
+    outcomesText,
+    legacyOrgDescription,
+    legacyImpact,
+    legacyBusinessValue,
+  } = prepareImpactStoryPersistenceFields(data);
   const structuredUpdatePayload = {
     title: data.title,
     orgDescription: legacyOrgDescription,

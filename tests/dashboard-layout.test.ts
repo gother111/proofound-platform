@@ -21,7 +21,6 @@ describe('dashboard layout', () => {
       'matching-readiness',
       'interviews-feedback',
       'momentum-metrics',
-      'zen-snapshot',
       'notifications',
       'next-best-actions',
     ];

@@ -144,7 +144,11 @@ export function ReadinessSprintPanel() {
           size="sm"
           className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
         >
-          <Link href="/app/i/expertise">Open Expertise Atlas</Link>
+          <Link href="/app/i/portfolio">
+            {data.proofProgress.totalProofs === 0
+              ? 'Add your first proof'
+              : 'Open public portfolio'}
+          </Link>
         </Button>
       </div>
     </Card>

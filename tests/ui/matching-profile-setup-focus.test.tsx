@@ -103,6 +103,9 @@ describe('MatchingProfileSetup single-page form', () => {
     });
 
     fireEvent.click(screen.getByRole('button', { name: 'set location' }));
+    fireEvent.change(screen.getByLabelText('Engagement preference'), {
+      target: { value: 'contract_consulting' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'set compensation' }));
     fireEvent.click(screen.getByRole('button', { name: 'set availability' }));
 
@@ -129,6 +132,7 @@ describe('MatchingProfileSetup single-page form', () => {
     expect(payload.weightBias).toBe(80);
     expect(payload.compPeriod).toBe('monthly');
     expect(payload.workMode).toBe('remote');
+    expect(payload.engagementType).toBe('contract_consulting');
     expect(payload.availabilityEarliest).toBe('2026-03-01');
     expect(payload.availabilityLatest).toBe('2026-04-01');
     expect(payload).not.toHaveProperty('valuesTags');

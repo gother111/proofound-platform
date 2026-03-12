@@ -54,21 +54,21 @@ export function ProfileTabsSection({
   onEditVolunteering,
   onDeleteVolunteering,
 }: ProfileTabsSectionProps) {
-  const [activeTab, setActiveTab] = useState('impact');
+  const [activeTab, setActiveTab] = useState('journey');
 
   return (
     <Tabs
-      defaultValue="impact"
+      defaultValue="journey"
       value={activeTab}
       onValueChange={setActiveTab}
       className="space-y-8"
     >
       <TabsList className="w-full justify-start bg-transparent border-b border-border/40 rounded-none h-auto p-0 gap-6 relative">
         {[
-          { id: 'impact', label: 'Impact', icon: Target, color: '#7A9278' },
           { id: 'journey', label: 'Journey', icon: Briefcase, color: '#C67B5C' },
           { id: 'learning', label: 'Learning', icon: GraduationCap, color: '#5C8B89' },
           { id: 'service', label: 'Service', icon: HandHeart, color: '#C67B5C' },
+          { id: 'impact', label: 'Proof stories', icon: Target, color: '#7A9278' },
           { id: 'network', label: 'Network', icon: Network, color: '#7A9278' },
         ].map((tab) => {
           const Icon = tab.icon;

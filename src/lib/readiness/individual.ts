@@ -68,9 +68,9 @@ export async function getIndividualReadiness(userId: string): Promise<Individual
 
   const profileChecks = [
     Boolean(profileRow?.displayName),
-    Boolean(profileRow?.avatarUrl),
     Boolean(individualRow?.headline),
-    Boolean(individualRow?.mission),
+    readinessState.flags.portfolioReady,
+    readinessState.flags.browseReady,
   ];
 
   const profileBasicsScore = Math.round(
@@ -91,14 +91,14 @@ export async function getIndividualReadiness(userId: string): Promise<Individual
       label: 'Profile Basics',
       score: profileBasicsScore,
       maxScore: 25,
-      notes: 'Display name, avatar, headline, and mission',
+      notes: 'Safe shell, first public proof, and publishable browse basics',
     },
     {
       key: 'expertise_depth',
       label: 'Expertise Depth',
       score: expertiseDepthScore,
       maxScore: 25,
-      notes: 'Skill coverage in your Expertise Atlas',
+      notes: 'Proof-backed coverage that can support later matching',
     },
     {
       key: 'proofs_verification',
@@ -112,7 +112,7 @@ export async function getIndividualReadiness(userId: string): Promise<Individual
       label: 'Matching Signal',
       score: matchingSignalScore,
       maxScore: 25,
-      notes: 'Current real-match activity and quality',
+      notes: 'Focus, preferences, and current real-match activity',
     },
   ];
 
@@ -142,12 +142,12 @@ export async function getIndividualReadiness(userId: string): Promise<Individual
     completionRate,
     nextStep:
       totalProofs === 0
-        ? 'Upload your first proof'
+        ? 'Add your first proof'
         : pendingVerifications > 0
           ? `Follow up on ${pendingVerifications} pending verification request${
               pendingVerifications > 1 ? 's' : ''
             }`
-          : 'Request a new verification for your strongest proof',
+          : 'Request verification for your strongest proof when you are ready',
   };
 
   if (topActions.length === 0) {

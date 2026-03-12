@@ -1,34 +1,14 @@
 import {
   buildPurposeLinks,
   normalizePurposeLinks,
+  normalizeUniqueStringList,
   prunePurposeLinks,
   type PurposeLinksShape,
 } from '@/lib/purpose/normalizePurposeLinks';
 import { normalizeOrganizationValues } from '@/lib/organizations/normalizeValues';
 
 export function normalizeOrganizationCauses(causes: unknown): string[] {
-  if (!Array.isArray(causes)) {
-    return [];
-  }
-
-  const normalized: string[] = [];
-  const seen = new Set<string>();
-
-  for (const cause of causes) {
-    if (typeof cause !== 'string') {
-      continue;
-    }
-
-    const trimmed = cause.trim();
-    if (!trimmed || seen.has(trimmed)) {
-      continue;
-    }
-
-    seen.add(trimmed);
-    normalized.push(trimmed);
-  }
-
-  return normalized;
+  return normalizeUniqueStringList(causes);
 }
 
 export function normalizeOrganizationPurposeLinks(links: unknown): PurposeLinksShape {

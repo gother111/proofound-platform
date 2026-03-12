@@ -12,22 +12,24 @@ type PortfolioReadinessChecklistProps = {
 export function PortfolioReadinessChecklist({ completionState }: PortfolioReadinessChecklistProps) {
   const checklist = [
     {
-      id: 'name',
-      label: 'Display name, handle, and headline',
-      passed:
-        completionState.checks.hasDisplayName &&
-        completionState.checks.hasHandle &&
-        completionState.checks.hasHeadlineOrBio,
+      id: 'safe_shell',
+      label: 'Safe shell is complete',
+      passed: completionState.checks.hasSafeShell,
     },
     {
-      id: 'purpose',
-      label: 'At least 1 skill',
-      passed: completionState.checks.hasMinimumSkills,
+      id: 'context',
+      label: 'One real context is anchored',
+      passed: completionState.checks.hasRealContext,
     },
     {
-      id: 'artifact',
-      label: 'At least 1 public proof-backed signal',
-      passed: completionState.checks.hasVerificationArtifact,
+      id: 'proof',
+      label: 'One real proof is added and structured',
+      passed: completionState.checks.hasFirstProof && completionState.checks.hasStructuredProofPack,
+    },
+    {
+      id: 'publish',
+      label: 'Portfolio is published and accessible',
+      passed: completionState.checks.hasPublishedPortfolio,
     },
   ];
 
@@ -36,8 +38,8 @@ export function PortfolioReadinessChecklist({ completionState }: PortfolioReadin
       <div className="space-y-2">
         <h2 className="text-sm font-medium text-proofound-charcoal">Public Portfolio readiness</h2>
         <p className="text-xs text-muted-foreground">
-          Keep this light. A credible public portfolio only needs basics plus one proof-backed
-          signal.
+          Keep this calm and minimal. Portfolio readiness now depends on a safe shell, one real
+          context, one anchored Proof Pack, and an accessible public portfolio state.
         </p>
         <div className="pt-1 space-y-2">
           {checklist.map((item) => (

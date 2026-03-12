@@ -5,7 +5,12 @@ import { validateAssignmentPublishReadiness } from '@/lib/assignments/publish-va
 const baseAssignment = {
   builderMode: 'basic',
   role: 'Product Designer',
-  businessValue: 'Improve candidate quality',
+  businessValue:
+    'Improve candidate quality by turning vague hiring goals into specific proof-backed review decisions.',
+  description:
+    'Own the end-to-end assignment review loop, clarify what work is expected, and keep the team aligned on what delivery actually matters.',
+  expectedImpact:
+    'Convincing proof includes delivered assignments, clear evidence of ownership, and signals that the candidate can explain tradeoffs from real work.',
   mustHaveSkills: ['Research', 'UX', 'Figma'],
   locationMode: 'remote',
   city: null,
@@ -59,13 +64,12 @@ describe('validateAssignmentPublishReadiness', () => {
     );
   });
 
-  it('requires weight totals only in advanced mode', () => {
+  it('requires concrete work summary and proof expectations', () => {
     const result = validateAssignmentPublishReadiness({
       assignment: {
         ...baseAssignment,
-        builderMode: 'advanced',
-        mustHaveSkills: ['Research'],
-        weights: { mission: 50, expertise: 30, workMode: 10 },
+        description: '',
+        expectedImpact: '',
       },
       outcomesCount: 1,
       assignmentBasicModeEnabled: true,
@@ -76,9 +80,14 @@ describe('validateAssignmentPublishReadiness', () => {
       } as any,
     });
 
-    expect(result.builderMode).toBe('advanced');
     expect(result.blocks).toEqual(
-      expect.arrayContaining([expect.objectContaining({ blockCode: 'weights_required' })])
+      expect.arrayContaining([
+        expect.objectContaining({ blockCode: 'work_summary_required', field: 'description' }),
+        expect.objectContaining({
+          blockCode: 'proof_expectations_required',
+          field: 'expectedImpact',
+        }),
+      ])
     );
   });
 
@@ -99,6 +108,41 @@ describe('validateAssignmentPublishReadiness', () => {
 
     expect(result.blocks).toEqual(
       expect.arrayContaining([expect.objectContaining({ blockCode: 'invalid_trust_requirements' })])
+    );
+  });
+
+  it('blocks vague generic assignment language at publish time', () => {
+    const result = validateAssignmentPublishReadiness({
+      assignment: {
+        ...baseAssignment,
+        businessValue: 'Join our team and make an impact.',
+        description: 'Wear many hats on a fast-paced team.',
+        expectedImpact: 'Self-starter wanted.',
+      },
+      outcomesCount: 1,
+      assignmentBasicModeEnabled: true,
+      organization: {
+        trustStatus: 'platform_reviewed',
+        orgTrustTier: 'reviewed',
+        verified: true,
+      } as any,
+    });
+
+    expect(result.blocks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          blockCode: 'generic_assignment_language',
+          field: 'businessValue',
+        }),
+        expect.objectContaining({
+          blockCode: 'generic_assignment_language',
+          field: 'description',
+        }),
+        expect.objectContaining({
+          blockCode: 'generic_assignment_language',
+          field: 'expectedImpact',
+        }),
+      ])
     );
   });
 });

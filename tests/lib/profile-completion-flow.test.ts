@@ -10,70 +10,159 @@ describe('profile completion flow', () => {
     expect(isTwoWordName('')).toBe(false);
   });
 
-  it('returns step 0 when two-word name is missing', () => {
-    const state = evaluateIndividualProfileCompletion({
-      displayName: 'Jane',
-      handle: 'jane-doe',
-      headline: 'Builder',
-      valuesCount: 2,
-      causesCount: 2,
-      skillsCount: 1,
-      proofCount: 1,
-      acceptedVerificationCount: 0,
-    });
-
-    expect(state.stage).toBe('step0_name');
-    expect(state.isPortfolioReady).toBe(false);
-    expect(state.portfolioLockCode).toBe('name');
-  });
-
-  it('returns step 1 when handle or headline is missing', () => {
-    const state = evaluateIndividualProfileCompletion({
+  it('uses the locked stage order from shell to publication', () => {
+    const safeShellState = evaluateIndividualProfileCompletion({
       displayName: 'Jane Doe',
       handle: '',
       headline: '',
+      bio: '',
+      contextCount: 0,
       valuesCount: 0,
-      causesCount: 1,
-      skillsCount: 1,
-      proofCount: 1,
+      causesCount: 0,
+      skillsCount: 0,
+      proofCount: 0,
+      proofArtifactCount: 0,
+      anchoredProofPackCount: 0,
       acceptedVerificationCount: 0,
+      publishedPortfolio: false,
     });
 
-    expect(state.stage).toBe('step1_purpose');
-    expect(state.isCoreProfileComplete).toBe(false);
-    expect(state.portfolioLockCode).toBe('name');
-  });
-
-  it('requires artifact as proof OR accepted verification', () => {
-    const stateWithAcceptedVerification = evaluateIndividualProfileCompletion({
+    const contextState = evaluateIndividualProfileCompletion({
       displayName: 'Jane Doe',
       handle: 'jane-doe',
       headline: 'Builder',
-      valuesCount: 1,
-      causesCount: 1,
-      skillsCount: 1,
+      bio: '',
+      contextCount: 0,
+      valuesCount: 0,
+      causesCount: 0,
+      skillsCount: 0,
       proofCount: 0,
-      acceptedVerificationCount: 1,
+      proofArtifactCount: 0,
+      anchoredProofPackCount: 0,
+      acceptedVerificationCount: 0,
+      publishedPortfolio: false,
     });
 
-    expect(stateWithAcceptedVerification.checks.hasVerificationArtifact).toBe(true);
-    expect(stateWithAcceptedVerification.isPortfolioReady).toBe(true);
+    const firstProofState = evaluateIndividualProfileCompletion({
+      displayName: 'Jane Doe',
+      handle: 'jane-doe',
+      headline: 'Builder',
+      bio: '',
+      contextCount: 1,
+      valuesCount: 0,
+      causesCount: 0,
+      skillsCount: 0,
+      proofCount: 0,
+      proofArtifactCount: 0,
+      anchoredProofPackCount: 0,
+      acceptedVerificationCount: 0,
+      publishedPortfolio: false,
+    });
+
+    const anchoredPackState = evaluateIndividualProfileCompletion({
+      displayName: 'Jane Doe',
+      handle: 'jane-doe',
+      headline: 'Builder',
+      bio: '',
+      contextCount: 1,
+      valuesCount: 0,
+      causesCount: 0,
+      skillsCount: 0,
+      proofCount: 0,
+      proofArtifactCount: 1,
+      anchoredProofPackCount: 0,
+      acceptedVerificationCount: 0,
+      publishedPortfolio: false,
+    });
+
+    const publishState = evaluateIndividualProfileCompletion({
+      displayName: 'Jane Doe',
+      handle: 'jane-doe',
+      headline: 'Builder',
+      bio: '',
+      contextCount: 1,
+      valuesCount: 0,
+      causesCount: 0,
+      skillsCount: 0,
+      proofCount: 1,
+      proofArtifactCount: 1,
+      anchoredProofPackCount: 1,
+      acceptedVerificationCount: 0,
+      publishedPortfolio: false,
+    });
+
+    expect(safeShellState.stage).toBe('safe_shell');
+    expect(contextState.stage).toBe('real_context');
+    expect(firstProofState.stage).toBe('first_proof');
+    expect(anchoredPackState.stage).toBe('proof_pack');
+    expect(publishState.stage).toBe('publish_portfolio');
   });
 
-  it('gates readiness when skills are missing', () => {
+  it('requires safe shell, real context, anchored proof pack, and publication for portfolio readiness', () => {
+    const readyState = evaluateIndividualProfileCompletion({
+      displayName: 'Jane Doe',
+      handle: 'jane-doe',
+      headline: 'Builder',
+      bio: '',
+      contextCount: 1,
+      valuesCount: 0,
+      causesCount: 0,
+      skillsCount: 5,
+      proofCount: 1,
+      proofArtifactCount: 2,
+      anchoredProofPackCount: 1,
+      acceptedVerificationCount: 0,
+      publishedPortfolio: true,
+    });
+
+    expect(readyState.isCoreProfileComplete).toBe(true);
+    expect(readyState.isPortfolioReady).toBe(true);
+    expect(readyState.portfolioLockCode).toBeNull();
+  });
+
+  it('does not let skills alone or accepted verification satisfy portfolio readiness', () => {
     const state = evaluateIndividualProfileCompletion({
       displayName: 'Jane Doe',
       handle: 'jane-doe',
       headline: 'Builder',
-      valuesCount: 1,
-      causesCount: 1,
-      skillsCount: 0,
-      proofCount: 1,
-      acceptedVerificationCount: 0,
+      bio: '',
+      contextCount: 0,
+      valuesCount: 2,
+      causesCount: 2,
+      skillsCount: 4,
+      proofCount: 0,
+      proofArtifactCount: 0,
+      anchoredProofPackCount: 0,
+      acceptedVerificationCount: 1,
+      publishedPortfolio: false,
     });
 
-    expect(state.stage).toBe('step2_profile');
+    expect(state.checks.hasOptionalVerification).toBe(true);
     expect(state.isPortfolioReady).toBe(false);
-    expect(state.portfolioLockCode).toBe('skills');
+    expect(state.portfolioLockCode).toBe('context');
+  });
+
+  it('keeps legacy unanchored proof data readable but not portfolio-ready', () => {
+    const legacyState = evaluateIndividualProfileCompletion({
+      displayName: 'Jane Doe',
+      handle: 'jane-doe',
+      headline: 'Builder',
+      bio: '',
+      contextCount: 1,
+      valuesCount: 0,
+      causesCount: 0,
+      skillsCount: 3,
+      proofCount: 1,
+      proofArtifactCount: 1,
+      anchoredProofPackCount: 0,
+      acceptedVerificationCount: 1,
+      publicProofCount: 1,
+      publishedPortfolio: true,
+    });
+
+    expect(legacyState.checks.hasFirstProof).toBe(true);
+    expect(legacyState.checks.hasStructuredProofPack).toBe(false);
+    expect(legacyState.isPortfolioReady).toBe(false);
+    expect(legacyState.portfolioLockCode).toBe('proof');
   });
 });

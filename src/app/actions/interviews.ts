@@ -3,15 +3,18 @@
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 import { db } from '@/db';
-import { sql } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import { getRows } from '@/lib/db/rows';
 import { isActiveOrgMember } from '@/lib/api/auth';
+import { decisions } from '@/db/schema';
 import {
   InterviewPlatformSchema,
   ManualMeetingProviderSchema,
   normalizeInterviewPlatform,
 } from '@/lib/contracts/domain';
+import { listEngagementVerificationsByInterviewIds } from '@/lib/engagement-verifications/service';
 import { postInterviewUpdateMessageBestEffort } from '@/lib/interviews/messaging';
+import { mergeInterviewProcessState } from '@/lib/interviews/process-state';
 import { classifyGoogleScheduleError } from '@/lib/interviews/schedule-errors';
 import { log } from '@/lib/log';
 
@@ -118,7 +121,7 @@ export async function getInterviews(params?: { status?: string; matchId?: string
   }
 
   const transformedInterviews = (interviews ?? []).map((interview: any) => ({
-    id: interview.id,
+    id: interview.id as string,
     matchId: interview.match_id,
     scheduledAt: interview.scheduled_at,
     duration: interview.duration_minutes ?? interview.duration ?? 30,
@@ -132,9 +135,36 @@ export async function getInterviews(params?: { status?: string; matchId?: string
     organizationName: interview.organization_name || 'Organization',
   }));
 
-  return {
+  const interviewIds = transformedInterviews.map((interview) => interview.id);
+  const [decisionRows, engagementVerificationMap] = await Promise.all([
+    interviewIds.length === 0
+      ? Promise.resolve([])
+      : db
+          .select({
+            interviewId: decisions.latestInterviewId,
+            state: decisions.state,
+          })
+          .from(decisions)
+          .where(inArray(decisions.latestInterviewId, interviewIds)),
+    listEngagementVerificationsByInterviewIds(interviewIds),
+  ]);
+
+  const decisionStateByInterviewId = new Map<string, string>();
+  for (const row of decisionRows) {
+    if (typeof row.interviewId === 'string') {
+      decisionStateByInterviewId.set(row.interviewId, row.state);
+    }
+  }
+
+  const interviewsWithProcessState = mergeInterviewProcessState({
     interviews: transformedInterviews,
-    count: transformedInterviews.length,
+    decisionStateByInterviewId,
+    engagementVerificationByInterviewId: engagementVerificationMap,
+  });
+
+  return {
+    interviews: interviewsWithProcessState,
+    count: interviewsWithProcessState.length,
   };
 }
 

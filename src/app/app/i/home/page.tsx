@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { ReadinessSprintPanel } from '@/components/dashboard/ReadinessSprintPanel';
 import { Button } from '@/components/ui/button';
 import { getDashboardMetrics } from '@/lib/dashboard/metrics';
-import { ArrowRight, Briefcase, Calendar, ShieldCheck, Sparkles, Users } from 'lucide-react';
+import { ArrowRight, Briefcase, Calendar, ShieldCheck, Users } from 'lucide-react';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -89,7 +89,9 @@ export default async function IndividualHomePage() {
                   asChild
                 >
                   <Link href="/app/i/portfolio">
-                    Open public portfolio
+                    {metrics.proofStoriesCount === 0
+                      ? 'Add your first proof'
+                      : 'Open public portfolio'}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Link>
                 </Button>
@@ -162,8 +164,8 @@ export default async function IndividualHomePage() {
               Interviews and reflections
             </CardTitle>
             <CardDescription>
-              Keep interviews, feedback, and optional private check-ins in a quieter follow-through
-              loop.
+              Keep interviews and follow-through visible without reopening archived wellbeing
+              surfaces.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
@@ -171,20 +173,12 @@ export default async function IndividualHomePage() {
               {metrics.activeIntroductions} active intro
               {metrics.activeIntroductions === 1 ? '' : 's'} currently need follow-through.
             </p>
-            <div className="flex flex-wrap gap-2">
-              <Button asChild variant="outline" className="flex-1 justify-between">
-                <Link href="/app/i/interviews">
-                  Open interviews
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="flex-1 justify-between">
-                <Link href="/app/i/zen">
-                  Private check-ins
-                  <Sparkles className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
+            <Button asChild variant="outline" className="w-full justify-between">
+              <Link href="/app/i/interviews">
+                Open interviews
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </section>

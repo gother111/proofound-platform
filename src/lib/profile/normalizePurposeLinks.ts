@@ -2,6 +2,7 @@ import type { Value } from '@/types/profile';
 import {
   buildPurposeLinks,
   normalizePurposeLinks,
+  normalizeUniqueStringList,
   prunePurposeLinks,
   type PurposeLinksShape,
 } from '@/lib/purpose/normalizePurposeLinks';
@@ -25,6 +26,27 @@ export function parseJsonStringSafely(input: unknown): unknown {
   }
 }
 
+function normalizeLabel(input: unknown): string | null {
+  if (typeof input !== 'string') {
+    return null;
+  }
+
+  const trimmed = input.trim();
+  return trimmed ? trimmed : null;
+}
+
+function extractValueLabel(input: unknown): string | null {
+  if (typeof input === 'string') {
+    return normalizeLabel(input);
+  }
+
+  if (input && typeof input === 'object' && 'label' in input) {
+    return normalizeLabel((input as { label?: unknown }).label);
+  }
+
+  return null;
+}
+
 function normalizeFallbackValueId(index: number, label: string): string {
   const slug = label
     .trim()
@@ -33,6 +55,23 @@ function normalizeFallbackValueId(index: number, label: string): string {
     .replace(/^-+|-+$/g, '');
 
   return `legacy-${index}-${slug || 'value'}`;
+}
+
+function collectUniqueValueLabels(items: unknown[]): string[] {
+  const labels: string[] = [];
+  const seen = new Set<string>();
+
+  for (const item of items) {
+    const label = extractValueLabel(item);
+    if (!label || seen.has(label)) {
+      continue;
+    }
+
+    seen.add(label);
+    labels.push(label);
+  }
+
+  return labels;
 }
 
 export function normalizeIndividualValues(values: unknown): Value[] {
@@ -47,18 +86,19 @@ export function normalizeIndividualValues(values: unknown): Value[] {
 
   for (let index = 0; index < parsedValues.length; index += 1) {
     const item = parsedValues[index];
+    const label = extractValueLabel(item);
+
+    if (!label || seenLabels.has(label)) {
+      continue;
+    }
+
+    seenLabels.add(label);
 
     if (typeof item === 'string') {
-      const trimmed = item.trim();
-      if (!trimmed || seenLabels.has(trimmed)) {
-        continue;
-      }
-
-      seenLabels.add(trimmed);
       normalized.push({
-        id: normalizeFallbackValueId(index, trimmed),
+        id: normalizeFallbackValueId(index, label),
         icon: FALLBACK_VALUE_ICON,
-        label: trimmed,
+        label,
         verified: false,
       });
       continue;
@@ -69,12 +109,6 @@ export function normalizeIndividualValues(values: unknown): Value[] {
     }
 
     const raw = item as Partial<Value>;
-    const label = typeof raw.label === 'string' ? raw.label.trim() : '';
-    if (!label || seenLabels.has(label)) {
-      continue;
-    }
-
-    seenLabels.add(label);
     normalized.push({
       id:
         typeof raw.id === 'string' && raw.id.trim()
@@ -96,56 +130,11 @@ export function normalizeIndividualValueLabels(values: unknown): string[] {
     return [];
   }
 
-  const labels: string[] = [];
-  const seen = new Set<string>();
-
-  for (const item of parsedValues) {
-    const label =
-      typeof item === 'string'
-        ? item
-        : item && typeof item === 'object' && 'label' in item
-          ? (item as Value).label
-          : null;
-
-    if (typeof label !== 'string') {
-      continue;
-    }
-
-    const trimmed = label.trim();
-    if (!trimmed || seen.has(trimmed)) {
-      continue;
-    }
-
-    seen.add(trimmed);
-    labels.push(trimmed);
-  }
-
-  return labels;
+  return collectUniqueValueLabels(parsedValues);
 }
 
 export function normalizeIndividualCauses(causes: unknown): string[] {
-  if (!Array.isArray(causes)) {
-    return [];
-  }
-
-  const normalized: string[] = [];
-  const seen = new Set<string>();
-
-  for (const cause of causes) {
-    if (typeof cause !== 'string') {
-      continue;
-    }
-
-    const trimmed = cause.trim();
-    if (!trimmed || seen.has(trimmed)) {
-      continue;
-    }
-
-    seen.add(trimmed);
-    normalized.push(trimmed);
-  }
-
-  return normalized;
+  return normalizeUniqueStringList(causes);
 }
 
 export function normalizeIndividualPurposeLinks(links: unknown): PurposeLinksShape {

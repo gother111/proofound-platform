@@ -24,6 +24,12 @@ interface Step5Props {
   onSubmit: () => void;
   onBack: () => void;
   isSubmitting?: boolean;
+  submitLabel?: string;
+  stepTitle?: string;
+  stepNumber?: number;
+  progressValue?: number;
+  hideProgressHeader?: boolean;
+  hideNavigation?: boolean;
 }
 
 interface TaxonomyNode {
@@ -156,6 +162,12 @@ export function Step5ExpertiseMapping({
   onSubmit,
   onBack,
   isSubmitting = false,
+  submitLabel = 'Review & Publish',
+  stepTitle = 'Step 5: Expertise Mapping',
+  stepNumber = 5,
+  progressValue = 100,
+  hideProgressHeader = false,
+  hideNavigation = false,
 }: Step5Props) {
   const { watch, setValue } = form;
 
@@ -359,17 +371,19 @@ export function Step5ExpertiseMapping({
 
   return (
     <div className="space-y-6">
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-2xl font-bold">Step 5: Expertise Mapping</h2>
-          <span className="text-sm text-muted-foreground">Step 5 of 5</span>
+      {!hideProgressHeader ? (
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-2xl font-bold">{stepTitle}</h2>
+            <span className="text-sm text-muted-foreground">Step {stepNumber} of 5</span>
+          </div>
+          <p className="text-muted-foreground">
+            Pick skills, link them to the assignment, and specify education requirements only when
+            truly necessary.
+          </p>
+          <Progress value={progressValue} className="mt-4" />
         </div>
-        <p className="text-muted-foreground">
-          Pick skills, link to business value and target outcomes, and specify education
-          requirements.
-        </p>
-        <Progress value={100} className="mt-4" />
-      </div>
+      ) : null}
 
       {unresolvedLegacyIds.length > 0 && (
         <div className="border border-yellow-400 bg-yellow-50 rounded-lg p-4 text-yellow-900">
@@ -630,14 +644,16 @@ export function Step5ExpertiseMapping({
         <p className="text-sm text-destructive">At least one must-have skill is required</p>
       )}
 
-      <div className="flex justify-between pt-4 border-t">
-        <Button variant="outline" onClick={onBack} disabled={isSubmitting} type="button">
-          Back
-        </Button>
-        <Button onClick={onSubmit} disabled={!isValid || isSubmitting} type="button">
-          {isSubmitting ? 'Saving...' : 'Review & Publish'}
-        </Button>
-      </div>
+      {!hideNavigation ? (
+        <div className="flex justify-between border-t pt-4">
+          <Button variant="outline" onClick={onBack} disabled={isSubmitting} type="button">
+            Back
+          </Button>
+          <Button onClick={onSubmit} disabled={!isValid || isSubmitting} type="button">
+            {isSubmitting ? 'Saving...' : submitLabel}
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }

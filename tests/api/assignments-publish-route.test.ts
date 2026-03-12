@@ -82,7 +82,12 @@ describe('assignment publish route', () => {
       builderMode: 'basic',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
-      businessValue: 'Improve candidate quality',
+      businessValue:
+        'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
+      description:
+        'Lead the assignment review workflow, define concrete deliverables, and keep the team aligned on what strong work actually looks like.',
+      expectedImpact:
+        'Convincing proof includes real shipped work, evidence of ownership, and a clear explanation of tradeoffs from past assignments.',
       mustHaveSkills: ['Research', 'UX', 'Figma'],
       locationMode: 'remote',
       compMin: 80000,
@@ -129,6 +134,8 @@ describe('assignment publish route', () => {
       builderMode: 'basic',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: '',
+      description: '',
+      expectedImpact: '',
       mustHaveSkills: [],
       locationMode: null,
       city: null,
@@ -154,6 +161,14 @@ describe('assignment publish route', () => {
     expect(payload.details.blocks).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ blockCode: 'role_required', field: 'role' }),
+        expect.objectContaining({
+          blockCode: 'work_summary_required',
+          field: 'description',
+        }),
+        expect.objectContaining({
+          blockCode: 'proof_expectations_required',
+          field: 'expectedImpact',
+        }),
         expect.objectContaining({ blockCode: 'outcomes_required', field: 'outcomes' }),
         expect.objectContaining({
           blockCode: 'must_have_skills_required',
@@ -164,20 +179,21 @@ describe('assignment publish route', () => {
     );
   });
 
-  it('blocks advanced-mode publish when weight matrix is invalid', async () => {
+  it('blocks vague generic copy at publish time', async () => {
     (db.query.assignments.findFirst as any).mockResolvedValue({
       id: assignmentId,
       orgId,
-      builderMode: 'advanced',
+      builderMode: 'basic',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
-      businessValue: 'Improve candidate quality',
-      mustHaveSkills: ['Research'],
+      businessValue: 'Join our team and make an impact.',
+      description: 'Wear many hats on a fast-paced team.',
+      expectedImpact: 'Self-starter wanted.',
+      mustHaveSkills: ['Research', 'UX', 'Figma'],
       locationMode: 'remote',
       compMin: 80000,
       compMax: 100000,
       verificationGates: [],
-      weights: { mission: 50, expertise: 30, workMode: 10 },
     });
     (db.query.assignmentOutcomes.findMany as any).mockResolvedValue([{ id: 'outcome-1' }]);
 
@@ -192,10 +208,20 @@ describe('assignment publish route', () => {
     const payload = await res.json();
 
     expect(res.status).toBe(400);
-    expect(payload.details.builderMode).toBe('advanced');
     expect(payload.details.blocks).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ blockCode: 'weights_required', field: 'weights' }),
+        expect.objectContaining({
+          blockCode: 'generic_assignment_language',
+          field: 'businessValue',
+        }),
+        expect.objectContaining({
+          blockCode: 'generic_assignment_language',
+          field: 'description',
+        }),
+        expect.objectContaining({
+          blockCode: 'generic_assignment_language',
+          field: 'expectedImpact',
+        }),
       ])
     );
   });
@@ -207,7 +233,12 @@ describe('assignment publish route', () => {
       builderMode: 'basic',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
-      businessValue: 'Improve candidate quality',
+      businessValue:
+        'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
+      description:
+        'Lead the assignment review workflow, define concrete deliverables, and keep the team aligned on what strong work actually looks like.',
+      expectedImpact:
+        'Convincing proof includes real shipped work, evidence of ownership, and a clear explanation of tradeoffs from past assignments.',
       mustHaveSkills: ['Research', 'UX', 'Figma'],
       locationMode: 'remote',
       compMin: 80000,
@@ -252,7 +283,12 @@ describe('assignment publish route', () => {
       builderMode: 'basic',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
-      businessValue: 'Improve candidate quality',
+      businessValue:
+        'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
+      description:
+        'Lead the assignment review workflow, define concrete deliverables, and keep the team aligned on what strong work actually looks like.',
+      expectedImpact:
+        'Convincing proof includes real shipped work, evidence of ownership, and a clear explanation of tradeoffs from past assignments.',
       mustHaveSkills: ['Research', 'UX', 'Figma'],
       locationMode: 'remote',
       compMin: 80000,
@@ -299,7 +335,12 @@ describe('assignment publish route', () => {
       builderMode: 'basic',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
-      businessValue: 'Improve candidate quality',
+      businessValue:
+        'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
+      description:
+        'Lead the assignment review workflow, define concrete deliverables, and keep the team aligned on what strong work actually looks like.',
+      expectedImpact:
+        'Convincing proof includes real shipped work, evidence of ownership, and a clear explanation of tradeoffs from past assignments.',
       mustHaveSkills: ['Research', 'UX', 'Figma'],
       locationMode: 'remote',
       compMin: 80000,
@@ -338,7 +379,12 @@ describe('assignment publish route', () => {
       builderMode: 'basic',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Support Advocate',
-      businessValue: 'Support high-risk applicants safely',
+      businessValue:
+        'Support high-risk applicants safely by making sure the review corridor is specific and privacy-safe.',
+      description:
+        'Guide applicants through sensitive review workflows, document what evidence matters, and coordinate escalations when risk thresholds are met.',
+      expectedImpact:
+        'Convincing proof includes prior delivery in sensitive support environments, careful handling of escalation paths, and clear written judgment.',
       mustHaveSkills: ['Research', 'UX', 'Figma'],
       locationMode: 'remote',
       compMin: 80000,

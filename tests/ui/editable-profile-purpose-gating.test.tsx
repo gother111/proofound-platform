@@ -5,7 +5,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EditableProfileView } from '@/components/profile/EditableProfileView';
 import { useProfileData } from '@/hooks/useProfileData';
 
-const toastInfoMock = vi.fn();
 const pushMock = vi.fn();
 const replaceMock = vi.fn();
 let searchParamsState = new URLSearchParams();
@@ -17,14 +16,6 @@ vi.mock('next/navigation', () => ({
   }),
   useSearchParams: () => searchParamsState,
   usePathname: () => '/app/i/profile',
-}));
-
-vi.mock('sonner', () => ({
-  toast: {
-    info: (...args: unknown[]) => toastInfoMock(...args),
-    error: vi.fn(),
-    success: vi.fn(),
-  },
 }));
 
 vi.mock('@/hooks/useProfileData', () => ({
@@ -56,14 +47,12 @@ vi.mock('@/components/profile/GuidedProfileSetupView', () => ({
     completionState,
     onEditProfile,
     onOpenFullProfile,
-    onOpenValues,
-    onOpenCauses,
+    onOpenProofs,
   }: any) => (
     <div data-testid="guided-profile-setup" data-stage={completionState.stage}>
       <button onClick={onEditProfile}>guided-edit-profile</button>
       <button onClick={onOpenFullProfile}>guided-open-full-profile</button>
-      <button onClick={onOpenValues}>guided-open-values</button>
-      <button onClick={onOpenCauses}>guided-open-causes</button>
+      <button onClick={onOpenProofs}>guided-open-proofs</button>
     </div>
   ),
 }));
@@ -102,11 +91,12 @@ vi.mock('@/components/profile/editable-profile/ProfileDialogs', () => ({
 const useProfileDataMock = vi.mocked(useProfileData);
 
 function createProfile(overrides: Partial<any> = {}) {
-  return {
+  const baseProfile = {
     basicInfo: {
       name: 'Test User',
       avatar: null,
       tagline: 'Builder',
+      location: 'Stockholm, Sweden',
     },
     mission: null,
     vision: null,
@@ -119,7 +109,27 @@ function createProfile(overrides: Partial<any> = {}) {
     experiences: [],
     education: [],
     volunteering: [],
+    guidedSetup: {
+      handle: 'test-user',
+      headline: 'Builder',
+      timezone: 'Europe/Stockholm',
+      desiredRoles: ['Product onboarding'],
+      workMode: 'remote',
+      engagementType: 'contract',
+    },
+  };
+
+  return {
+    ...baseProfile,
     ...overrides,
+    basicInfo: {
+      ...baseProfile.basicInfo,
+      ...(overrides.basicInfo ?? {}),
+    },
+    guidedSetup: {
+      ...baseProfile.guidedSetup,
+      ...(overrides.guidedSetup ?? {}),
+    },
   };
 }
 
@@ -163,32 +173,57 @@ function mockUseProfileData(profile: any) {
   } as any);
 }
 
-describe('EditableProfileView guided completion and purpose gating', () => {
+describe('EditableProfileView guided completion and purpose access', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     searchParamsState = new URLSearchParams();
   });
 
-  it('shows guided Step 0 when name is missing and opens edit profile dialog', () => {
+  it('shows the guided proof-first flow when shell or proof readiness is incomplete', () => {
     mockUseProfileData(
       createProfile({
         basicInfo: { name: 'Your Name', avatar: null, tagline: '' },
+        guidedSetup: {
+          handle: null,
+          headline: null,
+          timezone: null,
+          desiredRoles: [],
+          workMode: null,
+          engagementType: null,
+        },
       })
     );
 
     render(<EditableProfileView />);
 
-    expect(screen.getByTestId('guided-profile-setup')).toHaveAttribute('data-stage', 'step0_name');
+    expect(screen.getByTestId('guided-profile-setup')).toHaveAttribute('data-stage', 'safe_shell');
     fireEvent.click(screen.getByRole('button', { name: 'guided-edit-profile' }));
     expect(screen.getByTestId('edit-profile-open')).toBeInTheDocument();
   });
 
-  it('keeps the full profile visible when values and causes are missing, but still routes purpose edits through guided editors', () => {
+  it('keeps the full profile visible when values and causes are missing once proof-first readiness is complete', () => {
+    searchParamsState = new URLSearchParams('profileView=full');
     mockUseProfileData(
       createProfile({
-        basicInfo: { name: 'Jane Doe', avatar: null, tagline: '' },
+        basicInfo: { name: 'Jane Doe', avatar: null, tagline: '', location: 'Stockholm, Sweden' },
+        guidedSetup: {
+          handle: 'jane-doe',
+          headline: 'Builder',
+          timezone: 'Europe/Stockholm',
+          desiredRoles: ['Product onboarding'],
+          workMode: 'remote',
+          engagementType: 'contract',
+        },
         values: [],
         causes: [],
+        experiences: [
+          {
+            id: 'exp-1',
+            title: 'Onboarding lead',
+          },
+        ],
+        proofArtifactCount: 1,
+        acceptedVerificationCount: 0,
       })
     );
 
@@ -198,26 +233,11 @@ describe('EditableProfileView guided completion and purpose gating', () => {
     expect(screen.getByTestId('profile-sidebar')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'sidebar-open-mission' }));
-    expect(screen.getByTestId('values-editor-open')).toBeInTheDocument();
-    expect(toastInfoMock).toHaveBeenCalled();
-  });
-
-  it('routes purpose edits to causes when values exist but causes are still missing', () => {
-    mockUseProfileData(
-      createProfile({
-        basicInfo: { name: 'Jane Doe', avatar: null, tagline: '' },
-        values: [{ id: 'v1', label: 'Integrity', icon: 'shield' }],
-        causes: [],
-      })
-    );
-
-    render(<EditableProfileView />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'sidebar-open-vision' }));
-    expect(screen.getByTestId('causes-editor-open')).toBeInTheDocument();
+    expect(screen.getByTestId('mission-editor-open')).toBeInTheDocument();
   });
 
   it('shows full profile view and opens mission/vision editors when prerequisites are met', () => {
+    searchParamsState = new URLSearchParams('profileView=full');
     mockUseProfileData(
       createProfile({
         basicInfo: { name: 'Jane Doe', avatar: null, tagline: '' },
@@ -236,7 +256,6 @@ describe('EditableProfileView guided completion and purpose gating', () => {
 
     expect(screen.getByTestId('mission-editor-open')).toBeInTheDocument();
     expect(screen.getByTestId('vision-editor-open')).toBeInTheDocument();
-    expect(toastInfoMock).not.toHaveBeenCalled();
   });
 
   it('shows full profile when incomplete profile has profileView=full override', () => {
@@ -260,8 +279,14 @@ describe('EditableProfileView guided completion and purpose gating', () => {
     mockUseProfileData(
       createProfile({
         basicInfo: { name: 'Your Name', avatar: null, tagline: '' },
-        values: [],
-        causes: [],
+        guidedSetup: {
+          handle: null,
+          headline: null,
+          timezone: null,
+          desiredRoles: [],
+          workMode: null,
+          engagementType: null,
+        },
       })
     );
 

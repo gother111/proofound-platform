@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { and, eq, inArray, or } from 'drizzle-orm';
+import { and, eq, or } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
 import { db } from '@/db';
@@ -26,6 +26,7 @@ import {
   buildCandidateInvitePolicyError,
   resolveCandidateInvitePolicyContext,
 } from '@/lib/candidate-invite-policy';
+import { normalizeAuthorizedOrgRole } from '@/lib/authz';
 import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
 import { createClient } from '@/lib/supabase/server';
 
@@ -272,23 +273,25 @@ export async function POST(
         })
         .from(organizationMembers)
         .where(
-          and(
-            eq(organizationMembers.orgId, invite.orgId),
-            eq(organizationMembers.status, 'active'),
-            inArray(organizationMembers.role, ['owner', 'admin'])
-          )
+          and(eq(organizationMembers.orgId, invite.orgId), eq(organizationMembers.status, 'active'))
         )
         .limit(10);
 
-      if (orgLeads.length === 0) {
+      const canonicalOrgLeads = orgLeads.filter((member) => {
+        const role = normalizeAuthorizedOrgRole(member.role);
+        return role === 'org_owner' || role === 'org_manager';
+      });
+
+      if (canonicalOrgLeads.length === 0) {
         throw new Error('ORG_REP_NOT_FOUND');
       }
 
       const prioritizedOrgRepId =
         (invite.invitedBy &&
-          orgLeads.find((member) => member.userId === invite.invitedBy)?.userId) ||
-        orgLeads.find((member) => member.role === 'owner')?.userId ||
-        orgLeads[0]?.userId;
+          canonicalOrgLeads.find((member) => member.userId === invite.invitedBy)?.userId) ||
+        canonicalOrgLeads.find((member) => normalizeAuthorizedOrgRole(member.role) === 'org_owner')
+          ?.userId ||
+        canonicalOrgLeads[0]?.userId;
 
       if (!prioritizedOrgRepId) {
         throw new Error('ORG_REP_NOT_FOUND');
@@ -423,7 +426,7 @@ export async function POST(
 
     if (error instanceof Error && error.message === 'ORG_REP_NOT_FOUND') {
       return NextResponse.json(
-        { error: 'No active organization owner/admin available for test messaging.' },
+        { error: 'No active organization owner/manager available for test messaging.' },
         { status: 409 }
       );
     }

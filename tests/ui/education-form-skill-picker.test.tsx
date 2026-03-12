@@ -6,7 +6,7 @@ import { EducationForm } from '@/components/profile/forms/EducationForm';
 
 vi.mock('next/link', () => ({
   default: ({ children, href, ...props }: any) => (
-    <a href={typeof href === 'string' ? href : '/app/i/expertise'} {...props}>
+    <a href={typeof href === 'string' ? href : '/app/i/portfolio'} {...props}>
       {children}
     </a>
   ),
@@ -53,7 +53,7 @@ vi.mock('@/components/ui/badge', () => ({
 }));
 
 describe('EducationForm skill picker', () => {
-  it('blocks save and guides user when no Expertise Atlas skills exist', () => {
+  it('blocks save and guides user when no portfolio-backed skills exist', () => {
     const onSave = vi.fn();
 
     render(
@@ -61,11 +61,11 @@ describe('EducationForm skill picker', () => {
     );
 
     expect(
-      screen.getByText(/You need skills in your Expertise Atlas before adding education entries/i)
+      screen.getByText(/Add proof-backed portfolio content before attaching education entries/i)
     ).toBeTruthy();
-    expect(screen.getByRole('link', { name: /Go to Expertise Atlas/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /Open Public Portfolio/i })).toHaveAttribute(
       'href',
-      '/app/i/expertise'
+      '/app/i/portfolio'
     );
     expect(screen.getByRole('button', { name: /Add Education/i })).toHaveAttribute('disabled');
   });

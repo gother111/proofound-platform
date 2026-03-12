@@ -262,10 +262,10 @@ export function VolunteerForm({
               {availableSkills.length === 0 ? (
                 <div className="space-y-3 rounded-md border border-amber-200 bg-amber-50/40 p-3">
                   <p className="text-sm text-amber-900">
-                    You need skills in your Expertise Atlas before adding volunteer work.
+                    Add proof-backed portfolio content before attaching volunteer work.
                   </p>
                   <Button asChild type="button" variant="outline" size="sm">
-                    <Link href="/app/i/expertise">Go to Expertise Atlas</Link>
+                    <Link href="/app/i/portfolio">Open Public Portfolio</Link>
                   </Button>
                 </div>
               ) : (
@@ -282,7 +282,7 @@ export function VolunteerForm({
                 />
               )}
               <p className="text-xs text-muted-foreground">
-                Choose only from your existing Expertise Atlas skills
+                Choose only from the skills already represented on your profile.
               </p>
               {skillsError ? <p className="text-xs text-red-500">{skillsError}</p> : null}
             </motion.div>

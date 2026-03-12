@@ -48,6 +48,7 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
     period: 'annual',
   });
   const [availability, setAvailability] = useState<DateWindow>({ earliest: '', latest: '' });
+  const [engagementType, setEngagementType] = useState('');
 
   const handleFocusChange = (partial: {
     desiredRoles?: string[];
@@ -150,6 +151,7 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
           currency: compensation.currency,
           availabilityEarliest: availability.earliest,
           availabilityLatest: availability.latest,
+          engagementType,
           weights,
           weightBias,
         }),
@@ -194,15 +196,15 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
           <BookOpen className="mt-0.5 h-5 w-5 text-proofound-forest" />
           <div className="space-y-2">
             <p className="text-sm text-foreground">
-              Skills come from Expertise Atlas. Add or refresh skills and proofs there.
+              Public proof comes from your portfolio. Refresh work examples and proof there.
             </p>
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => window.open('/app/i/expertise', '_blank', 'noopener,noreferrer')}
+              onClick={() => window.open('/app/i/portfolio', '_blank', 'noopener,noreferrer')}
             >
-              Open Expertise Atlas
+              Open Public Portfolio
               <ExternalLink className="ml-2 h-4 w-4" />
             </Button>
           </div>
@@ -251,6 +253,22 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
           <h3 className="text-lg font-medium text-foreground">Work Preferences</h3>
 
           <LocationInput value={location} onChange={setLocation} />
+
+          <div>
+            <Label htmlFor="engagement-type">Engagement preference</Label>
+            <select
+              id="engagement-type"
+              value={engagementType}
+              onChange={(event) => setEngagementType(event.target.value)}
+              className="mt-2 flex h-11 w-full rounded-lg border border-proofound-stone bg-white px-4 py-2 text-base text-proofound-charcoal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest"
+            >
+              <option value="">Select one</option>
+              <option value="full_time">Full-time</option>
+              <option value="part_time">Part-time</option>
+              <option value="contract_consulting">Contract / consulting</option>
+              <option value="fractional_project">Fractional / project</option>
+            </select>
+          </div>
 
           <div>
             <Label>Hours per Week</Label>

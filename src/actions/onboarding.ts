@@ -12,7 +12,6 @@ import { emitIndividualOnboardingCompleted } from '@/lib/analytics/events';
 import { syncReadinessMilestones } from '@/lib/readiness/analytics';
 import { getIndividualReadinessState } from '@/lib/readiness/individual-state';
 import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
-import { upsertCanonicalProofArtifactFromSkillProof } from '@/lib/canonical/repository';
 
 const choosePersonaSchema = z.object({
   persona: z.enum(['individual', 'org_member']),
@@ -30,19 +29,16 @@ const INDIVIDUAL_DAY_ONE_FIELD_VISIBILITY = {
   contact: false,
 } as const;
 
+type OnboardingContextType = 'experience' | 'education' | 'volunteering';
+
 function buildPublicPortfolioUrl(pathname: string) {
   const baseUrl = resolvePublicSnippetBaseUrl();
   const normalizedPath = pathname.startsWith('/') ? pathname : `/${pathname}`;
   return `${baseUrl}${normalizedPath}`;
 }
 
-function slugifySkillSeed(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 40);
+function isOnboardingContextType(value: string): value is OnboardingContextType {
+  return value === 'experience' || value === 'education' || value === 'volunteering';
 }
 
 function normalizeHandle(value: string): string {
@@ -107,19 +103,114 @@ export async function completeIndividualOnboarding(formData: FormData) {
   const displayName = formData.get('displayName') as string;
   const handle = formData.get('handle') as string;
   const headline = formData.get('headline') as string;
-  const bio = formData.get('bio') as string;
-  const location = formData.get('location') as string;
+  const location = String(formData.get('location') || '').trim();
+  const timezone = String(formData.get('timezone') || '').trim();
+  const focusArea = String(formData.get('focusArea') || '').trim();
+  const workMode = String(formData.get('workMode') || '').trim();
+  const engagementType = String(formData.get('engagementType') || '').trim();
+  const contextTypeValue = String(formData.get('contextType') || '').trim();
+  const contextTitle = String(formData.get('contextTitle') || '').trim();
+  const contextOrganizationName = String(formData.get('contextOrganizationName') || '').trim();
+  const contextSummary = String(formData.get('contextSummary') || '').trim();
+  const contextDuration = String(formData.get('contextDuration') || '').trim();
+  const contextOutcomes = String(formData.get('contextOutcomes') || '').trim();
+  const contextProjects = String(formData.get('contextProjects') || '').trim();
+  const contextCollaboration = String(formData.get('contextCollaboration') || '').trim();
+  const contextAchievement = String(formData.get('contextAchievement') || '').trim();
+  const contextDegree = String(formData.get('contextDegree') || '').trim();
+  const contextSkills = String(formData.get('contextSkills') || '').trim();
+  const contextCause = String(formData.get('contextCause') || '').trim();
+  const contextImpact = String(formData.get('contextImpact') || '').trim();
+  const contextSkillsDeployed = String(formData.get('contextSkillsDeployed') || '').trim();
+  const contextPersonalWhy = String(formData.get('contextPersonalWhy') || '').trim();
   const proofUrl = String(formData.get('proofUrl') || '').trim();
   const proofTitle = String(formData.get('proofTitle') || '').trim();
-  const proofSkillLabel = String(formData.get('proofSkillLabel') || '').trim();
+  const proofSummary = String(formData.get('proofSummary') || '').trim();
 
-  if (!displayName || !handle) {
+  if (!isOnboardingContextType(contextTypeValue)) {
+    emitLaunchTrace(trace, {
+      outcome: 'rejected',
+      state: 'portfolio_publish_validation_failed',
+      failureClass: 'invalid_context_type',
+    });
+    return { error: 'Choose one real context before publishing.' };
+  }
+
+  const contextType = contextTypeValue as OnboardingContextType;
+
+  if (
+    !displayName ||
+    !handle ||
+    !headline ||
+    !location ||
+    !timezone ||
+    !focusArea ||
+    !workMode ||
+    !engagementType
+  ) {
     emitLaunchTrace(trace, {
       outcome: 'rejected',
       state: 'portfolio_publish_validation_failed',
       failureClass: 'missing_required_fields',
     });
-    return { error: 'Display name and handle are required' };
+    return { error: 'Finish the safe shell before publishing.' };
+  }
+
+  if (
+    !contextTitle ||
+    !contextOrganizationName ||
+    !contextSummary ||
+    !contextDuration ||
+    !contextOutcomes ||
+    !contextProjects
+  ) {
+    emitLaunchTrace(trace, {
+      outcome: 'rejected',
+      state: 'portfolio_publish_validation_failed',
+      failureClass: 'missing_context_fields',
+    });
+    return { error: 'Add one real context with summary and outcomes before publishing.' };
+  }
+
+  if (contextType === 'experience' && (!contextCollaboration || !contextAchievement)) {
+    emitLaunchTrace(trace, {
+      outcome: 'rejected',
+      state: 'portfolio_publish_validation_failed',
+      failureClass: 'incomplete_experience_context',
+    });
+    return { error: 'Add collaboration and standout details for the work context.' };
+  }
+
+  if (contextType === 'education' && (!contextDegree || !contextSkills)) {
+    emitLaunchTrace(trace, {
+      outcome: 'rejected',
+      state: 'portfolio_publish_validation_failed',
+      failureClass: 'incomplete_education_context',
+    });
+    return { error: 'Add the learning path and skills for this education context.' };
+  }
+
+  if (
+    contextType === 'volunteering' &&
+    (!contextCause || !contextImpact || !contextSkillsDeployed || !contextPersonalWhy)
+  ) {
+    emitLaunchTrace(trace, {
+      outcome: 'rejected',
+      state: 'portfolio_publish_validation_failed',
+      failureClass: 'incomplete_volunteering_context',
+    });
+    return {
+      error: 'Add the cause, impact, skills, and personal why for this volunteering context.',
+    };
+  }
+
+  if (!proofUrl || !proofTitle || !proofSummary) {
+    emitLaunchTrace(trace, {
+      outcome: 'rejected',
+      state: 'portfolio_publish_validation_failed',
+      failureClass: 'missing_proof_fields',
+    });
+    return { error: 'Add your first proof before publishing.' };
   }
 
   const normalizedHandle = normalizeHandle(handle);
@@ -136,6 +227,7 @@ export async function completeIndividualOnboarding(formData: FormData) {
   try {
     const supabase = await createClient({ allowCookieWrite: true });
     const publicPortfolioPath = `/portfolio/${encodeURIComponent(normalizedHandle)}`;
+    const nowIso = new Date().toISOString();
 
     const profileUpdate = await supabase
       .from('profiles')
@@ -143,7 +235,7 @@ export async function completeIndividualOnboarding(formData: FormData) {
         handle: normalizedHandle,
         display_name: displayName,
         persona: 'individual',
-        updated_at: new Date().toISOString(),
+        updated_at: nowIso,
       })
       .eq('id', user.id);
 
@@ -169,7 +261,6 @@ export async function completeIndividualOnboarding(formData: FormData) {
     const individualInsert = await supabase.from('individual_profiles').upsert({
       user_id: user.id,
       headline: headline || null,
-      bio: bio || null,
       location: location || null,
       visibility: 'public',
       field_visibility: INDIVIDUAL_DAY_ONE_FIELD_VISIBILITY,
@@ -188,85 +279,194 @@ export async function completeIndividualOnboarding(formData: FormData) {
       return { error: 'Failed to complete setup. Please try again.' };
     }
 
-    let onboardingSkillId: string | null = null;
-    if (proofUrl && proofSkillLabel) {
-      onboardingSkillId = randomUUID();
-      const skillSeed = slugifySkillSeed(proofSkillLabel);
+    const matchingProfileInsert = await supabase.from('matching_profiles').upsert({
+      profile_id: user.id,
+      timezone,
+      desired_roles: [focusArea],
+      work_mode: workMode,
+      engagement_type: engagementType,
+      updated_at: nowIso,
+    });
 
-      const skillInsert = await supabase.from('skills').insert({
-        id: onboardingSkillId,
-        profile_id: user.id,
-        skill_id: `onboarding-${skillSeed || randomUUID().slice(0, 8)}`,
-        skill_code: null,
-        level: 3,
-        competency_label: 'C3',
-        months_experience: 0,
-        relevance: 'current',
-        last_used_at: new Date().toISOString(),
+    if (matchingProfileInsert.error) {
+      console.error(
+        'Failed to persist matching preferences during onboarding:',
+        matchingProfileInsert.error
+      );
+      emitLaunchTrace(trace, {
+        outcome: 'failure',
+        state: 'portfolio_publish_matching_profile_failed',
+        failureClass: 'matching_profile_failed',
       });
+      return { error: 'Failed to save your work preferences. Please try again.' };
+    }
 
-      if (skillInsert.error) {
-        console.error('Failed to seed onboarding skill:', skillInsert.error);
-        emitLaunchTrace(trace, {
-          outcome: 'failure',
-          state: 'portfolio_publish_skill_seed_failed',
-          failureClass: 'skill_seed_failed',
-        });
-        return { error: 'Failed to save your first proof. Please try again.' };
-      }
+    const contextId = randomUUID();
+    let contextInsertError: { message?: string } | null = null;
 
-      const proofInsert = await supabase
-        .from('skill_proofs')
-        .insert({
-          id: randomUUID(),
-          skill_id: onboardingSkillId,
-          profile_id: user.id,
-          proof_type: 'link',
-          title: proofTitle || proofSkillLabel || 'Proof link',
-          description: `Imported during onboarding for ${proofSkillLabel}.`,
-          url: proofUrl,
-          verified: false,
-          metadata: {
-            visibility: 'public',
-            imported_from: 'onboarding',
-            candidate_evidence: true,
-            topic_label: proofSkillLabel,
-          },
-        })
-        .select()
-        .single();
-
-      if (proofInsert.error || !proofInsert.data) {
-        console.error('Failed to seed onboarding proof:', proofInsert.error);
-        emitLaunchTrace(trace, {
-          outcome: 'failure',
-          state: 'portfolio_publish_proof_seed_failed',
-          failureClass: 'proof_seed_failed',
-        });
-        return { error: 'Failed to save your first proof. Please try again.' };
-      }
-
-      await upsertCanonicalProofArtifactFromSkillProof({
-        id: proofInsert.data.id,
-        skillId: onboardingSkillId,
-        profileId: user.id,
-        proofType: 'link',
-        title: proofInsert.data.title,
-        description: proofInsert.data.description,
-        url: proofInsert.data.url,
-        filePath: proofInsert.data.file_path,
-        issuedDate: proofInsert.data.issued_date,
-        expiresDate: proofInsert.data.expires_date,
-        metadata:
-          proofInsert.data.metadata && typeof proofInsert.data.metadata === 'object'
-            ? (proofInsert.data.metadata as Record<string, unknown>)
-            : {},
-        createdAt: proofInsert.data.created_at,
-        updatedAt: proofInsert.data.updated_at,
+    if (contextType === 'experience') {
+      const { error } = await supabase.from('experiences').insert({
+        id: contextId,
+        user_id: user.id,
+        title: contextTitle,
+        organization_name: contextOrganizationName,
+        org_description: contextSummary,
+        duration: contextDuration,
+        outcomes: contextOutcomes,
+        projects: contextProjects,
+        colleagues: contextCollaboration,
+        achievements: contextAchievement,
+        verified: false,
       });
+      contextInsertError = error;
+    } else if (contextType === 'education') {
+      const { error } = await supabase.from('education').insert({
+        id: contextId,
+        user_id: user.id,
+        institution: contextOrganizationName,
+        degree: contextDegree,
+        duration: contextDuration,
+        skills: contextSkills,
+        projects: contextProjects,
+        verified: false,
+      });
+      contextInsertError = error;
+    } else {
+      const { error } = await supabase.from('volunteering').insert({
+        id: contextId,
+        user_id: user.id,
+        title: contextTitle,
+        org_description: `${contextOrganizationName}: ${contextSummary}`,
+        duration: contextDuration,
+        cause: contextCause,
+        impact: contextImpact,
+        skills_deployed: contextSkillsDeployed,
+        personal_why: contextPersonalWhy,
+        verified: false,
+      });
+      contextInsertError = error;
+    }
+
+    if (contextInsertError) {
+      console.error('Failed to create onboarding context:', contextInsertError);
+      emitLaunchTrace(trace, {
+        outcome: 'failure',
+        state: 'portfolio_publish_context_insert_failed',
+        failureClass: 'context_insert_failed',
+      });
+      return { error: 'Failed to save your first context. Please try again.' };
+    }
+
+    const artifactId = randomUUID();
+    const packId = randomUUID();
+    const proofMetadata = {
+      imported_from: 'onboarding',
+      context_type: contextType,
+      context_title: contextTitle,
+      context_organization_name: contextOrganizationName,
+      focus_area: focusArea,
+      candidate_evidence: true,
+      public_signal: true,
+    };
+
+    const proofArtifactInsert = await supabase.from('proof_artifacts').insert({
+      id: artifactId,
+      owner_type: 'individual_profile',
+      owner_id: user.id,
+      subject_type: contextType,
+      subject_id: contextId,
+      artifact_kind: 'link',
+      lifecycle_state: 'active',
+      title: proofTitle,
+      description: proofSummary,
+      source_url: proofUrl,
+      activated_at: nowIso,
+      visibility: 'public',
+      reveal_gate: 'none',
+      metadata: proofMetadata,
+      created_at: nowIso,
+      updated_at: nowIso,
+    });
+
+    if (proofArtifactInsert.error) {
+      console.error('Failed to create onboarding proof artifact:', proofArtifactInsert.error);
+      emitLaunchTrace(trace, {
+        outcome: 'failure',
+        state: 'portfolio_publish_proof_artifact_failed',
+        failureClass: 'proof_artifact_failed',
+      });
+      return { error: 'Failed to save your first proof. Please try again.' };
+    }
+
+    const proofPackInsert = await supabase.from('proof_packs').insert({
+      id: packId,
+      owner_type: 'individual_profile',
+      owner_id: user.id,
+      pack_kind: 'verification_bundle',
+      primary_subject_type: contextType,
+      primary_subject_id: contextId,
+      lifecycle_state: 'published',
+      title: proofTitle,
+      summary: proofSummary,
+      context_json: {
+        importedFrom: 'onboarding',
+        contextType,
+        contextId,
+        focusArea,
+        workMode,
+        engagementType,
+      },
+      evidence_summary: proofSummary,
+      visibility: 'public',
+      reveal_gate: 'none',
+      created_by: user.id,
+      verification_status: 'unverified',
+      freshness_state: 'fresh',
+      freshness_evaluated_at: nowIso,
+      last_refreshed_at: nowIso,
+      portability_meta: {
+        completenessState: 'context_anchored',
+        importedFrom: 'onboarding',
+      },
+      metadata: proofMetadata,
+      published_at: nowIso,
+      created_at: nowIso,
+      updated_at: nowIso,
+    });
+
+    if (proofPackInsert.error) {
+      console.error('Failed to create onboarding proof pack:', proofPackInsert.error);
+      emitLaunchTrace(trace, {
+        outcome: 'failure',
+        state: 'portfolio_publish_proof_pack_failed',
+        failureClass: 'proof_pack_failed',
+      });
+      return { error: 'Failed to structure your first Proof Pack. Please try again.' };
+    }
+
+    const proofPackItemInsert = await supabase.from('proof_pack_items').insert({
+      pack_id: packId,
+      artifact_id: artifactId,
+      position: 0,
+      included_fields: ['title', 'description', 'sourceUrl', 'issuedAt', 'expiresAt'],
+      created_at: nowIso,
+      updated_at: nowIso,
+    });
+
+    if (proofPackItemInsert.error) {
+      console.error('Failed to attach onboarding proof to proof pack:', proofPackItemInsert.error);
+      emitLaunchTrace(trace, {
+        outcome: 'failure',
+        state: 'portfolio_publish_proof_pack_item_failed',
+        failureClass: 'proof_pack_item_failed',
+      });
+      return { error: 'Failed to finish your first Proof Pack. Please try again.' };
     }
 
     revalidatePath('/app/i');
+    revalidatePath('/app/i/home');
+    revalidatePath('/app/i/profile');
+    revalidatePath('/app/i/portfolio');
     revalidatePath(publicPortfolioPath);
 
     try {
@@ -285,7 +485,7 @@ export async function completeIndividualOnboarding(formData: FormData) {
       portfolioReady: readiness.flags.portfolioReady,
       browseReady: readiness.flags.browseReady,
       qualifiedIntroReady: readiness.flags.qualifiedIntroReady,
-      proofImported: Boolean(proofUrl && proofSkillLabel),
+      proofImported: true,
     });
 
     emitLaunchTrace(trace, {

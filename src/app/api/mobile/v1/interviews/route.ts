@@ -143,11 +143,14 @@ export async function POST(request: NextRequest) {
       return mobileError('not_found', 'Assignment not found', 404);
     }
 
-    const canSchedule = await isActiveOrgMember(auth.user.id, assignment.orgId, ['owner', 'admin']);
+    const canSchedule = await isActiveOrgMember(auth.user.id, assignment.orgId, [
+      'org_owner',
+      'org_manager',
+    ]);
     if (!canSchedule) {
       return mobileError(
         'forbidden',
-        'Only organization owners/admins can schedule interviews',
+        'Only organization owners/managers can schedule interviews',
         403
       );
     }

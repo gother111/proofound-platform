@@ -93,10 +93,10 @@ export default function MatchingPage() {
   ) => {
     const defaults = [
       {
-        id: 'update-expertise-atlas-default',
-        title: 'Update Expertise Atlas',
-        description: 'Add skills with recency and at least one proof artifact.',
-        actionUrl: '/app/i/expertise',
+        id: 'update-public-portfolio-default',
+        title: 'Strengthen public portfolio',
+        description: 'Refresh proof-backed work examples and trust signals on your portfolio.',
+        actionUrl: '/app/i/portfolio',
       },
       {
         id: 'set-matching-constraints-default',

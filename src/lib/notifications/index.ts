@@ -189,7 +189,7 @@ export async function notifyVerificationRequested(
     type: 'verification_requested',
     title: 'Skill Verification Request',
     message: `${requesterName} has asked you to verify their ${skillName} skill`,
-    actionUrl: `/app/i/expertise?verificationRequest=${requestId}`,
+    actionUrl: `/app/i/verifications?verificationRequest=${requestId}`,
     entityType: 'verification',
     entityId: requestId,
   });
@@ -209,7 +209,7 @@ export async function notifyVerificationCompleted(
     type: 'verification_completed',
     title: `Skill Verification ${approved ? 'Approved' : 'Declined'}`,
     message: `Your ${skillName} skill verification has been ${approved ? 'approved' : 'declined'}`,
-    actionUrl: `/app/i/expertise`,
+    actionUrl: `/app/i/verifications`,
     entityType: 'verification',
     entityId: requestId,
     metadata: { approved },

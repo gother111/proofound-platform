@@ -36,6 +36,14 @@ export function getEmptyProfile(): ProfileData {
       impactStories: 'public',
     },
     redactMode: false,
+    guidedSetup: {
+      handle: null,
+      headline: null,
+      timezone: null,
+      desiredRoles: [],
+      workMode: null,
+      engagementType: null,
+    },
   };
 }
 

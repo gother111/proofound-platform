@@ -65,7 +65,7 @@ export async function isActiveOrgMember(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
   orgId: string,
-  roles?: OrgRole[]
+  roles?: readonly OrgRole[]
 ): Promise<boolean> {
   const { data, error } = await supabase
     .from('organization_members')

@@ -8,7 +8,7 @@ export const EMPTY_PURPOSE_LINKS: PurposeLinksShape = {
   causes: [],
 };
 
-function normalizeStringList(input: unknown): string[] {
+export function normalizeUniqueStringList(input: unknown): string[] {
   if (!Array.isArray(input)) {
     return [];
   }
@@ -41,15 +41,15 @@ export function normalizePurposeLinks(input: unknown): PurposeLinksShape {
   const raw = input as { values?: unknown; causes?: unknown };
 
   return {
-    values: normalizeStringList(raw.values),
-    causes: normalizeStringList(raw.causes),
+    values: normalizeUniqueStringList(raw.values),
+    causes: normalizeUniqueStringList(raw.causes),
   };
 }
 
 export function buildPurposeLinks(values: unknown, causes: unknown): PurposeLinksShape {
   return {
-    values: normalizeStringList(values),
-    causes: normalizeStringList(causes),
+    values: normalizeUniqueStringList(values),
+    causes: normalizeUniqueStringList(causes),
   };
 }
 

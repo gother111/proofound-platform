@@ -6,13 +6,13 @@ import AssignmentBuilderPage from '@/app/app/o/[slug]/assignments/new/page';
 
 let mockDraftId: string | null = null;
 
+const pushMock = vi.fn();
 const toastSuccessMock = vi.fn();
 const toastErrorMock = vi.fn();
-const toastInfoMock = vi.fn();
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
-    push: vi.fn(),
+    push: pushMock,
   }),
   useParams: () => ({ slug: 'acme' }),
   useSearchParams: () => ({
@@ -24,81 +24,102 @@ vi.mock('sonner', () => ({
   toast: {
     success: (...args: any[]) => toastSuccessMock(...args),
     error: (...args: any[]) => toastErrorMock(...args),
-    info: (...args: any[]) => toastInfoMock(...args),
   },
-}));
-
-vi.mock('@/lib/featureFlags', () => ({
-  CLIENT_FF_DEFAULTS: {
-    assignmentBasicMode: true,
-  },
-}));
-
-vi.mock('@/lib/templates/prefill', () => ({
-  mapTemplateToAssignmentForm: vi.fn(() => ({})),
 }));
 
 vi.mock('@/components/matching/assignment-steps', () => ({
-  Step1BusinessValue: ({ onOpenTemplatePicker, templateAccessEnabled }: any) => (
+  Step1BusinessValue: ({ onNext }: any) => (
     <div>
-      {templateAccessEnabled ? (
-        <button type="button" onClick={onOpenTemplatePicker}>
-          Load template
-        </button>
-      ) : null}
+      <p>Step 1 content</p>
+      <button type="button" onClick={onNext}>
+        next-step-1
+      </button>
     </div>
   ),
-  Step2TargetOutcomes: () => <div>Step2</div>,
-  Step3WeightMatrix: () => <div>Step3</div>,
-  Step4Practicals: () => <div>Step4</div>,
-  Step5ExpertiseMapping: () => <div>Step5</div>,
-}));
-
-vi.mock('@/components/matching/TemplatePicker', () => ({
-  TemplatePicker: ({ open, templates, onApply }: any) =>
-    open ? (
-      <div data-testid="template-picker">
-        {templates.map((template: any) => (
-          <button key={template.id} type="button" onClick={() => onApply(template)}>
-            Apply {template.name}
-          </button>
-        ))}
-      </div>
-    ) : null,
+  Step2TargetOutcomes: ({ onNext, onBack }: any) => (
+    <div>
+      <p>Step 2 content</p>
+      <button type="button" onClick={onBack}>
+        back-step-2
+      </button>
+      <button type="button" onClick={onNext}>
+        next-step-2
+      </button>
+    </div>
+  ),
+  Step3WeightMatrix: ({ onNext, onBack }: any) => (
+    <div>
+      <p>Step 3 content</p>
+      <button type="button" onClick={onBack}>
+        back-step-3
+      </button>
+      <button type="button" onClick={onNext}>
+        next-step-3
+      </button>
+    </div>
+  ),
+  Step4Practicals: ({ onNext, onBack }: any) => (
+    <div>
+      <p>Step 4 content</p>
+      <button type="button" onClick={onBack}>
+        back-step-4
+      </button>
+      <button type="button" onClick={onNext}>
+        continue-to-review
+      </button>
+    </div>
+  ),
 }));
 
 type FetchFixture = {
-  assignmentBasicMode?: boolean;
-  templates?: Array<Record<string, unknown>>;
   draftAssignment?: Record<string, unknown> | null;
 };
 
-function setupFetch({
-  assignmentBasicMode = true,
-  templates = [],
-  draftAssignment = null,
-}: FetchFixture = {}) {
-  const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+function setupFetch({ draftAssignment = null }: FetchFixture = {}) {
+  const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
+    const isAssignmentDetailRequest = /^\/api\/assignments\/[^/]+$/.test(url);
 
-    if (url === '/api/feature-flags') {
-      return {
-        ok: true,
-        json: async () => ({ flags: { assignmentBasicMode } }),
-      };
-    }
-
-    if (url.startsWith('/api/assignment-templates')) {
-      return {
-        ok: true,
-        json: async () => ({ items: templates }),
-      };
-    }
-
-    if (mockDraftId && url === `/api/assignments/${mockDraftId}` && draftAssignment) {
+    if (
+      mockDraftId &&
+      url === `/api/assignments/${mockDraftId}` &&
+      (!init || init.method === undefined)
+    ) {
       return {
         ok: true,
         json: async () => ({ assignment: draftAssignment }),
+      };
+    }
+
+    if (url === '/api/assignments' || (isAssignmentDetailRequest && init?.method === 'PUT')) {
+      return {
+        ok: true,
+        json: async () => ({
+          assignment: {
+            id: mockDraftId || 'draft-1',
+            orgId: 'org-1',
+          },
+        }),
+      };
+    }
+
+    if (
+      (mockDraftId && url === `/api/assignments/${mockDraftId}/outcomes`) ||
+      url === '/api/assignments/draft-1/outcomes'
+    ) {
+      return {
+        ok: true,
+        json: async () => ({ outcomes: [] }),
+      };
+    }
+
+    if (
+      (mockDraftId && url === `/api/assignments/${mockDraftId}/expertise-matrix`) ||
+      url === '/api/assignments/draft-1/expertise-matrix'
+    ) {
+      return {
+        ok: true,
+        json: async () => ({ success: true }),
       };
     }
 
@@ -112,72 +133,62 @@ function setupFetch({
   return fetchMock;
 }
 
-describe('Assignment builder mode entry behavior', () => {
+describe('Assignment builder lean corridor', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockDraftId = null;
+    window.scrollTo = vi.fn();
   });
 
-  it('shows Basic by default with explicit Advanced opt-in CTA', async () => {
+  it('renders the lean five-step corridor and hides advanced controls', async () => {
     setupFetch();
 
     render(<AssignmentBuilderPage />);
 
-    expect(await screen.findByTestId('advanced-mode-opt-in')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Advanced' })).not.toBeInTheDocument();
-    expect(screen.queryByText('Weight Matrix')).not.toBeInTheDocument();
-  });
-
-  it('reveals mode switch and advanced step after explicit opt-in, and allows switching back', async () => {
-    setupFetch();
-
-    render(<AssignmentBuilderPage />);
-
-    fireEvent.click(await screen.findByTestId('advanced-mode-opt-in'));
-
+    expect(await screen.findByText(/lean assignment corridor/i)).toBeInTheDocument();
+    expect(screen.getByText('Why this role exists')).toBeInTheDocument();
+    expect(screen.getByText('What work will be done')).toBeInTheDocument();
+    expect(screen.getByText('What proof would count')).toBeInTheDocument();
+    expect(screen.getByText('Practical constraints')).toBeInTheDocument();
+    expect(screen.getByText('Internal review')).toBeInTheDocument();
     expect(screen.queryByTestId('advanced-mode-opt-in')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Advanced' })).toBeInTheDocument();
-    expect(screen.getByText('Weight Matrix')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Basic' }));
+    expect(screen.queryByRole('button', { name: 'Advanced' })).not.toBeInTheDocument();
     expect(screen.queryByText('Weight Matrix')).not.toBeInTheDocument();
   });
 
-  it('keeps templates hidden until Advanced mode is explicitly enabled', async () => {
-    setupFetch({
-      templates: [
-        {
-          id: 'template-advanced',
-          name: 'Advanced template',
-          recommendedBuilderMode: 'advanced',
-          presetPayload: {},
-        },
-      ],
-    });
+  it('advances through the lean corridor and ends in internal review routing', async () => {
+    setupFetch();
 
     render(<AssignmentBuilderPage />);
 
-    expect(await screen.findByTestId('advanced-mode-opt-in')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Load template' })).not.toBeInTheDocument();
-    expect(screen.queryByTestId('template-picker')).not.toBeInTheDocument();
-    expect(screen.getByTestId('advanced-mode-opt-in')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Advanced' })).not.toBeInTheDocument();
-    expect(screen.queryByText('Weight Matrix')).not.toBeInTheDocument();
-    expect(toastInfoMock).not.toHaveBeenCalled();
+    fireEvent.click(await screen.findByRole('button', { name: 'next-step-1' }));
+    expect(await screen.findByText('Step 2 content')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'next-step-2' }));
+    expect(await screen.findByText('Step 3 content')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'next-step-3' }));
+    expect(await screen.findByText('Step 4 content')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'continue-to-review' }));
+
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith('/app/o/acme/assignments/draft-1/review');
+    });
+    expect(toastSuccessMock).toHaveBeenCalledWith('Assignment saved for internal review');
   });
 
-  it('loads existing advanced draft with advanced controls already unlocked', async () => {
+  it('hydrates an existing draft into the lean builder without showing legacy controls', async () => {
     mockDraftId = 'draft-1';
     setupFetch({
       draftAssignment: {
         id: 'draft-1',
         orgId: 'org-1',
-        builderMode: 'advanced',
-        role: 'Senior Product Designer',
-        businessValue: 'Improve onboarding conversion',
-        expectedImpact: 'Increase completion by 20%',
+        role: 'Founding operator',
+        businessValue: 'Tighten proof quality',
+        description: 'Run the day-to-day assignment and review loop.',
+        expectedImpact: 'Strong proof from prior assignment delivery.',
         outcomes: [],
-        weights: { mission: 33, expertise: 34, workMode: 33 },
         locationMode: 'hybrid',
         city: 'Stockholm',
         country: 'SE',
@@ -194,11 +205,8 @@ describe('Assignment builder mode entry behavior', () => {
 
     render(<AssignmentBuilderPage />);
 
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Advanced' })).toBeInTheDocument();
-    });
-
-    expect(screen.queryByTestId('advanced-mode-opt-in')).not.toBeInTheDocument();
-    expect(screen.getByText('Weight Matrix')).toBeInTheDocument();
+    expect(await screen.findByText(/lean assignment corridor/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Advanced' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Weight Matrix')).not.toBeInTheDocument();
   });
 });

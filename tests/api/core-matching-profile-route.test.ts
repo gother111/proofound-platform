@@ -66,6 +66,7 @@ describe('core matching profile route', () => {
     const updatedProfile = {
       profileId: userId,
       desiredRoles: ['Staff Engineer'],
+      engagementType: 'contract_consulting',
       desiredIndustries: ['Information and communication'],
       preferredIndustryKeys: ['information_and_communication'],
       preferredIndustryLabels: ['Information and communication'],
@@ -90,6 +91,7 @@ describe('core matching profile route', () => {
         desiredIndustries: ['Technology'],
         orgTypes: ['startup'],
         workMode: 'remote',
+        engagementType: 'contract',
         availabilityEarliest: '2026-03-01',
         availabilityLatest: '2026-04-01',
         compMin: 90000,
@@ -112,10 +114,12 @@ describe('core matching profile route', () => {
         preferredIndustryLabels: ['Information and communication'],
         preferredIndustryLegacy: ['Technology'],
         orgTypes: ['startup'],
+        engagementType: 'contract_consulting',
         compPeriod: 'monthly',
       })
     );
     expect(payload.profile.desiredRoles).toEqual(['Staff Engineer']);
+    expect(payload.profile.engagementType).toBe('contract_consulting');
     expect(payload.profile.desiredIndustries).toEqual(['Information and communication']);
     expect(payload.profile.preferredIndustryKeys).toEqual(['information_and_communication']);
     expect(payload.profile.orgTypes).toEqual(['startup']);
@@ -159,6 +163,7 @@ describe('core matching profile route', () => {
       profileId: userId,
       valuesTags: ['Integrity', 'Innovation'],
       causeTags: ['Climate', 'Education'],
+      engagementType: 'fractional_project',
       createdAt: new Date('2026-02-23T00:00:00.000Z'),
       updatedAt: new Date('2026-02-23T00:00:00.000Z'),
     };
@@ -181,6 +186,7 @@ describe('core matching profile route', () => {
         desiredIndustries: ['Technology'],
         orgTypes: ['startup'],
         workMode: 'remote',
+        engagementType: 'fractional',
       }),
     });
 
@@ -196,6 +202,7 @@ describe('core matching profile route', () => {
         preferredIndustryKeys: ['information_and_communication'],
         preferredIndustryLabels: ['Information and communication'],
         preferredIndustryLegacy: ['Technology'],
+        engagementType: 'fractional_project',
       })
     );
   });

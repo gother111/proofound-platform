@@ -160,7 +160,7 @@ export function EditSkillWindow({
   const [deletingVerificationId, setDeletingVerificationId] = useState<string | null>(null);
   const [newVerificationRequest, setNewVerificationRequest] = useState<VerificationDraft>({
     verifierEmail: '',
-    verifierSource: 'peer',
+    relationship: 'peer',
     message: '',
   });
   const proofsSectionRef = useRef<HTMLDivElement | null>(null);
@@ -513,7 +513,7 @@ export function EditSkillWindow({
         }
         setNewVerificationRequest({
           verifierEmail: '',
-          verifierSource: 'peer',
+          relationship: 'peer',
           message: '',
         });
         setShowRequestVerification(false);

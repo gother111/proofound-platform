@@ -1,17 +1,24 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 import { db } from '@/db';
-import { individualProfiles, matchingProfiles, profiles, skills } from '@/db/schema';
+import {
+  education,
+  experiences,
+  individualProfiles,
+  matchingProfiles,
+  portfolioPublicationStates,
+  profiles,
+  skills,
+  volunteering,
+} from '@/db/schema';
 import type { ReadinessAction } from '@/lib/momentum/types';
+import { isAccessiblePublicPortfolioState } from '@/lib/portfolio/public-contract';
+import { evaluateIndividualProfileCompletion } from '@/lib/profile/completion-flow';
 import {
+  hasPrimaryAnchorContext,
   listCanonicalProofPackAggregatesForOwner,
-  summarizeCanonicalProofOwnerAggregates,
+  type CanonicalProofPackAggregate,
 } from '@/lib/proofs/canonical-pack';
-import {
-  listVerificationRecordsForOwner,
-  summarizeVerificationPolicy,
-} from '@/lib/verification/policy';
-import { resolveWorkEmailValidity } from '@/lib/verification/work-email-validity';
 
 export const READINESS_STATES = [
   'portfolio_ready',
@@ -44,6 +51,7 @@ export const INTRO_ELIGIBILITY_REASON_CODES = [
   'intro_preferences_incomplete',
   'purpose_signal_missing',
   'trust_anchor_missing',
+  'orphan_relevant_proof_blocking_intro',
   'trust_regressed',
 ] as const;
 
@@ -131,21 +139,58 @@ type ProfileRow = typeof profiles.$inferSelect | null;
 type UnknownRow = Record<string, unknown>;
 
 const READINESS_EVENT_ACTIONS: Record<string, ReadinessAction> = {
-  add_public_basics: {
-    id: 'add-public-basics',
-    title: 'Complete your public basics',
-    description: 'Add your name, handle, and a short headline so your portfolio can be shared.',
+  finish_safe_shell: {
+    id: 'finish-safe-shell',
+    title: 'Finish your safe shell',
+    description:
+      'Add the few basics that help people read your first proof: handle, headline, location, and work preferences.',
     priority: 'high',
     category: 'profile',
     actionUrl: '/app/i/profile',
   },
-  add_first_proof_link: {
-    id: 'add-first-proof-link',
-    title: 'Add one proof link',
-    description: 'Publish one proof-backed signal so your public portfolio becomes credible.',
+  add_anchor_context: {
+    id: 'add-anchor-context',
+    title: 'Add one real context',
+    description:
+      'Create one work, volunteering, or learning context so your first proof has a real anchor.',
     priority: 'high',
-    category: 'expertise',
-    actionUrl: '/app/i/expertise',
+    category: 'profile',
+    actionUrl: '/app/i/profile',
+  },
+  add_first_proof: {
+    id: 'add-first-proof',
+    title: 'Add your first proof',
+    description:
+      'Start with one real proof link or artifact. This is the fastest path into a shareable portfolio.',
+    priority: 'high',
+    category: 'profile',
+    actionUrl: '/app/i/portfolio',
+  },
+  structure_first_proof_pack: {
+    id: 'structure-first-proof-pack',
+    title: 'Structure first Proof Pack',
+    description:
+      'Turn the first proof into a clean Proof Pack with context, evidence, and outcomes.',
+    priority: 'high',
+    category: 'profile',
+    actionUrl: '/app/i/portfolio',
+  },
+  request_verification_optional: {
+    id: 'request-verification-optional',
+    title: 'Request verification later',
+    description:
+      'Verification is optional for day one. Add it once your first proof is already live.',
+    priority: 'medium',
+    category: 'verification',
+    actionUrl: '/app/i/verifications',
+  },
+  publish_portfolio: {
+    id: 'publish-portfolio',
+    title: 'Publish portfolio',
+    description: 'Choose one proof-backed public signal and publish the portfolio.',
+    priority: 'high',
+    category: 'profile',
+    actionUrl: '/app/i/portfolio',
   },
   preview_portfolio: {
     id: 'preview-portfolio',
@@ -155,60 +200,53 @@ const READINESS_EVENT_ACTIONS: Record<string, ReadinessAction> = {
     category: 'profile',
     actionUrl: '/app/i/portfolio',
   },
-  add_recent_skills: {
-    id: 'add-recent-skills',
-    title: 'Add recent skills',
-    description: 'Add at least 3 skills with last-used dates so browsing can be personalized.',
-    priority: 'high',
-    category: 'expertise',
-    actionUrl: '/app/i/expertise',
-  },
   set_browse_preferences: {
     id: 'set-browse-preferences',
-    title: 'Set browse preferences',
+    title: 'Set focus and work preferences',
     description:
-      'Add one practical preference so browse results stay relevant without overfitting.',
+      'Browse unlocks once your portfolio has a target role or focus plus work and engagement preferences.',
     priority: 'high',
     category: 'matching',
     actionUrl: '/app/i/matching/preferences',
   },
-  add_purpose_signal: {
-    id: 'add-purpose-signal',
-    title: 'Add mission, values, or causes',
-    description:
-      'A light purpose signal improves explainable browsing without making onboarding heavy.',
-    priority: 'medium',
-    category: 'profile',
-    actionUrl: '/app/i/profile',
-  },
   strengthen_proof_coverage: {
     id: 'strengthen-proof-coverage',
-    title: 'Add stronger proof coverage',
+    title: 'Strengthen anchored proof',
     description:
-      'Qualified introductions need proof linked across more relevant skills, with at least one trusted or attested proof.',
+      'Introductions need anchored proof on relevant skills, with fresh evidence and no floating orphan packs.',
     priority: 'high',
-    category: 'expertise',
-    actionUrl: '/app/i/expertise',
+    category: 'verification',
+    actionUrl: '/app/i/portfolio',
   },
   complete_intro_constraints: {
     id: 'complete-intro-constraints',
     title: 'Complete intro requirements',
     description:
-      'Add role, availability, location, and compensation constraints before qualified introductions unlock.',
+      'Add role, availability, location, compensation, and engagement constraints before introductions unlock.',
     priority: 'high',
     category: 'matching',
     actionUrl: '/app/i/matching/preferences',
   },
   add_verified_signal: {
     id: 'add-verified-signal',
-    title: 'Add one verified trust signal',
+    title: 'Add one non-self trust signal',
     description:
-      'Qualified introductions require at least one active trust anchor and one trusted or attested proof-backed skill.',
+      'Introductions require at least one active peer, manager, or external attestation tied to anchored proof.',
     priority: 'medium',
     category: 'verification',
     actionUrl: '/app/i/verifications',
   },
 };
+
+const DAYS_365 = 365 * 24 * 60 * 60 * 1000;
+const RECENT_SKILL_WINDOW_MS = 3 * DAYS_365;
+const FRESH_PROOF_WINDOW_MS = 2 * DAYS_365;
+const VERY_FRESH_PROOF_WINDOW_MS = DAYS_365;
+const NON_SELF_TRUST_KINDS = new Set([
+  'skill_attestation_peer',
+  'skill_attestation_manager',
+  'impact_attestation',
+]);
 
 function hasContent(value: unknown): boolean {
   return typeof value === 'string' && value.trim().length > 0;
@@ -273,55 +311,65 @@ function buildNextBestActions(
   const actionIds: string[] = [];
 
   if (highestState === null) {
-    if (missingByState.portfolio_ready.some((item) => item.id === 'display_name')) {
-      actionIds.push('add_public_basics');
+    if (missingByState.portfolio_ready.some((item) => item.id === 'safe_shell')) {
+      actionIds.push('finish_safe_shell');
     }
-    if (missingByState.portfolio_ready.some((item) => item.id === 'public_proof_signal')) {
-      actionIds.push('add_first_proof_link');
+    if (missingByState.portfolio_ready.some((item) => item.id === 'real_context')) {
+      actionIds.push('add_anchor_context');
+    }
+    if (missingByState.portfolio_ready.some((item) => item.id === 'anchored_proof_pack')) {
+      actionIds.push('structure_first_proof_pack');
+    }
+    if (missingByState.portfolio_ready.some((item) => item.id === 'published_portfolio')) {
+      actionIds.push('publish_portfolio');
     }
   }
 
   if (highestState === 'portfolio_ready' || highestState === null) {
     if (
-      missingByState.browse_ready.some((item) => item.id === 'skills_with_recency') ||
-      missingByState.browse_ready.some((item) => item.id === 'matching_profile')
-    ) {
-      actionIds.push('add_recent_skills');
-    }
-    if (
-      missingByState.browse_ready.some((item) => item.id === 'intent_signal') ||
-      missingByState.browse_ready.some((item) => item.id === 'logistics_signal')
+      missingByState.browse_ready.some((item) =>
+        ['desired_roles', 'work_mode', 'engagement_type'].includes(item.id)
+      )
     ) {
       actionIds.push('set_browse_preferences');
-      actionIds.push('add_purpose_signal');
     }
   }
 
   if (highestState === 'browse_ready' || highestState === 'portfolio_ready') {
     if (
-      missingByState.qualified_intro_ready.some(
-        (item) =>
-          item.id === 'proof_coverage' ||
-          item.id === 'role_relevant_proof' ||
-          item.id === 'fresh_proof_24' ||
-          item.id === 'fresh_proof_12'
+      missingByState.qualified_intro_ready.some((item) =>
+        [
+          'proof_coverage',
+          'role_relevant_proof',
+          'trusted_signal',
+          'fresh_proof_24',
+          'fresh_proof_12',
+          'orphan_relevant_packs',
+        ].includes(item.id)
       )
     ) {
       actionIds.push('strengthen_proof_coverage');
     }
     if (
-      missingByState.qualified_intro_ready.some(
-        (item) => item.id === 'work_mode' || item.id === 'location' || item.id === 'availability'
-      ) ||
-      missingByState.qualified_intro_ready.some(
-        (item) =>
-          item.id === 'compensation' || item.id === 'currency' || item.id === 'desired_roles'
+      missingByState.qualified_intro_ready.some((item) =>
+        [
+          'work_mode',
+          'engagement_type',
+          'location',
+          'availability',
+          'compensation',
+          'currency',
+          'desired_roles',
+        ].includes(item.id)
       )
     ) {
       actionIds.push('complete_intro_constraints');
     }
     if (missingByState.qualified_intro_ready.some((item) => item.id === 'trusted_signal')) {
       actionIds.push('add_verified_signal');
+    }
+    if (highestState === 'portfolio_ready') {
+      actionIds.push('request_verification_optional');
     }
   }
 
@@ -340,11 +388,6 @@ function buildNextBestActions(
   return deduped.slice(0, 3);
 }
 
-const DAYS_365 = 365 * 24 * 60 * 60 * 1000;
-const RECENT_SKILL_WINDOW_MS = 3 * DAYS_365;
-const FRESH_PROOF_WINDOW_MS = 2 * DAYS_365;
-const VERY_FRESH_PROOF_WINDOW_MS = DAYS_365;
-
 function toTimestamp(value: Date | string | null | undefined): number | null {
   if (!value) return null;
   const date = value instanceof Date ? value : new Date(value);
@@ -361,9 +404,56 @@ function isWithinWindow(
   return timestamp !== null && timestamp >= nowMs - windowMs;
 }
 
-function toIsoString(value: Date | string | null | undefined): string | null | undefined {
-  if (!value) return value;
-  return value instanceof Date ? value.toISOString() : value;
+function hasActiveNonSelfTrustAnchor(
+  record: CanonicalProofPackAggregate['verificationReferences'][number],
+  seenRecordIds: Set<string>
+) {
+  if (seenRecordIds.has(record.id)) {
+    return false;
+  }
+
+  if (!NON_SELF_TRUST_KINDS.has(record.verificationKind)) {
+    return false;
+  }
+
+  if (record.status !== 'verified' || record.integrityStatus !== 'clear') {
+    return false;
+  }
+
+  if (record.disputeState === 'open' || record.disputeState === 'under_review') {
+    return false;
+  }
+
+  seenRecordIds.add(record.id);
+  return true;
+}
+
+function collectAggregateSkillIds(aggregate: CanonicalProofPackAggregate) {
+  const skillIds = new Set<string>();
+
+  for (const item of aggregate.items) {
+    if (item.artifact.subjectType === 'skill' && typeof item.artifact.subjectId === 'string') {
+      skillIds.add(item.artifact.subjectId);
+    }
+  }
+
+  for (const record of aggregate.verificationReferences) {
+    if (record.subjectType === 'skill' && typeof record.subjectId === 'string') {
+      skillIds.add(record.subjectId);
+    }
+  }
+
+  return skillIds;
+}
+
+function intersectsSkillSet(skillIds: Set<string>, candidateIds: Set<string>) {
+  for (const skillId of skillIds) {
+    if (candidateIds.has(skillId)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 export async function getIndividualReadinessState(
@@ -375,8 +465,11 @@ export async function getIndividualReadinessState(
     individualRow,
     matchingRow,
     skillRows,
+    experienceRows,
+    educationRows,
+    volunteeringRows,
+    publicationStateRow,
     canonicalAggregates,
-    verificationRecords,
   ] = await Promise.all([
     safeFindFirst(() =>
       queryDb.query?.profiles?.findFirst?.({
@@ -398,8 +491,33 @@ export async function getIndividualReadinessState(
         where: eq(skills.profileId, userId),
       })
     ),
+    safeSelectRows(() =>
+      queryDb.query?.experiences?.findMany?.({
+        where: eq(experiences.userId, userId),
+        columns: { id: true },
+      })
+    ),
+    safeSelectRows(() =>
+      queryDb.query?.education?.findMany?.({
+        where: eq(education.userId, userId),
+        columns: { id: true },
+      })
+    ),
+    safeSelectRows(() =>
+      queryDb.query?.volunteering?.findMany?.({
+        where: eq(volunteering.userId, userId),
+        columns: { id: true },
+      })
+    ),
+    safeFindFirst(() =>
+      queryDb.query?.portfolioPublicationStates?.findFirst?.({
+        where: and(
+          eq(portfolioPublicationStates.subjectType, 'individual_profile'),
+          eq(portfolioPublicationStates.subjectId, userId)
+        ),
+      })
+    ),
     listCanonicalProofPackAggregatesForOwner('individual_profile', userId),
-    listVerificationRecordsForOwner('individual_profile', userId).catch(() => []),
   ]);
 
   const profile = profileRow as ProfileRow;
@@ -408,13 +526,10 @@ export async function getIndividualReadinessState(
   const nowMs = Date.now();
 
   const skillRowsTyped = skillRows as Array<typeof skills.$inferSelect>;
-  const canonicalSummary = summarizeCanonicalProofOwnerAggregates(canonicalAggregates);
-
   const skillsCount = skillRowsTyped.length;
-  const proofCount = canonicalSummary.packCount;
-  const publicProofCount = canonicalSummary.publicProofSignalCount;
-  const acceptedVerificationCount = canonicalSummary.verifiedVerificationCount;
+  const contextCount = experienceRows.length + educationRows.length + volunteeringRows.length;
 
+  const currentSkillIds = new Set(skillRowsTyped.map((skill) => skill.id));
   const recentSkillIds = new Set(
     skillRowsTyped
       .filter(
@@ -427,327 +542,272 @@ export async function getIndividualReadinessState(
   );
   const recentActiveSkillCount = recentSkillIds.size;
 
-  const proofSummaryBySkillId = new Map<
-    string,
-    {
-      proofCount: number;
-      latestProofAtMs: number | null;
-      hasFresh24: boolean;
-      hasFresh12: boolean;
-    }
-  >();
+  const anchoredAggregates = canonicalAggregates.filter((aggregate) =>
+    hasPrimaryAnchorContext(aggregate.pack)
+  );
+  const orphanAggregates = canonicalAggregates.filter(
+    (aggregate) => !hasPrimaryAnchorContext(aggregate.pack)
+  );
 
-  for (const summary of canonicalSummary.subjectSummaries) {
-    if (summary.subjectType !== 'skill') {
-      continue;
+  const proofBackedSkillIds = new Set<string>();
+  const roleRelevantProofSkillIds = new Set<string>();
+  const fresh24RoleRelevantSkillIds = new Set<string>();
+  const fresh12RoleRelevantSkillIds = new Set<string>();
+  const attestedSkillIds = new Set<string>();
+  const seenTrustRecordIds = new Set<string>();
+
+  let publicProofCount = 0;
+  let freshRoleRelevantAnchoredPackCount = 0;
+  let orphanRelevantPackCount = 0;
+  let activeTrustAnchorCount = 0;
+
+  for (const aggregate of anchoredAggregates) {
+    const packSkillIds = collectAggregateSkillIds(aggregate);
+    const isRoleRelevant = intersectsSkillSet(packSkillIds, recentSkillIds);
+    const isFresh24 = isWithinWindow(aggregate.latestEvidenceAt, FRESH_PROOF_WINDOW_MS, nowMs);
+    const isFresh12 = isWithinWindow(aggregate.latestEvidenceAt, VERY_FRESH_PROOF_WINDOW_MS, nowMs);
+
+    if (aggregate.publicSafe !== null) {
+      publicProofCount += 1;
     }
 
-    const latestProofAtMs = toTimestamp(summary.latestEvidenceAt);
-    proofSummaryBySkillId.set(summary.subjectId, {
-      proofCount: summary.packCount,
-      latestProofAtMs,
-      hasFresh24: isWithinWindow(summary.latestEvidenceAt, FRESH_PROOF_WINDOW_MS, nowMs),
-      hasFresh12: isWithinWindow(summary.latestEvidenceAt, VERY_FRESH_PROOF_WINDOW_MS, nowMs),
-    });
+    for (const skillId of packSkillIds) {
+      proofBackedSkillIds.add(skillId);
+      if (recentSkillIds.has(skillId)) {
+        roleRelevantProofSkillIds.add(skillId);
+        if (isFresh24) {
+          fresh24RoleRelevantSkillIds.add(skillId);
+        }
+        if (isFresh12) {
+          fresh12RoleRelevantSkillIds.add(skillId);
+        }
+      }
+    }
+
+    if (isRoleRelevant && isFresh24) {
+      freshRoleRelevantAnchoredPackCount += 1;
+    }
+
+    for (const record of aggregate.verificationReferences) {
+      if (!hasActiveNonSelfTrustAnchor(record, seenTrustRecordIds)) {
+        continue;
+      }
+
+      activeTrustAnchorCount += 1;
+      if (record.subjectType === 'skill' && typeof record.subjectId === 'string') {
+        attestedSkillIds.add(record.subjectId);
+      }
+    }
   }
 
-  const proofBackedSkillIds = new Set(proofSummaryBySkillId.keys());
+  for (const aggregate of orphanAggregates) {
+    const packSkillIds = collectAggregateSkillIds(aggregate);
+    const relevantSkillUniverse = recentSkillIds.size > 0 ? recentSkillIds : currentSkillIds;
+    if (intersectsSkillSet(packSkillIds, relevantSkillUniverse)) {
+      orphanRelevantPackCount += 1;
+    }
+  }
+
   const proofBackedSkillCount = proofBackedSkillIds.size;
-
-  const roleRelevantProofSkillIds = new Set(
-    [...proofBackedSkillIds].filter((skillId) => recentSkillIds.has(skillId))
-  );
   const roleRelevantProofLinkedL4Count = roleRelevantProofSkillIds.size;
-
-  const fresh24SkillIds = new Set(
-    [...proofSummaryBySkillId.entries()]
-      .filter(([, summary]) => summary.hasFresh24)
-      .map(([skillId]) => skillId)
-  );
-  const fresh12SkillIds = new Set(
-    [...proofSummaryBySkillId.entries()]
-      .filter(([, summary]) => summary.hasFresh12)
-      .map(([skillId]) => skillId)
-  );
-
-  const attestedSkillIds = new Set(
-    verificationRecords
-      .filter(
-        (record) =>
-          record.status === 'verified' &&
-          record.subjectType === 'skill' &&
-          ['skill_attestation_peer', 'skill_attestation_manager', 'impact_attestation'].includes(
-            record.verificationKind
-          )
-      )
-      .map((record) => record.subjectId)
-  );
-  const verifiedProofSkillIds = new Set(
-    canonicalSummary.subjectSummaries
-      .filter(
-        (summary) =>
-          summary.subjectType === 'skill' &&
-          (summary.verificationStatus === 'verified' ||
-            summary.verificationStatus === 'partially_verified')
-      )
-      .map((summary) => summary.subjectId)
-  );
-  const trustedProofSkillIds = new Set([...attestedSkillIds, ...verifiedProofSkillIds]);
+  const qualifyingProofLinkedL4Count = fresh24RoleRelevantSkillIds.size;
   const attestedProofLinkedSkillCount = [...attestedSkillIds].filter((skillId) =>
     proofBackedSkillIds.has(skillId)
   ).length;
-  const trustedProofLinkedSkillCount = [...trustedProofSkillIds].filter((skillId) =>
-    proofBackedSkillIds.has(skillId)
-  ).length;
-  const qualifyingProofSkillIds = new Set(
-    [...roleRelevantProofSkillIds].filter((skillId) => fresh24SkillIds.has(skillId))
-  );
-  const qualifyingProofLinkedL4Count = qualifyingProofSkillIds.size;
-  const qualifyingTrustedProofLinkedSkillCount = [...trustedProofSkillIds].filter((skillId) =>
-    qualifyingProofSkillIds.has(skillId)
-  ).length;
-  const fresh24RoleRelevantSkillIds = new Set(
-    [...roleRelevantProofSkillIds].filter((skillId) => fresh24SkillIds.has(skillId))
-  );
-  const fresh12RoleRelevantSkillIds = new Set(
-    [...roleRelevantProofSkillIds].filter((skillId) => fresh12SkillIds.has(skillId))
-  );
+  const acceptedVerificationCount = activeTrustAnchorCount;
+  const verifiedTrustSignalCount = activeTrustAnchorCount;
+  const providerTrustAnchorCount = 0;
+  const publicationEffectiveState =
+    (publicationStateRow as { effectiveState?: string | null } | null)?.effectiveState ??
+    profile?.publicPortfolioState ??
+    null;
+  const publishedPortfolio =
+    typeof publicationEffectiveState === 'string' &&
+    isAccessiblePublicPortfolioState(publicationEffectiveState as any);
 
-  const workEmailValidity = resolveWorkEmailValidity({
-    work_email_verified: individual?.workEmailVerified,
-    work_email_verified_at: toIsoString(individual?.workEmailVerifiedAt),
-    work_email_reverify_due_at: toIsoString(individual?.workEmailReverifyDueAt),
-    verified_at: toIsoString(individual?.verifiedAt),
+  const completionState = evaluateIndividualProfileCompletion({
+    displayName: profile?.displayName ?? null,
+    handle: profile?.handle ?? null,
+    headline: individual?.headline ?? null,
+    bio: individual?.bio ?? null,
+    location: individual?.location ?? null,
+    timezone: matching?.timezone ?? null,
+    desiredRolesCount: Array.isArray(matching?.desiredRoles) ? matching.desiredRoles.length : 0,
+    workPreference: matching?.workMode ?? null,
+    engagementType: matching?.engagementType ?? null,
+    contextCount,
+    valuesCount: Array.isArray(individual?.values) ? individual.values.length : 0,
+    causesCount: Array.isArray(individual?.causes) ? individual.causes.length : 0,
+    skillsCount,
+    proofCount: anchoredAggregates.length,
+    proofArtifactCount: anchoredAggregates.reduce(
+      (total, aggregate) => total + aggregate.items.length,
+      0
+    ),
+    anchoredProofPackCount: anchoredAggregates.length,
+    acceptedVerificationCount,
+    publicProofCount,
+    publishedPortfolio,
   });
-  const verificationPolicy = summarizeVerificationPolicy({
-    records: verificationRecords,
-    legacyProfile: {
-      verified: individual?.verified,
-      verificationMethod: individual?.verificationMethod,
-      verificationStatus: individual?.verificationStatus,
-      verificationTier: individual?.verificationTier,
-      verificationTierSource: individual?.verificationTierSource,
-      workEmailCurrentlyVerified: workEmailValidity.isCurrentlyVerified,
-      linkedinVerificationStatus: individual?.linkedinVerificationStatus,
-      linkedinHasIdentityVerification: individual?.linkedinVerificationLevel === 'identity',
-    },
-  });
-
-  const providerTrustAnchorCount = [
-    verificationPolicy.slots.identity.activeTrust,
-    verificationPolicy.slots.workplace.activeTrust,
-  ].filter(Boolean).length;
-  const activeTrustAnchorCount = providerTrustAnchorCount + trustedProofLinkedSkillCount;
-  const hasOpenTrustIssue = verificationPolicy.activeIssues.some(
-    (issue) => issue.slot === 'individual.identity' || issue.slot === 'individual.workplace'
-  );
 
   const hasDisplayName = hasContent(profile?.displayName);
   const hasHandle = hasContent(profile?.handle);
   const hasHeadlineOrBio = hasContent(individual?.headline) || hasContent(individual?.bio);
-  const hasPortfolioSkill = skillsCount >= 1;
-  const hasPublicProofSignal =
-    publicProofCount >= 1 ||
-    (Boolean(individual?.fieldVisibility) &&
-      typeof individual?.fieldVisibility === 'object' &&
-      (individual?.fieldVisibility as Record<string, unknown>).proofBar === true &&
-      acceptedVerificationCount >= 1);
-
+  const hasPortfolioSkill = proofBackedSkillCount >= 1;
+  const hasPublicProofSignal = publicProofCount >= 1;
   const hasMatchingProfile = Boolean(matching);
   const hasDesiredRoles = hasArrayContent(matching?.desiredRoles);
   const hasPurposeBlock =
     hasContent(individual?.mission) ||
     hasArrayContent(individual?.values) ||
     hasArrayContent(individual?.causes);
-  const hasIntentSignal = hasPurposeBlock || hasDesiredRoles;
+  const hasIntentSignal = hasDesiredRoles;
+  const hasEngagementPreference = hasContent(matching?.engagementType);
+  const hasLocationConstraint = hasContent(matching?.country) || hasContent(matching?.city);
   const hasLogisticsSignal =
-    hasContent(matching?.workMode) || hasContent(matching?.country) || hasContent(matching?.city);
-
+    hasContent(matching?.workMode) ||
+    hasEngagementPreference ||
+    hasLocationConstraint ||
+    hasContent(matching?.timezone);
   const hasAvailabilityWindow =
     matching?.availabilityEarliest != null && matching?.availabilityLatest != null;
   const hasBasicAvailability =
     matching?.availabilityEarliest != null || matching?.availabilityLatest != null;
   const hasCompensationRange =
     matching?.compMin != null && matching?.compMax != null && hasContent(matching?.currency);
-  const hasLocationConstraint = hasContent(matching?.country) || hasContent(matching?.city);
   const hasIntroConstraints =
     hasContent(matching?.workMode) &&
+    hasEngagementPreference &&
     hasLocationConstraint &&
     hasAvailabilityWindow &&
     hasCompensationRange &&
     hasDesiredRoles;
   const hasTrustedSignal = activeTrustAnchorCount >= 1;
-  const verifiedTrustSignalCount = activeTrustAnchorCount;
 
-  const discoverable =
-    hasDisplayName &&
-    hasHandle &&
-    hasHeadlineOrBio &&
-    hasDesiredRoles &&
-    recentActiveSkillCount >= 1 &&
-    proofBackedSkillCount >= 1 &&
-    hasLogisticsSignal;
+  const portfolioReady = completionState.isPortfolioReady;
+  const browseReady =
+    portfolioReady && hasDesiredRoles && hasContent(matching?.workMode) && hasEngagementPreference;
+  const discoverable = portfolioReady;
   const matchVisible =
     discoverable &&
-    recentActiveSkillCount >= 3 &&
-    roleRelevantProofLinkedL4Count >= 2 &&
-    fresh24RoleRelevantSkillIds.size >= 1 &&
+    browseReady &&
+    roleRelevantProofLinkedL4Count >= 3 &&
+    anchoredAggregates.length >= 1 &&
     hasBasicAvailability &&
-    hasContent(matching?.workMode) &&
     hasLocationConstraint;
   const introEligible =
     matchVisible &&
-    recentActiveSkillCount >= 5 &&
-    proofBackedSkillCount >= 4 &&
-    roleRelevantProofLinkedL4Count >= 3 &&
-    fresh24RoleRelevantSkillIds.size >= 3 &&
-    fresh12RoleRelevantSkillIds.size >= 1 &&
+    freshRoleRelevantAnchoredPackCount >= 1 &&
     hasTrustedSignal &&
     hasIntroConstraints &&
-    hasPurposeBlock &&
-    qualifyingTrustedProofLinkedSkillCount >= 1;
+    orphanRelevantPackCount === 0;
   const stronglyTrusted =
     introEligible &&
-    recentActiveSkillCount >= 8 &&
-    proofBackedSkillCount >= 5 &&
-    trustedProofLinkedSkillCount >= 2 &&
     activeTrustAnchorCount >= 2 &&
-    providerTrustAnchorCount >= 1 &&
-    fresh12RoleRelevantSkillIds.size >= 2 &&
-    fresh24RoleRelevantSkillIds.size >= 3 &&
-    !hasOpenTrustIssue;
-
-  const portfolioReady =
-    hasDisplayName && hasHandle && hasHeadlineOrBio && hasPortfolioSkill && hasPublicProofSignal;
-  const browseReady =
-    recentActiveSkillCount >= 3 && hasMatchingProfile && hasIntentSignal && hasLogisticsSignal;
+    fresh12RoleRelevantSkillIds.size >= 1 &&
+    orphanRelevantPackCount === 0;
   const qualifiedIntroReady = introEligible;
 
   const missingByState: IndividualReadinessRequirementsByState = {
     portfolio_ready: [
       buildRequirement(
-        'display_name',
-        'Display name',
-        'Add the public name you want to share on your portfolio.',
+        'safe_shell',
+        'Safe shell',
+        'Finish the shell with a real display name, handle, and headline or bio.',
         '/app/i/profile',
-        hasDisplayName
+        completionState.checks.hasSafeShell
       ),
       buildRequirement(
-        'handle',
-        'Public handle',
-        'Choose a handle so your portfolio gets a stable public URL.',
+        'real_context',
+        'One real context',
+        'Add at least one work, education-learning, or volunteering context.',
         '/app/i/profile',
-        hasHandle
-      ),
-      buildRequirement(
-        'headline_or_bio',
-        'Headline or short bio',
-        'Add a short summary so the portfolio says what you do before someone opens proof.',
-        '/app/i/profile',
-        hasHeadlineOrBio
-      ),
-      buildRequirement(
-        'portfolio_skill',
-        'At least one skill',
-        'Add one skill so your first proof has clear context.',
-        '/app/i/expertise',
-        hasPortfolioSkill,
-        skillsCount,
+        completionState.checks.hasRealContext,
+        completionState.counts.contexts,
         1
       ),
       buildRequirement(
-        'public_proof_signal',
-        'One public proof-backed signal',
-        'Add one proof link and include it on your public portfolio.',
-        '/app/i/expertise',
-        hasPublicProofSignal,
-        publicProofCount,
+        'anchored_proof_pack',
+        'Anchored Proof Pack',
+        'Add at least one Proof Pack anchored to a real work, education, or volunteering context.',
+        '/app/i/portfolio',
+        completionState.checks.hasStructuredProofPack,
+        completionState.counts.anchoredProofPacks,
         1
+      ),
+      buildRequirement(
+        'published_portfolio',
+        'Published portfolio',
+        'Publish the portfolio so the anchored proof is accessible from your public page.',
+        '/app/i/portfolio',
+        completionState.checks.hasPublishedPortfolio
       ),
     ].filter((item) => !item.met),
     browse_ready: [
       buildRequirement(
-        'skills_with_recency',
-        'Three recent skills',
-        'Browsing becomes useful once at least three skills include last-used dates.',
-        '/app/i/expertise',
-        recentActiveSkillCount >= 3,
-        recentActiveSkillCount,
-        3
-      ),
-      buildRequirement(
-        'matching_profile',
-        'Browse profile',
-        'Create a matching profile row so browse preferences have a place to live.',
+        'desired_roles',
+        'Target role or focus',
+        'Add at least one target role or focus area so browse stays relevant.',
         '/app/i/matching/preferences',
-        hasMatchingProfile
+        hasDesiredRoles
       ),
       buildRequirement(
-        'intent_signal',
-        'Intent signal',
-        'Add mission, values, causes, or desired roles so browse results stay explainable.',
-        '/app/i/profile',
-        hasIntentSignal
-      ),
-      buildRequirement(
-        'logistics_signal',
-        'One practical preference',
-        'Add work mode or a location preference so browse results stay relevant.',
+        'work_mode',
+        'Work mode preference',
+        'Add remote, hybrid, or on-site preference before browse unlocks.',
         '/app/i/matching/preferences',
-        hasLogisticsSignal
+        hasContent(matching?.workMode)
+      ),
+      buildRequirement(
+        'engagement_type',
+        'Engagement preference',
+        'Add the engagement type you want so browse stays practical.',
+        '/app/i/matching/preferences',
+        hasEngagementPreference
       ),
     ].filter((item) => !item.met),
     qualified_intro_ready: [
       buildRequirement(
-        'skills_with_recency',
-        'Five recent skills',
-        'Qualified introductions require at least five recent L4 skills.',
-        '/app/i/expertise',
-        recentActiveSkillCount >= 5,
-        recentActiveSkillCount,
-        5
-      ),
-      buildRequirement(
         'proof_coverage',
-        'Four proof-linked L4 skills',
-        'Qualified introductions require proof linked across at least four skills.',
-        '/app/i/expertise',
-        proofBackedSkillCount >= 4,
-        proofBackedSkillCount,
-        4
-      ),
-      buildRequirement(
-        'role_relevant_proof',
-        'Three role-relevant proof-linked skills',
-        'For MVP, role relevance is proxied by recent active skills with proof attached.',
-        '/app/i/expertise',
+        'Three proof-backed role signals',
+        'Introductions need at least three role-relevant skills or capabilities that resolve back to anchored Proof Packs.',
+        '/app/i/portfolio',
         roleRelevantProofLinkedL4Count >= 3,
         roleRelevantProofLinkedL4Count,
         3
       ),
       buildRequirement(
+        'role_relevant_proof',
+        'One fresh anchored pack',
+        'At least one anchored Proof Pack must be both fresh and relevant to matching.',
+        '/app/i/portfolio',
+        freshRoleRelevantAnchoredPackCount >= 1,
+        freshRoleRelevantAnchoredPackCount,
+        1
+      ),
+      buildRequirement(
         'trusted_signal',
-        'Trusted or attested proof-backed signal',
-        'Add one active trust anchor and at least one trusted or attested proof-backed skill before introductions unlock.',
+        'Non-self trust anchor',
+        'Add one active peer, manager, or external attestation tied to anchored proof or context.',
         '/app/i/verifications',
-        hasTrustedSignal && qualifyingTrustedProofLinkedSkillCount >= 1,
-        qualifyingTrustedProofLinkedSkillCount,
+        hasTrustedSignal,
+        activeTrustAnchorCount,
         1
       ),
       buildRequirement(
         'fresh_proof_24',
-        'Three fresh proof-linked skills',
-        'At least three qualifying proof-linked skills must be evidenced within the last 24 months.',
-        '/app/i/expertise',
-        fresh24RoleRelevantSkillIds.size >= 3,
+        'Fresh supporting proof',
+        'Role-relevant anchored Proof Packs should include supporting evidence refreshed within the last 24 months.',
+        '/app/i/portfolio',
+        fresh24RoleRelevantSkillIds.size >= 1,
         fresh24RoleRelevantSkillIds.size,
-        3
+        1
       ),
       buildRequirement(
         'fresh_proof_12',
-        'One very recent proof-linked skill',
-        'At least one qualifying proof-linked skill must be evidenced within the last 12 months.',
-        '/app/i/expertise',
+        'One current proof signal',
+        'At least one role-relevant anchored Proof Pack should show evidence refreshed within the last 12 months.',
+        '/app/i/portfolio',
         fresh12RoleRelevantSkillIds.size >= 1,
         fresh12RoleRelevantSkillIds.size,
         1
@@ -758,6 +818,13 @@ export async function getIndividualReadinessState(
         'Set remote, hybrid, or on-site preference for safe introductions.',
         '/app/i/matching/preferences',
         hasContent(matching?.workMode)
+      ),
+      buildRequirement(
+        'engagement_type',
+        'Engagement preference',
+        'Add the engagement type you can accept before introductions unlock.',
+        '/app/i/matching/preferences',
+        hasEngagementPreference
       ),
       buildRequirement(
         'location',
@@ -795,11 +862,13 @@ export async function getIndividualReadinessState(
         hasDesiredRoles
       ),
       buildRequirement(
-        'purpose_block',
-        'Mission, values, or causes',
-        'Qualified introductions need at least one purpose signal in place.',
-        '/app/i/profile',
-        hasPurposeBlock
+        'orphan_relevant_packs',
+        'No orphan Proof Packs',
+        'Re-anchor legacy or floating Proof Packs before introductions can unlock.',
+        '/app/i/portfolio',
+        orphanRelevantPackCount === 0,
+        orphanRelevantPackCount,
+        0
       ),
     ].filter((item) => !item.met),
   };
@@ -835,22 +904,20 @@ export async function getIndividualReadinessState(
   if (!matchVisible) {
     introReasonCodes.push('match_visibility_requirements_incomplete');
   }
-  if (recentActiveSkillCount < 5) {
+  if (roleRelevantProofLinkedL4Count < 3) {
     introReasonCodes.push('recent_skills_insufficient');
   }
-  if (proofBackedSkillCount < 4) {
+  if (proofBackedSkillCount < 1) {
     introReasonCodes.push('proof_linked_skills_insufficient');
   }
-  if (roleRelevantProofLinkedL4Count < 3) {
+  if (freshRoleRelevantAnchoredPackCount < 1) {
     introReasonCodes.push('role_relevant_proof_insufficient');
   }
   if (!hasTrustedSignal) {
     introReasonCodes.push('trust_anchor_missing');
-  }
-  if (qualifyingTrustedProofLinkedSkillCount < 1) {
     introReasonCodes.push('trusted_or_attested_proof_missing');
   }
-  if (fresh24RoleRelevantSkillIds.size < 3) {
+  if (fresh24RoleRelevantSkillIds.size < 1) {
     introReasonCodes.push('proof_freshness_insufficient');
   }
   if (fresh12RoleRelevantSkillIds.size < 1) {
@@ -859,27 +926,28 @@ export async function getIndividualReadinessState(
   if (!hasIntroConstraints) {
     introReasonCodes.push('intro_preferences_incomplete');
   }
-  if (!hasPurposeBlock) {
-    introReasonCodes.push('purpose_signal_missing');
+  if (orphanRelevantPackCount > 0) {
+    introReasonCodes.push('orphan_relevant_proof_blocking_intro');
   }
   if (
     matchVisible &&
     !introEligible &&
-    (fresh24RoleRelevantSkillIds.size < 3 ||
+    (freshRoleRelevantAnchoredPackCount < 1 ||
       fresh12RoleRelevantSkillIds.size < 1 ||
-      hasOpenTrustIssue ||
-      !hasTrustedSignal)
+      !hasTrustedSignal ||
+      orphanRelevantPackCount > 0)
   ) {
     introReasonCodes.push('trust_regressed');
   }
 
+  const nextBestActions = buildNextBestActions(highestState, missingByState);
   const introEligibility: IntroEligibilitySummary = {
     status: introEligible ? 'eligible' : 'blocked_profile',
     profileEligible: introEligible,
     assignmentEligible: null,
     reasonCodes: introEligible ? [] : Array.from(new Set(introReasonCodes)),
     missingRequirements: missingByState.qualified_intro_ready,
-    nextActions: buildNextBestActions(highestState, missingByState),
+    nextActions: nextBestActions,
     qualifyingProofLinkedL4Count,
     roleRelevantProofLinkedL4Count,
     assignmentRelevantProofLinkedL4Count: 0,
@@ -917,7 +985,7 @@ export async function getIndividualReadinessState(
     counts: {
       skillsCount,
       skillsWithRecency: recentActiveSkillCount,
-      proofCount,
+      proofCount: anchoredAggregates.length,
       publicProofSignalCount: publicProofCount,
       proofBackedSkillCount,
       qualifyingProofLinkedL4Count,
@@ -932,6 +1000,6 @@ export async function getIndividualReadinessState(
     },
     missingByState,
     introEligibility,
-    nextBestActions: introEligibility.nextActions,
+    nextBestActions,
   };
 }

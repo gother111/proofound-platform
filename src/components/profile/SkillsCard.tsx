@@ -20,7 +20,7 @@ export function SkillsCard({ skills, showManageLink = true }: SkillsCardProps) {
     typeof skill === 'string' ? { name: skill, verified: false } : skill
   );
 
-  // Empty state with link to Expertise Atlas
+  // Empty state with link to the launch MVP proof surface
   if (skillsArray.length === 0) {
     return (
       <Card className="border-0 shadow-md bg-gradient-to-br from-white to-stone-50 dark:from-stone-950 dark:to-stone-900 overflow-hidden group hover:shadow-lg transition-all duration-300">
@@ -57,11 +57,11 @@ export function SkillsCard({ skills, showManageLink = true }: SkillsCardProps) {
               </svg>
             </div>
             <p className="text-sm text-muted-foreground">
-              Add your skills and expertise to showcase your capabilities
+              Strengthen your public portfolio with proof-backed examples of your work
             </p>
             <Button asChild variant="outline" size="sm" className="gap-2">
-              <Link href="/app/i/expertise">
-                Open Expertise Atlas
+              <Link href="/app/i/portfolio">
+                Open Public Portfolio
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </Button>
@@ -89,8 +89,8 @@ export function SkillsCard({ skills, showManageLink = true }: SkillsCardProps) {
               size="sm"
               className="text-xs gap-1 text-muted-foreground hover:text-foreground"
             >
-              <Link href="/app/i/expertise">
-                Manage in Expertise Atlas
+              <Link href="/app/i/portfolio">
+                Review public portfolio
                 <ArrowRight className="w-3 h-3" />
               </Link>
             </Button>

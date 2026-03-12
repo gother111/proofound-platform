@@ -6,6 +6,7 @@ import { db } from '@/db';
 import { assignments, organizationMembers } from '@/db/schema';
 import { requireMobileAuth } from '@/lib/api/mobile/auth';
 import { mobileError, mobileSuccess } from '@/lib/api/mobile/response';
+import { normalizeAuthorizedOrgRole } from '@/lib/authz';
 
 export const dynamic = 'force-dynamic';
 
@@ -98,8 +99,9 @@ export async function POST(request: NextRequest) {
     }
 
     const membership = await resolveMembership(auth.user.id, parsed.data.orgId);
-    if (!membership || !['owner', 'admin'].includes(membership.role)) {
-      return mobileError('forbidden', 'Only owner/admin can create assignments', 403);
+    const membershipRole = normalizeAuthorizedOrgRole(membership?.role);
+    if (!membershipRole || !['org_owner', 'org_manager'].includes(membershipRole)) {
+      return mobileError('forbidden', 'Only owner/manager can create assignments', 403);
     }
 
     const [created] = await db

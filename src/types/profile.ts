@@ -207,6 +207,15 @@ export interface FieldVisibility {
   [key: string]: VisibilityLevel | undefined;
 }
 
+export interface GuidedSetupState {
+  handle: string | null;
+  headline: string | null;
+  timezone: string | null;
+  desiredRoles: string[];
+  workMode: string | null;
+  engagementType: string | null;
+}
+
 export interface ProfileData {
   basicInfo: BasicInfo;
   mission: string | null;
@@ -224,4 +233,5 @@ export interface ProfileData {
   volunteering: Volunteering[];
   fieldVisibility: FieldVisibility;
   redactMode: boolean;
+  guidedSetup: GuidedSetupState;
 }

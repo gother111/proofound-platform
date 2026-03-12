@@ -139,7 +139,7 @@ describe('canonical authz policy', () => {
         action: 'invite',
         orgRole: 'org_manager',
       }).allowed
-    ).toBe(true);
+    ).toBe(false);
     expect(
       authorize({
         resource: 'org_audit_logs',
@@ -154,10 +154,48 @@ describe('canonical authz policy', () => {
         orgRole: 'org_manager',
       }).allowed
     ).toBe(false);
+    expect(
+      authorize({
+        resource: 'org_profile',
+        action: 'update',
+        orgRole: 'org_manager',
+      }).allowed
+    ).toBe(false);
+    expect(
+      authorize({
+        resource: 'intros_decisions_feedback',
+        action: 'decide',
+        orgRole: 'org_manager',
+      }).allowed
+    ).toBe(false);
     expect(getEffectiveReviewRevealScope('org_manager', 'shortlist_identity')).toBe(
       'shortlist_identity'
     );
     expect(getVerificationSummaryVisibility('org_manager')).toBe('detailed');
+  });
+
+  it('keeps owner-only rights for org config, invites, and final decisions', () => {
+    expect(
+      authorize({
+        resource: 'org_profile',
+        action: 'update',
+        orgRole: 'org_owner',
+      }).allowed
+    ).toBe(true);
+    expect(
+      authorize({
+        resource: 'team_invites_memberships',
+        action: 'invite',
+        orgRole: 'org_owner',
+      }).allowed
+    ).toBe(true);
+    expect(
+      authorize({
+        resource: 'intros_decisions_feedback',
+        action: 'decide',
+        orgRole: 'org_owner',
+      }).allowed
+    ).toBe(true);
   });
 
   it('rejects mutating org actions without explicit organization principal context', () => {

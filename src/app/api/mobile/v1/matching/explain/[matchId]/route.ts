@@ -75,10 +75,9 @@ export async function GET(
     const orgAccess = ownMatch
       ? true
       : await isActiveOrgMember(auth.user.id, row.assignmentOrgId, [
-          'owner',
-          'admin',
-          'member',
-          'viewer',
+          'org_owner',
+          'org_manager',
+          'org_reviewer',
         ]);
 
     if (!ownMatch && !orgAccess) {

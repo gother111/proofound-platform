@@ -1,7 +1,8 @@
 export const CANONICAL_ORG_ROLE_VALUES = ['org_owner', 'org_manager', 'org_reviewer'] as const;
 export const LEGACY_ORG_ROLE_VALUES = ['owner', 'admin', 'member', 'viewer'] as const;
-export const ORG_ROLE_VALUES = [...CANONICAL_ORG_ROLE_VALUES, ...LEGACY_ORG_ROLE_VALUES] as const;
-export type OrgRole = (typeof ORG_ROLE_VALUES)[number];
+export const ORG_ROLE_VALUES = [...CANONICAL_ORG_ROLE_VALUES] as const;
+export type OrgRole = (typeof CANONICAL_ORG_ROLE_VALUES)[number];
+export type LegacyOrgRole = (typeof LEGACY_ORG_ROLE_VALUES)[number];
 
 export const ORG_ACTIVE_MEMBERSHIP_STATES = ['active'] as const;
 export type ActiveMembershipState = (typeof ORG_ACTIVE_MEMBERSHIP_STATES)[number];
@@ -76,15 +77,13 @@ export type AuthzDecision = {
 };
 
 type MatrixRule = {
-  orgRoles?: readonly (typeof CANONICAL_ORG_ROLE_VALUES)[number][];
+  orgRoles?: readonly OrgRole[];
   platformRoles?: readonly PlatformRole[];
   breakGlassOnly?: boolean;
   notes?: string;
 };
 
-function normalizePolicyOrgRole(
-  orgRole?: OrgRole | null
-): (typeof CANONICAL_ORG_ROLE_VALUES)[number] | null {
+function normalizePolicyOrgRole(orgRole?: OrgRole | LegacyOrgRole | null): OrgRole | null {
   switch (orgRole) {
     case 'owner':
       return 'org_owner';
@@ -108,8 +107,8 @@ export const AUTHZ_MATRIX = {
       orgRoles: ['org_reviewer', 'org_manager', 'org_owner'],
     },
     update: {
-      orgRoles: ['org_manager', 'org_owner'],
-      notes: 'Non-governance presentation fields only.',
+      orgRoles: ['org_owner'],
+      notes: 'Organization configuration remains owner-only in the locked MVP.',
     },
     update_governance: {
       orgRoles: ['org_owner'],
@@ -189,7 +188,7 @@ export const AUTHZ_MATRIX = {
       orgRoles: ['org_reviewer', 'org_manager', 'org_owner'],
     },
     decide: {
-      orgRoles: ['org_reviewer', 'org_manager', 'org_owner'],
+      orgRoles: ['org_owner'],
     },
   },
   team_invites_memberships: {
@@ -197,7 +196,7 @@ export const AUTHZ_MATRIX = {
       orgRoles: ['org_manager', 'org_owner'],
     },
     invite: {
-      orgRoles: ['org_manager', 'org_owner'],
+      orgRoles: ['org_owner'],
     },
     manage: {
       orgRoles: ['org_owner'],
@@ -209,7 +208,7 @@ export const AUTHZ_MATRIX = {
       orgRoles: ['org_manager', 'org_owner'],
     },
     update: {
-      orgRoles: ['org_manager', 'org_owner'],
+      orgRoles: ['org_owner'],
     },
   },
   exports: {

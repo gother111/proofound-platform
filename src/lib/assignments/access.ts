@@ -84,7 +84,7 @@ export async function verifyAssignmentAccess(
 }
 
 /**
- * Returns assignment mutation access status for owner/admin-level operations.
+ * Returns assignment mutation access status for owner/manager-level operations.
  */
 export async function verifyAssignmentMutationAccess(
   userId: string,

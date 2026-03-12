@@ -171,10 +171,10 @@ export function EducationForm({
               {availableSkills.length === 0 ? (
                 <div className="space-y-3 rounded-md border border-amber-200 bg-amber-50/40 p-3">
                   <p className="text-sm text-amber-900">
-                    You need skills in your Expertise Atlas before adding education entries.
+                    Add proof-backed portfolio content before attaching education entries.
                   </p>
                   <Button asChild type="button" variant="outline" size="sm">
-                    <Link href="/app/i/expertise">Go to Expertise Atlas</Link>
+                    <Link href="/app/i/portfolio">Open Public Portfolio</Link>
                   </Button>
                 </div>
               ) : (
@@ -191,7 +191,7 @@ export function EducationForm({
                 />
               )}
               <p className="text-xs text-muted-foreground">
-                Choose only from your existing Expertise Atlas skills
+                Choose only from the skills already represented on your profile.
               </p>
               {errors.skills && <p className="text-xs text-red-500">{errors.skills}</p>}
             </motion.div>

@@ -1,20 +1,14 @@
-/**
- * Assignment Builder - Step 4: Practicals
- *
- * Define budget, location, timing, and availability
- */
-
 'use client';
 
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+
+import { CityCountryAutocompleteFields } from '@/components/location/CityCountryAutocompleteFields';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
-import { Checkbox } from '@/components/ui/checkbox';
-import { CityCountryAutocompleteFields } from '@/components/location/CityCountryAutocompleteFields';
 import {
   Select,
   SelectContent,
@@ -35,38 +29,6 @@ const CURRENCY_OPTIONS = [
   { value: 'GBP', label: 'GBP (£)' },
 ];
 
-const DURATION_OPTIONS = [
-  { value: '3mo', label: '3 months' },
-  { value: '6mo', label: '6 months' },
-  { value: '12mo', label: '12 months' },
-  { value: 'contract_to_hire', label: 'Contract-to-Hire' },
-  { value: 'permanent', label: 'Permanent' },
-];
-
-const VERIFICATION_GATES = [
-  {
-    id: 'identity',
-    label: 'Identity Verification',
-    description: 'Government ID verification (Veriff)',
-  },
-  {
-    id: 'work_email',
-    label: 'Work Email Verification',
-    description: 'Verify corporate email domain',
-  },
-  {
-    id: 'linkedin',
-    label: 'LinkedIn Profile Verification',
-    description: 'Verify professional profile',
-  },
-  {
-    id: 'background_check',
-    label: 'Background Check',
-    description: 'Criminal background screening',
-  },
-  { id: 'education', label: 'Education Verification', description: 'Verify degree/certifications' },
-];
-
 export function Step4Practicals({ form, onNext, onBack }: Step4Props) {
   const {
     register,
@@ -80,42 +42,30 @@ export function Step4Practicals({ form, onNext, onBack }: Step4Props) {
   const currency = watch('currency') || 'USD';
   const hoursMin = watch('hoursMin') || 10;
   const hoursMax = watch('hoursMax') || 40;
-  const duration = watch('duration') || '12mo';
-  const locationMode = watch('locationMode') || watch('workModePreference') || 'hybrid';
+  const locationMode = watch('locationMode') || 'hybrid';
   const city = watch('city') || '';
   const country = watch('country') || '';
-  const verificationGates = watch('verificationGates') || [];
 
-  const isValid = compMin > 0 && compMax > compMin;
-
-  const toggleVerificationGate = (gateId: string) => {
-    const current = verificationGates || [];
-    if (current.includes(gateId)) {
-      setValue(
-        'verificationGates',
-        current.filter((id: string) => id !== gateId)
-      );
-    } else {
-      setValue('verificationGates', [...current, gateId]);
-    }
-  };
+  const hasLocation = locationMode === 'remote' || Boolean(country.trim());
+  const isValid = compMin > 0 && compMax > compMin && hasLocation;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-2xl font-bold">Step 4: Practicals</h2>
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-2xl font-bold">Step 4: What practical constraints apply</h2>
           <span className="text-sm text-muted-foreground">Step 4 of 5</span>
         </div>
-        <p className="text-muted-foreground">Budget, location, timing, and availability</p>
+        <p className="text-muted-foreground">
+          Capture the real operating constraints, including location, timing, and compensation
+          posture where relevant.
+        </p>
         <Progress value={80} className="mt-4" />
       </div>
 
-      {/* Compensation Range */}
       <div className="space-y-4">
         <Label>
-          Salary Range <span className="text-destructive">*</span>
+          Compensation range <span className="text-destructive">*</span>
         </Label>
         <div className="grid grid-cols-[1fr,1fr,auto] gap-4">
           <div className="space-y-2">
@@ -127,7 +77,7 @@ export function Step4Practicals({ form, onNext, onBack }: Step4Props) {
               type="number"
               placeholder="50000"
               {...register('compMin', {
-                required: 'Minimum salary is required',
+                required: 'Minimum compensation is required',
                 valueAsNumber: true,
                 min: { value: 1, message: 'Must be greater than 0' },
               })}
@@ -142,7 +92,7 @@ export function Step4Practicals({ form, onNext, onBack }: Step4Props) {
               type="number"
               placeholder="120000"
               {...register('compMax', {
-                required: 'Maximum salary is required',
+                required: 'Maximum compensation is required',
                 valueAsNumber: true,
                 validate: (value) => value > compMin || 'Maximum must be greater than minimum',
               })}
@@ -174,11 +124,10 @@ export function Step4Practicals({ form, onNext, onBack }: Step4Props) {
         )}
       </div>
 
-      {/* Hours Per Week */}
       <div className="space-y-3">
-        <Label>Hours Per Week</Label>
+        <Label>Hours per week</Label>
         <div className="flex items-center gap-4">
-          <span className="text-sm font-medium w-12">{hoursMin}h</span>
+          <span className="w-12 text-sm font-medium">{hoursMin}h</span>
           <Slider
             value={[hoursMin]}
             onValueChange={(value) => setValue('hoursMin', value[0])}
@@ -196,14 +145,13 @@ export function Step4Practicals({ form, onNext, onBack }: Step4Props) {
             step={5}
             className="flex-1"
           />
-          <span className="text-sm font-medium w-12">{hoursMax}h</span>
+          <span className="w-12 text-sm font-medium">{hoursMax}h</span>
         </div>
       </div>
 
-      {/* Location Mode */}
       <div className="space-y-2">
         <Label htmlFor="locationMode">
-          Location Mode <span className="text-destructive">*</span>
+          Work mode <span className="text-destructive">*</span>
         </Label>
         <Select value={locationMode} onValueChange={(value) => setValue('locationMode', value)}>
           <SelectTrigger id="locationMode">
@@ -217,8 +165,7 @@ export function Step4Practicals({ form, onNext, onBack }: Step4Props) {
         </Select>
       </div>
 
-      {/* City & Country (conditional on location mode) */}
-      {locationMode !== 'remote' && (
+      {locationMode !== 'remote' ? (
         <CityCountryAutocompleteFields
           city={city}
           country={country}
@@ -236,80 +183,31 @@ export function Step4Practicals({ form, onNext, onBack }: Step4Props) {
             })
           }
         />
-      )}
+      ) : null}
 
-      {/* Start Date Range */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="startEarliest">Start Date (Earliest)</Label>
+          <Label htmlFor="startEarliest">Earliest start date</Label>
           <Input id="startEarliest" type="date" {...register('startEarliest')} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="startLatest">Start Date (Latest)</Label>
+          <Label htmlFor="startLatest">Latest start date</Label>
           <Input id="startLatest" type="date" {...register('startLatest')} />
         </div>
       </div>
 
-      {/* Duration */}
-      <div className="space-y-2">
-        <Label htmlFor="duration">Duration</Label>
-        <Select value={duration} onValueChange={(value) => setValue('duration', value)}>
-          <SelectTrigger id="duration">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {DURATION_OPTIONS.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {!hasLocation ? (
+        <p className="text-sm text-destructive">
+          Add a real location constraint or mark the role as remote before review.
+        </p>
+      ) : null}
 
-      {/* Verification Gates */}
-      <div className="space-y-4 pt-4 border-t">
-        <div>
-          <Label>Verification Requirements</Label>
-          <p className="text-sm text-muted-foreground">
-            Select verification gates that candidates must complete before matching
-          </p>
-        </div>
-        <div className="space-y-3">
-          {VERIFICATION_GATES.map((gate) => (
-            <div
-              key={gate.id}
-              className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-            >
-              <Checkbox
-                id={gate.id}
-                checked={verificationGates.includes(gate.id)}
-                onCheckedChange={() => toggleVerificationGate(gate.id)}
-              />
-              <div className="flex-1">
-                <Label htmlFor={gate.id} className="font-medium cursor-pointer">
-                  {gate.label}
-                </Label>
-                <p className="text-sm text-muted-foreground mt-0.5">{gate.description}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        {verificationGates.length > 0 && (
-          <p className="text-sm text-primary font-medium">
-            {verificationGates.length} verification gate{verificationGates.length > 1 ? 's' : ''}{' '}
-            selected
-          </p>
-        )}
-      </div>
-
-      {/* Navigation */}
-      <div className="flex justify-between pt-4 border-t">
+      <div className="flex justify-between border-t pt-4">
         <Button variant="outline" onClick={onBack}>
           Back
         </Button>
         <Button onClick={onNext} disabled={!isValid}>
-          Next: Expertise Mapping
+          Continue to internal review
         </Button>
       </div>
     </div>

@@ -77,10 +77,10 @@ describe('MatchingPage soft-gated state', () => {
       },
       topActions: [
         {
-          id: 'update-expertise-atlas',
-          title: 'Update Expertise Atlas',
-          description: 'Add skills and proofs.',
-          actionUrl: '/app/i/expertise',
+          id: 'update-public-portfolio',
+          title: 'Strengthen public portfolio',
+          description: 'Refresh proof-backed work examples and trust signals.',
+          actionUrl: '/app/i/portfolio',
         },
       ],
     };
@@ -129,6 +129,6 @@ describe('MatchingPage soft-gated state', () => {
     });
 
     expect(screen.getByText('Recent skills')).toBeInTheDocument();
-    expect(screen.getByText('Update Expertise Atlas')).toBeInTheDocument();
+    expect(screen.getByText('Strengthen public portfolio')).toBeInTheDocument();
   });
 });

@@ -2,6 +2,7 @@ import { canonicalOrgMembershipStates, canonicalOrgRoleValues } from '@/db/schem
 import {
   CANONICAL_ORG_ROLE_VALUES,
   ORG_ACTIVE_MEMBERSHIP_STATES,
+  type LegacyOrgRole,
   type OrgRole,
 } from '@/lib/authz/policy';
 
@@ -13,7 +14,7 @@ const LEGACY_ROLE_MAP = {
   admin: 'org_manager',
   member: 'org_reviewer',
   viewer: 'org_reviewer',
-} as const satisfies Record<string, OrgRole>;
+} as const satisfies Record<LegacyOrgRole, OrgRole>;
 
 const LEGACY_MEMBERSHIP_STATE_MAP = {
   invited: 'invited_pending',

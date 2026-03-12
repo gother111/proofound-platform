@@ -19,6 +19,7 @@ import {
   downloadInterviewIcs,
   type InterviewCalendarPayload,
 } from '@/lib/interviews/calendar';
+import { toast } from 'sonner';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,11 +32,27 @@ interface Interview {
   meetingUrl: string;
   status: string;
   matchAgreedAt?: string;
+  decisionState?: string | null;
+  engagementVerification?: {
+    id: string;
+    status: string;
+    statusLabel: string;
+    engagementType: string | null;
+    candidateConfirmedAt: string | null;
+    organizationConfirmedAt: string | null;
+    uploadedEvidencePresent: boolean;
+    proofHookStatus: string;
+    verifiedAt: string | null;
+  } | null;
 }
 
 export default function InterviewsPage() {
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isConfirmingEngagementId, setIsConfirmingEngagementId] = useState<string | null>(null);
+  const [engagementTypeSelections, setEngagementTypeSelections] = useState<Record<string, string>>(
+    {}
+  );
 
   useEffect(() => {
     loadInterviews();
@@ -82,6 +99,91 @@ export default function InterviewsPage() {
     platform: interview.platform,
     title: 'Proofound interview',
   });
+
+  const resolveEngagementTypeValue = (interview: Interview) => {
+    const verification = interview.engagementVerification;
+    if (!verification) {
+      return '';
+    }
+
+    return engagementTypeSelections[verification.id] ?? verification.engagementType ?? '';
+  };
+
+  const handleConfirmEngagement = async (interview: Interview) => {
+    const verification = interview.engagementVerification;
+    if (!verification) {
+      return;
+    }
+
+    const engagementType = resolveEngagementTypeValue(interview);
+    if (!engagementType) {
+      toast.error('Select an engagement type before confirming');
+      return;
+    }
+
+    setIsConfirmingEngagementId(verification.id);
+    try {
+      const response = await fetch(`/api/engagement-verifications/${verification.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          confirm: true,
+          engagementType,
+        }),
+      });
+
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload.error || 'Failed to confirm engagement');
+      }
+
+      toast.success('Engagement confirmation recorded');
+      await loadInterviews();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to confirm engagement');
+    } finally {
+      setIsConfirmingEngagementId(null);
+    }
+  };
+
+  const getDecisionBadge = (decisionState: string | null | undefined) => {
+    if (!decisionState) {
+      return null;
+    }
+
+    return (
+      <span
+        className="px-2 py-1 rounded-full text-xs font-medium"
+        style={{
+          backgroundColor: decisionState === 'hire' ? '#E8F5E9' : '#F1F5F9',
+          color: decisionState === 'hire' ? '#2E7D32' : '#334155',
+        }}
+      >
+        Decision: {decisionState.replace(/_/g, ' ')}
+      </span>
+    );
+  };
+
+  const getEngagementBadge = (interview: Interview) => {
+    if (!interview.engagementVerification) {
+      return null;
+    }
+
+    const verification = interview.engagementVerification;
+    const isVerified = verification.status === 'verified';
+
+    return (
+      <span
+        className="px-2 py-1 rounded-full text-xs font-medium"
+        style={{
+          backgroundColor: isVerified ? '#E8F5E9' : '#FEF3C7',
+          color: isVerified ? '#2E7D32' : '#92400E',
+        }}
+      >
+        Engagement: {verification.statusLabel}
+      </span>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -191,7 +293,7 @@ export default function InterviewsPage() {
                     </div>
 
                     {/* Status Badge */}
-                    <div className="inline-block">
+                    <div className="flex flex-wrap gap-2">
                       <span
                         className="px-2 py-1 rounded-full text-xs font-medium"
                         style={{
@@ -211,6 +313,8 @@ export default function InterviewsPage() {
                       >
                         {interview.status}
                       </span>
+                      {getDecisionBadge(interview.decisionState)}
+                      {getEngagementBadge(interview)}
                     </div>
                   </div>
 
@@ -227,6 +331,41 @@ export default function InterviewsPage() {
                           size="sm"
                           onScheduled={loadInterviews}
                         />
+                      )}
+                    {interview.decisionState === 'hire' &&
+                      interview.engagementVerification &&
+                      !interview.engagementVerification.candidateConfirmedAt && (
+                        <>
+                          <select
+                            aria-label="Engagement type"
+                            value={resolveEngagementTypeValue(interview)}
+                            onChange={(event) =>
+                              setEngagementTypeSelections((current) => ({
+                                ...current,
+                                [interview.engagementVerification!.id]: event.target.value,
+                              }))
+                            }
+                            className="h-9 rounded-md border border-gray-300 px-3 text-sm"
+                          >
+                            <option value="">Select engagement type</option>
+                            <option value="full_time">Full-time</option>
+                            <option value="part_time">Part-time</option>
+                            <option value="contract_consulting">Contract / consulting</option>
+                            <option value="fractional_project">Fractional / project</option>
+                          </select>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleConfirmEngagement(interview)}
+                            disabled={
+                              isConfirmingEngagementId === interview.engagementVerification.id
+                            }
+                          >
+                            {isConfirmingEngagementId === interview.engagementVerification.id
+                              ? 'Confirming...'
+                              : 'Confirm Engagement'}
+                          </Button>
+                        </>
                       )}
                   </div>
                 </div>

@@ -6,6 +6,7 @@ import { db } from '@/db';
 import { assignments, organizationMembers, profiles } from '@/db/schema';
 import { requireMobileAuth } from '@/lib/api/mobile/auth';
 import { mobileError, mobileSuccess } from '@/lib/api/mobile/response';
+import { normalizeAuthorizedOrgRole } from '@/lib/authz';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,7 +26,7 @@ const OrgOnboardingSchema = z.object({
  *
  * Minimum viable org-side setup:
  * - profiles.persona = org_member
- * - create a draft assignment for the org (owner/admin only)
+ * - create a draft assignment for the org (owner/manager only)
  */
 export async function PUT(request: NextRequest) {
   try {
@@ -53,8 +54,9 @@ export async function PUT(request: NextRequest) {
       columns: { role: true },
     });
 
-    if (!membership || !['owner', 'admin'].includes(membership.role)) {
-      return mobileError('forbidden', 'Only owner/admin can complete org onboarding', 403);
+    const membershipRole = normalizeAuthorizedOrgRole(membership?.role);
+    if (!membershipRole || !['org_owner', 'org_manager'].includes(membershipRole)) {
+      return mobileError('forbidden', 'Only owner/manager can complete org onboarding', 403);
     }
 
     const now = new Date();

@@ -1,20 +1,8 @@
 import type { PurposeLinks } from '@/types/profile';
+import { normalizeUniqueStringList } from '@/lib/purpose/normalizePurposeLinks';
 
 export function normalizeLabels(items: string[]): string[] {
-  const normalized: string[] = [];
-  const seen = new Set<string>();
-
-  for (const item of items) {
-    const trimmed = item.trim();
-    if (!trimmed || seen.has(trimmed)) {
-      continue;
-    }
-
-    seen.add(trimmed);
-    normalized.push(trimmed);
-  }
-
-  return normalized;
+  return normalizeUniqueStringList(items);
 }
 
 export function normalizeLinks(

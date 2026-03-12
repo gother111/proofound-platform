@@ -14,6 +14,7 @@ import {
   normalizeIndividualValueLabels,
 } from '@/lib/profile/normalizePurposeLinks';
 import { syncReadinessMilestones } from '@/lib/readiness/analytics';
+import { normalizeEngagementType } from '@/lib/engagement-verifications/service';
 
 export const dynamic = 'force-dynamic';
 const ENABLE_MATCHING_PROFILE_SKILL_WRITES =
@@ -56,6 +57,13 @@ const MatchingProfileSchema = z.object({
   availabilityEarliest: z.string().optional(), // ISO date string
   availabilityLatest: z.string().optional(),
   workMode: z.enum(['remote', 'onsite', 'hybrid']).optional(),
+  engagementType: z
+    .string()
+    .refine((value) => normalizeEngagementType(value) !== null, {
+      message:
+        'engagementType must normalize to full_time, part_time, contract_consulting, or fractional_project',
+    })
+    .optional(),
   radiusKm: z.number().optional(),
   hoursMin: z.number().optional(),
   hoursMax: z.number().optional(),
@@ -131,6 +139,8 @@ function normalizeProfileResponse(
 
   return {
     ...profile,
+    engagementType:
+      normalizeEngagementType(profile.engagementType) ?? profile.engagementType ?? null,
     desiredIndustries: preferred.labels,
     preferredIndustryKeys: preferred.keys,
     preferredIndustryLabels: preferred.labels,
@@ -256,6 +266,7 @@ export async function PUT(request: NextRequest) {
       avoidIndustryKeys,
       avoidIndustryLabels,
       orgTypes,
+      engagementType,
       ...restProfile
     } = profileData;
     const normalizedIndustries = normalizeProfileIndustries({
@@ -290,6 +301,9 @@ export async function PUT(request: NextRequest) {
           }
         : {}),
       ...(orgTypes !== undefined ? { orgTypes } : {}),
+      ...(engagementType !== undefined
+        ? { engagementType: normalizeEngagementType(engagementType) }
+        : {}),
     };
 
     // Upsert matching profile

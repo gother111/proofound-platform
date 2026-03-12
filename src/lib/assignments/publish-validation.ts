@@ -13,11 +13,13 @@ export type AssignmentPublishBlock = {
   blockCode:
     | 'role_required'
     | 'business_value_required'
+    | 'work_summary_required'
+    | 'proof_expectations_required'
     | 'outcomes_required'
     | 'must_have_skills_required'
     | 'must_have_skills_minimum_basic'
     | 'constraints_required'
-    | 'weights_required'
+    | 'generic_assignment_language'
     | 'invalid_trust_requirements'
     | 'org_trust_restricted'
     | 'assignment_policy_hold'
@@ -32,10 +34,11 @@ export type AssignmentPublishBlock = {
   field:
     | 'role'
     | 'businessValue'
+    | 'description'
+    | 'expectedImpact'
     | 'outcomes'
     | 'mustHaveSkills'
     | 'constraints'
-    | 'weights'
     | 'trustRequirements';
   message: string;
   details?: Record<string, unknown>;
@@ -54,6 +57,37 @@ type AssignmentPublishValidationInput = {
   assignmentBasicModeEnabled: boolean;
   organization?: Partial<typeof organizations.$inferSelect> | null;
 };
+
+const GENERIC_ASSIGNMENT_PATTERNS = [
+  'join our team',
+  'make an impact',
+  'fast-paced',
+  'wear many hats',
+  'other duties as assigned',
+  'rockstar',
+  'ninja',
+  'self-starter',
+];
+
+function getSpecificityIssue(
+  value: string | null | undefined
+): 'too_short' | 'generic_phrase' | null {
+  const normalized = value?.trim().toLowerCase() || '';
+  if (!normalized) {
+    return 'too_short';
+  }
+
+  const words = normalized.match(/[a-z0-9]+/g) || [];
+  if (normalized.length < 40 || words.length < 6) {
+    return 'too_short';
+  }
+
+  if (GENERIC_ASSIGNMENT_PATTERNS.some((pattern) => normalized.includes(pattern))) {
+    return 'generic_phrase';
+  }
+
+  return null;
+}
 
 export function validateAssignmentPublishReadiness({
   assignment,
@@ -81,6 +115,22 @@ export function validateAssignmentPublishReadiness({
       blockCode: 'business_value_required',
       field: 'businessValue',
       message: 'Add the business value or mission need before publishing this assignment.',
+    });
+  }
+
+  if (!assignment.description?.trim()) {
+    blocks.push({
+      blockCode: 'work_summary_required',
+      field: 'description',
+      message: 'Explain what work will actually be done before publishing this assignment.',
+    });
+  }
+
+  if (!assignment.expectedImpact?.trim()) {
+    blocks.push({
+      blockCode: 'proof_expectations_required',
+      field: 'expectedImpact',
+      message: 'Explain what proof would convince the organization before publishing.',
     });
   }
 
@@ -128,25 +178,40 @@ export function validateAssignmentPublishReadiness({
     });
   }
 
-  if (builderMode === 'advanced') {
-    const weights = assignment.weights as Record<string, unknown> | null;
-    const mission = typeof weights?.mission === 'number' ? weights.mission : null;
-    const expertise = typeof weights?.expertise === 'number' ? weights.expertise : null;
-    const workMode = typeof weights?.workMode === 'number' ? weights.workMode : null;
+  const specificityChecks: Array<{
+    field: 'businessValue' | 'description' | 'expectedImpact';
+    value: string | null | undefined;
+    message: string;
+  }> = [
+    {
+      field: 'businessValue',
+      value: assignment.businessValue,
+      message:
+        'Explain why this role exists in concrete terms. Generic recruiting language is not enough.',
+    },
+    {
+      field: 'description',
+      value: assignment.description,
+      message:
+        'Describe the actual work in concrete terms. Generic job-description filler is not enough.',
+    },
+    {
+      field: 'expectedImpact',
+      value: assignment.expectedImpact,
+      message:
+        'Describe what proof would count in concrete terms before publishing this assignment.',
+    },
+  ];
 
-    if (
-      mission === null ||
-      expertise === null ||
-      workMode === null ||
-      mission + expertise + workMode !== 100
-    ) {
-      blocks.push({
-        blockCode: 'weights_required',
-        field: 'weights',
-        message:
-          'Advanced mode requires a complete weight matrix that totals exactly 100 before publishing.',
-      });
-    }
+  for (const check of specificityChecks) {
+    const issue = getSpecificityIssue(check.value);
+    if (!issue) continue;
+    blocks.push({
+      blockCode: 'generic_assignment_language',
+      field: check.field,
+      message: check.message,
+      details: { issue },
+    });
   }
 
   const verificationGates = Array.isArray(assignment.verificationGates)

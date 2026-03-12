@@ -26,7 +26,7 @@ export interface EligibilityAction {
   id: string;
   title: string;
   description: string;
-  actionUrl: '/app/i/expertise' | '/app/i/matching/preferences' | '/app/i/profile';
+  actionUrl: '/app/i/portfolio' | '/app/i/matching/preferences' | '/app/i/profile';
 }
 
 export interface EligibilityResult {
@@ -90,12 +90,12 @@ function toEligibilityAction(requirement: ReadinessRequirement): EligibilityActi
     };
   }
 
-  if (requirement.actionUrl === '/app/i/expertise') {
+  if (requirement.actionUrl === '/app/i/portfolio') {
     return {
       id: requirement.id,
-      title: 'Add recent skills and proof',
+      title: 'Strengthen public portfolio proof',
       description: requirement.detail,
-      actionUrl: '/app/i/expertise',
+      actionUrl: '/app/i/portfolio',
     };
   }
 

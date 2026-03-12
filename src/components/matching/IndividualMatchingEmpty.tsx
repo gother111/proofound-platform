@@ -23,10 +23,10 @@ export function IndividualMatchingEmpty({ onSetup }: IndividualMatchingEmptyProp
       onClick: onSetup,
     },
     {
-      id: 'add-skills',
-      title: 'Add skills and proof',
-      description: 'Add at least 3 skills with recency and one proof.',
-      onClick: () => router.push('/app/i/expertise'),
+      id: 'strengthen-portfolio',
+      title: 'Strengthen public portfolio',
+      description: 'Refresh proof-backed work examples before opening matching further.',
+      onClick: () => router.push('/app/i/portfolio'),
     },
     {
       id: 'complete-purpose',

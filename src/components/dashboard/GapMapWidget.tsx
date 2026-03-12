@@ -2,7 +2,7 @@
  * Gap Map Widget for Dashboard
  *
  * Condensed version of Gap Map showing top 3 skill gaps
- * Links to full Gap Analysis in Expertise Atlas
+ * Retained only as a lightweight prompt back to the public portfolio
  */
 
 'use client';
@@ -54,7 +54,7 @@ export function GapMapWidget() {
   }, []);
 
   const handleViewAll = () => {
-    router.push('/app/i/expertise?tab=gap-analysis');
+    router.push('/app/i/portfolio');
   };
 
   if (loading) {
@@ -98,10 +98,10 @@ export function GapMapWidget() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => router.push('/app/i/expertise')}
+              onClick={() => router.push('/app/i/portfolio')}
               className="border-primary text-primary hover:bg-primary/10"
             >
-              Add Skills
+              Review Portfolio
             </Button>
           </div>
         </CardContent>
@@ -122,7 +122,7 @@ export function GapMapWidget() {
           onClick={handleViewAll}
           className="text-primary hover:bg-primary/10 hover:text-primary"
         >
-          View All
+          Review Portfolio
           <ArrowRight className="h-4 w-4 ml-1" />
         </Button>
       </CardHeader>
@@ -176,7 +176,7 @@ export function GapMapWidget() {
             className="w-full border-primary text-primary hover:bg-primary/10"
           >
             <TrendingUp className="h-4 w-4 mr-2" />
-            Analyze All Gaps
+            Review Portfolio
           </Button>
         </div>
       </CardContent>

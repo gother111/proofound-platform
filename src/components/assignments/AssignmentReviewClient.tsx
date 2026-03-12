@@ -11,11 +11,10 @@ interface Assignment {
   id: string;
   orgId?: string;
   role: string;
+  description?: string;
   businessValue: string;
   expectedImpact?: string;
   outcomes: any[];
-  missionWeight: number;
-  expertiseWeight: number;
   compensationMin?: number;
   compensationMax?: number;
   currency: string;
@@ -163,8 +162,10 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Review Assignment</h1>
-            <p className="text-muted-foreground">Review all details before publishing</p>
+            <h1 className="text-3xl font-bold text-foreground">Internal review before publish</h1>
+            <p className="text-muted-foreground">
+              Confirm the assignment is specific, credible, and ready for a narrow publish path.
+            </p>
           </div>
           <div className="flex gap-3">
             <Button
@@ -201,13 +202,13 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
           </Card>
         ) : null}
 
-        {/* Business Value */}
+        {/* Why this role exists */}
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 rounded-full bg-proofound-forest text-white flex items-center justify-center font-semibold">
               1
             </div>
-            <h2 className="text-xl font-semibold text-foreground">Business Value</h2>
+            <h2 className="text-xl font-semibold text-foreground">Why this role exists</h2>
           </div>
           <div className="space-y-3 ml-10">
             <div>
@@ -215,27 +216,29 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
               <p className="font-medium text-foreground">{assignment.role}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Business Value</p>
+              <p className="text-sm text-muted-foreground">Role purpose</p>
               <p className="text-foreground">{assignment.businessValue}</p>
             </div>
-            {assignment.expectedImpact && (
-              <div>
-                <p className="text-sm text-muted-foreground">Expected Impact</p>
-                <p className="text-foreground">{assignment.expectedImpact}</p>
-              </div>
-            )}
           </div>
         </Card>
 
-        {/* Target Outcomes */}
+        {/* Work summary and outcomes */}
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 rounded-full bg-proofound-forest text-white flex items-center justify-center font-semibold">
               2
             </div>
-            <h2 className="text-xl font-semibold text-foreground">Target Outcomes</h2>
+            <h2 className="text-xl font-semibold text-foreground">
+              What work will actually be done
+            </h2>
           </div>
-          <div className="ml-10">
+          <div className="ml-10 space-y-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Work summary</p>
+              <p className="text-foreground">
+                {assignment.description || 'No work summary has been saved yet.'}
+              </p>
+            </div>
             {assignment.outcomes && assignment.outcomes.length > 0 ? (
               <div className="space-y-3">
                 {assignment.outcomes.map((outcome: any, index: number) => (
@@ -256,57 +259,26 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
           </div>
         </Card>
 
-        {/* Weight Matrix */}
+        {/* Proof expectations */}
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 rounded-full bg-proofound-forest text-white flex items-center justify-center font-semibold">
               3
             </div>
-            <h2 className="text-xl font-semibold text-foreground">Weight Matrix</h2>
+            <h2 className="text-xl font-semibold text-foreground">
+              What proof would convince the org
+            </h2>
           </div>
           <div className="ml-10 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Mission/Purpose Fit</span>
-              <span className="font-semibold text-foreground">{assignment.missionWeight}%</span>
+            <div>
+              <p className="text-sm text-muted-foreground">Proof expectations</p>
+              <p className="text-foreground">
+                {assignment.expectedImpact || 'No proof expectations have been saved yet.'}
+              </p>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Expertise Depth</span>
-              <span className="font-semibold text-foreground">{assignment.expertiseWeight}%</span>
-            </div>
-          </div>
-        </Card>
-
-        {/* Practical Details */}
-        <Card className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-full bg-proofound-forest text-white flex items-center justify-center font-semibold">
-              4
-            </div>
-            <h2 className="text-xl font-semibold text-foreground">Practical Details</h2>
-          </div>
-          <div className="ml-10 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              {assignment.compensationMin != null && assignment.compensationMax != null && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Compensation Range</p>
-                  <p className="font-medium text-foreground">
-                    {assignment.currency} {assignment.compensationMin.toLocaleString()} -{' '}
-                    {assignment.compensationMax.toLocaleString()}
-                  </p>
-                </div>
-              )}
-              {assignment.location && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Location</p>
-                  <p className="font-medium text-foreground">{assignment.location}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Verification Gates */}
             {assignment.verificationGates && assignment.verificationGates.length > 0 && (
-              <div className="pt-4 border-t">
-                <p className="text-sm text-muted-foreground mb-2">Verification Requirements</p>
+              <div className="border-t pt-4">
+                <p className="mb-2 text-sm text-muted-foreground">Verification requirements</p>
                 <div className="flex flex-wrap gap-2">
                   {assignment.verificationGates.map((gate) => (
                     <Badge
@@ -323,27 +295,63 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
           </div>
         </Card>
 
-        {/* Required Skills */}
+        {/* Practical details */}
+        <Card className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-full bg-proofound-forest text-white flex items-center justify-center font-semibold">
+              4
+            </div>
+            <h2 className="text-xl font-semibold text-foreground">
+              What practical constraints apply
+            </h2>
+          </div>
+          <div className="ml-10 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              {assignment.compensationMin != null && assignment.compensationMax != null ? (
+                <div>
+                  <p className="text-sm text-muted-foreground">Compensation range</p>
+                  <p className="font-medium text-foreground">
+                    {assignment.currency} {assignment.compensationMin.toLocaleString()} -{' '}
+                    {assignment.compensationMax.toLocaleString()}
+                  </p>
+                </div>
+              ) : null}
+              {assignment.location ? (
+                <div>
+                  <p className="text-sm text-muted-foreground">Location</p>
+                  <p className="font-medium text-foreground">{assignment.location}</p>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </Card>
+
+        {/* Required skills */}
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 rounded-full bg-proofound-forest text-white flex items-center justify-center font-semibold">
               5
             </div>
-            <h2 className="text-xl font-semibold text-foreground">Required Skills</h2>
+            <h2 className="text-xl font-semibold text-foreground">Internal review checklist</h2>
           </div>
           <div className="ml-10">
             {assignment.requiredSkills && assignment.requiredSkills.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {assignment.requiredSkills.map((skill: any, index: number) => (
-                  <Badge
-                    key={index}
-                    variant="outline"
-                    className="border-[#7A9278] text-proofound-forest"
-                  >
-                    {getSkillDisplayLabel(skill)} (Level {skill.level}/5)
-                  </Badge>
-                ))}
-              </div>
+              <>
+                <p className="mb-3 text-sm text-muted-foreground">
+                  Required skills and proof expectations are ready for internal review.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {assignment.requiredSkills.map((skill: any, index: number) => (
+                    <Badge
+                      key={index}
+                      variant="outline"
+                      className="border-[#7A9278] text-proofound-forest"
+                    >
+                      {getSkillDisplayLabel(skill)} (Level {skill.level}/5)
+                    </Badge>
+                  ))}
+                </div>
+              </>
             ) : (
               <p className="text-muted-foreground">No required skills defined</p>
             )}
