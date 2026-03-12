@@ -2,6 +2,7 @@ import {
   canonicalAssignmentWorkflowStates,
   canonicalConsentObligationStates,
   canonicalDecisionWorkflowStates,
+  canonicalEngagementVerificationWorkflowStates,
   canonicalDeletionLifecycleStates,
   canonicalExportLifecycleStates,
   canonicalImportLifecycleStates,
@@ -21,6 +22,8 @@ export type AssignmentWorkflowState = (typeof canonicalAssignmentWorkflowStates)
 export type IntroWorkflowState = (typeof canonicalIntroWorkflowStates)[number];
 export type InterviewWorkflowState = (typeof canonicalInterviewWorkflowStates)[number];
 export type DecisionWorkflowState = (typeof canonicalDecisionWorkflowStates)[number];
+export type EngagementVerificationWorkflowState =
+  (typeof canonicalEngagementVerificationWorkflowStates)[number];
 export type VerificationWorkflowState = (typeof canonicalVerificationStatuses)[number];
 export type ConsentObligationState = (typeof canonicalConsentObligationStates)[number];
 export type ProfileLifecycleState = (typeof canonicalProfileLifecycleStates)[number];
@@ -38,6 +41,7 @@ export type WorkflowMachineName =
   | 'intro'
   | 'interview'
   | 'decision'
+  | 'engagement_verification'
   | 'verification'
   | 'consent';
 
@@ -537,6 +541,12 @@ export const WORKFLOW_LABELS = {
     withdrawn: 'Withdrawn',
     closed: 'Closed',
   },
+  engagement_verification: {
+    pending_both_confirmations: 'Awaiting both confirmations',
+    pending_candidate_confirmation: 'Awaiting candidate confirmation',
+    pending_organization_confirmation: 'Awaiting organization confirmation',
+    verified: 'Engagement verified',
+  },
   verification: {
     pending: 'Pending',
     verified: 'Verified',
@@ -602,6 +612,16 @@ export const WORKFLOW_TRANSITIONS = {
     withdrawn: [],
     closed: [],
   },
+  engagement_verification: {
+    pending_both_confirmations: [
+      'pending_candidate_confirmation',
+      'pending_organization_confirmation',
+      'verified',
+    ],
+    pending_candidate_confirmation: ['pending_both_confirmations', 'verified'],
+    pending_organization_confirmation: ['pending_both_confirmations', 'verified'],
+    verified: [],
+  },
   verification: {
     pending: ['verified', 'declined', 'expired', 'cancelled', 'failed', 'disputed', 'revoked'],
     verified: ['expired', 'superseded', 'downgraded', 'contradicted', 'disputed', 'revoked'],
@@ -630,6 +650,7 @@ export function getWorkflowLabel(
     | IntroWorkflowState
     | InterviewWorkflowState
     | DecisionWorkflowState
+    | EngagementVerificationWorkflowState
     | VerificationWorkflowState
     | ConsentObligationState
 ): string {

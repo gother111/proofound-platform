@@ -172,6 +172,19 @@ export const canonicalDecisionWorkflowStates = [
   'withdrawn',
   'closed',
 ] as const;
+export const canonicalEngagementTypeValues = [
+  'full_time',
+  'part_time',
+  'contract_consulting',
+  'fractional_project',
+] as const;
+export const canonicalEngagementVerificationWorkflowStates = [
+  'pending_both_confirmations',
+  'pending_candidate_confirmation',
+  'pending_organization_confirmation',
+  'verified',
+] as const;
+export const canonicalEngagementProofHookStatuses = ['not_ready', 'eligible'] as const;
 export const canonicalConsentObligationStates = [
   'active',
   'expiring',
@@ -696,6 +709,8 @@ export const organizations = pgTable('organizations', {
   coverImageUrl: text('cover_image_url'),
   tagline: text('tagline'),
   mission: text('mission'),
+  workingContext: text('working_context'),
+  hiringProcessSummary: text('hiring_process_summary'),
   vision: text('vision'),
   missionLinks: jsonb('mission_links'), // { values: string[], causes: string[] }
   visionLinks: jsonb('vision_links'), // { values: string[], causes: string[] }
@@ -1461,6 +1476,7 @@ export const matchingProfiles = pgTable('matching_profiles', {
   availabilityEarliest: date('availability_earliest'),
   availabilityLatest: date('availability_latest'),
   workMode: text('work_mode'), // 'remote' | 'onsite' | 'hybrid'
+  engagementType: text('engagement_type'),
   radiusKm: integer('radius_km'),
   hoursMin: integer('hours_min'),
   hoursMax: integer('hours_max'),
@@ -1889,6 +1905,13 @@ export const customVerificationRequests = pgTable('custom_verification_requests'
     ],
   }).notNull(),
   message: text('message'),
+  requestKind: text('request_kind', {
+    enum: ['generic_verification', 'human_observed_attestation'],
+  })
+    .notNull()
+    .default('generic_verification'),
+  attestationRequest: jsonb('attestation_request'),
+  attestationResponse: jsonb('attestation_response'),
   tokenHash: text('token_hash').notNull().unique(),
   status: text('status', {
     enum: canonicalVerificationInviteLifecycleStates,
@@ -1954,7 +1977,15 @@ export const skillVerificationRequests = pgTable('skill_verification_requests', 
   verifierSource: text('verifier_source', {
     enum: ['peer', 'manager', 'external'],
   }).notNull(),
+  verifierRelationship: text('verifier_relationship'),
   message: text('message'),
+  requestKind: text('request_kind', {
+    enum: ['generic_verification', 'human_observed_attestation'],
+  })
+    .notNull()
+    .default('generic_verification'),
+  attestationRequest: jsonb('attestation_request'),
+  attestationResponse: jsonb('attestation_response'),
   riskSignals: jsonb('risk_signals')
     .default(sql`'{}'::jsonb`)
     .notNull(),
@@ -4954,6 +4985,102 @@ export const decisionStateTransitions = pgTable(
       table.decisionId,
       table.createdAt
     ),
+  })
+);
+
+export const engagementVerifications = pgTable(
+  'engagement_verifications',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    decisionId: uuid('decision_id')
+      .references(() => decisions.id, { onDelete: 'cascade' })
+      .notNull(),
+    introId: uuid('intro_id')
+      .references(() => introWorkflows.id, { onDelete: 'cascade' })
+      .notNull(),
+    assignmentId: uuid('assignment_id')
+      .references(() => assignments.id, { onDelete: 'cascade' })
+      .notNull(),
+    candidateProfileId: uuid('candidate_profile_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    orgId: uuid('org_id')
+      .references(() => organizations.id, { onDelete: 'cascade' })
+      .notNull(),
+    engagementType: text('engagement_type', {
+      enum: canonicalEngagementTypeValues,
+    }),
+    state: text('state', {
+      enum: canonicalEngagementVerificationWorkflowStates,
+    })
+      .default('pending_both_confirmations')
+      .notNull(),
+    candidateConfirmed: boolean('candidate_confirmed').default(false).notNull(),
+    candidateConfirmedAt: timestamp('candidate_confirmed_at', { withTimezone: true }),
+    candidateConfirmedBy: uuid('candidate_confirmed_by').references(() => profiles.id, {
+      onDelete: 'set null',
+    }),
+    organizationConfirmed: boolean('organization_confirmed').default(false).notNull(),
+    organizationConfirmedAt: timestamp('organization_confirmed_at', { withTimezone: true }),
+    organizationConfirmedBy: uuid('organization_confirmed_by').references(() => profiles.id, {
+      onDelete: 'set null',
+    }),
+    uploadedFileId: uuid('uploaded_file_id').references(() => uploadedFiles.id, {
+      onDelete: 'set null',
+    }),
+    evidenceNote: text('evidence_note'),
+    proofHookStatus: text('proof_hook_status', {
+      enum: canonicalEngagementProofHookStatuses,
+    })
+      .default('not_ready')
+      .notNull(),
+    proofHookEligibleAt: timestamp('proof_hook_eligible_at', { withTimezone: true }),
+    verifiedAt: timestamp('verified_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    decisionUnique: unique().on(table.decisionId),
+    orgStateIdx: index('engagement_verifications_org_state_idx').on(table.orgId, table.state),
+    candidateStateIdx: index('engagement_verifications_candidate_state_idx').on(
+      table.candidateProfileId,
+      table.state
+    ),
+    assignmentStateIdx: index('engagement_verifications_assignment_state_idx').on(
+      table.assignmentId,
+      table.state
+    ),
+  })
+);
+
+export const engagementVerificationStateTransitions = pgTable(
+  'engagement_verification_state_transitions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    engagementVerificationId: uuid('engagement_verification_id')
+      .references(() => engagementVerifications.id, { onDelete: 'cascade' })
+      .notNull(),
+    fromState: text('from_state', {
+      enum: canonicalEngagementVerificationWorkflowStates,
+    }),
+    toState: text('to_state', {
+      enum: canonicalEngagementVerificationWorkflowStates,
+    }).notNull(),
+    trigger: text('trigger').notNull(),
+    reasonCode: text('reason_code'),
+    actorType: text('actor_type', {
+      enum: canonicalWorkflowActorTypes,
+    }).notNull(),
+    actorId: uuid('actor_id').references(() => profiles.id, { onDelete: 'set null' }),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    engagementVerificationCreatedAtIdx: index(
+      'engagement_verification_state_transitions_created_at_idx'
+    ).on(table.engagementVerificationId, table.createdAt),
   })
 );
 

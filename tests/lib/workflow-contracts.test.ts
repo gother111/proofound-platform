@@ -23,4 +23,16 @@ describe('workflow contracts', () => {
       /Forbidden decision transition/i
     );
   });
+
+  it('keeps engagement verification separate from decision state progression', () => {
+    expect(WORKFLOW_TRANSITIONS.engagement_verification.pending_both_confirmations).toEqual([
+      'pending_candidate_confirmation',
+      'pending_organization_confirmation',
+      'verified',
+    ]);
+    expect(WORKFLOW_TRANSITIONS.engagement_verification.verified).toEqual([]);
+    expect(() =>
+      assertAllowedTransition('engagement_verification', 'verified', 'pending_both_confirmations')
+    ).toThrow(/Forbidden engagement_verification transition/i);
+  });
 });
