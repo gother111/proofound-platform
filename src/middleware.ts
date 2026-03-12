@@ -70,6 +70,46 @@ const SUSPICIOUS_PREFIXES = [
   '/cgi-bin',
 ];
 
+const LEGACY_API_PREFIXES = ['/api/wellbeing/', '/api/mobile/'];
+
+const LEGACY_ADMIN_EXACT_PATHS = new Set([
+  '/api/admin/cron/summary',
+  '/api/admin/fairness-metrics',
+  '/api/admin/fairness-report',
+  '/api/admin/metrics/overview',
+  '/api/admin/organizations',
+  '/api/admin/users',
+]);
+
+const LEGACY_ADMIN_PREFIXES = [
+  '/api/admin/analytics/',
+  '/api/admin/fairness-evaluations/',
+  '/api/admin/fairness/',
+  '/api/admin/performance/',
+  '/api/admin/users/',
+];
+
+function buildArchivedApiResponse(
+  request: NextRequest,
+  requestId: string,
+  surface: string,
+  detail: string,
+  status = 410
+) {
+  const response = NextResponse.json(
+    {
+      error: `${surface} is not part of the launch MVP corridor.`,
+      message: detail,
+      surface,
+      launchState: 'non_launch',
+    },
+    { status }
+  );
+  response.headers.set('x-request-id', requestId);
+  applySecurityHeaders(response, request);
+  return response;
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const requestId = request.headers.get('x-request-id') || nanoid(12);
@@ -151,6 +191,27 @@ export async function middleware(request: NextRequest) {
 
     // CSRF protection for API routes (allowlist some public endpoints)
     if (pathname.startsWith('/api')) {
+      if (LEGACY_API_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
+        return buildArchivedApiResponse(
+          request,
+          requestId,
+          pathname.startsWith('/api/wellbeing/') ? 'Wellbeing API' : 'Mobile API',
+          'This API family is retired for the locked launch MVP.'
+        );
+      }
+
+      if (
+        LEGACY_ADMIN_EXACT_PATHS.has(pathname) ||
+        LEGACY_ADMIN_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+      ) {
+        return buildArchivedApiResponse(
+          request,
+          requestId,
+          'Admin API',
+          'This admin surface is archived outside the locked launch MVP.'
+        );
+      }
+
       // Allow anonymous web-vitals posts without CSRF blocking
       if (pathname.startsWith('/api/analytics/web-vitals')) {
         const response = NextResponse.next();

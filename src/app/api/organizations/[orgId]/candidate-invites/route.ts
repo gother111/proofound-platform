@@ -14,6 +14,7 @@ import {
 } from '@/lib/candidate-invites';
 import { sendCandidateInviteEmail } from '@/lib/email';
 import { emitAnalyticsEventAsync } from '@/lib/analytics/events';
+import { normalizeAuthorizedOrgRole } from '@/lib/authz';
 import {
   CAPABILITY_BINDINGS,
   CAPABILITY_TOKEN_CLASSES,
@@ -194,7 +195,9 @@ export async function GET(
     return NextResponse.json({
       invites: rows,
       permissions: {
-        canManage: membership.role === 'owner' || membership.role === 'admin',
+        canManage: ['org_owner', 'org_manager'].includes(
+          normalizeAuthorizedOrgRole(membership.role) ?? ''
+        ),
       },
     });
   } catch (error) {
@@ -216,7 +219,8 @@ export async function POST(
     const { orgId } = await params;
     const membership = await getMembership(orgId, user.id);
 
-    if (!membership || !['owner', 'admin'].includes(membership.role)) {
+    const membershipRole = normalizeAuthorizedOrgRole(membership?.role);
+    if (!membershipRole || !['org_owner', 'org_manager'].includes(membershipRole)) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 

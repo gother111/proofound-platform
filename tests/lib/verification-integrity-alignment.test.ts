@@ -34,9 +34,12 @@ vi.mock('@/lib/proofs/canonical-pack', () => ({
 
 import { db } from '@/db';
 import {
+  education,
   experiences,
   individualProfiles,
+  matchingProfiles,
   matches,
+  portfolioPublicationStates,
   profiles,
   proofArtifacts,
   proofPackItems,
@@ -44,6 +47,7 @@ import {
   skillProofs,
   skills,
   verificationRecords,
+  volunteering,
 } from '@/db/schema';
 import { requireApiAuthContext } from '@/lib/auth';
 import { GET as getProfileCompleteness } from '@/app/api/profile/completeness/route';
@@ -133,6 +137,7 @@ describe('verification integrity alignment', () => {
 
   it('uses integrity_status clear in completion-flow accepted verification counter', async () => {
     const selectSpy = db.select as any;
+    vi.spyOn(canonicalPack, 'listCanonicalProofPackAggregatesForOwner').mockResolvedValue([]);
     vi.mocked(canonicalPack.summarizeCanonicalProofOwnerAggregates).mockReturnValue({
       packCount: 0,
       publicPackCount: 0,
@@ -158,29 +163,34 @@ describe('verification integrity alignment', () => {
               limit: vi.fn().mockResolvedValue([{ values: ['impact'], causes: ['climate'] }]),
             };
           }
+          if (table === matchingProfiles) {
+            return {
+              limit: vi.fn().mockResolvedValue([
+                {
+                  timezone: 'Europe/Stockholm',
+                  desiredRoles: ['Engineer'],
+                  workMode: 'remote',
+                  engagementType: 'fractional',
+                },
+              ]),
+            };
+          }
           if (table === skills) {
             return Promise.resolve([{ count: 5 }]);
           }
-          if (table === skillProofs) {
+          if (table === experiences) {
             return Promise.resolve([{ count: 1 }]);
           }
-          if (table === verificationRecords) {
-            return Promise.resolve([
-              {
-                id: 'verification-clear',
-                ownerType: 'individual_profile',
-                ownerId: 'user-1',
-                status: 'verified',
-                integrityStatus: 'clear',
-              },
-              {
-                id: 'verification-warning',
-                ownerType: 'individual_profile',
-                ownerId: 'user-1',
-                status: 'verified',
-                integrityStatus: 'warning',
-              },
-            ]);
+          if (table === education) {
+            return Promise.resolve([{ count: 0 }]);
+          }
+          if (table === volunteering) {
+            return Promise.resolve([{ count: 0 }]);
+          }
+          if (table === portfolioPublicationStates) {
+            return {
+              limit: vi.fn().mockResolvedValue([{ effectiveState: 'private' }]),
+            };
           }
           throw new Error('Unexpected table in completion-flow select');
         }),

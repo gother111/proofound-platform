@@ -143,7 +143,7 @@ export async function GET(
       authResult.supabase,
       authResult.user.id,
       match.org_id,
-      ['owner', 'admin', 'member', 'viewer']
+      ['org_owner', 'org_manager', 'org_reviewer']
     );
     const orgRole = canViewAsOrgMember
       ? await getOrgMembershipRole(authResult.user.id, match.org_id)

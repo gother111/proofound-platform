@@ -249,4 +249,32 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     );
     expect(mocks.notifyIntroAccepted).toHaveBeenCalledTimes(2);
   });
+
+  it('allows reviewers to record reveal requests without admin-style roles', async () => {
+    mocks.getOrgMembershipRole.mockResolvedValue('org_reviewer');
+
+    const response = await POST(
+      new NextRequest('https://example.com/api/org/proofound/matches/match-1/review', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'reveal_request',
+          requestedScope: 'full_identity',
+        }),
+      }),
+      {
+        params: Promise.resolve({ id: 'proofound', matchId: 'match-1' }),
+      } as any
+    );
+
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.message).toContain('Reveal request recorded');
+    expect(mocks.recordRevealEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorRole: 'org_reviewer',
+        requestedScope: 'full_identity',
+      })
+    );
+  });
 });

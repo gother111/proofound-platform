@@ -9,6 +9,7 @@ import { log } from '@/lib/log';
 import { emitContractSigned } from '@/lib/analytics/events';
 import { sendContractSignedEmail } from '@/lib/email';
 import { notifyContractSigned } from '@/lib/notifications';
+import { normalizeAuthorizedOrgRole } from '@/lib/authz';
 
 export const dynamic = 'force-dynamic';
 
@@ -312,7 +313,8 @@ export async function POST(request: NextRequest) {
           candidateProfile?.displayName || candidateProfile?.handle || 'A candidate';
 
         for (const member of orgMembers) {
-          if (member.role === 'owner' || member.role === 'admin') {
+          const memberRole = normalizeAuthorizedOrgRole(member.role);
+          if (memberRole === 'org_owner' || memberRole === 'org_manager') {
             try {
               await notifyContractSigned(member.userId, contract.id, candidateName);
             } catch (memberNotifError) {
@@ -370,7 +372,8 @@ export async function POST(request: NextRequest) {
         });
 
         for (const member of orgMembers) {
-          if (member.role === 'owner' || member.role === 'admin') {
+          const memberRole = normalizeAuthorizedOrgRole(member.role);
+          if (memberRole === 'org_owner' || memberRole === 'org_manager') {
             try {
               const { data: memberAuthData } = await supabase.auth.admin.getUserById(member.userId);
               const memberProfile = await db.query.profiles.findFirst({

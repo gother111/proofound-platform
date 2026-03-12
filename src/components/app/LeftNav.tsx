@@ -9,9 +9,7 @@ import {
   Lock,
   User,
   Users,
-  MapPin,
   ShieldCheck,
-  Sparkles,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -99,7 +97,6 @@ export function LeftNav({
       label: 'Messages',
       dataTour: 'messages-link',
     },
-    { href: `${basePath}/expertise`, icon: MapPin, label: 'Expertise', dataTour: 'expertise-link' },
     {
       href: `${basePath}/interviews`,
       icon: Video,
@@ -111,12 +108,6 @@ export function LeftNav({
       icon: ShieldCheck,
       label: 'Verifications',
       dataTour: 'verifications-link',
-    },
-    {
-      href: `${basePath}/zen`,
-      icon: Sparkles,
-      label: 'Private check-ins',
-      dataTour: 'zen-link',
     },
     { href: `${basePath}/settings`, icon: Settings, label: 'Settings', dataTour: 'settings-link' },
   ];

@@ -77,7 +77,7 @@ describe('/api/metrics', () => {
     mocks.profileFindFirst.mockResolvedValue({ platformRole: null });
     mocks.orgMemberFindFirst.mockResolvedValue({
       orgId: 'org-1',
-      role: 'owner',
+      role: 'org_owner',
     });
   });
 
@@ -99,7 +99,7 @@ describe('/api/metrics', () => {
     expect(body.error).toBe('Invalid startDate parameter');
   });
 
-  it('returns 403 when user is neither platform admin nor active org owner/admin', async () => {
+  it('returns 403 when user is neither platform admin nor active org owner/manager', async () => {
     mocks.orgMemberFindFirst.mockResolvedValue(null);
 
     const response = await GET(makeRequest('https://example.com/api/metrics?metric=all'));
@@ -109,7 +109,7 @@ describe('/api/metrics', () => {
     expect(body.error).toBe('Forbidden');
   });
 
-  it('returns metric payload for authorized org admin requests', async () => {
+  it('returns metric payload for authorized org owner requests', async () => {
     mocks.calculateTTV.mockResolvedValue({
       metric: 'TTV',
       value: 5,

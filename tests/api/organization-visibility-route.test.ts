@@ -203,6 +203,20 @@ describe('organization visibility route', () => {
     expect(body.error).toBe('Invalid visibility level for displayName');
   });
 
+  it('PUT rejects manager updates because publication controls are owner-only', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      buildSupabase({
+        membershipRole: 'org_manager',
+      }) as any
+    );
+
+    const response = await PUT(buildPutRequest({ displayName: 'internal_only' }), params);
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.error).toBe('Forbidden');
+  });
+
   it('PUT stores publication controls, recomputes publication, and invalidates public paths', async () => {
     const supabase = buildSupabase({
       visibilityRow: {

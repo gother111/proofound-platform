@@ -31,7 +31,7 @@ export async function PUT(
     const body = await request.json();
     const validated = OwnershipSchema.parse(body);
 
-    const canWrite = await isActiveOrgMember(supabase as any, user.id, orgId, ['owner', 'admin']);
+    const canWrite = await isActiveOrgMember(supabase as any, user.id, orgId, ['org_owner']);
     if (!canWrite) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
@@ -64,7 +64,7 @@ export async function DELETE(
     const { user, supabase } = authContext;
     const { orgId, ownershipId } = await params;
 
-    const canWrite = await isActiveOrgMember(supabase as any, user.id, orgId, ['owner', 'admin']);
+    const canWrite = await isActiveOrgMember(supabase as any, user.id, orgId, ['org_owner']);
     if (!canWrite) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }

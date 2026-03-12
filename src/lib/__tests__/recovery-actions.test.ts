@@ -11,7 +11,11 @@ describe('recovery actions', () => {
 
     expect(actions).toHaveLength(3);
     expect(actions.map((action) => action.title)).toEqual(
-      expect.arrayContaining(['Add a proof', 'Add a skill', 'Turn on matchable'])
+      expect.arrayContaining([
+        'Add a proof',
+        'Strengthen your public portfolio',
+        'Turn on matchable',
+      ])
     );
     expect(new Set(actions.map((action) => action.actionUrl)).size).toBe(3);
   });
@@ -22,7 +26,7 @@ describe('recovery actions', () => {
         id: 'request-verification',
         title: 'Add proof from verification',
         description: 'Verification hint from readiness service.',
-        actionUrl: '/app/i/expertise',
+        actionUrl: '/app/i/portfolio',
       },
     ]);
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authorize, type OrgRole } from '@/lib/authz';
+import { authorize, normalizeAuthorizedOrgRole, type OrgRole } from '@/lib/authz';
 import { createClient } from '@/lib/supabase/server';
 
 /**
@@ -33,7 +33,7 @@ export async function GET(
       .eq('status', 'active')
       .maybeSingle();
 
-    const orgRole = (membership?.role as OrgRole | undefined) ?? null;
+    const orgRole = (normalizeAuthorizedOrgRole(membership?.role) as OrgRole | null) ?? null;
     if (
       !authorize({
         resource: 'exports',

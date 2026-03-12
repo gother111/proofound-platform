@@ -27,7 +27,7 @@ import {
   profiles,
 } from '@/db/schema';
 import { eq, and, sql, gte, desc, count } from 'drizzle-orm';
-import { authorize, type OrgRole } from '@/lib/authz';
+import { authorize, normalizeAuthorizedOrgRole, type OrgRole } from '@/lib/authz';
 import { CLIENT_FF_DEFAULTS } from '@/lib/featureFlags';
 import { legacySurfaceJsonResponse } from '@/lib/mvp/nonLaunch';
 
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
     }
 
-    const orgRole = (membership?.role as OrgRole | undefined) ?? null;
+    const orgRole = (normalizeAuthorizedOrgRole(membership?.role) as OrgRole | null) ?? null;
     if (
       !authorize({
         resource: 'assignments',

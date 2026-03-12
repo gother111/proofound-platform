@@ -6,12 +6,24 @@ vi.mock('@/db', () => ({
   },
 }));
 
+vi.mock('node:fs/promises', () => ({
+  default: {
+    readFile: vi.fn(),
+  },
+}));
+
 import { db } from '@/db';
-import { getLatestLaunchSyntheticStatus } from '@/lib/launch/synthetic-monitors';
+import fs from 'node:fs/promises';
+import {
+  getCurrentLaunchSyntheticStatus,
+  getLatestLaunchSyntheticStatus,
+} from '@/lib/launch/synthetic-monitors';
+import { LAUNCH_MONITOR_DEFINITIONS, LAUNCH_SMOKE_MATRIX } from '@/lib/launch/contracts';
 
 describe('launch synthetic monitor persistence', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it('reads the latest monitor state when drizzle returns array rows', async () => {
@@ -53,25 +65,37 @@ describe('launch synthetic monitor persistence', () => {
         details: {},
       },
       {
-        monitor_key: 'signup_auth',
+        monitor_key: 'first_proof_first_individual',
         monitor_group: 'synthetic-smoke',
         status: 'pass',
         severity: 'p1',
         response_time_ms: 100,
-        expected_state: 'auth_flow_completed',
-        observed_state: 'auth_flow_completed',
+        expected_state: 'first_proof_first_corridor_live',
+        observed_state: 'first_proof_first_corridor_live',
         failure_class: null,
         checked_at: '2026-03-10T16:52:57.187Z',
         details: {},
       },
       {
-        monitor_key: 'portfolio_publish_render',
+        monitor_key: 'public_portfolio_publish',
         monitor_group: 'synthetic-smoke',
         status: 'pass',
         severity: 'p1',
         response_time_ms: 100,
         expected_state: 'public_portfolio_live',
         observed_state: 'public_portfolio_live',
+        failure_class: null,
+        checked_at: '2026-03-10T16:52:57.187Z',
+        details: {},
+      },
+      {
+        monitor_key: 'privacy_reveal_enforcement',
+        monitor_group: 'synthetic-smoke',
+        status: 'pass',
+        severity: 'p1',
+        response_time_ms: 100,
+        expected_state: 'privacy_and_reveal_enforced',
+        observed_state: 'privacy_and_reveal_enforced',
         failure_class: null,
         checked_at: '2026-03-10T16:52:57.187Z',
         details: {},
@@ -89,73 +113,25 @@ describe('launch synthetic monitor persistence', () => {
         details: {},
       },
       {
-        monitor_key: 'shortlist_generation',
-        monitor_group: 'synthetic-smoke',
-        status: 'pass',
-        severity: 'p2',
-        response_time_ms: 100,
-        expected_state: 'shortlist_or_named_fallback',
-        observed_state: 'shortlist_or_named_fallback',
-        failure_class: null,
-        checked_at: '2026-03-10T16:52:57.187Z',
-        details: {},
-      },
-      {
-        monitor_key: 'invite_redemption',
+        monitor_key: 'intro_reveal_interview_decision',
         monitor_group: 'synthetic-smoke',
         status: 'pass',
         severity: 'p1',
         response_time_ms: 100,
-        expected_state: 'invite_redeemed',
-        observed_state: 'invite_redeemed',
+        expected_state: 'intro_reveal_interview_decision_live',
+        observed_state: 'intro_reveal_interview_decision_live',
         failure_class: null,
         checked_at: '2026-03-10T16:52:57.187Z',
         details: {},
       },
       {
-        monitor_key: 'verification_request',
+        monitor_key: 'engagement_verification',
         monitor_group: 'synthetic-smoke',
         status: 'pass',
         severity: 'p2',
         response_time_ms: 100,
-        expected_state: 'verification_request_created',
-        observed_state: 'verification_request_created',
-        failure_class: null,
-        checked_at: '2026-03-10T16:52:57.187Z',
-        details: {},
-      },
-      {
-        monitor_key: 'feedback_submission',
-        monitor_group: 'synthetic-smoke',
-        status: 'pass',
-        severity: 'p2',
-        response_time_ms: 100,
-        expected_state: 'structured_feedback_submitted',
-        observed_state: 'structured_feedback_submitted',
-        failure_class: null,
-        checked_at: '2026-03-10T16:52:57.187Z',
-        details: {},
-      },
-      {
-        monitor_key: 'export',
-        monitor_group: 'synthetic-smoke',
-        status: 'pass',
-        severity: 'p1',
-        response_time_ms: 100,
-        expected_state: 'export_visible_and_safe',
-        observed_state: 'export_visible_and_safe',
-        failure_class: null,
-        checked_at: '2026-03-10T16:52:57.187Z',
-        details: {},
-      },
-      {
-        monitor_key: 'delete_unpublish',
-        monitor_group: 'synthetic-smoke',
-        status: 'pass',
-        severity: 'p1',
-        response_time_ms: 100,
-        expected_state: 'public_projection_removed',
-        observed_state: 'public_projection_removed',
+        expected_state: 'engagement_verification_live',
+        observed_state: 'engagement_verification_live',
         failure_class: null,
         checked_at: '2026-03-10T16:52:57.187Z',
         details: {},
@@ -164,8 +140,97 @@ describe('launch synthetic monitor persistence', () => {
 
     const result = await getLatestLaunchSyntheticStatus(new Date('2026-03-10T16:53:25.057Z'));
 
-    expect(result.rows).toHaveLength(12);
+    expect(result.rows).toHaveLength(LAUNCH_MONITOR_DEFINITIONS.length);
     expect(result.missingMonitorKeys).toEqual([]);
     expect(result.ok).toBe(true);
+  });
+
+  it('derives current launch status from live checks and the current smoke artifact', async () => {
+    (fs.readFile as any).mockResolvedValue(
+      JSON.stringify({
+        schemaVersion: 1,
+        generatedAt: '2026-03-12T10:00:00.000Z',
+        overallStatus: 'pass',
+        checks: LAUNCH_SMOKE_MATRIX.map((scenario) => ({
+          id: scenario.id,
+          label: scenario.label,
+          status: 'pass',
+          expectedState: scenario.expectedState,
+          durationMs: 25,
+          testFiles: scenario.testFiles,
+          generatedAt: '2026-03-12T10:00:00.000Z',
+        })),
+      })
+    );
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string | URL) => {
+        const url = String(input);
+        if (url.endsWith('/api/health')) {
+          return new Response(JSON.stringify({ status: 'healthy' }), { status: 200 });
+        }
+
+        return new Response('ok', { status: 200 });
+      })
+    );
+
+    const result = await getCurrentLaunchSyntheticStatus({
+      baseUrl: 'https://example.com',
+      artifactPath: '.artifacts/launch-smoke-report.json',
+      persist: false,
+    });
+
+    expect(result.source).toBe('live');
+    expect(result.ok).toBe(true);
+    expect(result.evidence.persisted).toBe(false);
+    expect(result.evidence.smokeArtifactGeneratedAt).toBe('2026-03-12T10:00:00.000Z');
+    expect(result.rows).toHaveLength(LAUNCH_MONITOR_DEFINITIONS.length);
+    expect(result.rows.every((row) => row.stale === false)).toBe(true);
+    expect(db.execute).not.toHaveBeenCalled();
+  });
+
+  it('fails current smoke-backed monitors when the smoke artifact itself is stale', async () => {
+    (fs.readFile as any).mockResolvedValue(
+      JSON.stringify({
+        schemaVersion: 1,
+        generatedAt: '2020-01-01T00:00:00.000Z',
+        overallStatus: 'pass',
+        checks: LAUNCH_SMOKE_MATRIX.map((scenario) => ({
+          id: scenario.id,
+          label: scenario.label,
+          status: 'pass',
+          expectedState: scenario.expectedState,
+          durationMs: 25,
+          testFiles: scenario.testFiles,
+          generatedAt: '2020-01-01T00:00:00.000Z',
+        })),
+      })
+    );
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string | URL) => {
+        const url = String(input);
+        if (url.endsWith('/api/health')) {
+          return new Response(JSON.stringify({ status: 'healthy' }), { status: 200 });
+        }
+
+        return new Response('ok', { status: 200 });
+      })
+    );
+
+    const result = await getCurrentLaunchSyntheticStatus({
+      baseUrl: 'https://example.com',
+      artifactPath: '.artifacts/launch-smoke-report.json',
+      persist: false,
+    });
+
+    expect(result.ok).toBe(false);
+    expect(
+      result.rows
+        .filter((row) => row.monitorGroup === 'synthetic-smoke')
+        .every((row) => row.observedState === 'smoke_artifact_stale')
+    ).toBe(true);
   });
 });

@@ -460,7 +460,11 @@ export async function getProfileData(): Promise<ProfileData> {
             .from(skillsTable)
             .leftJoin(skillsTaxonomy, eq(skillsTable.skillCode, skillsTaxonomy.code))
             .where(eq(skillsTable.profileId, user.id)),
-          db.query.matchingProfiles.findFirst({
+          ((
+            db as {
+              query?: { matchingProfiles?: { findFirst?: (args: unknown) => Promise<any> } };
+            }
+          ).query?.matchingProfiles?.findFirst?.({
             where: eq(matchingProfiles.profileId, user.id),
             columns: {
               timezone: true,
@@ -468,7 +472,7 @@ export async function getProfileData(): Promise<ProfileData> {
               workMode: true,
               engagementType: true,
             },
-          }) as Promise<any>,
+          }) ?? Promise.resolve(null)) as Promise<any>,
         ]);
     } catch (error) {
       console.error('Failed to fetch profile related data:', error);

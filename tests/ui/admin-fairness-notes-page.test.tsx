@@ -1,6 +1,6 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import FairnessNotesPage from '@/app/admin/fairness/notes/page';
 
 const apiFetchMock = vi.fn();
@@ -106,37 +106,10 @@ vi.mock('@/components/ui/alert', () => ({
 describe('Admin fairness notes page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => ({
-        ok: true,
-        json: async () => ({ success: true, notes: [] }),
-      }))
-    );
-    vi.stubGlobal('alert', vi.fn());
-    apiFetchMock.mockResolvedValue({
-      ok: true,
-      json: async () => ({ success: true, noteId: 'note-1' }),
-    });
   });
 
-  it('uses apiFetch for fairness note generation POST', async () => {
-    render(<FairnessNotesPage />);
-
-    await screen.findByText(/fairness notes/i);
-
-    fireEvent.change(screen.getByLabelText(/release version/i), {
-      target: { value: 'v1.2.3' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: /generate fairness note/i }));
-
-    await waitFor(() => expect(apiFetchMock).toHaveBeenCalledTimes(1));
-    expect(apiFetchMock).toHaveBeenCalledWith(
-      '/api/admin/fairness/generate-note',
-      expect.objectContaining({ method: 'POST' })
-    );
-
-    const requestInit = apiFetchMock.mock.calls[0][1] as RequestInit;
-    expect(JSON.parse(String(requestInit.body))).toEqual({ releaseVersion: 'v1.2.3' });
+  it('is archived behind a notFound boundary', () => {
+    expect(() => render(<FairnessNotesPage />)).toThrow('NEXT_HTTP_ERROR_FALLBACK;404');
+    expect(apiFetchMock).not.toHaveBeenCalled();
   });
 });

@@ -27,13 +27,13 @@ const INDIVIDUAL_BASE_ACTIONS: RecoveryAction[] = [
     id: 'add-proof',
     title: 'Add a proof',
     description: 'Attach a project, credential, or artifact that proves your work.',
-    actionUrl: '/app/i/expertise?focus=proofs',
+    actionUrl: '/app/i/portfolio',
   },
   {
     id: 'add-skill',
-    title: 'Add a skill',
-    description: 'Add or refresh skills with recency so matching can evaluate fit.',
-    actionUrl: '/app/i/expertise?focus=skills',
+    title: 'Strengthen your public portfolio',
+    description: 'Refresh profile signals so matching can evaluate fit without legacy Atlas flows.',
+    actionUrl: '/app/i/profile',
   },
   {
     id: 'turn-on-matchable',
@@ -86,7 +86,12 @@ function mapHintToIndividualActionId(hint: RecoveryActionHint): RecoveryAction['
   const id = (hint.id || '').toLowerCase();
 
   if (title.includes('proof') || id.includes('proof')) return 'add-proof';
-  if (title.includes('skill') || id.includes('skill') || actionUrl.includes('/app/i/expertise')) {
+  if (
+    title.includes('skill') ||
+    id.includes('skill') ||
+    actionUrl.includes('/app/i/portfolio') ||
+    actionUrl.includes('/app/i/profile')
+  ) {
     return 'add-skill';
   }
   if (

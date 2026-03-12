@@ -432,7 +432,9 @@ describe('CvImportWizard', () => {
       expect(screen.getByRole('button', { name: /Finish Review & Apply/i })).toBeDisabled();
     });
 
-    expect(screen.getByText('Needs mapping')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Advanced diagnostics/i }));
+
+    expect(screen.getAllByText('Needs mapping: 1').length).toBeGreaterThan(0);
   });
 
   it('shows the Python queue error instead of falling back locally when enqueue fails', async () => {

@@ -40,6 +40,12 @@ export interface SUSResult {
   meetsTarget: boolean; // Whether it meets our ≥75 target
 }
 
+type SUSQuestion = {
+  id: keyof SUSResponse;
+  text: string;
+  type: 'positive' | 'negative';
+};
+
 /**
  * Calculate SUS score from survey responses
  *
@@ -55,22 +61,11 @@ export function calculateSUSScore(responses: SUSResponse): SUSResult {
     throw new Error('All SUS responses must be between 1 and 5');
   }
 
-  // Calculate contributions for each question
-  const contributions = [
-    responses.q1 - 1, // Odd: positive statement
-    5 - responses.q2, // Even: negative statement
-    responses.q3 - 1, // Odd: positive statement
-    5 - responses.q4, // Even: negative statement
-    responses.q5 - 1, // Odd: positive statement
-    5 - responses.q6, // Even: negative statement
-    responses.q7 - 1, // Odd: positive statement
-    5 - responses.q8, // Even: negative statement
-    responses.q9 - 1, // Odd: positive statement
-    5 - responses.q10, // Even: negative statement
-  ];
-
   // Sum contributions and multiply by 2.5
-  const sumContributions = contributions.reduce((sum, c) => sum + c, 0);
+  const sumContributions = SUS_QUESTIONS.reduce(
+    (sum, question) => sum + scoreQuestionContribution(question.type, responses[question.id]),
+    0
+  );
   const rawScore = sumContributions * 2.5;
 
   // Calculate percentile (approximate based on research)
@@ -96,6 +91,10 @@ export function calculateSUSScore(responses: SUSResponse): SUSResult {
     interpretation,
     meetsTarget,
   };
+}
+
+function scoreQuestionContribution(type: SUSQuestion['type'], value: number): number {
+  return type === 'positive' ? value - 1 : 5 - value;
 }
 
 /**
@@ -161,7 +160,7 @@ function generateInterpretation(score: number): string {
 /**
  * Standard SUS questions
  */
-export const SUS_QUESTIONS = [
+export const SUS_QUESTIONS: SUSQuestion[] = [
   {
     id: 'q1',
     text: 'I think that I would like to use this system frequently',

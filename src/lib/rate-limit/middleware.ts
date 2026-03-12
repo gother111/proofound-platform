@@ -3,7 +3,29 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { checkRateLimit, getRateLimitHeaders, RateLimitConfig } from './index';
+import { checkRateLimit, getRateLimitHeaders, RateLimitConfig, RateLimitResult } from './index';
+
+function getRetryAfterSeconds(resetTimestampMs: number): number {
+  return Math.ceil((resetTimestampMs - Date.now()) / 1000);
+}
+
+function createRateLimitExceededResponse(result: RateLimitResult): NextResponse {
+  const retryAfter = getRetryAfterSeconds(result.reset);
+  return NextResponse.json(
+    {
+      error: 'Too many requests',
+      message: 'Rate limit exceeded. Please try again later.',
+      retryAfter,
+    },
+    {
+      status: 429,
+      headers: {
+        ...getRateLimitHeaders(result),
+        'Retry-After': retryAfter.toString(),
+      },
+    }
+  );
+}
 
 /**
  * Wrap an API route handler with rate limiting
@@ -30,20 +52,7 @@ export function withRateLimit(
     const { allowed, result } = await checkRateLimit(request, config);
 
     if (!allowed) {
-      return NextResponse.json(
-        {
-          error: 'Too many requests',
-          message: 'Rate limit exceeded. Please try again later.',
-          retryAfter: Math.ceil((result.reset - Date.now()) / 1000),
-        },
-        {
-          status: 429,
-          headers: {
-            ...getRateLimitHeaders(result),
-            'Retry-After': Math.ceil((result.reset - Date.now()) / 1000).toString(),
-          },
-        }
-      );
+      return createRateLimitExceededResponse(result);
     }
 
     // Call the original handler
@@ -82,20 +91,7 @@ export async function requireRateLimit(
   const { allowed, result } = await checkRateLimit(request, config);
 
   if (!allowed) {
-    return NextResponse.json(
-      {
-        error: 'Too many requests',
-        message: 'Rate limit exceeded. Please try again later.',
-        retryAfter: Math.ceil((result.reset - Date.now()) / 1000),
-      },
-      {
-        status: 429,
-        headers: {
-          ...getRateLimitHeaders(result),
-          'Retry-After': Math.ceil((result.reset - Date.now()) / 1000).toString(),
-        },
-      }
-    );
+    return createRateLimitExceededResponse(result);
   }
 
   return { allowed: true };

@@ -6,6 +6,7 @@ import { db } from '@/db';
 import { organizationMembers, organizations } from '@/db/schema';
 import { requireMobileAuth } from '@/lib/api/mobile/auth';
 import { mobileError, mobileSuccess } from '@/lib/api/mobile/response';
+import { normalizeAuthorizedOrgRole } from '@/lib/authz';
 import { LEGAL_FORM_VALUES, ORGANIZATION_SIZE_VALUES } from '@/lib/organizations/profile-options';
 import { mapIndustryValueToCanonical, resolveIndustryFromInputs } from '@/lib/industry/options';
 
@@ -105,8 +106,13 @@ export async function PATCH(
 
     const { orgId } = await params;
     const membership = await membershipFor(auth.user.id, orgId);
-    if (!membership || !['owner', 'admin'].includes(membership.role)) {
-      return mobileError('forbidden', 'Only owner/admin can edit organization settings', 403);
+    const membershipRole = normalizeAuthorizedOrgRole(membership?.role);
+    if (membershipRole !== 'org_owner') {
+      return mobileError(
+        'forbidden',
+        'Only organization owners can edit organization settings',
+        403
+      );
     }
 
     const parsed = UpdateSchema.safeParse(await request.json());

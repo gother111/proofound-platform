@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { isActiveOrgMember } from '@/lib/api/auth';
 
 /**
  * GET /api/organizations/[orgId]/structure
- * 
+ *
  * Fetch all structure entities for an organization
  */
 export async function GET(
@@ -23,15 +24,12 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check membership
-    const { data: membership } = await supabase
-      .from('organization_members')
-      .select('role')
-      .eq('org_id', orgId)
-      .eq('user_id', user.id)
-      .single();
-
-    if (!membership) {
+    const canRead = await isActiveOrgMember(supabase as any, user.id, orgId, [
+      'org_owner',
+      'org_manager',
+      'org_reviewer',
+    ]);
+    if (!canRead) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -56,7 +54,7 @@ export async function GET(
 
 /**
  * POST /api/organizations/[orgId]/structure
- * 
+ *
  * Create a new structure entity
  */
 export async function POST(
@@ -76,15 +74,8 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check membership (owner or admin can modify)
-    const { data: membership } = await supabase
-      .from('organization_members')
-      .select('role')
-      .eq('org_id', orgId)
-      .eq('user_id', user.id)
-      .single();
-
-    if (!membership || (membership.role !== 'owner' && membership.role !== 'admin')) {
+    const canWrite = await isActiveOrgMember(supabase as any, user.id, orgId, ['org_owner']);
+    if (!canWrite) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -94,10 +85,7 @@ export async function POST(
 
     // Validate required fields
     if (!entityType || !name) {
-      return NextResponse.json(
-        { error: 'Entity type and name are required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Entity type and name are required' }, { status: 400 });
     }
 
     // Validate entity type

@@ -5,14 +5,9 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
-  Users,
-  Building2,
   FileText,
   Shield,
-  Activity,
-  Scale,
   BadgeCheck,
-  Wallet,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -33,43 +28,13 @@ const navItems = [
     title: 'Dashboard',
     href: '/admin',
     icon: LayoutDashboard,
-    description: 'Overview & metrics',
-  },
-  {
-    title: 'Users',
-    href: '/admin/users',
-    icon: Users,
-    description: 'Manage users',
-  },
-  {
-    title: 'Organizations',
-    href: '/admin/organizations',
-    icon: Building2,
-    description: 'Manage organizations',
+    description: 'Internal launch operations overview',
   },
   {
     title: 'Verification',
     href: '/admin/verification',
     icon: BadgeCheck,
     description: 'LinkedIn verification queue',
-  },
-  {
-    title: 'Performance',
-    href: '/admin/performance',
-    icon: Activity,
-    description: 'SLA & monitoring',
-  },
-  {
-    title: 'AI Spend',
-    href: '/admin/ai-spend',
-    icon: Wallet,
-    description: 'Gemini budgets & usage',
-  },
-  {
-    title: 'Fairness',
-    href: '/admin/fairness/notes',
-    icon: Scale,
-    description: 'Fairness notes & analysis',
   },
   {
     title: 'Audit Log',
@@ -108,7 +73,7 @@ export function AdminSidebar({
         {(!collapsed || mobile) && (
           <div className="flex items-center gap-2">
             <Shield className="h-6 w-6 text-proofound-forest fill-current text-green-400" />
-            <span className="font-semibold text-lg tracking-tight">Admin</span>
+            <span className="font-semibold text-lg tracking-tight">Internal Ops</span>
           </div>
         )}
         {!mobile && setCollapsed && (
@@ -163,7 +128,7 @@ export function AdminSidebar({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="truncate text-sm font-medium text-white/90">
-                {adminEmail || 'Admin'}
+                {adminEmail || 'Internal Ops'}
               </div>
               <Badge
                 variant="outline"

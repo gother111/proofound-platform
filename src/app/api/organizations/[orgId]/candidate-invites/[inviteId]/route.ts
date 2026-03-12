@@ -12,6 +12,7 @@ import {
 import { sendCandidateInviteEmail } from '@/lib/email';
 import { emitAnalyticsEventAsync } from '@/lib/analytics/events';
 import { createClient } from '@/lib/supabase/server';
+import { normalizeAuthorizedOrgRole } from '@/lib/authz';
 import {
   CAPABILITY_BINDINGS,
   CAPABILITY_TOKEN_CLASSES,
@@ -98,7 +99,8 @@ export async function PATCH(
     const { orgId, inviteId } = await params;
     const membership = await getMembership(orgId, user.id);
 
-    if (!membership || !['owner', 'admin'].includes(membership.role)) {
+    const membershipRole = normalizeAuthorizedOrgRole(membership?.role);
+    if (!membershipRole || !['org_owner', 'org_manager'].includes(membershipRole)) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 

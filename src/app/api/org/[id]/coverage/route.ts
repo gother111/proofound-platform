@@ -24,10 +24,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const project = searchParams.get('project');
 
     const hasOrgAccess = await isActiveOrgMember(authResult.supabase, authResult.user.id, orgId, [
-      'owner',
-      'admin',
-      'member',
-      'viewer',
+      'org_owner',
+      'org_manager',
+      'org_reviewer',
     ]);
 
     if (!hasOrgAccess) {

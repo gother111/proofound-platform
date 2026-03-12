@@ -16,15 +16,12 @@ export const REQUIRED_SAFE_MODE_FLAGS = [
 
 export type LaunchSmokeScenario = {
   id:
-    | 'signup_auth'
-    | 'portfolio_publish_render'
+    | 'first_proof_first_individual'
+    | 'public_portfolio_publish'
+    | 'privacy_reveal_enforcement'
     | 'assignment_publish'
-    | 'shortlist_generation'
-    | 'invite_redemption'
-    | 'verification_request'
-    | 'feedback_submission'
-    | 'export'
-    | 'delete_unpublish';
+    | 'intro_reveal_interview_decision'
+    | 'engagement_verification';
   label: string;
   severity: LaunchAlertSeverity;
   testFiles: string[];
@@ -34,81 +31,55 @@ export type LaunchSmokeScenario = {
 
 export const LAUNCH_SMOKE_MATRIX: LaunchSmokeScenario[] = [
   {
-    id: 'signup_auth',
-    label: 'Signup and auth',
+    id: 'first_proof_first_individual',
+    label: 'First proof first individual corridor',
     severity: 'p1',
-    testFiles: ['tests/actions/auth.test.ts'],
-    expectedState: 'auth_flow_completed',
+    testFiles: ['tests/actions/onboarding.test.ts'],
+    expectedState: 'first_proof_first_corridor_live',
   },
   {
-    id: 'portfolio_publish_render',
-    label: 'Portfolio publish and render',
+    id: 'public_portfolio_publish',
+    label: 'Public portfolio publish',
     severity: 'p1',
-    testFiles: [
-      'tests/actions/onboarding.test.ts',
-      'tests/api/public-portfolio-summary-route.test.ts',
-    ],
+    testFiles: ['tests/api/public-portfolio-summary-route.test.ts'],
     expectedState: 'public_portfolio_live',
     allowedFallbackModes: ['proof_building_weak_coverage', 'trust_pending_verification'],
+  },
+  {
+    id: 'privacy_reveal_enforcement',
+    label: 'Privacy and reveal enforcement',
+    severity: 'p1',
+    testFiles: [
+      'tests/api/org-match-review-route.test.ts',
+      'tests/lib/matching-review-contract.test.ts',
+      'tests/lib/effective-visibility.test.ts',
+    ],
+    expectedState: 'privacy_and_reveal_enforced',
   },
   {
     id: 'assignment_publish',
     label: 'Assignment publish',
     severity: 'p2',
-    testFiles: ['tests/api/assignments-publish-route.test.ts'],
+    testFiles: ['tests/lib/launch-assignment-publish-smoke.test.ts'],
     expectedState: 'assignment_published',
   },
   {
-    id: 'shortlist_generation',
-    label: 'Shortlist generation or named fallback',
-    severity: 'p2',
-    testFiles: ['tests/api/core-matching-assignment-route.test.ts'],
-    expectedState: 'shortlist_or_named_fallback',
-    allowedFallbackModes: [
-      'browse_only_low_candidate_supply',
-      'fairness_suppressed_ranking',
-      'intro_hold_insufficient_qualified_intros',
-    ],
-  },
-  {
-    id: 'invite_redemption',
-    label: 'Invite redemption',
-    severity: 'p1',
-    testFiles: ['tests/api/candidate-invite-claim-route.test.ts'],
-    expectedState: 'invite_redeemed',
-  },
-  {
-    id: 'verification_request',
-    label: 'Verification request',
-    severity: 'p2',
-    testFiles: ['tests/api/verification-skill-request-route.test.ts'],
-    expectedState: 'verification_request_created',
-    allowedFallbackModes: ['trust_pending_verification'],
-  },
-  {
-    id: 'feedback_submission',
-    label: 'Feedback submission',
-    severity: 'p2',
-    testFiles: ['tests/api/feedback-submit-route.test.ts'],
-    expectedState: 'structured_feedback_submitted',
-  },
-  {
-    id: 'export',
-    label: 'Export visibility',
+    id: 'intro_reveal_interview_decision',
+    label: 'Intro reveal interview decision corridor',
     severity: 'p1',
     testFiles: [
-      'tests/api/portfolio-export-route.test.ts',
-      'tests/api/portfolio-org-export-route.test.ts',
-      'tests/api/public-portfolio-export-route.test.ts',
+      'tests/api/org-match-review-route.test.ts',
+      'tests/api/interviews-schedule-route.test.ts',
+      'tests/api/decisions-route.test.ts',
     ],
-    expectedState: 'export_visible_and_safe',
+    expectedState: 'intro_reveal_interview_decision_live',
   },
   {
-    id: 'delete_unpublish',
-    label: 'Delete and unpublish',
-    severity: 'p1',
-    testFiles: ['tests/lib/lifecycle-reconciliation.test.ts'],
-    expectedState: 'public_projection_removed',
+    id: 'engagement_verification',
+    label: 'Engagement verification',
+    severity: 'p2',
+    testFiles: ['tests/lib/launch-engagement-verification-smoke.test.ts'],
+    expectedState: 'engagement_verification_live',
   },
 ];
 

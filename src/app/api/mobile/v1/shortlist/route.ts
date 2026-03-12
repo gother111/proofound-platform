@@ -47,10 +47,9 @@ export async function GET(request: NextRequest) {
 
     const { orgId } = parsedQuery.data;
     const canAccess = await isActiveOrgMember(auth.user.id, orgId, [
-      'owner',
-      'admin',
-      'member',
-      'viewer',
+      'org_owner',
+      'org_manager',
+      'org_reviewer',
     ]);
 
     if (!canAccess) {

@@ -6,6 +6,7 @@ import { revalidatePublicOrganizationPortfolioById } from '@/lib/portfolio/publi
 import { resolveRequestedPublicPortfolioState } from '@/lib/portfolio/public-contract';
 import { and, eq } from 'drizzle-orm';
 import { portfolioPublicationStates } from '@/db/schema';
+import { normalizeAuthorizedOrgRole } from '@/lib/authz';
 
 type VisibilityLevel = 'public' | 'post_match' | 'post_conversation_start' | 'internal_only';
 
@@ -110,7 +111,7 @@ function mapClientToDbVisibility(settings: VisibilitySettings): Record<string, s
 }
 
 function canManageVisibility(role: string | null | undefined) {
-  return role === 'owner' || role === 'admin' || role === 'org_owner' || role === 'org_manager';
+  return normalizeAuthorizedOrgRole(role) === 'org_owner';
 }
 
 /**

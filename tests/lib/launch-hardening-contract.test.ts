@@ -10,15 +10,12 @@ import { CLIENT_FEATURE_FLAG_RESPONSE_MAP } from '@/lib/featureFlags';
 describe('launch hardening contract', () => {
   it('defines the canonical smoke matrix for every launch-critical flow', () => {
     expect(LAUNCH_SMOKE_MATRIX.map((item) => item.id)).toEqual([
-      'signup_auth',
-      'portfolio_publish_render',
+      'first_proof_first_individual',
+      'public_portfolio_publish',
+      'privacy_reveal_enforcement',
       'assignment_publish',
-      'shortlist_generation',
-      'invite_redemption',
-      'verification_request',
-      'feedback_submission',
-      'export',
-      'delete_unpublish',
+      'intro_reveal_interview_decision',
+      'engagement_verification',
     ]);
 
     for (const scenario of LAUNCH_SMOKE_MATRIX) {

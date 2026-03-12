@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireApiAuth } from '@/lib/api/auth';
 import { db } from '@/db';
 import { organizationMembers, profiles } from '@/db/schema';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import {
   calculateTTSC,
   calculateTTFQI,
@@ -10,6 +10,7 @@ import {
   calculatePACLift,
   getAllMetrics,
 } from '@/lib/analytics/metrics';
+import { normalizeAuthorizedOrgRole } from '@/lib/authz';
 import { parseOptionalDate } from '@/lib/datetime/parse-optional-date';
 import { log } from '@/lib/log';
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit/index';
@@ -21,7 +22,7 @@ const ALLOWED_METRICS = new Set(['ttsc', 'ttfqi', 'ttv', 'pac', 'all']);
 /**
  * GET /api/metrics
  *
- * Returns platform metrics (platform admin/super admin, or active org owner/admin)
+ * Returns platform metrics (platform admin/super admin, or active org owner/manager)
  * Includes: TTSC, TTFQI, TTV, PAC lift
  *
  * Query params:
@@ -128,14 +129,16 @@ export async function GET(request: NextRequest) {
       profile?.platformRole === 'platform_admin' || profile?.platformRole === 'super_admin';
 
     if (!isPlatformAdmin) {
-      const hasOrgMetricsAccess = await db.query.organizationMembers.findFirst({
+      const membership = await db.query.organizationMembers.findFirst({
         where: and(
           eq(organizationMembers.userId, user.id),
-          eq(organizationMembers.status, 'active'),
-          inArray(organizationMembers.role, ['owner', 'admin'])
+          eq(organizationMembers.status, 'active')
         ),
         columns: { orgId: true, role: true },
       });
+      const membershipRole = normalizeAuthorizedOrgRole(membership?.role);
+      const hasOrgMetricsAccess =
+        membershipRole === 'org_owner' || membershipRole === 'org_manager';
 
       if (!hasOrgMetricsAccess) {
         log.warn('metrics.unauthorized', { userId: user.id });
@@ -143,7 +146,7 @@ export async function GET(request: NextRequest) {
           {
             error: 'Forbidden',
             message:
-              'Metrics access requires platform admin or active organization owner/admin role',
+              'Metrics access requires platform admin or an active organization owner/manager role',
           },
           { status: 403, headers: rateLimitHeaders }
         );

@@ -8,10 +8,6 @@ import {
   Bell,
   CheckCircle,
   Calendar,
-  Sparkles,
-  Award,
-  BookOpen,
-  PieChart,
   LucideIcon,
 } from 'lucide-react';
 
@@ -32,12 +28,6 @@ export const getRouteMeta = (pathname: string): RouteMeta => {
     };
   if (path.includes('/matching'))
     return { title: 'Matching', description: 'Browse aligned introductions', icon: Users };
-  if (path.includes('/expertise'))
-    return {
-      title: 'Expertise',
-      description: 'Manage proof-backed skills and domains',
-      icon: Award,
-    };
   if (path.includes('/interviews'))
     return { title: 'Interviews', description: 'Interview and feedback status', icon: Calendar };
   if (path.includes('/messages'))
@@ -70,14 +60,6 @@ export const getRouteMeta = (pathname: string): RouteMeta => {
       description: 'Project libraries remain outside the MVP corridor',
       icon: Briefcase,
     };
-  if (path.includes('/zen'))
-    return {
-      title: 'Private check-ins',
-      description: 'Optional private check-ins and reflections',
-      icon: Sparkles,
-    };
-  if (path.includes('/skill-gaps'))
-    return { title: 'Skill Gaps', description: 'Areas for growth', icon: BookOpen };
   if (path.includes('/portfolio'))
     return { title: 'Portfolio', description: 'Your work showcase', icon: Briefcase };
   if (path.includes('/assignments'))
@@ -89,9 +71,6 @@ export const getRouteMeta = (pathname: string): RouteMeta => {
   if (path.includes('/members'))
     return { title: 'Members', description: 'Organization members', icon: Users };
   if (path.includes('/team')) return { title: 'Team', description: 'Team management', icon: Users };
-  if (path.includes('/analytics/fairness'))
-    return { title: 'Fairness Analytics', description: 'Bias and equity tracking', icon: PieChart };
-
   // Fallback
   return { title: 'Overview', description: 'Proof-first launch overview', icon: Home };
 };

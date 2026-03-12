@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { isActiveOrgMember } from '@/lib/api/auth';
 
 /**
  * PUT /api/organizations/[orgId]/goals/[id]
- * 
+ *
  * Update a goal
  */
 export async function PUT(
@@ -23,15 +24,8 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check membership (owner or admin can modify)
-    const { data: membership } = await supabase
-      .from('organization_members')
-      .select('role')
-      .eq('org_id', orgId)
-      .eq('user_id', user.id)
-      .single();
-
-    if (!membership || (membership.role !== 'owner' && membership.role !== 'admin')) {
+    const canWrite = await isActiveOrgMember(supabase as any, user.id, orgId, ['org_owner']);
+    if (!canWrite) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -103,7 +97,7 @@ export async function PUT(
 
 /**
  * DELETE /api/organizations/[orgId]/goals/[id]
- * 
+ *
  * Delete a goal
  */
 export async function DELETE(
@@ -123,15 +117,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check membership (owner or admin can delete)
-    const { data: membership } = await supabase
-      .from('organization_members')
-      .select('role')
-      .eq('org_id', orgId)
-      .eq('user_id', user.id)
-      .single();
-
-    if (!membership || (membership.role !== 'owner' && membership.role !== 'admin')) {
+    const canWrite = await isActiveOrgMember(supabase as any, user.id, orgId, ['org_owner']);
+    if (!canWrite) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -153,4 +140,3 @@ export async function DELETE(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

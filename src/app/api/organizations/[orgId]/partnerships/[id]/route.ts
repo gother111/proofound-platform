@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { isActiveOrgMember } from '@/lib/api/auth';
 
 /**
  * GET /api/organizations/[orgId]/partnerships/[id]
- * 
+ *
  * Fetch a single partnership
  */
 export async function GET(
@@ -23,15 +24,12 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check membership
-    const { data: membership } = await supabase
-      .from('organization_members')
-      .select('role')
-      .eq('org_id', orgId)
-      .eq('user_id', user.id)
-      .single();
-
-    if (!membership) {
+    const canRead = await isActiveOrgMember(supabase as any, user.id, orgId, [
+      'org_owner',
+      'org_manager',
+      'org_reviewer',
+    ]);
+    if (!canRead) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -56,7 +54,7 @@ export async function GET(
 
 /**
  * PUT /api/organizations/[orgId]/partnerships/[id]
- * 
+ *
  * Update a partnership
  */
 export async function PUT(
@@ -76,15 +74,8 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check membership (owner or admin can modify)
-    const { data: membership } = await supabase
-      .from('organization_members')
-      .select('role')
-      .eq('org_id', orgId)
-      .eq('user_id', user.id)
-      .single();
-
-    if (!membership || (membership.role !== 'owner' && membership.role !== 'admin')) {
+    const canWrite = await isActiveOrgMember(supabase as any, user.id, orgId, ['org_owner']);
+    if (!canWrite) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -102,7 +93,15 @@ export async function PUT(
 
     // Parse request body
     const body = await request.json();
-    const { partnerName, partnerType, partnershipScope, impactCreated, startDate, endDate, status } = body;
+    const {
+      partnerName,
+      partnerType,
+      partnershipScope,
+      impactCreated,
+      startDate,
+      endDate,
+      status,
+    } = body;
 
     // Validate required fields
     if (!partnerName || !partnershipScope || !impactCreated || !startDate) {
@@ -156,7 +155,7 @@ export async function PUT(
 
 /**
  * DELETE /api/organizations/[orgId]/partnerships/[id]
- * 
+ *
  * Delete a partnership
  */
 export async function DELETE(
@@ -176,15 +175,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check membership (owner or admin can delete)
-    const { data: membership } = await supabase
-      .from('organization_members')
-      .select('role')
-      .eq('org_id', orgId)
-      .eq('user_id', user.id)
-      .single();
-
-    if (!membership || (membership.role !== 'owner' && membership.role !== 'admin')) {
+    const canWrite = await isActiveOrgMember(supabase as any, user.id, orgId, ['org_owner']);
+    if (!canWrite) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -206,4 +198,3 @@ export async function DELETE(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

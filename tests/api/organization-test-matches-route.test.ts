@@ -53,8 +53,8 @@ describe('GET /api/organizations/[orgId]/test-matches', () => {
     mockAuthenticatedUser();
   });
 
-  it('returns test matches with canInitiateTest=true for beta admin', async () => {
-    mockSelectWithLimit([{ role: 'owner', status: 'active' }]);
+  it('returns test matches with canInitiateTest=true for beta manager', async () => {
+    mockSelectWithLimit([{ role: 'org_manager', status: 'active' }]);
     mockSelectWithJoinOrder([
       {
         matchId: 'match-1',
@@ -77,6 +77,7 @@ describe('GET /api/organizations/[orgId]/test-matches', () => {
 
     expect(response.status).toBe(200);
     expect(payload.items).toHaveLength(1);
+    expect(payload.permissions.canManage).toBe(true);
     expect(payload.permissions.canInitiateTest).toBe(true);
   });
 

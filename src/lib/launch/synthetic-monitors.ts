@@ -30,6 +30,33 @@ export type SyntheticMonitorResult = {
   checkedAt: string;
 };
 
+export type CurrentLaunchSyntheticStatus = {
+  generatedAt: string;
+  rows: Array<{
+    monitorKey: string;
+    monitorGroup: string;
+    status: string;
+    severity: string;
+    responseTimeMs: number | null;
+    expectedState: string;
+    observedState: string;
+    failureClass: string | null;
+    checkedAt: string | null;
+    ageMinutes: number;
+    stale: boolean;
+    details: Record<string, unknown>;
+  }>;
+  missingMonitorKeys: string[];
+  ok: boolean;
+  source: 'live';
+  evidence: {
+    source: 'live';
+    artifactPath: string;
+    smokeArtifactGeneratedAt: string;
+    persisted: boolean;
+  };
+};
+
 export async function readLaunchSmokeArtifactFromFile(artifactPath: string) {
   const raw = await fs.readFile(artifactPath, 'utf8');
   return validateLaunchSmokeArtifact(JSON.parse(raw));
@@ -263,6 +290,53 @@ export async function runLaunchSyntheticMonitors(params: {
       p2Failures: failing.filter((result) => result.severity === 'p2').length,
     },
     alertSummary,
+    evidence: {
+      source: 'live' as const,
+      artifactPath: params.artifactPath,
+      smokeArtifactGeneratedAt: smokeArtifact.generatedAt,
+      persisted: params.persist !== false,
+    },
+  };
+}
+
+export async function getCurrentLaunchSyntheticStatus(
+  params: Parameters<typeof runLaunchSyntheticMonitors>[0],
+  now = new Date()
+): Promise<CurrentLaunchSyntheticStatus> {
+  const evaluation = await runLaunchSyntheticMonitors(params);
+  const rows = evaluation.results.map((result) => {
+    const checkedAt = result.checkedAt ? new Date(result.checkedAt) : null;
+    const ageMinutes = checkedAt
+      ? Math.max(0, Math.round((now.getTime() - checkedAt.getTime()) / 60_000))
+      : 0;
+
+    return {
+      monitorKey: result.monitorKey,
+      monitorGroup: result.monitorGroup,
+      status: result.status,
+      severity: result.severity,
+      responseTimeMs: result.responseTimeMs,
+      expectedState: result.expectedState,
+      observedState: result.observedState,
+      failureClass: result.failureClass,
+      checkedAt: result.checkedAt ?? null,
+      ageMinutes,
+      stale: false,
+      details: result.details,
+    };
+  });
+
+  const missingMonitorKeys = LAUNCH_MONITOR_DEFINITIONS.map((item) => item.monitorKey).filter(
+    (monitorKey) => !rows.some((row) => row.monitorKey === monitorKey)
+  );
+
+  return {
+    generatedAt: evaluation.generatedAt,
+    rows,
+    missingMonitorKeys,
+    ok: evaluation.ok && missingMonitorKeys.length === 0,
+    source: 'live',
+    evidence: evaluation.evidence,
   };
 }
 

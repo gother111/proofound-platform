@@ -3,6 +3,7 @@ import { and, desc, eq } from 'drizzle-orm';
 
 import { db } from '@/db';
 import { assignments, conversations, matches, organizationMembers, profiles } from '@/db/schema';
+import { normalizeAuthorizedOrgRole } from '@/lib/authz';
 import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -58,8 +59,9 @@ export async function GET(
 
     const { orgId } = await params;
     const membership = await getMembership(orgId, user.id);
+    const membershipRole = normalizeAuthorizedOrgRole(membership?.role);
 
-    if (!membership) {
+    if (!membershipRole) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
@@ -110,9 +112,8 @@ export async function GET(
     return NextResponse.json({
       items: rows,
       permissions: {
-        canManage: membership.role === 'owner' || membership.role === 'admin',
-        canInitiateTest:
-          isBetaTesting && (membership.role === 'owner' || membership.role === 'admin'),
+        canManage: ['org_owner', 'org_manager'].includes(membershipRole),
+        canInitiateTest: isBetaTesting && ['org_owner', 'org_manager'].includes(membershipRole),
       },
     });
   } catch (error) {

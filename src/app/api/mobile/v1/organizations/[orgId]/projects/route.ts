@@ -6,6 +6,7 @@ import { db } from '@/db';
 import { organizationMembers, organizationProjects } from '@/db/schema';
 import { requireMobileAuth } from '@/lib/api/mobile/auth';
 import { mobileError, mobileSuccess } from '@/lib/api/mobile/response';
+import { normalizeAuthorizedOrgRole } from '@/lib/authz';
 
 export const dynamic = 'force-dynamic';
 
@@ -74,8 +75,9 @@ export async function POST(
 
     const { orgId } = await params;
     const membership = await orgRole(auth.user.id, orgId);
-    if (!membership || !['owner', 'admin'].includes(membership.role)) {
-      return mobileError('forbidden', 'Only owner/admin can create projects', 403);
+    const membershipRole = normalizeAuthorizedOrgRole(membership?.role);
+    if (membershipRole !== 'org_owner') {
+      return mobileError('forbidden', 'Only organization owners can create projects', 403);
     }
 
     const parsed = CreateProjectSchema.safeParse(await request.json());

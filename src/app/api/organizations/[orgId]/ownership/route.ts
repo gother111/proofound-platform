@@ -30,10 +30,9 @@ export async function GET(
     const { orgId } = await params;
 
     const canRead = await isActiveOrgMember(supabase as any, user.id, orgId, [
-      'owner',
-      'admin',
-      'member',
-      'viewer',
+      'org_owner',
+      'org_manager',
+      'org_reviewer',
     ]);
     if (!canRead) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -66,7 +65,7 @@ export async function POST(
     const body = await request.json();
     const validated = OwnershipSchema.parse(body);
 
-    const canWrite = await isActiveOrgMember(supabase as any, user.id, orgId, ['owner', 'admin']);
+    const canWrite = await isActiveOrgMember(supabase as any, user.id, orgId, ['org_owner']);
     if (!canWrite) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }

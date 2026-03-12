@@ -23,7 +23,7 @@ import {
   resolveCanonicalFallbackState,
   shouldSuppressExactRank,
 } from '@/lib/matching/review-contract';
-import { authorize, type OrgRole } from '@/lib/authz';
+import { authorize, normalizeAuthorizedOrgRole, type OrgRole } from '@/lib/authz';
 
 export const dynamic = 'force-dynamic';
 
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (!org) {
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
     }
-    const orgRole = (membership?.role as OrgRole | undefined) ?? null;
+    const orgRole = (normalizeAuthorizedOrgRole(membership?.role) as OrgRole | null) ?? null;
     if (
       !authorize({
         resource: 'candidate_shortlist_cards',
@@ -220,7 +220,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             status: fairnessStatus,
           },
           rankBand:
-            rankInfo && !suppressExactRank && orgRole !== 'viewer'
+            rankInfo && !suppressExactRank && orgRole !== 'org_reviewer'
               ? getRankBand(rankInfo.rank, rankInfo.total)
               : 'Shortlisted',
           why: buildVisibilitySafeWhy({
@@ -228,7 +228,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             fairnessStatus,
             fallbackState,
             rankBand:
-              rankInfo && !suppressExactRank && orgRole !== 'viewer'
+              rankInfo && !suppressExactRank && orgRole !== 'org_reviewer'
                 ? getRankBand(rankInfo.rank, rankInfo.total)
                 : 'Shortlisted',
           }),

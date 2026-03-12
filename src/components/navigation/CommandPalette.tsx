@@ -7,7 +7,6 @@ import {
   Search,
   Compass,
   LayoutDashboard,
-  Target,
   Briefcase,
   FileCheck,
   LogOut,
@@ -89,13 +88,6 @@ export function CommandPalette() {
                 <span>Overview</span>
               </Command.Item>
               <Command.Item
-                onSelect={() => runCommand(() => router.push('/app/i/expertise'))}
-                className="relative flex cursor-default select-none items-center rounded-sm px-2 py-2.5 text-sm outline-none aria-selected:bg-proofound-forest aria-selected:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50 transition-colors"
-              >
-                <Target className="mr-2 h-4 w-4" />
-                <span>Expertise Atlas</span>
-              </Command.Item>
-              <Command.Item
                 onSelect={() => runCommand(() => router.push('/app/i/matching'))}
                 className="relative flex cursor-default select-none items-center rounded-sm px-2 py-2.5 text-sm outline-none aria-selected:bg-proofound-forest aria-selected:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50 transition-colors"
               >
@@ -118,11 +110,11 @@ export function CommandPalette() {
               className="px-2 py-1.5 text-xs font-medium text-muted-foreground"
             >
               <Command.Item
-                onSelect={() => runCommand(() => router.push('/app/i/expertise?action=verify'))}
+                onSelect={() => runCommand(() => router.push('/app/i/verifications'))}
                 className="relative flex cursor-default select-none items-center rounded-sm px-2 py-2.5 text-sm outline-none aria-selected:bg-proofound-forest aria-selected:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50 transition-colors"
               >
                 <FileCheck className="mr-2 h-4 w-4" />
-                <span>Verify a Skill</span>
+                <span>Review verifications</span>
               </Command.Item>
             </Command.Group>
 

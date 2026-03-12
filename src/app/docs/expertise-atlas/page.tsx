@@ -53,16 +53,16 @@ export default function ExpertiseAtlasDocsPage() {
         <h2 className="mb-3 text-xl font-semibold text-foreground">Quick links</h2>
         <div className="flex flex-wrap gap-3 text-sm">
           <Link
-            href="/app/i/expertise"
+            href="/app/i/portfolio"
             className="rounded-lg border border-border px-3 py-2 text-proofound-forest hover:bg-proofound-forest/5"
           >
-            Open Expertise Atlas
+            Open Public Portfolio
           </Link>
           <Link
-            href="/app/i/expertise?tab=gap-analysis"
+            href="/app/i/verifications"
             className="rounded-lg border border-border px-3 py-2 text-proofound-forest hover:bg-proofound-forest/5"
           >
-            Open Gap Analysis
+            Open Verifications
           </Link>
           <Link
             href="/app/i/matching"

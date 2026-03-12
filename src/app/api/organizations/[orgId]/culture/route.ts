@@ -80,7 +80,7 @@ export async function PUT(
     });
 
     const membershipRole = normalizeAuthorizedOrgRole(membership?.role);
-    if (!membershipRole || !['org_owner', 'org_manager'].includes(membershipRole)) {
+    if (membershipRole !== 'org_owner') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

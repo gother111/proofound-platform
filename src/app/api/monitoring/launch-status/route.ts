@@ -1,17 +1,31 @@
 import { NextResponse } from 'next/server';
 
 import { LAUNCH_MONITOR_DEFINITIONS } from '@/lib/launch/contracts';
-import { getLatestLaunchSyntheticStatus } from '@/lib/launch/synthetic-monitors';
+import { getCurrentLaunchSyntheticStatus } from '@/lib/launch/synthetic-monitors';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const latest = await getLatestLaunchSyntheticStatus();
+    const requestOrigin = new URL(request.url).origin;
+    const baseUrl =
+      process.env.LAUNCH_MONITOR_BASE_URL ||
+      requestOrigin ||
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      'http://localhost:3000';
+    const artifactPath =
+      process.env.LAUNCH_SMOKE_ARTIFACT_PATH || '.artifacts/launch-smoke-report.json';
+    const latest = await getCurrentLaunchSyntheticStatus({
+      baseUrl,
+      artifactPath,
+      persist: false,
+    });
 
     return NextResponse.json({
       ok: latest.ok,
       generatedAt: latest.generatedAt,
+      source: latest.source,
+      evidence: latest.evidence,
       summary: {
         expectedMonitors: LAUNCH_MONITOR_DEFINITIONS.length,
         reportedMonitors: latest.rows.length,
