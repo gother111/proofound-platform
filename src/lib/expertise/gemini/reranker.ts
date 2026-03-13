@@ -1,4 +1,5 @@
 import type { CvImportCandidate } from '@/lib/expertise/cv-import-suggest';
+import { candidateDedupeKey } from '@/lib/expertise/candidate-dedupe';
 import {
   calibrateCandidateConfidence,
   hasStrongExactOrSynonymSignal,
@@ -146,8 +147,7 @@ function mergeSuggestionLists(
 }
 
 function dedupeKey(candidate: CvImportCandidate): string {
-  const normalized = normalize(candidate.raw_skill_text);
-  return normalized || `candidate::${candidate.candidate_id}`;
+  return candidateDedupeKey(normalize(candidate.raw_skill_text), candidate.candidate_id);
 }
 
 function topSuggestionSkillId(candidate: CvImportCandidate): string | null {

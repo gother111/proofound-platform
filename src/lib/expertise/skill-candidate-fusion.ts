@@ -1,4 +1,5 @@
 import type { CvImportCandidate } from '@/lib/expertise/cv-import-suggest';
+import { candidateDedupeKey } from '@/lib/expertise/candidate-dedupe';
 import {
   calibrateCandidateConfidence,
   computeLexicalOverlap,
@@ -37,8 +38,7 @@ function topMethodWeight(candidate: CvImportCandidate): number {
 }
 
 function dedupeKey(candidate: CvImportCandidate): string {
-  const normalized = normalize(candidate.raw_skill_text);
-  return normalized || `candidate::${candidate.candidate_id}`;
+  return candidateDedupeKey(normalize(candidate.raw_skill_text), candidate.candidate_id);
 }
 
 function simplifyForAliasMerge(value: string): string {
