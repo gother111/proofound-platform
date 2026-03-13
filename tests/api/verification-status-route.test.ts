@@ -140,11 +140,11 @@ describe('GET /api/verification/status', () => {
     expect(response.status).toBe(200);
 
     const body = await response.json();
-    expect(body.verificationStatus).toBe('pending');
-    expect(body.verificationMethod).toBe('work_email');
-    expect(body.verificationTier).toBe('unverified');
-    expect(body.verificationTierSource).toBe('unknown');
-    expect(body.workEmail).toBe('person@acme.org');
+    expect(body.channels.workEmail.state).toBe('pending');
+    expect(body.channels.workEmail.email).toBe('person@acme.org');
+    expect(body.workflow?.state).toBe('pending');
+    expect(body).not.toHaveProperty('verificationTier');
+    expect(body).not.toHaveProperty('verificationMethod');
   });
 
   it('keeps explicit status even when token is active', async () => {
@@ -169,9 +169,9 @@ describe('GET /api/verification/status', () => {
     expect(response.status).toBe(200);
 
     const body = await response.json();
-    expect(body.verificationStatus).toBe('failed');
-    expect(body.verificationMethod).toBeNull();
-    expect(body.verificationTier).toBe('unverified');
+    expect(body.channels.workEmail.state).toBe('failed');
+    expect(body.workflow?.state).toBe('failed');
+    expect(body.summary.publicBadges).toEqual([]);
   });
 
   it('marks work email as stale when re-verification due date is in the past', async () => {
@@ -197,13 +197,10 @@ describe('GET /api/verification/status', () => {
     expect(response.status).toBe(200);
 
     const body = await response.json();
-    expect(body.verified).toBe(false);
-    expect(body.verificationStatus).toBe('unverified');
-    expect(body.verificationMethod).toBe('work_email');
-    expect(body.verificationTier).toBe('unverified');
-    expect(body.workEmailVerified).toBe(false);
-    expect(body.workEmailNeedsReverify).toBe(true);
-    expect(body.workEmailReverifyDueAt).toBe(pastDue);
+    expect(body.channels.workEmail.state).toBe('expired');
+    expect(body.channels.workEmail.needsReverify).toBe(true);
+    expect(body.channels.workEmail.reverifyDueAt).toBe(pastDue);
+    expect(body.workflow?.state).toBe('expired');
   });
 
   it('keeps work email as valid when re-verification due date is in the future', async () => {
@@ -229,18 +226,14 @@ describe('GET /api/verification/status', () => {
     expect(response.status).toBe(200);
 
     const body = await response.json();
-    expect(body.verified).toBe(false);
-    expect(body.verificationStatus).toBe('unverified');
-    expect(body.verificationTier).toBe('unverified');
-    expect(body.verificationTierSource).toBe('unknown');
-    expect(body.verificationMethod).toBe('work_email');
-    expect(body.workEmailVerified).toBe(true);
-    expect(body.workEmailNeedsReverify).toBe(false);
-    expect(body.workEmailReverifyDueAt).toBe(futureDue);
+    expect(body.channels.workEmail.state).toBe('verified');
+    expect(body.channels.workEmail.needsReverify).toBe(false);
+    expect(body.channels.workEmail.reverifyDueAt).toBe(futureDue);
+    expect(body.workflow?.state).toBe('verified');
     expect(body.summary.publicBadges).toEqual([]);
   });
 
-  it('falls back to legacy profile query when re-verification columns are missing', async () => {
+  it('fails honestly when required verification columns are missing', async () => {
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
     const supabase = createSupabaseMock({
       profileResponses: [
@@ -251,39 +244,18 @@ describe('GET /api/verification/status', () => {
             message: 'column individual_profiles.work_email_verified_at does not exist',
           },
         },
-        {
-          data: {
-            verified: false,
-            verification_method: null,
-            verification_status: null,
-            verified_at: null,
-            work_email: 'person@acme.org',
-            work_email_verified: false,
-            work_email_verified_at: null,
-            work_email_reverify_due_at: null,
-            work_email_token: 'token-legacy',
-            work_email_token_expires: expiresAt,
-          },
-        },
       ],
     });
     (createClient as any).mockResolvedValue(supabase);
 
     const response = await GET(makeRequest());
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(500);
     const body = await response.json();
-
-    expect(body.verificationStatus).toBe('pending');
-    expect(body.verificationMethod).toBe('work_email');
-    expect(body.verificationTier).toBe('unverified');
-    expect(body.verificationTierSource).toBe('unknown');
-    expect(body.workEmailNeedsReverify).toBe(false);
-    expect(body.linkedinVerificationStatus).toBe('unverified');
-    expect(body.linkedinVerificationLevel).toBe('unverified');
-    expect(body.linkedinHasIdentityVerification).toBe(false);
+    expect(body.error).toBe('Failed to fetch verification status');
+    expect(body.details).toContain('does not exist');
   });
 
-  it('returns LinkedIn-specific compatibility fields without global trust inflation', async () => {
+  it('keeps LinkedIn signals channel-scoped without global trust inflation', async () => {
     const nowIso = new Date().toISOString();
     const supabase = createSupabaseMock({
       profile: {
@@ -310,14 +282,12 @@ describe('GET /api/verification/status', () => {
     expect(response.status).toBe(200);
 
     const body = await response.json();
-    expect(body.linkedinVerificationStatus).toBe('verified');
-    expect(body.linkedinVerificationLevel).toBe('identity');
-    expect(body.linkedinHasIdentityVerification).toBe(true);
-    expect(body.linkedinVerifiedAt).toBe(nowIso);
-    expect(body.verificationTier).toBe('unverified');
-    expect(body.verificationTierSource).toBe('unknown');
-    expect(body.verified).toBe(false);
-    expect(body.verifiedAt).toBeNull();
+    expect(body.channels.linkedin.state).toBe('verified');
+    expect(body.channels.linkedin.signalLevel).toBe('identity');
+    expect(body.channels.linkedin.hasIdentitySignal).toBe(true);
+    expect(body.channels.linkedin.verifiedAt).toBe(nowIso);
+    expect(body).not.toHaveProperty('linkedinVerificationLevel');
+    expect(body).not.toHaveProperty('linkedinHasIdentityVerification');
     expect(body.summary.publicBadges).toEqual([]);
   });
 });

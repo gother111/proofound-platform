@@ -21,7 +21,7 @@ describe('CustomVerificationRequestDialog', () => {
     global.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
 
-      if (url.includes('/api/expertise/verifications/custom/artifacts')) {
+      if (url.includes('/api/verification/requests/custom/artifacts')) {
         return {
           ok: true,
           json: async () => ({
@@ -38,14 +38,14 @@ describe('CustomVerificationRequestDialog', () => {
         } as Response;
       }
 
-      if (url.includes('/api/expertise/verifications/email-hint')) {
+      if (url.includes('/api/verification/requests/email-hint')) {
         return {
           ok: true,
           json: async () => ({ kind: 'proofound_user' }),
         } as Response;
       }
 
-      if (url.includes('/api/expertise/verifications/custom/request')) {
+      if (url.includes('/api/verification/requests/custom')) {
         return {
           ok: true,
           json: async () => ({ request: { id: 'request-1' } }),
@@ -77,8 +77,10 @@ describe('CustomVerificationRequestDialog', () => {
       expect(successToast).toHaveBeenCalled();
     });
 
-    const submitCall = (global.fetch as any).mock.calls.find((call: unknown[]) =>
-      String(call[0]).includes('/api/expertise/verifications/custom/request')
+    const submitCall = (global.fetch as any).mock.calls.find(
+      (call: unknown[]) =>
+        String(call[0]).includes('/api/verification/requests/custom') &&
+        (call[1] as RequestInit | undefined)?.method === 'POST'
     );
 
     expect(submitCall).toBeTruthy();

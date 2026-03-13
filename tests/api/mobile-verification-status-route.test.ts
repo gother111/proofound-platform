@@ -86,12 +86,11 @@ describe('mobile verification status route', () => {
 
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
-    expect(body.data.verified).toBe(false);
-    expect(body.data.verificationTier).toBe('unverified');
-    expect(body.data.verificationTierSource).toBe('unknown');
-    expect(body.data.linkedinVerificationStatus).toBe('verified');
-    expect(body.data.linkedinVerificationLevel).toBe('identity');
-    expect(body.data.linkedinHasIdentityVerification).toBe(true);
+    expect(body.data.channels.linkedin.state).toBe('verified');
+    expect(body.data.channels.linkedin.signalLevel).toBe('identity');
+    expect(body.data.channels.linkedin.hasIdentitySignal).toBe(true);
+    expect(body.data).not.toHaveProperty('linkedinVerificationLevel');
+    expect(body.data).not.toHaveProperty('verificationTier');
     expect(body.data.summary.publicBadges).toEqual([]);
   });
 });

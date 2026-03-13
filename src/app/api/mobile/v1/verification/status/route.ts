@@ -5,36 +5,9 @@ import { db } from '@/db';
 import { individualProfiles } from '@/db/schema';
 import { requireMobileAuth } from '@/lib/api/mobile/auth';
 import { mobileError, mobileSuccess } from '@/lib/api/mobile/response';
-import { resolveHasLinkedInIdentityVerification } from '@/lib/linkedin-verified';
-import {
-  listVerificationRecordsForOwner,
-  summarizeVerificationPolicy,
-} from '@/lib/verification/policy';
-import { resolveLinkedInVerificationLevel } from '@/lib/verification/tier';
-import { resolveWorkEmailValidity } from '@/lib/verification/work-email-validity';
+import { buildVerificationStatusContract } from '@/lib/verification/status-contract';
 
 export const dynamic = 'force-dynamic';
-
-function hasActiveWorkEmailToken(profile: {
-  workEmailToken?: string | null;
-  workEmailTokenExpires?: Date | null;
-  workEmailVerified?: boolean | null;
-}) {
-  if (!profile.workEmailToken || profile.workEmailVerified) {
-    return false;
-  }
-
-  if (!profile.workEmailTokenExpires) {
-    return false;
-  }
-
-  const expiresAtMs = profile.workEmailTokenExpires.getTime();
-  if (!Number.isFinite(expiresAtMs)) {
-    return false;
-  }
-
-  return expiresAtMs > Date.now();
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -67,94 +40,29 @@ export async function GET(request: NextRequest) {
       .limit(1);
 
     if (!profile) {
-      return mobileSuccess({
-        verified: false,
-        verificationMethod: null,
-        verificationStatus: 'unverified',
-        verificationTier: 'unverified',
-        verificationTierSource: 'unknown',
-        verifiedAt: null,
-        linkedinVerificationStatus: 'unverified',
-        linkedinVerificationLevel: 'unverified',
-        linkedinHasIdentityVerification: false,
-        linkedinVerifiedAt: null,
-        workEmail: null,
-        workEmailVerified: false,
-        workEmailReverifyDueAt: null,
-        workEmailNeedsReverify: false,
-      });
+      return mobileSuccess(await buildVerificationStatusContract(auth.user.id, null));
     }
 
-    const workEmailValidity = resolveWorkEmailValidity({
-      work_email_verified: profile.workEmailVerified,
-      work_email_verified_at: profile.workEmailVerifiedAt?.toISOString() || null,
-      work_email_reverify_due_at: profile.workEmailReverifyDueAt?.toISOString() || null,
-      verified_at: profile.verifiedAt?.toISOString() || null,
-    });
-    const canonicalRecords = await listVerificationRecordsForOwner(
-      'individual_profile',
-      auth.user.id
-    ).catch(() => []);
-    const policySummary = summarizeVerificationPolicy({
-      records: canonicalRecords,
-      legacyProfile: {
+    return mobileSuccess(
+      await buildVerificationStatusContract(auth.user.id, {
         verified: profile.verified,
         verificationMethod: profile.verificationMethod,
         verificationStatus: profile.verificationStatus,
         verificationTier: profile.verificationTier,
         verificationTierSource: profile.verificationTierSource,
-        workEmailCurrentlyVerified: workEmailValidity.isCurrentlyVerified,
+        verifiedAt: profile.verifiedAt?.toISOString() || null,
+        workEmail: profile.workEmail,
+        workEmailVerified: profile.workEmailVerified,
+        workEmailVerifiedAt: profile.workEmailVerifiedAt?.toISOString() || null,
+        workEmailReverifyDueAt: profile.workEmailReverifyDueAt?.toISOString() || null,
+        workEmailToken: profile.workEmailToken,
+        workEmailTokenExpires: profile.workEmailTokenExpires?.toISOString() || null,
         linkedinVerificationStatus: profile.linkedinVerificationStatus,
-        linkedinHasIdentityVerification: resolveHasLinkedInIdentityVerification(
-          profile.linkedinVerificationData
-        ),
-      },
-    });
-    const hasPendingToken = hasActiveWorkEmailToken(profile);
-    const linkedinVerificationStatus = profile.linkedinVerificationStatus || 'unverified';
-    const linkedinVerificationLevel =
-      profile.linkedinVerificationLevel ||
-      resolveLinkedInVerificationLevel({
-        linkedinVerificationStatus: profile.linkedinVerificationStatus,
+        linkedinVerificationLevel: profile.linkedinVerificationLevel,
+        linkedinVerifiedAt: profile.linkedinVerifiedAt?.toISOString() || null,
         linkedinVerificationData: profile.linkedinVerificationData,
-      });
-    const linkedinHasIdentityVerification =
-      linkedinVerificationLevel === 'identity' ||
-      resolveHasLinkedInIdentityVerification(profile.linkedinVerificationData);
-    const verificationStatus =
-      hasPendingToken && policySummary.compatibility.verificationStatus === 'unverified'
-        ? 'pending'
-        : policySummary.compatibility.verificationStatus;
-    const verificationMethod =
-      verificationStatus === 'pending' &&
-      hasPendingToken &&
-      !policySummary.compatibility.verificationMethod
-        ? 'work_email'
-        : policySummary.compatibility.verificationMethod;
-
-    return mobileSuccess({
-      verified: false,
-      verificationMethod,
-      verificationStatus,
-      verificationTier: 'unverified',
-      verificationTierSource: 'unknown',
-      verifiedAt: null,
-      linkedinVerificationStatus,
-      linkedinVerificationLevel,
-      linkedinHasIdentityVerification,
-      linkedinVerifiedAt: profile.linkedinVerifiedAt,
-      workEmail: profile.workEmail,
-      workEmailVerified:
-        workEmailValidity.isCurrentlyVerified || policySummary.compatibility.workEmailVerified,
-      workEmailReverifyDueAt: workEmailValidity.reverifyDueAt,
-      workEmailNeedsReverify: workEmailValidity.needsReverify,
-      summary: {
-        badgeSemanticsVersion: policySummary.badgeSemanticsVersion,
-        publicBadges: policySummary.publicBadges,
-        activeIssues: policySummary.activeIssues,
-        slots: policySummary.slots,
-      },
-    });
+      })
+    );
   } catch (error) {
     console.error('[mobile.verification.status.get] failed', error);
     return mobileError('internal_error', 'Failed to load verification status', 500);

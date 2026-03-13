@@ -96,7 +96,7 @@ export function BundleCancelDialog({
 
     const loadBundleRequest = async () => {
       try {
-        const response = await apiFetch(`/api/expertise/verifications/custom/${requestId}`, {
+        const response = await apiFetch(`/api/verification/requests/bundles/${requestId}`, {
           method: 'GET',
         });
 
@@ -151,7 +151,7 @@ export function BundleCancelDialog({
 
     setSaving(true);
     try {
-      const response = await apiFetch(`/api/expertise/verifications/custom/${requestId}`, {
+      const response = await apiFetch(`/api/verification/requests/bundles/${requestId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

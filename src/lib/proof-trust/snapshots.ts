@@ -2,13 +2,11 @@ import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 
 import { db } from '@/db';
 import {
-  individualProfiles,
   organizations,
   portfolioIndexingStates,
   portfolioPublicationStates,
   portfolioRobotsStates,
   portfolioSitemapStates,
-  profiles,
   proofArtifacts,
   proofTrustSnapshots,
   skills,
@@ -205,7 +203,7 @@ export async function computeProofTrustSnapshot(
     return emptySnapshot;
   }
 
-  const [publicSkillCountResult, verificationRows, medianRow, profileRow, canonicalAggregates] =
+  const [publicSkillCountResult, verificationRows, medianRow, canonicalAggregates] =
     await Promise.all([
       db
         .select({ count: sql<number>`count(*)::int` })
@@ -237,23 +235,6 @@ export async function computeProofTrustSnapshot(
         AND status = 'verified'
         AND COALESCE(verified_at, completed_at) IS NOT NULL
     `),
-      db
-        .select({
-          handle: profiles.handle,
-          requestedState: profiles.publicPortfolioState,
-          searchIndexingEnabledAt: profiles.searchIndexingEnabledAt,
-          headline: individualProfiles.headline,
-          bio: individualProfiles.bio,
-          verificationStatus: individualProfiles.verificationStatus,
-          verificationMethod: individualProfiles.verificationMethod,
-          workEmailVerified: individualProfiles.workEmailVerified,
-          linkedinVerificationLevel: individualProfiles.linkedinVerificationLevel,
-          linkedinVerificationStatus: individualProfiles.linkedinVerificationStatus,
-        })
-        .from(profiles)
-        .leftJoin(individualProfiles, eq(individualProfiles.userId, profiles.id))
-        .where(eq(profiles.id, subjectId))
-        .limit(1),
       listCanonicalProofPackAggregatesForOwner('individual_profile', subjectId),
     ]);
 

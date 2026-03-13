@@ -11,25 +11,58 @@ import { WorkEmailVerificationForm } from './WorkEmailVerificationForm';
 import { LinkedInVerification } from './LinkedInVerification';
 
 interface VerificationStatusData {
-  verified: boolean;
-  verificationMethod: 'veriff' | 'work_email' | 'linkedin' | null;
-  verificationStatus: 'unverified' | 'pending' | 'verified' | 'failed';
-  verificationTier: 'unverified' | 'workplace_verified' | 'identity_verified';
-  verificationTierSource:
-    | 'linkedin_identity'
-    | 'linkedin_workplace'
-    | 'work_email'
-    | 'veriff'
-    | 'unknown';
-  verifiedAt: string | null;
-  linkedinVerificationStatus: 'unverified' | 'pending' | 'verified' | 'failed';
-  linkedinVerificationLevel: 'unverified' | 'pending' | 'workplace' | 'identity' | 'failed';
-  linkedinHasIdentityVerification: boolean;
-  linkedinVerifiedAt: string | null;
-  workEmail: string | null;
-  workEmailVerified: boolean;
-  workEmailReverifyDueAt: string | null;
-  workEmailNeedsReverify: boolean;
+  summary: {
+    badgeSemanticsVersion: number;
+    publicBadges: unknown[];
+    orgReviewBadges?: unknown[];
+    internalBadges?: unknown[];
+    slots: {
+      identity: { state: string };
+      workplace: { state: string };
+      organizationDomain: { state: string };
+      organizationPlatformReview: { state: string };
+    };
+    activeIssues: Array<{
+      slot: string;
+      state: string;
+      issueKey: string;
+      label: string;
+    }>;
+  };
+  workflow: {
+    state: string;
+    displayState: string;
+    reasonCode: string | null;
+    timestamps: Record<string, string | null | undefined>;
+    allowedActions: string[];
+  } | null;
+  channels: {
+    workEmail: {
+      email: string | null;
+      state:
+        | 'unverified'
+        | 'pending'
+        | 'verified'
+        | 'expired'
+        | 'superseded'
+        | 'downgraded'
+        | 'contradicted'
+        | 'disputed'
+        | 'revoked'
+        | 'declined'
+        | 'cancelled'
+        | 'failed';
+      verifiedAt: string | null;
+      reverifyDueAt: string | null;
+      needsReverify: boolean;
+    };
+    linkedin: {
+      state: 'unverified' | 'pending' | 'verified' | 'failed';
+      signalLevel: 'none' | 'workplace' | 'identity';
+      verifiedAt: string | null;
+      hasIdentitySignal: boolean;
+    };
+  };
 }
 
 interface OAuthFeedbackBanner {
@@ -38,7 +71,7 @@ interface OAuthFeedbackBanner {
 }
 
 function getLinkedInStatusText(status: VerificationStatusData) {
-  if (status.linkedinVerificationLevel === 'pending') {
+  if (status.channels.linkedin.state === 'pending') {
     return {
       label: 'Pending',
       helper: 'LinkedIn verification is under review.',
@@ -46,7 +79,7 @@ function getLinkedInStatusText(status: VerificationStatusData) {
     };
   }
 
-  if (status.linkedinVerificationLevel === 'identity') {
+  if (status.channels.linkedin.signalLevel === 'identity') {
     return {
       label: 'Identity signal detected',
       helper:
@@ -55,7 +88,7 @@ function getLinkedInStatusText(status: VerificationStatusData) {
     };
   }
 
-  if (status.linkedinVerificationLevel === 'workplace') {
+  if (status.channels.linkedin.signalLevel === 'workplace') {
     return {
       label: 'Workplace signal detected',
       helper:
@@ -64,8 +97,8 @@ function getLinkedInStatusText(status: VerificationStatusData) {
     };
   }
 
-  if (status.linkedinVerificationStatus === 'verified') {
-    if (status.linkedinHasIdentityVerification) {
+  if (status.channels.linkedin.state === 'verified') {
+    if (status.channels.linkedin.hasIdentitySignal) {
       return {
         label: 'Identity signal detected',
         helper:
@@ -82,7 +115,7 @@ function getLinkedInStatusText(status: VerificationStatusData) {
     };
   }
 
-  if (status.linkedinVerificationStatus === 'failed') {
+  if (status.channels.linkedin.state === 'failed') {
     return {
       label: 'Failed',
       helper: 'LinkedIn verification failed. You can retry.',
@@ -112,15 +145,49 @@ function LinkedInStatusPanel({ status }: { status: VerificationStatusData }) {
           <p className="text-sm font-medium">LinkedIn Account Signal</p>
           <p className="text-sm">{linkedInStatus.label}</p>
           <p className="text-xs text-muted-foreground">{linkedInStatus.helper}</p>
-          {status.linkedinVerifiedAt && (
+          {status.channels.linkedin.verifiedAt && (
             <p className="text-xs text-muted-foreground">
-              Updated on {new Date(status.linkedinVerifiedAt).toLocaleDateString()}
+              Updated on {new Date(status.channels.linkedin.verifiedAt).toLocaleDateString()}
             </p>
           )}
         </div>
       </div>
     </div>
   );
+}
+
+function getDefaultStatus(): VerificationStatusData {
+  return {
+    summary: {
+      badgeSemanticsVersion: 2,
+      publicBadges: [],
+      orgReviewBadges: [],
+      internalBadges: [],
+      slots: {
+        identity: { state: 'none' },
+        workplace: { state: 'none' },
+        organizationDomain: { state: 'none' },
+        organizationPlatformReview: { state: 'none' },
+      },
+      activeIssues: [],
+    },
+    workflow: null,
+    channels: {
+      workEmail: {
+        email: null,
+        state: 'unverified',
+        verifiedAt: null,
+        reverifyDueAt: null,
+        needsReverify: false,
+      },
+      linkedin: {
+        state: 'unverified',
+        signalLevel: 'none',
+        verifiedAt: null,
+        hasIdentitySignal: false,
+      },
+    },
+  };
 }
 
 export function VerificationStatus() {
@@ -200,38 +267,12 @@ export function VerificationStatus() {
       }
 
       const data = await response.json();
-      setStatus({
-        ...data,
-        verificationTier: data.verificationTier || 'unverified',
-        verificationTierSource: data.verificationTierSource || 'unknown',
-        linkedinVerificationLevel:
-          data.linkedinVerificationLevel ||
-          (data.linkedinHasIdentityVerification
-            ? 'identity'
-            : data.linkedinVerificationStatus === 'verified'
-              ? 'workplace'
-              : data.linkedinVerificationStatus || 'unverified'),
-      });
+      setStatus(data);
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
         const timeoutMessage = 'Request timed out. Please check your connection and try again.';
         setError(timeoutMessage);
-        setStatus({
-          verified: false,
-          verificationMethod: null,
-          verificationStatus: 'unverified',
-          verificationTier: 'unverified',
-          verificationTierSource: 'unknown',
-          verifiedAt: null,
-          linkedinVerificationStatus: 'unverified',
-          linkedinVerificationLevel: 'unverified',
-          linkedinHasIdentityVerification: false,
-          linkedinVerifiedAt: null,
-          workEmail: null,
-          workEmailVerified: false,
-          workEmailReverifyDueAt: null,
-          workEmailNeedsReverify: false,
-        });
+        setStatus(getDefaultStatus());
       } else {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to load verification status';
@@ -282,6 +323,13 @@ export function VerificationStatus() {
     return null;
   }
 
+  const workEmailChannel = status.channels.workEmail;
+  const linkedinChannel = status.channels.linkedin;
+  const workEmailConfirmed = workEmailChannel.state === 'verified';
+  const hasPendingVerification =
+    workEmailChannel.state === 'pending' || linkedinChannel.state === 'pending';
+  const hasFailedVerification = linkedinChannel.state === 'failed';
+
   if (showWorkEmailForm) {
     return (
       <div className="space-y-4">
@@ -318,11 +366,7 @@ export function VerificationStatus() {
     );
   }
 
-  const canAddLinkedInVerification =
-    status.linkedinVerificationLevel !== 'identity' &&
-    status.linkedinVerificationLevel !== 'pending';
-
-  if (status.workEmailVerified && status.verificationStatus !== 'pending') {
+  if (workEmailConfirmed && !hasPendingVerification) {
     return (
       <div className="space-y-4">
         {oauthFeedback && (
@@ -350,7 +394,7 @@ export function VerificationStatus() {
           Add a stronger scoped verification only when it is actually needed for a specific proof or
           workflow.
         </p>
-        {status.workEmailNeedsReverify && (
+        {workEmailChannel.needsReverify && (
           <Alert className="border-amber-300 bg-amber-50 text-amber-900">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
@@ -381,7 +425,7 @@ export function VerificationStatus() {
     );
   }
 
-  if (status.verificationStatus === 'pending') {
+  if (hasPendingVerification) {
     return (
       <div className="space-y-4">
         {oauthFeedback && (
@@ -397,7 +441,7 @@ export function VerificationStatus() {
         <Alert>
           <Loader2 className="h-4 w-4 animate-spin" />
           <AlertDescription>
-            Identity verification is in progress. This may take a few moments.
+            Verification is in progress. This may take a few moments.
           </AlertDescription>
         </Alert>
         <LinkedInStatusPanel status={status} />
@@ -408,7 +452,7 @@ export function VerificationStatus() {
     );
   }
 
-  if (status.verificationStatus === 'failed') {
+  if (hasFailedVerification) {
     return (
       <div className="space-y-4">
         {oauthFeedback && (
@@ -462,19 +506,19 @@ export function VerificationStatus() {
           <AlertDescription>{oauthFeedback.message}</AlertDescription>
         </Alert>
       )}
-      {status.workEmailNeedsReverify && (
+      {workEmailChannel.needsReverify && (
         <Alert className="border-amber-300 bg-amber-50 text-amber-900">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             Your work email verification expired
-            {status.workEmailReverifyDueAt
-              ? ` on ${new Date(status.workEmailReverifyDueAt).toLocaleDateString()}`
+            {workEmailChannel.reverifyDueAt
+              ? ` on ${new Date(workEmailChannel.reverifyDueAt).toLocaleDateString()}`
               : ''}{' '}
             and now requires re-verification.
           </AlertDescription>
         </Alert>
       )}
-      {status.workEmailVerified && (
+      {workEmailConfirmed && (
         <Alert>
           <CheckCircle2 className="h-4 w-4" />
           <AlertDescription>

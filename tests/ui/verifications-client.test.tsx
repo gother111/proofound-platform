@@ -53,14 +53,16 @@ type VerificationRequest = ComponentProps<typeof VerificationsClient>['incomingR
 
 function makeRequest(overrides: Partial<VerificationRequest> = {}): VerificationRequest {
   return {
-    request_type: 'skill',
     id: 'req-1',
-    skill_id: 'skill-1',
-    requester_profile_id: 'profile-1',
-    verifier_email: 'reviewer@example.com',
-    verifier_source: 'peer',
+    subjectType: 'skill',
+    subjectId: 'skill-1',
+    verificationKind: 'skill_attestation_peer',
+    requestKind: 'generic_verification',
+    requesterProfileId: 'profile-1',
+    verifierEmail: 'reviewer@example.com',
+    verifierSource: 'peer',
     status: 'pending',
-    created_at: '2026-02-20T10:00:00.000Z',
+    createdAt: '2026-02-20T10:00:00.000Z',
     skills: {
       id: 'skill-1',
       competency_level: 3,
@@ -97,12 +99,12 @@ describe('VerificationsClient', () => {
     const sentRequests = [
       makeRequest({
         id: 'sent-pending',
-        verifier_email: 'mentor@company.com',
+        verifierEmail: 'mentor@company.com',
         status: 'pending',
       }),
       makeRequest({
         id: 'sent-accepted',
-        verifier_email: 'lead@company.com',
+        verifierEmail: 'lead@company.com',
         status: 'accepted',
       }),
     ];
@@ -131,11 +133,13 @@ describe('VerificationsClient', () => {
     const incomingRequests = [
       makeRequest({
         id: 'incoming-impact-pending',
-        request_type: 'impact_story',
-        impact_story_id: 'story-1',
-        impact_story_title: 'Climate adaptation rollout',
-        verifier_source: undefined,
-        verifier_relationship: 'Program partner',
+        subjectType: 'impact_story',
+        subjectId: 'story-1',
+        verificationKind: 'impact_attestation',
+        requestKind: 'impact_attestation',
+        impactStoryTitle: 'Climate adaptation rollout',
+        verifierSource: undefined,
+        verifierRelationship: 'Program partner',
         status: 'pending',
       }),
     ];
@@ -143,13 +147,15 @@ describe('VerificationsClient', () => {
     const sentRequests = [
       makeRequest({
         id: 'sent-impact-accepted',
-        request_type: 'impact_story',
-        impact_story_id: 'story-2',
-        impact_story_title: 'Public health transformation',
-        verifier_source: undefined,
-        verifier_relationship: 'Client',
+        subjectType: 'impact_story',
+        subjectId: 'story-2',
+        verificationKind: 'impact_attestation',
+        requestKind: 'impact_attestation',
+        impactStoryTitle: 'Public health transformation',
+        verifierSource: undefined,
+        verifierRelationship: 'Client',
         status: 'pending',
-        verifier_email: 'partner@example.org',
+        verifierEmail: 'partner@example.org',
       }),
     ];
 
@@ -184,7 +190,7 @@ describe('VerificationsClient', () => {
     const sentRequests = [
       makeRequest({
         id: 'sent-delete-1',
-        verifier_email: 'mentor@company.com',
+        verifierEmail: 'mentor@company.com',
         status: 'pending',
       }),
     ];
@@ -206,7 +212,7 @@ describe('VerificationsClient', () => {
 
     await waitFor(() =>
       expect(apiFetchMock).toHaveBeenCalledWith(
-        '/api/expertise/verifications/sent/skill/sent-delete-1',
+        '/api/verification/requests/skill/sent-delete-1',
         expect.objectContaining({ method: 'DELETE' })
       )
     );
@@ -220,7 +226,7 @@ describe('VerificationsClient', () => {
     const sentRequests = [
       makeRequest({
         id: 'sent-resend-1',
-        verifier_email: 'mentor@company.com',
+        verifierEmail: 'mentor@company.com',
         status: 'pending',
       }),
     ];
@@ -242,7 +248,7 @@ describe('VerificationsClient', () => {
 
     await waitFor(() =>
       expect(apiFetchMock).toHaveBeenCalledWith(
-        '/api/expertise/verifications/sent/skill/sent-resend-1',
+        '/api/verification/requests/skill/sent-resend-1',
         expect.objectContaining({ method: 'POST' })
       )
     );
@@ -252,9 +258,9 @@ describe('VerificationsClient', () => {
     const sentRequests = [
       makeRequest({
         id: 'sent-bundle-1',
-        verifier_email: 'bundle@company.com',
+        verifierEmail: 'bundle@company.com',
         status: 'pending',
-        custom_request_id: 'bundle-request-1',
+        bundleId: 'bundle-request-1',
       }),
     ];
 
@@ -281,9 +287,9 @@ describe('VerificationsClient', () => {
     const sentRequests = [
       makeRequest({
         id: 'sent-bundle-resend-1',
-        verifier_email: 'bundle@company.com',
+        verifierEmail: 'bundle@company.com',
         status: 'pending',
-        custom_request_id: 'bundle-request-2',
+        bundleId: 'bundle-request-2',
       }),
     ];
 
@@ -309,7 +315,7 @@ describe('VerificationsClient', () => {
 
     await waitFor(() =>
       expect(apiFetchMock).toHaveBeenCalledWith(
-        '/api/expertise/verifications/sent/skill/sent-bundle-resend-1',
+        '/api/verification/requests/skill/sent-bundle-resend-1',
         expect.objectContaining({ method: 'POST' })
       )
     );

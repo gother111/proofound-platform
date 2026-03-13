@@ -51,7 +51,7 @@ export function RespondDialog({
     createDefaultHumanObservedAttestationForm()
   );
 
-  const isAttestationRequest = request?.request_kind === 'human_observed_attestation';
+  const isAttestationRequest = request?.requestKind === 'human_observed_attestation';
 
   useEffect(() => {
     if (!open) {
@@ -60,7 +60,7 @@ export function RespondDialog({
 
     setAttestationForm(
       createDefaultHumanObservedAttestationForm(
-        isAttestationRequest ? request?.verifier_relationship || request?.verifier_source || '' : ''
+        isAttestationRequest ? request?.verifierRelationship || request?.verifierSource || '' : ''
       )
     );
     setResponseMessage('');
@@ -72,7 +72,7 @@ export function RespondDialog({
     setError(null);
 
     try {
-      const response = await apiFetch(`/api/expertise/verification/${request.id}/respond`, {
+      const response = await apiFetch(`/api/verification/requests/skill/${request.id}/respond`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -83,7 +83,7 @@ export function RespondDialog({
               ? buildHumanObservedAttestationPayload({
                   form: attestationForm,
                   skillIds:
-                    request?.attestation_request?.skillIds || [request?.skill_id].filter(Boolean),
+                    request?.attestationRequest?.skillIds || [request?.subjectId].filter(Boolean),
                 })
               : undefined,
         }),
@@ -198,7 +198,7 @@ export function RespondDialog({
           <HumanObservedAttestationFields
             value={attestationForm}
             onChange={setAttestationForm}
-            skillLabels={request?.attestation_request?.skillLabels || [skillName]}
+            skillLabels={request?.attestationRequest?.skillLabels || [skillName]}
             disabled={isSubmitting}
           />
         )}

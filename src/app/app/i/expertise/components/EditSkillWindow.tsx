@@ -542,7 +542,7 @@ export function EditSkillWindow({
     setDeletingVerificationId(verificationRequest.id);
     try {
       const response = await apiFetch(
-        `/api/expertise/verifications/sent/skill/${verificationRequest.id}`,
+        `/api/verification/requests/skill/${verificationRequest.id}`,
         {
           method: 'DELETE',
         }

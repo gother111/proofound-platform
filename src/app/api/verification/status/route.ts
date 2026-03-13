@@ -1,35 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { resolveWorkEmailValidity } from '@/lib/verification/work-email-validity';
-import { isMissingColumnError } from '@/lib/db/schemaCompatibility';
-import { resolveHasLinkedInIdentityVerification } from '@/lib/linkedin-verified';
-import {
-  listVerificationRecordsForOwner,
-  summarizeVerificationPolicy,
-} from '@/lib/verification/policy';
-import { resolveLinkedInVerificationLevel } from '@/lib/verification/tier';
-import { buildWorkflowView } from '@/lib/workflow/service';
-
-function hasActiveWorkEmailToken(profile: {
-  work_email_token?: string | null;
-  work_email_token_expires?: string | null;
-  work_email_verified?: boolean | null;
-}) {
-  if (!profile.work_email_token || profile.work_email_verified) {
-    return false;
-  }
-
-  if (!profile.work_email_token_expires) {
-    return false;
-  }
-
-  const expiresAtMs = new Date(profile.work_email_token_expires).getTime();
-  if (!Number.isFinite(expiresAtMs)) {
-    return false;
-  }
-
-  return expiresAtMs > Date.now();
-}
+import { buildVerificationStatusContract } from '@/lib/verification/status-contract';
 
 /**
  * GET /api/verification/status
@@ -48,56 +19,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const latestSelect =
-      'verified, verification_method, verification_status, verification_tier, verification_tier_source, verified_at, work_email, work_email_verified, work_email_verified_at, work_email_reverify_due_at, work_email_token, work_email_token_expires, linkedin_verification_status, linkedin_verification_level, linkedin_verified_at, linkedin_verification_data';
-    const legacySelect =
-      'verified, verification_method, verification_status, verified_at, work_email, work_email_verified, work_email_token, work_email_token_expires';
-    const latestOnlyColumns = [
-      'verification_tier',
-      'verification_tier_source',
-      'work_email_verified_at',
-      'work_email_reverify_due_at',
-      'linkedin_verification_status',
-      'linkedin_verification_level',
-      'linkedin_verified_at',
-      'linkedin_verification_data',
-    ];
-
-    // Fetch individual profile with verification status.
-    // Fallback keeps this endpoint working when deployments run against slightly older schemas.
-    let { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('individual_profiles')
-      .select(latestSelect)
+      .select(
+        'verified, verification_method, verification_status, verification_tier, verification_tier_source, verified_at, work_email, work_email_verified, work_email_verified_at, work_email_reverify_due_at, work_email_token, work_email_token_expires, linkedin_verification_status, linkedin_verification_level, linkedin_verified_at, linkedin_verification_data'
+      )
       .eq('user_id', user.id)
       .maybeSingle();
-
-    if (profileError && isMissingColumnError(profileError, latestOnlyColumns)) {
-      console.warn('Falling back to legacy verification status query due to schema lag.', {
-        code: profileError.code,
-        message: profileError.message,
-      });
-
-      const { data: legacyProfile, error: legacyProfileError } = await supabase
-        .from('individual_profiles')
-        .select(legacySelect)
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      profileError = legacyProfileError;
-      profile = legacyProfile
-        ? {
-            ...legacyProfile,
-            work_email_verified_at: null,
-            work_email_reverify_due_at: null,
-            verification_tier: 'unverified',
-            verification_tier_source: 'unknown',
-            linkedin_verification_status: 'unverified',
-            linkedin_verification_level: 'unverified',
-            linkedin_verified_at: null,
-            linkedin_verification_data: null,
-          }
-        : legacyProfile;
-    }
 
     // Handle errors - maybeSingle() typically returns null data and no error if not found
     // But if there's an error, log it and only fail on real database errors
@@ -131,131 +59,29 @@ export async function GET(request: NextRequest) {
     }
 
     if (!profile) {
-      // If no individual profile exists, return default unverified status
-      return NextResponse.json({
-        verified: false,
-        verificationMethod: null,
-        verificationStatus: 'unverified',
-        verificationTier: 'unverified',
-        verificationTierSource: 'unknown',
-        verifiedAt: null,
-        linkedinVerificationStatus: 'unverified',
-        linkedinVerificationLevel: 'unverified',
-        linkedinHasIdentityVerification: false,
-        linkedinVerifiedAt: null,
-        workEmail: null,
-        workEmailVerified: false,
-        workEmailReverifyDueAt: null,
-        workEmailNeedsReverify: false,
-        workflow: null,
-      });
+      return NextResponse.json(await buildVerificationStatusContract(user.id, null));
     }
 
-    const canonicalRecords = await listVerificationRecordsForOwner(
-      'individual_profile',
-      user.id
-    ).catch(() => []);
-    const canonicalWorkEmailVerification =
-      canonicalRecords.find((record) => record.verificationKind === 'work_email') ?? null;
-    const workEmailValidity = resolveWorkEmailValidity(profile);
-    const hasPendingToken =
-      hasActiveWorkEmailToken(profile) || canonicalWorkEmailVerification?.status === 'pending';
-    const policySummary = summarizeVerificationPolicy({
-      records: canonicalRecords,
-      legacyProfile: {
+    return NextResponse.json(
+      await buildVerificationStatusContract(user.id, {
         verified: profile.verified,
         verificationMethod: profile.verification_method,
         verificationStatus: profile.verification_status,
         verificationTier: profile.verification_tier,
         verificationTierSource: profile.verification_tier_source,
-        workEmailCurrentlyVerified: workEmailValidity.isCurrentlyVerified,
+        verifiedAt: profile.verified_at,
+        workEmail: profile.work_email,
+        workEmailVerified: profile.work_email_verified,
+        workEmailVerifiedAt: profile.work_email_verified_at,
+        workEmailReverifyDueAt: profile.work_email_reverify_due_at,
+        workEmailToken: profile.work_email_token,
+        workEmailTokenExpires: profile.work_email_token_expires,
         linkedinVerificationStatus: profile.linkedin_verification_status,
-        linkedinHasIdentityVerification: resolveHasLinkedInIdentityVerification(
-          profile.linkedin_verification_data
-        ),
-      },
-    });
-    const linkedinVerificationStatus =
-      (profile.linkedin_verification_status as
-        | 'unverified'
-        | 'pending'
-        | 'verified'
-        | 'failed'
-        | null) || 'unverified';
-    const linkedinVerificationLevel =
-      (profile.linkedin_verification_level as
-        | 'unverified'
-        | 'pending'
-        | 'workplace'
-        | 'identity'
-        | 'failed'
-        | null) ||
-      resolveLinkedInVerificationLevel({
-        linkedinVerificationStatus: profile.linkedin_verification_status,
+        linkedinVerificationLevel: profile.linkedin_verification_level,
+        linkedinVerifiedAt: profile.linkedin_verified_at,
         linkedinVerificationData: profile.linkedin_verification_data,
-      });
-    const linkedinHasIdentityVerification =
-      linkedinVerificationLevel === 'identity' ||
-      resolveHasLinkedInIdentityVerification(profile.linkedin_verification_data);
-    const verificationStatus =
-      hasPendingToken && policySummary.compatibility.verificationStatus === 'unverified'
-        ? 'pending'
-        : policySummary.compatibility.verificationStatus;
-    const verificationMethod =
-      verificationStatus === 'pending' &&
-      hasPendingToken &&
-      !policySummary.compatibility.verificationMethod
-        ? 'work_email'
-        : policySummary.compatibility.verificationMethod;
-    const workflowState =
-      canonicalWorkEmailVerification?.status === 'verified' && workEmailValidity.needsReverify
-        ? 'expired'
-        : (canonicalWorkEmailVerification?.status ?? 'pending');
-
-    return NextResponse.json({
-      verified: false,
-      verificationMethod,
-      verificationStatus,
-      verificationTier: 'unverified',
-      verificationTierSource: 'unknown',
-      verifiedAt: null,
-      linkedinVerificationStatus,
-      linkedinVerificationLevel,
-      linkedinHasIdentityVerification,
-      linkedinVerifiedAt: profile.linkedin_verified_at,
-      workEmail: profile.work_email,
-      workEmailVerified:
-        workEmailValidity.isCurrentlyVerified || policySummary.compatibility.workEmailVerified,
-      workEmailReverifyDueAt: workEmailValidity.reverifyDueAt,
-      workEmailNeedsReverify: workEmailValidity.needsReverify,
-      summary: {
-        badgeSemanticsVersion: policySummary.badgeSemanticsVersion,
-        publicBadges: policySummary.publicBadges,
-        orgReviewBadges: policySummary.orgReviewBadges,
-        internalBadges: policySummary.internalBadges,
-        slots: policySummary.slots,
-        activeIssues: policySummary.activeIssues,
-      },
-      workflow: buildWorkflowView({
-        machine: 'verification',
-        state: workflowState,
-        reasonCode: canonicalWorkEmailVerification?.failureCode ?? null,
-        timestamps: {
-          requestedAt: canonicalWorkEmailVerification?.requestedAt?.toISOString(),
-          expiresAt: canonicalWorkEmailVerification?.expiresAt?.toISOString(),
-          requestExpiresAt: canonicalWorkEmailVerification?.requestExpiresAt?.toISOString(),
-          followUpDueAt: canonicalWorkEmailVerification?.followUpDueAt?.toISOString(),
-          completedAt: canonicalWorkEmailVerification?.completedAt?.toISOString(),
-          expiredAt: canonicalWorkEmailVerification?.expiredAt?.toISOString(),
-          downgradedAt: canonicalWorkEmailVerification?.downgradedAt?.toISOString(),
-          contradictedAt: canonicalWorkEmailVerification?.contradictedAt?.toISOString(),
-          disputedAt: canonicalWorkEmailVerification?.disputedAt?.toISOString(),
-          revokedAt: canonicalWorkEmailVerification?.revokedAt?.toISOString(),
-          cancelledAt: canonicalWorkEmailVerification?.cancelledAt?.toISOString(),
-          verifiedAt: canonicalWorkEmailVerification?.verifiedAt?.toISOString(),
-        },
-      }),
-    });
+      })
+    );
   } catch (error) {
     console.error('Error in verification status API:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

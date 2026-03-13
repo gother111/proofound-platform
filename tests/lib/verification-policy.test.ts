@@ -158,6 +158,32 @@ describe('summarizeVerificationPolicy', () => {
     );
   });
 
+  it('removes workplace trust when the verification is contradicted', () => {
+    const summary = summarizeVerificationPolicy({
+      records: [
+        makeRecord({
+          verificationKind: 'work_email',
+          verificationSlot: 'individual.workplace',
+          status: 'contradicted',
+          integrityStatus: 'contradicted',
+          verifierClass: 'system_signal',
+          contradictedAt: new Date('2026-03-01T00:00:00.000Z'),
+          updatedAt: new Date('2026-03-01T00:00:00.000Z'),
+        }),
+      ],
+    });
+
+    expect(summary.slots.workplace.state).toBe('contradicted');
+    expect(summary.slots.workplace.activeTrust).toBe(false);
+    expect(summary.compatibility.workEmailVerified).toBe(false);
+    expect(summary.publicBadges).not.toContainEqual(
+      expect.objectContaining({ key: 'workplace_confirmed' })
+    );
+    expect(summary.activeIssues).toContainEqual(
+      expect.objectContaining({ slot: 'individual.workplace', issueKey: 'changed' })
+    );
+  });
+
   it('does not let linkedin identity create a global compatibility tier', () => {
     const summary = summarizeVerificationPolicy({
       records: [

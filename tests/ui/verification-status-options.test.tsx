@@ -38,20 +38,35 @@ describe('VerificationStatus', () => {
       vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({
-          verified: false,
-          verificationMethod: null,
-          verificationStatus: 'unverified',
-          verificationTier: 'unverified',
-          verificationTierSource: 'unknown',
-          verifiedAt: null,
-          linkedinVerificationStatus: 'unverified',
-          linkedinVerificationLevel: 'unverified',
-          linkedinHasIdentityVerification: false,
-          linkedinVerifiedAt: null,
-          workEmail: null,
-          workEmailVerified: false,
-          workEmailReverifyDueAt: null,
-          workEmailNeedsReverify: false,
+          summary: {
+            badgeSemanticsVersion: 2,
+            publicBadges: [],
+            orgReviewBadges: [],
+            internalBadges: [],
+            slots: {
+              identity: { state: 'none' },
+              workplace: { state: 'none' },
+              organizationDomain: { state: 'none' },
+              organizationPlatformReview: { state: 'none' },
+            },
+            activeIssues: [],
+          },
+          workflow: null,
+          channels: {
+            workEmail: {
+              email: null,
+              state: 'unverified',
+              verifiedAt: null,
+              reverifyDueAt: null,
+              needsReverify: false,
+            },
+            linkedin: {
+              state: 'unverified',
+              signalLevel: 'none',
+              verifiedAt: null,
+              hasIdentitySignal: false,
+            },
+          },
         }),
       })
     );
@@ -71,20 +86,41 @@ describe('VerificationStatus', () => {
       vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({
-          verified: false,
-          verificationMethod: 'work_email',
-          verificationStatus: 'unverified',
-          verificationTier: 'unverified',
-          verificationTierSource: 'unknown',
-          verifiedAt: null,
-          linkedinVerificationStatus: 'unverified',
-          linkedinVerificationLevel: 'unverified',
-          linkedinHasIdentityVerification: false,
-          linkedinVerifiedAt: null,
-          workEmail: 'person@acme.org',
-          workEmailVerified: true,
-          workEmailReverifyDueAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-          workEmailNeedsReverify: false,
+          summary: {
+            badgeSemanticsVersion: 2,
+            publicBadges: [],
+            orgReviewBadges: [],
+            internalBadges: [],
+            slots: {
+              identity: { state: 'none' },
+              workplace: { state: 'verified' },
+              organizationDomain: { state: 'none' },
+              organizationPlatformReview: { state: 'none' },
+            },
+            activeIssues: [],
+          },
+          workflow: {
+            state: 'verified',
+            displayState: 'Verified',
+            reasonCode: null,
+            timestamps: {},
+            allowedActions: [],
+          },
+          channels: {
+            workEmail: {
+              email: 'person@acme.org',
+              state: 'verified',
+              verifiedAt: null,
+              reverifyDueAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+              needsReverify: false,
+            },
+            linkedin: {
+              state: 'unverified',
+              signalLevel: 'none',
+              verifiedAt: null,
+              hasIdentitySignal: false,
+            },
+          },
         }),
       })
     );

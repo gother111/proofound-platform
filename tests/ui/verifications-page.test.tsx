@@ -208,15 +208,15 @@ describe('VerificationsPage', () => {
     expect(verificationsClientSpy).toHaveBeenCalledTimes(1);
 
     const props = verificationsClientSpy.mock.calls[0]?.[0] as {
-      incomingRequests: Array<{ id: string; request_type: string; created_at: string }>;
-      sentRequests: Array<{ id: string; request_type: string; impact_story_title?: string | null }>;
+      incomingRequests: Array<{ id: string; subjectType: string; createdAt: string }>;
+      sentRequests: Array<{ id: string; subjectType: string; impactStoryTitle?: string | null }>;
     };
 
     expect(props.incomingRequests.map((request) => request.id)).toEqual([
       'impact-incoming-1',
       'skill-incoming-1',
     ]);
-    expect(props.incomingRequests.map((request) => request.request_type)).toEqual([
+    expect(props.incomingRequests.map((request) => request.subjectType)).toEqual([
       'impact_story',
       'skill',
     ]);
@@ -225,11 +225,11 @@ describe('VerificationsPage', () => {
       'impact-sent-1',
       'skill-sent-1',
     ]);
-    expect(props.sentRequests.map((request) => request.request_type)).toEqual([
+    expect(props.sentRequests.map((request) => request.subjectType)).toEqual([
       'impact_story',
       'skill',
     ]);
-    expect(props.sentRequests[0]?.impact_story_title).toBe('Public Health Program');
+    expect(props.sentRequests[0]?.impactStoryTitle).toBe('Public Health Program');
 
     const combinedSkillSelect = capturedSkillSelects.join('\n');
     expect(combinedSkillSelect).toContain(
@@ -268,14 +268,14 @@ describe('VerificationsPage', () => {
     expect(screen.getByTestId('verifications-client-proxy')).toBeInTheDocument();
 
     const props = verificationsClientSpy.mock.calls[0]?.[0] as {
-      incomingRequests: Array<{ id: string; request_type: string }>;
+      incomingRequests: Array<{ id: string; subjectType: string }>;
       sentRequests: unknown[];
     };
 
     expect(props.incomingRequests).toHaveLength(1);
     expect(props.incomingRequests[0]).toMatchObject({
       id: 'skill-incoming-only',
-      request_type: 'skill',
+      subjectType: 'skill',
     });
     expect(props.sentRequests).toHaveLength(0);
   });
@@ -407,25 +407,25 @@ describe('VerificationsPage', () => {
 
     const props = verificationsClientSpy.mock.calls[0]?.[0] as {
       incomingRequests: Array<{
-        canonical_pack_title?: string | null;
-        canonical_evidence_titles?: string[];
+        canonicalPackTitle?: string | null;
+        canonicalEvidenceTitles?: string[];
       }>;
       sentRequests: Array<{
         id: string;
-        canonical_pack_title?: string | null;
-        canonical_verification_status?: string | null;
-        canonical_outcomes_summary?: string | null;
+        canonicalPackTitle?: string | null;
+        canonicalVerificationStatus?: string | null;
+        canonicalOutcomesSummary?: string | null;
       }>;
     };
 
     expect(props.incomingRequests[0]).toMatchObject({
-      canonical_pack_title: 'Proof Pack: Product Strategy',
-      canonical_evidence_titles: ['Launch memo'],
+      canonicalPackTitle: 'Proof Pack: Product Strategy',
+      canonicalEvidenceTitles: ['Launch memo'],
     });
     expect(props.sentRequests.find((request) => request.id === 'impact-sent-1')).toMatchObject({
-      canonical_pack_title: 'Proof Pack: Climate Adaptation',
-      canonical_verification_status: 'partially_verified',
-      canonical_outcomes_summary: 'Reduced planning time by 35%.',
+      canonicalPackTitle: 'Proof Pack: Climate Adaptation',
+      canonicalVerificationStatus: 'partially_verified',
+      canonicalOutcomesSummary: 'Reduced planning time by 35%.',
     });
   });
 
@@ -461,13 +461,13 @@ describe('VerificationsPage', () => {
     expect(createAdminClientMock).not.toHaveBeenCalled();
 
     const props = verificationsClientSpy.mock.calls[0]?.[0] as {
-      incomingRequests: Array<{ id: string; request_type: string }>;
+      incomingRequests: Array<{ id: string; subjectType: string }>;
     };
 
     expect(props.incomingRequests).toHaveLength(1);
     expect(props.incomingRequests[0]).toMatchObject({
       id: 'skill-incoming-only',
-      request_type: 'skill',
+      subjectType: 'skill',
     });
   });
 });

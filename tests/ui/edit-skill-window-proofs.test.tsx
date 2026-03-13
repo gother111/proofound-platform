@@ -471,7 +471,10 @@ describe('EditSkillWindow proof refresh behavior', () => {
           ],
         });
       }
-      if (url.endsWith('/verifications/sent/skill/verification-1') && init?.method === 'DELETE') {
+      if (
+        url.endsWith('/verification/requests/skill/verification-1') &&
+        init?.method === 'DELETE'
+      ) {
         return mockResponse({ success: true });
       }
       return mockResponse({});
@@ -496,7 +499,7 @@ describe('EditSkillWindow proof refresh behavior', () => {
 
     await waitFor(() =>
       expect(apiFetchMock).toHaveBeenCalledWith(
-        '/api/expertise/verifications/sent/skill/verification-1',
+        '/api/verification/requests/skill/verification-1',
         expect.objectContaining({ method: 'DELETE' })
       )
     );
@@ -527,7 +530,10 @@ describe('EditSkillWindow proof refresh behavior', () => {
           ],
         });
       }
-      if (url.endsWith('/verifications/sent/skill/verification-2') && init?.method === 'DELETE') {
+      if (
+        url.endsWith('/verification/requests/skill/verification-2') &&
+        init?.method === 'DELETE'
+      ) {
         return mockResponse(
           {
             code: 'BUNDLED_REQUEST',
@@ -558,7 +564,7 @@ describe('EditSkillWindow proof refresh behavior', () => {
 
     await waitFor(() =>
       expect(apiFetchMock).toHaveBeenCalledWith(
-        '/api/expertise/verifications/sent/skill/verification-2',
+        '/api/verification/requests/skill/verification-2',
         expect.objectContaining({ method: 'DELETE' })
       )
     );

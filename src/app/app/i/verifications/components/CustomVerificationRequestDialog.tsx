@@ -103,7 +103,7 @@ export function CustomVerificationRequestDialog({ open, onOpenChange, onCreated 
     const loadArtifacts = async () => {
       setLoadingArtifacts(true);
       try {
-        const response = await fetch('/api/expertise/verifications/custom/artifacts', {
+        const response = await fetch('/api/verification/requests/custom/artifacts', {
           cache: 'no-store',
         });
 
@@ -161,7 +161,7 @@ export function CustomVerificationRequestDialog({ open, onOpenChange, onCreated 
     const timer = setTimeout(async () => {
       try {
         const response = await fetch(
-          `/api/expertise/verifications/email-hint?email=${encodeURIComponent(email)}`,
+          `/api/verification/requests/email-hint?email=${encodeURIComponent(email)}`,
           {
             cache: 'no-store',
           }
@@ -240,7 +240,7 @@ export function CustomVerificationRequestDialog({ open, onOpenChange, onCreated 
         })),
       };
 
-      const response = await fetch('/api/expertise/verifications/custom/request', {
+      const response = await fetch('/api/verification/requests/custom', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
