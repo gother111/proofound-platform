@@ -1685,8 +1685,8 @@ export const proofPacks = pgTable(
     }).notNull(),
     primarySubjectType: text('primary_subject_type', {
       enum: canonicalProofSubjectTypes,
-    }),
-    primarySubjectId: uuid('primary_subject_id'),
+    }).notNull(),
+    primarySubjectId: uuid('primary_subject_id').notNull(),
     lifecycleState: text('lifecycle_state', {
       enum: canonicalProofPackLifecycleStates,
     })
@@ -4837,42 +4837,50 @@ export const userIntegrations = pgTable(
 );
 
 // Scheduled interviews with video links
-export const interviews = pgTable('interviews', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  matchId: uuid('match_id')
-    .references(() => matches.id, { onDelete: 'cascade' })
-    .notNull(),
-  scheduledAt: timestamp('scheduled_at').notNull(),
-  duration: integer('duration').default(30).notNull(), // minutes
-  platform: text('platform', { enum: ['zoom', 'google'] }).notNull(),
-  manualMeetingProvider: text('manual_meeting_provider', {
-    enum: ['teams', 'zoom', 'google_meet', 'other'],
-  }),
-  meetingId: text('meeting_id').notNull(), // External meeting/event ID
-  meetingUrl: text('meeting_url').notNull(),
-  timezone: text('timezone').default('UTC'),
-  status: text('status', {
-    enum: ['scheduled', 'completed', 'cancelled', 'no_show'],
+export const interviews = pgTable(
+  'interviews',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    matchId: uuid('match_id')
+      .references(() => matches.id, { onDelete: 'cascade' })
+      .notNull(),
+    scheduledAt: timestamp('scheduled_at').notNull(),
+    duration: integer('duration').default(30).notNull(), // minutes
+    platform: text('platform', { enum: ['zoom', 'google'] }).notNull(),
+    manualMeetingProvider: text('manual_meeting_provider', {
+      enum: ['teams', 'zoom', 'google_meet', 'other'],
+    }),
+    meetingId: text('meeting_id').notNull(), // External meeting/event ID
+    meetingUrl: text('meeting_url').notNull(),
+    timezone: text('timezone').default('UTC'),
+    status: text('status', {
+      enum: ['scheduled', 'completed', 'cancelled', 'no_show'],
+    })
+      .default('scheduled')
+      .notNull(),
+    // Decision tracking (post-interview)
+    decision: text('decision', { enum: ['accept', 'decline'] }),
+    decidedBy: uuid('decided_by').references(() => profiles.id),
+    decidedAt: timestamp('decided_at'),
+    feedback: text('feedback'),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+    cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
+    cancelledBy: uuid('cancelled_by').references(() => profiles.id, { onDelete: 'set null' }),
+    cancelReason: text('cancel_reason'),
+    noShowAt: timestamp('no_show_at', { withTimezone: true }),
+    noShowRecordedBy: uuid('no_show_recorded_by').references(() => profiles.id, {
+      onDelete: 'set null',
+    }),
+    rescheduleCount: integer('reschedule_count').default(0).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    matchIdIdx: index('interviews_match_id_idx').on(table.matchId),
+    scheduledAtIdx: index('interviews_scheduled_at_idx').on(table.scheduledAt),
+    statusIdx: index('interviews_status_idx').on(table.status),
   })
-    .default('scheduled')
-    .notNull(),
-  // Decision tracking (post-interview)
-  decision: text('decision', { enum: ['accept', 'decline'] }),
-  decidedBy: uuid('decided_by').references(() => profiles.id),
-  decidedAt: timestamp('decided_at'),
-  feedback: text('feedback'),
-  completedAt: timestamp('completed_at', { withTimezone: true }),
-  cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
-  cancelledBy: uuid('cancelled_by').references(() => profiles.id, { onDelete: 'set null' }),
-  cancelReason: text('cancel_reason'),
-  noShowAt: timestamp('no_show_at', { withTimezone: true }),
-  noShowRecordedBy: uuid('no_show_recorded_by').references(() => profiles.id, {
-    onDelete: 'set null',
-  }),
-  rescheduleCount: integer('reschedule_count').default(0).notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+);
 
 export const interviewStateTransitions = pgTable(
   'interview_state_transitions',

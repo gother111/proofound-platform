@@ -17,6 +17,7 @@ import {
 } from '@/lib/proofs/canonical-pack';
 import { revalidatePublicPortfolioByProfileId } from '@/lib/portfolio/public-invalidation';
 import { computeProofTrustSnapshot } from '@/lib/proof-trust/snapshots';
+import { buildOwnerAnchor, validateProofPackAnchor } from '@/lib/proofs/pack-anchor';
 import { and, eq, sql } from 'drizzle-orm';
 
 type SkillProofInput = {
@@ -208,6 +209,20 @@ async function refreshIndividualProofTrustSnapshots(profileId: string) {
   ]);
 }
 
+function assertValidProofPackAnchor(values: typeof proofPacks.$inferInsert) {
+  const result = validateProofPackAnchor({
+    packKind: values.packKind,
+    ownerType: values.ownerType,
+    ownerId: values.ownerId,
+    primarySubjectType: values.primarySubjectType ?? null,
+    primarySubjectId: values.primarySubjectId ?? null,
+  } as typeof proofPacks.$inferSelect);
+
+  if (!result.ok) {
+    throw new Error(result.message);
+  }
+}
+
 async function ensureCompatibilityProofPackForArtifact(params: {
   proofId: string;
   profileId: string;
@@ -234,35 +249,42 @@ async function ensureCompatibilityProofPackForArtifact(params: {
 
   const [pack] = await db
     .insert(proofPacks)
-    .values({
-      ownerType: 'individual_profile',
-      ownerId: params.profileId,
-      packKind: 'verification_bundle',
-      primarySubjectType: params.primaryAnchor.type,
-      primarySubjectId: params.primaryAnchor.id,
-      lifecycleState: 'published',
-      title: params.title,
-      summary: params.summary ?? null,
-      contextJson: {
-        compatibilitySource: 'skill_proofs',
-        primaryAnchorType: params.primaryAnchor.type,
-        primaryAnchorId: params.primaryAnchor.id,
-        linkedSkillId: params.skillId,
-      },
-      evidenceSummary: params.summary ?? null,
-      outcomesSummary: null,
-      visibility: params.visibility,
-      revealGate: params.revealGate,
-      createdBy: params.createdBy ?? params.profileId,
-      portabilityMeta: {
-        originType: 'legacy_skill_proof',
-        originRef: params.proofId,
-        completenessState: 'compatibility_minimal',
-      },
-      metadata: params.metadata ?? {},
-      legacySourceTable: 'skill_proofs',
-      legacySourceId: params.proofId,
-    })
+    .values(
+      (() => {
+        const values = {
+          ownerType: 'individual_profile' as const,
+          ownerId: params.profileId,
+          packKind: 'verification_bundle' as const,
+          primarySubjectType: params.primaryAnchor.type,
+          primarySubjectId: params.primaryAnchor.id,
+          lifecycleState: 'published' as const,
+          title: params.title,
+          summary: params.summary ?? null,
+          contextJson: {
+            compatibilitySource: 'skill_proofs',
+            primaryAnchorType: params.primaryAnchor.type,
+            primaryAnchorId: params.primaryAnchor.id,
+            linkedSkillId: params.skillId,
+          },
+          evidenceSummary: params.summary ?? null,
+          outcomesSummary: null,
+          visibility: params.visibility,
+          revealGate: params.revealGate,
+          createdBy: params.createdBy ?? params.profileId,
+          portabilityMeta: {
+            originType: 'legacy_skill_proof',
+            originRef: params.proofId,
+            completenessState: 'compatibility_minimal',
+          },
+          metadata: params.metadata ?? {},
+          legacySourceTable: 'skill_proofs' as const,
+          legacySourceId: params.proofId,
+        };
+
+        assertValidProofPackAnchor(values);
+        return values;
+      })()
+    )
     .onConflictDoUpdate({
       target: [proofPacks.legacySourceTable, proofPacks.legacySourceId],
       set: {
@@ -405,6 +427,8 @@ async function upsertCanonicalProofPackForArtifact(params: {
     publishedAt: new Date(),
     updatedAt: new Date(),
   };
+
+  assertValidProofPackAnchor(packValues);
 
   const [pack] = existing
     ? await db.update(proofPacks).set(packValues).where(eq(proofPacks.id, existing.id)).returning()
@@ -988,37 +1012,51 @@ export async function deleteCanonicalProofArtifactById(artifactId: string) {
 }
 
 export async function upsertCanonicalProofPackForSnippet(input: SnippetPackInput) {
-  const ownerType = input.profileType === 'organization' ? 'organization' : 'individual_profile';
+  const ownerType = (
+    input.profileType === 'organization' ? 'organization' : 'individual_profile'
+  ) as 'organization' | 'individual_profile';
   const ownerId = input.profileType === 'organization' ? input.orgId || input.userId : input.userId;
+  const anchor = buildOwnerAnchor(ownerType, ownerId);
   const [row] = await db
     .insert(proofPacks)
-    .values({
-      ownerType,
-      ownerId,
-      packKind: 'profile_export',
-      title:
-        input.profileType === 'organization' ? 'Organization Profile Export' : 'Profile Export',
-      summary: null,
-      visibility: 'link_only',
-      revealGate: 'none',
-      shareTokenHash: hashOpaqueToken(input.shareToken),
-      shareExpiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
-      createdBy: input.userId,
-      metadata: {
-        fields: input.fields,
-        theme: input.theme,
-        format: input.format,
-        profileType: input.profileType,
-        orgId: input.orgId || null,
-      },
-      legacySourceTable: 'profile_snippets',
-      legacySourceId: input.snippetId,
-    })
+    .values(
+      (() => {
+        const values = {
+          ownerType,
+          ownerId,
+          packKind: 'profile_export' as const,
+          primarySubjectType: anchor.primarySubjectType,
+          primarySubjectId: anchor.primarySubjectId,
+          title:
+            input.profileType === 'organization' ? 'Organization Profile Export' : 'Profile Export',
+          summary: null,
+          visibility: 'link_only' as const,
+          revealGate: 'none' as const,
+          shareTokenHash: hashOpaqueToken(input.shareToken),
+          shareExpiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
+          createdBy: input.userId,
+          metadata: {
+            fields: input.fields,
+            theme: input.theme,
+            format: input.format,
+            profileType: input.profileType,
+            orgId: input.orgId || null,
+          },
+          legacySourceTable: 'profile_snippets' as const,
+          legacySourceId: input.snippetId,
+        };
+
+        assertValidProofPackAnchor(values);
+        return values;
+      })()
+    )
     .onConflictDoUpdate({
       target: [proofPacks.legacySourceTable, proofPacks.legacySourceId],
       set: {
         ownerType: sql`excluded.owner_type`,
         ownerId: sql`excluded.owner_id`,
+        primarySubjectType: sql`excluded.primary_subject_type`,
+        primarySubjectId: sql`excluded.primary_subject_id`,
         title: sql`excluded.title`,
         visibility: sql`excluded.visibility`,
         revealGate: sql`excluded.reveal_gate`,

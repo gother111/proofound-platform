@@ -21,7 +21,8 @@ import { detectPII } from '@/lib/privacy/pii-detection';
 import { normalizeImportRequest } from '@/lib/contracts/data-portability';
 import { parseOptionalDate } from '@/lib/datetime/parse-optional-date';
 import { buildExperienceTimeline } from '@/lib/profile/experience-timeline';
-import { hasPrimaryAnchorContext, syncCanonicalProofPackState } from '@/lib/proofs/canonical-pack';
+import { syncCanonicalProofPackState } from '@/lib/proofs/canonical-pack';
+import { buildOwnerAnchor, validateProofPackAnchor } from '@/lib/proofs/pack-anchor';
 
 function collectPotentialPiiText(payload: {
   profile?: { bio?: string; mission?: string; vision?: string };
@@ -150,6 +151,7 @@ export async function POST(request: NextRequest) {
       verificationReferences: 0,
       submissions: 0,
     };
+    const quarantinedPackIds: string[] = [];
     const syncedPackIds = new Set<string>();
 
     await db.transaction(async (tx) => {
@@ -467,17 +469,40 @@ export async function POST(request: NextRequest) {
       const importedPackIdMap = new Map<string, string>();
       let importedAnchoredPackCount = 0;
       for (const pack of data.proof.packs) {
-        if (!hasPrimaryAnchorContext(pack)) {
+        const normalizedPack =
+          pack.packKind === 'verification_bundle'
+            ? pack
+            : {
+                ...pack,
+                ...buildOwnerAnchor('individual_profile', user.id),
+              };
+        const anchorValidation = validateProofPackAnchor({
+          packKind: normalizedPack.packKind,
+          ownerType: 'individual_profile',
+          ownerId: user.id,
+          primarySubjectType: normalizedPack.primarySubjectType,
+          primarySubjectId: normalizedPack.primarySubjectId,
+        } as any);
+
+        if (!anchorValidation.ok) {
+          quarantinedPackIds.push(pack.id);
           continue;
         }
+        const anchoredPack = {
+          ...normalizedPack,
+          primarySubjectType: normalizedPack.primarySubjectType as NonNullable<
+            typeof normalizedPack.primarySubjectType
+          >,
+          primarySubjectId: normalizedPack.primarySubjectId as string,
+        };
 
         const portabilityHash =
-          typeof pack.portabilityMeta?.portabilityHash === 'string'
-            ? pack.portabilityMeta.portabilityHash
+          typeof anchoredPack.portabilityMeta?.portabilityHash === 'string'
+            ? anchoredPack.portabilityMeta.portabilityHash
             : null;
         const resolvedPackId =
-          (pack.legacySourceTable && pack.legacySourceId
-            ? packIdByKey.get(`${pack.legacySourceTable}:${pack.legacySourceId}`)
+          (anchoredPack.legacySourceTable && anchoredPack.legacySourceId
+            ? packIdByKey.get(`${anchoredPack.legacySourceTable}:${anchoredPack.legacySourceId}`)
             : null) ||
           (portabilityHash ? packIdByPortabilityHash.get(portabilityHash) : null) ||
           pack.id;
@@ -492,67 +517,73 @@ export async function POST(request: NextRequest) {
             id: resolvedPackId,
             ownerType: 'individual_profile',
             ownerId: user.id,
-            packKind: pack.packKind,
-            primarySubjectType: pack.primarySubjectType,
-            primarySubjectId: pack.primarySubjectId,
-            lifecycleState: pack.lifecycleState,
-            title: pack.title,
-            summary: pack.summary,
-            contextJson: pack.contextJson,
-            evidenceSummary: pack.evidenceSummary,
-            outcomesSummary: pack.outcomesSummary,
-            visibility: pack.visibility,
-            revealGate: pack.revealGate,
-            shareTokenHash: pack.shareTokenHash,
-            shareExpiresAt: parseOptionalDate(pack.shareExpiresAt),
+            packKind: anchoredPack.packKind,
+            primarySubjectType: anchoredPack.primarySubjectType,
+            primarySubjectId: anchoredPack.primarySubjectId,
+            lifecycleState: anchoredPack.lifecycleState,
+            title: anchoredPack.title,
+            summary: anchoredPack.summary,
+            contextJson: anchoredPack.contextJson,
+            evidenceSummary: anchoredPack.evidenceSummary,
+            outcomesSummary: anchoredPack.outcomesSummary,
+            visibility: anchoredPack.visibility,
+            revealGate: anchoredPack.revealGate,
+            shareTokenHash: anchoredPack.shareTokenHash,
+            shareExpiresAt: parseOptionalDate(anchoredPack.shareExpiresAt),
             createdBy: user.id,
-            verificationStatus: pack.verificationStatus,
-            freshnessState: pack.freshnessState,
-            freshnessEvaluatedAt: parseOptionalDate(pack.freshnessEvaluatedAt),
-            lastVerifiedAt: parseOptionalDate(pack.lastVerifiedAt),
-            lastRefreshedAt: parseOptionalDate(pack.lastRefreshedAt),
-            publishedAt: parseOptionalDate(pack.publishedAt),
-            submittedAt: parseOptionalDate(pack.submittedAt),
-            withdrawnAt: parseOptionalDate(pack.withdrawnAt),
-            supersededAt: parseOptionalDate(pack.supersededAt),
-            archivedAt: parseOptionalDate(pack.archivedAt),
-            portabilityMeta: pack.portabilityMeta,
-            metadata: pack.metadata,
-            legacySourceTable: pack.legacySourceTable,
-            legacySourceId: pack.legacySourceId,
+            verificationStatus: anchoredPack.verificationStatus,
+            freshnessState: anchoredPack.freshnessState,
+            freshnessEvaluatedAt: parseOptionalDate(anchoredPack.freshnessEvaluatedAt),
+            lastVerifiedAt: parseOptionalDate(anchoredPack.lastVerifiedAt),
+            lastRefreshedAt: parseOptionalDate(anchoredPack.lastRefreshedAt),
+            publishedAt: parseOptionalDate(anchoredPack.publishedAt),
+            submittedAt: parseOptionalDate(anchoredPack.submittedAt),
+            withdrawnAt: parseOptionalDate(anchoredPack.withdrawnAt),
+            supersededAt: parseOptionalDate(anchoredPack.supersededAt),
+            archivedAt: parseOptionalDate(anchoredPack.archivedAt),
+            portabilityMeta: anchoredPack.portabilityMeta,
+            metadata: {
+              ...anchoredPack.metadata,
+              importedFrom: 'data_portability',
+            },
+            legacySourceTable: anchoredPack.legacySourceTable,
+            legacySourceId: anchoredPack.legacySourceId,
           })
           .onConflictDoUpdate({
             target: proofPacks.id,
             set: {
               ownerType: 'individual_profile',
               ownerId: user.id,
-              packKind: pack.packKind,
-              primarySubjectType: pack.primarySubjectType,
-              primarySubjectId: pack.primarySubjectId,
-              lifecycleState: pack.lifecycleState,
-              title: pack.title,
-              summary: pack.summary,
-              contextJson: pack.contextJson,
-              evidenceSummary: pack.evidenceSummary,
-              outcomesSummary: pack.outcomesSummary,
-              visibility: pack.visibility,
-              revealGate: pack.revealGate,
-              shareTokenHash: pack.shareTokenHash,
-              shareExpiresAt: parseOptionalDate(pack.shareExpiresAt),
-              verificationStatus: pack.verificationStatus,
-              freshnessState: pack.freshnessState,
-              freshnessEvaluatedAt: parseOptionalDate(pack.freshnessEvaluatedAt),
-              lastVerifiedAt: parseOptionalDate(pack.lastVerifiedAt),
-              lastRefreshedAt: parseOptionalDate(pack.lastRefreshedAt),
-              publishedAt: parseOptionalDate(pack.publishedAt),
-              submittedAt: parseOptionalDate(pack.submittedAt),
-              withdrawnAt: parseOptionalDate(pack.withdrawnAt),
-              supersededAt: parseOptionalDate(pack.supersededAt),
-              archivedAt: parseOptionalDate(pack.archivedAt),
-              portabilityMeta: pack.portabilityMeta,
-              metadata: pack.metadata,
-              legacySourceTable: pack.legacySourceTable,
-              legacySourceId: pack.legacySourceId,
+              packKind: anchoredPack.packKind,
+              primarySubjectType: anchoredPack.primarySubjectType,
+              primarySubjectId: anchoredPack.primarySubjectId,
+              lifecycleState: anchoredPack.lifecycleState,
+              title: anchoredPack.title,
+              summary: anchoredPack.summary,
+              contextJson: anchoredPack.contextJson,
+              evidenceSummary: anchoredPack.evidenceSummary,
+              outcomesSummary: anchoredPack.outcomesSummary,
+              visibility: anchoredPack.visibility,
+              revealGate: anchoredPack.revealGate,
+              shareTokenHash: anchoredPack.shareTokenHash,
+              shareExpiresAt: parseOptionalDate(anchoredPack.shareExpiresAt),
+              verificationStatus: anchoredPack.verificationStatus,
+              freshnessState: anchoredPack.freshnessState,
+              freshnessEvaluatedAt: parseOptionalDate(anchoredPack.freshnessEvaluatedAt),
+              lastVerifiedAt: parseOptionalDate(anchoredPack.lastVerifiedAt),
+              lastRefreshedAt: parseOptionalDate(anchoredPack.lastRefreshedAt),
+              publishedAt: parseOptionalDate(anchoredPack.publishedAt),
+              submittedAt: parseOptionalDate(anchoredPack.submittedAt),
+              withdrawnAt: parseOptionalDate(anchoredPack.withdrawnAt),
+              supersededAt: parseOptionalDate(anchoredPack.supersededAt),
+              archivedAt: parseOptionalDate(anchoredPack.archivedAt),
+              portabilityMeta: anchoredPack.portabilityMeta,
+              metadata: {
+                ...anchoredPack.metadata,
+                importedFrom: 'data_portability',
+              },
+              legacySourceTable: anchoredPack.legacySourceTable,
+              legacySourceId: anchoredPack.legacySourceId,
               updatedAt: new Date(),
             },
           });
@@ -819,6 +850,7 @@ export async function POST(request: NextRequest) {
       action: 'data_import',
       meta: {
         imported: importedCounts,
+        quarantinedProofPackIds: quarantinedPackIds,
         version: data.version,
         mode,
         piiFindings: piiDetections.length,
@@ -830,6 +862,10 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Data imported successfully',
       imported: importedCounts,
+      quarantined: {
+        proofPackCount: quarantinedPackIds.length,
+        proofPackIds: quarantinedPackIds,
+      },
       mode,
     });
   } catch (error) {

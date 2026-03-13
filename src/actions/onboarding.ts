@@ -12,6 +12,7 @@ import { emitIndividualOnboardingCompleted } from '@/lib/analytics/events';
 import { syncReadinessMilestones } from '@/lib/readiness/analytics';
 import { getIndividualReadinessState } from '@/lib/readiness/individual-state';
 import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
+import { validateProofPackAnchor } from '@/lib/proofs/pack-anchor';
 
 const choosePersonaSchema = z.object({
   persona: z.enum(['individual', 'org_member']),
@@ -396,6 +397,23 @@ export async function completeIndividualOnboarding(formData: FormData) {
         failureClass: 'proof_artifact_failed',
       });
       return { error: 'Failed to save your first proof. Please try again.' };
+    }
+
+    const anchorValidation = validateProofPackAnchor({
+      packKind: 'verification_bundle',
+      ownerType: 'individual_profile',
+      ownerId: user.id,
+      primarySubjectType: contextType,
+      primarySubjectId: contextId,
+    } as any);
+
+    if (!anchorValidation.ok) {
+      emitLaunchTrace(trace, {
+        outcome: 'rejected',
+        state: 'portfolio_publish_validation_failed',
+        failureClass: anchorValidation.reason,
+      });
+      return { error: anchorValidation.message };
     }
 
     const proofPackInsert = await supabase.from('proof_packs').insert({

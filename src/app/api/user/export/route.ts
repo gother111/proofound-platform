@@ -39,6 +39,7 @@ import {
 import { getRows } from '@/lib/db/rows';
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { listCanonicalProofPackAggregatesForOwner } from '@/lib/proofs/canonical-pack';
+import { isQuarantinedProofPack, validateProofPackAnchor } from '@/lib/proofs/pack-anchor';
 
 export const dynamic = 'force-dynamic';
 
@@ -270,6 +271,17 @@ export async function GET() {
               )
           : Promise.resolve([]),
       ]);
+    const exportableProofPacks = canonicalProofPacks.filter((pack) => {
+      if (isQuarantinedProofPack(pack)) {
+        return false;
+      }
+
+      return validateProofPackAnchor(pack as any).ok;
+    });
+    const exportableProofPackIds = new Set(exportableProofPacks.map((pack) => pack.id));
+    const exportableProofPackItems = canonicalProofPackItems.filter((item) =>
+      exportableProofPackIds.has(item.packId)
+    );
 
     const individualProfile = individualProfileData[0] || null;
     const uploadedFilesResult = await db.execute(sql`
@@ -360,9 +372,9 @@ export async function GET() {
         schemaVersion: '4.0.0',
         ownerType: 'individual_profile' as const,
         ownerId: user.id,
-        packs: serializeForExport(canonicalProofPacks),
+        packs: serializeForExport(exportableProofPacks),
         artifacts: serializeForExport(canonicalProofArtifacts),
-        packItems: serializeForExport(canonicalProofPackItems),
+        packItems: serializeForExport(exportableProofPackItems),
         submissions: serializeForExport(canonicalSubmissions),
         submissionArtifacts: serializeForExport(canonicalSubmissionArtifacts),
         verificationReferences: serializeForExport(canonicalVerificationRecords),
@@ -417,8 +429,8 @@ export async function GET() {
       },
       canonical: {
         proofArtifacts: canonicalProofArtifacts,
-        proofPacks: canonicalProofPacks,
-        proofPackItems: canonicalProofPackItems,
+        proofPacks: exportableProofPacks,
+        proofPackItems: exportableProofPackItems,
         submissions: canonicalSubmissions,
         submissionArtifacts: canonicalSubmissionArtifacts,
         verificationRecords: canonicalVerificationRecords,

@@ -23,19 +23,24 @@ import {
   revalidatePublicOrganizationPortfolioById,
   revalidatePublicPortfolioByProfileId,
 } from '@/lib/portfolio/public-invalidation';
+import {
+  hasPrimaryAnchorContext,
+  isPrimaryAnchorContextSubjectType,
+  PRIMARY_ANCHOR_CONTEXT_SUBJECT_TYPES,
+  type PrimaryAnchorContextSubjectType,
+} from '@/lib/proofs/pack-anchor';
+
+export {
+  hasPrimaryAnchorContext,
+  isPrimaryAnchorContextSubjectType,
+  PRIMARY_ANCHOR_CONTEXT_SUBJECT_TYPES,
+  type PrimaryAnchorContextSubjectType,
+} from '@/lib/proofs/pack-anchor';
 
 type ProofPackRow = typeof proofPacks.$inferSelect;
 type ProofPackItemRow = typeof proofPackItems.$inferSelect;
 type ProofArtifactRow = typeof proofArtifacts.$inferSelect;
 type VerificationRecordRow = typeof verificationRecords.$inferSelect;
-
-export const PRIMARY_ANCHOR_CONTEXT_SUBJECT_TYPES = [
-  'experience',
-  'education',
-  'volunteering',
-] as const;
-
-export type PrimaryAnchorContextSubjectType = (typeof PRIMARY_ANCHOR_CONTEXT_SUBJECT_TYPES)[number];
 
 export type CanonicalProofItemAggregate = {
   item: ProofPackItemRow;
@@ -214,25 +219,6 @@ function toRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
-}
-
-export function isPrimaryAnchorContextSubjectType(
-  value: ProofPackRow['primarySubjectType'] | null | undefined
-): value is PrimaryAnchorContextSubjectType {
-  return (
-    typeof value === 'string' &&
-    (PRIMARY_ANCHOR_CONTEXT_SUBJECT_TYPES as readonly string[]).includes(value)
-  );
-}
-
-export function hasPrimaryAnchorContext(
-  pack: Pick<ProofPackRow, 'primarySubjectType' | 'primarySubjectId'>
-): boolean {
-  return (
-    isPrimaryAnchorContextSubjectType(pack.primarySubjectType) &&
-    typeof pack.primarySubjectId === 'string' &&
-    pack.primarySubjectId.length > 0
-  );
 }
 
 function toStringArray(value: unknown): string[] {
