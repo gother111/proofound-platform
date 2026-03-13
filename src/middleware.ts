@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { nanoid } from 'nanoid';
 import { csrfProtection, getOrGenerateCSRFToken, setCSRFTokenCookie } from '@/lib/csrf';
+import { getArchivedApiPolicy } from '@/lib/launch/surface-policy';
 import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit/index';
 import { sendDebugIngest } from '@/lib/debug-ingest';
 
@@ -68,25 +69,6 @@ const SUSPICIOUS_PREFIXES = [
   '/.env',
   '/server-status',
   '/cgi-bin',
-];
-
-const LEGACY_API_PREFIXES = ['/api/wellbeing/', '/api/mobile/'];
-
-const LEGACY_ADMIN_EXACT_PATHS = new Set([
-  '/api/admin/cron/summary',
-  '/api/admin/fairness-metrics',
-  '/api/admin/fairness-report',
-  '/api/admin/metrics/overview',
-  '/api/admin/organizations',
-  '/api/admin/users',
-]);
-
-const LEGACY_ADMIN_PREFIXES = [
-  '/api/admin/analytics/',
-  '/api/admin/fairness-evaluations/',
-  '/api/admin/fairness/',
-  '/api/admin/performance/',
-  '/api/admin/users/',
 ];
 
 function buildArchivedApiResponse(
@@ -191,24 +173,13 @@ export async function middleware(request: NextRequest) {
 
     // CSRF protection for API routes (allowlist some public endpoints)
     if (pathname.startsWith('/api')) {
-      if (LEGACY_API_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
+      const archivedApiPolicy = getArchivedApiPolicy(pathname);
+      if (archivedApiPolicy) {
         return buildArchivedApiResponse(
           request,
           requestId,
-          pathname.startsWith('/api/wellbeing/') ? 'Wellbeing API' : 'Mobile API',
-          'This API family is retired for the locked launch MVP.'
-        );
-      }
-
-      if (
-        LEGACY_ADMIN_EXACT_PATHS.has(pathname) ||
-        LEGACY_ADMIN_PREFIXES.some((prefix) => pathname.startsWith(prefix))
-      ) {
-        return buildArchivedApiResponse(
-          request,
-          requestId,
-          'Admin API',
-          'This admin surface is archived outside the locked launch MVP.'
+          archivedApiPolicy.surfaceLabel,
+          archivedApiPolicy.detail
         );
       }
 

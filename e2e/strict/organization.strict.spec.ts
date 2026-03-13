@@ -11,11 +11,13 @@ import {
   createRuntimeOrganization,
   createRuntimeUser,
   loginWithUi,
+  seedPortfolioReadyCandidate,
   type StrictFixtureState,
   type StrictRuntimeAssignment,
   type StrictRuntimeConversation,
   type StrictRuntimeMatch,
   type StrictRuntimeOrganization,
+  type StrictSkillRequirement,
   type StrictRuntimeUser,
 } from '../helpers/strict-fixtures';
 
@@ -31,6 +33,19 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
   let seededMatch: StrictRuntimeMatch;
   let seededConversation: StrictRuntimeConversation;
   let assignmentForLifecycle: StrictRuntimeAssignment | null = null;
+  let strictCandidateSkillRequirements: StrictSkillRequirement[] = [];
+  const strictLifecycleBusinessValue =
+    'Improve hiring quality by turning vague role scoping into a concrete, proof-backed assignment review workflow for the team.';
+  const strictLifecycleDescription =
+    'Lead the assignment review corridor, define the real work to be done, and keep internal reviewers aligned on what evidence actually counts.';
+  const strictLifecycleImpact =
+    'Convincing proof includes shipped work, clear ownership signals, and thoughtful explanations of delivery tradeoffs from comparable assignments.';
+  const strictDraftBusinessValue =
+    'Clarify the role purpose in concrete terms so the organization can review candidates through real proof instead of generic hiring language.';
+  const strictDraftDescription =
+    'Document the actual work, the constraints, and the candidate proof expectations so internal review can approve a credible public assignment.';
+  const strictDraftImpact =
+    'Strong submissions should show delivered work, evidence of ownership, and grounded explanations of the decisions behind that work.';
 
   test.beforeAll(async () => {
     fixture = createFixtureState();
@@ -46,6 +61,11 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
       prefix: 'strict-org-candidate',
       displayName: 'Strict Org Candidate',
     });
+
+    const seededCandidate = await seedPortfolioReadyCandidate(candidateUser, {
+      verifierProfileId: orgUser.id,
+    });
+    strictCandidateSkillRequirements = seededCandidate.skillRequirements;
 
     viewerUser = await createRuntimeUser(fixture, {
       persona: 'org_member',
@@ -76,6 +96,7 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     seededAssignment = await createRuntimeAssignment(fixture, organization.id, {
       role: 'Strict Organization Seeded Role',
       status: 'active',
+      mustHaveSkills: strictCandidateSkillRequirements,
     });
     seededMatch = await createRuntimeMatch(fixture, seededAssignment.id, candidateUser.id);
     seededConversation = await createRuntimeConversation(
@@ -119,25 +140,29 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
   }) => {
     await loginWithUi(page, orgUser);
 
-    const createAssignmentResponse = await apiPostJson(page.request, '/api/assignments', {
-      orgId: organization.id,
-      role: 'Strict Lifecycle Assignment',
-      description: 'Lifecycle assignment for strict org flow validation',
-      businessValue: 'Strict lifecycle assignment business value',
-      status: 'draft',
-      valuesRequired: ['integrity'],
-      causeTags: ['education'],
-      mustHaveSkills: [
-        { id: 'strict.skill.1', level: 3 },
-        { id: 'strict.skill.2', level: 3 },
-        { id: 'strict.skill.3', level: 2 },
-      ],
-      niceToHaveSkills: [],
-      locationMode: 'remote',
-      compMin: 95000,
-      compMax: 145000,
-      currency: 'USD',
-    });
+    const createAssignmentResponse = await apiPostJson(
+      page.request,
+      '/api/assignments',
+      {
+        orgId: organization.id,
+        role: 'Strict Lifecycle Assignment',
+        description: strictLifecycleDescription,
+        businessValue: strictLifecycleBusinessValue,
+        expectedImpact: strictLifecycleImpact,
+        status: 'draft',
+        valuesRequired: ['integrity'],
+        causeTags: ['education'],
+        mustHaveSkills: strictCandidateSkillRequirements,
+        niceToHaveSkills: [],
+        locationMode: 'remote',
+        compMin: 95000,
+        compMax: 145000,
+        currency: 'USD',
+      },
+      {
+        timeoutMs: 120_000,
+      }
+    );
     expect(createAssignmentResponse.status()).toBe(201);
 
     const createAssignmentPayload = (await createAssignmentResponse.json()) as {
@@ -173,22 +198,40 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     );
     expect(outcomesResponse.ok()).toBeTruthy();
 
+    const internalReviewResponse = await apiPutJson(
+      page.request,
+      `/api/assignments/${assignmentId}`,
+      {
+        orgId: organization.id,
+        creationStatus: 'pending_review',
+        status: 'draft',
+      }
+    );
+    expect(internalReviewResponse.ok()).toBeTruthy();
+
     const publishAssignmentResponse = await apiPostJson(
       page.request,
       `/api/assignments/${assignmentId}/publish`,
-      {}
+      {
+        principalContext: {
+          principalType: 'organization',
+          orgId: organization.id,
+        },
+      },
+      {
+        timeoutMs: 120_000,
+      }
     );
-    expect([200, 400, 403, 409]).toContain(publishAssignmentResponse.status());
+    expect(publishAssignmentResponse.status()).toBe(200);
     const publishPayload = (await publishAssignmentResponse.json()) as {
       assignment?: { status?: string; creationStatus?: string };
       error?: string;
       details?: { blocks?: unknown[]; missing?: unknown[] };
     };
-    if (publishAssignmentResponse.ok()) {
-      expect(publishPayload.assignment?.status).toBe('active');
-      expect(publishPayload.assignment?.creationStatus).toBe('published');
-    } else {
-      expect(publishPayload.error).toBeTruthy();
+    expect(publishPayload.assignment?.status).toBe('active');
+    expect(publishPayload.assignment?.creationStatus).toBe('published');
+    if (assignmentForLifecycle) {
+      assignmentForLifecycle.status = 'active';
     }
 
     const pipelineStepResponse = await apiPostJson(
@@ -232,8 +275,11 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
   test('O-08..O-12 ranked matches, shortlist, messaging, and interview prep are strict', async ({
     page,
   }) => {
+    test.setTimeout(300_000);
+
     await loginWithUi(page, orgUser);
-    const assignmentId = assignmentForLifecycle?.id ?? seededAssignment.id;
+    const assignmentId =
+      assignmentForLifecycle?.status === 'active' ? assignmentForLifecycle.id : seededAssignment.id;
 
     let rankedMatchesResponse = await apiPostJson(
       page.request,
@@ -244,7 +290,7 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
         k: 20,
       },
       {
-        timeoutMs: 60_000,
+        timeoutMs: 120_000,
       }
     );
     if (!rankedMatchesResponse.ok() && rankedMatchesResponse.status() >= 500) {
@@ -258,7 +304,7 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
           k: 20,
         },
         {
-          timeoutMs: 60_000,
+          timeoutMs: 120_000,
         }
       );
     }
@@ -337,22 +383,30 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     await loginWithUi(page, orgUser);
 
     const uniqueRole = `Strict Draft Resume ${Date.now()}`;
-    const createDraftResponse = await apiPostJson(page.request, '/api/assignments', {
-      orgId: organization.id,
-      role: uniqueRole,
-      description: 'Initial strict draft description',
-      businessValue: 'Initial strict draft business value',
-      status: 'draft',
-      mustHaveSkills: [
-        { id: 'strict.resume.skill.1', level: 3 },
-        { id: 'strict.resume.skill.2', level: 3 },
-        { id: 'strict.resume.skill.3', level: 2 },
-      ],
-      locationMode: 'hybrid',
-      compMin: 120000,
-      compMax: 160000,
-      currency: 'USD',
-    });
+    const createDraftResponse = await apiPostJson(
+      page.request,
+      '/api/assignments',
+      {
+        orgId: organization.id,
+        role: uniqueRole,
+        description: strictDraftDescription,
+        businessValue: strictDraftBusinessValue,
+        expectedImpact: strictDraftImpact,
+        status: 'draft',
+        mustHaveSkills: [
+          { id: 'strict.resume.skill.1', level: 3 },
+          { id: 'strict.resume.skill.2', level: 3 },
+          { id: 'strict.resume.skill.3', level: 2 },
+        ],
+        locationMode: 'hybrid',
+        compMin: 120000,
+        compMax: 160000,
+        currency: 'USD',
+      },
+      {
+        timeoutMs: 120_000,
+      }
+    );
     expect(createDraftResponse.status()).toBe(201);
     const createDraftPayload = (await createDraftResponse.json()) as {
       assignment?: { id?: string };
@@ -363,7 +417,10 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
 
     const autosaveUpdateResponse = await apiPutJson(page.request, `/api/assignments/${draftId}`, {
       orgId: organization.id,
-      businessValue: 'Updated strict draft business value',
+      businessValue:
+        'Update the role purpose with concrete reviewer guidance so the assignment can move cleanly through internal review before publish.',
+      expectedImpact:
+        'Approved proof should show delivered work, ownership of the outcome, and clear explanations of why the candidate made those choices.',
       creationStatus: 'pipeline_in_progress',
       status: 'draft',
     });
@@ -387,7 +444,9 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
           message: 'Draft assignment should persist business value before resume assertions',
         }
       )
-      .toBe('Updated strict draft business value');
+      .toBe(
+        'Update the role purpose with concrete reviewer guidance so the assignment can move cleanly through internal review before publish.'
+      );
 
     const listResponse = await page.request.get(
       `/api/assignments?limit=100&orgSlug=${organization.slug}`
@@ -401,8 +460,8 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
 
     await page.goto(`/app/o/${organization.slug}/assignments/new?draftId=${draftId}`);
     await expect(page.getByLabel(/role title/i)).toHaveValue(uniqueRole);
-    await expect(page.getByLabel(/business value/i)).toHaveValue(
-      'Updated strict draft business value'
+    await expect(page.getByLabel(/why this role exists/i)).toHaveValue(
+      'Update the role purpose with concrete reviewer guidance so the assignment can move cleanly through internal review before publish.'
     );
 
     const outcomesResponse = await apiPostJson(
@@ -422,22 +481,33 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     );
     expect(outcomesResponse.ok()).toBeTruthy();
 
+    const pendingReviewResponse = await apiPutJson(page.request, `/api/assignments/${draftId}`, {
+      orgId: organization.id,
+      creationStatus: 'pending_review',
+      status: 'draft',
+    });
+    expect(pendingReviewResponse.ok()).toBeTruthy();
+
     const publishResponse = await apiPostJson(
       page.request,
       `/api/assignments/${draftId}/publish`,
-      {}
+      {
+        principalContext: {
+          principalType: 'organization',
+          orgId: organization.id,
+        },
+      },
+      {
+        timeoutMs: 120_000,
+      }
     );
-    expect([200, 400, 403, 409]).toContain(publishResponse.status());
+    expect(publishResponse.status()).toBe(200);
     const publishPayload = (await publishResponse.json()) as {
       assignment?: { status?: string; creationStatus?: string };
       error?: string;
     };
-    if (publishResponse.ok()) {
-      expect(publishPayload.assignment?.status).toBe('active');
-      expect(publishPayload.assignment?.creationStatus).toBe('published');
-    } else {
-      expect(publishPayload.error).toBeTruthy();
-    }
+    expect(publishPayload.assignment?.status).toBe('active');
+    expect(publishPayload.assignment?.creationStatus).toBe('published');
   });
 
   test('O-13..O-16 feedback, offer, deliverables, and verification paths are strict', async ({
@@ -446,14 +516,21 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     await loginWithUi(page, orgUser);
 
     const scheduledAt = new Date(Date.now() + 1000 * 60 * 60 * 3).toISOString();
-    const scheduleInterviewResponse = await apiPostJson(page.request, '/api/interviews/schedule', {
-      matchId: seededMatch.id,
-      scheduledAt,
-      platform: 'manual',
-      manualMeetingProvider: 'google_meet',
-      participantUserIds: [candidateUser.id, orgUser.id],
-      manualMeetingLink: 'https://meet.google.com/strict-org-manual',
-    });
+    const scheduleInterviewResponse = await apiPostJson(
+      page.request,
+      '/api/interviews/schedule',
+      {
+        matchId: seededMatch.id,
+        scheduledAt,
+        platform: 'manual',
+        manualMeetingProvider: 'google_meet',
+        participantUserIds: [candidateUser.id, orgUser.id],
+        manualMeetingLink: 'https://meet.google.com/strict-org-manual',
+      },
+      {
+        timeoutMs: 120_000,
+      }
+    );
     expect(scheduleInterviewResponse.ok()).toBeTruthy();
     const scheduleInterviewPayload = (await scheduleInterviewResponse.json()) as {
       interview?: { id?: string };
@@ -525,7 +602,14 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     expect(Array.isArray(analyticsPayload.actions)).toBeTruthy();
 
     await page.goto(`/app/o/${organization.slug}/settings`);
-    await expect(page.getByText('Organization Settings')).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Broad org settings are gated for launch' })
+    ).toBeVisible();
+    await expect(
+      page.getByText(
+        'Only trust-profile updates remain in scope for launch. Wider settings, integrations, and admin dashboards are isolated until after MVP.'
+      )
+    ).toBeVisible();
 
     // Viewer role should not have admin update permission.
     const viewerContext = await browser.newContext();

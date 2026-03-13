@@ -1,16 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { evaluateIndividualMatchability } from '@/lib/matching/eligibility';
+import {
+  evaluateIndividualMatchability,
+  evaluateIndividualMatchabilityForProfiles,
+} from '@/lib/matching/eligibility';
 import {
   getIndividualReadinessState,
+  getIndividualPortfolioReadinessMap,
   type IndividualReadinessStateSnapshot,
 } from '@/lib/readiness/individual-state';
 
 vi.mock('@/lib/readiness/individual-state', () => ({
   getIndividualReadinessState: vi.fn(),
+  getIndividualPortfolioReadinessMap: vi.fn(),
 }));
 
 const getIndividualReadinessStateMock = vi.mocked(getIndividualReadinessState);
+const getIndividualPortfolioReadinessMapMock = vi.mocked(getIndividualPortfolioReadinessMap);
 
 function createReadinessSnapshot(
   overrides: Partial<IndividualReadinessStateSnapshot> = {}
@@ -311,5 +317,25 @@ describe('evaluateIndividualMatchability', () => {
     expect(result.topActions.map((action) => action.actionUrl)).toEqual(
       expect.arrayContaining(['/app/i/portfolio', '/app/i/matching/preferences', '/app/i/profile'])
     );
+  });
+});
+
+describe('evaluateIndividualMatchabilityForProfiles', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns the batched portfolio readiness map without recomputing each profile individually', async () => {
+    const readinessMap = new Map<string, boolean>([
+      ['profile-a', true],
+      ['profile-b', false],
+    ]);
+    getIndividualPortfolioReadinessMapMock.mockResolvedValue(readinessMap);
+
+    const result = await evaluateIndividualMatchabilityForProfiles(['profile-a', 'profile-b']);
+
+    expect(getIndividualPortfolioReadinessMapMock).toHaveBeenCalledWith(['profile-a', 'profile-b']);
+    expect(result).toBe(readinessMap);
+    expect(getIndividualReadinessStateMock).not.toHaveBeenCalled();
   });
 });

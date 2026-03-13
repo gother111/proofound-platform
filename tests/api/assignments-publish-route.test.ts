@@ -80,6 +80,7 @@ describe('assignment publish route', () => {
       id: assignmentId,
       orgId,
       builderMode: 'basic',
+      creationStatus: 'pending_review',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
       businessValue:
@@ -132,6 +133,7 @@ describe('assignment publish route', () => {
       id: assignmentId,
       orgId,
       builderMode: 'basic',
+      creationStatus: 'pending_review',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: '',
       description: '',
@@ -184,6 +186,7 @@ describe('assignment publish route', () => {
       id: assignmentId,
       orgId,
       builderMode: 'basic',
+      creationStatus: 'pending_review',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
       businessValue: 'Join our team and make an impact.',
@@ -231,6 +234,7 @@ describe('assignment publish route', () => {
       id: assignmentId,
       orgId,
       builderMode: 'basic',
+      creationStatus: 'pending_review',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
       businessValue:
@@ -281,6 +285,7 @@ describe('assignment publish route', () => {
       id: assignmentId,
       orgId,
       builderMode: 'basic',
+      creationStatus: 'pending_review',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
       businessValue:
@@ -333,6 +338,7 @@ describe('assignment publish route', () => {
       id: assignmentId,
       orgId,
       builderMode: 'basic',
+      creationStatus: 'pending_review',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
       businessValue:
@@ -377,6 +383,7 @@ describe('assignment publish route', () => {
       id: assignmentId,
       orgId,
       builderMode: 'basic',
+      creationStatus: 'pending_review',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Support Advocate',
       businessValue:
@@ -441,5 +448,42 @@ describe('assignment publish route', () => {
 
     const res = await POST(req, { params: Promise.resolve({ id: assignmentId }) });
     expect(res.status).toBe(403);
+  });
+
+  it('rejects publish before assignment reaches internal review', async () => {
+    (db.query.assignments.findFirst as any).mockResolvedValue({
+      id: assignmentId,
+      orgId,
+      builderMode: 'basic',
+      creationStatus: 'draft',
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      role: 'Product Designer',
+      businessValue:
+        'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
+      description:
+        'Lead the assignment review workflow, define concrete deliverables, and keep the team aligned on what strong work actually looks like.',
+      expectedImpact:
+        'Convincing proof includes real shipped work, evidence of ownership, and a clear explanation of tradeoffs from past assignments.',
+      mustHaveSkills: ['Research', 'UX', 'Figma'],
+      locationMode: 'remote',
+      compMin: 80000,
+      compMax: 100000,
+      verificationGates: [],
+    });
+
+    const req = new NextRequest(`http://localhost/api/assignments/${assignmentId}/publish`, {
+      method: 'POST',
+      body: JSON.stringify({
+        principalContext: { principalType: 'organization', orgId },
+      }),
+    });
+
+    const res = await POST(req, { params: Promise.resolve({ id: assignmentId }) });
+    const payload = await res.json();
+
+    expect(res.status).toBe(409);
+    expect(payload.error).toBe('ASSIGNMENT_INTERNAL_REVIEW_REQUIRED');
+    expect(payload.details.currentCreationStatus).toBe('draft');
+    expect(payload.details.allowedCreationStatuses).toEqual(['pending_review', 'ready_to_publish']);
   });
 });

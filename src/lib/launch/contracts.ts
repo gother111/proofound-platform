@@ -7,6 +7,14 @@ export type LaunchAlertSeverity = (typeof LAUNCH_ALERT_SEVERITY_VALUES)[number];
 export const LAUNCH_MONITOR_STATUS_VALUES = ['pass', 'degraded', 'fail'] as const;
 export type LaunchMonitorStatus = (typeof LAUNCH_MONITOR_STATUS_VALUES)[number];
 
+export const LAUNCH_READINESS_STATE_VALUES = ['ready', 'blocked'] as const;
+export type LaunchReadinessState = (typeof LAUNCH_READINESS_STATE_VALUES)[number];
+
+export const LAUNCH_SMOKE_FRESHNESS_STATE_VALUES = ['fresh', 'stale', 'missing'] as const;
+export type LaunchSmokeFreshnessState = (typeof LAUNCH_SMOKE_FRESHNESS_STATE_VALUES)[number];
+
+export const LAUNCH_SMOKE_FRESHNESS_THRESHOLD_MINUTES = 60;
+
 export const REQUIRED_SAFE_MODE_FLAGS = [
   FEATURE_FLAG_KEYS.QUALIFIED_INTRO_CORRIDOR,
   FEATURE_FLAG_KEYS.EXACT_RANK_EXPOSURE,
@@ -164,7 +172,7 @@ export const LAUNCH_MONITOR_DEFINITIONS: LaunchMonitorDefinition[] = [
     kind: 'smoke_artifact',
     smokeScenarioId: scenario.id,
     expectedState: scenario.expectedState,
-    maxAgeMinutes: 24 * 60,
+    maxAgeMinutes: LAUNCH_SMOKE_FRESHNESS_THRESHOLD_MINUTES,
     alertAfterConsecutiveFailures: scenario.severity === 'p1' ? 1 : 2,
     failureClass: `${scenario.id}_regression`,
   })),

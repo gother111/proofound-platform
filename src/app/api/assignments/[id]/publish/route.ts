@@ -15,6 +15,8 @@ import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
+const PUBLISHABLE_CREATION_STATUSES = ['pending_review', 'ready_to_publish'] as const;
+
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   let assignmentId: string | undefined;
 
@@ -61,6 +63,20 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     if (!assignment) {
       return NextResponse.json({ error: 'Assignment not found' }, { status: 404 });
+    }
+
+    if (!PUBLISHABLE_CREATION_STATUSES.includes(assignment.creationStatus as any)) {
+      return NextResponse.json(
+        {
+          error: 'ASSIGNMENT_INTERNAL_REVIEW_REQUIRED',
+          message: 'Assignment must reach internal review before it can be published.',
+          details: {
+            currentCreationStatus: assignment.creationStatus,
+            allowedCreationStatuses: PUBLISHABLE_CREATION_STATUSES,
+          },
+        },
+        { status: 409 }
+      );
     }
 
     const org = await db.query.organizations.findFirst({
@@ -150,12 +166,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       .where(eq(assignments.id, assignmentId))
       .returning();
 
-    await emitAssignmentPublishSucceeded(user.id, assignmentId, publishedAssignment.orgId, {
+    void emitAssignmentPublishSucceeded(user.id, assignmentId, publishedAssignment.orgId, {
       builderMode: publishedAssignment.builderMode || 'basic',
       source: 'assignments_publish_route',
     });
 
-    await checkAndEmitAssignmentActivation({
+    void checkAndEmitAssignmentActivation({
       assignmentId,
       orgId: publishedAssignment.orgId,
       createdAt: publishedAssignment.createdAt,

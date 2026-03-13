@@ -141,16 +141,46 @@ async function appendAssignmentTransition(
   toState: string,
   context: TransitionContext
 ) {
-  await db.insert(assignmentStateTransitions).values({
-    assignmentId,
-    fromState: fromState as any,
-    toState: toState as any,
-    trigger: context.trigger,
-    reasonCode: context.reasonCode ?? null,
-    actorType: context.actorType,
-    actorId: context.actorId ?? null,
-    metadata: context.metadata ?? {},
+  await appendStateTransitionRecord({
+    table: assignmentStateTransitions,
+    foreignKeyField: 'assignmentId',
+    foreignKeyValue: assignmentId,
+    fromState,
+    toState,
+    context,
   });
+}
+
+async function appendStateTransitionRecord(params: {
+  table:
+    | typeof assignmentStateTransitions
+    | typeof introWorkflowStateTransitions
+    | typeof interviewStateTransitions
+    | typeof decisionStateTransitions
+    | typeof verificationStateTransitions
+    | typeof consentStateTransitions;
+  foreignKeyField:
+    | 'assignmentId'
+    | 'introWorkflowId'
+    | 'interviewId'
+    | 'decisionId'
+    | 'verificationRecordId'
+    | 'consentObligationId';
+  foreignKeyValue: string;
+  fromState: string | null;
+  toState: string;
+  context: TransitionContext;
+}) {
+  await db.insert(params.table).values({
+    [params.foreignKeyField]: params.foreignKeyValue,
+    fromState: params.fromState as any,
+    toState: params.toState as any,
+    trigger: params.context.trigger,
+    reasonCode: params.context.reasonCode ?? null,
+    actorType: params.context.actorType,
+    actorId: params.context.actorId ?? null,
+    metadata: params.context.metadata ?? {},
+  } as any);
 }
 
 async function appendIntroTransition(
@@ -159,15 +189,13 @@ async function appendIntroTransition(
   toState: string,
   context: TransitionContext
 ) {
-  await db.insert(introWorkflowStateTransitions).values({
-    introWorkflowId,
-    fromState: fromState as any,
-    toState: toState as any,
-    trigger: context.trigger,
-    reasonCode: context.reasonCode ?? null,
-    actorType: context.actorType,
-    actorId: context.actorId ?? null,
-    metadata: context.metadata ?? {},
+  await appendStateTransitionRecord({
+    table: introWorkflowStateTransitions,
+    foreignKeyField: 'introWorkflowId',
+    foreignKeyValue: introWorkflowId,
+    fromState,
+    toState,
+    context,
   });
 }
 
@@ -177,15 +205,13 @@ async function appendInterviewTransition(
   toState: string,
   context: TransitionContext
 ) {
-  await db.insert(interviewStateTransitions).values({
-    interviewId,
-    fromState: fromState as any,
-    toState: toState as any,
-    trigger: context.trigger,
-    reasonCode: context.reasonCode ?? null,
-    actorType: context.actorType,
-    actorId: context.actorId ?? null,
-    metadata: context.metadata ?? {},
+  await appendStateTransitionRecord({
+    table: interviewStateTransitions,
+    foreignKeyField: 'interviewId',
+    foreignKeyValue: interviewId,
+    fromState,
+    toState,
+    context,
   });
 }
 
@@ -195,15 +221,13 @@ async function appendDecisionTransition(
   toState: string,
   context: TransitionContext
 ) {
-  await db.insert(decisionStateTransitions).values({
-    decisionId,
-    fromState: fromState as any,
-    toState: toState as any,
-    trigger: context.trigger,
-    reasonCode: context.reasonCode ?? null,
-    actorType: context.actorType,
-    actorId: context.actorId ?? null,
-    metadata: context.metadata ?? {},
+  await appendStateTransitionRecord({
+    table: decisionStateTransitions,
+    foreignKeyField: 'decisionId',
+    foreignKeyValue: decisionId,
+    fromState,
+    toState,
+    context,
   });
 }
 
@@ -213,15 +237,13 @@ async function appendVerificationTransition(
   toState: string,
   context: TransitionContext
 ) {
-  await db.insert(verificationStateTransitions).values({
-    verificationRecordId,
-    fromState: fromState as any,
-    toState: toState as any,
-    trigger: context.trigger,
-    reasonCode: context.reasonCode ?? null,
-    actorType: context.actorType,
-    actorId: context.actorId ?? null,
-    metadata: context.metadata ?? {},
+  await appendStateTransitionRecord({
+    table: verificationStateTransitions,
+    foreignKeyField: 'verificationRecordId',
+    foreignKeyValue: verificationRecordId,
+    fromState,
+    toState,
+    context,
   });
 
   await appendVerificationTransitionLogEntry({
@@ -242,15 +264,13 @@ async function appendConsentTransition(
   toState: string,
   context: TransitionContext
 ) {
-  await db.insert(consentStateTransitions).values({
-    consentObligationId,
-    fromState: fromState as any,
-    toState: toState as any,
-    trigger: context.trigger,
-    reasonCode: context.reasonCode ?? null,
-    actorType: context.actorType,
-    actorId: context.actorId ?? null,
-    metadata: context.metadata ?? {},
+  await appendStateTransitionRecord({
+    table: consentStateTransitions,
+    foreignKeyField: 'consentObligationId',
+    foreignKeyValue: consentObligationId,
+    fromState,
+    toState,
+    context,
   });
 }
 

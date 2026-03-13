@@ -23,7 +23,6 @@ test.describe('Strict MVP Privacy and Security Flows', () => {
 
   let fixture: StrictFixtureState;
   let participantOne: StrictRuntimeUser;
-  let participantTwo: StrictRuntimeUser;
   let outsider: StrictRuntimeUser;
   let orgOwner: StrictRuntimeUser;
   let organization: StrictRuntimeOrganization;
@@ -38,11 +37,6 @@ test.describe('Strict MVP Privacy and Security Flows', () => {
       persona: 'individual',
       prefix: 'strict-privacy-one',
       displayName: 'Strict Privacy One',
-    });
-    participantTwo = await createRuntimeUser(fixture, {
-      persona: 'individual',
-      prefix: 'strict-privacy-two',
-      displayName: 'Strict Privacy Two',
     });
     outsider = await createRuntimeUser(fixture, {
       persona: 'individual',
@@ -70,7 +64,7 @@ test.describe('Strict MVP Privacy and Security Flows', () => {
       match.id,
       assignment.id,
       participantOne.id,
-      participantTwo.id
+      orgOwner.id
     );
   });
 
@@ -175,7 +169,7 @@ test.describe('Strict MVP Privacy and Security Flows', () => {
     const secondContext = await browser.newContext();
     try {
       const secondPage = await secondContext.newPage();
-      await loginWithUi(secondPage, participantTwo);
+      await loginWithUi(secondPage, orgOwner);
 
       const secondRevealResponse = await apiPostJson(
         secondPage.request,

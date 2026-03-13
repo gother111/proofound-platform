@@ -19,7 +19,7 @@ import {
 } from '@/lib/core/matching/language-resolution';
 import { log } from '@/lib/log';
 import { toAnnualCompensationRange } from '@/lib/matching/compensation';
-import { evaluateIndividualMatchability } from '@/lib/matching/eligibility';
+import { evaluateIndividualMatchabilityForProfiles } from '@/lib/matching/eligibility';
 import {
   buildCanonicalMatchScoreArtifact,
   compareCanonicalMatchOrder,
@@ -198,16 +198,7 @@ export async function computeAssignmentMatches(input: ComputeAssignmentMatchesIn
         )
     : [];
   const activeMatchingConsentIds = new Set(activeMatchingConsentRows.map((row) => row.profileId));
-  const eligibilityByProfileId = new Map(
-    (
-      await Promise.all(
-        candidateProfiles.map(async (profile) => ({
-          profileId: profile.profileId,
-          eligible: (await evaluateIndividualMatchability(profile.profileId)).eligible,
-        }))
-      )
-    ).map((row) => [row.profileId, row.eligible])
-  );
+  const eligibilityByProfileId = await evaluateIndividualMatchabilityForProfiles(profileIds);
 
   const results: AssignmentMatchResult[] = [];
   const assignmentLanguageRequirement = assignment.minLanguage as {

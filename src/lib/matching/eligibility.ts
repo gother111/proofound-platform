@@ -1,6 +1,7 @@
 import type { ReadinessRequirement } from '@/lib/momentum/types';
 import {
   getIndividualReadinessState,
+  getIndividualPortfolioReadinessMap,
   type LegacyReadinessTier,
   type IntroEligibilitySummary,
   type TrustLevelOrNone,
@@ -243,4 +244,10 @@ export async function evaluateIndividualMatchability(
     topActions,
     readiness,
   };
+}
+
+export async function evaluateIndividualMatchabilityForProfiles(
+  profileIds: string[]
+): Promise<Map<string, boolean>> {
+  return getIndividualPortfolioReadinessMap(profileIds);
 }

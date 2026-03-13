@@ -7,7 +7,10 @@ import { getRows } from '@/lib/db/rows';
 import { classifyLaunchAlertStatus } from '@/lib/launch/alerting';
 import {
   LAUNCH_MONITOR_DEFINITIONS,
+  LAUNCH_SMOKE_FRESHNESS_THRESHOLD_MINUTES,
   LAUNCH_MONITOR_STATUS_VALUES,
+  type LaunchReadinessState,
+  type LaunchSmokeFreshnessState,
   type LaunchMonitorDefinition,
   type LaunchMonitorStatus,
 } from '@/lib/launch/contracts';
@@ -48,11 +51,15 @@ export type CurrentLaunchSyntheticStatus = {
   }>;
   missingMonitorKeys: string[];
   ok: boolean;
+  readinessState: LaunchReadinessState;
   source: 'live';
   evidence: {
     source: 'live';
     artifactPath: string;
     smokeArtifactGeneratedAt: string;
+    smokeArtifactAgeMinutes: number;
+    smokeFreshnessThresholdMinutes: number;
+    smokeFreshnessState: Exclude<LaunchSmokeFreshnessState, 'missing'>;
     persisted: boolean;
   };
 };
@@ -134,10 +141,11 @@ async function runHttpMonitor(
 function runSmokeArtifactMonitor(
   definition: Extract<LaunchMonitorDefinition, { kind: 'smoke_artifact' }>,
   artifact: Awaited<ReturnType<typeof readLaunchSmokeArtifactFromFile>>,
-  artifactPath: string
+  artifactPath: string,
+  now: Date
 ): SyntheticMonitorResult {
   const smokeCheck = getLaunchSmokeCheckStatus(artifact, definition.smokeScenarioId);
-  const checkedAt = new Date().toISOString();
+  const checkedAt = now.toISOString();
 
   if (!smokeCheck) {
     return {
@@ -154,7 +162,7 @@ function runSmokeArtifactMonitor(
     };
   }
 
-  const artifactAgeMinutes = getLaunchSmokeAgeMinutes(artifact, new Date(checkedAt));
+  const artifactAgeMinutes = getLaunchSmokeAgeMinutes(artifact, now);
   const stale = artifactAgeMinutes > definition.maxAgeMinutes;
   const status = stale
     ? 'fail'
@@ -218,13 +226,20 @@ export async function persistSyntheticMonitorResults(results: SyntheticMonitorRe
   }
 }
 
-export async function runLaunchSyntheticMonitors(params: {
-  baseUrl: string;
-  artifactPath: string;
-  persist?: boolean;
-}) {
+export async function runLaunchSyntheticMonitors(
+  params: {
+    baseUrl: string;
+    artifactPath: string;
+    persist?: boolean;
+  },
+  now = new Date()
+) {
   const results: SyntheticMonitorResult[] = [];
   const smokeArtifact = await readLaunchSmokeArtifactFromFile(params.artifactPath);
+  const generatedAt = now;
+  const smokeArtifactAgeMinutes = getLaunchSmokeAgeMinutes(smokeArtifact, generatedAt);
+  const smokeFreshnessState: Exclude<LaunchSmokeFreshnessState, 'missing'> =
+    smokeArtifactAgeMinutes > LAUNCH_SMOKE_FRESHNESS_THRESHOLD_MINUTES ? 'stale' : 'fresh';
 
   for (const definition of LAUNCH_MONITOR_DEFINITIONS) {
     if (definition.kind === 'http') {
@@ -251,7 +266,9 @@ export async function runLaunchSyntheticMonitors(params: {
       continue;
     }
 
-    results.push(runSmokeArtifactMonitor(definition, smokeArtifact, params.artifactPath));
+    results.push(
+      runSmokeArtifactMonitor(definition, smokeArtifact, params.artifactPath, generatedAt)
+    );
   }
 
   if (params.persist !== false) {
@@ -279,7 +296,7 @@ export async function runLaunchSyntheticMonitors(params: {
         : degraded.length > 0
           ? 'degraded'
           : ('pass' as (typeof LAUNCH_MONITOR_STATUS_VALUES)[number]),
-    generatedAt: new Date().toISOString(),
+    generatedAt: generatedAt.toISOString(),
     results,
     summary: {
       total: results.length,
@@ -294,6 +311,9 @@ export async function runLaunchSyntheticMonitors(params: {
       source: 'live' as const,
       artifactPath: params.artifactPath,
       smokeArtifactGeneratedAt: smokeArtifact.generatedAt,
+      smokeArtifactAgeMinutes,
+      smokeFreshnessThresholdMinutes: LAUNCH_SMOKE_FRESHNESS_THRESHOLD_MINUTES,
+      smokeFreshnessState,
       persisted: params.persist !== false,
     },
   };
@@ -303,7 +323,7 @@ export async function getCurrentLaunchSyntheticStatus(
   params: Parameters<typeof runLaunchSyntheticMonitors>[0],
   now = new Date()
 ): Promise<CurrentLaunchSyntheticStatus> {
-  const evaluation = await runLaunchSyntheticMonitors(params);
+  const evaluation = await runLaunchSyntheticMonitors(params, now);
   const rows = evaluation.results.map((result) => {
     const checkedAt = result.checkedAt ? new Date(result.checkedAt) : null;
     const ageMinutes = checkedAt
@@ -321,7 +341,7 @@ export async function getCurrentLaunchSyntheticStatus(
       failureClass: result.failureClass,
       checkedAt: result.checkedAt ?? null,
       ageMinutes,
-      stale: false,
+      stale: result.observedState === 'smoke_artifact_stale',
       details: result.details,
     };
   });
@@ -335,6 +355,8 @@ export async function getCurrentLaunchSyntheticStatus(
     rows,
     missingMonitorKeys,
     ok: evaluation.ok && missingMonitorKeys.length === 0,
+    readinessState:
+      evaluation.ok && missingMonitorKeys.length === 0 ? ('ready' as const) : ('blocked' as const),
     source: 'live',
     evidence: evaluation.evidence,
   };

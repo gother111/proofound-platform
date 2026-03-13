@@ -12,6 +12,7 @@ import { performanceMetrics, performanceAlerts } from '@/db/schema';
 import type { InsertPerformanceAlert } from '@/db/schema';
 import { and, gte, desc, isNotNull, sql } from 'drizzle-orm';
 import { EMAIL_CONFIG } from '@/lib/email/config';
+import { INTERNAL_OPS_HREF } from '@/lib/launch/surface-policy';
 
 // SLA thresholds in milliseconds
 export const SLA_THRESHOLDS = {
@@ -320,9 +321,9 @@ async function sendEmailAlert(violations: AlertResult['violations']): Promise<vo
         }
         
         <p style="margin-top: 30px;">
-          <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/performance" 
+          <a href="${process.env.NEXT_PUBLIC_APP_URL}${INTERNAL_OPS_HREF}"
              style="background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-            View Performance Dashboard
+            Open Internal Ops
           </a>
         </p>
       </div>
@@ -378,7 +379,7 @@ async function sendSlackAlert(violations: AlertResult['violations']): Promise<vo
                 type: 'plain_text',
                 text: 'View Dashboard',
               },
-              url: `${process.env.NEXT_PUBLIC_APP_URL}/admin/performance`,
+              url: `${process.env.NEXT_PUBLIC_APP_URL}${INTERNAL_OPS_HREF}`,
             },
           ],
         },

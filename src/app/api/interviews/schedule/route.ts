@@ -215,6 +215,15 @@ type InterviewScheduleStep =
   | 'interview_insert'
   | 'unknown';
 
+type InterviewScheduleTimingStep =
+  | 'match_lookup'
+  | 'duplicate_check'
+  | 'meeting_create'
+  | 'interview_insert'
+  | 'workflow_registration'
+  | 'analytics_emit'
+  | 'interview_messaging';
+
 function truncateProviderMessage(value: string | null | undefined): string | undefined {
   if (!value) return undefined;
   const normalized = value.replace(/\s+/g, ' ').trim();
@@ -287,6 +296,12 @@ export async function POST(request: NextRequest) {
     provider?: 'google_meet';
     step?: InterviewScheduleStep;
   } = {};
+  const scheduleStartedAt = Date.now();
+  const stepDurationsMs: Partial<Record<InterviewScheduleTimingStep, number>> = {};
+
+  const recordStepDuration = (step: InterviewScheduleTimingStep, startedAt: number) => {
+    stepDurationsMs[step] = Date.now() - startedAt;
+  };
 
   try {
     const supabase = await createClient();
@@ -308,6 +323,7 @@ export async function POST(request: NextRequest) {
     const durationMinutes = data.durationMinutes ?? 30;
 
     // 1. Verify match exists and org access is valid.
+    const matchLookupStartedAt = Date.now();
     const matchResult = await db.execute(sql`
       SELECT
         m.id,
@@ -321,6 +337,7 @@ export async function POST(request: NextRequest) {
       WHERE m.id = ${data.matchId}
       LIMIT 1
     `);
+    recordStepDuration('match_lookup', matchLookupStartedAt);
 
     const matchRows = getRows(matchResult) as Array<{
       id: string;
@@ -350,6 +367,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Check if a non-cancelled interview already exists for this match.
+    const duplicateCheckStartedAt = Date.now();
     const { data: interviewsForMatch, error: interviewsForMatchError } = await supabase
       .from('interviews')
       .select('id, status')
@@ -383,11 +401,13 @@ export async function POST(request: NextRequest) {
     }
 
     if (hasBlockingInterview) {
+      recordStepDuration('duplicate_check', duplicateCheckStartedAt);
       return NextResponse.json(
         { error: 'Interview already exists for this match' },
         { status: 400 }
       );
     }
+    recordStepDuration('duplicate_check', duplicateCheckStartedAt);
 
     // 3. Validate scheduling window by active policy preset.
     const scheduledDate = new Date(data.scheduledAt);
@@ -509,6 +529,7 @@ export async function POST(request: NextRequest) {
       }
 
       scheduleFailureContext.step = 'meeting_create';
+      const meetingCreateStartedAt = Date.now();
       let meeting: Awaited<ReturnType<typeof createGoogleMeet>>;
       try {
         meeting = await createGoogleMeet(accessToken, {
@@ -534,6 +555,7 @@ export async function POST(request: NextRequest) {
 
         throw meetingError;
       }
+      recordStepDuration('meeting_create', meetingCreateStartedAt);
 
       meetingLink = meeting.hangoutLink;
       meetingId = meeting.id;
@@ -575,6 +597,7 @@ export async function POST(request: NextRequest) {
         normalizedPlatform === 'manual' ? (data.manualMeetingProvider ?? null) : null,
     };
     scheduleFailureContext.step = 'interview_insert';
+    const interviewInsertStartedAt = Date.now();
 
     let lastInsertError: any = null;
 
@@ -636,8 +659,10 @@ export async function POST(request: NextRequest) {
     if (!interview) {
       throw lastInsertError ?? new Error('Failed to insert interview after compatibility retries');
     }
+    recordStepDuration('interview_insert', interviewInsertStartedAt);
 
-    await registerScheduledInterviewWorkflow({
+    const workflowRegistrationStartedAt = Date.now();
+    void registerScheduledInterviewWorkflow({
       interviewId: interview.id,
       matchId: data.matchId,
       actorType: 'organization_member',
@@ -648,41 +673,97 @@ export async function POST(request: NextRequest) {
         timezone: data.timezone,
         recoveryFromInterviewId: recoverySourceInterviewId,
       },
-    });
-
-    try {
-      const { emitInterviewScheduledAsync } = await import('@/lib/analytics/events');
-
-      const matchDate = new Date(match.created_at);
-      const interviewDate = new Date(data.scheduledAt);
-      const daysSinceMatch = Math.floor(
-        (interviewDate.getTime() - matchDate.getTime()) / (1000 * 60 * 60 * 24)
-      );
-
-      emitInterviewScheduledAsync(user.id, interview.id, {
-        interview_id: interview.id,
-        assignment_id: match.assignment_id,
-        match_id: data.matchId,
-        duration_minutes: durationMinutes,
-        policy_preset: data.policyPreset,
-        platform: persistedPlatform,
-        days_since_match: daysSinceMatch,
+    })
+      .then(() => {
+        log.info('interview.schedule.workflow_registered', {
+          interviewId: interview.id,
+          matchId: data.matchId,
+          durationMs: Date.now() - workflowRegistrationStartedAt,
+        });
+      })
+      .catch((workflowError) => {
+        log.error('interview.schedule.workflow_register_failed', {
+          interviewId: interview.id,
+          matchId: data.matchId,
+          durationMs: Date.now() - workflowRegistrationStartedAt,
+          error: workflowError instanceof Error ? workflowError.message : 'Unknown error',
+        });
       });
-    } catch (analyticsError) {
-      console.error('Failed to emit interview_scheduled event:', analyticsError);
-    }
 
-    await postInterviewUpdateMessageBestEffort({
-      action: 'scheduled',
-      actorUserId: user.id,
+    const analyticsEmitStartedAt = Date.now();
+    void (async () => {
+      try {
+        const { emitInterviewScheduledAsync } = await import('@/lib/analytics/events');
+
+        const matchDate = new Date(match.created_at);
+        const interviewDate = new Date(data.scheduledAt);
+        const daysSinceMatch = Math.floor(
+          (interviewDate.getTime() - matchDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
+
+        await emitInterviewScheduledAsync(user.id, interview.id, {
+          interview_id: interview.id,
+          assignment_id: match.assignment_id,
+          match_id: data.matchId,
+          duration_minutes: durationMinutes,
+          policy_preset: data.policyPreset,
+          platform: persistedPlatform,
+          days_since_match: daysSinceMatch,
+        });
+
+        log.info('interview.schedule.analytics_dispatched', {
+          interviewId: interview.id,
+          matchId: data.matchId,
+          durationMs: Date.now() - analyticsEmitStartedAt,
+        });
+      } catch (analyticsError) {
+        log.error('interview.schedule.analytics_failed', {
+          interviewId: interview.id,
+          matchId: data.matchId,
+          durationMs: Date.now() - analyticsEmitStartedAt,
+          error: analyticsError instanceof Error ? analyticsError.message : 'Unknown error',
+        });
+      }
+    })();
+
+    const interviewMessagingStartedAt = Date.now();
+    void Promise.resolve(
+      postInterviewUpdateMessageBestEffort({
+        action: 'scheduled',
+        actorUserId: user.id,
+        interviewId: interview.id,
+        matchId: data.matchId,
+        next: {
+          scheduledAt: data.scheduledAt,
+          platform: persistedPlatform,
+          meetingUrl: meetingLink,
+          timezone: data.timezone,
+        },
+      })
+    )
+      .then(() => {
+        log.info('interview.schedule.message_dispatched', {
+          interviewId: interview.id,
+          matchId: data.matchId,
+          durationMs: Date.now() - interviewMessagingStartedAt,
+        });
+      })
+      .catch((messageError) => {
+        log.error('interview.schedule.message_failed', {
+          interviewId: interview.id,
+          matchId: data.matchId,
+          durationMs: Date.now() - interviewMessagingStartedAt,
+          error: messageError instanceof Error ? messageError.message : 'Unknown error',
+        });
+      });
+
+    log.info('interview.schedule.completed', {
       interviewId: interview.id,
       matchId: data.matchId,
-      next: {
-        scheduledAt: data.scheduledAt,
-        platform: persistedPlatform,
-        meetingUrl: meetingLink,
-        timezone: data.timezone,
-      },
+      userId: user.id,
+      platform: persistedPlatform,
+      totalDurationMs: Date.now() - scheduleStartedAt,
+      stepDurationsMs,
     });
 
     return NextResponse.json({

@@ -15,6 +15,11 @@ import {
 import { toast } from 'sonner';
 import type { AdminUser } from '@/lib/auth/admin';
 import { apiFetch } from '@/lib/api/fetch';
+import {
+  INTERNAL_OPS_HREF,
+  INTERNAL_OPS_AUDIT_HREF,
+  INTERNAL_OPS_VERIFICATION_HREF,
+} from '@/lib/launch/surface-policy';
 import { AdminGrowthChart } from './analytics/AdminGrowthChart';
 import { FairnessNoteDashboard } from '../analytics/FairnessNoteDashboard';
 import { MetricsDashboard } from '../metrics/MetricsDashboard';
@@ -219,27 +224,31 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
           <CardContent>
             <div className="space-y-2">
               <Link
-                href="/admin/users"
+                href={INTERNAL_OPS_VERIFICATION_HREF}
                 className="block w-full text-left p-3 rounded-lg border border-proofound-stone hover:bg-japandi-bg transition-colors"
               >
-                <p className="font-medium text-sm text-foreground">View All Users</p>
+                <p className="font-medium text-sm text-foreground">Verification Queue</p>
                 <p className="text-xs text-muted-foreground">
-                  Manage user accounts and permissions
+                  Review pending trust checks inside the launch corridor
                 </p>
               </Link>
               <Link
-                href="/admin/organizations"
-                className="block w-full text-left p-3 rounded-lg border border-proofound-stone hover:bg-japandi-bg transition-colors"
-              >
-                <p className="font-medium text-sm text-foreground">View Organizations</p>
-                <p className="text-xs text-muted-foreground">Browse and manage organizations</p>
-              </Link>
-              <Link
-                href="/admin/audit"
+                href={INTERNAL_OPS_AUDIT_HREF}
                 className="block w-full text-left p-3 rounded-lg border border-proofound-stone hover:bg-japandi-bg transition-colors"
               >
                 <p className="font-medium text-sm text-foreground">Audit Log</p>
-                <p className="text-xs text-muted-foreground">Review admin actions and changes</p>
+                <p className="text-xs text-muted-foreground">
+                  Review internal actions and dispute-support traces
+                </p>
+              </Link>
+              <Link
+                href={INTERNAL_OPS_HREF}
+                className="block w-full text-left p-3 rounded-lg border border-proofound-stone hover:bg-japandi-bg transition-colors"
+              >
+                <p className="font-medium text-sm text-foreground">Internal Ops Hub</p>
+                <p className="text-xs text-muted-foreground">
+                  Return to the preserved launch-ops overview surface
+                </p>
               </Link>
             </div>
           </CardContent>

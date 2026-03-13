@@ -187,7 +187,8 @@ test.describe('Landing Page', () => {
     await expect(finalCta).toBeVisible();
     await finalCta.click();
 
-    await expect(page).toHaveURL(/\/signup$/);
+    await page.waitForURL((url) => url.pathname === '/signup');
+    expect(new URL(page.url()).pathname).toBe('/signup');
   });
 
   test('all sections are in correct order', async ({ page }) => {

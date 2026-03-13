@@ -8,6 +8,7 @@ import { getRows } from '@/lib/db/rows';
 import { isActiveOrgMember } from '@/lib/api/auth';
 import { createGoogleMeet, refreshGoogleToken } from '@/lib/integrations/google-meet';
 import { postInterviewUpdateMessageBestEffort } from '@/lib/interviews/messaging';
+import { registerScheduledInterviewWorkflow } from '@/lib/workflow/service';
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
@@ -427,5 +428,30 @@ describe('POST /api/interviews/schedule', () => {
         success: true,
       })
     );
+  });
+
+  it('does not wait for workflow registration or interview messaging after insert succeeds', async () => {
+    const neverSettles = new Promise<void>(() => undefined);
+    vi.mocked(registerScheduledInterviewWorkflow).mockReturnValue(neverSettles);
+    vi.mocked(postInterviewUpdateMessageBestEffort).mockReturnValue(neverSettles);
+
+    const { supabase } = createSupabaseMock({
+      interviewsForMatch: [{ id: 'interview-cancelled', status: 'cancelled' }],
+    });
+    vi.mocked(createClient).mockResolvedValue(supabase);
+
+    const response = (await Promise.race([
+      POST(
+        createScheduleRequest({
+          platform: 'manual',
+          manualMeetingLink: 'https://example.com/manual-room',
+          manualMeetingProvider: 'teams',
+        })
+      ),
+      new Promise<'timeout'>((resolve) => setTimeout(() => resolve('timeout'), 50)),
+    ])) as Response | 'timeout';
+
+    expect(response).not.toBe('timeout');
+    expect((response as Response).status).toBe(200);
   });
 });

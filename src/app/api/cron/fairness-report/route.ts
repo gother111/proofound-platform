@@ -14,18 +14,7 @@ import { eq } from 'drizzle-orm';
 import { calculateFairnessGaps } from '@/lib/analytics/fairness';
 import { generateFairnessMarkdown, generateFairnessSummary } from '@/lib/reports/fairness-note';
 import { log } from '@/lib/log';
-
-function isAuthorized(request: NextRequest): boolean {
-  const authHeader = request.headers.get('authorization');
-  const secrets = [
-    process.env.CRON_SECRET,
-    process.env.CRON_SECRET_PREVIEW,
-    process.env.NEXT_PUBLIC_CRON_SECRET,
-  ].filter(Boolean) as string[];
-
-  if (!secrets.length) return false;
-  return secrets.some(secret => authHeader === `Bearer ${secret}`);
-}
+import { isAuthorizedCronRequest } from '@/lib/api/cron-auth';
 
 /**
  * Generate fairness report on deployment
@@ -38,7 +27,7 @@ function isAuthorized(request: NextRequest): boolean {
 export async function GET(request: NextRequest) {
   try {
     // Verify cron secret (allow preview/fallback)
-    if (!isAuthorized(request)) {
+    if (!isAuthorizedCronRequest(request)) {
       log.warn('fairness.cron.unauthorized', {
         hasAuth: !!request.headers.get('authorization'),
         hasSecret: !!process.env.CRON_SECRET,

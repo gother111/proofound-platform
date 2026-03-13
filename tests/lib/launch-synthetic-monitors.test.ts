@@ -175,16 +175,23 @@ describe('launch synthetic monitor persistence', () => {
       })
     );
 
-    const result = await getCurrentLaunchSyntheticStatus({
-      baseUrl: 'https://example.com',
-      artifactPath: '.artifacts/launch-smoke-report.json',
-      persist: false,
-    });
+    const result = await getCurrentLaunchSyntheticStatus(
+      {
+        baseUrl: 'https://example.com',
+        artifactPath: '.artifacts/launch-smoke-report.json',
+        persist: false,
+      },
+      new Date('2026-03-12T10:59:00.000Z')
+    );
 
     expect(result.source).toBe('live');
     expect(result.ok).toBe(true);
+    expect(result.readinessState).toBe('ready');
     expect(result.evidence.persisted).toBe(false);
     expect(result.evidence.smokeArtifactGeneratedAt).toBe('2026-03-12T10:00:00.000Z');
+    expect(result.evidence.smokeArtifactAgeMinutes).toBe(59);
+    expect(result.evidence.smokeFreshnessThresholdMinutes).toBe(60);
+    expect(result.evidence.smokeFreshnessState).toBe('fresh');
     expect(result.rows).toHaveLength(LAUNCH_MONITOR_DEFINITIONS.length);
     expect(result.rows.every((row) => row.stale === false)).toBe(true);
     expect(db.execute).not.toHaveBeenCalled();
@@ -220,17 +227,24 @@ describe('launch synthetic monitor persistence', () => {
       })
     );
 
-    const result = await getCurrentLaunchSyntheticStatus({
-      baseUrl: 'https://example.com',
-      artifactPath: '.artifacts/launch-smoke-report.json',
-      persist: false,
-    });
+    const result = await getCurrentLaunchSyntheticStatus(
+      {
+        baseUrl: 'https://example.com',
+        artifactPath: '.artifacts/launch-smoke-report.json',
+        persist: false,
+      },
+      new Date('2020-01-01T01:01:00.000Z')
+    );
 
     expect(result.ok).toBe(false);
+    expect(result.readinessState).toBe('blocked');
+    expect(result.evidence.smokeArtifactAgeMinutes).toBe(61);
+    expect(result.evidence.smokeFreshnessThresholdMinutes).toBe(60);
+    expect(result.evidence.smokeFreshnessState).toBe('stale');
     expect(
       result.rows
         .filter((row) => row.monitorGroup === 'synthetic-smoke')
-        .every((row) => row.observedState === 'smoke_artifact_stale')
+        .every((row) => row.observedState === 'smoke_artifact_stale' && row.stale)
     ).toBe(true);
   });
 });

@@ -11,6 +11,7 @@ import { db } from '@/db';
 import { fairnessNotes } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { EMAIL_CONFIG } from '@/lib/email/config';
+import { INTERNAL_OPS_HREF } from '@/lib/launch/surface-policy';
 
 export async function GET(request: NextRequest) {
   // Verify cron secret for security
@@ -160,9 +161,9 @@ async function sendFairnessAlertEmail(note: any): Promise<void> {
             .join('')}
           
           <p style="margin-top: 30px;">
-            <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/fairness/notes" 
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}${INTERNAL_OPS_HREF}"
                style="background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-              View Full Report
+              Open Internal Ops
             </a>
           </p>
         </div>
@@ -205,7 +206,7 @@ async function sendFairnessAlertEmail(note: any): Promise<void> {
               type: 'section',
               text: {
                 type: 'mrkdwn',
-                text: `*Fairness Alert for ${note.releaseVersion}*\n\n• Critical Findings: ${criticalFindings.length}\n• Moderate Findings: ${moderateFindings.length}\n• <${process.env.NEXT_PUBLIC_APP_URL}/admin/fairness/notes|View Full Report>`,
+                text: `*Fairness Alert for ${note.releaseVersion}*\n\n• Critical Findings: ${criticalFindings.length}\n• Moderate Findings: ${moderateFindings.length}\n• <${process.env.NEXT_PUBLIC_APP_URL}${INTERNAL_OPS_HREF}|Open Internal Ops>`,
               },
             },
           ],

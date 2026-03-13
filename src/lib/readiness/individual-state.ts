@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 
 import { db } from '@/db';
 import {
@@ -8,6 +8,7 @@ import {
   matchingProfiles,
   portfolioPublicationStates,
   profiles,
+  proofPacks,
   skills,
   volunteering,
 } from '@/db/schema';
@@ -137,6 +138,19 @@ type MatchingProfileRow = typeof matchingProfiles.$inferSelect | null;
 type IndividualProfileRow = typeof individualProfiles.$inferSelect | null;
 type ProfileRow = typeof profiles.$inferSelect | null;
 type UnknownRow = Record<string, unknown>;
+type ProofPackRow = typeof proofPacks.$inferSelect;
+type PortfolioCompletionProfileRow = Pick<
+  typeof profiles.$inferSelect,
+  'id' | 'displayName' | 'handle' | 'publicPortfolioState'
+> | null;
+type PortfolioCompletionIndividualRow = Pick<
+  typeof individualProfiles.$inferSelect,
+  'userId' | 'headline' | 'bio' | 'location' | 'values' | 'causes'
+> | null;
+type PortfolioCompletionMatchingRow = Pick<
+  typeof matchingProfiles.$inferSelect,
+  'profileId' | 'timezone' | 'desiredRoles' | 'workMode' | 'engagementType'
+> | null;
 
 const READINESS_EVENT_ACTIONS: Record<string, ReadinessAction> = {
   finish_safe_shell: {
@@ -456,6 +470,258 @@ function intersectsSkillSet(skillIds: Set<string>, candidateIds: Set<string>) {
   return false;
 }
 
+type PortfolioCompletionSnapshotInput = {
+  profile: PortfolioCompletionProfileRow;
+  individual: PortfolioCompletionIndividualRow;
+  matching: PortfolioCompletionMatchingRow;
+  contextCount: number;
+  skillsCount: number;
+  proofCount: number;
+  proofArtifactCount: number;
+  anchoredProofPackCount: number;
+  acceptedVerificationCount: number;
+  publicProofCount: number;
+  publishedPortfolio: boolean;
+};
+
+function buildPortfolioCompletionSnapshotInput(input: PortfolioCompletionSnapshotInput) {
+  return {
+    displayName: input.profile?.displayName ?? null,
+    handle: input.profile?.handle ?? null,
+    headline: input.individual?.headline ?? null,
+    bio: input.individual?.bio ?? null,
+    location: input.individual?.location ?? null,
+    timezone: input.matching?.timezone ?? null,
+    desiredRolesCount: Array.isArray(input.matching?.desiredRoles)
+      ? input.matching.desiredRoles.length
+      : 0,
+    workPreference: input.matching?.workMode ?? null,
+    engagementType: input.matching?.engagementType ?? null,
+    contextCount: input.contextCount,
+    valuesCount: Array.isArray(input.individual?.values) ? input.individual.values.length : 0,
+    causesCount: Array.isArray(input.individual?.causes) ? input.individual.causes.length : 0,
+    skillsCount: input.skillsCount,
+    proofCount: input.proofCount,
+    proofArtifactCount: input.proofArtifactCount,
+    anchoredProofPackCount: input.anchoredProofPackCount,
+    acceptedVerificationCount: input.acceptedVerificationCount,
+    publicProofCount: input.publicProofCount,
+    publishedPortfolio: input.publishedPortfolio,
+  };
+}
+
+function incrementOwnerCount(map: Map<string, number>, ownerId: string) {
+  map.set(ownerId, (map.get(ownerId) ?? 0) + 1);
+}
+
+function countRowsByUserId<T extends { userId: string | null | undefined }>(
+  rows: T[]
+): Map<string, number> {
+  const counts = new Map<string, number>();
+
+  for (const row of rows) {
+    if (typeof row.userId !== 'string' || row.userId.length === 0) {
+      continue;
+    }
+    incrementOwnerCount(counts, row.userId);
+  }
+
+  return counts;
+}
+
+export async function getIndividualPortfolioReadinessMap(
+  profileIds: string[]
+): Promise<Map<string, boolean>> {
+  const uniqueProfileIds = Array.from(
+    new Set(profileIds.filter((profileId): profileId is string => typeof profileId === 'string'))
+  );
+
+  if (uniqueProfileIds.length === 0) {
+    return new Map();
+  }
+
+  const queryDb = db as any;
+  const [
+    profileRows,
+    individualRows,
+    matchingRows,
+    experienceRows,
+    educationRows,
+    volunteeringRows,
+    publicationStateRows,
+    packRows,
+  ] = await Promise.all([
+    safeSelectRows(() =>
+      queryDb.query?.profiles?.findMany?.({
+        where: inArray(profiles.id, uniqueProfileIds),
+        columns: {
+          id: true,
+          displayName: true,
+          handle: true,
+          publicPortfolioState: true,
+        },
+      })
+    ),
+    safeSelectRows(() =>
+      queryDb.query?.individualProfiles?.findMany?.({
+        where: inArray(individualProfiles.userId, uniqueProfileIds),
+        columns: {
+          userId: true,
+          headline: true,
+          bio: true,
+          location: true,
+          values: true,
+          causes: true,
+        },
+      })
+    ),
+    safeSelectRows(() =>
+      queryDb.query?.matchingProfiles?.findMany?.({
+        where: inArray(matchingProfiles.profileId, uniqueProfileIds),
+        columns: {
+          profileId: true,
+          timezone: true,
+          desiredRoles: true,
+          workMode: true,
+          engagementType: true,
+        },
+      })
+    ),
+    safeSelectRows(() =>
+      queryDb.query?.experiences?.findMany?.({
+        where: inArray(experiences.userId, uniqueProfileIds),
+        columns: { userId: true },
+      })
+    ),
+    safeSelectRows(() =>
+      queryDb.query?.education?.findMany?.({
+        where: inArray(education.userId, uniqueProfileIds),
+        columns: { userId: true },
+      })
+    ),
+    safeSelectRows(() =>
+      queryDb.query?.volunteering?.findMany?.({
+        where: inArray(volunteering.userId, uniqueProfileIds),
+        columns: { userId: true },
+      })
+    ),
+    safeSelectRows(() =>
+      queryDb.query?.portfolioPublicationStates?.findMany?.({
+        where: and(
+          eq(portfolioPublicationStates.subjectType, 'individual_profile'),
+          inArray(portfolioPublicationStates.subjectId, uniqueProfileIds)
+        ),
+        columns: {
+          subjectId: true,
+          effectiveState: true,
+        },
+      })
+    ),
+    safeSelectRows(() =>
+      queryDb.query?.proofPacks?.findMany?.({
+        where: and(
+          eq(proofPacks.ownerType, 'individual_profile'),
+          inArray(proofPacks.ownerId, uniqueProfileIds),
+          isNull(proofPacks.deletedAt)
+        ),
+        columns: {
+          ownerId: true,
+          primarySubjectType: true,
+          primarySubjectId: true,
+        },
+      })
+    ),
+  ]);
+
+  const profileById = new Map(
+    (
+      profileRows as Array<
+        Pick<typeof profiles.$inferSelect, 'id' | 'displayName' | 'handle' | 'publicPortfolioState'>
+      >
+    ).map((row) => [row.id, row])
+  );
+  const individualByUserId = new Map(
+    (
+      individualRows as Array<
+        Pick<
+          typeof individualProfiles.$inferSelect,
+          'userId' | 'headline' | 'bio' | 'location' | 'values' | 'causes'
+        >
+      >
+    ).map((row) => [row.userId, row])
+  );
+  const matchingByProfileId = new Map(
+    (
+      matchingRows as Array<
+        Pick<
+          typeof matchingProfiles.$inferSelect,
+          'profileId' | 'timezone' | 'desiredRoles' | 'workMode' | 'engagementType'
+        >
+      >
+    ).map((row) => [row.profileId, row])
+  );
+  const publicationStateBySubjectId = new Map(
+    (
+      publicationStateRows as Array<
+        Pick<typeof portfolioPublicationStates.$inferSelect, 'subjectId' | 'effectiveState'>
+      >
+    ).map((row) => [row.subjectId, row.effectiveState])
+  );
+
+  const contextCountByUserId = new Map<string, number>();
+  for (const counts of [
+    countRowsByUserId(experienceRows as Array<{ userId: string | null }>),
+    countRowsByUserId(educationRows as Array<{ userId: string | null }>),
+    countRowsByUserId(volunteeringRows as Array<{ userId: string | null }>),
+  ]) {
+    for (const [userId, count] of counts.entries()) {
+      contextCountByUserId.set(userId, (contextCountByUserId.get(userId) ?? 0) + count);
+    }
+  }
+
+  const anchoredPackCountByOwnerId = new Map<string, number>();
+  for (const pack of packRows as Array<
+    Pick<ProofPackRow, 'ownerId' | 'primarySubjectType' | 'primarySubjectId'>
+  >) {
+    if (typeof pack.ownerId !== 'string' || !hasPrimaryAnchorContext(pack)) {
+      continue;
+    }
+    incrementOwnerCount(anchoredPackCountByOwnerId, pack.ownerId);
+  }
+
+  const readinessByProfileId = new Map<string, boolean>();
+  for (const profileId of uniqueProfileIds) {
+    const profile = profileById.get(profileId) ?? null;
+    const individual = individualByUserId.get(profileId) ?? null;
+    const matching = matchingByProfileId.get(profileId) ?? null;
+    const publicationEffectiveState =
+      publicationStateBySubjectId.get(profileId) ?? profile?.publicPortfolioState ?? null;
+    const publishedPortfolio =
+      typeof publicationEffectiveState === 'string' &&
+      isAccessiblePublicPortfolioState(publicationEffectiveState as any);
+    const anchoredProofPackCount = anchoredPackCountByOwnerId.get(profileId) ?? 0;
+    const completionState = evaluateIndividualProfileCompletion(
+      buildPortfolioCompletionSnapshotInput({
+        profile,
+        individual,
+        matching,
+        contextCount: contextCountByUserId.get(profileId) ?? 0,
+        skillsCount: 0,
+        proofCount: anchoredProofPackCount,
+        proofArtifactCount: anchoredProofPackCount,
+        anchoredProofPackCount,
+        acceptedVerificationCount: 0,
+        publicProofCount: 0,
+        publishedPortfolio,
+      })
+    );
+
+    readinessByProfileId.set(profileId, completionState.isPortfolioReady);
+  }
+
+  return readinessByProfileId;
+}
+
 export async function getIndividualReadinessState(
   userId: string
 ): Promise<IndividualReadinessStateSnapshot> {
@@ -625,30 +891,24 @@ export async function getIndividualReadinessState(
     typeof publicationEffectiveState === 'string' &&
     isAccessiblePublicPortfolioState(publicationEffectiveState as any);
 
-  const completionState = evaluateIndividualProfileCompletion({
-    displayName: profile?.displayName ?? null,
-    handle: profile?.handle ?? null,
-    headline: individual?.headline ?? null,
-    bio: individual?.bio ?? null,
-    location: individual?.location ?? null,
-    timezone: matching?.timezone ?? null,
-    desiredRolesCount: Array.isArray(matching?.desiredRoles) ? matching.desiredRoles.length : 0,
-    workPreference: matching?.workMode ?? null,
-    engagementType: matching?.engagementType ?? null,
-    contextCount,
-    valuesCount: Array.isArray(individual?.values) ? individual.values.length : 0,
-    causesCount: Array.isArray(individual?.causes) ? individual.causes.length : 0,
-    skillsCount,
-    proofCount: anchoredAggregates.length,
-    proofArtifactCount: anchoredAggregates.reduce(
-      (total, aggregate) => total + aggregate.items.length,
-      0
-    ),
-    anchoredProofPackCount: anchoredAggregates.length,
-    acceptedVerificationCount,
-    publicProofCount,
-    publishedPortfolio,
-  });
+  const completionState = evaluateIndividualProfileCompletion(
+    buildPortfolioCompletionSnapshotInput({
+      profile,
+      individual,
+      matching,
+      contextCount,
+      skillsCount,
+      proofCount: anchoredAggregates.length,
+      proofArtifactCount: anchoredAggregates.reduce(
+        (total, aggregate) => total + aggregate.items.length,
+        0
+      ),
+      anchoredProofPackCount: anchoredAggregates.length,
+      acceptedVerificationCount,
+      publicProofCount,
+      publishedPortfolio,
+    })
+  );
 
   const hasDisplayName = hasContent(profile?.displayName);
   const hasHandle = hasContent(profile?.handle);

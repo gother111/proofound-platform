@@ -33,30 +33,34 @@ describe('middleware launch archive behavior', () => {
   });
 
   it('returns 410 for archived admin analytics and fairness APIs', async () => {
-    const analyticsResponse = await middleware(
-      new NextRequest('http://localhost/api/admin/analytics/overview', { method: 'GET' })
-    );
-    const analyticsBody = await analyticsResponse.json();
+    const archivedPaths = [
+      'http://localhost/api/admin/analytics/overview',
+      'http://localhost/api/admin/fairness/notes',
+      'http://localhost/api/admin/users/user-1/role',
+      'http://localhost/api/admin/organizations',
+    ];
 
-    expect(analyticsResponse.status).toBe(410);
-    expect(analyticsBody.surface).toBe('Admin API');
+    for (const path of archivedPaths) {
+      const response = await middleware(new NextRequest(path, { method: 'GET' }));
+      const body = await response.json();
 
-    const fairnessResponse = await middleware(
-      new NextRequest('http://localhost/api/admin/fairness/notes', { method: 'GET' })
-    );
-    const fairnessBody = await fairnessResponse.json();
-
-    expect(fairnessResponse.status).toBe(410);
-    expect(fairnessBody.surface).toBe('Admin API');
+      expect(response.status).toBe(410);
+      expect(body.surface).toBe('Admin API');
+      expect(body.launchState).toBe('non_launch');
+    }
   });
 
   it('still passes through preserved internal ops admin endpoints', async () => {
     const preservedPaths = [
+      'http://localhost/api/admin/audit?limit=10',
       'http://localhost/api/admin/verification/linkedin/queue',
+      'http://localhost/api/admin/verification/linkedin/user-1/review',
       'http://localhost/api/admin/moderation/queue',
+      'http://localhost/api/admin/moderation/action',
       'http://localhost/api/admin/metrics/rollout',
       'http://localhost/api/admin/feature-flags',
       'http://localhost/api/admin/organizations/org-1/audit?reason=test',
+      'http://localhost/api/admin/organizations/org-1/verify',
     ];
 
     for (const path of preservedPaths) {

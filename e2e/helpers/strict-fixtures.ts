@@ -30,6 +30,11 @@ export interface StrictRuntimeAssignment {
   managed: boolean;
 }
 
+export interface StrictSkillRequirement {
+  id: string;
+  level: number;
+}
+
 export interface StrictRuntimeMatch {
   id: string;
   assignmentId: string;
@@ -309,6 +314,7 @@ export async function createRuntimeAssignment(
   options?: {
     role?: string;
     status?: 'draft' | 'active' | 'paused' | 'closed';
+    mustHaveSkills?: StrictSkillRequirement[];
   }
 ): Promise<StrictRuntimeAssignment> {
   const supabase = adminClient();
@@ -324,7 +330,7 @@ export async function createRuntimeAssignment(
       status,
       values_required: [],
       cause_tags: [],
-      must_have_skills: [],
+      must_have_skills: options?.mustHaveSkills ?? [],
       nice_to_have_skills: [],
       location_mode: 'remote',
       country: 'US',
@@ -389,6 +395,18 @@ export async function createRuntimeMatch(
   profileId: string
 ): Promise<StrictRuntimeMatch> {
   const supabase = adminClient();
+  const { data: assignmentRecord, error: assignmentLookupError } = await supabase
+    .from('assignments')
+    .select('org_id')
+    .eq('id', assignmentId)
+    .single();
+
+  if (assignmentLookupError || !assignmentRecord?.org_id) {
+    throw new Error(
+      `Failed to resolve strict runtime assignment org: ${assignmentLookupError?.message ?? 'unknown error'}`
+    );
+  }
+
   const { data: match, error: matchError } = await supabase
     .from('matches')
     .upsert(
@@ -431,11 +449,310 @@ export async function createRuntimeMatch(
 
   fixture.matchIds.add(match.id);
 
+  const { error: reviewStateError } = await supabase.from('match_review_states').upsert(
+    {
+      match_id: match.id,
+      assignment_id: match.assignment_id,
+      profile_id: match.profile_id,
+      org_id: assignmentRecord.org_id,
+      review_stage: 'blind_review',
+      reveal_scope: 'blind',
+    },
+    { onConflict: 'match_id' }
+  );
+
+  if (reviewStateError) {
+    throw new Error(
+      `Failed to seed strict runtime match review state: ${reviewStateError.message}`
+    );
+  }
+
   return {
     id: match.id,
     assignmentId: match.assignment_id,
     profileId: match.profile_id,
   };
+}
+
+export async function seedPortfolioReadyCandidate(
+  user: StrictRuntimeUser,
+  options?: {
+    skillRequirements?: StrictSkillRequirement[];
+    verifierProfileId?: string;
+  }
+): Promise<{ skillRequirements: StrictSkillRequirement[] }> {
+  const supabase = adminClient();
+  const nowIso = new Date().toISOString();
+  const skillRequirements = options?.skillRequirements ?? [
+    { id: 'strict.skill.1', level: 3 },
+    { id: 'strict.skill.2', level: 3 },
+    { id: 'strict.skill.3', level: 2 },
+  ];
+
+  const { data: experienceRow, error: experienceError } = await supabase
+    .from('experiences')
+    .insert({
+      user_id: user.id,
+      title: 'Strict matching context',
+      organization_name: 'Strict Candidate Org',
+      organization_type: 'company',
+      org_description: 'A seeded context to verify the MVP shortlist corridor.',
+      duration: '2024-2026',
+      start_date: '2024-01-01',
+      outcomes: 'Built proof-backed systems and operational launch artifacts.',
+      projects: 'Owned proof-first onboarding and trust workflows.',
+      measured_outcomes: [],
+      project_entries: [],
+      colleagues: 'Worked closely with cross-functional reviewers.',
+      achievements: 'Shipped a verified proof portfolio used in strict tests.',
+      verified: true,
+    })
+    .select('id')
+    .single();
+
+  if (experienceError || !experienceRow?.id) {
+    throw new Error(
+      `Failed to seed strict candidate experience context: ${experienceError?.message ?? 'unknown error'}`
+    );
+  }
+
+  const { error: matchingProfileError } = await supabase.from('matching_profiles').upsert(
+    {
+      profile_id: user.id,
+      timezone: 'Europe/Stockholm',
+      desired_roles: ['Proof Systems Lead'],
+      work_mode: 'remote',
+      engagement_type: 'contract_consulting',
+      country: 'SE',
+      city: 'Stockholm',
+      availability_earliest: '2026-04-01',
+      availability_latest: '2026-06-01',
+      comp_min: 90000,
+      comp_max: 130000,
+      currency: 'USD',
+      values_tags: ['integrity'],
+      cause_tags: ['education'],
+    },
+    { onConflict: 'profile_id' }
+  );
+
+  if (matchingProfileError) {
+    throw new Error(
+      `Failed to seed strict candidate matching profile: ${matchingProfileError.message}`
+    );
+  }
+
+  const { data: skillRows, error: skillError } = await supabase
+    .from('skills')
+    .insert(
+      skillRequirements.map((requirement, index) => ({
+        profile_id: user.id,
+        skill_id: requirement.id,
+        level: requirement.level,
+        months_experience: 24 + index * 6,
+        evidence_strength: '0.9',
+        recency_multiplier: '1.0',
+        impact_score: '0.8',
+        last_used_at: nowIso,
+        relevance: 'current',
+      }))
+    )
+    .select('id, skill_id');
+
+  if (skillError || !skillRows || skillRows.length !== skillRequirements.length) {
+    throw new Error(
+      `Failed to seed strict candidate skills: ${skillError?.message ?? 'unknown error'}`
+    );
+  }
+
+  const { data: insertedArtifacts, error: artifactError } = await supabase
+    .from('proof_artifacts')
+    .insert(
+      skillRows.map((skillRow, index) => ({
+        owner_type: 'individual_profile',
+        owner_id: user.id,
+        subject_type: 'skill',
+        subject_id: skillRow.id,
+        artifact_kind: 'link',
+        lifecycle_state: 'active',
+        title: `Strict proof artifact ${index + 1}`,
+        description: 'Seeded proof artifact for strict shortlist verification.',
+        source_url: `https://example.com/strict-proof-${index + 1}`,
+        activated_at: nowIso,
+        issued_at: nowIso,
+        visibility: 'public',
+        reveal_gate: 'none',
+        metadata: {
+          imported_from: 'strict_fixture',
+          proof_scope: 'mvp_verification_rerun',
+          skill_key: skillRow.skill_id,
+        },
+        created_at: nowIso,
+        updated_at: nowIso,
+      }))
+    )
+    .select('id');
+
+  if (
+    artifactError ||
+    !insertedArtifacts ||
+    insertedArtifacts.length !== skillRequirements.length
+  ) {
+    throw new Error(
+      `Failed to seed strict candidate proof artifacts: ${artifactError?.message ?? 'unknown error'}`
+    );
+  }
+
+  const packId = randomUUID();
+  const { error: proofPackError } = await supabase.from('proof_packs').insert({
+    id: packId,
+    owner_type: 'individual_profile',
+    owner_id: user.id,
+    pack_kind: 'verification_bundle',
+    primary_subject_type: 'experience',
+    primary_subject_id: experienceRow.id,
+    lifecycle_state: 'published',
+    title: 'Strict seeded Proof Pack',
+    summary: 'Anchored proof pack used to verify shortlist and privacy gates.',
+    context_json: {
+      importedFrom: 'strict_fixture',
+      contextType: 'experience',
+      contextId: experienceRow.id,
+    },
+    evidence_summary: 'Three recent skill-linked proof artifacts.',
+    outcomes_summary: 'Portfolio-ready candidate seed for strict org lifecycle verification.',
+    visibility: 'public',
+    reveal_gate: 'none',
+    created_by: user.id,
+    verification_status: options?.verifierProfileId ? 'verified' : 'unverified',
+    freshness_state: 'fresh',
+    freshness_evaluated_at: nowIso,
+    last_verified_at: options?.verifierProfileId ? nowIso : null,
+    last_refreshed_at: nowIso,
+    portability_meta: {
+      completenessState: 'context_anchored',
+      importedFrom: 'strict_fixture',
+    },
+    metadata: {
+      imported_from: 'strict_fixture',
+      candidate_evidence: true,
+      public_signal: true,
+    },
+    published_at: nowIso,
+    created_at: nowIso,
+    updated_at: nowIso,
+  });
+
+  if (proofPackError) {
+    throw new Error(`Failed to seed strict candidate proof pack: ${proofPackError.message}`);
+  }
+
+  const { error: proofPackItemError } = await supabase.from('proof_pack_items').insert(
+    insertedArtifacts.map((artifact, index) => ({
+      pack_id: packId,
+      artifact_id: artifact.id,
+      position: index,
+      included_fields: ['title', 'description', 'sourceUrl', 'issuedAt'],
+      created_at: nowIso,
+      updated_at: nowIso,
+    }))
+  );
+
+  if (proofPackItemError) {
+    throw new Error(
+      `Failed to seed strict candidate proof pack items: ${proofPackItemError.message}`
+    );
+  }
+
+  if (options?.verifierProfileId) {
+    const { error: verificationError } = await supabase.from('verification_records').insert({
+      owner_type: 'individual_profile',
+      owner_id: user.id,
+      subject_type: 'skill',
+      subject_id: skillRows[0]?.id,
+      proof_artifact_id: insertedArtifacts[0]?.id ?? null,
+      verification_slot: 'skill.attestation',
+      verification_kind: 'skill_attestation_manager',
+      status: 'verified',
+      verifier_principal_type: 'user_account',
+      verifier_class: 'authenticated_manager',
+      verifier_profile_id: options.verifierProfileId,
+      integrity_status: 'clear',
+      dispute_state: 'none',
+      requested_at: nowIso,
+      completed_at: nowIso,
+      verified_at: nowIso,
+      metadata: {
+        imported_from: 'strict_fixture',
+      },
+      created_at: nowIso,
+      updated_at: nowIso,
+    });
+
+    if (verificationError) {
+      throw new Error(
+        `Failed to seed strict candidate verification record: ${verificationError.message}`
+      );
+    }
+  }
+
+  const { error: consentError } = await supabase.from('consent_obligations').upsert(
+    {
+      profile_id: user.id,
+      consent_type: 'ml_matching',
+      state: 'active',
+      metadata: {
+        imported_from: 'strict_fixture',
+      },
+    },
+    { onConflict: 'profile_id,consent_type' }
+  );
+
+  if (consentError) {
+    throw new Error(
+      `Failed to seed strict candidate matching consent obligation: ${consentError.message}`
+    );
+  }
+
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .update({
+      public_portfolio_state: 'public_noindex',
+      updated_at: nowIso,
+    })
+    .eq('id', user.id);
+
+  if (profileError) {
+    throw new Error(`Failed to update strict candidate profile shell: ${profileError.message}`);
+  }
+
+  const { error: publicationError } = await supabase.from('portfolio_publication_states').upsert(
+    {
+      subject_type: 'individual_profile',
+      subject_id: user.id,
+      requested_state: 'public_noindex',
+      effective_state: 'public_noindex',
+      publication_state: 'public_noindex',
+      indexing_state: 'noindex',
+      robots_state: 'noindex_nofollow',
+      sitemap_state: 'excluded',
+      reason_codes: [],
+      metadata: {
+        imported_from: 'strict_fixture',
+      },
+      last_computed_at: nowIso,
+      updated_at: nowIso,
+    },
+    { onConflict: 'subject_type,subject_id' }
+  );
+
+  if (publicationError) {
+    throw new Error(
+      `Failed to seed strict candidate portfolio publication state: ${publicationError.message}`
+    );
+  }
+
+  return { skillRequirements };
 }
 
 export async function createRuntimeConversation(
@@ -498,7 +815,12 @@ export async function loginWithUi(page: Page, user: StrictRuntimeUser): Promise<
 }
 
 export async function getCsrfToken(request: APIRequestContext): Promise<string> {
-  const response = await request.get('/api/csrf-token');
+  const response = await request.get(`/api/csrf-token?ts=${Date.now()}`, {
+    headers: {
+      'cache-control': 'no-store',
+      pragma: 'no-cache',
+    },
+  });
   if (!response.ok()) {
     throw new Error(`Failed to fetch CSRF token: HTTP ${response.status()}`);
   }
@@ -575,6 +897,61 @@ export async function cleanupFixtureData(fixture: StrictFixtureState): Promise<v
   await deleteByIds('matches', 'id', [...fixture.matchIds]);
   await deleteByIds('assignments', 'id', [...fixture.assignmentIds]);
   await deleteByIds('organizations', 'id', [...fixture.orgIds]);
+
+  const fixtureUserIds = [...fixture.userIds].filter(
+    (userId) => !managedProviderUserId || userId !== managedProviderUserId
+  );
+  if (fixtureUserIds.length > 0) {
+    const { error: publicationError } = await supabase
+      .from('portfolio_publication_states')
+      .delete()
+      .eq('subject_type', 'individual_profile')
+      .in('subject_id', fixtureUserIds);
+    if (publicationError) {
+      console.warn(
+        `[strict-fixtures] failed to clean portfolio_publication_states: ${publicationError.message}`
+      );
+    }
+
+    const { error: verificationError } = await supabase
+      .from('verification_records')
+      .delete()
+      .eq('owner_type', 'individual_profile')
+      .in('owner_id', fixtureUserIds);
+    if (verificationError) {
+      console.warn(
+        `[strict-fixtures] failed to clean verification_records: ${verificationError.message}`
+      );
+    }
+
+    const { error: proofPackError } = await supabase
+      .from('proof_packs')
+      .delete()
+      .eq('owner_type', 'individual_profile')
+      .in('owner_id', fixtureUserIds);
+    if (proofPackError) {
+      console.warn(`[strict-fixtures] failed to clean proof_packs: ${proofPackError.message}`);
+    }
+
+    const { error: artifactError } = await supabase
+      .from('proof_artifacts')
+      .delete()
+      .eq('owner_type', 'individual_profile')
+      .in('owner_id', fixtureUserIds);
+    if (artifactError) {
+      console.warn(`[strict-fixtures] failed to clean proof_artifacts: ${artifactError.message}`);
+    }
+
+    const { error: consentError } = await supabase
+      .from('consent_obligations')
+      .delete()
+      .in('profile_id', fixtureUserIds);
+    if (consentError) {
+      console.warn(
+        `[strict-fixtures] failed to clean consent_obligations: ${consentError.message}`
+      );
+    }
+  }
 
   for (const userId of fixture.userIds) {
     if (managedProviderUserId && userId === managedProviderUserId) {

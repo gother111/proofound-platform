@@ -164,9 +164,18 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
     const verificationStatusResponse = await page.request.get('/api/verification/status');
     expect(verificationStatusResponse.ok()).toBeTruthy();
     const verificationStatusPayload = (await verificationStatusResponse.json()) as {
-      verificationStatus?: string;
+      workflow?: { state?: string | null } | null;
+      channels?: {
+        workEmail?: { state?: string };
+        linkedin?: { state?: string };
+      };
     };
-    expect(typeof verificationStatusPayload.verificationStatus).toBe('string');
+    expect(typeof verificationStatusPayload.channels?.workEmail?.state).toBe('string');
+    expect(typeof verificationStatusPayload.channels?.linkedin?.state).toBe('string');
+    expect(
+      verificationStatusPayload.workflow == null ||
+        typeof verificationStatusPayload.workflow.state === 'string'
+    ).toBeTruthy();
   });
 
   test('I-10..I-14 matching preferences, overview, and interest action are real', async ({
@@ -402,12 +411,13 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
     }
   });
 
-  test('I-18..I-20 private check-ins, privacy, and account controls are real', async ({ page }) => {
+  test('I-18..I-20 privacy-safe settings, account controls, and archived routes are real', async ({
+    page,
+  }) => {
     await loginWithUi(page, individualUser);
 
-    await page.goto('/app/i/zen');
-    await expect(page.getByRole('heading', { name: 'Private check-ins' })).toBeVisible();
-    await expect(page.getByText(/optional private space for brief check-ins/i)).toBeVisible();
+    const archivedZenResponse = await page.request.get('/app/i/zen');
+    expect(archivedZenResponse.status()).toBe(404);
 
     let updateVisibilityResponse = await apiPostJson(page.request, '/api/profile/visibility', {
       location: 'private',

@@ -4,7 +4,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
-import { LAUNCH_MONITOR_DEFINITIONS, REQUIRED_SAFE_MODE_FLAGS } from '../src/lib/launch/contracts';
+import {
+  LAUNCH_MONITOR_DEFINITIONS,
+  LAUNCH_SMOKE_FRESHNESS_THRESHOLD_MINUTES,
+  REQUIRED_SAFE_MODE_FLAGS,
+} from '../src/lib/launch/contracts';
 import {
   getLaunchSmokeAgeMinutes,
   hasPassingLaunchSmokeArtifact,
@@ -78,7 +82,7 @@ function ensureLaunchSmokeArtifact() {
   if (!hasPassingLaunchSmokeArtifact(artifact)) {
     fail('launch smoke artifact reports failing checks');
   }
-  if (getLaunchSmokeAgeMinutes(artifact) > 24 * 60) {
+  if (getLaunchSmokeAgeMinutes(artifact) > LAUNCH_SMOKE_FRESHNESS_THRESHOLD_MINUTES) {
     fail('launch smoke artifact is stale');
   }
 }
@@ -120,6 +124,11 @@ async function checkLaunchStatus() {
   }
 
   const data = await response.json();
+  if (!data.ok || data.readinessState !== 'ready') {
+    fail(
+      `launch-status is not ready (ok=${String(data.ok)}, readinessState=${String(data.readinessState)})`
+    );
+  }
   if (data.summary?.expectedMonitors !== LAUNCH_MONITOR_DEFINITIONS.length) {
     fail('launch-status endpoint did not report the full monitor contract');
   }

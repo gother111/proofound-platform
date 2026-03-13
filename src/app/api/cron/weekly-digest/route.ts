@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { getCronAuthStatus } from '@/lib/api/cron-auth';
 import { processWeeklyDigests } from '@/lib/notifications/weekly-digest';
 import { log } from '@/lib/log';
 
@@ -8,12 +9,11 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
+    const authStatus = getCronAuthStatus(request);
 
-    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    if (authStatus !== 'authorized') {
       log.warn('weekly-digest.cron.unauthorized', {
-        authHeader: authHeader ? 'present' : 'missing',
+        authHeader: request.headers.get('authorization') ? 'present' : 'missing',
       });
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
