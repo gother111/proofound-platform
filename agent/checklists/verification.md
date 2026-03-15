@@ -15,7 +15,7 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Unit tests: `npm run test` (source: package.json)
 - Build: `npm run build` (source: package.json)
 - Practical sequencing note:
-  - Run `npm run typecheck` and `npm run build` sequentially, not in parallel, because both touch `.next/types` and can produce false missing-file failures when they overlap.
+  - Run `npm run typecheck` and `npm run build` sequentially, not in parallel, because both write under `.next/` and parallel runs can create avoidable verification noise.
 - If changes touch `/api/mobile/v1/*` routes, run focused contract tests in addition to full unit tests:
   - `npm run test -- tests/api/mobile-bootstrap-route.test.ts tests/api/mobile-device-token-route.test.ts`
 - If changes touch auth, RLS, policies, migrations, or privacy-sensitive API contracts:

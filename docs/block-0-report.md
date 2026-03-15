@@ -2,18 +2,23 @@
 
 ## objective
 
-Create a durable Codex execution harness inside the repo so later long-running sessions can resume safely, reuse current evidence, and avoid restarting discovery from scratch.
+Refresh the durable Codex resume harness so later sessions resume from the 2026-03-14 evidence baseline, preserve the historical Block 1 through Block 7 reports, and stop relying on the stale 2026-03-13 resume state.
 
 ## commands run
 
-- `date '+%Y-%m-%d %H:%M:%S %Z'`
 - `date -u '+%Y-%m-%dT%H:%M:%SZ'`
-- `git status --short`
-- `rg --files -g 'AGENTS.md' -g 'docs/codex-progress.md' -g 'docs/block-*-report.md' -g 'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md' -g 'PRD_for_a_web_platform_MVP.aligned-rewrite.2026-03-11.md' -g 'PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md' -g 'LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md' -g 'Proofound_Project_Specification_2026-03-11.md' -g 'proofound-hard-audit-2026-03-13-rerun.md' -g 'project/Implement.md' -g 'project/Prompt.md' -g 'project/Architecture.md' -g 'project/Plans.md' -g 'project/Documentation.md' -g 'agent/runbooks/setup.md' -g 'agent/checklists/preflight.md' -g 'agent/checklists/verification.md'`
-- Targeted `rg` and `sed` reads across the locked authority stack, the verification docs, and `docs/proofound-hard-audit-2026-03-13-rerun.md`
+- `rg --files docs | sort`
+- `ls -1`
+- `rg --files -g 'AGENTS.md' -g 'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md' -g 'PRD_for_a_web_platform_MVP.aligned-rewrite.2026-03-11.md' -g 'PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md' -g 'LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md' -g 'Proofound_Project_Specification_2026-03-11.md' -g 'proofound-hard-audit-2026-03-14-rerun.md'`
+- `sed -n '1,220p' docs/codex-progress.md`
+- `sed -n '1,220p' docs/verification-checklist.md`
+- `sed -n '1,220p' docs/block-0-report.md`
+- `sed -n '1,260p' docs/block-7-report.md`
+- `sed -n '1,320p' docs/proofound-hard-audit-2026-03-14-rerun.md`
+- `rg -n "proof-first|Proof Pack|anchor|blind|reveal|candidate consent|assignment|internal review|publish|interview|decision|hire|engagement verification|export|delete|audit" Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md PRD_for_a_web_platform_MVP.aligned-rewrite.2026-03-11.md PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md Proofound_Project_Specification_2026-03-11.md`
+- `npm run docs:freshness`
 - `npm run lint`
 - `npm run typecheck`
-- `npm run docs:freshness`
 - `git diff --name-only -- docs/codex-progress.md docs/verification-checklist.md docs/block-0-report.md`
 - `git status --short -- docs/codex-progress.md docs/verification-checklist.md docs/block-0-report.md`
 
@@ -25,13 +30,11 @@ Create a durable Codex execution harness inside the repo so later long-running s
 
 ## tests run
 
+- `npm run docs:freshness` -> PASS in warning mode with 16 orphan-doc warnings for the block reports, resume harness docs, and recent audit reruns already missing from the docs registry
 - `npm run lint` -> PASS with 2 existing warnings about raw `<img>` usage in landing components
-- `npm run typecheck` -> PASS
-- `npm run docs:freshness` -> PASS in warning mode with 3 pre-existing orphan audit-doc warnings:
-  - `docs/proofound-hard-audit-2026-03-12-rerun-2.md`
-  - `docs/proofound-hard-audit-2026-03-12-rerun.md`
-  - `docs/proofound-hard-audit-2026-03-12.md`
-- Diff sanity check -> PASS, this block stayed docs-only
+- `npm run typecheck` -> PASS under Node `v20.20.0`
+- `git diff --name-only -- docs/codex-progress.md docs/verification-checklist.md docs/block-0-report.md` -> PASS, only the three required docs files changed
+- `git status --short -- docs/codex-progress.md docs/verification-checklist.md docs/block-0-report.md` -> PASS, only the three required docs files are modified in this block
 
 ## result
 
@@ -39,13 +42,14 @@ PASS
 
 ## remaining blockers
 
-- Organization publish corridor still returns `403` in strict runtime.
-- `launch-status` can still report green from stale smoke evidence.
-- Organization corridor remains slow and brittle under widened timeouts.
-- Proof Pack anchors are still nullable at the schema layer.
-- Verification semantics still mix canonical and legacy models.
-- Non-MVP API families remain in the active repo surface.
+- The docs registry still treats the block reports, resume harness docs, and recent audit reruns as orphan files during `npm run docs:freshness`.
+- Verification request transport still mixes canonical records with legacy request tables.
+- Compatibility-side verification channel semantics still keep the corridor short of fully canonical end-to-end behavior.
+- Non-MVP internal API families still exist in repo surface under `src/app/api/mobile/**`, `src/app/api/admin/**`, and `src/app/api/wellbeing/**`.
+- The authenticated org review, reveal, and explanation corridor remains evidence-incomplete in the 2026-03-14 audit pass.
+- `npm run typecheck` can fail when `.next/types/**` is missing.
+- `/api/monitoring/launch-status` exceeded the 25-second cold probe once even though retry passed.
 
 ## exact next recommended action
 
-Run Block 1: fix the org publish `403` in the strict launch corridor, rerun the full organization strict suite cleanly without workaround seeding, and update `docs/codex-progress.md` plus the next block report with fresh evidence.
+Run Block 8: finish migrating the live verification request corridor off legacy request tables while preserving the already-aligned proof-first onboarding, Proof Pack anchor enforcement, public portfolio summary/export gating, distinct engagement verification workflow, and launch-surface archive policy.
