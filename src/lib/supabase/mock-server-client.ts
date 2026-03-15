@@ -18,6 +18,81 @@ const getMockPlatformRole = (): 'platform_admin' | 'super_admin' | null => {
   return process.env.MOCK_ADMIN_MODE === 'true' ? 'platform_admin' : null;
 };
 
+const mockVerificationFeedSkills = [
+  {
+    id: '11111111-1111-4111-8111-111111111111',
+    profile_id: MOCK_USER_ID,
+    skill_code: '02.043.337.95036',
+    custom_skill_name: null,
+    level: 4,
+    relevance: 'current',
+    lastUsedAt: new Date().toISOString(),
+    skills_taxonomy: {
+      name_i18n: { en: 'Budget management' },
+      skills_l3: {
+        name_i18n: { en: 'Project Planning' },
+        skills_subcategories: {
+          name_i18n: { en: 'Management' },
+          skills_categories: {
+            name_i18n: { en: 'Functional Competencies' },
+          },
+        },
+      },
+    },
+  },
+  {
+    id: 'skill-1',
+    profile_id: MOCK_USER_ID,
+    skill_code: 'react',
+    custom_skill_name: null,
+    level: 4,
+    relevance: 'current',
+    lastUsedAt: new Date().toISOString(),
+    skills_taxonomy: {
+      name_i18n: { en: 'React' },
+      skills_l3: {
+        name_i18n: { en: 'Frontend Frameworks' },
+        skills_subcategories: {
+          name_i18n: { en: 'Frontend Development' },
+          skills_categories: {
+            name_i18n: { en: 'Tools & Technologies' },
+          },
+        },
+      },
+    },
+  },
+  {
+    id: 'skill-2',
+    profile_id: MOCK_USER_ID,
+    skill_code: 'typescript',
+    custom_skill_name: null,
+    level: 5,
+    relevance: 'current',
+    lastUsedAt: new Date().toISOString(),
+    skills_taxonomy: {
+      name_i18n: { en: 'TypeScript' },
+      skills_l3: {
+        name_i18n: { en: 'Frontend Frameworks' },
+        skills_subcategories: {
+          name_i18n: { en: 'Frontend Development' },
+          skills_categories: {
+            name_i18n: { en: 'Tools & Technologies' },
+          },
+        },
+      },
+    },
+  },
+];
+
+const mockVerificationFeedProfiles = [
+  {
+    id: MOCK_USER_ID,
+    display_name: 'Mock Individual',
+    handle: 'mock-individual',
+    avatar_url: null,
+  },
+];
+
 const mockSupabaseClient = {
   auth: {
     getSession: async () => ({
@@ -170,43 +245,26 @@ const mockSupabaseClient = {
 
       if (table === 'skills') {
         return {
-          eq: () => ({
+          eq: (_col: string, _value: any) => ({
             then: (resolve: any) => {
               resolve({
-                data: [
-                  {
-                    id: 'skill-1',
-                    profile_id: MOCK_USER_ID,
-                    skill_code: 'react',
-                    level: 4,
-                    relevance: 'current',
-                    lastUsedAt: new Date().toISOString(),
-                    taxonomy: {
-                      code: 'react',
-                      name_i18n: { en: 'React' },
-                      cat_id: 3,
-                      subcat_id: 10,
-                      l3_id: 100,
-                      slug: 'react',
-                    },
-                  },
-                  {
-                    id: 'skill-2',
-                    profile_id: MOCK_USER_ID,
-                    skill_code: 'typescript',
-                    level: 5,
-                    relevance: 'current',
-                    lastUsedAt: new Date().toISOString(),
-                    taxonomy: {
-                      code: 'typescript',
-                      name_i18n: { en: 'TypeScript' },
-                      cat_id: 3,
-                      subcat_id: 10,
-                      l3_id: 100,
-                      slug: 'typescript',
-                    },
-                  },
-                ],
+                data: mockVerificationFeedSkills,
+                error: null,
+              });
+            },
+          }),
+          in: (col: string, vals: any[]) => ({
+            then: (resolve: any) => {
+              resolve({
+                data: mockVerificationFeedSkills.filter((skill) => {
+                  if (col === 'id') {
+                    return vals.includes(skill.id);
+                  }
+                  if (col === 'skill_code') {
+                    return vals.includes(skill.skill_code);
+                  }
+                  return false;
+                }),
                 error: null,
               });
             },
@@ -388,6 +446,24 @@ const mockSupabaseClient = {
         },
         in: (col: string, vals: any[]) => {
           // Mock IN queries for context fetching
+          if (table === 'profiles' && col === 'id') {
+            return {
+              then: (resolve: any) =>
+                resolve({
+                  data: mockVerificationFeedProfiles.filter((profile) => vals.includes(profile.id)),
+                  error: null,
+                }),
+            };
+          }
+          if (table === 'impact_stories' && col === 'id') {
+            return {
+              then: (resolve: any) =>
+                resolve({
+                  data: [],
+                  error: null,
+                }),
+            };
+          }
           if (table === 'skills_categories' && col === 'cat_id') {
             return {
               then: (resolve: any) =>

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { impactStories, impactStoryVerificationRequests } from '@/db/schema';
+import { impactStories } from '@/db/schema';
 import { createImpactStory } from '@/actions/profile';
 
 const mockDbInsert = vi.hoisted(() => vi.fn());
@@ -8,6 +8,9 @@ const mockRequireAuth = vi.hoisted(() => vi.fn());
 const mockSendEmail = vi.hoisted(() => vi.fn());
 const mockCreateClient = vi.hoisted(() => vi.fn());
 const mockHeaders = vi.hoisted(() => vi.fn());
+const mockCreateCanonicalImpactVerificationRequest = vi.hoisted(() => vi.fn());
+const mockFindExistingCanonicalImpactVerificationRequest = vi.hoisted(() => vi.fn());
+const mockUpdateCanonicalImpactVerificationRequest = vi.hoisted(() => vi.fn());
 
 vi.mock('@/db', () => ({
   db: {
@@ -30,6 +33,14 @@ vi.mock('@/lib/supabase/server', () => ({
 
 vi.mock('next/headers', () => ({
   headers: mockHeaders,
+}));
+
+vi.mock('@/lib/verification/canonical-impact-requests', () => ({
+  createCanonicalImpactVerificationRequest: mockCreateCanonicalImpactVerificationRequest,
+  findExistingCanonicalImpactVerificationRequest:
+    mockFindExistingCanonicalImpactVerificationRequest,
+  mapCanonicalImpactVerificationRequestRecord: vi.fn((record: any) => record),
+  updateCanonicalImpactVerificationRequest: mockUpdateCanonicalImpactVerificationRequest,
 }));
 
 vi.mock('next/cache', () => ({
@@ -95,6 +106,17 @@ describe('createImpactStory verification email path', () => {
       },
     });
     mockHeaders.mockResolvedValue(new Headers());
+    mockFindExistingCanonicalImpactVerificationRequest.mockResolvedValue(null);
+    mockCreateCanonicalImpactVerificationRequest.mockResolvedValue({
+      record: {
+        id: 'verification-1',
+        integrityStatus: 'clear',
+        createdAt: new Date('2026-02-27T09:00:00.000Z'),
+      },
+      rawToken: 'a'.repeat(64),
+      expiresAt: new Date('2026-03-13T09:00:00.000Z'),
+    });
+    mockUpdateCanonicalImpactVerificationRequest.mockResolvedValue({});
   });
 
   function createProfileInsertMock({
@@ -103,7 +125,6 @@ describe('createImpactStory verification email path', () => {
     emailResult: { success: boolean; error?: string; id?: string };
   }) {
     const insertCalls: Array<{ table: unknown; payload: any }> = [];
-    const updateCalls: Array<{ table: unknown; payload: any }> = [];
 
     mockDbInsert.mockImplementation((table: unknown) => {
       return {
@@ -121,12 +142,6 @@ describe('createImpactStory verification email path', () => {
             };
           }
 
-          if (table === impactStoryVerificationRequests) {
-            return {
-              returning: vi.fn().mockResolvedValue([{ id: 'verification-1' }]),
-            };
-          }
-
           throw new Error(`Unexpected insert table: ${String(table)}`);
         }),
       };
@@ -134,7 +149,6 @@ describe('createImpactStory verification email path', () => {
 
     mockDbUpdate.mockImplementation((table: unknown) => ({
       set: vi.fn((payload: any) => {
-        updateCalls.push({ table, payload });
         return {
           where: vi.fn().mockResolvedValue(undefined),
         };
@@ -143,11 +157,11 @@ describe('createImpactStory verification email path', () => {
 
     mockSendEmail.mockResolvedValue(emailResult);
 
-    return { insertCalls, updateCalls };
+    return { insertCalls };
   }
 
   it('stores lowercase verifier email and marks verification as sent when email sends', async () => {
-    const { insertCalls, updateCalls } = createProfileInsertMock({
+    createProfileInsertMock({
       emailResult: { success: true, id: 'resend-id-1' },
     });
 
@@ -164,12 +178,12 @@ describe('createImpactStory verification email path', () => {
     expect(result.id).toBe('story-1');
     expect(result.verificationWarning).toBeNull();
 
-    expect(insertCalls[1]).toMatchObject({
-      table: impactStoryVerificationRequests,
-      payload: expect.objectContaining({
+    expect(mockCreateCanonicalImpactVerificationRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        impactStoryId: 'story-1',
         verifierEmail: 'verifier@example.com',
-      }),
-    });
+      })
+    );
 
     const sentArgs = vi.mocked(mockSendEmail).mock.calls[0];
     expect(sentArgs?.[0]).toMatchObject({
@@ -181,16 +195,18 @@ describe('createImpactStory verification email path', () => {
     )?.[0];
     expect(verificationUrl).toBeDefined();
 
-    expect(updateCalls).toHaveLength(1);
-    expect(updateCalls[0]).toMatchObject({
-      payload: expect.objectContaining({
-        emailSentAt: expect.any(Date),
-      }),
-    });
+    expect(mockUpdateCanonicalImpactVerificationRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestId: 'verification-1',
+        status: 'pending',
+        emailSent: true,
+        emailError: null,
+      })
+    );
   });
 
   it('returns warning and stores email error when verification email fails', async () => {
-    const { insertCalls, updateCalls } = createProfileInsertMock({
+    createProfileInsertMock({
       emailResult: { success: false, error: 'Resend unavailable' },
     });
 
@@ -207,20 +223,19 @@ describe('createImpactStory verification email path', () => {
     expect(result.id).toBe('story-1');
     expect(result.verificationWarning).toBe('Resend unavailable');
 
-    expect(insertCalls[1]).toMatchObject({
-      table: impactStoryVerificationRequests,
-      payload: expect.objectContaining({
+    expect(mockCreateCanonicalImpactVerificationRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        impactStoryId: 'story-1',
         verifierEmail: 'verifier@example.com',
-      }),
-    });
-
-    expect(updateCalls).toHaveLength(1);
-    expect(updateCalls[0]).toMatchObject({
-      payload: expect.objectContaining({
+      })
+    );
+    expect(mockUpdateCanonicalImpactVerificationRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestId: 'verification-1',
         status: 'failed',
         emailError: 'Resend unavailable',
-      }),
-    });
+      })
+    );
   });
 
   it('keeps impact story save and blocks self verification request creation', async () => {
@@ -245,10 +260,6 @@ describe('createImpactStory verification email path', () => {
             };
           }
 
-          if (table === impactStoryVerificationRequests) {
-            throw new Error('Verification insert should not be called for self verification');
-          }
-
           throw new Error(`Unexpected insert table: ${String(table)}`);
         }),
       };
@@ -266,6 +277,7 @@ describe('createImpactStory verification email path', () => {
     expect(result.id).toBe('story-self');
     expect(result.verificationWarning).toMatch(/self-verification requests are not allowed/i);
     expect(insertCalls).toHaveLength(1);
+    expect(mockCreateCanonicalImpactVerificationRequest).not.toHaveBeenCalled();
     expect(mockSendEmail).not.toHaveBeenCalled();
   });
 });

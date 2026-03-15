@@ -26,14 +26,16 @@ vi.mock('@/lib/proofs/canonical-pack', () => ({
   listCanonicalProofPackAggregatesForOwner: vi.fn(),
 }));
 
-vi.mock('@/lib/verification/policy', () => ({
-  listVerificationRecordsForOwner: vi.fn(),
-}));
-
 vi.mock('@/lib/verification/canonical-requests', () => ({
   listCanonicalSkillVerificationRequestsForOwner: vi.fn(),
   listCanonicalSkillVerificationRequestsForVerifierEmail: vi.fn(),
   mapCanonicalSkillVerificationRequestRecord: vi.fn((record: any) => record),
+}));
+
+vi.mock('@/lib/verification/canonical-impact-requests', () => ({
+  listCanonicalImpactVerificationRequestsForOwner: vi.fn(),
+  listCanonicalImpactVerificationRequestsForVerifierEmail: vi.fn(),
+  mapCanonicalImpactVerificationRequestRecord: vi.fn((record: any) => record),
 }));
 
 vi.mock('@/app/app/i/verifications/VerificationsClient', () => ({
@@ -45,37 +47,22 @@ vi.mock('@/app/app/i/verifications/VerificationsClient', () => ({
 
 import VerificationsPage from '@/app/app/i/verifications/page';
 import { listCanonicalProofPackAggregatesForOwner } from '@/lib/proofs/canonical-pack';
-import { listVerificationRecordsForOwner } from '@/lib/verification/policy';
 import {
   listCanonicalSkillVerificationRequestsForOwner,
   listCanonicalSkillVerificationRequestsForVerifierEmail,
 } from '@/lib/verification/canonical-requests';
-
-type QueryResult = { data: unknown[]; error: null };
+import {
+  listCanonicalImpactVerificationRequestsForOwner,
+  listCanonicalImpactVerificationRequestsForVerifierEmail,
+} from '@/lib/verification/canonical-impact-requests';
 
 function createSupabaseClientMock(options: {
   userEmail: string;
   emailConfirmedAt?: string | null;
-  incomingSkill: unknown[];
-  sentSkill: unknown[];
-  sentImpact: unknown[];
   canonicalSkillDetails?: unknown[];
   canonicalRequesterProfiles?: unknown[];
-  capturedSkillSelects?: string[];
+  impactStories?: unknown[];
 }) {
-  const resolveQuery = (table: string, column: string): QueryResult => {
-    if (table === 'skill_verification_requests' && column === 'verifier_email') {
-      return { data: options.incomingSkill, error: null };
-    }
-    if (table === 'skill_verification_requests' && column === 'requester_profile_id') {
-      return { data: options.sentSkill, error: null };
-    }
-    if (table === 'impact_story_verification_requests' && column === 'requester_profile_id') {
-      return { data: options.sentImpact, error: null };
-    }
-    return { data: [], error: null };
-  };
-
   return {
     auth: {
       getUser: vi.fn().mockResolvedValue({
@@ -92,37 +79,20 @@ function createSupabaseClientMock(options: {
     },
     from: vi.fn((table: string) => ({
       select: vi.fn((selectQuery?: string) => {
-        if (table === 'skill_verification_requests' && typeof selectQuery === 'string') {
-          options.capturedSkillSelects?.push(selectQuery);
-        }
-
         return {
-          eq: vi.fn((column: string) => ({
-            order: vi.fn().mockResolvedValue(resolveQuery(table, column)),
-          })),
           in: vi.fn().mockResolvedValue({
             data:
               table === 'skills'
                 ? (options.canonicalSkillDetails ?? [])
                 : table === 'profiles'
                   ? (options.canonicalRequesterProfiles ?? [])
-                  : [],
+                  : table === 'impact_stories'
+                    ? (options.impactStories ?? [])
+                    : [],
             error: null,
           }),
         };
       }),
-    })),
-  };
-}
-
-function createAdminClientMockResult(incomingImpact: unknown[]) {
-  return {
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          order: vi.fn().mockResolvedValue({ data: incomingImpact, error: null }),
-        })),
-      })),
     })),
   };
 }
@@ -133,73 +103,108 @@ describe('VerificationsPage', () => {
     createAdminClientMock.mockReset();
     requireAuthMock.mockResolvedValue({ id: 'user-1' });
     vi.mocked(listCanonicalProofPackAggregatesForOwner).mockResolvedValue([]);
-    vi.mocked(listVerificationRecordsForOwner).mockResolvedValue([]);
     vi.mocked(listCanonicalSkillVerificationRequestsForOwner).mockResolvedValue([]);
     vi.mocked(listCanonicalSkillVerificationRequestsForVerifierEmail).mockResolvedValue([]);
+    vi.mocked(listCanonicalImpactVerificationRequestsForOwner).mockResolvedValue([]);
+    vi.mocked(listCanonicalImpactVerificationRequestsForVerifierEmail).mockResolvedValue([]);
   });
 
   it('merges skill and impact requests for incoming and sent views', async () => {
-    const capturedSkillSelects: string[] = [];
     createClientMock.mockResolvedValue(
       createSupabaseClientMock({
         userEmail: 'user@example.com',
-        incomingSkill: [
+        canonicalSkillDetails: [
           {
-            id: 'skill-incoming-1',
-            skill_id: 'skill-1',
-            requester_profile_id: 'requester-1',
-            verifier_email: 'user@example.com',
-            verifier_source: 'peer',
-            status: 'pending',
-            created_at: '2026-02-25T10:00:00.000Z',
+            id: 'skill-1',
+            competency_level: 4,
+            skills_taxonomy: {
+              name_i18n: {
+                en: 'Systems Thinking',
+              },
+            },
+          },
+          {
+            id: 'skill-2',
+            competency_level: 5,
+            skills_taxonomy: {
+              name_i18n: {
+                en: 'Program Management',
+              },
+            },
           },
         ],
-        sentSkill: [
+        canonicalRequesterProfiles: [
           {
-            id: 'skill-sent-1',
-            skill_id: 'skill-2',
-            requester_profile_id: 'user-1',
-            verifier_email: 'reviewer@example.com',
-            verifier_source: 'manager',
-            status: 'accepted',
-            created_at: '2026-02-22T10:00:00.000Z',
+            id: 'requester-1',
+            display_name: 'Jordan Sender',
+            handle: 'jordan-sender',
+            avatar_url: null,
+          },
+          {
+            id: 'requester-2',
+            display_name: 'Taylor Impact',
+            handle: 'taylor-impact',
+            avatar_url: null,
           },
         ],
-        sentImpact: [
+        impactStories: [
           {
-            id: 'impact-sent-1',
-            impact_story_id: 'story-2',
-            requester_profile_id: 'user-1',
-            verifier_email: 'impact-reviewer@example.com',
-            verifier_name: 'Alex Reviewer',
-            verifier_relationship: 'Client',
-            status: 'accepted',
-            created_at: '2026-02-24T10:00:00.000Z',
-            impact_stories: { id: 'story-2', title: 'Public Health Program' },
+            id: 'story-1',
+            title: 'Climate Adaptation',
+          },
+          {
+            id: 'story-2',
+            title: 'Public Health Program',
           },
         ],
-        capturedSkillSelects,
       })
     );
-    vi.mocked(listCanonicalSkillVerificationRequestsForVerifierEmail).mockResolvedValue([]);
-    vi.mocked(listCanonicalSkillVerificationRequestsForOwner).mockResolvedValue([]);
-
-    createAdminClientMock.mockReturnValue(
-      createAdminClientMockResult([
-        {
-          id: 'impact-incoming-1',
-          impact_story_id: 'story-1',
-          requester_profile_id: 'requester-2',
-          verifier_email: 'user@example.com',
-          verifier_name: 'Taylor',
-          verifier_relationship: 'Partner',
-          status: 'pending',
-          created_at: '2026-02-26T10:00:00.000Z',
-          impact_stories: { id: 'story-1', title: 'Climate Adaptation' },
-          profiles: { id: 'requester-2', display_name: 'Jordan Sender' },
-        },
-      ])
-    );
+    vi.mocked(listCanonicalSkillVerificationRequestsForVerifierEmail).mockResolvedValue([
+      {
+        id: 'skill-incoming-1',
+        skill_id: 'skill-1',
+        requester_profile_id: 'requester-1',
+        verifier_email: 'user@example.com',
+        verifier_source: 'peer',
+        status: 'pending',
+        created_at: '2026-02-25T10:00:00.000Z',
+      },
+    ] as any);
+    vi.mocked(listCanonicalSkillVerificationRequestsForOwner).mockResolvedValue([
+      {
+        id: 'skill-sent-1',
+        skill_id: 'skill-2',
+        requester_profile_id: 'user-1',
+        verifier_email: 'reviewer@example.com',
+        verifier_source: 'manager',
+        status: 'accepted',
+        created_at: '2026-02-22T10:00:00.000Z',
+      },
+    ] as any);
+    vi.mocked(listCanonicalImpactVerificationRequestsForVerifierEmail).mockResolvedValue([
+      {
+        id: 'impact-incoming-1',
+        impact_story_id: 'story-1',
+        requester_profile_id: 'requester-2',
+        verifier_email: 'user@example.com',
+        verifier_name: 'Taylor',
+        verifier_relationship: 'Partner',
+        status: 'pending',
+        created_at: '2026-02-26T10:00:00.000Z',
+      },
+    ] as any);
+    vi.mocked(listCanonicalImpactVerificationRequestsForOwner).mockResolvedValue([
+      {
+        id: 'impact-sent-1',
+        impact_story_id: 'story-2',
+        requester_profile_id: 'user-1',
+        verifier_email: 'impact-reviewer@example.com',
+        verifier_name: 'Alex Reviewer',
+        verifier_relationship: 'Client',
+        status: 'accepted',
+        created_at: '2026-02-24T10:00:00.000Z',
+      },
+    ] as any);
 
     const element = await VerificationsPage();
     render(element);
@@ -230,42 +235,42 @@ describe('VerificationsPage', () => {
       'skill',
     ]);
     expect(props.sentRequests[0]?.impactStoryTitle).toBe('Public Health Program');
-
-    const combinedSkillSelect = capturedSkillSelects.join('\n');
-    expect(combinedSkillSelect).toContain(
-      'skills:skills!skill_verification_requests_skill_id_fkey'
-    );
-    expect(combinedSkillSelect).toContain('competency_level:level');
   });
 
-  it('falls back gracefully when admin client for incoming impact requests is unavailable', async () => {
+  it('loads canonical feed data without using the admin client', async () => {
     createClientMock.mockResolvedValue(
       createSupabaseClientMock({
         userEmail: 'user@example.com',
-        incomingSkill: [
+        canonicalSkillDetails: [
           {
-            id: 'skill-incoming-only',
-            skill_id: 'skill-1',
-            requester_profile_id: 'requester-1',
-            verifier_email: 'user@example.com',
-            verifier_source: 'peer',
-            status: 'pending',
-            created_at: '2026-02-25T10:00:00.000Z',
+            id: 'skill-1',
+            competency_level: 3,
+            skills_taxonomy: {
+              name_i18n: {
+                en: 'Facilitation',
+              },
+            },
           },
         ],
-        sentSkill: [],
-        sentImpact: [],
       })
     );
-
-    createAdminClientMock.mockImplementation(() => {
-      throw new Error('Missing SUPABASE env for admin client');
-    });
+    vi.mocked(listCanonicalSkillVerificationRequestsForVerifierEmail).mockResolvedValue([
+      {
+        id: 'skill-incoming-only',
+        skill_id: 'skill-1',
+        requester_profile_id: 'requester-1',
+        verifier_email: 'user@example.com',
+        verifier_source: 'peer',
+        status: 'pending',
+        created_at: '2026-02-25T10:00:00.000Z',
+      },
+    ] as any);
 
     const element = await VerificationsPage();
     render(element);
 
     expect(screen.getByTestId('verifications-client-proxy')).toBeInTheDocument();
+    expect(createAdminClientMock).not.toHaveBeenCalled();
 
     const props = verificationsClientSpy.mock.calls[0]?.[0] as {
       incomingRequests: Array<{ id: string; subjectType: string }>;
@@ -284,31 +289,6 @@ describe('VerificationsPage', () => {
     createClientMock.mockResolvedValue(
       createSupabaseClientMock({
         userEmail: 'user@example.com',
-        incomingSkill: [
-          {
-            id: 'skill-incoming-1',
-            skill_id: 'skill-1',
-            requester_profile_id: 'requester-1',
-            verifier_email: 'user@example.com',
-            verifier_source: 'peer',
-            status: 'pending',
-            created_at: '2026-02-25T10:00:00.000Z',
-          },
-        ],
-        sentSkill: [],
-        sentImpact: [
-          {
-            id: 'impact-sent-1',
-            impact_story_id: 'story-2',
-            requester_profile_id: 'user-1',
-            verifier_email: 'impact-reviewer@example.com',
-            verifier_name: 'Alex Reviewer',
-            verifier_relationship: 'Client',
-            status: 'accepted',
-            created_at: '2026-02-24T10:00:00.000Z',
-            impact_stories: { id: 'story-2', title: 'Legacy Impact Story' },
-          },
-        ],
         canonicalSkillDetails: [
           {
             id: 'skill-1',
@@ -328,9 +308,14 @@ describe('VerificationsPage', () => {
             avatar_url: null,
           },
         ],
+        impactStories: [
+          {
+            id: 'story-2',
+            title: 'Legacy Impact Story',
+          },
+        ],
       })
     );
-    createAdminClientMock.mockReturnValue(createAdminClientMockResult([]));
     vi.mocked(listCanonicalSkillVerificationRequestsForVerifierEmail).mockResolvedValue([
       {
         id: 'canonical-skill-incoming-1',
@@ -340,6 +325,18 @@ describe('VerificationsPage', () => {
         verifier_source: 'peer',
         status: 'pending',
         created_at: '2026-02-25T11:00:00.000Z',
+      },
+    ] as any);
+    vi.mocked(listCanonicalImpactVerificationRequestsForOwner).mockResolvedValue([
+      {
+        id: 'impact-sent-1',
+        impact_story_id: 'story-2',
+        requester_profile_id: 'user-1',
+        verifier_email: 'impact-reviewer@example.com',
+        verifier_name: 'Alex Reviewer',
+        verifier_relationship: 'Client',
+        status: 'accepted',
+        created_at: '2026-02-24T10:00:00.000Z',
       },
     ] as any);
     vi.mocked(listCanonicalProofPackAggregatesForOwner).mockResolvedValue([
@@ -394,13 +391,6 @@ describe('VerificationsPage', () => {
         verificationReferences: [{ id: 'verification-impact-1' }],
       },
     ] as any);
-    vi.mocked(listVerificationRecordsForOwner).mockResolvedValue([
-      {
-        id: 'verification-impact-1',
-        sourceRequestTable: 'impact_story_verification_requests',
-        sourceRequestId: 'impact-sent-1',
-      },
-    ] as any);
 
     const element = await VerificationsPage();
     render(element);
@@ -430,44 +420,38 @@ describe('VerificationsPage', () => {
   });
 
   it('does not use admin client when session email is unconfirmed', async () => {
-    createAdminClientMock.mockReturnValue(createAdminClientMockResult([]));
-
     createClientMock.mockResolvedValue(
       createSupabaseClientMock({
         userEmail: 'user@example.com',
         emailConfirmedAt: null,
-        incomingSkill: [
-          {
-            id: 'skill-incoming-only',
-            skill_id: 'skill-1',
-            requester_profile_id: 'requester-1',
-            verifier_email: 'user@example.com',
-            verifier_source: 'peer',
-            status: 'pending',
-            created_at: '2026-02-25T10:00:00.000Z',
-          },
-        ],
-        sentSkill: [],
-        sentImpact: [],
       })
     );
     vi.mocked(listCanonicalSkillVerificationRequestsForVerifierEmail).mockResolvedValue([]);
     vi.mocked(listCanonicalSkillVerificationRequestsForOwner).mockResolvedValue([]);
+    vi.mocked(listCanonicalImpactVerificationRequestsForVerifierEmail).mockResolvedValue([
+      {
+        id: 'impact-incoming-unverified-email',
+        impact_story_id: 'story-1',
+        requester_profile_id: 'requester-2',
+        verifier_email: 'user@example.com',
+        verifier_name: 'Taylor',
+        verifier_relationship: 'Partner',
+        status: 'pending',
+        created_at: '2026-02-26T10:00:00.000Z',
+      },
+    ] as any);
 
     const element = await VerificationsPage();
     render(element);
 
     expect(screen.getByTestId('verifications-client-proxy')).toBeInTheDocument();
     expect(createAdminClientMock).not.toHaveBeenCalled();
+    expect(listCanonicalImpactVerificationRequestsForVerifierEmail).not.toHaveBeenCalled();
 
     const props = verificationsClientSpy.mock.calls[0]?.[0] as {
       incomingRequests: Array<{ id: string; subjectType: string }>;
     };
 
-    expect(props.incomingRequests).toHaveLength(1);
-    expect(props.incomingRequests[0]).toMatchObject({
-      id: 'skill-incoming-only',
-      subjectType: 'skill',
-    });
+    expect(props.incomingRequests).toHaveLength(0);
   });
 });

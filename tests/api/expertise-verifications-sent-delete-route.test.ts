@@ -35,24 +35,40 @@ vi.mock('@/lib/security/capability-tokens', () => ({
   })),
 }));
 
+vi.mock('@/lib/verification/canonical-requests', () => ({
+  createCanonicalSkillVerificationRequest: vi.fn(),
+  getCanonicalSkillVerificationRequestById: vi.fn(),
+  listCanonicalSkillVerificationRequestsForOwner: vi.fn(),
+  mapCanonicalSkillVerificationRequestRecord: vi.fn((record: any) => record),
+  updateCanonicalSkillVerificationRequest: vi.fn(),
+}));
+
+vi.mock('@/lib/verification/canonical-impact-requests', () => ({
+  createCanonicalImpactVerificationRequest: vi.fn(),
+  getCanonicalImpactVerificationRequestById: vi.fn(),
+  mapCanonicalImpactVerificationRequestRecord: vi.fn((record: any) => record),
+  updateCanonicalImpactVerificationRequest: vi.fn(),
+}));
+
 import { requireApiAuthContext } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { sendEmail } from '@/lib/email/sender';
 import { writeVerificationAuditLog } from '@/lib/verification/integrity';
 import {
+  createCanonicalSkillVerificationRequest,
+  getCanonicalSkillVerificationRequestById,
+  listCanonicalSkillVerificationRequestsForOwner,
+  updateCanonicalSkillVerificationRequest,
+} from '@/lib/verification/canonical-requests';
+import {
+  createCanonicalImpactVerificationRequest,
+  getCanonicalImpactVerificationRequestById,
+  updateCanonicalImpactVerificationRequest,
+} from '@/lib/verification/canonical-impact-requests';
+import {
   DELETE,
   POST,
 } from '@/app/api/expertise/verifications/sent/[requestType]/[requestId]/route';
-
-function makeDeleteBuilder(result: unknown) {
-  const builder: any = {
-    eq: vi.fn(() => builder),
-    in: vi.fn(() => builder),
-  };
-  builder.then = (resolve: (value: unknown) => unknown, reject?: (reason: unknown) => unknown) =>
-    Promise.resolve(result).then(resolve, reject);
-  return builder;
-}
 
 function makeRequest(requestType: string, requestId: string) {
   return {
@@ -66,6 +82,56 @@ function makeRequest(requestType: string, requestId: string) {
   };
 }
 
+function makeCanonicalSkillRequest(overrides: Record<string, unknown> = {}) {
+  return {
+    id: '11111111-1111-4111-8111-111111111111',
+    skill_id: 'skill-1',
+    requester_profile_id: 'user-1',
+    requester_email_snapshot: 'requester@example.com',
+    verifier_email: 'mentor@example.com',
+    verifier_source: 'peer',
+    verifier_relationship: null,
+    verifier_profile_id: null,
+    request_kind: 'generic_verification',
+    attestation_request: null,
+    message: 'Please verify',
+    custom_request_id: null,
+    status: 'pending',
+    capability_token_id: 'old-capability-token-id',
+    requires_authenticated_verifier: false,
+    integrity_status: 'clear',
+    integrity_reason: null,
+    integrity_meta: {},
+    integrity_flagged_at: null,
+    risk_signals: {},
+    expires_at: '2099-03-01T00:00:00.000Z',
+    ...overrides,
+  };
+}
+
+function makeCanonicalImpactRequest(overrides: Record<string, unknown> = {}) {
+  return {
+    id: '55555555-5555-4555-8555-555555555555',
+    impact_story_id: 'story-1',
+    requester_profile_id: 'user-1',
+    requester_email_snapshot: 'requester@example.com',
+    verifier_email: 'reviewer@example.com',
+    verifier_name: 'Reviewer Name',
+    verifier_relationship: 'Client',
+    verifier_profile_id: null,
+    message: 'Please verify',
+    claim_snapshot: {},
+    status: 'pending',
+    capability_token_id: 'old-impact-capability-token-id',
+    requires_authenticated_verifier: false,
+    integrity_status: 'clear',
+    integrity_reason: null,
+    risk_signals: {},
+    expires_at: '2099-03-01T00:00:00.000Z',
+    ...overrides,
+  };
+}
+
 describe('DELETE /api/expertise/verifications/sent/[requestType]/[requestId]', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -74,34 +140,25 @@ describe('DELETE /api/expertise/verifications/sent/[requestType]/[requestId]', (
       supabase: {},
     } as any);
     vi.mocked(sendEmail).mockResolvedValue({ success: true });
+    vi.mocked(getCanonicalSkillVerificationRequestById).mockResolvedValue(null as any);
+    vi.mocked(listCanonicalSkillVerificationRequestsForOwner).mockResolvedValue([]);
+    vi.mocked(updateCanonicalSkillVerificationRequest).mockResolvedValue({} as any);
+    vi.mocked(createCanonicalSkillVerificationRequest).mockResolvedValue({
+      record: { id: 'generated-request-id' },
+      rawToken: 'capability-token',
+    } as any);
+    vi.mocked(getCanonicalImpactVerificationRequestById).mockResolvedValue(null as any);
+    vi.mocked(updateCanonicalImpactVerificationRequest).mockResolvedValue({} as any);
+    vi.mocked(createCanonicalImpactVerificationRequest).mockResolvedValue({
+      record: { id: 'generated-request-id' },
+      rawToken: 'capability-token',
+    } as any);
   });
 
   it('deletes requester-owned pending skill verification requests', async () => {
-    const skillTable = {
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          maybeSingle: vi.fn().mockResolvedValue({
-            data: {
-              id: '11111111-1111-4111-8111-111111111111',
-              requester_profile_id: 'user-1',
-              status: 'pending',
-              custom_request_id: null,
-              skill_id: 'skill-1',
-              verifier_email: 'mentor@example.com',
-            },
-            error: null,
-          }),
-        })),
-      })),
-      delete: vi.fn(() => makeDeleteBuilder({ error: null })),
-    };
-
-    vi.mocked(createAdminClient).mockReturnValue({
-      from: vi.fn((table: string) => {
-        if (table === 'skill_verification_requests') return skillTable as any;
-        throw new Error(`Unexpected table ${table}`);
-      }),
-    } as any);
+    vi.mocked(getCanonicalSkillVerificationRequestById).mockResolvedValue(
+      makeCanonicalSkillRequest()
+    );
 
     const { request, params } = makeRequest('skill', '11111111-1111-4111-8111-111111111111');
     const response = await DELETE(request, { params });
@@ -112,98 +169,51 @@ describe('DELETE /api/expertise/verifications/sent/[requestType]/[requestId]', (
       requestType: 'skill',
       requestId: '11111111-1111-4111-8111-111111111111',
     });
+    expect(updateCanonicalSkillVerificationRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestId: '11111111-1111-4111-8111-111111111111',
+        status: 'cancelled',
+      })
+    );
     expect(writeVerificationAuditLog).toHaveBeenCalledTimes(1);
   });
 
   it('rejects deletion when requester does not own the skill request', async () => {
-    const skillTable = {
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          maybeSingle: vi.fn().mockResolvedValue({
-            data: {
-              id: '22222222-2222-4222-8222-222222222222',
-              requester_profile_id: 'someone-else',
-              status: 'pending',
-              custom_request_id: null,
-            },
-            error: null,
-          }),
-        })),
-      })),
-      delete: vi.fn(() => makeDeleteBuilder({ error: null })),
-    };
-
-    vi.mocked(createAdminClient).mockReturnValue({
-      from: vi.fn((table: string) => {
-        if (table === 'skill_verification_requests') return skillTable as any;
-        throw new Error(`Unexpected table ${table}`);
-      }),
-    } as any);
+    vi.mocked(getCanonicalSkillVerificationRequestById).mockResolvedValue(
+      makeCanonicalSkillRequest({
+        id: '22222222-2222-4222-8222-222222222222',
+        requester_profile_id: 'someone-else',
+      })
+    );
 
     const { request, params } = makeRequest('skill', '22222222-2222-4222-8222-222222222222');
     const response = await DELETE(request, { params });
 
     expect(response.status).toBe(403);
-    expect(skillTable.delete).not.toHaveBeenCalled();
     expect(writeVerificationAuditLog).not.toHaveBeenCalled();
   });
 
   it('rejects deletion for disallowed skill statuses', async () => {
-    const skillTable = {
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          maybeSingle: vi.fn().mockResolvedValue({
-            data: {
-              id: '33333333-3333-4333-8333-333333333333',
-              requester_profile_id: 'user-1',
-              status: 'accepted',
-              custom_request_id: null,
-            },
-            error: null,
-          }),
-        })),
-      })),
-      delete: vi.fn(() => makeDeleteBuilder({ error: null })),
-    };
-
-    vi.mocked(createAdminClient).mockReturnValue({
-      from: vi.fn((table: string) => {
-        if (table === 'skill_verification_requests') return skillTable as any;
-        throw new Error(`Unexpected table ${table}`);
-      }),
-    } as any);
+    vi.mocked(getCanonicalSkillVerificationRequestById).mockResolvedValue(
+      makeCanonicalSkillRequest({
+        id: '33333333-3333-4333-8333-333333333333',
+        status: 'accepted',
+      })
+    );
 
     const { request, params } = makeRequest('skill', '33333333-3333-4333-8333-333333333333');
     const response = await DELETE(request, { params });
 
     expect(response.status).toBe(400);
-    expect(skillTable.delete).not.toHaveBeenCalled();
   });
 
   it('returns bundled-request conflict for skill requests linked to a custom bundle', async () => {
-    const skillTable = {
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          maybeSingle: vi.fn().mockResolvedValue({
-            data: {
-              id: '44444444-4444-4444-8444-444444444444',
-              requester_profile_id: 'user-1',
-              status: 'pending',
-              custom_request_id: 'bundle-1',
-            },
-            error: null,
-          }),
-        })),
-      })),
-      delete: vi.fn(() => makeDeleteBuilder({ error: null })),
-    };
-
-    vi.mocked(createAdminClient).mockReturnValue({
-      from: vi.fn((table: string) => {
-        if (table === 'skill_verification_requests') return skillTable as any;
-        throw new Error(`Unexpected table ${table}`);
-      }),
-    } as any);
+    vi.mocked(getCanonicalSkillVerificationRequestById).mockResolvedValue(
+      makeCanonicalSkillRequest({
+        id: '44444444-4444-4444-8444-444444444444',
+        custom_request_id: 'bundle-1',
+      })
+    );
 
     const { request, params } = makeRequest('skill', '44444444-4444-4444-8444-444444444444');
     const response = await DELETE(request, { params });
@@ -213,34 +223,14 @@ describe('DELETE /api/expertise/verifications/sent/[requestType]/[requestId]', (
       code: 'BUNDLED_REQUEST',
       customRequestId: 'bundle-1',
     });
-    expect(skillTable.delete).not.toHaveBeenCalled();
   });
 
   it('deletes requester-owned failed impact verification requests', async () => {
-    const impactTable = {
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          maybeSingle: vi.fn().mockResolvedValue({
-            data: {
-              id: '55555555-5555-4555-8555-555555555555',
-              requester_profile_id: 'user-1',
-              status: 'failed',
-              impact_story_id: 'story-1',
-              verifier_email: 'reviewer@example.com',
-            },
-            error: null,
-          }),
-        })),
-      })),
-      delete: vi.fn(() => makeDeleteBuilder({ error: null })),
-    };
-
-    vi.mocked(createAdminClient).mockReturnValue({
-      from: vi.fn((table: string) => {
-        if (table === 'impact_story_verification_requests') return impactTable as any;
-        throw new Error(`Unexpected table ${table}`);
-      }),
-    } as any);
+    vi.mocked(getCanonicalImpactVerificationRequestById).mockResolvedValue(
+      makeCanonicalImpactRequest({
+        status: 'failed',
+      })
+    );
 
     const { request, params } = makeRequest('impact_story', '55555555-5555-4555-8555-555555555555');
     const response = await DELETE(request, { params });
@@ -251,34 +241,21 @@ describe('DELETE /api/expertise/verifications/sent/[requestType]/[requestId]', (
       requestType: 'impact_story',
       requestId: '55555555-5555-4555-8555-555555555555',
     });
+    expect(updateCanonicalImpactVerificationRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestId: '55555555-5555-4555-8555-555555555555',
+        status: 'cancelled',
+      })
+    );
     expect(writeVerificationAuditLog).toHaveBeenCalledTimes(1);
   });
 
   it('resends pending skill verification requests without cloning', async () => {
-    const skillUpdateBuilder = makeDeleteBuilder({ error: null });
-    const skillTable = {
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          maybeSingle: vi.fn().mockResolvedValue({
-            data: {
-              id: '66666666-6666-4666-8666-666666666666',
-              skill_id: 'skill-1',
-              requester_profile_id: 'user-1',
-              verifier_email: 'mentor@example.com',
-              verifier_source: 'peer',
-              message: 'Please verify',
-              custom_request_id: null,
-              status: 'pending',
-              capability_token_id: 'old-capability-token-id',
-            },
-            error: null,
-          }),
-        })),
-      })),
-      update: vi.fn(() => skillUpdateBuilder),
-      insert: vi.fn().mockResolvedValue({ error: null }),
-      delete: vi.fn(() => makeDeleteBuilder({ error: null })),
-    };
+    vi.mocked(getCanonicalSkillVerificationRequestById).mockResolvedValue(
+      makeCanonicalSkillRequest({
+        id: '66666666-6666-4666-8666-666666666666',
+      })
+    );
 
     const profilesTable = {
       select: vi.fn(() => ({
@@ -308,7 +285,6 @@ describe('DELETE /api/expertise/verifications/sent/[requestType]/[requestId]', (
 
     vi.mocked(createAdminClient).mockReturnValue({
       from: vi.fn((table: string) => {
-        if (table === 'skill_verification_requests') return skillTable as any;
         if (table === 'profiles') return profilesTable as any;
         if (table === 'skills') return skillsTable as any;
         throw new Error(`Unexpected table ${table}`);
@@ -324,35 +300,28 @@ describe('DELETE /api/expertise/verifications/sent/[requestType]/[requestId]', (
       reusedRecord: true,
       requestType: 'skill',
     });
-    expect(skillTable.insert).not.toHaveBeenCalled();
-    expect(skillTable.update).toHaveBeenCalled();
+    expect(updateCanonicalSkillVerificationRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestId: '66666666-6666-4666-8666-666666666666',
+        status: 'pending',
+        capabilityTokenId: 'capability-token-id',
+      })
+    );
     expect(sendEmail).toHaveBeenCalledTimes(1);
     expect(writeVerificationAuditLog).toHaveBeenCalledTimes(1);
   });
 
   it('resends declined skill verification requests by cloning a new pending request', async () => {
-    const skillTable = {
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          maybeSingle: vi.fn().mockResolvedValue({
-            data: {
-              id: '77777777-7777-4777-8777-777777777777',
-              skill_id: 'skill-2',
-              requester_profile_id: 'user-1',
-              verifier_email: 'reviewer@example.com',
-              verifier_source: 'manager',
-              message: 'Please review',
-              custom_request_id: null,
-              status: 'declined',
-              capability_token_id: 'old-capability-token-id',
-            },
-            error: null,
-          }),
-        })),
-      })),
-      insert: vi.fn().mockResolvedValue({ error: null }),
-      delete: vi.fn(() => makeDeleteBuilder({ error: null })),
-    };
+    vi.mocked(getCanonicalSkillVerificationRequestById).mockResolvedValue(
+      makeCanonicalSkillRequest({
+        id: '77777777-7777-4777-8777-777777777777',
+        skill_id: 'skill-2',
+        verifier_email: 'reviewer@example.com',
+        verifier_source: 'manager',
+        message: 'Please review',
+        status: 'declined',
+      })
+    );
 
     const profilesTable = {
       select: vi.fn(() => ({
@@ -382,7 +351,6 @@ describe('DELETE /api/expertise/verifications/sent/[requestType]/[requestId]', (
 
     vi.mocked(createAdminClient).mockReturnValue({
       from: vi.fn((table: string) => {
-        if (table === 'skill_verification_requests') return skillTable as any;
         if (table === 'profiles') return profilesTable as any;
         if (table === 'skills') return skillsTable as any;
         throw new Error(`Unexpected table ${table}`);
@@ -398,34 +366,27 @@ describe('DELETE /api/expertise/verifications/sent/[requestType]/[requestId]', (
       reusedRecord: false,
       requestType: 'skill',
     });
-    expect(skillTable.insert).toHaveBeenCalledTimes(1);
+    expect(createCanonicalSkillVerificationRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ownerId: 'user-1',
+        skillId: 'skill-2',
+        verifierEmail: 'reviewer@example.com',
+      })
+    );
     expect(sendEmail).toHaveBeenCalledTimes(1);
     expect(writeVerificationAuditLog).toHaveBeenCalledTimes(1);
   });
 
   it('regenerates expired skill verification requests by cloning a fresh pending request', async () => {
-    const skillTable = {
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          maybeSingle: vi.fn().mockResolvedValue({
-            data: {
-              id: '88888888-8888-4888-8888-888888888888',
-              skill_id: 'skill-3',
-              requester_profile_id: 'user-1',
-              verifier_email: 'reviewer@example.com',
-              verifier_source: 'peer',
-              message: 'Please review again',
-              custom_request_id: null,
-              status: 'expired',
-              capability_token_id: 'old-capability-token-id',
-            },
-            error: null,
-          }),
-        })),
-      })),
-      insert: vi.fn().mockResolvedValue({ error: null }),
-      delete: vi.fn(() => makeDeleteBuilder({ error: null })),
-    };
+    vi.mocked(getCanonicalSkillVerificationRequestById).mockResolvedValue(
+      makeCanonicalSkillRequest({
+        id: '88888888-8888-4888-8888-888888888888',
+        skill_id: 'skill-3',
+        verifier_email: 'reviewer@example.com',
+        message: 'Please review again',
+        status: 'expired',
+      })
+    );
 
     const profilesTable = {
       select: vi.fn(() => ({
@@ -455,7 +416,6 @@ describe('DELETE /api/expertise/verifications/sent/[requestType]/[requestId]', (
 
     vi.mocked(createAdminClient).mockReturnValue({
       from: vi.fn((table: string) => {
-        if (table === 'skill_verification_requests') return skillTable as any;
         if (table === 'profiles') return profilesTable as any;
         if (table === 'skills') return skillsTable as any;
         throw new Error(`Unexpected table ${table}`);
@@ -471,34 +431,23 @@ describe('DELETE /api/expertise/verifications/sent/[requestType]/[requestId]', (
       reusedRecord: false,
       requestType: 'skill',
     });
-    expect(skillTable.insert).toHaveBeenCalledTimes(1);
+    expect(createCanonicalSkillVerificationRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ownerId: 'user-1',
+        skillId: 'skill-3',
+        verifierEmail: 'reviewer@example.com',
+      })
+    );
     expect(sendEmail).toHaveBeenCalledTimes(1);
     expect(writeVerificationAuditLog).toHaveBeenCalledTimes(1);
   });
 
   it('resends pending impact verification requests without cloning', async () => {
-    const impactUpdateBuilder = makeDeleteBuilder({ error: null });
-    const impactTable = {
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          maybeSingle: vi.fn().mockResolvedValue({
-            data: {
-              id: '99999999-9999-4999-8999-999999999999',
-              requester_profile_id: 'user-1',
-              status: 'pending',
-              impact_story_id: 'story-1',
-              verifier_email: 'reviewer@example.com',
-              capability_token_id: 'old-impact-capability-token-id',
-              message: 'Please verify',
-            },
-            error: null,
-          }),
-        })),
-      })),
-      update: vi.fn(() => impactUpdateBuilder),
-      insert: vi.fn().mockResolvedValue({ error: null }),
-      delete: vi.fn(() => makeDeleteBuilder({ error: null })),
-    };
+    vi.mocked(getCanonicalImpactVerificationRequestById).mockResolvedValue(
+      makeCanonicalImpactRequest({
+        id: '99999999-9999-4999-8999-999999999999',
+      })
+    );
 
     const profilesTable = {
       select: vi.fn(() => ({
@@ -524,7 +473,6 @@ describe('DELETE /api/expertise/verifications/sent/[requestType]/[requestId]', (
 
     vi.mocked(createAdminClient).mockReturnValue({
       from: vi.fn((table: string) => {
-        if (table === 'impact_story_verification_requests') return impactTable as any;
         if (table === 'profiles') return profilesTable as any;
         if (table === 'impact_stories') return storiesTable as any;
         throw new Error(`Unexpected table ${table}`);
@@ -540,8 +488,13 @@ describe('DELETE /api/expertise/verifications/sent/[requestType]/[requestId]', (
       reusedRecord: true,
       requestType: 'impact_story',
     });
-    expect(impactTable.insert).not.toHaveBeenCalled();
-    expect(impactTable.update).toHaveBeenCalled();
+    expect(updateCanonicalImpactVerificationRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestId: '99999999-9999-4999-8999-999999999999',
+        status: 'pending',
+        capabilityTokenId: 'capability-token-id',
+      })
+    );
     expect(sendEmail).toHaveBeenCalledTimes(1);
     expect(writeVerificationAuditLog).toHaveBeenCalledTimes(1);
   });

@@ -16,8 +16,8 @@ export function createAdminClient() {
           }),
         }),
         insert: async () => ({ data: null, error: null }),
-        update: async () => ({ eq: async () => ({ data: null, error: null }) }),
-        delete: async () => ({ eq: async () => ({ data: null, error: null }) }),
+        update: () => ({ eq: async () => ({ data: null, error: null }) }),
+        delete: () => ({ eq: async () => ({ data: null, error: null }) }),
       }),
       auth: {
         admin: {

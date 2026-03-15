@@ -15,7 +15,6 @@ import {
   education,
   experiences,
   impactStories,
-  impactStoryVerificationRequests,
   individualProfiles,
   volunteering,
 } from '@/db/schema';
@@ -33,6 +32,10 @@ const mockHeaders = vi.hoisted(() => vi.fn());
 const mockAssessVerificationRequestIntegrity = vi.hoisted(() => vi.fn());
 const mockWriteVerificationAuditLog = vi.hoisted(() => vi.fn());
 const mockListCanonicalSkillProofSummariesForOwner = vi.hoisted(() => vi.fn());
+const mockCreateCanonicalImpactVerificationRequest = vi.hoisted(() => vi.fn());
+const mockFindExistingCanonicalImpactVerificationRequest = vi.hoisted(() => vi.fn());
+const mockListCanonicalImpactVerificationRequestsForOwner = vi.hoisted(() => vi.fn());
+const mockUpdateCanonicalImpactVerificationRequest = vi.hoisted(() => vi.fn());
 
 vi.mock('@/db', () => ({
   db: {
@@ -87,6 +90,16 @@ vi.mock('@/lib/proofs/canonical-pack', async () => {
     listCanonicalSkillProofSummariesForOwner: mockListCanonicalSkillProofSummariesForOwner,
   };
 });
+
+vi.mock('@/lib/verification/canonical-impact-requests', () => ({
+  createCanonicalImpactVerificationRequest: mockCreateCanonicalImpactVerificationRequest,
+  findExistingCanonicalImpactVerificationRequest:
+    mockFindExistingCanonicalImpactVerificationRequest,
+  listCanonicalImpactVerificationRequestsForOwner:
+    mockListCanonicalImpactVerificationRequestsForOwner,
+  mapCanonicalImpactVerificationRequestRecord: vi.fn((record: any) => record),
+  updateCanonicalImpactVerificationRequest: mockUpdateCanonicalImpactVerificationRequest,
+}));
 
 vi.mock('@/lib/analytics/events', () => ({
   emitEvent: vi.fn(),
@@ -187,6 +200,18 @@ describe('profile purpose actions', () => {
     });
     mockWriteVerificationAuditLog.mockResolvedValue(undefined);
     mockListCanonicalSkillProofSummariesForOwner.mockResolvedValue([]);
+    mockFindExistingCanonicalImpactVerificationRequest.mockResolvedValue(null);
+    mockListCanonicalImpactVerificationRequestsForOwner.mockResolvedValue([]);
+    mockCreateCanonicalImpactVerificationRequest.mockResolvedValue({
+      record: {
+        id: 'request-1',
+        integrityStatus: 'clear',
+        createdAt: new Date('2026-02-27T09:00:00.000Z'),
+      },
+      rawToken: 'a'.repeat(64),
+      expiresAt: new Date('2026-03-13T09:00:00.000Z'),
+    });
+    mockUpdateCanonicalImpactVerificationRequest.mockResolvedValue({});
   });
 
   it('updates mission when at least one value and one cause exist', async () => {
@@ -519,24 +544,24 @@ describe('profile purpose actions', () => {
     mockSelectWithWhere([]); // education
     mockSelectWithWhere([]); // volunteering
     mockSelectWithWhere([]); // skills
-    mockSelectWithWhere([
+    mockListCanonicalImpactVerificationRequestsForOwner.mockResolvedValue([
       {
-        impactStoryId: 'impact-1',
+        impact_story_id: 'impact-1',
         status: 'failed',
-        verifierEmail: 'verifier@example.com',
-        createdAt: new Date('2026-02-27T09:00:00.000Z'),
-        emailSentAt: null,
-        emailError: 'Resend unavailable',
+        verifier_email: 'verifier@example.com',
+        created_at: new Date('2026-02-27T09:00:00.000Z'),
+        email_sent: false,
+        email_error: 'Resend unavailable',
       },
       {
-        impactStoryId: 'impact-1',
+        impact_story_id: 'impact-1',
         status: 'pending',
-        verifierEmail: 'older@example.com',
-        createdAt: new Date('2026-02-26T09:00:00.000Z'),
-        emailSentAt: new Date('2026-02-26T09:01:00.000Z'),
-        emailError: null,
+        verifier_email: 'older@example.com',
+        created_at: new Date('2026-02-26T09:00:00.000Z'),
+        email_sent: true,
+        email_error: null,
       },
-    ]); // impact verification summaries
+    ]);
     mockSelectWithWhere([]); // proofs
     mockSelectWithWhere([]); // accepted verifications
 
@@ -658,27 +683,7 @@ describe('profile purpose actions', () => {
       mockDb.select.mockReturnValueOnce({ from: selectFromMock });
       mockSelectWithLimit([]);
 
-      const insertPayloads: any[] = [];
-      mockDb.insert.mockImplementation((table: unknown) => ({
-        values: vi.fn((payload: any) => {
-          insertPayloads.push({ table, payload });
-          return {
-            returning: vi.fn().mockResolvedValue([
-              {
-                id: 'request-1',
-                integrityStatus: 'clear',
-                createdAt: new Date('2026-02-27T09:00:00.000Z'),
-              },
-            ]),
-          };
-        }),
-      }));
-
       mockSelectWithLimit([]);
-
-      const updateWhereMock = vi.fn().mockResolvedValue(undefined);
-      const updateSetMock = vi.fn().mockReturnValue({ where: updateWhereMock });
-      mockDb.update.mockReturnValue({ set: updateSetMock });
 
       const result = await requestImpactStoryVerification({
         storyId: 'impact-1',
@@ -688,27 +693,28 @@ describe('profile purpose actions', () => {
         },
       });
 
-      expect(insertPayloads[0]).toMatchObject({
-        table: impactStoryVerificationRequests,
-        payload: expect.objectContaining({
+      expect(mockCreateCanonicalImpactVerificationRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ownerId: 'test-user-id',
           impactStoryId: 'impact-1',
           verifierEmail: 'verifier@example.com',
-          status: 'pending',
           claimSnapshot: expect.objectContaining({
             context: expect.objectContaining({
               requesterName: 'Pavlo Samoshko',
             }),
           }),
-        }),
-      });
+        })
+      );
       expect(mockSendEmail).toHaveBeenCalledWith(
         expect.objectContaining({
           to: 'verifier@example.com',
         })
       );
-      expect(updateSetMock).toHaveBeenCalledWith(
+      expect(mockUpdateCanonicalImpactVerificationRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          emailSentAt: expect.any(Date),
+          requestId: 'request-1',
+          status: 'pending',
+          emailSent: true,
         })
       );
       expect(result.story.id).toBe('impact-1');
@@ -775,21 +781,15 @@ describe('profile purpose actions', () => {
         }),
       }));
 
-      const insertPayloads: any[] = [];
-      mockDb.insert.mockImplementation((table: unknown) => ({
-        values: vi.fn((payload: any) => {
-          insertPayloads.push({ table, payload });
-          return {
-            returning: vi.fn().mockResolvedValue([
-              {
-                id: 'request-3',
-                integrityStatus: 'clear',
-                createdAt: new Date('2026-02-27T09:30:00.000Z'),
-              },
-            ]),
-          };
-        }),
-      }));
+      mockCreateCanonicalImpactVerificationRequest.mockResolvedValueOnce({
+        record: {
+          id: 'request-3',
+          integrityStatus: 'clear',
+          createdAt: new Date('2026-02-27T09:30:00.000Z'),
+        },
+        rawToken: 'b'.repeat(64),
+        expiresAt: new Date('2026-03-13T09:30:00.000Z'),
+      });
       mockSelectWithLimit([]);
 
       const result = await requestImpactStoryVerification({
@@ -847,9 +847,8 @@ describe('profile purpose actions', () => {
         }),
       });
 
-      expect(insertPayloads[0]).toMatchObject({
-        table: impactStoryVerificationRequests,
-        payload: expect.objectContaining({
+      expect(mockCreateCanonicalImpactVerificationRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
           impactStoryId: 'impact-3',
           claimSnapshot: expect.objectContaining({
             outcomeClaims: expect.arrayContaining([
@@ -859,8 +858,8 @@ describe('profile purpose actions', () => {
               }),
             ]),
           }),
-        }),
-      });
+        })
+      );
 
       expect(result.story.title).toBe('Updated draft title');
       expect(result.verification.status).toBe('pending');
@@ -897,25 +896,14 @@ describe('profile purpose actions', () => {
       mockDb.select.mockReturnValueOnce({ from: selectFromMock });
       mockSelectWithLimit([]);
 
-      mockDb.insert.mockReturnValue({
-        values: vi.fn(() => ({
-          returning: vi.fn().mockResolvedValue([
-            {
-              id: 'request-2',
-              integrityStatus: 'clear',
-              createdAt: new Date('2026-02-27T09:00:00.000Z'),
-            },
-          ]),
-        })),
-      });
-
-      const updateSetCalls: any[] = [];
-      const updateWhereMock = vi.fn().mockResolvedValue(undefined);
-      mockDb.update.mockReturnValue({
-        set: vi.fn((payload: any) => {
-          updateSetCalls.push(payload);
-          return { where: updateWhereMock };
-        }),
+      mockCreateCanonicalImpactVerificationRequest.mockResolvedValueOnce({
+        record: {
+          id: 'request-2',
+          integrityStatus: 'clear',
+          createdAt: new Date('2026-02-27T09:00:00.000Z'),
+        },
+        rawToken: 'c'.repeat(64),
+        expiresAt: new Date('2026-03-13T09:00:00.000Z'),
       });
       mockSendEmail.mockResolvedValueOnce({ success: false, error: 'Resend unavailable' });
 
@@ -931,10 +919,13 @@ describe('profile purpose actions', () => {
         emailSent: false,
         emailError: 'Resend unavailable',
       });
-      expect(updateSetCalls[0]).toMatchObject({
-        status: 'failed',
-        emailError: 'Resend unavailable',
-      });
+      expect(mockUpdateCanonicalImpactVerificationRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          requestId: 'request-2',
+          status: 'failed',
+          emailError: 'Resend unavailable',
+        })
+      );
     });
   });
 

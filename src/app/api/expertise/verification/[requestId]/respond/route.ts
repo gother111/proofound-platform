@@ -10,11 +10,6 @@ import {
   writeVerificationAuditLog,
 } from '@/lib/verification/integrity';
 import {
-  CANONICAL_PROOFS_WRITE_ENABLED,
-  upsertCanonicalVerificationRecord,
-} from '@/lib/canonical/repository';
-import { hashOpaqueToken } from '@/lib/contracts/canonical-domain';
-import {
   parseHumanObservedAttestationResponse,
   type HumanObservedAttestationRequestPayload,
 } from '@/lib/verification/human-attestations';
@@ -23,12 +18,6 @@ import {
   mapCanonicalSkillVerificationRequestRecord,
   updateCanonicalSkillVerificationRequest,
 } from '@/lib/verification/canonical-requests';
-
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-function isUuid(value: unknown): value is string {
-  return typeof value === 'string' && UUID_PATTERN.test(value);
-}
 
 const RespondSchema = z.object({
   action: z.enum(['accept', 'decline']),
@@ -56,17 +45,15 @@ export async function POST(
 
     const validated = RespondSchema.parse(body);
 
-    // Fetch the verification request
-    const { data: legacyVerificationRequest, error: fetchError } = await supabase
-      .from('skill_verification_requests')
-      .select('*')
-      .eq('id', requestId)
-      .single();
-
-    const canonicalVerificationRow =
-      fetchError || !legacyVerificationRequest
-        ? await getCanonicalSkillVerificationRequestById(requestId).catch(() => null)
-        : null;
+    let canonicalVerificationRow = null;
+    try {
+      canonicalVerificationRow = await getCanonicalSkillVerificationRequestById(requestId);
+    } catch {
+      canonicalVerificationRow = null;
+    }
+    const { data: legacyVerificationRequest } = canonicalVerificationRow
+      ? { data: null as any }
+      : await supabase.from('skill_verification_requests').select('*').eq('id', requestId).single();
 
     const verificationRequest = legacyVerificationRequest
       ? legacyVerificationRequest
@@ -171,32 +158,38 @@ export async function POST(
 
     let updated = null;
     if (usingCanonicalRequest) {
-      updated = await updateCanonicalSkillVerificationRequest({
-        requestId,
-        status: validated.action === 'accept' ? 'accepted' : 'declined',
-        respondedAt,
-        responseMessage: validated.responseMessage || null,
-        attestationResponse,
-        verifierProfileId: user.id,
-        verifierPrincipalType: 'user_account',
-        verifierEmail: userEmail || verificationRequest.verifier_email || null,
-        integrityStatus:
-          mergedIntegrity.integrityStatus === 'flagged'
-            ? 'warning'
-            : mergedIntegrity.integrityStatus,
-        integrityReason: mergedIntegrity.integrityReason,
-        riskSignals: mergedIntegrity.riskSignals,
-        integrityMeta,
-        integrityFlaggedAt:
-          mergedIntegrity.integrityStatus === 'flagged'
-            ? verificationRequest.integrity_flagged_at || mergedIntegrity.integrityFlaggedAt
-            : null,
-        responseAuthMethod: 'authenticated',
-        responseActorEmail: userEmail,
-      }).catch((error) => {
+      let updatedCanonical = null;
+      try {
+        updatedCanonical = await updateCanonicalSkillVerificationRequest({
+          requestId,
+          status: validated.action === 'accept' ? 'accepted' : 'declined',
+          respondedAt,
+          responseMessage: validated.responseMessage || null,
+          attestationResponse,
+          verifierProfileId: user.id,
+          verifierPrincipalType: 'user_account',
+          verifierEmail: userEmail || verificationRequest.verifier_email || null,
+          integrityStatus:
+            mergedIntegrity.integrityStatus === 'flagged'
+              ? 'warning'
+              : mergedIntegrity.integrityStatus,
+          integrityReason: mergedIntegrity.integrityReason,
+          riskSignals: mergedIntegrity.riskSignals,
+          integrityMeta,
+          integrityFlaggedAt:
+            mergedIntegrity.integrityStatus === 'flagged'
+              ? verificationRequest.integrity_flagged_at || mergedIntegrity.integrityFlaggedAt
+              : null,
+          responseAuthMethod: 'authenticated',
+          responseActorEmail: userEmail,
+        });
+      } catch (error) {
         console.error('Error updating canonical verification request:', error);
-        return null;
-      });
+        updatedCanonical = null;
+      }
+      updated = updatedCanonical
+        ? mapCanonicalSkillVerificationRequestRecord(updatedCanonical)
+        : null;
     } else {
       const { data, error: updateError } = await supabase
         .from('skill_verification_requests')
@@ -236,62 +229,6 @@ export async function POST(
 
     if (!updated) {
       return NextResponse.json({ error: 'Failed to update verification request' }, { status: 500 });
-    }
-
-    let canonicalRecord = null;
-    if (
-      CANONICAL_PROOFS_WRITE_ENABLED &&
-      !usingCanonicalRequest &&
-      isUuid(verificationRequest.requester_profile_id) &&
-      isUuid(verificationRequest.skill_id) &&
-      isUuid(user.id)
-    ) {
-      try {
-        canonicalRecord = await upsertCanonicalVerificationRecord({
-          ownerType: 'individual_profile',
-          ownerId: verificationRequest.requester_profile_id,
-          subjectType: 'skill',
-          subjectId: verificationRequest.skill_id,
-          verificationKind:
-            requestKind === 'human_observed_attestation'
-              ? verificationRequest.verifier_source === 'manager'
-                ? 'skill_attestation_manager'
-                : 'skill_attestation_peer'
-              : verificationRequest.verifier_source === 'manager'
-                ? 'skill_attestation_manager'
-                : verificationRequest.verifier_source === 'peer'
-                  ? 'skill_attestation_peer'
-                  : 'platform_manual_review',
-          status: updated.status,
-          verifierPrincipalType: 'user_account',
-          verifierProfileId: user.id,
-          verifierEmailHash: userEmail ? hashOpaqueToken(userEmail) : null,
-          verifierDomainSnapshot:
-            typeof verificationRequest.verifier_domain_snapshot === 'string'
-              ? verificationRequest.verifier_domain_snapshot
-              : null,
-          integrityStatus: updated.integrity_status === 'clear' ? 'clear' : 'warning',
-          integrityReason: updated.integrity_reason || null,
-          riskSignals:
-            updated.risk_signals && typeof updated.risk_signals === 'object'
-              ? (updated.risk_signals as Record<string, unknown>)
-              : {},
-          sourceRequestTable: 'skill_verification_requests',
-          sourceRequestId: requestId,
-          sourceResponseTable: 'skill_verification_requests',
-          sourceResponseId: requestId,
-          verifiedAt: validated.action === 'accept' ? respondedAt : null,
-          metadata: {
-            responseMessage: validated.responseMessage || null,
-            responseAuthMethod: 'authenticated',
-            evidenceClass:
-              requestKind === 'human_observed_attestation' ? 'human_observed' : 'generic',
-            attestation: attestationResponse,
-          },
-        });
-      } catch (canonicalError) {
-        console.error('Failed to upsert canonical verification record:', canonicalError);
-      }
     }
 
     // Notify the requester that verification was completed
@@ -336,7 +273,7 @@ export async function POST(
     return NextResponse.json({
       request: updated,
       message: `Verification request ${validated.action === 'accept' ? 'accepted' : 'declined'} successfully`,
-      canonical_record_id: canonicalRecord?.id ?? null,
+      canonical_record_id: usingCanonicalRequest ? requestId : null,
       integrity_status: updated.integrity_status || mergedIntegrity.integrityStatus,
       integrity_reason:
         (updated.integrity_status || mergedIntegrity.integrityStatus) === 'flagged'

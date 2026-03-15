@@ -25,6 +25,10 @@ import {
   CANONICAL_PROOFS_WRITE_ENABLED,
   upsertCanonicalVerificationRecord,
 } from '@/lib/canonical/repository';
+import {
+  listCanonicalSkillVerificationRequestsForOwner,
+  mapCanonicalSkillVerificationRequestRecord,
+} from '@/lib/verification/canonical-requests';
 
 const RequestArtifactSchema = z.object({
   type: z.enum(CUSTOM_VERIFICATION_ARTIFACT_TYPES),
@@ -172,32 +176,6 @@ async function loadSelectedSkills(
   };
 }
 
-function isUniqueViolationError(error: unknown): boolean {
-  if (!error || typeof error !== 'object') {
-    return false;
-  }
-
-  const e = error as { code?: string };
-  return e.code === '23505';
-}
-
-function isDuplicateSkillVerificationConstraintError(error: unknown): boolean {
-  if (!isUniqueViolationError(error)) {
-    return false;
-  }
-
-  const e = error as { message?: string; details?: string; hint?: string; constraint?: string };
-  const errorText =
-    `${e.constraint || ''} ${e.message || ''} ${e.details || ''} ${e.hint || ''}`.toLowerCase();
-
-  return (
-    errorText.includes('idx_skill_verification_active_unique_verifier') ||
-    (errorText.includes('skill_verification_requests') &&
-      errorText.includes('requester_profile_id') &&
-      errorText.includes('skill_id'))
-  );
-}
-
 function readI18nEnglish(value: unknown): string | null {
   if (!value) {
     return null;
@@ -339,27 +317,24 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      const { data: acceptedSkillRequests, error: acceptedSkillRequestsError } = await supabase
-        .from('skill_verification_requests')
-        .select('skill_id, integrity_status')
-        .eq('requester_profile_id', user.id)
-        .eq('status', 'accepted')
-        .in('skill_id', groupedArtifacts.skill);
-
-      if (acceptedSkillRequestsError) {
-        console.error(
-          'Failed to validate accepted skill verification requests:',
-          acceptedSkillRequestsError
-        );
-        return NextResponse.json(
-          { error: 'Failed to validate selected artifacts' },
-          { status: 500 }
-        );
-      }
+      const acceptedSkillRequests = (
+        await listCanonicalSkillVerificationRequestsForOwner(user.id).catch((error) => {
+          console.error(
+            'Failed to validate accepted canonical skill verification requests:',
+            error
+          );
+          return [];
+        })
+      ).map(mapCanonicalSkillVerificationRequestRecord);
 
       const alreadyVerifiedSkillIds = new Set(
-        (acceptedSkillRequests || [])
-          .filter((requestRow) => requestRow.integrity_status === 'clear')
+        acceptedSkillRequests
+          .filter(
+            (requestRow) =>
+              requestRow.status === 'accepted' &&
+              requestRow.integrity_status === 'clear' &&
+              groupedArtifacts.skill.includes(requestRow.skill_id)
+          )
           .map((requestRow) => requestRow.skill_id)
       );
 
@@ -544,6 +519,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: attestationRequestMode.error }, { status: 400 });
     }
 
+    if (selectedSkillIds.length > 0) {
+      const existingSkillRequests = (
+        await listCanonicalSkillVerificationRequestsForOwner(user.id).catch((error) => {
+          console.error('Failed to validate active canonical skill verification requests:', error);
+          return [];
+        })
+      ).map(mapCanonicalSkillVerificationRequestRecord);
+
+      const hasActiveDuplicate = existingSkillRequests.some(
+        (requestRow) =>
+          selectedSkillIds.includes(requestRow.skill_id) &&
+          normalizeVerifierEmail(requestRow.verifier_email) === verifierEmail &&
+          (requestRow.status === 'pending' || requestRow.status === 'accepted')
+      );
+
+      if (hasActiveDuplicate) {
+        return NextResponse.json(
+          {
+            error:
+              'An active verification request already exists for at least one selected skill and verifier.',
+            code: 'DUPLICATE_VERIFICATION_REQUEST',
+          },
+          { status: 409 }
+        );
+      }
+    }
+
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 14);
 
@@ -659,6 +661,16 @@ export async function POST(request: NextRequest) {
               sourceRequestTable: 'custom_verification_requests',
               sourceRequestId: customRequest.id,
               metadata: {
+                requestTransport: artifact.type === 'skill' ? 'skill_verification_request' : null,
+                requesterEmailSnapshot: null,
+                verifierEmail: verifierEmail,
+                verifierSource:
+                  artifact.type === 'skill'
+                    ? mapCustomRelationshipToSkillVerifierSource(parsed.data.relationship)
+                    : null,
+                verifierRelationship: parsed.data.relationship,
+                customRequestId: customRequest.id,
+                capabilityTokenId: issued.token.id,
                 relationship: parsed.data.relationship,
                 message: parsed.data.message?.trim() || null,
                 requestKind: attestationRequestMode.requestKind,
@@ -672,49 +684,6 @@ export async function POST(request: NextRequest) {
           )
         )
       : [];
-
-    if (selectedSkillIds.length > 0) {
-      const mappedSkillVerifierSource = mapCustomRelationshipToSkillVerifierSource(
-        parsed.data.relationship
-      );
-      const skillRequestRows = selectedSkillIds.map((skillId) => ({
-        skill_id: skillId,
-        requester_profile_id: user.id,
-        verifier_email: verifierEmail,
-        verifier_profile_id: verifierProfileId,
-        verifier_source: mappedSkillVerifierSource,
-        verifier_relationship: parsed.data.relationship,
-        request_kind: attestationRequestMode.requestKind,
-        attestation_request: attestationRequestMode.requestPayload,
-        message: parsed.data.message?.trim() || null,
-        custom_request_id: customRequest.id,
-        status: 'pending',
-        expires_at: expiresAt.toISOString(),
-      }));
-
-      const { error: linkedSkillRowsError } = await supabase
-        .from('skill_verification_requests')
-        .insert(skillRequestRows);
-
-      if (linkedSkillRowsError) {
-        if (isDuplicateSkillVerificationConstraintError(linkedSkillRowsError)) {
-          return NextResponse.json(
-            {
-              error:
-                'An active verification request already exists for at least one selected skill and verifier.',
-              code: 'DUPLICATE_VERIFICATION_REQUEST',
-            },
-            { status: 409 }
-          );
-        }
-
-        console.error('Failed to create linked skill verification requests:', linkedSkillRowsError);
-        return NextResponse.json(
-          { error: 'Failed to create linked skill verification requests' },
-          { status: 500 }
-        );
-      }
-    }
 
     const { data: requesterProfile } = await supabase
       .from('profiles')

@@ -1,88 +1,51 @@
-import { createAdminClient } from '@/lib/supabase/admin';
 import { listCanonicalProofPackAggregatesForOwner } from '@/lib/proofs/canonical-pack';
-import { listVerificationRecordsForOwner } from '@/lib/verification/policy';
 import {
   listCanonicalSkillVerificationRequestsForOwner,
   listCanonicalSkillVerificationRequestsForVerifierEmail,
   mapCanonicalSkillVerificationRequestRecord,
 } from '@/lib/verification/canonical-requests';
-
-type SkillVerificationRecord = {
-  id: string;
-  skill_id: string;
-  custom_request_id?: string | null;
-  requester_profile_id: string;
-  verifier_email: string;
-  verifier_source: 'peer' | 'manager' | 'external';
-  verifier_relationship?: string | null;
-  request_kind?: 'generic_verification' | 'human_observed_attestation' | null;
-  attestation_request?: {
-    skillIds: string[];
-    skillLabels: string[];
-  } | null;
-  message?: string | null;
-  status: 'pending' | 'accepted' | 'declined' | 'expired' | 'failed';
-  created_at: string;
-  responded_at?: string | null;
-  response_message?: string | null;
-  expires_at?: string | null;
-  skills?: {
-    id: string;
-    competency_level: number;
-    name_i18n?: unknown;
-    skills_taxonomy?: {
-      name_i18n?: unknown;
-      skills_l3?: {
-        name_i18n?: unknown;
-        skills_subcategories?: {
-          name_i18n?: unknown;
-          skills_categories?: {
-            name_i18n?: unknown;
-          };
-        };
-      };
-    };
-  };
-  profiles?: {
-    id: string;
-    display_name?: string | null;
-    handle?: string | null;
-    avatar_url?: string | null;
-  };
-};
-
-type SkillDetailsRecord = NonNullable<SkillVerificationRecord['skills']>;
-type ProfileDetailsRecord = NonNullable<SkillVerificationRecord['profiles']>;
-
-type ImpactVerificationRecord = {
-  id: string;
-  impact_story_id: string;
-  requester_profile_id: string;
-  verifier_email: string;
-  verifier_name?: string | null;
-  verifier_relationship?: string | null;
-  message?: string | null;
-  status: 'pending' | 'accepted' | 'declined' | 'expired' | 'failed';
-  created_at: string;
-  responded_at?: string | null;
-  response_message?: string | null;
-  expires_at?: string | null;
-  impact_stories?: {
-    id?: string;
-    title?: string | null;
-  } | null;
-  profiles?: {
-    id: string;
-    display_name?: string | null;
-    handle?: string | null;
-    avatar_url?: string | null;
-  } | null;
-};
+import {
+  listCanonicalImpactVerificationRequestsForOwner,
+  listCanonicalImpactVerificationRequestsForVerifierEmail,
+  mapCanonicalImpactVerificationRequestRecord,
+} from '@/lib/verification/canonical-impact-requests';
 
 type CanonicalProofPackAggregate = Awaited<
   ReturnType<typeof listCanonicalProofPackAggregatesForOwner>
 >[number];
-type VerificationRecord = Awaited<ReturnType<typeof listVerificationRecordsForOwner>>[number];
+
+type SkillVerificationRecord = ReturnType<typeof mapCanonicalSkillVerificationRequestRecord>;
+type ImpactVerificationRecord = ReturnType<typeof mapCanonicalImpactVerificationRequestRecord>;
+
+type SkillDetailsRecord = {
+  id: string;
+  competency_level: number;
+  name_i18n?: unknown;
+  skills_taxonomy?: {
+    name_i18n?: unknown;
+    skills_l3?: {
+      name_i18n?: unknown;
+      skills_subcategories?: {
+        name_i18n?: unknown;
+        skills_categories?: {
+          name_i18n?: unknown;
+        };
+      };
+    };
+  };
+};
+
+type ProfileDetailsRecord = {
+  id: string;
+  display_name?: string | null;
+  handle?: string | null;
+  avatar_url?: string | null;
+};
+
+type ImpactStorySummaryRecord = {
+  id: string;
+  title?: string | null;
+};
 
 type CanonicalRequestContext = {
   canonicalPackId?: string | null;
@@ -122,8 +85,8 @@ export type VerificationRequestView = {
   canonicalOutcomesSummary?: string | null;
   canonicalVerificationStatus?: string | null;
   canonicalEvidenceTitles?: string[];
-  skills?: SkillVerificationRecord['skills'];
-  profiles?: SkillVerificationRecord['profiles'];
+  skills?: SkillDetailsRecord;
+  profiles?: ProfileDetailsRecord;
 };
 
 function verificationStatusRank(status: string | null | undefined) {
@@ -183,38 +146,9 @@ function buildCanonicalRequestContext(
   };
 }
 
-function toSkillVerificationRecords(rows: unknown): SkillVerificationRecord[] {
-  return Array.isArray(rows) ? (rows as unknown as SkillVerificationRecord[]) : [];
-}
-
-function toImpactVerificationRecords(rows: unknown): ImpactVerificationRecord[] {
-  return Array.isArray(rows) ? (rows as unknown as ImpactVerificationRecord[]) : [];
-}
-
-function mergeSkillVerificationRecords(
-  canonical: SkillVerificationRecord[],
-  legacy: SkillVerificationRecord[]
-) {
-  const merged = new Map<string, SkillVerificationRecord>();
-
-  canonical.forEach((record) => {
-    merged.set(record.id, record);
-  });
-
-  legacy.forEach((record) => {
-    if (!merged.has(record.id)) {
-      merged.set(record.id, record);
-    }
-  });
-
-  return Array.from(merged.values()).sort((left, right) => {
-    return new Date(right.created_at).getTime() - new Date(left.created_at).getTime();
-  });
-}
-
 function toAttestationRequestShape(
   value: Record<string, unknown> | null | undefined
-): SkillVerificationRecord['attestation_request'] {
+): VerificationRequestView['attestationRequest'] {
   if (!value || !Array.isArray(value.skillIds) || !Array.isArray(value.skillLabels)) {
     return null;
   }
@@ -225,35 +159,12 @@ function toAttestationRequestShape(
   };
 }
 
-function toSkillVerificationRecordFromCanonical(
-  request: ReturnType<typeof mapCanonicalSkillVerificationRequestRecord>,
-  skillDetailsById: Map<string, SkillDetailsRecord>,
-  requesterProfilesById: Map<string, ProfileDetailsRecord>
-): SkillVerificationRecord {
-  return {
-    id: request.id,
-    skill_id: request.skill_id,
-    custom_request_id: null,
-    requester_profile_id: request.requester_profile_id,
-    verifier_email: request.verifier_email,
-    verifier_source: request.verifier_source,
-    verifier_relationship: request.verifier_relationship,
-    request_kind: request.request_kind,
-    attestation_request: toAttestationRequestShape(request.attestation_request),
-    message: request.message,
-    status: request.status,
-    created_at: request.created_at,
-    responded_at: request.responded_at,
-    response_message: request.response_message,
-    expires_at: request.expires_at,
-    skills: skillDetailsById.get(request.skill_id),
-    profiles: requesterProfilesById.get(request.requester_profile_id),
-  };
-}
-
 function mapSkillRequestToView(
   request: SkillVerificationRecord,
-  canonicalContext: CanonicalRequestContext
+  skillDetailsById: Map<string, SkillDetailsRecord>,
+  requesterProfilesById: Map<string, ProfileDetailsRecord>,
+  canonicalContext: CanonicalRequestContext,
+  bundleId?: string | null
 ): VerificationRequestView {
   return {
     id: request.id,
@@ -264,26 +175,29 @@ function mapSkillRequestToView(
         ? 'skill_attestation_manager'
         : 'skill_attestation_peer',
     requestKind: request.request_kind || 'generic_verification',
-    bundleId: request.custom_request_id || null,
+    bundleId: bundleId || null,
     requesterProfileId: request.requester_profile_id,
     verifierEmail: request.verifier_email,
     verifierSource: request.verifier_source,
     verifierRelationship: request.verifier_relationship || null,
-    attestationRequest: request.attestation_request || null,
+    attestationRequest: toAttestationRequestShape(request.attestation_request),
     message: request.message || null,
-    status: request.status,
+    status:
+      request.status === 'cancelled' || request.status === 'revoked' ? 'declined' : request.status,
     createdAt: request.created_at,
     respondedAt: request.responded_at || null,
     responseMessage: request.response_message || null,
     expiresAt: request.expires_at || null,
-    skills: request.skills,
-    profiles: request.profiles,
+    skills: skillDetailsById.get(request.skill_id),
+    profiles: requesterProfilesById.get(request.requester_profile_id),
     ...canonicalContext,
   };
 }
 
 function mapImpactRequestToView(
   request: ImpactVerificationRecord,
+  impactStoriesById: Map<string, ImpactStorySummaryRecord>,
+  requesterProfilesById: Map<string, ProfileDetailsRecord>,
   canonicalContext: CanonicalRequestContext
 ): VerificationRequestView {
   return {
@@ -292,18 +206,19 @@ function mapImpactRequestToView(
     subjectId: request.impact_story_id,
     verificationKind: 'impact_attestation',
     requestKind: 'impact_attestation',
-    impactStoryTitle: request.impact_stories?.title || null,
+    impactStoryTitle: impactStoriesById.get(request.impact_story_id)?.title || null,
     requesterProfileId: request.requester_profile_id,
     verifierEmail: request.verifier_email,
     verifierName: request.verifier_name || null,
     verifierRelationship: request.verifier_relationship || null,
     message: request.message || null,
-    status: request.status,
+    status:
+      request.status === 'cancelled' || request.status === 'revoked' ? 'declined' : request.status,
     createdAt: request.created_at,
     respondedAt: request.responded_at || null,
     responseMessage: request.response_message || null,
     expiresAt: request.expires_at || null,
-    profiles: request.profiles || undefined,
+    profiles: requesterProfilesById.get(request.requester_profile_id),
     ...canonicalContext,
   };
 }
@@ -314,193 +229,67 @@ export async function loadVerificationRequestFeed(params: {
   hasVerifiedEmail: boolean;
   supabase: any;
 }) {
-  const verificationSelect = `
-    id,
-    skill_id,
-    custom_request_id,
-    requester_profile_id,
-    verifier_email,
-    verifier_source,
-    verifier_relationship,
-    request_kind,
-    attestation_request,
-    message,
-    status,
-    created_at,
-    responded_at,
-    response_message,
-    expires_at,
-    skills:skills!skill_verification_requests_skill_id_fkey (
-      id,
-      competency_level:level,
-      skills_taxonomy:skills_taxonomy!skills_skill_code_fkey (
-        name_i18n,
-        skills_l3:skills_l3!skills_taxonomy_cat_id_subcat_id_l3_id_fkey (
-          name_i18n,
-          skills_subcategories:skills_subcategories!skills_l3_cat_id_subcat_id_fkey (
-            name_i18n,
-            skills_categories:skills_categories!skills_subcategories_cat_id_fkey (
-              name_i18n
-            )
-          )
-        )
-      )
-    ),
-    profiles:profiles!skill_verification_requests_requester_profile_id_fkey (
-      id,
-      display_name,
-      handle,
-      avatar_url
-    )
-  `;
-
-  const [incomingResult, sentResult] = await Promise.all([
-    params.userEmail
-      ? params.supabase
-          .from('skill_verification_requests')
-          .select(verificationSelect)
-          .eq('verifier_email', params.userEmail)
-          .order('created_at', { ascending: false })
-      : Promise.resolve({ data: [], error: null } as const),
-    params.supabase
-      .from('skill_verification_requests')
-      .select(verificationSelect)
-      .eq('requester_profile_id', params.userId)
-      .order('created_at', { ascending: false }),
-  ]);
-
-  const sentImpactResult = await params.supabase
-    .from('impact_story_verification_requests')
-    .select(
-      `
-        id,
-        impact_story_id,
-        requester_profile_id,
-        verifier_email,
-        verifier_name,
-        verifier_relationship,
-        message,
-        status,
-        created_at,
-        responded_at,
-        response_message,
-        expires_at,
-        impact_stories:impact_story_id (
-          id,
-          title
-        )
-      `
-    )
-    .eq('requester_profile_id', params.userId)
-    .order('created_at', { ascending: false });
-
   const [
     canonicalAggregates,
-    verificationRecords,
     canonicalIncomingSkillRows,
     canonicalSentSkillRows,
+    canonicalIncomingImpactRows,
+    canonicalSentImpactRows,
   ] = await Promise.all([
     listCanonicalProofPackAggregatesForOwner('individual_profile', params.userId).catch(() => []),
-    listVerificationRecordsForOwner('individual_profile', params.userId).catch(() => []),
     params.userEmail
       ? listCanonicalSkillVerificationRequestsForVerifierEmail(params.userEmail).catch(() => [])
       : Promise.resolve([]),
     listCanonicalSkillVerificationRequestsForOwner(params.userId).catch(() => []),
+    params.userEmail && params.hasVerifiedEmail
+      ? listCanonicalImpactVerificationRequestsForVerifierEmail(params.userEmail).catch(() => [])
+      : Promise.resolve([]),
+    listCanonicalImpactVerificationRequestsForOwner(params.userId).catch(() => []),
   ]);
 
-  let incomingImpactResult: { data: unknown[] | null; error: unknown | null } = {
-    data: [],
-    error: null,
-  };
-  if (params.userEmail && params.hasVerifiedEmail) {
-    try {
-      const adminClient = createAdminClient();
-      const adminResult = await adminClient
-        .from('impact_story_verification_requests')
-        .select(
-          `
-            id,
-            impact_story_id,
-            requester_profile_id,
-            verifier_email,
-            verifier_name,
-            verifier_relationship,
-            message,
-            status,
-            created_at,
-            responded_at,
-            response_message,
-            expires_at,
-            impact_stories:impact_story_id (
-              id,
-              title
-            ),
-            profiles:requester_profile_id (
-              id,
-              display_name,
-              handle,
-              avatar_url
-            )
-          `
-        )
-        .eq('verifier_email', params.userEmail)
-        .order('created_at', { ascending: false });
-
-      incomingImpactResult = {
-        data: adminResult.data as unknown[] | null,
-        error: adminResult.error as unknown,
-      };
-    } catch (error) {
-      incomingImpactResult = { data: null, error };
-    }
-  }
-
-  if (incomingResult.error) {
-    console.error('Failed to load incoming verification requests:', incomingResult.error);
-  }
-  if (sentResult.error) {
-    console.error('Failed to load sent verification requests:', sentResult.error);
-  }
-  if (sentImpactResult.error) {
-    console.error('Failed to load sent impact verification requests:', sentImpactResult.error);
-  }
-  if (incomingImpactResult.error) {
-    console.error(
-      'Failed to load incoming impact verification requests:',
-      incomingImpactResult.error
-    );
-  }
-
-  const incomingSkillRequests = toSkillVerificationRecords(incomingResult.data);
-  const incomingImpactRequests = toImpactVerificationRecords(incomingImpactResult.data);
-  const sentSkillRequests = toSkillVerificationRecords(sentResult.data);
-  const sentImpactRequests = toImpactVerificationRecords(sentImpactResult.data);
   const canonicalIncomingSkillRequests = canonicalIncomingSkillRows.map(
     mapCanonicalSkillVerificationRequestRecord
   );
   const canonicalSentSkillRequests = canonicalSentSkillRows.map(
     mapCanonicalSkillVerificationRequestRecord
   );
-
-  const canonicalSkillIds = Array.from(
-    new Set(
-      [...canonicalIncomingSkillRequests, ...canonicalSentSkillRequests]
-        .map((request) => request.skill_id)
-        .filter((skillId): skillId is string => typeof skillId === 'string' && skillId.length > 0)
-    )
+  const canonicalIncomingImpactRequests = canonicalIncomingImpactRows.map(
+    mapCanonicalImpactVerificationRequestRecord
   );
-  const canonicalRequesterProfileIds = Array.from(
-    new Set(
-      [...canonicalIncomingSkillRequests, ...canonicalSentSkillRequests]
-        .map((request) => request.requester_profile_id)
-        .filter(
-          (profileId): profileId is string => typeof profileId === 'string' && profileId.length > 0
-        )
-    )
+  const canonicalSentImpactRequests = canonicalSentImpactRows.map(
+    mapCanonicalImpactVerificationRequestRecord
   );
 
-  const [canonicalSkillDetailsResult, canonicalRequesterProfilesResult] = await Promise.all([
-    canonicalSkillIds.length > 0
+  const skillIds = Array.from(
+    new Set(
+      [
+        ...canonicalIncomingSkillRequests.map((request) => request.skill_id),
+        ...canonicalSentSkillRequests.map((request) => request.skill_id),
+      ].filter((skillId): skillId is string => typeof skillId === 'string' && skillId.length > 0)
+    )
+  );
+  const requesterProfileIds = Array.from(
+    new Set(
+      [
+        ...canonicalIncomingSkillRequests.map((request) => request.requester_profile_id),
+        ...canonicalSentSkillRequests.map((request) => request.requester_profile_id),
+        ...canonicalIncomingImpactRequests.map((request) => request.requester_profile_id),
+        ...canonicalSentImpactRequests.map((request) => request.requester_profile_id),
+      ].filter(
+        (profileId): profileId is string => typeof profileId === 'string' && profileId.length > 0
+      )
+    )
+  );
+  const impactStoryIds = Array.from(
+    new Set(
+      [...canonicalIncomingImpactRequests, ...canonicalSentImpactRequests]
+        .map((request) => request.impact_story_id)
+        .filter((storyId): storyId is string => typeof storyId === 'string' && storyId.length > 0)
+    )
+  );
+
+  const [skillDetailsResult, requesterProfilesResult, impactStoriesResult] = await Promise.all([
+    skillIds.length > 0
       ? params.supabase
           .from('skills')
           .select(
@@ -523,71 +312,64 @@ export async function loadVerificationRequestFeed(params: {
               )
             `
           )
-          .in('id', canonicalSkillIds)
+          .in('id', skillIds)
       : Promise.resolve({ data: [], error: null } as const),
-    canonicalRequesterProfileIds.length > 0
+    requesterProfileIds.length > 0
       ? params.supabase
           .from('profiles')
           .select('id, display_name, handle, avatar_url')
-          .in('id', canonicalRequesterProfileIds)
+          .in('id', requesterProfileIds)
+      : Promise.resolve({ data: [], error: null } as const),
+    impactStoryIds.length > 0
+      ? params.supabase.from('impact_stories').select('id, title').in('id', impactStoryIds)
       : Promise.resolve({ data: [], error: null } as const),
   ]);
 
-  if (canonicalSkillDetailsResult.error) {
+  if (skillDetailsResult.error) {
+    console.error('Failed to load canonical verification skill details:', skillDetailsResult.error);
+  }
+  if (requesterProfilesResult.error) {
     console.error(
-      'Failed to load canonical skill verification details:',
-      canonicalSkillDetailsResult.error
+      'Failed to load requester profiles for canonical verification requests:',
+      requesterProfilesResult.error
     );
   }
-  if (canonicalRequesterProfilesResult.error) {
+  if (impactStoriesResult.error) {
     console.error(
-      'Failed to load canonical requester profiles for verification requests:',
-      canonicalRequesterProfilesResult.error
+      'Failed to load impact story titles for canonical verification requests:',
+      impactStoriesResult.error
     );
   }
 
-  const canonicalSkillDetailsById = new Map<string, SkillDetailsRecord>();
-  (Array.isArray(canonicalSkillDetailsResult.data) ? canonicalSkillDetailsResult.data : []).forEach(
+  const skillDetailsById = new Map<string, SkillDetailsRecord>();
+  (Array.isArray(skillDetailsResult.data) ? skillDetailsResult.data : []).forEach(
     (skill: SkillDetailsRecord | null | undefined) => {
       if (skill?.id) {
-        canonicalSkillDetailsById.set(skill.id as string, skill as SkillDetailsRecord);
+        skillDetailsById.set(skill.id, skill);
       }
     }
   );
-  const canonicalRequesterProfilesById = new Map<string, ProfileDetailsRecord>();
-  (Array.isArray(canonicalRequesterProfilesResult.data)
-    ? canonicalRequesterProfilesResult.data
-    : []
-  ).forEach((profile: ProfileDetailsRecord | null | undefined) => {
-    if (profile?.id) {
-      canonicalRequesterProfilesById.set(profile.id as string, profile as ProfileDetailsRecord);
-    }
-  });
 
-  const enrichedIncomingSkillRequests = mergeSkillVerificationRecords(
-    canonicalIncomingSkillRequests.map((request) =>
-      toSkillVerificationRecordFromCanonical(
-        request,
-        canonicalSkillDetailsById,
-        canonicalRequesterProfilesById
-      )
-    ),
-    incomingSkillRequests
+  const requesterProfilesById = new Map<string, ProfileDetailsRecord>();
+  (Array.isArray(requesterProfilesResult.data) ? requesterProfilesResult.data : []).forEach(
+    (profile: ProfileDetailsRecord | null | undefined) => {
+      if (profile?.id) {
+        requesterProfilesById.set(profile.id, profile);
+      }
+    }
   );
-  const enrichedSentSkillRequests = mergeSkillVerificationRecords(
-    canonicalSentSkillRequests.map((request) =>
-      toSkillVerificationRecordFromCanonical(
-        request,
-        canonicalSkillDetailsById,
-        canonicalRequesterProfilesById
-      )
-    ),
-    sentSkillRequests
+
+  const impactStoriesById = new Map<string, ImpactStorySummaryRecord>();
+  (Array.isArray(impactStoriesResult.data) ? impactStoriesResult.data : []).forEach(
+    (story: ImpactStorySummaryRecord | null | undefined) => {
+      if (story?.id) {
+        impactStoriesById.set(story.id, story);
+      }
+    }
   );
 
   const aggregatesBySkillId = new Map<string, CanonicalProofPackAggregate[]>();
   const aggregatesByImpactStoryId = new Map<string, CanonicalProofPackAggregate[]>();
-  const aggregateByVerificationRequestId = new Map<string, CanonicalProofPackAggregate>();
 
   canonicalAggregates.forEach((aggregate) => {
     if (aggregate.pack.primarySubjectType === 'skill' && aggregate.pack.primarySubjectId) {
@@ -603,70 +385,52 @@ export async function loadVerificationRequestFeed(params: {
     }
   });
 
-  verificationRecords.forEach((record) => {
-    if (
-      record.sourceRequestTable !== 'impact_story_verification_requests' ||
-      !record.sourceRequestId
-    ) {
-      return;
-    }
-
-    const linkedAggregate = canonicalAggregates.find(
-      (aggregate) =>
-        aggregate.verificationReferences.some((reference) => reference.id === record.id) ||
-        (record.proofArtifactId
-          ? aggregate.items.some(({ artifact }) => artifact.id === record.proofArtifactId)
-          : false)
-    );
-
-    if (linkedAggregate) {
-      aggregateByVerificationRequestId.set(record.sourceRequestId, linkedAggregate);
-    }
-  });
-
   const incomingRequests: VerificationRequestView[] = [
-    ...enrichedIncomingSkillRequests.map((request) =>
+    ...canonicalIncomingSkillRequests.map((request) =>
       mapSkillRequestToView(
         request,
+        skillDetailsById,
+        requesterProfilesById,
         buildCanonicalRequestContext(
           pickPreferredAggregate(aggregatesBySkillId.get(request.skill_id) ?? [])
         )
       )
     ),
-    ...incomingImpactRequests.map((request) =>
+    ...canonicalIncomingImpactRequests.map((request) =>
       mapImpactRequestToView(
         request,
+        impactStoriesById,
+        requesterProfilesById,
         buildCanonicalRequestContext(
-          aggregateByVerificationRequestId.get(request.id) ??
-            pickPreferredAggregate(aggregatesByImpactStoryId.get(request.impact_story_id) ?? [])
+          pickPreferredAggregate(aggregatesByImpactStoryId.get(request.impact_story_id) ?? [])
         )
       )
     ),
-  ].sort((left, right) => {
-    return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
-  });
+  ].sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
 
   const sentRequests: VerificationRequestView[] = [
-    ...enrichedSentSkillRequests.map((request) =>
+    ...canonicalSentSkillRequests.map((request) =>
       mapSkillRequestToView(
         request,
+        skillDetailsById,
+        requesterProfilesById,
         buildCanonicalRequestContext(
           pickPreferredAggregate(aggregatesBySkillId.get(request.skill_id) ?? [])
-        )
+        ),
+        request.custom_request_id || null
       )
     ),
-    ...sentImpactRequests.map((request) =>
+    ...canonicalSentImpactRequests.map((request) =>
       mapImpactRequestToView(
         request,
+        impactStoriesById,
+        requesterProfilesById,
         buildCanonicalRequestContext(
-          aggregateByVerificationRequestId.get(request.id) ??
-            pickPreferredAggregate(aggregatesByImpactStoryId.get(request.impact_story_id) ?? [])
+          pickPreferredAggregate(aggregatesByImpactStoryId.get(request.impact_story_id) ?? [])
         )
       )
     ),
-  ].sort((left, right) => {
-    return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
-  });
+  ].sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
 
   return {
     incomingRequests,

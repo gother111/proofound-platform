@@ -44,14 +44,9 @@ function createRequest(origin: string, body: Record<string, unknown>) {
 }
 
 function createSupabaseMock(options?: {
-  precheckResults?: Array<
-    Array<{ id: string; status: 'pending' | 'accepted'; verifier_email: string }>
-  >;
   requesterEmail?: string | null;
   skillRow?: Record<string, unknown>;
 }) {
-  let precheckCalls = 0;
-
   const skillsQuery = {
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
@@ -79,27 +74,6 @@ function createSupabaseMock(options?: {
     }),
   };
 
-  const verificationRequestsQuery = {
-    select: vi.fn().mockImplementation(() => {
-      const builder: any = {};
-      builder.eq = vi.fn().mockImplementation(() => builder);
-      builder.in = vi.fn().mockImplementation(() => {
-        const resultSet =
-          options?.precheckResults?.[
-            Math.min(precheckCalls, Math.max((options?.precheckResults?.length || 1) - 1, 0))
-          ] || [];
-        precheckCalls += 1;
-
-        return Promise.resolve({
-          data: resultSet,
-          error: null,
-        });
-      });
-
-      return builder;
-    }),
-  };
-
   const supabase = {
     auth: {
       getUser: vi.fn().mockResolvedValue({
@@ -114,18 +88,14 @@ function createSupabaseMock(options?: {
     from: vi.fn((table: string) => {
       if (table === 'skills') return skillsQuery;
       if (table === 'profiles') return profilesQuery;
-      if (table === 'skill_verification_requests') return verificationRequestsQuery;
       throw new Error(`Unexpected table ${table}`);
     }),
   };
 
-  return { supabase, verificationRequestsQuery, precheckCallCount: () => precheckCalls };
+  return { supabase };
 }
 
-function createSupabaseGetMock(options?: {
-  skillProfileId?: string;
-  requests?: Array<{ status: string; integrity_status?: string | null }>;
-}) {
+function createSupabaseGetMock(options?: { skillProfileId?: string }) {
   const skillsQuery = {
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
@@ -138,22 +108,9 @@ function createSupabaseGetMock(options?: {
     }),
   };
 
-  const verificationRequestsQuery = {
-    select: vi.fn().mockImplementation(() => {
-      const builder: any = {};
-      builder.eq = vi.fn().mockReturnValue(builder);
-      builder.order = vi.fn().mockResolvedValue({
-        data: options?.requests ?? [],
-        error: null,
-      });
-      return builder;
-    }),
-  };
-
   const supabase = {
     from: vi.fn((table: string) => {
       if (table === 'skills') return skillsQuery;
-      if (table === 'skill_verification_requests') return verificationRequestsQuery;
       throw new Error(`Unexpected table ${table}`);
     }),
   };
@@ -406,7 +363,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
     process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
     process.env.NEXT_PUBLIC_APP_URL = '';
 
-    const { supabase, verificationRequestsQuery } = createSupabaseMock();
+    const { supabase } = createSupabaseMock();
     authContext.supabase = supabase;
     (sendEmail as any).mockResolvedValue({ success: true, id: 'email-no-readback' });
 
@@ -419,7 +376,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
     );
 
     expect(response.status).toBe(201);
-    expect(verificationRequestsQuery.select).toHaveBeenCalledTimes(1);
+    expect(findExistingCanonicalSkillVerificationRequest).toHaveBeenCalledTimes(1);
   });
 
   it('returns 401 when API auth context is unavailable', async () => {
@@ -457,12 +414,16 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
   });
 
   it('returns 409 when a pending active duplicate exists', async () => {
-    const { supabase } = createSupabaseMock({
-      precheckResults: [
-        [{ id: 'req-pending', status: 'pending', verifier_email: 'mentor@example.com' }],
-      ],
-    });
+    const { supabase } = createSupabaseMock();
     authContext.supabase = supabase;
+    (findExistingCanonicalSkillVerificationRequest as any).mockResolvedValueOnce({
+      id: 'req-pending',
+      skill_id: 'skill-1',
+      requester_profile_id: 'user-1',
+      verifier_email: 'mentor@example.com',
+      status: 'pending',
+      created_at: '2026-03-12T10:00:00.000Z',
+    });
 
     const response = await POST(
       createRequest('https://proofound.io', {
@@ -482,12 +443,16 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
   });
 
   it('returns 409 when an accepted active duplicate exists', async () => {
-    const { supabase } = createSupabaseMock({
-      precheckResults: [
-        [{ id: 'req-accepted', status: 'accepted', verifier_email: 'mentor@example.com' }],
-      ],
-    });
+    const { supabase } = createSupabaseMock();
     authContext.supabase = supabase;
+    (findExistingCanonicalSkillVerificationRequest as any).mockResolvedValueOnce({
+      id: 'req-accepted',
+      skill_id: 'skill-1',
+      requester_profile_id: 'user-1',
+      verifier_email: 'mentor@example.com',
+      status: 'accepted',
+      created_at: '2026-03-12T10:00:00.000Z',
+    });
 
     const response = await POST(
       createRequest('https://proofound.io', {
@@ -507,13 +472,18 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
   });
 
   it('returns 409 when the canonical create step hits a duplicate race', async () => {
-    const { supabase, precheckCallCount } = createSupabaseMock({
-      precheckResults: [
-        [],
-        [{ id: 'req-race', status: 'pending', verifier_email: 'mentor@example.com' }],
-      ],
-    });
+    const { supabase } = createSupabaseMock();
     authContext.supabase = supabase;
+    (findExistingCanonicalSkillVerificationRequest as any)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
+        id: 'req-race',
+        skill_id: 'skill-1',
+        requester_profile_id: 'user-1',
+        verifier_email: 'mentor@example.com',
+        status: 'pending',
+        created_at: '2026-03-12T10:00:00.000Z',
+      });
     (createCanonicalSkillVerificationRequest as any).mockRejectedValueOnce(
       Object.assign(new Error('duplicate key'), { code: '23505' })
     );
@@ -532,7 +502,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
       existingRequestId: 'req-race',
       existingStatus: 'pending',
     });
-    expect(precheckCallCount()).toBe(2);
+    expect(findExistingCanonicalSkillVerificationRequest).toHaveBeenCalledTimes(2);
     expect(sendEmail).not.toHaveBeenCalled();
   });
 });
@@ -544,12 +514,11 @@ describe('GET /api/expertise/user-skills/[id]/verification-request', () => {
   });
 
   it('returns verified when at least one accepted request is integrity clear', async () => {
-    const { supabase } = createSupabaseGetMock({
-      requests: [
-        { status: 'accepted', integrity_status: 'flagged' },
-        { status: 'accepted', integrity_status: 'clear' },
-      ],
-    });
+    const { supabase } = createSupabaseGetMock();
+    (listCanonicalSkillVerificationRequestsForOwner as any).mockResolvedValue([
+      { status: 'accepted', integrity_status: 'flagged', skill_id: 'skill-1' },
+      { status: 'accepted', integrity_status: 'clear', skill_id: 'skill-1' },
+    ]);
 
     (requireApiAuthContext as any).mockResolvedValue({
       user: { id: 'user-1' },
@@ -568,9 +537,10 @@ describe('GET /api/expertise/user-skills/[id]/verification-request', () => {
   });
 
   it('returns pending when accepted requests are integrity flagged', async () => {
-    const { supabase } = createSupabaseGetMock({
-      requests: [{ status: 'accepted', integrity_status: 'flagged' }],
-    });
+    const { supabase } = createSupabaseGetMock();
+    (listCanonicalSkillVerificationRequestsForOwner as any).mockResolvedValue([
+      { status: 'accepted', integrity_status: 'flagged', skill_id: 'skill-1' },
+    ]);
 
     (requireApiAuthContext as any).mockResolvedValue({
       user: { id: 'user-1' },
@@ -589,9 +559,7 @@ describe('GET /api/expertise/user-skills/[id]/verification-request', () => {
   });
 
   it('returns verified when the only accepted request is canonical and integrity clear', async () => {
-    const { supabase } = createSupabaseGetMock({
-      requests: [],
-    });
+    const { supabase } = createSupabaseGetMock();
     (listCanonicalSkillVerificationRequestsForOwner as any).mockResolvedValue([
       {
         id: 'canonical-request-1',

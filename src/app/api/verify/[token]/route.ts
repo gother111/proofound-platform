@@ -29,6 +29,11 @@ import {
   updateCanonicalSkillVerificationRequest,
 } from '@/lib/verification/canonical-requests';
 import {
+  getCanonicalImpactVerificationRequestById,
+  mapCanonicalImpactVerificationRequestRecord,
+  updateCanonicalImpactVerificationRequest,
+} from '@/lib/verification/canonical-impact-requests';
+import {
   CANONICAL_PROOFS_WRITE_ENABLED,
   upsertCanonicalVerificationRecord,
 } from '@/lib/canonical/repository';
@@ -242,6 +247,33 @@ async function getSkillVerificationByTokenOrLegacyId(
     tokenClass: CAPABILITY_TOKEN_CLASSES.SKILL_VERIFICATION_RESPONSE,
     metadata: { surface: 'verify_skill_lookup' },
   });
+
+  if (
+    capabilityLookup.ok &&
+    capabilityLookup.token.source_table === 'verification_records' &&
+    capabilityLookup.token.source_id
+  ) {
+    let canonicalVerification = null;
+    try {
+      canonicalVerification = await getCanonicalSkillVerificationRequestById(
+        capabilityLookup.token.source_id
+      );
+    } catch {
+      canonicalVerification = null;
+    }
+
+    if (canonicalVerification) {
+      const hydratedCanonicalVerification = await hydrateSkill({
+        ...mapCanonicalSkillVerificationRequestRecord(canonicalVerification),
+        source_request_table: 'verification_records',
+        source_request_id: canonicalVerification.id,
+      });
+
+      if (hydratedCanonicalVerification.data) {
+        return { data: hydratedCanonicalVerification.data as any, error: null };
+      }
+    }
+  }
 
   if (
     capabilityLookup.ok &&
@@ -854,6 +886,32 @@ async function getImpactVerificationRequestByToken(
 
   if (
     capabilityLookup.ok &&
+    capabilityLookup.token.source_table === 'verification_records' &&
+    capabilityLookup.token.source_id
+  ) {
+    let canonicalImpactVerification = null;
+    try {
+      canonicalImpactVerification = await getCanonicalImpactVerificationRequestById(
+        capabilityLookup.token.source_id
+      );
+    } catch {
+      canonicalImpactVerification = null;
+    }
+
+    if (canonicalImpactVerification) {
+      return {
+        data: {
+          ...mapCanonicalImpactVerificationRequestRecord(canonicalImpactVerification),
+          source_request_table: 'verification_records',
+          source_request_id: canonicalImpactVerification.id,
+        },
+        error: null,
+      };
+    }
+  }
+
+  if (
+    capabilityLookup.ok &&
     capabilityLookup.token.source_table === 'impact_story_verification_requests' &&
     capabilityLookup.token.source_id
   ) {
@@ -933,19 +991,29 @@ export async function GET(
       }
 
       if (impactVerification) {
+        const isCanonicalImpactRequest =
+          impactVerification.source_request_table === 'verification_records';
         if (
           impactVerification.expires_at &&
           new Date(impactVerification.expires_at) < new Date() &&
           impactVerification.status === 'pending'
         ) {
-          await adminClient
-            .from('impact_story_verification_requests')
-            .update({
+          if (isCanonicalImpactRequest) {
+            await updateCanonicalImpactVerificationRequest({
+              requestId: impactVerification.id,
               status: 'expired',
-              expired_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', impactVerification.id);
+              respondedAt: new Date().toISOString(),
+            });
+          } else {
+            await adminClient
+              .from('impact_story_verification_requests')
+              .update({
+                status: 'expired',
+                expired_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', impactVerification.id);
+          }
 
           impactVerification.status = 'expired';
         }
@@ -1316,6 +1384,8 @@ export async function POST(
       }
 
       if (impactVerification) {
+        const isCanonicalImpactRequest =
+          impactVerification.source_request_table === 'verification_records';
         if (impactVerification.status !== 'pending') {
           return NextResponse.json(
             { error: `This request has already been ${impactVerification.status}` },
@@ -1324,14 +1394,22 @@ export async function POST(
         }
 
         if (impactVerification.expires_at && new Date(impactVerification.expires_at) < new Date()) {
-          await adminClient
-            .from('impact_story_verification_requests')
-            .update({
+          if (isCanonicalImpactRequest) {
+            await updateCanonicalImpactVerificationRequest({
+              requestId: impactVerification.id,
               status: 'expired',
-              expired_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', impactVerification.id);
+              respondedAt: new Date().toISOString(),
+            });
+          } else {
+            await adminClient
+              .from('impact_story_verification_requests')
+              .update({
+                status: 'expired',
+                expired_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', impactVerification.id);
+          }
 
           return NextResponse.json(
             { error: 'This verification request has expired' },
@@ -1439,59 +1517,95 @@ export async function POST(
           },
         };
 
-        const { error: responseInsertError } = await adminClient
-          .from('impact_story_verification_responses')
-          .insert({
-            request_id: impactVerification.id,
-            responder_email:
-              authIdentity.email || normalizedVerifierEmail || impactVerification.verifier_email,
-            action: validated.action,
-            confirmed_role: confirmedRole,
-            confirmed_artifacts: confirmedArtifacts,
-            confirmed_outcome_ids: confirmedOutcomeIds,
-            response_note: validated.message || null,
-          });
-
-        if (responseInsertError) {
-          console.error('Failed to insert impact verification response:', responseInsertError);
-          return NextResponse.json(
-            { error: 'Failed to record verification response' },
-            { status: 500 }
-          );
-        }
-
         const nextStatus = validated.action === 'accept' ? 'accepted' : 'declined';
 
-        const { error: requestUpdateError } = await adminClient
-          .from('impact_story_verification_requests')
-          .update({
+        if (isCanonicalImpactRequest) {
+          const updatedCanonicalImpact = await updateCanonicalImpactVerificationRequest({
+            requestId: impactVerification.id,
             status: nextStatus,
-            responded_at: respondedAt,
-            response_message: validated.message || null,
-            responder_ip_hash: responderFingerprints.ipHash,
-            responder_user_agent_hash: responderFingerprints.userAgentHash,
-            response_auth_method: getResponseAuthMethod(authIdentity),
-            response_actor_email: authIdentity.email,
-            verifier_profile_id:
+            respondedAt,
+            responseMessage: validated.message || null,
+            verifierProfileId:
               authIdentity.profileId || impactVerification.verifier_profile_id || null,
-            risk_signals: mergedIntegrity.riskSignals,
-            integrity_status: mergedIntegrity.integrityStatus,
-            integrity_reason: mergedIntegrity.integrityReason,
-            integrity_meta: integrityMeta,
-            integrity_flagged_at:
+            verifierPrincipalType: authIdentity.isAuthenticated ? 'user_account' : 'external_email',
+            verifierEmail:
+              authIdentity.email || normalizedVerifierEmail || impactVerification.verifier_email,
+            verifierName: impactVerification.verifier_name || null,
+            verifierRelationship: impactVerification.verifier_relationship || null,
+            integrityStatus: mergedIntegrity.integrityStatus === 'clear' ? 'clear' : 'warning',
+            integrityReason: mergedIntegrity.integrityReason,
+            riskSignals: mergedIntegrity.riskSignals,
+            integrityMeta,
+            integrityFlaggedAt:
               mergedIntegrity.integrityStatus === 'flagged'
                 ? impactVerification.integrity_flagged_at || mergedIntegrity.integrityFlaggedAt
                 : null,
-            updated_at: respondedAt,
-          })
-          .eq('id', impactVerification.id);
+            responseAuthMethod: getResponseAuthMethod(authIdentity),
+            responseActorEmail: authIdentity.email,
+          }).catch((error) => {
+            console.error('Failed to update canonical impact verification request:', error);
+            return null;
+          });
 
-        if (requestUpdateError) {
-          console.error('Failed to update impact verification request:', requestUpdateError);
-          return NextResponse.json(
-            { error: 'Failed to update verification request' },
-            { status: 500 }
-          );
+          if (!updatedCanonicalImpact) {
+            return NextResponse.json(
+              { error: 'Failed to update verification request' },
+              { status: 500 }
+            );
+          }
+        } else {
+          const { error: responseInsertError } = await adminClient
+            .from('impact_story_verification_responses')
+            .insert({
+              request_id: impactVerification.id,
+              responder_email:
+                authIdentity.email || normalizedVerifierEmail || impactVerification.verifier_email,
+              action: validated.action,
+              confirmed_role: confirmedRole,
+              confirmed_artifacts: confirmedArtifacts,
+              confirmed_outcome_ids: confirmedOutcomeIds,
+              response_note: validated.message || null,
+            });
+
+          if (responseInsertError) {
+            console.error('Failed to insert impact verification response:', responseInsertError);
+            return NextResponse.json(
+              { error: 'Failed to record verification response' },
+              { status: 500 }
+            );
+          }
+
+          const { error: requestUpdateError } = await adminClient
+            .from('impact_story_verification_requests')
+            .update({
+              status: nextStatus,
+              responded_at: respondedAt,
+              response_message: validated.message || null,
+              responder_ip_hash: responderFingerprints.ipHash,
+              responder_user_agent_hash: responderFingerprints.userAgentHash,
+              response_auth_method: getResponseAuthMethod(authIdentity),
+              response_actor_email: authIdentity.email,
+              verifier_profile_id:
+                authIdentity.profileId || impactVerification.verifier_profile_id || null,
+              risk_signals: mergedIntegrity.riskSignals,
+              integrity_status: mergedIntegrity.integrityStatus,
+              integrity_reason: mergedIntegrity.integrityReason,
+              integrity_meta: integrityMeta,
+              integrity_flagged_at:
+                mergedIntegrity.integrityStatus === 'flagged'
+                  ? impactVerification.integrity_flagged_at || mergedIntegrity.integrityFlaggedAt
+                  : null,
+              updated_at: respondedAt,
+            })
+            .eq('id', impactVerification.id);
+
+          if (requestUpdateError) {
+            console.error('Failed to update impact verification request:', requestUpdateError);
+            return NextResponse.json(
+              { error: 'Failed to update verification request' },
+              { status: 500 }
+            );
+          }
         }
 
         if (

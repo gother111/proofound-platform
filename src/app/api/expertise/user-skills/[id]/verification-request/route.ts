@@ -114,37 +114,7 @@ async function findExistingActiveVerificationRequest(params: {
       created_at: mapped.created_at,
     };
   }
-
-  const { data, error } = await params.supabase
-    .from('skill_verification_requests')
-    .select('id, status, verifier_email, created_at')
-    .eq('requester_profile_id', params.requesterProfileId)
-    .eq('skill_id', params.skillId)
-    .in('status', ['pending', 'accepted']);
-
-  if (error || !Array.isArray(data)) {
-    return null;
-  }
-
-  const matchingRows = data
-    .filter((row) => normalizeEmail(row.verifier_email) === params.verifierEmail)
-    .map((row) => row as ExistingActiveSkillVerificationRequest);
-
-  if (matchingRows.length === 0) {
-    return null;
-  }
-
-  matchingRows.sort((left, right) => {
-    const leftPriority = left.status === 'accepted' ? 0 : 1;
-    const rightPriority = right.status === 'accepted' ? 0 : 1;
-    if (leftPriority !== rightPriority) {
-      return leftPriority - rightPriority;
-    }
-
-    return new Date(right.created_at).getTime() - new Date(left.created_at).getTime();
-  });
-
-  return matchingRows[0] || null;
+  return null;
 }
 
 /**
@@ -537,29 +507,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Skill not found' }, { status: 404 });
     }
 
-    // Fetch verification requests for this skill
-    const { data: requests, error: requestsError } = await supabase
-      .from('skill_verification_requests')
-      .select('*')
-      .eq('skill_id', skillId)
-      .eq('requester_profile_id', user.id)
-      .order('created_at', { ascending: false });
-
-    if (requestsError) {
-      console.error('Error fetching verification requests:', requestsError);
-      return NextResponse.json({ error: 'Failed to fetch verification requests' }, { status: 500 });
-    }
-
     const canonicalRequests = (
       await listCanonicalSkillVerificationRequestsForOwner(user.id).catch(() => [])
     )
       .map(mapCanonicalSkillVerificationRequestRecord)
       .filter((record) => record.skill_id === skillId);
 
-    const combinedRequests = [...canonicalRequests, ...((requests as any[]) || [])];
-
     // Determine overall verification status
-    const hasAccepted = combinedRequests.some(
+    const hasAccepted = canonicalRequests.some(
       (r: any) =>
         (r.status === 'accepted' || r.status === 'verified') &&
         (r.integrity_status === 'clear' || r.integrity_status === undefined)
@@ -568,7 +523,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({
       verification_status,
-      requests: combinedRequests,
+      requests: canonicalRequests,
     });
   } catch (error) {
     console.error('Verification GET error:', error);

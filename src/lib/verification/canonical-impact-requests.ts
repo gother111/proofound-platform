@@ -4,7 +4,6 @@ import { and, desc, eq, sql } from 'drizzle-orm';
 
 import { db } from '@/db';
 import { verificationRecords } from '@/db/schema';
-import { getRows } from '@/lib/db/rows';
 import { hashOpaqueToken } from '@/lib/contracts/canonical-domain';
 import { upsertCanonicalVerificationRecord } from '@/lib/canonical/repository';
 import {
@@ -12,16 +11,13 @@ import {
   CAPABILITY_TOKEN_CLASSES,
   issueCapabilityToken,
 } from '@/lib/security/capability-tokens';
+import { getRows } from '@/lib/db/rows';
 import { normalizeEmail } from '@/lib/verification/integrity';
-
-export const CANONICAL_REQUEST_TRANSPORTS = {
-  skill: 'skill_verification_request',
-  impact: 'impact_verification_request',
-} as const;
+import { CANONICAL_REQUEST_TRANSPORTS } from '@/lib/verification/canonical-requests';
 
 type VerificationRecordRow = typeof verificationRecords.$inferSelect;
 
-type CanonicalSkillRequestStatus =
+type CanonicalImpactRequestStatus =
   | 'pending'
   | 'accepted'
   | 'declined'
@@ -30,22 +26,17 @@ type CanonicalSkillRequestStatus =
   | 'cancelled'
   | 'revoked';
 
-type CanonicalSkillRequestMetadata = {
+type CanonicalImpactRequestMetadata = {
   requestTransport?: string;
   requesterEmailSnapshot?: string | null;
   verifierEmail?: string | null;
-  verifierSource?: 'peer' | 'manager' | 'external' | null;
+  verifierName?: string | null;
   verifierRelationship?: string | null;
-  requestKind?: 'generic_verification' | 'human_observed_attestation' | null;
-  attestationRequest?: Record<string, unknown> | null;
-  attestationResponse?: Record<string, unknown> | null;
   message?: string | null;
-  skillName?: string | null;
-  requesterName?: string | null;
+  claimSnapshot?: Record<string, unknown> | null;
   capabilityTokenId?: string | null;
   emailSent?: boolean | null;
   emailError?: string | null;
-  customRequestId?: string | null;
   requiresAuthenticatedVerifier?: boolean | null;
   integrityMeta?: Record<string, unknown> | null;
   integrityFlaggedAt?: string | null;
@@ -54,20 +45,17 @@ type CanonicalSkillRequestMetadata = {
   responseMessage?: string | null;
 } & Record<string, unknown>;
 
-export type CanonicalSkillVerificationRequestRecord = {
+export type CanonicalImpactVerificationRequestRecord = {
   id: string;
-  skill_id: string;
-  custom_request_id: string | null;
+  impact_story_id: string;
   requester_profile_id: string;
   requester_email_snapshot: string | null;
   verifier_email: string;
-  verifier_source: 'peer' | 'manager' | 'external';
+  verifier_name: string | null;
   verifier_relationship: string | null;
-  request_kind: 'generic_verification' | 'human_observed_attestation' | null;
-  attestation_request: Record<string, unknown> | null;
-  attestation_response: Record<string, unknown> | null;
   message: string | null;
-  status: CanonicalSkillRequestStatus;
+  claim_snapshot: Record<string, unknown>;
+  status: CanonicalImpactRequestStatus;
   created_at: string;
   responded_at: string | null;
   response_message: string | null;
@@ -87,17 +75,24 @@ export type CanonicalSkillVerificationRequestRecord = {
   response_actor_email: string | null;
 };
 
+function isUuid(value: string | null | undefined): value is string {
+  return Boolean(
+    value &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+  );
+}
+
 function toMetadata(
   record: Pick<VerificationRecordRow, 'metadata'>
-): CanonicalSkillRequestMetadata {
+): CanonicalImpactRequestMetadata {
   return record.metadata && typeof record.metadata === 'object' && !Array.isArray(record.metadata)
-    ? (record.metadata as CanonicalSkillRequestMetadata)
+    ? (record.metadata as CanonicalImpactRequestMetadata)
     : {};
 }
 
 function normalizeCanonicalStatus(
   status: VerificationRecordRow['status']
-): CanonicalSkillRequestStatus {
+): CanonicalImpactRequestStatus {
   switch (status) {
     case 'verified':
       return 'accepted';
@@ -116,58 +111,39 @@ function normalizeCanonicalStatus(
   }
 }
 
-function isUuid(value: string | null | undefined): value is string {
-  return Boolean(
-    value &&
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
-  );
-}
-
-export function isCanonicalSkillVerificationRequestRecord(
+export function isCanonicalImpactVerificationRequestRecord(
   record: Pick<VerificationRecordRow, 'metadata' | 'subjectType'>
 ): boolean {
   const metadata = toMetadata(record);
   return (
-    record.subjectType === 'skill' &&
-    metadata.requestTransport === CANONICAL_REQUEST_TRANSPORTS.skill
+    record.subjectType === 'impact_story' &&
+    metadata.requestTransport === CANONICAL_REQUEST_TRANSPORTS.impact
   );
 }
 
-export function mapCanonicalSkillVerificationRequestRecord(
+export function mapCanonicalImpactVerificationRequestRecord(
   record: VerificationRecordRow
-): CanonicalSkillVerificationRequestRecord {
+): CanonicalImpactVerificationRequestRecord {
   const metadata = toMetadata(record);
   const verifierEmail = normalizeEmail(metadata.verifierEmail || null) || '';
 
   return {
     id: record.id,
-    skill_id: record.subjectId,
-    custom_request_id:
-      typeof metadata.customRequestId === 'string' ? metadata.customRequestId : null,
+    impact_story_id: record.subjectId,
     requester_profile_id: record.ownerId,
     requester_email_snapshot:
       typeof metadata.requesterEmailSnapshot === 'string' ? metadata.requesterEmailSnapshot : null,
     verifier_email: verifierEmail,
-    verifier_source: metadata.verifierSource || 'external',
+    verifier_name: typeof metadata.verifierName === 'string' ? metadata.verifierName : null,
     verifier_relationship:
       typeof metadata.verifierRelationship === 'string' ? metadata.verifierRelationship : null,
-    request_kind:
-      metadata.requestKind === 'human_observed_attestation'
-        ? 'human_observed_attestation'
-        : 'generic_verification',
-    attestation_request:
-      metadata.attestationRequest &&
-      typeof metadata.attestationRequest === 'object' &&
-      !Array.isArray(metadata.attestationRequest)
-        ? (metadata.attestationRequest as Record<string, unknown>)
-        : null,
-    attestation_response:
-      metadata.attestationResponse &&
-      typeof metadata.attestationResponse === 'object' &&
-      !Array.isArray(metadata.attestationResponse)
-        ? (metadata.attestationResponse as Record<string, unknown>)
-        : null,
     message: typeof metadata.message === 'string' ? metadata.message : null,
+    claim_snapshot:
+      metadata.claimSnapshot &&
+      typeof metadata.claimSnapshot === 'object' &&
+      !Array.isArray(metadata.claimSnapshot)
+        ? (metadata.claimSnapshot as Record<string, unknown>)
+        : {},
     status: normalizeCanonicalStatus(record.status),
     created_at: record.createdAt.toISOString(),
     responded_at: record.completedAt?.toISOString() || null,
@@ -206,13 +182,13 @@ export function mapCanonicalSkillVerificationRequestRecord(
   };
 }
 
-export async function findExistingCanonicalSkillVerificationRequest(params: {
+export async function findExistingCanonicalImpactVerificationRequest(params: {
   ownerId: string;
-  skillId: string;
+  impactStoryId: string;
   verifierEmail: string;
 }) {
   const normalizedVerifierEmail = normalizeEmail(params.verifierEmail);
-  if (!normalizedVerifierEmail || !isUuid(params.ownerId) || !isUuid(params.skillId)) {
+  if (!normalizedVerifierEmail || !isUuid(params.ownerId) || !isUuid(params.impactStoryId)) {
     return null;
   }
 
@@ -221,32 +197,31 @@ export async function findExistingCanonicalSkillVerificationRequest(params: {
     FROM verification_records
     WHERE owner_type = 'individual_profile'
       AND owner_id = ${params.ownerId}::uuid
-      AND subject_type = 'skill'
-      AND subject_id = ${params.skillId}::uuid
+      AND subject_type = 'impact_story'
+      AND subject_id = ${params.impactStoryId}::uuid
       AND status = 'pending'
-      AND metadata->>'requestTransport' = ${CANONICAL_REQUEST_TRANSPORTS.skill}
+      AND metadata->>'requestTransport' = ${CANONICAL_REQUEST_TRANSPORTS.impact}
       AND lower(coalesce(metadata->>'verifierEmail', '')) = ${normalizedVerifierEmail}
     ORDER BY created_at DESC
     LIMIT 1
   `);
 
   const row = (getRows(result)[0] ?? null) as VerificationRecordRow | null;
-  return row && isCanonicalSkillVerificationRequestRecord(row) ? row : null;
+  return row && isCanonicalImpactVerificationRequestRecord(row) ? row : null;
 }
 
-export async function createCanonicalSkillVerificationRequest(params: {
+export async function createCanonicalImpactVerificationRequest(params: {
   ownerId: string;
-  skillId: string;
-  skillName: string;
+  impactStoryId: string;
+  storyTitle: string;
   requesterName: string;
   requesterEmailSnapshot?: string | null;
   verifierEmail: string;
-  verifierSource: 'peer' | 'manager' | 'external';
+  verifierName?: string | null;
   verifierRelationship?: string | null;
   verifierProfileId?: string | null;
-  requestKind: 'generic_verification' | 'human_observed_attestation';
-  attestationRequest?: Record<string, unknown> | null;
   message?: string | null;
+  claimSnapshot: Record<string, unknown>;
   integrityStatus?: VerificationRecordRow['integrityStatus'];
   integrityReason?: string | null;
   riskSignals?: Record<string, unknown>;
@@ -256,18 +231,18 @@ export async function createCanonicalSkillVerificationRequest(params: {
   if (!normalizedVerifierEmail) {
     throw new Error('Verifier email is required');
   }
-  if (!isUuid(params.ownerId) || !isUuid(params.skillId)) {
-    throw new Error('Canonical verification requests require UUID owner and skill identifiers');
+  if (!isUuid(params.ownerId) || !isUuid(params.impactStoryId)) {
+    throw new Error('Canonical impact verification requests require UUID owner and subject ids');
   }
 
   const requestId = randomUUID();
   const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
   const issued = await issueCapabilityToken({
-    tokenClass: CAPABILITY_TOKEN_CLASSES.SKILL_VERIFICATION_RESPONSE,
+    tokenClass: CAPABILITY_TOKEN_CLASSES.IMPACT_VERIFICATION_RESPONSE,
     sourceTable: 'verification_records',
     sourceId: requestId,
-    actionScope: 'skill_verification.respond',
-    subjectType: 'skill_verification_request',
+    actionScope: 'impact_verification.respond',
+    subjectType: 'impact_verification_request',
     subjectId: requestId,
     actorBinding: params.verifierProfileId
       ? CAPABILITY_BINDINGS.EMAIL_THEN_PROFILE_LOCK
@@ -277,12 +252,11 @@ export async function createCanonicalSkillVerificationRequest(params: {
     expiresAt,
     singleUse: true,
     maxUses: 1,
-    scopeKey: `skill_verification:${params.skillId}:${normalizedVerifierEmail}`,
+    scopeKey: `impact_verification:${params.impactStoryId}:${normalizedVerifierEmail}`,
     revokePriorActiveTokensForScope: true,
     metadata: {
-      verifierSource: params.verifierSource,
-      skillId: params.skillId,
-      requestTransport: CANONICAL_REQUEST_TRANSPORTS.skill,
+      impactStoryId: params.impactStoryId,
+      requestTransport: CANONICAL_REQUEST_TRANSPORTS.impact,
     },
   });
 
@@ -290,16 +264,13 @@ export async function createCanonicalSkillVerificationRequest(params: {
     id: requestId,
     ownerType: 'individual_profile',
     ownerId: params.ownerId,
-    subjectType: 'skill',
-    subjectId: params.skillId,
-    verificationKind:
-      params.requestKind === 'human_observed_attestation'
-        ? params.verifierSource === 'manager'
-          ? 'skill_attestation_manager'
-          : 'skill_attestation_peer'
-        : 'skill_attestation_peer',
+    subjectType: 'impact_story',
+    subjectId: params.impactStoryId,
+    verificationSlot: 'impact_story.attestation',
+    verificationKind: 'impact_attestation',
     status: 'pending',
     verifierPrincipalType: params.verifierProfileId ? 'user_account' : 'external_email',
+    verifierClass: 'authenticated_external',
     verifierProfileId: params.verifierProfileId || null,
     verifierEmailHash: hashOpaqueToken(normalizedVerifierEmail),
     verifierDomainSnapshot: normalizedVerifierEmail.split('@')[1] || null,
@@ -307,26 +278,24 @@ export async function createCanonicalSkillVerificationRequest(params: {
     integrityReason: params.integrityReason || null,
     riskSignals: params.riskSignals || {},
     claimSnapshot: {
-      requestTransport: CANONICAL_REQUEST_TRANSPORTS.skill,
-      skillId: params.skillId,
-      skillName: params.skillName,
-      requestKind: params.requestKind,
-      attestationRequest: params.attestationRequest || null,
+      ...params.claimSnapshot,
+      requestTransport: CANONICAL_REQUEST_TRANSPORTS.impact,
+      impactStoryId: params.impactStoryId,
+      storyTitle: params.storyTitle,
     },
     sourceRequestTable: 'verification_records',
     sourceRequestId: requestId,
     requestedAt: new Date(),
     expiresAt,
     metadata: {
-      requestTransport: CANONICAL_REQUEST_TRANSPORTS.skill,
+      requestTransport: CANONICAL_REQUEST_TRANSPORTS.impact,
       requesterEmailSnapshot: normalizeEmail(params.requesterEmailSnapshot || null),
       verifierEmail: normalizedVerifierEmail,
-      verifierSource: params.verifierSource,
+      verifierName: params.verifierName || null,
       verifierRelationship: params.verifierRelationship || null,
-      requestKind: params.requestKind,
-      attestationRequest: params.attestationRequest || null,
       message: params.message || null,
-      skillName: params.skillName,
+      claimSnapshot: params.claimSnapshot,
+      storyTitle: params.storyTitle,
       requesterName: params.requesterName,
       capabilityTokenId: issued.token.id,
       emailSent: false,
@@ -344,7 +313,7 @@ export async function createCanonicalSkillVerificationRequest(params: {
   };
 }
 
-export async function getCanonicalSkillVerificationRequestById(requestId: string) {
+export async function getCanonicalImpactVerificationRequestById(requestId: string) {
   if (!isUuid(requestId)) {
     return null;
   }
@@ -354,10 +323,10 @@ export async function getCanonicalSkillVerificationRequestById(requestId: string
     orderBy: [desc(verificationRecords.createdAt)],
   });
 
-  return row && isCanonicalSkillVerificationRequestRecord(row) ? row : null;
+  return row && isCanonicalImpactVerificationRequestRecord(row) ? row : null;
 }
 
-export async function listCanonicalSkillVerificationRequestsForOwner(ownerId: string) {
+export async function listCanonicalImpactVerificationRequestsForOwner(ownerId: string) {
   if (!isUuid(ownerId)) {
     return [];
   }
@@ -365,17 +334,18 @@ export async function listCanonicalSkillVerificationRequestsForOwner(ownerId: st
   const rows = await db.query.verificationRecords.findMany({
     where: and(
       eq(verificationRecords.ownerType, 'individual_profile'),
-      eq(verificationRecords.ownerId, ownerId)
+      eq(verificationRecords.ownerId, ownerId),
+      eq(verificationRecords.subjectType, 'impact_story')
     ),
     orderBy: [desc(verificationRecords.createdAt)],
   });
 
   return rows.filter(
-    (row) => isCanonicalSkillVerificationRequestRecord(row) && row.status !== 'cancelled'
+    (row) => isCanonicalImpactVerificationRequestRecord(row) && row.status !== 'cancelled'
   );
 }
 
-export async function listCanonicalSkillVerificationRequestsForVerifierEmail(
+export async function listCanonicalImpactVerificationRequestsForVerifierEmail(
   verifierEmail: string
 ) {
   const normalizedVerifierEmail = normalizeEmail(verifierEmail);
@@ -386,26 +356,28 @@ export async function listCanonicalSkillVerificationRequestsForVerifierEmail(
   const result = await db.execute(sql`
     SELECT *
     FROM verification_records
-    WHERE metadata->>'requestTransport' = ${CANONICAL_REQUEST_TRANSPORTS.skill}
+    WHERE subject_type = 'impact_story'
       AND status <> 'cancelled'
+      AND metadata->>'requestTransport' = ${CANONICAL_REQUEST_TRANSPORTS.impact}
       AND lower(coalesce(metadata->>'verifierEmail', '')) = ${normalizedVerifierEmail}
     ORDER BY created_at DESC
   `);
 
   return getRows(result).filter((row) =>
-    isCanonicalSkillVerificationRequestRecord(row as VerificationRecordRow)
+    isCanonicalImpactVerificationRequestRecord(row as VerificationRecordRow)
   ) as VerificationRecordRow[];
 }
 
-export async function updateCanonicalSkillVerificationRequest(params: {
+export async function updateCanonicalImpactVerificationRequest(params: {
   requestId: string;
-  status: CanonicalSkillRequestStatus;
+  status: CanonicalImpactRequestStatus;
   respondedAt?: string | Date | null;
   responseMessage?: string | null;
-  attestationResponse?: Record<string, unknown> | null;
   verifierProfileId?: string | null;
   verifierPrincipalType?: VerificationRecordRow['verifierPrincipalType'];
   verifierEmail?: string | null;
+  verifierName?: string | null;
+  verifierRelationship?: string | null;
   integrityStatus?: VerificationRecordRow['integrityStatus'];
   integrityReason?: string | null;
   riskSignals?: Record<string, unknown>;
@@ -416,11 +388,10 @@ export async function updateCanonicalSkillVerificationRequest(params: {
   emailSent?: boolean;
   emailError?: string | null;
   capabilityTokenId?: string | null;
-  customRequestId?: string | null;
   expiresAt?: string | Date | null;
   requestedAt?: string | Date | null;
 }) {
-  const existing = await getCanonicalSkillVerificationRequestById(params.requestId);
+  const existing = await getCanonicalImpactVerificationRequestById(params.requestId);
   if (!existing) {
     return null;
   }
@@ -431,12 +402,8 @@ export async function updateCanonicalSkillVerificationRequest(params: {
   const normalizedVerifierEmail = normalizeEmail(
     params.verifierEmail || existingMetadata.verifierEmail || null
   );
-  const nextMetadata: CanonicalSkillRequestMetadata = {
+  const nextMetadata: CanonicalImpactRequestMetadata = {
     ...existingMetadata,
-    attestationResponse:
-      params.attestationResponse === undefined
-        ? existingMetadata.attestationResponse || null
-        : params.attestationResponse,
     responseMessage:
       params.responseMessage === undefined
         ? typeof existingMetadata.responseMessage === 'string'
@@ -454,6 +421,18 @@ export async function updateCanonicalSkillVerificationRequest(params: {
           : null
         : params.responseActorEmail,
     verifierEmail: normalizedVerifierEmail || null,
+    verifierName:
+      params.verifierName === undefined
+        ? typeof existingMetadata.verifierName === 'string'
+          ? existingMetadata.verifierName
+          : null
+        : params.verifierName,
+    verifierRelationship:
+      params.verifierRelationship === undefined
+        ? typeof existingMetadata.verifierRelationship === 'string'
+          ? existingMetadata.verifierRelationship
+          : null
+        : params.verifierRelationship,
     emailSent: params.emailSent === undefined ? existingMetadata.emailSent : params.emailSent,
     emailError:
       params.emailError === undefined
@@ -467,12 +446,6 @@ export async function updateCanonicalSkillVerificationRequest(params: {
           ? existingMetadata.capabilityTokenId
           : null
         : params.capabilityTokenId,
-    customRequestId:
-      params.customRequestId === undefined
-        ? typeof existingMetadata.customRequestId === 'string'
-          ? existingMetadata.customRequestId
-          : null
-        : params.customRequestId,
     integrityMeta:
       params.integrityMeta === undefined
         ? existingMetadata.integrityMeta || {}
@@ -559,9 +532,9 @@ export async function updateCanonicalSkillVerificationRequest(params: {
         ? existing.completedAt
         : respondedAt,
     expiredAt: params.status === 'expired' ? respondedAt || existing.expiredAt : existing.expiredAt,
+    revokedAt: params.status === 'revoked' ? respondedAt || existing.revokedAt : existing.revokedAt,
     cancelledAt:
       params.status === 'cancelled' ? respondedAt || existing.cancelledAt : existing.cancelledAt,
-    revokedAt: params.status === 'revoked' ? respondedAt || existing.revokedAt : existing.revokedAt,
     failureCode: existing.failureCode,
     verifiedAt: params.status === 'accepted' ? respondedAt : existing.verifiedAt,
     metadata: nextMetadata,

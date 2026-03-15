@@ -4,7 +4,6 @@ import { revalidatePath } from 'next/cache';
 import { revalidatePublicPortfolioByProfileId } from '@/lib/portfolio/public-invalidation';
 import { headers } from 'next/headers';
 import { eq, and, or } from 'drizzle-orm';
-import { randomBytes } from 'node:crypto';
 
 import { db } from '@/db';
 import {
@@ -12,7 +11,6 @@ import {
   individualProfiles,
   matchingProfiles,
   impactStories,
-  impactStoryVerificationRequests,
   experiences,
   education,
   volunteering,
@@ -42,6 +40,13 @@ import {
 } from '@/lib/profile/normalizePurposeLinks';
 import { hasRequiredPurposeLinks } from '@/lib/purpose/normalizePurposeLinks';
 import { listCanonicalSkillProofSummariesForOwner } from '@/lib/proofs/canonical-pack';
+import {
+  createCanonicalImpactVerificationRequest,
+  findExistingCanonicalImpactVerificationRequest,
+  listCanonicalImpactVerificationRequestsForOwner,
+  mapCanonicalImpactVerificationRequestRecord,
+  updateCanonicalImpactVerificationRequest,
+} from '@/lib/verification/canonical-impact-requests';
 import {
   VERIFICATION_INTEGRITY_REASONS,
   assessVerificationRequestIntegrity,
@@ -480,17 +485,19 @@ export async function getProfileData(): Promise<ProfileData> {
     }
 
     try {
-      impactVerificationRows = await db
-        .select({
-          impactStoryId: impactStoryVerificationRequests.impactStoryId,
-          status: impactStoryVerificationRequests.status,
-          verifierEmail: impactStoryVerificationRequests.verifierEmail,
-          createdAt: impactStoryVerificationRequests.createdAt,
-          emailSentAt: impactStoryVerificationRequests.emailSentAt,
-          emailError: impactStoryVerificationRequests.emailError,
-        })
-        .from(impactStoryVerificationRequests)
-        .where(eq(impactStoryVerificationRequests.requesterProfileId, user.id));
+      impactVerificationRows = (await listCanonicalImpactVerificationRequestsForOwner(user.id)).map(
+        (row) => {
+          const record = mapCanonicalImpactVerificationRequestRecord(row);
+          return {
+            impactStoryId: record.impact_story_id,
+            status: record.status,
+            verifierEmail: record.verifier_email,
+            createdAt: record.created_at,
+            emailSentAt: record.email_sent ? record.created_at : null,
+            emailError: record.email_error,
+          };
+        }
+      );
 
       impactVerificationRows.sort((a, b) => {
         const left = toIsoStringOrNull(a?.createdAt) || '';
@@ -498,7 +505,7 @@ export async function getProfileData(): Promise<ProfileData> {
         return right.localeCompare(left);
       });
     } catch (error) {
-      const verificationMarkers = ['impact_story_verification_requests', 'created_at'];
+      const verificationMarkers = ['verification_records', 'created_at'];
       if (!isSchemaDriftError(error, verificationMarkers)) {
         console.error('Failed to fetch impact verification summaries:', error);
       }
@@ -634,7 +641,7 @@ export async function getProfileData(): Promise<ProfileData> {
       if (!verificationRow?.impactStoryId) continue;
       if (latestImpactVerificationByStory.has(verificationRow.impactStoryId)) continue;
       latestImpactVerificationByStory.set(verificationRow.impactStoryId, {
-        status: verificationRow.status as ImpactStoryVerificationRequestStatus,
+        status: toLegacyImpactVerificationRequestStatus(verificationRow.status),
         verifierEmail: verificationRow.verifierEmail || null,
         createdAt: toIsoStringOrNull(verificationRow.createdAt),
         emailSentAt: toIsoStringOrNull(verificationRow.emailSentAt),
@@ -1073,6 +1080,24 @@ type ExistingImpactVerificationRow = {
   emailError: string | null;
 };
 
+function toLegacyImpactVerificationRequestStatus(
+  status: string | null | undefined
+): ImpactStoryVerificationRequestStatus {
+  if (status === 'accepted' || status === 'expired' || status === 'failed') {
+    return status;
+  }
+
+  if (status === 'declined' || status === 'cancelled' || status === 'revoked') {
+    return 'declined';
+  }
+
+  return 'pending';
+}
+
+function toCanonicalImpactIntegrityStatus(status: 'clear' | 'flagged') {
+  return status === 'flagged' ? 'warning' : 'clear';
+}
+
 function impactVerificationStatusPriority(status: ImpactStoryVerificationRequestStatus): number {
   return status === 'accepted' ? 0 : 1;
 }
@@ -1129,59 +1154,25 @@ async function findExistingActiveImpactVerificationRequest(args: {
   impactStoryId: string;
   verifierEmail: string;
 }): Promise<ExistingImpactVerificationRow | null> {
-  const selectFn = (db as { select?: unknown }).select;
-  if (typeof selectFn !== 'function') {
+  const existing = await findExistingCanonicalImpactVerificationRequest({
+    ownerId: args.userId,
+    impactStoryId: args.impactStoryId,
+    verifierEmail: args.verifierEmail,
+  }).catch(() => null);
+
+  if (!existing) {
     return null;
   }
 
-  const selectQuery = selectFn
-    .call(db, {
-      id: impactStoryVerificationRequests.id,
-      status: impactStoryVerificationRequests.status,
-      verifierEmail: impactStoryVerificationRequests.verifierEmail,
-      createdAt: impactStoryVerificationRequests.createdAt,
-      emailSentAt: impactStoryVerificationRequests.emailSentAt,
-      emailError: impactStoryVerificationRequests.emailError,
-    })
-    .from(impactStoryVerificationRequests)
-    .where(
-      and(
-        eq(impactStoryVerificationRequests.requesterProfileId, args.userId),
-        eq(impactStoryVerificationRequests.impactStoryId, args.impactStoryId),
-        or(
-          eq(impactStoryVerificationRequests.status, ACTIVE_IMPACT_VERIFICATION_STATUSES[0]),
-          eq(impactStoryVerificationRequests.status, ACTIVE_IMPACT_VERIFICATION_STATUSES[1])
-        )
-      )
-    );
-
-  const rowsResult =
-    selectQuery && typeof selectQuery === 'object' && 'limit' in selectQuery
-      ? await (selectQuery as { limit: (limit: number) => Promise<unknown> }).limit(25)
-      : await selectQuery;
-
-  const rows = Array.isArray(rowsResult) ? rowsResult : [];
-
-  const matchingRows = rows.filter(
-    (row) => normalizeEmail(row.verifierEmail) === args.verifierEmail
-  ) as ExistingImpactVerificationRow[];
-
-  if (matchingRows.length === 0) {
-    return null;
-  }
-
-  matchingRows.sort((left, right) => {
-    const priorityDiff =
-      impactVerificationStatusPriority(left.status) -
-      impactVerificationStatusPriority(right.status);
-    if (priorityDiff !== 0) {
-      return priorityDiff;
-    }
-
-    return new Date(right.createdAt || 0).getTime() - new Date(left.createdAt || 0).getTime();
-  });
-
-  return matchingRows[0] || null;
+  const canonicalRecord = mapCanonicalImpactVerificationRequestRecord(existing);
+  return {
+    id: canonicalRecord.id,
+    status: toLegacyImpactVerificationRequestStatus(canonicalRecord.status),
+    verifierEmail: canonicalRecord.verifier_email,
+    createdAt: canonicalRecord.created_at,
+    emailSentAt: canonicalRecord.email_sent ? canonicalRecord.created_at : null,
+    emailError: canonicalRecord.email_error,
+  };
 }
 
 function formatTimelineForLegacy(
@@ -1557,8 +1548,6 @@ async function createImpactStoryVerificationRequestInternal(
     };
   }
 
-  const token = randomBytes(32).toString('hex');
-  const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
   const claimSnapshot = buildClaimSnapshot(input.storyData, {
     verifierRelationship: input.verificationRequest.verifierRelationship || null,
     requesterDomain: integrityAssessment.requesterDomain,
@@ -1571,49 +1560,36 @@ async function createImpactStoryVerificationRequestInternal(
     id: string;
     integrityStatus?: string | null;
     createdAt?: Date | string | null;
+    rawToken?: string;
   } | null = null;
 
   try {
-    const [insertedVerificationRequest] = await db
-      .insert(impactStoryVerificationRequests)
-      .values({
-        impactStoryId: input.impactStoryId,
-        requesterProfileId: input.userId,
-        requesterEmailSnapshot: integrityAssessment.normalizedRequesterEmail,
-        requesterDomainSnapshot: integrityAssessment.requesterDomain,
-        verifierEmail: normalizedVerifierEmail,
-        verifierDomainSnapshot: integrityAssessment.verifierDomain,
-        verifierProfileId: integrityAssessment.verifierProfileId,
-        verifierName: input.verificationRequest.verifierName || null,
-        verifierRelationship: input.verificationRequest.verifierRelationship || null,
-        message: input.verificationRequest.message || null,
-        riskSignals: integrityAssessment.riskSignals,
-        requiresAuthenticatedVerifier: integrityAssessment.policy.requiresAuthenticatedVerifier,
-        integrityStatus: integrityAssessment.policy.integrityStatus,
-        integrityReason: integrityAssessment.policy.integrityReason,
-        integrityMeta: {
-          policy: {
-            requires_authenticated_verifier:
-              integrityAssessment.policy.requiresAuthenticatedVerifier,
-            integrity_status: integrityAssessment.policy.integrityStatus,
-            integrity_reason: integrityAssessment.policy.integrityReason,
-          },
-        },
-        requesterIpHash: integrityAssessment.requesterFingerprints.ipHash,
-        requesterUserAgentHash: integrityAssessment.requesterFingerprints.userAgentHash,
-        token,
-        status: 'pending',
-        expiresAt,
-        claimSnapshot,
-      })
-      .returning({
-        id: impactStoryVerificationRequests.id,
-        integrityStatus: impactStoryVerificationRequests.integrityStatus,
-        createdAt: impactStoryVerificationRequests.createdAt,
-      });
-    verificationRequest = insertedVerificationRequest || null;
+    const createdVerificationRequest = await createCanonicalImpactVerificationRequest({
+      ownerId: input.userId,
+      impactStoryId: input.impactStoryId,
+      storyTitle: input.storyData.title,
+      requesterName: input.requesterDisplayName || 'Proofound member',
+      requesterEmailSnapshot: integrityAssessment.normalizedRequesterEmail,
+      verifierEmail: normalizedVerifierEmail,
+      verifierName: input.verificationRequest.verifierName || null,
+      verifierRelationship: input.verificationRequest.verifierRelationship || null,
+      verifierProfileId: integrityAssessment.verifierProfileId,
+      message: input.verificationRequest.message || null,
+      claimSnapshot,
+      integrityStatus: toCanonicalImpactIntegrityStatus(integrityAssessment.policy.integrityStatus),
+      integrityReason: integrityAssessment.policy.integrityReason,
+      riskSignals: integrityAssessment.riskSignals,
+      requiresAuthenticatedVerifier: integrityAssessment.policy.requiresAuthenticatedVerifier,
+    });
+
+    verificationRequest = {
+      id: createdVerificationRequest.record.id,
+      integrityStatus: createdVerificationRequest.record.integrityStatus,
+      createdAt: createdVerificationRequest.record.createdAt,
+      rawToken: createdVerificationRequest.rawToken,
+    };
   } catch (error) {
-    const verificationMarkers = ['impact_story_verification_requests', 'claim_snapshot'];
+    const verificationMarkers = ['verification_records', 'claim_snapshot', 'metadata'];
     if (isSchemaDriftError(error, verificationMarkers)) {
       return {
         verification: null,
@@ -1673,7 +1649,7 @@ async function createImpactStoryVerificationRequestInternal(
       process.env.NEXT_PUBLIC_APP_URL ||
       process.env.SITE_URL
   );
-  const verifyUrl = `${baseUrl}/verify/${token}`;
+  const verifyUrl = `${baseUrl}/verify/${verificationRequest.rawToken}`;
 
   const emailResult = await sendEmail({
     to: normalizedVerifierEmail,
@@ -1691,7 +1667,7 @@ async function createImpactStoryVerificationRequestInternal(
           <p style="margin-top: 24px;">
             <a href="${verifyUrl}" style="display: inline-block; background: #1f4d3a; color: white; text-decoration: none; padding: 10px 16px; border-radius: 8px;">Open verification request</a>
           </p>
-          <p style="color: #6b7280; font-size: 12px; margin-top: 16px;">This link expires on ${expiresAt.toISOString().split('T')[0]}.</p>
+          <p style="color: #6b7280; font-size: 12px; margin-top: 16px;">This link expires in 14 days.</p>
         </div>
       `,
     text: `You have been asked to verify claims for "${input.storyData.title}". Open: ${verifyUrl}`,
@@ -1701,14 +1677,12 @@ async function createImpactStoryVerificationRequestInternal(
 
   if (!emailResult.success) {
     const warning = emailResult.error || 'Failed to send verification request email.';
-    await db
-      .update(impactStoryVerificationRequests)
-      .set({
-        status: 'failed',
-        emailError: warning,
-        updatedAt: new Date(),
-      })
-      .where(eq(impactStoryVerificationRequests.id, verificationRequest.id));
+    await updateCanonicalImpactVerificationRequest({
+      requestId: verificationRequest.id,
+      status: 'failed',
+      emailSent: false,
+      emailError: warning,
+    });
 
     return {
       verification: {
@@ -1727,13 +1701,12 @@ async function createImpactStoryVerificationRequestInternal(
   }
 
   const emailSentAt = new Date();
-  await db
-    .update(impactStoryVerificationRequests)
-    .set({
-      emailSentAt,
-      updatedAt: emailSentAt,
-    })
-    .where(eq(impactStoryVerificationRequests.id, verificationRequest.id));
+  await updateCanonicalImpactVerificationRequest({
+    requestId: verificationRequest.id,
+    status: 'pending',
+    emailSent: true,
+    emailError: null,
+  });
 
   return {
     verification: {
