@@ -22,7 +22,7 @@ vi.mock('@/lib/expertise/gemini/config', () => ({
   ),
 }));
 
-import { GET } from '@/app/api/admin/analytics/cv-import-spend/route';
+import { GET } from '@/archive/non_launch_api/app/api/admin/analytics/cv-import-spend/route';
 import { requirePlatformAdminJson } from '@/lib/api/route-helpers';
 import { db } from '@/db';
 import { resolveMonthlyBudgetOre } from '@/lib/expertise/gemini/config';
