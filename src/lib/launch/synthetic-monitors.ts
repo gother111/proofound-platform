@@ -35,20 +35,7 @@ export type SyntheticMonitorResult = {
 
 export type CurrentLaunchSyntheticStatus = {
   generatedAt: string;
-  rows: Array<{
-    monitorKey: string;
-    monitorGroup: string;
-    status: string;
-    severity: string;
-    responseTimeMs: number | null;
-    expectedState: string;
-    observedState: string;
-    failureClass: string | null;
-    checkedAt: string | null;
-    ageMinutes: number;
-    stale: boolean;
-    details: Record<string, unknown>;
-  }>;
+  rows: LaunchSyntheticStatusRow[];
   missingMonitorKeys: string[];
   ok: boolean;
   readinessState: LaunchReadinessState;
@@ -64,9 +51,122 @@ export type CurrentLaunchSyntheticStatus = {
   };
 };
 
+export type LaunchSyntheticStatusRow = {
+  monitorKey: string;
+  monitorGroup: string;
+  status: string;
+  severity: string;
+  responseTimeMs: number | null;
+  expectedState: string;
+  observedState: string;
+  failureClass: string | null;
+  checkedAt: string | null;
+  ageMinutes: number | null;
+  stale: boolean;
+  details: Record<string, unknown>;
+};
+
+export type PersistedLaunchSyntheticStatus = {
+  generatedAt: string;
+  rows: LaunchSyntheticStatusRow[];
+  missingMonitorKeys: string[];
+  ok: boolean;
+  readinessState: LaunchReadinessState;
+  source: 'persisted';
+  evidence: {
+    source: 'persisted';
+    artifactPath: string;
+    smokeArtifactGeneratedAt: string | null;
+    smokeArtifactAgeMinutes: number | null;
+    smokeFreshnessThresholdMinutes: number;
+    smokeFreshnessState: LaunchSmokeFreshnessState;
+    persisted: true;
+  };
+};
+
 export async function readLaunchSmokeArtifactFromFile(artifactPath: string) {
   const raw = await fs.readFile(artifactPath, 'utf8');
   return validateLaunchSmokeArtifact(JSON.parse(raw));
+}
+
+function mapResultToStatusRow(
+  result: SyntheticMonitorResult,
+  now = new Date()
+): LaunchSyntheticStatusRow {
+  const checkedAt = result.checkedAt ? new Date(result.checkedAt) : null;
+  const ageMinutes = checkedAt
+    ? Math.max(0, Math.round((now.getTime() - checkedAt.getTime()) / 60_000))
+    : 0;
+
+  return {
+    monitorKey: result.monitorKey,
+    monitorGroup: result.monitorGroup,
+    status: result.status,
+    severity: result.severity,
+    responseTimeMs: result.responseTimeMs,
+    expectedState: result.expectedState,
+    observedState: result.observedState,
+    failureClass: result.failureClass,
+    checkedAt: result.checkedAt ?? null,
+    ageMinutes,
+    stale: result.observedState === 'smoke_artifact_stale',
+    details: result.details,
+  };
+}
+
+function buildMissingSmokeArtifactRows(
+  rows: Awaited<ReturnType<typeof getLatestLaunchSyntheticStatus>>['rows'],
+  artifactPath: string,
+  now = new Date()
+): LaunchSyntheticStatusRow[] {
+  const rowMap = new Map<string, LaunchSyntheticStatusRow>(
+    rows.map((row) => [row.monitorKey, row] as const)
+  );
+  const nowIso = now.toISOString();
+
+  return LAUNCH_MONITOR_DEFINITIONS.reduce<LaunchSyntheticStatusRow[]>((acc, definition) => {
+    if (definition.kind !== 'smoke_artifact') {
+      return acc;
+    }
+
+    const existing = rowMap.get(definition.monitorKey);
+    acc.push({
+      monitorKey: definition.monitorKey,
+      monitorGroup: definition.monitorGroup,
+      status: 'fail',
+      severity: definition.severity,
+      responseTimeMs: existing?.responseTimeMs ?? 0,
+      expectedState: definition.expectedState,
+      observedState: 'smoke_artifact_missing',
+      failureClass: 'smoke_artifact_missing',
+      checkedAt: existing?.checkedAt ?? nowIso,
+      ageMinutes: existing?.ageMinutes ?? 0,
+      stale: true,
+      details: {
+        ...(existing?.details ?? {}),
+        artifactPath,
+        smokeFreshnessState: 'missing',
+      },
+    });
+    return acc;
+  }, []);
+}
+
+function buildPersistedRowsInContractOrder(
+  endpointRows: LaunchSyntheticStatusRow[],
+  smokeRows: LaunchSyntheticStatusRow[]
+) {
+  const endpointMap = new Map(endpointRows.map((row) => [row.monitorKey, row] as const));
+  const smokeMap = new Map(smokeRows.map((row) => [row.monitorKey, row] as const));
+
+  return LAUNCH_MONITOR_DEFINITIONS.flatMap((definition) => {
+    const row =
+      definition.kind === 'http'
+        ? endpointMap.get(definition.monitorKey)
+        : smokeMap.get(definition.monitorKey);
+
+    return row ? [row] : [];
+  });
 }
 
 async function runHttpMonitor(
@@ -324,27 +424,7 @@ export async function getCurrentLaunchSyntheticStatus(
   now = new Date()
 ): Promise<CurrentLaunchSyntheticStatus> {
   const evaluation = await runLaunchSyntheticMonitors(params, now);
-  const rows = evaluation.results.map((result) => {
-    const checkedAt = result.checkedAt ? new Date(result.checkedAt) : null;
-    const ageMinutes = checkedAt
-      ? Math.max(0, Math.round((now.getTime() - checkedAt.getTime()) / 60_000))
-      : 0;
-
-    return {
-      monitorKey: result.monitorKey,
-      monitorGroup: result.monitorGroup,
-      status: result.status,
-      severity: result.severity,
-      responseTimeMs: result.responseTimeMs,
-      expectedState: result.expectedState,
-      observedState: result.observedState,
-      failureClass: result.failureClass,
-      checkedAt: result.checkedAt ?? null,
-      ageMinutes,
-      stale: result.observedState === 'smoke_artifact_stale',
-      details: result.details,
-    };
-  });
+  const rows = evaluation.results.map((result) => mapResultToStatusRow(result, now));
 
   const missingMonitorKeys = LAUNCH_MONITOR_DEFINITIONS.map((item) => item.monitorKey).filter(
     (monitorKey) => !rows.some((row) => row.monitorKey === monitorKey)
@@ -359,6 +439,76 @@ export async function getCurrentLaunchSyntheticStatus(
       evaluation.ok && missingMonitorKeys.length === 0 ? ('ready' as const) : ('blocked' as const),
     source: 'live',
     evidence: evaluation.evidence,
+  };
+}
+
+export async function getPersistedLaunchSyntheticStatus(
+  params: { artifactPath: string },
+  now = new Date()
+): Promise<PersistedLaunchSyntheticStatus> {
+  const latest = await getLatestLaunchSyntheticStatus(now);
+  const endpointRows = latest.rows.filter((row) => {
+    const definition = LAUNCH_MONITOR_DEFINITIONS.find(
+      (item) => item.monitorKey === row.monitorKey
+    );
+    return definition?.kind === 'http';
+  });
+
+  let smokeRows: LaunchSyntheticStatusRow[];
+  let smokeArtifactGeneratedAt: string | null = null;
+  let smokeArtifactAgeMinutes: number | null = null;
+  let smokeFreshnessState: LaunchSmokeFreshnessState = 'missing';
+
+  try {
+    const artifact = await readLaunchSmokeArtifactFromFile(params.artifactPath);
+    smokeArtifactGeneratedAt = artifact.generatedAt;
+    smokeArtifactAgeMinutes = getLaunchSmokeAgeMinutes(artifact, now);
+    smokeFreshnessState =
+      smokeArtifactAgeMinutes > LAUNCH_SMOKE_FRESHNESS_THRESHOLD_MINUTES ? 'stale' : 'fresh';
+
+    smokeRows = LAUNCH_MONITOR_DEFINITIONS.reduce<LaunchSyntheticStatusRow[]>((acc, definition) => {
+      if (definition.kind !== 'smoke_artifact') {
+        return acc;
+      }
+
+      acc.push(
+        mapResultToStatusRow(
+          runSmokeArtifactMonitor(definition, artifact, params.artifactPath, now),
+          now
+        )
+      );
+      return acc;
+    }, []);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException | undefined)?.code !== 'ENOENT') {
+      throw error;
+    }
+
+    smokeRows = buildMissingSmokeArtifactRows(latest.rows, params.artifactPath, now);
+  }
+
+  const rows = buildPersistedRowsInContractOrder(endpointRows, smokeRows);
+  const missingMonitorKeys = LAUNCH_MONITOR_DEFINITIONS.map((item) => item.monitorKey).filter(
+    (monitorKey) => !rows.some((row) => row.monitorKey === monitorKey)
+  );
+  const ok = missingMonitorKeys.length === 0 && rows.every((row) => row.status === 'pass');
+
+  return {
+    generatedAt: now.toISOString(),
+    rows,
+    missingMonitorKeys,
+    ok,
+    readinessState: ok ? 'ready' : 'blocked',
+    source: 'persisted',
+    evidence: {
+      source: 'persisted',
+      artifactPath: params.artifactPath,
+      smokeArtifactGeneratedAt,
+      smokeArtifactAgeMinutes,
+      smokeFreshnessThresholdMinutes: LAUNCH_SMOKE_FRESHNESS_THRESHOLD_MINUTES,
+      smokeFreshnessState,
+      persisted: true,
+    },
   };
 }
 

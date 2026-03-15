@@ -16,6 +16,7 @@ import { db } from '@/db';
 import fs from 'node:fs/promises';
 import {
   getCurrentLaunchSyntheticStatus,
+  getPersistedLaunchSyntheticStatus,
   getLatestLaunchSyntheticStatus,
 } from '@/lib/launch/synthetic-monitors';
 import { LAUNCH_MONITOR_DEFINITIONS, LAUNCH_SMOKE_MATRIX } from '@/lib/launch/contracts';
@@ -246,5 +247,196 @@ describe('launch synthetic monitor persistence', () => {
         .filter((row) => row.monitorGroup === 'synthetic-smoke')
         .every((row) => row.observedState === 'smoke_artifact_stale' && row.stale)
     ).toBe(true);
+  });
+
+  it('builds a ready persisted snapshot from fresh endpoint rows plus a fresh smoke artifact', async () => {
+    (db.execute as any).mockResolvedValue(
+      LAUNCH_MONITOR_DEFINITIONS.map((definition) => ({
+        monitor_key: definition.monitorKey,
+        monitor_group: definition.monitorGroup,
+        status: 'pass',
+        severity: definition.severity,
+        response_time_ms: 42,
+        expected_state: definition.expectedState,
+        observed_state: definition.expectedState,
+        failure_class: null,
+        checked_at: '2026-03-12T10:58:00.000Z',
+        details: {},
+      }))
+    );
+
+    (fs.readFile as any).mockResolvedValue(
+      JSON.stringify({
+        schemaVersion: 1,
+        generatedAt: '2026-03-12T10:00:00.000Z',
+        overallStatus: 'pass',
+        checks: LAUNCH_SMOKE_MATRIX.map((scenario) => ({
+          id: scenario.id,
+          label: scenario.label,
+          status: 'pass',
+          expectedState: scenario.expectedState,
+          durationMs: 25,
+          testFiles: scenario.testFiles,
+          generatedAt: '2026-03-12T10:00:00.000Z',
+        })),
+      })
+    );
+
+    const result = await getPersistedLaunchSyntheticStatus(
+      {
+        artifactPath: '.artifacts/launch-smoke-report.json',
+      },
+      new Date('2026-03-12T10:59:00.000Z')
+    );
+
+    expect(result.source).toBe('persisted');
+    expect(result.ok).toBe(true);
+    expect(result.readinessState).toBe('ready');
+    expect(result.evidence.persisted).toBe(true);
+    expect(result.evidence.smokeArtifactGeneratedAt).toBe('2026-03-12T10:00:00.000Z');
+    expect(result.evidence.smokeArtifactAgeMinutes).toBe(59);
+    expect(result.evidence.smokeFreshnessState).toBe('fresh');
+    expect(result.rows).toHaveLength(LAUNCH_MONITOR_DEFINITIONS.length);
+    expect(result.missingMonitorKeys).toEqual([]);
+  });
+
+  it('blocks persisted readiness when the current smoke artifact is stale even if persisted rows were green', async () => {
+    (db.execute as any).mockResolvedValue(
+      LAUNCH_MONITOR_DEFINITIONS.map((definition) => ({
+        monitor_key: definition.monitorKey,
+        monitor_group: definition.monitorGroup,
+        status: 'pass',
+        severity: definition.severity,
+        response_time_ms: 42,
+        expected_state: definition.expectedState,
+        observed_state: definition.expectedState,
+        failure_class: null,
+        checked_at: '2026-03-12T10:58:00.000Z',
+        details: {},
+      }))
+    );
+
+    (fs.readFile as any).mockResolvedValue(
+      JSON.stringify({
+        schemaVersion: 1,
+        generatedAt: '2026-03-12T08:00:00.000Z',
+        overallStatus: 'pass',
+        checks: LAUNCH_SMOKE_MATRIX.map((scenario) => ({
+          id: scenario.id,
+          label: scenario.label,
+          status: 'pass',
+          expectedState: scenario.expectedState,
+          durationMs: 25,
+          testFiles: scenario.testFiles,
+          generatedAt: '2026-03-12T08:00:00.000Z',
+        })),
+      })
+    );
+
+    const result = await getPersistedLaunchSyntheticStatus(
+      {
+        artifactPath: '.artifacts/launch-smoke-report.json',
+      },
+      new Date('2026-03-12T10:59:00.000Z')
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.readinessState).toBe('blocked');
+    expect(result.evidence.smokeArtifactAgeMinutes).toBe(179);
+    expect(result.evidence.smokeFreshnessState).toBe('stale');
+    expect(
+      result.rows
+        .filter((row) => row.monitorGroup === 'synthetic-smoke')
+        .every((row) => row.observedState === 'smoke_artifact_stale' && row.status === 'fail')
+    ).toBe(true);
+  });
+
+  it('blocks persisted readiness when the smoke artifact is missing', async () => {
+    (db.execute as any).mockResolvedValue(
+      LAUNCH_MONITOR_DEFINITIONS.filter((definition) => definition.kind === 'http').map(
+        (definition) => ({
+          monitor_key: definition.monitorKey,
+          monitor_group: definition.monitorGroup,
+          status: 'pass',
+          severity: definition.severity,
+          response_time_ms: 42,
+          expected_state: definition.expectedState,
+          observed_state: definition.expectedState,
+          failure_class: null,
+          checked_at: '2026-03-12T10:58:00.000Z',
+          details: {},
+        })
+      )
+    );
+
+    (fs.readFile as any).mockRejectedValue(
+      Object.assign(new Error('ENOENT: missing artifact'), { code: 'ENOENT' })
+    );
+
+    const result = await getPersistedLaunchSyntheticStatus(
+      {
+        artifactPath: '.artifacts/launch-smoke-report.json',
+      },
+      new Date('2026-03-12T10:59:00.000Z')
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.readinessState).toBe('blocked');
+    expect(result.evidence.smokeArtifactGeneratedAt).toBeNull();
+    expect(result.evidence.smokeArtifactAgeMinutes).toBeNull();
+    expect(result.evidence.smokeFreshnessState).toBe('missing');
+    expect(result.rows).toHaveLength(LAUNCH_MONITOR_DEFINITIONS.length);
+    expect(
+      result.rows
+        .filter((row) => row.monitorGroup === 'synthetic-smoke')
+        .every((row) => row.observedState === 'smoke_artifact_missing' && row.status === 'fail')
+    ).toBe(true);
+  });
+
+  it('blocks persisted readiness when endpoint evidence is incomplete', async () => {
+    (db.execute as any).mockResolvedValue(
+      LAUNCH_MONITOR_DEFINITIONS.filter(
+        (definition) => definition.kind === 'http' && definition.monitorKey !== 'api_health'
+      ).map((definition) => ({
+        monitor_key: definition.monitorKey,
+        monitor_group: definition.monitorGroup,
+        status: 'pass',
+        severity: definition.severity,
+        response_time_ms: 42,
+        expected_state: definition.expectedState,
+        observed_state: definition.expectedState,
+        failure_class: null,
+        checked_at: '2026-03-12T10:58:00.000Z',
+        details: {},
+      }))
+    );
+
+    (fs.readFile as any).mockResolvedValue(
+      JSON.stringify({
+        schemaVersion: 1,
+        generatedAt: '2026-03-12T10:00:00.000Z',
+        overallStatus: 'pass',
+        checks: LAUNCH_SMOKE_MATRIX.map((scenario) => ({
+          id: scenario.id,
+          label: scenario.label,
+          status: 'pass',
+          expectedState: scenario.expectedState,
+          durationMs: 25,
+          testFiles: scenario.testFiles,
+          generatedAt: '2026-03-12T10:00:00.000Z',
+        })),
+      })
+    );
+
+    const result = await getPersistedLaunchSyntheticStatus(
+      {
+        artifactPath: '.artifacts/launch-smoke-report.json',
+      },
+      new Date('2026-03-12T10:59:00.000Z')
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.readinessState).toBe('blocked');
+    expect(result.missingMonitorKeys).toContain('api_health');
   });
 });
