@@ -77,13 +77,10 @@ export async function sendOrgInviteEmail(
   orgName: string,
   role: string,
   token: string,
-  orgSlug?: string
+  _orgSlug?: string
 ) {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
-  const inviteUrl =
-    orgSlug && baseUrl
-      ? `${baseUrl}/app/o/${orgSlug}/invitations/${token}`
-      : `${baseUrl}/accept-invite?token=${token}`;
+  const inviteUrl = `${baseUrl}/accept-invite?token=${token}`;
 
   try {
     await resend.emails.send({

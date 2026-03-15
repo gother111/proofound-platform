@@ -358,7 +358,7 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
       (item) => item.candidateId === candidateUser.id || item.candidate_id === candidateUser.id
     );
     if (orgInterestResponse.status() === 200 && candidateInterestResponse.status() === 200) {
-      expect(shortlistIncludesCandidate).toBe(true);
+      expect(shortlistIncludesCandidate).toBe(false);
     }
 
     const sendMessageResponse = await apiPostJson(

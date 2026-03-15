@@ -29,6 +29,7 @@ export interface InterviewAccessContext {
   platform: string | null;
   meetingUrl: string | null;
   timezone: string | null;
+  rescheduleCount: number;
 }
 
 interface PostInterviewUpdateMessageParams {
@@ -96,6 +97,7 @@ export async function getInterviewAccessContext(
       m.profile_id AS candidate_id,
       i.status,
       i.scheduled_at,
+      COALESCE(i.reschedule_count, 0) AS reschedule_count,
       NULLIF(to_jsonb(i)->>'platform', '') AS platform,
       COALESCE(
         NULLIF(to_jsonb(i)->>'meeting_link', ''),
@@ -116,6 +118,7 @@ export async function getInterviewAccessContext(
     candidate_id: string;
     status: string | null;
     scheduled_at: Date | null;
+    reschedule_count: number | null;
     platform: string | null;
     meeting_url: string | null;
     timezone: string | null;
@@ -134,6 +137,7 @@ export async function getInterviewAccessContext(
     platform: row.platform,
     meetingUrl: row.meeting_url,
     timezone: row.timezone,
+    rescheduleCount: row.reschedule_count ?? 0,
   };
 }
 

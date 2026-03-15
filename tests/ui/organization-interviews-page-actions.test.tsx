@@ -232,4 +232,35 @@ describe('organization interviews page actions', () => {
       expect(screen.getByText('Engagement: Awaiting candidate confirmation')).toBeInTheDocument();
     });
   });
+
+  it('shows reschedule history and blocks a second reschedule on the interviews surface', async () => {
+    const upcomingInterviewAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+    getInterviewsMock.mockResolvedValue({
+      interviews: [
+        {
+          id: 'interview-1',
+          matchId: 'match-1',
+          scheduledAt: upcomingInterviewAt,
+          duration: 30,
+          platform: 'zoom',
+          meetingUrl: 'https://zoom.us/j/example',
+          status: 'scheduled',
+          rescheduleCount: 1,
+          candidateName: 'Candidate',
+          assignmentTitle: 'Engineer',
+          matchAgreedAt: new Date().toISOString(),
+          decisionState: null,
+          engagementVerification: null,
+        },
+      ],
+    });
+
+    render(<OrganizationInterviewsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Rescheduled 1 time')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /reschedule limit reached/i })).toBeDisabled();
+    });
+  });
 });

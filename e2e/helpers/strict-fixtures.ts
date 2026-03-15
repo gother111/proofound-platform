@@ -449,17 +449,34 @@ export async function createRuntimeMatch(
 
   fixture.matchIds.add(match.id);
 
-  const { error: reviewStateError } = await supabase.from('match_review_states').upsert(
-    {
-      match_id: match.id,
-      assignment_id: match.assignment_id,
-      profile_id: match.profile_id,
-      org_id: assignmentRecord.org_id,
-      review_stage: 'blind_review',
-      reveal_scope: 'blind',
-    },
-    { onConflict: 'match_id' }
-  );
+  let reviewStateError: { message: string } | null = null;
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const result = await supabase.from('match_review_states').upsert(
+      {
+        match_id: match.id,
+        assignment_id: match.assignment_id,
+        profile_id: match.profile_id,
+        org_id: assignmentRecord.org_id,
+        review_stage: 'blind_review',
+        reveal_scope: 'blind',
+      },
+      { onConflict: 'match_id' }
+    );
+
+    reviewStateError = result.error;
+    if (!reviewStateError) {
+      break;
+    }
+
+    const isMatchVisibilityRace = reviewStateError.message.includes(
+      'match_review_states_match_id_fkey'
+    );
+    if (!isMatchVisibilityRace || attempt === 9) {
+      break;
+    }
+
+    await wait(250 * (attempt + 1));
+  }
 
   if (reviewStateError) {
     throw new Error(
@@ -483,11 +500,30 @@ export async function seedPortfolioReadyCandidate(
 ): Promise<{ skillRequirements: StrictSkillRequirement[] }> {
   const supabase = adminClient();
   const nowIso = new Date().toISOString();
-  const skillRequirements = options?.skillRequirements ?? [
-    { id: 'strict.skill.1', level: 3 },
-    { id: 'strict.skill.2', level: 3 },
-    { id: 'strict.skill.3', level: 2 },
-  ];
+  let skillRequirements = options?.skillRequirements;
+  if (!skillRequirements) {
+    const { data: taxonomyRows, error: taxonomyError } = await supabase
+      .from('skills_taxonomy')
+      .select('code')
+      .eq('status', 'active')
+      .order('code', { ascending: true })
+      .limit(3);
+
+    if (taxonomyError) {
+      throw new Error(
+        `Failed to load strict candidate skill taxonomy defaults: ${taxonomyError.message}`
+      );
+    }
+
+    if (!taxonomyRows || taxonomyRows.length < 3) {
+      throw new Error('Failed to load strict candidate skill taxonomy defaults: insufficient rows');
+    }
+
+    skillRequirements = taxonomyRows.map((row, index) => ({
+      id: row.code,
+      level: index < 2 ? 3 : 2,
+    }));
+  }
 
   const { data: experienceRow, error: experienceError } = await supabase
     .from('experiences')
@@ -548,6 +584,7 @@ export async function seedPortfolioReadyCandidate(
       skillRequirements.map((requirement, index) => ({
         profile_id: user.id,
         skill_id: requirement.id,
+        skill_code: requirement.id,
         level: requirement.level,
         months_experience: 24 + index * 6,
         evidence_strength: '0.9',

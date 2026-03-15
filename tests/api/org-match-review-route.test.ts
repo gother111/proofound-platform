@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   update: vi.fn(),
   insert: vi.fn(),
   profileFindFirst: vi.fn(),
+  matchReviewStateFindFirst: vi.fn(),
   getOrgMembershipRole: vi.fn(),
   appendManualOverrideReason: vi.fn(),
   buildVisibilitySafeWhy: vi.fn(),
@@ -20,7 +21,6 @@ const mocks = vi.hoisted(() => ({
   getOrCreateIntroWorkflow: vi.fn(),
   syncIntroWorkflowFromInterest: vi.fn(),
   openIntroConversation: vi.fn(),
-  unlockFullIdentityForMatch: vi.fn(),
   emitMatchActioned: vi.fn(),
   emitFirstQualifiedIntroAsync: vi.fn(),
   notifyIntroAccepted: vi.fn(),
@@ -40,6 +40,9 @@ vi.mock('@/db', () => ({
       profiles: {
         findFirst: mocks.profileFindFirst,
       },
+      matchReviewStates: {
+        findFirst: mocks.matchReviewStateFindFirst,
+      },
     },
   },
 }));
@@ -55,7 +58,6 @@ vi.mock('@/lib/matching/review-contract', () => ({
   resolveCanonicalCorridor: mocks.resolveCanonicalCorridor,
   resolveCanonicalFallbackState: mocks.resolveCanonicalFallbackState,
   setMatchReviewStage: mocks.setMatchReviewStage,
-  unlockFullIdentityForMatch: mocks.unlockFullIdentityForMatch,
 }));
 
 vi.mock('@/lib/workflow/service', () => ({
@@ -104,6 +106,10 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     mocks.profileFindFirst.mockResolvedValue({
       displayName: 'Taylor',
       handle: 'taylor',
+    });
+    mocks.matchReviewStateFindFirst.mockResolvedValue({
+      reviewStage: 'shortlisted',
+      revealScope: 'blind',
     });
     mocks.syncIntroWorkflowFromInterest.mockResolvedValue({
       id: 'intro-2',
@@ -166,9 +172,9 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     expect(mocks.getOrCreateIntroWorkflow).not.toHaveBeenCalled();
   });
 
-  it('approves intro, unlocks identity, and opens messaging when candidate interest already exists', async () => {
+  it('approves intro, keeps identity masked, and opens messaging when candidate interest already exists', async () => {
     mocks.resolveCanonicalCorridor.mockReturnValue({
-      progressiveRevealStage: 'stage3_intro_approved',
+      progressiveRevealStage: 'stage2_contextual_reveal',
       corridorState: 'intro_approved',
       fallbackState: null,
     });
@@ -224,21 +230,15 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
 
     expect(response.status).toBe(200);
     expect(body.introApproved).toBe(true);
-    expect(body.progressiveRevealStage).toBe('stage3_intro_approved');
+    expect(body.progressiveRevealStage).toBe('stage2_contextual_reveal');
     expect(body.corridorState).toBe('intro_approved');
-    expect(body.revealScope).toBe('full_identity');
+    expect(body.revealScope).toBe('shortlist_identity');
     expect(body.visibleIdentityFields).toEqual([]);
     expect(body.conversationId).toBe('conversation-1');
     expect(mocks.syncIntroWorkflowFromInterest).toHaveBeenCalledWith(
       expect.objectContaining({
         mutual: true,
         matchId: 'match-1',
-      })
-    );
-    expect(mocks.unlockFullIdentityForMatch).toHaveBeenCalledWith(
-      expect.objectContaining({
-        matchId: 'match-1',
-        unlockTrigger: 'mutual_interest',
       })
     );
     expect(mocks.openIntroConversation).toHaveBeenCalledWith(
@@ -250,8 +250,122 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     expect(mocks.notifyIntroAccepted).toHaveBeenCalledTimes(2);
   });
 
-  it('allows reviewers to record reveal requests without admin-style roles', async () => {
+  it('keeps intro available when fairness only suppresses ranking detail', async () => {
+    mocks.resolveCanonicalFallbackState.mockReturnValue('fairness_suppressed_ranking');
+    mocks.resolveCanonicalCorridor.mockReturnValue({
+      progressiveRevealStage: 'stage2_contextual_reveal',
+      corridorState: 'intro_approved',
+      fallbackState: 'fairness_suppressed_ranking',
+    });
+    mocks.select.mockReset();
+
+    const orgLimit = vi.fn().mockResolvedValue([{ id: 'org-1', slug: 'proofound' }]);
+    const orgWhere = vi.fn().mockReturnValue({ limit: orgLimit });
+    const orgFrom = vi.fn().mockReturnValue({ where: orgWhere });
+
+    const matchLimit = vi.fn().mockResolvedValue([
+      {
+        matchId: 'match-1',
+        assignmentId: 'assignment-1',
+        profileId: 'profile-1',
+        orgId: 'org-1',
+        reviewStage: 'shortlisted',
+        revealScope: 'shortlist_identity',
+        reviewOperationalFallbackMode: null,
+        assignmentOperationalFallbackMode: null,
+        fairnessStatus: 'unavailable',
+      },
+    ]);
+    const matchWhere = vi.fn().mockReturnValue({ limit: matchLimit });
+    const matchInnerJoin2 = vi.fn().mockReturnValue({ where: matchWhere });
+    const matchInnerJoin1 = vi.fn().mockReturnValue({ innerJoin: matchInnerJoin2 });
+    const matchFrom = vi.fn().mockReturnValue({ innerJoin: matchInnerJoin1 });
+
+    const candidateInterestLimit = vi.fn().mockResolvedValue([{ actorProfileId: 'profile-1' }]);
+    const candidateInterestWhere = vi.fn().mockReturnValue({ limit: candidateInterestLimit });
+    const candidateInterestFrom = vi.fn().mockReturnValue({ where: candidateInterestWhere });
+
+    const conversationLimit = vi.fn().mockResolvedValue([]);
+    const conversationWhere = vi.fn().mockReturnValue({ limit: conversationLimit });
+    const conversationFrom = vi.fn().mockReturnValue({ where: conversationWhere });
+
+    mocks.select
+      .mockReturnValueOnce({ from: orgFrom })
+      .mockReturnValueOnce({ from: matchFrom })
+      .mockReturnValueOnce({ from: candidateInterestFrom })
+      .mockReturnValueOnce({ from: conversationFrom });
+
+    const response = await POST(
+      new NextRequest('https://example.com/api/org/proofound/matches/match-1/review', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'request_intro' }),
+      }),
+      {
+        params: Promise.resolve({ id: 'proofound', matchId: 'match-1' }),
+      } as any
+    );
+
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.introApproved).toBe(true);
+    expect(body.fallbackState).toBe('fairness_suppressed_ranking');
+    expect(mocks.syncIntroWorkflowFromInterest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mutual: true,
+        matchId: 'match-1',
+      })
+    );
+  });
+
+  it('records reveal requests as pending candidate approval without unlocking identity', async () => {
     mocks.getOrgMembershipRole.mockResolvedValue('org_reviewer');
+    mocks.resolveCanonicalCorridor.mockReturnValue({
+      progressiveRevealStage: 'stage2_contextual_reveal',
+      corridorState: 'request_reveal',
+      fallbackState: null,
+    });
+    mocks.select.mockReset();
+
+    const orgLimit = vi.fn().mockResolvedValue([{ id: 'org-1', slug: 'proofound' }]);
+    const orgWhere = vi.fn().mockReturnValue({ limit: orgLimit });
+    const orgFrom = vi.fn().mockReturnValue({ where: orgWhere });
+
+    const matchLimit = vi.fn().mockResolvedValue([
+      {
+        matchId: 'match-1',
+        assignmentId: 'assignment-1',
+        profileId: 'profile-1',
+        orgId: 'org-1',
+        reviewStage: 'shortlisted',
+        revealScope: 'shortlist_identity',
+        reviewOperationalFallbackMode: null,
+        assignmentOperationalFallbackMode: null,
+        fairnessStatus: 'pass',
+      },
+    ]);
+    const matchWhere = vi.fn().mockReturnValue({ limit: matchLimit });
+    const matchInnerJoin2 = vi.fn().mockReturnValue({ where: matchWhere });
+    const matchInnerJoin1 = vi.fn().mockReturnValue({ innerJoin: matchInnerJoin2 });
+    const matchFrom = vi.fn().mockReturnValue({ innerJoin: matchInnerJoin1 });
+
+    const conversationLimit = vi.fn().mockResolvedValue([
+      {
+        id: 'conversation-1',
+        stage: 'masked',
+        participantOneId: 'profile-1',
+        participantTwoId: 'user-1',
+        participantOneWantsReveal: false,
+        participantTwoWantsReveal: false,
+      },
+    ]);
+    const conversationWhere = vi.fn().mockReturnValue({ limit: conversationLimit });
+    const conversationFrom = vi.fn().mockReturnValue({ where: conversationWhere });
+
+    mocks.select
+      .mockReturnValueOnce({ from: orgFrom })
+      .mockReturnValueOnce({ from: matchFrom })
+      .mockReturnValueOnce({ from: conversationFrom });
 
     const response = await POST(
       new NextRequest('https://example.com/api/org/proofound/matches/match-1/review', {
@@ -269,11 +383,75 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.message).toContain('Reveal request recorded');
+    expect(body.corridorState).toBe('request_reveal');
+    expect(body.waitingForCandidateApproval).toBe(true);
+    expect(body.message).toContain('candidate approves');
     expect(mocks.recordRevealEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         actorRole: 'org_reviewer',
         requestedScope: 'full_identity',
+        reasonCode: 'org_reveal_request_pending',
+      })
+    );
+  });
+
+  it('keeps shortlist updates live when fairness persistence fails', async () => {
+    mocks.select.mockReset();
+    mocks.persistFairnessEvaluationForAssignment.mockRejectedValue(
+      new Error('fairness insert failed')
+    );
+    mocks.resolveCanonicalCorridor.mockReturnValue({
+      progressiveRevealStage: 'stage1_capability_and_proof',
+      corridorState: 'shortlist',
+      fallbackState: null,
+    });
+
+    const orgLimit = vi.fn().mockResolvedValue([{ id: 'org-1', slug: 'proofound' }]);
+    const orgWhere = vi.fn().mockReturnValue({ limit: orgLimit });
+    const orgFrom = vi.fn().mockReturnValue({ where: orgWhere });
+
+    const matchLimit = vi.fn().mockResolvedValue([
+      {
+        matchId: 'match-1',
+        assignmentId: 'assignment-1',
+        profileId: 'profile-1',
+        orgId: 'org-1',
+        reviewStage: 'blind_review',
+        revealScope: 'blind',
+        reviewOperationalFallbackMode: null,
+        assignmentOperationalFallbackMode: null,
+        fairnessStatus: 'pass',
+      },
+    ]);
+    const matchWhere = vi.fn().mockReturnValue({ limit: matchLimit });
+    const matchInnerJoin2 = vi.fn().mockReturnValue({ where: matchWhere });
+    const matchInnerJoin1 = vi.fn().mockReturnValue({ innerJoin: matchInnerJoin2 });
+    const matchFrom = vi.fn().mockReturnValue({ innerJoin: matchInnerJoin1 });
+
+    mocks.select.mockReturnValueOnce({ from: orgFrom }).mockReturnValueOnce({ from: matchFrom });
+
+    const response = await POST(
+      new NextRequest('https://example.com/api/org/proofound/matches/match-1/review', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'shortlist' }),
+      }),
+      {
+        params: Promise.resolve({ id: 'proofound', matchId: 'match-1' }),
+      } as any
+    );
+
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.reviewStage).toBe('shortlisted');
+    expect(body.fairness).toEqual({
+      status: 'pass',
+      evaluationId: null,
+    });
+    expect(mocks.setMatchReviewStage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        matchId: 'match-1',
+        reviewStage: 'shortlisted',
       })
     );
   });

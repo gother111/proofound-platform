@@ -27,7 +27,6 @@ import {
   persistFairnessEvaluationForAssignment,
   recordRevealEvent,
   setMatchReviewStage,
-  unlockFullIdentityForMatch,
 } from '@/lib/matching/review-contract';
 import { notifyIntroAccepted } from '@/lib/notifications';
 import {
@@ -127,6 +126,85 @@ export async function POST(
     if (payload.action === 'reveal_request') {
       const requestedScope = payload.requestedScope ?? 'full_identity';
       const fairnessStatus = normalizeFairnessStatus(matchRow.fairnessStatus);
+      const [activeConversation] = await db
+        .select({
+          id: conversations.id,
+          stage: conversations.stage,
+          participantOneId: conversations.participantOneId,
+          participantTwoId: conversations.participantTwoId,
+          participantOneWantsReveal: conversations.participantOneWantsReveal,
+          participantTwoWantsReveal: conversations.participantTwoWantsReveal,
+        })
+        .from(conversations)
+        .where(eq(conversations.matchId, matchRow.matchId))
+        .limit(1);
+
+      if (!activeConversation) {
+        return NextResponse.json(
+          {
+            error:
+              'Reveal requests only open after introduction approval creates a masked conversation.',
+            matchId: matchRow.matchId,
+            reviewStage: matchRow.reviewStage,
+            revealScope: matchRow.revealScope,
+            visibleIdentityFields: getVisibleIdentityFields(matchRow.revealScope),
+          },
+          { status: 409 }
+        );
+      }
+
+      if (activeConversation.stage === 'revealed' || matchRow.revealScope === 'full_identity') {
+        const corridor = resolveCanonicalCorridor({
+          reviewStage: matchRow.reviewStage,
+          revealScope: 'full_identity',
+          surface: 'review_detail',
+          fairnessStatus,
+          operationalFallbackMode:
+            matchRow.reviewOperationalFallbackMode ?? matchRow.assignmentOperationalFallbackMode,
+          introApproved: true,
+        });
+
+        return NextResponse.json({
+          matchId: matchRow.matchId,
+          reviewStage: matchRow.reviewStage,
+          revealScope: 'full_identity',
+          visibleIdentityFields: getVisibleIdentityFields('full_identity'),
+          conversationId: activeConversation.id,
+          ...corridor,
+          why: buildVisibilitySafeWhy({
+            reasonCodes: ['reveal_full_identity'],
+            fairnessStatus,
+            fallbackState: corridor.fallbackState,
+          }),
+          message: 'Identity is already revealed for this introduction.',
+        });
+      }
+
+      const orgParticipantIsOne = activeConversation.participantOneId !== matchRow.profileId;
+      const orgRevealAlreadyRequested = orgParticipantIsOne
+        ? activeConversation.participantOneWantsReveal
+        : activeConversation.participantTwoWantsReveal;
+
+      if (!orgRevealAlreadyRequested) {
+        const now = new Date();
+        await db
+          .update(conversations)
+          .set(
+            orgParticipantIsOne
+              ? {
+                  participantOneWantsReveal: true,
+                  participantOneRevealRequestedAt: now,
+                  updatedAt: now,
+                }
+              : {
+                  participantTwoWantsReveal: true,
+                  participantTwoRevealRequestedAt: now,
+                  updatedAt: now,
+                }
+          )
+          .where(eq(conversations.id, activeConversation.id));
+      }
+
       await recordRevealEvent({
         matchId: matchRow.matchId,
         assignmentId: matchRow.assignmentId,
@@ -142,6 +220,7 @@ export async function POST(
         sourceSurface: 'org_review_route',
         context: {
           pending: true,
+          conversationId: activeConversation.id,
         },
         outcome: 'no_op',
       });
@@ -161,15 +240,17 @@ export async function POST(
         reviewStage: matchRow.reviewStage,
         revealScope: matchRow.revealScope,
         visibleIdentityFields: getVisibleIdentityFields(matchRow.revealScope),
+        conversationId: activeConversation.id,
+        waitingForCandidateApproval: true,
         ...corridor,
         why: buildVisibilitySafeWhy({
-          reasonCodes: ['reveal_shortlist_identity'],
+          reasonCodes: ['org_reveal_request_pending'],
           fairnessStatus,
           fallbackState: corridor.fallbackState,
         }),
         message:
           requestedScope === 'full_identity'
-            ? 'Reveal request recorded. Full identity stays locked until intro approval or interview coordination.'
+            ? 'Reveal request sent. Full identity remains locked until the candidate approves.'
             : 'Reveal request recorded.',
       });
     }
@@ -184,7 +265,7 @@ export async function POST(
       const stage2Ready =
         matchRow.reviewStage === 'shortlisted' && matchRow.revealScope === 'shortlist_identity';
 
-      if (!stage2Ready || fallbackState) {
+      if (!stage2Ready || fallbackState === 'intro_hold') {
         const fallbackMode =
           matchRow.reviewOperationalFallbackMode ??
           matchRow.assignmentOperationalFallbackMode ??
@@ -297,21 +378,6 @@ export async function POST(
         matchId: matchRow.matchId,
       });
 
-      await unlockFullIdentityForMatch({
-        matchId: matchRow.matchId,
-        actorId: user.id,
-        actorRole: role,
-        actorType: 'user_account',
-        triggerType: 'user',
-        sourceSurface: 'org_review_route',
-        reasonCode: 'reveal_full_identity',
-        unlockTrigger: 'mutual_interest',
-        context: {
-          approvedFromStage: 'stage2_contextual_reveal',
-          introWorkflowId: intro.id,
-        },
-      });
-
       const [existingConversation] = await db
         .select({
           id: conversations.id,
@@ -344,8 +410,7 @@ export async function POST(
               assignmentId: matchRow.assignmentId,
               participantOneId: matchRow.profileId,
               participantTwoId: user.id,
-              stage: 'revealed',
-              revealedAt: new Date(),
+              stage: 'masked',
               maskedHandleOne: `Candidate #${nanoid(6).toUpperCase()}`,
               maskedHandleTwo: `Organization #${nanoid(6).toUpperCase()}`,
               lastMessageAt: new Date(),
@@ -361,8 +426,12 @@ export async function POST(
           .set({
             matchId: matchRow.matchId,
             assignmentId: matchRow.assignmentId,
-            stage: 'revealed',
-            revealedAt: new Date(),
+            stage: 'masked',
+            revealedAt: null,
+            participantOneWantsReveal: false,
+            participantTwoWantsReveal: false,
+            participantOneRevealRequestedAt: null,
+            participantTwoRevealRequestedAt: null,
             lastMessageAt: new Date(),
             updatedAt: new Date(),
           })
@@ -408,7 +477,7 @@ export async function POST(
 
       const corridor = resolveCanonicalCorridor({
         reviewStage: matchRow.reviewStage,
-        revealScope: 'full_identity',
+        revealScope: 'shortlist_identity',
         surface: 'review_detail',
         fairnessStatus,
         operationalFallbackMode: null,
@@ -418,19 +487,20 @@ export async function POST(
       return NextResponse.json({
         matchId: matchRow.matchId,
         reviewStage: matchRow.reviewStage,
-        revealScope: 'full_identity',
-        visibleIdentityFields: getVisibleIdentityFields('full_identity'),
+        revealScope: 'shortlist_identity',
+        visibleIdentityFields: getVisibleIdentityFields('shortlist_identity'),
         introWorkflowId: intro.id,
         introWorkflowState: 'conversation_open',
         introApproved: true,
         conversationId,
         ...corridor,
         why: buildVisibilitySafeWhy({
-          reasonCodes: ['shortlist_selected'],
+          reasonCodes: ['intro_accepted_masked'],
           fairnessStatus,
           fallbackState: corridor.fallbackState,
         }),
-        message: 'Introduction approved. Identity is revealed and messaging is open.',
+        message:
+          'Introduction approved. Masked messaging is open, and full identity stays locked until the candidate approves reveal.',
       });
     }
 
@@ -476,11 +546,34 @@ export async function POST(
       });
     }
 
-    const fairnessEvaluation = await persistFairnessEvaluationForAssignment({
-      assignmentId: matchRow.assignmentId,
-      actorId: user.id,
-      actorType: 'user_account',
-    });
+    let fairnessEvaluation:
+      | {
+          id: string | null;
+          status: 'pass' | 'unavailable' | 'elevated' | 'breach';
+        }
+      | undefined;
+
+    try {
+      const persisted = await persistFairnessEvaluationForAssignment({
+        assignmentId: matchRow.assignmentId,
+        actorId: user.id,
+        actorType: 'user_account',
+      });
+      fairnessEvaluation = {
+        id: persisted.id,
+        status: persisted.status,
+      };
+    } catch (error) {
+      console.error('org review fairness persistence failed', {
+        matchId: matchRow.matchId,
+        assignmentId: matchRow.assignmentId,
+        error: error instanceof Error ? error.message : 'unknown_error',
+      });
+      fairnessEvaluation = {
+        id: null,
+        status: normalizeFairnessStatus(matchRow.fairnessStatus),
+      };
+    }
 
     const updated = await db.query.matchReviewStates.findFirst({
       where: eq(matchReviewStates.matchId, matchRow.matchId),

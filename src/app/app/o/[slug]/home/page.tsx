@@ -5,6 +5,11 @@ import { ArrowRight, Building2, ClipboardCheck, ShieldCheck, Users } from 'lucid
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
+import {
+  OrgCollaboratorInviteCard,
+  type OrgInviteFormState,
+} from '@/components/org/OrgCollaboratorInviteCard';
+import { inviteMember } from '@/actions/org';
 import { getActiveOrg, requireAuth } from '@/lib/auth';
 import { normalizeAuthorizedOrgRole } from '@/lib/authz';
 import { normalizeOrganizationValues } from '@/lib/organizations/normalizeValues';
@@ -41,9 +46,32 @@ export default async function OrganizationHomePage({
   const { org, membership } = result;
   const values = normalizeOrganizationValues(org.values);
   const roleLabel = getRoleLabel(membership.role);
-  const canEditTrustProfile = ['org_owner', 'org_manager'].includes(
-    normalizeAuthorizedOrgRole(membership.role) ?? ''
-  );
+  const normalizedRole = normalizeAuthorizedOrgRole(membership.role);
+  const canEditTrustProfile = ['org_owner', 'org_manager'].includes(normalizedRole ?? '');
+  const canInviteCollaborators = normalizedRole === 'org_owner';
+
+  const inviteAction = async (
+    _state: OrgInviteFormState,
+    formData: FormData
+  ): Promise<OrgInviteFormState> => {
+    'use server';
+
+    const result = await inviteMember(membership.orgId, formData);
+
+    if (result.error) {
+      return {
+        status: 'error',
+        message: result.error,
+      };
+    }
+
+    return {
+      status: 'success',
+      message:
+        result.warning ??
+        'Invitation sent. The collaborator must accept their tokenized email invite before access is granted.',
+    };
+  };
 
   return (
     <AppSurface>
@@ -153,12 +181,16 @@ export default async function OrganizationHomePage({
                 Reviewers can review the queue and published work, but they cannot change org
                 settings outside the launch corridor.
               </p>
-              <Button asChild variant="outline" className="w-full justify-between">
-                <Link href={`/app/o/${slug}/matching`}>
-                  Open review queue
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
+              {canInviteCollaborators ? (
+                <OrgCollaboratorInviteCard action={inviteAction} />
+              ) : (
+                <Button asChild variant="outline" className="w-full justify-between">
+                  <Link href={`/app/o/${slug}/matching`}>
+                    Open review queue
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              )}
             </CardContent>
           </Card>
         </section>

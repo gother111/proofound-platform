@@ -31,6 +31,7 @@ const inviteMemberSchema = z.object({
   email: z.string().email(),
   role: z.enum(['org_manager', 'org_reviewer']),
 });
+const INVITE_EMAIL_TIMEOUT_MS = 5000;
 
 async function getOrgMembershipForUser(orgId: string, userId: string) {
   const supabase = await createClient({ allowCookieWrite: true });
@@ -192,6 +193,7 @@ export async function inviteMember(orgId: string, formData: FormData) {
 
   try {
     const supabase = await createClient({ allowCookieWrite: true });
+    const adminClient = createAdminClient();
     const normalizedEmail = result.data.email.trim().toLowerCase();
     const existingInviteQuery = await supabase
       .from('org_invitations')
@@ -233,7 +235,7 @@ export async function inviteMember(orgId: string, formData: FormData) {
       },
     });
 
-    const invitationInsert = await supabase.from('org_invitations').insert({
+    const invitationInsert = await adminClient.from('org_invitations').insert({
       id: invitationId,
       org_id: orgId,
       membership_id: membershipId,
@@ -252,7 +254,6 @@ export async function inviteMember(orgId: string, formData: FormData) {
       console.error('Failed to create invitation:', invitationInsert.error);
       return { error: 'Failed to send invitation' };
     }
-
     const orgQuery = await supabase
       .from('organizations')
       .select('display_name, slug')
@@ -263,15 +264,27 @@ export async function inviteMember(orgId: string, formData: FormData) {
       console.error('Failed to load organization for invite:', orgQuery.error);
       return { error: 'Failed to send invitation' };
     }
-
-    // Send email
-    await sendOrgInviteEmail(
-      result.data.email,
-      orgQuery.data.display_name,
-      result.data.role,
-      issued.rawToken,
-      orgQuery.data.slug
-    );
+    let warning: string | undefined;
+    try {
+      await Promise.race([
+        sendOrgInviteEmail(
+          result.data.email,
+          orgQuery.data.display_name,
+          result.data.role,
+          issued.rawToken,
+          orgQuery.data.slug
+        ),
+        new Promise<never>((_, reject) => {
+          setTimeout(() => {
+            reject(new Error('org_invite_email_timeout'));
+          }, INVITE_EMAIL_TIMEOUT_MS);
+        }),
+      ]);
+    } catch (error) {
+      console.error('Org invite email delivery could not be confirmed:', error);
+      warning =
+        'Invitation saved, but email delivery could not be confirmed. Ask the collaborator to use the latest invite link before expecting access.';
+    }
 
     // Log audit event
     await supabase.from('audit_logs').insert({
@@ -288,9 +301,8 @@ export async function inviteMember(orgId: string, formData: FormData) {
         extra: { role: result.data.role, email: normalizedEmail, invitationId },
       }),
     });
-
     revalidatePath(`/app/o/${orgQuery.data.slug}/members`);
-    return { success: true };
+    return warning ? { success: true, warning } : { success: true };
   } catch (error) {
     console.error('Unexpected invite member error:', error);
     return { error: 'Failed to send invitation' };

@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server';
 const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
   isActiveOrgMember: vi.fn(),
+  getInterviewAccessContext: vi.fn(),
   recordDecisionTransition: vi.fn(),
   logInfo: vi.fn(),
   logWarn: vi.fn(),
@@ -16,6 +17,10 @@ vi.mock('@/lib/supabase/server', () => ({
 
 vi.mock('@/lib/api/auth', () => ({
   isActiveOrgMember: mocks.isActiveOrgMember,
+}));
+
+vi.mock('@/lib/interviews/messaging', () => ({
+  getInterviewAccessContext: mocks.getInterviewAccessContext,
 }));
 
 vi.mock('@/lib/workflow/service', () => ({
@@ -41,21 +46,8 @@ function buildRequest(body: Record<string, unknown>) {
 
 function buildSupabase({
   user = { id: 'user-1' },
-  interview = {
-    id: 'interview-1',
-    match_id: 'match-1',
-    matches: {
-      assignment_id: 'assignment-1',
-      assignments: {
-        org_id: 'org-1',
-      },
-    },
-  },
-  interviewError = null,
 }: {
   user?: { id: string } | null;
-  interview?: Record<string, unknown> | null;
-  interviewError?: unknown;
 } = {}) {
   return {
     auth: {
@@ -65,16 +57,6 @@ function buildSupabase({
         },
       }),
     },
-    from: vi.fn(() => ({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: interview,
-            error: interviewError,
-          }),
-        }),
-      }),
-    })),
   };
 }
 
@@ -82,6 +64,18 @@ describe('POST /api/decisions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.createClient.mockResolvedValue(buildSupabase());
+    mocks.getInterviewAccessContext.mockResolvedValue({
+      interviewId: 'interview-1',
+      matchId: 'match-1',
+      orgId: 'org-1',
+      candidateId: 'candidate-1',
+      status: 'completed',
+      scheduledAt: new Date('2026-03-15T00:00:00.000Z'),
+      platform: 'zoom',
+      meetingUrl: 'https://zoom.us/j/meeting',
+      timezone: 'UTC',
+      rescheduleCount: 1,
+    });
     mocks.recordDecisionTransition.mockResolvedValue({
       id: 'decision-1',
       state: 'hire',

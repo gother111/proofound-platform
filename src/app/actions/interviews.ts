@@ -129,6 +129,7 @@ export async function getInterviews(params?: { status?: string; matchId?: string
     meetingUrl: interview.meeting_link ?? interview.meeting_url ?? 'pending',
     manualMeetingProvider: interview.manual_meeting_provider ?? null,
     status: interview.status,
+    rescheduleCount: interview.reschedule_count ?? 0,
     matchAgreedAt: interview.match_agreed_at ?? null,
     candidateName: interview.candidate_name || 'Candidate',
     assignmentTitle: interview.assignment_title || 'Assignment',

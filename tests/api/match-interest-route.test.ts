@@ -5,6 +5,7 @@ import { POST } from '@/app/api/core/matching/interest/route';
 import { db } from '@/db';
 import { requireApiAuthContext, requireAuth } from '@/lib/auth';
 import { getIndividualReadinessState } from '@/lib/readiness/individual-state';
+import { listCanonicalProofPackAggregatesForOwner } from '@/lib/proofs/canonical-pack';
 import { checkVerificationGates } from '@/lib/verification/gates';
 
 vi.mock('@/lib/auth', () => ({
@@ -209,6 +210,74 @@ describe('match interest route', () => {
     expect(payload.currentTrustLevel).toBe('match_visible');
     expect(payload.browseStillAvailable).toBe(true);
     expect(payload.copy.title).toContain('You can keep browsing');
+  });
+
+  it('counts skill-linked proof from experience-anchored packs toward assignment intro eligibility', async () => {
+    (requireAuth as any).mockResolvedValue({ id: candidateId });
+    (db.query.assignments.findFirst as any).mockResolvedValue({
+      id: assignmentId,
+      orgId,
+      mustHaveSkills: [{ id: 'typescript', level: 4 }],
+    });
+    (db.query.skills.findMany as any).mockResolvedValue([
+      {
+        id: 'skill-row-1',
+        skillId: 'typescript',
+        skillCode: 'typescript',
+        relevance: 'current',
+        lastUsedAt: new Date('2026-03-01T00:00:00Z'),
+      },
+    ]);
+    (listCanonicalProofPackAggregatesForOwner as any).mockResolvedValue([
+      {
+        freshnessState: 'fresh',
+        pack: {
+          primarySubjectType: 'experience',
+          primarySubjectId: 'experience-1',
+        },
+        items: [
+          {
+            artifact: {
+              subjectType: 'skill',
+              subjectId: 'skill-row-1',
+            },
+          },
+        ],
+        verificationReferences: [],
+      },
+    ]);
+
+    const txOnConflictDoNothing = vi.fn().mockResolvedValue(undefined);
+    const txInsertValues = vi.fn().mockReturnValue({ onConflictDoNothing: txOnConflictDoNothing });
+    const txInsert = vi.fn().mockReturnValue({ values: txInsertValues });
+    const txMatchInterestFind = vi.fn().mockResolvedValue([]);
+    const txOrgMembershipFindMany = vi.fn().mockResolvedValue([]);
+
+    (db.transaction as any).mockImplementation(async (callback: any) =>
+      callback({
+        query: {
+          matchInterest: { findMany: txMatchInterestFind },
+          organizationMembers: { findMany: txOrgMembershipFindMany },
+        },
+        insert: txInsert,
+      })
+    );
+
+    const req = new NextRequest('http://localhost/api/match/interest', {
+      method: 'POST',
+      body: JSON.stringify({ assignmentId }),
+    });
+
+    const res = await POST(req);
+    const payload = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(payload.revealed).toBe(false);
+    expect(txInsertValues).toHaveBeenCalledWith({
+      actorProfileId: candidateId,
+      assignmentId,
+      targetProfileId: null,
+    });
   });
 
   it('keeps mutual interest pending until org intro approval', async () => {

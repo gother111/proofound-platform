@@ -61,7 +61,16 @@ export async function POST(request: NextRequest) {
       trigger: 'host_marked_complete',
     });
 
-    const feedbackInvites = await issueFeedbackInvites(body.interviewId);
+    let feedbackInvites: Awaited<ReturnType<typeof issueFeedbackInvites>> = [];
+    let feedbackInviteWarning: string | null = null;
+
+    try {
+      feedbackInvites = await issueFeedbackInvites(body.interviewId);
+    } catch (feedbackError) {
+      console.warn('Interview completion feedback invites failed', feedbackError);
+      feedbackInviteWarning = 'Feedback invites could not be issued immediately.';
+    }
+
     const feedbackFollowUp = resolveFeedbackFollowUpState({
       completedAt: updatedInterview.completedAt ?? new Date(),
     });
@@ -92,6 +101,7 @@ export async function POST(request: NextRequest) {
           scheduledAt: entry.scheduledAt.toISOString(),
         })),
         issuedInvites: feedbackInvites.length,
+        warning: feedbackInviteWarning,
       },
     });
   } catch (error: any) {

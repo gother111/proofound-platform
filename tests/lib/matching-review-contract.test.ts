@@ -199,7 +199,7 @@ describe('matching review contract', () => {
       })
     ).toEqual(
       expect.objectContaining({
-        corridorState: 'intro_hold',
+        corridorState: 'shortlist',
         fallbackState: 'fairness_suppressed_ranking',
       })
     );

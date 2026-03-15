@@ -49,6 +49,7 @@ interface Interview {
   platform: string;
   meetingUrl: string;
   status: string;
+  rescheduleCount?: number;
   candidateName?: string;
   assignmentTitle?: string;
   matchAgreedAt?: string;
@@ -326,6 +327,11 @@ export default function OrganizationInterviewsPage() {
     );
   };
 
+  const canEditInterview = (interview: Interview) =>
+    interview.status === 'scheduled' &&
+    new Date(interview.scheduledAt) > new Date() &&
+    (interview.rescheduleCount ?? 0) < 1;
+
   if (isLoading) {
     return (
       <AppSurface>
@@ -470,6 +476,18 @@ export default function OrganizationInterviewsPage() {
                       </span>
                       {getDecisionBadge(interview.decisionState)}
                       {getEngagementBadge(interview)}
+                      {(interview.rescheduleCount ?? 0) > 0 && (
+                        <span
+                          className="px-2 py-1 rounded-full text-xs font-medium"
+                          style={{
+                            backgroundColor: '#FEF3C7',
+                            color: '#92400E',
+                          }}
+                        >
+                          Rescheduled {interview.rescheduleCount} time
+                          {(interview.rescheduleCount ?? 0) === 1 ? '' : 's'}
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -482,10 +500,13 @@ export default function OrganizationInterviewsPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => openEditDialog(interview)}
+                            disabled={!canEditInterview(interview)}
                             className="flex items-center gap-2"
                           >
                             <Pencil className="w-4 h-4" />
-                            Edit Interview
+                            {(interview.rescheduleCount ?? 0) > 0
+                              ? 'Reschedule limit reached'
+                              : 'Edit Interview'}
                           </Button>
                           <Button
                             variant="outline"
@@ -571,6 +592,14 @@ export default function OrganizationInterviewsPage() {
                 Update the interview time. Changes will be sent to the candidate via messaging.
               </DialogDescription>
             </DialogHeader>
+
+            {editingInterview && (
+              <p className="text-xs text-muted-foreground">
+                {editingInterview.rescheduleCount && editingInterview.rescheduleCount > 0
+                  ? 'This interview has already been rescheduled once. Further edits are blocked by the launch policy.'
+                  : 'Launch policy allows one auditable reschedule on the same interview record.'}
+              </p>
+            )}
 
             <div className="space-y-4 py-2">
               <div className="space-y-2">

@@ -230,6 +230,8 @@ export const MATCH_REASON_CODE_VALUES = [
   'fairness_warning_active',
   'fairness_ranking_suppressed',
   'reveal_shortlist_identity',
+  'intro_accepted_masked',
+  'org_reveal_request_pending',
   'reveal_full_identity',
 ] as const;
 export type MatchReasonCode = (typeof MATCH_REASON_CODE_VALUES)[number];

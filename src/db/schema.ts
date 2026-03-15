@@ -4918,6 +4918,11 @@ export const decisions = pgTable(
   'decisions',
   {
     id: uuid('id').defaultRandom().primaryKey(),
+    interviewId: uuid('interview_id').references(() => interviews.id, { onDelete: 'cascade' }),
+    decision: text('decision'),
+    feedback: text('feedback'),
+    hoursSinceInterview: numeric('hours_since_interview', { precision: 10, scale: 2 }),
+    withinSla: boolean('within_sla').default(false).notNull(),
     introId: uuid('intro_id')
       .references(() => introWorkflows.id, { onDelete: 'cascade' })
       .notNull(),
@@ -4960,6 +4965,7 @@ export const decisions = pgTable(
       table.candidateProfileId,
       table.state
     ),
+    legacyInterviewIdx: index('decisions_interview_id_idx').on(table.interviewId),
     interviewIdx: index('decisions_latest_interview_idx').on(table.latestInterviewId),
   })
 );

@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { log } from '@/lib/log';
 import { isActiveOrgMember } from '@/lib/api/auth';
+import { getInterviewAccessContext } from '@/lib/interviews/messaging';
 import { recordDecisionTransition } from '@/lib/workflow/service';
 
 export async function POST(req: NextRequest) {
@@ -36,24 +37,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { data: interview, error: interviewError } = await supabase
-      .from('interviews')
-      .select(
-        `
-          id,
-          match_id,
-          matches!inner(
-            assignment_id,
-            assignments!inner(
-              org_id
-            )
-          )
-        `
-      )
-      .eq('id', interviewId)
-      .single();
-
-    if (interviewError || !interview) {
+    const interview = await getInterviewAccessContext(interviewId);
+    if (!interview) {
       log.warn('decision.interview_not_found', {
         userId: user.id,
         interviewId,
@@ -61,25 +46,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Interview not found' }, { status: 404 });
     }
 
-    const interviewMatch = Array.isArray((interview as any).matches)
-      ? (interview as any).matches[0]
-      : (interview as any).matches;
-    const interviewAssignment = Array.isArray(interviewMatch?.assignments)
-      ? interviewMatch.assignments[0]
-      : interviewMatch?.assignments;
-    const orgId = interviewAssignment?.org_id as string | undefined;
-
-    if (!orgId) {
-      return NextResponse.json({ error: 'Interview assignment not found' }, { status: 404 });
-    }
-
-    const canDecide = await isActiveOrgMember(supabase, user.id, orgId, ['org_owner']);
+    const canDecide = await isActiveOrgMember(supabase, user.id, interview.orgId, ['org_owner']);
 
     if (!canDecide) {
       log.warn('decision.unauthorized', {
         userId: user.id,
         interviewId,
-        orgId,
+        orgId: interview.orgId,
       });
       return NextResponse.json(
         { error: 'Unauthorized to make decision for this interview' },

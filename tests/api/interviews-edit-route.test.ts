@@ -7,6 +7,7 @@ import {
   canManageInterviewAsOrgAdmin,
   postInterviewUpdateMessageBestEffort,
 } from '@/lib/interviews/messaging';
+import { buildWorkflowView, recordInterviewRescheduleAudit } from '@/lib/workflow/service';
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
@@ -15,6 +16,17 @@ vi.mock('@/lib/supabase/server', () => ({
 vi.mock('@/lib/interviews/messaging', () => ({
   canManageInterviewAsOrgAdmin: vi.fn(),
   postInterviewUpdateMessageBestEffort: vi.fn(),
+}));
+
+vi.mock('@/lib/workflow/service', () => ({
+  recordInterviewRescheduleAudit: vi.fn().mockResolvedValue(undefined),
+  buildWorkflowView: vi.fn().mockReturnValue({
+    state: 'scheduled',
+    displayState: 'Scheduled',
+    reasonCode: 'rescheduled_by_org',
+    timestamps: {},
+    allowedActions: [],
+  }),
 }));
 
 describe('POST /api/interviews/edit', () => {
@@ -81,6 +93,7 @@ describe('POST /api/interviews/edit', () => {
         platform: 'zoom',
         meetingUrl: 'https://zoom.us/j/meeting',
         timezone: 'UTC',
+        rescheduleCount: 0,
       },
     } as any);
 
@@ -130,6 +143,7 @@ describe('POST /api/interviews/edit', () => {
         platform: 'zoom',
         meetingUrl: 'https://zoom.us/j/meeting',
         timezone: 'UTC',
+        rescheduleCount: 0,
       },
     } as any);
 
@@ -180,6 +194,7 @@ describe('POST /api/interviews/edit', () => {
         platform: 'google_meet',
         meetingUrl: 'https://meet.google.com/abc-defg-hij',
         timezone: 'UTC',
+        rescheduleCount: 0,
       },
     } as any);
 
@@ -198,11 +213,82 @@ describe('POST /api/interviews/edit', () => {
     expect(response.status).toBe(200);
     expect(update).toHaveBeenCalled();
     expect(updateEq).toHaveBeenCalledWith('id', interviewId);
+    expect(recordInterviewRescheduleAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        interviewId,
+        reasonCode: 'rescheduled_by_org',
+        nextTimezone: 'Europe/Stockholm',
+      })
+    );
+    expect(buildWorkflowView).toHaveBeenCalledWith(
+      expect.objectContaining({
+        machine: 'interview',
+        state: 'scheduled',
+      })
+    );
     expect(postInterviewUpdateMessageBestEffort).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'edited',
         interviewId,
       })
     );
+  });
+
+  it('blocks edits after the single allowed reschedule has been used', async () => {
+    const updateEq = vi.fn().mockResolvedValue({ error: null });
+    const update = vi.fn().mockReturnValue({ eq: updateEq });
+    const from = vi.fn().mockReturnValue({
+      update,
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }),
+      }),
+    });
+
+    vi.mocked(createClient).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: orgAdminId } },
+          error: null,
+        }),
+      },
+      from,
+    } as any);
+
+    vi.mocked(canManageInterviewAsOrgAdmin).mockResolvedValue({
+      allowed: true,
+      context: {
+        interviewId,
+        matchId: '22222222-2222-4222-8222-222222222222',
+        orgId: '33333333-3333-4333-8333-333333333333',
+        candidateId: '44444444-4444-4444-8444-444444444444',
+        status: 'scheduled',
+        scheduledAt: new Date(Date.now() + 30 * 60 * 1000),
+        platform: 'google_meet',
+        meetingUrl: 'https://meet.google.com/abc-defg-hij',
+        timezone: 'UTC',
+        rescheduleCount: 1,
+      },
+    } as any);
+
+    const nextScheduledAt = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+    const response = await POST(
+      new NextRequest('http://localhost/api/interviews/edit', {
+        method: 'POST',
+        body: JSON.stringify({
+          interviewId,
+          scheduledAt: nextScheduledAt,
+          timezone: 'Europe/Stockholm',
+        }),
+      })
+    );
+
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toContain('Maximum 1 reschedule');
+    expect(update).not.toHaveBeenCalled();
+    expect(recordInterviewRescheduleAudit).not.toHaveBeenCalled();
   });
 });

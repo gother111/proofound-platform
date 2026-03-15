@@ -246,6 +246,22 @@ const REASON_DICTIONARY: Record<MatchReasonCode, ReasonDictionaryEntry> = {
     candidateCopy: 'Your shortlist identity reveal was granted under the review policy.',
     importance: 50,
   },
+  intro_accepted_masked: {
+    category: 'workflow_decision',
+    orgCopy:
+      'The introduction is approved and masked messaging is open. Full identity remains locked until reveal consent is granted.',
+    candidateCopy:
+      'The introduction is approved and masked messaging is open. Full identity remains locked until reveal consent is granted.',
+    importance: 64,
+  },
+  org_reveal_request_pending: {
+    category: 'workflow_decision',
+    orgCopy:
+      'A reveal request is pending candidate approval. Identity-bearing fields stay hidden until consent is granted.',
+    candidateCopy:
+      'The organization has requested reveal. Identity-bearing fields stay hidden until you approve.',
+    importance: 66,
+  },
   reveal_full_identity: {
     category: 'workflow_decision',
     orgCopy: 'Full identity reveal was granted under an explicit downstream trigger.',
@@ -484,7 +500,7 @@ export function resolveCanonicalCorridor(input: {
     corridorState = 'decision_pending';
   } else if (input.interviewScheduled) {
     corridorState = 'interview_scheduled';
-  } else if (fallbackState) {
+  } else if (fallbackState === 'intro_hold') {
     corridorState = 'intro_hold';
   } else if (input.introApproved || input.revealScope === 'full_identity') {
     corridorState = 'intro_approved';

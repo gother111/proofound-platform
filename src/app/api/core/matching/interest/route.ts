@@ -16,10 +16,7 @@ import {
 import { evaluateAssignmentPolicy } from '@/lib/assignments/policy';
 import { emitAnalyticsEventAsync } from '@/lib/analytics/events';
 import { log } from '@/lib/log';
-import {
-  listCanonicalProofPackAggregatesForOwner,
-  summarizeCanonicalProofOwnerAggregates,
-} from '@/lib/proofs/canonical-pack';
+import { listCanonicalProofPackAggregatesForOwner } from '@/lib/proofs/canonical-pack';
 import { getIndividualReadinessState } from '@/lib/readiness/individual-state';
 import { checkVerificationGates } from '@/lib/verification/gates';
 import {
@@ -120,17 +117,25 @@ async function getAssignmentRelevantProofLinkedSkillCount(
   ]);
 
   const nowMs = Date.now();
-  const canonicalSummary = summarizeCanonicalProofOwnerAggregates(proofRows || []);
-  const proofBackedSkillIds = new Set(
-    canonicalSummary.subjectSummaries
-      .filter(
-        (summary) =>
-          summary.subjectType === 'skill' &&
-          summary.freshnessState !== 'expired' &&
-          summary.subjectId
-      )
-      .map((summary) => summary.subjectId)
-  );
+  const proofBackedSkillIds = new Set<string>();
+
+  for (const aggregate of proofRows || []) {
+    if (aggregate.freshnessState === 'expired') {
+      continue;
+    }
+
+    for (const item of aggregate.items) {
+      if (item.artifact.subjectType === 'skill' && typeof item.artifact.subjectId === 'string') {
+        proofBackedSkillIds.add(item.artifact.subjectId);
+      }
+    }
+
+    for (const record of aggregate.verificationReferences) {
+      if (record.subjectType === 'skill' && typeof record.subjectId === 'string') {
+        proofBackedSkillIds.add(record.subjectId);
+      }
+    }
+  }
 
   const recentProofLinkedSkillKeys = new Set(
     (skillRows || [])

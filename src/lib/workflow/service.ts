@@ -38,6 +38,53 @@ import {
 } from '@/lib/workflow/contracts';
 import { cancelWorkflowJobs, enqueueWorkflowJob } from '@/lib/workflow/queue';
 import { revalidatePublicPortfolioByProfileId } from '@/lib/portfolio/public-invalidation';
+
+async function getInterviewWorkflowRow(interviewId: string) {
+  const result = await db.execute(sql`
+    SELECT
+      i.id,
+      i.status,
+      i.completed_at,
+      i.cancelled_at,
+      i.cancelled_by,
+      i.cancel_reason,
+      i.no_show_at,
+      i.no_show_recorded_by,
+      i.updated_at
+    FROM interviews i
+    WHERE i.id = ${interviewId}
+    LIMIT 1
+  `);
+
+  const rows = getRows(result) as Array<{
+    id: string;
+    status: string | null;
+    completed_at: Date | null;
+    cancelled_at: Date | null;
+    cancelled_by: string | null;
+    cancel_reason: string | null;
+    no_show_at: Date | null;
+    no_show_recorded_by: string | null;
+    updated_at: Date | null;
+  }>;
+
+  const row = rows[0];
+  if (!row || !row.status) {
+    return null;
+  }
+
+  return {
+    id: row.id,
+    status: row.status,
+    completedAt: row.completed_at,
+    cancelledAt: row.cancelled_at,
+    cancelledBy: row.cancelled_by,
+    cancelReason: row.cancel_reason,
+    noShowAt: row.no_show_at,
+    noShowRecordedBy: row.no_show_recorded_by,
+    updatedAt: row.updated_at,
+  };
+}
 import { computeProofTrustSnapshot } from '@/lib/proof-trust/snapshots';
 import {
   appendVerificationLogEntry,
@@ -133,6 +180,19 @@ function inferNoShowParticipantRole(
   }
 
   return 'candidate';
+}
+
+function isMissingLegacyInterviewDecisionColumnError(error: unknown) {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === 'object' && error && 'message' in error
+        ? String((error as { message?: unknown }).message ?? '')
+        : '';
+
+  return /column "(decision|decided_by|decided_at|feedback)" of relation "interviews" does not exist/.test(
+    message
+  );
 }
 
 async function appendAssignmentTransition(
@@ -934,10 +994,14 @@ export async function ensureDecisionRecordForInterview(params: {
   });
 
   if (existing) {
-    if (existing.latestInterviewId !== params.interviewId) {
+    if (
+      existing.latestInterviewId !== params.interviewId ||
+      existing.interviewId !== params.interviewId
+    ) {
       const [updated] = await db
         .update(decisions)
         .set({
+          interviewId: params.interviewId,
           latestInterviewId: params.interviewId,
           updatedAt: new Date(),
         })
@@ -951,6 +1015,12 @@ export async function ensureDecisionRecordForInterview(params: {
   const [decision] = await db
     .insert(decisions)
     .values({
+      interviewId: params.interviewId,
+      // Legacy decisions.decision only accepts terminal outcomes; keep canonical state pending
+      // while using the least-final compatibility value until a real decision is recorded.
+      decision: 'hold',
+      hoursSinceInterview: '0.00',
+      withinSla: true,
       introId,
       assignmentId: context.assignment_id,
       candidateProfileId: context.candidate_profile_id,
@@ -983,9 +1053,7 @@ export async function recordInterviewTransition(params: {
   reasonCode?: string | null;
   metadata?: Record<string, unknown>;
 }) {
-  const interview = await db.query.interviews.findFirst({
-    where: eq(interviews.id, params.interviewId),
-  });
+  const interview = await getInterviewWorkflowRow(params.interviewId);
 
   if (!interview) {
     throw new Error('Interview not found');
@@ -1014,7 +1082,17 @@ export async function recordInterviewTransition(params: {
       updatedAt: now,
     })
     .where(eq(interviews.id, params.interviewId))
-    .returning();
+    .returning({
+      id: interviews.id,
+      status: interviews.status,
+      completedAt: interviews.completedAt,
+      cancelledAt: interviews.cancelledAt,
+      cancelledBy: interviews.cancelledBy,
+      cancelReason: interviews.cancelReason,
+      noShowAt: interviews.noShowAt,
+      noShowRecordedBy: interviews.noShowRecordedBy,
+      updatedAt: interviews.updatedAt,
+    });
 
   if (interview.status !== params.toState) {
     await appendInterviewTransition(params.interviewId, interview.status, params.toState, {
@@ -1108,6 +1186,38 @@ export async function recordInterviewTransition(params: {
   return updated;
 }
 
+export async function recordInterviewRescheduleAudit(params: {
+  interviewId: string;
+  actorType: WorkflowActorType;
+  actorId?: string | null;
+  previousScheduledAt?: string | null;
+  nextScheduledAt: string;
+  previousTimezone?: string | null;
+  nextTimezone?: string | null;
+  reasonCode?: string | null;
+  metadata?: Record<string, unknown>;
+}) {
+  const interview = await getInterviewWorkflowRow(params.interviewId);
+
+  if (!interview) {
+    throw new Error('Interview not found');
+  }
+
+  await appendInterviewTransition(params.interviewId, interview.status, interview.status, {
+    trigger: 'interview_rescheduled',
+    actorType: params.actorType,
+    actorId: params.actorId ?? null,
+    reasonCode: params.reasonCode ?? 'rescheduled_by_org',
+    metadata: {
+      previousScheduledAt: params.previousScheduledAt ?? null,
+      nextScheduledAt: params.nextScheduledAt,
+      previousTimezone: params.previousTimezone ?? null,
+      nextTimezone: params.nextTimezone ?? null,
+      ...params.metadata,
+    },
+  });
+}
+
 export async function registerScheduledInterviewWorkflow(params: {
   interviewId: string;
   matchId: string;
@@ -1158,10 +1268,21 @@ export async function recordDecisionTransition(params: {
   }
 
   const now = new Date();
+  const interview = await getInterviewWorkflowRow(params.interviewId);
+  const completedAt = interview?.completedAt ?? interview?.updatedAt ?? now;
+  const hoursSinceInterview = Number(
+    (((now.getTime() - completedAt.getTime()) / (1000 * 60 * 60)) as number).toFixed(2)
+  );
+  const withinSla = hoursSinceInterview <= 48;
   const [updated] = await db
     .update(decisions)
     .set({
+      interviewId: params.interviewId,
       latestInterviewId: params.interviewId,
+      decision: params.toState,
+      feedback: params.internalNote ?? null,
+      hoursSinceInterview: String(hoursSinceInterview.toFixed(2)),
+      withinSla,
       state: params.toState,
       holdUntil: params.toState === 'hold' ? (params.holdUntil ?? null) : null,
       reasonCode: params.reasonCode ?? null,
@@ -1223,23 +1344,22 @@ export async function recordDecisionTransition(params: {
         ? 'decline'
         : null;
 
-  await db
-    .update(interviews)
-    .set({
-      decision: legacyDecision as any,
-      decidedBy: params.actorId ?? null,
-      decidedAt: now,
-      feedback: params.internalNote ?? null,
-      updatedAt: now,
-    })
-    .where(eq(interviews.id, params.interviewId));
-
-  const interview = await db.query.interviews.findFirst({
-    where: eq(interviews.id, params.interviewId),
-  });
-
-  const completedAt = interview?.completedAt ?? interview?.updatedAt ?? now;
-  const hoursSinceInterview = (now.getTime() - completedAt.getTime()) / (1000 * 60 * 60);
+  try {
+    await db
+      .update(interviews)
+      .set({
+        decision: legacyDecision as any,
+        decidedBy: params.actorId ?? null,
+        decidedAt: now,
+        feedback: params.internalNote ?? null,
+        updatedAt: now,
+      })
+      .where(eq(interviews.id, params.interviewId));
+  } catch (error) {
+    if (!isMissingLegacyInterviewDecisionColumnError(error)) {
+      throw error;
+    }
+  }
 
   if (params.actorId) {
     await emitDecisionMade(params.actorId, params.interviewId, {
