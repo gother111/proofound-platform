@@ -4,6 +4,7 @@ import {
   INTERNAL_OPS_AUDIT_HREF,
   INTERNAL_OPS_HREF,
   INTERNAL_OPS_VERIFICATION_HREF,
+  LAUNCH_API_SURFACE_POLICIES,
   classifyLaunchApiPath,
   getArchivedApiPolicy,
 } from '@/lib/launch/surface-policy';
@@ -23,7 +24,6 @@ describe('launch surface policy', () => {
     expect(getArchivedApiPolicy('/api/admin/verification/linkedin/queue')).toBeNull();
     expect(getArchivedApiPolicy('/api/admin/verification/linkedin/user-1/review')).toBeNull();
     expect(getArchivedApiPolicy('/api/admin/moderation/queue')).toBeNull();
-    expect(getArchivedApiPolicy('/api/admin/feature-flags/launch')).toBeNull();
     expect(getArchivedApiPolicy('/api/admin/organizations/org-1/audit')).toBeNull();
     expect(getArchivedApiPolicy('/api/admin/organizations/org-1/verify')).toBeNull();
   });
@@ -38,13 +38,24 @@ describe('launch surface policy', () => {
     expect(getArchivedApiPolicy('/api/admin/organizations')).toMatchObject({
       surfaceLabel: 'Admin API',
     });
+    expect(getArchivedApiPolicy('/api/admin/feature-flags/launch')).toMatchObject({
+      surfaceLabel: 'Admin API',
+    });
+    expect(getArchivedApiPolicy('/api/admin/metrics/rollout')).toMatchObject({
+      surfaceLabel: 'Admin API',
+    });
   });
 
   it('classifies only non-MVP families as archived', () => {
     expect(classifyLaunchApiPath('/api/mobile/v1/bootstrap')).toBe('archived');
     expect(classifyLaunchApiPath('/api/admin/analytics/overview')).toBe('archived');
+    expect(classifyLaunchApiPath('/api/admin/feature-flags')).toBe('archived');
     expect(classifyLaunchApiPath('/api/admin/audit')).toBe('internal_only_launch_ops');
     expect(classifyLaunchApiPath('/api/assignments')).toBe('active_launch_path');
+  });
+
+  it('keeps the registry explicit and small enough to audit', () => {
+    expect(LAUNCH_API_SURFACE_POLICIES).toHaveLength(11);
   });
 
   it('keeps preserved internal ops hrefs inside the allowed admin corridor', () => {

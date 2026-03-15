@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
-import { DELETE, POST } from '@/app/api/mobile/v1/devices/token/route';
+import { DELETE, POST } from '@/archive/non_launch_api/app/api/mobile/v1/devices/token/route';
 import { db } from '@/db';
 import { requireMobileAuth } from '@/lib/api/mobile/auth';
 

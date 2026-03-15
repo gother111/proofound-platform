@@ -10,7 +10,7 @@ import { db } from '@/db';
 import { performanceMetrics, performanceAlerts } from '@/db/schema';
 import { and, gte, desc, isNotNull, sql } from 'drizzle-orm';
 import { calculatePercentiles } from '@/lib/performance/api-monitor';
-import { adminListGuard } from '../../_utils';
+import { adminListGuard } from '@/app/api/admin/_utils';
 import { jsonError } from '@/lib/api/route-helpers';
 
 export async function GET(request: NextRequest) {

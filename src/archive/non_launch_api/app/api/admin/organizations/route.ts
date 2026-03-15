@@ -3,7 +3,7 @@ import { jsonError } from '@/lib/api/route-helpers';
 import { db } from '@/db';
 import { organizations } from '@/db/schema';
 import { ilike, or, desc, asc, sql } from 'drizzle-orm';
-import { adminListGuard } from '../_utils';
+import { adminListGuard } from '@/app/api/admin/_utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -41,7 +41,10 @@ export async function GET(request: NextRequest) {
 
     const [orgs, countResult] = await Promise.all([
       orgsQuery,
-      db.select({ count: sql<number>`count(*)` }).from(organizations).where(whereClause),
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(organizations)
+        .where(whereClause),
     ]);
 
     const total = Number(countResult[0]?.count || 0);
@@ -59,11 +62,10 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching organizations:', error);
     return NextResponse.json(
       {
-      error: 'Failed to fetch organizations',
+        error: 'Failed to fetch organizations',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
   }
 }
-

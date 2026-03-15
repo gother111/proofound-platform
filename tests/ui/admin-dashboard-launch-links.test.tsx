@@ -1,82 +1,61 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AdminDashboard } from '@/components/admin/AdminDashboard';
+import AdminPage from '@/app/admin/page';
+import { AdminSidebar } from '@/components/admin/AdminSidebar';
 
-const apiFetchMock = vi.fn();
+const requirePlatformAdminMock = vi.fn();
+const usePathnameMock = vi.fn();
 
-vi.mock('@/lib/api/fetch', () => ({
-  apiFetch: (...args: unknown[]) => apiFetchMock(...args),
+vi.mock('@/lib/auth/admin', () => ({
+  requirePlatformAdmin: () => requirePlatformAdminMock(),
 }));
 
-vi.mock('sonner', () => ({
-  toast: {
-    error: vi.fn(),
-  },
-}));
+vi.mock('next/navigation', async () => {
+  const actual = await vi.importActual<typeof import('next/navigation')>('next/navigation');
+  return {
+    ...actual,
+    usePathname: () => usePathnameMock(),
+  };
+});
 
-vi.mock('@/components/admin/analytics/AdminGrowthChart', () => ({
-  AdminGrowthChart: () => <div data-testid="admin-growth-chart" />,
-}));
-
-vi.mock('@/components/analytics/FairnessNoteDashboard', () => ({
-  FairnessNoteDashboard: () => <div data-testid="fairness-note-dashboard" />,
-}));
-
-vi.mock('@/components/metrics/MetricsDashboard', () => ({
-  MetricsDashboard: () => <div data-testid="metrics-dashboard" />,
-}));
-
-describe('AdminDashboard launch links', () => {
+describe('admin launch links', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    apiFetchMock.mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        data: {
-          users: {
-            total: 12,
-            thisMonth: 2,
-            activeLastWeek: 8,
-          },
-          organizations: {
-            total: 4,
-            active: 3,
-          },
-          matches: {
-            total: 9,
-            thisMonth: 1,
-          },
-          contracts: {
-            total: 2,
-            thisMonth: 1,
-          },
-          assignments: {
-            active: 3,
-          },
-        },
-      }),
+    requirePlatformAdminMock.mockResolvedValue({
+      userId: 'admin-1',
+      email: 'ops@proofound.io',
+      platformRole: 'platform_admin',
+      adminLevel: 'platform_admin',
     });
+    usePathnameMock.mockReturnValue('/admin');
   });
 
-  it('only links to preserved internal ops surfaces', async () => {
-    render(
-      <AdminDashboard
-        adminUser={{
-          userId: 'admin-1',
-          email: 'ops@proofound.io',
-          platformRole: 'platform_admin',
-          adminLevel: 'platform_admin',
-        }}
-      />
+  it('keeps the real admin page limited to verification and audit launch actions', async () => {
+    render(await AdminPage());
+
+    expect(screen.getByRole('link', { name: /open verification queue/i })).toHaveAttribute(
+      'href',
+      '/admin/verification'
+    );
+    expect(screen.getByRole('link', { name: /open audit log/i })).toHaveAttribute(
+      'href',
+      '/admin/audit'
     );
 
-    await waitFor(() => {
-      expect(apiFetchMock).toHaveBeenCalledWith('/api/admin/analytics/overview');
-    });
+    expect(screen.queryByRole('link', { name: /users/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /organizations/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /fairness/i })).not.toBeInTheDocument();
+  });
 
-    expect(screen.getByRole('link', { name: /verification queue/i })).toHaveAttribute(
+  it('keeps the active admin navigation inside the preserved launch corridor', () => {
+    render(
+      <AdminSidebar adminEmail="ops@proofound.io" adminRole="platform_admin" collapsed={false} />
+    );
+
+    expect(screen.getByRole('link', { name: /dashboard/i })).toHaveAttribute('href', '/admin');
+    expect(screen.getByRole('link', { name: /verification/i })).toHaveAttribute(
       'href',
       '/admin/verification'
     );
@@ -84,12 +63,5 @@ describe('AdminDashboard launch links', () => {
       'href',
       '/admin/audit'
     );
-    expect(screen.getByRole('link', { name: /internal ops hub/i })).toHaveAttribute(
-      'href',
-      '/admin'
-    );
-
-    expect(screen.queryByRole('link', { name: /view all users/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /view organizations/i })).not.toBeInTheDocument();
   });
 });

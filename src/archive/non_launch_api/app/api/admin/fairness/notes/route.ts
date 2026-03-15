@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { fairnessNotes } from '@/db/schema';
 import { desc, eq } from 'drizzle-orm';
-import { adminListGuard } from '../../_utils';
+import { adminListGuard } from '@/app/api/admin/_utils';
 import { jsonError } from '@/lib/api/route-helpers';
 
 export async function GET(request: NextRequest) {

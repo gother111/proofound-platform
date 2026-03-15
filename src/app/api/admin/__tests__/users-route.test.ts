@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
-import { GET } from '../users/route';
+import { GET } from '@/archive/non_launch_api/app/api/admin/users/route';
 import * as adminAuth from '@/lib/auth/admin';
 import * as dbModule from '@/db';
 

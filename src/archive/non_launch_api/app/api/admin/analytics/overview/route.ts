@@ -23,9 +23,7 @@ export async function GET(request: NextRequest) {
     const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
     // Total users
-    const totalUsersResult = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(profiles);
+    const totalUsersResult = await db.select({ count: sql<number>`count(*)::int` }).from(profiles);
     const totalUsers = totalUsersResult[0]?.count || 0;
 
     // Users this month
@@ -123,14 +121,14 @@ export async function GET(request: NextRequest) {
         metrics: {
           ttsc: ttsc
             ? {
-              median: ttsc.value,
-              mean: ttsc.value, // Using median as proxy since mean is not calculated
-              p25: ttsc.percentile?.p50 || 0, // We don't calculate p25, using p50 as fallback
-              p75: ttsc.percentile?.p75 || 0,
-              sampleSize: ttsc.sampleSize,
-              meetsTarget: ttsc.onTrack,
-              unit: 'days',
-            }
+                median: ttsc.value,
+                mean: ttsc.value, // Using median as proxy since mean is not calculated
+                p25: ttsc.percentile?.p50 || 0, // We don't calculate p25, using p50 as fallback
+                p75: ttsc.percentile?.p75 || 0,
+                sampleSize: ttsc.sampleSize,
+                meetsTarget: ttsc.onTrack,
+                unit: 'days',
+              }
             : null,
         },
         period: {

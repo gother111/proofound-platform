@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveCronSummaryBaseUrl } from '../cron/summary/base-url';
+import { resolveCronSummaryBaseUrl } from '@/archive/non_launch_api/app/api/admin/cron/summary/base-url';
 
 describe('cron summary base URL resolver', () => {
   it('prefers NEXT_PUBLIC_SITE_URL when provided', () => {

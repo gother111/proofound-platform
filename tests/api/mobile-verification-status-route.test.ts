@@ -23,7 +23,7 @@ vi.mock('@/lib/verification/policy', async () => {
 });
 
 import { db } from '@/db';
-import { GET } from '@/app/api/mobile/v1/verification/status/route';
+import { GET } from '@/archive/non_launch_api/app/api/mobile/v1/verification/status/route';
 import { requireMobileAuth } from '@/lib/api/mobile/auth';
 
 function makeRequest() {

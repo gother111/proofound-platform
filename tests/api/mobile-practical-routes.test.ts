@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
-import { POST as postAssignmentMatches } from '@/app/api/mobile/v1/matching/assignment/route';
-import { GET as getShortlist } from '@/app/api/mobile/v1/shortlist/route';
-import { POST as postPersonaSwitch } from '@/app/api/mobile/v1/persona/switch/route';
-import { PATCH as patchNotificationRead } from '@/app/api/mobile/v1/notifications/[id]/read/route';
+import { POST as postAssignmentMatches } from '@/archive/non_launch_api/app/api/mobile/v1/matching/assignment/route';
+import { GET as getShortlist } from '@/archive/non_launch_api/app/api/mobile/v1/shortlist/route';
+import { POST as postPersonaSwitch } from '@/archive/non_launch_api/app/api/mobile/v1/persona/switch/route';
+import { PATCH as patchNotificationRead } from '@/archive/non_launch_api/app/api/mobile/v1/notifications/[id]/read/route';
 import { requireMobileAuth } from '@/lib/api/mobile/auth';
 import { db } from '@/db';
 

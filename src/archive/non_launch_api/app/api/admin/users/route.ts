@@ -3,7 +3,7 @@ import { jsonError } from '@/lib/api/route-helpers';
 import { db } from '@/db';
 import { profiles } from '@/db/schema';
 import { ilike, or, desc, asc, sql, eq, and } from 'drizzle-orm';
-import { adminListGuard } from '../_utils';
+import { adminListGuard } from '@/app/api/admin/_utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -40,7 +40,10 @@ export async function GET(request: NextRequest) {
 
     const [users, countResult] = await Promise.all([
       usersQuery,
-      db.select({ count: sql<number>`count(*)` }).from(profiles).where(whereClause),
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(profiles)
+        .where(whereClause),
     ]);
 
     const total = Number(countResult[0]?.count || 0);
@@ -57,9 +60,11 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching users:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch users', details: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        error: 'Failed to fetch users',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }
 }
-

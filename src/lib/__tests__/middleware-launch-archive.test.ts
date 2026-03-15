@@ -57,8 +57,6 @@ describe('middleware launch archive behavior', () => {
       'http://localhost/api/admin/verification/linkedin/user-1/review',
       'http://localhost/api/admin/moderation/queue',
       'http://localhost/api/admin/moderation/action',
-      'http://localhost/api/admin/metrics/rollout',
-      'http://localhost/api/admin/feature-flags',
       'http://localhost/api/admin/organizations/org-1/audit?reason=test',
       'http://localhost/api/admin/organizations/org-1/verify',
     ];
@@ -71,12 +69,18 @@ describe('middleware launch archive behavior', () => {
   });
 
   it('archives broader admin list surfaces while preserving nested trust endpoints', async () => {
-    const response = await middleware(
-      new NextRequest('http://localhost/api/admin/organizations', { method: 'GET' })
-    );
-    const body = await response.json();
+    const archivedPaths = [
+      'http://localhost/api/admin/organizations',
+      'http://localhost/api/admin/feature-flags',
+      'http://localhost/api/admin/metrics/rollout',
+    ];
 
-    expect(response.status).toBe(410);
-    expect(body.surface).toBe('Admin API');
+    for (const path of archivedPaths) {
+      const response = await middleware(new NextRequest(path, { method: 'GET' }));
+      const body = await response.json();
+
+      expect(response.status).toBe(410);
+      expect(body.surface).toBe('Admin API');
+    }
   });
 });

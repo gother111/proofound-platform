@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
 
-import { GET } from '@/app/api/mobile/v1/bootstrap/route';
+import { GET } from '@/archive/non_launch_api/app/api/mobile/v1/bootstrap/route';
 import { requireMobileAuth } from '@/lib/api/mobile/auth';
 
 vi.mock('@/lib/api/mobile/auth', () => ({

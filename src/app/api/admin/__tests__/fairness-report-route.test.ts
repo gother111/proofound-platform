@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
-import { POST } from '../fairness-report/route';
+import { POST } from '@/archive/non_launch_api/app/api/admin/fairness-report/route';
 import { requirePlatformAdminJson } from '@/lib/api/route-helpers';
 import { createClient } from '@/lib/supabase/server';
 

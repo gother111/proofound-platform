@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
-import { GET } from '../fairness-metrics/route';
+import { GET } from '@/archive/non_launch_api/app/api/admin/fairness-metrics/route';
 import { adminListGuard } from '../_utils';
 import { createClient } from '@/lib/supabase/server';
 
