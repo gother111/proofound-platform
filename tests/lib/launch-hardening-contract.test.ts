@@ -5,6 +5,8 @@ import {
   LAUNCH_SMOKE_CORRIDOR_VALUES,
   LAUNCH_SMOKE_MATRIX,
   REQUIRED_SAFE_MODE_FLAGS,
+  isLocalLaunchBaseUrl,
+  normalizeLaunchBaseUrl,
 } from '@/lib/launch/contracts';
 import { CLIENT_FEATURE_FLAG_RESPONSE_MAP } from '@/lib/featureFlags';
 import {
@@ -78,5 +80,18 @@ describe('launch hardening contract', () => {
     for (const flag of REQUIRED_SAFE_MODE_FLAGS) {
       expect(exposedFlags.has(flag)).toBe(true);
     }
+  });
+
+  it('normalizes launch base URLs and classifies local versus live targets', () => {
+    expect(normalizeLaunchBaseUrl('https://proofound.io/launch/status')).toBe(
+      'https://proofound.io'
+    );
+    expect(normalizeLaunchBaseUrl('http://localhost:3000/api/health')).toBe(
+      'http://localhost:3000'
+    );
+
+    expect(isLocalLaunchBaseUrl('http://localhost:3000')).toBe(true);
+    expect(isLocalLaunchBaseUrl('http://127.0.0.1:3000')).toBe(true);
+    expect(isLocalLaunchBaseUrl('https://proofound.io')).toBe(false);
   });
 });

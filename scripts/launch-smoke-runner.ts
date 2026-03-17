@@ -7,6 +7,8 @@ import { spawnSync } from 'node:child_process';
 import {
   LAUNCH_SMOKE_FRESHNESS_THRESHOLD_MINUTES,
   LAUNCH_SMOKE_MATRIX,
+  isLocalLaunchBaseUrl,
+  normalizeLaunchBaseUrl,
 } from '../src/lib/launch/contracts';
 import {
   aggregateLaunchSmokeStatus,
@@ -46,8 +48,15 @@ async function main() {
     readArg('--artifact') ??
     process.env.LAUNCH_SMOKE_ARTIFACT_PATH ??
     '.artifacts/launch-smoke-report.json';
+  const baseUrl = normalizeLaunchBaseUrl(
+    readArg('--base-url') ?? process.env.BASE_URL ?? 'http://localhost:3000'
+  );
+  const executionMode = isLocalLaunchBaseUrl(baseUrl) ? 'local' : 'live';
   const reporter = process.env.LAUNCH_SMOKE_REPORTER ?? 'basic';
   const checks: LaunchSmokeCheckResult[] = [];
+  const sharedEnv = { BASE_URL: baseUrl };
+
+  console.log(`Running launch smoke checks against ${baseUrl} (${executionMode})`);
 
   for (const scenario of LAUNCH_SMOKE_MATRIX) {
     const startedAt = Date.now();
@@ -58,7 +67,7 @@ async function main() {
     if (scenario.runner.kind === 'vitest') {
       const run = executeCommand(
         ['npx', 'vitest', 'run', ...scenario.runner.testFiles, '--reporter', reporter],
-        undefined
+        sharedEnv
       );
 
       status = run.status === 0 ? 'pass' : 'fail';
@@ -67,8 +76,13 @@ async function main() {
         message = `${scenario.label} failed`;
       }
     } else {
+      const scenarioEnv = {
+        ...scenario.runner.env,
+        ...sharedEnv,
+      };
+
       for (const preCommand of scenario.runner.preCommands ?? []) {
-        const run = executeCommand(preCommand.command, scenario.runner.env);
+        const run = executeCommand(preCommand.command, scenarioEnv);
         outputSegments.push(
           [`[${preCommand.label}]`, collectCommandOutput(run)].filter(Boolean).join('\n')
         );
@@ -80,7 +94,7 @@ async function main() {
       }
 
       if (status === 'pass') {
-        const run = executeCommand(scenario.runner.command, scenario.runner.env);
+        const run = executeCommand(scenario.runner.command, scenarioEnv);
         outputSegments.push(
           [`[${scenario.runner.label}]`, collectCommandOutput(run)].filter(Boolean).join('\n')
         );
@@ -120,6 +134,8 @@ async function main() {
   const artifact = {
     schemaVersion: 2 as const,
     generatedAt,
+    targetBaseUrl: baseUrl,
+    executionMode,
     freshnessThresholdMinutes,
     expiresAt: new Date(Date.now() + freshnessThresholdMinutes * 60_000).toISOString(),
     overallStatus: aggregateLaunchSmokeStatus(checks),

@@ -3,6 +3,7 @@ import {
   LAUNCH_SMOKE_CORRIDOR_VALUES,
   LAUNCH_SMOKE_FRESHNESS_THRESHOLD_MINUTES,
   LAUNCH_SMOKE_MATRIX,
+  normalizeLaunchBaseUrl,
   type LaunchMonitorStatus,
   type LaunchSmokeCorridor,
 } from '@/lib/launch/contracts';
@@ -74,6 +75,8 @@ const LaunchSmokeCorridorSchema = z.object({
 const LaunchSmokeArtifactV2Schema = z.object({
   schemaVersion: z.literal(2),
   generatedAt: z.string().datetime(),
+  targetBaseUrl: z.string().url().optional(),
+  executionMode: z.enum(['local', 'live']).optional(),
   freshnessThresholdMinutes: z.number().int().positive(),
   expiresAt: z.string().datetime(),
   overallStatus: z.enum(LAUNCH_MONITOR_STATUS_VALUES),
@@ -193,6 +196,27 @@ export function getLaunchSmokeCheckStatus(artifact: LaunchSmokeArtifact, scenari
 
 export function getLaunchSmokeFreshnessThresholdMinutes(artifact: LaunchSmokeArtifact): number {
   return artifact.freshnessThresholdMinutes;
+}
+
+export function getLaunchSmokeTargetBaseUrl(artifact: LaunchSmokeArtifact): string | null {
+  if (!artifact.targetBaseUrl) {
+    return null;
+  }
+
+  return normalizeLaunchBaseUrl(artifact.targetBaseUrl);
+}
+
+export function isLaunchSmokeArtifactForBaseUrl(
+  artifact: LaunchSmokeArtifact,
+  baseUrl: string
+): boolean {
+  const artifactBaseUrl = getLaunchSmokeTargetBaseUrl(artifact);
+  if (!artifactBaseUrl) {
+    // Backward-compatibility for artifacts written before target binding was added.
+    return true;
+  }
+
+  return artifactBaseUrl === normalizeLaunchBaseUrl(baseUrl);
 }
 
 export function hasPassingLaunchSmokeArtifact(artifact: LaunchSmokeArtifact): boolean {

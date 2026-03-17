@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 import {
   buildLaunchSmokeCorridors,
   getLaunchSmokeFreshnessThresholdMinutes,
+  getLaunchSmokeTargetBaseUrl,
   hasPassingLaunchSmokeArtifact,
+  isLaunchSmokeArtifactForBaseUrl,
   validateLaunchSmokeArtifact,
   type LaunchSmokeCheckResult,
 } from '@/lib/launch/smoke-artifact';
@@ -113,5 +115,38 @@ describe('launch smoke artifact', () => {
         }),
       ])
     );
+  });
+
+  it('binds smoke artifacts to a canonical target base URL', () => {
+    const artifact = validateLaunchSmokeArtifact({
+      schemaVersion: 2,
+      generatedAt: '2026-03-16T10:00:00.000Z',
+      targetBaseUrl: 'https://proofound.io/launch',
+      executionMode: 'live',
+      freshnessThresholdMinutes: 60,
+      expiresAt: '2026-03-16T11:00:00.000Z',
+      overallStatus: 'pass',
+      corridors: [],
+      checks: [],
+    });
+
+    expect(getLaunchSmokeTargetBaseUrl(artifact)).toBe('https://proofound.io');
+    expect(isLaunchSmokeArtifactForBaseUrl(artifact, 'https://proofound.io/api/health')).toBe(true);
+    expect(isLaunchSmokeArtifactForBaseUrl(artifact, 'https://staging.proofound.io')).toBe(false);
+  });
+
+  it('treats pre-target-binding artifacts as backward compatible', () => {
+    const artifact = validateLaunchSmokeArtifact({
+      schemaVersion: 2,
+      generatedAt: '2026-03-16T10:00:00.000Z',
+      freshnessThresholdMinutes: 60,
+      expiresAt: '2026-03-16T11:00:00.000Z',
+      overallStatus: 'pass',
+      corridors: [],
+      checks: [],
+    });
+
+    expect(getLaunchSmokeTargetBaseUrl(artifact)).toBeNull();
+    expect(isLaunchSmokeArtifactForBaseUrl(artifact, 'https://proofound.io')).toBe(true);
   });
 });

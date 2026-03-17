@@ -76,6 +76,7 @@ describe('launch synthetic monitor persistence', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.unstubAllGlobals();
+    (db as { execute?: ReturnType<typeof vi.fn> }).execute = vi.fn();
   });
 
   it('reads the latest monitor state when drizzle returns array rows', async () => {
@@ -102,6 +103,24 @@ describe('launch synthetic monitor persistence', () => {
     expect(result.rows).toHaveLength(LAUNCH_MONITOR_DEFINITIONS.length);
     expect(result.missingMonitorKeys).toEqual([]);
     expect(result.ok).toBe(true);
+  });
+
+  it('returns an empty persisted snapshot when db.execute is unavailable', async () => {
+    const dbWithoutExecute = db as { execute?: unknown };
+    const originalExecute = dbWithoutExecute.execute;
+    delete dbWithoutExecute.execute;
+
+    try {
+      const result = await getLatestLaunchSyntheticStatus(new Date('2026-03-10T16:53:25.057Z'));
+
+      expect(result.rows).toEqual([]);
+      expect(result.missingMonitorKeys).toEqual(
+        LAUNCH_MONITOR_DEFINITIONS.map((definition) => definition.monitorKey)
+      );
+      expect(result.ok).toBe(false);
+    } finally {
+      dbWithoutExecute.execute = originalExecute;
+    }
   });
 
   it('derives current launch status from live checks and the current smoke artifact', async () => {
@@ -145,6 +164,45 @@ describe('launch synthetic monitor persistence', () => {
       )
     ).toBe(true);
     expect(db.execute).not.toHaveBeenCalled();
+  });
+
+  it('runs live monitors without crashing when persistence is requested but db.execute is unavailable', async () => {
+    const dbWithoutExecute = db as { execute?: unknown };
+    const originalExecute = dbWithoutExecute.execute;
+    delete dbWithoutExecute.execute;
+
+    (fs.readFile as any).mockResolvedValue(
+      JSON.stringify(buildSmokeArtifact('2026-03-12T10:00:00.000Z'))
+    );
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string | URL) => {
+        const url = String(input);
+        if (url.endsWith('/api/health')) {
+          return new Response(JSON.stringify({ status: 'healthy' }), { status: 200 });
+        }
+
+        return new Response('ok', { status: 200 });
+      })
+    );
+
+    try {
+      const result = await getCurrentLaunchSyntheticStatus(
+        {
+          baseUrl: 'https://example.com',
+          artifactPath: '.artifacts/launch-smoke-report.json',
+          persist: true,
+        },
+        new Date('2026-03-12T10:59:00.000Z')
+      );
+
+      expect(result.ok).toBe(true);
+      expect(result.readinessState).toBe('ready');
+      expect(result.evidence.persisted).toBe(false);
+    } finally {
+      dbWithoutExecute.execute = originalExecute;
+    }
   });
 
   it('marks current smoke-backed monitors unverified when the smoke artifact itself is stale', async () => {

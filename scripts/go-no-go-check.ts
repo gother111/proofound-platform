@@ -4,16 +4,22 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
-import { LAUNCH_MONITOR_DEFINITIONS, REQUIRED_SAFE_MODE_FLAGS } from '../src/lib/launch/contracts';
+import {
+  LAUNCH_MONITOR_DEFINITIONS,
+  REQUIRED_SAFE_MODE_FLAGS,
+  normalizeLaunchBaseUrl,
+} from '../src/lib/launch/contracts';
 import {
   getLaunchSmokeAgeMinutes,
   getLaunchSmokeFreshnessThresholdMinutes,
+  getLaunchSmokeTargetBaseUrl,
   hasPassingLaunchSmokeArtifact,
+  isLaunchSmokeArtifactForBaseUrl,
   validateLaunchSmokeArtifact,
 } from '../src/lib/launch/smoke-artifact';
 import { CLIENT_FEATURE_FLAG_RESPONSE_MAP } from '../src/lib/featureFlags';
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
+const BASE_URL = normalizeLaunchBaseUrl(process.env.BASE_URL || 'http://localhost:3000');
 const SKIP = process.env.SKIP_GO_NOGO === '1';
 const ARTIFACT_PATH =
   process.env.LAUNCH_SMOKE_ARTIFACT_PATH || '.artifacts/launch-smoke-report.json';
@@ -55,30 +61,71 @@ function checkSafeModeFlags() {
   }
 }
 
-function ensureLaunchSmokeArtifact() {
-  if (!fs.existsSync(ARTIFACT_PATH)) {
-    if (!RUN_SMOKE_DIRECT) {
-      fail(`launch smoke artifact missing at ${ARTIFACT_PATH}`);
-    }
-
-    const run = spawnSync(
-      command('npx'),
-      ['tsx', 'scripts/launch-smoke-runner.ts', '--artifact', ARTIFACT_PATH],
-      {
-        cwd: process.cwd(),
-        stdio: 'inherit',
-      }
-    );
-
-    if (run.status !== 0) {
-      fail('launch smoke runner failed');
-    }
+function runLaunchSmokeRunner(reason: string) {
+  if (!RUN_SMOKE_DIRECT) {
+    fail(reason);
   }
 
-  const artifact = validateLaunchSmokeArtifact(JSON.parse(fs.readFileSync(ARTIFACT_PATH, 'utf8')));
+  console.log(`Running launch smoke runner because ${reason}.`);
+
+  const run = spawnSync(
+    command('npx'),
+    ['tsx', 'scripts/launch-smoke-runner.ts', '--artifact', ARTIFACT_PATH, '--base-url', BASE_URL],
+    {
+      cwd: process.cwd(),
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        BASE_URL,
+      },
+    }
+  );
+
+  if (run.status !== 0) {
+    fail('launch smoke runner failed');
+  }
+}
+
+function readLaunchSmokeArtifact() {
+  return validateLaunchSmokeArtifact(JSON.parse(fs.readFileSync(ARTIFACT_PATH, 'utf8')));
+}
+
+function ensureLaunchSmokeArtifact() {
+  if (!fs.existsSync(ARTIFACT_PATH)) {
+    runLaunchSmokeRunner(`launch smoke artifact is missing at ${ARTIFACT_PATH}`);
+  }
+
+  let artifact = readLaunchSmokeArtifact();
+
+  if (!isLaunchSmokeArtifactForBaseUrl(artifact, BASE_URL)) {
+    const artifactBaseUrl = getLaunchSmokeTargetBaseUrl(artifact) ?? 'unknown';
+    runLaunchSmokeRunner(
+      `artifact target (${artifactBaseUrl}) does not match requested BASE_URL (${BASE_URL})`
+    );
+    artifact = readLaunchSmokeArtifact();
+  }
+
+  if (!hasPassingLaunchSmokeArtifact(artifact)) {
+    runLaunchSmokeRunner('artifact reports failing smoke checks');
+    artifact = readLaunchSmokeArtifact();
+  }
+
+  if (getLaunchSmokeAgeMinutes(artifact) > getLaunchSmokeFreshnessThresholdMinutes(artifact)) {
+    runLaunchSmokeRunner('artifact is stale');
+    artifact = readLaunchSmokeArtifact();
+  }
+
   if (!hasPassingLaunchSmokeArtifact(artifact)) {
     fail('launch smoke artifact reports failing checks');
   }
+
+  if (!isLaunchSmokeArtifactForBaseUrl(artifact, BASE_URL)) {
+    const artifactBaseUrl = getLaunchSmokeTargetBaseUrl(artifact) ?? 'unknown';
+    fail(
+      `launch smoke artifact target (${artifactBaseUrl}) does not match requested BASE_URL (${BASE_URL})`
+    );
+  }
+
   if (getLaunchSmokeAgeMinutes(artifact) > getLaunchSmokeFreshnessThresholdMinutes(artifact)) {
     fail('launch smoke artifact is stale');
   }

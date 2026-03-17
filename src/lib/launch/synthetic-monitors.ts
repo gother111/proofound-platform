@@ -263,6 +263,15 @@ function getSmokeArtifactMonitorDefinitions() {
   return LAUNCH_MONITOR_DEFINITIONS.filter(isSmokeArtifactMonitorDefinition);
 }
 
+function getDbExecute() {
+  const execute = (db as { execute?: unknown }).execute;
+  if (typeof execute !== 'function') {
+    return null;
+  }
+
+  return execute as (query: unknown) => Promise<unknown>;
+}
+
 async function runHttpMonitor(
   definition: Extract<LaunchMonitorDefinition, { kind: 'http' }>,
   baseUrl: string
@@ -420,8 +429,13 @@ function runSmokeArtifactMonitor(
 }
 
 export async function persistSyntheticMonitorResults(results: SyntheticMonitorResult[]) {
+  const execute = getDbExecute();
+  if (!execute) {
+    return false;
+  }
+
   for (const result of results) {
-    await db.execute(sql`
+    await execute(sql`
       INSERT INTO synthetic_monitor_runs (
         monitor_key,
         monitor_group,
@@ -447,6 +461,8 @@ export async function persistSyntheticMonitorResults(results: SyntheticMonitorRe
       )
     `);
   }
+
+  return true;
 }
 
 export async function runLaunchSyntheticMonitors(
@@ -476,8 +492,9 @@ export async function runLaunchSyntheticMonitors(
     );
   }
 
+  let persisted = false;
   if (params.persist !== false) {
-    await persistSyntheticMonitorResults(results);
+    persisted = await persistSyntheticMonitorResults(results);
   }
 
   const failing = results.filter((result) => result.status === 'fail');
@@ -520,7 +537,7 @@ export async function runLaunchSyntheticMonitors(
       smokeArtifactAgeMinutes,
       smokeFreshnessThresholdMinutes,
       smokeFreshnessState,
-      persisted: params.persist !== false,
+      persisted,
     },
   };
 }
@@ -702,7 +719,17 @@ export async function getPersistedLaunchSyntheticStatus(
 
 export async function getLatestLaunchSyntheticStatus(now = new Date()) {
   const activeMonitorKeys = new Set(LAUNCH_MONITOR_DEFINITIONS.map((item) => item.monitorKey));
-  const latestRuns = await db.execute(sql`
+  const execute = getDbExecute();
+  if (!execute) {
+    return {
+      generatedAt: now.toISOString(),
+      rows: [],
+      missingMonitorKeys: LAUNCH_MONITOR_DEFINITIONS.map((item) => item.monitorKey),
+      ok: false,
+    };
+  }
+
+  const latestRuns = await execute(sql`
     SELECT DISTINCT ON (monitor_key)
       monitor_key,
       monitor_group,

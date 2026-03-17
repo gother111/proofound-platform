@@ -466,6 +466,36 @@ export async function POST(
             })
         )[0].id;
 
+      if (intro.state === 'conversation_open' && conversationId) {
+        const corridor = resolveCanonicalCorridor({
+          reviewStage: matchRow.reviewStage,
+          revealScope: 'shortlist_identity',
+          surface: 'review_detail',
+          fairnessStatus,
+          operationalFallbackMode: null,
+          introApproved: true,
+        });
+
+        return NextResponse.json({
+          matchId: matchRow.matchId,
+          reviewStage: matchRow.reviewStage,
+          revealScope: 'shortlist_identity',
+          visibleIdentityFields: getVisibleIdentityFields('shortlist_identity'),
+          introWorkflowId: intro.id,
+          introWorkflowState: 'conversation_open',
+          introApproved: true,
+          conversationId,
+          ...corridor,
+          why: buildVisibilitySafeWhy({
+            reasonCodes: ['intro_accepted_masked'],
+            fairnessStatus,
+            fallbackState: corridor.fallbackState,
+          }),
+          message:
+            'Introduction already approved. Masked messaging is open, and full identity stays locked until the candidate approves reveal.',
+        });
+      }
+
       if (existingConversation) {
         await db
           .update(conversations)

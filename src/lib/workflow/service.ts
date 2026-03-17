@@ -823,6 +823,12 @@ export async function syncIntroWorkflowFromInterest(params: {
     expiresAt: params.expiresAt ?? null,
   });
 
+  // Duplicate intro requests are valid while messaging is already open.
+  // Keep the active conversation state instead of attempting to regress to `mutual`.
+  if (intro.state === 'conversation_open') {
+    return intro;
+  }
+
   if (intro.state !== nextState) {
     assertAllowedTransition('intro', intro.state, nextState);
     const [updated] = await db

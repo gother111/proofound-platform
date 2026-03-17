@@ -3,7 +3,10 @@ import path from 'node:path';
 import { config as loadEnv } from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 
-import { SEEDED_PUBLIC_ORG_TRUST_FIXTURE } from '../src/lib/launch/public-org-trust-fixture';
+import {
+  SEEDED_PUBLIC_ORG_TRUST_FIXTURE,
+  SEEDED_PUBLIC_ORG_TRUST_PATH,
+} from '../src/lib/launch/public-org-trust-fixture';
 
 const envPath = path.resolve(process.cwd(), '.env.local');
 if (fs.existsSync(envPath)) {
@@ -16,6 +19,87 @@ function requireEnv(name: string) {
     throw new Error(`Missing required environment variable: ${name}`);
   }
   return value;
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isLocalHostname(hostname: string) {
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '0.0.0.0' ||
+    hostname === '::1'
+  );
+}
+
+function parseUrl(value: string | undefined) {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    return new URL(value);
+  } catch {
+    return null;
+  }
+}
+
+function resolveLiveFixtureVerificationUrl() {
+  const override = parseUrl(process.env.PUBLIC_ORG_TRUST_FIXTURE_VERIFY_URL?.trim());
+  if (override) {
+    return new URL(SEEDED_PUBLIC_ORG_TRUST_PATH, override);
+  }
+
+  const baseUrl = parseUrl(process.env.BASE_URL?.trim());
+  if (!baseUrl || isLocalHostname(baseUrl.hostname)) {
+    return null;
+  }
+
+  return new URL(SEEDED_PUBLIC_ORG_TRUST_PATH, baseUrl);
+}
+
+async function verifyLiveFixtureAvailability(url: URL) {
+  const timeoutMs = Number.parseInt(process.env.PUBLIC_ORG_TRUST_VERIFY_TIMEOUT_MS || '90000', 10);
+  const intervalMs = Number.parseInt(process.env.PUBLIC_ORG_TRUST_VERIFY_INTERVAL_MS || '3000', 10);
+  const deadline = Date.now() + Math.max(timeoutMs, 1000);
+  let lastFailureReason = 'unknown';
+
+  while (Date.now() <= deadline) {
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store',
+      });
+      const body = await response.text();
+
+      if (
+        response.status === 200 &&
+        body.includes(SEEDED_PUBLIC_ORG_TRUST_FIXTURE.organization.displayName) &&
+        /public organization trust card/i.test(body) &&
+        !/organization portfolio unavailable/i.test(body)
+      ) {
+        return {
+          ok: true,
+          status: response.status,
+          verifiedAt: new Date().toISOString(),
+        } as const;
+      }
+
+      lastFailureReason = `status=${response.status}, unavailable=${/organization portfolio unavailable/i.test(
+        body
+      )}`;
+    } catch (error) {
+      lastFailureReason = error instanceof Error ? error.message : String(error);
+    }
+
+    await sleep(Math.max(intervalMs, 250));
+  }
+
+  throw new Error(
+    `Timed out waiting for seeded public org trust page at ${url.toString()} (${lastFailureReason})`
+  );
 }
 
 function createAdminClient() {
@@ -32,9 +116,36 @@ function createAdminClient() {
 }
 
 async function main() {
-  const supabase = createAdminClient();
   const nowIso = new Date().toISOString();
+  const liveVerificationUrl = resolveLiveFixtureVerificationUrl();
+  const hasServiceRoleKey = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY?.trim());
   const { organization, assignment, visibility } = SEEDED_PUBLIC_ORG_TRUST_FIXTURE;
+
+  if (!hasServiceRoleKey) {
+    if (!liveVerificationUrl) {
+      throw new Error('Missing required environment variable: SUPABASE_SERVICE_ROLE_KEY');
+    }
+
+    const verification = await verifyLiveFixtureAvailability(liveVerificationUrl);
+    console.log(
+      JSON.stringify(
+        {
+          ok: true,
+          mode: 'verify_only',
+          slug: organization.slug,
+          path: SEEDED_PUBLIC_ORG_TRUST_PATH,
+          verificationUrl: liveVerificationUrl.toString(),
+          verifiedAt: verification.verifiedAt,
+          httpStatus: verification.status,
+        },
+        null,
+        2
+      )
+    );
+    return;
+  }
+
+  const supabase = createAdminClient();
 
   const { data: existingOrganization, error: existingOrganizationError } = await supabase
     .from('organizations')
@@ -143,14 +254,23 @@ async function main() {
     );
   }
 
+  let verification: Awaited<ReturnType<typeof verifyLiveFixtureAvailability>> | null = null;
+  if (liveVerificationUrl) {
+    verification = await verifyLiveFixtureAvailability(liveVerificationUrl);
+  }
+
   console.log(
     JSON.stringify(
       {
         ok: true,
+        mode: 'seeded',
         slug: organization.slug,
-        path: `/portfolio/org/${organization.slug}`,
+        path: SEEDED_PUBLIC_ORG_TRUST_PATH,
         publicationState: organization.publicPortfolioState,
         seededAt: nowIso,
+        verificationUrl: liveVerificationUrl?.toString() ?? null,
+        verifiedAt: verification?.verifiedAt ?? null,
+        httpStatus: verification?.status ?? null,
       },
       null,
       2

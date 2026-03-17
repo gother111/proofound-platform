@@ -28,6 +28,26 @@ export type LaunchSmokeFreshnessState = (typeof LAUNCH_SMOKE_FRESHNESS_STATE_VAL
 
 export const LAUNCH_SMOKE_FRESHNESS_THRESHOLD_MINUTES = 60;
 
+const LOCAL_LAUNCH_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
+
+export function isLocalLaunchBaseUrl(baseUrl: string): boolean {
+  try {
+    const parsed = new URL(baseUrl);
+    return LOCAL_LAUNCH_HOSTS.has(parsed.hostname.toLowerCase());
+  } catch {
+    return false;
+  }
+}
+
+export function normalizeLaunchBaseUrl(rawBaseUrl: string): string {
+  try {
+    const parsed = new URL(rawBaseUrl);
+    return `${parsed.protocol}//${parsed.host}`;
+  } catch {
+    return rawBaseUrl.trim().replace(/\/+$/, '');
+  }
+}
+
 export const REQUIRED_SAFE_MODE_FLAGS = [
   FEATURE_FLAG_KEYS.QUALIFIED_INTRO_CORRIDOR,
   FEATURE_FLAG_KEYS.EXACT_RANK_EXPOSURE,
