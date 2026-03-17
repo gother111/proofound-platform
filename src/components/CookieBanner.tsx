@@ -81,11 +81,8 @@ export function CookieBanner() {
   if (isSnippetEmbedRoute || !show) return null;
 
   return (
-    <div
-      className="fixed bottom-0 left-0 right-0 z-50 p-4 animate-in slide-in-from-bottom duration-300 pointer-events-none"
-      style={{ maxWidth: '100vw' }}
-    >
-      <Card className="mx-auto max-w-4xl border-2 shadow-lg pointer-events-auto">
+    <div className="fixed bottom-0 left-0 md:left-auto md:right-0 z-50 p-4 md:p-6 animate-in slide-in-from-bottom duration-300 pointer-events-none w-full md:w-[450px]">
+      <Card className="mx-auto w-full border-2 shadow-lg pointer-events-auto">
         <CardContent className="p-4 sm:p-6">
           <div className="flex items-start gap-4">
             {/* Icon */}

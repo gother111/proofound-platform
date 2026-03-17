@@ -2,18 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, useInView, useScroll, useTransform } from 'framer-motion';
-import {
-  Sparkles,
-  Award,
-  Key,
-  Lock,
-  Eye,
-  Heart,
-  Compass,
-  TrendingUp,
-  Network,
-  BookOpen,
-} from 'lucide-react';
+import { Sparkles, Key, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface HowItWorksSectionProps {
@@ -38,53 +27,18 @@ export function HowItWorksSection({ shouldReduceMotion }: HowItWorksSectionProps
   const features = [
     {
       icon: Sparkles,
-      title: 'Public proof portfolio',
-      desc: 'Publish a clean, shareable portfolio URL on day 1 with evidence and trust signals in one place',
-    },
-    {
-      icon: Award,
-      title: 'Matching as a second step',
-      desc: 'After your portfolio is live, discover aligned opportunities and collaborators without relying on vanity metrics',
-    },
-    {
-      icon: Key,
-      title: 'Transferable verification',
-      desc: 'Once verified, your proofs travel with you across contexts and time',
-    },
-    {
-      icon: Lock,
-      title: 'Granular privacy controls',
-      desc: "You decide what's visible, to whom, and when—data dignity at every layer",
+      title: 'Add your proofs',
+      desc: 'Build a portable portfolio of verified work, not just another CV.',
     },
     {
       icon: Eye,
-      title: 'Decluttered UX',
-      desc: 'Clean, Japandi-inspired design that respects your attention and mental space',
+      title: 'Blind-by-default review',
+      desc: 'Share your proof safely. Identity is hidden initially to ensure fair, unbiased, and merit-based evaluation.',
     },
     {
-      icon: Heart,
-      title: 'Mental health tools',
-      desc: 'Built-in well-being support, not an afterthought—ikigai, safety planning, reflection',
-    },
-    {
-      icon: Compass,
-      title: 'Life & career planning',
-      desc: 'Map your journey with purpose, not just the next job title',
-    },
-    {
-      icon: TrendingUp,
-      title: 'Data democratization',
-      desc: 'Your data, your insights—we give you the tools to understand and control it',
-    },
-    {
-      icon: Network,
-      title: 'Talent mobility',
-      desc: 'Skills and evidence are portable, opening doors across sectors and geographies',
-    },
-    {
-      icon: BookOpen,
-      title: 'Education & guidance',
-      desc: 'Contextual learning pathways tailored to your goals and gaps',
+      icon: Key,
+      title: 'Consented reveal',
+      desc: 'You control the keys. Progress to identity-bearing reveal only when there is mutual interest and your explicit consent.',
     },
   ];
 
@@ -147,8 +101,7 @@ export function HowItWorksSection({ shouldReduceMotion }: HowItWorksSectionProps
                   How Proofound works
                 </h2>
                 <p className="text-xl md:text-2xl text-muted-foreground font-sans text-balance mb-12">
-                  Start by publishing your proof portfolio, then expand into matching and growth
-                  workflows.
+                  A straightforward, privacy-first process for verifiable connection.
                 </p>
 
                 {/* Progress Indicator (Desktop only) */}

@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Twitter, Linkedin, Github, Mail, ArrowUpRight } from 'lucide-react';
+import { Mail, ArrowUpRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface FooterSectionProps {
@@ -66,25 +66,22 @@ export function FooterSection({ shouldReduceMotion }: FooterSectionProps) {
               infrastructure for verifiable professional reputation.
             </p>
             <div className="flex gap-4 pt-4">
-              {[
-                { icon: Twitter, href: '#', label: 'Twitter' },
-                { icon: Linkedin, href: '#', label: 'LinkedIn' },
-                { icon: Github, href: '#', label: 'GitHub' },
-                { icon: Mail, href: 'mailto:hello@proofound.io', label: 'Email' },
-              ].map((social, idx) => (
-                <motion.a
-                  key={idx}
-                  href={social.href}
-                  aria-label={social.label}
-                  title={social.label}
-                  whileHover={reduceMotion ? undefined : { scale: 1.15, rotate: [-5, 5, 0] }}
-                  whileTap={reduceMotion ? undefined : { scale: 0.95 }}
-                  className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white hover:text-foreground transition-colors duration-300 group"
-                >
-                  <span className="sr-only">{social.label}</span>
-                  <social.icon className="w-5 h-5" aria-hidden="true" />
-                </motion.a>
-              ))}
+              {[{ icon: Mail, href: 'mailto:hello@proofound.io', label: 'Email' }].map(
+                (social, idx) => (
+                  <motion.a
+                    key={idx}
+                    href={social.href}
+                    aria-label={social.label}
+                    title={social.label}
+                    whileHover={reduceMotion ? undefined : { scale: 1.15, rotate: [-5, 5, 0] }}
+                    whileTap={reduceMotion ? undefined : { scale: 0.95 }}
+                    className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white hover:text-foreground transition-colors duration-300 group"
+                  >
+                    <span className="sr-only">{social.label}</span>
+                    <social.icon className="w-5 h-5" aria-hidden="true" />
+                  </motion.a>
+                )
+              )}
             </div>
           </div>
 

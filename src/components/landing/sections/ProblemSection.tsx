@@ -26,15 +26,10 @@ export function ProblemSection({ shouldReduceMotion }: ProblemSectionProps) {
   const effectiveInView = reduceMotion ? true : isInView;
 
   const problems = [
-    { icon: Heart, text: 'The endless toll of networking and job hunting' },
+    { icon: FileText, text: 'Outdated CVs missing the full story' },
     { icon: Clock, text: 'Wasted hours on manual verification rituals' },
     { icon: Eye, text: 'Opaque, biased, and misaligned matching' },
-    { icon: TrendingUp, text: 'Vanity metrics obscuring real impact' },
-    { icon: FileText, text: 'Outdated CVs missing the full story' },
-    { icon: DollarSign, text: 'Capital disconnected from true mission' },
-    { icon: Bot, text: 'Anxiety from opaque algorithmic decisions' },
-    { icon: Puzzle, text: 'Fragmented frameworks for collaboration' },
-    { icon: Recycle, text: 'Wasted talent, time, and resources' },
+    { icon: TrendingUp, text: 'Vanity metrics obscuring real capability' },
   ];
 
   const containerVariants = {
