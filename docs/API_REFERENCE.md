@@ -208,32 +208,24 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### expertise
 
-| Methods  | Path                                               | Auth Tier                                                     | Notes                           | Source                                                             |
-| -------- | -------------------------------------------------- | ------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
-| `POST`   | `/api/expertise/auto-suggest`                      | `session`                                                     | legacy/compat markers in source | `src/app/api/expertise/auto-suggest/route.ts`                      |
-| `POST`   | `/api/expertise/cv-import/suggest`                 | `session`                                                     | -                               | `src/app/api/expertise/cv-import/suggest/route.ts`                 |
-| `POST`   | `/api/expertise/cv-import/wizard-apply`            | `session`                                                     | -                               | `src/app/api/expertise/cv-import/wizard-apply/route.ts`            |
-| `POST`   | `/api/expertise/cv-import/wizard-suggest`          | `service`                                                     | -                               | `src/app/api/expertise/cv-import/wizard-suggest/route.ts`          |
-| `GET`    | `/api/expertise/gap-analysis`                      | `public`                                                      | legacy/compat markers in source | `src/app/api/expertise/gap-analysis/route.ts`                      |
-| `POST`   | `/api/expertise/jd-to-l4`                          | `public`                                                      | -                               | `src/app/api/expertise/jd-to-l4/route.ts`                          |
-| `POST`   | `/api/expertise/linkedin-disconnect`               | `session`                                                     | -                               | `src/app/api/expertise/linkedin-disconnect/route.ts`               |
-| `POST`   | `/api/expertise/linkedin-import`                   | `session`                                                     | legacy/compat markers in source | `src/app/api/expertise/linkedin-import/route.ts`                   |
-| `GET`    | `/api/expertise/linkedin-status`                   | `session`                                                     | -                               | `src/app/api/expertise/linkedin-status/route.ts`                   |
-| `GET     | PUT`                                               | `/api/expertise/profile`                                      | `public`                        | -                                                                  | `src/app/api/expertise/profile/route.ts`                                      |
-| `GET`    | `/api/expertise/stats`                             | `public`                                                      | -                               | `src/app/api/expertise/stats/route.ts`                             |
-| `GET`    | `/api/expertise/taxonomy`                          | `service`                                                     | -                               | `src/app/api/expertise/taxonomy/route.ts`                          |
-| `GET     | POST`                                              | `/api/expertise/user-skills`                                  | `public`                        | legacy/compat markers in source; contains TODO                     | `src/app/api/expertise/user-skills/route.ts`                                  |
-| `PATCH   | DELETE`                                            | `/api/expertise/user-skills/[id]`                             | `public`                        | -                                                                  | `src/app/api/expertise/user-skills/[id]/route.ts`                             |
-| `GET     | POST`                                              | `/api/expertise/user-skills/[id]/proofs`                      | `public`                        | -                                                                  | `src/app/api/expertise/user-skills/[id]/proofs/route.ts`                      |
-| `DELETE` | `/api/expertise/user-skills/[id]/proofs/[proofId]` | `public`                                                      | -                               | `src/app/api/expertise/user-skills/[id]/proofs/[proofId]/route.ts` |
-| `GET     | POST`                                              | `/api/expertise/user-skills/[id]/verification-request`        | `session`                       | legacy/compat markers in source                                    | `src/app/api/expertise/user-skills/[id]/verification-request/route.ts`        |
-| `POST`   | `/api/expertise/verification/[requestId]/respond`  | `session`                                                     | -                               | `src/app/api/expertise/verification/[requestId]/respond/route.ts`  |
-| `GET     | PATCH`                                             | `/api/expertise/verifications/custom/[requestId]`             | `public`                        | -                                                                  | `src/app/api/expertise/verifications/custom/[requestId]/route.ts`             |
-| `GET`    | `/api/expertise/verifications/custom/artifacts`    | `public`                                                      | -                               | `src/app/api/expertise/verifications/custom/artifacts/route.ts`    |
-| `POST`   | `/api/expertise/verifications/custom/request`      | `session`                                                     | -                               | `src/app/api/expertise/verifications/custom/request/route.ts`      |
-| `GET`    | `/api/expertise/verifications/email-hint`          | `service`                                                     | -                               | `src/app/api/expertise/verifications/email-hint/route.ts`          |
-| `GET`    | `/api/expertise/verifications/incoming`            | `session`                                                     | -                               | `src/app/api/expertise/verifications/incoming/route.ts`            |
-| `POST    | DELETE`                                            | `/api/expertise/verifications/sent/[requestType]/[requestId]` | `public`                        | legacy/compat markers in source                                    | `src/app/api/expertise/verifications/sent/[requestType]/[requestId]/route.ts` |
+| Methods  | Path                                               | Auth Tier                                | Notes                           | Source                                                             |
+| -------- | -------------------------------------------------- | ---------------------------------------- | ------------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------- |
+| `POST`   | `/api/expertise/auto-suggest`                      | `session`                                | legacy/compat markers in source | `src/app/api/expertise/auto-suggest/route.ts`                      |
+| `POST`   | `/api/expertise/cv-import/suggest`                 | `session`                                | -                               | `src/app/api/expertise/cv-import/suggest/route.ts`                 |
+| `POST`   | `/api/expertise/cv-import/wizard-apply`            | `session`                                | -                               | `src/app/api/expertise/cv-import/wizard-apply/route.ts`            |
+| `POST`   | `/api/expertise/cv-import/wizard-suggest`          | `service`                                | -                               | `src/app/api/expertise/cv-import/wizard-suggest/route.ts`          |
+| `GET`    | `/api/expertise/gap-analysis`                      | `public`                                 | legacy/compat markers in source | `src/app/api/expertise/gap-analysis/route.ts`                      |
+| `POST`   | `/api/expertise/jd-to-l4`                          | `public`                                 | -                               | `src/app/api/expertise/jd-to-l4/route.ts`                          |
+| `POST`   | `/api/expertise/linkedin-disconnect`               | `session`                                | -                               | `src/app/api/expertise/linkedin-disconnect/route.ts`               |
+| `POST`   | `/api/expertise/linkedin-import`                   | `session`                                | legacy/compat markers in source | `src/app/api/expertise/linkedin-import/route.ts`                   |
+| `GET`    | `/api/expertise/linkedin-status`                   | `session`                                | -                               | `src/app/api/expertise/linkedin-status/route.ts`                   |
+| `GET     | PUT`                                               | `/api/expertise/profile`                 | `public`                        | -                                                                  | `src/app/api/expertise/profile/route.ts`                 |
+| `GET`    | `/api/expertise/stats`                             | `public`                                 | -                               | `src/app/api/expertise/stats/route.ts`                             |
+| `GET`    | `/api/expertise/taxonomy`                          | `service`                                | -                               | `src/app/api/expertise/taxonomy/route.ts`                          |
+| `GET     | POST`                                              | `/api/expertise/user-skills`             | `public`                        | legacy/compat markers in source; contains TODO                     | `src/app/api/expertise/user-skills/route.ts`             |
+| `PATCH   | DELETE`                                            | `/api/expertise/user-skills/[id]`        | `public`                        | -                                                                  | `src/app/api/expertise/user-skills/[id]/route.ts`        |
+| `GET     | POST`                                              | `/api/expertise/user-skills/[id]/proofs` | `public`                        | -                                                                  | `src/app/api/expertise/user-skills/[id]/proofs/route.ts` |
+| `DELETE` | `/api/expertise/user-skills/[id]/proofs/[proofId]` | `public`                                 | -                               | `src/app/api/expertise/user-skills/[id]/proofs/[proofId]/route.ts` |
 
 ### feature-flags
 
@@ -433,12 +425,10 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### org
 
-| Methods | Path                      | Auth Tier | Notes         | Source                                    |
-| ------- | ------------------------- | --------- | ------------- | ----------------------------------------- |
-| `GET`   | `/api/org/[id]/coverage`  | `public`  | contains TODO | `src/app/api/org/[id]/coverage/route.ts`  |
-| `GET`   | `/api/org/[id]/dashboard` | `public`  | -             | `src/app/api/org/[id]/dashboard/route.ts` |
-| `GET`   | `/api/org/[id]/shortlist` | `public`  | -             | `src/app/api/org/[id]/shortlist/route.ts` |
-| `GET`   | `/api/org/readiness`      | `public`  | -             | `src/app/api/org/readiness/route.ts`      |
+| Methods | Path                      | Auth Tier | Notes | Source                                    |
+| ------- | ------------------------- | --------- | ----- | ----------------------------------------- |
+| `GET`   | `/api/org/[id]/shortlist` | `public`  | -     | `src/app/api/org/[id]/shortlist/route.ts` |
+| `GET`   | `/api/org/readiness`      | `public`  | -     | `src/app/api/org/readiness/route.ts`      |
 
 ### organizations
 
@@ -575,8 +565,6 @@ Canonical API documentation generated from the current App Router route handlers
 | Methods | Path                                  | Auth Tier | Notes                           | Source                                                |
 | ------- | ------------------------------------- | --------- | ------------------------------- | ----------------------------------------------------- |
 | `POST`  | `/api/verification/linkedin/initiate` | `session` | legacy/compat markers in source | `src/app/api/verification/linkedin/initiate/route.ts` |
-| `POST`  | `/api/verification/skill/request`     | `session` | -                               | `src/app/api/verification/skill/request/route.ts`     |
-| `POST`  | `/api/verification/skill/respond`     | `public`  | -                               | `src/app/api/verification/skill/respond/route.ts`     |
 | `GET`   | `/api/verification/status`            | `session` | legacy/compat markers in source | `src/app/api/verification/status/route.ts`            |
 | `POST`  | `/api/verification/veriff/session`    | `session` | -                               | `src/app/api/verification/veriff/session/route.ts`    |
 | `POST`  | `/api/verification/veriff/webhook`    | `service` | -                               | `src/app/api/verification/veriff/webhook/route.ts`    |
@@ -608,44 +596,42 @@ Canonical API documentation generated from the current App Router route handlers
 
 Routes with source-level `legacy`/`deprecated` markers should be treated as compatibility surfaces and reviewed before removal.
 
-| Path                                                          | Source                                                                        | Marker                         |
-| ------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------ |
-| `/api/analytics/events`                                       | `src/app/api/analytics/events/route.ts`                                       | legacy/deprecated text present |
-| `/api/auth/google/callback`                                   | `src/app/api/auth/google/callback/route.ts`                                   | legacy/deprecated text present |
-| `/api/core/matching/matching-profile`                         | `src/app/api/core/matching/matching-profile/route.ts`                         | legacy/deprecated text present |
-| `/api/core/matching/near-matches`                             | `src/app/api/core/matching/near-matches/route.ts`                             | legacy/deprecated text present |
-| `/api/core/matching/profile`                                  | `src/app/api/core/matching/profile/route.ts`                                  | legacy/deprecated text present |
-| `/api/cron/account-deletion-workflow`                         | `src/app/api/cron/account-deletion-workflow/route.ts`                         | legacy/deprecated text present |
-| `/api/cron/generate-fairness-note`                            | `src/app/api/cron/generate-fairness-note/route.ts`                            | legacy/deprecated text present |
-| `/api/cron/process-deletions`                                 | `src/app/api/cron/process-deletions/route.ts`                                 | legacy/deprecated text present |
-| `/api/cron/send-deletion-reminders`                           | `src/app/api/cron/send-deletion-reminders/route.ts`                           | legacy/deprecated text present |
-| `/api/data-import/preview`                                    | `src/app/api/data-import/preview/route.ts`                                    | legacy/deprecated text present |
-| `/api/expertise/auto-suggest`                                 | `src/app/api/expertise/auto-suggest/route.ts`                                 | legacy/deprecated text present |
-| `/api/expertise/gap-analysis`                                 | `src/app/api/expertise/gap-analysis/route.ts`                                 | legacy/deprecated text present |
-| `/api/expertise/linkedin-import`                              | `src/app/api/expertise/linkedin-import/route.ts`                              | legacy/deprecated text present |
-| `/api/expertise/user-skills`                                  | `src/app/api/expertise/user-skills/route.ts`                                  | legacy/deprecated text present |
-| `/api/expertise/user-skills/[id]/verification-request`        | `src/app/api/expertise/user-skills/[id]/verification-request/route.ts`        | legacy/deprecated text present |
-| `/api/expertise/verifications/sent/[requestType]/[requestId]` | `src/app/api/expertise/verifications/sent/[requestType]/[requestId]/route.ts` | legacy/deprecated text present |
-| `/api/goals`                                                  | `src/app/api/goals/route.ts`                                                  | legacy/deprecated text present |
-| `/api/interviews/schedule`                                    | `src/app/api/interviews/schedule/route.ts`                                    | legacy/deprecated text present |
-| `/api/match/decision`                                         | `src/app/api/match/decision/route.ts`                                         | legacy/deprecated text present |
-| `/api/match/hide`                                             | `src/app/api/match/hide/route.ts`                                             | legacy/deprecated text present |
-| `/api/matching/profile`                                       | `src/app/api/matching/profile/route.ts`                                       | legacy/deprecated text present |
-| `/api/matching/profile/[id]`                                  | `src/app/api/matching/profile/[id]/route.ts`                                  | legacy/deprecated text present |
-| `/api/matching-profile`                                       | `src/app/api/matching-profile/route.ts`                                       | legacy/deprecated text present |
-| `/api/messages`                                               | `src/app/api/messages/route.ts`                                               | legacy/deprecated text present |
-| `/api/messages/[conversationId]`                              | `src/app/api/messages/[conversationId]/route.ts`                              | legacy/deprecated text present |
-| `/api/mobile/v1/organizations/[orgId]`                        | `src/app/api/mobile/v1/organizations/[orgId]/route.ts`                        | legacy/deprecated text present |
-| `/api/moderation/report`                                      | `src/app/api/moderation/report/route.ts`                                      | legacy/deprecated text present |
-| `/api/monitoring/perf-status`                                 | `src/app/api/monitoring/perf-status/route.ts`                                 | legacy/deprecated text present |
-| `/api/organizations`                                          | `src/app/api/organizations/route.ts`                                          | legacy/deprecated text present |
-| `/api/organizations/[orgId]`                                  | `src/app/api/organizations/[orgId]/route.ts`                                  | legacy/deprecated text present |
-| `/api/skill-gaps/goals`                                       | `src/app/api/skill-gaps/goals/route.ts`                                       | legacy/deprecated text present |
-| `/api/user/consent`                                           | `src/app/api/user/consent/route.ts`                                           | legacy/deprecated text present |
-| `/api/user/export`                                            | `src/app/api/user/export/route.ts`                                            | legacy/deprecated text present |
-| `/api/verification/linkedin/initiate`                         | `src/app/api/verification/linkedin/initiate/route.ts`                         | legacy/deprecated text present |
-| `/api/verification/status`                                    | `src/app/api/verification/status/route.ts`                                    | legacy/deprecated text present |
-| `/api/verify/[token]`                                         | `src/app/api/verify/[token]/route.ts`                                         | legacy/deprecated text present |
+| Path                                   | Source                                                 | Marker                         |
+| -------------------------------------- | ------------------------------------------------------ | ------------------------------ |
+| `/api/analytics/events`                | `src/app/api/analytics/events/route.ts`                | legacy/deprecated text present |
+| `/api/auth/google/callback`            | `src/app/api/auth/google/callback/route.ts`            | legacy/deprecated text present |
+| `/api/core/matching/matching-profile`  | `src/app/api/core/matching/matching-profile/route.ts`  | legacy/deprecated text present |
+| `/api/core/matching/near-matches`      | `src/app/api/core/matching/near-matches/route.ts`      | legacy/deprecated text present |
+| `/api/core/matching/profile`           | `src/app/api/core/matching/profile/route.ts`           | legacy/deprecated text present |
+| `/api/cron/account-deletion-workflow`  | `src/app/api/cron/account-deletion-workflow/route.ts`  | legacy/deprecated text present |
+| `/api/cron/generate-fairness-note`     | `src/app/api/cron/generate-fairness-note/route.ts`     | legacy/deprecated text present |
+| `/api/cron/process-deletions`          | `src/app/api/cron/process-deletions/route.ts`          | legacy/deprecated text present |
+| `/api/cron/send-deletion-reminders`    | `src/app/api/cron/send-deletion-reminders/route.ts`    | legacy/deprecated text present |
+| `/api/data-import/preview`             | `src/app/api/data-import/preview/route.ts`             | legacy/deprecated text present |
+| `/api/expertise/auto-suggest`          | `src/app/api/expertise/auto-suggest/route.ts`          | legacy/deprecated text present |
+| `/api/expertise/gap-analysis`          | `src/app/api/expertise/gap-analysis/route.ts`          | legacy/deprecated text present |
+| `/api/expertise/linkedin-import`       | `src/app/api/expertise/linkedin-import/route.ts`       | legacy/deprecated text present |
+| `/api/expertise/user-skills`           | `src/app/api/expertise/user-skills/route.ts`           | legacy/deprecated text present |
+| `/api/goals`                           | `src/app/api/goals/route.ts`                           | legacy/deprecated text present |
+| `/api/interviews/schedule`             | `src/app/api/interviews/schedule/route.ts`             | legacy/deprecated text present |
+| `/api/match/decision`                  | `src/app/api/match/decision/route.ts`                  | legacy/deprecated text present |
+| `/api/match/hide`                      | `src/app/api/match/hide/route.ts`                      | legacy/deprecated text present |
+| `/api/matching/profile`                | `src/app/api/matching/profile/route.ts`                | legacy/deprecated text present |
+| `/api/matching/profile/[id]`           | `src/app/api/matching/profile/[id]/route.ts`           | legacy/deprecated text present |
+| `/api/matching-profile`                | `src/app/api/matching-profile/route.ts`                | legacy/deprecated text present |
+| `/api/messages`                        | `src/app/api/messages/route.ts`                        | legacy/deprecated text present |
+| `/api/messages/[conversationId]`       | `src/app/api/messages/[conversationId]/route.ts`       | legacy/deprecated text present |
+| `/api/mobile/v1/organizations/[orgId]` | `src/app/api/mobile/v1/organizations/[orgId]/route.ts` | legacy/deprecated text present |
+| `/api/moderation/report`               | `src/app/api/moderation/report/route.ts`               | legacy/deprecated text present |
+| `/api/monitoring/perf-status`          | `src/app/api/monitoring/perf-status/route.ts`          | legacy/deprecated text present |
+| `/api/organizations`                   | `src/app/api/organizations/route.ts`                   | legacy/deprecated text present |
+| `/api/organizations/[orgId]`           | `src/app/api/organizations/[orgId]/route.ts`           | legacy/deprecated text present |
+| `/api/skill-gaps/goals`                | `src/app/api/skill-gaps/goals/route.ts`                | legacy/deprecated text present |
+| `/api/user/consent`                    | `src/app/api/user/consent/route.ts`                    | legacy/deprecated text present |
+| `/api/user/export`                     | `src/app/api/user/export/route.ts`                     | legacy/deprecated text present |
+| `/api/verification/linkedin/initiate`  | `src/app/api/verification/linkedin/initiate/route.ts`  | legacy/deprecated text present |
+| `/api/verification/status`             | `src/app/api/verification/status/route.ts`             | legacy/deprecated text present |
+| `/api/verify/[token]`                  | `src/app/api/verify/[token]/route.ts`                  | legacy/deprecated text present |
 
 ## Verification Checklist
 

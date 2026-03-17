@@ -5,6 +5,7 @@ import IndividualSkillGapsPage from '@/app/app/i/skill-gaps/page';
 import IndividualZenPage from '@/app/app/i/zen/page';
 import IndividualFairnessSettingsPage from '@/app/app/i/settings/fairness/page';
 import OrgFairnessAnalyticsPage from '@/app/app/o/[slug]/analytics/fairness/page';
+import VerifySkillPage from '@/app/verify-skill/page';
 
 async function expectNotFound(renderRoute: () => unknown | Promise<unknown>) {
   await expect(Promise.resolve().then(renderRoute)).rejects.toMatchObject({
@@ -31,5 +32,9 @@ describe('archived non-MVP routes', () => {
 
   it('archives the org fairness analytics route', async () => {
     await expectNotFound(() => OrgFairnessAnalyticsPage());
+  });
+
+  it('archives the legacy verify-skill page', async () => {
+    await expectNotFound(() => VerifySkillPage());
   });
 });

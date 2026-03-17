@@ -576,16 +576,11 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
       }
     }
 
-    const deliverablesResponse = await page.request.get(
-      `/api/organizations/${organization.id}/projects`
-    );
-    expect(deliverablesResponse.ok()).toBeTruthy();
-
     const verificationStatusResponse = await page.request.get('/api/verification/status');
     expect(verificationStatusResponse.ok()).toBeTruthy();
   });
 
-  test('O-18..O-20 team permissions, analytics snapshot, and compliance settings are strict', async ({
+  test('O-18..O-20 team permissions and compliance settings are strict', async ({
     browser,
     page,
   }) => {
@@ -593,13 +588,6 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
 
     const teamResponse = await page.request.get(`/api/organizations/${organization.id}/team`);
     expect(teamResponse.ok()).toBeTruthy();
-
-    const analyticsResponse = await page.request.get(
-      `/api/analytics/org/next-actions?orgId=${organization.id}`
-    );
-    expect(analyticsResponse.ok()).toBeTruthy();
-    const analyticsPayload = (await analyticsResponse.json()) as { actions?: unknown[] };
-    expect(Array.isArray(analyticsPayload.actions)).toBeTruthy();
 
     await page.goto(`/app/o/${organization.slug}/settings`);
     await expect(
