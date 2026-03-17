@@ -29,17 +29,18 @@ import {
   listCanonicalSkillVerificationRequestsForOwner,
   updateCanonicalSkillVerificationRequest,
 } from '@/lib/verification/canonical-requests';
-import { GET, POST } from '@/app/api/expertise/user-skills/[id]/verification-request/route';
-
-const params = { params: Promise.resolve({ id: 'skill-1' }) };
+import { GET, POST } from '@/app/api/verification/requests/skill/route';
 
 function createRequest(origin: string, body: Record<string, unknown>) {
-  return new NextRequest(`${origin}/api/expertise/user-skills/skill-1/verification-request`, {
+  return new NextRequest(`${origin}/api/verification/requests/skill`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      skillId: 'skill-1',
+      ...body,
+    }),
   });
 }
 
@@ -118,7 +119,7 @@ function createSupabaseGetMock(options?: { skillProfileId?: string }) {
   return { supabase };
 }
 
-describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
+describe('POST /api/verification/requests/skill', () => {
   const originalSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   const originalAppUrl = process.env.NEXT_PUBLIC_APP_URL;
   let authContext: { user: { id: string; email: string }; supabase: any };
@@ -193,8 +194,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
         verifierSource: 'peer',
         verifierEmail: 'Mentor@Example.COM',
         message: 'Please verify my artifact history.',
-      }),
-      params
+      })
     );
 
     expect(response.status).toBe(201);
@@ -225,7 +225,11 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
     );
 
     const sentEmailPayload = (sendEmail as any).mock.calls[0][0];
+    expect(sentEmailPayload.subject).toBe('Proofound verification request');
     expect(sentEmailPayload.html).toContain('https://proofound.io/verify/issued-token-123');
+    expect(sentEmailPayload.html).not.toContain('Alice');
+    expect(sentEmailPayload.html).not.toContain('system design');
+    expect(sentEmailPayload.html).not.toContain('Please verify my artifact history.');
   });
 
   it('marks eligible interpersonal requests as bounded attestation mode', async () => {
@@ -248,8 +252,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
         relationship: 'manager',
         verifierEmail: 'manager@example.com',
         message: 'Please describe how you observed this skill in practice.',
-      }),
-      params
+      })
     );
 
     expect(response.status).toBe(201);
@@ -280,8 +283,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
       createRequest('https://proofound.io', {
         verifierSource: 'peer',
         verifierEmail: '  Mentor@Example.COM  ',
-      }),
-      params
+      })
     );
 
     expect(response.status).toBe(201);
@@ -307,8 +309,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
       createRequest('https://staging.proofound.io', {
         verifierSource: 'manager',
         verifierEmail: 'Boss@Company.COM',
-      }),
-      params
+      })
     );
 
     expect(response.status).toBe(201);
@@ -330,6 +331,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
 
     const sentEmailPayload = (sendEmail as any).mock.calls[0][0];
     expect(sentEmailPayload.html).toContain('https://staging.proofound.io/verify/');
+    expect(sentEmailPayload.text).not.toContain('Boss@Company.COM');
   });
 
   it('persists the capability token reference instead of a legacy raw token column', async () => {
@@ -344,8 +346,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
       createRequest('https://proofound.io', {
         verifierSource: 'peer',
         verifierEmail: 'Capability@Example.COM',
-      }),
-      params
+      })
     );
 
     expect(response.status).toBe(201);
@@ -357,6 +358,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
 
     const sentEmailPayload = (sendEmail as any).mock.calls[0][0];
     expect(sentEmailPayload.html).toContain('https://proofound.io/verify/issued-token-123');
+    expect(sentEmailPayload.subject).toBe('Proofound verification request');
   });
 
   it('runs only the active-duplicate precheck select before creating a canonical request', async () => {
@@ -371,8 +373,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
       createRequest('https://proofound.io', {
         verifierSource: 'peer',
         verifierEmail: 'NoReadback@Example.COM',
-      }),
-      params
+      })
     );
 
     expect(response.status).toBe(201);
@@ -386,8 +387,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
       createRequest('https://proofound.io', {
         verifierSource: 'peer',
         verifierEmail: 'mentor@example.com',
-      }),
-      params
+      })
     );
 
     expect(response.status).toBe(401);
@@ -402,8 +402,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
       createRequest('https://proofound.io', {
         verifierSource: 'peer',
         verifierEmail: 'Alice+alias@Proofound.io',
-      }),
-      params
+      })
     );
 
     expect(response.status).toBe(400);
@@ -429,8 +428,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
       createRequest('https://proofound.io', {
         verifierSource: 'peer',
         verifierEmail: 'Mentor@Example.com',
-      }),
-      params
+      })
     );
 
     expect(response.status).toBe(409);
@@ -458,8 +456,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
       createRequest('https://proofound.io', {
         verifierSource: 'manager',
         verifierEmail: 'mentor@example.com',
-      }),
-      params
+      })
     );
 
     expect(response.status).toBe(409);
@@ -492,8 +489,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
       createRequest('https://proofound.io', {
         verifierSource: 'peer',
         verifierEmail: 'mentor@example.com',
-      }),
-      params
+      })
     );
 
     expect(response.status).toBe(409);
@@ -507,7 +503,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
   });
 });
 
-describe('GET /api/expertise/user-skills/[id]/verification-request', () => {
+describe('GET /api/verification/requests/skill', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (listCanonicalSkillVerificationRequestsForOwner as any).mockResolvedValue([]);
@@ -526,8 +522,7 @@ describe('GET /api/expertise/user-skills/[id]/verification-request', () => {
     });
 
     const response = await GET(
-      new NextRequest('http://localhost/api/expertise/user-skills/skill-1/verification-request'),
-      params
+      new NextRequest('http://localhost/api/verification/requests/skill?skillId=skill-1')
     );
 
     expect(response.status).toBe(200);
@@ -548,8 +543,7 @@ describe('GET /api/expertise/user-skills/[id]/verification-request', () => {
     });
 
     const response = await GET(
-      new NextRequest('http://localhost/api/expertise/user-skills/skill-1/verification-request'),
-      params
+      new NextRequest('http://localhost/api/verification/requests/skill?skillId=skill-1')
     );
 
     expect(response.status).toBe(200);
@@ -599,8 +593,7 @@ describe('GET /api/expertise/user-skills/[id]/verification-request', () => {
     });
 
     const response = await GET(
-      new NextRequest('http://localhost/api/expertise/user-skills/skill-1/verification-request'),
-      params
+      new NextRequest('http://localhost/api/verification/requests/skill?skillId=skill-1')
     );
 
     expect(response.status).toBe(200);

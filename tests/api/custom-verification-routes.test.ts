@@ -5,9 +5,17 @@ import { requireAuth } from '@/lib/auth';
 import { sendEmail } from '@/lib/email/sender';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { GET as getArtifacts } from '@/app/api/expertise/verifications/custom/artifacts/route';
-import { POST as postCustomRequest } from '@/app/api/expertise/verifications/custom/request/route';
-import { GET as getEmailHint } from '@/app/api/expertise/verifications/email-hint/route';
+import {
+  createCanonicalVerificationBundle,
+  expireCanonicalBundle,
+  getCanonicalBundleById,
+  respondCanonicalBundle,
+  updateCanonicalBundleDeliveryState,
+} from '@/lib/verification/canonical-bundles';
+import { listCanonicalSkillVerificationRequestsForOwner } from '@/lib/verification/canonical-requests';
+import { GET as getArtifacts } from '@/app/api/verification/requests/custom/artifacts/route';
+import { POST as postCustomRequest } from '@/app/api/verification/requests/custom/route';
+import { GET as getEmailHint } from '@/app/api/verification/requests/email-hint/route';
 import {
   GET as getVerifyCustom,
   POST as postVerifyCustom,
@@ -29,6 +37,19 @@ vi.mock('@/lib/email/sender', () => ({
   sendEmail: vi.fn(),
 }));
 
+vi.mock('@/lib/verification/canonical-bundles', () => ({
+  createCanonicalVerificationBundle: vi.fn(),
+  updateCanonicalBundleDeliveryState: vi.fn(),
+  getCanonicalBundleById: vi.fn(),
+  expireCanonicalBundle: vi.fn(),
+  respondCanonicalBundle: vi.fn(),
+}));
+
+vi.mock('@/lib/verification/canonical-requests', () => ({
+  listCanonicalSkillVerificationRequestsForOwner: vi.fn(),
+  mapCanonicalSkillVerificationRequestRecord: vi.fn((record: any) => record),
+}));
+
 vi.mock('@/lib/security/capability-tokens', () => ({
   CAPABILITY_BINDINGS: {
     EMAIL_HASH: 'email_hash',
@@ -39,32 +60,16 @@ vi.mock('@/lib/security/capability-tokens', () => ({
   },
   CAPABILITY_REDEEM_SESSION_MAX_AGE_SECONDS: 600,
   getCapabilityRedeemSessionCookieName: vi.fn(() => 'pf_rsn_custom_verification_response'),
-  issueCapabilityToken: vi.fn(async () => ({
-    rawToken: 'issued-custom-token',
-    tokenHash: 'issued-custom-token-hash',
-    token: { id: 'cap-custom-token-1', source_id: 'request-generated-id' },
-  })),
   beginCapabilityTokenRedeemSession: vi.fn(async () => ({
     ok: true,
-    token: { id: 'cap-custom-token-1' },
+    token: { id: 'cap-custom-token-1', source_id: 'bundle-1' },
     redeemSessionNonce: 'nonce-123',
     maxAgeSeconds: 600,
   })),
   redeemCapabilityToken: vi.fn(async () => ({
     ok: true,
-    token: { id: 'cap-custom-token-1', source_id: 'request-generated-id' },
+    token: { id: 'cap-custom-token-1', source_id: 'bundle-1' },
   })),
-}));
-
-vi.mock('@/lib/canonical/repository', () => ({
-  CANONICAL_PROOFS_WRITE_ENABLED: true,
-  upsertCanonicalVerificationRecord: vi.fn(async () => ({
-    id: 'canonical-verification-record-1',
-  })),
-}));
-
-vi.mock('@/lib/contracts/canonical-domain', () => ({
-  hashOpaqueToken: vi.fn(() => 'hashed-email'),
 }));
 
 const AUTH_USER_ID = '11111111-1111-4111-8111-111111111111';
@@ -85,1087 +90,303 @@ function thenableResult<T>(result: T) {
   return query;
 }
 
-describe('custom verification API routes', () => {
+function makeCanonicalBundle(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'bundle-1',
+    requester_profile_id: AUTH_USER_ID,
+    requester_name: 'Requester Name',
+    verifier_email: 'verifier@example.com',
+    verifier_profile_id: null,
+    verifier_relationship: 'peer',
+    verifier_source: 'peer',
+    request_kind: 'generic_verification',
+    attestation_request: null,
+    attestation_response: null,
+    message: 'Please verify these artifacts.',
+    status: 'pending',
+    created_at: '2026-03-15T10:00:00.000Z',
+    expires_at: '2099-03-20T10:00:00.000Z',
+    responded_at: null,
+    response_message: null,
+    capability_token_id: 'cap-custom-token-1',
+    email_sent: true,
+    email_error: null,
+    items: [
+      {
+        id: 'skill-request-1',
+        artifact_type: 'skill',
+        artifact_id: '22222222-2222-4222-8222-222222222222',
+        display_label: 'TypeScript',
+        status: 'pending',
+        created_at: '2026-03-15T10:00:00.000Z',
+        updated_at: '2026-03-15T10:00:00.000Z',
+      },
+      {
+        id: 'exp-request-1',
+        artifact_type: 'experience',
+        artifact_id: 'experience-1',
+        display_label: 'Staff Engineer',
+        status: 'pending',
+        created_at: '2026-03-15T10:00:00.000Z',
+        updated_at: '2026-03-15T10:00:00.000Z',
+      },
+    ],
+    ...overrides,
+  };
+}
+
+describe('canonical custom verification routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(requireAuth).mockResolvedValue({ id: AUTH_USER_ID } as any);
     vi.mocked(sendEmail).mockResolvedValue({ success: true });
+    vi.mocked(updateCanonicalBundleDeliveryState).mockResolvedValue(undefined as any);
+    vi.mocked(respondCanonicalBundle).mockResolvedValue(makeCanonicalBundle() as any);
+    vi.mocked(listCanonicalSkillVerificationRequestsForOwner).mockResolvedValue([]);
   });
 
-  it('returns partial artifacts with 200 when one source fails', async () => {
+  it('loads selectable artifacts from the active custom artifacts route', async () => {
     vi.mocked(createClient).mockResolvedValue({
       from: vi.fn((table: string) => {
         if (table === 'skills') {
           return {
             select: vi.fn(() =>
               thenableResult({
-                data: null,
-                error: { message: 'boom' },
+                data: [
+                  {
+                    id: '22222222-2222-4222-8222-222222222222',
+                    skill_id: 'custom-1-2-3-typescript',
+                    skill_code: null,
+                    competency_label: 'C3',
+                    name_i18n: { en: 'TypeScript' },
+                    taxonomy: null,
+                  },
+                ],
+                error: null,
               })
             ),
+          };
+        }
+
+        return {
+          select: vi.fn(() => thenableResult({ data: [], error: null })),
+        };
+      }),
+    } as any);
+
+    const response = await getArtifacts();
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      total: 1,
+      artifacts: {
+        skill: [{ id: '22222222-2222-4222-8222-222222222222', label: 'TypeScript' }],
+      },
+    });
+  });
+
+  it('creates a canonical verification bundle and sends the public verify/custom link', async () => {
+    vi.mocked(createClient).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { email: 'requester@example.com' } },
+          error: null,
+        }),
+      },
+      from: vi.fn((table: string) => {
+        if (table === 'skills') {
+          return {
+            select: vi.fn(() =>
+              thenableResult({
+                data: [
+                  {
+                    id: '22222222-2222-4222-8222-222222222222',
+                    skill_id: 'custom-1-2-3-typescript',
+                    skill_code: null,
+                    name_i18n: { en: 'TypeScript' },
+                    taxonomy: null,
+                  },
+                ],
+                error: null,
+              })
+            ),
+          };
+        }
+
+        if (table === 'profiles') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                single: vi.fn().mockResolvedValue({
+                  data: { display_name: 'Requester Name' },
+                  error: null,
+                }),
+              })),
+            })),
+          };
+        }
+
+        return {
+          select: vi.fn(() => thenableResult({ data: [], error: null })),
+        };
+      }),
+    } as any);
+
+    vi.mocked(createAdminClient).mockReturnValue({
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+          })),
+        })),
+      })),
+    } as any);
+
+    vi.mocked(createCanonicalVerificationBundle).mockResolvedValue({
+      bundleId: 'bundle-1',
+      rawToken: 'custom-verify-token',
+      token: { id: 'cap-custom-token-1' },
+      expiresAt: new Date('2099-03-20T10:00:00.000Z'),
+      records: [],
+    } as any);
+
+    const response = await postCustomRequest(
+      new NextRequest('http://localhost/api/verification/requests/custom', {
+        method: 'POST',
+        body: JSON.stringify({
+          verifierEmail: 'verifier@example.com',
+          relationship: 'peer',
+          artifacts: [{ type: 'skill', id: '22222222-2222-4222-8222-222222222222' }],
+          message: 'Please verify',
+        }),
+      })
+    );
+
+    expect(response.status).toBe(201);
+    expect(createCanonicalVerificationBundle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ownerId: AUTH_USER_ID,
+        verifierEmail: 'verifier@example.com',
+      })
+    );
+    expect(updateCanonicalBundleDeliveryState).toHaveBeenCalledWith('bundle-1', {
+      emailSent: true,
+      emailError: null,
+    });
+    expect(sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: 'verifier@example.com',
+        subject: 'Proofound verification request',
+        html: expect.stringContaining('/verify/custom/custom-verify-token'),
+      })
+    );
+    const sentEmailPayload = vi.mocked(sendEmail).mock.calls[0][0];
+    expect(sentEmailPayload.html).not.toContain('Requester Name');
+    expect(sentEmailPayload.html).not.toContain('TypeScript');
+    expect(sentEmailPayload.html).not.toContain('Please verify');
+  });
+
+  it('returns canonical bundle details for /api/verify/custom/[token]', async () => {
+    vi.mocked(getCanonicalBundleById).mockResolvedValue(makeCanonicalBundle() as any);
+
+    const response = await getVerifyCustom(
+      new NextRequest('http://localhost/api/verify/custom/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
+      { params: Promise.resolve({ token: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' }) }
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      request: {
+        id: 'bundle-1',
+        requester_name: 'Requester Name',
+        items: [
+          { id: 'skill-request-1', artifact_type: 'skill', display_label: 'TypeScript' },
+          { id: 'exp-request-1', artifact_type: 'experience', display_label: 'Staff Engineer' },
+        ],
+      },
+    });
+  });
+
+  it('records canonical bundle responses and applies artifact effects without legacy tables', async () => {
+    vi.mocked(getCanonicalBundleById).mockResolvedValue(makeCanonicalBundle() as any);
+
+    const admin = {
+      from: vi.fn((table: string) => {
+        if (table === 'skills') {
+          return {
+            select: vi.fn(() => ({
+              in: vi.fn().mockResolvedValue({
+                data: [
+                  {
+                    id: '22222222-2222-4222-8222-222222222222',
+                    evidence_strength: '0.2',
+                  },
+                ],
+                error: null,
+              }),
+            })),
+            update: vi.fn(() => ({
+              eq: vi.fn().mockResolvedValue({ error: null }),
+            })),
           };
         }
 
         if (table === 'experiences') {
           return {
-            select: vi.fn(() =>
-              thenableResult({
-                data: [{ id: 'exp-1', title: 'Experience One', org_description: 'Org' }],
-                error: null,
-              })
-            ),
-          };
-        }
-
-        return {
-          select: vi.fn(() => thenableResult({ data: [], error: null })),
-        };
-      }),
-    } as any);
-
-    const response = await getArtifacts();
-    expect(response.status).toBe(200);
-
-    await expect(response.json()).resolves.toMatchObject({
-      total: 1,
-      artifacts: {
-        skill: [],
-        experience: [{ id: 'exp-1', type: 'experience', label: 'Experience One' }],
-      },
-    });
-  });
-
-  it('returns 500 when all artifact sources fail', async () => {
-    vi.mocked(createClient).mockResolvedValue({
-      from: vi.fn(() => ({
-        select: vi.fn(() =>
-          thenableResult({
-            data: null,
-            error: { message: 'all failed' },
-          })
-        ),
-      })),
-    } as any);
-
-    const response = await getArtifacts();
-    expect(response.status).toBe(500);
-  });
-
-  it('returns skills when accepted-skill lookup fails', async () => {
-    const skillId = '22222222-2222-4222-8222-222222222222';
-
-    vi.mocked(createClient).mockResolvedValue({
-      from: vi.fn((table: string) => {
-        if (table === 'skills') {
-          return {
-            select: vi.fn(() =>
-              thenableResult({
-                data: [
-                  {
-                    id: skillId,
-                    skill_id: 'custom-1-2-3-typescript',
-                    skill_code: null,
-                    competency_label: 'C3',
-                    name_i18n: { en: 'TypeScript' },
-                    taxonomy: null,
-                  },
-                ],
-                error: null,
-              })
-            ),
-          };
-        }
-
-        if (table === 'skill_verification_requests') {
-          return {
-            select: vi.fn(() =>
-              thenableResult({
-                data: null,
-                error: { message: 'accepted query failed' },
-              })
-            ),
-          };
-        }
-
-        return {
-          select: vi.fn(() => thenableResult({ data: [], error: null })),
-        };
-      }),
-    } as any);
-
-    const response = await getArtifacts();
-    expect(response.status).toBe(200);
-
-    await expect(response.json()).resolves.toMatchObject({
-      total: 1,
-      artifacts: {
-        skill: [
-          {
-            id: skillId,
-            type: 'skill',
-            label: 'TypeScript',
-            subtitle: 'Level C3',
-          },
-        ],
-      },
-    });
-  });
-
-  it('returns skill artifacts when accepted requests are integrity flagged', async () => {
-    const skillId = '5d3cae7c-0734-4268-8bfd-072f5649efed';
-
-    vi.mocked(createClient).mockResolvedValue({
-      from: vi.fn((table: string) => {
-        if (table === 'skills') {
-          return {
-            select: vi.fn(() =>
-              thenableResult({
-                data: [
-                  {
-                    id: skillId,
-                    skill_id: 'custom-1-2-3-typescript',
-                    skill_code: null,
-                    competency_label: 'C3',
-                    name_i18n: { en: 'TypeScript' },
-                    taxonomy: null,
-                  },
-                ],
-                error: null,
-              })
-            ),
-          };
-        }
-
-        if (table === 'skill_verification_requests') {
-          return {
-            select: vi.fn(() =>
-              thenableResult({
-                data: [{ skill_id: skillId, integrity_status: 'flagged' }],
-                error: null,
-              })
-            ),
-          };
-        }
-
-        return {
-          select: vi.fn(() => thenableResult({ data: [], error: null })),
-        };
-      }),
-    } as any);
-
-    const response = await getArtifacts();
-    expect(response.status).toBe(200);
-
-    await expect(response.json()).resolves.toMatchObject({
-      total: 1,
-      artifacts: {
-        skill: [
-          {
-            id: skillId,
-            type: 'skill',
-            label: 'TypeScript',
-            subtitle: 'Level C3',
-          },
-        ],
-      },
-    });
-  });
-
-  it.each([null, 'unknown'])(
-    'returns skill artifacts when accepted requests have non-clear integrity (%s)',
-    async (integrityStatus) => {
-      const skillId = '93ce44db-8459-4cfe-a9af-27daf1f49ca0';
-
-      vi.mocked(createClient).mockResolvedValue({
-        from: vi.fn((table: string) => {
-          if (table === 'skills') {
-            return {
-              select: vi.fn(() =>
-                thenableResult({
-                  data: [
-                    {
-                      id: skillId,
-                      skill_id: 'custom-1-2-3-typescript',
-                      skill_code: null,
-                      competency_label: 'C3',
-                      name_i18n: { en: 'TypeScript' },
-                      taxonomy: null,
-                    },
-                  ],
-                  error: null,
-                })
-              ),
-            };
-          }
-
-          if (table === 'skill_verification_requests') {
-            return {
-              select: vi.fn(() =>
-                thenableResult({
-                  data: [{ skill_id: skillId, integrity_status: integrityStatus }],
-                  error: null,
-                })
-              ),
-            };
-          }
-
-          return {
-            select: vi.fn(() => thenableResult({ data: [], error: null })),
-          };
-        }),
-      } as any);
-
-      const response = await getArtifacts();
-      expect(response.status).toBe(200);
-
-      await expect(response.json()).resolves.toMatchObject({
-        total: 1,
-        artifacts: {
-          skill: [
-            {
-              id: skillId,
-              type: 'skill',
-              label: 'TypeScript',
-              subtitle: 'Level C3',
-            },
-          ],
-        },
-      });
-    }
-  );
-
-  it('excludes skill artifacts when accepted requests are integrity clear', async () => {
-    const skillId = 'f6fcbf09-5ca0-42e7-89b4-bb2c2f1d1af1';
-
-    vi.mocked(createClient).mockResolvedValue({
-      from: vi.fn((table: string) => {
-        if (table === 'skills') {
-          return {
-            select: vi.fn(() =>
-              thenableResult({
-                data: [
-                  {
-                    id: skillId,
-                    skill_id: 'custom-1-2-3-typescript',
-                    skill_code: null,
-                    competency_label: 'C3',
-                    name_i18n: { en: 'TypeScript' },
-                    taxonomy: null,
-                  },
-                ],
-                error: null,
-              })
-            ),
-          };
-        }
-
-        if (table === 'skill_verification_requests') {
-          return {
-            select: vi.fn(() =>
-              thenableResult({
-                data: [{ skill_id: skillId, integrity_status: 'clear' }],
-                error: null,
-              })
-            ),
-          };
-        }
-
-        return {
-          select: vi.fn(() => thenableResult({ data: [], error: null })),
-        };
-      }),
-    } as any);
-
-    const response = await getArtifacts();
-    expect(response.status).toBe(200);
-
-    await expect(response.json()).resolves.toMatchObject({
-      total: 0,
-      artifacts: {
-        skill: [],
-      },
-    });
-  });
-
-  it('returns skills when skill relation join fails but taxonomy fallback succeeds', async () => {
-    const skillId = '33333333-3333-4333-8333-333333333333';
-    const skillCode = '01.02.03.004';
-
-    vi.mocked(createClient).mockResolvedValue({
-      from: vi.fn((table: string) => {
-        if (table === 'skills') {
-          return {
-            select: vi.fn((columns?: string) => {
-              if (String(columns).includes('skills_taxonomy!skills_skill_code_fkey')) {
-                return thenableResult({
-                  data: null,
-                  error: { message: 'Could not find relation skills_skill_code_fkey' },
-                });
-              }
-
-              return thenableResult({
-                data: [
-                  {
-                    id: skillId,
-                    skill_id: 'custom-1-2-3-typescript',
-                    skill_code: skillCode,
-                    competency_label: 'C4',
-                    name_i18n: null,
-                  },
-                ],
-                error: null,
-              });
-            }),
-          };
-        }
-
-        if (table === 'skills_taxonomy') {
-          return {
-            select: vi.fn(() =>
-              thenableResult({
-                data: [{ code: skillCode, name_i18n: { en: 'Taxonomy TypeScript' } }],
-                error: null,
-              })
-            ),
-          };
-        }
-
-        if (table === 'skill_verification_requests') {
-          return {
-            select: vi.fn(() => thenableResult({ data: [], error: null })),
-          };
-        }
-
-        return {
-          select: vi.fn(() => thenableResult({ data: [], error: null })),
-        };
-      }),
-    } as any);
-
-    const response = await getArtifacts();
-    expect(response.status).toBe(200);
-
-    await expect(response.json()).resolves.toMatchObject({
-      total: 1,
-      artifacts: {
-        skill: [
-          {
-            id: skillId,
-            type: 'skill',
-            label: 'Taxonomy TypeScript',
-            subtitle: 'Level C4',
-          },
-        ],
-      },
-    });
-  });
-
-  it('returns 400 for invalid custom request payload', async () => {
-    vi.mocked(createClient).mockResolvedValue({
-      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null } }) },
-    } as any);
-
-    const response = await postCustomRequest(
-      new NextRequest('http://localhost/api/expertise/verifications/custom/request', {
-        method: 'POST',
-        body: JSON.stringify({
-          verifierEmail: 'not-an-email',
-          relationship: 'peer',
-          artifacts: [],
-        }),
-      })
-    );
-
-    expect(response.status).toBe(400);
-  });
-
-  it('returns 409 when linked skill verification rows hit active duplicate constraint', async () => {
-    const skillId = '11111111-1111-4111-8111-111111111111';
-
-    vi.mocked(createClient).mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { email: 'requester@example.com' } },
-          error: null,
-        }),
-      },
-      from: vi.fn((table: string) => {
-        if (table === 'skills') {
-          return {
-            select: vi.fn(() =>
-              thenableResult({
-                data: [
-                  {
-                    id: skillId,
-                    skill_id: 'custom-1-2-3-typescript',
-                    skill_code: null,
-                    name_i18n: { en: 'TypeScript' },
-                    taxonomy: null,
-                  },
-                ],
-                error: null,
-              })
-            ),
-          };
-        }
-
-        if (table === 'skill_verification_requests') {
-          return {
-            select: vi.fn(() => thenableResult({ data: [], error: null })),
-            insert: vi.fn().mockResolvedValue({
-              error: {
-                code: '23505',
-                message:
-                  'duplicate key value violates unique constraint "idx_skill_verification_active_unique_verifier"',
-              },
-            }),
-          };
-        }
-
-        if (table === 'custom_verification_requests') {
-          return {
-            insert: vi.fn(() => ({
-              select: vi.fn(() => ({
-                single: vi.fn().mockResolvedValue({
-                  data: {
-                    id: 'custom-request-1',
-                    status: 'pending',
-                    verifier_email: 'mentor@example.com',
-                    verifier_relationship: 'peer',
-                    created_at: new Date().toISOString(),
-                    expires_at: new Date(Date.now() + 86400000).toISOString(),
-                  },
-                  error: null,
-                }),
-              })),
-            })),
-          };
-        }
-
-        if (table === 'custom_verification_request_items') {
-          return {
-            insert: vi.fn().mockResolvedValue({ error: null }),
-          };
-        }
-
-        if (table === 'profiles') {
-          return {
-            select: vi.fn(() => ({
+            update: vi.fn(() => ({
               eq: vi.fn(() => ({
-                single: vi.fn().mockResolvedValue({
-                  data: { display_name: 'Requester Name' },
-                  error: null,
-                }),
+                in: vi.fn().mockResolvedValue({ error: null }),
               })),
             })),
           };
         }
 
-        throw new Error(`Unexpected table: ${table}`);
-      }),
-    } as any);
-
-    vi.mocked(createAdminClient).mockReturnValue({
-      from: vi.fn(() => ({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-          })),
-        })),
-      })),
-    } as any);
-
-    const response = await postCustomRequest(
-      new NextRequest('http://localhost/api/expertise/verifications/custom/request', {
-        method: 'POST',
-        body: JSON.stringify({
-          verifierEmail: 'mentor@example.com',
-          relationship: 'peer',
-          artifacts: [{ type: 'skill', id: skillId }],
-        }),
-      })
-    );
-
-    expect(response.status).toBe(409);
-    await expect(response.json()).resolves.toMatchObject({
-      code: 'DUPLICATE_VERIFICATION_REQUEST',
-    });
-  });
-
-  it('accepts expanded relationship options and maps client relationship to external skill source', async () => {
-    const skillId = '99999999-1111-4111-8111-111111111111';
-    const skillInsertSpy = vi.fn().mockResolvedValue({ error: null });
-
-    vi.mocked(createClient).mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { email: 'requester@example.com' } },
-          error: null,
-        }),
-      },
-      from: vi.fn((table: string) => {
-        if (table === 'skills') {
-          return {
-            select: vi.fn(() =>
-              thenableResult({
-                data: [
-                  {
-                    id: skillId,
-                    skill_id: 'custom-1-2-3-typescript',
-                    skill_code: null,
-                    name_i18n: { en: 'TypeScript' },
-                    taxonomy: null,
-                  },
-                ],
-                error: null,
-              })
-            ),
-          };
-        }
-
-        if (table === 'skill_verification_requests') {
-          return {
-            select: vi.fn(() => thenableResult({ data: [], error: null })),
-            insert: skillInsertSpy,
-          };
-        }
-
-        if (table === 'custom_verification_requests') {
-          return {
-            insert: vi.fn(() => ({
-              select: vi.fn(() => ({
-                single: vi.fn().mockResolvedValue({
-                  data: {
-                    id: 'custom-request-2',
-                    status: 'pending',
-                    verifier_email: 'client@example.com',
-                    verifier_relationship: 'client',
-                    created_at: new Date().toISOString(),
-                    expires_at: new Date(Date.now() + 86400000).toISOString(),
-                  },
-                  error: null,
-                }),
-              })),
-            })),
-          };
-        }
-
-        if (table === 'custom_verification_request_items') {
-          return {
-            insert: vi.fn().mockResolvedValue({ error: null }),
-          };
-        }
-
-        if (table === 'profiles') {
-          return {
-            select: vi.fn(() => ({
-              eq: vi.fn(() => ({
-                single: vi.fn().mockResolvedValue({
-                  data: { display_name: 'Requester Name' },
-                  error: null,
-                }),
-              })),
-            })),
-          };
-        }
-
-        throw new Error(`Unexpected table: ${table}`);
-      }),
-    } as any);
-
-    vi.mocked(createAdminClient).mockReturnValue({
-      from: vi.fn(() => ({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-          })),
-        })),
-      })),
-    } as any);
-
-    const response = await postCustomRequest(
-      new NextRequest('http://localhost/api/expertise/verifications/custom/request', {
-        method: 'POST',
-        body: JSON.stringify({
-          verifierEmail: 'client@example.com',
-          relationship: 'client',
-          artifacts: [{ type: 'skill', id: skillId }],
-        }),
-      })
-    );
-
-    expect(response.status).toBe(201);
-    expect(skillInsertSpy).toHaveBeenCalledTimes(1);
-    expect(skillInsertSpy).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({
-          skill_id: skillId,
-          verifier_source: 'external',
-        }),
-      ])
-    );
-  });
-
-  it('creates custom request when selected-skill relation join fails but fallback succeeds', async () => {
-    const skillId = '44444444-4444-4444-8444-444444444444';
-    const skillCode = '02.03.04.005';
-    const linkedSkillInsertSpy = vi.fn().mockResolvedValue({ error: null });
-
-    vi.mocked(createClient).mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { email: 'requester@example.com' } },
-          error: null,
-        }),
-      },
-      from: vi.fn((table: string) => {
-        if (table === 'skills') {
-          return {
-            select: vi.fn((columns?: string) => {
-              if (String(columns).includes('skills_taxonomy!skills_skill_code_fkey')) {
-                return thenableResult({
-                  data: null,
-                  error: { message: 'relation skills_skill_code_fkey not found' },
-                });
-              }
-
-              return thenableResult({
-                data: [
-                  {
-                    id: skillId,
-                    skill_id: 'custom-1-2-3-typescript',
-                    skill_code: skillCode,
-                    name_i18n: null,
-                  },
-                ],
-                error: null,
-              });
-            }),
-          };
-        }
-
-        if (table === 'skills_taxonomy') {
-          return {
-            select: vi.fn(() =>
-              thenableResult({
-                data: [{ code: skillCode, name_i18n: { en: 'Taxonomy Skill' } }],
-                error: null,
-              })
-            ),
-          };
-        }
-
-        if (table === 'skill_verification_requests') {
-          return {
-            select: vi.fn(() => thenableResult({ data: [], error: null })),
-            insert: linkedSkillInsertSpy,
-          };
-        }
-
-        if (table === 'custom_verification_requests') {
-          return {
-            insert: vi.fn(() => ({
-              select: vi.fn(() => ({
-                single: vi.fn().mockResolvedValue({
-                  data: {
-                    id: 'custom-request-fallback',
-                    status: 'pending',
-                    verifier_email: 'mentor@example.com',
-                    verifier_relationship: 'peer',
-                    created_at: new Date().toISOString(),
-                    expires_at: new Date(Date.now() + 86400000).toISOString(),
-                  },
-                  error: null,
-                }),
-              })),
-            })),
-          };
-        }
-
-        if (table === 'custom_verification_request_items') {
-          return {
-            insert: vi.fn().mockResolvedValue({ error: null }),
-          };
-        }
-
-        if (table === 'profiles') {
-          return {
-            select: vi.fn(() => ({
-              eq: vi.fn(() => ({
-                single: vi.fn().mockResolvedValue({
-                  data: { display_name: 'Requester Name' },
-                  error: null,
-                }),
-              })),
-            })),
-          };
-        }
-
-        throw new Error(`Unexpected table: ${table}`);
-      }),
-    } as any);
-
-    vi.mocked(createAdminClient).mockReturnValue({
-      from: vi.fn(() => ({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-          })),
-        })),
-      })),
-    } as any);
-
-    const response = await postCustomRequest(
-      new NextRequest('http://localhost/api/expertise/verifications/custom/request', {
-        method: 'POST',
-        body: JSON.stringify({
-          verifierEmail: 'mentor@example.com',
-          relationship: 'peer',
-          artifacts: [{ type: 'skill', id: skillId }],
-        }),
-      })
-    );
-
-    expect(response.status).toBe(201);
-    expect(linkedSkillInsertSpy).toHaveBeenCalledTimes(1);
-    expect(linkedSkillInsertSpy).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({
-          skill_id: skillId,
-        }),
-      ])
-    );
-  });
-
-  it('creates custom request when accepted selected-skill requests are integrity flagged', async () => {
-    const skillId = 'c376e312-9a4b-4f14-ac8a-981dcb7288e3';
-    const linkedSkillInsertSpy = vi.fn().mockResolvedValue({ error: null });
-
-    vi.mocked(createClient).mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { email: 'requester@example.com' } },
-          error: null,
-        }),
-      },
-      from: vi.fn((table: string) => {
-        if (table === 'skills') {
-          return {
-            select: vi.fn(() =>
-              thenableResult({
-                data: [
-                  {
-                    id: skillId,
-                    skill_id: 'custom-1-2-3-typescript',
-                    skill_code: null,
-                    name_i18n: { en: 'TypeScript' },
-                    taxonomy: null,
-                  },
-                ],
-                error: null,
-              })
-            ),
-          };
-        }
-
-        if (table === 'skill_verification_requests') {
-          return {
-            select: vi.fn(() =>
-              thenableResult({
-                data: [{ skill_id: skillId, integrity_status: 'flagged' }],
-                error: null,
-              })
-            ),
-            insert: linkedSkillInsertSpy,
-          };
-        }
-
-        if (table === 'custom_verification_requests') {
-          return {
-            insert: vi.fn(() => ({
-              select: vi.fn(() => ({
-                single: vi.fn().mockResolvedValue({
-                  data: {
-                    id: 'custom-request-flagged',
-                    status: 'pending',
-                    verifier_email: 'mentor@example.com',
-                    verifier_relationship: 'peer',
-                    created_at: new Date().toISOString(),
-                    expires_at: new Date(Date.now() + 86400000).toISOString(),
-                  },
-                  error: null,
-                }),
-              })),
-            })),
-          };
-        }
-
-        if (table === 'custom_verification_request_items') {
-          return {
-            insert: vi.fn().mockResolvedValue({ error: null }),
-          };
-        }
-
-        if (table === 'profiles') {
-          return {
-            select: vi.fn(() => ({
-              eq: vi.fn(() => ({
-                single: vi.fn().mockResolvedValue({
-                  data: { display_name: 'Requester Name' },
-                  error: null,
-                }),
-              })),
-            })),
-          };
-        }
-
-        throw new Error(`Unexpected table: ${table}`);
-      }),
-    } as any);
-
-    vi.mocked(createAdminClient).mockReturnValue({
-      from: vi.fn(() => ({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-          })),
-        })),
-      })),
-    } as any);
-
-    const response = await postCustomRequest(
-      new NextRequest('http://localhost/api/expertise/verifications/custom/request', {
-        method: 'POST',
-        body: JSON.stringify({
-          verifierEmail: 'mentor@example.com',
-          relationship: 'peer',
-          artifacts: [{ type: 'skill', id: skillId }],
-        }),
-      })
-    );
-
-    expect(response.status).toBe(201);
-    expect(linkedSkillInsertSpy).toHaveBeenCalledTimes(1);
-    expect(linkedSkillInsertSpy).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({
-          skill_id: skillId,
-        }),
-      ])
-    );
-  });
-
-  it.each([null, 'unknown'])(
-    'creates custom request when accepted selected-skill requests have non-clear integrity (%s)',
-    async (integrityStatus) => {
-      const skillId = '65442b53-5e8d-4028-b39c-d5abf6f16453';
-      const linkedSkillInsertSpy = vi.fn().mockResolvedValue({ error: null });
-
-      vi.mocked(createClient).mockResolvedValue({
-        auth: {
-          getUser: vi.fn().mockResolvedValue({
-            data: { user: { email: 'requester@example.com' } },
-            error: null,
-          }),
-        },
-        from: vi.fn((table: string) => {
-          if (table === 'skills') {
-            return {
-              select: vi.fn(() =>
-                thenableResult({
-                  data: [
-                    {
-                      id: skillId,
-                      skill_id: 'custom-1-2-3-typescript',
-                      skill_code: null,
-                      name_i18n: { en: 'TypeScript' },
-                      taxonomy: null,
-                    },
-                  ],
-                  error: null,
-                })
-              ),
-            };
-          }
-
-          if (table === 'skill_verification_requests') {
-            return {
-              select: vi.fn(() =>
-                thenableResult({
-                  data: [{ skill_id: skillId, integrity_status: integrityStatus }],
-                  error: null,
-                })
-              ),
-              insert: linkedSkillInsertSpy,
-            };
-          }
-
-          if (table === 'custom_verification_requests') {
-            return {
-              insert: vi.fn(() => ({
-                select: vi.fn(() => ({
-                  single: vi.fn().mockResolvedValue({
-                    data: {
-                      id: 'custom-request-non-clear',
-                      status: 'pending',
-                      verifier_email: 'mentor@example.com',
-                      verifier_relationship: 'peer',
-                      created_at: new Date().toISOString(),
-                      expires_at: new Date(Date.now() + 86400000).toISOString(),
-                    },
-                    error: null,
-                  }),
-                })),
-              })),
-            };
-          }
-
-          if (table === 'custom_verification_request_items') {
-            return {
-              insert: vi.fn().mockResolvedValue({ error: null }),
-            };
-          }
-
-          if (table === 'profiles') {
-            return {
-              select: vi.fn(() => ({
-                eq: vi.fn(() => ({
-                  single: vi.fn().mockResolvedValue({
-                    data: { display_name: 'Requester Name' },
-                    error: null,
-                  }),
-                })),
-              })),
-            };
-          }
-
-          throw new Error(`Unexpected table: ${table}`);
-        }),
-      } as any);
-
-      vi.mocked(createAdminClient).mockReturnValue({
-        from: vi.fn(() => ({
-          select: vi.fn(() => ({
+        return {
+          update: vi.fn(() => ({
             eq: vi.fn(() => ({
-              maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+              in: vi.fn().mockResolvedValue({ error: null }),
             })),
           })),
-        })),
-      } as any);
-
-      const response = await postCustomRequest(
-        new NextRequest('http://localhost/api/expertise/verifications/custom/request', {
-          method: 'POST',
-          body: JSON.stringify({
-            verifierEmail: 'mentor@example.com',
-            relationship: 'peer',
-            artifacts: [{ type: 'skill', id: skillId }],
-          }),
-        })
-      );
-
-      expect(response.status).toBe(201);
-      expect(linkedSkillInsertSpy).toHaveBeenCalledTimes(1);
-      expect(linkedSkillInsertSpy).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({
-            skill_id: skillId,
-          }),
-        ])
-      );
-    }
-  );
-
-  it('blocks custom request when accepted selected-skill requests are integrity clear', async () => {
-    const skillId = '8f40c827-d042-4e96-b0be-b79497af7692';
-
-    const customRequestInsertSpy = vi.fn();
-    const linkedSkillInsertSpy = vi.fn();
-
-    vi.mocked(createClient).mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { email: 'requester@example.com' } },
-          error: null,
-        }),
-      },
-      from: vi.fn((table: string) => {
-        if (table === 'skills') {
-          return {
-            select: vi.fn(() =>
-              thenableResult({
-                data: [
-                  {
-                    id: skillId,
-                    skill_id: 'custom-1-2-3-typescript',
-                    skill_code: null,
-                    name_i18n: { en: 'TypeScript' },
-                    taxonomy: null,
-                  },
-                ],
-                error: null,
-              })
-            ),
-          };
-        }
-
-        if (table === 'skill_verification_requests') {
-          return {
-            select: vi.fn(() =>
-              thenableResult({
-                data: [{ skill_id: skillId, integrity_status: 'clear' }],
-                error: null,
-              })
-            ),
-            insert: linkedSkillInsertSpy,
-          };
-        }
-
-        if (table === 'custom_verification_requests') {
-          return {
-            insert: customRequestInsertSpy,
-          };
-        }
-
-        throw new Error(`Unexpected table: ${table}`);
+        };
       }),
-    } as any);
+    };
+    vi.mocked(createAdminClient).mockReturnValue(admin as any);
 
-    vi.mocked(createAdminClient).mockReturnValue({
-      from: vi.fn(() => ({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-          })),
-        })),
-      })),
-    } as any);
-
-    const response = await postCustomRequest(
-      new NextRequest('http://localhost/api/expertise/verifications/custom/request', {
+    const response = await postVerifyCustom(
+      new NextRequest('http://localhost/api/verify/custom/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', {
         method: 'POST',
         body: JSON.stringify({
-          verifierEmail: 'mentor@example.com',
-          relationship: 'peer',
-          artifacts: [{ type: 'skill', id: skillId }],
+          action: 'accept',
+          message: 'Confirmed',
         }),
-      })
+      }),
+      { params: Promise.resolve({ token: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' }) }
     );
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(200);
+    expect(respondCanonicalBundle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        bundleId: 'bundle-1',
+        action: 'accept',
+        responseAuthMethod: 'token',
+      })
+    );
+    expect(admin.from).toHaveBeenCalledWith('skills');
+    expect(admin.from).toHaveBeenCalledWith('experiences');
     await expect(response.json()).resolves.toMatchObject({
-      error: 'Some selected skills are already verified',
+      success: true,
+      status: 'accepted',
     });
-    expect(customRequestInsertSpy).not.toHaveBeenCalled();
-    expect(linkedSkillInsertSpy).not.toHaveBeenCalled();
   });
 
-  it('returns proofound user email hint when account exists', async () => {
-    vi.mocked(createAdminClient).mockReturnValue({
+  it('serves active email hints without expertise transport imports', async () => {
+    vi.mocked(createClient).mockResolvedValue({
       from: vi.fn(() => ({
         select: vi.fn(() => ({
           eq: vi.fn(() => ({
-            maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'profile-1' }, error: null }),
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: { id: 'profile-1' },
+              error: null,
+            }),
           })),
         })),
       })),
@@ -1173,266 +394,39 @@ describe('custom verification API routes', () => {
 
     const response = await getEmailHint(
       new NextRequest(
-        'http://localhost/api/expertise/verifications/email-hint?email=founder@example.com'
+        'http://localhost/api/verification/requests/email-hint?email=founder@example.com'
       )
     );
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ kind: 'proofound_user' });
   });
 
-  it('scopes artifact verification updates to the custom request requester profile', async () => {
-    const experienceEqSpy = vi.fn(() => experienceUpdateQuery);
-    const projectEqSpy = vi.fn(() => projectUpdateQuery);
-
-    const customRequestSelectQuery: any = {
-      eq: vi.fn(() => customRequestSelectQuery),
-      single: vi.fn().mockResolvedValue({
-        data: {
-          id: 'request-1',
-          requester_profile_id: 'requester-1',
-          status: 'pending',
-          expires_at: new Date(Date.now() + 60_000).toISOString(),
-          custom_verification_request_items: [
-            { id: 'item-1', artifact_type: 'experience', artifact_id: 'exp-1' },
-            { id: 'item-2', artifact_type: 'project', artifact_id: 'proj-1' },
-          ],
-        },
-        error: null,
-      }),
-    };
-
-    const simpleUpdateQuery = {
-      eq: vi.fn(function () {
-        return this;
-      }),
-      select: vi.fn().mockResolvedValue({ data: [], error: null }),
-      then: (resolve: (value: unknown) => unknown, reject?: (reason: unknown) => unknown) =>
-        Promise.resolve({ error: null }).then(resolve, reject),
-    };
-
-    const experienceUpdateQuery: any = {
-      eq: experienceEqSpy,
-      in: vi.fn(() => experienceUpdateQuery),
-      then: (resolve: (value: unknown) => unknown, reject?: (reason: unknown) => unknown) =>
-        Promise.resolve({ error: null }).then(resolve, reject),
-    };
-
-    const projectUpdateQuery: any = {
-      eq: projectEqSpy,
-      in: vi.fn(() => projectUpdateQuery),
-      then: (resolve: (value: unknown) => unknown, reject?: (reason: unknown) => unknown) =>
-        Promise.resolve({ error: null }).then(resolve, reject),
-    };
-
-    vi.mocked(createAdminClient).mockReturnValue({
-      from: vi.fn((table: string) => {
-        if (table === 'custom_verification_requests') {
-          return {
-            select: vi.fn(() => customRequestSelectQuery),
-            update: vi.fn(() => simpleUpdateQuery),
-          };
-        }
-
-        if (table === 'custom_verification_request_items') {
-          return {
-            update: vi.fn(() => simpleUpdateQuery),
-          };
-        }
-
-        if (table === 'skill_verification_requests') {
-          return {
-            update: vi.fn(() => simpleUpdateQuery),
-          };
-        }
-
-        if (table === 'experiences') {
-          return {
-            update: vi.fn(() => experienceUpdateQuery),
-          };
-        }
-
-        if (table === 'projects') {
-          return {
-            update: vi.fn(() => projectUpdateQuery),
-          };
-        }
-
-        return {
-          update: vi.fn(() => simpleUpdateQuery),
-        };
-      }),
-    } as any);
-
-    const response = await postVerifyCustom(
-      new NextRequest('http://localhost/api/verify/custom/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', {
-        method: 'POST',
-        body: JSON.stringify({ action: 'accept' }),
-      }),
-      {
-        params: Promise.resolve({ token: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' }),
-      }
+  it('expires canonical bundles when public links are stale', async () => {
+    vi.mocked(getCanonicalBundleById).mockResolvedValue(
+      makeCanonicalBundle({
+        expires_at: '2000-01-01T00:00:00.000Z',
+      }) as any
     );
 
-    expect(response.status).toBe(200);
-    expect(experienceEqSpy).toHaveBeenCalledWith('user_id', 'requester-1');
-    expect(projectEqSpy).toHaveBeenCalledWith('user_id', 'requester-1');
+    await getVerifyCustom(
+      new NextRequest('http://localhost/api/verify/custom/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
+      { params: Promise.resolve({ token: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' }) }
+    );
+
+    expect(expireCanonicalBundle).toHaveBeenCalledWith('bundle-1');
   });
 
-  it('returns 400 for invalid custom verify token on GET', async () => {
-    vi.mocked(createAdminClient).mockReturnValue({ from: vi.fn() } as any);
+  it('fails shut when a custom verification token lacks canonical bundle source linkage', async () => {
+    vi.mocked(getCanonicalBundleById).mockResolvedValue(null as any);
 
     const response = await getVerifyCustom(
-      new NextRequest('http://localhost/api/verify/custom/abc'),
-      {
-        params: Promise.resolve({ token: 'short' }),
-      }
+      new NextRequest('http://localhost/api/verify/custom/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
+      { params: Promise.resolve({ token: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' }) }
     );
 
-    expect(response.status).toBe(400);
-  });
-
-  it('returns 400 for invalid custom verify token on POST', async () => {
-    vi.mocked(createAdminClient).mockReturnValue({ from: vi.fn() } as any);
-
-    const response = await postVerifyCustom(
-      new NextRequest('http://localhost/api/verify/custom/abc', {
-        method: 'POST',
-        body: JSON.stringify({ action: 'accept' }),
-      }),
-      {
-        params: Promise.resolve({ token: 'short' }),
-      }
-    );
-
-    expect(response.status).toBe(400);
-  });
-
-  it('rejects attestation bundles with more than three interpersonal skills', async () => {
-    const skillIds = [
-      '11111111-1111-4111-8111-111111111111',
-      '22222222-2222-4222-8222-222222222222',
-      '33333333-3333-4333-8333-333333333333',
-      '44444444-4444-4444-8444-444444444444',
-    ];
-
-    vi.mocked(createClient).mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { email: 'requester@example.com' } },
-          error: null,
-        }),
-      },
-      from: vi.fn((table: string) => {
-        if (table === 'skills') {
-          return {
-            select: vi.fn(() =>
-              thenableResult({
-                data: skillIds.map((id, index) => ({
-                  id,
-                  skill_id: `u-communication-${index + 1}`,
-                  skill_code: 'u-communication',
-                  name_i18n: { en: `Communication ${index + 1}` },
-                  taxonomy: {
-                    name_i18n: { en: `Communication ${index + 1}` },
-                  },
-                })),
-                error: null,
-              })
-            ),
-          };
-        }
-
-        if (table === 'skill_verification_requests') {
-          return {
-            select: vi.fn(() =>
-              thenableResult({
-                data: [],
-                error: null,
-              })
-            ),
-          };
-        }
-
-        return {
-          select: vi.fn(() => thenableResult({ data: [], error: null })),
-        };
-      }),
-    } as any);
-
-    const response = await postCustomRequest(
-      new NextRequest('http://localhost/api/expertise/verifications/custom/request', {
-        method: 'POST',
-        body: JSON.stringify({
-          verifierEmail: 'manager@example.com',
-          relationship: 'manager',
-          artifacts: skillIds.map((id) => ({ type: 'skill', id })),
-        }),
-      })
-    );
-
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(404);
     await expect(response.json()).resolves.toMatchObject({
-      error: expect.stringContaining('limited to 3 skills'),
-    });
-  });
-
-  it('requires structured attestation fields for attestation-mode custom responses', async () => {
-    const customRequestSelectQuery: any = {
-      eq: vi.fn(() => customRequestSelectQuery),
-      single: vi.fn().mockResolvedValue({
-        data: {
-          id: 'request-1',
-          requester_profile_id: 'requester-1',
-          verifier_email: 'manager@example.com',
-          verifier_profile_id: null,
-          verifier_relationship: 'manager',
-          request_kind: 'human_observed_attestation',
-          attestation_request: {
-            requestKind: 'human_observed_attestation',
-            skillIds: ['11111111-1111-4111-8111-111111111111'],
-            skillLabels: ['Communication'],
-            skillFamilies: ['communication'],
-          },
-          status: 'pending',
-          expires_at: new Date(Date.now() + 60_000).toISOString(),
-          custom_verification_request_items: [
-            {
-              id: 'item-1',
-              artifact_type: 'skill',
-              artifact_id: '11111111-1111-4111-8111-111111111111',
-            },
-          ],
-        },
-        error: null,
-      }),
-    };
-
-    vi.mocked(createAdminClient).mockReturnValue({
-      from: vi.fn((table: string) => {
-        if (table === 'custom_verification_requests') {
-          return {
-            select: vi.fn(() => customRequestSelectQuery),
-          };
-        }
-
-        throw new Error(`Unexpected table: ${table}`);
-      }),
-    } as any);
-
-    const response = await postVerifyCustom(
-      new NextRequest('http://localhost/api/verify/custom/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', {
-        method: 'POST',
-        body: JSON.stringify({ action: 'accept' }),
-      }),
-      {
-        params: Promise.resolve({ token: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' }),
-      }
-    );
-
-    expect(response.status).toBe(400);
-    await expect(response.json()).resolves.toMatchObject({
-      error: 'Validation failed',
+      error: 'Verification request not found',
     });
   });
 });

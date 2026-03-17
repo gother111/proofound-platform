@@ -50,6 +50,12 @@ vi.mock('@/lib/verification/canonical-impact-requests', () => ({
   updateCanonicalImpactVerificationRequest: vi.fn(),
 }));
 
+vi.mock('@/lib/verification/canonical-bundles', () => ({
+  getCanonicalBundleById: vi.fn(),
+  resendCanonicalBundle: vi.fn(),
+  updateCanonicalBundleDeliveryState: vi.fn(),
+}));
+
 import { requireApiAuthContext } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { sendEmail } from '@/lib/email/sender';
@@ -66,20 +72,52 @@ import {
   updateCanonicalImpactVerificationRequest,
 } from '@/lib/verification/canonical-impact-requests';
 import {
-  DELETE,
-  POST,
-} from '@/app/api/expertise/verifications/sent/[requestType]/[requestId]/route';
+  DELETE as deleteSkillRoute,
+  POST as postSkillRoute,
+} from '@/app/api/verification/requests/skill/[requestId]/route';
+import {
+  DELETE as deleteImpactRoute,
+  POST as postImpactRoute,
+} from '@/app/api/verification/requests/impact-story/[requestId]/route';
 
 function makeRequest(requestType: string, requestId: string) {
   return {
     request: new NextRequest(
-      `http://localhost/api/expertise/verifications/sent/${requestType}/${requestId}`,
+      `http://localhost/api/verification/requests/${requestType === 'skill' ? 'skill' : 'impact-story'}/${requestId}`,
       {
         method: 'DELETE',
       }
     ),
     params: Promise.resolve({ requestType, requestId }),
   };
+}
+
+async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ requestType: string; requestId: string }> }
+) {
+  const resolved = await params;
+  if (resolved.requestType === 'skill') {
+    return postSkillRoute(request, { params: Promise.resolve({ requestId: resolved.requestId }) });
+  }
+
+  return postImpactRoute(request, { params: Promise.resolve({ requestId: resolved.requestId }) });
+}
+
+async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ requestType: string; requestId: string }> }
+) {
+  const resolved = await params;
+  if (resolved.requestType === 'skill') {
+    return deleteSkillRoute(request, {
+      params: Promise.resolve({ requestId: resolved.requestId }),
+    });
+  }
+
+  return deleteImpactRoute(request, {
+    params: Promise.resolve({ requestId: resolved.requestId }),
+  });
 }
 
 function makeCanonicalSkillRequest(overrides: Record<string, unknown> = {}) {

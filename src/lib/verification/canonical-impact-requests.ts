@@ -9,6 +9,7 @@ import { upsertCanonicalVerificationRecord } from '@/lib/canonical/repository';
 import {
   CAPABILITY_BINDINGS,
   CAPABILITY_TOKEN_CLASSES,
+  inspectCapabilityToken,
   issueCapabilityToken,
 } from '@/lib/security/capability-tokens';
 import { getRows } from '@/lib/db/rows';
@@ -67,13 +68,31 @@ export type CanonicalImpactVerificationRequestRecord = {
   verification_kind: VerificationRecordRow['verificationKind'];
   integrity_status: VerificationRecordRow['integrityStatus'];
   integrity_reason: string | null;
+  dispute_state: VerificationRecordRow['disputeState'];
   integrity_meta: Record<string, unknown>;
   integrity_flagged_at: string | null;
   risk_signals: Record<string, unknown>;
+  contradicted_at: string | null;
+  revoked_at: string | null;
   verifier_profile_id: string | null;
   response_auth_method: 'token' | 'authenticated' | null;
   response_actor_email: string | null;
 };
+
+export type CanonicalImpactVerificationRequestTokenLookupResult =
+  | {
+      data: CanonicalImpactVerificationRequestRecord & {
+        source_request_table: 'verification_records';
+        source_request_id: string;
+        requester_ip_hash: null;
+        requester_user_agent_hash: null;
+      };
+      error: null;
+    }
+  | {
+      data: null;
+      error: 'invalid' | 'expired' | 'revoked' | null;
+    };
 
 function isUuid(value: string | null | undefined): value is string {
   return Boolean(
@@ -158,6 +177,7 @@ export function mapCanonicalImpactVerificationRequestRecord(
     verification_kind: record.verificationKind,
     integrity_status: record.integrityStatus,
     integrity_reason: record.integrityReason || null,
+    dispute_state: record.disputeState,
     integrity_meta:
       metadata.integrityMeta &&
       typeof metadata.integrityMeta === 'object' &&
@@ -172,6 +192,8 @@ export function mapCanonicalImpactVerificationRequestRecord(
       !Array.isArray(record.riskSignals)
         ? (record.riskSignals as Record<string, unknown>)
         : {},
+    contradicted_at: record.contradictedAt?.toISOString() || null,
+    revoked_at: record.revokedAt?.toISOString() || null,
     verifier_profile_id: record.verifierProfileId || null,
     response_auth_method:
       metadata.responseAuthMethod === 'authenticated' || metadata.responseAuthMethod === 'token'
@@ -324,6 +346,42 @@ export async function getCanonicalImpactVerificationRequestById(requestId: strin
   });
 
   return row && isCanonicalImpactVerificationRequestRecord(row) ? row : null;
+}
+
+export async function getCanonicalImpactVerificationRequestByToken(
+  token: string
+): Promise<CanonicalImpactVerificationRequestTokenLookupResult> {
+  const capabilityLookup = await inspectCapabilityToken(token, {
+    tokenClass: CAPABILITY_TOKEN_CLASSES.IMPACT_VERIFICATION_RESPONSE,
+    metadata: { surface: 'verify_impact_lookup' },
+  });
+
+  if (!capabilityLookup.ok) {
+    return { data: null, error: capabilityLookup.reason };
+  }
+
+  if (!capabilityLookup.token.source_id) {
+    return { data: null, error: null };
+  }
+
+  const canonicalVerification = await getCanonicalImpactVerificationRequestById(
+    capabilityLookup.token.source_id
+  ).catch(() => null);
+
+  if (!canonicalVerification) {
+    return { data: null, error: null };
+  }
+
+  return {
+    data: {
+      ...mapCanonicalImpactVerificationRequestRecord(canonicalVerification),
+      source_request_table: 'verification_records',
+      source_request_id: canonicalVerification.id,
+      requester_ip_hash: null,
+      requester_user_agent_hash: null,
+    },
+    error: null,
+  };
 }
 
 export async function listCanonicalImpactVerificationRequestsForOwner(ownerId: string) {

@@ -169,4 +169,58 @@ describe('expertise user-skill proofs route', () => {
       })
     );
   });
+
+  it('uses a neutral fallback title for uploaded files and surfaces privacy-review holds', async () => {
+    vi.mocked(attachUploadedFile).mockResolvedValueOnce({
+      quarantine_path: 'individual_profile/user-1/proof/123-jane_doe_resume.pdf',
+      durable_path: null,
+      public_path: null,
+    } as any);
+
+    const request = new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        proofType: 'document',
+        uploadedFileId: '44444444-4444-4444-8444-444444444444',
+        primaryAnchor: {
+          type: 'experience',
+          id: '11111111-1111-4111-8111-111111111111',
+        },
+      }),
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ id: 'skill-1' }) });
+
+    expect(response.status).toBe(201);
+    expect(vi.mocked(upsertCanonicalSkillProof)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Uploaded document',
+      })
+    );
+
+    vi.mocked(attachUploadedFile).mockResolvedValueOnce(null as any);
+
+    const heldRequest = new NextRequest(
+      'http://localhost/api/expertise/user-skills/skill-1/proofs',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          proofType: 'document',
+          uploadedFileId: '44444444-4444-4444-8444-444444444444',
+          primaryAnchor: {
+            type: 'experience',
+            id: '11111111-1111-4111-8111-111111111111',
+          },
+        }),
+      }
+    );
+
+    const heldResponse = await POST(heldRequest, { params: Promise.resolve({ id: 'skill-1' }) });
+    const heldPayload = await heldResponse.json();
+
+    expect(heldResponse.status).toBe(409);
+    expect(heldPayload.message).toContain('privacy review');
+  });
 });

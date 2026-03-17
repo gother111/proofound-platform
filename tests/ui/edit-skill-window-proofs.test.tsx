@@ -65,7 +65,7 @@ describe('EditSkillWindow proof refresh behavior', () => {
       if (url.endsWith('/proofs') && !init?.method) {
         return mockResponse({ proofs: [] });
       }
-      if (url.endsWith('/verification-request') && !init?.method) {
+      if (url === '/api/verification/requests/skill?skillId=skill-1' && !init?.method) {
         return mockResponse({ requests: [] });
       }
       if (url.endsWith('/proofs') && init?.method === 'POST') {
@@ -126,7 +126,7 @@ describe('EditSkillWindow proof refresh behavior', () => {
           ],
         });
       }
-      if (url.endsWith('/verification-request') && !init?.method) {
+      if (url === '/api/verification/requests/skill?skillId=skill-1' && !init?.method) {
         return mockResponse({ requests: [] });
       }
       if (url.endsWith('/proofs/proof-1') && init?.method === 'DELETE') {
@@ -157,7 +157,7 @@ describe('EditSkillWindow proof refresh behavior', () => {
       if (url.endsWith('/proofs') && !init?.method) {
         return mockResponse({ proofs: [] });
       }
-      if (url.endsWith('/verification-request') && !init?.method) {
+      if (url === '/api/verification/requests/skill?skillId=skill-1' && !init?.method) {
         return mockResponse({ requests: [] });
       }
       if (url.endsWith('/proofs') && init?.method === 'POST') {
@@ -232,7 +232,7 @@ describe('EditSkillWindow proof refresh behavior', () => {
       if (url.endsWith('/proofs') && !init?.method) {
         return mockResponse({ proofs: [] });
       }
-      if (url.endsWith('/verification-request') && !init?.method) {
+      if (url === '/api/verification/requests/skill?skillId=skill-1' && !init?.method) {
         return mockResponse({ requests: [] });
       }
       if (url.endsWith('/proofs') && init?.method === 'POST') {
@@ -310,7 +310,7 @@ describe('EditSkillWindow proof refresh behavior', () => {
           })),
         });
       }
-      if (url.endsWith('/verification-request') && !init?.method) {
+      if (url === '/api/verification/requests/skill?skillId=skill-1' && !init?.method) {
         return mockResponse({ requests: [] });
       }
       return mockResponse({});
@@ -337,7 +337,7 @@ describe('EditSkillWindow proof refresh behavior', () => {
       if (url.endsWith('/proofs') && !init?.method) {
         return mockResponse({ proofs: [] });
       }
-      if (url.endsWith('/verification-request') && !init?.method) {
+      if (url === '/api/verification/requests/skill?skillId=skill-1' && !init?.method) {
         return mockResponse({ requests: [] });
       }
       if (url.endsWith('/user-skills/skill-1') && init?.method === 'PATCH') {
@@ -392,10 +392,10 @@ describe('EditSkillWindow proof refresh behavior', () => {
       if (url.endsWith('/proofs') && !init?.method) {
         return mockResponse({ proofs: [] });
       }
-      if (url.endsWith('/verification-request') && !init?.method) {
+      if (url === '/api/verification/requests/skill?skillId=skill-1' && !init?.method) {
         return mockResponse({ requests: [] });
       }
-      if (url.endsWith('/verification-request') && init?.method === 'POST') {
+      if (url === '/api/verification/requests/skill' && init?.method === 'POST') {
         return mockResponse({
           request: {
             id: 'req-1',
@@ -432,14 +432,14 @@ describe('EditSkillWindow proof refresh behavior', () => {
 
     await waitFor(() =>
       expect(apiFetchMock).toHaveBeenCalledWith(
-        '/api/expertise/user-skills/skill-1/verification-request',
+        '/api/verification/requests/skill',
         expect.objectContaining({ method: 'POST' })
       )
     );
 
     const verificationCall = apiFetchMock.mock.calls.find(
       ([url, init]) =>
-        url === '/api/expertise/user-skills/skill-1/verification-request' &&
+        url === '/api/verification/requests/skill' &&
         (init as RequestInit | undefined)?.method === 'POST'
     );
 
@@ -447,6 +447,7 @@ describe('EditSkillWindow proof refresh behavior', () => {
     const verificationInit = verificationCall?.[1] as RequestInit;
     const payload = JSON.parse(verificationInit.body as string);
 
+    expect(payload.skillId).toBe('skill-1');
     expect(payload.verifierEmail).toBe('mentor@example.com');
   });
 
@@ -457,7 +458,7 @@ describe('EditSkillWindow proof refresh behavior', () => {
       if (url.endsWith('/proofs') && !init?.method) {
         return mockResponse({ proofs: [] });
       }
-      if (url.endsWith('/verification-request') && !init?.method) {
+      if (url === '/api/verification/requests/skill?skillId=skill-1' && !init?.method) {
         return mockResponse({
           requests: [
             {
@@ -515,7 +516,7 @@ describe('EditSkillWindow proof refresh behavior', () => {
       if (url.endsWith('/proofs') && !init?.method) {
         return mockResponse({ proofs: [] });
       }
-      if (url.endsWith('/verification-request') && !init?.method) {
+      if (url === '/api/verification/requests/skill?skillId=skill-1' && !init?.method) {
         return mockResponse({
           requests: [
             {

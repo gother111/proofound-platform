@@ -194,7 +194,7 @@ export function EditSkillWindow({
       setLoadingVerifications(true);
       try {
         const response = await apiFetch(
-          `/api/expertise/user-skills/${skill.id}/verification-request`
+          `/api/verification/requests/skill?skillId=${encodeURIComponent(skill.id)}`
         );
         if (response.ok) {
           const data = (await response.json()) as { requests?: VerificationRequest[] };
@@ -480,17 +480,15 @@ export function EditSkillWindow({
 
     setRequestingVerification(true);
     try {
-      const response = await apiFetch(
-        `/api/expertise/user-skills/${skill.id}/verification-request`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ...newVerificationRequest,
-            verifierEmail: normalizedVerifierEmail,
-          }),
-        }
-      );
+      const response = await apiFetch('/api/verification/requests/skill', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...newVerificationRequest,
+          skillId: skill.id,
+          verifierEmail: normalizedVerifierEmail,
+        }),
+      });
 
       if (response.ok) {
         const data = (await response.json()) as {

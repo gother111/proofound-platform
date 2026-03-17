@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireApiAuthContext } from '@/lib/auth';
@@ -7,8 +6,6 @@ import { resolveSiteUrlFromHeaders } from '@/lib/env';
 import { createAdminClient } from '@/lib/supabase/admin';
 import {
   artifactTypeLabel,
-  mapCustomRelationshipToSkillVerifierSource,
-  parseCustomSkillName,
   relationshipDisplayLabel,
   relationshipLabel,
   type CustomVerificationRelationship,
@@ -22,7 +19,6 @@ import {
 import {
   createCanonicalSkillVerificationRequest,
   getCanonicalSkillVerificationRequestById,
-  listCanonicalSkillVerificationRequestsForOwner,
   mapCanonicalSkillVerificationRequestRecord,
   updateCanonicalSkillVerificationRequest,
 } from '@/lib/verification/canonical-requests';
@@ -32,67 +28,25 @@ import {
   mapCanonicalImpactVerificationRequestRecord,
   updateCanonicalImpactVerificationRequest,
 } from '@/lib/verification/canonical-impact-requests';
-import { upsertCanonicalVerificationRecord } from '@/lib/canonical/repository';
-import { hashOpaqueToken } from '@/lib/contracts/canonical-domain';
+import {
+  getCanonicalBundleById,
+  resendCanonicalBundle,
+  updateCanonicalBundleDeliveryState,
+} from '@/lib/verification/canonical-bundles';
 
 type RequestType = 'skill' | 'impact_story';
+type BundleArtifactType =
+  | 'skill'
+  | 'experience'
+  | 'education'
+  | 'impact_story'
+  | 'project'
+  | 'volunteering';
 type DeleteEligibility = 'pending' | 'failed';
 type SkillResendEligibility = 'pending' | 'declined' | 'expired';
 type ImpactResendEligibility = 'pending' | 'failed' | 'declined' | 'expired';
 type BundleResendEligibility = 'pending' | 'declined' | 'expired';
-
 type SkillVerifierSource = 'peer' | 'manager' | 'external';
-
-type CustomVerificationRequestRow = {
-  id: string;
-  requester_profile_id: string;
-  verifier_email: string;
-  verifier_profile_id: string | null;
-  verifier_relationship: CustomVerificationRelationship;
-  message: string | null;
-  token_hash: string;
-  status: 'pending' | 'accepted' | 'declined' | 'expired' | 'cancelled';
-  responded_at: string | null;
-  response_message: string | null;
-  expires_at: string;
-  created_at: string;
-  updated_at: string;
-};
-
-type CustomVerificationRequestItemRow = {
-  id: string;
-  request_id: string;
-  artifact_type: 'skill' | 'experience' | 'education' | 'impact_story' | 'project' | 'volunteering';
-  artifact_id: string;
-  display_label: string;
-  status: 'pending' | 'accepted' | 'declined' | 'expired';
-};
-
-type RequesterProfileRow = {
-  display_name: string | null;
-};
-
-type SkillTaxonomyRow = {
-  name_i18n?: unknown;
-};
-
-type SkillLabelLookupRow = {
-  skill_id?: string | null;
-  name_i18n?: unknown;
-  taxonomy?: SkillTaxonomyRow | null;
-};
-
-type ResendContext = {
-  admin: ReturnType<typeof createAdminClient>;
-  userId: string;
-  request: NextRequest;
-};
-
-type BundleResendResult = {
-  resentRequestId: string;
-  reusedRecord: boolean;
-  emailSent: boolean;
-};
 
 function normalizeBaseUrl(value: string | null | undefined): string {
   const trimmed = (value || '').trim();
@@ -105,10 +59,6 @@ function normalizeBaseUrl(value: string | null | undefined): string {
 
 function computeExpiresAt(days: number): string {
   return new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
-}
-
-function isRequestType(value: string): value is RequestType {
-  return value === 'skill' || value === 'impact_story';
 }
 
 function isDeleteAllowedStatus(
@@ -163,8 +113,7 @@ async function fetchRequesterDisplayName(
     return 'A Proofound user';
   }
 
-  const typedData = data as RequesterProfileRow | null;
-  return typedData?.display_name || 'A Proofound user';
+  return (data as { display_name?: string | null } | null)?.display_name || 'A Proofound user';
 }
 
 async function fetchSkillName(
@@ -192,25 +141,21 @@ async function fetchSkillName(
     return 'a skill';
   }
 
-  const row = data as SkillLabelLookupRow;
+  const row = data as {
+    skill_id?: string | null;
+    name_i18n?: Record<string, unknown> | null;
+    taxonomy?: { name_i18n?: Record<string, unknown> | null } | null;
+  };
 
-  if (row.name_i18n && typeof row.name_i18n === 'object' && 'en' in row.name_i18n) {
-    const englishName = (row.name_i18n as Record<string, unknown>).en;
-    if (typeof englishName === 'string' && englishName.trim()) {
-      return englishName.trim();
-    }
+  const directName = typeof row.name_i18n?.en === 'string' ? row.name_i18n.en.trim() : '';
+  if (directName) {
+    return directName;
   }
 
-  if (row.taxonomy?.name_i18n && typeof row.taxonomy.name_i18n === 'object') {
-    const englishTaxonomyName = (row.taxonomy.name_i18n as Record<string, unknown>).en;
-    if (typeof englishTaxonomyName === 'string' && englishTaxonomyName.trim()) {
-      return englishTaxonomyName.trim();
-    }
-  }
-
-  const parsedCustomName = parseCustomSkillName(row.skill_id || null);
-  if (parsedCustomName) {
-    return parsedCustomName;
+  const taxonomyName =
+    typeof row.taxonomy?.name_i18n?.en === 'string' ? row.taxonomy.name_i18n.en.trim() : '';
+  if (taxonomyName) {
+    return taxonomyName;
   }
 
   return 'a skill';
@@ -231,29 +176,6 @@ function buildImpactVerificationScopeKey(impactStoryId: string, verifierEmail: s
   return `impact_verification:${impactStoryId}:${normalizeEmail(verifierEmail) ?? 'unknown'}`;
 }
 
-function buildCustomVerificationScopeKey(requestId: string, verifierEmail: string) {
-  return `custom_verification:${requestId}:${normalizeEmail(verifierEmail) ?? 'unknown'}`;
-}
-
-function resolveCanonicalSkillVerificationKind(
-  verifierSource: SkillVerifierSource,
-  requestKind: string | null | undefined
-) {
-  if (requestKind === 'human_observed_attestation') {
-    return verifierSource === 'manager' ? 'skill_attestation_manager' : 'skill_attestation_peer';
-  }
-
-  if (verifierSource === 'manager') {
-    return 'skill_attestation_manager';
-  }
-
-  if (verifierSource === 'peer') {
-    return 'skill_attestation_peer';
-  }
-
-  return 'platform_manual_review';
-}
-
 async function sendSkillResendEmail(args: {
   verifierEmail: string;
   requesterName: string;
@@ -261,8 +183,8 @@ async function sendSkillResendEmail(args: {
   skillName: string;
   message: string | null;
   verifyUrl: string;
-}): Promise<{ success: boolean; error?: string }> {
-  const emailResult = await sendEmail({
+}) {
+  return sendEmail({
     to: args.verifierEmail,
     subject: `${args.requesterName} requested your verification on Proofound`,
     html: `
@@ -279,8 +201,6 @@ async function sendSkillResendEmail(args: {
     `,
     text: `${args.requesterName} listed you as ${args.relationshipDescription} and requested verification for ${args.skillName}. Review request: ${args.verifyUrl}`,
   });
-
-  return emailResult;
 }
 
 async function sendImpactResendEmail(args: {
@@ -289,8 +209,8 @@ async function sendImpactResendEmail(args: {
   storyTitle: string;
   message: string | null;
   verifyUrl: string;
-}): Promise<{ success: boolean; error?: string }> {
-  const emailResult = await sendEmail({
+}) {
+  return sendEmail({
     to: args.verifierEmail,
     subject: `${args.storyTitle} verification request on Proofound`,
     html: `
@@ -306,8 +226,6 @@ async function sendImpactResendEmail(args: {
     `,
     text: `${args.requesterName} requested verification for "${args.storyTitle}". Review request: ${args.verifyUrl}`,
   });
-
-  return emailResult;
 }
 
 async function sendBundleResendEmail(args: {
@@ -316,8 +234,8 @@ async function sendBundleResendEmail(args: {
   relationship: CustomVerificationRelationship;
   message: string | null;
   verifyUrl: string;
-  artifacts: CustomVerificationRequestItemRow[];
-}): Promise<{ success: boolean; error?: string }> {
+  artifacts: Array<{ artifact_type: BundleArtifactType; display_label: string }>;
+}) {
   const artifactsHtml = args.artifacts
     .slice(0, 12)
     .map(
@@ -353,316 +271,120 @@ async function sendBundleResendEmail(args: {
   });
 }
 
-async function resendCustomBundleRequest(
-  context: ResendContext,
-  customRequestId: string,
-  options: {
-    triggeredBySkillRequestId?: string | null;
-  } = {}
-): Promise<NextResponse> {
-  const { admin, userId, request } = context;
-
-  const { data: customRequestData, error: customRequestError } = await admin
-    .from('custom_verification_requests')
-    .select('*')
-    .eq('id', customRequestId)
-    .maybeSingle();
-
-  if (customRequestError) {
-    console.error('Failed to fetch custom verification request for resend:', customRequestError);
-    return NextResponse.json(
-      { error: 'Failed to load bundled verification request' },
-      { status: 500 }
-    );
-  }
-
-  if (!customRequestData) {
+async function resendBundleRequest(
+  admin: ReturnType<typeof createAdminClient>,
+  request: NextRequest,
+  userId: string,
+  bundleId: string,
+  requestType: RequestType,
+  triggeredByRequestId?: string | null
+) {
+  const bundle = await getCanonicalBundleById(bundleId);
+  if (!bundle) {
     return NextResponse.json({ error: 'Bundled verification request not found' }, { status: 404 });
   }
 
-  const customRequest = customRequestData as CustomVerificationRequestRow;
-
-  if (customRequest.requester_profile_id !== userId) {
+  if (bundle.requester_profile_id !== userId) {
     return NextResponse.json(
       { error: 'Not authorized to resend this bundled request' },
       { status: 403 }
     );
   }
 
-  if (!isBundleResendAllowedStatus(customRequest.status)) {
+  if (!isBundleResendAllowedStatus(bundle.status)) {
     return NextResponse.json(
       { error: 'Only pending, declined, or expired bundled requests can be resent.' },
       { status: 400 }
     );
   }
 
-  const { data: itemData, error: itemError } = await admin
-    .from('custom_verification_request_items')
-    .select('id, request_id, artifact_type, artifact_id, display_label, status')
-    .eq('request_id', customRequest.id)
-    .order('created_at', { ascending: true });
-
-  if (itemError) {
-    console.error('Failed to fetch custom verification request items for resend:', itemError);
-    return NextResponse.json({ error: 'Failed to load bundled request items' }, { status: 500 });
+  const resentBundle = await resendCanonicalBundle(bundleId, userId);
+  if (!resentBundle) {
+    return NextResponse.json(
+      { error: 'Failed to resend bundled verification request' },
+      { status: 500 }
+    );
   }
-
-  const bundleItems = (itemData || []) as CustomVerificationRequestItemRow[];
 
   const requesterName = await fetchRequesterDisplayName(admin, userId);
-  const baseUrl = buildBaseUrl(request);
-  const nowIso = new Date().toISOString();
-  const expiresAtIso = computeExpiresAt(14);
-
-  let resendToken = '';
-  let resentRequestId = customRequest.id;
-  let reusedRecord = customRequest.status === 'pending';
-  const linkedCanonicalSkillRows = (await listCanonicalSkillVerificationRequestsForOwner(userId))
-    .map(mapCanonicalSkillVerificationRequestRecord)
-    .filter((row) => row.custom_request_id === customRequest.id);
-  const issued = await issueCapabilityToken({
-    tokenClass: CAPABILITY_TOKEN_CLASSES.CUSTOM_VERIFICATION_RESPONSE,
-    sourceTable: 'custom_verification_requests',
-    sourceId: reusedRecord ? customRequest.id : randomUUID(),
-    actionScope: 'custom_verification.respond',
-    subjectType: 'custom_verification_request',
-    subjectId: reusedRecord ? customRequest.id : null,
-    actorBinding: customRequest.verifier_profile_id
-      ? CAPABILITY_BINDINGS.EMAIL_THEN_PROFILE_LOCK
-      : CAPABILITY_BINDINGS.EMAIL_HASH,
-    actorEmail: customRequest.verifier_email,
-    actorProfileId: customRequest.verifier_profile_id,
-    expiresAt: new Date(expiresAtIso),
-    singleUse: true,
-    maxUses: 1,
-    scopeKey: buildCustomVerificationScopeKey(customRequest.id, customRequest.verifier_email),
-    revokePriorActiveTokensForScope: true,
-    metadata: {
-      resend: true,
-      requestId: customRequest.id,
-      artifactCount: bundleItems.length,
-    },
-  });
-  resendToken = issued.rawToken;
-
-  if (reusedRecord) {
-    const { error: updateBundleError } = await admin
-      .from('custom_verification_requests')
-      .update({
-        token_hash: issued.tokenHash,
-        capability_token_id: issued.token.id,
-        expires_at: expiresAtIso,
-        updated_at: nowIso,
-      })
-      .eq('id', customRequest.id)
-      .eq('requester_profile_id', userId)
-      .eq('status', 'pending');
-
-    if (updateBundleError) {
-      console.error('Failed to rotate bundled verification token for resend:', updateBundleError);
-      return NextResponse.json(
-        { error: 'Failed to resend bundled verification request' },
-        { status: 500 }
-      );
-    }
-
-    await Promise.all(
-      linkedCanonicalSkillRows
-        .filter((row) => row.status === 'pending')
-        .map((row) =>
-          updateCanonicalSkillVerificationRequest({
-            requestId: row.id,
-            status: 'pending',
-            customRequestId: customRequest.id,
-            capabilityTokenId: issued.token.id,
-            requestedAt: nowIso,
-            expiresAt: expiresAtIso,
-            emailSent: true,
-            emailError: null,
-          }).catch((error) => {
-            console.warn(
-              'Failed to refresh linked canonical skill request during bundle resend:',
-              error
-            );
-            return null;
-          })
-        )
-    );
-  } else {
-    resentRequestId = issued.token.source_id || randomUUID();
-
-    const { error: insertBundleError } = await admin.from('custom_verification_requests').insert({
-      id: resentRequestId,
-      requester_profile_id: userId,
-      verifier_email: customRequest.verifier_email,
-      verifier_profile_id: customRequest.verifier_profile_id,
-      verifier_relationship: customRequest.verifier_relationship,
-      message: customRequest.message,
-      token_hash: issued.tokenHash,
-      capability_token_id: issued.token.id,
-      status: 'pending',
-      expires_at: expiresAtIso,
-      created_at: nowIso,
-      updated_at: nowIso,
-    });
-
-    if (insertBundleError) {
-      console.error('Failed to clone bundled verification request for resend:', insertBundleError);
-      return NextResponse.json(
-        { error: 'Failed to resend bundled verification request' },
-        { status: 500 }
-      );
-    }
-
-    if (bundleItems.length > 0) {
-      const clonedItems = bundleItems.map((item) => ({
-        request_id: resentRequestId,
-        artifact_type: item.artifact_type,
-        artifact_id: item.artifact_id,
-        display_label: item.display_label,
-        status: 'pending',
-        created_at: nowIso,
-        updated_at: nowIso,
-      }));
-
-      const { error: insertItemsError } = await admin
-        .from('custom_verification_request_items')
-        .insert(clonedItems);
-
-      if (insertItemsError) {
-        console.error('Failed to clone bundled verification request items:', insertItemsError);
-        return NextResponse.json(
-          { error: 'Failed to clone bundled request items' },
-          { status: 500 }
-        );
-      }
-    }
-
-    if (linkedCanonicalSkillRows.length > 0) {
-      await Promise.all(
-        linkedCanonicalSkillRows.map((row) =>
-          upsertCanonicalVerificationRecord({
-            id: randomUUID(),
-            ownerType: 'individual_profile',
-            ownerId: userId,
-            subjectType: 'skill',
-            subjectId: row.skill_id,
-            verificationKind: resolveCanonicalSkillVerificationKind(
-              row.verifier_source,
-              row.request_kind
-            ),
-            status: 'pending',
-            verifierPrincipalType: row.verifier_profile_id ? 'user_account' : 'external_email',
-            verifierProfileId: row.verifier_profile_id,
-            verifierEmailHash: hashOpaqueToken(row.verifier_email),
-            verifierDomainSnapshot: row.verifier_email.split('@')[1] || null,
-            integrityStatus: row.integrity_status,
-            integrityReason: row.integrity_reason,
-            riskSignals: row.risk_signals || {},
-            claimSnapshot: {
-              requestTransport: 'skill_verification_request',
-              skillId: row.skill_id,
-              requestKind: row.request_kind,
-              attestationRequest: row.attestation_request || null,
-            },
-            sourceRequestTable: 'custom_verification_requests',
-            sourceRequestId: resentRequestId,
-            requestedAt: new Date(nowIso),
-            expiresAt: new Date(expiresAtIso),
-            metadata: {
-              requestTransport: 'skill_verification_request',
-              requesterEmailSnapshot: row.requester_email_snapshot,
-              verifierEmail: row.verifier_email,
-              verifierSource: row.verifier_source,
-              verifierRelationship: row.verifier_relationship,
-              requestKind: row.request_kind,
-              attestationRequest: row.attestation_request || null,
-              message: customRequest.message,
-              customRequestId: resentRequestId,
-              capabilityTokenId: issued.token.id,
-              emailSent: true,
-              emailError: null,
-              requiresAuthenticatedVerifier: row.requires_authenticated_verifier,
-              integrityMeta: row.integrity_meta || {},
-              integrityFlaggedAt: row.integrity_flagged_at,
-            },
-          }).catch((error) => {
-            console.error(
-              'Failed to clone linked canonical skill request for bundle resend:',
-              error
-            );
-            throw error;
-          })
-        )
-      ).catch(() => null);
-    }
-  }
-
-  const verifyUrl = `${baseUrl}/verify/custom/${resendToken}`;
+  const verifyUrl = `${buildBaseUrl(request)}/verify/custom/${resentBundle.rawToken}`;
   const emailResult = await sendBundleResendEmail({
-    verifierEmail: customRequest.verifier_email,
+    verifierEmail: bundle.verifier_email,
     requesterName,
-    relationship: customRequest.verifier_relationship,
-    message: customRequest.message,
+    relationship: (bundle.verifier_relationship || 'external') as CustomVerificationRelationship,
+    message: bundle.message,
     verifyUrl,
-    artifacts: bundleItems,
+    artifacts: resentBundle.records.map((record) => ({
+      artifact_type: record.subjectType as BundleArtifactType,
+      display_label:
+        typeof (record.metadata as Record<string, unknown> | null)?.displayLabel === 'string'
+          ? String((record.metadata as Record<string, unknown>).displayLabel)
+          : record.subjectId,
+    })),
   });
-
-  if (!emailResult.success && !reusedRecord) {
-    await admin
-      .from('custom_verification_requests')
-      .delete()
-      .eq('id', resentRequestId)
-      .eq('requester_profile_id', userId);
-  }
 
   if (!emailResult.success) {
+    await updateCanonicalBundleDeliveryState(resentBundle.bundleId, {
+      emailSent: false,
+      emailError: emailResult.error || 'Failed to send bundled verification resend email.',
+    });
+
     return NextResponse.json(
       {
         error: emailResult.error || 'Failed to send bundled verification resend email.',
-        resentRequestId,
-        reusedRecord,
+        resentRequestId: resentBundle.bundleId,
+        reusedRecord: false,
       },
       { status: 502 }
     );
   }
 
+  await updateCanonicalBundleDeliveryState(resentBundle.bundleId, {
+    emailSent: true,
+    emailError: null,
+  });
+
   await writeVerificationAuditLog({
     actorId: userId,
     action: 'verification.request.resent',
     targetType: 'custom_verification_request',
-    targetId: resentRequestId,
+    targetId: resentBundle.bundleId,
     meta: {
-      request_type: 'skill',
-      source_request_id: customRequest.id,
-      triggered_by_skill_request_id: options.triggeredBySkillRequestId || null,
-      source_status: customRequest.status,
-      reused_record: reusedRecord,
-      resent_request_id: resentRequestId,
-      verifier_email: customRequest.verifier_email,
-      relationship: relationshipDisplayLabel(customRequest.verifier_relationship),
+      request_type: requestType,
+      source_request_id: bundle.id,
+      triggered_by_request_id: triggeredByRequestId || null,
+      source_status: bundle.status,
+      reused_record: false,
+      resent_request_id: resentBundle.bundleId,
+      verifier_email: bundle.verifier_email,
+      relationship: relationshipDisplayLabel(
+        (bundle.verifier_relationship || 'external') as CustomVerificationRelationship
+      ),
       source: 'sent_request_resend_api',
     },
   });
 
-  const result: BundleResendResult = {
-    resentRequestId,
-    reusedRecord,
-    emailSent: true,
-  };
-
   return NextResponse.json({
     success: true,
-    requestType: 'skill',
-    requestId: options.triggeredBySkillRequestId || customRequest.id,
+    requestType,
+    requestId: triggeredByRequestId || bundle.id,
+    resentRequestId: resentBundle.bundleId,
+    reusedRecord: false,
     bundled: true,
-    ...result,
   });
 }
 
-async function handleSkillResend(context: ResendContext, requestId: string): Promise<NextResponse> {
-  const { admin, userId, request } = context;
+export async function resendSkillVerificationRequest(
+  request: NextRequest,
+  requestId: string
+): Promise<NextResponse> {
+  const authContext = await requireApiAuthContext();
+  if (!authContext) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
+  const { user } = authContext;
+  const admin = createAdminClient();
   const canonicalRequest = await getCanonicalSkillVerificationRequestById(requestId).catch(
     () => null
   );
@@ -671,8 +393,7 @@ async function handleSkillResend(context: ResendContext, requestId: string): Pro
   }
 
   const verificationRequest = mapCanonicalSkillVerificationRequestRecord(canonicalRequest);
-
-  if (verificationRequest.requester_profile_id !== userId) {
+  if (verificationRequest.requester_profile_id !== user.id) {
     return NextResponse.json(
       { error: 'Not authorized to resend this verification request' },
       { status: 403 }
@@ -680,9 +401,14 @@ async function handleSkillResend(context: ResendContext, requestId: string): Pro
   }
 
   if (verificationRequest.custom_request_id) {
-    return resendCustomBundleRequest(context, verificationRequest.custom_request_id, {
-      triggeredBySkillRequestId: requestId,
-    });
+    return resendBundleRequest(
+      admin,
+      request,
+      user.id,
+      verificationRequest.custom_request_id,
+      'skill',
+      requestId
+    );
   }
 
   if (!isSkillResendAllowedStatus(verificationRequest.status)) {
@@ -692,10 +418,9 @@ async function handleSkillResend(context: ResendContext, requestId: string): Pro
     );
   }
 
-  const requesterName = await fetchRequesterDisplayName(admin, userId);
+  const requesterName = await fetchRequesterDisplayName(admin, user.id);
   const skillName = await fetchSkillName(admin, verificationRequest.skill_id);
   const baseUrl = buildBaseUrl(request);
-
   const reusedRecord = verificationRequest.status === 'pending';
   let resentRequestId = verificationRequest.id;
   let resendToken = '';
@@ -746,7 +471,7 @@ async function handleSkillResend(context: ResendContext, requestId: string): Pro
     }
   } else {
     const createdRequest = await createCanonicalSkillVerificationRequest({
-      ownerId: userId,
+      ownerId: user.id,
       skillId: verificationRequest.skill_id,
       skillName,
       requesterName,
@@ -810,7 +535,7 @@ async function handleSkillResend(context: ResendContext, requestId: string): Pro
   }).catch(() => null);
 
   await writeVerificationAuditLog({
-    actorId: userId,
+    actorId: user.id,
     action: 'verification.request.resent',
     targetType: 'skill_verification_request',
     targetId: resentRequestId,
@@ -836,12 +561,92 @@ async function handleSkillResend(context: ResendContext, requestId: string): Pro
   });
 }
 
-async function handleImpactResend(
-  context: ResendContext,
+export async function deleteSkillVerificationRequest(requestId: string): Promise<NextResponse> {
+  const authContext = await requireApiAuthContext();
+  if (!authContext) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { user } = authContext;
+  const canonicalRequest = await getCanonicalSkillVerificationRequestById(requestId).catch(
+    () => null
+  );
+  const verificationRequest = canonicalRequest
+    ? mapCanonicalSkillVerificationRequestRecord(canonicalRequest)
+    : null;
+
+  if (!verificationRequest) {
+    return NextResponse.json({ error: 'Verification request not found' }, { status: 404 });
+  }
+
+  if (verificationRequest.requester_profile_id !== user.id) {
+    return NextResponse.json(
+      { error: 'Not authorized to delete this verification request' },
+      { status: 403 }
+    );
+  }
+
+  if (verificationRequest.custom_request_id) {
+    return NextResponse.json(
+      {
+        error:
+          'This verification request belongs to a bundled request. Manage it from bundle controls.',
+        code: 'BUNDLED_REQUEST',
+        customRequestId: verificationRequest.custom_request_id,
+      },
+      { status: 409 }
+    );
+  }
+
+  if (!isDeleteAllowedStatus('skill', verificationRequest.status)) {
+    return NextResponse.json({ error: 'Only pending requests can be deleted.' }, { status: 400 });
+  }
+
+  const cancelledRequest = await updateCanonicalSkillVerificationRequest({
+    requestId,
+    status: 'cancelled',
+    respondedAt: new Date().toISOString(),
+  }).catch((error) => {
+    console.error('Failed to cancel skill verification request:', error);
+    return null;
+  });
+
+  if (!cancelledRequest) {
+    return NextResponse.json({ error: 'Failed to delete verification request' }, { status: 500 });
+  }
+
+  await writeVerificationAuditLog({
+    actorId: user.id,
+    action: 'verification.request.deleted',
+    targetType: 'skill_verification_request',
+    targetId: requestId,
+    meta: {
+      request_type: 'skill',
+      request_status: verificationRequest.status,
+      skill_id: verificationRequest.skill_id,
+      verifier_email: verificationRequest.verifier_email,
+      source: 'sent_request_delete_api',
+    },
+  });
+
+  return NextResponse.json({
+    success: true,
+    requestType: 'skill',
+    requestId,
+  });
+}
+
+export async function resendImpactVerificationRequest(
+  request: NextRequest,
   requestId: string
 ): Promise<NextResponse> {
-  const { admin, userId, request } = context;
+  const authContext = await requireApiAuthContext();
+  if (!authContext) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
+  const { user } = authContext;
+  const admin = createAdminClient();
   const canonicalRequest = await getCanonicalImpactVerificationRequestById(requestId).catch(
     () => null
   );
@@ -851,8 +656,7 @@ async function handleImpactResend(
   }
 
   const verificationRequest = mapCanonicalImpactVerificationRequestRecord(canonicalRequest);
-
-  if (verificationRequest.requester_profile_id !== userId) {
+  if (verificationRequest.requester_profile_id !== user.id) {
     return NextResponse.json(
       { error: 'Not authorized to resend this verification request' },
       { status: 403 }
@@ -866,15 +670,13 @@ async function handleImpactResend(
     );
   }
 
-  const requesterName = await fetchRequesterDisplayName(admin, userId);
+  const requesterName = await fetchRequesterDisplayName(admin, user.id);
   const baseUrl = buildBaseUrl(request);
-
   const { data: storyTitleData } = await admin
     .from('impact_stories')
     .select('title')
     .eq('id', verificationRequest.impact_story_id)
     .maybeSingle();
-
   const storyTitle =
     storyTitleData && typeof storyTitleData === 'object' && 'title' in storyTitleData
       ? String((storyTitleData as { title?: unknown }).title || 'Impact Story')
@@ -929,7 +731,7 @@ async function handleImpactResend(
     }
   } else {
     const createdRequest = await createCanonicalImpactVerificationRequest({
-      ownerId: userId,
+      ownerId: user.id,
       impactStoryId: verificationRequest.impact_story_id,
       storyTitle,
       requesterName,
@@ -991,7 +793,7 @@ async function handleImpactResend(
   }).catch(() => null);
 
   await writeVerificationAuditLog({
-    actorId: userId,
+    actorId: user.id,
     action: 'verification.request.resent',
     targetType: 'impact_story_verification_request',
     targetId: resentRequestId,
@@ -1016,207 +818,68 @@ async function handleImpactResend(
   });
 }
 
-/**
- * POST /api/expertise/verifications/sent/[requestType]/[requestId]
- *
- * Resends a sent verification request owned by the authenticated requester.
- */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ requestType: string; requestId: string }> }
-) {
-  try {
-    const authContext = await requireApiAuthContext();
-    if (!authContext) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { user } = authContext;
-    const admin = createAdminClient();
-    const { requestType: rawRequestType, requestId } = await params;
-
-    if (!isRequestType(rawRequestType)) {
-      return NextResponse.json({ error: 'Invalid request type' }, { status: 400 });
-    }
-
-    const context: ResendContext = {
-      admin,
-      userId: user.id,
-      request,
-    };
-
-    if (rawRequestType === 'skill') {
-      return handleSkillResend(context, requestId);
-    }
-
-    return handleImpactResend(context, requestId);
-  } catch (error) {
-    console.error('Sent verification POST resend error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+export async function deleteImpactVerificationRequest(requestId: string): Promise<NextResponse> {
+  const authContext = await requireApiAuthContext();
+  if (!authContext) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-}
 
-/**
- * DELETE /api/expertise/verifications/sent/[requestType]/[requestId]
- *
- * Removes a sent verification request owned by the authenticated requester.
- * For bundled skill requests, caller must use custom bundle cancellation flow.
- */
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ requestType: string; requestId: string }> }
-) {
-  try {
-    const authContext = await requireApiAuthContext();
-    if (!authContext) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    const { user } = authContext;
-    const admin = createAdminClient();
-    const { requestType: rawRequestType, requestId } = await params;
+  const { user } = authContext;
+  const canonicalRequest = await getCanonicalImpactVerificationRequestById(requestId).catch(
+    () => null
+  );
+  const verificationRequest = canonicalRequest
+    ? mapCanonicalImpactVerificationRequestRecord(canonicalRequest)
+    : null;
 
-    if (!isRequestType(rawRequestType)) {
-      return NextResponse.json({ error: 'Invalid request type' }, { status: 400 });
-    }
+  if (!verificationRequest) {
+    return NextResponse.json({ error: 'Verification request not found' }, { status: 404 });
+  }
 
-    const requestType = rawRequestType;
-
-    if (requestType === 'skill') {
-      const canonicalRequest = await getCanonicalSkillVerificationRequestById(requestId).catch(
-        () => null
-      );
-      const verificationRequest = canonicalRequest
-        ? mapCanonicalSkillVerificationRequestRecord(canonicalRequest)
-        : null;
-      if (!verificationRequest) {
-        return NextResponse.json({ error: 'Verification request not found' }, { status: 404 });
-      }
-
-      if (verificationRequest.requester_profile_id !== user.id) {
-        return NextResponse.json(
-          { error: 'Not authorized to delete this verification request' },
-          { status: 403 }
-        );
-      }
-
-      if (verificationRequest.custom_request_id) {
-        return NextResponse.json(
-          {
-            error:
-              'This verification request belongs to a bundled request. Manage it from bundle controls.',
-            code: 'BUNDLED_REQUEST',
-            customRequestId: verificationRequest.custom_request_id,
-          },
-          { status: 409 }
-        );
-      }
-
-      if (!isDeleteAllowedStatus(requestType, verificationRequest.status)) {
-        return NextResponse.json(
-          {
-            error: `Only ${requestType === 'skill' ? 'pending' : 'pending or failed'} requests can be deleted.`,
-          },
-          { status: 400 }
-        );
-      }
-
-      const cancelledRequest = await updateCanonicalSkillVerificationRequest({
-        requestId,
-        status: 'cancelled',
-        respondedAt: new Date().toISOString(),
-      }).catch((error) => {
-        console.error('Failed to cancel skill verification request:', error);
-        return null;
-      });
-
-      if (!cancelledRequest) {
-        return NextResponse.json(
-          { error: 'Failed to delete verification request' },
-          { status: 500 }
-        );
-      }
-
-      await writeVerificationAuditLog({
-        actorId: user.id,
-        action: 'verification.request.deleted',
-        targetType: 'skill_verification_request',
-        targetId: requestId,
-        meta: {
-          request_type: requestType,
-          request_status: verificationRequest.status,
-          skill_id: verificationRequest.skill_id,
-          verifier_email: verificationRequest.verifier_email,
-          source: 'sent_request_delete_api',
-        },
-      });
-
-      return NextResponse.json({
-        success: true,
-        requestType,
-        requestId,
-      });
-    }
-
-    const canonicalRequest = await getCanonicalImpactVerificationRequestById(requestId).catch(
-      () => null
+  if (verificationRequest.requester_profile_id !== user.id) {
+    return NextResponse.json(
+      { error: 'Not authorized to delete this verification request' },
+      { status: 403 }
     );
-    const verificationRequest = canonicalRequest
-      ? mapCanonicalImpactVerificationRequestRecord(canonicalRequest)
-      : null;
-    if (!verificationRequest) {
-      return NextResponse.json({ error: 'Verification request not found' }, { status: 404 });
-    }
-
-    if (verificationRequest.requester_profile_id !== user.id) {
-      return NextResponse.json(
-        { error: 'Not authorized to delete this verification request' },
-        { status: 403 }
-      );
-    }
-
-    if (!isDeleteAllowedStatus(requestType, verificationRequest.status)) {
-      return NextResponse.json(
-        {
-          error: 'Only pending or failed requests can be deleted.',
-        },
-        { status: 400 }
-      );
-    }
-
-    const cancelledRequest = await updateCanonicalImpactVerificationRequest({
-      requestId,
-      status: 'cancelled',
-      respondedAt: new Date().toISOString(),
-    }).catch((error) => {
-      console.error('Failed to cancel impact verification request:', error);
-      return null;
-    });
-
-    if (!cancelledRequest) {
-      return NextResponse.json({ error: 'Failed to delete verification request' }, { status: 500 });
-    }
-
-    await writeVerificationAuditLog({
-      actorId: user.id,
-      action: 'verification.request.deleted',
-      targetType: 'impact_story_verification_request',
-      targetId: requestId,
-      meta: {
-        request_type: requestType,
-        request_status: verificationRequest.status,
-        impact_story_id: verificationRequest.impact_story_id,
-        verifier_email: verificationRequest.verifier_email,
-        source: 'sent_request_delete_api',
-      },
-    });
-
-    return NextResponse.json({
-      success: true,
-      requestType,
-      requestId,
-    });
-  } catch (error) {
-    console.error('Sent verification DELETE error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+
+  if (!isDeleteAllowedStatus('impact_story', verificationRequest.status)) {
+    return NextResponse.json(
+      { error: 'Only pending or failed requests can be deleted.' },
+      { status: 400 }
+    );
+  }
+
+  const cancelledRequest = await updateCanonicalImpactVerificationRequest({
+    requestId,
+    status: 'cancelled',
+    respondedAt: new Date().toISOString(),
+  }).catch((error) => {
+    console.error('Failed to cancel impact verification request:', error);
+    return null;
+  });
+
+  if (!cancelledRequest) {
+    return NextResponse.json({ error: 'Failed to delete verification request' }, { status: 500 });
+  }
+
+  await writeVerificationAuditLog({
+    actorId: user.id,
+    action: 'verification.request.deleted',
+    targetType: 'impact_story_verification_request',
+    targetId: requestId,
+    meta: {
+      request_type: 'impact_story',
+      request_status: verificationRequest.status,
+      impact_story_id: verificationRequest.impact_story_id,
+      verifier_email: verificationRequest.verifier_email,
+      source: 'sent_request_delete_api',
+    },
+  });
+
+  return NextResponse.json({
+    success: true,
+    requestType: 'impact_story',
+    requestId,
+  });
 }

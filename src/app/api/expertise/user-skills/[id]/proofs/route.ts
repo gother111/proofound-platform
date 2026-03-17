@@ -27,15 +27,7 @@ function deriveProofTitleFromUrl(rawUrl: string): string {
   }
 }
 
-function deriveProofTitleFromFilePath(rawPath: string): string {
-  const normalized = rawPath.trim().replace(/\/+$/, '');
-  if (!normalized) return 'Uploaded Document';
-
-  const lastSegment = normalized.split('/').filter(Boolean).pop();
-  if (!lastSegment) return 'Uploaded Document';
-
-  return decodeURIComponent(lastSegment).replace(/[-_]+/g, ' ').slice(0, 80) || 'Uploaded Document';
-}
+const UPLOADED_PROOF_FALLBACK_TITLE = 'Uploaded document';
 
 const CreateProofSchema = z
   .object({
@@ -139,7 +131,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json(
         {
           error: 'Validation failed',
-          message: 'Uploaded file is still quarantined or failed checks',
+          message: 'Uploaded file is awaiting privacy review or failed checks',
         },
         { status: 409 }
       );
@@ -153,7 +145,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const proofTitle =
       validated.title?.trim() ||
       (validated.url ? deriveProofTitleFromUrl(validated.url) : '') ||
-      (resolvedFilePath ? deriveProofTitleFromFilePath(resolvedFilePath) : '') ||
+      (validated.uploadedFileId ? UPLOADED_PROOF_FALLBACK_TITLE : '') ||
       'Proof Link';
 
     // Verify skill belongs to user

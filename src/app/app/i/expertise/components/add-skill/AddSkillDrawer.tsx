@@ -793,18 +793,16 @@ export function AddSkillDrawer({
 
         if (shouldRequestVerification) {
           try {
-            const verificationResponse = await apiFetch(
-              `/api/expertise/user-skills/${skillData.skill.id}/verification-request`,
-              {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  verifierSource: verificationSource,
-                  verifierEmail: verificationEmail.trim().toLowerCase(),
-                  message: verificationMessage.trim(),
-                }),
-              }
-            );
+            const verificationResponse = await apiFetch('/api/verification/requests/skill', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                skillId: skillData.skill.id,
+                verifierSource: verificationSource,
+                verifierEmail: verificationEmail.trim().toLowerCase(),
+                message: verificationMessage.trim(),
+              }),
+            });
             if (verificationResponse.ok) {
               verificationRequested = true;
               if (skillData?.skill) {

@@ -9,15 +9,6 @@ vi.mock('@/lib/notifications', () => ({
   notifyVerificationCompleted: vi.fn(),
 }));
 
-vi.mock('@/lib/canonical/repository', () => ({
-  CANONICAL_PROOFS_WRITE_ENABLED: true,
-  upsertCanonicalVerificationRecord: vi.fn(async () => ({ id: 'canonical-1' })),
-}));
-
-vi.mock('@/lib/contracts/canonical-domain', () => ({
-  hashOpaqueToken: vi.fn(() => 'hashed-email'),
-}));
-
 vi.mock('@/lib/verification/canonical-requests', () => ({
   getCanonicalSkillVerificationRequestById: vi.fn(),
   mapCanonicalSkillVerificationRequestRecord: vi.fn((record: any) => record),
@@ -26,9 +17,13 @@ vi.mock('@/lib/verification/canonical-requests', () => ({
 
 import { requireApiAuthContext } from '@/lib/auth';
 import { notifyVerificationCompleted } from '@/lib/notifications';
-import { POST } from '@/app/api/expertise/verification/[requestId]/respond/route';
+import {
+  getCanonicalSkillVerificationRequestById,
+  updateCanonicalSkillVerificationRequest,
+} from '@/lib/verification/canonical-requests';
+import { POST } from '@/app/api/verification/requests/skill/[requestId]/respond/route';
 
-describe('POST /api/expertise/verification/[requestId]/respond', () => {
+describe('POST /api/verification/requests/skill/[requestId]/respond', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -41,7 +36,17 @@ describe('POST /api/expertise/verification/[requestId]/respond', () => {
       requester_profile_id: requesterProfileId,
       verifier_profile_id: null,
       verifier_email: 'Verifier@Example.com',
+      verifier_relationship: 'manager',
+      request_kind: 'generic_verification',
+      attestation_request: null,
       status: 'pending',
+      integrity_status: 'clear',
+      integrity_reason: null,
+      integrity_meta: {},
+      integrity_flagged_at: null,
+      risk_signals: {},
+      requester_ip_hash: null,
+      requester_user_agent_hash: null,
     };
 
     let requestedProfileId = '';
@@ -59,32 +64,6 @@ describe('POST /api/expertise/verification/[requestId]/respond', () => {
         }),
       },
       from: vi.fn((table: string) => {
-        if (table === 'skill_verification_requests') {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: verificationRequest,
-                  error: null,
-                }),
-              }),
-            }),
-            update: vi.fn((payload: Record<string, unknown>) => {
-              updatePayload = payload;
-              return {
-                eq: vi.fn().mockReturnValue({
-                  select: vi.fn().mockReturnValue({
-                    single: vi.fn().mockResolvedValue({
-                      data: { ...verificationRequest, ...payload },
-                      error: null,
-                    }),
-                  }),
-                }),
-              };
-            }),
-          };
-        }
-
         if (table === 'profiles') {
           return {
             select: vi.fn().mockReturnValue({
@@ -108,6 +87,22 @@ describe('POST /api/expertise/verification/[requestId]/respond', () => {
       }),
     };
 
+    (getCanonicalSkillVerificationRequestById as any).mockResolvedValue(verificationRequest);
+    (updateCanonicalSkillVerificationRequest as any).mockImplementation(
+      async (payload: Record<string, unknown>) => {
+        updatePayload = payload;
+        return {
+          ...verificationRequest,
+          status: payload.status,
+          response_message: payload.responseMessage,
+          verifier_profile_id: payload.verifierProfileId,
+          response_auth_method: payload.responseAuthMethod,
+          response_actor_email: payload.responseActorEmail,
+          responded_at: payload.respondedAt,
+        };
+      }
+    );
+
     (requireApiAuthContext as any).mockResolvedValue({
       user: {
         id: '33333333-3333-4333-8333-333333333333',
@@ -116,7 +111,7 @@ describe('POST /api/expertise/verification/[requestId]/respond', () => {
     });
 
     const response = await POST(
-      new NextRequest(`http://localhost/api/expertise/verification/${requestId}/respond`, {
+      new NextRequest(`http://localhost/api/verification/requests/skill/${requestId}/respond`, {
         method: 'POST',
         body: JSON.stringify({
           action: 'accept',
@@ -128,15 +123,18 @@ describe('POST /api/expertise/verification/[requestId]/respond', () => {
 
     expect(response.status).toBe(200);
     expect(requestedProfileId).toBe(requesterProfileId);
-    expect(updatePayload?.verifier_profile_id).toBe('33333333-3333-4333-8333-333333333333');
-    expect(updatePayload?.response_auth_method).toBe('authenticated');
-    expect(updatePayload?.response_actor_email).toBe('verifier@example.com');
+    expect(updatePayload?.verifierProfileId).toBe('33333333-3333-4333-8333-333333333333');
+    expect(updatePayload?.responseAuthMethod).toBe('authenticated');
+    expect(updatePayload?.responseActorEmail).toBe('verifier@example.com');
     expect(notifyVerificationCompleted).toHaveBeenCalledWith(
       requesterProfileId,
       requestId,
       'Requester Person',
       true
     );
+    await expect(response.json()).resolves.toMatchObject({
+      canonical_record_id: requestId,
+    });
   });
 
   it('requires structured attestation payloads for human-observed requests', async () => {
@@ -168,31 +166,19 @@ describe('POST /api/expertise/verification/[requestId]/respond', () => {
           error: null,
         }),
       },
-      from: vi.fn((table: string) => {
-        if (table === 'skill_verification_requests') {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: verificationRequest,
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-
-        throw new Error(`Unexpected table: ${table}`);
+      from: vi.fn(() => {
+        throw new Error('profiles lookup should not run for invalid attestation payloads');
       }),
     };
 
+    (getCanonicalSkillVerificationRequestById as any).mockResolvedValue(verificationRequest);
     (requireApiAuthContext as any).mockResolvedValue({
       user: { id: '44444444-4444-4444-8444-444444444444' },
       supabase,
     });
 
     const response = await POST(
-      new NextRequest(`http://localhost/api/expertise/verification/${requestId}/respond`, {
+      new NextRequest(`http://localhost/api/verification/requests/skill/${requestId}/respond`, {
         method: 'POST',
         body: JSON.stringify({
           action: 'accept',

@@ -173,7 +173,7 @@ describe('AddSkillDrawer proof + verification flow', () => {
 
     await waitFor(() => expect(apiFetchMock).toHaveBeenCalledTimes(1));
     expect(apiFetchMock).toHaveBeenCalledWith(
-      '/api/expertise/user-skills/skill-1/verification-request',
+      '/api/verification/requests/skill',
       expect.objectContaining({
         method: 'POST',
       })
@@ -182,6 +182,7 @@ describe('AddSkillDrawer proof + verification flow', () => {
     const verificationRequest = apiFetchMock.mock.calls[0][1];
     expect(JSON.parse(verificationRequest.body)).toEqual(
       expect.objectContaining({
+        skillId: 'skill-1',
         verifierSource: 'peer',
         verifierEmail: 'verifier@example.com',
       })

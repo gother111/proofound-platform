@@ -1,21 +1,17 @@
 import { NextRequest } from 'next/server';
 
 import {
-  DELETE as deleteLegacySkillRequest,
-  POST as resendLegacySkillRequest,
-} from '@/app/api/expertise/verifications/sent/[requestType]/[requestId]/route';
+  deleteSkillVerificationRequest,
+  resendSkillVerificationRequest,
+} from '@/lib/verification/sent-request-actions';
 
 export function POST(request: NextRequest, { params }: { params: Promise<{ requestId: string }> }) {
-  return resendLegacySkillRequest(request, {
-    params: params.then(({ requestId }) => ({ requestType: 'skill', requestId })),
-  });
+  return params.then(({ requestId }) => resendSkillVerificationRequest(request, requestId));
 }
 
 export function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ requestId: string }> }
 ) {
-  return deleteLegacySkillRequest(request, {
-    params: params.then(({ requestId }) => ({ requestType: 'skill', requestId })),
-  });
+  return params.then(({ requestId }) => deleteSkillVerificationRequest(requestId));
 }

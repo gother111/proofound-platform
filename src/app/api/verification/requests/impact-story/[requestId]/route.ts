@@ -1,21 +1,17 @@
 import { NextRequest } from 'next/server';
 
 import {
-  DELETE as deleteLegacyImpactRequest,
-  POST as resendLegacyImpactRequest,
-} from '@/app/api/expertise/verifications/sent/[requestType]/[requestId]/route';
+  deleteImpactVerificationRequest,
+  resendImpactVerificationRequest,
+} from '@/lib/verification/sent-request-actions';
 
 export function POST(request: NextRequest, { params }: { params: Promise<{ requestId: string }> }) {
-  return resendLegacyImpactRequest(request, {
-    params: params.then(({ requestId }) => ({ requestType: 'impact_story', requestId })),
-  });
+  return params.then(({ requestId }) => resendImpactVerificationRequest(request, requestId));
 }
 
 export function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ requestId: string }> }
 ) {
-  return deleteLegacyImpactRequest(request, {
-    params: params.then(({ requestId }) => ({ requestType: 'impact_story', requestId })),
-  });
+  return params.then(({ requestId }) => deleteImpactVerificationRequest(requestId));
 }

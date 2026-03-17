@@ -14,7 +14,6 @@ import {
   CAPABILITY_TOKEN_CLASSES,
   beginCapabilityTokenRedeemSession,
   getCapabilityRedeemSessionCookieName,
-  inspectCapabilityToken,
   redeemCapabilityToken,
 } from '@/lib/security/capability-tokens';
 import { listCanonicalSkillProofRowsForOwnerSkill } from '@/lib/proofs/canonical-pack';
@@ -24,20 +23,13 @@ import {
   type HumanObservedAttestationRequestPayload,
 } from '@/lib/verification/human-attestations';
 import {
-  getCanonicalSkillVerificationRequestById,
-  mapCanonicalSkillVerificationRequestRecord,
+  getCanonicalSkillVerificationRequestByToken,
   updateCanonicalSkillVerificationRequest,
 } from '@/lib/verification/canonical-requests';
 import {
-  getCanonicalImpactVerificationRequestById,
-  mapCanonicalImpactVerificationRequestRecord,
+  getCanonicalImpactVerificationRequestByToken,
   updateCanonicalImpactVerificationRequest,
 } from '@/lib/verification/canonical-impact-requests';
-import {
-  CANONICAL_PROOFS_WRITE_ENABLED,
-  upsertCanonicalVerificationRecord,
-} from '@/lib/canonical/repository';
-import { hashOpaqueToken } from '@/lib/contracts/canonical-domain';
 
 const VerifyResponseSchema = z.object({
   action: z.enum(['accept', 'decline']),
@@ -45,12 +37,6 @@ const VerifyResponseSchema = z.object({
   confirmedClaimIds: z.array(z.string()).optional(),
   attestation: z.unknown().optional(),
 });
-
-function isRelationMissingError(error: unknown) {
-  return Boolean(
-    error && typeof error === 'object' && (error as { code?: string }).code === '42P01'
-  );
-}
 
 function isMissingColumnError(error: unknown, column: string) {
   if (!error || typeof error !== 'object') {
@@ -60,24 +46,6 @@ function isMissingColumnError(error: unknown, column: string) {
   const e = error as { code?: string; message?: string; details?: string; hint?: string };
   const errorText = `${e.message || ''} ${e.details || ''} ${e.hint || ''}`.toLowerCase();
   return (e.code === 'PGRST204' || e.code === '42703') && errorText.includes(column.toLowerCase());
-}
-
-function isAnyMissingColumnError(error: unknown) {
-  if (!error || typeof error !== 'object') {
-    return false;
-  }
-
-  const e = error as { code?: string; message?: string; details?: string; hint?: string };
-  if (e.code !== 'PGRST204' && e.code !== '42703') {
-    return false;
-  }
-
-  const errorText = `${e.message || ''} ${e.details || ''} ${e.hint || ''}`.toLowerCase();
-  return (
-    errorText.includes('column') ||
-    errorText.includes('schema cache') ||
-    errorText.includes('does not exist')
-  );
 }
 
 function isNotFoundError(error: unknown) {
@@ -107,14 +75,13 @@ function isSkillRelationQueryError(error: unknown): boolean {
   const errorText =
     `${e.message || ''} ${JSON.stringify(e.details || '')} ${e.hint || ''}`.toLowerCase();
   return (
-    errorText.includes('skill_verification_requests') ||
     errorText.includes('skills_taxonomy') ||
     errorText.includes('skills') ||
     errorText.includes('relationship')
   );
 }
 
-async function getSkillVerificationByTokenOrLegacyId(
+async function getCanonicalSkillVerificationWithSkillDetails(
   client: {
     from: (table: string) => {
       select: (query: string) => {
@@ -127,187 +94,55 @@ async function getSkillVerificationByTokenOrLegacyId(
       };
     };
   },
-  token: string,
-  selectClause: string,
-  options?: {
-    fallbackSelectClause?: string;
-    compatibilitySelectClauses?: string[];
-    hydrateSkillWhenMissing?: boolean;
-    fallbackMissingColumns?: string[];
-    fallbackOnAnyMissingColumn?: boolean;
-  }
+  token: string
 ): Promise<{ data: any; error: any }> {
-  const hydrateSkillWhenMissing = options?.hydrateSkillWhenMissing ?? false;
-  const fallbackSelectClauses = [
-    ...(options?.compatibilitySelectClauses || []),
-    ...(options?.fallbackSelectClause ? [options.fallbackSelectClause] : []),
-  ];
-  const fallbackMissingColumns = options?.fallbackMissingColumns || [];
-  const fallbackOnAnyMissingColumn = options?.fallbackOnAnyMissingColumn ?? false;
+  const { data: canonicalData, error } = await getCanonicalSkillVerificationRequestByToken(token);
+  if (error || !canonicalData) {
+    return { data: null, error };
+  }
 
-  const loadSkillDetails = async (skillId: string) => {
-    const hintedLookup = await client
-      .from('skills')
-      .select(
-        `
-        skill_id,
-        skill_code,
-        custom_skill_name,
-        taxonomy:skills_taxonomy!skills_skill_code_fkey (
-          name_i18n
-        )
+  if (!canonicalData.skill_id) {
+    return { data: canonicalData, error: null };
+  }
+
+  const hintedLookup = await client
+    .from('skills')
+    .select(
       `
+      skill_id,
+      skill_code,
+      custom_skill_name,
+      taxonomy:skills_taxonomy!skills_skill_code_fkey (
+        name_i18n
       )
-      .eq('id', skillId)
-      .single();
+    `
+    )
+    .eq('id', String(canonicalData.skill_id))
+    .single();
 
-    if (hintedLookup.data || !isSkillRelationQueryError(hintedLookup.error)) {
-      return hintedLookup;
-    }
-
-    const fallbackLookup = await client
-      .from('skills')
-      .select('skill_id, skill_code, custom_skill_name')
-      .eq('id', skillId)
-      .single();
-
-    return fallbackLookup;
-  };
-
-  const hydrateSkill = async (verification: any) => {
-    if (
-      !hydrateSkillWhenMissing ||
-      !verification ||
-      verification.skills ||
-      !verification.skill_id
-    ) {
-      return { data: verification, error: null };
-    }
-
-    const { data: skillData, error: skillError } = await loadSkillDetails(verification.skill_id);
-    if (skillData) {
-      return {
-        data: {
-          ...verification,
-          skills: skillData,
-        },
-        error: null,
-      };
-    }
-
+  if (hintedLookup.data || !isSkillRelationQueryError(hintedLookup.error)) {
     return {
-      data: verification,
-      error: skillError,
+      data: {
+        ...canonicalData,
+        skills: hintedLookup.data || null,
+      },
+      error: hintedLookup.error,
     };
-  };
-
-  const shouldRetryWithCompatibilitySelect = (error: unknown) => {
-    if (isSkillRelationQueryError(error)) {
-      return true;
-    }
-    if (fallbackOnAnyMissingColumn && isAnyMissingColumnError(error)) {
-      return true;
-    }
-    if (
-      fallbackMissingColumns.length > 0 &&
-      isMissingAnyColumnError(error, fallbackMissingColumns)
-    ) {
-      return true;
-    }
-    return false;
-  };
-
-  const runLookupById = async (value: string) => {
-    const selectClauses = [selectClause, ...fallbackSelectClauses];
-    let lastError: unknown = null;
-
-    for (let index = 0; index < selectClauses.length; index += 1) {
-      const currentSelectClause = selectClauses[index];
-      const lookup = await client
-        .from('skill_verification_requests')
-        .select(currentSelectClause)
-        .eq('id', value)
-        .single();
-
-      if (lookup.data) {
-        return hydrateSkill(lookup.data);
-      }
-
-      lastError = lookup.error;
-      const hasCompatibilityFallback = index < selectClauses.length - 1;
-      if (!hasCompatibilityFallback || !shouldRetryWithCompatibilitySelect(lookup.error)) {
-        return { data: null, error: lookup.error };
-      }
-    }
-
-    return { data: null, error: lastError };
-  };
-
-  const capabilityLookup = await inspectCapabilityToken(token, {
-    tokenClass: CAPABILITY_TOKEN_CLASSES.SKILL_VERIFICATION_RESPONSE,
-    metadata: { surface: 'verify_skill_lookup' },
-  });
-
-  if (
-    capabilityLookup.ok &&
-    capabilityLookup.token.source_table === 'verification_records' &&
-    capabilityLookup.token.source_id
-  ) {
-    let canonicalVerification = null;
-    try {
-      canonicalVerification = await getCanonicalSkillVerificationRequestById(
-        capabilityLookup.token.source_id
-      );
-    } catch {
-      canonicalVerification = null;
-    }
-
-    if (canonicalVerification) {
-      const hydratedCanonicalVerification = await hydrateSkill({
-        ...mapCanonicalSkillVerificationRequestRecord(canonicalVerification),
-        source_request_table: 'verification_records',
-        source_request_id: canonicalVerification.id,
-      });
-
-      if (hydratedCanonicalVerification.data) {
-        return { data: hydratedCanonicalVerification.data as any, error: null };
-      }
-    }
   }
 
-  if (
-    capabilityLookup.ok &&
-    capabilityLookup.token.source_table === 'skill_verification_requests' &&
-    capabilityLookup.token.source_id
-  ) {
-    const capabilityIdLookup = await runLookupById(capabilityLookup.token.source_id);
-    if (capabilityIdLookup.data) {
-      return { data: capabilityIdLookup.data as any, error: null };
-    }
+  const fallbackLookup = await client
+    .from('skills')
+    .select('skill_id, skill_code, custom_skill_name')
+    .eq('id', String(canonicalData.skill_id))
+    .single();
 
-    let canonicalVerification = null;
-    try {
-      canonicalVerification = await getCanonicalSkillVerificationRequestById(
-        capabilityLookup.token.source_id
-      );
-    } catch {
-      canonicalVerification = null;
-    }
-
-    if (canonicalVerification) {
-      const hydratedCanonicalVerification = await hydrateSkill({
-        ...mapCanonicalSkillVerificationRequestRecord(canonicalVerification),
-        source_request_table: 'verification_records',
-        source_request_id: canonicalVerification.id,
-      });
-
-      if (hydratedCanonicalVerification.data) {
-        return { data: hydratedCanonicalVerification.data as any, error: null };
-      }
-    }
-  }
-
-  return { data: null, error: capabilityLookup.ok ? null : capabilityLookup.reason };
+  return {
+    data: {
+      ...canonicalData,
+      skills: fallbackLookup.data || null,
+    },
+    error: fallbackLookup.error,
+  };
 }
 
 function normalizeBaseUrl(url?: string | null) {
@@ -805,7 +640,16 @@ async function getRequesterProfileForSkillVerification(
 }
 
 function normalizeSkillVerificationRecord(verification: any) {
-  const integrityStatus = verification?.integrity_status === 'flagged' ? 'flagged' : 'clear';
+  const integrityStatus =
+    verification?.integrity_status === 'contradicted'
+      ? 'contradicted'
+      : verification?.integrity_status === 'flagged'
+        ? 'flagged'
+        : verification?.integrity_status === 'warning'
+          ? 'warning'
+          : verification?.integrity_status === 'clear'
+            ? 'clear'
+            : 'unknown';
 
   return {
     ...verification,
@@ -826,7 +670,10 @@ function normalizeSkillVerificationRecord(verification: any) {
     requires_authenticated_verifier: Boolean(verification?.requires_authenticated_verifier),
     integrity_status: integrityStatus,
     integrity_reason:
-      integrityStatus === 'flagged' ? toStringOrNull(verification?.integrity_reason) : null,
+      integrityStatus === 'flagged' || integrityStatus === 'contradicted'
+        ? toStringOrNull(verification?.integrity_reason)
+        : null,
+    dispute_state: toStringOrNull(verification?.dispute_state),
     integrity_meta:
       verification?.integrity_meta && typeof verification.integrity_meta === 'object'
         ? verification.integrity_meta
@@ -836,9 +683,45 @@ function normalizeSkillVerificationRecord(verification: any) {
       verification?.risk_signals && typeof verification.risk_signals === 'object'
         ? verification.risk_signals
         : {},
+    contradicted_at: toStringOrNull(verification?.contradicted_at),
+    revoked_at: toStringOrNull(verification?.revoked_at),
     requester_ip_hash: toStringOrNull(verification?.requester_ip_hash),
     requester_user_agent_hash: toStringOrNull(verification?.requester_user_agent_hash),
   };
+}
+
+function toCanonicalLookupErrorResponse(
+  reason: 'invalid' | 'expired' | 'revoked' | null | undefined
+) {
+  if (reason === 'expired') {
+    return NextResponse.json({ error: 'Verification request has expired' }, { status: 410 });
+  }
+
+  return NextResponse.json(
+    { error: 'Verification request not found or invalid token' },
+    { status: 404 }
+  );
+}
+
+function isContradictedVerificationState(
+  verification:
+    | {
+        integrity_status?: string | null;
+        dispute_state?: string | null;
+        contradicted_at?: string | null;
+      }
+    | null
+    | undefined
+) {
+  if (!verification) {
+    return false;
+  }
+
+  return (
+    verification.integrity_status === 'contradicted' ||
+    verification.dispute_state === 'resolved_revoked' ||
+    Boolean(verification.contradicted_at)
+  );
 }
 
 function resolveSkillRequesterIdentity(args: {
@@ -873,62 +756,6 @@ function sanitizeSkillProofForResponse(proof: SkillProofContext) {
     issued_date: toStringOrNull(proof.issued_date),
     expires_date: toStringOrNull(proof.expires_date),
   };
-}
-
-async function getImpactVerificationRequestByToken(
-  adminClient: ReturnType<typeof createAdminClient>,
-  token: string
-) {
-  const capabilityLookup = await inspectCapabilityToken(token, {
-    tokenClass: CAPABILITY_TOKEN_CLASSES.IMPACT_VERIFICATION_RESPONSE,
-    metadata: { surface: 'verify_impact_lookup' },
-  });
-
-  if (
-    capabilityLookup.ok &&
-    capabilityLookup.token.source_table === 'verification_records' &&
-    capabilityLookup.token.source_id
-  ) {
-    let canonicalImpactVerification = null;
-    try {
-      canonicalImpactVerification = await getCanonicalImpactVerificationRequestById(
-        capabilityLookup.token.source_id
-      );
-    } catch {
-      canonicalImpactVerification = null;
-    }
-
-    if (canonicalImpactVerification) {
-      return {
-        data: {
-          ...mapCanonicalImpactVerificationRequestRecord(canonicalImpactVerification),
-          source_request_table: 'verification_records',
-          source_request_id: canonicalImpactVerification.id,
-        },
-        error: null,
-      };
-    }
-  }
-
-  if (
-    capabilityLookup.ok &&
-    capabilityLookup.token.source_table === 'impact_story_verification_requests' &&
-    capabilityLookup.token.source_id
-  ) {
-    const { data, error } = await adminClient
-      .from('impact_story_verification_requests')
-      .select('*')
-      .eq('id', capabilityLookup.token.source_id)
-      .maybeSingle();
-
-    if (error && isRelationMissingError(error)) {
-      return { data: null, error: null };
-    }
-
-    return { data, error };
-  }
-
-  return { data: null, error: capabilityLookup.ok ? null : capabilityLookup.reason };
 }
 
 function toNeutralCapabilityTokenError(reason: unknown) {
@@ -984,36 +811,31 @@ export async function GET(
         metadata: { surface: 'verify_impact_preview' },
       });
       const { data: impactVerification, error: impactVerificationError } =
-        await getImpactVerificationRequestByToken(adminClient, token);
+        await getCanonicalImpactVerificationRequestByToken(token);
 
       if (impactVerificationError) {
+        if (impactVerificationError === 'expired' || impactVerificationError === 'revoked') {
+          return toCanonicalLookupErrorResponse(impactVerificationError);
+        }
+
         console.error('Impact verification lookup error:', impactVerificationError);
       }
 
       if (impactVerification) {
-        const isCanonicalImpactRequest =
-          impactVerification.source_request_table === 'verification_records';
+        if (isContradictedVerificationState(impactVerification)) {
+          return toCanonicalLookupErrorResponse('revoked');
+        }
+
         if (
           impactVerification.expires_at &&
           new Date(impactVerification.expires_at) < new Date() &&
           impactVerification.status === 'pending'
         ) {
-          if (isCanonicalImpactRequest) {
-            await updateCanonicalImpactVerificationRequest({
-              requestId: impactVerification.id,
-              status: 'expired',
-              respondedAt: new Date().toISOString(),
-            });
-          } else {
-            await adminClient
-              .from('impact_story_verification_requests')
-              .update({
-                status: 'expired',
-                expired_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              })
-              .eq('id', impactVerification.id);
-          }
+          await updateCanonicalImpactVerificationRequest({
+            requestId: impactVerification.id,
+            status: 'expired',
+            respondedAt: new Date().toISOString(),
+          });
 
           impactVerification.status = 'expired';
         }
@@ -1066,7 +888,7 @@ export async function GET(
               impactVerification.requires_authenticated_verifier || false,
             integrity_status: impactVerification.integrity_status || 'clear',
             integrity_reason:
-              (impactVerification.integrity_status || 'clear') === 'flagged'
+              (impactVerification.integrity_status || 'clear') !== 'clear'
                 ? impactVerification.integrity_reason || null
                 : null,
             claims,
@@ -1126,89 +948,19 @@ export async function GET(
       metadata: { surface: 'verify_skill_preview' },
     });
     const { data: verification, error: verificationError } =
-      await getSkillVerificationByTokenOrLegacyId(
-        skillDataClient,
-        token,
-        `
-        id,
-        skill_id,
-        requester_profile_id,
-        requester_email_snapshot,
-        verifier_email,
-        verifier_source,
-        verifier_relationship,
-        request_kind,
-        attestation_request,
-        attestation_response,
-        message,
-        status,
-        requires_authenticated_verifier,
-        integrity_status,
-        integrity_reason,
-        created_at,
-        expires_at,
-        skills!skill_verification_requests_skill_id_fkey (
-          skill_id,
-          skill_code,
-          taxonomy:skills_taxonomy!skills_skill_code_fkey (
-            name_i18n
-          )
-        )
-      `,
-        {
-          compatibilitySelectClauses: [
-            `
-              id,
-              skill_id,
-              requester_profile_id,
-              requester_email_snapshot,
-              verifier_email,
-              verifier_source,
-              verifier_relationship,
-              request_kind,
-              attestation_request,
-              attestation_response,
-              message,
-              status,
-              requires_authenticated_verifier,
-              integrity_status,
-              integrity_reason,
-              created_at,
-              expires_at
-            `,
-            `
-              id,
-              skill_id,
-              requester_profile_id,
-              verifier_email,
-              verifier_source,
-              message,
-              status,
-              created_at,
-              expires_at
-            `,
-          ],
-          fallbackSelectClause: `
-            id,
-            skill_id,
-            requester_profile_id,
-            verifier_email,
-            verifier_source,
-            message,
-            status,
-            created_at,
-            expires_at
-          `,
-          hydrateSkillWhenMissing: true,
-          fallbackOnAnyMissingColumn: true,
-        }
-      );
+      await getCanonicalSkillVerificationWithSkillDetails(skillDataClient, token);
 
     if (verificationError) {
-      if (verificationError === 'invalid' || isNotFoundError(verificationError)) {
-        return NextResponse.json(
-          { error: 'Verification request not found or invalid token' },
-          { status: 404 }
+      if (
+        verificationError === 'invalid' ||
+        verificationError === 'expired' ||
+        verificationError === 'revoked' ||
+        isNotFoundError(verificationError)
+      ) {
+        return toCanonicalLookupErrorResponse(
+          verificationError === 'invalid' || isNotFoundError(verificationError)
+            ? 'invalid'
+            : verificationError
         );
       }
 
@@ -1224,21 +976,20 @@ export async function GET(
     }
 
     const normalizedVerification = normalizeSkillVerificationRecord(verification);
-    const isCanonicalSkillRequest =
-      normalizedVerification.source_request_table === 'verification_records';
+    if (isContradictedVerificationState(normalizedVerification)) {
+      return toCanonicalLookupErrorResponse('revoked');
+    }
 
     if (
       normalizedVerification.expires_at &&
       new Date(normalizedVerification.expires_at) < new Date()
     ) {
       if (normalizedVerification.status === 'pending') {
-        await skillDataClient
-          .from('skill_verification_requests')
-          .update({
-            status: 'expired',
-            expired_at: new Date().toISOString(),
-          })
-          .eq('id', normalizedVerification.id);
+        await updateCanonicalSkillVerificationRequest({
+          requestId: normalizedVerification.id,
+          status: 'expired',
+          respondedAt: new Date().toISOString(),
+        });
       }
 
       return NextResponse.json({
@@ -1377,15 +1128,21 @@ export async function POST(
     try {
       const adminClient = createAdminClient();
       const { data: impactVerification, error: impactVerificationError } =
-        await getImpactVerificationRequestByToken(adminClient, token);
+        await getCanonicalImpactVerificationRequestByToken(token);
 
       if (impactVerificationError) {
+        if (impactVerificationError === 'expired' || impactVerificationError === 'revoked') {
+          return toCanonicalLookupErrorResponse(impactVerificationError);
+        }
+
         console.error('Impact verification lookup error:', impactVerificationError);
       }
 
       if (impactVerification) {
-        const isCanonicalImpactRequest =
-          impactVerification.source_request_table === 'verification_records';
+        if (isContradictedVerificationState(impactVerification)) {
+          return toCanonicalLookupErrorResponse('revoked');
+        }
+
         if (impactVerification.status !== 'pending') {
           return NextResponse.json(
             { error: `This request has already been ${impactVerification.status}` },
@@ -1394,22 +1151,11 @@ export async function POST(
         }
 
         if (impactVerification.expires_at && new Date(impactVerification.expires_at) < new Date()) {
-          if (isCanonicalImpactRequest) {
-            await updateCanonicalImpactVerificationRequest({
-              requestId: impactVerification.id,
-              status: 'expired',
-              respondedAt: new Date().toISOString(),
-            });
-          } else {
-            await adminClient
-              .from('impact_story_verification_requests')
-              .update({
-                status: 'expired',
-                expired_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              })
-              .eq('id', impactVerification.id);
-          }
+          await updateCanonicalImpactVerificationRequest({
+            requestId: impactVerification.id,
+            status: 'expired',
+            respondedAt: new Date().toISOString(),
+          });
 
           return NextResponse.json(
             { error: 'This verification request has expired' },
@@ -1518,94 +1264,38 @@ export async function POST(
         };
 
         const nextStatus = validated.action === 'accept' ? 'accepted' : 'declined';
+        const updatedCanonicalImpact = await updateCanonicalImpactVerificationRequest({
+          requestId: impactVerification.id,
+          status: nextStatus,
+          respondedAt,
+          responseMessage: validated.message || null,
+          verifierProfileId:
+            authIdentity.profileId || impactVerification.verifier_profile_id || null,
+          verifierPrincipalType: authIdentity.isAuthenticated ? 'user_account' : 'external_email',
+          verifierEmail:
+            authIdentity.email || normalizedVerifierEmail || impactVerification.verifier_email,
+          verifierName: impactVerification.verifier_name || null,
+          verifierRelationship: impactVerification.verifier_relationship || null,
+          integrityStatus: mergedIntegrity.integrityStatus === 'clear' ? 'clear' : 'warning',
+          integrityReason: mergedIntegrity.integrityReason,
+          riskSignals: mergedIntegrity.riskSignals,
+          integrityMeta,
+          integrityFlaggedAt:
+            mergedIntegrity.integrityStatus === 'flagged'
+              ? impactVerification.integrity_flagged_at || mergedIntegrity.integrityFlaggedAt
+              : null,
+          responseAuthMethod: getResponseAuthMethod(authIdentity),
+          responseActorEmail: authIdentity.email,
+        }).catch((error) => {
+          console.error('Failed to update canonical impact verification request:', error);
+          return null;
+        });
 
-        if (isCanonicalImpactRequest) {
-          const updatedCanonicalImpact = await updateCanonicalImpactVerificationRequest({
-            requestId: impactVerification.id,
-            status: nextStatus,
-            respondedAt,
-            responseMessage: validated.message || null,
-            verifierProfileId:
-              authIdentity.profileId || impactVerification.verifier_profile_id || null,
-            verifierPrincipalType: authIdentity.isAuthenticated ? 'user_account' : 'external_email',
-            verifierEmail:
-              authIdentity.email || normalizedVerifierEmail || impactVerification.verifier_email,
-            verifierName: impactVerification.verifier_name || null,
-            verifierRelationship: impactVerification.verifier_relationship || null,
-            integrityStatus: mergedIntegrity.integrityStatus === 'clear' ? 'clear' : 'warning',
-            integrityReason: mergedIntegrity.integrityReason,
-            riskSignals: mergedIntegrity.riskSignals,
-            integrityMeta,
-            integrityFlaggedAt:
-              mergedIntegrity.integrityStatus === 'flagged'
-                ? impactVerification.integrity_flagged_at || mergedIntegrity.integrityFlaggedAt
-                : null,
-            responseAuthMethod: getResponseAuthMethod(authIdentity),
-            responseActorEmail: authIdentity.email,
-          }).catch((error) => {
-            console.error('Failed to update canonical impact verification request:', error);
-            return null;
-          });
-
-          if (!updatedCanonicalImpact) {
-            return NextResponse.json(
-              { error: 'Failed to update verification request' },
-              { status: 500 }
-            );
-          }
-        } else {
-          const { error: responseInsertError } = await adminClient
-            .from('impact_story_verification_responses')
-            .insert({
-              request_id: impactVerification.id,
-              responder_email:
-                authIdentity.email || normalizedVerifierEmail || impactVerification.verifier_email,
-              action: validated.action,
-              confirmed_role: confirmedRole,
-              confirmed_artifacts: confirmedArtifacts,
-              confirmed_outcome_ids: confirmedOutcomeIds,
-              response_note: validated.message || null,
-            });
-
-          if (responseInsertError) {
-            console.error('Failed to insert impact verification response:', responseInsertError);
-            return NextResponse.json(
-              { error: 'Failed to record verification response' },
-              { status: 500 }
-            );
-          }
-
-          const { error: requestUpdateError } = await adminClient
-            .from('impact_story_verification_requests')
-            .update({
-              status: nextStatus,
-              responded_at: respondedAt,
-              response_message: validated.message || null,
-              responder_ip_hash: responderFingerprints.ipHash,
-              responder_user_agent_hash: responderFingerprints.userAgentHash,
-              response_auth_method: getResponseAuthMethod(authIdentity),
-              response_actor_email: authIdentity.email,
-              verifier_profile_id:
-                authIdentity.profileId || impactVerification.verifier_profile_id || null,
-              risk_signals: mergedIntegrity.riskSignals,
-              integrity_status: mergedIntegrity.integrityStatus,
-              integrity_reason: mergedIntegrity.integrityReason,
-              integrity_meta: integrityMeta,
-              integrity_flagged_at:
-                mergedIntegrity.integrityStatus === 'flagged'
-                  ? impactVerification.integrity_flagged_at || mergedIntegrity.integrityFlaggedAt
-                  : null,
-              updated_at: respondedAt,
-            })
-            .eq('id', impactVerification.id);
-
-          if (requestUpdateError) {
-            console.error('Failed to update impact verification request:', requestUpdateError);
-            return NextResponse.json(
-              { error: 'Failed to update verification request' },
-              { status: 500 }
-            );
-          }
+        if (!updatedCanonicalImpact) {
+          return NextResponse.json(
+            { error: 'Failed to update verification request' },
+            { status: 500 }
+          );
         }
 
         if (
@@ -1724,94 +1414,19 @@ export async function POST(
 
     // 2) Fallback to existing skill verification flow
     const { data: verification, error: verificationError } =
-      await getSkillVerificationByTokenOrLegacyId(
-        skillDataClient,
-        token,
-        `
-        id, 
-        skill_id, 
-        status, 
-        expires_at, 
-        requester_profile_id,
-        verifier_email,
-        verifier_source,
-        verifier_relationship,
-        verifier_profile_id,
-        request_kind,
-        attestation_request,
-        attestation_response,
-        requires_authenticated_verifier,
-        integrity_status,
-        integrity_reason,
-        integrity_meta,
-        integrity_flagged_at,
-        risk_signals,
-        requester_ip_hash,
-        requester_user_agent_hash,
-        skills!skill_verification_requests_skill_id_fkey (
-          skill_code,
-          custom_skill_name,
-          skill_id,
-          taxonomy:skills_taxonomy!skills_skill_code_fkey (
-            name_i18n
-          )
-        )
-      `,
-        {
-          compatibilitySelectClauses: [
-            `
-              id,
-              skill_id,
-              status,
-              expires_at,
-              requester_profile_id,
-              verifier_email,
-              verifier_source,
-              verifier_relationship,
-              verifier_profile_id,
-              request_kind,
-              attestation_request,
-              attestation_response,
-              requires_authenticated_verifier,
-              integrity_status,
-              integrity_reason,
-              integrity_meta,
-              integrity_flagged_at,
-              risk_signals,
-              requester_ip_hash,
-              requester_user_agent_hash
-            `,
-            `
-              id,
-              skill_id,
-              status,
-              expires_at,
-              requester_profile_id,
-              verifier_email,
-              verifier_source,
-              verifier_profile_id
-            `,
-          ],
-          fallbackSelectClause: `
-            id,
-            skill_id,
-            status,
-            expires_at,
-            requester_profile_id,
-            verifier_email,
-            verifier_source,
-            verifier_profile_id
-          `,
-          hydrateSkillWhenMissing: true,
-          fallbackOnAnyMissingColumn: true,
-        }
-      );
+      await getCanonicalSkillVerificationWithSkillDetails(skillDataClient, token);
 
     if (verificationError) {
-      if (verificationError === 'invalid' || isNotFoundError(verificationError)) {
-        return NextResponse.json(
-          { error: 'Verification request not found or invalid token' },
-          { status: 404 }
+      if (
+        verificationError === 'invalid' ||
+        verificationError === 'expired' ||
+        verificationError === 'revoked' ||
+        isNotFoundError(verificationError)
+      ) {
+        return toCanonicalLookupErrorResponse(
+          verificationError === 'invalid' || isNotFoundError(verificationError)
+            ? 'invalid'
+            : verificationError
         );
       }
 
@@ -1827,8 +1442,9 @@ export async function POST(
     }
 
     const normalizedVerification = normalizeSkillVerificationRecord(verification);
-    const isCanonicalSkillRequest =
-      normalizedVerification.source_request_table === 'verification_records';
+    if (isContradictedVerificationState(normalizedVerification)) {
+      return toCanonicalLookupErrorResponse('revoked');
+    }
 
     const normalizedSkillVerifierEmail = normalizeEmail(normalizedVerification.verifier_email);
     if (normalizedVerification.requires_authenticated_verifier) {
@@ -1861,21 +1477,11 @@ export async function POST(
       normalizedVerification.expires_at &&
       new Date(normalizedVerification.expires_at) < new Date()
     ) {
-      if (isCanonicalSkillRequest) {
-        await updateCanonicalSkillVerificationRequest({
-          requestId: normalizedVerification.id,
-          status: 'expired',
-          respondedAt: new Date().toISOString(),
-        });
-      } else {
-        await supabase
-          .from('skill_verification_requests')
-          .update({
-            status: 'expired',
-            expired_at: new Date().toISOString(),
-          })
-          .eq('id', normalizedVerification.id);
-      }
+      await updateCanonicalSkillVerificationRequest({
+        requestId: normalizedVerification.id,
+        status: 'expired',
+        respondedAt: new Date().toISOString(),
+      });
 
       return NextResponse.json({ error: 'This verification request has expired' }, { status: 400 });
     }
@@ -1964,92 +1570,33 @@ export async function POST(
       },
     };
 
-    const fullUpdatePayload = {
-      status: newStatus,
-      responded_at: respondedAt,
-      response_message: validated.message || null,
-      attestation_response: attestationResponse,
-      responder_ip_hash: responderFingerprints.ipHash,
-      responder_user_agent_hash: responderFingerprints.userAgentHash,
-      response_auth_method: getResponseAuthMethod(authIdentity),
-      response_actor_email: authIdentity.email,
-      verifier_profile_id:
+    const updatedCanonicalRecord = await updateCanonicalSkillVerificationRequest({
+      requestId: normalizedVerification.id,
+      status: validated.action === 'accept' ? 'accepted' : 'declined',
+      respondedAt,
+      responseMessage: validated.message || null,
+      attestationResponse,
+      verifierProfileId:
         authIdentity.profileId || normalizedVerification.verifier_profile_id || null,
-      risk_signals: mergedIntegrity.riskSignals,
-      integrity_status: mergedIntegrity.integrityStatus,
-      integrity_reason: mergedIntegrity.integrityReason,
-      integrity_meta: skillIntegrityMeta,
-      integrity_flagged_at:
+      verifierPrincipalType: authIdentity.isAuthenticated ? 'user_account' : 'external_email',
+      verifierEmail: authIdentity.email || normalizedSkillVerifierEmail || null,
+      integrityStatus: mergedIntegrity.integrityStatus === 'clear' ? 'clear' : 'warning',
+      integrityReason: mergedIntegrity.integrityReason,
+      riskSignals: mergedIntegrity.riskSignals,
+      integrityMeta: skillIntegrityMeta,
+      integrityFlaggedAt:
         mergedIntegrity.integrityStatus === 'flagged'
           ? normalizedVerification.integrity_flagged_at || mergedIntegrity.integrityFlaggedAt
           : null,
-    };
+      responseAuthMethod: getResponseAuthMethod(authIdentity),
+      responseActorEmail: authIdentity.email,
+    }).catch((error) => {
+      console.error('Error updating canonical skill verification:', error);
+      return null;
+    });
 
-    if (isCanonicalSkillRequest) {
-      const updatedCanonicalRecord = await updateCanonicalSkillVerificationRequest({
-        requestId: normalizedVerification.id,
-        status: validated.action === 'accept' ? 'accepted' : 'declined',
-        respondedAt,
-        responseMessage: validated.message || null,
-        attestationResponse,
-        verifierProfileId:
-          authIdentity.profileId || normalizedVerification.verifier_profile_id || null,
-        verifierPrincipalType: authIdentity.isAuthenticated ? 'user_account' : 'external_email',
-        verifierEmail: authIdentity.email || normalizedSkillVerifierEmail || null,
-        integrityStatus: mergedIntegrity.integrityStatus === 'clear' ? 'clear' : 'warning',
-        integrityReason: mergedIntegrity.integrityReason,
-        riskSignals: mergedIntegrity.riskSignals,
-        integrityMeta: skillIntegrityMeta,
-        integrityFlaggedAt:
-          mergedIntegrity.integrityStatus === 'flagged'
-            ? normalizedVerification.integrity_flagged_at || mergedIntegrity.integrityFlaggedAt
-            : null,
-        responseAuthMethod: getResponseAuthMethod(authIdentity),
-        responseActorEmail: authIdentity.email,
-      }).catch((error) => {
-        console.error('Error updating canonical skill verification:', error);
-        return null;
-      });
-
-      if (!updatedCanonicalRecord) {
-        return NextResponse.json(
-          { error: 'Failed to update verification status' },
-          { status: 500 }
-        );
-      }
-    } else {
-      let { error: updateError } = await skillDataClient
-        .from('skill_verification_requests')
-        .update(fullUpdatePayload)
-        .eq('id', normalizedVerification.id);
-
-      if (updateError && isAnyMissingColumnError(updateError)) {
-        console.warn(
-          'Skill verification update falling back to legacy-compatible payload due to missing columns:',
-          updateError
-        );
-
-        const legacyUpdatePayload = {
-          status: newStatus,
-          responded_at: respondedAt,
-          response_message: validated.message || null,
-          verifier_profile_id:
-            authIdentity.profileId || normalizedVerification.verifier_profile_id || null,
-        };
-        const legacyUpdateResult = await skillDataClient
-          .from('skill_verification_requests')
-          .update(legacyUpdatePayload)
-          .eq('id', normalizedVerification.id);
-        updateError = legacyUpdateResult.error;
-      }
-
-      if (updateError) {
-        console.error('Error updating verification:', updateError);
-        return NextResponse.json(
-          { error: 'Failed to update verification status' },
-          { status: 500 }
-        );
-      }
+    if (!updatedCanonicalRecord) {
+      return NextResponse.json({ error: 'Failed to update verification status' }, { status: 500 });
     }
 
     if (validated.action === 'accept' && mergedIntegrity.integrityStatus === 'clear') {
@@ -2077,60 +1624,7 @@ export async function POST(
         .eq('id', normalizedVerification.skill_id);
     }
 
-    let canonicalRecordId: string | null = null;
-    if (CANONICAL_PROOFS_WRITE_ENABLED && !isCanonicalSkillRequest) {
-      try {
-        const canonicalRecord = await upsertCanonicalVerificationRecord({
-          ownerType: 'individual_profile',
-          ownerId: normalizedVerification.requester_profile_id,
-          subjectType: 'skill',
-          subjectId: normalizedVerification.skill_id,
-          verificationKind:
-            requestKind === 'human_observed_attestation'
-              ? normalizedVerification.verifier_source === 'manager'
-                ? 'skill_attestation_manager'
-                : 'skill_attestation_peer'
-              : normalizedVerification.verifier_source === 'manager'
-                ? 'skill_attestation_manager'
-                : normalizedVerification.verifier_source === 'peer'
-                  ? 'skill_attestation_peer'
-                  : 'platform_manual_review',
-          status: validated.action === 'accept' ? 'verified' : 'declined',
-          verifierPrincipalType: authIdentity.isAuthenticated ? 'user_account' : 'external_email',
-          verifierProfileId:
-            authIdentity.profileId || normalizedVerification.verifier_profile_id || null,
-          verifierEmailHash:
-            authIdentity.email || normalizedSkillVerifierEmail
-              ? hashOpaqueToken(authIdentity.email || normalizedSkillVerifierEmail || '')
-              : null,
-          verifierDomainSnapshot:
-            typeof normalizedSkillVerifierEmail === 'string' &&
-            normalizedSkillVerifierEmail.includes('@')
-              ? normalizedSkillVerifierEmail.split('@')[1] || null
-              : null,
-          integrityStatus: mergedIntegrity.integrityStatus === 'clear' ? 'clear' : 'warning',
-          integrityReason: mergedIntegrity.integrityReason,
-          riskSignals: mergedIntegrity.riskSignals,
-          sourceRequestTable: 'skill_verification_requests',
-          sourceRequestId: normalizedVerification.id,
-          sourceResponseTable: 'skill_verification_requests',
-          sourceResponseId: normalizedVerification.id,
-          verifiedAt: validated.action === 'accept' ? respondedAt : null,
-          metadata: {
-            responseMessage: validated.message || null,
-            responseAuthMethod: getResponseAuthMethod(authIdentity),
-            requestKind,
-            verifierRelationship: normalizedVerification.verifier_relationship,
-            attestation: attestationResponse,
-            evidenceClass:
-              requestKind === 'human_observed_attestation' ? 'human_observed' : 'generic',
-          },
-        });
-        canonicalRecordId = canonicalRecord.id;
-      } catch (canonicalError) {
-        console.error('Failed to upsert canonical skill verification record:', canonicalError);
-      }
-    }
+    const canonicalRecordId = normalizedVerification.id;
 
     try {
       const { emitVerificationProvided } = await import('@/lib/analytics/events');
