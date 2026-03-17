@@ -6,6 +6,7 @@ import {
   proofPackItems,
   proofPacks,
   proofFreshnessStates,
+  uploadedFiles,
   verificationRecords,
 } from '@/db/schema';
 import {
@@ -29,6 +30,7 @@ import {
   PRIMARY_ANCHOR_CONTEXT_SUBJECT_TYPES,
   type PrimaryAnchorContextSubjectType,
 } from '@/lib/proofs/pack-anchor';
+import { isUploadHeldForPrivacyReview } from '@/lib/uploads/privacy';
 
 export {
   hasPrimaryAnchorContext,
@@ -40,12 +42,17 @@ export {
 type ProofPackRow = typeof proofPacks.$inferSelect;
 type ProofPackItemRow = typeof proofPackItems.$inferSelect;
 type ProofArtifactRow = typeof proofArtifacts.$inferSelect;
+type UploadedFileRow = typeof uploadedFiles.$inferSelect;
 type VerificationRecordRow = typeof verificationRecords.$inferSelect;
 
 export type CanonicalProofItemAggregate = {
   item: ProofPackItemRow;
   artifact: ProofArtifactRow;
   effectiveVisibility: EffectiveVisibility;
+  uploadedFile: Pick<
+    UploadedFileRow,
+    'id' | 'lifecycleState' | 'safetyStatus' | 'safetyReason' | 'attachStatus' | 'safeForPublic'
+  > | null;
 };
 
 export type CanonicalOwnerProofPackProjection = {
@@ -530,12 +537,21 @@ export function buildCanonicalPublicProofPackProjection(input: {
     return null;
   }
 
+  const heldUploadArtifactTitles = new Set(
+    input.items
+      .filter(({ uploadedFile }) => uploadedFile && isUploadHeldForPrivacyReview(uploadedFile))
+      .map(({ artifact }) => artifact.title)
+  );
+
   const safeItems = input.items
-    .filter(({ effectiveVisibility, artifact }) => {
+    .filter(({ effectiveVisibility, artifact, uploadedFile }) => {
       if (!isPublicSafeVisibility(effectiveVisibility)) {
         return false;
       }
       if (artifact.deletedAt || artifact.revokedAt || artifact.lifecycleState === 'deleted') {
+        return false;
+      }
+      if (uploadedFile && isUploadHeldForPrivacyReview(uploadedFile)) {
         return false;
       }
       return true;
@@ -551,7 +567,7 @@ export function buildCanonicalPublicProofPackProjection(input: {
       expiresAt: toIsoString(artifact.expiresAt),
     }));
 
-  if (safeItems.length === 0 && !input.pack.summary && !input.pack.evidenceSummary) {
+  if (safeItems.length === 0) {
     return null;
   }
 
@@ -566,7 +582,9 @@ export function buildCanonicalPublicProofPackProjection(input: {
     primarySubjectType: input.pack.primarySubjectType,
     primarySubjectId: input.pack.primarySubjectId,
     lifecycleState: input.pack.lifecycleState,
-    title: input.pack.title,
+    title: heldUploadArtifactTitles.has(input.pack.title)
+      ? safeItems[0]?.title || 'Proof Pack'
+      : input.pack.title,
     summary: input.pack.summary,
     evidenceSummary: input.pack.evidenceSummary,
     outcomesSummary: input.pack.outcomesSummary,
@@ -653,8 +671,26 @@ export async function listCanonicalProofPackAggregatesForOwner(
     artifactIds.length > 0
       ? await db.select().from(proofArtifacts).where(inArray(proofArtifacts.id, artifactIds))
       : [];
+  const uploadedFileIds = artifactRows
+    .map((artifact) => artifact.uploadedFileId)
+    .filter((value): value is string => typeof value === 'string' && value.length > 0);
+  const uploadedFileRows =
+    uploadedFileIds.length > 0
+      ? await db
+          .select({
+            id: uploadedFiles.id,
+            lifecycleState: uploadedFiles.lifecycleState,
+            safetyStatus: uploadedFiles.safetyStatus,
+            safetyReason: uploadedFiles.safetyReason,
+            attachStatus: uploadedFiles.attachStatus,
+            safeForPublic: uploadedFiles.safeForPublic,
+          })
+          .from(uploadedFiles)
+          .where(inArray(uploadedFiles.id, uploadedFileIds))
+      : [];
 
   const artifactById = new Map(artifactRows.map((artifact) => [artifact.id, artifact]));
+  const uploadedFileById = new Map(uploadedFileRows.map((file) => [file.id, file]));
   const verificationRows = await db
     .select()
     .from(verificationRecords)
@@ -678,6 +714,9 @@ export async function listCanonicalProofPackAggregatesForOwner(
       item,
       artifact,
       effectiveVisibility: computePackEffectiveVisibility(pack, artifact),
+      uploadedFile: artifact.uploadedFileId
+        ? (uploadedFileById.get(artifact.uploadedFileId) ?? null)
+        : null,
     };
 
     const list = itemsByPackId.get(item.packId) ?? [];

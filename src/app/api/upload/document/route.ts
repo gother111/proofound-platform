@@ -60,13 +60,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (upload.status === 'manual_review') {
+      return NextResponse.json(
+        {
+          success: true,
+          status: 'manual_review',
+          uploadedFileId: upload.uploadedFileId,
+          path: upload.storagePath,
+          fileName: upload.displayName,
+          fileSize: file.size,
+          fileType:
+            TYPE_LABELS[upload.detectedMime || file.type] || upload.detectedMime || file.type,
+          message: 'Upload received and held for privacy review before it can be attached.',
+        },
+        { status: 202 }
+      );
+    }
+
     return NextResponse.json({
       success: true,
       status: 'attachable',
       uploadedFileId: upload.uploadedFileId,
       url: upload.url,
       path: upload.storagePath,
-      fileName: file.name,
+      fileName: upload.displayName,
       fileSize: file.size,
       fileType: TYPE_LABELS[upload.detectedMime || file.type] || upload.detectedMime || file.type,
     });

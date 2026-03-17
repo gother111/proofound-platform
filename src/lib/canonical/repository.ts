@@ -589,6 +589,41 @@ function toLegacyDateString(value: string | Date | null | undefined): string | n
   return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
 }
 
+function deriveProofTitleFromStoragePath(rawPath: string): string {
+  const normalized = rawPath.trim().replace(/\/+$/, '');
+  if (!normalized) {
+    return 'Uploaded document';
+  }
+
+  const lastSegment = normalized.split('/').filter(Boolean).pop();
+  if (!lastSegment) {
+    return 'Uploaded document';
+  }
+
+  return decodeURIComponent(lastSegment).replace(/[-_]+/g, ' ').slice(0, 80) || 'Uploaded document';
+}
+
+function resolveCanonicalSkillProofTitle(input: CanonicalSkillProofInput): string {
+  const explicitTitle = input.title.trim();
+
+  if (!input.uploadedFileId) {
+    return explicitTitle || 'Proof Link';
+  }
+
+  if (!explicitTitle) {
+    return 'Uploaded document';
+  }
+
+  const storageDerivedTitle = input.filePath
+    ? deriveProofTitleFromStoragePath(input.filePath)
+    : null;
+  if (storageDerivedTitle && explicitTitle === storageDerivedTitle) {
+    return 'Uploaded document';
+  }
+
+  return explicitTitle;
+}
+
 export async function upsertCanonicalSkillProof(
   input: CanonicalSkillProofInput
 ): Promise<CanonicalSkillProofWriteResult> {
@@ -600,6 +635,7 @@ export async function upsertCanonicalSkillProof(
   const visibility = mapLegacyProofVisibility(
     typeof input.metadata?.visibility === 'string' ? input.metadata.visibility : null
   );
+  const resolvedTitle = resolveCanonicalSkillProofTitle(input);
   const now = new Date();
   const artifactValues = {
     ownerType: 'individual_profile' as const,
@@ -608,7 +644,7 @@ export async function upsertCanonicalSkillProof(
     subjectId: input.skillId,
     artifactKind: mapSkillProofTypeToArtifactKind(input.proofType),
     lifecycleState: 'active' as const,
-    title: input.title,
+    title: resolvedTitle,
     description: input.description || null,
     sourceUrl: input.url || null,
     storagePath: input.filePath || null,
@@ -718,7 +754,7 @@ export async function upsertCanonicalSkillProof(
     profileId: input.profileId,
     skillId: input.skillId,
     primaryAnchor: input.primaryAnchor,
-    title: input.title,
+    title: resolvedTitle,
     summary: input.description ?? null,
     artifactId: artifact.id,
     visibility: artifact.visibility,

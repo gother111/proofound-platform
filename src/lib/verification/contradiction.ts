@@ -18,6 +18,16 @@ type ReconcileResult = {
   impactedStoryCount: number;
 };
 
+type CanonicalVerificationRow = {
+  id: string;
+  owner_id: string;
+  subject_type: 'skill' | 'impact_story' | string;
+  subject_id: string;
+  verifier_profile_id: string | null;
+  metadata: Record<string, unknown> | null;
+  claim_snapshot: Record<string, unknown> | null;
+};
+
 function emptyResult(): ReconcileResult {
   return {
     flaggedSkillCount: 0,
@@ -25,24 +35,6 @@ function emptyResult(): ReconcileResult {
     impactedStoryCount: 0,
   };
 }
-
-type SkillVerificationRow = {
-  id: string;
-  requester_profile_id: string;
-  verifier_source: 'peer' | 'manager' | 'external';
-  requester_domain_snapshot: string | null;
-  integrity_meta: Record<string, unknown> | null;
-};
-
-type ImpactVerificationRow = {
-  id: string;
-  impact_story_id: string;
-  requester_profile_id: string;
-  verifier_relationship: string | null;
-  requester_domain_snapshot: string | null;
-  claim_snapshot: Record<string, unknown> | null;
-  integrity_meta: Record<string, unknown> | null;
-};
 
 function relationshipSuggestsSharedOrg(relationship: string | null | undefined): boolean {
   if (!relationship) {
@@ -58,7 +50,7 @@ function relationshipSuggestsSharedOrg(relationship: string | null | undefined):
   return sameOrgKeywords.some((keyword) => rel.includes(keyword));
 }
 
-function sourceSuggestsSharedOrg(source: SkillVerificationRow['verifier_source']): boolean {
+function sourceSuggestsSharedOrg(source: string | null | undefined): boolean {
   return source === 'manager' || source === 'peer';
 }
 
@@ -67,7 +59,7 @@ function shouldFlagRoleOrgMismatch(args: {
   verifierCurrentDomain: string | null;
   expectsSameOrg: boolean;
   sharesOrganization: boolean;
-}): boolean {
+}) {
   if (!args.expectsSameOrg) {
     return false;
   }
@@ -81,6 +73,59 @@ function shouldFlagRoleOrgMismatch(args: {
   }
 
   return args.requesterDomain !== args.verifierCurrentDomain && !args.sharesOrganization;
+}
+
+function getMetadata(row: CanonicalVerificationRow): Record<string, unknown> {
+  return row.metadata && typeof row.metadata === 'object' && !Array.isArray(row.metadata)
+    ? row.metadata
+    : {};
+}
+
+function getClaimSnapshot(row: CanonicalVerificationRow): Record<string, unknown> {
+  return row.claim_snapshot &&
+    typeof row.claim_snapshot === 'object' &&
+    !Array.isArray(row.claim_snapshot)
+    ? row.claim_snapshot
+    : {};
+}
+
+function getRequesterDomainSnapshot(row: CanonicalVerificationRow): string | null {
+  const metadata = getMetadata(row);
+  const requesterEmail =
+    typeof metadata.requesterEmailSnapshot === 'string' ? metadata.requesterEmailSnapshot : null;
+  const fromClaim = (() => {
+    const claimSnapshot = getClaimSnapshot(row);
+    const context =
+      claimSnapshot.context && typeof claimSnapshot.context === 'object'
+        ? (claimSnapshot.context as Record<string, unknown>)
+        : null;
+    const email =
+      typeof context?.requesterEmail === 'string'
+        ? context.requesterEmail
+        : typeof context?.requester_email === 'string'
+          ? context.requester_email
+          : null;
+    return email;
+  })();
+
+  return getEmailDomain(requesterEmail || fromClaim);
+}
+
+function getSkillVerifierSource(row: CanonicalVerificationRow): string | null {
+  const metadata = getMetadata(row);
+  return typeof metadata.verifierSource === 'string' ? metadata.verifierSource : null;
+}
+
+function getImpactVerifierRelationship(row: CanonicalVerificationRow): string | null {
+  const metadata = getMetadata(row);
+  if (typeof metadata.verifierRelationship === 'string') {
+    return metadata.verifierRelationship;
+  }
+
+  const claimSnapshot = getClaimSnapshot(row);
+  return typeof claimSnapshot.verifierRelationship === 'string'
+    ? claimSnapshot.verifierRelationship
+    : null;
 }
 
 async function resolveVerifierIdentity(input: ReconcileInput): Promise<{
@@ -160,7 +205,9 @@ async function resolveVerifierIdentity(input: ReconcileInput): Promise<{
     .eq('id', input.verifierProfileId)
     .maybeSingle();
 
-  const emailFromProfile = normalizeEmail((profileLookup.data as any)?.email || null);
+  const emailFromProfile = normalizeEmail(
+    (profileLookup.data as { email?: string | null } | null)?.email || null
+  );
   if (emailFromProfile) {
     return {
       verifierEmail: emailFromProfile,
@@ -176,7 +223,9 @@ async function resolveVerifierIdentity(input: ReconcileInput): Promise<{
     .eq('work_email_verified', true)
     .maybeSingle();
 
-  const emailFromWork = normalizeEmail((workEmailLookup.data as any)?.work_email || null);
+  const emailFromWork = normalizeEmail(
+    (workEmailLookup.data as { work_email?: string | null } | null)?.work_email || null
+  );
   return {
     verifierEmail: emailFromWork,
     verifierProfileId: input.verifierProfileId,
@@ -201,7 +250,7 @@ async function buildRequesterOrgMap(requesterIds: string[]): Promise<Map<string,
   }
 
   const map = new Map<string, Set<string>>();
-  for (const row of data as any[]) {
+  for (const row of data as Array<{ user_id?: string | null; org_id?: string | null }>) {
     const userId = String(row.user_id || '');
     const orgId = String(row.org_id || '');
     if (!userId || !orgId) {
@@ -235,7 +284,7 @@ async function getVerifierOrganizations(verifierProfileId: string | null): Promi
   }
 
   const orgIds = new Set<string>();
-  for (const row of data as any[]) {
+  for (const row of data as Array<{ org_id?: string | null }>) {
     const orgId = String(row.org_id || '');
     if (orgId) {
       orgIds.add(orgId);
@@ -264,66 +313,47 @@ function hasOrgIntersection(
   return false;
 }
 
-async function flagSkillRequest(
-  row: SkillVerificationRow,
+async function flagVerificationRecord(
+  row: CanonicalVerificationRow,
   contradictionMeta: Record<string, unknown>
 ) {
   const adminClient = createAdminClient();
-  const integrityMeta = {
-    ...(row.integrity_meta || {}),
-    contradiction: contradictionMeta,
-  };
+  const metadata = getMetadata(row);
+  const integrityMeta =
+    metadata.integrityMeta && typeof metadata.integrityMeta === 'object'
+      ? (metadata.integrityMeta as Record<string, unknown>)
+      : {};
 
   await adminClient
-    .from('skill_verification_requests')
+    .from('verification_records')
     .update({
       integrity_status: 'flagged',
       integrity_reason: VERIFICATION_INTEGRITY_REASONS.VERIFIER_PROFILE_CONTRADICTION,
-      integrity_meta: integrityMeta,
-      integrity_flagged_at: new Date().toISOString(),
+      metadata: {
+        ...metadata,
+        integrityMeta: {
+          ...integrityMeta,
+          contradiction: contradictionMeta,
+        },
+        integrityFlaggedAt: new Date().toISOString(),
+      },
+      updated_at: new Date().toISOString(),
     })
     .eq('id', row.id);
 
   await writeVerificationAuditLog({
     actorId: null,
     action: 'verification.integrity.flagged',
-    targetType: 'skill_verification_request',
+    targetType:
+      row.subject_type === 'skill'
+        ? 'skill_verification_request'
+        : 'impact_story_verification_request',
     targetId: row.id,
     meta: {
       reason: VERIFICATION_INTEGRITY_REASONS.VERIFIER_PROFILE_CONTRADICTION,
       contradiction: contradictionMeta,
-    },
-  });
-}
-
-async function flagImpactRequest(
-  row: ImpactVerificationRow,
-  contradictionMeta: Record<string, unknown>
-) {
-  const adminClient = createAdminClient();
-  const integrityMeta = {
-    ...(row.integrity_meta || {}),
-    contradiction: contradictionMeta,
-  };
-
-  await adminClient
-    .from('impact_story_verification_requests')
-    .update({
-      integrity_status: 'flagged',
-      integrity_reason: VERIFICATION_INTEGRITY_REASONS.VERIFIER_PROFILE_CONTRADICTION,
-      integrity_meta: integrityMeta,
-      integrity_flagged_at: new Date().toISOString(),
-    })
-    .eq('id', row.id);
-
-  await writeVerificationAuditLog({
-    actorId: null,
-    action: 'verification.integrity.flagged',
-    targetType: 'impact_story_verification_request',
-    targetId: row.id,
-    meta: {
-      reason: VERIFICATION_INTEGRITY_REASONS.VERIFIER_PROFILE_CONTRADICTION,
-      contradiction: contradictionMeta,
+      subject_type: row.subject_type,
+      subject_id: row.subject_id,
     },
   });
 }
@@ -337,10 +367,11 @@ async function reconcileImpactStoryVerifiedState(impactStoryIds: Set<string>) {
 
   for (const storyId of impactStoryIds) {
     const { count, error } = await adminClient
-      .from('impact_story_verification_requests')
+      .from('verification_records')
       .select('id', { count: 'exact', head: true })
-      .eq('impact_story_id', storyId)
-      .eq('status', 'accepted')
+      .eq('subject_type', 'impact_story')
+      .eq('subject_id', storyId)
+      .eq('status', 'verified')
       .eq('integrity_status', 'clear');
 
     if (error) {
@@ -366,40 +397,34 @@ export async function reconcileVerifierContradictions(
     }
 
     const adminClient = createAdminClient();
+    const { data, error } = await adminClient
+      .from('verification_records')
+      .select(
+        'id, owner_id, subject_type, subject_id, verifier_profile_id, metadata, claim_snapshot'
+      )
+      .eq('status', 'verified')
+      .eq('integrity_status', 'clear')
+      .contains('metadata', { verifierEmail: identity.verifierEmail });
 
-    const [skillRequestsResult, impactRequestsResult] = await Promise.all([
-      adminClient
-        .from('skill_verification_requests')
-        .select(
-          'id, requester_profile_id, verifier_source, requester_domain_snapshot, integrity_meta'
-        )
-        .eq('verifier_email', identity.verifierEmail)
-        .eq('status', 'accepted')
-        .eq('integrity_status', 'clear'),
-      adminClient
-        .from('impact_story_verification_requests')
-        .select(
-          'id, impact_story_id, requester_profile_id, verifier_relationship, requester_domain_snapshot, claim_snapshot, integrity_meta'
-        )
-        .eq('verifier_email', identity.verifierEmail)
-        .eq('status', 'accepted')
-        .eq('integrity_status', 'clear'),
-    ]);
-
-    const skillRequests = (skillRequestsResult.data || []) as SkillVerificationRow[];
-    const impactRequests = (impactRequestsResult.data || []) as ImpactVerificationRow[];
-
-    if (skillRequests.length === 0 && impactRequests.length === 0) {
+    if (error || !data) {
+      if (error) {
+        console.error(
+          'Failed to load canonical verification records for contradiction scan:',
+          error
+        );
+      }
       return emptyResult();
     }
 
-    const requesterIds = Array.from(
-      new Set([
-        ...skillRequests.map((row) => row.requester_profile_id),
-        ...impactRequests.map((row) => row.requester_profile_id),
-      ])
+    const rows = (data as CanonicalVerificationRow[]).filter(
+      (row) => row.subject_type === 'skill' || row.subject_type === 'impact_story'
     );
 
+    if (rows.length === 0) {
+      return emptyResult();
+    }
+
+    const requesterIds = Array.from(new Set(rows.map((row) => row.owner_id)));
     const [requesterOrgMap, verifierOrgIds] = await Promise.all([
       buildRequesterOrgMap(requesterIds),
       getVerifierOrganizations(identity.verifierProfileId),
@@ -409,16 +434,39 @@ export async function reconcileVerifierContradictions(
     let flaggedImpactCount = 0;
     const impactedStoryIds = new Set<string>();
 
-    for (const row of skillRequests) {
-      const sharesOrg = hasOrgIntersection(
-        requesterOrgMap,
-        row.requester_profile_id,
-        verifierOrgIds
-      );
+    for (const row of rows) {
+      const requesterDomain = getRequesterDomainSnapshot(row);
+      const sharesOrg = hasOrgIntersection(requesterOrgMap, row.owner_id, verifierOrgIds);
+
+      if (row.subject_type === 'skill') {
+        const verifierSource = getSkillVerifierSource(row);
+        const shouldFlag = shouldFlagRoleOrgMismatch({
+          requesterDomain,
+          verifierCurrentDomain: identity.verifierCurrentDomain,
+          expectsSameOrg: sourceSuggestsSharedOrg(verifierSource),
+          sharesOrganization: sharesOrg,
+        });
+
+        if (!shouldFlag) {
+          continue;
+        }
+
+        await flagVerificationRecord(row, {
+          type: 'role_org_mismatch',
+          verifier_source: verifierSource,
+          requester_domain_snapshot: requesterDomain,
+          verifier_current_domain: identity.verifierCurrentDomain,
+          shares_organization: sharesOrg,
+        });
+        flaggedSkillCount += 1;
+        continue;
+      }
+
+      const verifierRelationship = getImpactVerifierRelationship(row);
       const shouldFlag = shouldFlagRoleOrgMismatch({
-        requesterDomain: row.requester_domain_snapshot,
+        requesterDomain,
         verifierCurrentDomain: identity.verifierCurrentDomain,
-        expectsSameOrg: sourceSuggestsSharedOrg(row.verifier_source),
+        expectsSameOrg: relationshipSuggestsSharedOrg(verifierRelationship),
         sharesOrganization: sharesOrg,
       });
 
@@ -426,49 +474,15 @@ export async function reconcileVerifierContradictions(
         continue;
       }
 
-      await flagSkillRequest(row, {
+      await flagVerificationRecord(row, {
         type: 'role_org_mismatch',
-        verifier_source: row.verifier_source,
-        requester_domain_snapshot: row.requester_domain_snapshot,
-        verifier_current_domain: identity.verifierCurrentDomain,
-        shares_organization: sharesOrg,
-      });
-      flaggedSkillCount += 1;
-    }
-
-    for (const row of impactRequests) {
-      const claimRelationship =
-        row.verifier_relationship ||
-        (row.claim_snapshot && typeof row.claim_snapshot === 'object'
-          ? String((row.claim_snapshot as any).verifierRelationship || '')
-          : '');
-
-      const expectsSameOrg = relationshipSuggestsSharedOrg(claimRelationship);
-      const sharesOrg = hasOrgIntersection(
-        requesterOrgMap,
-        row.requester_profile_id,
-        verifierOrgIds
-      );
-      const shouldFlag = shouldFlagRoleOrgMismatch({
-        requesterDomain: row.requester_domain_snapshot,
-        verifierCurrentDomain: identity.verifierCurrentDomain,
-        expectsSameOrg,
-        sharesOrganization: sharesOrg,
-      });
-
-      if (!shouldFlag) {
-        continue;
-      }
-
-      await flagImpactRequest(row, {
-        type: 'role_org_mismatch',
-        verifier_relationship: row.verifier_relationship,
-        requester_domain_snapshot: row.requester_domain_snapshot,
+        verifier_relationship: verifierRelationship,
+        requester_domain_snapshot: requesterDomain,
         verifier_current_domain: identity.verifierCurrentDomain,
         shares_organization: sharesOrg,
       });
       flaggedImpactCount += 1;
-      impactedStoryIds.add(row.impact_story_id);
+      impactedStoryIds.add(row.subject_id);
     }
 
     await reconcileImpactStoryVerifiedState(impactedStoryIds);
