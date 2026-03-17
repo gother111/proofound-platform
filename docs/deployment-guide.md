@@ -171,11 +171,18 @@ PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:migrate
 PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:seed-taxonomy
 ```
 
-**Demo Data (Optional for staging):**
+**Seeded Public Org Trust Fixture (Required for local/staging org trust smoke):**
 
 ```bash
-# Only for staging environment
-DATABASE_URL="your-staging-url" PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:seed
+# Shared fixture for /portfolio/org/proofound-labs smoke verification
+PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run seed:public-org-trust-fixture
+```
+
+**Local Seed Script (Not a staging fixture path):**
+
+```bash
+# Local-only feature-flag seed helper
+NEXT_PUBLIC_APP_ENV=local PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:seed
 ```
 
 ### 5. Enable Row Level Security (RLS)

@@ -50,6 +50,7 @@ This document defines the current testing architecture for Proofound and the com
   - `npm run test:e2e:auth` (alias to mock auth flow)
   - `npm run test:e2e:auth:mock`
   - `npm run test:e2e:auth:real`
+  - `npm run test:e2e:org-trust:smoke`
   - `npm run test:e2e:mobile`
 
 ### 5) Strict MVP Launch Contracts (Playwright)
@@ -112,6 +113,8 @@ This document defines the current testing architecture for Proofound and the com
 | E2E full suite         | `npm run test:e2e`                                                                             |
 | Auth contract (mock)   | `npm run test:e2e:auth`                                                                        |
 | Auth contract (real)   | `npm run test:e2e:auth:real`                                                                   |
+| Seed public org trust  | `npm run seed:public-org-trust-fixture`                                                        |
+| Org trust smoke        | `npm run test:e2e:org-trust:smoke`                                                             |
 | A11y baseline          | `npm run test:a11y`                                                                            |
 | A11y strict            | `npm run test:a11y:strict`                                                                     |
 | Strict quality guard   | `npm run test:strict:quality`                                                                  |
@@ -135,17 +138,19 @@ Default sequence for high-confidence release validation:
 3. `npm run test`
 4. `npm run build`
 5. `npm run test:launch:smoke`
-6. `npm run test:e2e:landing`
-7. `npm run test:e2e:auth:real`
-8. `npm run test:a11y:strict`
-9. `npm run test:strict:quality`
-10. `npm run test:e2e:individual:strict`
-11. `npm run test:e2e:org:strict`
-12. `npm run test:e2e:privacy:strict`
-13. `npm run test:e2e:providers:strict`
-14. `BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run monitor:launch`
-15. `BASE_URL=http://localhost:3000 npm run perf:budgets`
-16. `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
+6. `npm run seed:public-org-trust-fixture`
+7. `npm run test:e2e:org-trust:smoke`
+8. `npm run test:e2e:landing`
+9. `npm run test:e2e:auth:real`
+10. `npm run test:a11y:strict`
+11. `npm run test:strict:quality`
+12. `npm run test:e2e:individual:strict`
+13. `npm run test:e2e:org:strict`
+14. `npm run test:e2e:privacy:strict`
+15. `npm run test:e2e:providers:strict`
+16. `BASE_URL=http://localhost:3000 CRON_SECRET=<secret> npm run monitor:launch`
+17. `BASE_URL=http://localhost:3000 npm run perf:budgets`
+18. `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true CRON_SECRET=<secret> npm run go:no-go`
 
 ## Environment Requirements for Strict Flows
 

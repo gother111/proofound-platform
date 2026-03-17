@@ -65,6 +65,12 @@ cp .env.example .env.local
 npm run dev
 ```
 
+4. Seed the shared public org trust fixture used by local and staging smoke checks:
+
+```bash
+npm run seed:public-org-trust-fixture
+```
+
 ## Local Postgres (Optional)
 
 If you want a local Postgres database (for example to support deterministic E2E with mock auth), start the included container:

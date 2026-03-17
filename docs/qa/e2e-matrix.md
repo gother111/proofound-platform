@@ -15,6 +15,7 @@ This matrix maps personas and critical flows to canonical Playwright contracts.
 - `e2e/strict/providers.strict.spec.ts`
 - `e2e/landing-page.spec.ts`
 - `e2e/landing-visual.spec.ts`
+- `e2e/public-org-trust.smoke.spec.ts`
 - `e2e/admin-dashboard-smoke.spec.ts`
 
 ## Persona Coverage
@@ -55,6 +56,8 @@ This matrix maps personas and critical flows to canonical Playwright contracts.
 - Landing and visual baseline:
   - `e2e/landing-page.spec.ts`
   - `e2e/landing-visual.spec.ts`
+- Public org trust runtime smoke:
+  - `e2e/public-org-trust.smoke.spec.ts`
 - Accessibility:
   - `tests/a11y/critical-flows.spec.ts`
   - `tests/a11y/keyboard-navigation.spec.ts`
@@ -65,6 +68,7 @@ This matrix maps personas and critical flows to canonical Playwright contracts.
 - Full Playwright sweep: `npm run test:e2e`
 - Auth mock smoke: `npm run test:e2e:auth`
 - Auth real contract: `npm run test:e2e:auth:real`
+- Seeded public org trust smoke: `npm run seed:public-org-trust-fixture` then `npm run test:e2e:org-trust:smoke`
 - Strict flows:
   - `npm run test:e2e:individual:strict`
   - `npm run test:e2e:org:strict`

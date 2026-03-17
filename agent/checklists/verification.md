@@ -137,6 +137,7 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - E2E: `npm run test:e2e` (source: package.json)
 - Auth real contract (launch gate): `npm run test:e2e:auth:real` (source: package.json)
 - Auth mock contract (non-blocking local feedback): `npm run test:e2e:auth:mock` (source: package.json)
+- Seeded public org trust smoke: `npm run seed:public-org-trust-fixture` then `npm run test:e2e:org-trust:smoke` (source: package.json, `e2e/public-org-trust.smoke.spec.ts`)
 - A11y strict contract (launch gate): `npm run test:a11y:strict` (source: package.json)
 - A11y mock contract (non-blocking local feedback): `npm run test:a11y` (source: package.json)
 - Individual strict flow contract: `npm run test:e2e:individual:strict` (source: package.json)
@@ -193,6 +194,7 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - Run `npm run docs:freshness`
 - Manual smoke expectations for launch-safe behavior:
   - qualified intro corridor can be disabled without breaking portfolio, browse, export, delete, or unpublish
+  - seeded public org trust route returns `200` for `/portfolio/org/proofound-labs` after `npm run seed:public-org-trust-fixture`
   - feedback token lookup returns structured feedback contract fields
   - feedback submission rejects empty payloads when both answers and structured feedback are missing
   - admin rollout metrics returns fallback states, queue health, and synthetic monitor health
