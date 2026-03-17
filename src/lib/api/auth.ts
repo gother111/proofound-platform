@@ -23,6 +23,12 @@ export async function requireApiAuth(): Promise<ApiAuthContext | NextResponse> {
   return { supabase, user };
 }
 
+export type CanonicalActiveOrgMembership = {
+  role: OrgRole;
+  state: string | null;
+  status: string | null;
+};
+
 export function getInternalApiSecret(): string {
   return (process.env.INTERNAL_API_SECRET || process.env.CRON_SECRET || '').trim();
 }
@@ -61,34 +67,50 @@ export function requireInternalApiRequest(request: NextRequest): NextResponse | 
   return null;
 }
 
+export async function getCanonicalActiveOrgMembership(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  orgId: string
+): Promise<CanonicalActiveOrgMembership | null> {
+  const { data, error } = await supabase
+    .from('organization_members')
+    .select('role, state, status')
+    .eq('org_id', orgId)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error || !data) {
+    return null;
+  }
+
+  const role = normalizeAuthorizedOrgRole(data.role as string | null | undefined);
+  const state = (data.state ?? data.status ?? null) as string | null;
+
+  if (!role || !isActiveMembershipState(state)) {
+    return null;
+  }
+
+  return {
+    role,
+    state,
+    status: (data.status ?? null) as string | null,
+  };
+}
+
 export async function isActiveOrgMember(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
   orgId: string,
   roles?: readonly OrgRole[]
 ): Promise<boolean> {
-  const { data, error } = await supabase
-    .from('organization_members')
-    .select('role, state, status')
-    .eq('org_id', orgId)
-    .eq('user_id', userId)
-    .limit(1);
-
-  if (error) {
-    return false;
-  }
-
-  const membership = Array.isArray(data) ? data[0] : null;
-  const role = normalizeAuthorizedOrgRole(membership?.role as string | null | undefined);
-  const state = membership?.state ?? membership?.status;
-
-  if (!membership || !isActiveMembershipState(state)) {
+  const membership = await getCanonicalActiveOrgMembership(supabase, userId, orgId);
+  if (!membership) {
     return false;
   }
 
   if (roles && roles.length > 0) {
-    return Boolean(role && roles.includes(role));
+    return roles.includes(membership.role);
   }
 
-  return Boolean(role);
+  return true;
 }

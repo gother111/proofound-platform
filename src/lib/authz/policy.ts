@@ -1,8 +1,6 @@
 export const CANONICAL_ORG_ROLE_VALUES = ['org_owner', 'org_manager', 'org_reviewer'] as const;
-export const LEGACY_ORG_ROLE_VALUES = ['owner', 'admin', 'member', 'viewer'] as const;
 export const ORG_ROLE_VALUES = [...CANONICAL_ORG_ROLE_VALUES] as const;
 export type OrgRole = (typeof CANONICAL_ORG_ROLE_VALUES)[number];
-export type LegacyOrgRole = (typeof LEGACY_ORG_ROLE_VALUES)[number];
 
 export const ORG_ACTIVE_MEMBERSHIP_STATES = ['active'] as const;
 export type ActiveMembershipState = (typeof ORG_ACTIVE_MEMBERSHIP_STATES)[number];
@@ -82,24 +80,6 @@ type MatrixRule = {
   breakGlassOnly?: boolean;
   notes?: string;
 };
-
-function normalizePolicyOrgRole(orgRole?: OrgRole | LegacyOrgRole | null): OrgRole | null {
-  switch (orgRole) {
-    case 'owner':
-      return 'org_owner';
-    case 'admin':
-      return 'org_manager';
-    case 'member':
-    case 'viewer':
-      return 'org_reviewer';
-    case 'org_owner':
-    case 'org_manager':
-    case 'org_reviewer':
-      return orgRole;
-    default:
-      return null;
-  }
-}
 
 export const AUTHZ_MATRIX = {
   org_profile: {
@@ -271,8 +251,7 @@ function allowsRule(
     return true;
   }
 
-  const normalizedOrgRole = normalizePolicyOrgRole(input.orgRole);
-  if (normalizedOrgRole && rule.orgRoles?.includes(normalizedOrgRole)) {
+  if (input.orgRole && rule.orgRoles?.includes(input.orgRole)) {
     return true;
   }
 
@@ -301,22 +280,20 @@ export function authorize(input: {
 export function getVerificationSummaryVisibility(
   orgRole?: OrgRole | null
 ): VerificationSummaryVisibility {
-  const normalizedRole = normalizePolicyOrgRole(orgRole);
-  if (normalizedRole === 'org_manager' || normalizedRole === 'org_owner') {
+  if (orgRole === 'org_manager' || orgRole === 'org_owner') {
     return 'detailed';
   }
-  if (normalizedRole === 'org_reviewer') {
+  if (orgRole === 'org_reviewer') {
     return 'redacted';
   }
   return 'none';
 }
 
 export function getAuditMetadataVisibility(orgRole?: OrgRole | null): AuditMetadataVisibility {
-  const normalizedRole = normalizePolicyOrgRole(orgRole);
-  if (normalizedRole === 'org_owner') {
+  if (orgRole === 'org_owner') {
     return 'sensitive';
   }
-  if (normalizedRole === 'org_manager') {
+  if (orgRole === 'org_manager') {
     return 'standard';
   }
   return 'none';
@@ -326,7 +303,7 @@ export function getEffectiveShortlistRevealScope(
   orgRole: OrgRole | null | undefined,
   storedScope: CandidateIdentityScope
 ): CandidateIdentityScope {
-  if (normalizePolicyOrgRole(orgRole) === 'org_reviewer' && storedScope === 'full_identity') {
+  if (orgRole === 'org_reviewer' && storedScope === 'full_identity') {
     return 'shortlist_identity';
   }
   return storedScope;
@@ -340,7 +317,7 @@ export function getEffectiveReviewRevealScope(
     return null;
   }
 
-  if (normalizePolicyOrgRole(orgRole) === 'org_reviewer' && storedScope === 'full_identity') {
+  if (orgRole === 'org_reviewer' && storedScope === 'full_identity') {
     return 'shortlist_identity';
   }
 

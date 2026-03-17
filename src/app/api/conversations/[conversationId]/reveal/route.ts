@@ -20,6 +20,7 @@ import { Resend } from 'resend';
 import IdentityRevealed from '@/../emails/IdentityRevealed';
 import { EMAIL_CONFIG } from '@/lib/email/config';
 import { recordRevealEvent, unlockFullIdentityForMatch } from '@/lib/matching/review-contract';
+import { syncRevealRequestTimeoutState } from '@/lib/workflow/service';
 
 function getResendClient(): Resend | null {
   const apiKey = process.env.RESEND_API_KEY;
@@ -77,8 +78,44 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
+    const {
+      conversation: syncedConversation,
+      timeout: revealTimeout,
+      reset: revealRequestExpired,
+    } = await syncRevealRequestTimeoutState({
+      conversation,
+    });
+
+    let revealContext = syncedConversation.matchId
+      ? await db.query.matchReviewStates.findFirst({
+          where: eq(matchReviewStates.matchId, syncedConversation.matchId),
+        })
+      : null;
+
+    if (revealRequestExpired && revealContext) {
+      await recordRevealEvent({
+        matchId: revealContext.matchId,
+        assignmentId: revealContext.assignmentId,
+        profileId: revealContext.profileId,
+        orgId: revealContext.orgId,
+        actorType: 'system',
+        triggerType: 'policy',
+        requestedScope: 'full_identity',
+        grantedScope: revealContext.revealScope,
+        reasonCode: 'reveal_request_expired',
+        sourceSurface: 'conversation_reveal_route',
+        context: {
+          conversationId,
+          requestedBy: revealTimeout.requestedBy,
+          requestedAt: revealTimeout.requestedAt?.toISOString() ?? null,
+          expiresAt: revealTimeout.expiresAt?.toISOString() ?? null,
+        },
+        outcome: 'denied',
+      });
+    }
+
     // Check if already revealed
-    if (conversation.stage === 'revealed') {
+    if (syncedConversation.stage === 'revealed') {
       return NextResponse.json(
         { error: 'Identities already revealed', alreadyRevealed: true },
         { status: 400 }
@@ -86,12 +123,12 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
     }
 
     // Determine which participant is making the request
-    const isParticipantOne = conversation.participantOneId === user.id;
+    const isParticipantOne = syncedConversation.participantOneId === user.id;
 
     // Check if user already requested reveal
     const alreadyRequested = isParticipantOne
-      ? conversation.participantOneWantsReveal
-      : conversation.participantTwoWantsReveal;
+      ? syncedConversation.participantOneWantsReveal
+      : syncedConversation.participantTwoWantsReveal;
 
     if (alreadyRequested) {
       return NextResponse.json(
@@ -116,7 +153,7 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
               updatedAt: new Date(),
             }
       )
-      .where(eq(conversations.id, conversationId))
+      .where(eq(conversations.id, syncedConversation.id))
       .returning();
 
     const updated = updatedConversation[0];
@@ -191,27 +228,30 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
       });
 
       if (updated.matchId) {
-        const matchReviewState = await db.query.matchReviewStates.findFirst({
-          where: eq(matchReviewStates.matchId, updated.matchId),
-        });
+        if (!revealContext || revealContext.matchId !== updated.matchId) {
+          revealContext = await db.query.matchReviewStates.findFirst({
+            where: eq(matchReviewStates.matchId, updated.matchId),
+          });
+        }
 
-        if (matchReviewState) {
+        if (revealContext) {
           await recordRevealEvent({
-            matchId: matchReviewState.matchId,
-            assignmentId: matchReviewState.assignmentId,
-            profileId: matchReviewState.profileId,
-            orgId: matchReviewState.orgId,
+            matchId: revealContext.matchId,
+            assignmentId: revealContext.assignmentId,
+            profileId: revealContext.profileId,
+            orgId: revealContext.orgId,
             actorId: user.id,
             actorRole: 'conversation_participant',
             actorType: 'user_account',
             triggerType: 'user',
             requestedScope: 'full_identity',
-            grantedScope: matchReviewState.revealScope,
+            grantedScope: revealContext.revealScope,
             reasonCode: 'reveal_full_identity',
             sourceSurface: 'conversation_reveal_route',
             context: {
               conversationId,
               waitingForOther: true,
+              expiredAndReset: revealRequestExpired,
             },
             outcome: 'no_op',
           });

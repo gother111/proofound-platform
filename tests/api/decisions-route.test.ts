@@ -138,4 +138,20 @@ describe('POST /api/decisions', () => {
     ]);
     expect(mocks.recordDecisionTransition).not.toHaveBeenCalled();
   });
+
+  it('rejects non-canonical decision aliases so hire remains explicit', async () => {
+    mocks.isActiveOrgMember.mockResolvedValue(true);
+
+    const response = await POST(
+      buildRequest({
+        interviewId: 'interview-1',
+        decision: 'pass',
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toContain('decision must be one of');
+    expect(mocks.recordDecisionTransition).not.toHaveBeenCalled();
+  });
 });

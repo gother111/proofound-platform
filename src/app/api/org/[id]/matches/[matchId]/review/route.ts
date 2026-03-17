@@ -32,6 +32,7 @@ import { notifyIntroAccepted } from '@/lib/notifications';
 import {
   getOrCreateIntroWorkflow,
   openIntroConversation,
+  syncRevealRequestTimeoutState,
   syncIntroWorkflowFromInterest,
 } from '@/lib/workflow/service';
 
@@ -53,6 +54,17 @@ const ReviewMutationSchema = z.object({
     .optional(),
   requestedScope: z.enum(['shortlist_identity', 'full_identity']).optional(),
 });
+
+function getReviewMutationReasonCodes(action: 'shortlist' | 'unshortlist' | 'pass' | 'reject') {
+  switch (action) {
+    case 'shortlist':
+      return ['shortlist_selected'];
+    case 'reject':
+      return ['rejected_constraints'];
+    default:
+      return ['passed_for_now'];
+  }
+}
 
 async function getOrgByIdOrSlug(orgIdOrSlug: string) {
   const [org] = await db
@@ -129,7 +141,10 @@ export async function POST(
       const [activeConversation] = await db
         .select({
           id: conversations.id,
+          matchId: conversations.matchId,
           stage: conversations.stage,
+          participantOneRevealRequestedAt: conversations.participantOneRevealRequestedAt,
+          participantTwoRevealRequestedAt: conversations.participantTwoRevealRequestedAt,
           participantOneId: conversations.participantOneId,
           participantTwoId: conversations.participantTwoId,
           participantOneWantsReveal: conversations.participantOneWantsReveal,
@@ -153,7 +168,37 @@ export async function POST(
         );
       }
 
-      if (activeConversation.stage === 'revealed' || matchRow.revealScope === 'full_identity') {
+      const {
+        conversation: syncedConversation,
+        timeout: revealTimeout,
+        reset: revealRequestExpired,
+      } = await syncRevealRequestTimeoutState({
+        conversation: activeConversation,
+      });
+
+      if (revealRequestExpired) {
+        await recordRevealEvent({
+          matchId: matchRow.matchId,
+          assignmentId: matchRow.assignmentId,
+          profileId: matchRow.profileId,
+          orgId: org.id,
+          actorType: 'system',
+          triggerType: 'policy',
+          requestedScope: requestedScope,
+          grantedScope: matchRow.revealScope,
+          reasonCode: 'reveal_request_expired',
+          sourceSurface: 'org_review_route',
+          context: {
+            conversationId: syncedConversation.id,
+            requestedBy: revealTimeout.requestedBy,
+            requestedAt: revealTimeout.requestedAt?.toISOString() ?? null,
+            expiresAt: revealTimeout.expiresAt?.toISOString() ?? null,
+          },
+          outcome: 'denied',
+        });
+      }
+
+      if (syncedConversation.stage === 'revealed' || matchRow.revealScope === 'full_identity') {
         const corridor = resolveCanonicalCorridor({
           reviewStage: matchRow.reviewStage,
           revealScope: 'full_identity',
@@ -169,7 +214,7 @@ export async function POST(
           reviewStage: matchRow.reviewStage,
           revealScope: 'full_identity',
           visibleIdentityFields: getVisibleIdentityFields('full_identity'),
-          conversationId: activeConversation.id,
+          conversationId: syncedConversation.id,
           ...corridor,
           why: buildVisibilitySafeWhy({
             reasonCodes: ['reveal_full_identity'],
@@ -180,10 +225,10 @@ export async function POST(
         });
       }
 
-      const orgParticipantIsOne = activeConversation.participantOneId !== matchRow.profileId;
+      const orgParticipantIsOne = syncedConversation.participantOneId !== matchRow.profileId;
       const orgRevealAlreadyRequested = orgParticipantIsOne
-        ? activeConversation.participantOneWantsReveal
-        : activeConversation.participantTwoWantsReveal;
+        ? syncedConversation.participantOneWantsReveal
+        : syncedConversation.participantTwoWantsReveal;
 
       if (!orgRevealAlreadyRequested) {
         const now = new Date();
@@ -202,7 +247,7 @@ export async function POST(
                   updatedAt: now,
                 }
           )
-          .where(eq(conversations.id, activeConversation.id));
+          .where(eq(conversations.id, syncedConversation.id));
       }
 
       await recordRevealEvent({
@@ -220,7 +265,8 @@ export async function POST(
         sourceSurface: 'org_review_route',
         context: {
           pending: true,
-          conversationId: activeConversation.id,
+          conversationId: syncedConversation.id,
+          expiredAndReset: revealRequestExpired,
         },
         outcome: 'no_op',
       });
@@ -240,7 +286,7 @@ export async function POST(
         reviewStage: matchRow.reviewStage,
         revealScope: matchRow.revealScope,
         visibleIdentityFields: getVisibleIdentityFields(matchRow.revealScope),
-        conversationId: activeConversation.id,
+        conversationId: syncedConversation.id,
         waitingForCandidateApproval: true,
         ...corridor,
         why: buildVisibilitySafeWhy({
@@ -583,18 +629,34 @@ export async function POST(
       },
     });
 
+    const nextReviewStage = updated?.reviewStage ?? matchRow.reviewStage;
+    const nextRevealScope = updated?.revealScope ?? matchRow.revealScope;
+    const nextFairnessStatus = normalizeFairnessStatus(fairnessEvaluation.status);
+    const corridor = resolveCanonicalCorridor({
+      reviewStage: nextReviewStage,
+      revealScope: nextRevealScope,
+      surface: 'review_detail',
+      fairnessStatus: nextFairnessStatus,
+      operationalFallbackMode:
+        matchRow.reviewOperationalFallbackMode ?? matchRow.assignmentOperationalFallbackMode,
+    });
+    const reasonCodes: string[] =
+      payload.action === 'manual_override'
+        ? payload.reasonCode
+          ? [payload.reasonCode]
+          : []
+        : getReviewMutationReasonCodes(payload.action);
+
     return NextResponse.json({
       matchId: matchRow.matchId,
-      reviewStage: updated?.reviewStage ?? matchRow.reviewStage,
-      revealScope: updated?.revealScope ?? matchRow.revealScope,
-      visibleIdentityFields: getVisibleIdentityFields(updated?.revealScope ?? matchRow.revealScope),
-      ...resolveCanonicalCorridor({
-        reviewStage: updated?.reviewStage ?? matchRow.reviewStage,
-        revealScope: updated?.revealScope ?? matchRow.revealScope,
-        surface: 'review_detail',
-        fairnessStatus: normalizeFairnessStatus(fairnessEvaluation.status),
-        operationalFallbackMode:
-          matchRow.reviewOperationalFallbackMode ?? matchRow.assignmentOperationalFallbackMode,
+      reviewStage: nextReviewStage,
+      revealScope: nextRevealScope,
+      visibleIdentityFields: getVisibleIdentityFields(nextRevealScope),
+      ...corridor,
+      why: buildVisibilitySafeWhy({
+        reasonCodes,
+        fairnessStatus: nextFairnessStatus,
+        fallbackState: corridor.fallbackState,
       }),
       fairness: {
         status: fairnessEvaluation.status,

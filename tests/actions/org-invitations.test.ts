@@ -312,11 +312,16 @@ describe('organization invitations', () => {
     expect(issueCapabilityToken).not.toHaveBeenCalled();
   });
 
-  it('accepts a tokenized invitation and activates the membership', async () => {
+  it('accepts a tokenized invitation and canonicalizes a persisted legacy invite role', async () => {
     const invitationUpdateEq = vi.fn().mockResolvedValue({ error: null });
     const memberInsertSingle = vi.fn().mockResolvedValue({
       data: { id: 'membership-2' },
       error: null,
+    });
+    const memberInsert = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        single: memberInsertSingle,
+      }),
     });
     const auditInsert = vi.fn().mockResolvedValue({ error: null });
 
@@ -375,7 +380,7 @@ describe('organization invitations', () => {
                     org_id: 'org-1',
                     membership_id: null,
                     email: 'candidate@proofound.test',
-                    role: 'org_reviewer',
+                    role: 'admin',
                     status: 'pending',
                     expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
                     accepted_at: null,
@@ -393,11 +398,7 @@ describe('organization invitations', () => {
 
         if (table === 'organization_members') {
           return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: memberInsertSingle,
-              }),
-            }),
+            insert: memberInsert,
           };
         }
 
@@ -418,6 +419,12 @@ describe('organization invitations', () => {
       })
     );
     expect(memberInsertSingle).toHaveBeenCalled();
+    expect(memberInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        org_id: 'org-1',
+        role: 'org_manager',
+      })
+    );
     expect(invitationUpdateEq).toHaveBeenCalledWith('id', 'invite-1');
     expect(revalidatePath).toHaveBeenCalledWith('/app/o/proofound');
   });

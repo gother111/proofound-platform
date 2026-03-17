@@ -53,6 +53,8 @@ interface MatchExplainerProps {
   rank?: number; // User's rank in this match pool
   totalCandidates?: number; // Total candidates in pool
   rankBand?: string; // e.g., "Top 5", "Top 10"
+  rankMode?: 'exact' | 'band';
+  exactRankAvailable?: boolean;
 
   // Subscore breakdown
   subscores: {
@@ -96,6 +98,9 @@ interface MatchExplainerProps {
     hours: { match: boolean; details?: string };
     workMode: { match: boolean; details?: string };
   };
+  reasonSummary?: string[];
+  reasonSections?: Record<string, string[]>;
+  fairnessWarning?: string | null;
 
   // Custom trigger button (optional)
   trigger?: React.ReactNode;
@@ -107,10 +112,15 @@ export function MatchExplainerModal({
   rank,
   totalCandidates,
   rankBand,
+  rankMode,
+  exactRankAvailable,
   subscores,
   skillsMatch,
   pac,
   constraints,
+  reasonSummary = [],
+  reasonSections,
+  fairnessWarning,
   trigger,
 }: MatchExplainerProps) {
   const [open, setOpen] = useState(false);
@@ -188,6 +198,11 @@ export function MatchExplainerModal({
                     {getRankDisplay()}
                   </p>
                 </div>
+                {rankMode === 'band' && exactRankAvailable ? (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Exact rank is hidden while privacy or fairness limits apply.
+                  </p>
+                ) : null}
               </div>
             )}
           </div>
@@ -199,6 +214,41 @@ export function MatchExplainerModal({
             strength.
           </p>
         </div>
+
+        {fairnessWarning ? (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="mt-0.5 h-4 w-4 text-amber-700" />
+              <p className="text-sm text-amber-900">{fairnessWarning}</p>
+            </div>
+          </div>
+        ) : null}
+
+        {reasonSummary.length > 0 ? (
+          <div className="rounded-xl border border-proofound-stone bg-white p-4">
+            <h4 className="mb-3 text-sm font-semibold text-foreground">Privacy-safe explanation</h4>
+            <ul className="space-y-2 text-sm text-foreground">
+              {reasonSummary.map((item, index) => (
+                <li key={`${matchId}-reason-summary-${index}`} className="flex items-start gap-2">
+                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-proofound-forest" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+            {reasonSections?.manual_override?.length ? (
+              <div className="mt-4 rounded-lg bg-[#F7F6F1] p-3">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Review notes
+                </p>
+                <ul className="space-y-1 text-sm text-foreground">
+                  {reasonSections.manual_override.map((item, index) => (
+                    <li key={`${matchId}-manual-override-${index}`}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
 
         {/* Tabbed Breakdown */}
         <Tabs defaultValue="overview" className="w-full">

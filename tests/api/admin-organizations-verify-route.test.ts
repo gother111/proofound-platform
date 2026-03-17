@@ -2,13 +2,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 import { POST } from '@/app/api/admin/organizations/[orgId]/verify/route';
-import { requirePlatformAdmin } from '@/lib/auth/admin';
 import { logAdminAction } from '@/lib/audit/admin-logger';
+import { requireBreakGlassPlatformAdminJson } from '@/lib/authz';
 import { db } from '@/db';
 
-vi.mock('@/lib/auth/admin', () => ({
-  requirePlatformAdmin: vi.fn(),
-}));
+vi.mock('@/lib/authz', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/authz')>('@/lib/authz');
+  return {
+    ...actual,
+    requireBreakGlassPlatformAdminJson: vi.fn(),
+  };
+});
 
 vi.mock('@/lib/audit/admin-logger', () => ({
   logAdminAction: vi.fn(),
@@ -29,8 +33,9 @@ describe('POST /api/admin/organizations/[orgId]/verify', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(requirePlatformAdmin).mockResolvedValue({
-      userId: 'admin-1',
+    vi.mocked(requireBreakGlassPlatformAdminJson).mockResolvedValue({
+      adminUser: { userId: 'admin-1' },
+      reason: 'Investigating material trust issue',
     } as any);
     (db.query.organizations.findFirst as any).mockResolvedValue({
       id: orgId,
@@ -55,6 +60,9 @@ describe('POST /api/admin/organizations/[orgId]/verify', () => {
         reasonCode: 'safety_review_failed',
         note: 'Manual escalation.',
       }),
+      headers: {
+        'x-break-glass-reason': 'Investigating material trust issue',
+      },
     });
 
     const response = await POST(request, { params: Promise.resolve({ orgId }) });
@@ -67,6 +75,13 @@ describe('POST /api/admin/organizations/[orgId]/verify', () => {
     });
     expect(db.update as any).toHaveBeenCalled();
     expect(db.insert as any).toHaveBeenCalled();
+    expect(requireBreakGlassPlatformAdminJson).toHaveBeenCalledWith(
+      request,
+      expect.objectContaining({
+        action: 'org_trust_tier.break_glass_update',
+        targetId: orgId,
+      })
+    );
     expect(logAdminAction).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'set_org_trust_tier',
@@ -74,6 +89,9 @@ describe('POST /api/admin/organizations/[orgId]/verify', () => {
         changes: expect.objectContaining({
           previousTier: 'basic_trusted',
           newTier: 'restricted',
+        }),
+        metadata: expect.objectContaining({
+          breakGlassReason: 'Investigating material trust issue',
         }),
       })
     );

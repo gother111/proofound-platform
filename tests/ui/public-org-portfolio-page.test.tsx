@@ -142,6 +142,7 @@ describe('Organization public portfolio page', () => {
     expect(screen.getByText(/public organization trust card/i)).toBeInTheDocument();
     expect(screen.getByText('Shareable by direct link')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /trust basics/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /purpose/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /why the work matters/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /working context/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /hiring process clarity/i })).toBeInTheDocument();
@@ -157,6 +158,14 @@ describe('Organization public portfolio page', () => {
       'href',
       '/app/o/acme/home'
     );
+    expect(screen.queryByRole('heading', { name: /values/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /causes/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /work culture/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /projects/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /partnerships/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /goals/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/team members/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/owner@|reviewer@|member@/i)).not.toBeInTheDocument();
   });
 
   it('falls back to return-home link when returnTo is unsafe', async () => {

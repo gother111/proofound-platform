@@ -2,12 +2,12 @@ import { canonicalOrgMembershipStates, canonicalOrgRoleValues } from '@/db/schem
 import {
   CANONICAL_ORG_ROLE_VALUES,
   ORG_ACTIVE_MEMBERSHIP_STATES,
-  type LegacyOrgRole,
   type OrgRole,
 } from '@/lib/authz/policy';
 
 export type CanonicalOrgMembershipState = (typeof canonicalOrgMembershipStates)[number];
 export type CanonicalOrgRole = (typeof canonicalOrgRoleValues)[number];
+type LegacyOrgRole = 'owner' | 'admin' | 'member' | 'viewer';
 
 const LEGACY_ROLE_MAP = {
   owner: 'org_owner',

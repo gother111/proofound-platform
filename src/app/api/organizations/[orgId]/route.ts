@@ -1,10 +1,11 @@
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { db } from '@/db';
-import { organizationMembers, organizations } from '@/db/schema';
+import { organizations } from '@/db/schema';
+import { getCanonicalActiveOrgMembership } from '@/lib/api/auth';
 import { requireApiAuthContext } from '@/lib/auth';
-import { ensureOrganizationPrincipal, normalizeAuthorizedOrgRole } from '@/lib/authz';
+import { ensureOrganizationPrincipal } from '@/lib/authz';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
 
 const TRUST_PROFILE_KEYS = new Set([
@@ -30,14 +31,7 @@ export async function GET(
     const { user } = authContext;
     const { orgId } = await params;
 
-    const membership = await db.query.organizationMembers.findFirst({
-      where: and(
-        eq(organizationMembers.orgId, orgId),
-        eq(organizationMembers.userId, user.id),
-        eq(organizationMembers.state, 'active')
-      ),
-      columns: { id: true },
-    });
+    const membership = await getCanonicalActiveOrgMembership(authContext.supabase, user.id, orgId);
 
     if (!membership) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
@@ -92,17 +86,8 @@ export async function PUT(
       );
     }
 
-    const membership = await db.query.organizationMembers.findFirst({
-      where: and(
-        eq(organizationMembers.orgId, orgId),
-        eq(organizationMembers.userId, user.id),
-        eq(organizationMembers.state, 'active')
-      ),
-      columns: { role: true },
-    });
-
-    const membershipRole = normalizeAuthorizedOrgRole(membership?.role);
-    if (membershipRole !== 'org_owner') {
+    const membership = await getCanonicalActiveOrgMembership(authContext.supabase, user.id, orgId);
+    if (membership?.role !== 'org_owner') {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 

@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { normalizeAuthorizedOrgRole } from '@/lib/authz';
+import { getCanonicalActiveOrgMembership, requireApiAuth } from '@/lib/api/auth';
 import { db } from '@/db';
-import { assignmentInvitations, organizationMembers } from '@/db/schema';
-import { and, eq } from 'drizzle-orm';
+import { assignmentInvitations } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
@@ -20,38 +19,26 @@ export async function GET(
   let orgId: string | undefined;
 
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const auth = await requireApiAuth();
 
     ({ orgId } = await params);
 
-    if (authError || !user) {
+    if (auth instanceof NextResponse) {
       log.warn('org.assignments.list.unauthorized', {
         orgId,
-        hasAuthError: !!authError,
+        hasAuthError: true,
       });
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return auth;
     }
+    const { user, supabase } = auth;
     userId = user.id;
 
-    const membership = await db.query.organizationMembers.findFirst({
-      where: and(
-        eq(organizationMembers.orgId, orgId),
-        eq(organizationMembers.userId, user.id),
-        eq(organizationMembers.state, 'active')
-      ),
-      columns: { role: true },
-    });
-
-    const orgRole = normalizeAuthorizedOrgRole(membership?.role);
-    if (!membership || !orgRole || !['org_owner', 'org_manager'].includes(orgRole)) {
+    const membership = await getCanonicalActiveOrgMembership(supabase, user.id, orgId);
+    if (!membership || !['org_owner', 'org_manager'].includes(membership.role)) {
       log.warn('org.assignments.list.forbidden', {
         orgId,
         userId: user.id,
-        role: orgRole ?? membership?.role ?? null,
+        role: membership?.role ?? null,
       });
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }

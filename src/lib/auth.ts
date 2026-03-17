@@ -63,8 +63,10 @@ type OrganizationRow = Pick<
 
 type OrganizationMemberRow = Pick<
   OrganizationMember,
-  'id' | 'orgId' | 'userId' | 'role' | 'state' | 'joinedAt'
->;
+  'id' | 'orgId' | 'userId' | 'state' | 'joinedAt'
+> & {
+  role: OrgRole;
+};
 
 export type ApiAuthContext = {
   user: ProfileRow;

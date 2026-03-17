@@ -41,7 +41,6 @@ import { createClient } from '@/lib/supabase/server';
 import { CopyTextButton } from './CopyTextButton';
 import { DownloadPdfButton } from './DownloadPdfButton';
 import { ShareLinkButton } from './ShareLinkButton';
-import { ViewCounterClient } from './ViewCounterClient';
 
 function renderUnavailablePage(handle: string) {
   return (
@@ -211,9 +210,6 @@ export default async function PortfolioPage({
         </div>
       }
     >
-      {!viewerIsOwner ? (
-        <ViewCounterClient subjectType="individual_profile" slugOrHandle={data.handle} />
-      ) : null}
       <JsonLdScripts items={jsonLdItems} idPrefix="public-portfolio-jsonld" />
       <div className="space-y-4">
         <Card variant="bento" className="p-4 sm:p-5">

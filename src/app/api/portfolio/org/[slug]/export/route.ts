@@ -1,11 +1,7 @@
 import { NextResponse } from 'next/server';
+import { getCanonicalActiveOrgMembership } from '@/lib/api/auth';
 import { createClient } from '@/lib/supabase/server';
-import {
-  authorize,
-  isActiveMembershipState,
-  normalizeAuthorizedOrgRole,
-  type OrgRole,
-} from '@/lib/authz';
+import { authorize, type OrgRole } from '@/lib/authz';
 import { fetchOrganizationTrustExportData } from '@/lib/portfolio/export-data';
 import { generateOrganizationProfilePdf } from '@/lib/portfolio/pdf';
 import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
@@ -56,16 +52,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
     }
     trace.objectRefs.orgId = organization.id;
 
-    const { data: membership } = await supabase
-      .from('organization_members')
-      .select('role, state')
-      .eq('org_id', organization.id)
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    const orgRole = isActiveMembershipState(membership?.state)
-      ? (normalizeAuthorizedOrgRole(membership?.role) as OrgRole | null)
-      : null;
+    const membership = await getCanonicalActiveOrgMembership(supabase, user.id, organization.id);
+    const orgRole = (membership?.role as OrgRole | null) ?? null;
     const canExport = authorize({
       resource: 'exports',
       action: 'export',

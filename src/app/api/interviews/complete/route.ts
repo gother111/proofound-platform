@@ -28,7 +28,9 @@ export async function POST(request: NextRequest) {
 
     const { data: interview, error: interviewError } = await supabase
       .from('interviews')
-      .select('id, host_user_id, participant_user_ids, status')
+      .select(
+        'id, host_user_id, participant_user_ids, status, completed_at, cancelled_at, cancel_reason, no_show_at, updated_at'
+      )
       .eq('id', body.interviewId)
       .maybeSingle();
 
@@ -41,7 +43,21 @@ export async function POST(request: NextRequest) {
     }
 
     if (interview.status === 'completed') {
-      return NextResponse.json({ success: true, message: 'Already completed' });
+      return NextResponse.json({
+        success: true,
+        message: 'Already completed',
+        workflow: buildWorkflowView({
+          machine: 'interview',
+          state: 'completed',
+          reasonCode: interview.cancel_reason,
+          timestamps: {
+            completedAt: interview.completed_at,
+            cancelledAt: interview.cancelled_at,
+            noShowAt: interview.no_show_at,
+            updatedAt: interview.updated_at,
+          },
+        }),
+      });
     }
 
     const { error: updateError } = await supabase

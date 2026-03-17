@@ -25,10 +25,6 @@ vi.mock('@/lib/auth', () => ({
   })),
 }));
 
-vi.mock('@/lib/authz', () => ({
-  normalizeAuthorizedOrgRole: vi.fn((role: string) => role),
-}));
-
 vi.mock('@/components/organization/OrgTrustProfileEditor', () => ({
   OrgTrustProfileEditor: ({ org }: any) => (
     <div data-testid="trust-editor">

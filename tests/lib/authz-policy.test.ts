@@ -125,6 +125,20 @@ describe('canonical authz policy', () => {
     expect(getAuditMetadataVisibility('org_reviewer')).toBe('none');
   });
 
+  it('treats legacy org role strings as unauthorized inside policy helpers', () => {
+    expect(
+      authorize({
+        resource: 'candidate_shortlist_cards',
+        action: 'read',
+        orgRole: 'owner' as any,
+      }).allowed
+    ).toBe(false);
+    expect(getVerificationSummaryVisibility('member' as any)).toBe('none');
+    expect(getEffectiveShortlistRevealScope('viewer' as any, 'full_identity')).toBe(
+      'full_identity'
+    );
+  });
+
   it('keeps manager access operational but not ownership privileged', () => {
     expect(
       authorize({

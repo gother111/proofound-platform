@@ -41,6 +41,11 @@ function buildSupabase({
     host_user_id: 'host-1',
     participant_user_ids: ['host-1', 'candidate-1'],
     status: 'scheduled',
+    completed_at: null,
+    cancelled_at: null,
+    cancel_reason: null,
+    no_show_at: null,
+    updated_at: new Date('2026-03-15T00:00:00.000Z').toISOString(),
   },
 }: {
   user?: { id: string } | null;
@@ -122,5 +127,41 @@ describe('POST /api/interviews/complete', () => {
       warning: 'Feedback invites could not be issued immediately.',
       overallState: 'due',
     });
+  });
+
+  it('returns workflow state when the interview was already completed', async () => {
+    mocks.createClient.mockResolvedValue(
+      buildSupabase({
+        interview: {
+          id: '11111111-1111-4111-8111-111111111111',
+          host_user_id: 'host-1',
+          participant_user_ids: ['host-1', 'candidate-1'],
+          status: 'completed',
+          completed_at: '2026-03-15T00:00:00.000Z',
+          cancelled_at: null,
+          cancel_reason: null,
+          no_show_at: null,
+          updated_at: '2026-03-15T00:00:00.000Z',
+        },
+      })
+    );
+
+    const response = await POST(
+      buildRequest({ interviewId: '11111111-1111-4111-8111-111111111111' })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.message).toBe('Already completed');
+    expect(body.workflow).toEqual({ state: 'completed' });
+    expect(mocks.recordInterviewTransition).not.toHaveBeenCalled();
+    expect(mocks.issueFeedbackInvites).not.toHaveBeenCalled();
+    expect(mocks.buildWorkflowView).toHaveBeenCalledWith(
+      expect.objectContaining({
+        machine: 'interview',
+        state: 'completed',
+      })
+    );
   });
 });

@@ -2,12 +2,12 @@
  * POST /api/admin/organizations/[orgId]/verify
  *
  * Transition an organization trust tier.
- * Requires: platform_admin or super_admin
+ * Requires: break-glass platform admin access with an audited reason.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requirePlatformAdmin } from '@/lib/auth/admin';
+import { requireBreakGlassPlatformAdminJson } from '@/lib/authz';
 import { db } from '@/db';
 import { organizations, organizationTrustTierTransitions } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -81,8 +81,21 @@ export async function POST(
   { params }: { params: Promise<{ orgId: string }> }
 ) {
   try {
-    const adminUser = await requirePlatformAdmin();
     const { orgId } = await params;
+    const breakGlass = await requireBreakGlassPlatformAdminJson(request, {
+      action: 'org_trust_tier.break_glass_update',
+      targetType: 'organization',
+      targetId: orgId,
+      metadata: {
+        route: '/api/admin/organizations/[orgId]/verify',
+      },
+    });
+
+    if (breakGlass instanceof NextResponse) {
+      return breakGlass;
+    }
+
+    const adminUser = breakGlass.adminUser;
     const rawBody = await request.json();
     const body = OrgTrustTierSchema.parse(rawBody);
     const trustTier =
@@ -127,6 +140,7 @@ export async function POST(
       actorType: 'platform_admin',
       actorId: adminUser.userId,
       metadata: {
+        breakGlassReason: breakGlass.reason,
         note: body.note ?? null,
         compatibilityTrustStatus,
       },
@@ -147,6 +161,7 @@ export async function POST(
       },
       metadata: {
         organizationName: org.displayName,
+        breakGlassReason: breakGlass.reason,
         reasonCode: body.reasonCode ?? null,
         note: body.note ?? null,
       },

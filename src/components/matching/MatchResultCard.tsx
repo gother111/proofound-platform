@@ -19,8 +19,8 @@ interface MatchResultCardProps {
   result: {
     id?: string; // Match ID for fetching detailed explanation
     score: number;
-    subscores: Record<string, number>;
-    contributions: Record<string, number>;
+    subscores?: Record<string, number>;
+    contributions?: Record<string, number>;
     profileId?: string;
     assignmentId?: string;
     profile?: {
@@ -86,10 +86,10 @@ export function MatchResultCard({
     (data as any)?.showExactSalary === true;
 
   // Match score percentage
-  const scorePercent = Math.round(result.score * 100);
+  const scorePercent = Math.round((Number.isFinite(result.score) ? result.score : 0) * 100);
 
   // Contribution bars
-  const contributions = Object.entries(result.contributions)
+  const contributions = Object.entries(result.contributions ?? {})
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3);
 
@@ -208,6 +208,11 @@ export function MatchResultCard({
                       rank={matchExplanation.rank}
                       totalCandidates={matchExplanation.totalCandidates}
                       rankBand={matchExplanation.rankBand}
+                      rankMode={matchExplanation.rankMode}
+                      exactRankAvailable={matchExplanation.exactRankAvailable}
+                      fairnessWarning={matchExplanation.fairness?.warning}
+                      reasonSummary={matchExplanation.reasonSummary}
+                      reasonSections={matchExplanation.reasonSections}
                       subscores={matchExplanation.subscores}
                       skillsMatch={matchExplanation.skillsMatch}
                       pac={matchExplanation.pac}

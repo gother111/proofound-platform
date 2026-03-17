@@ -21,6 +21,20 @@ const mocks = vi.hoisted(() => ({
 const schema = vi.hoisted(() => ({
   assignmentStateTransitions: {},
   assignments: {},
+  conversations: {
+    __name: 'conversations',
+    id: Symbol('conversations.id'),
+    matchId: Symbol('conversations.matchId'),
+    stage: Symbol('conversations.stage'),
+    participantOneId: Symbol('conversations.participantOneId'),
+    participantTwoId: Symbol('conversations.participantTwoId'),
+    participantOneWantsReveal: Symbol('conversations.participantOneWantsReveal'),
+    participantTwoWantsReveal: Symbol('conversations.participantTwoWantsReveal'),
+    participantOneRevealRequestedAt: Symbol('conversations.participantOneRevealRequestedAt'),
+    participantTwoRevealRequestedAt: Symbol('conversations.participantTwoRevealRequestedAt'),
+    revealedAt: Symbol('conversations.revealedAt'),
+    updatedAt: Symbol('conversations.updatedAt'),
+  },
   consentObligations: {},
   consentStateTransitions: {},
   decisionStateTransitions: { __name: 'decision_state_transitions' },
@@ -80,6 +94,13 @@ vi.mock('@/lib/privacy/consent-contract', () => ({
 }));
 
 vi.mock('@/lib/workflow/contracts', () => ({
+  CANONICAL_RELATIONSHIP_LIFECYCLE_CONTRACT: {
+    policy: {
+      reveal: {
+        timeoutHours: 72,
+      },
+    },
+  },
   assertAllowedTransition: vi.fn(),
   getAllowedActions: vi.fn(() => []),
   getWorkflowLabel: vi.fn((_machine: string, state: string) => state),

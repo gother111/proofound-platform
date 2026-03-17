@@ -376,9 +376,10 @@ export async function acceptInvitation(token: string) {
     }
 
     let membershipId = invitation.membership_id as string | null;
+    const invitationRole = normalizeAuthorizedOrgRole(invitation.role) ?? 'org_reviewer';
     const membershipUpdatePayload = {
       user_id: user.id,
-      role: normalizeAuthorizedOrgRole(invitation.role) ?? 'org_reviewer',
+      role: invitationRole,
       state: 'active',
       accepted_at: new Date().toISOString(),
       joined_at: new Date().toISOString(),
@@ -447,7 +448,7 @@ export async function acceptInvitation(token: string) {
         actorMembershipId: membershipId,
         priorState: 'invited_pending',
         newState: 'active',
-        extra: { role: normalizeAuthorizedOrgRole(invitation.role) ?? 'org_reviewer' },
+        extra: { role: invitationRole },
       }),
     });
 

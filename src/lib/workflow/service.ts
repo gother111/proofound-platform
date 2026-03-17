@@ -4,6 +4,7 @@ import { db } from '@/db';
 import {
   assignmentStateTransitions,
   assignments,
+  conversations,
   consentObligations,
   consentStateTransitions,
   decisionStateTransitions,
@@ -25,6 +26,7 @@ import {
   type ConsentTypeValue,
 } from '@/lib/privacy/consent-contract';
 import {
+  CANONICAL_RELATIONSHIP_LIFECYCLE_CONTRACT,
   assertAllowedTransition,
   getAllowedActions,
   getWorkflowLabel,
@@ -38,6 +40,12 @@ import {
 } from '@/lib/workflow/contracts';
 import { cancelWorkflowJobs, enqueueWorkflowJob } from '@/lib/workflow/queue';
 import { revalidatePublicPortfolioByProfileId } from '@/lib/portfolio/public-invalidation';
+import { computeProofTrustSnapshot } from '@/lib/proof-trust/snapshots';
+import {
+  appendVerificationLogEntry,
+  appendVerificationTransitionLogEntry,
+} from '@/lib/verification/log-entries';
+import { ensureEngagementVerificationForDecision } from '@/lib/engagement-verifications/service';
 
 async function getInterviewWorkflowRow(interviewId: string) {
   const result = await db.execute(sql`
@@ -85,12 +93,6 @@ async function getInterviewWorkflowRow(interviewId: string) {
     updatedAt: row.updated_at,
   };
 }
-import { computeProofTrustSnapshot } from '@/lib/proof-trust/snapshots';
-import {
-  appendVerificationLogEntry,
-  appendVerificationTransitionLogEntry,
-} from '@/lib/verification/log-entries';
-import { ensureEngagementVerificationForDecision } from '@/lib/engagement-verifications/service';
 
 type TransitionContext = {
   trigger: string;
@@ -114,6 +116,141 @@ function buildWorkflowView(params: WorkflowViewParams) {
     reasonCode: params.reasonCode ?? null,
     timestamps: params.timestamps ?? {},
     allowedActions: getAllowedActions(params.machine, params.state),
+  };
+}
+
+export type RevealRequestConversationState = {
+  id: string;
+  matchId?: string | null;
+  stage: string | null;
+  participantOneId?: string | null;
+  participantTwoId?: string | null;
+  participantOneWantsReveal: boolean | null;
+  participantTwoWantsReveal: boolean | null;
+  participantOneRevealRequestedAt: Date | null;
+  participantTwoRevealRequestedAt: Date | null;
+  revealedAt?: Date | null;
+  updatedAt?: Date | null;
+};
+
+export type RevealRequestTimeoutSnapshot = {
+  pending: boolean;
+  expired: boolean;
+  requestedBy: 'participant_one' | 'participant_two' | null;
+  requestedAt: Date | null;
+  expiresAt: Date | null;
+  timedOutParticipantId: string | null;
+};
+
+const REVEAL_REQUEST_TIMEOUT_MS =
+  CANONICAL_RELATIONSHIP_LIFECYCLE_CONTRACT.policy.reveal.timeoutHours * 60 * 60 * 1000;
+
+export function getRevealRequestTimeoutSnapshot(
+  conversation: RevealRequestConversationState,
+  now: Date = new Date()
+): RevealRequestTimeoutSnapshot {
+  if (conversation.stage !== 'masked') {
+    return {
+      pending: false,
+      expired: false,
+      requestedBy: null,
+      requestedAt: null,
+      expiresAt: null,
+      timedOutParticipantId: null,
+    };
+  }
+
+  const participantOnePending =
+    conversation.participantOneWantsReveal === true &&
+    conversation.participantTwoWantsReveal !== true;
+  const participantTwoPending =
+    conversation.participantTwoWantsReveal === true &&
+    conversation.participantOneWantsReveal !== true;
+
+  if (!participantOnePending && !participantTwoPending) {
+    return {
+      pending: false,
+      expired: false,
+      requestedBy: null,
+      requestedAt: null,
+      expiresAt: null,
+      timedOutParticipantId: null,
+    };
+  }
+
+  const requestedBy = participantOnePending ? 'participant_one' : 'participant_two';
+  const requestedAt =
+    requestedBy === 'participant_one'
+      ? conversation.participantOneRevealRequestedAt
+      : conversation.participantTwoRevealRequestedAt;
+  const expiresAt = requestedAt
+    ? new Date(requestedAt.getTime() + REVEAL_REQUEST_TIMEOUT_MS)
+    : null;
+  const expired = expiresAt ? now.getTime() > expiresAt.getTime() : false;
+  const timedOutParticipantId =
+    requestedBy === 'participant_one'
+      ? (conversation.participantOneId ?? null)
+      : (conversation.participantTwoId ?? null);
+
+  return {
+    pending: true,
+    expired,
+    requestedBy,
+    requestedAt,
+    expiresAt,
+    timedOutParticipantId,
+  };
+}
+
+export async function syncRevealRequestTimeoutState(params: {
+  conversation: RevealRequestConversationState;
+  now?: Date;
+}) {
+  const timeout = getRevealRequestTimeoutSnapshot(params.conversation, params.now ?? new Date());
+
+  if (!timeout.expired) {
+    return {
+      conversation: params.conversation,
+      timeout,
+      reset: false,
+    };
+  }
+
+  const [updated] = await db
+    .update(conversations)
+    .set({
+      participantOneWantsReveal: false,
+      participantTwoWantsReveal: false,
+      participantOneRevealRequestedAt: null,
+      participantTwoRevealRequestedAt: null,
+      updatedAt: params.now ?? new Date(),
+    })
+    .where(eq(conversations.id, params.conversation.id))
+    .returning({
+      id: conversations.id,
+      matchId: conversations.matchId,
+      stage: conversations.stage,
+      participantOneId: conversations.participantOneId,
+      participantTwoId: conversations.participantTwoId,
+      participantOneWantsReveal: conversations.participantOneWantsReveal,
+      participantTwoWantsReveal: conversations.participantTwoWantsReveal,
+      participantOneRevealRequestedAt: conversations.participantOneRevealRequestedAt,
+      participantTwoRevealRequestedAt: conversations.participantTwoRevealRequestedAt,
+      revealedAt: conversations.revealedAt,
+      updatedAt: conversations.updatedAt,
+    });
+
+  return {
+    conversation: updated ?? {
+      ...params.conversation,
+      participantOneWantsReveal: false,
+      participantTwoWantsReveal: false,
+      participantOneRevealRequestedAt: null,
+      participantTwoRevealRequestedAt: null,
+      updatedAt: params.now ?? new Date(),
+    },
+    timeout,
+    reset: true,
   };
 }
 

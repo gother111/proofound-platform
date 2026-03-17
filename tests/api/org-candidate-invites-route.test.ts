@@ -55,7 +55,10 @@ import { sendCandidateInviteEmail } from '@/lib/email';
 import { POST } from '@/app/api/organizations/[orgId]/candidate-invites/route';
 import { resolveCandidateInvitePolicyContext } from '@/lib/candidate-invite-policy';
 
-function mockAuthenticatedUser(userId = '11111111-1111-1111-1111-111111111111') {
+function mockAuthenticatedUser(
+  membership: { role: string; state?: string | null; status?: string | null } | null,
+  userId = '11111111-1111-1111-1111-111111111111'
+) {
   (createClient as any).mockResolvedValue({
     auth: {
       getUser: vi.fn().mockResolvedValue({
@@ -67,6 +70,18 @@ function mockAuthenticatedUser(userId = '11111111-1111-1111-1111-111111111111') 
         },
       }),
     },
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: membership,
+              error: null,
+            }),
+          })),
+        })),
+      })),
+    })),
   });
 }
 
@@ -88,7 +103,7 @@ describe('POST /api/organizations/[orgId]/candidate-invites', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockAuthenticatedUser();
+    mockAuthenticatedUser({ role: 'org_owner', state: 'active', status: null });
     (resolveCandidateInvitePolicyContext as any).mockResolvedValue({
       organization: { id: 'org-1', orgTrustTier: 'reviewed', trustStatus: 'platform_reviewed' },
       assignment: null,
@@ -100,8 +115,8 @@ describe('POST /api/organizations/[orgId]/candidate-invites', () => {
     });
   });
 
-  it('returns 403 when user is not a canonical org owner or legacy admin', async () => {
-    mockSelectWithLimit([{ role: 'org_reviewer', status: 'active' }]); // membership
+  it('returns 403 when user is not a canonical org owner or manager', async () => {
+    mockAuthenticatedUser({ role: 'org_reviewer', state: 'active', status: null });
 
     const request = new NextRequest('http://localhost/api/organizations/org/candidate-invites', {
       method: 'POST',
@@ -115,7 +130,6 @@ describe('POST /api/organizations/[orgId]/candidate-invites', () => {
   });
 
   it('returns 409 when all recipients already have active invites', async () => {
-    mockSelectWithLimit([{ role: 'org_owner', status: 'active' }]); // membership
     mockSelectWithLimit([{ id: orgId, displayName: 'Acme', slug: 'acme' }]); // org
     mockSelectWithWhere([{ inviteeEmailNormalized: 'candidate@example.com' }]); // existing invite
 
@@ -133,8 +147,8 @@ describe('POST /api/organizations/[orgId]/candidate-invites', () => {
     expect(payload.error).toMatch(/active invites/i);
   });
 
-  it('creates invite and sends email for legacy admin via canonical mapping', async () => {
-    mockSelectWithLimit([{ role: 'admin', status: 'active' }]); // membership
+  it('creates invite and sends email for canonical org manager', async () => {
+    mockAuthenticatedUser({ role: 'org_manager', state: 'active', status: null });
     mockSelectWithLimit([{ id: orgId, displayName: 'Acme', slug: 'acme' }]); // org
     mockSelectWithWhere([]); // no existing invite
 
@@ -162,7 +176,6 @@ describe('POST /api/organizations/[orgId]/candidate-invites', () => {
   });
 
   it('rejects test_match invite creation for non-beta users', async () => {
-    mockSelectWithLimit([{ role: 'org_owner', status: 'active' }]); // membership
     mockSelectWithLimit([{ id: orgId, displayName: 'Acme', slug: 'acme' }]); // org
     mockSelectWithLimit([{ isBetaTesting: false }]); // inviter profile flags
 
@@ -182,7 +195,6 @@ describe('POST /api/organizations/[orgId]/candidate-invites', () => {
   it('creates test_match invite when user is beta and assignment belongs to org', async () => {
     const assignmentId = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
 
-    mockSelectWithLimit([{ role: 'org_owner', status: 'active' }]); // membership
     mockSelectWithLimit([{ id: orgId, displayName: 'Acme', slug: 'acme' }]); // org
     mockSelectWithLimit([{ isBetaTesting: true }]); // inviter profile flags
     mockSelectWithWhere([]); // existing invite check
@@ -228,7 +240,6 @@ describe('POST /api/organizations/[orgId]/candidate-invites', () => {
   it('blocks invite creation when assignment policy blocks the workflow', async () => {
     const assignmentId = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
 
-    mockSelectWithLimit([{ role: 'org_owner', status: 'active' }]); // membership
     mockSelectWithLimit([{ id: orgId, displayName: 'Acme', slug: 'acme' }]); // org
     mockSelectWithLimit([{ isBetaTesting: true }]); // inviter profile flags
     (resolveCandidateInvitePolicyContext as any).mockClear();

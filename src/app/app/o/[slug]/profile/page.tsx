@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { getActiveOrg, requireAuth } from '@/lib/auth';
-import { normalizeAuthorizedOrgRole } from '@/lib/authz';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,8 +24,7 @@ export default async function OrganizationProfilePage({
   }
 
   const { org, membership } = result;
-  const membershipRole = normalizeAuthorizedOrgRole(membership.role);
-  const canEdit = membershipRole === 'org_owner' || membershipRole === 'org_manager';
+  const canEdit = membership.role === 'org_owner' || membership.role === 'org_manager';
 
   return (
     <AppSurface>

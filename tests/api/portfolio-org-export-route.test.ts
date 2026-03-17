@@ -22,7 +22,7 @@ import { generateOrganizationProfilePdf } from '@/lib/portfolio/pdf';
 function mockSupabase({
   user,
   organization = { id: 'org-1', slug: 'acme' },
-  membership = { role: 'admin', state: 'active' },
+  membership = { role: 'org_manager', state: 'active' },
 }: {
   user: { id: string } | null;
   organization?: { id: string; slug: string } | null;
@@ -136,8 +136,11 @@ describe('/api/portfolio/org/[slug]/export', () => {
     expect(bytes.length).toBeGreaterThan(0);
   });
 
-  it('returns 403 for viewer membership', async () => {
-    mockSupabase({ user: { id: 'user-1' }, membership: { role: 'viewer', state: 'active' } });
+  it('returns 403 for canonical reviewer membership', async () => {
+    mockSupabase({
+      user: { id: 'user-1' },
+      membership: { role: 'org_reviewer', state: 'active' },
+    });
 
     const response = await GET(new Request('http://localhost/api/portfolio/org/acme/export'), {
       params: Promise.resolve({ slug: 'acme' }),
@@ -147,8 +150,11 @@ describe('/api/portfolio/org/[slug]/export', () => {
     expect(await response.json()).toEqual({ error: 'Forbidden' });
   });
 
-  it('returns 403 for member membership', async () => {
-    mockSupabase({ user: { id: 'user-1' }, membership: { role: 'member', state: 'active' } });
+  it('returns 403 for inactive canonical owner membership', async () => {
+    mockSupabase({
+      user: { id: 'user-1' },
+      membership: { role: 'org_owner', state: 'inactive' },
+    });
 
     const response = await GET(new Request('http://localhost/api/portfolio/org/acme/export'), {
       params: Promise.resolve({ slug: 'acme' }),

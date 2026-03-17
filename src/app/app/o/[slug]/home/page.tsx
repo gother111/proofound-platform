@@ -11,14 +11,13 @@ import {
 } from '@/components/org/OrgCollaboratorInviteCard';
 import { inviteMember } from '@/actions/org';
 import { getActiveOrg, requireAuth } from '@/lib/auth';
-import { normalizeAuthorizedOrgRole } from '@/lib/authz';
+import type { OrgRole } from '@/lib/authz';
 import { normalizeOrganizationValues } from '@/lib/organizations/normalizeValues';
 
 export const dynamic = 'force-dynamic';
 
-function getRoleLabel(role: string | null | undefined) {
-  const normalized = normalizeAuthorizedOrgRole(role);
-  switch (normalized) {
+function getRoleLabel(role: OrgRole) {
+  switch (role) {
     case 'org_owner':
       return 'Owner';
     case 'org_manager':
@@ -46,9 +45,8 @@ export default async function OrganizationHomePage({
   const { org, membership } = result;
   const values = normalizeOrganizationValues(org.values);
   const roleLabel = getRoleLabel(membership.role);
-  const normalizedRole = normalizeAuthorizedOrgRole(membership.role);
-  const canEditTrustProfile = ['org_owner', 'org_manager'].includes(normalizedRole ?? '');
-  const canInviteCollaborators = normalizedRole === 'org_owner';
+  const canEditTrustProfile = ['org_owner', 'org_manager'].includes(membership.role);
+  const canInviteCollaborators = membership.role === 'org_owner';
 
   const inviteAction = async (
     _state: OrgInviteFormState,

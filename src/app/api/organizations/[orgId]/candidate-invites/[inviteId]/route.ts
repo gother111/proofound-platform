@@ -3,7 +3,7 @@ import { and, eq, inArray, lt } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db';
-import { orgCandidateInvites, organizationMembers, organizations } from '@/db/schema';
+import { orgCandidateInvites, organizations } from '@/db/schema';
 import {
   buildCandidateInviteUrl,
   CANDIDATE_INVITE_EXPIRY_DAYS,
@@ -11,8 +11,8 @@ import {
 } from '@/lib/candidate-invites';
 import { sendCandidateInviteEmail } from '@/lib/email';
 import { emitAnalyticsEventAsync } from '@/lib/analytics/events';
+import { getCanonicalActiveOrgMembership } from '@/lib/api/auth';
 import { createClient } from '@/lib/supabase/server';
-import { normalizeAuthorizedOrgRole } from '@/lib/authz';
 import {
   CAPABILITY_BINDINGS,
   CAPABILITY_TOKEN_CLASSES,
@@ -26,31 +26,12 @@ const updateCandidateInviteSchema = z.object({
   action: z.enum(['resend', 'revoke']),
 });
 
-async function getAuthenticatedUser() {
+async function getAuthenticatedContext() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  return user;
-}
-
-async function getMembership(orgId: string, userId: string) {
-  const [membership] = await db
-    .select({
-      role: organizationMembers.role,
-      status: organizationMembers.status,
-    })
-    .from(organizationMembers)
-    .where(
-      and(
-        eq(organizationMembers.orgId, orgId),
-        eq(organizationMembers.userId, userId),
-        eq(organizationMembers.status, 'active')
-      )
-    )
-    .limit(1);
-
-  return membership ?? null;
+  return { supabase, user };
 }
 
 async function getOrganization(orgId: string) {
@@ -91,16 +72,14 @@ export async function PATCH(
   { params }: { params: Promise<{ orgId: string; inviteId: string }> }
 ) {
   try {
-    const user = await getAuthenticatedUser();
+    const { user, supabase } = await getAuthenticatedContext();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { orgId, inviteId } = await params;
-    const membership = await getMembership(orgId, user.id);
-
-    const membershipRole = normalizeAuthorizedOrgRole(membership?.role);
-    if (!membershipRole || !['org_owner', 'org_manager'].includes(membershipRole)) {
+    const membership = await getCanonicalActiveOrgMembership(supabase, user.id, orgId);
+    if (!membership || !['org_owner', 'org_manager'].includes(membership.role)) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 

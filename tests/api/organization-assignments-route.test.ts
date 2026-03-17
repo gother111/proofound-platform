@@ -12,7 +12,6 @@ vi.mock('@/lib/supabase/server', () => ({
 vi.mock('@/db', () => ({
   db: {
     query: {
-      organizationMembers: { findFirst: vi.fn() },
       assignmentInvitations: { findMany: vi.fn() },
     },
   },
@@ -59,8 +58,19 @@ describe('organizations assignments route', () => {
           error: null,
         }),
       },
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: null,
+                error: null,
+              }),
+            })),
+          })),
+        })),
+      })),
     } as any);
-    (db.query.organizationMembers.findFirst as any).mockResolvedValue(null);
 
     const response = await GET(
       new NextRequest('http://localhost/api/organizations/org-1/assignments'),
@@ -78,8 +88,19 @@ describe('organizations assignments route', () => {
           error: null,
         }),
       },
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: { role: 'org_reviewer', state: 'active', status: null },
+                error: null,
+              }),
+            })),
+          })),
+        })),
+      })),
     } as any);
-    (db.query.organizationMembers.findFirst as any).mockResolvedValue({ role: 'org_reviewer' });
 
     const response = await GET(
       new NextRequest('http://localhost/api/organizations/org-1/assignments'),
@@ -97,8 +118,19 @@ describe('organizations assignments route', () => {
           error: null,
         }),
       },
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: { role: 'org_manager', state: 'active', status: null },
+                error: null,
+              }),
+            })),
+          })),
+        })),
+      })),
     } as any);
-    (db.query.organizationMembers.findFirst as any).mockResolvedValue({ role: 'org_manager' });
     (db.query.assignmentInvitations.findMany as any).mockResolvedValue([
       { id: 'invite-1', orgId: 'org-1' },
     ]);

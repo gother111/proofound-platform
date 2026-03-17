@@ -142,6 +142,45 @@ async function browserRequestJson(
   };
 }
 
+async function browserGetJson(page: Page, url: string) {
+  const response = await page.evaluate(async (requestUrl) => {
+    const fetchResponse = await fetch(requestUrl, {
+      method: 'GET',
+      credentials: 'include',
+      cache: 'no-store',
+      headers: {
+        'cache-control': 'no-store',
+        pragma: 'no-cache',
+      },
+    });
+
+    return {
+      ok: fetchResponse.ok,
+      status: fetchResponse.status,
+      text: await fetchResponse.text(),
+    };
+  }, url);
+
+  return {
+    ok: () => response.ok,
+    status: () => response.status,
+    text: async () => response.text,
+    json: async () => JSON.parse(response.text),
+  };
+}
+
+async function dismissBlockingOverlays(page: Page) {
+  const blockers = ['Essential Only', 'Skip for now'] as const;
+
+  for (const name of blockers) {
+    const button = page.getByRole('button', { name });
+    await button.waitFor({ state: 'visible', timeout: 5_000 }).catch(() => null);
+    if (await button.isVisible().catch(() => false)) {
+      await button.click();
+    }
+  }
+}
+
 test.describe('Strict Authenticated Org Corridor', () => {
   test.describe.configure({ mode: 'serial' });
 
@@ -345,6 +384,28 @@ test.describe('Strict Authenticated Org Corridor', () => {
     expect(blindMatch?.profile?.displayName ?? null).toBeNull();
     expect(blindMatch?.profile?.handle ?? null).toBeNull();
 
+    await page.goto(`/app/o/${organization.slug}/matching`);
+    await dismissBlockingOverlays(page);
+
+    const explanationTrigger = page.locator('button:has-text("Why this match?")').first();
+    await expect(explanationTrigger).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText(candidate.displayName)).toHaveCount(0);
+    await expect(page.getByText(candidate.email)).toHaveCount(0);
+
+    await dismissBlockingOverlays(page);
+    await explanationTrigger.click();
+    await expect(explanationTrigger).toBeVisible({ timeout: 10_000 });
+    await explanationTrigger.click({ force: true });
+    await expect(page.getByRole('heading', { name: /Why This Match\?/i })).toBeVisible();
+    await expect(page.getByText('Privacy-safe explanation')).toBeVisible();
+    await expect(
+      page.getByText(
+        /Evidence points to a strong skills fit|Required proof and verification signals are in place/i
+      )
+    ).toBeVisible();
+    await expect(page.getByText(candidate.displayName)).toHaveCount(0);
+    await page.keyboard.press('Escape');
+
     let shortlistResponse = await browserRequestJson(
       page,
       'POST',
@@ -374,7 +435,10 @@ test.describe('Strict Authenticated Org Corridor', () => {
     }
     expect(shortlistResponse.ok()).toBeTruthy();
 
-    const shortlistViewResponse = await page.request.get(`/api/org/${organization.slug}/shortlist`);
+    const shortlistViewResponse = await browserGetJson(
+      page,
+      `/api/org/${organization.slug}/shortlist`
+    );
     expect(shortlistViewResponse.ok()).toBeTruthy();
     const shortlistViewPayload = (await shortlistViewResponse.json()) as {
       items?: Array<{
@@ -431,6 +495,24 @@ test.describe('Strict Authenticated Org Corridor', () => {
     expect(introPayload.why?.reasonCodes ?? []).toContain('intro_accepted_masked');
     expect(introPayload.message).toContain('Masked messaging is open');
 
+    const duplicateIntroResponse = await browserRequestJson(
+      page,
+      'POST',
+      `/api/org/${organization.slug}/matches/${activeMatchId}/review`,
+      {
+        action: 'request_intro',
+      }
+    );
+    expect(duplicateIntroResponse.ok()).toBeTruthy();
+    const duplicateIntroPayload = (await duplicateIntroResponse.json()) as {
+      conversationId?: string;
+      introWorkflowId?: string;
+      introApproved?: boolean;
+    };
+    expect(duplicateIntroPayload.introApproved).toBe(true);
+    expect(duplicateIntroPayload.conversationId).toBe(conversationId);
+    expect(duplicateIntroPayload.introWorkflowId).toBe(introPayload.introWorkflowId);
+
     const revealRequestResponse = await browserRequestJson(
       page,
       'POST',
@@ -455,7 +537,8 @@ test.describe('Strict Authenticated Org Corridor', () => {
     await page.context().clearCookies();
     await loginWithUi(page, candidate);
 
-    const candidateConversationState = await page.request.get(
+    const candidateConversationState = await browserGetJson(
+      page,
       `/api/conversations/${conversationId}`
     );
     expect(candidateConversationState.ok()).toBeTruthy();
@@ -489,7 +572,8 @@ test.describe('Strict Authenticated Org Corridor', () => {
     await page.context().clearCookies();
     await loginWithUi(page, orgOwner);
 
-    const revealedShortlistResponse = await page.request.get(
+    const revealedShortlistResponse = await browserGetJson(
+      page,
       `/api/org/${organization.slug}/shortlist`
     );
     expect(revealedShortlistResponse.ok()).toBeTruthy();

@@ -3,11 +3,10 @@ import { NextRequest } from 'next/server';
 
 import { PUT } from '@/app/api/organizations/[orgId]/route';
 import { db } from '@/db';
-import { requireApiAuthContext, requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 
 vi.mock('@/lib/auth', () => ({
   requireApiAuthContext: vi.fn(),
-  requireAuth: vi.fn(),
 }));
 
 vi.mock('@/db', () => ({
@@ -46,15 +45,43 @@ function mockUpdateReturningOrganization() {
 describe('organizations [orgId] route', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    (requireApiAuthContext as any).mockImplementation(async () => {
-      const user = await (requireAuth as any)();
-      return user ? { user, supabase: {} } : null;
+    (requireApiAuthContext as any).mockResolvedValue({
+      user: { id: 'user-1' },
+      supabase: {
+        from: vi.fn(() => ({
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: { role: 'org_owner', state: 'active', status: null },
+                  error: null,
+                }),
+              })),
+            })),
+          })),
+        })),
+      },
     });
-    (requireAuth as any).mockResolvedValue({ id: 'user-1' });
   });
 
   it('returns 403 when user is not an active org member', async () => {
-    (db.query.organizationMembers.findFirst as any).mockResolvedValue(null);
+    (requireApiAuthContext as any).mockResolvedValue({
+      user: { id: 'user-1' },
+      supabase: {
+        from: vi.fn(() => ({
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: null,
+                }),
+              })),
+            })),
+          })),
+        })),
+      },
+    });
 
     const response = await PUT(buildPutRequest({ displayName: 'Acme' }), params);
 
@@ -62,7 +89,23 @@ describe('organizations [orgId] route', () => {
   });
 
   it('returns 403 when user role is reviewer', async () => {
-    (db.query.organizationMembers.findFirst as any).mockResolvedValue({ role: 'org_reviewer' });
+    (requireApiAuthContext as any).mockResolvedValue({
+      user: { id: 'user-1' },
+      supabase: {
+        from: vi.fn(() => ({
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: { role: 'org_reviewer', state: 'active', status: null },
+                  error: null,
+                }),
+              })),
+            })),
+          })),
+        })),
+      },
+    });
 
     const response = await PUT(buildPutRequest({ displayName: 'Acme' }), params);
 
@@ -70,8 +113,6 @@ describe('organizations [orgId] route', () => {
   });
 
   it('rejects non-MVP organization fields with explicit unsupported fields', async () => {
-    (db.query.organizationMembers.findFirst as any).mockResolvedValue({ role: 'org_owner' });
-
     const response = await PUT(buildPutRequest({ industry: 'Technology' }), params);
     const body = await response.json();
 
@@ -80,7 +121,23 @@ describe('organizations [orgId] route', () => {
   });
 
   it('returns 403 when user role is manager', async () => {
-    (db.query.organizationMembers.findFirst as any).mockResolvedValue({ role: 'org_manager' });
+    (requireApiAuthContext as any).mockResolvedValue({
+      user: { id: 'user-1' },
+      supabase: {
+        from: vi.fn(() => ({
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: { role: 'org_manager', state: 'active', status: null },
+                  error: null,
+                }),
+              })),
+            })),
+          })),
+        })),
+      },
+    });
 
     const response = await PUT(buildPutRequest({ displayName: 'Acme' }), params);
 
@@ -88,7 +145,6 @@ describe('organizations [orgId] route', () => {
   });
 
   it('normalizes website input and updates lean trust profile fields for an owner', async () => {
-    (db.query.organizationMembers.findFirst as any).mockResolvedValue({ role: 'org_owner' });
     const { set } = mockUpdateReturningOrganization();
 
     const response = await PUT(
@@ -117,8 +173,6 @@ describe('organizations [orgId] route', () => {
   });
 
   it('rejects unsupported non-MVP organization fields', async () => {
-    (db.query.organizationMembers.findFirst as any).mockResolvedValue({ role: 'org_owner' });
-
     const response = await PUT(buildPutRequest({ values: ['Clarity', '', 123] as any }), params);
     const body = await response.json();
 

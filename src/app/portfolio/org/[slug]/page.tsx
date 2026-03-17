@@ -32,7 +32,6 @@ import {
 import { createClient } from '@/lib/supabase/server';
 
 import { ShareLinkButton } from '../../[handle]/ShareLinkButton';
-import { ViewCounterClient } from '../../[handle]/ViewCounterClient';
 import { DownloadOrganizationPdfButton } from './DownloadOrganizationPdfButton';
 
 function renderUnavailablePage(slug: string) {
@@ -220,9 +219,6 @@ export default async function OrganizationPortfolioPage({
         </div>
       }
     >
-      {!viewerIsMember ? (
-        <ViewCounterClient subjectType="organization" slugOrHandle={data.slug} />
-      ) : null}
       <JsonLdScripts items={jsonLdItems} idPrefix="public-org-portfolio-jsonld" />
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <div className="space-y-4">

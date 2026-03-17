@@ -184,13 +184,17 @@ export async function GET(
       else if (skill.skill_id) skillCodes.add(skill.skill_id);
     }
 
+    const skillCodeList = Array.from(skillCodes);
     const taxonomyRows =
-      skillCodes.size > 0
+      skillCodeList.length > 0
         ? (getRows(
             await db.execute(sql`
               SELECT code, COALESCE(name_i18n ->> 'en', slug, code) AS name
               FROM skills_taxonomy
-              WHERE code = ANY(${Array.from(skillCodes)})
+              WHERE code IN (${sql.join(
+                skillCodeList.map((skillCode) => sql`${skillCode}`),
+                sql`, `
+              )})
             `)
           ) as Array<{ code: string; name: string }>)
         : [];
