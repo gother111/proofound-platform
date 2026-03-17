@@ -4,13 +4,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
-import {
-  LAUNCH_MONITOR_DEFINITIONS,
-  LAUNCH_SMOKE_FRESHNESS_THRESHOLD_MINUTES,
-  REQUIRED_SAFE_MODE_FLAGS,
-} from '../src/lib/launch/contracts';
+import { LAUNCH_MONITOR_DEFINITIONS, REQUIRED_SAFE_MODE_FLAGS } from '../src/lib/launch/contracts';
 import {
   getLaunchSmokeAgeMinutes,
+  getLaunchSmokeFreshnessThresholdMinutes,
   hasPassingLaunchSmokeArtifact,
   validateLaunchSmokeArtifact,
 } from '../src/lib/launch/smoke-artifact';
@@ -82,7 +79,7 @@ function ensureLaunchSmokeArtifact() {
   if (!hasPassingLaunchSmokeArtifact(artifact)) {
     fail('launch smoke artifact reports failing checks');
   }
-  if (getLaunchSmokeAgeMinutes(artifact) > LAUNCH_SMOKE_FRESHNESS_THRESHOLD_MINUTES) {
+  if (getLaunchSmokeAgeMinutes(artifact) > getLaunchSmokeFreshnessThresholdMinutes(artifact)) {
     fail('launch smoke artifact is stale');
   }
 }

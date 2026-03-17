@@ -4,14 +4,34 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/lib/launch/synthetic-monitors', () => ({
   getPersistedLaunchSyntheticStatus: vi.fn(),
-  getCurrentLaunchSyntheticStatus: vi.fn(),
+  getLaunchSyntheticStatusWithFreshHttpRevalidation: vi.fn(),
 }));
 
 import { GET } from '../launch-status/route';
 import {
   getPersistedLaunchSyntheticStatus,
-  getCurrentLaunchSyntheticStatus,
+  getLaunchSyntheticStatusWithFreshHttpRevalidation,
 } from '@/lib/launch/synthetic-monitors';
+
+function buildMonitorRow(overrides: Record<string, unknown> = {}) {
+  return {
+    monitorKey: 'api_health',
+    monitorGroup: 'endpoint',
+    severity: 'p1',
+    status: 'pass',
+    responseTimeMs: 12,
+    expectedState: 'health_contract_ok',
+    observedState: 'health_contract_ok',
+    failureClass: null,
+    checkedAt: '2026-03-10T10:00:00.000Z',
+    ageMinutes: 0,
+    freshnessState: 'fresh',
+    blocking: false,
+    stale: false,
+    details: {},
+    ...overrides,
+  };
+}
 
 describe('/api/monitoring/launch-status', () => {
   beforeEach(() => {
@@ -35,8 +55,13 @@ describe('/api/monitoring/launch-status', () => {
       },
       missingMonitorKeys: [],
       rows: [
-        { monitorKey: 'api_health', severity: 'p1', status: 'pass' },
-        { monitorKey: 'first_proof_first_individual', severity: 'p1', status: 'pass' },
+        buildMonitorRow(),
+        buildMonitorRow({
+          monitorKey: 'first_proof_first_individual',
+          monitorGroup: 'synthetic-smoke',
+          expectedState: 'first_proof_first_corridor_live',
+          observedState: 'first_proof_first_corridor_live',
+        }),
       ],
     });
 
@@ -53,15 +78,16 @@ describe('/api/monitoring/launch-status', () => {
     expect(body.evidence.smokeFreshnessState).toBe('fresh');
     expect(body.summary.reportedMonitors).toBe(2);
     expect(body.summary.missingMonitors).toBe(0);
+    expect(body.summary.unverifiedMonitors).toBe(0);
     expect(Array.isArray(body.monitors)).toBe(true);
-    expect(getCurrentLaunchSyntheticStatus).not.toHaveBeenCalled();
+    expect(getLaunchSyntheticStatusWithFreshHttpRevalidation).not.toHaveBeenCalled();
   });
 
-  it('returns blocked readiness when persisted smoke evidence is stale', async () => {
+  it('returns unverified readiness when persisted smoke evidence is stale', async () => {
     (getPersistedLaunchSyntheticStatus as any).mockResolvedValue({
       generatedAt: '2026-03-10T10:00:00.000Z',
       ok: false,
-      readinessState: 'blocked',
+      readinessState: 'unverified',
       source: 'persisted',
       evidence: {
         source: 'persisted',
@@ -74,29 +100,42 @@ describe('/api/monitoring/launch-status', () => {
       },
       missingMonitorKeys: [],
       rows: [
-        { monitorKey: 'api_health', severity: 'p1', status: 'pass' },
-        { monitorKey: 'first_proof_first_individual', severity: 'p1', status: 'fail' },
+        buildMonitorRow(),
+        buildMonitorRow({
+          monitorKey: 'first_proof_first_individual',
+          monitorGroup: 'synthetic-smoke',
+          status: 'degraded',
+          expectedState: 'first_proof_first_corridor_live',
+          observedState: 'smoke_artifact_stale',
+          failureClass: 'smoke_artifact_stale',
+          freshnessState: 'stale',
+          blocking: false,
+          stale: true,
+        }),
       ],
     });
 
     const response = await GET(new Request('https://example.com/api/monitoring/launch-status'));
     const body = await response.json();
 
-    expect(response.status).toBe(503);
+    expect(response.status).toBe(200);
     expect(body.ok).toBe(false);
-    expect(body.readinessState).toBe('blocked');
+    expect(body.readinessState).toBe('unverified');
     expect(body.evidence.smokeArtifactGeneratedAt).toBe('2026-03-10T08:45:00.000Z');
     expect(body.evidence.smokeArtifactAgeMinutes).toBe(75);
     expect(body.evidence.smokeFreshnessThresholdMinutes).toBe(60);
     expect(body.evidence.smokeFreshnessState).toBe('stale');
-    expect(body.summary.p1Failures).toBe(1);
+    expect(body.summary.p1Failures).toBe(0);
+    expect(body.summary.staleMonitors).toBe(1);
+    expect(body.summary.unverifiedMonitors).toBe(1);
+    expect(getLaunchSyntheticStatusWithFreshHttpRevalidation).not.toHaveBeenCalled();
   });
 
-  it('returns blocked persisted status when the smoke artifact is unavailable', async () => {
+  it('returns unverified persisted status when the smoke artifact is unavailable', async () => {
     (getPersistedLaunchSyntheticStatus as any).mockResolvedValue({
       generatedAt: '2026-03-13T00:00:00.000Z',
       ok: false,
-      readinessState: 'blocked',
+      readinessState: 'unverified',
       source: 'persisted',
       evidence: {
         source: 'persisted',
@@ -109,34 +148,242 @@ describe('/api/monitoring/launch-status', () => {
       },
       missingMonitorKeys: [],
       rows: [
-        {
-          monitorKey: 'api_health',
-          monitorGroup: 'endpoint',
-          severity: 'p1',
-          status: 'pass',
-          responseTimeMs: 12,
-          expectedState: 'health_contract_ok',
-          observedState: 'health_contract_ok',
-          failureClass: null,
+        buildMonitorRow({
           checkedAt: '2026-03-13T00:00:00.000Z',
-          ageMinutes: 0,
-          stale: false,
-          details: {},
-        },
-        {
+        }),
+        buildMonitorRow({
           monitorKey: 'first_proof_first_individual',
           monitorGroup: 'synthetic-smoke',
-          severity: 'p1',
-          status: 'fail',
+          status: 'degraded',
           responseTimeMs: 0,
           expectedState: 'first_proof_first_corridor_live',
           observedState: 'smoke_artifact_missing',
           failureClass: 'smoke_artifact_missing',
           checkedAt: '2026-03-13T00:00:00.000Z',
-          ageMinutes: 0,
+          freshnessState: 'missing',
+          blocking: false,
           stale: true,
-          details: {},
-        },
+        }),
+      ],
+    });
+
+    const response = await GET(new Request('https://example.com/api/monitoring/launch-status'));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(false);
+    expect(body.readinessState).toBe('unverified');
+    expect(body.source).toBe('persisted');
+    expect(body.evidence.persisted).toBe(true);
+    expect(body.evidence.smokeArtifactGeneratedAt).toBeNull();
+    expect(body.evidence.smokeArtifactAgeMinutes).toBeNull();
+    expect(body.evidence.smokeFreshnessThresholdMinutes).toBe(60);
+    expect(body.evidence.smokeFreshnessState).toBe('missing');
+    expect(body.summary.reportedMonitors).toBe(2);
+    expect(body.summary.missingMonitors).toBe(0);
+    expect(body.summary.p1Failures).toBe(0);
+    expect(body.summary.missingEvidenceMonitors).toBe(1);
+    expect(body.summary.unverifiedMonitors).toBe(1);
+    expect(getLaunchSyntheticStatusWithFreshHttpRevalidation).not.toHaveBeenCalled();
+  });
+
+  it('revalidates stale persisted endpoint evidence with fresh runtime checks', async () => {
+    (getPersistedLaunchSyntheticStatus as any).mockResolvedValue({
+      generatedAt: '2026-03-15T10:00:00.000Z',
+      ok: false,
+      readinessState: 'blocked',
+      source: 'persisted',
+      evidence: {
+        source: 'persisted',
+        artifactPath: '.artifacts/launch-smoke-report.json',
+        smokeArtifactGeneratedAt: '2026-03-15T09:58:00.000Z',
+        smokeArtifactAgeMinutes: 2,
+        smokeFreshnessThresholdMinutes: 60,
+        smokeFreshnessState: 'fresh',
+        persisted: true,
+      },
+      missingMonitorKeys: [],
+      rows: [
+        buildMonitorRow({
+          monitorGroup: 'unknown',
+          status: 'degraded',
+          stale: true,
+          observedState: 'stale',
+          failureClass: 'stale_monitor_result',
+          freshnessState: 'stale',
+          blocking: false,
+        }),
+      ],
+    });
+    (getLaunchSyntheticStatusWithFreshHttpRevalidation as any).mockResolvedValue({
+      generatedAt: '2026-03-15T10:01:00.000Z',
+      ok: true,
+      readinessState: 'ready',
+      source: 'live',
+      evidence: {
+        source: 'live',
+        artifactPath: '.artifacts/launch-smoke-report.json',
+        smokeArtifactGeneratedAt: '2026-03-15T09:58:00.000Z',
+        smokeArtifactAgeMinutes: 3,
+        smokeFreshnessThresholdMinutes: 60,
+        smokeFreshnessState: 'fresh',
+        persisted: false,
+      },
+      missingMonitorKeys: [],
+      rows: [buildMonitorRow()],
+    });
+
+    const response = await GET(new Request('https://example.com/api/monitoring/launch-status'));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.readinessState).toBe('ready');
+    expect(body.source).toBe('live');
+    expect(getLaunchSyntheticStatusWithFreshHttpRevalidation).toHaveBeenCalledWith({
+      artifactPath: '.artifacts/launch-smoke-report.json',
+      baseUrl: 'https://example.com',
+      persistedStatus: expect.objectContaining({
+        source: 'persisted',
+        evidence: expect.objectContaining({
+          smokeFreshnessState: 'fresh',
+        }),
+      }),
+    });
+  });
+
+  it('revalidates stale persisted endpoint evidence even when smoke evidence is stale', async () => {
+    (getPersistedLaunchSyntheticStatus as any).mockResolvedValue({
+      generatedAt: '2026-03-15T10:00:00.000Z',
+      ok: false,
+      readinessState: 'unverified',
+      source: 'persisted',
+      evidence: {
+        source: 'persisted',
+        artifactPath: '.artifacts/launch-smoke-report.json',
+        smokeArtifactGeneratedAt: '2026-03-15T08:45:00.000Z',
+        smokeArtifactAgeMinutes: 75,
+        smokeFreshnessThresholdMinutes: 60,
+        smokeFreshnessState: 'stale',
+        persisted: true,
+      },
+      missingMonitorKeys: [],
+      rows: [
+        buildMonitorRow({
+          status: 'degraded',
+          stale: true,
+          observedState: 'stale',
+          failureClass: 'stale_monitor_result',
+          freshnessState: 'stale',
+          blocking: false,
+        }),
+        buildMonitorRow({
+          monitorKey: 'first_proof_first_individual',
+          monitorGroup: 'synthetic-smoke',
+          status: 'degraded',
+          expectedState: 'first_proof_first_corridor_live',
+          observedState: 'smoke_artifact_stale',
+          failureClass: 'smoke_artifact_stale',
+          freshnessState: 'stale',
+          blocking: false,
+          stale: true,
+        }),
+      ],
+    });
+    (getLaunchSyntheticStatusWithFreshHttpRevalidation as any).mockResolvedValue({
+      generatedAt: '2026-03-15T10:01:00.000Z',
+      ok: false,
+      readinessState: 'unverified',
+      source: 'live',
+      evidence: {
+        source: 'live',
+        artifactPath: '.artifacts/launch-smoke-report.json',
+        smokeArtifactGeneratedAt: '2026-03-15T08:45:00.000Z',
+        smokeArtifactAgeMinutes: 76,
+        smokeFreshnessThresholdMinutes: 60,
+        smokeFreshnessState: 'stale',
+        persisted: false,
+      },
+      missingMonitorKeys: [],
+      rows: [
+        buildMonitorRow(),
+        buildMonitorRow({
+          monitorKey: 'first_proof_first_individual',
+          monitorGroup: 'synthetic-smoke',
+          status: 'degraded',
+          expectedState: 'first_proof_first_corridor_live',
+          observedState: 'smoke_artifact_stale',
+          failureClass: 'smoke_artifact_stale',
+          freshnessState: 'stale',
+          blocking: false,
+          stale: true,
+        }),
+      ],
+    });
+
+    const response = await GET(new Request('https://example.com/api/monitoring/launch-status'));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(false);
+    expect(body.readinessState).toBe('unverified');
+    expect(body.source).toBe('live');
+    expect(body.summary.p1Failures).toBe(0);
+    expect(body.summary.staleMonitors).toBe(1);
+    expect(getLaunchSyntheticStatusWithFreshHttpRevalidation).toHaveBeenCalled();
+  });
+
+  it('keeps launch blocked when fresh HTTP revalidation reproduces a real failure', async () => {
+    (getPersistedLaunchSyntheticStatus as any).mockResolvedValue({
+      generatedAt: '2026-03-15T10:00:00.000Z',
+      ok: false,
+      readinessState: 'blocked',
+      source: 'persisted',
+      evidence: {
+        source: 'persisted',
+        artifactPath: '.artifacts/launch-smoke-report.json',
+        smokeArtifactGeneratedAt: '2026-03-15T09:58:00.000Z',
+        smokeArtifactAgeMinutes: 2,
+        smokeFreshnessThresholdMinutes: 60,
+        smokeFreshnessState: 'fresh',
+        persisted: true,
+      },
+      missingMonitorKeys: [],
+      rows: [
+        buildMonitorRow({
+          status: 'degraded',
+          stale: true,
+          observedState: 'stale',
+          failureClass: 'stale_monitor_result',
+          freshnessState: 'stale',
+          blocking: false,
+        }),
+      ],
+    });
+    (getLaunchSyntheticStatusWithFreshHttpRevalidation as any).mockResolvedValue({
+      generatedAt: '2026-03-15T10:01:00.000Z',
+      ok: false,
+      readinessState: 'blocked',
+      source: 'live',
+      evidence: {
+        source: 'live',
+        artifactPath: '.artifacts/launch-smoke-report.json',
+        smokeArtifactGeneratedAt: '2026-03-15T09:58:00.000Z',
+        smokeArtifactAgeMinutes: 3,
+        smokeFreshnessThresholdMinutes: 60,
+        smokeFreshnessState: 'fresh',
+        persisted: false,
+      },
+      missingMonitorKeys: [],
+      rows: [
+        buildMonitorRow({
+          status: 'fail',
+          stale: false,
+          observedState: 'unexpected_payload_value',
+          failureClass: 'payload_contract_mismatch',
+          freshnessState: 'fresh',
+          blocking: true,
+        }),
       ],
     });
 
@@ -146,15 +393,66 @@ describe('/api/monitoring/launch-status', () => {
     expect(response.status).toBe(503);
     expect(body.ok).toBe(false);
     expect(body.readinessState).toBe('blocked');
-    expect(body.source).toBe('persisted');
-    expect(body.evidence.persisted).toBe(true);
-    expect(body.evidence.smokeArtifactGeneratedAt).toBeNull();
-    expect(body.evidence.smokeArtifactAgeMinutes).toBeNull();
-    expect(body.evidence.smokeFreshnessThresholdMinutes).toBe(60);
-    expect(body.evidence.smokeFreshnessState).toBe('missing');
-    expect(body.summary.reportedMonitors).toBe(2);
-    expect(body.summary.missingMonitors).toBe(0);
+    expect(body.source).toBe('live');
+    expect(body.monitors[0]).toEqual(
+      expect.objectContaining({
+        monitorKey: 'api_health',
+        failureClass: 'payload_contract_mismatch',
+        freshnessState: 'fresh',
+        blocking: true,
+        stale: false,
+      })
+    );
+  });
+
+  it('keeps blocked status for mixed current blocker and stale evidence while separating summary counts', async () => {
+    (getPersistedLaunchSyntheticStatus as any).mockResolvedValue({
+      generatedAt: '2026-03-15T10:00:00.000Z',
+      ok: false,
+      readinessState: 'blocked',
+      source: 'persisted',
+      evidence: {
+        source: 'persisted',
+        artifactPath: '.artifacts/launch-smoke-report.json',
+        smokeArtifactGeneratedAt: '2026-03-15T08:45:00.000Z',
+        smokeArtifactAgeMinutes: 75,
+        smokeFreshnessThresholdMinutes: 60,
+        smokeFreshnessState: 'stale',
+        persisted: true,
+      },
+      missingMonitorKeys: [],
+      rows: [
+        buildMonitorRow({
+          status: 'fail',
+          observedState: 'unexpected_payload_value',
+          failureClass: 'payload_contract_mismatch',
+          freshnessState: 'fresh',
+          blocking: true,
+        }),
+        buildMonitorRow({
+          monitorKey: 'first_proof_first_individual',
+          monitorGroup: 'synthetic-smoke',
+          status: 'degraded',
+          expectedState: 'first_proof_first_corridor_live',
+          observedState: 'smoke_artifact_stale',
+          failureClass: 'smoke_artifact_stale',
+          freshnessState: 'stale',
+          blocking: false,
+          stale: true,
+        }),
+      ],
+    });
+
+    const response = await GET(new Request('https://example.com/api/monitoring/launch-status'));
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.ok).toBe(false);
+    expect(body.readinessState).toBe('blocked');
     expect(body.summary.p1Failures).toBe(1);
+    expect(body.summary.staleMonitors).toBe(1);
+    expect(body.summary.unverifiedMonitors).toBe(1);
+    expect(getLaunchSyntheticStatusWithFreshHttpRevalidation).not.toHaveBeenCalled();
   });
 
   it('returns 500 when persisted monitor loading fails', async () => {

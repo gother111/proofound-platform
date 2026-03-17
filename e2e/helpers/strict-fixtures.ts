@@ -59,13 +59,20 @@ export interface StrictFixtureState {
 }
 
 const DEFAULT_PASSWORD = 'TestPassword123!';
-const TRANSIENT_REQUEST_ERROR_PATTERNS = ['socket hang up', 'econnreset', 'aborted'];
+const TRANSIENT_REQUEST_ERROR_PATTERNS = [
+  'socket hang up',
+  'econnreset',
+  'econnrefused',
+  'aborted',
+  'timed out',
+  'timeout',
+];
 const REQUEST_RETRY_ATTEMPTS = Number.parseInt(
-  process.env.STRICT_REQUEST_RETRY_ATTEMPTS || '3',
+  process.env.STRICT_REQUEST_RETRY_ATTEMPTS || '5',
   10
 );
 const REQUEST_RETRY_DELAY_MS = Number.parseInt(
-  process.env.STRICT_REQUEST_RETRY_DELAY_MS || '400',
+  process.env.STRICT_REQUEST_RETRY_DELAY_MS || '1000',
   10
 );
 

@@ -1,5 +1,11 @@
 import type { OperationalFallbackMode } from '@/lib/contracts/launch-operations';
 import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
+import {
+  SEEDED_PUBLIC_ORG_TRUST_MONITOR_KEY,
+  SEEDED_PUBLIC_ORG_TRUST_PATH,
+  SEEDED_PUBLIC_ORG_TRUST_SLUG,
+  shouldMonitorSeededPublicOrgTrustPage,
+} from '@/lib/launch/public-org-trust-fixture';
 
 export const LAUNCH_ALERT_SEVERITY_VALUES = ['p1', 'p2'] as const;
 export type LaunchAlertSeverity = (typeof LAUNCH_ALERT_SEVERITY_VALUES)[number];
@@ -7,8 +13,15 @@ export type LaunchAlertSeverity = (typeof LAUNCH_ALERT_SEVERITY_VALUES)[number];
 export const LAUNCH_MONITOR_STATUS_VALUES = ['pass', 'degraded', 'fail'] as const;
 export type LaunchMonitorStatus = (typeof LAUNCH_MONITOR_STATUS_VALUES)[number];
 
-export const LAUNCH_READINESS_STATE_VALUES = ['ready', 'blocked'] as const;
+export const LAUNCH_READINESS_STATE_VALUES = ['ready', 'blocked', 'unverified'] as const;
 export type LaunchReadinessState = (typeof LAUNCH_READINESS_STATE_VALUES)[number];
+
+export const LAUNCH_SMOKE_CORRIDOR_VALUES = [
+  'individual',
+  'organization',
+  'trust_privacy',
+] as const;
+export type LaunchSmokeCorridor = (typeof LAUNCH_SMOKE_CORRIDOR_VALUES)[number];
 
 export const LAUNCH_SMOKE_FRESHNESS_STATE_VALUES = ['fresh', 'stale', 'missing'] as const;
 export type LaunchSmokeFreshnessState = (typeof LAUNCH_SMOKE_FRESHNESS_STATE_VALUES)[number];
@@ -24,70 +37,134 @@ export const REQUIRED_SAFE_MODE_FLAGS = [
 
 export type LaunchSmokeScenario = {
   id:
-    | 'first_proof_first_individual'
-    | 'public_portfolio_publish'
-    | 'privacy_reveal_enforcement'
-    | 'assignment_publish'
-    | 'intro_reveal_interview_decision'
-    | 'engagement_verification';
+    | 'public_individual_portfolio_visible'
+    | 'proof_creation_case'
+    | 'public_org_trust_fixture_live'
+    | 'full_org_corridor_review_to_engagement_verification'
+    | 'hidden_portfolio_protected'
+    | 'privacy_no_leak_case';
   label: string;
+  corridor: LaunchSmokeCorridor;
   severity: LaunchAlertSeverity;
-  testFiles: string[];
   expectedState: string;
   allowedFallbackModes?: OperationalFallbackMode[];
+  runner:
+    | {
+        kind: 'vitest';
+        label: 'vitest';
+        testFiles: string[];
+      }
+    | {
+        kind: 'command';
+        label: string;
+        command: string[];
+        preCommands?: Array<{
+          label: string;
+          command: string[];
+        }>;
+        env?: Record<string, string>;
+      };
+  evidence?: Record<string, string>;
 };
 
 export const LAUNCH_SMOKE_MATRIX: LaunchSmokeScenario[] = [
   {
-    id: 'first_proof_first_individual',
-    label: 'First proof first individual corridor',
+    id: 'public_individual_portfolio_visible',
+    label: 'Public individual portfolio visible case',
+    corridor: 'individual',
     severity: 'p1',
-    testFiles: ['tests/actions/onboarding.test.ts'],
-    expectedState: 'first_proof_first_corridor_live',
+    runner: {
+      kind: 'vitest',
+      label: 'vitest',
+      testFiles: ['tests/ui/public-portfolio-access-consistency.test.tsx'],
+    },
+    expectedState: 'public_individual_portfolio_visible',
   },
   {
-    id: 'public_portfolio_publish',
-    label: 'Public portfolio publish',
+    id: 'proof_creation_case',
+    label: 'Proof creation case',
+    corridor: 'individual',
     severity: 'p1',
-    testFiles: ['tests/api/public-portfolio-summary-route.test.ts'],
-    expectedState: 'public_portfolio_live',
+    runner: {
+      kind: 'vitest',
+      label: 'vitest',
+      testFiles: ['tests/api/expertise-user-skill-proofs-route.test.ts'],
+    },
+    expectedState: 'proof_creation_case_live',
     allowedFallbackModes: ['proof_building_weak_coverage', 'trust_pending_verification'],
   },
   {
-    id: 'privacy_reveal_enforcement',
-    label: 'Privacy and reveal enforcement',
-    severity: 'p1',
-    testFiles: [
-      'tests/api/org-match-review-route.test.ts',
-      'tests/lib/matching-review-contract.test.ts',
-      'tests/lib/effective-visibility.test.ts',
-    ],
-    expectedState: 'privacy_and_reveal_enforced',
-  },
-  {
-    id: 'assignment_publish',
-    label: 'Assignment publish',
+    id: 'public_org_trust_fixture_live',
+    label: 'Seeded public org trust fixture live',
+    corridor: 'organization',
     severity: 'p2',
-    testFiles: ['tests/lib/launch-assignment-publish-smoke.test.ts'],
-    expectedState: 'assignment_published',
+    runner: {
+      kind: 'command',
+      label: 'seeded_public_org_trust_smoke',
+      preCommands: [
+        {
+          label: 'seed_public_org_trust_fixture',
+          command: ['npm', 'run', 'seed:public-org-trust-fixture'],
+        },
+      ],
+      command: ['npm', 'run', 'test:e2e:org-trust:smoke'],
+    },
+    expectedState: 'public_org_trust_fixture_live',
+    evidence: {
+      fixtureSlug: SEEDED_PUBLIC_ORG_TRUST_SLUG,
+      fixturePath: SEEDED_PUBLIC_ORG_TRUST_PATH,
+    },
   },
   {
-    id: 'intro_reveal_interview_decision',
-    label: 'Intro reveal interview decision corridor',
+    id: 'full_org_corridor_review_to_engagement_verification',
+    label: 'Full org corridor review to engagement verification case',
+    corridor: 'organization',
     severity: 'p1',
-    testFiles: [
-      'tests/api/org-match-review-route.test.ts',
-      'tests/api/interviews-schedule-route.test.ts',
-      'tests/api/decisions-route.test.ts',
-    ],
-    expectedState: 'intro_reveal_interview_decision_live',
+    runner: {
+      kind: 'command',
+      label: 'strict_org_corridor_smoke',
+      command: [
+        'node',
+        './scripts/playwright-node20.mjs',
+        'test',
+        'e2e/strict/org-corridor.strict.spec.ts',
+        '--project=chromium',
+        '--reporter=line',
+        '--workers=1',
+      ],
+      env: {
+        NEXT_PUBLIC_USE_MOCK_SUPABASE: 'false',
+      },
+    },
+    expectedState: 'full_org_corridor_review_to_engagement_verification_live',
   },
   {
-    id: 'engagement_verification',
-    label: 'Engagement verification',
-    severity: 'p2',
-    testFiles: ['tests/lib/launch-engagement-verification-smoke.test.ts'],
-    expectedState: 'engagement_verification_live',
+    id: 'hidden_portfolio_protected',
+    label: 'Hidden portfolio protected case',
+    corridor: 'trust_privacy',
+    severity: 'p1',
+    runner: {
+      kind: 'vitest',
+      label: 'vitest',
+      testFiles: ['tests/ui/public-portfolio-access-consistency.test.tsx'],
+    },
+    expectedState: 'hidden_portfolio_protected',
+  },
+  {
+    id: 'privacy_no_leak_case',
+    label: 'Privacy no-leak case',
+    corridor: 'trust_privacy',
+    severity: 'p1',
+    runner: {
+      kind: 'vitest',
+      label: 'vitest',
+      testFiles: [
+        'tests/api/org-match-review-route.test.ts',
+        'tests/lib/effective-visibility.test.ts',
+        'tests/api/conversation-reveal-route.test.ts',
+      ],
+    },
+    expectedState: 'privacy_no_leak_enforced',
   },
 ];
 
@@ -164,6 +241,24 @@ export const LAUNCH_MONITOR_DEFINITIONS: LaunchMonitorDefinition[] = [
     failureClass: 'health_contract_broken',
     payloadChecks: [{ key: 'status' }],
   },
+  ...(shouldMonitorSeededPublicOrgTrustPage()
+    ? [
+        {
+          monitorKey: SEEDED_PUBLIC_ORG_TRUST_MONITOR_KEY,
+          label: 'Seeded public org trust page',
+          monitorGroup: 'endpoint',
+          severity: 'p2',
+          kind: 'http',
+          method: 'GET',
+          path: SEEDED_PUBLIC_ORG_TRUST_PATH,
+          expectedStatus: 200,
+          expectedState: 'seeded_public_org_trust_page_live',
+          maxAgeMinutes: 30,
+          alertAfterConsecutiveFailures: 2,
+          failureClass: 'seeded_public_org_trust_page_unavailable',
+        } satisfies LaunchMonitorDefinition,
+      ]
+    : []),
   ...LAUNCH_SMOKE_MATRIX.map<LaunchMonitorDefinition>((scenario) => ({
     monitorKey: scenario.id,
     label: scenario.label,
