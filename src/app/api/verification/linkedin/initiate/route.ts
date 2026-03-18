@@ -19,11 +19,7 @@ import { constructLinkedInProfileUrl, fetchLinkedInProfile } from '@/lib/linkedi
 import type { AutomatedCheckResult } from '@/lib/linkedin-scraper';
 import { enrichLinkedInProfile, combineVerificationData } from '@/lib/linkedin-enrichment';
 import { sendLinkedInVerificationPendingReviewEmail } from '@/lib/email';
-import {
-  resolveCanonicalVerificationTier,
-  type LinkedInVerificationLevel,
-} from '@/lib/verification/tier';
-import { resolveWorkEmailValidity } from '@/lib/verification/work-email-validity';
+import { type LinkedInVerificationLevel } from '@/lib/verification/tier';
 import {
   fetchLinkedInIdentityMe,
   fetchLinkedInVerificationReport,
@@ -100,24 +96,6 @@ export async function POST(_request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: existingProfile, error: existingProfileError } = await supabase
-      .from('individual_profiles')
-      .select(
-        'verified, verified_at, verification_method, verification_status, verification_tier, verification_tier_source, work_email_verified, work_email_verified_at, work_email_reverify_due_at'
-      )
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (existingProfileError) {
-      console.error('Failed to load current verification profile state:', existingProfileError);
-      return NextResponse.json(
-        { error: 'Failed to load verification state before LinkedIn check' },
-        { status: 500 }
-      );
-    }
-
-    const workEmailValidity = resolveWorkEmailValidity(existingProfile || {});
-
     // 2. Check if LinkedIn is connected
     const integration = await db
       .select()
@@ -193,7 +171,6 @@ export async function POST(_request: NextRequest) {
       };
       linkedinVerificationStatus = 'verified';
       linkedinVerificationLevel = 'identity';
-      identityGranted = true;
     } else if (hasWorkplaceVerification) {
       automatedSummary = {
         confidence: 90,
@@ -365,23 +342,10 @@ export async function POST(_request: NextRequest) {
             : null,
     };
 
-    const canonicalTier = resolveCanonicalVerificationTier({
-      currentTier: existingProfile?.verification_tier,
-      currentTierSource: existingProfile?.verification_tier_source,
-      verificationMethod: existingProfile?.verification_method,
-      verificationStatus: existingProfile?.verification_status,
-      verified: existingProfile?.verified,
-      linkedinVerificationStatus,
-      linkedinVerificationData: verificationData,
-      workEmailCurrentlyVerified: workEmailValidity.isCurrentlyVerified,
-    });
-
     const updatePayload: Record<string, unknown> = {
       linkedin_verification_data: verificationData,
       linkedin_verification_status: linkedinVerificationStatus,
       linkedin_verification_level: linkedinVerificationLevel,
-      verification_tier: canonicalTier.verificationTier,
-      verification_tier_source: canonicalTier.verificationTierSource,
     };
 
     if (profileUrl) {
@@ -390,26 +354,8 @@ export async function POST(_request: NextRequest) {
 
     if (linkedinVerificationLevel === 'identity' || linkedinVerificationLevel === 'workplace') {
       updatePayload.linkedin_verified_at = nowIso;
-    }
-
-    if (canonicalTier.verificationTier === 'identity_verified') {
-      updatePayload.verification_status = 'verified';
-      updatePayload.verification_method = 'veriff';
-      updatePayload.verified = true;
-      updatePayload.verified_at = existingProfile?.verified_at || nowIso;
-      identityGranted = true;
-    } else if (linkedinVerificationLevel === 'pending') {
-      updatePayload.verification_status = 'pending';
-      updatePayload.verification_method = 'linkedin';
-      updatePayload.verified = false;
-      updatePayload.verified_at = null;
     } else {
-      // LinkedIn remains a compatibility signal only unless an existing Veriff identity must be preserved.
-      updatePayload.verification_status = 'unverified';
-      updatePayload.verification_method = null;
-      updatePayload.verified = false;
-      updatePayload.verified_at = null;
-      identityGranted = false;
+      updatePayload.linkedin_verified_at = null;
     }
 
     // 7. Persist profile updates

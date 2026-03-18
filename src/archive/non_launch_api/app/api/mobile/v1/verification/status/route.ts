@@ -18,12 +18,6 @@ export async function GET(request: NextRequest) {
 
     const [profile] = await db
       .select({
-        verified: individualProfiles.verified,
-        verificationMethod: individualProfiles.verificationMethod,
-        verificationStatus: individualProfiles.verificationStatus,
-        verificationTier: individualProfiles.verificationTier,
-        verificationTierSource: individualProfiles.verificationTierSource,
-        verifiedAt: individualProfiles.verifiedAt,
         linkedinVerificationStatus: individualProfiles.linkedinVerificationStatus,
         linkedinVerificationLevel: individualProfiles.linkedinVerificationLevel,
         linkedinVerifiedAt: individualProfiles.linkedinVerifiedAt,
@@ -45,12 +39,6 @@ export async function GET(request: NextRequest) {
 
     return mobileSuccess(
       await buildVerificationStatusContract(auth.user.id, {
-        verified: profile.verified,
-        verificationMethod: profile.verificationMethod,
-        verificationStatus: profile.verificationStatus,
-        verificationTier: profile.verificationTier,
-        verificationTierSource: profile.verificationTierSource,
-        verifiedAt: profile.verifiedAt?.toISOString() || null,
         workEmail: profile.workEmail,
         workEmailVerified: profile.workEmailVerified,
         workEmailVerifiedAt: profile.workEmailVerifiedAt?.toISOString() || null,

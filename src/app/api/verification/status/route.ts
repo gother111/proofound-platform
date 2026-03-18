@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const { data: profile, error: profileError } = await supabase
       .from('individual_profiles')
       .select(
-        'verified, verification_method, verification_status, verification_tier, verification_tier_source, verified_at, work_email, work_email_verified, work_email_verified_at, work_email_reverify_due_at, work_email_token, work_email_token_expires, linkedin_verification_status, linkedin_verification_level, linkedin_verified_at, linkedin_verification_data'
+        'work_email, work_email_verified, work_email_verified_at, work_email_reverify_due_at, work_email_token, work_email_token_expires, linkedin_verification_status, linkedin_verification_level, linkedin_verified_at, linkedin_verification_data'
       )
       .eq('user_id', user.id)
       .maybeSingle();
@@ -64,12 +64,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       await buildVerificationStatusContract(user.id, {
-        verified: profile.verified,
-        verificationMethod: profile.verification_method,
-        verificationStatus: profile.verification_status,
-        verificationTier: profile.verification_tier,
-        verificationTierSource: profile.verification_tier_source,
-        verifiedAt: profile.verified_at,
         workEmail: profile.work_email,
         workEmailVerified: profile.work_email_verified,
         workEmailVerifiedAt: profile.work_email_verified_at,

@@ -9,6 +9,19 @@ vi.mock('@/lib/verification/contradiction', () => ({
   reconcileVerifierContradictions: vi.fn(),
 }));
 
+vi.mock('@/lib/workflow/service', () => ({
+  buildWorkflowView: vi.fn(({ state, reasonCode, timestamps }) => ({
+    machine: 'verification',
+    state,
+    displayState: state,
+    reasonCode: reasonCode ?? null,
+    timestamps,
+    allowedActions: [],
+  })),
+  getLatestWorkEmailVerification: vi.fn().mockResolvedValue(null),
+  recordVerificationTransition: vi.fn(),
+}));
+
 import { createClient } from '@/lib/supabase/server';
 import { GET } from '@/app/api/verification/work-email/verify/route';
 import { reconcileVerifierContradictions } from '@/lib/verification/contradiction';
@@ -92,11 +105,11 @@ describe('GET /api/verification/work-email/verify', () => {
     expect(updatePayload?.work_email_verified).toBe(true);
     expect(updatePayload?.work_email_verified_at).toBeTruthy();
     expect(updatePayload?.work_email_reverify_due_at).toBeTruthy();
-    expect(updatePayload?.verification_tier).toBe('unverified');
-    expect(updatePayload?.verification_tier_source).toBe('unknown');
-    expect(updatePayload?.verified).toBe(false);
-    expect(updatePayload?.verification_status).toBe('unverified');
-    expect(updatePayload?.verification_method).toBeNull();
+    expect(updatePayload).not.toHaveProperty('verification_tier');
+    expect(updatePayload).not.toHaveProperty('verification_tier_source');
+    expect(updatePayload).not.toHaveProperty('verified');
+    expect(updatePayload).not.toHaveProperty('verification_status');
+    expect(updatePayload).not.toHaveProperty('verification_method');
 
     const verifiedAt = new Date(updatePayload!.work_email_verified_at).getTime();
     const reverifyDueAt = new Date(updatePayload!.work_email_reverify_due_at).getTime();

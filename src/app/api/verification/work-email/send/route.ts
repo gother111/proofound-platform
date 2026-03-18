@@ -109,19 +109,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to send verification email' }, { status: 500 });
     }
 
-    // Explicitly mark verification flow as pending after successful dispatch.
-    const { error: pendingStatusError } = await supabase
-      .from('individual_profiles')
-      .update({
-        verification_status: 'pending',
-        verification_method: 'work_email',
-      })
-      .eq('user_id', user.id);
-
-    if (pendingStatusError) {
-      console.error('Failed to set work email verification status to pending:', pendingStatusError);
-    }
-
     let verificationWorkflow = null;
     try {
       verificationWorkflow = await syncWorkEmailVerificationRequested({

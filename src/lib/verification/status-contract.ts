@@ -8,16 +8,6 @@ import { resolveLinkedInVerificationLevel } from '@/lib/verification/tier';
 import { resolveWorkEmailValidity } from '@/lib/verification/work-email-validity';
 import { buildWorkflowView } from '@/lib/workflow/service';
 
-type LegacyVerificationMethod = 'veriff' | 'work_email' | 'linkedin' | null;
-type LegacyVerificationStatus = 'unverified' | 'pending' | 'verified' | 'failed' | null;
-type LegacyVerificationTier = 'unverified' | 'workplace_verified' | 'identity_verified' | null;
-type LegacyVerificationTierSource =
-  | 'linkedin_identity'
-  | 'linkedin_workplace'
-  | 'work_email'
-  | 'veriff'
-  | 'unknown'
-  | null;
 type LinkedInVerificationStatus = 'unverified' | 'pending' | 'verified' | 'failed' | null;
 type LinkedInVerificationLevel =
   | 'unverified'
@@ -28,12 +18,6 @@ type LinkedInVerificationLevel =
   | null;
 
 export type VerificationStatusProfile = {
-  verified?: boolean | null;
-  verificationMethod?: LegacyVerificationMethod;
-  verificationStatus?: LegacyVerificationStatus;
-  verificationTier?: LegacyVerificationTier;
-  verificationTierSource?: LegacyVerificationTierSource;
-  verifiedAt?: string | null;
   workEmail?: string | null;
   workEmailVerified?: boolean | null;
   workEmailVerifiedAt?: string | null;
@@ -47,6 +31,21 @@ export type VerificationStatusProfile = {
 };
 
 type WorkflowView = ReturnType<typeof buildWorkflowView>;
+type WorkEmailChannelState =
+  | 'unverified'
+  | 'pending'
+  | 'verified'
+  | 'expired'
+  | 'superseded'
+  | 'downgraded'
+  | 'contradicted'
+  | 'disputed'
+  | 'revoked'
+  | 'declined'
+  | 'cancelled'
+  | 'failed';
+type LinkedInChannelState = 'unverified' | 'pending' | 'verified' | 'failed';
+type LinkedInSignalLevel = 'none' | 'workplace' | 'identity';
 
 export type VerificationStatusContract = {
   summary: Pick<
@@ -62,26 +61,14 @@ export type VerificationStatusContract = {
   channels: {
     workEmail: {
       email: string | null;
-      state:
-        | 'unverified'
-        | 'pending'
-        | 'verified'
-        | 'expired'
-        | 'superseded'
-        | 'downgraded'
-        | 'contradicted'
-        | 'disputed'
-        | 'revoked'
-        | 'declined'
-        | 'cancelled'
-        | 'failed';
+      state: WorkEmailChannelState;
       verifiedAt: string | null;
       reverifyDueAt: string | null;
       needsReverify: boolean;
     };
     linkedin: {
-      state: 'unverified' | 'pending' | 'verified' | 'failed';
-      signalLevel: 'none' | 'workplace' | 'identity';
+      state: LinkedInChannelState;
+      signalLevel: LinkedInSignalLevel;
       verifiedAt: string | null;
       hasIdentitySignal: boolean;
     };
@@ -116,38 +103,44 @@ function toSummaryPayload(summary: VerificationPolicySummary) {
   };
 }
 
-function normalizeExplicitWorkflowState(
-  status: string | null | undefined
-):
-  | 'pending'
-  | 'verified'
-  | 'expired'
-  | 'superseded'
-  | 'downgraded'
-  | 'contradicted'
-  | 'disputed'
-  | 'revoked'
-  | 'declined'
-  | 'cancelled'
-  | 'failed'
-  | null {
+function mapSlotStateToWorkEmailChannelState(
+  state: VerificationPolicySummary['slots']['workplace']['state']
+): WorkEmailChannelState {
   if (
-    status === 'pending' ||
-    status === 'verified' ||
-    status === 'expired' ||
-    status === 'superseded' ||
-    status === 'downgraded' ||
-    status === 'contradicted' ||
-    status === 'disputed' ||
-    status === 'revoked' ||
-    status === 'declined' ||
-    status === 'cancelled' ||
-    status === 'failed'
+    state === 'pending' ||
+    state === 'verified' ||
+    state === 'expired' ||
+    state === 'superseded' ||
+    state === 'downgraded' ||
+    state === 'contradicted' ||
+    state === 'disputed' ||
+    state === 'revoked' ||
+    state === 'declined' ||
+    state === 'cancelled' ||
+    state === 'failed'
   ) {
-    return status;
+    return state;
   }
 
-  return null;
+  return 'unverified';
+}
+
+function mapSlotStateToLinkedInChannelState(
+  state: VerificationPolicySummary['slots']['identity']['state']
+): LinkedInChannelState {
+  if (state === 'verified') {
+    return 'verified';
+  }
+
+  if (state === 'pending' || state === 'disputed') {
+    return 'pending';
+  }
+
+  if (state === 'failed') {
+    return 'failed';
+  }
+
+  return 'unverified';
 }
 
 export async function buildVerificationStatusContract(
@@ -158,29 +151,7 @@ export async function buildVerificationStatusContract(
     'individual_profile',
     ownerId
   ).catch(() => []);
-
-  const summary = summarizeVerificationPolicy({
-    records: canonicalRecords,
-    legacyProfile: profile
-      ? {
-          verified: profile.verified,
-          verificationMethod: profile.verificationMethod,
-          verificationStatus: profile.verificationStatus,
-          verificationTier: profile.verificationTier,
-          verificationTierSource: profile.verificationTierSource,
-          workEmailCurrentlyVerified: resolveWorkEmailValidity({
-            work_email_verified: profile.workEmailVerified,
-            work_email_verified_at: profile.workEmailVerifiedAt ?? null,
-            work_email_reverify_due_at: profile.workEmailReverifyDueAt ?? null,
-            verified_at: profile.verifiedAt ?? null,
-          }).isCurrentlyVerified,
-          linkedinVerificationStatus: profile.linkedinVerificationStatus,
-          linkedinHasIdentityVerification: resolveHasLinkedInIdentityVerification(
-            profile.linkedinVerificationData
-          ),
-        }
-      : undefined,
-  });
+  const summary = summarizeVerificationPolicy({ records: canonicalRecords });
 
   if (!profile) {
     return {
@@ -206,96 +177,130 @@ export async function buildVerificationStatusContract(
 
   const canonicalWorkEmailVerification =
     canonicalRecords.find((record) => record.verificationKind === 'work_email') ?? null;
+  const canonicalWorkEmailSlot =
+    summary.slots.workplace.kind === 'work_email' ? summary.slots.workplace : null;
+  const canonicalLinkedInVerification =
+    canonicalRecords.find(
+      (record) =>
+        record.verificationKind === 'linkedin_identity' ||
+        record.verificationKind === 'linkedin_workplace'
+    ) ?? null;
+  const canonicalLinkedInSlot =
+    canonicalLinkedInVerification?.verificationKind === 'linkedin_identity'
+      ? summary.slots.identity.kind === 'linkedin_identity'
+        ? summary.slots.identity
+        : null
+      : canonicalLinkedInVerification?.verificationKind === 'linkedin_workplace'
+        ? summary.slots.workplace.kind === 'linkedin_workplace'
+          ? summary.slots.workplace
+          : null
+        : null;
+
   const workEmailValidity = resolveWorkEmailValidity({
     work_email_verified: profile.workEmailVerified,
     work_email_verified_at: profile.workEmailVerifiedAt ?? null,
     work_email_reverify_due_at: profile.workEmailReverifyDueAt ?? null,
-    verified_at: profile.verifiedAt ?? null,
   });
   const pendingWorkEmailToken = hasActiveWorkEmailToken(profile);
-  const explicitWorkflowState = normalizeExplicitWorkflowState(profile.verificationStatus ?? null);
-  const workflowState =
-    canonicalWorkEmailVerification?.status === 'verified' && workEmailValidity.needsReverify
-      ? 'expired'
-      : (canonicalWorkEmailVerification?.status ??
-        (workEmailValidity.needsReverify
-          ? 'expired'
-          : workEmailValidity.isCurrentlyVerified
-            ? 'verified'
-            : (explicitWorkflowState ?? (pendingWorkEmailToken ? 'pending' : null))));
+  const fallbackWorkEmailState: WorkEmailChannelState = workEmailValidity.needsReverify
+    ? 'expired'
+    : workEmailValidity.isCurrentlyVerified
+      ? 'verified'
+      : pendingWorkEmailToken
+        ? 'pending'
+        : 'unverified';
+  const workEmailState = canonicalWorkEmailSlot
+    ? mapSlotStateToWorkEmailChannelState(canonicalWorkEmailSlot.state)
+    : fallbackWorkEmailState;
+
   const linkedinVerificationLevel =
     profile.linkedinVerificationLevel ??
     resolveLinkedInVerificationLevel({
       linkedinVerificationStatus: profile.linkedinVerificationStatus,
       linkedinVerificationData: profile.linkedinVerificationData,
     });
-  const linkedinHasIdentitySignal =
-    linkedinVerificationLevel === 'identity' ||
-    resolveHasLinkedInIdentityVerification(profile.linkedinVerificationData);
+  const fallbackLinkedInState: LinkedInChannelState =
+    profile.linkedinVerificationStatus === 'failed'
+      ? 'failed'
+      : profile.linkedinVerificationStatus === 'pending'
+        ? 'pending'
+        : linkedinVerificationLevel === 'identity' || linkedinVerificationLevel === 'workplace'
+          ? 'verified'
+          : 'unverified';
+  const fallbackLinkedInSignalLevel: LinkedInSignalLevel =
+    fallbackLinkedInState === 'verified' || fallbackLinkedInState === 'pending'
+      ? linkedinVerificationLevel === 'identity'
+        ? 'identity'
+        : linkedinVerificationLevel === 'workplace'
+          ? 'workplace'
+          : 'none'
+      : 'none';
+  const linkedInState = canonicalLinkedInSlot
+    ? mapSlotStateToLinkedInChannelState(canonicalLinkedInSlot.state)
+    : fallbackLinkedInState;
+  const linkedInSignalLevel = canonicalLinkedInSlot
+    ? linkedInState === 'verified' || linkedInState === 'pending'
+      ? canonicalLinkedInVerification?.verificationKind === 'linkedin_identity'
+        ? 'identity'
+        : 'workplace'
+      : 'none'
+    : fallbackLinkedInSignalLevel;
+  const linkedinHasIdentitySignal = canonicalLinkedInSlot
+    ? linkedInSignalLevel === 'identity'
+    : linkedInSignalLevel === 'identity' ||
+      (fallbackLinkedInState !== 'failed' &&
+        fallbackLinkedInState !== 'unverified' &&
+        resolveHasLinkedInIdentityVerification(profile.linkedinVerificationData));
 
   return {
     summary: toSummaryPayload(summary),
     workflow:
-      workflowState === null
-        ? null
-        : buildWorkflowView({
+      canonicalWorkEmailVerification && canonicalWorkEmailSlot
+        ? buildWorkflowView({
             machine: 'verification',
-            state: workflowState,
-            reasonCode: canonicalWorkEmailVerification?.failureCode ?? null,
+            state: mapSlotStateToWorkEmailChannelState(canonicalWorkEmailSlot.state),
+            reasonCode: canonicalWorkEmailVerification.failureCode ?? null,
             timestamps: {
-              requestedAt: canonicalWorkEmailVerification?.requestedAt?.toISOString(),
-              expiresAt: canonicalWorkEmailVerification?.expiresAt?.toISOString(),
-              requestExpiresAt: canonicalWorkEmailVerification?.requestExpiresAt?.toISOString(),
-              followUpDueAt: canonicalWorkEmailVerification?.followUpDueAt?.toISOString(),
-              completedAt: canonicalWorkEmailVerification?.completedAt?.toISOString(),
-              expiredAt: canonicalWorkEmailVerification?.expiredAt?.toISOString(),
-              downgradedAt: canonicalWorkEmailVerification?.downgradedAt?.toISOString(),
-              contradictedAt: canonicalWorkEmailVerification?.contradictedAt?.toISOString(),
-              disputedAt: canonicalWorkEmailVerification?.disputedAt?.toISOString(),
-              revokedAt: canonicalWorkEmailVerification?.revokedAt?.toISOString(),
-              cancelledAt: canonicalWorkEmailVerification?.cancelledAt?.toISOString(),
+              requestedAt: canonicalWorkEmailVerification.requestedAt?.toISOString(),
+              expiresAt: canonicalWorkEmailVerification.expiresAt?.toISOString(),
+              requestExpiresAt: canonicalWorkEmailVerification.requestExpiresAt?.toISOString(),
+              followUpDueAt: canonicalWorkEmailVerification.followUpDueAt?.toISOString(),
+              completedAt: canonicalWorkEmailVerification.completedAt?.toISOString(),
+              expiredAt: canonicalWorkEmailVerification.expiredAt?.toISOString(),
+              downgradedAt: canonicalWorkEmailVerification.downgradedAt?.toISOString(),
+              contradictedAt: canonicalWorkEmailVerification.contradictedAt?.toISOString(),
+              disputedAt: canonicalWorkEmailVerification.disputedAt?.toISOString(),
+              revokedAt: canonicalWorkEmailVerification.revokedAt?.toISOString(),
+              cancelledAt: canonicalWorkEmailVerification.cancelledAt?.toISOString(),
               verifiedAt:
-                canonicalWorkEmailVerification?.verifiedAt?.toISOString() ??
-                profile.workEmailVerifiedAt ??
+                canonicalWorkEmailVerification.verifiedAt?.toISOString() ??
+                canonicalWorkEmailSlot.verifiedAt ??
                 null,
             },
-          }),
+          })
+        : null,
     channels: {
       workEmail: {
         email: profile.workEmail ?? null,
-        state:
-          workflowState ??
-          (workEmailValidity.needsReverify
-            ? 'expired'
-            : workEmailValidity.isCurrentlyVerified || summary.compatibility.workEmailVerified
-              ? 'verified'
-              : pendingWorkEmailToken
-                ? 'pending'
-                : 'unverified'),
+        state: workEmailState,
         verifiedAt:
+          canonicalWorkEmailSlot?.verifiedAt ??
           canonicalWorkEmailVerification?.verifiedAt?.toISOString() ??
           profile.workEmailVerifiedAt ??
           null,
-        reverifyDueAt: workEmailValidity.reverifyDueAt,
-        needsReverify: workEmailValidity.needsReverify,
+        reverifyDueAt: canonicalWorkEmailSlot?.expiresAt ?? workEmailValidity.reverifyDueAt,
+        needsReverify: canonicalWorkEmailSlot
+          ? canonicalWorkEmailSlot.state === 'expired'
+          : workEmailValidity.needsReverify,
       },
       linkedin: {
-        state:
-          profile.linkedinVerificationStatus === 'failed'
-            ? 'failed'
-            : profile.linkedinVerificationStatus === 'pending'
-              ? 'pending'
-              : linkedinVerificationLevel === 'identity' ||
-                  linkedinVerificationLevel === 'workplace'
-                ? 'verified'
-                : 'unverified',
-        signalLevel:
-          linkedinVerificationLevel === 'identity'
-            ? 'identity'
-            : linkedinVerificationLevel === 'workplace'
-              ? 'workplace'
-              : 'none',
-        verifiedAt: profile.linkedinVerifiedAt ?? null,
+        state: linkedInState,
+        signalLevel: linkedInSignalLevel,
+        verifiedAt:
+          canonicalLinkedInSlot?.verifiedAt ??
+          canonicalLinkedInVerification?.verifiedAt?.toISOString() ??
+          profile.linkedinVerifiedAt ??
+          null,
         hasIdentitySignal: linkedinHasIdentitySignal,
       },
     },

@@ -9,6 +9,18 @@ vi.mock('@/lib/email', () => ({
   sendWorkEmailVerification: vi.fn(),
 }));
 
+vi.mock('@/lib/workflow/service', () => ({
+  buildWorkflowView: vi.fn(({ state, timestamps }) => ({
+    machine: 'verification',
+    state,
+    displayState: state,
+    reasonCode: null,
+    timestamps,
+    allowedActions: [],
+  })),
+  syncWorkEmailVerificationRequested: vi.fn().mockResolvedValue(null),
+}));
+
 import { createClient } from '@/lib/supabase/server';
 import { sendWorkEmailVerification } from '@/lib/email';
 import { POST } from '@/app/api/verification/work-email/send/route';
@@ -23,9 +35,7 @@ function makeRequest(workEmail: string) {
   });
 }
 
-function createSupabaseMock(pendingStatusError: null | { message: string } = null) {
-  const pendingPayloads: Array<Record<string, unknown>> = [];
-
+function createSupabaseMock() {
   const duplicateCheck = {
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
@@ -34,12 +44,6 @@ function createSupabaseMock(pendingStatusError: null | { message: string } = nul
 
   const writeQuery = {
     upsert: vi.fn().mockResolvedValue({ error: null }),
-    update: vi.fn((payload: Record<string, unknown>) => {
-      pendingPayloads.push(payload);
-      return {
-        eq: vi.fn().mockResolvedValue({ error: pendingStatusError }),
-      };
-    }),
   };
 
   const profilesQuery = {
@@ -68,7 +72,7 @@ function createSupabaseMock(pendingStatusError: null | { message: string } = nul
     }),
   } as any;
 
-  return { supabase, pendingPayloads };
+  return { supabase };
 }
 
 describe('POST /api/verification/work-email/send pending status sync', () => {
@@ -78,7 +82,7 @@ describe('POST /api/verification/work-email/send pending status sync', () => {
   });
 
   it('returns pending status in successful response payload', async () => {
-    const { supabase, pendingPayloads } = createSupabaseMock();
+    const { supabase } = createSupabaseMock();
     (createClient as any).mockResolvedValue(supabase);
 
     const response = await POST(makeRequest('person@acme.org'));
@@ -89,14 +93,10 @@ describe('POST /api/verification/work-email/send pending status sync', () => {
       success: true,
       verificationStatus: 'pending',
     });
-    expect(pendingPayloads).toContainEqual({
-      verification_status: 'pending',
-      verification_method: 'work_email',
-    });
   });
 
-  it('keeps success response even if explicit pending status update fails', async () => {
-    const { supabase } = createSupabaseMock({ message: 'write failed' });
+  it('keeps success response without writing legacy global verification status', async () => {
+    const { supabase } = createSupabaseMock();
     (createClient as any).mockResolvedValue(supabase);
 
     const response = await POST(makeRequest('person@acme.org'));

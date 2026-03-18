@@ -32,9 +32,7 @@ export async function GET(request: NextRequest) {
     // Find the profile with this token
     const { data: profile, error: findError } = await supabase
       .from('individual_profiles')
-      .select(
-        'user_id, work_email, work_email_token_expires, work_email_org_id, verified_at, verification_method, verification_status, verification_tier, verification_tier_source'
-      )
+      .select('user_id, work_email, work_email_token_expires, work_email_org_id')
       .eq('work_email_token', token)
       .single();
 
@@ -70,26 +68,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Update profile: mark work email as verified and set overall verified status
-    // The unique constraint will catch any race conditions that slip through
+    // Update profile: confirm the work email channel metadata and clear the transport token.
+    // The unique constraint will catch any race conditions that slip through.
     const nowIso = new Date().toISOString();
     const reverifyDueAtIso = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
-    const preserveIdentityTier =
-      profile.verification_tier_source === 'veriff' ||
-      (profile.verification_method === 'veriff' && profile.verification_status === 'verified');
-
     const { error: updateError } = await supabase
       .from('individual_profiles')
       .update({
         work_email_verified: true,
         work_email_verified_at: nowIso,
         work_email_reverify_due_at: reverifyDueAtIso,
-        verification_tier: preserveIdentityTier ? 'identity_verified' : 'unverified',
-        verification_tier_source: preserveIdentityTier ? 'veriff' : 'unknown',
-        verified: preserveIdentityTier,
-        verification_method: preserveIdentityTier ? 'veriff' : null,
-        verification_status: preserveIdentityTier ? 'verified' : 'unverified',
-        verified_at: preserveIdentityTier ? profile.verified_at || nowIso : null,
         work_email_token: null, // Clear the token
         work_email_token_expires: null,
       })

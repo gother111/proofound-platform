@@ -83,21 +83,6 @@ function buildSupabaseMock() {
     eq: updateEqSpy,
   });
 
-  const profileMaybeSingleSpy = vi.fn().mockResolvedValue({
-    data: {
-      verified: false,
-      verified_at: null,
-      verification_method: null,
-      verification_status: 'unverified',
-      verification_tier: 'unverified',
-      verification_tier_source: 'unknown',
-      work_email_verified: false,
-      work_email_verified_at: null,
-      work_email_reverify_due_at: null,
-    },
-    error: null,
-  });
-
   const maybeSingleSpy = vi.fn().mockResolvedValue({
     data: {
       display_name: 'Candidate Example',
@@ -108,11 +93,6 @@ function buildSupabaseMock() {
   const fromSpy = vi.fn((table: string) => {
     if (table === 'individual_profiles') {
       return {
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            maybeSingle: profileMaybeSingleSpy,
-          }),
-        }),
         update: updateSpy,
       };
     }
@@ -183,11 +163,7 @@ describe('POST /api/verification/linkedin/initiate', () => {
       expect.objectContaining({
         linkedin_verification_status: 'verified',
         linkedin_verification_level: 'identity',
-        verification_tier: 'unverified',
-        verification_tier_source: 'unknown',
-        verification_status: 'unverified',
-        verification_method: null,
-        verified: false,
+        linkedin_verified_at: expect.any(String),
       })
     );
     expect(checkLinkedInVerification).not.toHaveBeenCalled();
@@ -226,8 +202,7 @@ describe('POST /api/verification/linkedin/initiate', () => {
       expect.objectContaining({
         linkedin_verification_status: 'pending',
         linkedin_verification_level: 'pending',
-        verification_tier: 'unverified',
-        verification_tier_source: 'unknown',
+        linkedin_verified_at: null,
       })
     );
     expect(body.warnings).toEqual(
@@ -275,11 +250,7 @@ describe('POST /api/verification/linkedin/initiate', () => {
       expect.objectContaining({
         linkedin_verification_status: 'verified',
         linkedin_verification_level: 'workplace',
-        verification_tier: 'unverified',
-        verification_tier_source: 'unknown',
-        verification_status: 'unverified',
-        verification_method: null,
-        verified: false,
+        linkedin_verified_at: expect.any(String),
       })
     );
     expect(sendLinkedInVerificationPendingReviewEmail).not.toHaveBeenCalled();

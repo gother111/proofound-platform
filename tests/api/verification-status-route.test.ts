@@ -17,6 +17,7 @@ vi.mock('@/lib/verification/policy', async () => {
 });
 
 import { createClient } from '@/lib/supabase/server';
+import { listVerificationRecordsForOwner } from '@/lib/verification/policy';
 import { GET } from '@/app/api/verification/status/route';
 
 type VerificationProfile = {
@@ -113,9 +114,62 @@ function makeRequest() {
   });
 }
 
+function makeVerificationRecord(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'record-1',
+    ownerType: 'individual_profile',
+    ownerId: 'user-1',
+    subjectType: 'individual_profile',
+    subjectId: 'user-1',
+    proofArtifactId: null,
+    verificationSlot: null,
+    verificationKind: 'work_email',
+    status: 'pending',
+    verifierPrincipalType: 'system',
+    verifierClass: 'system_signal',
+    verifierProfileId: null,
+    verifierOrgId: null,
+    verifierEmailHash: null,
+    verifierDomainSnapshot: null,
+    integrityStatus: 'unknown',
+    integrityReason: null,
+    disputeState: 'none',
+    badgeSemanticsVersion: 2,
+    riskSignals: {},
+    claimSnapshot: {},
+    sourceRequestTable: null,
+    sourceRequestId: null,
+    sourceResponseTable: null,
+    sourceResponseId: null,
+    requestedAt: null,
+    expiresAt: null,
+    requestExpiresAt: null,
+    followUpDueAt: null,
+    lastFollowUpAt: null,
+    lastRefreshedAt: null,
+    completedAt: null,
+    expiredAt: null,
+    supersededAt: null,
+    supersededByVerificationId: null,
+    downgradedAt: null,
+    contradictedAt: null,
+    contradictedByVerificationId: null,
+    disputedAt: null,
+    revokedAt: null,
+    cancelledAt: null,
+    failureCode: null,
+    verifiedAt: null,
+    metadata: {},
+    createdAt: new Date('2026-01-01T00:00:00.000Z'),
+    updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+    ...overrides,
+  } as any;
+}
+
 describe('GET /api/verification/status', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(listVerificationRecordsForOwner as any).mockResolvedValue([]);
   });
 
   it('derives pending status from active work email token when explicit status is missing', async () => {
@@ -142,12 +196,12 @@ describe('GET /api/verification/status', () => {
     const body = await response.json();
     expect(body.channels.workEmail.state).toBe('pending');
     expect(body.channels.workEmail.email).toBe('person@acme.org');
-    expect(body.workflow?.state).toBe('pending');
+    expect(body.workflow).toBeNull();
     expect(body).not.toHaveProperty('verificationTier');
     expect(body).not.toHaveProperty('verificationMethod');
   });
 
-  it('keeps explicit status even when token is active', async () => {
+  it('ignores legacy global failure flags when only token metadata exists', async () => {
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
     const supabase = createSupabaseMock({
       profile: {
@@ -169,12 +223,12 @@ describe('GET /api/verification/status', () => {
     expect(response.status).toBe(200);
 
     const body = await response.json();
-    expect(body.channels.workEmail.state).toBe('failed');
-    expect(body.workflow?.state).toBe('failed');
+    expect(body.channels.workEmail.state).toBe('pending');
+    expect(body.workflow).toBeNull();
     expect(body.summary.publicBadges).toEqual([]);
   });
 
-  it('marks work email as stale when re-verification due date is in the past', async () => {
+  it('marks legacy work email metadata as stale without synthesizing workflow state', async () => {
     const pastDue = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const verifiedAt = new Date(Date.now() - 366 * 24 * 60 * 60 * 1000).toISOString();
     const supabase = createSupabaseMock({
@@ -200,10 +254,10 @@ describe('GET /api/verification/status', () => {
     expect(body.channels.workEmail.state).toBe('expired');
     expect(body.channels.workEmail.needsReverify).toBe(true);
     expect(body.channels.workEmail.reverifyDueAt).toBe(pastDue);
-    expect(body.workflow?.state).toBe('expired');
+    expect(body.workflow).toBeNull();
   });
 
-  it('keeps work email as valid when re-verification due date is in the future', async () => {
+  it('keeps legacy work email metadata as a secondary verified signal only', async () => {
     const futureDue = new Date(Date.now() + 60 * 60 * 1000).toISOString();
     const verifiedAt = new Date().toISOString();
     const supabase = createSupabaseMock({
@@ -229,7 +283,71 @@ describe('GET /api/verification/status', () => {
     expect(body.channels.workEmail.state).toBe('verified');
     expect(body.channels.workEmail.needsReverify).toBe(false);
     expect(body.channels.workEmail.reverifyDueAt).toBe(futureDue);
-    expect(body.workflow?.state).toBe('verified');
+    expect(body.workflow).toBeNull();
+    expect(body.summary.publicBadges).toEqual([]);
+  });
+
+  it('lets canonical work email beat conflicting legacy verified flags', async () => {
+    const verifiedAt = new Date().toISOString();
+    const supabase = createSupabaseMock({
+      profile: {
+        verified: true,
+        verification_method: 'work_email',
+        verification_status: 'verified',
+        verified_at: verifiedAt,
+        work_email: 'person@acme.org',
+        work_email_verified: true,
+        work_email_verified_at: verifiedAt,
+        work_email_reverify_due_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        work_email_token: null,
+        work_email_token_expires: null,
+      },
+    });
+    vi.mocked(listVerificationRecordsForOwner as any).mockResolvedValue([
+      makeVerificationRecord({
+        verificationKind: 'work_email',
+        verificationSlot: 'individual.workplace',
+        status: 'contradicted',
+        integrityStatus: 'contradicted',
+        contradictedAt: new Date('2026-03-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-03-01T00:00:00.000Z'),
+      }),
+    ]);
+    (createClient as any).mockResolvedValue(supabase);
+
+    const response = await GET(makeRequest());
+    expect(response.status).toBe(200);
+
+    const body = await response.json();
+    expect(body.channels.workEmail.state).toBe('contradicted');
+    expect(body.channels.workEmail.needsReverify).toBe(false);
+    expect(body.workflow?.state).toBe('contradicted');
+    expect(body.summary.slots.workplace.state).toBe('contradicted');
+  });
+
+  it('does not create workflow from legacy global verified flags alone', async () => {
+    const supabase = createSupabaseMock({
+      profile: {
+        verified: true,
+        verification_method: 'linkedin',
+        verification_status: 'verified',
+        verified_at: new Date().toISOString(),
+        work_email: null,
+        work_email_verified: false,
+        work_email_verified_at: null,
+        work_email_reverify_due_at: null,
+        work_email_token: null,
+        work_email_token_expires: null,
+      },
+    });
+    (createClient as any).mockResolvedValue(supabase);
+
+    const response = await GET(makeRequest());
+    expect(response.status).toBe(200);
+
+    const body = await response.json();
+    expect(body.workflow).toBeNull();
+    expect(body.channels.workEmail.state).toBe('unverified');
     expect(body.summary.publicBadges).toEqual([]);
   });
 
@@ -288,6 +406,52 @@ describe('GET /api/verification/status', () => {
     expect(body.channels.linkedin.verifiedAt).toBe(nowIso);
     expect(body).not.toHaveProperty('linkedinVerificationLevel');
     expect(body).not.toHaveProperty('linkedinHasIdentityVerification');
+    expect(body.summary.publicBadges).toEqual([]);
+  });
+
+  it('lets canonical linkedin state beat conflicting legacy linkedin flags', async () => {
+    const nowIso = new Date().toISOString();
+    const supabase = createSupabaseMock({
+      profile: {
+        verified: false,
+        verification_method: null,
+        verification_status: 'unverified',
+        verified_at: null,
+        linkedin_verification_status: 'failed',
+        linkedin_verification_level: 'failed',
+        linkedin_verified_at: nowIso,
+        linkedin_verification_data: {
+          hasIdentityVerification: false,
+        },
+        work_email: null,
+        work_email_verified: false,
+        work_email_verified_at: null,
+        work_email_reverify_due_at: null,
+        work_email_token: null,
+        work_email_token_expires: null,
+      },
+    });
+    vi.mocked(listVerificationRecordsForOwner as any).mockResolvedValue([
+      makeVerificationRecord({
+        verificationKind: 'linkedin_identity',
+        verificationSlot: 'individual.identity',
+        status: 'verified',
+        verifierClass: 'system_provider',
+        verifiedAt: new Date('2026-02-01T00:00:00.000Z'),
+        completedAt: new Date('2026-02-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-02-01T00:00:00.000Z'),
+        lastRefreshedAt: new Date('2026-02-01T00:00:00.000Z'),
+      }),
+    ]);
+    (createClient as any).mockResolvedValue(supabase);
+
+    const response = await GET(makeRequest());
+    expect(response.status).toBe(200);
+
+    const body = await response.json();
+    expect(body.channels.linkedin.state).toBe('verified');
+    expect(body.channels.linkedin.signalLevel).toBe('identity');
+    expect(body.channels.linkedin.hasIdentitySignal).toBe(true);
     expect(body.summary.publicBadges).toEqual([]);
   });
 });
