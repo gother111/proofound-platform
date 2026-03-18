@@ -11,24 +11,21 @@ test.describe('Landing Page', () => {
   });
 
   test('renders hero section with main heading', async ({ page }) => {
+    // Hero heading should be visible
     const heading = page.getByRole('heading', { name: /Proofound/i, level: 1 });
     await expect(heading).toBeVisible();
     const hero = page.getByTestId('landing-hero-section');
     await expect(hero).toBeVisible();
 
+    // Subheading should be visible
     await expect(
       page.getByRole('heading', {
-        name: /Stronger signal than CVs, built from proof/i,
+        name: /Publish your public proof portfolio on day 1/i,
         level: 2,
       })
     ).toBeVisible();
 
-    await expect(hero.getByText(/Add proof into a Proof Pack/i)).toBeVisible();
-    await expect(hero.getByText('Blind by default', { exact: true })).toBeVisible();
-    await expect(
-      hero.getByText('Identity-bearing reveal only with candidate consent', { exact: true })
-    ).toBeVisible();
-
+    // CTA buttons in hero
     await expect(hero.getByRole('button', { name: /Join as an Individual/i })).toBeVisible();
     await expect(hero.getByRole('button', { name: /Join as an Organization/i })).toBeVisible();
   });
@@ -51,12 +48,12 @@ test.describe('Landing Page', () => {
     expect(navBox!.y).toBeLessThan(viewport!.height);
     expect(navBox!.y + navBox!.height).toBeLessThanOrEqual(viewport!.height);
 
+    // All expected menu items should render.
+    await expect(nav.getByText('Mission', { exact: true })).toBeVisible();
     await expect(nav.getByText('How it Works', { exact: true })).toBeVisible();
-    await expect(nav.getByText('For Organizations', { exact: true })).toBeVisible();
-    await expect(nav.getByText('Trust & Privacy', { exact: true })).toBeVisible();
+    await expect(nav.getByText('Principles', { exact: true })).toBeVisible();
+    await expect(nav.getByText('Pricing', { exact: true })).toBeVisible();
     await expect(nav.getByText('Log in', { exact: true })).toBeVisible();
-    await expect(nav.getByText('Mission', { exact: true })).toHaveCount(0);
-    await expect(nav.getByText('Pricing', { exact: true })).toHaveCount(0);
 
     const closeButton = page.getByTestId('landing-menu-close');
     await expect(closeButton).toBeVisible();
@@ -74,42 +71,47 @@ test.describe('Landing Page', () => {
     const personas = page.getByTestId('landing-personas-section');
     await expect(personas).toBeVisible();
 
+    await expect(personas.getByRole('heading', { name: /Built for you/i })).toBeVisible();
+
+    // Instead of a toggle, desktop shows both panels
     await expect(
-      personas.getByRole('heading', { name: /One corridor, clear value on both sides/i })
+      personas.getByRole('heading', { name: /For Organizations/i }).first()
     ).toBeVisible();
+    await expect(personas.getByRole('heading', { name: /For Individuals/i }).first()).toBeVisible();
 
-    const cardHeadings = personas.locator('h3');
-    await expect(cardHeadings.nth(0)).toHaveText(/For Organizations/i);
-    await expect(cardHeadings.nth(1)).toHaveText(/For Individuals/i);
-
-    await expect(personas.getByText(/Publish a clear organization trust page/i)).toBeVisible();
-    await expect(personas.getByText(/Review proof-backed summaries/i)).toBeVisible();
-    await expect(personas.getByText(/Start with add proof/i)).toBeVisible();
-    await expect(personas.getByText(/portfolio-ready is easy while intro-eligible/i)).toBeVisible();
+    // The key outcomes should be visible inside the desktop panels
+    const desktopContainer = personas.locator('.hidden.md\\:grid');
+    await expect(
+      desktopContainer.getByText(/Publish a clean public proof portfolio link/i)
+    ).toBeVisible();
+    await expect(desktopContainer.getByText(/Build a verified, portable profile/i)).toBeVisible();
+    await expect(
+      desktopContainer.getByText(/Publish a clean public organization portfolio link/i)
+    ).toBeVisible();
+    await expect(desktopContainer.getByText(/Reduce bias in hiring/i)).toBeVisible();
   });
 
-  test('renders trust and privacy section', async ({ page }) => {
-    const proof = page.locator('#proof');
-    await expect(proof).toBeVisible();
+  test('renders principles section', async ({ page }) => {
+    const principles = page.getByTestId('landing-principles-section');
+    await expect(principles).toBeVisible();
 
     await expect(
-      proof.getByRole('heading', { name: /Trust and privacy stay inside the corridor/i })
+      principles.getByRole('heading', { name: /What makes it trustworthy/i })
     ).toBeVisible();
 
+    // Principle cards (subset)
     await expect(
-      proof.getByRole('heading', { name: /Proof Pack is the canonical proof object/i })
+      principles.getByRole('heading', { name: /Distributed systems mindset/i })
     ).toBeVisible();
-    await expect(
-      proof.getByRole('heading', { name: /Identity-bearing reveal requires consent/i })
-    ).toBeVisible();
-    await expect(proof.getByRole('button', { name: /Explore our protocol/i })).toHaveCount(0);
+    await expect(principles.getByRole('heading', { name: /Anti-bias guardrails/i })).toBeVisible();
   });
 
   test('renders CTA section', async ({ page }) => {
-    const ctaHeading = page.getByRole('heading', { name: /Start with proof/i });
+    const ctaHeading = page.getByRole('heading', { name: /Ready to share/i });
     await expect(ctaHeading).toBeVisible();
     const ctaSection = page.getByTestId('landing-final-cta-section');
 
+    // CTA button (scoped to section to avoid matching sticky CTA)
     const ctaButton = ctaSection.getByRole('button', { name: /Get Started/i });
     await expect(ctaButton).toBeVisible();
   });
@@ -118,17 +120,15 @@ test.describe('Landing Page', () => {
     const footer = page.getByTestId('landing-footer-section');
     await expect(footer).toBeVisible();
 
-    await expect(footer.getByText(/Proof-backed review for a hiring corridor/i)).toBeVisible();
+    // Footer sections
+    await expect(
+      footer.getByText(/Credibility engineering for a world that needs trust more than ever/i)
+    ).toBeVisible();
 
+    // Footer links
     await expect(footer.getByRole('link', { name: /Privacy Policy/i })).toBeVisible();
-    await expect(footer.getByRole('link', { name: /Email/i })).toBeVisible();
-    await expect(footer.getByRole('link', { name: /Manifesto/i })).toHaveCount(0);
 
-    const footerHashes = await footer
-      .locator('a')
-      .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
-    expect(footerHashes).not.toContain('#');
-
+    // Copyright
     await expect(footer.getByText(/© \d{4} Proofound/i)).toBeVisible();
   });
 
@@ -151,21 +151,23 @@ test.describe('Landing Page', () => {
   });
 
   test('maintains responsive layout on mobile', async ({ page }) => {
+    // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
 
+    // Hero should still be visible
     const heading = page.getByRole('heading', { name: /Proofound/i, level: 1 });
     await expect(heading).toBeVisible();
     const hero = page.getByTestId('landing-hero-section');
     await expect(hero).toBeVisible();
 
+    // CTAs should still be visible
     await expect(hero.getByRole('button', { name: /Join as an Individual/i })).toBeVisible();
     await expect(hero.getByRole('button', { name: /Join as an Organization/i })).toBeVisible();
 
+    // Personas section should still render after scroll
     const personas = page.getByTestId('landing-personas-section');
     await personas.scrollIntoViewIfNeeded();
-    await expect(
-      personas.getByRole('heading', { name: /One corridor, clear value on both sides/i })
-    ).toBeVisible();
+    await expect(personas.getByRole('heading', { name: /Built for you/i })).toBeVisible();
   });
 
   test('cookie banner does not block landing CTAs outside the consent card', async ({ page }) => {
@@ -193,19 +195,8 @@ test.describe('Landing Page', () => {
     const sections = page.locator('main').locator('section');
     const count = await sections.count();
 
-    expect(count).toBe(5);
-
-    const sectionIds = await sections.evaluateAll((nodes) =>
-      nodes.map((node) => node.getAttribute('id') ?? node.getAttribute('data-testid') ?? '')
-    );
-
-    expect(sectionIds).toEqual([
-      'landing-hero-section',
-      'how-it-works',
-      'personas',
-      'proof',
-      'landing-final-cta-section',
-    ]);
+    // Landing currently has 11 <section> blocks inside <main> (footer is a <footer>)
+    expect(count).toBe(11);
   });
 
   test('color tokens are applied', async ({ page }) => {

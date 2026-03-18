@@ -1,25 +1,30 @@
 'use client';
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Mail } from 'lucide-react';
+import { Mail, ArrowUpRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface FooterSectionProps {
   shouldReduceMotion?: boolean | null;
 }
 
 export function FooterSection({ shouldReduceMotion }: FooterSectionProps) {
+  const reduceMotion = !!shouldReduceMotion;
   const currentYear = new Date().getFullYear();
 
   const links = {
     platform: [
       { label: 'How it Works', href: '#how-it-works' },
+      { label: 'Principles', href: '#principles' },
+      { label: 'For Individuals', href: '#personas' },
       { label: 'For Organizations', href: '#personas' },
-      { label: 'Trust & Privacy', href: '#proof' },
-      { label: 'Get Started', href: '/signup' },
     ],
     company: [
       { label: 'About Us', href: '/about' },
+      { label: 'Manifesto', href: '/manifesto' },
+      { label: 'Careers', href: '/careers' },
       { label: 'Contact', href: '/contact' },
       { label: 'Support', href: '/support' },
     ],
@@ -35,6 +40,7 @@ export function FooterSection({ shouldReduceMotion }: FooterSectionProps) {
       className="bg-japandi-charcoal text-white pt-32 pb-12 px-6 md:px-12 border-t border-white/5 relative overflow-hidden"
       data-testid="landing-footer-section"
     >
+      {/* Watermark */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[20%] pointer-events-none select-none opacity-[0.02] whitespace-nowrap">
         <span className="text-[30vw] font-display font-bold text-white leading-none tracking-tighter">
           Proofound
@@ -56,18 +62,27 @@ export function FooterSection({ shouldReduceMotion }: FooterSectionProps) {
               />
             </Link>
             <p className="text-white/60 leading-relaxed font-sans text-lg max-w-md">
-              Proof-backed review for a hiring corridor that starts with Proof Packs, stays blind by
-              default, and moves into identity-bearing reveal only with candidate consent.
+              Credibility engineering for a world that needs trust more than ever. We build the
+              infrastructure for verifiable professional reputation.
             </p>
-            <a
-              href="mailto:hello@proofound.io"
-              aria-label="Email"
-              title="Email"
-              className="inline-flex w-fit items-center gap-3 rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-white/80 transition-colors duration-300 hover:bg-white hover:text-foreground"
-            >
-              <Mail className="h-4 w-4" aria-hidden="true" />
-              hello@proofound.io
-            </a>
+            <div className="flex gap-4 pt-4">
+              {[{ icon: Mail, href: 'mailto:hello@proofound.io', label: 'Email' }].map(
+                (social, idx) => (
+                  <motion.a
+                    key={idx}
+                    href={social.href}
+                    aria-label={social.label}
+                    title={social.label}
+                    whileHover={reduceMotion ? undefined : { scale: 1.15, rotate: [-5, 5, 0] }}
+                    whileTap={reduceMotion ? undefined : { scale: 0.95 }}
+                    className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white hover:text-foreground transition-colors duration-300 group"
+                  >
+                    <span className="sr-only">{social.label}</span>
+                    <social.icon className="w-5 h-5" aria-hidden="true" />
+                  </motion.a>
+                )
+              )}
+            </div>
           </div>
 
           <div className="md:col-span-2 md:col-start-7">
@@ -140,11 +155,28 @@ export function FooterSection({ shouldReduceMotion }: FooterSectionProps) {
           </div>
         </div>
 
-        <div className="flex flex-col items-center justify-between gap-6 border-t border-white/10 pt-8 md:flex-row">
+        <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6">
           <p className="text-white/30 text-sm font-sans">
             &copy; {currentYear} Proofound Inc. All rights reserved.
           </p>
-          <p className="text-center text-sm leading-snug text-white/30 font-sans">Stockholm</p>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <div
+                className={cn(
+                  'w-2 h-2 rounded-full bg-green-500',
+                  reduceMotion ? '' : 'animate-pulse'
+                )}
+              />
+              <span className="text-white/40 text-sm font-sans">All Systems Operational</span>
+            </div>
+            <p className="text-white/30 text-sm font-sans text-center leading-snug">
+              Designed with
+              <br />
+              <span className="text-japandi-terracotta">♥</span>
+              <br />
+              in Stockholm
+            </p>
+          </div>
         </div>
       </div>
     </footer>
