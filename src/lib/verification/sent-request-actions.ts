@@ -34,7 +34,7 @@ import {
   updateCanonicalBundleDeliveryState,
 } from '@/lib/verification/canonical-bundles';
 
-type RequestType = 'skill' | 'impact_story';
+type RequestType = 'skill' | 'impact_story' | 'custom_bundle';
 type BundleArtifactType =
   | 'skill'
   | 'experience'
@@ -372,6 +372,20 @@ async function resendBundleRequest(
     reusedRecord: false,
     bundled: true,
   });
+}
+
+export async function resendBundleVerificationRequest(
+  request: NextRequest,
+  bundleId: string
+): Promise<NextResponse> {
+  const authContext = await requireApiAuthContext();
+  if (!authContext) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { user } = authContext;
+  const admin = createAdminClient();
+  return resendBundleRequest(admin, request, user.id, bundleId, 'custom_bundle');
 }
 
 export async function resendSkillVerificationRequest(

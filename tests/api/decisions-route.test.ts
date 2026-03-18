@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
   isActiveOrgMember: vi.fn(),
   getInterviewAccessContext: vi.fn(),
+  buildWorkflowView: vi.fn(),
   recordDecisionTransition: vi.fn(),
   logInfo: vi.fn(),
   logWarn: vi.fn(),
@@ -24,6 +25,7 @@ vi.mock('@/lib/interviews/messaging', () => ({
 }));
 
 vi.mock('@/lib/workflow/service', () => ({
+  buildWorkflowView: mocks.buildWorkflowView,
   recordDecisionTransition: mocks.recordDecisionTransition,
 }));
 
@@ -75,6 +77,10 @@ describe('POST /api/decisions', () => {
       meetingUrl: 'https://zoom.us/j/meeting',
       timezone: 'UTC',
       rescheduleCount: 1,
+    });
+    mocks.buildWorkflowView.mockReturnValue({
+      state: 'completed',
+      allowedActions: [],
     });
     mocks.recordDecisionTransition.mockResolvedValue({
       id: 'decision-1',
@@ -152,6 +158,49 @@ describe('POST /api/decisions', () => {
 
     expect(response.status).toBe(400);
     expect(body.error).toContain('decision must be one of');
+    expect(mocks.recordDecisionTransition).not.toHaveBeenCalled();
+  });
+
+  it('rejects decisions before the interview is completed and returns the legal next action', async () => {
+    mocks.isActiveOrgMember.mockResolvedValue(true);
+    mocks.getInterviewAccessContext.mockResolvedValue({
+      interviewId: 'interview-1',
+      matchId: 'match-1',
+      orgId: 'org-1',
+      candidateId: 'candidate-1',
+      status: 'scheduled',
+      scheduledAt: new Date('2026-03-15T00:00:00.000Z'),
+      platform: 'zoom',
+      meetingUrl: 'https://zoom.us/j/meeting',
+      timezone: 'UTC',
+      rescheduleCount: 1,
+    });
+    mocks.buildWorkflowView.mockReturnValue({
+      state: 'scheduled',
+      displayState: 'Scheduled',
+      allowedActions: [{ id: 'complete_interview' }],
+    });
+
+    const response = await POST(
+      buildRequest({
+        interviewId: 'interview-1',
+        decision: 'hire',
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(body).toEqual(
+      expect.objectContaining({
+        code: 'DECISION_NOT_READY',
+        nextAction: expect.objectContaining({
+          id: 'record_interview_outcome',
+        }),
+        workflow: expect.objectContaining({
+          state: 'scheduled',
+        }),
+      })
+    );
     expect(mocks.recordDecisionTransition).not.toHaveBeenCalled();
   });
 });

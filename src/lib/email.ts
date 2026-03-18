@@ -20,6 +20,7 @@ import VerificationRejected from '../../emails/VerificationRejected';
 import LinkedInVerificationPendingReview from '../../emails/LinkedInVerificationPendingReview';
 import { sendDebugIngest } from '@/lib/debug-ingest';
 import { EMAIL_CONFIG } from './email/config';
+import { applyWorkflowEmailPrivacy, type WorkflowEmailPrivacyOptions } from './email/privacy';
 
 // Allow build to succeed without RESEND_API_KEY
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder_key');
@@ -209,8 +210,8 @@ export async function sendSkillVerificationRequest(
   token: string,
   message?: string
 ): Promise<void> {
-  const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify-skill?token=${token}&action=approve`;
-  const declineUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify-skill?token=${token}&action=decline`;
+  const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify/${token}`;
+  const declineUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify/${token}`;
 
   try {
     await resend.emails.send({
@@ -281,21 +282,35 @@ export async function sendContractSignedEmail(
     compensationCurrency?: string;
     compensationPeriod?: string;
     contractId: string;
-  }
+  },
+  privacy?: WorkflowEmailPrivacyOptions
 ): Promise<void> {
   const viewContractUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/contracts/${contractData.contractId}`;
+  const emailPrivacy = applyWorkflowEmailPrivacy(
+    {
+      subject: 'Contract Successfully Signed - Proofound',
+      organizationName: contractData.organizationName,
+      candidateName: contractData.candidateName,
+    },
+    {
+      neutralSubject: 'Proofound workflow update',
+      identityVisible: false,
+      organizationVisible: false,
+      ...privacy,
+    }
+  );
 
   try {
     await resend.emails.send({
       from: fromEmail,
       to: recipientEmail,
-      subject: 'Contract Successfully Signed - Proofound',
+      subject: emailPrivacy.subject,
       react: ContractSigned({
         recipientName,
         role,
         roleTitle: contractData.roleTitle,
-        organizationName: contractData.organizationName,
-        candidateName: contractData.candidateName,
+        organizationName: emailPrivacy.organizationName ?? undefined,
+        candidateName: emailPrivacy.candidateName ?? undefined,
         contractType: contractData.contractType,
         startDate: contractData.startDate,
         compensationAmount: contractData.compensationAmount,
@@ -324,21 +339,35 @@ export async function sendInterviewScheduledEmail(
     meetingUrl: string;
     timezone?: string;
     interviewId: string;
-  }
+  },
+  privacy?: WorkflowEmailPrivacyOptions
 ): Promise<void> {
   const viewInterviewUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/i/interviews/${interviewData.interviewId}`;
+  const emailPrivacy = applyWorkflowEmailPrivacy(
+    {
+      subject: 'Interview Confirmed - Proofound',
+      organizationName: interviewData.organizationName,
+      candidateName: interviewData.candidateName,
+    },
+    {
+      neutralSubject: 'Proofound workflow update',
+      identityVisible: false,
+      organizationVisible: false,
+      ...privacy,
+    }
+  );
 
   try {
     await resend.emails.send({
       from: fromEmail,
       to: recipientEmail,
-      subject: 'Interview Confirmed - Proofound',
+      subject: emailPrivacy.subject,
       react: InterviewScheduled({
         recipientName,
         role,
         roleTitle: interviewData.roleTitle,
-        organizationName: interviewData.organizationName,
-        candidateName: interviewData.candidateName,
+        organizationName: emailPrivacy.organizationName ?? undefined,
+        candidateName: emailPrivacy.candidateName ?? undefined,
         scheduledAt: interviewData.scheduledAt,
         duration: interviewData.duration,
         platform: interviewData.platform,
@@ -363,22 +392,36 @@ export async function sendIdentityRevealedEmail(
     organizationName?: string;
     conversationId: string;
     profileId: string;
-  }
+  },
+  privacy?: WorkflowEmailPrivacyOptions
 ): Promise<void> {
   const viewConversationUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/i/messages/${identityData.conversationId}`;
   const viewProfileUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/profile/${identityData.profileId}`;
+  const emailPrivacy = applyWorkflowEmailPrivacy(
+    {
+      subject: 'Identities Revealed - Proofound',
+      organizationName: identityData.organizationName,
+      revealedName: identityData.revealedName,
+    },
+    {
+      neutralSubject: 'Proofound workflow update',
+      identityVisible: false,
+      organizationVisible: false,
+      ...privacy,
+    }
+  );
 
   try {
     await resend.emails.send({
       from: fromEmail,
       to: recipientEmail,
-      subject: 'Identities Revealed - Proofound',
+      subject: emailPrivacy.subject,
       react: IdentityRevealed({
         recipientName,
         role,
-        revealedName: identityData.revealedName,
+        revealedName: emailPrivacy.revealedName ?? 'your match',
         roleTitle: identityData.roleTitle,
-        organizationName: identityData.organizationName,
+        organizationName: emailPrivacy.organizationName ?? undefined,
         viewConversationUrl,
         viewProfileUrl,
       }),

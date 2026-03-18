@@ -61,6 +61,34 @@ function checkSafeModeFlags() {
   }
 }
 
+function formatNotReadyReasons(reasons: unknown): string {
+  if (!Array.isArray(reasons) || reasons.length === 0) {
+    return 'No explicit not-ready reasons were returned.';
+  }
+
+  return reasons
+    .map((reason) => {
+      const code =
+        typeof reason === 'object' && reason != null && 'code' in reason ? String(reason.code) : '';
+      const message =
+        typeof reason === 'object' && reason != null && 'message' in reason
+          ? String(reason.message)
+          : '';
+      const monitorKeys =
+        typeof reason === 'object' &&
+        reason != null &&
+        'monitorKeys' in reason &&
+        Array.isArray(reason.monitorKeys)
+          ? reason.monitorKeys.map(String)
+          : [];
+
+      return [code, message, monitorKeys.length > 0 ? `monitors=${monitorKeys.join(',')}` : '']
+        .filter(Boolean)
+        .join(' | ');
+    })
+    .join('; ');
+}
+
 function runLaunchSmokeRunner(reason: string) {
   if (!RUN_SMOKE_DIRECT) {
     fail(reason);
@@ -163,14 +191,28 @@ async function maybeRunSynthetics() {
 
 async function checkLaunchStatus() {
   const response = await fetch(`${BASE_URL}/api/monitoring/launch-status`);
-  if (!response.ok) {
+  if (!response.ok && response.status !== 503) {
     fail(`launch-status endpoint returned ${response.status}`);
   }
 
   const data = await response.json();
   if (!data.ok || data.readinessState !== 'ready') {
+    const reasons = formatNotReadyReasons(data.notReadyReasons);
+
+    if (data.readinessState === 'unverified') {
+      fail(
+        `launch-status is unverified and launch cannot proceed yet. Refresh smoke evidence and rerun launch synthetics. reasons=${reasons}`
+      );
+    }
+
+    if (data.readinessState === 'blocked') {
+      fail(
+        `launch-status is blocked by fresh failing evidence. Resolve the failing monitor or corridor before launch. reasons=${reasons}`
+      );
+    }
+
     fail(
-      `launch-status is not ready (ok=${String(data.ok)}, readinessState=${String(data.readinessState)})`
+      `launch-status is not ready (ok=${String(data.ok)}, readinessState=${String(data.readinessState)}, reasons=${reasons})`
     );
   }
   if (data.summary?.expectedMonitors !== LAUNCH_MONITOR_DEFINITIONS.length) {

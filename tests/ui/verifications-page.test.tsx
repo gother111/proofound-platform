@@ -14,6 +14,12 @@ vi.mock('@/lib/auth', () => ({
   requireAuth: requireAuthMock,
 }));
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+  }),
+}));
+
 vi.mock('@/lib/supabase/server', () => ({
   createClient: createClientMock,
 }));
@@ -24,6 +30,10 @@ vi.mock('@/lib/supabase/admin', () => ({
 
 vi.mock('@/lib/proofs/canonical-pack', () => ({
   listCanonicalProofPackAggregatesForOwner: vi.fn(),
+}));
+
+vi.mock('@/lib/verification/canonical-bundles', () => ({
+  listCanonicalBundlesForOwner: vi.fn(),
 }));
 
 vi.mock('@/lib/verification/canonical-requests', () => ({
@@ -47,6 +57,7 @@ vi.mock('@/app/app/i/verifications/VerificationsClient', () => ({
 
 import VerificationsPage from '@/app/app/i/verifications/page';
 import { listCanonicalProofPackAggregatesForOwner } from '@/lib/proofs/canonical-pack';
+import { listCanonicalBundlesForOwner } from '@/lib/verification/canonical-bundles';
 import {
   listCanonicalSkillVerificationRequestsForOwner,
   listCanonicalSkillVerificationRequestsForVerifierEmail,
@@ -55,6 +66,7 @@ import {
   listCanonicalImpactVerificationRequestsForOwner,
   listCanonicalImpactVerificationRequestsForVerifierEmail,
 } from '@/lib/verification/canonical-impact-requests';
+import type { VerificationRequestView } from '@/lib/verification/request-feed';
 
 function createSupabaseClientMock(options: {
   userEmail: string;
@@ -103,6 +115,7 @@ describe('VerificationsPage', () => {
     createAdminClientMock.mockReset();
     requireAuthMock.mockResolvedValue({ id: 'user-1' });
     vi.mocked(listCanonicalProofPackAggregatesForOwner).mockResolvedValue([]);
+    vi.mocked(listCanonicalBundlesForOwner).mockResolvedValue([]);
     vi.mocked(listCanonicalSkillVerificationRequestsForOwner).mockResolvedValue([]);
     vi.mocked(listCanonicalSkillVerificationRequestsForVerifierEmail).mockResolvedValue([]);
     vi.mocked(listCanonicalImpactVerificationRequestsForOwner).mockResolvedValue([]);
@@ -399,23 +412,123 @@ describe('VerificationsPage', () => {
       incomingRequests: Array<{
         canonicalPackTitle?: string | null;
         canonicalEvidenceTitles?: string[];
+        proofLabel?: string | null;
+        claimSummary?: string | null;
       }>;
       sentRequests: Array<{
         id: string;
         canonicalPackTitle?: string | null;
         canonicalVerificationStatus?: string | null;
         canonicalOutcomesSummary?: string | null;
+        proofLabel?: string | null;
+        confirmationOutcome?: string | null;
       }>;
     };
 
     expect(props.incomingRequests[0]).toMatchObject({
       canonicalPackTitle: 'Proof Pack: Product Strategy',
       canonicalEvidenceTitles: ['Launch memo'],
+      proofLabel: 'Proof Pack: Product Strategy',
+      claimSummary: 'Observed skill claim for Product Strategy',
     });
     expect(props.sentRequests.find((request) => request.id === 'impact-sent-1')).toMatchObject({
       canonicalPackTitle: 'Proof Pack: Climate Adaptation',
       canonicalVerificationStatus: 'partially_verified',
       canonicalOutcomesSummary: 'Reduced planning time by 35%.',
+      proofLabel: 'Proof Pack: Climate Adaptation',
+      confirmationOutcome: 'Adds a non-self confirmation signal to this impact proof.',
+    });
+  });
+
+  it('surfaces canonical custom bundle rows without duplicating bundle-backed item requests', async () => {
+    createClientMock.mockResolvedValue(
+      createSupabaseClientMock({
+        userEmail: 'user@example.com',
+        canonicalRequesterProfiles: [
+          {
+            id: 'user-1',
+            display_name: 'Bundle Owner',
+            handle: 'bundle-owner',
+            avatar_url: null,
+          },
+        ],
+      })
+    );
+    vi.mocked(listCanonicalBundlesForOwner).mockResolvedValue([
+      {
+        id: 'bundle-1',
+        requester_profile_id: 'user-1',
+        requester_name: 'Bundle Owner',
+        verifier_email: 'bundle@example.com',
+        verifier_profile_id: null,
+        verifier_relationship: 'peer',
+        verifier_source: 'peer',
+        request_kind: 'generic_verification',
+        attestation_request: null,
+        attestation_response: null,
+        message: 'Please review this bundle.',
+        status: 'pending',
+        created_at: '2026-02-27T10:00:00.000Z',
+        expires_at: '2026-03-12T10:00:00.000Z',
+        responded_at: null,
+        response_message: null,
+        capability_token_id: 'cap-bundle-1',
+        email_sent: true,
+        email_error: null,
+        items: [
+          {
+            id: 'bundle-item-skill-1',
+            artifact_type: 'skill',
+            artifact_id: 'skill-1',
+            display_label: 'TypeScript',
+            status: 'pending',
+            created_at: '2026-02-27T10:00:00.000Z',
+            updated_at: '2026-02-27T10:00:00.000Z',
+          },
+          {
+            id: 'bundle-item-project-1',
+            artifact_type: 'project',
+            artifact_id: 'project-1',
+            display_label: 'Migration launch',
+            status: 'pending',
+            created_at: '2026-02-27T10:00:00.000Z',
+            updated_at: '2026-02-27T10:00:00.000Z',
+          },
+        ],
+      },
+    ] as any);
+    vi.mocked(listCanonicalSkillVerificationRequestsForOwner).mockResolvedValue([
+      {
+        id: 'skill-request-inside-bundle',
+        skill_id: 'skill-1',
+        custom_request_id: 'bundle-1',
+        requester_profile_id: 'user-1',
+        verifier_email: 'bundle@example.com',
+        verifier_source: 'peer',
+        status: 'pending',
+        created_at: '2026-02-27T10:00:00.000Z',
+      },
+    ] as any);
+    vi.mocked(listCanonicalImpactVerificationRequestsForOwner).mockResolvedValue([]);
+
+    const element = await VerificationsPage();
+    render(element);
+
+    const props = verificationsClientSpy.mock.calls[0]?.[0] as {
+      sentRequests: Array<{
+        id: string;
+        subjectType: string;
+        bundleItemCount?: number;
+        bundlePreviewLabels?: string[];
+      }>;
+    };
+
+    expect(props.sentRequests).toHaveLength(1);
+    expect(props.sentRequests[0]).toMatchObject({
+      id: 'bundle-1',
+      subjectType: 'custom_bundle',
+      bundleItemCount: 2,
+      bundlePreviewLabels: ['TypeScript', 'Migration launch'],
     });
   });
 
@@ -453,5 +566,56 @@ describe('VerificationsPage', () => {
     };
 
     expect(props.incomingRequests).toHaveLength(0);
+  });
+
+  it('renders the actual client without surfacing a custom verification request button', async () => {
+    const { VerificationsClient } = await vi.importActual<
+      typeof import('@/app/app/i/verifications/VerificationsClient')
+    >('@/app/app/i/verifications/VerificationsClient');
+
+    const incomingRequests: VerificationRequestView[] = [
+      {
+        id: 'incoming-1',
+        subjectId: 'skill-1',
+        subjectType: 'skill',
+        status: 'pending',
+        createdAt: '2026-02-25T10:00:00.000Z',
+        updatedAt: '2026-02-25T10:00:00.000Z',
+        verifierEmail: 'reviewer@example.com',
+        verifierSource: 'peer',
+        message: 'Please confirm this work.',
+        proofLabel: 'Proof Pack: Systems Thinking launch',
+        claimSummary: 'Observed skill claim for Systems Thinking',
+        confirmationOutcome: 'This skill keeps a bounded attestation linked to the attached proof.',
+        profiles: {
+          display_name: 'Jordan Sender',
+          handle: 'jordan',
+        } as any,
+        skills: {
+          competency_level: 4,
+          skills_taxonomy: {
+            name_i18n: {
+              en: 'Systems Thinking',
+            },
+          },
+        } as any,
+      },
+    ];
+
+    render(
+      <VerificationsClient
+        incomingRequests={incomingRequests}
+        sentRequests={[]}
+        userEmail="user@example.com"
+      />
+    );
+
+    expect(screen.getByText(/Proof verification requests/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Claim: Observed skill claim for Systems Thinking/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Custom verification request/i })
+    ).not.toBeInTheDocument();
   });
 });

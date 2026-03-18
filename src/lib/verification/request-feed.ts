@@ -1,5 +1,9 @@
 import { listCanonicalProofPackAggregatesForOwner } from '@/lib/proofs/canonical-pack';
 import {
+  listCanonicalBundlesForOwner,
+  type CanonicalBundleArtifactType,
+} from '@/lib/verification/canonical-bundles';
+import {
   listCanonicalSkillVerificationRequestsForOwner,
   listCanonicalSkillVerificationRequestsForVerifierEmail,
   mapCanonicalSkillVerificationRequestRecord,
@@ -58,11 +62,22 @@ type CanonicalRequestContext = {
 
 export type VerificationRequestView = {
   id: string;
-  subjectType: 'skill' | 'impact_story';
+  subjectType: 'skill' | 'impact_story' | 'custom_bundle';
   subjectId: string;
-  verificationKind: 'skill_attestation_peer' | 'skill_attestation_manager' | 'impact_attestation';
-  requestKind: 'generic_verification' | 'human_observed_attestation' | 'impact_attestation';
+  verificationKind:
+    | 'skill_attestation_peer'
+    | 'skill_attestation_manager'
+    | 'impact_attestation'
+    | 'verification_bundle';
+  requestKind:
+    | 'generic_verification'
+    | 'human_observed_attestation'
+    | 'impact_attestation'
+    | 'custom_bundle';
   bundleId?: string | null;
+  bundleItemCount?: number;
+  bundlePreviewLabels?: string[];
+  bundleArtifactTypes?: CanonicalBundleArtifactType[];
   impactStoryTitle?: string | null;
   requesterProfileId: string;
   verifierEmail: string;
@@ -85,6 +100,9 @@ export type VerificationRequestView = {
   canonicalOutcomesSummary?: string | null;
   canonicalVerificationStatus?: string | null;
   canonicalEvidenceTitles?: string[];
+  proofLabel?: string | null;
+  claimSummary?: string | null;
+  confirmationOutcome?: string | null;
   skills?: SkillDetailsRecord;
   profiles?: ProfileDetailsRecord;
 };
@@ -159,6 +177,135 @@ function toAttestationRequestShape(
   };
 }
 
+function joinLabels(labels: string[]) {
+  if (labels.length <= 2) {
+    return labels.join(', ');
+  }
+
+  const visible = labels.slice(0, 2);
+  return `${visible.join(', ')} + ${labels.length - visible.length} more`;
+}
+
+function getSkillLabel(skill?: SkillDetailsRecord | null) {
+  if (!skill) {
+    return 'this skill';
+  }
+
+  if (skill.name_i18n && typeof skill.name_i18n === 'object' && 'en' in skill.name_i18n) {
+    const name = (skill.name_i18n as Record<string, unknown>).en;
+    if (typeof name === 'string' && name.trim().length > 0) {
+      return name;
+    }
+  }
+
+  const taxonomyName = skill.skills_taxonomy?.name_i18n;
+  if (taxonomyName && typeof taxonomyName === 'object' && 'en' in taxonomyName) {
+    const name = (taxonomyName as Record<string, unknown>).en;
+    if (typeof name === 'string' && name.trim().length > 0) {
+      return name;
+    }
+  }
+
+  if (typeof taxonomyName === 'string' && taxonomyName.trim().length > 0) {
+    return taxonomyName;
+  }
+
+  return 'this skill';
+}
+
+function buildSkillClaimSummary(
+  request: SkillVerificationRecord,
+  skill?: SkillDetailsRecord | null
+): string {
+  const attestationRequest = toAttestationRequestShape(request.attestation_request);
+  const labels = attestationRequest?.skillLabels?.filter((label) => label.trim().length > 0) || [];
+  if (labels.length > 0) {
+    return `Observed in practice: ${joinLabels(labels)}.`;
+  }
+
+  return `That this proof demonstrates ${getSkillLabel(skill)} in real work.`;
+}
+
+function buildImpactClaimSummary(request: ImpactVerificationRecord): string {
+  const snapshot =
+    request.claim_snapshot && typeof request.claim_snapshot === 'object'
+      ? (request.claim_snapshot as Record<string, unknown>)
+      : {};
+
+  const roleClaim =
+    snapshot.roleClaim && typeof snapshot.roleClaim === 'object'
+      ? (snapshot.roleClaim as Record<string, unknown>)
+      : null;
+  const roleLabel = roleClaim && typeof roleClaim.label === 'string' ? roleClaim.label.trim() : '';
+
+  const outcomeClaims = Array.isArray(snapshot.outcomeClaims)
+    ? snapshot.outcomeClaims
+        .map((claim) =>
+          claim &&
+          typeof claim === 'object' &&
+          typeof (claim as Record<string, unknown>).label === 'string'
+            ? String((claim as Record<string, unknown>).label).trim()
+            : ''
+        )
+        .filter((label) => label.length > 0)
+    : [];
+
+  const artifactsClaim =
+    snapshot.artifactsClaim && typeof snapshot.artifactsClaim === 'object'
+      ? (snapshot.artifactsClaim as Record<string, unknown>)
+      : null;
+  const artifactsEnabled = Boolean(artifactsClaim?.enabled);
+
+  const parts: string[] = [];
+  if (roleLabel) {
+    parts.push(roleLabel);
+  }
+  if (outcomeClaims.length > 0) {
+    parts.push(`Outcome claims: ${joinLabels(outcomeClaims)}`);
+  }
+  if (artifactsEnabled) {
+    parts.push('Supporting artifacts authenticity');
+  }
+
+  if (parts.length === 0) {
+    return 'That this proof’s role, outcomes, and supporting evidence are accurate.';
+  }
+
+  return parts.join('. ') + '.';
+}
+
+function buildBundleClaimSummary(
+  bundle: Awaited<ReturnType<typeof listCanonicalBundlesForOwner>>[number]
+): string {
+  const labels = bundle.items
+    .map((item) => item.display_label?.trim())
+    .filter((label): label is string => Boolean(label));
+
+  if (labels.length === 0) {
+    return 'Selected proof-backed artifacts from an earlier grouped request.';
+  }
+
+  return `Selected proof-backed artifacts: ${joinLabels(labels)}.`;
+}
+
+function buildConfirmationOutcome(
+  request: Pick<VerificationRequestView, 'subjectType' | 'requestKind'>
+) {
+  if (request.subjectType === 'impact_story') {
+    return 'If confirmed, this Proof Pack gains a scoped impact attestation for the role, outcomes, or artifacts named here.';
+  }
+
+  if (request.subjectType === 'custom_bundle') {
+    return 'If confirmed, each included proof keeps its own scoped verification record. Legacy grouped requests do not create broad trust lift.';
+  }
+
+  if (request.requestKind === 'human_observed_attestation') {
+    return 'If confirmed, this Proof Pack gains a bounded observed-in-practice attestation for the named skill.';
+  }
+
+  return 'If confirmed, this Proof Pack gains a scoped non-self attestation for this skill claim.';
+}
+
 function mapSkillRequestToView(
   request: SkillVerificationRecord,
   skillDetailsById: Map<string, SkillDetailsRecord>,
@@ -166,6 +313,7 @@ function mapSkillRequestToView(
   canonicalContext: CanonicalRequestContext,
   bundleId?: string | null
 ): VerificationRequestView {
+  const skill = skillDetailsById.get(request.skill_id);
   return {
     id: request.id,
     subjectType: 'skill',
@@ -188,7 +336,13 @@ function mapSkillRequestToView(
     respondedAt: request.responded_at || null,
     responseMessage: request.response_message || null,
     expiresAt: request.expires_at || null,
-    skills: skillDetailsById.get(request.skill_id),
+    proofLabel: canonicalContext.canonicalPackTitle || getSkillLabel(skill),
+    claimSummary: buildSkillClaimSummary(request, skill),
+    confirmationOutcome: buildConfirmationOutcome({
+      subjectType: 'skill',
+      requestKind: request.request_kind || 'generic_verification',
+    }),
+    skills: skill,
     profiles: requesterProfilesById.get(request.requester_profile_id),
     ...canonicalContext,
   };
@@ -200,6 +354,7 @@ function mapImpactRequestToView(
   requesterProfilesById: Map<string, ProfileDetailsRecord>,
   canonicalContext: CanonicalRequestContext
 ): VerificationRequestView {
+  const impactStoryTitle = impactStoriesById.get(request.impact_story_id)?.title || null;
   return {
     id: request.id,
     subjectType: 'impact_story',
@@ -218,8 +373,46 @@ function mapImpactRequestToView(
     respondedAt: request.responded_at || null,
     responseMessage: request.response_message || null,
     expiresAt: request.expires_at || null,
+    proofLabel: canonicalContext.canonicalPackTitle || impactStoryTitle || 'Impact story proof',
+    claimSummary: buildImpactClaimSummary(request),
+    confirmationOutcome: buildConfirmationOutcome({
+      subjectType: 'impact_story',
+      requestKind: 'impact_attestation',
+    }),
     profiles: requesterProfilesById.get(request.requester_profile_id),
     ...canonicalContext,
+  };
+}
+
+function mapBundleRequestToView(
+  bundle: Awaited<ReturnType<typeof listCanonicalBundlesForOwner>>[number]
+): VerificationRequestView {
+  return {
+    id: bundle.id,
+    subjectType: 'custom_bundle',
+    subjectId: bundle.id,
+    verificationKind: 'verification_bundle',
+    requestKind: 'custom_bundle',
+    bundleId: bundle.id,
+    bundleItemCount: bundle.items.length,
+    bundlePreviewLabels: bundle.items.slice(0, 3).map((item) => item.display_label),
+    bundleArtifactTypes: [...new Set(bundle.items.map((item) => item.artifact_type))],
+    requesterProfileId: bundle.requester_profile_id,
+    verifierEmail: bundle.verifier_email,
+    verifierSource: bundle.verifier_source,
+    verifierRelationship: bundle.verifier_relationship || null,
+    message: bundle.message || null,
+    status: bundle.status === 'cancelled' ? 'expired' : bundle.status,
+    createdAt: bundle.created_at,
+    respondedAt: bundle.responded_at || null,
+    responseMessage: bundle.response_message || null,
+    expiresAt: bundle.expires_at || null,
+    proofLabel: bundle.items[0]?.display_label || 'Legacy grouped request',
+    claimSummary: buildBundleClaimSummary(bundle),
+    confirmationOutcome: buildConfirmationOutcome({
+      subjectType: 'custom_bundle',
+      requestKind: 'custom_bundle',
+    }),
   };
 }
 
@@ -231,12 +424,14 @@ export async function loadVerificationRequestFeed(params: {
 }) {
   const [
     canonicalAggregates,
+    canonicalBundles,
     canonicalIncomingSkillRows,
     canonicalSentSkillRows,
     canonicalIncomingImpactRows,
     canonicalSentImpactRows,
   ] = await Promise.all([
     listCanonicalProofPackAggregatesForOwner('individual_profile', params.userId).catch(() => []),
+    listCanonicalBundlesForOwner(params.userId).catch(() => []),
     params.userEmail
       ? listCanonicalSkillVerificationRequestsForVerifierEmail(params.userEmail).catch(() => [])
       : Promise.resolve([]),
@@ -259,6 +454,18 @@ export async function loadVerificationRequestFeed(params: {
   const canonicalSentImpactRequests = canonicalSentImpactRows.map(
     mapCanonicalImpactVerificationRequestRecord
   );
+  const bundledSentRequestIds = new Set(
+    [
+      ...canonicalSentSkillRequests
+        .filter((request) => Boolean(request.custom_request_id))
+        .map((request) => request.id),
+      ...canonicalSentImpactRequests
+        .filter((request) => Boolean(request.custom_request_id))
+        .map((request) => request.id),
+    ].filter(
+      (requestId): requestId is string => typeof requestId === 'string' && requestId.length > 0
+    )
+  );
 
   const skillIds = Array.from(
     new Set(
@@ -275,6 +482,7 @@ export async function loadVerificationRequestFeed(params: {
         ...canonicalSentSkillRequests.map((request) => request.requester_profile_id),
         ...canonicalIncomingImpactRequests.map((request) => request.requester_profile_id),
         ...canonicalSentImpactRequests.map((request) => request.requester_profile_id),
+        ...canonicalBundles.map((bundle) => bundle.requester_profile_id),
       ].filter(
         (profileId): profileId is string => typeof profileId === 'string' && profileId.length > 0
       )
@@ -409,28 +617,38 @@ export async function loadVerificationRequestFeed(params: {
   ].sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
 
   const sentRequests: VerificationRequestView[] = [
+    ...canonicalBundles.map((bundle) => mapBundleRequestToView(bundle)),
     ...canonicalSentSkillRequests.map((request) =>
-      mapSkillRequestToView(
-        request,
-        skillDetailsById,
-        requesterProfilesById,
-        buildCanonicalRequestContext(
-          pickPreferredAggregate(aggregatesBySkillId.get(request.skill_id) ?? [])
-        ),
-        request.custom_request_id || null
-      )
+      request.custom_request_id
+        ? null
+        : mapSkillRequestToView(
+            request,
+            skillDetailsById,
+            requesterProfilesById,
+            buildCanonicalRequestContext(
+              pickPreferredAggregate(aggregatesBySkillId.get(request.skill_id) ?? [])
+            ),
+            request.custom_request_id || null
+          )
     ),
     ...canonicalSentImpactRequests.map((request) =>
-      mapImpactRequestToView(
-        request,
-        impactStoriesById,
-        requesterProfilesById,
-        buildCanonicalRequestContext(
-          pickPreferredAggregate(aggregatesByImpactStoryId.get(request.impact_story_id) ?? [])
-        )
-      )
+      request.custom_request_id
+        ? null
+        : mapImpactRequestToView(
+            request,
+            impactStoriesById,
+            requesterProfilesById,
+            buildCanonicalRequestContext(
+              pickPreferredAggregate(aggregatesByImpactStoryId.get(request.impact_story_id) ?? [])
+            )
+          )
     ),
-  ].sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
+  ]
+    .filter((request): request is VerificationRequestView => Boolean(request))
+    .filter((request) => !bundledSentRequestIds.has(request.id))
+    .sort(
+      (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()
+    );
 
   return {
     incomingRequests,

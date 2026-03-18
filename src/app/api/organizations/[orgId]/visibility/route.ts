@@ -15,12 +15,6 @@ type VisibilitySettings = {
   mission: VisibilityLevel;
   vision: VisibilityLevel;
   causes: VisibilityLevel;
-  workCulture: VisibilityLevel;
-  structure: VisibilityLevel;
-  projects: VisibilityLevel;
-  partnerships: VisibilityLevel;
-  goals: VisibilityLevel;
-  impact: VisibilityLevel;
 };
 
 const DEFAULT_VISIBILITY_SETTINGS: VisibilitySettings = {
@@ -28,12 +22,6 @@ const DEFAULT_VISIBILITY_SETTINGS: VisibilitySettings = {
   mission: 'public',
   vision: 'public',
   causes: 'public',
-  workCulture: 'post_match',
-  structure: 'post_match',
-  projects: 'post_match',
-  partnerships: 'post_match',
-  goals: 'post_match',
-  impact: 'post_match',
 };
 
 const VALID_LEVELS: ReadonlySet<string> = new Set([
@@ -48,12 +36,6 @@ const FIELD_MAP: Array<{ client: keyof VisibilitySettings; db: string }> = [
   { client: 'mission', db: 'mission' },
   { client: 'vision', db: 'vision' },
   { client: 'causes', db: 'causes' },
-  { client: 'workCulture', db: 'work_culture' },
-  { client: 'structure', db: 'structure' },
-  { client: 'projects', db: 'projects' },
-  { client: 'partnerships', db: 'partnerships' },
-  { client: 'goals', db: 'goals' },
-  { client: 'impact', db: 'impact' },
 ];
 
 function mapRowToClientVisibility(
@@ -101,12 +83,6 @@ function mapClientToDbVisibility(settings: VisibilitySettings): Record<string, s
     mission: settings.mission,
     vision: settings.vision,
     causes: settings.causes,
-    work_culture: settings.workCulture,
-    structure: settings.structure,
-    projects: settings.projects,
-    partnerships: settings.partnerships,
-    goals: settings.goals,
-    impact: settings.impact,
   };
 }
 

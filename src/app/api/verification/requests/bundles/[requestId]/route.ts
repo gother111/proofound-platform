@@ -7,6 +7,7 @@ import {
   getCanonicalBundleById,
 } from '@/lib/verification/canonical-bundles';
 import { writeVerificationAuditLog } from '@/lib/verification/integrity';
+import { resendBundleVerificationRequest } from '@/lib/verification/sent-request-actions';
 
 const CancelSelectedSchema = z.object({
   action: z.literal('cancel_selected'),
@@ -157,4 +158,8 @@ export async function PATCH(
     console.error('Custom verification request PATCH error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+}
+
+export function POST(request: NextRequest, { params }: { params: Promise<{ requestId: string }> }) {
+  return params.then(({ requestId }) => resendBundleVerificationRequest(request, requestId));
 }

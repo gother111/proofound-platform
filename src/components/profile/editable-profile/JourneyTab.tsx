@@ -68,16 +68,18 @@ export interface JourneyTabProps {
   onDeleteExperience: (id: string) => void;
 }
 
-export function JourneyTab({
+export function JourneySection({
   experiences,
   onAddExperience,
   onEditExperience,
   onDeleteExperience,
 }: JourneyTabProps) {
   return (
-    <TabsContent value="journey" className="space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-muted-foreground">My professional outcomes and projects</p>
+        <p className="text-sm text-muted-foreground">
+          Work context that anchors your proof in real delivery and outcomes.
+        </p>
         {experiences.length > 0 && (
           <Button
             size="sm"
@@ -85,7 +87,7 @@ export function JourneyTab({
             onClick={onAddExperience}
           >
             <Plus className="w-4 h-4 mr-2" />
-            Add Experience
+            Add work context
           </Button>
         )}
       </div>
@@ -126,9 +128,10 @@ export function JourneyTab({
               </div>
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Map Your Journey</h3>
+              <h3 className="text-lg font-semibold">Add work context</h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                Share your professional experiences with measurable outcomes and project context.
+                Capture where the work happened, what you owned, and which outcomes should anchor
+                your proof.
               </p>
             </div>
             <Button
@@ -136,10 +139,12 @@ export function JourneyTab({
               onClick={onAddExperience}
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add Experience
+              Add work context
             </Button>
             <div className="pt-4 text-xs text-muted-foreground">
-              <p>Tip: Emphasize concrete outcomes and project participation</p>
+              <p>
+                Tip: Start with one concrete outcome and one project that your proof can point to.
+              </p>
             </div>
           </div>
         </Card>
@@ -207,6 +212,14 @@ export function JourneyTab({
           </Card>
         ))
       )}
+    </div>
+  );
+}
+
+export function JourneyTab(props: JourneyTabProps) {
+  return (
+    <TabsContent value="journey" className="space-y-6">
+      <JourneySection {...props} />
     </TabsContent>
   );
 }

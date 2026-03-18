@@ -117,7 +117,7 @@ export async function ensureOrgContextForUser(
   const { error: membershipErr } = await admin.from('organization_members').insert({
     user_id: userId,
     organization_id: org.id,
-    role: 'owner',
+    role: 'org_owner',
     status: 'active',
   });
 

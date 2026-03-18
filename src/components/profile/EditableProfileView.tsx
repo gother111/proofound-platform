@@ -26,9 +26,9 @@ function resolvePortfolioGateMessage(lockReason: string | null): string {
     case 'context':
       return 'Public portfolio is locked until you add one real context.';
     case 'proof':
-      return 'Public portfolio is locked until you add and structure your first proof.';
+      return 'Public portfolio is locked until you add and structure your first proof in the portfolio workspace.';
     case 'publish':
-      return 'Public portfolio is locked until you choose one proof-backed signal to publish.';
+      return 'Public portfolio is locked until you choose one proof-backed signal to publish from the portfolio workspace.';
     default:
       return 'Complete the required profile steps to unlock your public portfolio.';
   }
@@ -398,6 +398,9 @@ export function EditableProfileView() {
               experiences={profile.experiences}
               education={profile.education}
               volunteering={profile.volunteering}
+              completionState={completionState}
+              proofArtifactCount={profile.proofArtifactCount ?? 0}
+              acceptedVerificationCount={profile.acceptedVerificationCount ?? 0}
               isPending={isPending}
               impactPending={pending.impactStory}
               onAddImpactStory={openAddImpactStory}

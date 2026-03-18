@@ -34,7 +34,7 @@ describe('POST /api/upload/document', () => {
       storagePath: 'individual_profile/user-1/proof/123-safe_name.pdf',
       safetyReason: 'privacy_review_required:metadata_exif',
       detectedMime: 'application/pdf',
-      displayName: 'safe_name.pdf',
+      artifactDisplayName: 'safe_name.pdf',
     } as any);
 
     const formData = new FormData();
@@ -49,14 +49,17 @@ describe('POST /api/upload/document', () => {
     const response = await POST({
       formData: async () => formData,
     } as NextRequest);
+    const payload = await response.json();
 
     expect(response.status).toBe(202);
-    await expect(response.json()).resolves.toEqual(
+    expect(payload).toEqual(
       expect.objectContaining({
         status: 'manual_review',
+        artifactDisplayName: 'safe_name.pdf',
         fileName: 'safe_name.pdf',
         message: expect.stringContaining('privacy review'),
       })
     );
+    expect(JSON.stringify(payload)).not.toContain('../unsafe name.pdf');
   });
 });

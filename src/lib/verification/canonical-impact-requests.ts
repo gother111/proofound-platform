@@ -49,6 +49,7 @@ type CanonicalImpactRequestMetadata = {
 export type CanonicalImpactVerificationRequestRecord = {
   id: string;
   impact_story_id: string;
+  custom_request_id: string | null;
   requester_profile_id: string;
   requester_email_snapshot: string | null;
   verifier_email: string;
@@ -149,6 +150,8 @@ export function mapCanonicalImpactVerificationRequestRecord(
   return {
     id: record.id,
     impact_story_id: record.subjectId,
+    custom_request_id:
+      typeof metadata.customRequestId === 'string' ? metadata.customRequestId : null,
     requester_profile_id: record.ownerId,
     requester_email_snapshot:
       typeof metadata.requesterEmailSnapshot === 'string' ? metadata.requesterEmailSnapshot : null,

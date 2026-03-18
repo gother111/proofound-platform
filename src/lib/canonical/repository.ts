@@ -603,6 +603,10 @@ function deriveProofTitleFromStoragePath(rawPath: string): string {
   return decodeURIComponent(lastSegment).replace(/[-_]+/g, ' ').slice(0, 80) || 'Uploaded document';
 }
 
+function normalizeUploadDerivedTitle(value: string | null | undefined) {
+  return value?.trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+}
+
 function resolveCanonicalSkillProofTitle(input: CanonicalSkillProofInput): string {
   const explicitTitle = input.title.trim();
 
@@ -617,7 +621,27 @@ function resolveCanonicalSkillProofTitle(input: CanonicalSkillProofInput): strin
   const storageDerivedTitle = input.filePath
     ? deriveProofTitleFromStoragePath(input.filePath)
     : null;
-  if (storageDerivedTitle && explicitTitle === storageDerivedTitle) {
+  const uploadDisplayName =
+    typeof input.metadata?.artifactDisplayName === 'string'
+      ? input.metadata.artifactDisplayName
+      : null;
+  const normalizedExplicitTitle = normalizeUploadDerivedTitle(explicitTitle);
+
+  if (
+    storageDerivedTitle &&
+    normalizedExplicitTitle === normalizeUploadDerivedTitle(storageDerivedTitle)
+  ) {
+    return 'Uploaded document';
+  }
+
+  if (
+    uploadDisplayName &&
+    normalizedExplicitTitle === normalizeUploadDerivedTitle(uploadDisplayName)
+  ) {
+    return 'Uploaded document';
+  }
+
+  if (normalizedExplicitTitle?.startsWith('uploaded ')) {
     return 'Uploaded document';
   }
 

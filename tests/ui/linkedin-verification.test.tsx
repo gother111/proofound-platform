@@ -112,19 +112,21 @@ describe('LinkedInVerification', () => {
     fireEvent.click(button);
 
     await waitFor(() =>
-      expect(screen.getByText(/LinkedIn Identity Verification Approved!/i)).toBeInTheDocument()
+      expect(screen.getByText(/LinkedIn identity signal recorded/i)).toBeInTheDocument()
     );
-    expect(screen.getByText(/No further action is required/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/account-side compatibility signal only, not as public proof trust/i)
+    ).toBeInTheDocument();
   });
 
   it('shows pending-review messaging when identity signal is not detected', async () => {
     render(<LinkedInVerification />);
 
-    const button = await screen.findByRole('button', { name: /start verification check/i });
+    const button = await screen.findByRole('button', { name: /run linkedin check/i });
     fireEvent.click(button);
 
     await waitFor(() =>
-      expect(screen.getAllByText(/pending admin review/i).length).toBeGreaterThan(0)
+      expect(screen.getByText(/The LinkedIn check ran successfully/i)).toBeInTheDocument()
     );
   });
 
@@ -154,8 +156,10 @@ describe('LinkedInVerification', () => {
     fireEvent.click(button);
 
     await waitFor(() =>
-      expect(screen.getByText(/LinkedIn Workplace Verification Approved!/i)).toBeInTheDocument()
+      expect(screen.getByText(/LinkedIn workplace signal recorded/i)).toBeInTheDocument()
     );
-    expect(screen.getByText(/workplace verification is active/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/account-side compatibility signal only, not as public proof trust/i)
+    ).toBeInTheDocument();
   });
 });

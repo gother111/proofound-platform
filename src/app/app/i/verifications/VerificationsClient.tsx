@@ -25,7 +25,6 @@ import type { VerificationRequestView } from '@/lib/verification/request-feed';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { RespondDialog } from './components/RespondDialog';
-import { CustomVerificationRequestDialog } from './components/CustomVerificationRequestDialog';
 import { BundleCancelDialog } from './components/BundleCancelDialog';
 
 type VerificationRequest = VerificationRequestView;
@@ -73,7 +72,6 @@ export function VerificationsClient({
   const [selectedRequest, setSelectedRequest] = useState<VerificationRequest | null>(null);
   const [respondDialogOpen, setRespondDialogOpen] = useState(false);
   const [respondAction, setRespondAction] = useState<'accept' | 'decline'>('accept');
-  const [customDialogOpen, setCustomDialogOpen] = useState(false);
   const [bundleDialogOpen, setBundleDialogOpen] = useState(false);
   const [bundleRequestId, setBundleRequestId] = useState<string | null>(null);
   const [deletingRequestIds, setDeletingRequestIds] = useState<Record<string, boolean>>({});
@@ -98,6 +96,10 @@ export function VerificationsClient({
   };
 
   const canDeleteSentRequest = (request: VerificationRequest) => {
+    if (request.subjectType === 'custom_bundle') {
+      return request.status === 'pending';
+    }
+
     if (request.subjectType === 'skill') {
       return request.status === 'pending';
     }
@@ -106,6 +108,14 @@ export function VerificationsClient({
   };
 
   const canResendSentRequest = (request: VerificationRequest) => {
+    if (request.subjectType === 'custom_bundle') {
+      return (
+        request.status === 'pending' ||
+        request.status === 'declined' ||
+        request.status === 'expired'
+      );
+    }
+
     if (request.subjectType === 'skill') {
       return (
         request.status === 'pending' ||
@@ -132,6 +142,7 @@ export function VerificationsClient({
       const removedSet = new Set(removedSkillRequestIds);
       setSentRequests((prev) => prev.filter((item) => !removedSet.has(item.id)));
     }
+    router.refresh();
   };
 
   const handleBundleDialogOpenChange = (open: boolean) => {
@@ -146,6 +157,11 @@ export function VerificationsClient({
       return;
     }
 
+    if (request.subjectType === 'custom_bundle') {
+      openBundleCancelDialog(request.id);
+      return;
+    }
+
     if (request.subjectType === 'skill' && request.bundleId) {
       openBundleCancelDialog(request.bundleId);
       return;
@@ -153,10 +169,14 @@ export function VerificationsClient({
 
     setDeletingRequestIds((prev) => ({ ...prev, [request.id]: true }));
     try {
-      const routeSegment = request.subjectType === 'impact_story' ? 'impact-story' : 'skill';
-      const response = await apiFetch(`/api/verification/requests/${routeSegment}/${request.id}`, {
-        method: 'DELETE',
-      });
+      const response = await apiFetch(
+        `/api/verification/requests/${
+          request.subjectType === 'impact_story' ? 'impact-story' : 'skill'
+        }/${request.id}`,
+        {
+          method: 'DELETE',
+        }
+      );
 
       let body: DeleteSentRequestResponse = {};
       try {
@@ -196,10 +216,18 @@ export function VerificationsClient({
 
     setResendingRequestIds((prev) => ({ ...prev, [request.id]: true }));
     try {
-      const routeSegment = request.subjectType === 'impact_story' ? 'impact-story' : 'skill';
-      const response = await apiFetch(`/api/verification/requests/${routeSegment}/${request.id}`, {
-        method: 'POST',
-      });
+      const response = await apiFetch(
+        `/api/verification/requests/${
+          request.subjectType === 'custom_bundle'
+            ? 'bundles'
+            : request.subjectType === 'impact_story'
+              ? 'impact-story'
+              : 'skill'
+        }/${request.id}`,
+        {
+          method: 'POST',
+        }
+      );
 
       let body: ResendSentRequestResponse = {};
       try {
@@ -221,7 +249,8 @@ export function VerificationsClient({
       }
 
       toast.success(
-        request.subjectType === 'skill' && request.bundleId
+        request.subjectType === 'custom_bundle' ||
+          (request.subjectType === 'skill' && request.bundleId)
           ? 'Bundled verification request resent.'
           : 'Verification request resent.'
       );
@@ -259,14 +288,67 @@ export function VerificationsClient({
   };
 
   const getRequestSubject = (request: VerificationRequest): string => {
+    if (request.proofLabel) {
+      return request.proofLabel;
+    }
+
     if (request.canonicalPackTitle) {
       return request.canonicalPackTitle;
+    }
+
+    if (request.subjectType === 'custom_bundle') {
+      const preview = request.bundlePreviewLabels || [];
+      if (preview.length === 0) {
+        return request.bundleItemCount
+          ? `Custom verification bundle (${request.bundleItemCount} artifacts)`
+          : 'Custom verification bundle';
+      }
+
+      const extraCount = Math.max((request.bundleItemCount || preview.length) - preview.length, 0);
+      return extraCount > 0 ? `${preview.join(', ')} + ${extraCount} more` : preview.join(', ');
     }
 
     if (request.subjectType === 'impact_story') {
       return request.impactStoryTitle || 'Impact Story';
     }
     return getSkillName(request);
+  };
+
+  const getClaimSummary = (request: VerificationRequest): string => {
+    if (request.claimSummary) {
+      return request.claimSummary;
+    }
+
+    if (request.subjectType === 'impact_story') {
+      return 'Confirm the role, outcomes, and evidence attached to this proof.';
+    }
+
+    if (request.subjectType === 'custom_bundle') {
+      return 'Confirm the grouped proof items attached to this legacy request.';
+    }
+
+    return 'Confirm this skill claim from direct observation.';
+  };
+
+  const getConfirmationOutcome = (request: VerificationRequest): string => {
+    if (request.confirmationOutcome) {
+      return request.confirmationOutcome;
+    }
+
+    if (request.subjectType === 'impact_story') {
+      return 'This proof gains a non-self confirmation signal for intro-readiness review.';
+    }
+
+    if (request.subjectType === 'custom_bundle') {
+      return 'These legacy bundle items retain a bounded confirmation record.';
+    }
+
+    return 'This skill keeps a bounded attestation linked to the attached proof.';
+  };
+
+  const getRequestedPersonLabel = (request: VerificationRequest): string => {
+    const source = request.verifierRelationship || request.verifierSource || 'verifier';
+    return request.verifierEmail ? `${request.verifierEmail} (${source})` : source;
   };
 
   const renderCanonicalProofContext = (request: VerificationRequest) => {
@@ -436,9 +518,7 @@ export function VerificationsClient({
                 {getRequesterName(request)}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {request.subjectType === 'impact_story'
-                  ? 'wants you to verify their impact story'
-                  : 'wants you to verify their skill'}
+                Asked you to confirm a proof-backed claim
               </p>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
@@ -454,6 +534,10 @@ export function VerificationsClient({
                 {getRequestSubject(request)}
               </span>
             </div>
+            <p className="text-xs ml-6 text-muted-foreground">Claim: {getClaimSummary(request)}</p>
+            <p className="text-xs ml-6 mt-1 text-muted-foreground">
+              If confirmed: {getConfirmationOutcome(request)}
+            </p>
             {getBreadcrumb(request) && (
               <p className="text-xs ml-6 text-muted-foreground">{getBreadcrumb(request)}</p>
             )}
@@ -472,6 +556,7 @@ export function VerificationsClient({
 
           {request.message && (
             <div className="mb-3 p-3 rounded border border-proofound-stone/60 dark:border-border">
+              <p className="text-xs font-medium mb-1 text-muted-foreground">Request note</p>
               <p className="text-sm text-proofound-charcoal dark:text-foreground">
                 &ldquo;{request.message}&rdquo;
               </p>
@@ -510,13 +595,13 @@ export function VerificationsClient({
                   className="bg-proofound-forest text-white hover:bg-proofound-forest/90 dark:bg-primary dark:text-primary-foreground hover:opacity-90"
                 >
                   <CheckCircle2 className="w-4 h-4 mr-1" />
-                  Accept
+                  Confirm attestation
                 </Button>
               </div>
             )}
             {request.subjectType === 'impact_story' && request.status === 'pending' && (
               <p className="text-xs text-muted-foreground">
-                Respond using the verification link that was sent to your email.
+                Use the emailed link to respond to this proof confirmation request.
               </p>
             )}
           </div>
@@ -534,9 +619,9 @@ export function VerificationsClient({
             {request.verifierEmail}
           </h3>
           <p className="text-sm text-muted-foreground">
-            {request.subjectType === 'impact_story'
-              ? 'Impact story verification request sent'
-              : 'Verification request sent'}
+            {request.subjectType === 'custom_bundle'
+              ? 'Legacy bundle request sent'
+              : 'Proof confirmation request sent'}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -552,20 +637,32 @@ export function VerificationsClient({
             {getRequestSubject(request)}
           </span>
         </div>
+        <p className="text-xs ml-6 text-muted-foreground">Claim: {getClaimSummary(request)}</p>
+        <p className="text-xs ml-6 mt-1 text-muted-foreground">
+          Asked: {getRequestedPersonLabel(request)}
+        </p>
+        <p className="text-xs ml-6 mt-1 text-muted-foreground">
+          If confirmed: {getConfirmationOutcome(request)}
+        </p>
         {getBreadcrumb(request) && (
           <p className="text-xs ml-6 text-muted-foreground">{getBreadcrumb(request)}</p>
         )}
-        {request.subjectType === 'impact_story' && request.verifierRelationship && (
+        {request.subjectType !== 'skill' && request.verifierRelationship && (
           <p className="text-xs ml-6 mt-1 text-muted-foreground">
             Relationship: {request.verifierRelationship}
           </p>
         )}
+        {request.subjectType === 'custom_bundle' && request.bundleItemCount ? (
+          <p className="text-xs ml-6 mt-1 text-muted-foreground">
+            {request.bundleItemCount} artifact{request.bundleItemCount === 1 ? '' : 's'}
+          </p>
+        ) : null}
         {renderCanonicalProofContext(request)}
       </div>
 
       {request.message && (
         <div className="mb-3 p-3 rounded border border-proofound-stone/60 dark:border-border">
-          <p className="text-xs font-medium mb-1 text-muted-foreground">Your message:</p>
+          <p className="text-xs font-medium mb-1 text-muted-foreground">Request note</p>
           <p className="text-sm text-proofound-charcoal dark:text-foreground">
             &ldquo;{request.message}&rdquo;
           </p>
@@ -601,7 +698,8 @@ export function VerificationsClient({
               <Send className="h-4 w-4 mr-1" />
               {resendingRequestIds[request.id]
                 ? 'Resending...'
-                : request.subjectType === 'skill' && request.bundleId
+                : request.subjectType === 'custom_bundle' ||
+                    (request.subjectType === 'skill' && request.bundleId)
                   ? 'Resend bundle'
                   : 'Resend request'}
             </Button>
@@ -620,8 +718,9 @@ export function VerificationsClient({
               <Trash2 className="h-4 w-4 mr-1" />
               {deletingRequestIds[request.id]
                 ? 'Deleting...'
-                : request.subjectType === 'skill' && request.bundleId
-                  ? 'Manage Bundle'
+                : request.subjectType === 'custom_bundle' ||
+                    (request.subjectType === 'skill' && request.bundleId)
+                  ? 'Manage legacy bundle'
                   : 'Delete'}
             </Button>
           )}
@@ -639,12 +738,12 @@ export function VerificationsClient({
           <ShieldCheck className="w-8 h-8 text-muted-foreground" />
         </div>
         <h3 className="text-lg font-semibold mb-2 text-proofound-charcoal dark:text-foreground">
-          No {status} {modeText} requests
+          No {status} {modeText} proof requests
         </h3>
         <p className="text-sm text-center max-w-sm text-muted-foreground">
           {mode === 'incoming'
-            ? 'You do not have verification requests in this view yet.'
-            : 'You have not sent verification requests in this view yet.'}
+            ? 'No proof-scoped confirmations are waiting in this view yet.'
+            : 'No proof-scoped confirmations have been sent in this view yet.'}
         </p>
       </div>
     );
@@ -698,19 +797,12 @@ export function VerificationsClient({
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-2 text-proofound-charcoal dark:text-foreground">
-              Verification Requests
+              Proof verification requests
             </h1>
             <p className="text-base text-muted-foreground">
-              Track requests sent by you and review incoming verification requests
+              Follow which proof, claim, verifier, and bounded outcome each request is tied to.
             </p>
           </div>
-          <Button
-            onClick={() => setCustomDialogOpen(true)}
-            className="bg-proofound-forest text-white hover:bg-proofound-forest/90 dark:bg-primary dark:text-primary-foreground hover:opacity-90 w-full md:w-auto"
-          >
-            <Send className="w-4 h-4 mr-2" />
-            Custom verification request
-          </Button>
         </div>
 
         <Tabs defaultValue="incoming" className="w-full">
@@ -754,11 +846,6 @@ export function VerificationsClient({
           getCompetencyLabel={getCompetencyLabel}
         />
       )}
-      <CustomVerificationRequestDialog
-        open={customDialogOpen}
-        onOpenChange={setCustomDialogOpen}
-        onCreated={() => router.refresh()}
-      />
       <BundleCancelDialog
         open={bundleDialogOpen}
         onOpenChange={handleBundleDialogOpenChange}

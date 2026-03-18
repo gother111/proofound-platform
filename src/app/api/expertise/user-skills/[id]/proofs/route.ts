@@ -5,6 +5,7 @@ import { emitSkillProofAddedAsync } from '@/lib/analytics/events';
 import { MAX_PROOFS_PER_SKILL } from '@/lib/proofs/constants';
 import { upsertCanonicalSkillProof } from '@/lib/canonical/repository';
 import { attachUploadedFile } from '@/lib/uploads/lifecycle';
+import { resolveArtifactDisplayName } from '@/lib/uploads/privacy';
 import { revalidatePublicPortfolioByProfileId } from '@/lib/portfolio/public-invalidation';
 import { listCanonicalSkillProofRowsForOwnerSkill } from '@/lib/proofs/canonical-pack';
 
@@ -188,6 +189,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         metadata: {
           visibility: 'match-only',
           uploadedFileId: validated.uploadedFileId ?? null,
+          artifactDisplayName: attachedUpload
+            ? resolveArtifactDisplayName({
+                sanitizedFilename: attachedUpload.sanitized_filename ?? null,
+              })
+            : null,
           primaryAnchorType: validated.primaryAnchor.type,
           primaryAnchorId: validated.primaryAnchor.id,
           ...(validated.metadata || {}),

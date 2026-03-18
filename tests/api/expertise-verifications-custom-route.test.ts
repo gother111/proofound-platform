@@ -14,13 +14,18 @@ vi.mock('@/lib/verification/canonical-bundles', () => ({
   getCanonicalBundleById: vi.fn(),
 }));
 
+vi.mock('@/lib/verification/sent-request-actions', () => ({
+  resendBundleVerificationRequest: vi.fn(),
+}));
+
 import { requireApiAuthContext } from '@/lib/auth';
 import { writeVerificationAuditLog } from '@/lib/verification/integrity';
 import {
   cancelCanonicalBundleItems,
   getCanonicalBundleById,
 } from '@/lib/verification/canonical-bundles';
-import { PATCH } from '@/app/api/verification/requests/bundles/[requestId]/route';
+import { resendBundleVerificationRequest } from '@/lib/verification/sent-request-actions';
+import { PATCH, POST } from '@/app/api/verification/requests/bundles/[requestId]/route';
 
 function makeBundleRequest(overrides?: Partial<any>) {
   return {
@@ -132,5 +137,32 @@ describe('PATCH /api/verification/requests/bundles/[requestId]', () => {
       error: 'Only pending artifacts can be canceled.',
     });
     expect(cancelCanonicalBundleItems).not.toHaveBeenCalled();
+  });
+});
+
+describe('POST /api/verification/requests/bundles/[requestId]', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('uses the canonical bundle resend handler', async () => {
+    vi.mocked(resendBundleVerificationRequest).mockResolvedValue(
+      new Response(JSON.stringify({ success: true, requestType: 'custom_bundle' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }) as any
+    );
+
+    const request = new NextRequest('http://localhost/api/verification/requests/bundles/bundle-1', {
+      method: 'POST',
+    });
+    const response = await POST(request, { params: Promise.resolve({ requestId: 'bundle-1' }) });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      success: true,
+      requestType: 'custom_bundle',
+    });
+    expect(resendBundleVerificationRequest).toHaveBeenCalledWith(request, 'bundle-1');
   });
 });

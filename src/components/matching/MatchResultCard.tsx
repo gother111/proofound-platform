@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -23,6 +23,33 @@ interface MatchResultCardProps {
     contributions?: Record<string, number>;
     profileId?: string;
     assignmentId?: string;
+    reviewStage?: string;
+    revealScope?: string;
+    corridorState?: string;
+    progressiveRevealStage?: string;
+    visibleIdentityFields?: string[];
+    fairness?: {
+      status?: string;
+    };
+    reviewCard?: {
+      candidateLabel: string;
+      strongestProof: {
+        summary: string | null;
+        outcome: string | null;
+        ownership: string | null;
+        anchorContext: string | null;
+        freshnessLabel: string | null;
+      };
+      verification: {
+        summaryLabel: string;
+        count: number | null;
+      };
+      fitSummary: {
+        headline: string;
+        bullets: string[];
+        reasonCodes: string[];
+      };
+    };
     profile?: {
       workMode?: string;
       locationMode?: string;
@@ -168,6 +195,163 @@ export function MatchResultCard({
       await onInterested();
     }
   };
+
+  const stateBadgeLabel =
+    result.corridorState === 'request_intro'
+      ? 'Intro requested'
+      : result.corridorState === 'intro_approved'
+        ? 'Masked intro open'
+        : result.corridorState === 'request_reveal'
+          ? 'Reveal pending'
+          : result.corridorState === 'interview_scheduled'
+            ? 'Interview scheduled'
+            : result.reviewStage === 'shortlisted'
+              ? 'Shortlisted'
+              : 'Blind review';
+
+  const privacyCue =
+    result.revealScope === 'full_identity'
+      ? 'Identity revealed'
+      : result.revealScope === 'shortlist_identity'
+        ? 'Context reveal only'
+        : 'Blind by default';
+
+  const orgReviewCard = matchExplanation?.reviewCard ?? result.reviewCard;
+  const showOrgPrimaryAction =
+    result.reviewStage === 'blind_review' ||
+    (result.reviewStage === 'shortlisted' && result.corridorState === 'shortlist');
+  const orgPrimaryLabel = result.reviewStage === 'shortlisted' ? 'Request intro' : 'Shortlist';
+
+  if (isOrgView) {
+    return (
+      <motion.div layoutId={`match-card-${result.id}`} className="block h-full">
+        <Card variant="bento" className="flex h-full flex-col p-5">
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div className="space-y-1">
+              <h4 className="text-base font-semibold text-proofound-charcoal">
+                {orgReviewCard?.candidateLabel || 'Candidate'}
+              </h4>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="outline">{privacyCue}</Badge>
+                <Badge variant="secondary">{stateBadgeLabel}</Badge>
+                {result.fairness?.status && result.fairness.status !== 'pass' ? (
+                  <Badge variant="outline">Fairness protected</Badge>
+                ) : null}
+              </div>
+            </div>
+
+            {result.id ? (
+              matchExplanation ? (
+                <MatchExplainerModal
+                  matchId={matchExplanation.matchId}
+                  compositeScore={matchExplanation.compositeScore}
+                  rank={matchExplanation.rank}
+                  totalCandidates={matchExplanation.totalCandidates}
+                  rankBand={matchExplanation.rankBand}
+                  rankMode={matchExplanation.rankMode}
+                  exactRankAvailable={matchExplanation.exactRankAvailable}
+                  fairnessWarning={matchExplanation.fairness?.warning}
+                  reasonSummary={matchExplanation.reasonSummary}
+                  reasonSections={matchExplanation.reasonSections}
+                  subscores={matchExplanation.subscores}
+                  skillsMatch={matchExplanation.skillsMatch}
+                  pac={matchExplanation.pac}
+                  constraints={matchExplanation.constraints}
+                  reviewCard={matchExplanation.reviewCard}
+                />
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs gap-1.5 text-proofound-forest hover:bg-proofound-forest/5"
+                  onClick={fetchMatchExplanation}
+                  disabled={isLoadingExplanation}
+                >
+                  {isLoadingExplanation ? (
+                    <>
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    'Why this match?'
+                  )}
+                </Button>
+              )
+            ) : null}
+          </div>
+
+          <div className="mb-4 rounded-xl border border-proofound-stone bg-proofound-parchment/40 p-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Strongest relevant proof
+            </p>
+            <p className="text-sm font-medium text-proofound-charcoal">
+              {orgReviewCard?.strongestProof.summary ||
+                'Proof-backed evidence is available for review.'}
+            </p>
+            {orgReviewCard?.strongestProof.outcome ? (
+              <p className="mt-2 text-sm text-proofound-charcoal/85">
+                Outcome: {orgReviewCard.strongestProof.outcome}
+              </p>
+            ) : null}
+            {orgReviewCard?.strongestProof.ownership ? (
+              <p className="mt-2 text-sm text-proofound-charcoal/85">
+                Ownership: {orgReviewCard.strongestProof.ownership}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="mb-4 flex flex-wrap gap-2">
+            {orgReviewCard?.strongestProof.anchorContext ? (
+              <Badge variant="outline">{orgReviewCard.strongestProof.anchorContext}</Badge>
+            ) : null}
+            {orgReviewCard?.strongestProof.freshnessLabel ? (
+              <Badge variant="outline">{orgReviewCard.strongestProof.freshnessLabel}</Badge>
+            ) : null}
+            {orgReviewCard?.verification.summaryLabel ? (
+              <Badge variant="outline">{orgReviewCard.verification.summaryLabel}</Badge>
+            ) : null}
+          </div>
+
+          <div className="flex-1 rounded-xl border border-proofound-stone/80 bg-white p-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Reason-coded fit summary
+            </p>
+            <p className="mb-3 text-sm font-medium text-proofound-charcoal">
+              {orgReviewCard?.fitSummary.headline || 'Proof-backed fit available for review.'}
+            </p>
+            <ul className="space-y-2 text-sm text-proofound-charcoal/85">
+              {(orgReviewCard?.fitSummary.bullets || []).map((bullet: string) => (
+                <li key={bullet} className="flex items-start gap-2">
+                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-proofound-forest" />
+                  <span>{bullet}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {showOrgPrimaryAction ? (
+            <div className="mt-4 flex gap-2">
+              <Button
+                size="sm"
+                onClick={handleInterested}
+                style={{ backgroundColor: '#1C4D3A' }}
+                className="flex-1"
+              >
+                {orgPrimaryLabel}
+              </Button>
+              <Button size="sm" variant="outline" onClick={onHide}>
+                Pass
+              </Button>
+            </div>
+          ) : (
+            <div className="mt-4 rounded-lg border border-proofound-stone bg-proofound-parchment/30 px-3 py-2 text-sm text-muted-foreground">
+              Review actions continue in the masked intro corridor.
+            </div>
+          )}
+        </Card>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div layoutId={`match-card-${result.id}`} className="block h-full">

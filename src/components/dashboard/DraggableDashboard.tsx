@@ -14,11 +14,9 @@ import { motion } from 'framer-motion';
 import { WhileAwayCard } from './WhileAwayCard';
 import { GoalsCard } from './GoalsCard';
 import { TasksCard } from './TasksCard';
-import { ProjectsCard } from './ProjectsCard';
 import { MatchingResultsCard } from './MatchingResultsCard';
 import { ImpactSnapshotCard } from './ImpactSnapshotCard';
 import { ExploreCard } from './ExploreCard';
-import { GapMapWidget } from './GapMapWidget';
 import { NextBestActionsWidget } from './NextBestActionsWidget';
 import { ProfileActivationCard } from './ProfileActivationCard';
 import { MatchingReadinessCard } from './MatchingReadinessCard';
@@ -392,21 +390,12 @@ export function DraggableDashboard({
         );
       case 'tasks':
         return <TasksCard persona="individual" initialData={initialData?.tasks} />;
-      case 'projects':
-        return (
-          <ProjectsCard
-            initialData={initialData?.projects}
-            onVisibilityChange={(visible) => handleWidgetVisibilityChange(widgetId, visible)}
-          />
-        );
       case 'matching-results':
         return <MatchingResultsCard />;
       case 'impact-snapshot':
         return <ImpactSnapshotCard />;
       case 'explore':
         return <ExploreCard initialData={initialData?.explore} />;
-      case 'gap-map':
-        return <GapMapWidget />;
       case 'next-best-actions':
         return (
           <NextBestActionsWidget

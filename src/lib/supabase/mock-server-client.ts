@@ -353,12 +353,12 @@ const mockSupabaseClient = {
                   {
                     orgId: ORG_ID,
                     userId: MOCK_USER_ID,
-                    role: 'admin',
+                    role: 'org_manager',
                     status: 'active',
                     profiles: {
                       id: MOCK_USER_ID,
-                      displayName: 'Org Admin',
-                      handle: 'orgadmin',
+                      displayName: 'Org Manager',
+                      handle: 'orgmanager',
                     },
                   },
                 ],
@@ -375,7 +375,7 @@ const mockSupabaseClient = {
                     {
                       orgId: ORG_ID,
                       userId: MOCK_USER_ID,
-                      role: 'admin',
+                      role: 'org_manager',
                       status: 'active',
                       joinedAt: new Date().toISOString(),
                       org: {
@@ -556,7 +556,7 @@ const mockSupabaseClient = {
                   {
                     orgId: ORG_ID,
                     userId: MOCK_USER_ID,
-                    role: 'admin',
+                    role: 'org_manager',
                     status: 'active',
                     joinedAt: new Date().toISOString(),
                   },
@@ -571,7 +571,7 @@ const mockSupabaseClient = {
               data: {
                 orgId: ORG_ID,
                 userId: MOCK_USER_ID,
-                role: 'admin',
+                role: 'org_manager',
                 status: 'active',
                 joinedAt: new Date().toISOString(),
               },

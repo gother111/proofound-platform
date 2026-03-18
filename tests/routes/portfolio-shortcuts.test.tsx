@@ -18,49 +18,67 @@ vi.mock('@/lib/profile/completion-flow.server', () => ({
   getIndividualProfileCompletionState: vi.fn(),
 }));
 
+vi.mock('@/lib/readiness/individual', () => ({
+  getIndividualReadiness: vi.fn(),
+}));
+
+vi.mock('@/app/app/i/portfolio/PortfolioWorkspaceClient', () => ({
+  PortfolioWorkspaceClient: ({ completionState, readiness }: any) => (
+    <div data-testid="portfolio-workspace-client">
+      <span>{completionState.portfolioLockCode ?? 'no-lock'}</span>
+      <span>{readiness.flags.portfolioReady ? 'portfolio-ready' : 'portfolio-in-progress'}</span>
+    </div>
+  ),
+}));
+
 import { requireAuth } from '@/lib/auth';
 import { getIndividualProfileCompletionState } from '@/lib/profile/completion-flow.server';
+import { getIndividualReadiness } from '@/lib/readiness/individual';
 import IndividualPortfolioShortcutPage from '@/app/app/i/portfolio/page';
 import OrganizationPortfolioShortcutPage from '@/app/app/o/[slug]/portfolio/page';
 import LegacyAuthLoginPage from '@/app/auth/login/page';
 import LegacyTeamCoveragePage from '@/app/app/o/[slug]/team/coverage/page';
+import { render, screen } from '@testing-library/react';
+import React from 'react';
 
 describe('portfolio and compatibility shortcut routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('redirects individual shortcut to public portfolio URL', async () => {
+  it('renders the individual portfolio workspace when the profile is ready', async () => {
     (requireAuth as any).mockResolvedValue({ id: 'user-1', handle: 'strict-user' });
     (getIndividualProfileCompletionState as any).mockResolvedValue({
       isPortfolioReady: true,
       portfolioLockCode: null,
     });
+    (getIndividualReadiness as any).mockResolvedValue({
+      flags: { portfolioReady: true },
+    });
 
-    await expect(IndividualPortfolioShortcutPage()).rejects.toThrow('NEXT_REDIRECT');
-    expect(redirectMock).toHaveBeenCalledWith('/portfolio/strict-user?returnTo=%2Fapp%2Fi%2Fhome');
+    const page = await IndividualPortfolioShortcutPage();
+    render(page);
+
+    expect(screen.getByTestId('portfolio-workspace-client')).toBeInTheDocument();
+    expect(redirectMock).not.toHaveBeenCalled();
   });
 
-  it('redirects individual shortcut to profile when portfolio is locked', async () => {
+  it('keeps locked users inside the individual portfolio workspace', async () => {
     (requireAuth as any).mockResolvedValue({ id: 'user-1', handle: 'strict-user' });
     (getIndividualProfileCompletionState as any).mockResolvedValue({
       isPortfolioReady: false,
       portfolioLockCode: 'proof',
     });
-
-    await expect(IndividualPortfolioShortcutPage()).rejects.toThrow('NEXT_REDIRECT');
-    expect(redirectMock).toHaveBeenCalledWith('/app/i/profile?portfolioLocked=1&lockReason=proof');
-  });
-
-  it('redirects individual shortcut to profile when handle is missing', async () => {
-    (requireAuth as any).mockResolvedValue({ id: 'user-1', handle: null });
-    (getIndividualProfileCompletionState as any).mockResolvedValue({
-      isPortfolioReady: true,
-      portfolioLockCode: null,
+    (getIndividualReadiness as any).mockResolvedValue({
+      flags: { portfolioReady: false },
     });
 
-    await expect(IndividualPortfolioShortcutPage()).rejects.toThrow('NEXT_REDIRECT');
-    expect(redirectMock).toHaveBeenCalledWith('/app/i/profile');
+    const page = await IndividualPortfolioShortcutPage();
+    render(page);
+
+    expect(screen.getByTestId('portfolio-workspace-client')).toBeInTheDocument();
+    expect(screen.getByText('proof')).toBeInTheDocument();
+    expect(redirectMock).not.toHaveBeenCalled();
   });
 
   it('redirects organization shortcut to public org portfolio URL', async () => {

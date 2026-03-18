@@ -13,6 +13,12 @@ import {
   normalizeInterviewPlatform,
 } from '@/lib/contracts/domain';
 import { listEngagementVerificationsByInterviewIds } from '@/lib/engagement-verifications/service';
+import { listAccessibleHiringCorridorRecords } from '@/lib/hiring-corridor/service';
+import {
+  buildHiringCorridorSnapshot,
+  type HiringCorridorPerspective,
+  type HiringCorridorSnapshot,
+} from '@/lib/hiring-corridor/snapshot';
 import { postInterviewUpdateMessageBestEffort } from '@/lib/interviews/messaging';
 import { mergeInterviewProcessState } from '@/lib/interviews/process-state';
 import { classifyGoogleScheduleError } from '@/lib/interviews/schedule-errors';
@@ -166,6 +172,103 @@ export async function getInterviews(params?: { status?: string; matchId?: string
   return {
     interviews: interviewsWithProcessState,
     count: interviewsWithProcessState.length,
+  };
+}
+
+export type InterviewCorridorItem = {
+  id: string;
+  matchId: string;
+  assignmentTitle: string | null;
+  organizationName: string | null;
+  candidateDisplayName: string | null;
+  introAcceptedAt: string | null;
+  interview: null | {
+    id: string;
+    scheduledAt: string | null;
+    duration: number;
+    platform: string | null;
+    meetingUrl: string | null;
+    manualMeetingProvider: string | null;
+    rescheduleCount: number;
+    status: string | null;
+    completedAt: string | null;
+    cancelledAt: string | null;
+    noShowAt: string | null;
+  };
+  decisionState: string | null;
+  engagementVerification: HiringCorridorSnapshot['engagementVerification'];
+  corridor: HiringCorridorSnapshot;
+};
+
+function toIso(value: Date | null | undefined) {
+  return value ? value.toISOString() : null;
+}
+
+export async function getInterviewCorridorItems(params: {
+  perspective: HiringCorridorPerspective;
+}) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    throw new Error('Unauthorized');
+  }
+
+  const rows = await listAccessibleHiringCorridorRecords(user.id);
+
+  const items: InterviewCorridorItem[] = rows
+    .map((row) => {
+      const corridor = buildHiringCorridorSnapshot({
+        source: row,
+        viewerUserId: user.id,
+        perspective: params.perspective,
+      });
+
+      if (!corridor) {
+        return null;
+      }
+
+      return {
+        id: row.interviewId ?? row.introId ?? row.matchId,
+        matchId: row.matchId,
+        assignmentTitle: row.assignmentTitle,
+        organizationName: row.organizationName,
+        candidateDisplayName:
+          corridor.currentStep === 'reveal_approved' ||
+          corridor.currentStep === 'interview_scheduled' ||
+          corridor.currentStep === 'decision' ||
+          corridor.currentStep === 'engagement_verified'
+            ? row.candidateDisplayName
+            : null,
+        introAcceptedAt: toIso(row.introLastActivityAt ?? row.introUpdatedAt),
+        interview: row.interviewId
+          ? {
+              id: row.interviewId,
+              scheduledAt: toIso(row.interviewScheduledAt),
+              duration: row.interviewDurationMinutes ?? 30,
+              platform: row.interviewPlatform,
+              meetingUrl: row.interviewMeetingUrl,
+              manualMeetingProvider: row.interviewManualMeetingProvider,
+              rescheduleCount: row.interviewRescheduleCount ?? 0,
+              status: row.interviewStatus,
+              completedAt: toIso(row.interviewCompletedAt),
+              cancelledAt: toIso(row.interviewCancelledAt),
+              noShowAt: toIso(row.interviewNoShowAt),
+            }
+          : null,
+        decisionState: row.decisionState,
+        engagementVerification: row.engagementVerification,
+        corridor,
+      };
+    })
+    .filter((item): item is InterviewCorridorItem => item !== null);
+
+  return {
+    items,
+    count: items.length,
   };
 }
 

@@ -257,10 +257,17 @@ describe('VerificationsClient', () => {
   it('opens bundle cancellation dialog for bundled pending sent skill request', async () => {
     const sentRequests = [
       makeRequest({
-        id: 'sent-bundle-1',
+        id: 'bundle-request-1',
+        subjectType: 'custom_bundle',
+        subjectId: 'bundle-request-1',
+        verificationKind: 'verification_bundle',
+        requestKind: 'custom_bundle',
         verifierEmail: 'bundle@company.com',
+        verifierRelationship: 'peer',
         status: 'pending',
         bundleId: 'bundle-request-1',
+        bundleItemCount: 2,
+        bundlePreviewLabels: ['TypeScript', 'Staff Engineer'],
       }),
     ];
 
@@ -286,10 +293,17 @@ describe('VerificationsClient', () => {
   it('resends bundled skill requests and refreshes on bundled response', async () => {
     const sentRequests = [
       makeRequest({
-        id: 'sent-bundle-resend-1',
+        id: 'bundle-request-2',
+        subjectType: 'custom_bundle',
+        subjectId: 'bundle-request-2',
+        verificationKind: 'verification_bundle',
+        requestKind: 'custom_bundle',
         verifierEmail: 'bundle@company.com',
+        verifierRelationship: 'peer',
         status: 'pending',
         bundleId: 'bundle-request-2',
+        bundleItemCount: 2,
+        bundlePreviewLabels: ['TypeScript', 'Staff Engineer'],
       }),
     ];
 
@@ -315,7 +329,7 @@ describe('VerificationsClient', () => {
 
     await waitFor(() =>
       expect(apiFetchMock).toHaveBeenCalledWith(
-        '/api/verification/requests/skill/sent-bundle-resend-1',
+        '/api/verification/requests/bundles/bundle-request-2',
         expect.objectContaining({ method: 'POST' })
       )
     );

@@ -1,12 +1,20 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ImpactTab } from '@/components/profile/editable-profile/ImpactTab';
-import { JourneyTab } from '@/components/profile/editable-profile/JourneyTab';
+import { ProfileTabsSection } from '@/components/profile/editable-profile/ProfileTabsSection';
+
+vi.mock('next/link', () => ({
+  default: ({ children, href, ...props }: any) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
 
 vi.mock('@/components/ui/card', () => ({
-  Card: ({ children }: any) => <div>{children}</div>,
+  Card: ({ children, ...props }: any) => <div {...props}>{children}</div>,
 }));
 
 vi.mock('@/components/ui/badge', () => ({
@@ -14,77 +22,151 @@ vi.mock('@/components/ui/badge', () => ({
 }));
 
 vi.mock('@/components/ui/tabs', () => ({
+  Tabs: ({ children }: any) => <div>{children}</div>,
+  TabsList: ({ children }: any) => <div>{children}</div>,
+  TabsTrigger: ({ children, value }: any) => <button data-value={value}>{children}</button>,
   TabsContent: ({ children }: any) => <div>{children}</div>,
 }));
 
 vi.mock('@/components/ui/button', () => ({
-  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+  Button: ({ children, asChild, ...props }: any) =>
+    asChild ? <div>{children}</div> : <button {...props}>{children}</button>,
 }));
 
-describe('profile artifact edit actions', () => {
-  it('calls onEditStory from Impact tab card action', () => {
-    const onEditStory = vi.fn();
+vi.mock('framer-motion', () => ({
+  motion: {
+    div: ({ children }: any) => <div>{children}</div>,
+  },
+}));
 
+describe('profile launch IA', () => {
+  it('replaces legacy profile tabs with launch IA labels', () => {
     render(
-      <ImpactTab
-        impactStories={[
-          {
-            id: 'impact-1',
-            title: 'Impact title',
-            orgDescription: 'Org',
-            impact: 'Impact',
-            businessValue: 'Business value',
-            outcomes: 'Outcomes',
-            timeline: '2024',
-            verified: false,
-            roleTitle: 'Lead',
-            roleScope: 'owned',
-            primaryCause: 'education',
-            secondaryCauses: [],
-            measuredOutcomes: [],
-            supportingArtifacts: [],
+      <ProfileTabsSection
+        impactStories={[]}
+        experiences={[]}
+        education={[]}
+        volunteering={[]}
+        completionState={{
+          stage: 'first_proof',
+          checks: {
+            hasDisplayName: true,
+            hasHandle: true,
+            hasHeadlineOrBio: true,
+            hasLocationOrTimezone: true,
+            hasTargetRoleFocus: true,
+            hasWorkPreference: true,
+            hasEngagementPreference: true,
+            hasLegacyShellCompatibility: true,
+            hasSafeShell: true,
+            hasRealContext: true,
+            hasFirstProof: false,
+            hasStructuredProofPack: false,
+            hasProofForPublishing: false,
+            hasPublishedPortfolio: false,
+            hasOptionalVerification: false,
           },
-        ]}
-        onAddStory={vi.fn()}
-        onEditStory={onEditStory}
-        onDeleteStory={vi.fn()}
-        actionsDisabled={false}
+          counts: {
+            contexts: 1,
+            values: 0,
+            causes: 0,
+            skills: 0,
+            proofPacks: 0,
+            anchoredProofPacks: 0,
+            proofArtifacts: 0,
+            acceptedVerifications: 0,
+          },
+          isCoreProfileComplete: true,
+          isPortfolioReady: false,
+          portfolioLockCode: 'proof',
+          portfolioLockReason:
+            'Add at least one anchored Proof Pack before your portfolio can be ready.',
+        }}
+        proofArtifactCount={0}
+        acceptedVerificationCount={0}
+        isPending={false}
+        impactPending={false}
+        onAddImpactStory={vi.fn()}
+        onEditImpactStory={vi.fn()}
+        onDeleteImpactStory={vi.fn()}
+        onAddExperience={vi.fn()}
+        onEditExperience={vi.fn()}
+        onDeleteExperience={vi.fn()}
+        onAddEducation={vi.fn()}
+        onEditEducation={vi.fn()}
+        onDeleteEducation={vi.fn()}
+        onAddVolunteering={vi.fn()}
+        onEditVolunteering={vi.fn()}
+        onDeleteVolunteering={vi.fn()}
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /edit impact title/i }));
+    expect(screen.getByRole('button', { name: 'Context' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Proof Packs' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Verification' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Visibility / Portfolio' })).toBeInTheDocument();
 
-    expect(onEditStory).toHaveBeenCalledTimes(1);
-    expect(onEditStory.mock.calls[0][0].id).toBe('impact-1');
+    expect(screen.queryByRole('button', { name: /journey/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /learning/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /service/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /proof stories/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /network/i })).not.toBeInTheDocument();
   });
 
-  it('calls onEditExperience from Journey tab card action', () => {
-    const onEditExperience = vi.fn();
-
+  it('shows proof-pack blockers and a direct add-proof path', () => {
     render(
-      <JourneyTab
-        experiences={[
-          {
-            id: 'exp-1',
-            title: 'Experience title',
-            orgDescription: 'Org',
-            duration: '2022 - 2024',
-            outcomes: 'Outcomes',
-            projects: 'Projects',
-            colleagues: 'Colleagues',
-            achievements: 'Achievements',
-            verified: false,
+      <ImpactTab
+        impactStories={[]}
+        onAddStory={vi.fn()}
+        onEditStory={vi.fn()}
+        onDeleteStory={vi.fn()}
+        actionsDisabled={false}
+        completionState={{
+          stage: 'proof_pack',
+          checks: {
+            hasDisplayName: true,
+            hasHandle: true,
+            hasHeadlineOrBio: true,
+            hasLocationOrTimezone: true,
+            hasTargetRoleFocus: true,
+            hasWorkPreference: true,
+            hasEngagementPreference: true,
+            hasLegacyShellCompatibility: true,
+            hasSafeShell: true,
+            hasRealContext: true,
+            hasFirstProof: false,
+            hasStructuredProofPack: false,
+            hasProofForPublishing: false,
+            hasPublishedPortfolio: false,
+            hasOptionalVerification: false,
           },
-        ]}
-        onAddExperience={vi.fn()}
-        onEditExperience={onEditExperience}
-        onDeleteExperience={vi.fn()}
+          counts: {
+            contexts: 1,
+            values: 0,
+            causes: 0,
+            skills: 0,
+            proofPacks: 0,
+            anchoredProofPacks: 0,
+            proofArtifacts: 0,
+            acceptedVerifications: 0,
+          },
+          isCoreProfileComplete: true,
+          isPortfolioReady: false,
+          portfolioLockCode: 'proof',
+          portfolioLockReason:
+            'Add at least one anchored Proof Pack before your portfolio can be ready.',
+        }}
+        proofArtifactCount={0}
+        acceptedVerificationCount={0}
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /edit experience title/i }));
-
-    expect(onEditExperience).toHaveBeenCalledTimes(1);
-    expect(onEditExperience.mock.calls[0][0].id).toBe('exp-1');
+    expect(screen.getByText(/proof packs/i)).toBeInTheDocument();
+    expect(screen.getByText(/readiness blockers/i)).toBeInTheDocument();
+    expect(screen.getByText(/add your first proof link or artifact/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /add your first proof/i })).toHaveAttribute(
+      'href',
+      '/app/i/portfolio'
+    );
   });
 });

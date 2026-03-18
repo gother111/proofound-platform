@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { LAUNCH_MONITOR_DEFINITIONS } from '@/lib/launch/contracts';
+import { LAUNCH_MONITOR_DEFINITIONS, type LaunchNotReadyReason } from '@/lib/launch/contracts';
 import {
   getLaunchSyntheticStatusWithFreshHttpRevalidation,
   getPersistedLaunchSyntheticStatus,
@@ -39,11 +39,101 @@ const HTTP_MONITOR_KEYS = new Set(
   )
 );
 
-function shouldRefreshLive(status: Awaited<ReturnType<typeof getPersistedLaunchSyntheticStatus>>) {
-  if (status.readinessState === 'ready') {
-    return false;
+function buildNotReadyReasons(
+  rows: Array<{
+    monitorKey: string;
+    monitorGroup: string;
+    status: string;
+    freshnessState?: 'fresh' | 'stale' | 'missing';
+    blocking?: boolean;
+  }>,
+  missingMonitorKeys: string[]
+): LaunchNotReadyReason[] {
+  const freshFailingHttpMonitorKeys = rows
+    .filter(
+      (row) =>
+        HTTP_MONITOR_KEYS.has(row.monitorKey) &&
+        row.freshnessState === 'fresh' &&
+        row.status !== 'pass' &&
+        row.blocking === true
+    )
+    .map((row) => row.monitorKey);
+  const freshFailingSmokeMonitorKeys = rows
+    .filter(
+      (row) =>
+        !HTTP_MONITOR_KEYS.has(row.monitorKey) &&
+        row.freshnessState === 'fresh' &&
+        row.status !== 'pass' &&
+        row.blocking === true
+    )
+    .map((row) => row.monitorKey);
+  const staleHttpMonitorKeys = rows
+    .filter((row) => HTTP_MONITOR_KEYS.has(row.monitorKey) && row.freshnessState === 'stale')
+    .map((row) => row.monitorKey);
+  const missingHttpMonitorKeys = missingMonitorKeys.filter((monitorKey) =>
+    HTTP_MONITOR_KEYS.has(monitorKey)
+  );
+  const staleSmokeMonitorKeys = rows
+    .filter((row) => !HTTP_MONITOR_KEYS.has(row.monitorKey) && row.freshnessState === 'stale')
+    .map((row) => row.monitorKey);
+  const missingSmokeMonitorKeys = rows
+    .filter((row) => !HTTP_MONITOR_KEYS.has(row.monitorKey) && row.freshnessState === 'missing')
+    .map((row) => row.monitorKey);
+
+  const reasons: LaunchNotReadyReason[] = [];
+
+  if (freshFailingHttpMonitorKeys.length > 0) {
+    reasons.push({
+      code: 'fresh_failing_http_monitor',
+      message: 'Fresh failing HTTP monitor evidence is blocking launch readiness.',
+      monitorKeys: freshFailingHttpMonitorKeys,
+    });
   }
 
+  if (freshFailingSmokeMonitorKeys.length > 0) {
+    reasons.push({
+      code: 'fresh_failing_smoke_monitor',
+      message: 'A fresh failing launch corridor is blocking launch readiness.',
+      monitorKeys: freshFailingSmokeMonitorKeys,
+    });
+  }
+
+  if (staleHttpMonitorKeys.length > 0) {
+    reasons.push({
+      code: 'stale_http_evidence',
+      message: 'Persisted HTTP monitor evidence is stale and needs live refresh.',
+      monitorKeys: staleHttpMonitorKeys,
+    });
+  }
+
+  if (missingHttpMonitorKeys.length > 0) {
+    reasons.push({
+      code: 'missing_http_evidence',
+      message: 'Persisted HTTP monitor evidence is missing and launch readiness is unverified.',
+      monitorKeys: missingHttpMonitorKeys,
+    });
+  }
+
+  if (staleSmokeMonitorKeys.length > 0) {
+    reasons.push({
+      code: 'stale_smoke_artifact',
+      message: 'Launch smoke evidence is stale and must be refreshed before launch is ready.',
+      monitorKeys: staleSmokeMonitorKeys,
+    });
+  }
+
+  if (missingSmokeMonitorKeys.length > 0) {
+    reasons.push({
+      code: 'missing_smoke_artifact',
+      message: 'Launch smoke evidence is missing and launch readiness is unverified.',
+      monitorKeys: missingSmokeMonitorKeys,
+    });
+  }
+
+  return reasons;
+}
+
+function shouldRefreshLive(status: Awaited<ReturnType<typeof getPersistedLaunchSyntheticStatus>>) {
   if (
     status.rows.some(
       (row) =>
@@ -88,6 +178,7 @@ export async function GET(request: Request) {
     }
 
     const summary = buildSummary(latest.rows, latest.missingMonitorKeys);
+    const notReadyReasons = buildNotReadyReasons(latest.rows, latest.missingMonitorKeys);
 
     return NextResponse.json(
       {
@@ -98,6 +189,7 @@ export async function GET(request: Request) {
         evidence: latest.evidence,
         summary,
         missingMonitorKeys: latest.missingMonitorKeys,
+        notReadyReasons,
         monitors: latest.rows,
       },
       { status: latest.readinessState === 'blocked' ? 503 : 200 }

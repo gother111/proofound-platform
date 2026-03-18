@@ -1,15 +1,17 @@
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 
 import { db } from '@/db';
-import {
-  assignments,
-  growthPlans,
-  interviews,
-  matches,
-  notifications,
-  skillVerificationRequests,
-} from '@/db/schema';
+import { assignments, growthPlans, interviews, matches, notifications } from '@/db/schema';
 import type { ActivityEvent, ActivityEventType } from '@/lib/momentum/types';
+import { listCanonicalBundlesForOwner } from '@/lib/verification/canonical-bundles';
+import {
+  listCanonicalSkillVerificationRequestsForOwner,
+  mapCanonicalSkillVerificationRequestRecord,
+} from '@/lib/verification/canonical-requests';
+import {
+  listCanonicalImpactVerificationRequestsForOwner,
+  mapCanonicalImpactVerificationRequestRecord,
+} from '@/lib/verification/canonical-impact-requests';
 
 const DEFAULT_LIMIT = 8;
 
@@ -38,6 +40,14 @@ function asEventTimestamp(value: Date | string | null | undefined): string {
 function byNewest(a: ActivityEvent, b: ActivityEvent): number {
   return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
 }
+
+type VerificationActivityRow = {
+  id: string;
+  subjectType: 'skill' | 'impact_story' | 'custom_bundle';
+  status: string;
+  respondedAt: string | null;
+  createdAt: string;
+};
 
 export async function getIndividualActivityEvents(
   userId: string,
@@ -70,17 +80,51 @@ export async function getIndividualActivityEvents(
       .orderBy(desc(growthPlans.updatedAt))
       .limit(3),
 
-    db
-      .select({
-        id: skillVerificationRequests.id,
-        status: skillVerificationRequests.status,
-        respondedAt: skillVerificationRequests.respondedAt,
-        createdAt: skillVerificationRequests.createdAt,
-      })
-      .from(skillVerificationRequests)
-      .where(eq(skillVerificationRequests.requesterProfileId, userId))
-      .orderBy(desc(skillVerificationRequests.createdAt))
-      .limit(3),
+    Promise.all([
+      listCanonicalSkillVerificationRequestsForOwner(userId).catch(() => []),
+      listCanonicalImpactVerificationRequestsForOwner(userId).catch(() => []),
+      listCanonicalBundlesForOwner(userId).catch(() => []),
+    ]).then(([skillRows, impactRows, bundleRows]) => {
+      const standaloneSkillRows = skillRows
+        .map(mapCanonicalSkillVerificationRequestRecord)
+        .filter((row) => !row.custom_request_id)
+        .map(
+          (row): VerificationActivityRow => ({
+            id: row.id,
+            subjectType: 'skill',
+            status: row.status,
+            respondedAt: row.responded_at,
+            createdAt: row.created_at,
+          })
+        );
+      const standaloneImpactRows = impactRows
+        .map(mapCanonicalImpactVerificationRequestRecord)
+        .filter((row) => !row.custom_request_id)
+        .map(
+          (row): VerificationActivityRow => ({
+            id: row.id,
+            subjectType: 'impact_story',
+            status: row.status,
+            respondedAt: row.responded_at,
+            createdAt: row.created_at,
+          })
+        );
+      const bundleActivityRows = bundleRows.map(
+        (row): VerificationActivityRow => ({
+          id: row.id,
+          subjectType: 'custom_bundle',
+          status: row.status,
+          respondedAt: row.responded_at,
+          createdAt: row.created_at,
+        })
+      );
+
+      return [...standaloneSkillRows, ...standaloneImpactRows, ...bundleActivityRows]
+        .sort(
+          (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()
+        )
+        .slice(0, 3);
+    }),
 
     db
       .select({
@@ -120,10 +164,16 @@ export async function getIndividualActivityEvents(
   for (const row of verificationRows) {
     const state = row.status.replace('_', ' ');
     const eventTime = row.respondedAt || row.createdAt;
+    const text =
+      row.subjectType === 'custom_bundle'
+        ? `Custom verification bundle ${state}`
+        : row.subjectType === 'impact_story'
+          ? `Impact story verification request ${state}`
+          : `Skill verification request ${state}`;
     events.push({
       id: `verification-${row.id}`,
       type: 'verification_update',
-      text: `Verification request ${state}`,
+      text,
       timestamp: asEventTimestamp(eventTime),
       actionUrl: '/app/i/verifications',
     });

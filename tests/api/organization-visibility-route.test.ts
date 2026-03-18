@@ -139,12 +139,6 @@ describe('organization visibility route', () => {
           mission: 'public',
           vision: 'public',
           causes: 'public',
-          work_culture: 'post_conversation_start',
-          structure: 'post_match',
-          projects: 'post_match',
-          partnerships: 'post_match',
-          goals: 'post_match',
-          impact: 'internal_only',
         },
       }) as any
     );
@@ -159,8 +153,8 @@ describe('organization visibility route', () => {
     expect(body.publicPageEnabled).toBe(true);
     expect(body.searchIndexingEnabled).toBe(false);
     expect(body.visibility.displayName).toBe('public');
-    expect(body.visibility.workCulture).toBe('post_conversation_start');
-    expect(body.visibility.impact).toBe('internal_only');
+    expect(body.visibility.mission).toBe('public');
+    expect(body.visibility.causes).toBe('public');
     expect(body.visibility.display_name).toBeUndefined();
   });
 
@@ -184,12 +178,6 @@ describe('organization visibility route', () => {
       mission: 'public',
       vision: 'public',
       causes: 'public',
-      workCulture: 'post_match',
-      structure: 'post_match',
-      projects: 'post_match',
-      partnerships: 'post_match',
-      goals: 'post_match',
-      impact: 'post_match',
     });
   });
 
@@ -224,12 +212,6 @@ describe('organization visibility route', () => {
         mission: 'public',
         vision: 'public',
         causes: 'public',
-        work_culture: 'post_match',
-        structure: 'post_match',
-        projects: 'post_match',
-        partnerships: 'post_match',
-        goals: 'post_match',
-        impact: 'post_match',
       },
     });
     vi.mocked(createClient).mockResolvedValue(supabase as any);
@@ -243,7 +225,7 @@ describe('organization visibility route', () => {
     const response = await PUT(
       buildPutRequest({
         displayName: 'internal_only',
-        workCulture: 'post_conversation_start',
+        mission: 'post_conversation_start',
         publicPageEnabled: true,
         searchIndexingEnabled: true,
       }),
@@ -255,7 +237,7 @@ describe('organization visibility route', () => {
     expect(supabase.__mocks.visibilityWrite.update).toHaveBeenCalledWith(
       expect.objectContaining({
         display_name: 'internal_only',
-        work_culture: 'post_conversation_start',
+        mission: 'post_conversation_start',
       })
     );
     expect(supabase.__mocks.organizations.update).toHaveBeenCalledWith(
@@ -267,6 +249,6 @@ describe('organization visibility route', () => {
     expect(revalidatePublicOrganizationPortfolioById).toHaveBeenCalledWith('org-1');
     expect(body.searchIndexingEnabled).toBe(true);
     expect(body.visibility.displayName).toBe('internal_only');
-    expect(body.visibility.workCulture).toBe('post_conversation_start');
+    expect(body.visibility.mission).toBe('post_conversation_start');
   });
 });

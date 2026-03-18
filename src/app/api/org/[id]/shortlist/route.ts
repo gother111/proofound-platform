@@ -14,8 +14,10 @@ import {
 } from '@/db/schema';
 import {
   buildCandidateReviewProjection,
+  buildProofFirstReviewCard,
   buildVisibilitySafeWhy,
   getShortlistProjectionPolicy,
+  getReviewCardProofPackMap,
   getRankBand,
   getVisibleIdentityFields,
   normalizeFairnessStatus,
@@ -147,6 +149,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
               matches.id
             )
         : [];
+    const proofPackByProfileId = await getReviewCardProofPackMap(
+      shortlist.map((row) => row.profileId)
+    );
 
     const rankMap = new Map<string, { rank: number; total: number }>();
     const totalByAssignment = new Map<string, number>();
@@ -179,6 +184,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           operationalFallbackMode: row.operationalFallbackMode,
           fairnessStatus,
         });
+        const rankBand =
+          rankInfo && !suppressExactRank && orgRole !== 'org_reviewer'
+            ? getRankBand(rankInfo.rank, rankInfo.total)
+            : 'Shortlisted';
+        const verificationCount =
+          row.verified && typeof row.verified === 'object'
+            ? Object.values(row.verified as Record<string, unknown>).filter(Boolean).length
+            : 0;
 
         return {
           id: row.matchId,
@@ -219,18 +232,20 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           fairness: {
             status: fairnessStatus,
           },
-          rankBand:
-            rankInfo && !suppressExactRank && orgRole !== 'org_reviewer'
-              ? getRankBand(rankInfo.rank, rankInfo.total)
-              : 'Shortlisted',
+          rankBand,
           why: buildVisibilitySafeWhy({
             reasonCodes: ['shortlist_selected'],
             fairnessStatus,
             fallbackState,
-            rankBand:
-              rankInfo && !suppressExactRank && orgRole !== 'org_reviewer'
-                ? getRankBand(rankInfo.rank, rankInfo.total)
-                : 'Shortlisted',
+            rankBand,
+          }),
+          reviewCard: buildProofFirstReviewCard({
+            profileId: row.profileId,
+            reasonCodes: ['shortlist_selected'],
+            fairnessStatus,
+            verificationCount,
+            proofPack: proofPackByProfileId.get(row.profileId) ?? null,
+            fallbackHeadline: row.headline ?? row.tagline ?? null,
           }),
           shortlistedAt: row.shortlistedAt,
         };

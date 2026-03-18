@@ -170,7 +170,7 @@ function makeCanonicalImpactRequest(overrides: Record<string, unknown> = {}) {
   };
 }
 
-describe('DELETE /api/expertise/verifications/sent/[requestType]/[requestId]', () => {
+describe('sent verification request delete and resend routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(requireApiAuthContext).mockResolvedValue({

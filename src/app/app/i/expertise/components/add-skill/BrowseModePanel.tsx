@@ -67,6 +67,7 @@ type BrowseModePanelProps = {
   setProofIssuedDate: (value: string) => void;
   proofExpiresDate: string;
   setProofExpiresDate: (value: string) => void;
+  hasProofContext: boolean;
   requestVerification: boolean;
   setRequestVerification: (value: boolean) => void;
   verificationEmail: string;
@@ -123,6 +124,7 @@ export function BrowseModePanel({
   setProofIssuedDate,
   proofExpiresDate,
   setProofExpiresDate,
+  hasProofContext,
   requestVerification,
   setRequestVerification,
   verificationEmail,
@@ -674,12 +676,18 @@ export function BrowseModePanel({
               <Checkbox
                 id="request-verification-on-add"
                 checked={requestVerification}
+                disabled={!hasProofContext}
                 onCheckedChange={(checked) => setRequestVerification(Boolean(checked))}
               />
               <Label htmlFor="request-verification-on-add" className="text-foreground">
-                Send verification request after save (optional)
+                Ask someone to confirm this proof after save (optional)
               </Label>
             </div>
+            <p className="mb-3 text-xs text-muted-foreground">
+              {hasProofContext
+                ? 'Optional. Skipping is fine for portfolio-ready, but intro-readiness usually needs a non-self trust anchor tied to proof.'
+                : 'Add proof first. Verification requests for skills must stay attached to a proof link or uploaded document.'}
+            </p>
 
             {requestVerification && (
               <div className="space-y-3">
@@ -719,7 +727,7 @@ export function BrowseModePanel({
                   </Label>
                   <Textarea
                     id="verification-message"
-                    placeholder="Add context for the verifier..."
+                    placeholder="Explain what proof and claim you want them to confirm..."
                     value={verificationMessage}
                     onChange={(event) => setVerificationMessage(event.target.value)}
                     rows={3}

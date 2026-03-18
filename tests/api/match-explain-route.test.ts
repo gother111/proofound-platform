@@ -14,6 +14,8 @@ const mocks = vi.hoisted(() => ({
   normalizeFairnessStatus: vi.fn(),
   renderExplanationFromReasonCodes: vi.fn(),
   resolveEffectiveScoreState: vi.fn(),
+  getReviewCardProofPackMap: vi.fn(),
+  buildProofFirstReviewCard: vi.fn(),
 }));
 
 vi.mock('@/db', () => ({
@@ -37,8 +39,10 @@ vi.mock('@/lib/matching/review-contract', () => ({
   getOrgMembershipRole: mocks.getOrgMembershipRole,
   getRankBand: mocks.getRankBand,
   getReasonLedgerEntries: mocks.getReasonLedgerEntries,
+  getReviewCardProofPackMap: mocks.getReviewCardProofPackMap,
   normalizeFairnessStatus: mocks.normalizeFairnessStatus,
   renderExplanationFromReasonCodes: mocks.renderExplanationFromReasonCodes,
+  buildProofFirstReviewCard: mocks.buildProofFirstReviewCard,
 }));
 
 vi.mock('@/lib/matching/match-score-contract', () => ({
@@ -114,12 +118,38 @@ describe('GET /api/match/explain/[matchId]', () => {
     mocks.getOrgMembershipRole.mockResolvedValue('org_owner');
     mocks.getRankBand.mockReturnValue('Top tier');
     mocks.getReasonLedgerEntries.mockResolvedValue([]);
+    mocks.getReviewCardProofPackMap.mockResolvedValue(new Map([['candidate-1', null]]));
     mocks.normalizeFairnessStatus.mockImplementation(
       (status: string | null | undefined) => status ?? 'pass'
     );
     mocks.renderExplanationFromReasonCodes.mockReturnValue({
       summary: ['Strong skill overlap'],
-      sections: [{ title: 'Skills', items: ['Strong skill overlap'] }],
+      sections: {
+        positive_match: ['Strong skill overlap'],
+        constraint_mismatch: [],
+        workflow_decision: [],
+        fairness: [],
+        manual_override: [],
+      },
+    });
+    mocks.buildProofFirstReviewCard.mockReturnValue({
+      candidateLabel: 'Candidate A7F2',
+      strongestProof: {
+        summary: 'Proof-backed delivery signal.',
+        outcome: 'Improved a launch corridor.',
+        ownership: 'Owned the implementation.',
+        anchorContext: 'Anchored in prior project work',
+        freshnessLabel: 'Fresh',
+      },
+      verification: {
+        summaryLabel: 'Verified proof signal present',
+        count: 1,
+      },
+      fitSummary: {
+        headline: 'Proof signals align with this role.',
+        bullets: ['Strong skill overlap'],
+        reasonCodes: ['skills_strong'],
+      },
     });
     mocks.resolveEffectiveScoreState.mockReturnValue('fresh');
     mocks.dbExecute
@@ -176,5 +206,35 @@ describe('GET /api/match/explain/[matchId]', () => {
     expect(body.rankMode).toBe('exact');
     expect(body.exactRankAvailable).toBe(true);
     expect(body.rankBand).toBe('Top tier');
+  });
+
+  it('returns a privacy-safe proof-first review card and keeps rank detail fairness-safe', async () => {
+    mocks.getOrgMembershipRole.mockResolvedValue('org_reviewer');
+
+    const response = await GET(new NextRequest('https://example.com/api/match/explain/match-1'), {
+      params: Promise.resolve({ matchId: 'match-1' }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.reviewCard).toEqual(
+      expect.objectContaining({
+        candidateLabel: 'Candidate A7F2',
+        strongestProof: expect.objectContaining({
+          summary: 'Proof-backed delivery signal.',
+          outcome: 'Improved a launch corridor.',
+          ownership: 'Owned the implementation.',
+        }),
+        verification: expect.objectContaining({
+          summaryLabel: 'Verified proof signal present',
+        }),
+      })
+    );
+    expect(body.reviewCard).not.toHaveProperty('displayName');
+    expect(body.reviewCard).not.toHaveProperty('avatarUrl');
+    expect(JSON.stringify(body.reviewCard)).not.toContain('http');
+    expect(body.rank).toBeUndefined();
+    expect(body.rankMode).toBe('band');
+    expect(body.exactRankAvailable).toBe(false);
   });
 });

@@ -54,6 +54,7 @@ export type PublicTrustExportData = {
     contextLabel: string | null;
     selectedEvidence: Array<{
       title: string;
+      artifactDisplayName?: string | null;
       href: string | null;
       artifactKind: string | null;
       issuedAt: string | null;
@@ -408,6 +409,25 @@ function resolvePublicProofBadge(input: {
   }
 }
 
+function resolvePublicEvidenceTitle(input: { title: string; artifactDisplayName?: string | null }) {
+  const safeDisplayName = input.artifactDisplayName?.trim() || null;
+  const title = input.title.trim();
+
+  if (!safeDisplayName) {
+    return title;
+  }
+
+  if (!title) {
+    return safeDisplayName;
+  }
+
+  if (title.toLowerCase().startsWith('uploaded ')) {
+    return safeDisplayName;
+  }
+
+  return title;
+}
+
 function resolvePublicPortfolioName(
   profile: IndividualProfileRow,
   displayNameVisible: boolean
@@ -579,7 +599,11 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
       artifactCount: publicSafePack.items.length,
       contextLabel: resolvePublicProofPackContextLabel({ pack: aggregate.pack }),
       selectedEvidence: publicSafePack.items.slice(0, 3).map((item) => ({
-        title: item.title,
+        title: resolvePublicEvidenceTitle({
+          title: item.title,
+          artifactDisplayName: item.artifactDisplayName ?? null,
+        }),
+        artifactDisplayName: item.artifactDisplayName ?? null,
         href: resolveSafeEvidenceUrl({ sourceUrl: item.sourceUrl }),
         artifactKind: item.artifactKind ?? null,
         issuedAt: item.issuedAt ?? null,
@@ -628,10 +652,14 @@ function buildPublicFeaturedProof(input: {
   const evidenceUrl = resolveSafeEvidenceUrl({ sourceUrl: input.item.sourceUrl });
   const timeframeSource =
     input.item.issuedAt || input.item.expiresAt || input.latestEvidenceAt || null;
+  const proofTitle = resolvePublicEvidenceTitle({
+    title: input.item.title,
+    artifactDisplayName: input.item.artifactDisplayName ?? null,
+  });
 
   return {
     id: input.item.artifactId,
-    title: input.item.title,
+    title: proofTitle,
     role: prettifyProofType(input.item.artifactKind),
     timeframe: formatDate(timeframeSource),
     outcomes: toOutcomeLines(input.item.description || input.pack.outcomesSummary),

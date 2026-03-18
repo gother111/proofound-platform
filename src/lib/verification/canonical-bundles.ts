@@ -125,6 +125,95 @@ function isCanonicalBundleRecord(record: VerificationRecordRow): boolean {
   return typeof metadata.customRequestId === 'string' && metadata.customRequestId.length > 0;
 }
 
+function mapCanonicalBundleRows(rows: VerificationRecordRow[]): CanonicalBundle | null {
+  if (rows.length === 0) {
+    return null;
+  }
+
+  const orderedRows = [...rows].sort(
+    (left, right) => left.createdAt.getTime() - right.createdAt.getTime()
+  );
+  const first = orderedRows[0]!;
+  const firstMetadata = toMetadata(first);
+  const bundleId =
+    typeof firstMetadata.customRequestId === 'string' ? firstMetadata.customRequestId : null;
+
+  if (!bundleId) {
+    return null;
+  }
+
+  const respondedAt =
+    orderedRows
+      .map((row) => row.completedAt?.toISOString() || null)
+      .filter((value): value is string => Boolean(value))
+      .sort()
+      .at(-1) ?? null;
+
+  const responseMessage =
+    orderedRows
+      .map((row) => {
+        const metadata = toMetadata(row);
+        return typeof metadata.responseMessage === 'string' ? metadata.responseMessage : null;
+      })
+      .find((value) => Boolean(value)) ?? null;
+
+  return {
+    id: bundleId,
+    requester_profile_id: first.ownerId,
+    requester_name:
+      typeof firstMetadata.requesterName === 'string' ? firstMetadata.requesterName : null,
+    verifier_email: normalizeEmail(firstMetadata.verifierEmail || null) || '',
+    verifier_profile_id: first.verifierProfileId || null,
+    verifier_relationship:
+      typeof firstMetadata.verifierRelationship === 'string'
+        ? firstMetadata.verifierRelationship
+        : null,
+    verifier_source:
+      (firstMetadata.verifierSource as 'peer' | 'manager' | 'external') || 'external',
+    request_kind:
+      firstMetadata.requestKind === 'human_observed_attestation'
+        ? 'human_observed_attestation'
+        : 'generic_verification',
+    attestation_request:
+      firstMetadata.attestationRequest &&
+      typeof firstMetadata.attestationRequest === 'object' &&
+      !Array.isArray(firstMetadata.attestationRequest)
+        ? (firstMetadata.attestationRequest as Record<string, unknown>)
+        : null,
+    attestation_response:
+      firstMetadata.attestationResponse &&
+      typeof firstMetadata.attestationResponse === 'object' &&
+      !Array.isArray(firstMetadata.attestationResponse)
+        ? (firstMetadata.attestationResponse as Record<string, unknown>)
+        : null,
+    message: typeof firstMetadata.message === 'string' ? firstMetadata.message : null,
+    status: deriveBundleStatus(orderedRows),
+    created_at: first.createdAt.toISOString(),
+    expires_at: first.expiresAt?.toISOString() || null,
+    responded_at: respondedAt,
+    response_message: responseMessage,
+    capability_token_id:
+      typeof firstMetadata.capabilityTokenId === 'string' ? firstMetadata.capabilityTokenId : null,
+    email_sent: firstMetadata.emailSent !== false,
+    email_error: typeof firstMetadata.emailError === 'string' ? firstMetadata.emailError : null,
+    items: orderedRows.map((row) => {
+      const metadata = toMetadata(row);
+      return {
+        id: row.id,
+        artifact_type: row.subjectType as CanonicalBundleArtifactType,
+        artifact_id: row.subjectId,
+        display_label:
+          typeof metadata.displayLabel === 'string' && metadata.displayLabel.trim().length > 0
+            ? metadata.displayLabel
+            : row.subjectId,
+        status: toBundleItemStatus(row.status),
+        created_at: row.createdAt.toISOString(),
+        updated_at: row.updatedAt.toISOString(),
+      };
+    }),
+  } satisfies CanonicalBundle;
+}
+
 function mapRecordStatus(
   status: VerificationRecordRow['status']
 ): CanonicalBundleItem['status'] | 'cancelled' {
@@ -373,82 +462,46 @@ export async function listCanonicalBundleRecords(bundleId: string) {
 
 export async function getCanonicalBundleById(bundleId: string) {
   const rows = await listCanonicalBundleRecords(bundleId);
-  if (rows.length === 0) {
-    return null;
+  return mapCanonicalBundleRows(rows);
+}
+
+export async function listCanonicalBundlesForOwner(ownerId: string) {
+  if (!isUuid(ownerId)) {
+    return [];
   }
 
-  const first = rows[0]!;
-  const firstMetadata = toMetadata(first);
-  const respondedAt =
-    [...rows]
-      .map((row) => row.completedAt?.toISOString() || null)
-      .filter((value): value is string => Boolean(value))
-      .sort()
-      .at(-1) ?? null;
+  const result = await db.execute(sql`
+    SELECT *
+    FROM verification_records
+    WHERE owner_type = 'individual_profile'
+      AND owner_id = ${ownerId}::uuid
+      AND coalesce(metadata->>'customRequestId', '') <> ''
+    ORDER BY created_at DESC
+  `);
 
-  const responseMessage =
-    rows
-      .map((row) => {
-        const metadata = toMetadata(row);
-        return typeof metadata.responseMessage === 'string' ? metadata.responseMessage : null;
-      })
-      .find((value) => Boolean(value)) ?? null;
+  const rows = getRows(result).filter((row) =>
+    isCanonicalBundleRecord(row as VerificationRecordRow)
+  ) as VerificationRecordRow[];
 
-  return {
-    id: bundleId,
-    requester_profile_id: first.ownerId,
-    requester_name:
-      typeof firstMetadata.requesterName === 'string' ? firstMetadata.requesterName : null,
-    verifier_email: normalizeEmail(firstMetadata.verifierEmail || null) || '',
-    verifier_profile_id: first.verifierProfileId || null,
-    verifier_relationship:
-      typeof firstMetadata.verifierRelationship === 'string'
-        ? firstMetadata.verifierRelationship
-        : null,
-    verifier_source:
-      (firstMetadata.verifierSource as 'peer' | 'manager' | 'external') || 'external',
-    request_kind:
-      firstMetadata.requestKind === 'human_observed_attestation'
-        ? 'human_observed_attestation'
-        : 'generic_verification',
-    attestation_request:
-      firstMetadata.attestationRequest &&
-      typeof firstMetadata.attestationRequest === 'object' &&
-      !Array.isArray(firstMetadata.attestationRequest)
-        ? (firstMetadata.attestationRequest as Record<string, unknown>)
-        : null,
-    attestation_response:
-      firstMetadata.attestationResponse &&
-      typeof firstMetadata.attestationResponse === 'object' &&
-      !Array.isArray(firstMetadata.attestationResponse)
-        ? (firstMetadata.attestationResponse as Record<string, unknown>)
-        : null,
-    message: typeof firstMetadata.message === 'string' ? firstMetadata.message : null,
-    status: deriveBundleStatus(rows),
-    created_at: first.createdAt.toISOString(),
-    expires_at: first.expiresAt?.toISOString() || null,
-    responded_at: respondedAt,
-    response_message: responseMessage,
-    capability_token_id:
-      typeof firstMetadata.capabilityTokenId === 'string' ? firstMetadata.capabilityTokenId : null,
-    email_sent: firstMetadata.emailSent !== false,
-    email_error: typeof firstMetadata.emailError === 'string' ? firstMetadata.emailError : null,
-    items: rows.map((row) => {
-      const metadata = toMetadata(row);
-      return {
-        id: row.id,
-        artifact_type: row.subjectType as CanonicalBundleArtifactType,
-        artifact_id: row.subjectId,
-        display_label:
-          typeof metadata.displayLabel === 'string' && metadata.displayLabel.trim().length > 0
-            ? metadata.displayLabel
-            : row.subjectId,
-        status: toBundleItemStatus(row.status),
-        created_at: row.createdAt.toISOString(),
-        updated_at: row.updatedAt.toISOString(),
-      };
-    }),
-  } satisfies CanonicalBundle;
+  const groupedRows = new Map<string, VerificationRecordRow[]>();
+  for (const row of rows) {
+    const metadata = toMetadata(row);
+    if (typeof metadata.customRequestId !== 'string' || metadata.customRequestId.length === 0) {
+      continue;
+    }
+
+    const existing = groupedRows.get(metadata.customRequestId) ?? [];
+    existing.push(row);
+    groupedRows.set(metadata.customRequestId, existing);
+  }
+
+  return [...groupedRows.values()]
+    .map((bundleRows) => mapCanonicalBundleRows(bundleRows))
+    .filter((bundle): bundle is CanonicalBundle => Boolean(bundle))
+    .filter((bundle) => bundle.status !== 'cancelled')
+    .sort(
+      (left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
+    );
 }
 
 export async function updateCanonicalBundleDeliveryState(

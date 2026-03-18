@@ -54,14 +54,14 @@ CREATE POLICY "Authenticated users can create organizations"
   ON public.organizations FOR INSERT
   WITH CHECK (auth.uid() = created_by);
 
-CREATE POLICY "Owners and admins can update organizations"
+CREATE POLICY "Owners and managers can update organizations"
   ON public.organizations FOR UPDATE
   USING (
     EXISTS (
       SELECT 1 FROM public.organization_members
       WHERE organization_members.org_id = organizations.id
         AND organization_members.user_id = auth.uid()
-        AND organization_members.role IN ('owner', 'admin')
+        AND organization_members.role IN ('org_owner', 'org_manager')
         AND organization_members.status = 'active'
     )
   )
@@ -70,7 +70,7 @@ CREATE POLICY "Owners and admins can update organizations"
       SELECT 1 FROM public.organization_members
       WHERE organization_members.org_id = organizations.id
         AND organization_members.user_id = auth.uid()
-        AND organization_members.role IN ('owner', 'admin')
+        AND organization_members.role IN ('org_owner', 'org_manager')
         AND organization_members.status = 'active'
     )
   );
@@ -87,21 +87,21 @@ CREATE POLICY "Members can view organization members"
     )
   );
 
-CREATE POLICY "Owners and admins can insert members"
+CREATE POLICY "Owners and managers can insert members"
   ON public.organization_members FOR INSERT
   WITH CHECK (
-    -- Allow existing owners/admins to add members
+    -- Allow existing owners/managers to add members
     EXISTS (
       SELECT 1 FROM public.organization_members AS om
       WHERE om.org_id = organization_members.org_id
         AND om.user_id = auth.uid()
-        AND om.role IN ('owner', 'admin')
+        AND om.role IN ('org_owner', 'org_manager')
         AND om.status = 'active'
     )
     -- Allow org creator to add first owner (themselves)
     OR (
       auth.uid() = user_id 
-      AND role = 'owner'
+      AND role = 'org_owner'
       AND EXISTS (
         SELECT 1 FROM public.organizations
         WHERE organizations.id = organization_members.org_id
@@ -112,63 +112,63 @@ CREATE POLICY "Owners and admins can insert members"
     OR auth.uid() = user_id
   );
 
-CREATE POLICY "Owners and admins can update members"
+CREATE POLICY "Owners can update members"
   ON public.organization_members FOR UPDATE
   USING (
     EXISTS (
       SELECT 1 FROM public.organization_members AS om
       WHERE om.org_id = organization_members.org_id
         AND om.user_id = auth.uid()
-        AND om.role IN ('owner', 'admin')
+        AND om.role IN ('org_owner')
         AND om.status = 'active'
     )
   );
 
-CREATE POLICY "Owners and admins can delete members"
+CREATE POLICY "Owners can delete members"
   ON public.organization_members FOR DELETE
   USING (
     EXISTS (
       SELECT 1 FROM public.organization_members AS om
       WHERE om.org_id = organization_members.org_id
         AND om.user_id = auth.uid()
-        AND om.role IN ('owner', 'admin')
+        AND om.role IN ('org_owner')
         AND om.status = 'active'
     )
   );
 
 -- Organization invitations policies
-CREATE POLICY "Org admins can view invitations"
+CREATE POLICY "Org managers can view invitations"
   ON public.org_invitations FOR SELECT
   USING (
     EXISTS (
       SELECT 1 FROM public.organization_members
       WHERE organization_members.org_id = org_invitations.org_id
         AND organization_members.user_id = auth.uid()
-        AND organization_members.role IN ('owner', 'admin')
+        AND organization_members.role IN ('org_owner', 'org_manager')
         AND organization_members.status = 'active'
     )
   );
 
-CREATE POLICY "Org admins can create invitations"
+CREATE POLICY "Org managers can create invitations"
   ON public.org_invitations FOR INSERT
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM public.organization_members
       WHERE organization_members.org_id = org_invitations.org_id
         AND organization_members.user_id = auth.uid()
-        AND organization_members.role IN ('owner', 'admin')
+        AND organization_members.role IN ('org_owner', 'org_manager')
         AND organization_members.status = 'active'
     )
   );
 
-CREATE POLICY "Org admins can delete invitations"
+CREATE POLICY "Org owners can delete invitations"
   ON public.org_invitations FOR DELETE
   USING (
     EXISTS (
       SELECT 1 FROM public.organization_members
       WHERE organization_members.org_id = org_invitations.org_id
         AND organization_members.user_id = auth.uid()
-        AND organization_members.role IN ('owner', 'admin')
+        AND organization_members.role IN ('org_owner')
         AND organization_members.status = 'active'
     )
   );
@@ -207,17 +207,17 @@ BEGIN
     FROM pg_policies
     WHERE schemaname = 'public'
       AND tablename = 'org_candidate_invites'
-      AND policyname = 'Org admins can create candidate invites'
+      AND policyname = 'Org managers can create candidate invites'
   ) THEN
     EXECUTE '
-      CREATE POLICY "Org admins can create candidate invites"
+      CREATE POLICY "Org managers can create candidate invites"
       ON public.org_candidate_invites FOR INSERT
       WITH CHECK (
         EXISTS (
           SELECT 1 FROM public.organization_members
           WHERE organization_members.org_id = org_candidate_invites.org_id
             AND organization_members.user_id = auth.uid()
-            AND organization_members.role IN (''owner'', ''admin'')
+            AND organization_members.role IN (''org_owner'', ''org_manager'')
             AND organization_members.status = ''active''
         )
       )';
@@ -228,17 +228,17 @@ BEGIN
     FROM pg_policies
     WHERE schemaname = 'public'
       AND tablename = 'org_candidate_invites'
-      AND policyname = 'Org admins can update candidate invites'
+      AND policyname = 'Org managers can update candidate invites'
   ) THEN
     EXECUTE '
-      CREATE POLICY "Org admins can update candidate invites"
+      CREATE POLICY "Org managers can update candidate invites"
       ON public.org_candidate_invites FOR UPDATE
       USING (
         EXISTS (
           SELECT 1 FROM public.organization_members
           WHERE organization_members.org_id = org_candidate_invites.org_id
             AND organization_members.user_id = auth.uid()
-            AND organization_members.role IN (''owner'', ''admin'')
+            AND organization_members.role IN (''org_owner'', ''org_manager'')
             AND organization_members.status = ''active''
         )
       )
@@ -247,7 +247,7 @@ BEGIN
           SELECT 1 FROM public.organization_members
           WHERE organization_members.org_id = org_candidate_invites.org_id
             AND organization_members.user_id = auth.uid()
-            AND organization_members.role IN (''owner'', ''admin'')
+            AND organization_members.role IN (''org_owner'', ''org_manager'')
             AND organization_members.status = ''active''
         )
       )';
@@ -259,7 +259,7 @@ CREATE POLICY "Users can view own audit logs"
   ON public.audit_logs FOR SELECT
   USING (actor_id = auth.uid());
 
-CREATE POLICY "Org owners and admins can view org audit logs"
+CREATE POLICY "Org owners and managers can view org audit logs"
   ON public.audit_logs FOR SELECT
   USING (
     org_id IS NOT NULL
@@ -267,7 +267,7 @@ CREATE POLICY "Org owners and admins can view org audit logs"
       SELECT 1 FROM public.organization_members
       WHERE organization_members.org_id = audit_logs.org_id
         AND organization_members.user_id = auth.uid()
-        AND organization_members.role IN ('owner', 'admin')
+        AND organization_members.role IN ('org_owner', 'org_manager')
         AND organization_members.status = 'active'
     )
   );
@@ -442,26 +442,26 @@ CREATE POLICY "Org members can view org assignments"
     )
   );
 
-CREATE POLICY "Org admins can create assignments"
+CREATE POLICY "Org managers can create assignments"
   ON public.assignments FOR INSERT
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM public.organization_members
       WHERE organization_members.org_id = assignments.org_id
         AND organization_members.user_id = auth.uid()
-        AND organization_members.role IN ('owner', 'admin')
+        AND organization_members.role IN ('org_owner', 'org_manager')
         AND organization_members.status = 'active'
     )
   );
 
-CREATE POLICY "Org admins can update assignments"
+CREATE POLICY "Org managers can update assignments"
   ON public.assignments FOR UPDATE
   USING (
     EXISTS (
       SELECT 1 FROM public.organization_members
       WHERE organization_members.org_id = assignments.org_id
         AND organization_members.user_id = auth.uid()
-        AND organization_members.role IN ('owner', 'admin')
+        AND organization_members.role IN ('org_owner', 'org_manager')
         AND organization_members.status = 'active'
     )
   );

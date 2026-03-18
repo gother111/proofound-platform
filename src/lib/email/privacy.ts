@@ -5,6 +5,34 @@ type BlindSafeVerificationEmailInput = {
   requestKind: 'generic_verification' | 'human_observed_attestation';
 };
 
+export type WorkflowEmailPrivacyStage = 'masked' | 'revealed';
+
+export type WorkflowEmailPrivacyOptions = {
+  stage?: WorkflowEmailPrivacyStage;
+  neutralSubject?: string;
+  organizationVisible?: boolean;
+  schoolVisible?: boolean;
+  identityVisible?: boolean;
+  artifactVisible?: boolean;
+};
+
+export type WorkflowEmailPrivacyPayload = {
+  subject: string;
+  organizationName?: string | null;
+  schoolName?: string | null;
+  candidateName?: string | null;
+  revealedName?: string | null;
+  artifactDisplayName?: string | null;
+};
+
+const MASKED_WORKFLOW_PLACEHOLDERS = {
+  organizationName: 'the organization',
+  schoolName: 'the institution',
+  candidateName: 'your match',
+  revealedName: 'your match',
+  artifactDisplayName: 'the shared document',
+} as const;
+
 function verificationRequestDescription(
   requestKind: BlindSafeVerificationEmailInput['requestKind']
 ) {
@@ -75,5 +103,40 @@ Review request: ${input.verifyUrl}
 
 This link expires in ${input.expiresInDays} days.
     `.trim(),
+  };
+}
+
+export function applyWorkflowEmailPrivacy(
+  payload: WorkflowEmailPrivacyPayload,
+  options: WorkflowEmailPrivacyOptions
+) {
+  const stage = options.stage ?? 'revealed';
+
+  if (stage !== 'masked') {
+    return payload;
+  }
+
+  return {
+    subject: options.neutralSubject ?? payload.subject,
+    organizationName:
+      options.organizationVisible === false
+        ? MASKED_WORKFLOW_PLACEHOLDERS.organizationName
+        : (payload.organizationName ?? null),
+    schoolName:
+      options.schoolVisible === false
+        ? MASKED_WORKFLOW_PLACEHOLDERS.schoolName
+        : (payload.schoolName ?? null),
+    candidateName:
+      options.identityVisible === false
+        ? MASKED_WORKFLOW_PLACEHOLDERS.candidateName
+        : (payload.candidateName ?? null),
+    revealedName:
+      options.identityVisible === false
+        ? MASKED_WORKFLOW_PLACEHOLDERS.revealedName
+        : (payload.revealedName ?? null),
+    artifactDisplayName:
+      options.artifactVisible === false
+        ? MASKED_WORKFLOW_PLACEHOLDERS.artifactDisplayName
+        : (payload.artifactDisplayName ?? null),
   };
 }
