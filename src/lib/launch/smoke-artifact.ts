@@ -96,6 +96,48 @@ const LEGACY_CHECK_CORRIDOR_MAP: Record<string, LaunchSmokeCorridor> = {
 export type LaunchSmokeCheckResult = z.infer<typeof LaunchSmokeCheckSchema>;
 export type LaunchSmokeArtifact = z.infer<typeof LaunchSmokeArtifactV2Schema>;
 export type LaunchSmokeCorridorResult = z.infer<typeof LaunchSmokeCorridorSchema>;
+export type LaunchSmokeArtifactEvaluationState =
+  | 'fresh_passing'
+  | 'fresh_failing'
+  | 'stale'
+  | 'wrong_target';
+export type LaunchSmokeArtifactEvaluation = {
+  state: LaunchSmokeArtifactEvaluationState;
+  passes: boolean;
+  blocking: boolean;
+  fresh: boolean;
+  stale: boolean;
+  ageMinutes: number;
+  freshnessThresholdMinutes: number;
+  targetBaseUrl: string | null;
+  requestedBaseUrl: string | null;
+  overallStatus: LaunchMonitorStatus;
+  failingScenarioIds: LaunchSmokeCheckResult['id'][];
+  incompleteScenarioIds: LaunchSmokeCheckResult['id'][];
+  message: string;
+};
+
+type LaunchSmokeScenarioId = LaunchSmokeCheckResult['id'];
+
+function getRequiredLaunchSmokeScenarioIds(): LaunchSmokeScenarioId[] {
+  return LAUNCH_SMOKE_MATRIX.map((scenario) => scenario.id);
+}
+
+function getIncompleteLaunchSmokeScenarioIds(
+  artifact: LaunchSmokeArtifact
+): LaunchSmokeScenarioId[] {
+  const checkIds = new Set(artifact.checks.map((check) => check.id));
+
+  return getRequiredLaunchSmokeScenarioIds().filter((scenarioId) => !checkIds.has(scenarioId));
+}
+
+function getFailingLaunchSmokeScenarioIds(artifact: LaunchSmokeArtifact): LaunchSmokeScenarioId[] {
+  const checkById = new Map(artifact.checks.map((check) => [check.id, check] as const));
+
+  return getRequiredLaunchSmokeScenarioIds().filter(
+    (scenarioId) => checkById.get(scenarioId)?.status !== 'pass'
+  );
+}
 
 function getScenarioCorridor(id: string): LaunchSmokeCorridor | null {
   const current = LAUNCH_SMOKE_MATRIX.find((item) => item.id === id);
@@ -220,12 +262,7 @@ export function isLaunchSmokeArtifactForBaseUrl(
 }
 
 export function hasPassingLaunchSmokeArtifact(artifact: LaunchSmokeArtifact): boolean {
-  const checkById = new Map(artifact.checks.map((check) => [check.id, check] as const));
-
-  return (
-    artifact.overallStatus === 'pass' &&
-    LAUNCH_SMOKE_MATRIX.every((scenario) => checkById.get(scenario.id)?.status === 'pass')
-  );
+  return evaluateLaunchSmokeArtifact(artifact).state === 'fresh_passing';
 }
 
 export function getLaunchSmokeAgeMinutes(artifact: LaunchSmokeArtifact, now = new Date()): number {
@@ -233,4 +270,113 @@ export function getLaunchSmokeAgeMinutes(artifact: LaunchSmokeArtifact, now = ne
     0,
     Math.round((now.getTime() - new Date(artifact.generatedAt).getTime()) / 60_000)
   );
+}
+
+export function evaluateLaunchSmokeArtifact(
+  artifact: LaunchSmokeArtifact,
+  options: {
+    now?: Date;
+    baseUrl?: string;
+  } = {}
+): LaunchSmokeArtifactEvaluation {
+  const now = options.now ?? new Date();
+  const ageMinutes = getLaunchSmokeAgeMinutes(artifact, now);
+  const freshnessThresholdMinutes = getLaunchSmokeFreshnessThresholdMinutes(artifact);
+  const targetBaseUrl = getLaunchSmokeTargetBaseUrl(artifact);
+  const requestedBaseUrl = options.baseUrl ? normalizeLaunchBaseUrl(options.baseUrl) : null;
+  const incompleteScenarioIds = getIncompleteLaunchSmokeScenarioIds(artifact);
+  const failingScenarioIds = getFailingLaunchSmokeScenarioIds(artifact);
+  const stale = ageMinutes > freshnessThresholdMinutes;
+  const targetMismatch =
+    requestedBaseUrl != null && !isLaunchSmokeArtifactForBaseUrl(artifact, requestedBaseUrl);
+
+  if (targetMismatch) {
+    return {
+      state: 'wrong_target',
+      passes: false,
+      blocking: true,
+      fresh: false,
+      stale: false,
+      ageMinutes,
+      freshnessThresholdMinutes,
+      targetBaseUrl,
+      requestedBaseUrl,
+      overallStatus: artifact.overallStatus,
+      failingScenarioIds,
+      incompleteScenarioIds,
+      message: `launch smoke artifact target (${targetBaseUrl ?? 'unknown'}) does not match requested BASE_URL (${requestedBaseUrl})`,
+    };
+  }
+
+  if (stale) {
+    return {
+      state: 'stale',
+      passes: false,
+      blocking: true,
+      fresh: false,
+      stale: true,
+      ageMinutes,
+      freshnessThresholdMinutes,
+      targetBaseUrl,
+      requestedBaseUrl,
+      overallStatus: artifact.overallStatus,
+      failingScenarioIds,
+      incompleteScenarioIds,
+      message:
+        'launch smoke artifact is stale and must be refreshed before launch readiness can go green',
+    };
+  }
+
+  if (
+    artifact.overallStatus !== 'pass' ||
+    failingScenarioIds.length > 0 ||
+    incompleteScenarioIds.length > 0
+  ) {
+    const detailSegments: string[] = [];
+
+    if (failingScenarioIds.length > 0) {
+      detailSegments.push(`failing scenarios: ${failingScenarioIds.join(', ')}`);
+    }
+
+    if (incompleteScenarioIds.length > 0) {
+      detailSegments.push(`missing scenarios: ${incompleteScenarioIds.join(', ')}`);
+    }
+
+    return {
+      state: 'fresh_failing',
+      passes: false,
+      blocking: true,
+      fresh: true,
+      stale: false,
+      ageMinutes,
+      freshnessThresholdMinutes,
+      targetBaseUrl,
+      requestedBaseUrl,
+      overallStatus: artifact.overallStatus,
+      failingScenarioIds,
+      incompleteScenarioIds,
+      message: [
+        'launch smoke artifact is fresh but failing and blocks launch readiness',
+        detailSegments.length > 0 ? `(${detailSegments.join('; ')})` : '',
+      ]
+        .filter(Boolean)
+        .join(' '),
+    };
+  }
+
+  return {
+    state: 'fresh_passing',
+    passes: true,
+    blocking: false,
+    fresh: true,
+    stale: false,
+    ageMinutes,
+    freshnessThresholdMinutes,
+    targetBaseUrl,
+    requestedBaseUrl,
+    overallStatus: artifact.overallStatus,
+    failingScenarioIds: [],
+    incompleteScenarioIds: [],
+    message: 'launch smoke artifact is fresh and passing',
+  };
 }

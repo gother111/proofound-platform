@@ -10,11 +10,7 @@ import {
   normalizeLaunchBaseUrl,
 } from '../src/lib/launch/contracts';
 import {
-  getLaunchSmokeAgeMinutes,
-  getLaunchSmokeFreshnessThresholdMinutes,
-  getLaunchSmokeTargetBaseUrl,
-  hasPassingLaunchSmokeArtifact,
-  isLaunchSmokeArtifactForBaseUrl,
+  evaluateLaunchSmokeArtifact,
   validateLaunchSmokeArtifact,
 } from '../src/lib/launch/smoke-artifact';
 import { CLIENT_FEATURE_FLAG_RESPONSE_MAP } from '../src/lib/featureFlags';
@@ -124,38 +120,16 @@ function ensureLaunchSmokeArtifact() {
   }
 
   let artifact = readLaunchSmokeArtifact();
+  let evaluation = evaluateLaunchSmokeArtifact(artifact, { baseUrl: BASE_URL });
 
-  if (!isLaunchSmokeArtifactForBaseUrl(artifact, BASE_URL)) {
-    const artifactBaseUrl = getLaunchSmokeTargetBaseUrl(artifact) ?? 'unknown';
-    runLaunchSmokeRunner(
-      `artifact target (${artifactBaseUrl}) does not match requested BASE_URL (${BASE_URL})`
-    );
+  if (evaluation.state !== 'fresh_passing') {
+    runLaunchSmokeRunner(evaluation.message);
     artifact = readLaunchSmokeArtifact();
+    evaluation = evaluateLaunchSmokeArtifact(artifact, { baseUrl: BASE_URL });
   }
 
-  if (!hasPassingLaunchSmokeArtifact(artifact)) {
-    runLaunchSmokeRunner('artifact reports failing smoke checks');
-    artifact = readLaunchSmokeArtifact();
-  }
-
-  if (getLaunchSmokeAgeMinutes(artifact) > getLaunchSmokeFreshnessThresholdMinutes(artifact)) {
-    runLaunchSmokeRunner('artifact is stale');
-    artifact = readLaunchSmokeArtifact();
-  }
-
-  if (!hasPassingLaunchSmokeArtifact(artifact)) {
-    fail('launch smoke artifact reports failing checks');
-  }
-
-  if (!isLaunchSmokeArtifactForBaseUrl(artifact, BASE_URL)) {
-    const artifactBaseUrl = getLaunchSmokeTargetBaseUrl(artifact) ?? 'unknown';
-    fail(
-      `launch smoke artifact target (${artifactBaseUrl}) does not match requested BASE_URL (${BASE_URL})`
-    );
-  }
-
-  if (getLaunchSmokeAgeMinutes(artifact) > getLaunchSmokeFreshnessThresholdMinutes(artifact)) {
-    fail('launch smoke artifact is stale');
+  if (evaluation.state !== 'fresh_passing') {
+    fail(evaluation.message);
   }
 }
 
@@ -207,7 +181,7 @@ async function checkLaunchStatus() {
 
     if (data.readinessState === 'blocked') {
       fail(
-        `launch-status is blocked by fresh failing evidence. Resolve the failing monitor or corridor before launch. reasons=${reasons}`
+        `launch-status is blocked. Resolve the blocking monitor evidence before launch. reasons=${reasons}`
       );
     }
 

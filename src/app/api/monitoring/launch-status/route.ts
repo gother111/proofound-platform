@@ -85,7 +85,8 @@ function buildNotReadyReasons(
   if (freshFailingHttpMonitorKeys.length > 0) {
     reasons.push({
       code: 'fresh_failing_http_monitor',
-      message: 'Fresh failing HTTP monitor evidence is blocking launch readiness.',
+      message:
+        'Launch readiness is blocked by fresh failing HTTP monitor evidence. Fix the live monitor failure and rerun launch verification.',
       monitorKeys: freshFailingHttpMonitorKeys,
     });
   }
@@ -93,7 +94,8 @@ function buildNotReadyReasons(
   if (freshFailingSmokeMonitorKeys.length > 0) {
     reasons.push({
       code: 'fresh_failing_smoke_monitor',
-      message: 'A fresh failing launch corridor is blocking launch readiness.',
+      message:
+        'Launch readiness is blocked by a fresh failing smoke corridor. Fix the failing corridor and regenerate launch smoke evidence.',
       monitorKeys: freshFailingSmokeMonitorKeys,
     });
   }
@@ -101,7 +103,8 @@ function buildNotReadyReasons(
   if (staleHttpMonitorKeys.length > 0) {
     reasons.push({
       code: 'stale_http_evidence',
-      message: 'Persisted HTTP monitor evidence is stale and needs live refresh.',
+      message:
+        'Launch readiness is blocked because persisted HTTP monitor evidence is stale. Refresh the monitor evidence before launch.',
       monitorKeys: staleHttpMonitorKeys,
     });
   }
@@ -109,7 +112,8 @@ function buildNotReadyReasons(
   if (missingHttpMonitorKeys.length > 0) {
     reasons.push({
       code: 'missing_http_evidence',
-      message: 'Persisted HTTP monitor evidence is missing and launch readiness is unverified.',
+      message:
+        'Launch readiness is blocked because required HTTP monitor evidence is missing. Re-run launch monitors before launch.',
       monitorKeys: missingHttpMonitorKeys,
     });
   }
@@ -117,7 +121,8 @@ function buildNotReadyReasons(
   if (staleSmokeMonitorKeys.length > 0) {
     reasons.push({
       code: 'stale_smoke_artifact',
-      message: 'Launch smoke evidence is stale and must be refreshed before launch is ready.',
+      message:
+        'Launch readiness is blocked because launch smoke evidence is stale. Generate a fresh smoke artifact before launch.',
       monitorKeys: staleSmokeMonitorKeys,
     });
   }
@@ -125,7 +130,8 @@ function buildNotReadyReasons(
   if (missingSmokeMonitorKeys.length > 0) {
     reasons.push({
       code: 'missing_smoke_artifact',
-      message: 'Launch smoke evidence is missing and launch readiness is unverified.',
+      message:
+        'Launch readiness is blocked because launch smoke evidence is missing. Generate the smoke artifact before launch.',
       monitorKeys: missingSmokeMonitorKeys,
     });
   }

@@ -246,7 +246,7 @@ describe('launch synthetic monitor persistence', () => {
     expect(executeWithContext).toHaveBeenCalled();
   });
 
-  it('marks current smoke-backed monitors unverified when the smoke artifact itself is stale', async () => {
+  it('blocks current launch readiness when the smoke artifact itself is stale', async () => {
     (fs.readFile as any).mockResolvedValue(
       JSON.stringify(buildSmokeArtifact('2020-01-01T00:00:00.000Z'))
     );
@@ -273,7 +273,7 @@ describe('launch synthetic monitor persistence', () => {
     );
 
     expect(result.ok).toBe(false);
-    expect(result.readinessState).toBe('unverified');
+    expect(result.readinessState).toBe('blocked');
     expect(result.evidence.smokeArtifactAgeMinutes).toBe(61);
     expect(result.evidence.smokeFreshnessThresholdMinutes).toBe(60);
     expect(result.evidence.smokeFreshnessState).toBe('stale');
@@ -283,9 +283,9 @@ describe('launch synthetic monitor persistence', () => {
         .every(
           (row) =>
             row.observedState === 'smoke_artifact_stale' &&
-            row.status === 'degraded' &&
+            row.status === 'fail' &&
             row.freshnessState === 'stale' &&
-            row.blocking === false &&
+            row.blocking === true &&
             row.stale
         )
     ).toBe(true);
@@ -401,7 +401,7 @@ describe('launch synthetic monitor persistence', () => {
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
-  it('revalidates stale persisted HTTP failures even when smoke evidence is stale', async () => {
+  it('revalidates stale persisted HTTP failures while stale smoke evidence still keeps launch blocked', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async (input: string | URL) => {
@@ -444,11 +444,11 @@ describe('launch synthetic monitor persistence', () => {
           : definition.kind === 'smoke_artifact'
             ? buildPersistedStatusRow(definition.monitorKey, {
                 monitorGroup: 'synthetic-smoke',
-                status: 'degraded',
+                status: 'fail',
                 observedState: 'smoke_artifact_stale',
                 failureClass: 'smoke_artifact_stale',
                 freshnessState: 'stale',
-                blocking: false,
+                blocking: true,
                 stale: true,
                 ageMinutes: 179,
               })
@@ -467,7 +467,7 @@ describe('launch synthetic monitor persistence', () => {
 
     expect(result.source).toBe('live');
     expect(result.ok).toBe(false);
-    expect(result.readinessState).toBe('unverified');
+    expect(result.readinessState).toBe('blocked');
     expect(result.rows.find((row) => row.monitorKey === 'api_health')).toEqual(
       expect.objectContaining({
         status: 'pass',
@@ -478,7 +478,9 @@ describe('launch synthetic monitor persistence', () => {
     expect(
       result.rows
         .filter((row) => row.monitorGroup === 'synthetic-smoke')
-        .every((row) => row.freshnessState === 'stale' && row.blocking === false)
+        .every(
+          (row) => row.freshnessState === 'stale' && row.status === 'fail' && row.blocking === true
+        )
     ).toBe(true);
     expect(fetch).toHaveBeenCalledTimes(1);
   });
@@ -604,7 +606,7 @@ describe('launch synthetic monitor persistence', () => {
     );
   });
 
-  it('marks persisted readiness unverified when the current smoke artifact is stale even if persisted rows were green', async () => {
+  it('blocks persisted readiness when the current smoke artifact is stale even if persisted rows were green', async () => {
     (db.execute as any).mockResolvedValue(
       LAUNCH_MONITOR_DEFINITIONS.map((definition) => ({
         monitor_key: definition.monitorKey,
@@ -632,7 +634,7 @@ describe('launch synthetic monitor persistence', () => {
     );
 
     expect(result.ok).toBe(false);
-    expect(result.readinessState).toBe('unverified');
+    expect(result.readinessState).toBe('blocked');
     expect(result.evidence.smokeArtifactAgeMinutes).toBe(179);
     expect(result.evidence.smokeFreshnessState).toBe('stale');
     expect(
@@ -641,14 +643,14 @@ describe('launch synthetic monitor persistence', () => {
         .every(
           (row) =>
             row.observedState === 'smoke_artifact_stale' &&
-            row.status === 'degraded' &&
+            row.status === 'fail' &&
             row.freshnessState === 'stale' &&
-            row.blocking === false
+            row.blocking === true
         )
     ).toBe(true);
   });
 
-  it('marks persisted readiness unverified when the smoke artifact is missing', async () => {
+  it('blocks persisted readiness when the smoke artifact is missing', async () => {
     (db.execute as any).mockResolvedValue(
       LAUNCH_MONITOR_DEFINITIONS.filter((definition) => definition.kind === 'http').map(
         (definition) => ({
@@ -678,7 +680,7 @@ describe('launch synthetic monitor persistence', () => {
     );
 
     expect(result.ok).toBe(false);
-    expect(result.readinessState).toBe('unverified');
+    expect(result.readinessState).toBe('blocked');
     expect(result.evidence.smokeArtifactGeneratedAt).toBeNull();
     expect(result.evidence.smokeArtifactAgeMinutes).toBeNull();
     expect(result.evidence.smokeFreshnessState).toBe('missing');
@@ -689,9 +691,9 @@ describe('launch synthetic monitor persistence', () => {
         .every(
           (row) =>
             row.observedState === 'smoke_artifact_missing' &&
-            row.status === 'degraded' &&
+            row.status === 'fail' &&
             row.freshnessState === 'missing' &&
-            row.blocking === false
+            row.blocking === true
         )
     ).toBe(true);
   });
@@ -739,7 +741,9 @@ describe('launch synthetic monitor persistence', () => {
     expect(
       result.rows
         .filter((row) => row.monitorGroup === 'synthetic-smoke')
-        .every((row) => row.freshnessState === 'stale' && row.blocking === false)
+        .every(
+          (row) => row.freshnessState === 'stale' && row.status === 'fail' && row.blocking === true
+        )
     ).toBe(true);
   });
 

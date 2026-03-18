@@ -15,9 +15,8 @@ import {
   type LaunchMonitorStatus,
 } from '@/lib/launch/contracts';
 import {
-  getLaunchSmokeAgeMinutes,
+  evaluateLaunchSmokeArtifact,
   getLaunchSmokeCheckStatus,
-  getLaunchSmokeFreshnessThresholdMinutes,
   validateLaunchSmokeArtifact,
 } from '@/lib/launch/smoke-artifact';
 
@@ -32,6 +31,7 @@ export type SyntheticMonitorResult = {
   failureClass: string | null;
   details: Record<string, unknown>;
   checkedAt: string;
+  blocking?: boolean;
 };
 
 export type CurrentLaunchSyntheticStatus = {
@@ -176,7 +176,10 @@ function mapResultToStatusRow(
     checkedAt: result.checkedAt ?? null,
     ageMinutes,
     freshnessState,
-    blocking: freshnessState === 'fresh' && result.status !== 'pass',
+    blocking:
+      typeof result.blocking === 'boolean'
+        ? result.blocking
+        : freshnessState === 'fresh' && result.status !== 'pass',
     stale: freshnessState !== 'fresh',
     details: result.details,
   };
@@ -201,7 +204,7 @@ function buildMissingSmokeArtifactRows(
     const missingRow: LaunchSyntheticStatusRow = {
       monitorKey: definition.monitorKey,
       monitorGroup: definition.monitorGroup,
-      status: 'degraded',
+      status: 'fail',
       severity: definition.severity,
       responseTimeMs: existing?.responseTimeMs ?? 0,
       expectedState: definition.expectedState,
@@ -210,11 +213,12 @@ function buildMissingSmokeArtifactRows(
       checkedAt: existing?.checkedAt ?? nowIso,
       ageMinutes: existing?.ageMinutes ?? 0,
       freshnessState: 'missing',
-      blocking: false,
+      blocking: true,
       stale: true,
       details: {
         ...(existing?.details ?? {}),
         artifactPath,
+        smokeArtifactState: 'missing',
         smokeFreshnessState: 'missing',
       },
     };
@@ -375,34 +379,50 @@ function runSmokeArtifactMonitor(
   artifactPath: string,
   now: Date
 ): SyntheticMonitorResult {
+  const artifactEvaluation = evaluateLaunchSmokeArtifact(artifact, { now });
   const smokeCheck = getLaunchSmokeCheckStatus(artifact, definition.smokeScenarioId);
   const checkedAt = now.toISOString();
 
-  if (!smokeCheck) {
+  if (
+    !smokeCheck ||
+    artifactEvaluation.incompleteScenarioIds.includes(definition.smokeScenarioId)
+  ) {
     return {
       monitorKey: definition.monitorKey,
       monitorGroup: definition.monitorGroup,
-      status: 'degraded',
+      status: 'fail',
       severity: definition.severity,
       responseTimeMs: null,
       expectedState: definition.expectedState,
       observedState: 'smoke_artifact_missing',
       failureClass: 'smoke_artifact_missing',
-      details: { artifactPath },
+      details: {
+        artifactPath,
+        artifactSchemaVersion: artifact.schemaVersion,
+        artifactGeneratedAt: artifact.generatedAt,
+        artifactAgeMinutes: artifactEvaluation.ageMinutes,
+        freshnessThresholdMinutes: artifactEvaluation.freshnessThresholdMinutes,
+        smokeArtifactState: 'missing',
+        smokeFreshnessState: 'missing',
+        smokeMessage: 'Launch smoke artifact is missing required corridor evidence.',
+      },
       checkedAt,
+      blocking: true,
     };
   }
 
-  const artifactAgeMinutes = getLaunchSmokeAgeMinutes(artifact, now);
-  const freshnessThresholdMinutes = getLaunchSmokeFreshnessThresholdMinutes(artifact);
-  const stale = artifactAgeMinutes > freshnessThresholdMinutes;
+  const stale = artifactEvaluation.state === 'stale';
+  const artifactDeclaredFailing =
+    artifactEvaluation.state === 'fresh_failing' &&
+    artifactEvaluation.failingScenarioIds.length === 0 &&
+    artifactEvaluation.incompleteScenarioIds.length === 0;
   const status = stale
-    ? 'degraded'
-    : smokeCheck.status === 'pass'
-      ? 'pass'
-      : smokeCheck.status === 'degraded'
-        ? 'degraded'
-        : 'fail';
+    ? 'fail'
+    : artifactDeclaredFailing
+      ? 'fail'
+      : smokeCheck.status === 'pass'
+        ? 'pass'
+        : smokeCheck.status;
 
   return {
     monitorKey: definition.monitorKey,
@@ -411,7 +431,13 @@ function runSmokeArtifactMonitor(
     severity: definition.severity,
     responseTimeMs: smokeCheck.durationMs,
     expectedState: definition.expectedState,
-    observedState: stale ? 'smoke_artifact_stale' : smokeCheck.expectedState,
+    observedState: stale
+      ? 'smoke_artifact_stale'
+      : artifactDeclaredFailing
+        ? 'smoke_artifact_check_failed'
+        : status === 'pass'
+          ? smokeCheck.expectedState
+          : 'smoke_artifact_check_failed',
     failureClass: stale
       ? 'smoke_artifact_stale'
       : status === 'pass'
@@ -421,12 +447,16 @@ function runSmokeArtifactMonitor(
       artifactPath,
       artifactSchemaVersion: artifact.schemaVersion,
       artifactGeneratedAt: artifact.generatedAt,
-      artifactAgeMinutes,
-      freshnessThresholdMinutes,
+      artifactAgeMinutes: artifactEvaluation.ageMinutes,
+      freshnessThresholdMinutes: artifactEvaluation.freshnessThresholdMinutes,
+      smokeArtifactState: artifactEvaluation.state,
       smokeStatus: smokeCheck.status,
       smokeMessage: smokeCheck.message ?? null,
+      artifactMessage: artifactEvaluation.message,
+      smokeFreshnessState: stale ? 'stale' : 'fresh',
     },
     checkedAt,
+    blocking: stale || status !== 'pass',
   };
 }
 
@@ -478,10 +508,9 @@ export async function runLaunchSyntheticMonitors(
   const results: SyntheticMonitorResult[] = [];
   const smokeArtifact = await readLaunchSmokeArtifactFromFile(params.artifactPath);
   const generatedAt = now;
-  const smokeFreshnessThresholdMinutes = getLaunchSmokeFreshnessThresholdMinutes(smokeArtifact);
-  const smokeArtifactAgeMinutes = getLaunchSmokeAgeMinutes(smokeArtifact, generatedAt);
+  const smokeArtifactEvaluation = evaluateLaunchSmokeArtifact(smokeArtifact, { now: generatedAt });
   const smokeFreshnessState: Exclude<LaunchSmokeFreshnessState, 'missing'> =
-    smokeArtifactAgeMinutes > smokeFreshnessThresholdMinutes ? 'stale' : 'fresh';
+    smokeArtifactEvaluation.stale ? 'stale' : 'fresh';
 
   for (const definition of LAUNCH_MONITOR_DEFINITIONS) {
     if (definition.kind === 'http') {
@@ -536,8 +565,8 @@ export async function runLaunchSyntheticMonitors(
       artifactPath: params.artifactPath,
       smokeArtifactSchemaVersion: smokeArtifact.schemaVersion,
       smokeArtifactGeneratedAt: smokeArtifact.generatedAt,
-      smokeArtifactAgeMinutes,
-      smokeFreshnessThresholdMinutes,
+      smokeArtifactAgeMinutes: smokeArtifactEvaluation.ageMinutes,
+      smokeFreshnessThresholdMinutes: smokeArtifactEvaluation.freshnessThresholdMinutes,
       smokeFreshnessState,
       persisted,
     },
@@ -666,12 +695,12 @@ export async function getPersistedLaunchSyntheticStatus(
 
   try {
     const artifact = await readLaunchSmokeArtifactFromFile(params.artifactPath);
+    const artifactEvaluation = evaluateLaunchSmokeArtifact(artifact, { now });
     smokeArtifactSchemaVersion = artifact.schemaVersion;
     smokeArtifactGeneratedAt = artifact.generatedAt;
-    smokeArtifactAgeMinutes = getLaunchSmokeAgeMinutes(artifact, now);
-    smokeFreshnessThresholdMinutes = getLaunchSmokeFreshnessThresholdMinutes(artifact);
-    smokeFreshnessState =
-      smokeArtifactAgeMinutes > smokeFreshnessThresholdMinutes ? 'stale' : 'fresh';
+    smokeArtifactAgeMinutes = artifactEvaluation.ageMinutes;
+    smokeFreshnessThresholdMinutes = artifactEvaluation.freshnessThresholdMinutes;
+    smokeFreshnessState = artifactEvaluation.stale ? 'stale' : 'fresh';
 
     smokeRows = getSmokeArtifactMonitorDefinitions().reduce<LaunchSyntheticStatusRow[]>(
       (acc, definition) => {
