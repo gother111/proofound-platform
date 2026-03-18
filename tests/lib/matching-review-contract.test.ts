@@ -114,7 +114,7 @@ describe('matching review contract', () => {
 
   it('renders deterministic explanation sections from reason codes and manual overrides', () => {
     const rendered = renderExplanationFromReasonCodes({
-      reasonCodes: ['skills_strong', 'verification_ready'],
+      reasonCodes: ['skills_strong', 'verification_gap', 'verification_ready'],
       ledgerEntries: [
         {
           category: 'manual_override',
@@ -132,6 +132,7 @@ describe('matching review contract', () => {
     expect(rendered.summary).toContain(
       'Evidence points to a strong skills fit for this assignment.'
     );
+    expect(rendered.summary).toContain('Verification requirements are not fully met yet.');
     expect(rendered.sections.manual_override).toContain(
       'A reviewer manually shortlisted this candidate.'
     );

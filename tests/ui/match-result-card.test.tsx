@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { MatchResultCard } from '@/components/matching/MatchResultCard';
+import { MATCH_EXPLAINER_TRIGGER_LABEL } from '@/lib/matching/explainer-contract';
 
 vi.mock('framer-motion', () => ({
   motion: {
@@ -99,7 +100,7 @@ describe('MatchResultCard', () => {
     expect(screen.getByText('Fresh')).toBeInTheDocument();
     expect(screen.getByText('Verified proof signal present')).toBeInTheDocument();
     expect(screen.getByText('Reason-coded fit summary')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /why this match/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: MATCH_EXPLAINER_TRIGGER_LABEL })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Shortlist' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Pass' })).toBeInTheDocument();
     expect(screen.queryByText('82% Match')).not.toBeInTheDocument();

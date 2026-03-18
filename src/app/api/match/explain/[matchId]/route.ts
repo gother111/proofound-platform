@@ -1,8 +1,8 @@
 /**
- * Match Explanation API
+ * Match explanation API for the launch review corridor.
  *
  * GET /api/match/explain/[matchId]
- * Returns detailed breakdown of match scoring for transparency.
+ * Returns proof-first, privacy-safe explanation data for blind-by-default review.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -21,6 +21,7 @@ import {
   normalizeFairnessStatus,
   renderExplanationFromReasonCodes,
 } from '@/lib/matching/review-contract';
+import { buildMatchExplainerContract } from '@/lib/matching/explainer-contract';
 import { resolveEffectiveScoreState } from '@/lib/matching/match-score-contract';
 
 type SkillRequirement = {
@@ -335,6 +336,7 @@ export async function GET(
     const subscores = (match.subscores_json as Record<string, number> | null) || {};
 
     const explanation = {
+      explainer: buildMatchExplainerContract(),
       matchId: match.id,
       compositeScore: Number(match.score) || 0,
       scoreTotal: match.score_total,

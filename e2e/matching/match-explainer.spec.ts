@@ -25,25 +25,25 @@ test.describe('Match Explainer Modal', () => {
   });
 
   test('should open match explainer modal', async ({ page }) => {
-    // Click "Why this match?" button on first match
+    // Click the proof-first explainer trigger on first match
     const whyButton = page
       .locator('[data-testid="match-card"]')
       .first()
-      .locator('button:has-text("Why")');
+      .locator('[data-testid="match-explainer-trigger"]');
 
     if (await whyButton.isVisible()) {
       await whyButton.click();
 
       // Verify modal opens
-      await expect(page.locator('text=Why This Match?')).toBeVisible();
-      await expect(page.locator('text=Overall Match Score')).toBeVisible();
+      await expect(page.getByTestId('match-explainer-title')).toHaveText('Why This Proof Match?');
+      await expect(page.locator('text=Comparative score detail')).toBeVisible();
     }
   });
 
   test('should display score breakdown', async ({ page }) => {
     // Open explainer for first match
     const matchCard = page.locator('[data-testid="match-card"]').first();
-    await matchCard.locator('button:has-text("Why")').click();
+    await matchCard.locator('[data-testid="match-explainer-trigger"]').click();
 
     // Verify overall score is shown
     const scoreElement = page.locator('[data-testid="overall-score"]');
@@ -59,7 +59,7 @@ test.describe('Match Explainer Modal', () => {
 
   test('should show skills breakdown in Skills tab', async ({ page }) => {
     const matchCard = page.locator('[data-testid="match-card"]').first();
-    await matchCard.locator('button:has-text("Why")').click();
+    await matchCard.locator('[data-testid="match-explainer-trigger"]').click();
 
     // Click Skills tab
     await page.click('button[role="tab"]:has-text("Skills")');
@@ -80,7 +80,7 @@ test.describe('Match Explainer Modal', () => {
 
   test('should show purpose alignment in Purpose tab', async ({ page }) => {
     const matchCard = page.locator('[data-testid="match-card"]').first();
-    await matchCard.locator('button:has-text("Why")').click();
+    await matchCard.locator('[data-testid="match-explainer-trigger"]').click();
 
     // Click Purpose tab
     await page.click('button[role="tab"]:has-text("Purpose")');
@@ -96,7 +96,7 @@ test.describe('Match Explainer Modal', () => {
 
   test('should show constraints match in Constraints tab', async ({ page }) => {
     const matchCard = page.locator('[data-testid="match-card"]').first();
-    await matchCard.locator('button:has-text("Why")').click();
+    await matchCard.locator('[data-testid="match-explainer-trigger"]').click();
 
     // Click Constraints tab
     await page.click('button[role="tab"]:has-text("Constraints")');
@@ -115,21 +115,21 @@ test.describe('Match Explainer Modal', () => {
 
   test('should close modal on Got it button', async ({ page }) => {
     const matchCard = page.locator('[data-testid="match-card"]').first();
-    await matchCard.locator('button:has-text("Why")').click();
+    await matchCard.locator('[data-testid="match-explainer-trigger"]').click();
 
     // Wait for modal
-    await expect(page.locator('text=Why This Match?')).toBeVisible();
+    await expect(page.getByTestId('match-explainer-title')).toHaveText('Why This Proof Match?');
 
     // Click "Got it" button
     await page.click('button:has-text("Got it")');
 
     // Verify modal closes
-    await expect(page.locator('text=Why This Match?')).not.toBeVisible();
+    await expect(page.getByTestId('match-explainer-title')).not.toBeVisible();
   });
 
   test('should show PAC (Purpose-Alignment Contribution) explanation', async ({ page }) => {
     const matchCard = page.locator('[data-testid="match-card"]').first();
-    await matchCard.locator('button:has-text("Why")').click();
+    await matchCard.locator('[data-testid="match-explainer-trigger"]').click();
 
     // Look for PAC explanation
     const pacExplanation = page.locator('text=/PAC|Purpose-Alignment Contribution/i');
@@ -141,7 +141,7 @@ test.describe('Match Explainer Modal', () => {
 
   test('should show rank information if available', async ({ page }) => {
     const matchCard = page.locator('[data-testid="match-card"]').first();
-    await matchCard.locator('button:has-text("Why")').click();
+    await matchCard.locator('[data-testid="match-explainer-trigger"]').click();
 
     // Check for ranking display
     const rankElement = page.locator('text=/Top \d+|#\d+ of \d+/');
@@ -151,16 +151,23 @@ test.describe('Match Explainer Modal', () => {
     }
   });
 
-  test('should show PAC (Purpose-Alignment Contribution) in Purpose tab with breakdown', async ({ page }) => {
+  test('should show PAC (Purpose-Alignment Contribution) in Purpose tab with breakdown', async ({
+    page,
+  }) => {
     const matchCard = page.locator('[data-testid="match-card"]').first();
-    await matchCard.locator('button:has-text("Why")').click();
+    await matchCard.locator('[data-testid="match-explainer-trigger"]').click();
 
     // Click Purpose tab
     await page.click('button[role="tab"]:has-text("Purpose")');
 
     // Verify PAC breakdown elements
-    const pacElements = page.locator('text=/PAC|Purpose-Alignment Contribution|mission|vision|values|causes/i');
-    const hasPACElements = await pacElements.first().isVisible().catch(() => false);
+    const pacElements = page.locator(
+      'text=/PAC|Purpose-Alignment Contribution|mission|vision|values|causes/i'
+    );
+    const hasPACElements = await pacElements
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     // PAC may or may not be visible depending on match
     expect(typeof hasPACElements === 'boolean').toBeTruthy();
@@ -168,7 +175,7 @@ test.describe('Match Explainer Modal', () => {
 
   test('should show rank bands when exact rank unavailable', async ({ page }) => {
     const matchCard = page.locator('[data-testid="match-card"]').first();
-    await matchCard.locator('button:has-text("Why")').click();
+    await matchCard.locator('[data-testid="match-explainer-trigger"]').click();
 
     // Look for rank bands (e.g., "Top 5" instead of exact "#3")
     const rankBands = page.locator('text=/Top \d+|top \d+ candidates/i');

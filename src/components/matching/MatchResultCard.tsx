@@ -13,6 +13,10 @@ import { VerificationGatesWarning } from './VerificationGatesWarning';
 import { RankDisplay } from './RankDisplay';
 import { ConsentToShareDialog } from './ConsentToShareDialog';
 import { apiFetch } from '@/lib/api/fetch';
+import {
+  MATCH_EXPLAINER_TEST_IDS,
+  MATCH_EXPLAINER_TRIGGER_LABEL,
+} from '@/lib/matching/explainer-contract';
 import { motion } from 'framer-motion';
 
 interface MatchResultCardProps {
@@ -266,6 +270,8 @@ export function MatchResultCard({
                   className="text-xs gap-1.5 text-proofound-forest hover:bg-proofound-forest/5"
                   onClick={fetchMatchExplanation}
                   disabled={isLoadingExplanation}
+                  data-testid={MATCH_EXPLAINER_TEST_IDS.trigger}
+                  aria-haspopup="dialog"
                 >
                   {isLoadingExplanation ? (
                     <>
@@ -273,7 +279,7 @@ export function MatchResultCard({
                       Loading...
                     </>
                   ) : (
-                    'Why this match?'
+                    MATCH_EXPLAINER_TRIGGER_LABEL
                   )}
                 </Button>
               )
@@ -429,6 +435,8 @@ export function MatchResultCard({
                     className="text-xs gap-1.5 text-proofound-forest hover:bg-proofound-forest/5"
                     onClick={fetchMatchExplanation}
                     disabled={isLoadingExplanation}
+                    data-testid={MATCH_EXPLAINER_TEST_IDS.trigger}
+                    aria-haspopup="dialog"
                   >
                     {isLoadingExplanation ? (
                       <>
@@ -436,7 +444,7 @@ export function MatchResultCard({
                         Loading...
                       </>
                     ) : (
-                      'Why this match?'
+                      MATCH_EXPLAINER_TRIGGER_LABEL
                     )}
                   </Button>
                 )}

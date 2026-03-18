@@ -1,14 +1,10 @@
 /**
- * Match Explainer Modal (Flow I-18)
+ * Match explainer modal for the launch corridor.
  *
- * PRD Requirement: Show "Why you match" with full transparency
- * - Composite score breakdown
- * - PAC (Purpose-Alignment Contribution) percentage
- * - Skills overlap with levels
- * - Values & Causes alignment
- * - Rank transparency (Top X or band)
- *
- * Implements PRD Part 5 Feature F4: Matching Hub transparency
+ * The explanation stays proof-first and privacy-safe:
+ * - strongest proof and fit rationale lead
+ * - blind-by-default review stays explicit
+ * - comparative score detail stays secondary
  */
 
 'use client';
@@ -17,6 +13,7 @@ import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -24,6 +21,7 @@ import {
 import {
   Drawer,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
@@ -44,6 +42,10 @@ import {
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UI_VOCABULARY } from '@/lib/copy/vocabulary';
+import {
+  buildMatchExplainerContract,
+  MATCH_EXPLAINER_TEST_IDS,
+} from '@/lib/matching/explainer-contract';
 import { motion } from 'framer-motion';
 
 interface MatchExplainerProps {
@@ -144,6 +146,7 @@ export function MatchExplainerModal({
   trigger,
 }: MatchExplainerProps) {
   const [open, setOpen] = useState(false);
+  const explainerContract = buildMatchExplainerContract();
 
   // Calculate percentages
   const overallPercent = Math.round(compositeScore * 100);
@@ -178,9 +181,11 @@ export function MatchExplainerModal({
       variant="ghost"
       size="sm"
       className="text-xs gap-1.5 text-proofound-forest hover:bg-proofound-forest/5"
+      data-testid={MATCH_EXPLAINER_TEST_IDS.trigger}
+      aria-haspopup="dialog"
     >
       <Info className="w-4 h-4" />
-      Why this match?
+      {explainerContract.triggerLabel}
     </Button>
   );
 
@@ -193,13 +198,19 @@ export function MatchExplainerModal({
     >
       <div className="space-y-6 py-4 px-4 md:px-0 flex-1 flex flex-col">
         <DialogHeader className="md:px-0 px-2 text-left">
-          <DialogTitle className="flex items-center gap-2 text-xl">
+          <DialogTitle
+            className="flex items-center gap-2 text-xl"
+            data-testid={MATCH_EXPLAINER_TEST_IDS.title}
+          >
             <Zap className="w-6 h-6 text-proofound-forest" />
-            Proof-Backed Fit Review
+            {explainerContract.title}
           </DialogTitle>
-          <p className="text-sm text-muted-foreground mt-1">
-            Review proof, reasoning, and only then the comparative score detail
-          </p>
+          <DialogDescription
+            className="mt-1 text-sm text-muted-foreground"
+            data-testid={MATCH_EXPLAINER_TEST_IDS.description}
+          >
+            {explainerContract.dialogDescription}
+          </DialogDescription>
         </DialogHeader>
 
         {reviewCard ? (
@@ -264,6 +275,10 @@ export function MatchExplainerModal({
         {reasonSummary.length > 0 ? (
           <div className="rounded-xl border border-proofound-stone bg-white p-4">
             <h4 className="mb-3 text-sm font-semibold text-foreground">Privacy-safe explanation</h4>
+            <p className="mb-3 text-sm text-muted-foreground">
+              Blind-by-default review keeps identity-bearing details hidden until the candidate
+              consents to reveal.
+            </p>
             <ul className="space-y-2 text-sm text-foreground">
               {reasonSummary.map((item, index) => (
                 <li key={`${matchId}-reason-summary-${index}`} className="flex items-start gap-2">
@@ -420,9 +435,9 @@ export function MatchExplainerModal({
 
             <div className="bg-japandi-bg rounded-lg p-4 border border-proofound-stone mt-4">
               <p className="text-xs leading-relaxed text-foreground">
-                <strong className="font-semibold">How it works:</strong> Your composite score is a
-                weighted combination of these factors. Higher scores in key areas (Skills + Purpose)
-                boost your overall match.
+                <strong className="font-semibold">How it works:</strong> This comparative score
+                summarizes proof strength, fit rationale, and practical constraints after the
+                privacy-safe review context above.
               </p>
             </div>
           </TabsContent>
@@ -634,7 +649,10 @@ export function MatchExplainerModal({
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-transparent border-none shadow-none p-0 sm:max-w-2xl [&>button]:right-6 [&>button]:top-6 [&>button]:text-muted-foreground [&>button]:z-50 [&>button]:bg-background/50 [&>button]:backdrop-blur-sm [&>button]:rounded-full [&>button]:p-1.5 [&>button]:hover:bg-background">
+        <DialogContent
+          aria-label={explainerContract.title}
+          className="max-w-2xl max-h-[90vh] overflow-y-auto bg-transparent border-none shadow-none p-0 sm:max-w-2xl [&>button]:right-6 [&>button]:top-6 [&>button]:text-muted-foreground [&>button]:z-50 [&>button]:bg-background/50 [&>button]:backdrop-blur-sm [&>button]:rounded-full [&>button]:p-1.5 [&>button]:hover:bg-background"
+        >
           {renderModalContentBody()}
         </DialogContent>
       </Dialog>
@@ -644,7 +662,14 @@ export function MatchExplainerModal({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>{trigger || defaultTrigger}</DrawerTrigger>
-      <DrawerContent className="max-h-[90vh] bg-transparent border-none p-0 pt-4">
+      <DrawerContent
+        aria-label={explainerContract.title}
+        className="max-h-[90vh] bg-transparent border-none p-0 pt-4"
+      >
+        <DrawerHeader className="sr-only">
+          <DrawerTitle>{explainerContract.title}</DrawerTitle>
+          <DrawerDescription>{explainerContract.dialogDescription}</DrawerDescription>
+        </DrawerHeader>
         <div className="overflow-y-auto w-full h-full rounded-t-xl overflow-hidden shadow-2xl mt-4">
           {renderModalContentBody()}
         </div>

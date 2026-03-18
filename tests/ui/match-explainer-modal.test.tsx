@@ -3,6 +3,12 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { MatchExplainerModal } from '@/components/matching/MatchExplainerModal';
+import {
+  MATCH_EXPLAINER_DIALOG_DESCRIPTION,
+  MATCH_EXPLAINER_TEST_IDS,
+  MATCH_EXPLAINER_TITLE,
+  MATCH_EXPLAINER_TRIGGER_LABEL,
+} from '@/lib/matching/explainer-contract';
 
 vi.mock('@/hooks/use-responsive-modal-mode', () => ({
   useResponsiveModalMode: () => true,
@@ -10,9 +16,30 @@ vi.mock('@/hooks/use-responsive-modal-mode', () => ({
 
 vi.mock('@/components/ui/dialog', () => ({
   Dialog: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DialogContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DialogTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
+  DialogContent: ({
+    children,
+    ...props
+  }: React.HTMLAttributes<HTMLDivElement> & { children: React.ReactNode }) => (
+    <div {...props}>{children}</div>
+  ),
+  DialogHeader: ({
+    children,
+    ...props
+  }: React.HTMLAttributes<HTMLDivElement> & { children: React.ReactNode }) => (
+    <div {...props}>{children}</div>
+  ),
+  DialogTitle: ({
+    children,
+    ...props
+  }: React.HTMLAttributes<HTMLHeadingElement> & { children: React.ReactNode }) => (
+    <h2 {...props}>{children}</h2>
+  ),
+  DialogDescription: ({
+    children,
+    ...props
+  }: React.HTMLAttributes<HTMLParagraphElement> & { children: React.ReactNode }) => (
+    <p {...props}>{children}</p>
+  ),
   DialogTrigger: ({ children, asChild }: { children: React.ReactElement; asChild?: boolean }) => {
     if (asChild) {
       return children;
@@ -23,9 +50,30 @@ vi.mock('@/components/ui/dialog', () => ({
 
 vi.mock('@/components/ui/drawer', () => ({
   Drawer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DrawerContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DrawerHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DrawerTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
+  DrawerContent: ({
+    children,
+    ...props
+  }: React.HTMLAttributes<HTMLDivElement> & { children: React.ReactNode }) => (
+    <div {...props}>{children}</div>
+  ),
+  DrawerHeader: ({
+    children,
+    ...props
+  }: React.HTMLAttributes<HTMLDivElement> & { children: React.ReactNode }) => (
+    <div {...props}>{children}</div>
+  ),
+  DrawerTitle: ({
+    children,
+    ...props
+  }: React.HTMLAttributes<HTMLHeadingElement> & { children: React.ReactNode }) => (
+    <h2 {...props}>{children}</h2>
+  ),
+  DrawerDescription: ({
+    children,
+    ...props
+  }: React.HTMLAttributes<HTMLParagraphElement> & { children: React.ReactNode }) => (
+    <p {...props}>{children}</p>
+  ),
   DrawerTrigger: ({ children, asChild }: { children: React.ReactElement; asChild?: boolean }) => {
     if (asChild) {
       return children;
@@ -95,15 +143,27 @@ describe('MatchExplainerModal', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /why this match/i }));
+    fireEvent.click(screen.getByRole('button', { name: MATCH_EXPLAINER_TRIGGER_LABEL }));
 
-    expect(screen.getByText('Proof-Backed Fit Review')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: MATCH_EXPLAINER_TITLE })).toBeInTheDocument();
+    expect(screen.getByText(MATCH_EXPLAINER_DIALOG_DESCRIPTION)).toBeInTheDocument();
+    expect(screen.getByTestId(MATCH_EXPLAINER_TEST_IDS.title)).toHaveTextContent(
+      MATCH_EXPLAINER_TITLE
+    );
+    expect(screen.getByTestId(MATCH_EXPLAINER_TEST_IDS.description)).toHaveTextContent(
+      MATCH_EXPLAINER_DIALOG_DESCRIPTION
+    );
     expect(screen.getByText('Strongest relevant proof')).toBeInTheDocument();
     expect(
       screen.getByText('Built a blind review corridor around proof-backed evaluation.')
     ).toBeInTheDocument();
     expect(screen.getByText('Reason-coded fit summary')).toBeInTheDocument();
     expect(screen.getByText('Privacy-safe explanation')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Blind-by-default review keeps identity-bearing details hidden until the candidate consents to reveal.'
+      )
+    ).toBeInTheDocument();
     expect(
       screen.getAllByText('Evidence points to a strong skills fit for this assignment.')
     ).toHaveLength(2);
@@ -114,6 +174,11 @@ describe('MatchExplainerModal', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText('Exact rank is hidden while privacy or fairness limits apply.')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'This comparative score summarizes proof strength, fit rationale, and practical constraints after the privacy-safe review context above.'
+      )
     ).toBeInTheDocument();
   });
 });

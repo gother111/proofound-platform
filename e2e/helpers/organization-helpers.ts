@@ -173,10 +173,12 @@ export async function createAssignmentViaUI(
 
     if (await nextButton.isVisible()) {
       const buttonText = await nextButton.textContent();
-      
-      if (buttonText?.toLowerCase().includes('publish') || 
-          buttonText?.toLowerCase().includes('create') ||
-          buttonText?.toLowerCase().includes('save')) {
+
+      if (
+        buttonText?.toLowerCase().includes('publish') ||
+        buttonText?.toLowerCase().includes('create') ||
+        buttonText?.toLowerCase().includes('save')
+      ) {
         await nextButton.click();
         await page.waitForTimeout(2000);
         break;
@@ -198,11 +200,7 @@ export async function createAssignmentViaUI(
 /**
  * View matches for a specific assignment
  */
-export async function viewMatchesForAssignment(
-  page: Page,
-  orgSlug: string,
-  assignmentId: string
-) {
+export async function viewMatchesForAssignment(page: Page, orgSlug: string, assignmentId: string) {
   // Navigate to matching page
   await navigateToOrgMatching(page, orgSlug);
 
@@ -303,11 +301,13 @@ export async function shortlistCandidate(page: Page, matchIndex = 0) {
     await page.waitForTimeout(1000);
   } else {
     // Try dropdown menu
-    const menuButton = matchCard.locator('button[aria-label*="menu"], button[aria-label*="more"]').first();
+    const menuButton = matchCard
+      .locator('button[aria-label*="menu"], button[aria-label*="more"]')
+      .first();
     if (await menuButton.isVisible()) {
       await menuButton.click();
       await page.waitForTimeout(500);
-      
+
       const shortlistOption = page.locator('text=/shortlist/i').first();
       if (await shortlistOption.isVisible()) {
         await shortlistOption.click();
@@ -324,16 +324,16 @@ export async function openOrgMatchExplainer(page: Page, matchIndex = 0) {
   const matchCard = getOrgMatchCard(page, matchIndex);
 
   const whyButton = matchCard
-    .locator('button:has-text("Why"), button:has-text("Why this match"), [data-testid="why-match"]')
+    .locator(
+      '[data-testid="match-explainer-trigger"], button:has-text("Why This Proof Match?"), [data-testid="why-match"]'
+    )
     .first();
 
   if (await whyButton.isVisible()) {
     await whyButton.click();
-    await page.waitForSelector('text=/Why This Match|Match Score|Overall Score/i', {
-      timeout: 5000,
-    });
+    await page.getByTestId('match-explainer-title').waitFor({ state: 'visible', timeout: 5000 });
   } else {
-    throw new Error('Could not find "Why this match" button');
+    throw new Error('Could not find match explainer trigger');
   }
 }
 
@@ -344,7 +344,10 @@ export async function setMatchingWeights(
   page: Page,
   preset: 'mission-first' | 'skills-first' | 'balanced' = 'balanced'
 ) {
-  const presetSelect = page.locator('select, [role="combobox"]').filter({ hasText: /preset|strategy|weights/i }).first();
+  const presetSelect = page
+    .locator('select, [role="combobox"]')
+    .filter({ hasText: /preset|strategy|weights/i })
+    .first();
 
   if (await presetSelect.isVisible()) {
     await presetSelect.selectOption(preset);
@@ -404,14 +407,19 @@ export async function scheduleInterviewViaUI(
   }
 
   if (options.type) {
-    const typeSelect = page.getByLabel(/type|format/i).or(page.locator('select[name="type"]')).first();
+    const typeSelect = page
+      .getByLabel(/type|format/i)
+      .or(page.locator('select[name="type"]'))
+      .first();
     if (await typeSelect.isVisible()) {
       await typeSelect.selectOption(options.type);
     }
   }
 
   // Submit
-  const submitButton = page.getByRole('button', { name: /schedule|send invitation|confirm/i }).first();
+  const submitButton = page
+    .getByRole('button', { name: /schedule|send invitation|confirm/i })
+    .first();
   if (await submitButton.isVisible()) {
     await submitButton.click();
     await page.waitForTimeout(2000);
@@ -437,9 +445,10 @@ export async function verifyOrgProfileSetup(page: Page, orgSlug: string): Promis
   await navigateToOrgHome(page, orgSlug);
 
   // Check for profile completion indicators
-  const incompleteWarning = page.locator('text=/complete profile|set up profile|missing information/i');
+  const incompleteWarning = page.locator(
+    'text=/complete profile|set up profile|missing information/i'
+  );
   const hasWarning = await incompleteWarning.isVisible().catch(() => false);
 
   return !hasWarning;
 }
-

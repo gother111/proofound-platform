@@ -434,13 +434,13 @@ test.describe('Strict Authenticated Org Corridor', () => {
     await page.goto(`/app/o/${organization.slug}/matching`);
     await dismissBlockingOverlays(page);
 
-    const explanationTrigger = page.locator('button:has-text("Why this match?")').first();
+    const explanationTrigger = page.getByTestId('match-explainer-trigger').first();
     await expect(explanationTrigger).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText(candidate.displayName)).toHaveCount(0);
     await expect(page.getByText(candidate.email)).toHaveCount(0);
 
     await dismissBlockingOverlays(page);
-    const whyThisMatchHeading = page.getByRole('heading', { name: /Why This Match\?/i });
+    const whyThisMatchHeading = page.getByTestId('match-explainer-title');
     let explainerOpened = false;
     for (let attempt = 0; attempt < 2 && !explainerOpened; attempt += 1) {
       if (attempt === 0) {
@@ -451,6 +451,7 @@ test.describe('Strict Authenticated Org Corridor', () => {
 
       try {
         await expect(whyThisMatchHeading).toBeVisible({ timeout: 3_000 });
+        await expect(whyThisMatchHeading).toHaveText('Why This Proof Match?');
         explainerOpened = true;
       } catch {
         explainerOpened = false;

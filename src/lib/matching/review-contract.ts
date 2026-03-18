@@ -1628,7 +1628,11 @@ export function renderExplanationFromReasonCodes(input: {
   return {
     explanationVersion: CANONICAL_EXPLANATION_VERSION,
     sections,
-    summary: [...sections.positive_match, ...sections.workflow_decision].slice(0, 3),
+    summary: [
+      ...sections.positive_match,
+      ...sections.constraint_mismatch,
+      ...sections.workflow_decision,
+    ].slice(0, 3),
   };
 }
 

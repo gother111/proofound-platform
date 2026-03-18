@@ -30,14 +30,15 @@ test.describe('Match Transparency Features', () => {
     // Wait for matches to load
     await page.waitForSelector('[data-testid="match-card"]', { timeout: 10000 });
 
-    // Click "Why this match?" button
-    await page.click('button:has-text("Why this match?")');
+    // Click the proof-first match explainer trigger
+    await page.getByTestId('match-explainer-trigger').click();
 
     // Verify explainer modal appears
     await expect(page.locator('[role="dialog"]')).toBeVisible();
+    await expect(page.getByTestId('match-explainer-title')).toHaveText('Why This Proof Match?');
 
     // Check for score breakdown
-    await expect(page.locator('text=Match Score Breakdown')).toBeVisible();
+    await expect(page.locator('text=Comparative score detail')).toBeVisible();
 
     // Check for rank display
     await expect(page.locator('text=Your Rank')).toBeVisible();

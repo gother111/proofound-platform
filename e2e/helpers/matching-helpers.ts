@@ -48,19 +48,19 @@ export function getMatchCard(page: Page, index: number) {
  */
 export async function openMatchExplainer(page: Page, matchIndex = 0) {
   const matchCard = getMatchCard(page, matchIndex);
-  
+
   // Try different button selectors
-  const whyButton = matchCard.locator(
-    'button:has-text("Why"), button:has-text("Why this match"), [data-testid="why-match"]'
-  ).first();
-  
+  const whyButton = matchCard
+    .locator(
+      '[data-testid="match-explainer-trigger"], button:has-text("Why This Proof Match?"), [data-testid="why-match"]'
+    )
+    .first();
+
   if (await whyButton.isVisible()) {
     await whyButton.click();
-    await page.waitForSelector('text=/Why This Match|Match Score|Overall Score/i', {
-      timeout: 5000,
-    });
+    await page.getByTestId('match-explainer-title').waitFor({ state: 'visible', timeout: 5000 });
   } else {
-    throw new Error('Could not find "Why this match" button');
+    throw new Error('Could not find match explainer trigger');
   }
 }
 
@@ -69,11 +69,11 @@ export async function openMatchExplainer(page: Page, matchIndex = 0) {
  */
 export async function verifyMatchScore(page: Page, matchIndex = 0) {
   const matchCard = getMatchCard(page, matchIndex);
-  
+
   // Look for score indicators (percentage, number, etc.)
   const scorePattern = /\d+%|\d+\/\d+|score|match/i;
   const scoreElement = matchCard.locator(`text=/${scorePattern}/`).first();
-  
+
   await expect(scoreElement).toBeVisible();
 }
 
@@ -82,12 +82,10 @@ export async function verifyMatchScore(page: Page, matchIndex = 0) {
  */
 export async function verifyPACBadge(page: Page, matchIndex = 0) {
   const matchCard = getMatchCard(page, matchIndex);
-  
+
   // Look for PAC-related text
-  const pacIndicator = matchCard.locator(
-    'text=/PAC|Purpose-Alignment|Values Alignment/i'
-  ).first();
-  
+  const pacIndicator = matchCard.locator('text=/PAC|Purpose-Alignment|Values Alignment/i').first();
+
   // PAC may or may not be visible depending on match
   return await pacIndicator.isVisible();
 }
@@ -97,11 +95,13 @@ export async function verifyPACBadge(page: Page, matchIndex = 0) {
  */
 export async function clickInterested(page: Page, matchIndex = 0) {
   const matchCard = getMatchCard(page, matchIndex);
-  
-  const interestedButton = matchCard.locator(
-    'button:has-text("Interested"), button:has-text("Introduce"), button:has-text("Express Interest")'
-  ).first();
-  
+
+  const interestedButton = matchCard
+    .locator(
+      'button:has-text("Interested"), button:has-text("Introduce"), button:has-text("Express Interest")'
+    )
+    .first();
+
   if (await interestedButton.isVisible()) {
     await interestedButton.click();
     // Wait for consent dialog or success
@@ -116,11 +116,11 @@ export async function clickInterested(page: Page, matchIndex = 0) {
  */
 export async function clickPass(page: Page, matchIndex = 0) {
   const matchCard = getMatchCard(page, matchIndex);
-  
-  const passButton = matchCard.locator(
-    'button:has-text("Pass"), button:has-text("Hide"), button:has-text("Dismiss")'
-  ).first();
-  
+
+  const passButton = matchCard
+    .locator('button:has-text("Pass"), button:has-text("Hide"), button:has-text("Dismiss")')
+    .first();
+
   if (await passButton.isVisible()) {
     await passButton.click();
     await page.waitForTimeout(500);
@@ -134,9 +134,9 @@ export async function clickPass(page: Page, matchIndex = 0) {
  */
 export async function clickSnooze(page: Page, matchIndex = 0) {
   const matchCard = getMatchCard(page, matchIndex);
-  
+
   const snoozeButton = matchCard.locator('button:has-text("Snooze")').first();
-  
+
   if (await snoozeButton.isVisible()) {
     await snoozeButton.click();
     // Wait for snooze dialog
@@ -151,29 +151,34 @@ export async function clickSnooze(page: Page, matchIndex = 0) {
  */
 export async function filterByCauses(page: Page, causes: string[]) {
   // Look for filter button or panel
-  const filterButton = page.locator(
-    'button:has-text("Filter"), [data-testid="filter-button"], button[aria-label*="filter"]'
-  ).first();
-  
+  const filterButton = page
+    .locator(
+      'button:has-text("Filter"), [data-testid="filter-button"], button[aria-label*="filter"]'
+    )
+    .first();
+
   if (await filterButton.isVisible()) {
     await filterButton.click();
     await page.waitForTimeout(500);
   }
-  
+
   // Select causes
   for (const cause of causes) {
-    const causeCheckbox = page.locator(`text=${cause}`).locator('..').locator('input[type="checkbox"]');
+    const causeCheckbox = page
+      .locator(`text=${cause}`)
+      .locator('..')
+      .locator('input[type="checkbox"]');
     if (await causeCheckbox.isVisible()) {
       await causeCheckbox.check();
     }
   }
-  
+
   // Apply filters
   const applyButton = page.locator('button:has-text("Apply"), button:has-text("Filter")').first();
   if (await applyButton.isVisible()) {
     await applyButton.click();
   }
-  
+
   await page.waitForTimeout(1000);
 }
 
@@ -181,20 +186,20 @@ export async function filterByCauses(page: Page, causes: string[]) {
  * Apply filter by location mode
  */
 export async function filterByLocationMode(page: Page, mode: 'remote' | 'hybrid' | 'onsite') {
-  const filterButton = page.locator(
-    'button:has-text("Filter"), [data-testid="filter-button"]'
-  ).first();
-  
+  const filterButton = page
+    .locator('button:has-text("Filter"), [data-testid="filter-button"]')
+    .first();
+
   if (await filterButton.isVisible()) {
     await filterButton.click();
     await page.waitForTimeout(500);
   }
-  
+
   const modeOption = page.locator(`text=/${mode}/i`).first();
   if (await modeOption.isVisible()) {
     await modeOption.click();
   }
-  
+
   await page.waitForTimeout(1000);
 }
 
@@ -203,13 +208,13 @@ export async function filterByLocationMode(page: Page, mode: 'remote' | 'hybrid'
  */
 export async function verifyMatchExplainerTabs(page: Page) {
   const tabs = ['Overview', 'Skills', 'Purpose', 'Constraints'];
-  
+
   for (const tab of tabs) {
     const tabButton = page.locator(`button[role="tab"]:has-text("${tab}")`);
     if (await tabButton.isVisible()) {
       await tabButton.click();
       await page.waitForTimeout(500);
-      
+
       // Verify tab content is visible
       const tabContent = page.locator(`[role="tabpanel"]:has-text("${tab}")`);
       // Content may vary, just verify tab is clickable
@@ -224,7 +229,7 @@ export async function verifyRankDisplay(page: Page) {
   // Look for rank indicators
   const rankPattern = /Top \d+|#\d+ of \d+|rank|position/i;
   const rankElement = page.locator(`text=/${rankPattern}/`).first();
-  
+
   return await rankElement.isVisible();
 }
 
@@ -235,7 +240,7 @@ export async function checkMatchingProfileSetup(page: Page): Promise<boolean> {
   const setupWizard = page.locator(
     'text=/Set up your matching profile|Create matching profile|Matching Profile Setup/i'
   );
-  
+
   return await setupWizard.isVisible();
 }
 
@@ -257,7 +262,7 @@ export async function completeMatchingProfileSetup(
 ) {
   // Wait for setup wizard
   await page.waitForSelector('text=/matching profile|focus areas/i', { timeout: 5000 });
-  
+
   // Select focus areas if provided
   if (options.focusAreas) {
     for (const area of options.focusAreas) {
@@ -267,7 +272,7 @@ export async function completeMatchingProfileSetup(
       }
     }
   }
-  
+
   // Set weights if provided
   if (options.weights) {
     // Look for weight sliders or inputs
@@ -278,16 +283,18 @@ export async function completeMatchingProfileSetup(
       }
     }
   }
-  
+
   // Set constraints if provided
   if (options.constraints) {
     if (options.constraints.location) {
-      const locationInput = page.locator('input[name*="location"], input[placeholder*="location"]').first();
+      const locationInput = page
+        .locator('input[name*="location"], input[placeholder*="location"]')
+        .first();
       if (await locationInput.isVisible()) {
         await locationInput.fill(options.constraints.location);
       }
     }
-    
+
     if (options.constraints.workMode) {
       const workModeSelect = page.locator(`text=/${options.constraints.workMode}/i`).first();
       if (await workModeSelect.isVisible()) {
@@ -295,9 +302,11 @@ export async function completeMatchingProfileSetup(
       }
     }
   }
-  
+
   // Click save/complete
-  const saveButton = page.locator('button:has-text("Save"), button:has-text("Complete"), button:has-text("Finish")').first();
+  const saveButton = page
+    .locator('button:has-text("Save"), button:has-text("Complete"), button:has-text("Finish")')
+    .first();
   if (await saveButton.isVisible()) {
     await saveButton.click();
     await page.waitForTimeout(2000);
@@ -309,7 +318,7 @@ export async function completeMatchingProfileSetup(
  */
 export async function verifyVerificationGates(page: Page, matchIndex = 0): Promise<boolean> {
   const matchCard = getMatchCard(page, matchIndex);
-  
+
   const gatesText = matchCard.locator('text=/verification|gate|required/i');
   return await gatesText.isVisible();
 }
@@ -321,4 +330,3 @@ export async function checkNearMatches(page: Page): Promise<boolean> {
   const nearMatchText = page.locator('text=/near match|partial match|good fit/i');
   return await nearMatchText.isVisible();
 }
-

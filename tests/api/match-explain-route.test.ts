@@ -1,5 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
+import {
+  MATCH_EXPLAINER_DIALOG_DESCRIPTION,
+  MATCH_EXPLAINER_TITLE,
+  MATCH_EXPLAINER_TRIGGER_ARIA_LABEL,
+  MATCH_EXPLAINER_TRIGGER_LABEL,
+  MATCH_EXPLAINER_TEST_IDS,
+} from '@/lib/matching/explainer-contract';
 
 const mocks = vi.hoisted(() => ({
   dbExecute: vi.fn(),
@@ -206,6 +213,13 @@ describe('GET /api/match/explain/[matchId]', () => {
     expect(body.rankMode).toBe('exact');
     expect(body.exactRankAvailable).toBe(true);
     expect(body.rankBand).toBe('Top tier');
+    expect(body.explainer).toEqual({
+      title: MATCH_EXPLAINER_TITLE,
+      triggerLabel: MATCH_EXPLAINER_TRIGGER_LABEL,
+      triggerAriaLabel: MATCH_EXPLAINER_TRIGGER_ARIA_LABEL,
+      dialogDescription: MATCH_EXPLAINER_DIALOG_DESCRIPTION,
+      testIds: MATCH_EXPLAINER_TEST_IDS,
+    });
   });
 
   it('returns a privacy-safe proof-first review card and keeps rank detail fairness-safe', async () => {
