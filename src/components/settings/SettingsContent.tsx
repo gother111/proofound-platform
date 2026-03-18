@@ -6,7 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { PrivacyOverview } from './PrivacyOverview';
 import { VerificationStatus } from './VerificationStatus';
-import { LinkedInConnect } from './LinkedInConnect';
 import { EmailManager } from './EmailManager';
 import { PasswordChangeForm } from './PasswordChangeForm';
 import { resetTour } from '@/actions/tour';
@@ -21,7 +20,7 @@ interface SettingsContentProps {
   userId: string;
 }
 
-const ALLOWED_TABS = ['account', 'integrations', 'notifications', 'privacy'] as const;
+const ALLOWED_TABS = ['account', 'interviews', 'notifications', 'privacy'] as const;
 type AllowedTab = (typeof ALLOWED_TABS)[number];
 
 export function SettingsContent({ userId }: SettingsContentProps) {
@@ -102,7 +101,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-white dark:bg-card border border-proofound-stone dark:border-border">
             <TabsTrigger value="account">Account</TabsTrigger>
-            <TabsTrigger value="integrations">Integrations</TabsTrigger>
+            <TabsTrigger value="interviews">Interview Scheduling</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="privacy">Privacy & Data</TabsTrigger>
           </TabsList>
@@ -217,29 +216,16 @@ export function SettingsContent({ userId }: SettingsContentProps) {
             </Card>
           </TabsContent>
 
-          {/* Integrations Tab */}
-          <TabsContent value="integrations" className="space-y-6">
+          {/* Interview Scheduling Tab */}
+          <TabsContent value="interviews" className="space-y-6">
             <Card variant="bento" className="border-proofound-stone dark:border-border rounded-2xl">
               <CardHeader>
                 <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
-                  Connected Accounts
+                  Interview Scheduling
                 </CardTitle>
                 <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-                  Connect external accounts to import data and enhance your profile
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <LinkedInConnect />
-              </CardContent>
-            </Card>
-
-            <Card variant="bento" className="border-proofound-stone dark:border-border rounded-2xl">
-              <CardHeader>
-                <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
-                  Video Conferencing
-                </CardTitle>
-                <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-                  Connect your calendar for automated interview scheduling
+                  Connect Google Meet for automatic links, or use manual meeting links when you
+                  prefer to stay unconnected.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">

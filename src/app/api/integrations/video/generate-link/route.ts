@@ -1,8 +1,7 @@
 /**
  * Meeting Link Generation API
  *
- * POST - Generate a Zoom or Google Meet link for an interview
- * Uses real OAuth integrations stored in user_video_integrations table
+ * Generates Google Meet links for launch-safe interview scheduling
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -14,7 +13,7 @@ import { z } from 'zod';
 export const dynamic = 'force-dynamic';
 
 const GenerateLinkSchema = z.object({
-  provider: z.enum(['zoom', 'google']),
+  provider: z.literal('google'),
   interviewId: z.string().uuid().optional(),
   title: z.string().min(1).max(200).default('Proofound Interview'),
   duration: z.number().min(15).max(180).default(30), // minutes
@@ -49,17 +48,6 @@ export async function POST(req: NextRequest) {
     const { provider, interviewId, title, duration, startTime, timezone, attendeeEmails } =
       validationResult.data;
 
-    if (provider === 'zoom') {
-      return NextResponse.json(
-        {
-          error: 'Zoom integration is coming soon',
-          code: 'ZOOM_COMING_SOON',
-          message: 'Zoom is temporarily unavailable. Please use Google Meet or manual links.',
-        },
-        { status: 400 }
-      );
-    }
-
     const dbProvider = 'google_meet';
 
     // Fetch user's video integration
@@ -80,7 +68,7 @@ export async function POST(req: NextRequest) {
         {
           error: 'Google Meet not connected',
           code: 'NO_INTEGRATION',
-          message: 'Please connect your Google account first in Settings > Integrations.',
+          message: 'Please connect your Google account first in Settings > Interview Scheduling.',
         },
         { status: 400 }
       );
@@ -101,7 +89,7 @@ export async function POST(req: NextRequest) {
             error: 'Token expired',
             code: 'TOKEN_EXPIRED',
             message:
-              'Your Google connection has expired. Please reconnect in Settings > Integrations.',
+              'Your Google connection has expired. Please reconnect in Settings > Interview Scheduling.',
           },
           { status: 400 }
         );
@@ -133,7 +121,7 @@ export async function POST(req: NextRequest) {
             error: 'Token refresh failed',
             code: 'TOKEN_REFRESH_FAILED',
             message:
-              'Failed to refresh your Google token. Please reconnect in Settings > Integrations.',
+              'Failed to refresh your Google token. Please reconnect in Settings > Interview Scheduling.',
           },
           { status: 400 }
         );

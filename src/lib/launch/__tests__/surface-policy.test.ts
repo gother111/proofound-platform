@@ -204,12 +204,13 @@ describe('launch surface policy', () => {
     expect(classifyLaunchApiPath('/api/monitoring/perf-status')).toBe('active_launch_path');
     expect(classifyLaunchApiPath('/api/expertise/taxonomy')).toBe('active_launch_path');
     expect(classifyLaunchApiPath('/api/expertise/jd-to-l4')).toBe('active_launch_path');
+    expect(classifyLaunchApiPath('/api/expertise/user-skills')).toBe('active_launch_path');
     expect(classifyLaunchApiPath('/api/integrations/video/status')).toBe('active_launch_path');
     expect(classifyLaunchApiPath('/api/integrations/video/generate-link')).toBe(
       'active_launch_path'
     );
     expect(classifyLaunchApiPath('/api/integrations/google/connect')).toBe('active_launch_path');
-    expect(classifyLaunchApiPath('/api/integrations/zoom/callback')).toBe('active_launch_path');
+    expect(classifyLaunchApiPath('/api/integrations/zoom/callback')).toBe('archived');
     expect(getArchivedApiPolicy('/api/integrations/video/status')).toBeNull();
   });
 

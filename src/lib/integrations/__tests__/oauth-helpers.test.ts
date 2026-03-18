@@ -20,7 +20,7 @@ describe('oauth helpers', () => {
       defaultType: 'zoom_oauth',
     });
 
-    expect(html).toContain('/app/i/settings?tab=integrations\\u0026success=zoom_connected');
+    expect(html).toContain('/app/i/settings?tab=interviews\\u0026success=zoom_connected');
     expect(html).toContain('zoom_connected');
   });
 
@@ -103,7 +103,7 @@ describe('oauth helpers', () => {
 
   it('falls back to default integration path for invalid return path', () => {
     expect(resolveIntegrationReturnPath('https://evil.example')).toBe(
-      '/app/i/settings?tab=integrations'
+      '/app/i/settings?tab=interviews'
     );
   });
 });

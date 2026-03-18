@@ -31,9 +31,9 @@ describe('video integrations auth route', () => {
     } as any);
 
     const response = await GET(
-      new NextRequest('http://localhost/api/integrations/video/zoom/auth'),
+      new NextRequest('http://localhost/api/integrations/video/google/auth'),
       {
-        params: Promise.resolve({ provider: 'zoom' }),
+        params: Promise.resolve({ provider: 'google' }),
       }
     );
 
@@ -52,7 +52,7 @@ describe('video integrations auth route', () => {
   it('returns provider auth url with sanitized returnTo for google', async () => {
     const response = await GET(
       new NextRequest(
-        'http://localhost/api/integrations/video/google/auth?returnTo=%2Fapp%2Fo%2Facme%2Fsettings%2Fintegrations'
+        'http://localhost/api/integrations/video/google/auth?returnTo=%2Fapp%2Fo%2Facme%2Fsettings%2Finterviews'
       ),
       {
         params: Promise.resolve({ provider: 'google' }),
@@ -62,14 +62,14 @@ describe('video integrations auth route', () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
       authUrl:
-        '/api/integrations/google/connect?returnTo=%2Fapp%2Fo%2Facme%2Fsettings%2Fintegrations',
+        '/api/integrations/google/connect?returnTo=%2Fapp%2Fo%2Facme%2Fsettings%2Finterviews',
     });
   });
 
-  it('returns coming soon for zoom provider', async () => {
+  it('rejects non-launch providers', async () => {
     const response = await GET(
       new NextRequest(
-        'http://localhost/api/integrations/video/zoom/auth?returnTo=%2Fapp%2Fo%2Facme%2Fsettings%2Fintegrations'
+        'http://localhost/api/integrations/video/zoom/auth?returnTo=%2Fapp%2Fo%2Facme%2Fsettings%2Finterviews'
       ),
       {
         params: Promise.resolve({ provider: 'zoom' }),
@@ -78,7 +78,7 @@ describe('video integrations auth route', () => {
 
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toMatchObject({
-      code: 'ZOOM_COMING_SOON',
+      error: 'Invalid provider',
     });
   });
 
@@ -94,8 +94,7 @@ describe('video integrations auth route', () => {
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
-      authUrl:
-        '/api/integrations/google/connect?returnTo=%2Fapp%2Fi%2Fsettings%3Ftab%3Dintegrations',
+      authUrl: '/api/integrations/google/connect?returnTo=%2Fapp%2Fi%2Fsettings%3Ftab%3Dinterviews',
     });
   });
 });

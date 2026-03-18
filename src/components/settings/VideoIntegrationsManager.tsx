@@ -10,7 +10,7 @@ import { useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/api/fetch';
 
 interface Integration {
-  provider: 'zoom' | 'google';
+  provider: 'google';
   connected: boolean;
   connectedAt?: string | null;
   expiresAt?: string | null;
@@ -21,7 +21,7 @@ interface VideoIntegrationsManagerProps {
   returnTo?: string;
 }
 
-const SETTINGS_TAB_PATH = '/app/i/settings?tab=integrations';
+const SETTINGS_TAB_PATH = '/app/i/settings?tab=interviews';
 const GOOGLE_VERIFICATION_HELP =
   'Google blocked access because the Proofound app is not verified for your account. Ask an admin to add your Google account as a test user (Testing mode) or complete Google app verification (Production mode), then try again.';
 
@@ -52,7 +52,7 @@ export function VideoIntegrationsManager({
 }: VideoIntegrationsManagerProps) {
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [loading, setLoading] = useState(true);
-  const [connecting, setConnecting] = useState<string | null>(null);
+  const [connecting, setConnecting] = useState(false);
   const searchParams = useSearchParams();
 
   const cleanupPath = returnTo;
@@ -60,15 +60,11 @@ export function VideoIntegrationsManager({
   useEffect(() => {
     fetchIntegrations();
 
-    // Handle OAuth callbacks when users return to the settings tab.
     const success = searchParams?.get('success');
     const error = searchParams?.get('error');
     const message = searchParams?.get('message');
 
-    if (success === 'zoom_connected') {
-      toast.success('Zoom connected successfully');
-      window.history.replaceState({}, '', cleanupPath);
-    } else if (success === 'google_connected') {
+    if (success === 'google_connected') {
       toast.success('Google Meet connected successfully');
       window.history.replaceState({}, '', cleanupPath);
     } else if (error) {
@@ -82,7 +78,10 @@ export function VideoIntegrationsManager({
       const response = await fetch('/api/integrations/video');
       if (response.ok) {
         const data = await response.json();
-        setIntegrations(data.integrations || []);
+        const googleOnly = ((data.integrations || []) as Integration[]).filter(
+          (integration) => integration.provider === 'google'
+        );
+        setIntegrations(googleOnly);
       }
     } catch (error) {
       console.error('Failed to fetch integrations:', error);
@@ -91,12 +90,11 @@ export function VideoIntegrationsManager({
     }
   };
 
-  const handleConnect = async (provider: 'zoom' | 'google') => {
-    setConnecting(provider);
+  const handleConnect = async () => {
+    setConnecting(true);
     try {
-      // Endpoint returns a canonical provider connect path.
       const authParams = new URLSearchParams({ returnTo: cleanupPath });
-      const response = await fetch(`/api/integrations/video/${provider}/auth?${authParams}`);
+      const response = await fetch(`/api/integrations/video/google/auth?${authParams}`);
       if (!response.ok) {
         throw new Error('Failed to initiate connection');
       }
@@ -104,23 +102,19 @@ export function VideoIntegrationsManager({
       const data = await response.json();
       window.location.href = data.authUrl;
     } catch (error) {
-      console.error(`Failed to connect ${provider}:`, error);
-      toast.error(`Failed to connect ${provider === 'zoom' ? 'Zoom' : 'Google Calendar'}`);
-      setConnecting(null);
+      console.error('Failed to connect Google Meet:', error);
+      toast.error('Failed to connect Google Calendar');
+      setConnecting(false);
     }
   };
 
-  const handleDisconnect = async (provider: 'zoom' | 'google') => {
-    if (
-      !confirm(
-        `Are you sure you want to disconnect ${provider === 'zoom' ? 'Zoom' : 'Google Calendar'}?`
-      )
-    ) {
+  const handleDisconnect = async () => {
+    if (!confirm('Are you sure you want to disconnect Google Calendar?')) {
       return;
     }
 
     try {
-      const response = await apiFetch(`/api/integrations/video/${provider}`, {
+      const response = await apiFetch('/api/integrations/video/google', {
         method: 'DELETE',
       });
 
@@ -128,22 +122,18 @@ export function VideoIntegrationsManager({
         throw new Error('Failed to disconnect');
       }
 
-      toast.success(`${provider === 'zoom' ? 'Zoom' : 'Google Calendar'} disconnected`);
+      toast.success('Google Calendar disconnected');
       await fetchIntegrations();
     } catch (error) {
-      console.error(`Failed to disconnect ${provider}:`, error);
-      toast.error(`Failed to disconnect ${provider === 'zoom' ? 'Zoom' : 'Google Calendar'}`);
+      console.error('Failed to disconnect Google Calendar:', error);
+      toast.error('Failed to disconnect Google Calendar');
     }
   };
 
-  const byProvider = useMemo(() => {
-    const zoom = integrations.find((i) => i.provider === 'zoom');
-    const google = integrations.find((i) => i.provider === 'google');
-    return {
-      zoom,
-      google,
-    };
-  }, [integrations]);
+  const googleIntegration = useMemo(
+    () => integrations.find((integration) => integration.provider === 'google') ?? null,
+    [integrations]
+  );
 
   const formatConnectedDate = (date?: string | null) => {
     if (!date) return null;
@@ -156,7 +146,7 @@ export function VideoIntegrationsManager({
         className={variant === 'standalone' ? 'py-12 text-center text-muted-foreground' : 'py-4'}
       >
         <span className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
-          Loading integrations...
+          Loading interview scheduling setup...
         </span>
       </div>
     );
@@ -168,68 +158,17 @@ export function VideoIntegrationsManager({
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Video className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">Zoom</CardTitle>
-                <CardDescription>Zoom automation is temporarily unavailable</CardDescription>
-              </div>
-            </div>
-            <Badge variant="secondary" className="bg-amber-100 text-amber-900 border-amber-200">
-              Coming Soon
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-amber-900">
-                Zoom interview automation is paused while we stabilize provider connectivity.
-                Schedule with Google Meet integration or use a manual meeting link.
-              </p>
-            </div>
-          </div>
-
-          {byProvider.zoom?.connected ? (
-            <>
-              <p className="text-sm text-[#6B6760] dark:text-muted-foreground">
-                Previously connected since {formatConnectedDate(byProvider.zoom.connectedAt)}.
-                Existing links remain valid, but new Zoom automation is paused.
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => handleDisconnect('zoom')}
-                className="border-red-300 text-red-700 hover:bg-red-50"
-              >
-                Disconnect Zoom
-              </Button>
-            </>
-          ) : (
-            <p className="text-xs text-[#6B6760] dark:text-muted-foreground">
-              Zoom connection is disabled for now. We will re-enable this once OAuth stability is
-              restored.
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card variant="bento" className="border-proofound-stone dark:border-border">
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
               <div className="p-2 bg-red-100 rounded-lg">
                 <Video className="h-6 w-6 text-red-600" />
               </div>
               <div>
                 <CardTitle className="text-lg">Google Meet</CardTitle>
                 <CardDescription>
-                  Create Meet links via Google Calendar automatically
+                  Create Google Meet links automatically when you schedule interviews
                 </CardDescription>
               </div>
             </div>
-            {byProvider.google?.connected ? (
+            {googleIntegration?.connected ? (
               <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
                 <CheckCircle2 className="w-3 h-3 mr-1" />
                 Connected
@@ -243,10 +182,17 @@ export function VideoIntegrationsManager({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {byProvider.google?.connected ? (
+          <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+            <p className="text-xs text-blue-900">
+              Launch corridor note: Google Meet is the only connected provider in scope. If you do
+              not connect it, you can still schedule interviews with a manual meeting link.
+            </p>
+          </div>
+
+          {googleIntegration?.connected ? (
             <>
               <p className="text-sm text-muted-foreground dark:text-muted-foreground">
-                Connected since {formatConnectedDate(byProvider.google.connectedAt)}
+                Connected since {formatConnectedDate(googleIntegration.connectedAt)}
               </p>
               <p className="text-xs text-muted-foreground dark:text-muted-foreground">
                 Proofound will create Google Meet meetings from your connected Google account when
@@ -254,7 +200,7 @@ export function VideoIntegrationsManager({
               </p>
               <Button
                 variant="outline"
-                onClick={() => handleDisconnect('google')}
+                onClick={handleDisconnect}
                 className="border-red-300 text-red-700 hover:bg-red-50"
               >
                 Disconnect Google Calendar
@@ -266,8 +212,8 @@ export function VideoIntegrationsManager({
                 <div className="flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                   <p className="text-xs text-amber-900">
-                    Optional integration. If not connected, you can still schedule interviews using
-                    a manual meeting link.
+                    Google Meet is optional. If not connected, schedule interviews with a manual
+                    meeting link instead.
                   </p>
                 </div>
               </div>
@@ -278,11 +224,11 @@ export function VideoIntegrationsManager({
                 </p>
               </div>
               <Button
-                onClick={() => handleConnect('google')}
-                disabled={connecting === 'google'}
+                onClick={handleConnect}
+                disabled={connecting}
                 className="bg-red-600 text-white hover:bg-red-700"
               >
-                {connecting === 'google' ? 'Connecting...' : 'Connect Google Calendar'}
+                {connecting ? 'Connecting...' : 'Connect Google Calendar'}
               </Button>
             </>
           )}
@@ -296,9 +242,9 @@ export function VideoIntegrationsManager({
       <div className="min-h-screen bg-japandi-bg">
         <div className="mx-auto max-w-4xl px-6 py-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-semibold text-foreground mb-2">Integrations</h1>
+            <h1 className="text-3xl font-semibold text-foreground mb-2">Interview Scheduling</h1>
             <p className="text-muted-foreground">
-              Connect video calling platforms for interview scheduling
+              Connect Google Meet for interview scheduling or stay with manual meeting links.
             </p>
           </div>
           {content}

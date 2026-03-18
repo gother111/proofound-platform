@@ -18,7 +18,6 @@ describe('VideoProviderSelector connect routing', () => {
       vi.fn(async () => ({
         ok: true,
         json: async () => ({
-          zoom: { connected: false },
           google: { connected: false },
         }),
       }))
@@ -30,14 +29,12 @@ describe('VideoProviderSelector connect routing', () => {
     toastErrorMock.mockReset();
   });
 
-  it('uses canonical provider connect routes and keeps zoom disabled', async () => {
+  it('uses the canonical Google provider connect route without showing Zoom', async () => {
     const openMock = vi.spyOn(window, 'open').mockImplementation(() => null);
 
     render(<VideoProviderSelector selectedProvider={null} onSelectProvider={vi.fn()} />);
 
     expect(screen.queryByRole('button', { name: /connect zoom/i })).not.toBeInTheDocument();
-    const comingSoonLabels = await screen.findAllByText(/coming soon/i);
-    expect(comingSoonLabels.length).toBeGreaterThan(0);
     const googleButton = await screen.findByRole('button', { name: /connect google meet/i });
 
     fireEvent.click(googleButton);

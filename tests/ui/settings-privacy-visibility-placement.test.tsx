@@ -31,10 +31,6 @@ vi.mock('@/components/settings/VerificationStatus', () => ({
   VerificationStatus: () => <div data-testid="verification-status" />,
 }));
 
-vi.mock('@/components/settings/LinkedInConnect', () => ({
-  LinkedInConnect: () => <div data-testid="linkedin-connect" />,
-}));
-
 vi.mock('@/components/settings/EmailManager', () => ({
   EmailManager: () => <div data-testid="email-manager" />,
 }));

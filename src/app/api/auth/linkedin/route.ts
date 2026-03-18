@@ -26,7 +26,7 @@ function buildFailureRedirect(request: NextRequest, context: LinkedInOAuthContex
   }
 
   return new URL(
-    `/app/i/settings?tab=integrations&error=linkedin_auth_failed&message=${encodeURIComponent(
+    `/app/i/settings?tab=account&error=linkedin_auth_failed&message=${encodeURIComponent(
       'Failed to initiate LinkedIn connection'
     )}`,
     request.url

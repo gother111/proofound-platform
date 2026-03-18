@@ -135,7 +135,7 @@ export function classifyGoogleScheduleError(
     return {
       code: 'GOOGLE_RECONNECT_REQUIRED',
       error: 'Google authorization expired',
-      message: 'Reconnect Google Calendar in Settings > Integrations and retry.',
+      message: 'Reconnect Google Calendar in Settings > Interview Scheduling and retry.',
       shouldDisconnectIntegration: true,
       providerMessage,
     };
@@ -153,7 +153,7 @@ export function classifyGoogleScheduleError(
       code: 'GOOGLE_SCOPE_MISSING',
       error: 'Google Calendar scope missing',
       message:
-        'Your Google connection is missing required Calendar permissions. Reconnect Google Calendar in Settings > Integrations and retry.',
+        'Your Google connection is missing required Calendar permissions. Reconnect Google Calendar in Settings > Interview Scheduling and retry.',
       shouldDisconnectIntegration: false,
       providerMessage,
     };

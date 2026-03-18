@@ -93,7 +93,7 @@ describe('google integration oauth redirect resolution', () => {
         {
           headers: {
             cookie:
-              'google_oauth_state=state-ok; google_oauth_return_to=/app/i/settings?tab=integrations',
+              'google_oauth_state=state-ok; google_oauth_return_to=/app/i/settings?tab=interviews',
           },
         }
       )

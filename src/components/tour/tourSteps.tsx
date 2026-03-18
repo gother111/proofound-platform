@@ -23,10 +23,9 @@ import { UI_VOCABULARY } from '@/lib/copy/vocabulary';
  * 3. Reveal Overview
  * 4. Jump to Profile (empty state)
  * 5. Show Public Portfolio
- * 6. Show Expertise Hub
- * 7. Show Matching Profile
- * 8. Show Settings
- * 9. Suggest next actions
+ * 6. Show Matching Profile
+ * 7. Show Settings
+ * 8. Suggest next actions
  */
 export const individualTourSteps: Step[] = [
   {
@@ -105,24 +104,6 @@ export const individualTourSteps: Step[] = [
     disableBeacon: true,
   },
   {
-    target: '[data-tour="expertise-link"]',
-    content: (
-      <div className="space-y-2">
-        <h3 className="text-base font-semibold text-foreground">Expertise Hub</h3>
-        <p className="text-sm text-muted-foreground">
-          Add your skills in Expertise Atlas. The more specific your skills and proof, the better
-          your matches will be.
-        </p>
-        <p className="text-xs text-muted-foreground pt-2 border-t border-proofound-stone">
-          <strong>Tip:</strong> Add concrete skill examples with proof (for example, "React Hooks"
-          instead of only "JavaScript").
-        </p>
-      </div>
-    ),
-    placement: 'right',
-    disableBeacon: true,
-  },
-  {
     target: '[data-tour="matching-link"]',
     content: (
       <div className="space-y-2">
@@ -160,7 +141,8 @@ export const individualTourSteps: Step[] = [
         <h2 className="text-lg font-semibold text-foreground">You're all set! 🎉</h2>
         <p className="text-sm text-muted-foreground">
           Start with your <strong>Public Portfolio</strong>: publish, copy, and share your link.
-          Then strengthen it with Profile and Expertise details.
+          Then strengthen it with Profile details, proof-backed skills, and qualified matching
+          preferences.
         </p>
         <div className="pt-3 border-t border-proofound-stone">
           <p className="text-xs text-muted-foreground">
@@ -169,7 +151,7 @@ export const individualTourSteps: Step[] = [
           <ul className="text-xs text-muted-foreground list-disc list-inside space-y-1 mt-1">
             <li>Share your Public Portfolio link</li>
             <li>Add one proof-backed signal you want to show publicly</li>
-            <li>Add recent skills and one browse preference</li>
+            <li>Add one proof-linked skill and one matching preference</li>
             <li>Complete stronger proof and constraints for qualified introductions</li>
           </ul>
         </div>
@@ -204,7 +186,8 @@ export const organizationTourSteps: Step[] = [
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-foreground">Organization Navigation</h3>
         <p className="text-sm text-muted-foreground">
-          Your sidebar helps you manage assignments, review candidates, and track team activity.
+          Your sidebar helps you manage assignments, review candidates, and track the narrow launch
+          hiring corridor.
         </p>
       </div>
     ),

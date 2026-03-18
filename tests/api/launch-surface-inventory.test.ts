@@ -13,9 +13,16 @@ const REQUIRED_ACTIVE_ROUTES = [
   '/api/analytics/web-vitals',
   '/api/assignments',
   '/api/feature-flags',
+  '/api/expertise/jd-to-l4',
+  '/api/expertise/taxonomy',
+  '/api/expertise/user-skills',
   '/api/integrations/google/connect',
+  '/api/integrations/google/callback',
   '/api/integrations/video',
-  '/api/integrations/zoom/connect',
+  '/api/integrations/video/[provider]',
+  '/api/integrations/video/[provider]/auth',
+  '/api/integrations/video/generate-link',
+  '/api/integrations/video/status',
   '/api/interviews',
   '/api/monitoring/launch-status',
   '/api/monitoring/perf-status',
@@ -29,25 +36,52 @@ const REQUIRED_ACTIVE_ROUTES = [
   '/api/verification/requests',
   '/api/verification/linkedin/initiate',
   '/api/verify/[token]',
-  '/api/expertise/taxonomy',
-  '/api/expertise/jd-to-l4',
 ] as const;
 
-const REQUIRED_ARCHIVED_ROUTES = [
+const REMOVED_ROUTE_FILES = [
   '/api/contracts',
   '/api/contracts/[id]',
   '/api/projects',
   '/api/projects/[id]',
   '/api/skill-gaps',
+  '/api/skill-gaps/goals',
+  '/api/skill-gaps/overview',
   '/api/integrations',
+  '/api/integrations/[provider]/connect',
+  '/api/integrations/[provider]/disconnect',
+  '/api/integrations/zoom/connect',
+  '/api/integrations/zoom/callback',
   '/api/expertise/profile',
   '/api/expertise/auto-suggest',
   '/api/expertise/gap-analysis',
   '/api/expertise/stats',
+  '/api/expertise/cv-import/suggest',
+  '/api/expertise/cv-import/wizard-apply',
+  '/api/expertise/cv-import/wizard-extract',
+  '/api/expertise/cv-import/wizard-extract/status',
+  '/api/expertise/cv-import/wizard-suggest',
   '/api/expertise/linkedin-import',
   '/api/expertise/linkedin-status',
   '/api/expertise/linkedin-disconnect',
-  '/api/expertise/user-skills',
+] as const;
+
+const REQUIRED_ARCHIVED_COMPAT_PATHS = [
+  '/api/contracts',
+  '/api/contracts/[id]',
+  '/api/projects',
+  '/api/projects/[id]',
+  '/api/skill-gaps',
+  '/api/skill-gaps/overview',
+  '/api/integrations',
+  '/api/integrations/zoom/connect',
+  '/api/expertise/profile',
+  '/api/expertise/auto-suggest',
+  '/api/expertise/gap-analysis',
+  '/api/expertise/stats',
+  '/api/expertise/cv-import/wizard-suggest',
+  '/api/expertise/linkedin-import',
+  '/api/expertise/linkedin-status',
+  '/api/expertise/linkedin-disconnect',
   '/api/organizations/[orgId]/causes',
   '/api/organizations/[orgId]/goals',
   '/api/organizations/[orgId]/goals/[id]',
@@ -91,11 +125,16 @@ describe('launch surface inventory', () => {
     }
   });
 
-  it('keeps representative non-MVP families compiled only as archived compatibility surfaces', async () => {
+  it('removes non-MVP route handlers from the compiled launch surface', async () => {
     const routes = await collectRoutePaths(API_ROOT);
 
-    for (const route of REQUIRED_ARCHIVED_ROUTES) {
-      expect(routes).toContain(route);
+    for (const route of REMOVED_ROUTE_FILES) {
+      expect(routes).not.toContain(route);
+    }
+  });
+
+  it('keeps representative non-MVP paths archived at the surface-policy boundary', async () => {
+    for (const route of REQUIRED_ARCHIVED_COMPAT_PATHS) {
       expect(classifyLaunchApiPath(route)).toBe('archived');
     }
   });

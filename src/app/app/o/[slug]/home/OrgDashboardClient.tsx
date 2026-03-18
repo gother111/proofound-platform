@@ -8,9 +8,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { OrgGoalsCard } from '@/components/dashboard/OrgGoalsCard';
 import { TasksCard } from '@/components/dashboard/TasksCard';
-import { ProjectsCard } from '@/components/dashboard/ProjectsCard';
 import { OrgMatchingCard } from '@/components/dashboard/OrgMatchingCard';
 import { OrgReadinessCard } from '@/components/dashboard/org/OrgReadinessCard';
 import { TeamRolesCard } from '@/components/dashboard/TeamRolesCard';
@@ -67,12 +65,6 @@ const ORG_AVAILABLE_WIDGETS: Record<
     description: 'Overview of candidate matches and shortlists',
     defaultSize: 'large',
   },
-  'org-goals': {
-    id: 'org-goals',
-    name: 'Organization Goals',
-    description: 'Track organizational objectives',
-    defaultSize: 'default',
-  },
   'org-readiness': {
     id: 'org-readiness',
     name: 'Assignment Readiness',
@@ -89,12 +81,6 @@ const ORG_AVAILABLE_WIDGETS: Record<
     id: 'tasks',
     name: 'Tasks',
     description: 'Upcoming tasks and to-dos',
-    defaultSize: 'default',
-  },
-  projects: {
-    id: 'projects',
-    name: 'Projects',
-    description: 'Active projects',
     defaultSize: 'default',
   },
   'while-away': {
@@ -125,10 +111,8 @@ const ORG_LAYOUT_WIDGET_CONFIG = Object.fromEntries(
 const DEFAULT_ORG_LAYOUT: DashboardWidget[] = [
   { widgetId: 'org-pipeline', position: 0, visible: true, size: 'large', settings: {} },
   { widgetId: 'org-readiness', position: 1, visible: true, size: 'large', settings: {} },
-  { widgetId: 'org-goals', position: 2, visible: true, size: 'default', settings: {} },
-  { widgetId: 'team', position: 3, visible: true, size: 'default', settings: {} },
-  { widgetId: 'tasks', position: 4, visible: true, size: 'default', settings: {} },
-  { widgetId: 'projects', position: 5, visible: true, size: 'default', settings: {} },
+  { widgetId: 'team', position: 2, visible: true, size: 'default', settings: {} },
+  { widgetId: 'tasks', position: 3, visible: true, size: 'default', settings: {} },
 ];
 
 // Org preset layouts per PRD O8
@@ -149,23 +133,22 @@ const ORG_PRESET_LAYOUTS: Record<
   },
   'hiring-manager': {
     label: 'Hiring Manager',
-    description: 'Focus on assignments and goals',
+    description: 'Focus on launch-safe assignment flow',
     widgets: [
       { widgetId: 'org-pipeline', position: 0, visible: true, size: 'large', settings: {} },
       { widgetId: 'org-readiness', position: 1, visible: true, size: 'large', settings: {} },
-      { widgetId: 'org-goals', position: 2, visible: true, size: 'default', settings: {} },
-      { widgetId: 'team', position: 3, visible: true, size: 'default', settings: {} },
-      { widgetId: 'projects', position: 4, visible: true, size: 'default', settings: {} },
+      { widgetId: 'team', position: 2, visible: true, size: 'default', settings: {} },
+      { widgetId: 'tasks', position: 3, visible: true, size: 'default', settings: {} },
     ],
   },
   executive: {
     label: 'Executive',
-    description: 'High-level overview',
+    description: 'High-level launch overview',
     widgets: [
       { widgetId: 'org-readiness', position: 0, visible: true, size: 'large', settings: {} },
-      { widgetId: 'org-goals', position: 1, visible: true, size: 'large', settings: {} },
-      { widgetId: 'org-pipeline', position: 2, visible: true, size: 'default', settings: {} },
-      { widgetId: 'team', position: 3, visible: true, size: 'default', settings: {} },
+      { widgetId: 'org-pipeline', position: 1, visible: true, size: 'large', settings: {} },
+      { widgetId: 'team', position: 2, visible: true, size: 'default', settings: {} },
+      { widgetId: 'while-away', position: 3, visible: true, size: 'default', settings: {} },
     ],
   },
   balanced: {
@@ -316,16 +299,6 @@ export function OrgDashboardClient({
             onVisibilityChange={(visible) => handleWidgetVisibilityChange(widgetId, visible)}
           />
         );
-      case 'org-goals':
-        return (
-          <OrgGoalsCard
-            orgSlug={orgSlug}
-            orgId={orgId}
-            canManageSettings={canManageSettings}
-            initialData={initialData?.goals}
-            onVisibilityChange={(visible) => handleWidgetVisibilityChange(widgetId, visible)}
-          />
-        );
       case 'org-readiness':
         return <OrgReadinessCard orgRef={orgSlug} initialData={initialData?.readiness} />;
       case 'team':
@@ -341,15 +314,6 @@ export function OrgDashboardClient({
       case 'tasks':
         return (
           <TasksCard persona="organization" orgRef={orgSlug} initialData={initialData?.momentum} />
-        );
-      case 'projects':
-        return (
-          <ProjectsCard
-            persona="organization"
-            orgId={orgId}
-            orgSlug={orgSlug}
-            initialData={initialData?.projects}
-          />
         );
       case 'while-away':
         return (

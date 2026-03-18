@@ -252,7 +252,7 @@ describe('POST /api/interviews/schedule', () => {
     };
   }
 
-  it('rejects zoom scheduling while zoom is paused as coming soon', async () => {
+  it('rejects zoom scheduling outside the launch corridor', async () => {
     const { supabase } = createSupabaseMock({
       interviewsForMatch: [{ id: 'interview-cancelled', status: 'cancelled' }],
     });
@@ -268,7 +268,7 @@ describe('POST /api/interviews/schedule', () => {
     expect(response.status).toBe(400);
     expect(payload).toEqual(
       expect.objectContaining({
-        code: 'ZOOM_COMING_SOON',
+        code: 'NON_LAUNCH_PROVIDER',
       })
     );
   });

@@ -149,9 +149,9 @@ describe('middleware launch archive behavior', () => {
       'http://localhost/api/monitoring/perf-status',
       'http://localhost/api/expertise/taxonomy',
       'http://localhost/api/expertise/jd-to-l4',
+      'http://localhost/api/expertise/user-skills',
       'http://localhost/api/integrations/video/status',
       'http://localhost/api/integrations/google/connect',
-      'http://localhost/api/integrations/zoom/callback',
     ];
 
     for (const path of preservedPaths) {
@@ -175,5 +175,16 @@ describe('middleware launch archive behavior', () => {
       expect(response.status).toBe(410);
       expect(body.surface).toBe('Admin API');
     }
+  });
+
+  it('returns 410 for archived Zoom compatibility paths', async () => {
+    const response = await middleware(
+      new NextRequest('http://localhost/api/integrations/zoom/callback', { method: 'GET' })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(410);
+    expect(body.surface).toBe('Interview Integration API');
+    expect(body.launchState).toBe('non_launch');
   });
 });

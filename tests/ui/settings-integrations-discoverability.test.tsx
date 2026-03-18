@@ -12,7 +12,7 @@ vi.mock('next/navigation', () => ({
     refresh: refreshMock,
   }),
   useSearchParams: () => ({
-    get: (key: string) => (key === 'tab' ? 'integrations' : null),
+    get: (key: string) => (key === 'tab' ? 'interviews' : null),
   }),
 }));
 
@@ -29,10 +29,6 @@ vi.mock('sonner', () => ({
 
 vi.mock('@/components/settings/VerificationStatus', () => ({
   VerificationStatus: () => <div data-testid="verification-status" />,
-}));
-
-vi.mock('@/components/settings/LinkedInConnect', () => ({
-  LinkedInConnect: () => <div data-testid="linkedin-connect" />,
 }));
 
 vi.mock('@/components/settings/EmailManager', () => ({
@@ -55,7 +51,7 @@ vi.mock('@/components/settings/PortfolioVisibilityCard', () => ({
   PortfolioVisibilityCard: () => <div data-testid="portfolio-visibility-card" />,
 }));
 
-describe('Settings integrations discoverability', () => {
+describe('Settings interview scheduling discoverability', () => {
   beforeEach(() => {
     vi.stubGlobal(
       'fetch',
@@ -70,11 +66,11 @@ describe('Settings integrations discoverability', () => {
     vi.restoreAllMocks();
   });
 
-  it('shows inline Zoom/Google integrations controls on the same settings tab', async () => {
+  it('shows inline Google interview scheduling controls on the same settings tab', async () => {
     render(<SettingsContent userId="user-1" />);
 
     expect(await screen.findByTestId('video-integrations-manager')).toBeInTheDocument();
-    expect(screen.getByTestId('linkedin-connect')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Interview Scheduling' })).toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: 'Dashboard' })).not.toBeInTheDocument();
     expect(
       screen.queryByRole('link', { name: /manage zoom & google integrations/i })

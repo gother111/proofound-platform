@@ -27,6 +27,7 @@ interface LinkedInVerificationProps {
   onSuccess?: () => void;
   autoStart?: boolean;
   onAutoStartHandled?: () => void;
+  connectedByDefault?: boolean;
 }
 
 interface AutomatedCheckResult {
@@ -79,37 +80,20 @@ export function LinkedInVerification({
   onSuccess,
   autoStart = false,
   onAutoStartHandled,
+  connectedByDefault = false,
 }: LinkedInVerificationProps) {
-  const [connected, setConnected] = useState<boolean | null>(null);
-  const [checkingConnection, setCheckingConnection] = useState(true);
+  const [connected, setConnected] = useState<boolean | null>(connectedByDefault);
+  const [checkingConnection] = useState(false);
   const [loading, setLoading] = useState(false);
   const [checkResult, setCheckResult] = useState<AutomatedCheckResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const autoStartTriggeredRef = useRef(false);
 
   useEffect(() => {
-    let cancelled = false;
-
-    async function fetchConnectionStatus() {
-      setCheckingConnection(true);
-      try {
-        const res = await fetch('/api/expertise/linkedin-status');
-        const data = res.ok ? await res.json() : null;
-        if (!cancelled) setConnected(Boolean(data?.connected));
-      } catch (err) {
-        console.error('Failed to fetch LinkedIn connection status:', err);
-        if (!cancelled) setConnected(false);
-      } finally {
-        if (!cancelled) setCheckingConnection(false);
-      }
+    if (connectedByDefault) {
+      setConnected(true);
     }
-
-    fetchConnectionStatus();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  }, [connectedByDefault]);
 
   const handleConnectLinkedIn = () => {
     // Redirect to LinkedIn OAuth

@@ -1,8 +1,7 @@
 /**
  * Video Integration API
  *
- * GET - Fetch user's video integrations (Zoom, Google Meet)
- * Handles OAuth connection status and token management
+ * Fetches the launch interview provider state for Google Meet only
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -31,30 +30,21 @@ export async function GET(req: NextRequest) {
     }
 
     const now = new Date();
-    const integrations = (rows ?? []).map((row: any) => {
-      const provider = row.provider === 'google_meet' ? 'google' : row.provider;
-      const expiresAt = row.token_expiry ?? null;
-      const connected = expiresAt ? new Date(expiresAt) >= now : true;
+    const integrations = (rows ?? [])
+      .filter((row: any) => row.provider === 'google_meet')
+      .map((row: any) => {
+        const expiresAt = row.token_expiry ?? null;
+        const connected = expiresAt ? new Date(expiresAt) >= now : true;
 
-      return {
-        provider,
-        connected,
-        connectedAt: row.created_at ?? null,
-        email: null as string | null,
-        expiresAt,
-      };
-    });
-
-    // Add placeholders for non-connected services
-    if (!integrations.find((i) => i.provider === 'zoom')) {
-      integrations.push({
-        provider: 'zoom',
-        connected: false,
-        connectedAt: null,
-        email: null,
-        expiresAt: null,
+        return {
+          provider: 'google' as const,
+          connected,
+          connectedAt: row.created_at ?? null,
+          email: null as string | null,
+          expiresAt,
+        };
       });
-    }
+
     if (!integrations.find((i) => i.provider === 'google')) {
       integrations.push({
         provider: 'google',

@@ -48,7 +48,7 @@ describe('LinkedIn OAuth redirects', () => {
     expect(location).toContain('/login?error=unauthorized');
   });
 
-  it('GET /api/auth/linkedin/callback redirects state mismatch to integrations by default', async () => {
+  it('GET /api/auth/linkedin/callback redirects state mismatch to account by default', async () => {
     const req = new NextRequest('http://localhost/api/auth/linkedin/callback?code=abc&state=bad', {
       headers: {
         cookie: 'linkedin_oauth_state=good; linkedin_oauth_user=user_123',
@@ -63,7 +63,7 @@ describe('LinkedIn OAuth redirects', () => {
     expect(location).toBeTruthy();
     const url = new URL(location!);
     expect(url.pathname).toBe('/app/i/settings');
-    expect(url.searchParams.get('tab')).toBe('integrations');
+    expect(url.searchParams.get('tab')).toBe('account');
     expect(url.searchParams.get('error')).toBe('linkedin_auth_failed');
   });
 
@@ -87,7 +87,7 @@ describe('LinkedIn OAuth redirects', () => {
     expect(url.searchParams.get('verification_error')).toBe('linkedin_auth_failed');
   });
 
-  it('GET /api/auth/linkedin/callback falls back to integrations when context cookie is invalid', async () => {
+  it('GET /api/auth/linkedin/callback falls back to account when context cookie is invalid', async () => {
     const req = new NextRequest('http://localhost/api/auth/linkedin/callback?code=abc&state=bad', {
       headers: {
         cookie:
@@ -100,7 +100,7 @@ describe('LinkedIn OAuth redirects', () => {
     expect(location).toBeTruthy();
     const url = new URL(location!);
     expect(url.pathname).toBe('/app/i/settings');
-    expect(url.searchParams.get('tab')).toBe('integrations');
+    expect(url.searchParams.get('tab')).toBe('account');
     expect(url.searchParams.get('error')).toBe('linkedin_auth_failed');
   });
 

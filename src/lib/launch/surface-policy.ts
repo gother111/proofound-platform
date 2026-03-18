@@ -34,8 +34,6 @@ export const ACTIVE_LAUNCH_EXACT_API_PATHS = [
   '/api/feature-flags',
   '/api/health',
   '/api/individual/readiness',
-  '/api/integrations/zoom/connect',
-  '/api/integrations/zoom/callback',
   '/api/integrations/google/connect',
   '/api/integrations/google/callback',
   '/api/monitoring/launch-status',
@@ -135,12 +133,6 @@ const ACTIVE_API_POLICIES = [
     surfaceLabel: 'Interview Integration API',
     detail: 'Interview video integrations remain active for the launch interview corridor.',
     matches: matchExactOrPrefix('/api/integrations/google'),
-  },
-  {
-    classification: 'active_launch_path',
-    surfaceLabel: 'Interview Integration API',
-    detail: 'Interview video integrations remain active for the launch interview corridor.',
-    matches: matchExactOrPrefix('/api/integrations/zoom'),
   },
   {
     classification: 'active_launch_path',
@@ -298,6 +290,14 @@ const ACTIVE_API_POLICIES = [
     detail: 'Assignment drafting expertise support remains active for launch.',
     matches: matchExact('/api/expertise/jd-to-l4'),
   },
+  {
+    classification: 'active_launch_path',
+    surfaceLabel: 'Portfolio Skill Tagging API',
+    detail: 'Portfolio proof-to-skill tagging remains active inside the launch proof corridor.',
+    matches: (pathname: string) =>
+      matchExactOrPrefix('/api/expertise/user-skills')(pathname) &&
+      !matchPattern(/^\/api\/expertise\/user-skills\/[^/]+\/verification-request$/)(pathname),
+  },
 ] as const satisfies readonly ApiSurfacePolicy[];
 
 const INTERNAL_ONLY_API_POLICIES = [
@@ -453,6 +453,12 @@ const ARCHIVED_API_POLICIES = [
   },
   {
     classification: 'archived',
+    surfaceLabel: 'Interview Integration API',
+    detail: 'Zoom provider routes are archived outside the locked launch MVP.',
+    matches: matchExactOrPrefix('/api/integrations/zoom'),
+  },
+  {
+    classification: 'archived',
     surfaceLabel: 'Integrations API',
     detail: 'Broad integration surfaces are archived outside the locked launch MVP.',
     matches: matchExact('/api/integrations'),
@@ -510,14 +516,6 @@ const ARCHIVED_API_POLICIES = [
     surfaceLabel: 'Legacy Expertise API',
     detail: 'Individual expertise and import surfaces are archived outside the locked launch MVP.',
     matches: matchExact('/api/expertise/linkedin-disconnect'),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Legacy Expertise API',
-    detail: 'Individual expertise and import surfaces are archived outside the locked launch MVP.',
-    matches: (pathname: string) =>
-      matchExactOrPrefix('/api/expertise/user-skills')(pathname) &&
-      !matchPattern(/^\/api\/expertise\/user-skills\/[^/]+\/verification-request$/)(pathname),
   },
   {
     classification: 'archived',

@@ -53,13 +53,9 @@ describe('IntegrationsClient', () => {
             json: async () => ({
               integrations: [
                 {
-                  provider: 'zoom',
+                  provider: 'google',
                   connected: true,
                   connectedAt: new Date().toISOString(),
-                },
-                {
-                  provider: 'google',
-                  connected: false,
                 },
               ],
             }),
@@ -84,29 +80,31 @@ describe('IntegrationsClient', () => {
     vi.restoreAllMocks();
   });
 
-  it('uses apiFetch for provider disconnect DELETE', async () => {
+  it('uses apiFetch for Google provider disconnect DELETE', async () => {
     const { apiFetch } = await import('@/lib/api/fetch');
 
     render(<IntegrationsClient />);
 
-    const disconnectButton = await screen.findByRole('button', { name: /disconnect zoom/i });
+    const disconnectButton = await screen.findByRole('button', {
+      name: /disconnect google calendar/i,
+    });
     fireEvent.click(disconnectButton);
 
     await waitFor(() => expect(apiFetch).toHaveBeenCalled());
 
     expect(apiFetch).toHaveBeenCalledWith(
-      '/api/integrations/video/zoom',
+      '/api/integrations/video/google',
       expect.objectContaining({
         method: 'DELETE',
       })
     );
   });
 
-  it('renders Google verification troubleshooting guidance when Google is disconnected', async () => {
+  it('renders launch-corridor guidance when Google is the only connected provider', async () => {
     render(<IntegrationsClient />);
 
     expect(
-      await screen.findByText(/if google shows "access blocked" with "error 403: access_denied"/i)
+      await screen.findByText(/google meet is the only connected provider in scope/i)
     ).toBeInTheDocument();
   });
 });

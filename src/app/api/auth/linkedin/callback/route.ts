@@ -23,7 +23,7 @@ function buildSettingsRedirect(
   context: LinkedInOAuthContext,
   params: Record<string, string>
 ) {
-  const tab = context === 'verification' ? 'account' : 'integrations';
+  const tab = 'account';
   const search = new URLSearchParams({ tab, ...params });
   return NextResponse.redirect(new URL(`/app/i/settings?${search.toString()}`, request.url));
 }

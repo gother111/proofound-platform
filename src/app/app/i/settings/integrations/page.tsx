@@ -11,7 +11,7 @@ export default async function IntegrationsPage({ searchParams }: IntegrationsPag
   await requireAuth();
 
   const resolvedParams = (await searchParams) ?? {};
-  const nextParams = new URLSearchParams({ tab: 'integrations' });
+  const nextParams = new URLSearchParams({ tab: 'interviews' });
 
   const success = resolvedParams.success;
   const error = resolvedParams.error;

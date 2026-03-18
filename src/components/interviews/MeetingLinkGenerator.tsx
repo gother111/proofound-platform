@@ -1,31 +1,16 @@
-/**
- * Meeting Link Generator Component
- *
- * Integrates with Zoom and Google Meet for automatic meeting link generation
- * Implements PRD requirement for streamlined interview scheduling
- */
-
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
-  Video,
-  Calendar,
-  Link2,
-  CheckCircle2,
-  AlertCircle,
-  ExternalLink,
-  Settings,
-} from 'lucide-react';
+import { Calendar, Link2, CheckCircle2, AlertCircle, Settings, Video } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
 
 interface Integration {
-  provider: 'zoom' | 'google';
+  provider: 'google';
   connected: boolean;
   email?: string;
   expiresAt?: string;
@@ -50,10 +35,14 @@ export function MeetingLinkGenerator({ interviewId, onLinkGenerated }: MeetingLi
     try {
       setIsLoading(true);
       const response = await apiFetch('/api/integrations/video');
-      if (response.ok) {
-        const data = await response.json();
-        setIntegrations(data.integrations || []);
-      }
+      if (!response.ok) return;
+
+      const data = await response.json();
+      setIntegrations(
+        ((data.integrations || []) as Integration[]).filter(
+          (integration) => integration.provider === 'google'
+        )
+      );
     } catch (error) {
       console.error('Failed to fetch integrations:', error);
     } finally {
@@ -61,49 +50,49 @@ export function MeetingLinkGenerator({ interviewId, onLinkGenerated }: MeetingLi
     }
   };
 
-  const handleConnect = async (provider: 'zoom' | 'google') => {
+  const handleConnect = async () => {
     try {
-      // In production, this would redirect to OAuth flow
-      const response = await apiFetch(`/api/integrations/video/${provider}/auth`);
-      if (response.ok) {
-        const data = await response.json();
-        // Redirect to OAuth URL
-        window.location.href = data.authUrl;
-      } else {
-        toast.error(`Failed to initiate ${provider} connection`);
+      const response = await apiFetch('/api/integrations/video/google/auth');
+      if (!response.ok) {
+        toast.error('Failed to initiate Google Meet connection');
+        return;
       }
+
+      const data = await response.json();
+      window.location.href = data.authUrl;
     } catch (error) {
-      console.error(`Failed to connect ${provider}:`, error);
-      toast.error(`Failed to connect ${provider}`);
+      console.error('Failed to connect Google Meet:', error);
+      toast.error('Failed to connect Google Meet');
     }
   };
 
-  const handleDisconnect = async (provider: 'zoom' | 'google') => {
+  const handleDisconnect = async () => {
     try {
-      const response = await apiFetch(`/api/integrations/video/${provider}`, {
+      const response = await apiFetch('/api/integrations/video/google', {
         method: 'DELETE',
       });
 
-      if (response.ok) {
-        toast.success(`${provider === 'zoom' ? 'Zoom' : 'Google Meet'} disconnected`);
-        fetchIntegrations();
-      } else {
+      if (!response.ok) {
         toast.error('Failed to disconnect');
+        return;
       }
+
+      toast.success('Google Meet disconnected');
+      fetchIntegrations();
     } catch (error) {
       console.error('Failed to disconnect:', error);
       toast.error('Failed to disconnect');
     }
   };
 
-  const handleGenerateLink = async (provider: 'zoom' | 'google') => {
+  const handleGenerateLink = async () => {
     setIsGenerating(true);
     try {
       const response = await apiFetch('/api/integrations/video/generate-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          provider,
+          provider: 'google',
           interviewId,
           title: 'Interview Meeting',
           duration: 60,
@@ -116,11 +105,7 @@ export function MeetingLinkGenerator({ interviewId, onLinkGenerated }: MeetingLi
 
       const data = await response.json();
       setGeneratedLink(data.meetingLink);
-
-      if (onLinkGenerated) {
-        onLinkGenerated(data.meetingLink);
-      }
-
+      onLinkGenerated?.(data.meetingLink);
       toast.success('Meeting link generated successfully!');
     } catch (error) {
       console.error('Failed to generate link:', error);
@@ -130,8 +115,10 @@ export function MeetingLinkGenerator({ interviewId, onLinkGenerated }: MeetingLi
     }
   };
 
-  const zoomIntegration = integrations.find((i) => i.provider === 'zoom');
-  const googleIntegration = integrations.find((i) => i.provider === 'google');
+  const googleIntegration = useMemo(
+    () => integrations.find((integration) => integration.provider === 'google') ?? null,
+    [integrations]
+  );
 
   if (isLoading) {
     return (
@@ -149,75 +136,17 @@ export function MeetingLinkGenerator({ interviewId, onLinkGenerated }: MeetingLi
         <CardHeader>
           <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground flex items-center gap-2">
             <Video className="w-5 h-5" />
-            Video Conferencing
+            Interview Scheduling
           </CardTitle>
           <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-            Connect Zoom or Google Meet to automatically generate interview links
+            Connect Google Meet to generate interview links automatically, or use a manual meeting
+            link when you prefer not to connect a provider.
           </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-4">
-          {/* Zoom Integration */}
           <div className="p-4 border border-proofound-stone dark:border-border rounded-lg">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
-                  <Video className="w-5 h-5 text-blue-600 dark:text-blue-300" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground dark:text-foreground">Zoom</h3>
-                  {zoomIntegration?.connected ? (
-                    <div className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-green-600" />
-                      <span className="text-green-600 dark:text-green-400">Connected</span>
-                      {zoomIntegration.email && (
-                        <span className="text-muted-foreground dark:text-muted-foreground">
-                          • {zoomIntegration.email}
-                        </span>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground dark:text-muted-foreground">
-                      <AlertCircle className="w-4 h-4" />
-                      Not connected
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {zoomIntegration?.connected ? (
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    onClick={() => handleGenerateLink('zoom')}
-                    disabled={isGenerating}
-                    className="bg-blue-600 text-white hover:bg-blue-700"
-                  >
-                    Generate Link
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => handleDisconnect('zoom')}>
-                    Disconnect
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  size="sm"
-                  onClick={() => handleConnect('zoom')}
-                  className="bg-blue-600 text-white hover:bg-blue-700"
-                >
-                  Connect Zoom
-                </Button>
-              )}
-            </div>
-
-            <p className="text-xs text-muted-foreground dark:text-muted-foreground">
-              Automatically create Zoom meetings for interviews with calendar integration
-            </p>
-          </div>
-
-          {/* Google Meet Integration */}
-          <div className="p-4 border border-proofound-stone dark:border-border rounded-lg">
-            <div className="flex items-start justify-between mb-3">
+            <div className="flex items-start justify-between mb-3 gap-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-red-100 dark:bg-red-900 rounded-lg flex items-center justify-center">
                   <Calendar className="w-5 h-5 text-red-600 dark:text-red-300" />
@@ -230,11 +159,11 @@ export function MeetingLinkGenerator({ interviewId, onLinkGenerated }: MeetingLi
                     <div className="flex items-center gap-2 text-sm">
                       <CheckCircle2 className="w-4 h-4 text-green-600" />
                       <span className="text-green-600 dark:text-green-400">Connected</span>
-                      {googleIntegration.email && (
+                      {googleIntegration.email ? (
                         <span className="text-muted-foreground dark:text-muted-foreground">
                           • {googleIntegration.email}
                         </span>
-                      )}
+                      ) : null}
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground dark:text-muted-foreground">
@@ -249,34 +178,33 @@ export function MeetingLinkGenerator({ interviewId, onLinkGenerated }: MeetingLi
                 <div className="flex gap-2">
                   <Button
                     size="sm"
-                    onClick={() => handleGenerateLink('google')}
+                    onClick={handleGenerateLink}
                     disabled={isGenerating}
                     className="bg-red-600 text-white hover:bg-red-700"
                   >
                     Generate Link
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => handleDisconnect('google')}>
+                  <Button size="sm" variant="ghost" onClick={handleDisconnect}>
                     Disconnect
                   </Button>
                 </div>
               ) : (
                 <Button
                   size="sm"
-                  onClick={() => handleConnect('google')}
+                  onClick={handleConnect}
                   className="bg-red-600 text-white hover:bg-red-700"
                 >
-                  Connect Google
+                  Connect Google Meet
                 </Button>
               )}
             </div>
 
             <p className="text-xs text-muted-foreground dark:text-muted-foreground">
-              Create Google Meet links and add to Google Calendar automatically
+              Create Google Meet links and add them to Google Calendar automatically.
             </p>
           </div>
 
-          {/* Generated Link Display */}
-          {generatedLink && (
+          {generatedLink ? (
             <Alert className="border-green-300 bg-green-50">
               <CheckCircle2 className="h-4 w-4 text-green-600" />
               <AlertDescription>
@@ -299,22 +227,20 @@ export function MeetingLinkGenerator({ interviewId, onLinkGenerated }: MeetingLi
                 </div>
               </AlertDescription>
             </Alert>
-          )}
+          ) : null}
 
-          {/* Info Alert */}
-          {!zoomIntegration?.connected && !googleIntegration?.connected && (
+          {!googleIntegration?.connected ? (
             <Alert className="border-blue-300 bg-blue-50">
               <Settings className="h-4 w-4 text-blue-600" />
               <AlertDescription className="text-sm">
-                <strong>Connect a video service</strong> to automatically generate meeting links for
-                interviews. Both Zoom and Google Meet are supported.
+                <strong>Automatic links are optional.</strong> If Google Meet is not connected, you
+                can still schedule interviews with a manual meeting link.
               </AlertDescription>
             </Alert>
-          )}
+          ) : null}
         </CardContent>
       </Card>
 
-      {/* Benefits Card */}
       <Card variant="bento" className="rounded-2xl">
         <CardHeader>
           <CardTitle className="text-lg font-['Crimson_Pro']">Benefits</CardTitle>
@@ -322,16 +248,19 @@ export function MeetingLinkGenerator({ interviewId, onLinkGenerated }: MeetingLi
         <CardContent>
           <div className="space-y-2 text-sm text-muted-foreground dark:text-muted-foreground">
             <p>
-              • <strong>Automatic link generation:</strong> Create meeting links with one click
+              • <strong>Automatic link generation:</strong> Create interview links with one click
             </p>
             <p>
-              • <strong>Calendar integration:</strong> Invites sent to all participants
+              • <strong>Calendar integration:</strong> Invites stay tied to your connected Google
+              account
             </p>
             <p>
-              • <strong>No manual setup:</strong> Save time on interview coordination
+              • <strong>Manual fallback:</strong> Stay launch-safe even when no provider is
+              connected
             </p>
             <p>
-              • <strong>Professional experience:</strong> Seamless scheduling for candidates
+              • <strong>Cleaner review flow:</strong> Keep scheduling inside the narrow interview
+              corridor
             </p>
           </div>
         </CardContent>

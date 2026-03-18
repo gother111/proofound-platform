@@ -23,9 +23,8 @@ export async function DELETE(
     }
 
     const { provider } = await params;
-    const integrationType = provider === 'google' ? 'google_meet' : provider;
 
-    if (!['zoom', 'google'].includes(provider)) {
+    if (provider !== 'google') {
       return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
     }
 
@@ -33,7 +32,7 @@ export async function DELETE(
       .from('user_video_integrations')
       .delete()
       .eq('user_id', user.id)
-      .eq('provider', integrationType);
+      .eq('provider', 'google_meet');
 
     if (deleteError) {
       console.error('Disconnect integration error:', deleteError);

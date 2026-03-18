@@ -1,8 +1,7 @@
 /**
  * Video Integration Status Endpoint
  *
- * Returns connection status for Zoom and Google Meet
- * GET /api/integrations/video/status
+ * Returns connection status for the launch Google Meet provider
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -27,11 +26,6 @@ export async function GET(request: NextRequest) {
     `);
 
     const status = {
-      zoom: {
-        connected: false,
-        expires_at: null as string | null,
-        connected_at: null as string | null,
-      },
       google: {
         connected: false,
         expires_at: null as string | null,
@@ -40,11 +34,13 @@ export async function GET(request: NextRequest) {
     };
 
     for (const row of integrations as any[]) {
-      const key = row.provider === 'zoom' ? 'zoom' : 'google';
+      if (row.provider !== 'google_meet') {
+        continue;
+      }
       const expiry = row.token_expiry ? new Date(row.token_expiry) : null;
       const isExpired = expiry ? expiry < new Date() : false;
 
-      status[key] = {
+      status.google = {
         connected: !isExpired,
         expires_at: row.token_expiry,
         connected_at: row.created_at,

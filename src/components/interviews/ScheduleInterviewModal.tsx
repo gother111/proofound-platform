@@ -49,7 +49,7 @@ interface ScheduleInterviewModalProps {
   onScheduled?: (interview: { id: string; scheduledAt: string; meetingUrl: string }) => void;
 }
 
-type ManualMeetingProvider = 'teams' | 'zoom' | 'google_meet' | 'other';
+type ManualMeetingProvider = 'teams' | 'google_meet' | 'other';
 
 export function ScheduleInterviewModal({
   isOpen,
@@ -67,7 +67,7 @@ export function ScheduleInterviewModal({
   const [manualMeetingProvider, setManualMeetingProvider] = useState<ManualMeetingProvider | ''>(
     ''
   );
-  const [providerConnections, setProviderConnections] = useState({ zoom: false, google: false });
+  const [providerConnections, setProviderConnections] = useState({ google: false });
   const [timezone, setTimezone] = useState(
     Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
   );
@@ -90,7 +90,7 @@ export function ScheduleInterviewModal({
 
         const googleConnected = data.google?.connected === true;
 
-        setProviderConnections({ zoom: data.zoom?.connected === true, google: googleConnected });
+        setProviderConnections({ google: googleConnected });
 
         if (!googleConnected) {
           setPlatform('manual');
@@ -313,7 +313,6 @@ export function ScheduleInterviewModal({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="teams">Microsoft Teams</SelectItem>
-              <SelectItem value="zoom">Zoom</SelectItem>
               <SelectItem value="google_meet">Google Meet</SelectItem>
               <SelectItem value="other">Other</SelectItem>
             </SelectContent>
@@ -324,7 +323,7 @@ export function ScheduleInterviewModal({
             type="url"
             value={manualMeetingLink}
             onChange={(event) => setManualMeetingLink(event.target.value)}
-            placeholder="https://zoom.us/j/... or https://meet.google.com/..."
+            placeholder="https://meet.google.com/... or another secure meeting URL"
             className="flex h-11 w-full rounded-lg border border-proofound-stone dark:border-border bg-white dark:bg-background px-4 py-2 text-base text-proofound-charcoal dark:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest"
           />
         </div>

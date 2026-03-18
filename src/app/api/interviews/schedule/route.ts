@@ -473,10 +473,11 @@ export async function POST(request: NextRequest) {
     if (normalizedPlatform === 'zoom') {
       return NextResponse.json(
         {
-          error: 'Zoom integration is coming soon. Use Google Meet or manual meeting link.',
-          code: 'ZOOM_COMING_SOON',
+          error:
+            'Zoom is outside the launch interview surface. Use Google Meet or a manual meeting link.',
+          code: 'NON_LAUNCH_PROVIDER',
           message:
-            'Zoom integration is temporarily unavailable. Please select Google Meet or use manual link scheduling.',
+            'Zoom is archived for launch. Please select Google Meet or schedule with a manual meeting link.',
         },
         { status: 400 }
       );

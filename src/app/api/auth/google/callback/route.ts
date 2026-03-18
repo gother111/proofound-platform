@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       console.error('Google OAuth error:', error);
       return NextResponse.redirect(
         new URL(
-          `/app/i/settings/integrations?error=google_auth_failed&message=${encodeURIComponent(error)}`,
+          `/app/i/settings?tab=interviews&error=google_auth_failed&message=${encodeURIComponent(error)}`,
           request.url
         )
       );
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     if (!state || !expectedState || state !== expectedState) {
       return NextResponse.redirect(
         new URL(
-          '/app/i/settings/integrations?error=google_auth_failed&message=Invalid%20or%20expired%20OAuth%20state.%20Please%20try%20connecting%20again.',
+          '/app/i/settings?tab=interviews&error=google_auth_failed&message=Invalid%20or%20expired%20OAuth%20state.%20Please%20try%20connecting%20again.',
           request.url
         )
       );
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     if (!code) {
       return NextResponse.redirect(
         new URL(
-          '/app/i/settings/integrations?error=google_auth_failed&message=No authorization code received',
+          '/app/i/settings?tab=interviews&error=google_auth_failed&message=No authorization code received',
           request.url
         )
       );
@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
 
     // Redirect to settings page with success message
     const res = NextResponse.redirect(
-      new URL('/app/i/settings/integrations?success=google_connected', request.url)
+      new URL('/app/i/settings?tab=interviews&success=google_connected', request.url)
     );
     res.cookies.set('google_oauth_state', '', { maxAge: 0, path: '/' });
     return res;
@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
     console.error('Error handling Google OAuth callback:', error);
     return NextResponse.redirect(
       new URL(
-        `/app/i/settings/integrations?error=google_auth_failed&message=${encodeURIComponent(
+        `/app/i/settings?tab=interviews&error=google_auth_failed&message=${encodeURIComponent(
           error instanceof Error ? error.message : 'Unknown error'
         )}`,
         request.url

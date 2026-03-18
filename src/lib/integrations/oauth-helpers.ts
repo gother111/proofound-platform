@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { sanitizeReturnPath } from '@/lib/navigation/sanitize-return-path';
 
-export const DEFAULT_INTEGRATIONS_RETURN_PATH = '/app/i/settings?tab=integrations';
+export const DEFAULT_INTEGRATIONS_RETURN_PATH = '/app/i/settings?tab=interviews';
 
 function toInlineScriptJson(value: string): string {
   return JSON.stringify(value)

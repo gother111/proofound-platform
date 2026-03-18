@@ -665,6 +665,9 @@ export function VerificationStatus() {
           onSuccess={handleVerificationSuccess}
           autoStart={autoStartLinkedInCheck}
           onAutoStartHandled={() => setAutoStartLinkedInCheck(false)}
+          connectedByDefault={
+            autoStartLinkedInCheck || status.channels.linkedin.state !== 'unverified'
+          }
         />
       </div>
     );

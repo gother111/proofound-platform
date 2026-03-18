@@ -137,7 +137,6 @@ describe('ScheduleInterviewModal', () => {
           return {
             ok: true,
             json: async () => ({
-              zoom: { connected: false },
               google: { connected: false },
             }),
           };
@@ -194,7 +193,6 @@ describe('ScheduleInterviewModal', () => {
           return {
             ok: true,
             json: async () => ({
-              zoom: { connected: false },
               google: { connected: false },
             }),
           };
@@ -245,7 +243,6 @@ describe('ScheduleInterviewModal', () => {
           return {
             ok: true,
             json: async () => ({
-              zoom: { connected: false },
               google: { connected: false },
             }),
           };
@@ -290,7 +287,6 @@ describe('ScheduleInterviewModal', () => {
           return {
             ok: true,
             json: async () => ({
-              zoom: { connected: false },
               google: { connected: true },
             }),
           };
@@ -338,7 +334,6 @@ describe('ScheduleInterviewModal', () => {
           return {
             ok: true,
             json: async () => ({
-              zoom: { connected: true },
               google: { connected: true },
             }),
           };
@@ -368,7 +363,7 @@ describe('ScheduleInterviewModal', () => {
 
   it('renders backend actionable message when schedule action returns an error', async () => {
     scheduleInterviewMock.mockRejectedValue(
-      new Error('Reconnect Google Calendar in Settings > Integrations and retry.')
+      new Error('Reconnect Google Calendar in Settings > Interview Scheduling and retry.')
     );
 
     vi.stubGlobal(
@@ -380,7 +375,6 @@ describe('ScheduleInterviewModal', () => {
           return {
             ok: true,
             json: async () => ({
-              zoom: { connected: false },
               google: { connected: true },
             }),
           };
@@ -406,7 +400,7 @@ describe('ScheduleInterviewModal', () => {
 
     await waitFor(() =>
       expect(
-        screen.getByText('Reconnect Google Calendar in Settings > Integrations and retry.')
+        screen.getByText('Reconnect Google Calendar in Settings > Interview Scheduling and retry.')
       ).toBeInTheDocument()
     );
   });

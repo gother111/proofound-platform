@@ -2,7 +2,7 @@
  * First-Run Guided Tour (Flow I-03)
  *
  * PRD Requirement: First-run guided tour that progressively reveals UI
- * Steps: Navigation → Overview → Profile → Public Portfolio → Expertise Hub → Matching → Settings
+ * Steps: Navigation → Overview → Profile → Public Portfolio → Matching → Settings
  *
  * Features:
  * - Progressive reveal with styled background
@@ -90,15 +90,6 @@ const individualTourSteps: TourStep[] = [
       'This is your share-ready public link. Publish once, then copy and send it to collaborators, partners, or hiring teams immediately.',
     icon: Link2,
     target: '[data-tour="portfolio-link"]',
-    placement: 'right',
-  },
-  {
-    id: 'expertise',
-    title: 'Expertise Hub',
-    description:
-      'Map your skills using our comprehensive taxonomy of 20,000+ skills. Add evidence and verification to stand out. This is your credibility engine.',
-    icon: Target,
-    target: '[data-tour="expertise-link"]',
     placement: 'right',
   },
   {

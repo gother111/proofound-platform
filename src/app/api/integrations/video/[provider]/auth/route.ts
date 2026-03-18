@@ -1,7 +1,7 @@
 /**
  * OAuth Initiation Endpoint
  *
- * Starts the OAuth flow for Zoom or Google Meet
+ * Starts the OAuth flow for the launch Google Meet provider
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -22,19 +22,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ prov
 
     const { provider } = await params;
 
-    if (!['zoom', 'google'].includes(provider)) {
+    if (provider !== 'google') {
       return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
-    }
-
-    if (provider === 'zoom') {
-      return NextResponse.json(
-        {
-          error: 'Zoom integration is coming soon',
-          code: 'ZOOM_COMING_SOON',
-          message: 'Zoom is temporarily unavailable. Please use Google Meet or manual links.',
-        },
-        { status: 400 }
-      );
     }
 
     const authPath = '/api/integrations/google/connect';
