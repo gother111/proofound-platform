@@ -140,7 +140,7 @@ const mockSupabaseClient = {
                   {
                     orgId: ORG_ID,
                     userId: MOCK_USER_ID,
-                    role: 'org_manager',
+                    role: 'admin',
                     status: 'active',
                     joinedAt: new Date().toISOString(),
                   },
@@ -155,7 +155,7 @@ const mockSupabaseClient = {
               data: {
                 orgId: ORG_ID,
                 userId: MOCK_USER_ID,
-                role: 'org_manager',
+                role: 'admin',
                 status: 'active',
                 joinedAt: new Date().toISOString(),
               },
@@ -183,7 +183,7 @@ const mockSupabaseClient = {
               {
                 orgId: ORG_ID,
                 userId: MOCK_USER_ID,
-                role: 'org_manager',
+                role: 'admin',
                 status: 'active',
                 joinedAt: new Date().toISOString(),
                 org: {

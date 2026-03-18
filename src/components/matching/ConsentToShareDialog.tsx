@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,7 +17,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Drawer, DrawerContent } from '@/components/ui/drawer';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
 import { useResponsiveModalMode } from '@/hooks/use-responsive-modal-mode';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -25,7 +32,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Eye, EyeOff, Shield, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { ConsentExplainer } from '@/components/workflow/ConsentExplainer';
 
 interface ConsentToShareDialogProps {
   isOpen: boolean;
@@ -103,20 +109,6 @@ export function ConsentToShareDialog({
 
   const visibleFieldsCount = visibleFields.filter((f) => !f.isRedacted).length;
   const redactedFieldsCount = visibleFields.filter((f) => f.isRedacted).length;
-  const nowVisibleItems = visibleFields
-    .filter((field) => !field.isRedacted)
-    .map((field) => field.label);
-  const hiddenFieldItems = visibleFields
-    .filter((field) => field.isRedacted)
-    .map((field) => field.label);
-  const hiddenUntilInterviewItems = Array.from(
-    new Set([
-      ...hiddenFieldItems,
-      'Direct contact details',
-      'Scheduling links and meeting logistics',
-      'Any identity-bearing details you have not chosen to share',
-    ])
-  );
 
   const renderModalContentHeader = () => (
     <div className="px-4 md:px-0">
@@ -135,16 +127,21 @@ export function ConsentToShareDialog({
 
   const renderModalContentBody = () => (
     <div className="space-y-6 px-4 md:px-0">
-      <ConsentExplainer
-        nowVisible={
-          nowVisibleItems.length > 0
-            ? nowVisibleItems
-            : ['Only the role-specific proof-backed fields listed below']
-        }
-        hiddenUntilLater={hiddenUntilInterviewItems}
-        whyThisRequestExists={`This share lets ${organizationName} review your proof-backed profile for the ${assignmentRole} role and decide whether to continue the hiring corridor. It does not auto-reveal contact details or weaken blind review on future requests.`}
-        privacyNote={`Only the fields listed in this snapshot are shared with ${organizationName} right now.`}
-      />
+      {/* Privacy Notice */}
+      <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-4">
+        <div className="flex gap-3">
+          <Shield className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div className="space-y-2 text-sm">
+            <p className="font-semibold text-blue-900 dark:text-blue-100">
+              Your Privacy is Protected
+            </p>
+            <p className="text-blue-800 dark:text-blue-200">
+              Only the information listed below will be shared with {organizationName}. You control
+              what they see through your visibility settings.
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Visible Fields Summary */}
       <div>
@@ -169,7 +166,7 @@ export function ConsentToShareDialog({
 
       {/* Detailed Field List */}
       <div>
-        <h4 className="text-sm font-semibold mb-3">Visible Fields In This Snapshot</h4>
+        <h4 className="text-sm font-semibold mb-3">Visible Fields</h4>
         <div className="space-y-2">
           {visibleFields
             .filter((f) => !f.isRedacted)
@@ -194,7 +191,7 @@ export function ConsentToShareDialog({
         <>
           <Separator />
           <div>
-            <h4 className="text-sm font-semibold mb-3">Still Hidden</h4>
+            <h4 className="text-sm font-semibold mb-3">Hidden Fields</h4>
             <div className="space-y-2">
               {visibleFields
                 .filter((f) => f.isRedacted)
@@ -229,7 +226,6 @@ export function ConsentToShareDialog({
               <li>Once shared, you cannot revoke access to this specific snapshot</li>
               <li>The organization may retain this information as part of their hiring process</li>
               <li>You can update your visibility settings anytime to control future shares</li>
-              <li>Public portfolio publication does not expand what this organization sees here</li>
             </ul>
           </div>
         </div>

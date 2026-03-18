@@ -13,7 +13,17 @@
  * - Invite new members action
  */
 
-import { Users, Crown, Shield, User, Loader2, AlertCircle, UserPlus } from 'lucide-react';
+import {
+  Users,
+  Crown,
+  Shield,
+  User,
+  Eye,
+  Loader2,
+  AlertCircle,
+  Plus,
+  UserPlus,
+} from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +31,6 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api/fetch';
 import Link from 'next/link';
-import type { OrgRole } from '@/lib/authz';
 
 interface TeamRolesCardProps {
   orgSlug?: string;
@@ -34,8 +43,8 @@ interface TeamRolesCardProps {
 // Type definitions
 interface TeamMember {
   userId: string;
-  role: OrgRole;
-  status: string | null;
+  role: 'owner' | 'admin' | 'member' | 'viewer';
+  status: 'active' | 'invited' | 'suspended';
   displayName: string | null;
   handle: string | null;
   avatarUrl: string | null;
@@ -44,15 +53,19 @@ interface TeamMember {
 
 interface TeamStats {
   total: number;
-  byRole: Record<OrgRole, number>;
+  owners: number;
+  admins: number;
+  members: number;
+  viewers: number;
 }
 
 // Role configuration
 const roleConfig = {
-  org_owner: { label: 'Owner', icon: Crown, color: '#F59E0B', bg: '#FEF3C7' },
-  org_manager: { label: 'Manager', icon: Shield, color: '#1C4D3A', bg: '#D8EDE4' },
-  org_reviewer: { label: 'Reviewer', icon: User, color: '#3B82F6', bg: '#DBEAFE' },
-} satisfies Record<OrgRole, { label: string; icon: typeof Crown; color: string; bg: string }>;
+  owner: { label: 'Owner', icon: Crown, color: '#F59E0B', bg: '#FEF3C7' },
+  admin: { label: 'Admin', icon: Shield, color: '#1C4D3A', bg: '#D8EDE4' },
+  member: { label: 'Member', icon: User, color: '#3B82F6', bg: '#DBEAFE' },
+  viewer: { label: 'Viewer', icon: Eye, color: '#6B6760', bg: '#E8E6DD' },
+};
 
 // Get initials from name
 function getInitials(name: string | null | undefined): string {

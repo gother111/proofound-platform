@@ -93,7 +93,7 @@ export function ExpertiseAtlasClient({
     let nextStep = 'You look match-ready!';
     if (total < 3) nextStep = 'Add 3 skills to unlock the dashboard and matching.';
     else if (proofed < 2) nextStep = 'Attach proofs to your top 2 skills.';
-    else if (verified < 1) nextStep = 'Ask someone to confirm a proof-backed skill claim.';
+    else if (verified < 1) nextStep = 'Request one verification to boost credibility.';
     else if (fresh < Math.max(1, Math.ceil(total * 0.5)))
       nextStep = 'Update recency on a key skill.';
 

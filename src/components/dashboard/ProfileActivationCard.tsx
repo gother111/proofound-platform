@@ -10,7 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DASHBOARD_STATUS_CHIP_CLASS } from '@/components/dashboard/chipStyles';
 import { apiFetch } from '@/lib/api/fetch';
 import type { IndividualReadiness } from '@/lib/momentum/types';
-import { getLaunchReadinessDisplayLabel } from '@/lib/readiness/launch-display';
 
 type ProfileActivationCardProps = {
   useMockData?: boolean;
@@ -18,7 +17,11 @@ type ProfileActivationCardProps = {
 };
 
 function milestoneTone(readiness: IndividualReadiness | null) {
-  return getLaunchReadinessDisplayLabel(readiness?.flags || {});
+  if (readiness?.flags.stronglyTrusted) return 'Strongly trusted';
+  if (readiness?.flags.introEligible) return 'Intro-eligible';
+  if (readiness?.flags.matchVisible) return 'Match-visible';
+  if (readiness?.flags.discoverable) return 'Discoverable';
+  return 'Portfolio draft';
 }
 
 export function ProfileActivationCard({ useMockData }: ProfileActivationCardProps) {
@@ -129,17 +132,18 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
       <CardContent className="space-y-4">
         <div className="space-y-2 rounded-2xl border border-black/[0.04] bg-card p-5 shadow-sm dark:bg-card/50 dark:border-white/5">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-foreground">Launch states</p>
-            <p className="text-xs text-muted-foreground">Portfolio to intro</p>
+            <p className="text-sm font-medium text-foreground">Milestones</p>
+            <p className="text-xs text-muted-foreground">Trust ladder</p>
           </div>
           <div className="space-y-2">
             {[
-              { label: 'Portfolio ready', met: Boolean(data?.flags.portfolioReady) },
-              { label: 'Match visible', met: Boolean(data?.flags.matchVisible) },
+              { label: 'Discoverable', met: Boolean(data?.flags.discoverable) },
+              { label: 'Match-visible', met: Boolean(data?.flags.matchVisible) },
               {
-                label: 'Intro eligible',
+                label: 'Intro-eligible',
                 met: Boolean(data?.flags.introEligible),
               },
+              { label: 'Strongly trusted', met: Boolean(data?.flags.stronglyTrusted) },
             ].map((item) => (
               <div key={item.label} className="flex items-center gap-2 text-sm">
                 {item.met ? (

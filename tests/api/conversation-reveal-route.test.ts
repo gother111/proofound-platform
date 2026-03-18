@@ -14,8 +14,6 @@ const mocks = vi.hoisted(() => ({
   resendSend: vi.fn(),
   logInfo: vi.fn(),
   logError: vi.fn(),
-  getHiringCorridorRecordForMatch: vi.fn(),
-  buildHiringCorridorSnapshot: vi.fn(),
 }));
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -59,14 +57,6 @@ vi.mock('@/lib/matching/review-contract', () => ({
 
 vi.mock('@/lib/workflow/service', () => ({
   syncRevealRequestTimeoutState: mocks.syncRevealRequestTimeoutState,
-}));
-
-vi.mock('@/lib/hiring-corridor/service', () => ({
-  getHiringCorridorRecordForMatch: mocks.getHiringCorridorRecordForMatch,
-}));
-
-vi.mock('@/lib/hiring-corridor/snapshot', () => ({
-  buildHiringCorridorSnapshot: mocks.buildHiringCorridorSnapshot,
 }));
 
 vi.mock('@/lib/log', () => ({
@@ -121,8 +111,6 @@ describe('POST /api/conversations/[conversationId]/reveal', () => {
     ];
     mocks.profileFindFirst.mockImplementation(async () => profileRows.shift() ?? null);
     mocks.resendSend.mockResolvedValue({ data: { id: 'email-1' }, error: null });
-    mocks.getHiringCorridorRecordForMatch.mockResolvedValue(null);
-    mocks.buildHiringCorridorSnapshot.mockReturnValue(null);
     mocks.syncRevealRequestTimeoutState.mockImplementation(async ({ conversation }: any) => ({
       conversation,
       timeout: {

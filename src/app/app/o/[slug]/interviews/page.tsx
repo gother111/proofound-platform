@@ -1,13 +1,13 @@
 /**
  * Interviews Page - Organization
  *
- * View and manage the hiring corridor for your organization.
- * Shows reveal approval, interview scheduling, decision, and engagement verification.
+ * View and manage scheduled interviews for your organization.
+ * Shows upcoming interviews with candidates.
  */
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Calendar,
   Clock,
@@ -20,13 +20,7 @@ import {
   Pencil,
   XCircle,
 } from 'lucide-react';
-import { toast } from 'sonner';
-
-import { getInterviewCorridorItems } from '@/app/actions/interviews';
 import { DecisionDialog } from '@/components/decisions/DecisionDialog';
-import { HiringCorridorTimeline } from '@/components/interviews/HiringCorridorTimeline';
-import { ScheduleInterviewButton } from '@/components/interviews/ScheduleInterviewButton';
-import { CardListSkeleton, PageIntroSkeleton } from '@/components/skeletons/CoreLoadingPrimitives';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -35,37 +29,30 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { AppSurface } from '@/components/ui/v2/AppSurface';
 import {
   buildGoogleCalendarUrl,
   downloadInterviewIcs,
   type InterviewCalendarPayload,
 } from '@/lib/interviews/calendar';
-import type { HiringCorridorSnapshot } from '@/lib/hiring-corridor/snapshot';
+import { AppSurface } from '@/components/ui/v2/AppSurface';
+import { getInterviews as getInterviewsAction } from '@/app/actions/interviews';
+import { toast } from 'sonner';
+import { CardListSkeleton, PageIntroSkeleton } from '@/components/skeletons/CoreLoadingPrimitives';
 
 export const dynamic = 'force-dynamic';
 
 interface Interview {
   id: string;
   matchId: string;
-  assignmentTitle: string | null;
-  organizationName: string | null;
-  candidateDisplayName: string | null;
-  introAcceptedAt: string | null;
-  interview: {
-    id: string;
-    scheduledAt: string | null;
-    duration: number;
-    platform: string | null;
-    meetingUrl: string | null;
-    manualMeetingProvider: string | null;
-    rescheduleCount: number;
-    status: string | null;
-    completedAt: string | null;
-    cancelledAt: string | null;
-    noShowAt: string | null;
-  } | null;
-  corridor: HiringCorridorSnapshot;
+  scheduledAt: string;
+  duration: number;
+  platform: string;
+  meetingUrl: string;
+  status: string;
+  rescheduleCount?: number;
+  candidateName?: string;
+  assignmentTitle?: string;
+  matchAgreedAt?: string;
   decisionState?: string | null;
   engagementVerification?: {
     id: string;
@@ -97,22 +84,8 @@ export default function OrganizationInterviewsPage() {
   );
 
   useEffect(() => {
-    void loadInterviews();
+    loadInterviews();
   }, []);
-
-  const loadInterviews = async () => {
-    setIsLoading(true);
-
-    try {
-      const data = await getInterviewCorridorItems({ perspective: 'organization' });
-      setInterviews((data.items as Interview[]) || []);
-    } catch (error) {
-      console.error('Failed to load interviews:', error);
-      setInterviews([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleOpenDecisionDialog = (interview: Interview) => {
     setSelectedInterview(interview);
@@ -125,7 +98,21 @@ export default function OrganizationInterviewsPage() {
   };
 
   const handleDecisionMade = () => {
-    void loadInterviews();
+    loadInterviews(); // Refresh interviews after decision
+  };
+
+  const loadInterviews = async () => {
+    setIsLoading(true);
+
+    try {
+      const data = await getInterviewsAction();
+      setInterviews(data.interviews || []);
+    } catch (error) {
+      console.error('Failed to load interviews:', error);
+      setInterviews([]); // Set empty array on error
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const formatDate = (dateStr: string) => {
@@ -148,23 +135,18 @@ export default function OrganizationInterviewsPage() {
   };
 
   const toCalendarPayload = (interview: Interview): InterviewCalendarPayload => ({
-    interviewId: interview.interview?.id ?? interview.id,
-    scheduledAt: interview.interview?.scheduledAt ?? new Date().toISOString(),
-    durationMinutes: interview.interview?.duration ?? 30,
-    meetingUrl: interview.interview?.meetingUrl ?? 'pending',
-    platform: interview.interview?.platform ?? 'manual',
-    title:
-      interview.candidateDisplayName || interview.corridor.subjectLabel
-        ? `Interview with ${interview.candidateDisplayName || interview.corridor.subjectLabel}`
-        : 'Proofound interview',
+    interviewId: interview.id,
+    scheduledAt: interview.scheduledAt,
+    durationMinutes: interview.duration,
+    meetingUrl: interview.meetingUrl,
+    platform: interview.platform,
+    title: interview.candidateName
+      ? `Interview with ${interview.candidateName}`
+      : 'Proofound interview',
   });
 
   const openEditDialog = (interview: Interview) => {
-    if (!interview.interview?.scheduledAt) {
-      return;
-    }
-
-    const scheduled = new Date(interview.interview.scheduledAt);
+    const scheduled = new Date(interview.scheduledAt);
     const localDate = `${scheduled.getFullYear()}-${String(scheduled.getMonth() + 1).padStart(
       2,
       '0'
@@ -188,7 +170,7 @@ export default function OrganizationInterviewsPage() {
   };
 
   const handleSaveInterviewEdit = async () => {
-    if (!editingInterview?.interview) return;
+    if (!editingInterview) return;
     if (!editDate || !editTime) {
       toast.error('Select both date and time before saving');
       return;
@@ -206,7 +188,7 @@ export default function OrganizationInterviewsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          interviewId: editingInterview.interview.id,
+          interviewId: editingInterview.id,
           scheduledAt: editedAt.toISOString(),
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
           ...(editReason.trim() ? { reason: editReason.trim() } : {}),
@@ -228,10 +210,6 @@ export default function OrganizationInterviewsPage() {
   };
 
   const handleCancelInterview = async (interview: Interview) => {
-    if (!interview.interview) {
-      return;
-    }
-
     if (!confirm('Are you sure you want to cancel this interview?')) {
       return;
     }
@@ -239,13 +217,13 @@ export default function OrganizationInterviewsPage() {
     const reasonInput = window.prompt('Optional reason for cancellation (shown in conversation):');
     const reason = typeof reasonInput === 'string' ? reasonInput.trim() : '';
 
-    setIsCancellingInterviewId(interview.interview.id);
+    setIsCancellingInterviewId(interview.id);
     try {
       const response = await fetch('/api/interviews/cancel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          interviewId: interview.interview.id,
+          interviewId: interview.id,
           ...(reason ? { reason } : {}),
         }),
       });
@@ -265,8 +243,7 @@ export default function OrganizationInterviewsPage() {
   };
 
   const resolveEngagementTypeValue = (interview: Interview) => {
-    const verification =
-      interview.engagementVerification ?? interview.corridor.engagementVerification;
+    const verification = interview.engagementVerification;
     if (!verification) {
       return '';
     }
@@ -275,8 +252,7 @@ export default function OrganizationInterviewsPage() {
   };
 
   const handleConfirmEngagement = async (interview: Interview) => {
-    const verification =
-      interview.engagementVerification ?? interview.corridor.engagementVerification;
+    const verification = interview.engagementVerification;
     if (!verification) {
       return;
     }
@@ -319,7 +295,7 @@ export default function OrganizationInterviewsPage() {
 
     return (
       <span
-        className="rounded-full px-2 py-1 text-xs font-medium"
+        className="px-2 py-1 rounded-full text-xs font-medium"
         style={{
           backgroundColor: decisionState === 'hire' ? '#E8F5E9' : '#F1F5F9',
           color: decisionState === 'hire' ? '#2E7D32' : '#334155',
@@ -331,17 +307,16 @@ export default function OrganizationInterviewsPage() {
   };
 
   const getEngagementBadge = (interview: Interview) => {
-    const verification =
-      interview.engagementVerification ?? interview.corridor.engagementVerification;
-    if (!verification) {
+    if (!interview.engagementVerification) {
       return null;
     }
 
+    const verification = interview.engagementVerification;
     const isVerified = verification.status === 'verified';
 
     return (
       <span
-        className="rounded-full px-2 py-1 text-xs font-medium"
+        className="px-2 py-1 rounded-full text-xs font-medium"
         style={{
           backgroundColor: isVerified ? '#E8F5E9' : '#FEF3C7',
           color: isVerified ? '#2E7D32' : '#92400E',
@@ -353,34 +328,14 @@ export default function OrganizationInterviewsPage() {
   };
 
   const canEditInterview = (interview: Interview) =>
-    interview.interview?.status === 'scheduled' &&
-    Boolean(interview.interview.scheduledAt) &&
-    new Date(interview.interview.scheduledAt as string) > new Date() &&
-    (interview.interview.rescheduleCount ?? 0) < 1;
-
-  const canScheduleInterview = (interview: Interview) =>
-    interview.corridor.nextAction.id === 'schedule_interview' ||
-    interview.corridor.nextAction.id === 'advance_to_next_interview';
-
-  const canRecordDecision = (interview: Interview) =>
-    interview.corridor.nextAction.id === 'record_decision' && Boolean(interview.interview?.id);
-
-  const canConfirmEngagement = (interview: Interview) =>
-    interview.corridor.nextAction.id === 'confirm_engagement' &&
-    Boolean(
-      (interview.engagementVerification ?? interview.corridor.engagementVerification)
-        ?.organizationConfirmedAt === null
-    );
-
-  const scheduleAnchorDateFor = (interview: Interview) =>
-    interview.corridor.nextAction.id === 'advance_to_next_interview'
-      ? new Date()
-      : new Date(interview.introAcceptedAt ?? Date.now());
+    interview.status === 'scheduled' &&
+    new Date(interview.scheduledAt) > new Date() &&
+    (interview.rescheduleCount ?? 0) < 1;
 
   if (isLoading) {
     return (
       <AppSurface>
-        <div className="mx-auto max-w-4xl space-y-6">
+        <div className="max-w-4xl mx-auto space-y-6">
           <PageIntroSkeleton showAction={false} />
           <CardListSkeleton count={3} />
         </div>
@@ -390,191 +345,156 @@ export default function OrganizationInterviewsPage() {
 
   return (
     <AppSurface>
-      <div className="mx-auto max-w-4xl">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
         <div className="mb-8">
-          <h1 className="mb-2 text-2xl font-semibold" style={{ color: '#2D3330' }}>
+          <h1 className="text-2xl font-semibold mb-2" style={{ color: '#2D3330' }}>
             Interviews
           </h1>
           <p className="text-sm" style={{ color: '#6B6760' }}>
-            Track the full hiring corridor, from shortlist through decision and engagement
-            verification
+            Manage interviews with shortlisted candidates
           </p>
         </div>
 
+        {/* Interviews List */}
         {interviews.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white px-4 py-16 text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-japandi-bg">
-              <Calendar className="h-8 w-8" style={{ color: '#1C4D3A' }} />
-            </div>
-            <h2 className="mb-2 text-xl font-medium" style={{ color: '#2D3330' }}>
-              No Active Hiring Corridor Yet
+          <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+            <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+            <h2 className="text-lg font-medium mb-2" style={{ color: '#2D3330' }}>
+              No Interviews Scheduled
             </h2>
-            <p className="mb-6 max-w-md text-sm text-muted-foreground">
-              Once you shortlist a candidate, this page will show each corridor stage, the privacy
-              status, and the next legal action.
+            <p className="text-sm mb-4" style={{ color: '#6B6760' }}>
+              Once you shortlist candidates from your matches, you can schedule interviews.
+            </p>
+            <p className="text-xs" style={{ color: '#6B6760' }}>
+              Interviews are 30 minutes and must be scheduled within 7 days of match acceptance.
             </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {interviews.map((interview) => {
-              const verification =
-                interview.engagementVerification ?? interview.corridor.engagementVerification;
-              const hasFutureInterview =
-                interview.interview?.status === 'scheduled' &&
-                Boolean(interview.interview.scheduledAt) &&
-                new Date(interview.interview.scheduledAt as string) > new Date();
-
-              return (
-                <div
-                  key={interview.id}
-                  className="rounded-lg border border-gray-200 bg-white p-6 transition-colors hover:border-gray-300"
-                >
-                  <div className="flex items-start justify-between gap-6">
-                    <div className="flex-1 space-y-4">
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                          {interview.candidateDisplayName ? (
-                            <>
-                              <User className="h-4 w-4" style={{ color: '#1C4D3A' }} />
-                              <p className="text-base font-semibold" style={{ color: '#2D3330' }}>
-                                {interview.candidateDisplayName}
-                              </p>
-                            </>
-                          ) : (
-                            <p className="text-base font-semibold" style={{ color: '#2D3330' }}>
-                              {interview.corridor.subjectLabel}
-                            </p>
-                          )}
-                        </div>
-                        {interview.assignmentTitle ? (
-                          <p className="text-sm" style={{ color: '#6B6760' }}>
-                            {interview.assignmentTitle}
-                          </p>
-                        ) : null}
+            {interviews.map((interview) => (
+              <div
+                key={interview.id}
+                className="bg-white rounded-lg border border-gray-200 p-6 hover:border-gray-300 transition-colors"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    {/* Candidate Info */}
+                    {interview.candidateName && (
+                      <div className="flex items-center gap-2 mb-3">
+                        <User className="w-4 h-4" style={{ color: '#1C4D3A' }} />
+                        <span className="font-medium" style={{ color: '#2D3330' }}>
+                          {interview.candidateName}
+                        </span>
+                        {interview.assignmentTitle && (
+                          <span className="text-sm" style={{ color: '#6B6760' }}>
+                            • {interview.assignmentTitle}
+                          </span>
+                        )}
                       </div>
+                    )}
 
-                      <HiringCorridorTimeline corridor={interview.corridor} />
-
-                      {interview.interview?.scheduledAt ? (
-                        <div className="space-y-3">
-                          <div className="flex flex-wrap items-center gap-4">
-                            <div className="flex items-center gap-2">
-                              <Calendar className="h-4 w-4" style={{ color: '#1C4D3A' }} />
-                              <span className="font-medium" style={{ color: '#2D3330' }}>
-                                {formatDate(interview.interview.scheduledAt)}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4" style={{ color: '#6B6760' }} />
-                              <span className="text-sm" style={{ color: '#6B6760' }}>
-                                {formatTime(interview.interview.scheduledAt)} (
-                                {interview.interview.duration} min)
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="flex flex-wrap items-center gap-4">
-                            {interview.interview.platform ? (
-                              <div className="flex items-center gap-2">
-                                <Video className="h-4 w-4" style={{ color: '#6B6760' }} />
-                                <span className="text-sm capitalize" style={{ color: '#6B6760' }}>
-                                  {interview.interview.platform}
-                                </span>
-                              </div>
-                            ) : null}
-
-                            {interview.interview.meetingUrl &&
-                            interview.interview.meetingUrl !== 'pending' ? (
-                              <>
-                                <a
-                                  href={interview.interview.meetingUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-1 text-sm hover:underline"
-                                  style={{ color: '#1C4D3A' }}
-                                >
-                                  Join Meeting
-                                  <ExternalLink className="h-3 w-3" />
-                                </a>
-                                <a
-                                  href={buildGoogleCalendarUrl(toCalendarPayload(interview))}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-1 text-sm hover:underline"
-                                  style={{ color: '#1C4D3A' }}
-                                >
-                                  Add to Google Calendar
-                                  <CalendarPlus className="h-3 w-3" />
-                                </a>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-7 px-2 text-xs"
-                                  onClick={() => downloadInterviewIcs(toCalendarPayload(interview))}
-                                >
-                                  <Download className="mr-1 h-3 w-3" />
-                                  .ics
-                                </Button>
-                              </>
-                            ) : null}
-                          </div>
-                        </div>
-                      ) : null}
-
-                      <div className="flex flex-wrap gap-2">
-                        {interview.interview?.status ? (
-                          <span
-                            className="rounded-full px-2 py-1 text-xs font-medium"
-                            style={{
-                              backgroundColor:
-                                interview.interview.status === 'scheduled'
-                                  ? '#E8F5E9'
-                                  : interview.interview.status === 'completed'
-                                    ? '#E3F2FD'
-                                    : '#FFF3E0',
-                              color:
-                                interview.interview.status === 'scheduled'
-                                  ? '#2E7D32'
-                                  : interview.interview.status === 'completed'
-                                    ? '#1565C0'
-                                    : '#E65100',
-                            }}
-                          >
-                            {interview.interview.status}
-                          </span>
-                        ) : null}
-                        {getDecisionBadge(interview.decisionState)}
-                        {getEngagementBadge(interview)}
-                        {(interview.interview?.rescheduleCount ?? 0) > 0 ? (
-                          <span
-                            className="rounded-full px-2 py-1 text-xs font-medium"
-                            style={{
-                              backgroundColor: '#FEF3C7',
-                              color: '#92400E',
-                            }}
-                          >
-                            Rescheduled {interview.interview?.rescheduleCount} time
-                            {(interview.interview?.rescheduleCount ?? 0) === 1 ? '' : 's'}
-                          </span>
-                        ) : null}
+                    {/* Date & Time */}
+                    <div className="flex items-center gap-4 mb-3">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4" style={{ color: '#1C4D3A' }} />
+                        <span className="font-medium" style={{ color: '#2D3330' }}>
+                          {formatDate(interview.scheduledAt)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4" style={{ color: '#6B6760' }} />
+                        <span className="text-sm" style={{ color: '#6B6760' }}>
+                          {formatTime(interview.scheduledAt)} ({interview.duration} min)
+                        </span>
                       </div>
                     </div>
 
-                    <div className="flex min-w-[210px] flex-col gap-2">
-                      {canScheduleInterview(interview) && interview.introAcceptedAt ? (
-                        <ScheduleInterviewButton
-                          matchId={interview.matchId}
-                          matchAgreedAt={scheduleAnchorDateFor(interview)}
-                          existingInterviewsCount={0}
-                          variant="default"
-                          size="sm"
-                          onScheduled={() => {
-                            void loadInterviews();
-                          }}
-                        />
-                      ) : null}
+                    {/* Platform & Meeting Link */}
+                    <div className="flex items-center gap-4 mb-4 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <Video className="w-4 h-4" style={{ color: '#6B6760' }} />
+                        <span className="text-sm capitalize" style={{ color: '#6B6760' }}>
+                          {interview.platform}
+                        </span>
+                      </div>
+                      {interview.meetingUrl !== 'pending' && (
+                        <>
+                          <a
+                            href={interview.meetingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm flex items-center gap-1 hover:underline"
+                            style={{ color: '#1C4D3A' }}
+                          >
+                            Join Meeting
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                          <a
+                            href={buildGoogleCalendarUrl(toCalendarPayload(interview))}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm flex items-center gap-1 hover:underline"
+                            style={{ color: '#1C4D3A' }}
+                          >
+                            Add to Google Calendar
+                            <CalendarPlus className="w-3 h-3" />
+                          </a>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => downloadInterviewIcs(toCalendarPayload(interview))}
+                          >
+                            <Download className="w-3 h-3 mr-1" />
+                            .ics
+                          </Button>
+                        </>
+                      )}
+                    </div>
 
-                      {hasFutureInterview ? (
+                    {/* Status Badge */}
+                    <div className="flex flex-wrap gap-2">
+                      <span
+                        className="px-2 py-1 rounded-full text-xs font-medium"
+                        style={{
+                          backgroundColor:
+                            interview.status === 'scheduled'
+                              ? '#E8F5E9'
+                              : interview.status === 'completed'
+                                ? '#E3F2FD'
+                                : '#FFF3E0',
+                          color:
+                            interview.status === 'scheduled'
+                              ? '#2E7D32'
+                              : interview.status === 'completed'
+                                ? '#1565C0'
+                                : '#E65100',
+                        }}
+                      >
+                        {interview.status}
+                      </span>
+                      {getDecisionBadge(interview.decisionState)}
+                      {getEngagementBadge(interview)}
+                      {(interview.rescheduleCount ?? 0) > 0 && (
+                        <span
+                          className="px-2 py-1 rounded-full text-xs font-medium"
+                          style={{
+                            backgroundColor: '#FEF3C7',
+                            color: '#92400E',
+                          }}
+                        >
+                          Rescheduled {interview.rescheduleCount} time
+                          {(interview.rescheduleCount ?? 0) === 1 ? '' : 's'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex flex-col gap-2">
+                    {interview.status === 'scheduled' &&
+                      new Date(interview.scheduledAt) > new Date() && (
                         <>
                           <Button
                             variant="outline"
@@ -583,8 +503,8 @@ export default function OrganizationInterviewsPage() {
                             disabled={!canEditInterview(interview)}
                             className="flex items-center gap-2"
                           >
-                            <Pencil className="h-4 w-4" />
-                            {(interview.interview?.rescheduleCount ?? 0) > 0
+                            <Pencil className="w-4 h-4" />
+                            {(interview.rescheduleCount ?? 0) > 0
                               ? 'Reschedule limit reached'
                               : 'Edit Interview'}
                           </Button>
@@ -592,31 +512,34 @@ export default function OrganizationInterviewsPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleCancelInterview(interview)}
-                            disabled={isCancellingInterviewId === interview.interview?.id}
-                            className="flex items-center gap-2 border-[#E0C9C1] text-[#A03A2A]"
+                            disabled={isCancellingInterviewId === interview.id}
+                            className="flex items-center gap-2 text-[#A03A2A] border-[#E0C9C1]"
                           >
-                            <XCircle className="h-4 w-4" />
-                            {isCancellingInterviewId === interview.interview?.id
+                            <XCircle className="w-4 h-4" />
+                            {isCancellingInterviewId === interview.id
                               ? 'Cancelling...'
                               : 'Cancel Interview'}
                           </Button>
                         </>
-                      ) : null}
-
-                      {canRecordDecision(interview) && interview.interview?.id ? (
-                        <Button
-                          variant="default"
-                          size="sm"
-                          onClick={() => handleOpenDecisionDialog(interview)}
-                          className="flex items-center gap-2"
-                          style={{ backgroundColor: '#1C4D3A' }}
-                        >
-                          <FileCheck className="h-4 w-4" />
-                          Record Decision
-                        </Button>
-                      ) : null}
-
-                      {canConfirmEngagement(interview) && verification ? (
+                      )}
+                    {/* Decision button for completed interviews or past scheduled interviews */}
+                    {(interview.status === 'completed' ||
+                      (interview.status === 'scheduled' &&
+                        new Date(interview.scheduledAt) < new Date())) && (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => handleOpenDecisionDialog(interview)}
+                        className="flex items-center gap-2"
+                        style={{ backgroundColor: '#1C4D3A' }}
+                      >
+                        <FileCheck className="w-4 h-4" />
+                        Record Decision
+                      </Button>
+                    )}
+                    {interview.decisionState === 'hire' &&
+                      interview.engagementVerification &&
+                      !interview.engagementVerification.organizationConfirmedAt && (
                         <>
                           <select
                             aria-label="Engagement type"
@@ -624,7 +547,7 @@ export default function OrganizationInterviewsPage() {
                             onChange={(event) =>
                               setEngagementTypeSelections((current) => ({
                                 ...current,
-                                [verification.id]: event.target.value,
+                                [interview.engagementVerification!.id]: event.target.value,
                               }))
                             }
                             className="h-9 rounded-md border border-gray-300 px-3 text-sm"
@@ -639,21 +562,22 @@ export default function OrganizationInterviewsPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleConfirmEngagement(interview)}
-                            disabled={isConfirmingEngagementId === verification.id}
+                            disabled={
+                              isConfirmingEngagementId === interview.engagementVerification.id
+                            }
                             className="flex items-center gap-2"
                           >
-                            <FileCheck className="h-4 w-4" />
-                            {isConfirmingEngagementId === verification.id
+                            <FileCheck className="w-4 h-4" />
+                            {isConfirmingEngagementId === interview.engagementVerification.id
                               ? 'Confirming...'
                               : 'Confirm Engagement'}
                           </Button>
                         </>
-                      ) : null}
-                    </div>
+                      )}
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         )}
 
@@ -669,14 +593,13 @@ export default function OrganizationInterviewsPage() {
               </DialogDescription>
             </DialogHeader>
 
-            {editingInterview ? (
+            {editingInterview && (
               <p className="text-xs text-muted-foreground">
-                {editingInterview.interview?.rescheduleCount &&
-                editingInterview.interview.rescheduleCount > 0
+                {editingInterview.rescheduleCount && editingInterview.rescheduleCount > 0
                   ? 'This interview has already been rescheduled once. Further edits are blocked by the launch policy.'
                   : 'Launch policy allows one auditable reschedule on the same interview record.'}
               </p>
-            ) : null}
+            )}
 
             <div className="space-y-4 py-2">
               <div className="space-y-2">
@@ -740,18 +663,17 @@ export default function OrganizationInterviewsPage() {
           </DialogContent>
         </Dialog>
 
-        {selectedInterview?.interview?.id ? (
+        {/* Decision Dialog */}
+        {selectedInterview && (
           <DecisionDialog
             isOpen={decisionDialogOpen}
             onClose={handleCloseDecisionDialog}
-            interviewId={selectedInterview.interview.id}
-            candidateName={
-              selectedInterview.candidateDisplayName || selectedInterview.corridor.subjectLabel
-            }
+            interviewId={selectedInterview.id}
+            candidateName={selectedInterview.candidateName || 'Candidate'}
             role={selectedInterview.assignmentTitle || 'Assignment'}
             onDecisionMade={handleDecisionMade}
           />
-        ) : null}
+        )}
       </div>
     </AppSurface>
   );

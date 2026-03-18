@@ -140,12 +140,6 @@ export function AddSkillDrawer({
     return decoded.length > 0 ? decoded.slice(0, 80) : 'Uploaded Document';
   };
 
-  const hasProofContext = Boolean(
-    proofSource === 'url'
-      ? proofUrl.trim()
-      : proofUploadedFileId.trim() || proofFilePath.trim() || proofUrl.trim()
-  );
-
   // Reset drawer state when closed
   useEffect(() => {
     if (!open) {
@@ -611,7 +605,7 @@ export function AddSkillDrawer({
       setProofUrl(result.url || '');
       setProofUploadError('');
       if (!proofNotes.trim()) {
-        setProofNotes(result.artifactDisplayName || result.fileName || file.name);
+        setProofNotes(result.fileName || file.name);
       }
     } catch (error) {
       console.error('Proof upload failed:', error);
@@ -694,15 +688,6 @@ export function AddSkillDrawer({
     }
 
     if (requestVerification) {
-      if (!hasProofContext) {
-        toast({
-          title: 'Add proof first',
-          description: 'Attach a proof link or upload before asking someone to confirm this skill.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
       const normalizedEmail = verificationEmail.trim().toLowerCase();
       if (!normalizedEmail) {
         toast({
@@ -1035,7 +1020,6 @@ export function AddSkillDrawer({
       setProofIssuedDate={setProofIssuedDate}
       proofExpiresDate={proofExpiresDate}
       setProofExpiresDate={setProofExpiresDate}
-      hasProofContext={hasProofContext}
       requestVerification={requestVerification}
       setRequestVerification={setRequestVerification}
       verificationEmail={verificationEmail}

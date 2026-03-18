@@ -1,26 +1,23 @@
 'use client';
 
 import { useState } from 'react';
-import { Briefcase, Globe, PackageOpen, ShieldCheck } from 'lucide-react';
+import { Briefcase, GraduationCap, HandHeart, Network, Target } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { IndividualProfileCompletionState } from '@/lib/profile/completion-flow';
 import type { Education, Experience, ImpactStory, Volunteering } from '@/types/profile';
 
-import { ContextTab } from './ContextTab';
 import { ImpactTab } from './ImpactTab';
-import { VerificationTab } from './VerificationTab';
-import { VisibilityPortfolioTab } from './VisibilityPortfolioTab';
+import { JourneyTab } from './JourneyTab';
+import { LearningTab } from './LearningTab';
+import { NetworkTab } from './NetworkTab';
+import { ServiceTab } from './ServiceTab';
 
 type ProfileTabsSectionProps = {
   impactStories: ImpactStory[];
   experiences: Experience[];
   education: Education[];
   volunteering: Volunteering[];
-  completionState: IndividualProfileCompletionState;
-  proofArtifactCount: number;
-  acceptedVerificationCount: number;
   isPending: boolean;
   impactPending: boolean;
   onAddImpactStory: () => void;
@@ -42,9 +39,6 @@ export function ProfileTabsSection({
   experiences,
   education,
   volunteering,
-  completionState,
-  proofArtifactCount,
-  acceptedVerificationCount,
   isPending,
   impactPending,
   onAddImpactStory,
@@ -60,21 +54,22 @@ export function ProfileTabsSection({
   onEditVolunteering,
   onDeleteVolunteering,
 }: ProfileTabsSectionProps) {
-  const [activeTab, setActiveTab] = useState('context');
+  const [activeTab, setActiveTab] = useState('journey');
 
   return (
     <Tabs
-      defaultValue="context"
+      defaultValue="journey"
       value={activeTab}
       onValueChange={setActiveTab}
       className="space-y-8"
     >
       <TabsList className="w-full justify-start bg-transparent border-b border-border/40 rounded-none h-auto p-0 gap-6 relative">
         {[
-          { id: 'context', label: 'Context', icon: Briefcase, color: '#C67B5C' },
-          { id: 'proof_packs', label: 'Proof Packs', icon: PackageOpen, color: '#7A9278' },
-          { id: 'verification', label: 'Verification', icon: ShieldCheck, color: '#5C8B89' },
-          { id: 'visibility', label: 'Visibility / Portfolio', icon: Globe, color: '#7A9278' },
+          { id: 'journey', label: 'Journey', icon: Briefcase, color: '#C67B5C' },
+          { id: 'learning', label: 'Learning', icon: GraduationCap, color: '#5C8B89' },
+          { id: 'service', label: 'Service', icon: HandHeart, color: '#C67B5C' },
+          { id: 'impact', label: 'Proof stories', icon: Target, color: '#7A9278' },
+          { id: 'network', label: 'Network', icon: Network, color: '#7A9278' },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -102,35 +97,36 @@ export function ProfileTabsSection({
         })}
       </TabsList>
 
-      <ContextTab
-        experiences={experiences}
-        education={education}
-        volunteering={volunteering}
-        onAddExperience={onAddExperience}
-        onEditExperience={onEditExperience}
-        onDeleteExperience={onDeleteExperience}
-        onAddEducation={onAddEducation}
-        onEditEducation={onEditEducation}
-        onDeleteEducation={onDeleteEducation}
-        onAddVolunteering={onAddVolunteering}
-        onEditVolunteering={onEditVolunteering}
-        onDeleteVolunteering={onDeleteVolunteering}
-      />
-
       <ImpactTab
         impactStories={impactStories}
         onAddStory={onAddImpactStory}
         onEditStory={onEditImpactStory}
         onDeleteStory={onDeleteImpactStory}
         actionsDisabled={impactPending || isPending}
-        completionState={completionState}
-        proofArtifactCount={proofArtifactCount}
-        acceptedVerificationCount={acceptedVerificationCount}
       />
 
-      <VerificationTab acceptedVerificationCount={acceptedVerificationCount} />
+      <JourneyTab
+        experiences={experiences}
+        onAddExperience={onAddExperience}
+        onEditExperience={onEditExperience}
+        onDeleteExperience={onDeleteExperience}
+      />
 
-      <VisibilityPortfolioTab completionState={completionState} />
+      <LearningTab
+        education={education}
+        onAddEducation={onAddEducation}
+        onEditEducation={onEditEducation}
+        onDeleteEducation={onDeleteEducation}
+      />
+
+      <ServiceTab
+        volunteering={volunteering}
+        onAddService={onAddVolunteering}
+        onEditService={onEditVolunteering}
+        onDeleteService={onDeleteVolunteering}
+      />
+
+      <NetworkTab />
     </Tabs>
   );
 }

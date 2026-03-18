@@ -14,7 +14,6 @@ import {
 import type { VerificationDraft, VerificationRequest } from './types';
 
 type VerificationSectionProps = {
-  hasProofContext: boolean;
   verificationRequests: VerificationRequest[];
   loadingVerifications: boolean;
   showRequestVerification: boolean;
@@ -28,7 +27,6 @@ type VerificationSectionProps = {
 };
 
 export function VerificationSection({
-  hasProofContext,
   verificationRequests,
   loadingVerifications,
   showRequestVerification,
@@ -53,18 +51,12 @@ export function VerificationSection({
           variant="outline"
           size="sm"
           onClick={() => setShowRequestVerification(!showRequestVerification)}
-          disabled={!hasProofContext}
           className="border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5"
         >
           <CheckCircle2 className="h-4 w-4 mr-1" />
-          Ask for confirmation
+          Request Verification
         </Button>
       </div>
-      <p className="mb-3 text-sm text-muted-foreground">
-        {hasProofContext
-          ? 'Optional. Skipping is fine for portfolio-ready, but intro-readiness usually needs a non-self trust anchor attached to proof.'
-          : 'Add proof first. Skill attestations must stay attached to a proof link or uploaded document.'}
-      </p>
 
       {showRequestVerification && (
         <Card className="p-4 mb-4 border-proofound-stone">
@@ -115,7 +107,7 @@ export function VerificationSection({
               </Label>
               <Textarea
                 id="verification-message"
-                placeholder="Explain what proof and claim you want them to confirm..."
+                placeholder="Add context for the verifier..."
                 value={newVerificationRequest.message}
                 onChange={(e) =>
                   setNewVerificationRequest({
@@ -159,7 +151,7 @@ export function VerificationSection({
         <div className="text-center py-6 border border-dashed border-proofound-stone rounded-lg">
           <CheckCircle2 className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">
-            No proof confirmations yet. Add proof first, then ask someone who observed this skill.
+            No verification requests yet. Request verification to boost credibility.
           </p>
         </div>
       ) : (

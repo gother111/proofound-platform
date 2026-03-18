@@ -16,22 +16,6 @@ export type LaunchMonitorStatus = (typeof LAUNCH_MONITOR_STATUS_VALUES)[number];
 export const LAUNCH_READINESS_STATE_VALUES = ['ready', 'blocked', 'unverified'] as const;
 export type LaunchReadinessState = (typeof LAUNCH_READINESS_STATE_VALUES)[number];
 
-export const LAUNCH_NOT_READY_REASON_CODE_VALUES = [
-  'stale_http_evidence',
-  'missing_http_evidence',
-  'stale_smoke_artifact',
-  'missing_smoke_artifact',
-  'fresh_failing_http_monitor',
-  'fresh_failing_smoke_monitor',
-] as const;
-export type LaunchNotReadyReasonCode = (typeof LAUNCH_NOT_READY_REASON_CODE_VALUES)[number];
-
-export type LaunchNotReadyReason = {
-  code: LaunchNotReadyReasonCode;
-  message: string;
-  monitorKeys: string[];
-};
-
 export const LAUNCH_SMOKE_CORRIDOR_VALUES = [
   'individual',
   'organization',

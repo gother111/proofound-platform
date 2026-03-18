@@ -91,7 +91,7 @@ export default async function IndividualHomePage() {
                   <Link href="/app/i/portfolio">
                     {metrics.proofStoriesCount === 0
                       ? 'Add your first proof'
-                      : 'Open portfolio workspace'}
+                      : 'Open public portfolio'}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Link>
                 </Button>
@@ -122,12 +122,11 @@ export default async function IndividualHomePage() {
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
             <p>
-              {metrics.proofStoriesCount} proof-backed signal
-              {metrics.proofStoriesCount === 1 ? '' : 's'} currently support the portfolio.
+              {metrics.proofStoriesCount} proof-backed story entries currently support the profile.
             </p>
             <Button asChild variant="outline" className="w-full justify-between">
               <Link href="/app/i/portfolio">
-                Open portfolio workspace
+                Review portfolio
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>

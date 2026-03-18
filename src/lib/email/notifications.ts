@@ -5,7 +5,6 @@
  */
 
 import { sendEmail } from './sender';
-import { applyWorkflowEmailPrivacy, type WorkflowEmailPrivacyOptions } from './privacy';
 import {
   AssignmentInvitationEmail,
   AssignmentInvitationEmailText,
@@ -64,21 +63,7 @@ export async function sendInterviewScheduledEmail(params: {
   meetingLink?: string;
   calendarInvite?: string;
   assignmentTitle?: string;
-  privacy?: WorkflowEmailPrivacyOptions;
 }) {
-  const emailPrivacy = applyWorkflowEmailPrivacy(
-    {
-      subject: `Interview scheduled with ${params.organizationName}`,
-      organizationName: params.organizationName,
-      candidateName: params.candidateName,
-    },
-    {
-      neutralSubject: 'Proofound workflow update',
-      identityVisible: false,
-      organizationVisible: false,
-      ...params.privacy,
-    }
-  );
   const interviewDateFormatted = params.interviewDate.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -93,8 +78,8 @@ export async function sendInterviewScheduledEmail(params: {
   });
 
   const html = InterviewScheduledEmail({
-    candidateName: emailPrivacy.candidateName ?? 'your match',
-    organizationName: emailPrivacy.organizationName ?? 'the organization',
+    candidateName: params.candidateName,
+    organizationName: params.organizationName,
     interviewDate: interviewDateFormatted,
     interviewTime: interviewTimeFormatted,
     duration: params.duration.toString(),
@@ -104,8 +89,8 @@ export async function sendInterviewScheduledEmail(params: {
   });
 
   const text = InterviewScheduledEmailText({
-    candidateName: emailPrivacy.candidateName ?? 'your match',
-    organizationName: emailPrivacy.organizationName ?? 'the organization',
+    candidateName: params.candidateName,
+    organizationName: params.organizationName,
     interviewDate: interviewDateFormatted,
     interviewTime: interviewTimeFormatted,
     duration: params.duration.toString(),
@@ -115,7 +100,7 @@ export async function sendInterviewScheduledEmail(params: {
 
   return await sendEmail({
     to: params.to,
-    subject: emailPrivacy.subject,
+    subject: `Interview scheduled with ${params.organizationName}`,
     html,
     text,
   });
@@ -131,21 +116,7 @@ export async function sendContractSignedEmail(params: {
   contractType: string;
   assignmentTitle?: string;
   nextSteps?: string;
-  privacy?: WorkflowEmailPrivacyOptions;
 }) {
-  const emailPrivacy = applyWorkflowEmailPrivacy(
-    {
-      subject: `Contract signed with ${params.organizationName}!`,
-      organizationName: params.organizationName,
-      candidateName: params.candidateName,
-    },
-    {
-      neutralSubject: 'Proofound workflow update',
-      identityVisible: false,
-      organizationVisible: false,
-      ...params.privacy,
-    }
-  );
   const html = `
 <!DOCTYPE html>
 <html>
@@ -159,9 +130,9 @@ export async function sendContractSignedEmail(params: {
   </div>
 
   <div style="padding: 40px 30px; background-color: white; border-radius: 0 0 8px 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-    <p style="font-size: 18px; margin-bottom: 20px;">Hi ${emailPrivacy.candidateName || 'there'},</p>
+    <p style="font-size: 18px; margin-bottom: 20px;">Hi ${params.candidateName},</p>
 
-    <p>Congratulations! The ${params.contractType} contract with <strong>${emailPrivacy.organizationName || 'the organization'}</strong> has been signed${params.assignmentTitle ? ` for the <strong>${params.assignmentTitle}</strong> opportunity` : ''}.</p>
+    <p>Congratulations! The ${params.contractType} contract with <strong>${params.organizationName}</strong> has been signed${params.assignmentTitle ? ` for the <strong>${params.assignmentTitle}</strong> opportunity` : ''}.</p>
 
     <div style="background-color: #F7F6F1; border-radius: 8px; padding: 24px; margin: 24px 0;">
       <h3 style="margin: 0 0 12px 0; color: #1C4D3A;">What's Next?</h3>
@@ -179,9 +150,9 @@ export async function sendContractSignedEmail(params: {
   const text = `
 Contract Signed!
 
-Hi ${emailPrivacy.candidateName || 'there'},
+Hi ${params.candidateName},
 
-Congratulations! The ${params.contractType} contract with ${emailPrivacy.organizationName || 'the organization'} has been signed${params.assignmentTitle ? ` for the ${params.assignmentTitle} opportunity` : ''}.
+Congratulations! The ${params.contractType} contract with ${params.organizationName} has been signed${params.assignmentTitle ? ` for the ${params.assignmentTitle} opportunity` : ''}.
 
 What's Next?
 ${params.nextSteps || 'You will receive further details from the organization shortly.'}
@@ -191,7 +162,7 @@ You can view your contract details in your Proofound dashboard.
 
   return await sendEmail({
     to: params.to,
-    subject: emailPrivacy.subject,
+    subject: `Contract signed with ${params.organizationName}!`,
     html,
     text,
   });
@@ -207,22 +178,8 @@ export async function sendDecisionFeedbackEmail(params: {
   decision: 'accepted' | 'rejected';
   feedback?: string;
   assignmentTitle?: string;
-  privacy?: WorkflowEmailPrivacyOptions;
 }) {
   const isAccepted = params.decision === 'accepted';
-  const emailPrivacy = applyWorkflowEmailPrivacy(
-    {
-      subject: `Application update from ${params.organizationName}`,
-      organizationName: params.organizationName,
-      candidateName: params.candidateName,
-    },
-    {
-      neutralSubject: 'Proofound workflow update',
-      identityVisible: false,
-      organizationVisible: false,
-      ...params.privacy,
-    }
-  );
 
   const html = `
 <!DOCTYPE html>
@@ -237,15 +194,15 @@ export async function sendDecisionFeedbackEmail(params: {
   </div>
 
   <div style="padding: 40px 30px; background-color: white; border-radius: 0 0 8px 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-    <p style="font-size: 18px; margin-bottom: 20px;">Hi ${emailPrivacy.candidateName || 'there'},</p>
+    <p style="font-size: 18px; margin-bottom: 20px;">Hi ${params.candidateName},</p>
 
-    <p>Thank you for your interest in ${params.assignmentTitle ? `the <strong>${params.assignmentTitle}</strong> opportunity with` : ''} <strong>${emailPrivacy.organizationName || 'the organization'}</strong>.</p>
+    <p>Thank you for your interest in ${params.assignmentTitle ? `the <strong>${params.assignmentTitle}</strong> opportunity with` : ''} <strong>${params.organizationName}</strong>.</p>
 
     ${
       params.feedback
         ? `
     <div style="background-color: #F7F6F1; border-left: 4px solid #1C4D3A; border-radius: 6px; padding: 16px; margin: 24px 0;">
-      <h3 style="margin: 0 0 12px 0; color: #1C4D3A;">Feedback from ${emailPrivacy.organizationName || 'the organization'}:</h3>
+      <h3 style="margin: 0 0 12px 0; color: #1C4D3A;">Feedback from ${params.organizationName}:</h3>
       <p style="margin: 0;">${params.feedback}</p>
     </div>
     `
@@ -263,18 +220,18 @@ export async function sendDecisionFeedbackEmail(params: {
   const text = `
 Application Update
 
-Hi ${emailPrivacy.candidateName || 'there'},
+Hi ${params.candidateName},
 
-Thank you for your interest in ${params.assignmentTitle ? `the ${params.assignmentTitle} opportunity with` : ''} ${emailPrivacy.organizationName || 'the organization'}.
+Thank you for your interest in ${params.assignmentTitle ? `the ${params.assignmentTitle} opportunity with` : ''} ${params.organizationName}.
 
-${params.feedback ? `Feedback from ${emailPrivacy.organizationName || 'the organization'}:\n${params.feedback}\n\n` : ''}
+${params.feedback ? `Feedback from ${params.organizationName}:\n${params.feedback}\n\n` : ''}
 
 ${isAccepted ? 'You will receive next steps shortly.' : 'We encourage you to continue exploring opportunities on Proofound.'}
   `.trim();
 
   return await sendEmail({
     to: params.to,
-    subject: emailPrivacy.subject,
+    subject: `Application update from ${params.organizationName}`,
     html,
     text,
   });

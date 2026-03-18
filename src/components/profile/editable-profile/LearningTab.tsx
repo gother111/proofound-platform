@@ -14,17 +14,17 @@ export interface LearningTabProps {
   onDeleteEducation: (id: string) => void;
 }
 
-export function LearningSection({
+export function LearningTab({
   education,
   onAddEducation,
   onEditEducation,
   onDeleteEducation,
 }: LearningTabProps) {
   return (
-    <div className="space-y-6">
+    <TabsContent value="learning" className="space-y-6">
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm text-muted-foreground">
-          Learning context that explains where your skills or proof were built.
+          Formal education and meaningful learning experiences
         </p>
         {education.length > 0 && (
           <Button
@@ -33,7 +33,7 @@ export function LearningSection({
             onClick={onAddEducation}
           >
             <Plus className="w-4 h-4 mr-2" />
-            Add learning context
+            Add Education
           </Button>
         )}
       </div>
@@ -64,10 +64,10 @@ export function LearningSection({
               </div>
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Add learning context</h3>
+              <h3 className="text-lg font-semibold">Add Your Learning</h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                Capture formal education or serious learning that gives your proof real-world
-                context.
+                Share your educational background. Include skills gained and meaningful projects
+                that shaped your path.
               </p>
             </div>
             <Button
@@ -75,11 +75,11 @@ export function LearningSection({
               onClick={onAddEducation}
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add learning context
+              Add Education
             </Button>
             <div className="pt-4 text-xs text-muted-foreground">
               <p>
-                Tip: Add the course, program, or learning environment that best anchors your proof.
+                💡 Tip: Include both formal degrees and significant informal learning experiences
               </p>
             </div>
           </div>
@@ -143,14 +143,6 @@ export function LearningSection({
           </Card>
         ))
       )}
-    </div>
-  );
-}
-
-export function LearningTab(props: LearningTabProps) {
-  return (
-    <TabsContent value="learning" className="space-y-6">
-      <LearningSection {...props} />
     </TabsContent>
   );
 }

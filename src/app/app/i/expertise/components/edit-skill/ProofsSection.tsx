@@ -241,8 +241,7 @@ export function ProofsSection({
         <div className="text-center py-6 border border-dashed border-proofound-stone rounded-lg">
           <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">
-            No proofs added yet. Add your first proof so future confirmations stay attached to
-            evidence.
+            No proofs added yet. Add your first proof to boost credibility.
           </p>
           <div className="mt-4 grid grid-cols-1 gap-2 text-left">
             {recoveryActions.map((action) => (

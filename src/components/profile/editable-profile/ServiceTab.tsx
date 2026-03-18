@@ -14,17 +14,17 @@ export interface ServiceTabProps {
   onDeleteService: (id: string) => void;
 }
 
-export function ServiceSection({
+export function ServiceTab({
   volunteering,
   onAddService,
   onEditService,
   onDeleteService,
 }: ServiceTabProps) {
   return (
-    <div className="space-y-6">
+    <TabsContent value="service" className="space-y-6">
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm text-muted-foreground">
-          Volunteering context that shows contribution, ownership, and real-world relevance.
+          Community service connected to personal causes
         </p>
         {volunteering.length > 0 && (
           <Button
@@ -33,7 +33,7 @@ export function ServiceSection({
             onClick={onAddService}
           >
             <Plus className="w-4 h-4 mr-2" />
-            Add volunteering context
+            Add Service
           </Button>
         )}
       </div>
@@ -73,10 +73,10 @@ export function ServiceSection({
               </div>
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Add volunteering context</h3>
+              <h3 className="text-lg font-semibold">Share Your Service</h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                Capture the community or volunteering work that gives your proof stronger context
-                and credibility.
+                Highlight your volunteer work and community involvement. Explain why these causes
+                matter to you and what impact you&apos;ve created.
               </p>
             </div>
             <Button
@@ -84,10 +84,12 @@ export function ServiceSection({
               onClick={onAddService}
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add volunteering context
+              Add Volunteer Work
             </Button>
             <div className="pt-4 text-xs text-muted-foreground">
-              <p>Tip: Focus on one concrete contribution that your proof can point back to.</p>
+              <p>
+                💡 Tip: Connect your service to your values and explain your personal motivation
+              </p>
             </div>
           </div>
         </Card>
@@ -156,14 +158,6 @@ export function ServiceSection({
           </Card>
         ))
       )}
-    </div>
-  );
-}
-
-export function ServiceTab(props: ServiceTabProps) {
-  return (
-    <TabsContent value="service" className="space-y-6">
-      <ServiceSection {...props} />
     </TabsContent>
   );
 }

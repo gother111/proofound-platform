@@ -6,7 +6,6 @@ import {
   collectUploadMetadataFlags,
   isUploadHeldForPrivacyReview,
   parseUploadPrivacyReviewReasons,
-  resolveArtifactDisplayName,
   sanitizeUploadFilename,
 } from '@/lib/uploads/privacy';
 
@@ -45,38 +44,5 @@ describe('upload privacy helpers', () => {
         safetyReason: assessment.safetyReason,
       })
     ).toBe(true);
-  });
-
-  it('uses the stored sanitized filename as the canonical artifact display name', () => {
-    expect(
-      resolveArtifactDisplayName({
-        sanitizedFilename: 'safe_name.pdf',
-        originalFilename: 'Jane Doe Resume.pdf',
-        detectedMime: 'application/pdf',
-        uploadKind: 'document',
-      })
-    ).toBe('safe_name.pdf');
-  });
-
-  it('falls back to sanitizing legacy original filenames when needed', () => {
-    expect(
-      resolveArtifactDisplayName({
-        sanitizedFilename: null,
-        originalFilename: '../Jane Doe resume?.pdf',
-        detectedMime: 'application/pdf',
-        uploadKind: 'document',
-      })
-    ).toBe('Jane_Doe_resume_.pdf');
-  });
-
-  it('uses a typed generic label when no safe filename is available', () => {
-    expect(
-      resolveArtifactDisplayName({
-        sanitizedFilename: null,
-        originalFilename: null,
-        detectedMime: 'application/pdf',
-        uploadKind: 'document',
-      })
-    ).toBe('Uploaded PDF document');
   });
 });

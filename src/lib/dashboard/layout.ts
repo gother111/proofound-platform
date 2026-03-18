@@ -66,6 +66,14 @@ export const AVAILABLE_WIDGETS: Record<string, WidgetConfig> = {
     defaultSize: 'default',
     availableSizes: ['small', 'default'],
   },
+  projects: {
+    id: 'projects',
+    name: 'Projects',
+    description: 'Active projects and collaborations',
+    category: 'productivity',
+    defaultSize: 'large',
+    availableSizes: ['default', 'large'],
+  },
   'matching-results': {
     id: 'matching-results',
     name: 'Matching Results',
@@ -81,6 +89,14 @@ export const AVAILABLE_WIDGETS: Record<string, WidgetConfig> = {
     category: 'insights',
     defaultSize: 'large',
     availableSizes: ['default', 'large'],
+  },
+  'gap-map': {
+    id: 'gap-map',
+    name: 'Skill Gaps',
+    description: 'Top skill gaps to work on',
+    category: 'growth',
+    defaultSize: 'default',
+    availableSizes: ['default'],
   },
   'next-best-actions': {
     id: 'next-best-actions',
@@ -186,8 +202,8 @@ export const PRESET_LAYOUTS: Record<
       { widgetId: 'profile-activation', position: 0, visible: true, size: 'default', settings: {} },
       { widgetId: 'matching-readiness', position: 1, visible: true, size: 'default', settings: {} },
       { widgetId: 'momentum-metrics', position: 2, visible: true, size: 'default', settings: {} },
-      { widgetId: 'next-best-actions', position: 3, visible: true, size: 'full', settings: {} },
-      { widgetId: 'notifications', position: 4, visible: true, size: 'small', settings: {} },
+      { widgetId: 'gap-map', position: 3, visible: true, size: 'default', settings: {} },
+      { widgetId: 'next-best-actions', position: 4, visible: true, size: 'full', settings: {} },
     ],
   },
   // Students and early career professionals

@@ -74,13 +74,6 @@ describe('middleware launch archive behavior', () => {
     const archivedPaths = [
       'http://localhost/api/analytics/fairness',
       'http://localhost/api/analytics/org/next-actions',
-      'http://localhost/api/contracts',
-      'http://localhost/api/projects',
-      'http://localhost/api/skill-gaps',
-      'http://localhost/api/integrations',
-      'http://localhost/api/expertise/profile',
-      'http://localhost/api/expertise/auto-suggest',
-      'http://localhost/api/expertise/cv-import/wizard-suggest',
       'http://localhost/api/dashboard/layout',
       'http://localhost/api/momentum/summary',
       'http://localhost/api/impact/snapshot',
@@ -88,11 +81,6 @@ describe('middleware launch archive behavior', () => {
       'http://localhost/api/org/org-1/dashboard',
       'http://localhost/api/org/org-1/coverage',
       'http://localhost/api/organizations/org-1/culture',
-      'http://localhost/api/organizations/org-1/causes',
-      'http://localhost/api/organizations/org-1/goals',
-      'http://localhost/api/organizations/org-1/ownership',
-      'http://localhost/api/organizations/org-1/partnerships',
-      'http://localhost/api/organizations/org-1/test-matches',
       'http://localhost/api/organizations/org-1/impact/story-1',
       'http://localhost/api/organizations/org-1/projects/project-1',
       'http://localhost/api/organizations/org-1/structure/export',
@@ -147,11 +135,6 @@ describe('middleware launch archive behavior', () => {
       'http://localhost/api/feature-flags',
       'http://localhost/api/monitoring/launch-status',
       'http://localhost/api/monitoring/perf-status',
-      'http://localhost/api/expertise/taxonomy',
-      'http://localhost/api/expertise/jd-to-l4',
-      'http://localhost/api/integrations/video/status',
-      'http://localhost/api/integrations/google/connect',
-      'http://localhost/api/integrations/zoom/callback',
     ];
 
     for (const path of preservedPaths) {

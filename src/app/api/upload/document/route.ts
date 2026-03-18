@@ -67,8 +67,7 @@ export async function POST(request: NextRequest) {
           status: 'manual_review',
           uploadedFileId: upload.uploadedFileId,
           path: upload.storagePath,
-          artifactDisplayName: upload.artifactDisplayName,
-          fileName: upload.artifactDisplayName,
+          fileName: upload.displayName,
           fileSize: file.size,
           fileType:
             TYPE_LABELS[upload.detectedMime || file.type] || upload.detectedMime || file.type,
@@ -84,8 +83,7 @@ export async function POST(request: NextRequest) {
       uploadedFileId: upload.uploadedFileId,
       url: upload.url,
       path: upload.storagePath,
-      artifactDisplayName: upload.artifactDisplayName,
-      fileName: upload.artifactDisplayName,
+      fileName: upload.displayName,
       fileSize: file.size,
       fileType: TYPE_LABELS[upload.detectedMime || file.type] || upload.detectedMime || file.type,
     });

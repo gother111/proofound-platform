@@ -19,9 +19,6 @@ import { log } from '@/lib/log';
 import { Resend } from 'resend';
 import IdentityRevealed from '@/../emails/IdentityRevealed';
 import { EMAIL_CONFIG } from '@/lib/email/config';
-import { applyWorkflowEmailPrivacy } from '@/lib/email/privacy';
-import { getHiringCorridorRecordForMatch } from '@/lib/hiring-corridor/service';
-import { buildHiringCorridorSnapshot } from '@/lib/hiring-corridor/snapshot';
 import { recordRevealEvent, unlockFullIdentityForMatch } from '@/lib/matching/review-contract';
 import { syncRevealRequestTimeoutState } from '@/lib/workflow/service';
 
@@ -35,25 +32,6 @@ interface RouteParams {
   params: Promise<{
     conversationId: string;
   }>;
-}
-
-async function getCorridorPayload(matchId: string | null | undefined, userId: string) {
-  if (!matchId) {
-    return null;
-  }
-
-  const corridorSource = await getHiringCorridorRecordForMatch(matchId);
-  if (!corridorSource) {
-    return null;
-  }
-
-  const perspective = corridorSource.candidateProfileId === userId ? 'individual' : 'organization';
-
-  return buildHiringCorridorSnapshot({
-    source: corridorSource,
-    viewerUserId: userId,
-    perspective,
-  });
 }
 
 /**
@@ -231,8 +209,6 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
         conversationId
       );
 
-      const corridor = await getCorridorPayload(revealedConversation.matchId, user.id);
-
       return NextResponse.json({
         success: true,
         revealed: true,
@@ -242,8 +218,6 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
           stage: revealedConversation.stage,
           revealedAt: revealedConversation.revealedAt,
         },
-        corridor,
-        nextAction: corridor?.nextAction ?? null,
       });
     } else {
       // Waiting for other participant
@@ -284,15 +258,11 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
         }
       }
 
-      const corridor = await getCorridorPayload(updated.matchId, user.id);
-
       return NextResponse.json({
         success: true,
         revealed: false,
         waitingForOther: true,
         message: 'Reveal request sent. Waiting for the other participant to agree.',
-        corridor,
-        nextAction: corridor?.nextAction ?? null,
       });
     }
   } catch (error) {
@@ -358,38 +328,16 @@ async function sendIdentityRevealedEmails(
     }
 
     const conversationUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/i/messages/${conversationId}`;
-    const participantOneEmail = applyWorkflowEmailPrivacy(
-      {
-        subject: 'Identities Revealed - Continue Your Conversation',
-        revealedName: participantTwo?.displayName || 'your match',
-      },
-      {
-        stage: 'revealed',
-        neutralSubject: 'Proofound workflow update',
-        identityVisible: true,
-      }
-    );
-    const participantTwoEmail = applyWorkflowEmailPrivacy(
-      {
-        subject: 'Identities Revealed - Continue Your Conversation',
-        revealedName: participantOne?.displayName || 'your match',
-      },
-      {
-        stage: 'revealed',
-        neutralSubject: 'Proofound workflow update',
-        identityVisible: true,
-      }
-    );
 
     // Send to participant one
     await resend.emails.send({
       from: emailFrom,
       to: userOneEmail,
-      subject: participantOneEmail.subject,
+      subject: 'Identities Revealed - Continue Your Conversation',
       react: IdentityRevealed({
         recipientName: participantOne?.displayName || 'there',
         role: 'candidate',
-        revealedName: participantOneEmail.revealedName ?? 'your match',
+        revealedName: participantTwo?.displayName || 'your match',
         viewConversationUrl: conversationUrl,
         viewProfileUrl: conversationUrl,
       }),
@@ -399,11 +347,11 @@ async function sendIdentityRevealedEmails(
     await resend.emails.send({
       from: emailFrom,
       to: userTwoEmail,
-      subject: participantTwoEmail.subject,
+      subject: 'Identities Revealed - Continue Your Conversation',
       react: IdentityRevealed({
         recipientName: participantTwo?.displayName || 'there',
         role: 'candidate',
-        revealedName: participantTwoEmail.revealedName ?? 'your match',
+        revealedName: participantOne?.displayName || 'your match',
         viewConversationUrl: conversationUrl,
         viewProfileUrl: conversationUrl,
       }),

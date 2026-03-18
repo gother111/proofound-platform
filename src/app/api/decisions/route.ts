@@ -9,7 +9,7 @@ import { createClient } from '@/lib/supabase/server';
 import { log } from '@/lib/log';
 import { isActiveOrgMember } from '@/lib/api/auth';
 import { getInterviewAccessContext } from '@/lib/interviews/messaging';
-import { buildWorkflowView, recordDecisionTransition } from '@/lib/workflow/service';
+import { recordDecisionTransition } from '@/lib/workflow/service';
 
 export async function POST(req: NextRequest) {
   try {
@@ -57,30 +57,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: 'Unauthorized to make decision for this interview' },
         { status: 403 }
-      );
-    }
-
-    if (interview.status !== 'completed') {
-      return NextResponse.json(
-        {
-          error: 'Interview must be completed before a decision can be recorded',
-          code: 'DECISION_NOT_READY',
-          workflow: buildWorkflowView({
-            machine: 'interview',
-            state: interview.status ?? 'scheduled',
-            timestamps: {
-              scheduledAt:
-                interview.scheduledAt instanceof Date ? interview.scheduledAt.toISOString() : null,
-            },
-          }),
-          nextAction: {
-            id: 'record_interview_outcome',
-            label: 'Complete the interview first',
-            description:
-              'The legal next action is to finish the interview corridor before recording a decision.',
-          },
-        },
-        { status: 409 }
       );
     }
 

@@ -9,9 +9,9 @@
 
 import { useState, useEffect } from 'react';
 import { Calendar, Clock, Video, ExternalLink, CalendarPlus, Download } from 'lucide-react';
-import { HiringCorridorTimeline } from '@/components/interviews/HiringCorridorTimeline';
+import { ScheduleInterviewButton } from '@/components/interviews/ScheduleInterviewButton';
 import { Button } from '@/components/ui/button';
-import { getInterviewCorridorItems } from '@/app/actions/interviews';
+import { getInterviews as getInterviewsAction } from '@/app/actions/interviews';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { CardListSkeleton, PageIntroSkeleton } from '@/components/skeletons/CoreLoadingPrimitives';
 import {
@@ -19,7 +19,6 @@ import {
   downloadInterviewIcs,
   type InterviewCalendarPayload,
 } from '@/lib/interviews/calendar';
-import type { HiringCorridorSnapshot } from '@/lib/hiring-corridor/snapshot';
 import { toast } from 'sonner';
 
 export const dynamic = 'force-dynamic';
@@ -27,23 +26,12 @@ export const dynamic = 'force-dynamic';
 interface Interview {
   id: string;
   matchId: string;
-  assignmentTitle: string | null;
-  organizationName: string | null;
-  introAcceptedAt: string | null;
-  interview: {
-    id: string;
-    scheduledAt: string | null;
-    duration: number;
-    platform: string | null;
-    meetingUrl: string | null;
-    manualMeetingProvider: string | null;
-    rescheduleCount: number;
-    status: string | null;
-    completedAt: string | null;
-    cancelledAt: string | null;
-    noShowAt: string | null;
-  } | null;
-  corridor: HiringCorridorSnapshot;
+  scheduledAt: string;
+  duration: number;
+  platform: string;
+  meetingUrl: string;
+  status: string;
+  matchAgreedAt?: string;
   decisionState?: string | null;
   engagementVerification?: {
     id: string;
@@ -74,8 +62,8 @@ export default function InterviewsPage() {
     setIsLoading(true);
 
     try {
-      const data = await getInterviewCorridorItems({ perspective: 'individual' });
-      setInterviews((data.items as Interview[]) || []);
+      const data = await getInterviewsAction();
+      setInterviews(data.interviews || []);
     } catch (error) {
       console.error('Failed to load interviews:', error);
       setInterviews([]); // Set empty array on error
@@ -104,17 +92,16 @@ export default function InterviewsPage() {
   };
 
   const toCalendarPayload = (interview: Interview): InterviewCalendarPayload => ({
-    interviewId: interview.interview?.id ?? interview.id,
-    scheduledAt: interview.interview?.scheduledAt ?? new Date().toISOString(),
-    durationMinutes: interview.interview?.duration ?? 30,
-    meetingUrl: interview.interview?.meetingUrl ?? 'pending',
-    platform: interview.interview?.platform ?? 'manual',
+    interviewId: interview.id,
+    scheduledAt: interview.scheduledAt,
+    durationMinutes: interview.duration,
+    meetingUrl: interview.meetingUrl,
+    platform: interview.platform,
     title: 'Proofound interview',
   });
 
   const resolveEngagementTypeValue = (interview: Interview) => {
-    const verification =
-      interview.engagementVerification ?? interview.corridor.engagementVerification;
+    const verification = interview.engagementVerification;
     if (!verification) {
       return '';
     }
@@ -123,8 +110,7 @@ export default function InterviewsPage() {
   };
 
   const handleConfirmEngagement = async (interview: Interview) => {
-    const verification =
-      interview.engagementVerification ?? interview.corridor.engagementVerification;
+    const verification = interview.engagementVerification;
     if (!verification) {
       return;
     }
@@ -179,11 +165,11 @@ export default function InterviewsPage() {
   };
 
   const getEngagementBadge = (interview: Interview) => {
-    const verification =
-      interview.engagementVerification ?? interview.corridor.engagementVerification;
-    if (!verification) {
+    if (!interview.engagementVerification) {
       return null;
     }
+
+    const verification = interview.engagementVerification;
     const isVerified = verification.status === 'verified';
 
     return (
@@ -219,7 +205,7 @@ export default function InterviewsPage() {
             Interviews
           </h1>
           <p className="text-sm" style={{ color: '#6B6760' }}>
-            Track the full hiring corridor, from shortlist through interview and decision
+            Manage your scheduled video interviews
           </p>
         </div>
 
@@ -230,11 +216,12 @@ export default function InterviewsPage() {
               <Calendar className="w-8 h-8" style={{ color: '#1C4D3A' }} />
             </div>
             <h2 className="text-xl font-medium mb-2" style={{ color: '#2D3330' }}>
-              No Active Hiring Corridor Yet
+              No Interviews Scheduled
             </h2>
             <p className="text-sm text-muted-foreground max-w-md mb-6">
-              Once an organization shortlists you, this page will show the full corridor, including
-              intro, reveal, interview, decision, and engagement verification.
+              Once you match with an organization and they shortlist you, you can schedule an
+              interview. Interviews are 30 minutes and must be scheduled within 7 days of
+              acceptance.
             </p>
           </div>
         ) : (
@@ -246,109 +233,86 @@ export default function InterviewsPage() {
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="mb-3">
-                      <p className="text-base font-semibold" style={{ color: '#2D3330' }}>
-                        {interview.organizationName || interview.corridor.subjectLabel}
-                      </p>
-                      {interview.assignmentTitle ? (
-                        <p className="text-sm" style={{ color: '#6B6760' }}>
-                          {interview.assignmentTitle}
-                        </p>
-                      ) : null}
-                    </div>
-
                     {/* Date & Time */}
-                    <div className="mb-4">
-                      <HiringCorridorTimeline corridor={interview.corridor} />
-                    </div>
-
-                    {interview.interview?.scheduledAt && (
-                      <div className="flex items-center gap-4 mb-3">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4" style={{ color: '#1C4D3A' }} />
-                          <span className="font-medium" style={{ color: '#2D3330' }}>
-                            {formatDate(interview.interview.scheduledAt)}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4" style={{ color: '#6B6760' }} />
-                          <span className="text-sm" style={{ color: '#6B6760' }}>
-                            {formatTime(interview.interview.scheduledAt)} (
-                            {interview.interview.duration} min)
-                          </span>
-                        </div>
+                    <div className="flex items-center gap-4 mb-3">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4" style={{ color: '#1C4D3A' }} />
+                        <span className="font-medium" style={{ color: '#2D3330' }}>
+                          {formatDate(interview.scheduledAt)}
+                        </span>
                       </div>
-                    )}
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4" style={{ color: '#6B6760' }} />
+                        <span className="text-sm" style={{ color: '#6B6760' }}>
+                          {formatTime(interview.scheduledAt)} ({interview.duration} min)
+                        </span>
+                      </div>
+                    </div>
 
                     {/* Platform & Meeting Link */}
                     <div className="flex items-center gap-4 mb-4 flex-wrap">
-                      {interview.interview?.platform && (
-                        <div className="flex items-center gap-2">
-                          <Video className="w-4 h-4" style={{ color: '#6B6760' }} />
-                          <span className="text-sm capitalize" style={{ color: '#6B6760' }}>
-                            {interview.interview.platform}
-                          </span>
-                        </div>
+                      <div className="flex items-center gap-2">
+                        <Video className="w-4 h-4" style={{ color: '#6B6760' }} />
+                        <span className="text-sm capitalize" style={{ color: '#6B6760' }}>
+                          {interview.platform}
+                        </span>
+                      </div>
+                      {interview.meetingUrl !== 'pending' && (
+                        <>
+                          <a
+                            href={interview.meetingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm flex items-center gap-1 hover:underline"
+                            style={{ color: '#1C4D3A' }}
+                          >
+                            Join Meeting
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                          <a
+                            href={buildGoogleCalendarUrl(toCalendarPayload(interview))}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm flex items-center gap-1 hover:underline"
+                            style={{ color: '#1C4D3A' }}
+                          >
+                            Add to Google Calendar
+                            <CalendarPlus className="w-3 h-3" />
+                          </a>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => downloadInterviewIcs(toCalendarPayload(interview))}
+                          >
+                            <Download className="w-3 h-3 mr-1" />
+                            .ics
+                          </Button>
+                        </>
                       )}
-                      {interview.interview?.meetingUrl &&
-                        interview.interview.meetingUrl !== 'pending' && (
-                          <>
-                            <a
-                              href={interview.interview.meetingUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm flex items-center gap-1 hover:underline"
-                              style={{ color: '#1C4D3A' }}
-                            >
-                              Join Meeting
-                              <ExternalLink className="w-3 h-3" />
-                            </a>
-                            <a
-                              href={buildGoogleCalendarUrl(toCalendarPayload(interview))}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm flex items-center gap-1 hover:underline"
-                              style={{ color: '#1C4D3A' }}
-                            >
-                              Add to Google Calendar
-                              <CalendarPlus className="w-3 h-3" />
-                            </a>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-7 px-2 text-xs"
-                              onClick={() => downloadInterviewIcs(toCalendarPayload(interview))}
-                            >
-                              <Download className="w-3 h-3 mr-1" />
-                              .ics
-                            </Button>
-                          </>
-                        )}
                     </div>
 
                     {/* Status Badge */}
                     <div className="flex flex-wrap gap-2">
-                      {interview.interview?.status && (
-                        <span
-                          className="px-2 py-1 rounded-full text-xs font-medium"
-                          style={{
-                            backgroundColor:
-                              interview.interview.status === 'scheduled'
-                                ? '#E8F5E9'
-                                : interview.interview.status === 'completed'
-                                  ? '#E3F2FD'
-                                  : '#FFF3E0',
-                            color:
-                              interview.interview.status === 'scheduled'
-                                ? '#2E7D32'
-                                : interview.interview.status === 'completed'
-                                  ? '#1565C0'
-                                  : '#E65100',
-                          }}
-                        >
-                          {interview.interview.status}
-                        </span>
-                      )}
+                      <span
+                        className="px-2 py-1 rounded-full text-xs font-medium"
+                        style={{
+                          backgroundColor:
+                            interview.status === 'scheduled'
+                              ? '#E8F5E9'
+                              : interview.status === 'completed'
+                                ? '#E3F2FD'
+                                : '#FFF3E0',
+                          color:
+                            interview.status === 'scheduled'
+                              ? '#2E7D32'
+                              : interview.status === 'completed'
+                                ? '#1565C0'
+                                : '#E65100',
+                        }}
+                      >
+                        {interview.status}
+                      </span>
                       {getDecisionBadge(interview.decisionState)}
                       {getEngagementBadge(interview)}
                     </div>
@@ -356,7 +320,19 @@ export default function InterviewsPage() {
 
                   {/* Actions */}
                   <div className="flex flex-col gap-2">
-                    {interview.corridor.nextAction.id === 'confirm_engagement' &&
+                    {interview.status === 'scheduled' &&
+                      interview.matchAgreedAt &&
+                      new Date(interview.scheduledAt) > new Date() && (
+                        <ScheduleInterviewButton
+                          matchId={interview.matchId}
+                          matchAgreedAt={new Date(interview.matchAgreedAt)}
+                          existingInterviewsCount={1}
+                          variant="outline"
+                          size="sm"
+                          onScheduled={loadInterviews}
+                        />
+                      )}
+                    {interview.decisionState === 'hire' &&
                       interview.engagementVerification &&
                       !interview.engagementVerification.candidateConfirmedAt && (
                         <>

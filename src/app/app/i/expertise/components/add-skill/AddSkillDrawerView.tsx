@@ -76,7 +76,6 @@ export interface AddSkillDrawerViewProps {
   setProofIssuedDate: Dispatch<SetStateAction<string>>;
   proofExpiresDate: string;
   setProofExpiresDate: Dispatch<SetStateAction<string>>;
-  hasProofContext: boolean;
   requestVerification: boolean;
   setRequestVerification: Dispatch<SetStateAction<boolean>>;
   verificationEmail: string;
@@ -153,7 +152,6 @@ export function AddSkillDrawerView({
   setProofIssuedDate,
   proofExpiresDate,
   setProofExpiresDate,
-  hasProofContext,
   requestVerification,
   setRequestVerification,
   verificationEmail,
@@ -288,7 +286,6 @@ export function AddSkillDrawerView({
             setProofIssuedDate={setProofIssuedDate}
             proofExpiresDate={proofExpiresDate}
             setProofExpiresDate={setProofExpiresDate}
-            hasProofContext={hasProofContext}
             requestVerification={requestVerification}
             setRequestVerification={setRequestVerification}
             verificationEmail={verificationEmail}

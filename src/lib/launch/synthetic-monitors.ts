@@ -131,8 +131,7 @@ function evaluateLaunchReadiness(
   missingMonitorKeys: string[]
 ): Pick<LaunchSyntheticStatusSnapshot, 'ok' | 'readinessState'> {
   const hasBlockingRows = rows.some((row) => isBlockingMonitorRow(row));
-  const hasUnverifiedRows =
-    missingMonitorKeys.length > 0 || rows.some((row) => row.freshnessState !== 'fresh');
+  const hasUnverifiedRows = rows.some((row) => row.freshnessState !== 'fresh');
 
   if (missingMonitorKeys.length === 0 && !hasBlockingRows && !hasUnverifiedRows) {
     return {
@@ -141,7 +140,7 @@ function evaluateLaunchReadiness(
     };
   }
 
-  if (hasBlockingRows) {
+  if (hasBlockingRows || missingMonitorKeys.length > 0) {
     return {
       ok: false,
       readinessState: 'blocked',
@@ -270,8 +269,7 @@ function getDbExecute() {
     return null;
   }
 
-  return (query: unknown) =>
-    (execute as (this: typeof db, query: unknown) => Promise<unknown>).call(db, query);
+  return execute as (query: unknown) => Promise<unknown>;
 }
 
 async function runHttpMonitor(

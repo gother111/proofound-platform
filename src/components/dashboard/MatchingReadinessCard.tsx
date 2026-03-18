@@ -10,7 +10,6 @@ import { DASHBOARD_STATUS_CHIP_CLASS } from '@/components/dashboard/chipStyles';
 import { apiFetch } from '@/lib/api/fetch';
 import { FALLBACK_COPY, type OperationalFallbackMode } from '@/lib/contracts/launch-operations';
 import type { IndividualReadiness } from '@/lib/momentum/types';
-import { getLaunchReadinessDisplayLabel } from '@/lib/readiness/launch-display';
 
 type MatchingReadinessCardProps = {
   useMockData?: boolean;
@@ -105,15 +104,18 @@ export function MatchingReadinessCard({ useMockData, onActionClick }: MatchingRe
         <div className="min-w-0 space-y-1">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Compass className="h-5 w-5 text-proofound-forest" />
-            Match visibility
+            Browse readiness
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Matching can move before introductions. Add the lightest useful signal, then strengthen
-            trust later.
+            Browsing is available before introductions. Add light signal, not everything at once.
           </p>
         </div>
         <Badge variant="outline" className={DASHBOARD_STATUS_CHIP_CLASS}>
-          {getLaunchReadinessDisplayLabel(data?.flags || {})}
+          {data?.flags.matchVisible
+            ? 'Match-visible'
+            : data?.flags.discoverable
+              ? 'Discoverable'
+              : 'Soft-gated'}
         </Badge>
       </CardHeader>
       <CardContent className="space-y-4">

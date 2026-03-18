@@ -1,115 +1,310 @@
 'use client';
 
-import Link from 'next/link';
-import { PackageOpen, Sparkles } from 'lucide-react';
+import type { ImpactStory, ImpactStoryVerificationRequestStatus } from '@/types/profile';
 
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { TabsContent } from '@/components/ui/tabs';
-import type { IndividualProfileCompletionState } from '@/lib/profile/completion-flow';
-import type { ImpactStory } from '@/types/profile';
-
-type ImpactTabProps = {
+import { Button } from '@/components/ui/button';
+import { Calendar, CheckCircle2, Pencil, Plus, X } from 'lucide-react';
+import { getTaxonomyLabel, CAUSES_TAXONOMY } from '@/lib/taxonomy/data';
+export interface ImpactTabProps {
   impactStories: ImpactStory[];
   onAddStory: () => void;
   onEditStory: (story: ImpactStory) => void;
   onDeleteStory: (id: string) => void;
   actionsDisabled: boolean;
-  completionState: IndividualProfileCompletionState;
-  proofArtifactCount: number;
-  acceptedVerificationCount: number;
-};
-
-function resolveProofPackBlockers(completionState: IndividualProfileCompletionState) {
-  const blockers: string[] = [];
-
-  if (!completionState.checks.hasRealContext) {
-    blockers.push('Add one real context so your proof has a credible anchor.');
-  }
-
-  if (!completionState.checks.hasFirstProof) {
-    blockers.push('Add your first proof link or artifact.');
-  }
-
-  if (!completionState.checks.hasStructuredProofPack) {
-    blockers.push('Structure one anchored Proof Pack before you publish.');
-  }
-
-  if (!completionState.checks.hasPublishedPortfolio) {
-    blockers.push('Choose one proof-backed public signal and publish your portfolio.');
-  }
-
-  return blockers.slice(0, 3);
 }
 
 export function ImpactTab({
-  completionState,
-  proofArtifactCount,
-  acceptedVerificationCount,
+  impactStories,
+  onAddStory,
+  onEditStory,
+  onDeleteStory,
+  actionsDisabled,
 }: ImpactTabProps) {
-  const blockers = resolveProofPackBlockers(completionState);
-  const primaryCtaLabel =
-    proofArtifactCount > 0 ? 'Open portfolio workspace' : 'Add your first proof';
+  const getTimelineLabel = (story: ImpactStory) => {
+    const timeline = story.timelineStructured;
+    if (!timeline) return story.timeline;
+    if (timeline.mode === 'single') return timeline.start;
+    if (timeline.ongoing) return `${timeline.start} - Present`;
+    return timeline.end ? `${timeline.start} - ${timeline.end}` : timeline.start;
+  };
+
+  const getRoleScopeLabel = (scope?: string | null) => {
+    if (scope === 'owned') return 'Owned';
+    if (scope === 'co_led') return 'Co-led';
+    if (scope === 'contributed') return 'Contributed';
+    return null;
+  };
+
+  const getCauseLabels = (story: ImpactStory) => {
+    const keys = [story.primaryCause, ...(story.secondaryCauses || [])].filter(Boolean) as string[];
+    return keys.map((key) => getTaxonomyLabel(key, CAUSES_TAXONOMY));
+  };
+
+  const getOutcomeChangeText = (outcome: NonNullable<ImpactStory['measuredOutcomes']>[number]) => {
+    return (outcome.change || outcome.label || 'Outcome').trim();
+  };
+
+  const getOutcomeMetricText = (outcome: NonNullable<ImpactStory['measuredOutcomes']>[number]) => {
+    const hasValue =
+      outcome.value !== null &&
+      outcome.value !== undefined &&
+      String(outcome.value).trim().length > 0;
+    if (!hasValue) return null;
+
+    const valueText = String(outcome.value).trim();
+    const unitSuffix = outcome.unit?.trim() ? ` ${outcome.unit.trim()}` : '';
+    const meta = [outcome.valueMode, outcome.timeframe].filter(Boolean).join(', ');
+    return `${valueText}${unitSuffix}${meta ? ` (${meta})` : ''}`;
+  };
+
+  const getVerificationBadge = (
+    status: ImpactStoryVerificationRequestStatus | null | undefined
+  ) => {
+    if (!status) return null;
+
+    if (status === 'accepted') {
+      return (
+        <Badge
+          variant="outline"
+          className="gap-1 bg-[#7A9278]/10 border-[#7A9278]/30 text-[#7A9278]"
+        >
+          Request Accepted
+        </Badge>
+      );
+    }
+
+    if (status === 'failed') {
+      return <Badge variant="destructive">Request Email Failed</Badge>;
+    }
+
+    return <Badge variant="outline">Request {status}</Badge>;
+  };
 
   return (
-    <TabsContent value="proof_packs" className="space-y-6">
-      <Card className="border-proofound-stone/60 p-5">
-        <div className="flex items-start gap-3">
-          <div className="rounded-full bg-proofound-forest/10 p-2 text-proofound-forest">
-            <PackageOpen className="h-5 w-5" />
+    <TabsContent value="impact" className="space-y-6">
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-muted-foreground">
+          Projects and initiatives with verified impact
+        </p>
+        {!!impactStories.length && (
+          <Button
+            size="sm"
+            className="rounded-full bg-[#7A9278] hover:bg-[#7A9278]/90"
+            onClick={onAddStory}
+            disabled={actionsDisabled}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Story
+          </Button>
+        )}
+      </div>
+
+      {impactStories.length === 0 ? (
+        <Card className="p-12 border-2 border-dashed border-muted-foreground/20">
+          <div className="text-center space-y-6">
+            <div className="flex justify-center">
+              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#7A9278]/5 to-[#5C8B89]/10 flex items-center justify-center">
+                <svg viewBox="0 0 100 100" className="w-20 h-20">
+                  <circle cx="50" cy="50" r="15" fill="none" stroke="#7A9278" strokeWidth="1.5" />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="30"
+                    fill="none"
+                    stroke="#5C8B89"
+                    strokeWidth="1"
+                    strokeDasharray="4 6"
+                    opacity="0.7"
+                  />
+                  <path
+                    d="M 50 10 V 25 M 50 75 V 90 M 10 50 H 25 M 75 50 H 90"
+                    fill="none"
+                    stroke="#D4A574"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    opacity="0.8"
+                  />
+                  <circle cx="50" cy="50" r="4" fill="#7A9278" />
+                </svg>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">Share Your Impact Stories</h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                Highlight the meaningful work you&apos;ve done. Focus on the change created, lives
+                touched, and value delivered—not just tasks completed.
+              </p>
+            </div>
+            <Button
+              className="rounded-full bg-[#7A9278] hover:bg-[#7A9278]/90"
+              onClick={onAddStory}
+              disabled={actionsDisabled}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Your First Impact Story
+            </Button>
+            <div className="pt-4 text-xs text-muted-foreground">
+              <p>
+                💡 Tip: Lead with what changed, then add measured figures as supporting evidence
+              </p>
+            </div>
           </div>
-          <div className="min-w-0 space-y-4">
-            <div className="space-y-1">
-              <h3 className="text-lg font-semibold text-foreground">Proof Packs</h3>
-              <p className="text-sm text-muted-foreground">
-                Proof Pack is the canonical proof object. Keep the story calm and anchored to real
-                context, then manage publication from the portfolio workspace.
-              </p>
+        </Card>
+      ) : (
+        impactStories.map((story) => (
+          <Card
+            key={story.id}
+            className="p-6 border-2 hover:border-[#7A9278]/30 hover:shadow-md transition-all duration-300 group relative overflow-hidden"
+          >
+            <div className="absolute top-0 left-0 w-1 h-full bg-[#7A9278] opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute right-4 top-4 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onEditStory(story)}
+                aria-label={`Edit ${story.title}`}
+                disabled={actionsDisabled}
+              >
+                <Pencil className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  if (confirm('Are you sure you want to delete this impact story?')) {
+                    onDeleteStory(story.id);
+                  }
+                }}
+                aria-label={`Delete ${story.title}`}
+                disabled={actionsDisabled}
+              >
+                <X className="w-4 h-4" />
+              </Button>
             </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-lg border border-proofound-stone/60 bg-white p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                  Proof items
+            <div className="flex items-start justify-between mb-4 pr-8">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-3">
+                  <h3 className="text-xl font-display font-semibold">{story.title}</h3>
+                  {story.verified && (
+                    <Badge
+                      variant="outline"
+                      className="gap-1 bg-[#7A9278]/10 border-[#7A9278]/30 text-[#7A9278]"
+                    >
+                      <CheckCircle2 className="w-3 h-3" />
+                      Verified
+                    </Badge>
+                  )}
+                  {getVerificationBadge(story.verificationRequestStatus)}
+                </div>
+                <p className="text-sm text-muted-foreground mb-1">{story.orgDescription}</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  {getTimelineLabel(story)}
                 </p>
-                <p className="mt-2 text-2xl font-semibold text-foreground">{proofArtifactCount}</p>
-              </div>
-              <div className="rounded-lg border border-proofound-stone/60 bg-white p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                  Accepted trust signals
-                </p>
-                <p className="mt-2 text-2xl font-semibold text-foreground">
-                  {acceptedVerificationCount}
-                </p>
+                {(story.roleTitle || story.roleScope) && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {story.roleTitle || 'Contributor'}
+                    {story.roleScope ? ` • ${getRoleScopeLabel(story.roleScope)}` : ''}
+                  </p>
+                )}
+                {getCauseLabels(story).length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {getCauseLabels(story).map((cause) => (
+                      <Badge key={`${story.id}-${cause}`} variant="outline" className="text-xs">
+                        {cause}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-2">Impact</h4>
+                <p className="text-sm">{story.impact}</p>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-2">Business Value</h4>
+                <p className="text-sm">{story.businessValue}</p>
+              </div>
+              <div className="p-4 bg-muted/20 rounded-xl">
+                <h4 className="text-sm font-medium text-muted-foreground mb-2">Outcomes</h4>
+                {story.measuredOutcomes && story.measuredOutcomes.length > 0 ? (
+                  <ul className="space-y-2">
+                    {story.measuredOutcomes.map((outcome) => {
+                      const metricText = getOutcomeMetricText(outcome);
+                      return (
+                        <li key={outcome.id} className="text-sm">
+                          <span className="font-medium">{getOutcomeChangeText(outcome)}</span>
+                          {metricText ? (
+                            <span className="text-muted-foreground"> · {metricText}</span>
+                          ) : null}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : (
+                  <p className="text-sm">{story.outcomes}</p>
+                )}
+              </div>
 
-            <div className="rounded-lg border border-proofound-stone/60 bg-japandi-bg/50 p-4">
-              <p className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
-                <Sparkles className="h-4 w-4 text-proofound-forest" />
-                Readiness blockers
-              </p>
-              {blockers.length > 0 ? (
-                <ul className="mt-3 space-y-2">
-                  {blockers.map((blocker) => (
-                    <li key={blocker} className="text-sm text-muted-foreground">
-                      {blocker}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-3 text-sm text-muted-foreground">
-                  Your portfolio foundation is in place. Keep proof fresh and public-safe.
+              {story.supportingArtifacts && story.supportingArtifacts.length > 0 && (
+                <div className="p-4 bg-muted/10 rounded-xl">
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                    Supporting Artifacts
+                  </h4>
+                  <ul className="space-y-1">
+                    {story.supportingArtifacts.map((artifact) => (
+                      <li key={artifact.id} className="text-sm">
+                        <a
+                          href={artifact.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-proofound-forest underline underline-offset-2"
+                        >
+                          {artifact.title}
+                        </a>{' '}
+                        <span className="text-muted-foreground">({artifact.kind})</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {story.saveWarning && (
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2">
+                  {story.saveWarning}
+                </p>
+              )}
+
+              {story.verificationWarning && story.verificationWarning !== story.saveWarning && (
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2">
+                  {story.verificationWarning}
+                </p>
+              )}
+
+              {story.verificationRequestStatus && (
+                <p className="text-xs text-muted-foreground">
+                  Latest verification request: {story.verificationRequestStatus}
+                  {story.verificationVerifierEmail ? ` • ${story.verificationVerifierEmail}` : ''}
+                  {story.verificationRequestedAt
+                    ? ` • ${new Date(story.verificationRequestedAt).toLocaleDateString()}`
+                    : ''}
+                </p>
+              )}
+
+              {story.verificationEmailError && (
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2">
+                  {story.verificationEmailError}
                 </p>
               )}
             </div>
-
-            <Button asChild className="bg-proofound-forest text-white hover:bg-proofound-forest/90">
-              <Link href="/app/i/portfolio">{primaryCtaLabel}</Link>
-            </Button>
-          </div>
-        </div>
-      </Card>
+          </Card>
+        ))
+      )}
     </TabsContent>
   );
 }

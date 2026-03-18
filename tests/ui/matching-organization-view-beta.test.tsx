@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MatchingOrganizationView } from '@/components/matching/MatchingOrganizationView';
@@ -18,17 +18,29 @@ vi.mock('@/lib/api/fetch', () => ({
   apiFetch: (...args: any[]) => apiFetchMock(...args),
 }));
 
+vi.mock('@/hooks/use-responsive-modal-mode', () => ({
+  useResponsiveModalMode: () => true,
+}));
+
 vi.mock('@/components/matching/MatchResultCard', () => ({
   MatchResultCard: ({ result }: { result: any }) => (
     <div data-testid="match-card">{result?.id}</div>
   ),
 }));
 
+vi.mock('@/components/interviews/ScheduleInterviewButton', () => ({
+  ScheduleInterviewButton: () => <button type="button">Schedule Interview</button>,
+}));
+
 vi.mock('@/lib/ui/recovery-actions', () => ({
   getOrganizationRecoveryActions: () => [],
 }));
 
-describe('MatchingOrganizationView launch corridor', () => {
+describe('MatchingOrganizationView beta test initiation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   const assignments = [
     {
       id: 'assignment-1',
@@ -39,35 +51,22 @@ describe('MatchingOrganizationView launch corridor', () => {
     },
   ];
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('does not render the archived beta test initiation CTA', async () => {
-    apiFetchMock.mockResolvedValue({
-      ok: true,
-      json: async () => ({ items: [] }),
-    });
-
-    render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/no matches yet/i)).toBeInTheDocument();
-    });
-
-    expect(screen.queryByRole('button', { name: /initiate test/i })).not.toBeInTheDocument();
-    expect(screen.queryByText(/mission-first/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/skills-first/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/balanced/i)).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /weights & filters/i })).not.toBeInTheDocument();
-  });
-
-  it('stays on the assignment match API and never calls archived test-match endpoints', async () => {
+  it('shows Initiate test button when API returns canInitiateTest=true', async () => {
     apiFetchMock.mockImplementation(async (url: string) => {
       if (url === '/api/match/assignment') {
         return {
           ok: true,
           json: async () => ({ items: [] }),
+        };
+      }
+
+      if (url.startsWith('/api/organizations/org-1/test-matches')) {
+        return {
+          ok: true,
+          json: async () => ({
+            items: [],
+            permissions: { canInitiateTest: true },
+          }),
         };
       }
 
@@ -77,16 +76,76 @@ describe('MatchingOrganizationView launch corridor', () => {
     render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
 
     await waitFor(() => {
-      expect(apiFetchMock).toHaveBeenCalledWith(
-        '/api/match/assignment',
-        expect.objectContaining({
-          method: 'POST',
-        })
-      );
+      expect(screen.getByRole('button', { name: /initiate test/i })).toBeInTheDocument();
+    });
+  });
+
+  it('hides Initiate test button when API returns canInitiateTest=false', async () => {
+    apiFetchMock.mockImplementation(async (url: string) => {
+      if (url === '/api/match/assignment') {
+        return {
+          ok: true,
+          json: async () => ({ items: [] }),
+        };
+      }
+
+      if (url.startsWith('/api/organizations/org-1/test-matches')) {
+        return {
+          ok: true,
+          json: async () => ({
+            items: [],
+            permissions: { canInitiateTest: false },
+          }),
+        };
+      }
+
+      throw new Error(`Unexpected url: ${url}`);
     });
 
-    expect(apiFetchMock.mock.calls.some(([url]) => String(url).includes('/test-matches'))).toBe(
-      false
-    );
+    render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: /initiate test/i })).not.toBeInTheDocument();
+    });
+  });
+
+  it('allows continuous typing in tester email input without focus loss', async () => {
+    apiFetchMock.mockImplementation(async (url: string) => {
+      if (url === '/api/match/assignment') {
+        return {
+          ok: true,
+          json: async () => ({ items: [] }),
+        };
+      }
+
+      if (url.startsWith('/api/organizations/org-1/test-matches')) {
+        return {
+          ok: true,
+          json: async () => ({
+            items: [],
+            permissions: { canInitiateTest: true },
+          }),
+        };
+      }
+
+      throw new Error(`Unexpected url: ${url}`);
+    });
+
+    render(<MatchingOrganizationView assignments={assignments as any} onCreateNew={vi.fn()} />);
+
+    const initiateButton = await screen.findByRole('button', { name: /initiate test/i });
+    fireEvent.click(initiateButton);
+
+    const testerEmailInput = await screen.findByLabelText(/tester email/i);
+    testerEmailInput.focus();
+    expect(document.activeElement).toBe(testerEmailInput);
+
+    fireEvent.change(testerEmailInput, { target: { value: 't' } });
+    expect(testerEmailInput).toHaveValue('t');
+    expect(document.activeElement).toBe(testerEmailInput);
+
+    fireEvent.change(testerEmailInput, { target: { value: 'tester@example.com' } });
+    expect(testerEmailInput).toHaveValue('tester@example.com');
+    expect(document.activeElement).toBe(testerEmailInput);
   });
 });

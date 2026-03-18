@@ -51,25 +51,6 @@ describe('MatchExplainerModal', () => {
         reasonSections={{
           manual_override: ['A reviewer manually shortlisted this candidate.'],
         }}
-        reviewCard={{
-          candidateLabel: 'Candidate A7F2',
-          strongestProof: {
-            summary: 'Built a blind review corridor around proof-backed evaluation.',
-            outcome: 'Made fit clearer without exposing identity-bearing fields.',
-            ownership: 'Owned the review architecture and delivery.',
-            anchorContext: 'Anchored in prior project work',
-            freshnessLabel: 'Fresh',
-          },
-          verification: {
-            summaryLabel: 'Verified proof signal present',
-            count: 2,
-          },
-          fitSummary: {
-            headline: 'Proof signals align with the role needs.',
-            bullets: ['Evidence points to a strong skills fit for this assignment.'],
-            reasonCodes: ['skills_strong'],
-          },
-        }}
         subscores={{
           skills: 0.9,
           pac: 0.7,
@@ -97,18 +78,11 @@ describe('MatchExplainerModal', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /why this match/i }));
 
-    expect(screen.getByText('Proof-Backed Fit Review')).toBeInTheDocument();
-    expect(screen.getByText('Strongest relevant proof')).toBeInTheDocument();
-    expect(
-      screen.getByText('Built a blind review corridor around proof-backed evaluation.')
-    ).toBeInTheDocument();
-    expect(screen.getByText('Reason-coded fit summary')).toBeInTheDocument();
     expect(screen.getByText('Privacy-safe explanation')).toBeInTheDocument();
     expect(
       screen.getByText('Evidence points to a strong skills fit for this assignment.')
     ).toBeInTheDocument();
     expect(screen.getByText('A reviewer manually shortlisted this candidate.')).toBeInTheDocument();
-    expect(screen.getByText('Comparative score detail')).toBeInTheDocument();
     expect(
       screen.getByText('Exact ranking detail is suppressed while fairness remediation is active.')
     ).toBeInTheDocument();

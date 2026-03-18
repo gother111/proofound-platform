@@ -44,7 +44,6 @@ const schema = vi.hoisted(() => ({
     introId: Symbol('decisions.introId'),
     interviewId: Symbol('decisions.interviewId'),
     latestInterviewId: Symbol('decisions.latestInterviewId'),
-    state: Symbol('decisions.state'),
   },
   interviews: {
     __name: 'interviews',
@@ -215,21 +214,8 @@ describe('workflow decision bootstrap', () => {
     setInterviewContext('interview-2');
     mocks.findDecision.mockResolvedValue({
       id: 'decision-1',
-      decision: 'hold',
-      feedback: 'Previous round',
-      hoursSinceInterview: '12.00',
-      withinSla: true,
       interviewId: null,
       latestInterviewId: 'interview-old',
-      state: 'advance',
-      holdUntil: null,
-      reasonCode: null,
-      internalNote: 'Advance to panel',
-      madeByActorType: 'organization_member',
-      madeByActorId: 'owner-1',
-      reopenedAt: null,
-      withdrawnAt: null,
-      closedAt: null,
     });
 
     const updateSet = vi.fn().mockReturnValue({
@@ -237,24 +223,14 @@ describe('workflow decision bootstrap', () => {
         returning: vi.fn().mockResolvedValue([
           {
             id: 'decision-1',
-            decision: 'hold',
             interviewId: 'interview-2',
             latestInterviewId: 'interview-2',
-            state: 'pending',
           },
         ]),
       }),
     });
-    const insertTransitionValues = vi.fn().mockResolvedValue(undefined);
 
     mocks.update.mockReturnValue({ set: updateSet });
-    mocks.insert.mockImplementation((table: unknown) => {
-      if (table === schema.decisionStateTransitions) {
-        return { values: insertTransitionValues };
-      }
-
-      throw new Error('Unexpected insert target');
-    });
 
     const result = await ensureDecisionRecordForInterview({
       interviewId: 'interview-2',
@@ -264,19 +240,8 @@ describe('workflow decision bootstrap', () => {
 
     expect(updateSet).toHaveBeenCalledWith(
       expect.objectContaining({
-        decision: 'hold',
         interviewId: 'interview-2',
         latestInterviewId: 'interview-2',
-        state: 'pending',
-        feedback: null,
-        internalNote: null,
-      })
-    );
-    expect(insertTransitionValues).toHaveBeenCalledWith(
-      expect.objectContaining({
-        decisionId: 'decision-1',
-        fromState: 'advance',
-        toState: 'pending',
       })
     );
     expect(result).toEqual(
@@ -284,7 +249,6 @@ describe('workflow decision bootstrap', () => {
         id: 'decision-1',
         interviewId: 'interview-2',
         latestInterviewId: 'interview-2',
-        state: 'pending',
       })
     );
   });

@@ -54,7 +54,7 @@ describe('WorkEmailVerificationForm', () => {
     fireEvent.change(screen.getByLabelText(/work email address/i), {
       target: { value: 'Person@Acme.Org ' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /send confirmation email/i }));
+    fireEvent.click(screen.getByRole('button', { name: /send verification email/i }));
 
     await waitFor(() => {
       expect(apiFetch).toHaveBeenCalledWith(
@@ -101,7 +101,7 @@ describe('WorkEmailVerificationForm', () => {
     fireEvent.change(screen.getByLabelText(/work email address/i), {
       target: { value: 'person@gmail.com' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /send confirmation email/i }));
+    fireEvent.click(screen.getByRole('button', { name: /send verification email/i }));
 
     expect(
       await screen.findByText(/Please use your company\/organization email, not a personal email/i)

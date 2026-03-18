@@ -32,13 +32,6 @@ export type EvidenceUploadPrivacyAssessment = {
   safetyReason: string | null;
 };
 
-type ArtifactDisplayNameInput = {
-  sanitizedFilename?: string | null;
-  originalFilename?: string | null;
-  detectedMime?: string | null;
-  uploadKind?: string | null;
-};
-
 const FILENAME_REVIEW_PATTERN =
   /[\/\\]|(\.\.)|[\u0000-\u001f\u007f]|[\u202A-\u202E\u2066-\u2069]|[<>:"|?*]/;
 const PRIVACY_REVIEW_REASON_PREFIX = 'privacy_review_required:';
@@ -51,59 +44,6 @@ export function sanitizeUploadFilename(fileName: string): string {
       .replace(/[^a-zA-Z0-9_-]/g, '_')
       .slice(0, 80) || 'file';
   return `${base}${ext.slice(0, 10)}`;
-}
-
-function resolveTypedArtifactFallbackLabel(input: {
-  detectedMime?: string | null;
-  uploadKind?: string | null;
-}) {
-  if (input.uploadKind === 'avatar') {
-    return 'Profile image';
-  }
-
-  if (input.uploadKind === 'cover') {
-    return 'Cover image';
-  }
-
-  switch (input.detectedMime) {
-    case 'application/pdf':
-      return 'Uploaded PDF document';
-    case 'text/markdown':
-      return 'Uploaded Markdown document';
-    case 'text/plain':
-      return 'Uploaded text document';
-    case 'image/jpeg':
-    case 'image/png':
-    case 'image/webp':
-      return 'Uploaded image';
-    default:
-      return 'Uploaded document';
-  }
-}
-
-function normalizeStoredSanitizedFilename(fileName: string | null | undefined) {
-  const trimmed = fileName?.trim();
-  if (!trimmed) {
-    return null;
-  }
-
-  const leafName = path.basename(trimmed);
-  const normalized = sanitizeUploadFilename(leafName);
-  return normalized.trim().length > 0 ? normalized : null;
-}
-
-export function resolveArtifactDisplayName(input: ArtifactDisplayNameInput) {
-  const sanitized = normalizeStoredSanitizedFilename(input.sanitizedFilename);
-  if (sanitized) {
-    return sanitized;
-  }
-
-  const originalSanitized = normalizeStoredSanitizedFilename(input.originalFilename);
-  if (originalSanitized) {
-    return originalSanitized;
-  }
-
-  return resolveTypedArtifactFallbackLabel(input);
 }
 
 export function collectUploadMetadataFlags(

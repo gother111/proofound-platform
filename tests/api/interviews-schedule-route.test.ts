@@ -9,8 +9,6 @@ import { isActiveOrgMember } from '@/lib/api/auth';
 import { createGoogleMeet, refreshGoogleToken } from '@/lib/integrations/google-meet';
 import { postInterviewUpdateMessageBestEffort } from '@/lib/interviews/messaging';
 import { registerScheduledInterviewWorkflow } from '@/lib/workflow/service';
-import { getHiringCorridorRecordForMatch } from '@/lib/hiring-corridor/service';
-import { buildHiringCorridorSnapshot } from '@/lib/hiring-corridor/snapshot';
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
@@ -37,14 +35,6 @@ vi.mock('@/lib/integrations/google-meet', () => ({
 
 vi.mock('@/lib/interviews/messaging', () => ({
   postInterviewUpdateMessageBestEffort: vi.fn(),
-}));
-
-vi.mock('@/lib/hiring-corridor/service', () => ({
-  getHiringCorridorRecordForMatch: vi.fn(),
-}));
-
-vi.mock('@/lib/hiring-corridor/snapshot', () => ({
-  buildHiringCorridorSnapshot: vi.fn(),
 }));
 
 vi.mock('@/lib/analytics/events', () => ({
@@ -90,23 +80,6 @@ describe('POST /api/interviews/schedule', () => {
       start: { dateTime: futureScheduledAt, timeZone: 'UTC' },
       end: { dateTime: futureScheduledAt, timeZone: 'UTC' },
     });
-    vi.mocked(getHiringCorridorRecordForMatch).mockResolvedValue({
-      matchId,
-    } as any);
-    vi.mocked(buildHiringCorridorSnapshot).mockReturnValue({
-      currentStep: 'reveal_approved',
-      nextAction: {
-        id: 'schedule_interview',
-        label: 'Schedule interview',
-        description: 'Reveal is approved.',
-      },
-      steps: [],
-      privacyStage: 'stage3_intro_approved',
-      decisionState: null,
-      engagementVerification: null,
-      summary: 'Reveal approved',
-      subjectLabel: 'Candidate',
-    } as any);
     vi.mocked(refreshGoogleToken).mockResolvedValue({
       access_token: 'refreshed-access-token',
       expires_in: 3600,
@@ -480,75 +453,5 @@ describe('POST /api/interviews/schedule', () => {
 
     expect(response).not.toBe('timeout');
     expect((response as Response).status).toBe(200);
-  });
-
-  it('rejects scheduling before the corridor reaches reveal approval', async () => {
-    const { supabase } = createSupabaseMock({
-      interviewsForMatch: [],
-    });
-    vi.mocked(createClient).mockResolvedValue(supabase);
-    vi.mocked(buildHiringCorridorSnapshot).mockReturnValue({
-      currentStep: 'intro_accepted',
-      nextAction: {
-        id: 'request_reveal',
-        label: 'Request reveal',
-        description: 'Reveal is required before interview coordination.',
-      },
-      steps: [],
-      privacyStage: 'stage1_capability_and_proof',
-      decisionState: null,
-      engagementVerification: null,
-      summary: 'Still blind review',
-      subjectLabel: 'Candidate',
-    } as any);
-
-    const response = await POST(createScheduleRequest());
-    const payload = await response.json();
-
-    expect(response.status).toBe(409);
-    expect(payload).toEqual(
-      expect.objectContaining({
-        code: 'INTERVIEW_HANDOFF_NOT_READY',
-        nextAction: expect.objectContaining({
-          id: 'request_reveal',
-        }),
-      })
-    );
-  });
-
-  it('allows the next interview round after an advance decision when the last interview is completed', async () => {
-    const { supabase } = createSupabaseMock({
-      interviewsForMatch: [{ id: 'interview-completed', status: 'completed' }],
-    });
-    vi.mocked(createClient).mockResolvedValue(supabase);
-    vi.mocked(buildHiringCorridorSnapshot).mockReturnValue({
-      currentStep: 'decision',
-      nextAction: {
-        id: 'advance_to_next_interview',
-        label: 'Schedule next interview',
-        description: 'Advance requires another interview.',
-      },
-      steps: [],
-      privacyStage: 'stage4_interview_coordination',
-      decisionState: 'advance',
-      engagementVerification: null,
-      summary: 'Advance recorded',
-      subjectLabel: 'Candidate',
-    } as any);
-
-    const response = await POST(
-      createScheduleRequest({
-        platform: 'manual',
-        manualMeetingLink: 'https://example.com/manual-room',
-        manualMeetingProvider: 'teams',
-      })
-    );
-
-    expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual(
-      expect.objectContaining({
-        success: true,
-      })
-    );
   });
 });
