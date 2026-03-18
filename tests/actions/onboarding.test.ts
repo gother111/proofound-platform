@@ -111,13 +111,16 @@ describe('onboarding actions', () => {
     formData.set('contextOrganizationName', 'Proofound');
     formData.set('contextSummary', 'Led the MVP onboarding corridor.');
     formData.set('contextDuration', '2025 to present');
-    formData.set('contextOutcomes', 'Reduced the corridor to one calm proof-first path.');
-    formData.set('contextProjects', 'Published the first proof-first launch corridor.');
-    formData.set('contextCollaboration', 'Worked with product and design.');
-    formData.set('contextAchievement', 'Shipped the locked MVP onboarding block.');
+    formData.set('contextOutcome', 'Reduced the corridor to one calm proof-first path.');
     formData.set('proofUrl', 'https://example.com/projects/proof-first');
     formData.set('proofTitle', 'Proof-first corridor launch');
-    formData.set('proofSummary', 'Shows the first proof-backed onboarding launch.');
+    formData.set('proofSummary', 'Launch note showing the first proof-backed onboarding launch.');
+    formData.set('proofPackClaim', 'Proof-first corridor launch');
+    formData.set(
+      'proofPackOwnership',
+      'I owned the contribution shown in this proof inside this context.'
+    );
+    formData.set('proofPackOutcome', 'Reduced the corridor to one calm proof-first path.');
 
     const result = await completeIndividualOnboarding(formData);
 
@@ -147,8 +150,29 @@ describe('onboarding actions', () => {
       })
     );
     expect(experienceInsert).toHaveBeenCalledTimes(1);
+    expect(experienceInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        org_description: 'Led the MVP onboarding corridor.',
+        outcomes: 'Reduced the corridor to one calm proof-first path.',
+        projects: 'Led the MVP onboarding corridor.',
+        achievements: 'Reduced the corridor to one calm proof-first path.',
+      })
+    );
     expect(proofArtifactInsert).toHaveBeenCalledTimes(1);
-    expect(proofPackInsert).toHaveBeenCalledTimes(1);
+    expect(proofPackInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Proof-first corridor launch',
+        summary: 'I owned the contribution shown in this proof inside this context.',
+        evidence_summary: 'Launch note showing the first proof-backed onboarding launch.',
+        outcomes_summary: 'Reduced the corridor to one calm proof-first path.',
+        context_json: expect.objectContaining({
+          contextSummary: 'Led the MVP onboarding corridor.',
+          contextOutcome: 'Reduced the corridor to one calm proof-first path.',
+          evidenceTitle: 'Proof-first corridor launch',
+          evidenceUrl: 'https://example.com/projects/proof-first',
+        }),
+      })
+    );
     expect(proofPackItemInsert).toHaveBeenCalledTimes(1);
     expect(reconcileVerifierContradictions).toHaveBeenCalledWith({
       verifierProfileId: 'user-1',
@@ -266,13 +290,16 @@ describe('onboarding actions', () => {
     formData.set('contextOrganizationName', 'Proof Academy');
     formData.set('contextSummary', 'A focused learning program on proof systems.');
     formData.set('contextDuration', 'Spring 2026');
-    formData.set('contextOutcomes', 'Built a proof-first onboarding prototype.');
-    formData.set('contextProjects', 'Structured a live Proof Pack from the course.');
-    formData.set('contextDegree', 'Independent fellowship');
-    formData.set('contextSkills', 'Proof systems, product strategy');
+    formData.set('contextOutcome', 'Built a proof-first onboarding prototype.');
     formData.set('proofUrl', 'https://example.com/projects/proof-pack');
     formData.set('proofTitle', 'Proof Pack Launch');
     formData.set('proofSummary', 'A live proof-backed launch artifact.');
+    formData.set('proofPackClaim', 'Proof Pack Launch');
+    formData.set(
+      'proofPackOwnership',
+      'I owned the contribution shown in this proof inside this context.'
+    );
+    formData.set('proofPackOutcome', 'Built a proof-first onboarding prototype.');
 
     const result = await completeIndividualOnboarding(formData);
 
@@ -283,6 +310,14 @@ describe('onboarding actions', () => {
       })
     );
     expect(educationInsert).toHaveBeenCalledTimes(1);
+    expect(educationInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        institution: 'Proof Academy',
+        degree: 'Proof systems cohort',
+        skills: 'A focused learning program on proof systems.',
+        projects: 'Built a proof-first onboarding prototype.',
+      })
+    );
     expect(proofArtifactInsert).toHaveBeenCalledWith(
       expect.objectContaining({
         title: 'Proof Pack Launch',
@@ -293,7 +328,13 @@ describe('onboarding actions', () => {
         }),
       })
     );
-    expect(proofPackInsert).toHaveBeenCalledTimes(1);
+    expect(proofPackInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Proof Pack Launch',
+        summary: 'I owned the contribution shown in this proof inside this context.',
+        outcomes_summary: 'Built a proof-first onboarding prototype.',
+      })
+    );
     expect(proofPackItemInsert).toHaveBeenCalledTimes(1);
   });
 });

@@ -45,24 +45,21 @@ type ContextState = {
   contextType: ContextType;
   title: string;
   organizationName: string;
-  summary: string;
   duration: string;
-  outcomes: string;
-  projects: string;
-  collaboration: string;
-  achievement: string;
-  degree: string;
-  skills: string;
-  cause: string;
-  impact: string;
-  skillsDeployed: string;
-  personalWhy: string;
+  summary: string;
+  outcome: string;
 };
 
 type ProofState = {
   proofUrl: string;
   proofTitle: string;
   proofSummary: string;
+};
+
+type ProofPackState = {
+  claim: string;
+  ownership: string;
+  outcome: string;
 };
 
 const SETUP_STEPS: Array<{
@@ -93,24 +90,21 @@ const EMPTY_CONTEXT: ContextState = {
   contextType: 'experience',
   title: '',
   organizationName: '',
-  summary: '',
   duration: '',
-  outcomes: '',
-  projects: '',
-  collaboration: '',
-  achievement: '',
-  degree: '',
-  skills: '',
-  cause: '',
-  impact: '',
-  skillsDeployed: '',
-  personalWhy: '',
+  summary: '',
+  outcome: '',
 };
 
 const EMPTY_PROOF: ProofState = {
   proofUrl: '',
   proofTitle: '',
   proofSummary: '',
+};
+
+const EMPTY_PROOF_PACK: ProofPackState = {
+  claim: '',
+  ownership: '',
+  outcome: '',
 };
 
 function StepRail({ phase }: { phase: Exclude<SetupPhase, 'success'> }) {
@@ -152,6 +146,7 @@ export function IndividualSetup() {
   const [safeShell, setSafeShell] = useState<SafeShellState>(EMPTY_SAFE_SHELL);
   const [context, setContext] = useState<ContextState>(EMPTY_CONTEXT);
   const [proof, setProof] = useState<ProofState>(EMPTY_PROOF);
+  const [proofPack, setProofPack] = useState<ProofPackState>(EMPTY_PROOF_PACK);
   const [portfolioUrl, setPortfolioUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -174,22 +169,16 @@ export function IndividualSetup() {
       formData.set('contextType', context.contextType);
       formData.set('contextTitle', context.title);
       formData.set('contextOrganizationName', context.organizationName);
-      formData.set('contextSummary', context.summary);
       formData.set('contextDuration', context.duration);
-      formData.set('contextOutcomes', context.outcomes);
-      formData.set('contextProjects', context.projects);
-      formData.set('contextCollaboration', context.collaboration);
-      formData.set('contextAchievement', context.achievement);
-      formData.set('contextDegree', context.degree);
-      formData.set('contextSkills', context.skills);
-      formData.set('contextCause', context.cause);
-      formData.set('contextImpact', context.impact);
-      formData.set('contextSkillsDeployed', context.skillsDeployed);
-      formData.set('contextPersonalWhy', context.personalWhy);
+      formData.set('contextSummary', context.summary);
+      formData.set('contextOutcome', context.outcome);
 
       formData.set('proofUrl', proof.proofUrl);
       formData.set('proofTitle', proof.proofTitle);
       formData.set('proofSummary', proof.proofSummary);
+      formData.set('proofPackClaim', proofPack.claim);
+      formData.set('proofPackOwnership', proofPack.ownership);
+      formData.set('proofPackOutcome', proofPack.outcome);
 
       const result = await completeIndividualOnboarding(formData);
 
@@ -232,18 +221,9 @@ export function IndividualSetup() {
       contextType,
       title: String(formData.get('title') || '').trim(),
       organizationName: String(formData.get('organizationName') || '').trim(),
-      summary: String(formData.get('summary') || '').trim(),
       duration: String(formData.get('duration') || '').trim(),
-      outcomes: String(formData.get('outcomes') || '').trim(),
-      projects: String(formData.get('projects') || '').trim(),
-      collaboration: String(formData.get('collaboration') || '').trim(),
-      achievement: String(formData.get('achievement') || '').trim(),
-      degree: String(formData.get('degree') || '').trim(),
-      skills: String(formData.get('skills') || '').trim(),
-      cause: String(formData.get('cause') || '').trim(),
-      impact: String(formData.get('impact') || '').trim(),
-      skillsDeployed: String(formData.get('skillsDeployed') || '').trim(),
-      personalWhy: String(formData.get('personalWhy') || '').trim(),
+      summary: String(formData.get('summary') || '').trim(),
+      outcome: String(formData.get('outcome') || '').trim(),
     });
     setError(null);
     setPhase('first_proof');
@@ -255,8 +235,19 @@ export function IndividualSetup() {
       proofTitle: String(formData.get('proofTitle') || '').trim(),
       proofSummary: String(formData.get('proofSummary') || '').trim(),
     });
+    setProofPack((current) => ({
+      claim: current.claim || String(formData.get('proofTitle') || '').trim(),
+      ownership:
+        current.ownership || 'I owned the contribution shown in this proof inside this context.',
+      outcome: current.outcome || context.outcome,
+    }));
     setError(null);
     setPhase('proof_pack');
+  }
+
+  function handleProofPackSubmit() {
+    setError(null);
+    setPhase('optional_verification');
   }
 
   if (phase === 'success' && portfolioUrl) {
@@ -464,7 +455,7 @@ export function IndividualSetup() {
                   <Input
                     id="title"
                     name="title"
-                    placeholder="What was the role, program, or initiative?"
+                    placeholder="Role, title, focus, or contribution area"
                     required
                     defaultValue={context.title}
                   />
@@ -474,7 +465,7 @@ export function IndividualSetup() {
                   <Input
                     id="organizationName"
                     name="organizationName"
-                    placeholder="Where did this happen?"
+                    placeholder="Organization, institution, or community"
                     required
                     defaultValue={context.organizationName}
                   />
@@ -497,7 +488,7 @@ export function IndividualSetup() {
                   <Input
                     id="summary"
                     name="summary"
-                    placeholder="What setting should the proof be read inside?"
+                    placeholder="One short sentence that sets the context"
                     required
                     defaultValue={context.summary}
                   />
@@ -505,115 +496,14 @@ export function IndividualSetup() {
               </div>
 
               <div>
-                <Label htmlFor="outcomes">Outcome or impact *</Label>
-                <textarea
-                  id="outcomes"
-                  name="outcomes"
+                <Label htmlFor="outcome">Outcome or contribution *</Label>
+                <Input
+                  id="outcome"
+                  name="outcome"
                   required
-                  defaultValue={context.outcomes}
-                  placeholder="What changed, improved, or mattered?"
-                  className="flex min-h-[110px] w-full rounded-lg border border-proofound-stone bg-white px-4 py-2 text-base text-proofound-charcoal transition-colors placeholder:text-proofound-charcoal/40 focus-visible:border-proofound-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest dark:border-border dark:bg-background dark:text-foreground dark:placeholder:text-muted-foreground/40"
+                  defaultValue={context.outcome}
+                  placeholder="One short sentence on what changed or what you contributed"
                 />
-              </div>
-
-              <div>
-                <Label htmlFor="projects">Work or project summary *</Label>
-                <textarea
-                  id="projects"
-                  name="projects"
-                  required
-                  defaultValue={context.projects}
-                  placeholder="What did you build, deliver, learn, or contribute?"
-                  className="flex min-h-[110px] w-full rounded-lg border border-proofound-stone bg-white px-4 py-2 text-base text-proofound-charcoal transition-colors placeholder:text-proofound-charcoal/40 focus-visible:border-proofound-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest dark:border-border dark:bg-background dark:text-foreground dark:placeholder:text-muted-foreground/40"
-                />
-              </div>
-
-              <div className="grid gap-5 md:grid-cols-2">
-                <div>
-                  <Label htmlFor="collaboration">Collaboration or supporting detail *</Label>
-                  <textarea
-                    id="collaboration"
-                    name="collaboration"
-                    required
-                    defaultValue={context.collaboration}
-                    placeholder="Who was involved, or what capability did this build?"
-                    className="flex min-h-[110px] w-full rounded-lg border border-proofound-stone bg-white px-4 py-2 text-base text-proofound-charcoal transition-colors placeholder:text-proofound-charcoal/40 focus-visible:border-proofound-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest dark:border-border dark:bg-background dark:text-foreground dark:placeholder:text-muted-foreground/40"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="achievement">What should stand out? *</Label>
-                  <textarea
-                    id="achievement"
-                    name="achievement"
-                    required
-                    defaultValue={context.achievement}
-                    placeholder="Call out the strongest result, growth, or contribution."
-                    className="flex min-h-[110px] w-full rounded-lg border border-proofound-stone bg-white px-4 py-2 text-base text-proofound-charcoal transition-colors placeholder:text-proofound-charcoal/40 focus-visible:border-proofound-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest dark:border-border dark:bg-background dark:text-foreground dark:placeholder:text-muted-foreground/40"
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-5 md:grid-cols-2">
-                <div>
-                  <Label htmlFor="degree">Degree or learning path</Label>
-                  <Input
-                    id="degree"
-                    name="degree"
-                    placeholder="Used when the context is education or learning"
-                    defaultValue={context.degree}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="skills">Skills gained or practiced</Label>
-                  <Input
-                    id="skills"
-                    name="skills"
-                    placeholder="Used when the context is education or learning"
-                    defaultValue={context.skills}
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-5 md:grid-cols-2">
-                <div>
-                  <Label htmlFor="cause">Cause</Label>
-                  <Input
-                    id="cause"
-                    name="cause"
-                    placeholder="Used when the context is volunteering"
-                    defaultValue={context.cause}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="impact">Volunteering impact</Label>
-                  <Input
-                    id="impact"
-                    name="impact"
-                    placeholder="Used when the context is volunteering"
-                    defaultValue={context.impact}
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-5 md:grid-cols-2">
-                <div>
-                  <Label htmlFor="skillsDeployed">Skills deployed</Label>
-                  <Input
-                    id="skillsDeployed"
-                    name="skillsDeployed"
-                    placeholder="Used when the context is volunteering"
-                    defaultValue={context.skillsDeployed}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="personalWhy">Personal why</Label>
-                  <Input
-                    id="personalWhy"
-                    name="personalWhy"
-                    placeholder="Used when the context is volunteering"
-                    defaultValue={context.personalWhy}
-                  />
-                </div>
               </div>
 
               {error ? (
@@ -651,7 +541,8 @@ export function IndividualSetup() {
               Add your first proof
             </CardTitle>
             <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-              One real proof is enough for day one. You can add more after publishing.
+              Add one evidence item that will feed your first Proof Pack. One real link is enough
+              for day one.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -680,13 +571,13 @@ export function IndividualSetup() {
               </div>
 
               <div>
-                <Label htmlFor="proofSummary">What does this proof show? *</Label>
+                <Label htmlFor="proofSummary">Evidence item note *</Label>
                 <textarea
                   id="proofSummary"
                   name="proofSummary"
                   required
                   defaultValue={proof.proofSummary}
-                  placeholder="Describe the evidence, what it proves, and why it matters."
+                  placeholder="What is this evidence item, and why does it matter to this proof?"
                   className="flex min-h-[120px] w-full rounded-lg border border-proofound-stone bg-white px-4 py-2 text-base text-proofound-charcoal transition-colors placeholder:text-proofound-charcoal/40 focus-visible:border-proofound-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest dark:border-border dark:bg-background dark:text-foreground dark:placeholder:text-muted-foreground/40"
                 />
               </div>
@@ -726,35 +617,100 @@ export function IndividualSetup() {
               Structure your first Proof Pack
             </CardTitle>
             <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-              We&apos;ll publish one proof with its anchor context. Keep the first Proof Pack clean
-              and specific.
+              Turn the anchor context and evidence item into one clean Proof Pack. Keep it specific
+              and portfolio-ready.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="rounded-xl border border-proofound-stone bg-proofound-parchment/60 p-4 text-sm text-proofound-charcoal dark:border-border dark:bg-muted dark:text-foreground">
-              <p className="font-medium">Proof Pack preview</p>
-              <p className="mt-2">
-                <span className="font-medium">Context:</span> {context.title} at{' '}
-                {context.organizationName}
-              </p>
-              <p className="mt-1">
-                <span className="font-medium">Proof:</span> {proof.proofTitle}
-              </p>
-              <p className="mt-1 text-proofound-charcoal/70 dark:text-muted-foreground">
-                {proof.proofSummary}
-              </p>
-            </div>
+          <CardContent>
+            <form action={handleProofPackSubmit} className="space-y-5">
+              <div>
+                <Label htmlFor="proofPackClaim">Claim *</Label>
+                <Input
+                  id="proofPackClaim"
+                  name="proofPackClaim"
+                  required
+                  value={proofPack.claim}
+                  onChange={(event) =>
+                    setProofPack((current) => ({ ...current, claim: event.target.value }))
+                  }
+                  placeholder="What should this Proof Pack claim in one clear line?"
+                />
+              </div>
 
-            <div className="flex justify-end">
-              <Button
-                type="button"
-                size="lg"
-                className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
-                onClick={() => setPhase('optional_verification')}
-              >
-                Continue
-              </Button>
-            </div>
+              <div>
+                <Label htmlFor="proofPackOwnership">Ownership *</Label>
+                <Input
+                  id="proofPackOwnership"
+                  name="proofPackOwnership"
+                  required
+                  value={proofPack.ownership}
+                  onChange={(event) =>
+                    setProofPack((current) => ({ ...current, ownership: event.target.value }))
+                  }
+                  placeholder="What was your role or ownership in this work?"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="proofPackOutcome">Outcome *</Label>
+                <Input
+                  id="proofPackOutcome"
+                  name="proofPackOutcome"
+                  required
+                  value={proofPack.outcome}
+                  onChange={(event) =>
+                    setProofPack((current) => ({ ...current, outcome: event.target.value }))
+                  }
+                  placeholder="What result or contribution should a reviewer understand?"
+                />
+              </div>
+
+              <div className="rounded-xl border border-proofound-stone bg-proofound-parchment/60 p-4 text-sm text-proofound-charcoal dark:border-border dark:bg-muted dark:text-foreground">
+                <p className="font-medium">Proof Pack preview</p>
+                <p className="mt-3">
+                  <span className="font-medium">Claim:</span>{' '}
+                  {proofPack.claim || 'Add a clear claim'}
+                </p>
+                <p className="mt-1">
+                  <span className="font-medium">Ownership:</span>{' '}
+                  {proofPack.ownership || 'State your role or ownership'}
+                </p>
+                <p className="mt-1">
+                  <span className="font-medium">Outcome:</span>{' '}
+                  {proofPack.outcome || 'Describe the key result or contribution'}
+                </p>
+                <p className="mt-1">
+                  <span className="font-medium">Anchor context:</span> {context.title} at{' '}
+                  {context.organizationName} · {context.duration}
+                </p>
+                <p className="mt-1 text-proofound-charcoal/70 dark:text-muted-foreground">
+                  {context.summary}
+                </p>
+                <p className="mt-1">
+                  <span className="font-medium">Evidence item:</span> {proof.proofTitle}
+                </p>
+                <p className="mt-1 text-proofound-charcoal/70 dark:text-muted-foreground">
+                  {proof.proofSummary}
+                </p>
+                <p className="mt-1 break-all text-proofound-charcoal/70 dark:text-muted-foreground">
+                  {proof.proofUrl}
+                </p>
+                <p className="mt-3">
+                  <span className="font-medium">Visibility summary:</span> Public portfolio-safe by
+                  default. Blind review stays intact. Verification is currently unverified.
+                </p>
+              </div>
+
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
+                >
+                  Continue
+                </Button>
+              </div>
+            </form>
           </CardContent>
         </Card>
       ) : null}
@@ -774,16 +730,17 @@ export function IndividualSetup() {
               Optional verification
             </CardTitle>
             <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-              Verification can wait. The locked MVP lets you publish first and request verification
-              after.
+              Verification can wait. Skipping it does not block portfolio-ready, but this first
+              Proof Pack will stay unverified until you request a non-self trust signal later.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-xl border border-proofound-stone bg-proofound-parchment/60 p-4 text-sm text-proofound-charcoal dark:border-border dark:bg-muted dark:text-foreground">
               <p className="font-medium">What happens next</p>
               <p className="mt-1 text-proofound-charcoal/70 dark:text-muted-foreground">
-                We&apos;ll keep your portfolio calm and public-safe. You can request verification
-                from the app once this first proof is live.
+                We&apos;ll keep your portfolio calm and public-safe. You can publish now, then
+                request verification from the app later if you want stronger trust and future
+                intro-eligible progress.
               </p>
             </div>
 
@@ -840,7 +797,13 @@ export function IndividualSetup() {
                 <span className="font-medium">Context:</span> {context.title}
               </p>
               <p className="mt-1">
-                <span className="font-medium">Proof:</span> {proof.proofTitle}
+                <span className="font-medium">Proof Pack claim:</span> {proofPack.claim}
+              </p>
+              <p className="mt-1">
+                <span className="font-medium">Evidence item:</span> {proof.proofTitle}
+              </p>
+              <p className="mt-1">
+                <span className="font-medium">Visibility:</span> Public portfolio-safe
               </p>
             </div>
 

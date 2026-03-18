@@ -114,19 +114,13 @@ export async function completeIndividualOnboarding(formData: FormData) {
   const contextOrganizationName = String(formData.get('contextOrganizationName') || '').trim();
   const contextSummary = String(formData.get('contextSummary') || '').trim();
   const contextDuration = String(formData.get('contextDuration') || '').trim();
-  const contextOutcomes = String(formData.get('contextOutcomes') || '').trim();
-  const contextProjects = String(formData.get('contextProjects') || '').trim();
-  const contextCollaboration = String(formData.get('contextCollaboration') || '').trim();
-  const contextAchievement = String(formData.get('contextAchievement') || '').trim();
-  const contextDegree = String(formData.get('contextDegree') || '').trim();
-  const contextSkills = String(formData.get('contextSkills') || '').trim();
-  const contextCause = String(formData.get('contextCause') || '').trim();
-  const contextImpact = String(formData.get('contextImpact') || '').trim();
-  const contextSkillsDeployed = String(formData.get('contextSkillsDeployed') || '').trim();
-  const contextPersonalWhy = String(formData.get('contextPersonalWhy') || '').trim();
+  const contextOutcome = String(formData.get('contextOutcome') || '').trim();
   const proofUrl = String(formData.get('proofUrl') || '').trim();
   const proofTitle = String(formData.get('proofTitle') || '').trim();
   const proofSummary = String(formData.get('proofSummary') || '').trim();
+  const proofPackClaim = String(formData.get('proofPackClaim') || '').trim();
+  const proofPackOwnership = String(formData.get('proofPackOwnership') || '').trim();
+  const proofPackOutcome = String(formData.get('proofPackOutcome') || '').trim();
 
   if (!isOnboardingContextType(contextTypeValue)) {
     emitLaunchTrace(trace, {
@@ -162,47 +156,14 @@ export async function completeIndividualOnboarding(formData: FormData) {
     !contextOrganizationName ||
     !contextSummary ||
     !contextDuration ||
-    !contextOutcomes ||
-    !contextProjects
+    !contextOutcome
   ) {
     emitLaunchTrace(trace, {
       outcome: 'rejected',
       state: 'portfolio_publish_validation_failed',
       failureClass: 'missing_context_fields',
     });
-    return { error: 'Add one real context with summary and outcomes before publishing.' };
-  }
-
-  if (contextType === 'experience' && (!contextCollaboration || !contextAchievement)) {
-    emitLaunchTrace(trace, {
-      outcome: 'rejected',
-      state: 'portfolio_publish_validation_failed',
-      failureClass: 'incomplete_experience_context',
-    });
-    return { error: 'Add collaboration and standout details for the work context.' };
-  }
-
-  if (contextType === 'education' && (!contextDegree || !contextSkills)) {
-    emitLaunchTrace(trace, {
-      outcome: 'rejected',
-      state: 'portfolio_publish_validation_failed',
-      failureClass: 'incomplete_education_context',
-    });
-    return { error: 'Add the learning path and skills for this education context.' };
-  }
-
-  if (
-    contextType === 'volunteering' &&
-    (!contextCause || !contextImpact || !contextSkillsDeployed || !contextPersonalWhy)
-  ) {
-    emitLaunchTrace(trace, {
-      outcome: 'rejected',
-      state: 'portfolio_publish_validation_failed',
-      failureClass: 'incomplete_volunteering_context',
-    });
-    return {
-      error: 'Add the cause, impact, skills, and personal why for this volunteering context.',
-    };
+    return { error: 'Add one real context with a short anchor and outcome before publishing.' };
   }
 
   if (!proofUrl || !proofTitle || !proofSummary) {
@@ -212,6 +173,15 @@ export async function completeIndividualOnboarding(formData: FormData) {
       failureClass: 'missing_proof_fields',
     });
     return { error: 'Add your first proof before publishing.' };
+  }
+
+  if (!proofPackClaim || !proofPackOwnership || !proofPackOutcome) {
+    emitLaunchTrace(trace, {
+      outcome: 'rejected',
+      state: 'portfolio_publish_validation_failed',
+      failureClass: 'missing_proof_pack_fields',
+    });
+    return { error: 'Structure your first Proof Pack before publishing.' };
   }
 
   const normalizedHandle = normalizeHandle(handle);
@@ -313,10 +283,10 @@ export async function completeIndividualOnboarding(formData: FormData) {
         organization_name: contextOrganizationName,
         org_description: contextSummary,
         duration: contextDuration,
-        outcomes: contextOutcomes,
-        projects: contextProjects,
-        colleagues: contextCollaboration,
-        achievements: contextAchievement,
+        outcomes: contextOutcome,
+        projects: contextSummary,
+        colleagues: contextSummary,
+        achievements: contextOutcome,
         verified: false,
       });
       contextInsertError = error;
@@ -325,10 +295,10 @@ export async function completeIndividualOnboarding(formData: FormData) {
         id: contextId,
         user_id: user.id,
         institution: contextOrganizationName,
-        degree: contextDegree,
+        degree: contextTitle,
         duration: contextDuration,
-        skills: contextSkills,
-        projects: contextProjects,
+        skills: contextSummary,
+        projects: contextOutcome,
         verified: false,
       });
       contextInsertError = error;
@@ -339,10 +309,10 @@ export async function completeIndividualOnboarding(formData: FormData) {
         title: contextTitle,
         org_description: `${contextOrganizationName}: ${contextSummary}`,
         duration: contextDuration,
-        cause: contextCause,
-        impact: contextImpact,
-        skills_deployed: contextSkillsDeployed,
-        personal_why: contextPersonalWhy,
+        cause: contextSummary,
+        impact: contextOutcome,
+        skills_deployed: contextTitle,
+        personal_why: contextSummary,
         verified: false,
       });
       contextInsertError = error;
@@ -365,6 +335,9 @@ export async function completeIndividualOnboarding(formData: FormData) {
       context_type: contextType,
       context_title: contextTitle,
       context_organization_name: contextOrganizationName,
+      context_duration: contextDuration,
+      context_summary: contextSummary,
+      context_outcome: contextOutcome,
       focus_area: focusArea,
       candidate_evidence: true,
       public_signal: true,
@@ -424,8 +397,8 @@ export async function completeIndividualOnboarding(formData: FormData) {
       primary_subject_type: contextType,
       primary_subject_id: contextId,
       lifecycle_state: 'published',
-      title: proofTitle,
-      summary: proofSummary,
+      title: proofPackClaim,
+      summary: proofPackOwnership,
       context_json: {
         importedFrom: 'onboarding',
         contextType,
@@ -433,8 +406,19 @@ export async function completeIndividualOnboarding(formData: FormData) {
         focusArea,
         workMode,
         engagementType,
+        contextTitle,
+        contextOrganizationName,
+        contextDuration,
+        contextSummary,
+        contextOutcome,
+        evidenceTitle: proofTitle,
+        evidenceUrl: proofUrl,
+        proofPackClaim,
+        proofPackOwnership,
+        proofPackOutcome,
       },
       evidence_summary: proofSummary,
+      outcomes_summary: proofPackOutcome,
       visibility: 'public',
       reveal_gate: 'none',
       created_by: user.id,
