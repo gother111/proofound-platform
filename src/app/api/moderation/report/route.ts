@@ -170,7 +170,7 @@ async function resolveContentOwnerId(
       .from('organization_members')
       .select('user_id')
       .eq('org_id', assignment.org_id)
-      .eq('role', 'owner')
+      .eq('role', 'org_owner')
       .eq('status', 'active')
       .limit(1)
       .maybeSingle();

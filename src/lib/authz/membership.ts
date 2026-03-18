@@ -1,4 +1,8 @@
-import { canonicalOrgMembershipStates, canonicalOrgRoleValues } from '@/db/schema';
+import {
+  canonicalOrgMembershipStates,
+  canonicalOrgRoleValues,
+  legacyOrgRoleValues,
+} from '@/db/schema';
 import {
   CANONICAL_ORG_ROLE_VALUES,
   ORG_ACTIVE_MEMBERSHIP_STATES,
@@ -7,7 +11,7 @@ import {
 
 export type CanonicalOrgMembershipState = (typeof canonicalOrgMembershipStates)[number];
 export type CanonicalOrgRole = (typeof canonicalOrgRoleValues)[number];
-type LegacyOrgRole = 'owner' | 'admin' | 'member' | 'viewer';
+type LegacyOrgRole = (typeof legacyOrgRoleValues)[number];
 
 const LEGACY_ROLE_MAP = {
   owner: 'org_owner',
@@ -36,14 +40,6 @@ export function normalizeOrgRole(value: string | null | undefined): CanonicalOrg
   const legacyMapped = LEGACY_ROLE_MAP[value as keyof typeof LEGACY_ROLE_MAP];
   if (legacyMapped) {
     return legacyMapped;
-  }
-
-  if (
-    CANONICAL_ORG_ROLE_VALUES.includes(value as (typeof CANONICAL_ORG_ROLE_VALUES)[number]) ||
-    value === 'individual' ||
-    value === 'trust_admin'
-  ) {
-    return value as CanonicalOrgRole;
   }
 
   if (canonicalOrgRoleValues.includes(value as CanonicalOrgRole)) {

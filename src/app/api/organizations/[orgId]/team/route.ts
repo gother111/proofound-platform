@@ -9,13 +9,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
-import { organizationMembers, profiles } from '@/db/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { organizationMembers } from '@/db/schema';
+import { and, eq } from 'drizzle-orm';
+import { getCanonicalOrgTeamData } from '@/lib/organizations/team';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ orgId: string }> }
 ) {
   try {
@@ -27,62 +28,19 @@ export async function GET(
     const { orgId } = await params;
 
     // Verify user is a member
-    const membership = await db
-      .select()
-      .from(organizationMembers)
-      .where(
-        and(
-          eq(organizationMembers.orgId, orgId),
-          eq(organizationMembers.userId, user.id),
-          eq(organizationMembers.status, 'active')
-        )
-      )
-      .limit(1);
+    const membership = await db.query.organizationMembers.findFirst({
+      where: and(
+        eq(organizationMembers.orgId, orgId),
+        eq(organizationMembers.userId, user.id),
+        eq(organizationMembers.state, 'active')
+      ),
+    });
 
-    if (!membership || membership.length === 0) {
+    if (!membership) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
-    // Fetch team members with profile info
-    const members = await db
-      .select({
-        userId: organizationMembers.userId,
-        role: organizationMembers.role,
-        status: organizationMembers.status,
-        displayName: profiles.displayName,
-        handle: profiles.handle,
-        avatarUrl: profiles.avatarUrl,
-        createdAt: organizationMembers.joinedAt,
-      })
-      .from(organizationMembers)
-      .innerJoin(profiles, eq(profiles.id, organizationMembers.userId))
-      .where(eq(organizationMembers.orgId, orgId))
-      .orderBy(
-        sql`case 
-          when ${organizationMembers.role} = 'owner' then 1 
-          when ${organizationMembers.role} = 'admin' then 2 
-          when ${organizationMembers.role} = 'member' then 3 
-          else 4 
-        end`
-      );
-
-    // Get role stats
-    const roleStats = await db
-      .select({
-        role: organizationMembers.role,
-        count: sql<number>`count(*)::int`,
-      })
-      .from(organizationMembers)
-      .where(and(eq(organizationMembers.orgId, orgId), eq(organizationMembers.status, 'active')))
-      .groupBy(organizationMembers.role);
-
-    const stats = {
-      total: roleStats.reduce((sum, r) => sum + (r.count || 0), 0),
-      owners: roleStats.find((r) => r.role === 'owner')?.count || 0,
-      admins: roleStats.find((r) => r.role === 'admin')?.count || 0,
-      members: roleStats.find((r) => r.role === 'member')?.count || 0,
-      viewers: roleStats.find((r) => r.role === 'viewer')?.count || 0,
-    };
+    const { members, stats } = await getCanonicalOrgTeamData(orgId);
 
     return NextResponse.json({
       members,
@@ -94,7 +52,10 @@ export async function GET(
     return NextResponse.json(
       {
         members: [],
-        stats: { total: 0, owners: 0, admins: 0, members: 0, viewers: 0 },
+        stats: {
+          total: 0,
+          byRole: { org_owner: 0, org_manager: 0, org_reviewer: 0 },
+        },
         error: error instanceof Error ? error.message : 'Failed to fetch team members',
       },
       { status: 200 }

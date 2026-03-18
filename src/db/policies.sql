@@ -38,139 +38,194 @@ CREATE POLICY "Users can insert own individual profile"
   ON public.individual_profiles FOR INSERT
   WITH CHECK (user_id = auth.uid());
 
+CREATE OR REPLACE FUNCTION public.normalize_org_role_compat(role_value TEXT)
+RETURNS TEXT
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT CASE role_value
+    WHEN 'owner' THEN 'org_owner'
+    WHEN 'admin' THEN 'org_manager'
+    WHEN 'member' THEN 'org_reviewer'
+    WHEN 'viewer' THEN 'org_reviewer'
+    ELSE role_value
+  END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.has_active_org_membership(target_org_id UUID, actor_id UUID DEFAULT auth.uid())
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.organization_members om
+    WHERE om.org_id = target_org_id
+      AND om.user_id = actor_id
+      AND om.state = 'active'
+  );
+$$;
+
+CREATE OR REPLACE FUNCTION public.has_org_role(
+  target_org_id UUID,
+  allowed_roles TEXT[],
+  actor_id UUID DEFAULT auth.uid()
+)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.organization_members om
+    WHERE om.org_id = target_org_id
+      AND om.user_id = actor_id
+      AND om.state = 'active'
+      AND public.normalize_org_role_compat(om.role) = ANY (allowed_roles)
+  );
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_trust_admin(actor_id UUID DEFAULT auth.uid())
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.profiles p
+    WHERE p.id = actor_id
+      AND p.platform_role IN ('platform_admin', 'super_admin')
+  );
+$$;
+
 -- Organizations policies
+DROP POLICY IF EXISTS "Members can view their organizations" ON public.organizations;
+DROP POLICY IF EXISTS "Owners and admins can update organizations" ON public.organizations;
+DROP POLICY IF EXISTS "Owners and managers can update organizations" ON public.organizations;
+DROP POLICY IF EXISTS "Org owners can update organizations" ON public.organizations;
+
 CREATE POLICY "Members can view their organizations"
   ON public.organizations FOR SELECT
   USING (
-    EXISTS (
-      SELECT 1 FROM public.organization_members
-      WHERE organization_members.org_id = organizations.id
-        AND organization_members.user_id = auth.uid()
-        AND organization_members.status = 'active'
-    )
+    public.has_active_org_membership(id)
+    OR public.is_trust_admin()
   );
 
 CREATE POLICY "Authenticated users can create organizations"
   ON public.organizations FOR INSERT
   WITH CHECK (auth.uid() = created_by);
 
-CREATE POLICY "Owners and admins can update organizations"
+CREATE POLICY "Org owners can update organizations"
   ON public.organizations FOR UPDATE
   USING (
-    EXISTS (
-      SELECT 1 FROM public.organization_members
-      WHERE organization_members.org_id = organizations.id
-        AND organization_members.user_id = auth.uid()
-        AND organization_members.role IN ('owner', 'admin')
-        AND organization_members.status = 'active'
-    )
+    public.has_org_role(id, ARRAY['org_owner'])
+    OR public.is_trust_admin()
   )
   WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.organization_members
-      WHERE organization_members.org_id = organizations.id
-        AND organization_members.user_id = auth.uid()
-        AND organization_members.role IN ('owner', 'admin')
-        AND organization_members.status = 'active'
-    )
+    public.has_org_role(id, ARRAY['org_owner'])
+    OR public.is_trust_admin()
   );
 
 -- Organization members policies
+DROP POLICY IF EXISTS "Members can view organization members" ON public.organization_members;
+DROP POLICY IF EXISTS "Owners and admins can insert members" ON public.organization_members;
+DROP POLICY IF EXISTS "Owners and admins can update members" ON public.organization_members;
+DROP POLICY IF EXISTS "Owners and admins can delete members" ON public.organization_members;
+DROP POLICY IF EXISTS "Owners and managers can insert members" ON public.organization_members;
+DROP POLICY IF EXISTS "Owners can update members" ON public.organization_members;
+DROP POLICY IF EXISTS "Owners can delete members" ON public.organization_members;
+DROP POLICY IF EXISTS "Org owners can insert members" ON public.organization_members;
+DROP POLICY IF EXISTS "Org owners can update members" ON public.organization_members;
+DROP POLICY IF EXISTS "Org owners can delete members" ON public.organization_members;
+
 CREATE POLICY "Members can view organization members"
   ON public.organization_members FOR SELECT
   USING (
-    EXISTS (
-      SELECT 1 FROM public.organization_members AS om
-      WHERE om.org_id = organization_members.org_id
-        AND om.user_id = auth.uid()
-        AND om.status = 'active'
-    )
+    public.has_active_org_membership(org_id)
+    OR public.is_trust_admin()
   );
 
-CREATE POLICY "Owners and admins can insert members"
+CREATE POLICY "Org owners can insert members"
   ON public.organization_members FOR INSERT
   WITH CHECK (
-    -- Allow existing owners/admins to add members
-    EXISTS (
-      SELECT 1 FROM public.organization_members AS om
-      WHERE om.org_id = organization_members.org_id
-        AND om.user_id = auth.uid()
-        AND om.role IN ('owner', 'admin')
-        AND om.status = 'active'
-    )
+    public.has_org_role(org_id, ARRAY['org_owner'])
+    OR public.is_trust_admin()
     -- Allow org creator to add first owner (themselves)
     OR (
       auth.uid() = user_id 
-      AND role = 'owner'
+      AND public.normalize_org_role_compat(role) = 'org_owner'
       AND EXISTS (
         SELECT 1 FROM public.organizations
         WHERE organizations.id = organization_members.org_id
           AND organizations.created_by = auth.uid()
       )
     )
-    -- Allow self-join via invitation
-    OR auth.uid() = user_id
   );
 
-CREATE POLICY "Owners and admins can update members"
+CREATE POLICY "Org owners can update members"
   ON public.organization_members FOR UPDATE
   USING (
-    EXISTS (
-      SELECT 1 FROM public.organization_members AS om
-      WHERE om.org_id = organization_members.org_id
-        AND om.user_id = auth.uid()
-        AND om.role IN ('owner', 'admin')
-        AND om.status = 'active'
-    )
+    public.has_org_role(org_id, ARRAY['org_owner'])
+    OR public.is_trust_admin()
+  )
+  WITH CHECK (
+    public.has_org_role(org_id, ARRAY['org_owner'])
+    OR public.is_trust_admin()
   );
 
-CREATE POLICY "Owners and admins can delete members"
+CREATE POLICY "Org owners can delete members"
   ON public.organization_members FOR DELETE
   USING (
-    EXISTS (
-      SELECT 1 FROM public.organization_members AS om
-      WHERE om.org_id = organization_members.org_id
-        AND om.user_id = auth.uid()
-        AND om.role IN ('owner', 'admin')
-        AND om.status = 'active'
-    )
+    public.has_org_role(org_id, ARRAY['org_owner'])
+    OR public.is_trust_admin()
   );
 
 -- Organization invitations policies
-CREATE POLICY "Org admins can view invitations"
+DROP POLICY IF EXISTS "Org admins can view invitations" ON public.org_invitations;
+DROP POLICY IF EXISTS "Org admins can create invitations" ON public.org_invitations;
+DROP POLICY IF EXISTS "Org admins can delete invitations" ON public.org_invitations;
+DROP POLICY IF EXISTS "Org managers can view invitations" ON public.org_invitations;
+DROP POLICY IF EXISTS "Org managers can create invitations" ON public.org_invitations;
+DROP POLICY IF EXISTS "Org owners can create invitations" ON public.org_invitations;
+DROP POLICY IF EXISTS "Org owners can update invitations" ON public.org_invitations;
+DROP POLICY IF EXISTS "Org owners can delete invitations" ON public.org_invitations;
+
+CREATE POLICY "Org managers can view invitations"
   ON public.org_invitations FOR SELECT
   USING (
-    EXISTS (
-      SELECT 1 FROM public.organization_members
-      WHERE organization_members.org_id = org_invitations.org_id
-        AND organization_members.user_id = auth.uid()
-        AND organization_members.role IN ('owner', 'admin')
-        AND organization_members.status = 'active'
-    )
+    public.has_org_role(org_id, ARRAY['org_owner', 'org_manager'])
+    OR public.is_trust_admin()
   );
 
-CREATE POLICY "Org admins can create invitations"
+CREATE POLICY "Org owners can create invitations"
   ON public.org_invitations FOR INSERT
   WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.organization_members
-      WHERE organization_members.org_id = org_invitations.org_id
-        AND organization_members.user_id = auth.uid()
-        AND organization_members.role IN ('owner', 'admin')
-        AND organization_members.status = 'active'
-    )
+    public.has_org_role(org_id, ARRAY['org_owner'])
+    OR public.is_trust_admin()
   );
 
-CREATE POLICY "Org admins can delete invitations"
+CREATE POLICY "Org owners can update invitations"
+  ON public.org_invitations FOR UPDATE
+  USING (
+    public.has_org_role(org_id, ARRAY['org_owner'])
+    OR public.is_trust_admin()
+  )
+  WITH CHECK (
+    public.has_org_role(org_id, ARRAY['org_owner'])
+    OR public.is_trust_admin()
+  );
+
+CREATE POLICY "Org owners can delete invitations"
   ON public.org_invitations FOR DELETE
   USING (
-    EXISTS (
-      SELECT 1 FROM public.organization_members
-      WHERE organization_members.org_id = org_invitations.org_id
-        AND organization_members.user_id = auth.uid()
-        AND organization_members.role IN ('owner', 'admin')
-        AND organization_members.status = 'active'
-    )
+    public.has_org_role(org_id, ARRAY['org_owner'])
+    OR public.is_trust_admin()
   );
 
 -- Organization candidate invites policies (BYOC)
@@ -181,95 +236,60 @@ BEGIN
   END IF;
 
   EXECUTE 'ALTER TABLE public.org_candidate_invites ENABLE ROW LEVEL SECURITY';
+  EXECUTE 'DROP POLICY IF EXISTS "Org members can view candidate invites" ON public.org_candidate_invites';
+  EXECUTE 'DROP POLICY IF EXISTS "Org admins can create candidate invites" ON public.org_candidate_invites';
+  EXECUTE 'DROP POLICY IF EXISTS "Org admins can update candidate invites" ON public.org_candidate_invites';
+  EXECUTE 'DROP POLICY IF EXISTS "Org managers can create candidate invites" ON public.org_candidate_invites';
+  EXECUTE 'DROP POLICY IF EXISTS "Org managers can update candidate invites" ON public.org_candidate_invites';
 
-  IF NOT EXISTS (
-    SELECT 1
-    FROM pg_policies
-    WHERE schemaname = 'public'
-      AND tablename = 'org_candidate_invites'
-      AND policyname = 'Org members can view candidate invites'
-  ) THEN
-    EXECUTE '
-      CREATE POLICY "Org members can view candidate invites"
-      ON public.org_candidate_invites FOR SELECT
-      USING (
-        EXISTS (
-          SELECT 1 FROM public.organization_members
-          WHERE organization_members.org_id = org_candidate_invites.org_id
-            AND organization_members.user_id = auth.uid()
-            AND organization_members.status = ''active''
-        )
-      )';
-  END IF;
+  EXECUTE '
+    CREATE POLICY "Org members can view candidate invites"
+    ON public.org_candidate_invites FOR SELECT
+    USING (
+      public.has_active_org_membership(org_id)
+      OR public.is_trust_admin()
+    )';
 
-  IF NOT EXISTS (
-    SELECT 1
-    FROM pg_policies
-    WHERE schemaname = 'public'
-      AND tablename = 'org_candidate_invites'
-      AND policyname = 'Org admins can create candidate invites'
-  ) THEN
-    EXECUTE '
-      CREATE POLICY "Org admins can create candidate invites"
-      ON public.org_candidate_invites FOR INSERT
-      WITH CHECK (
-        EXISTS (
-          SELECT 1 FROM public.organization_members
-          WHERE organization_members.org_id = org_candidate_invites.org_id
-            AND organization_members.user_id = auth.uid()
-            AND organization_members.role IN (''owner'', ''admin'')
-            AND organization_members.status = ''active''
-        )
-      )';
-  END IF;
+  EXECUTE '
+    CREATE POLICY "Org managers can create candidate invites"
+    ON public.org_candidate_invites FOR INSERT
+    WITH CHECK (
+      public.has_org_role(org_id, ARRAY[''org_owner'', ''org_manager''])
+      OR public.is_trust_admin()
+    )';
 
-  IF NOT EXISTS (
-    SELECT 1
-    FROM pg_policies
-    WHERE schemaname = 'public'
-      AND tablename = 'org_candidate_invites'
-      AND policyname = 'Org admins can update candidate invites'
-  ) THEN
-    EXECUTE '
-      CREATE POLICY "Org admins can update candidate invites"
-      ON public.org_candidate_invites FOR UPDATE
-      USING (
-        EXISTS (
-          SELECT 1 FROM public.organization_members
-          WHERE organization_members.org_id = org_candidate_invites.org_id
-            AND organization_members.user_id = auth.uid()
-            AND organization_members.role IN (''owner'', ''admin'')
-            AND organization_members.status = ''active''
-        )
-      )
-      WITH CHECK (
-        EXISTS (
-          SELECT 1 FROM public.organization_members
-          WHERE organization_members.org_id = org_candidate_invites.org_id
-            AND organization_members.user_id = auth.uid()
-            AND organization_members.role IN (''owner'', ''admin'')
-            AND organization_members.status = ''active''
-        )
-      )';
-  END IF;
+  EXECUTE '
+    CREATE POLICY "Org managers can update candidate invites"
+    ON public.org_candidate_invites FOR UPDATE
+    USING (
+      public.has_org_role(org_id, ARRAY[''org_owner'', ''org_manager''])
+      OR public.is_trust_admin()
+    )
+    WITH CHECK (
+      public.has_org_role(org_id, ARRAY[''org_owner'', ''org_manager''])
+      OR public.is_trust_admin()
+    )';
 END $$;
 
 -- Audit logs policies
+DROP POLICY IF EXISTS "Users can view own audit logs" ON public.audit_logs;
+DROP POLICY IF EXISTS "Org owners and admins can view org audit logs" ON public.audit_logs;
+DROP POLICY IF EXISTS "Org members can view org audit logs" ON public.audit_logs;
+DROP POLICY IF EXISTS "Org managers can view org audit logs" ON public.audit_logs;
+
 CREATE POLICY "Users can view own audit logs"
   ON public.audit_logs FOR SELECT
   USING (actor_id = auth.uid());
 
-CREATE POLICY "Org owners and admins can view org audit logs"
+CREATE POLICY "Org managers can view org audit logs"
   ON public.audit_logs FOR SELECT
   USING (
-    org_id IS NOT NULL
-    AND EXISTS (
-      SELECT 1 FROM public.organization_members
-      WHERE organization_members.org_id = audit_logs.org_id
-        AND organization_members.user_id = auth.uid()
-        AND organization_members.role IN ('owner', 'admin')
-        AND organization_members.status = 'active'
+    actor_id = auth.uid()
+    OR (
+      org_id IS NOT NULL
+      AND public.has_org_role(org_id, ARRAY['org_owner', 'org_manager'])
     )
+    OR public.is_trust_admin()
   );
 
 CREATE POLICY "Service can insert audit logs"
@@ -431,39 +451,35 @@ CREATE POLICY "Matching profiles - owner only (restrictive)"
 -- Assignments
 ALTER TABLE public.assignments ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Org members can view org assignments" ON public.assignments;
+DROP POLICY IF EXISTS "Org admins can create assignments" ON public.assignments;
+DROP POLICY IF EXISTS "Org admins can update assignments" ON public.assignments;
+DROP POLICY IF EXISTS "Org managers can create assignments" ON public.assignments;
+DROP POLICY IF EXISTS "Org managers can update assignments" ON public.assignments;
+
 CREATE POLICY "Org members can view org assignments"
   ON public.assignments FOR SELECT
   USING (
-    EXISTS (
-      SELECT 1 FROM public.organization_members
-      WHERE organization_members.org_id = assignments.org_id
-        AND organization_members.user_id = auth.uid()
-        AND organization_members.status = 'active'
-    )
+    public.has_active_org_membership(org_id)
+    OR public.is_trust_admin()
   );
 
-CREATE POLICY "Org admins can create assignments"
+CREATE POLICY "Org managers can create assignments"
   ON public.assignments FOR INSERT
   WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.organization_members
-      WHERE organization_members.org_id = assignments.org_id
-        AND organization_members.user_id = auth.uid()
-        AND organization_members.role IN ('owner', 'admin')
-        AND organization_members.status = 'active'
-    )
+    public.has_org_role(org_id, ARRAY['org_owner', 'org_manager'])
+    OR public.is_trust_admin()
   );
 
-CREATE POLICY "Org admins can update assignments"
+CREATE POLICY "Org managers can update assignments"
   ON public.assignments FOR UPDATE
   USING (
-    EXISTS (
-      SELECT 1 FROM public.organization_members
-      WHERE organization_members.org_id = assignments.org_id
-        AND organization_members.user_id = auth.uid()
-        AND organization_members.role IN ('owner', 'admin')
-        AND organization_members.status = 'active'
-    )
+    public.has_org_role(org_id, ARRAY['org_owner', 'org_manager'])
+    OR public.is_trust_admin()
+  )
+  WITH CHECK (
+    public.has_org_role(org_id, ARRAY['org_owner', 'org_manager'])
+    OR public.is_trust_admin()
   );
 
 -- Matches (blind matching results)
@@ -481,7 +497,7 @@ CREATE POLICY "Org members can view assignment matches"
       JOIN public.organization_members ON organization_members.org_id = assignments.org_id
       WHERE assignments.id = matches.assignment_id
         AND organization_members.user_id = auth.uid()
-        AND organization_members.status = 'active'
+        AND organization_members.state = 'active'
     )
   );
 

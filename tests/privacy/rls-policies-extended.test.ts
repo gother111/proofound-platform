@@ -439,7 +439,7 @@ describe('Extended RLS Privacy Policies', () => {
       expectEmpty(data, error, 'Carol should not see organization members');
     });
 
-    test('✅ Only managers/owners can manage organization members', async () => {
+    test('✅ Org owners can invite team members', async () => {
       const aliceClient = await createAuthenticatedClient(alice.email, alice.password);
 
       // Alice (owner) can invite new members
@@ -459,6 +459,97 @@ describe('Extended RLS Privacy Policies', () => {
       expectAuthorized(data, error, 'Alice should be able to invite members');
     });
 
+    test('✅ Managers can read team data but cannot send collaborator invites', async () => {
+      const serviceClient = createServiceRoleClient();
+
+      await serviceClient.from('organization_members').insert({
+        org_id: orgId,
+        user_id: carol.id,
+        role: 'org_manager',
+        state: 'active',
+      });
+
+      const carolClient = await createAuthenticatedClient(carol.email, carol.password);
+
+      const { data: members, error: membersError } = await carolClient
+        .from('organization_members')
+        .select('*')
+        .eq('org_id', orgId);
+
+      expectAuthorized(
+        members,
+        membersError,
+        'Managers should be able to read organization members'
+      );
+
+      const { data, error } = await carolClient
+        .from('org_invitations')
+        .insert({
+          org_id: orgId,
+          email: 'manager-invite@test.com',
+          role: 'org_reviewer',
+          token: 'manager-team-invite-token-' + Date.now(),
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          invited_by: carol.id,
+        })
+        .select()
+        .single();
+
+      expectUnauthorized(data, error, 'Managers should not be able to send collaborator invites');
+    });
+
+    test('✅ Managers can create candidate invites but reviewers cannot', async () => {
+      const buildInvite = (seed: string) => {
+        const email = `${seed}+${Date.now()}@example.com`;
+        return {
+          org_id: orgId,
+          invitee_email: email,
+          invitee_email_normalized: email.toLowerCase(),
+          token_hash: `${seed}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        };
+      };
+
+      const carolClient = await createAuthenticatedClient(carol.email, carol.password);
+      const { data: managerInvite, error: managerInviteError } = await carolClient
+        .from('org_candidate_invites')
+        .insert(buildInvite('manager-candidate-invite'))
+        .select()
+        .single();
+
+      expectAuthorized(
+        managerInvite,
+        managerInviteError,
+        'Managers should be able to create candidate invites'
+      );
+
+      const bobClient = await createAuthenticatedClient(bob.email, bob.password);
+      const { data: reviewerInvite, error: reviewerInviteError } = await bobClient
+        .from('org_candidate_invites')
+        .insert(buildInvite('reviewer-candidate-invite'))
+        .select()
+        .single();
+
+      expectUnauthorized(
+        reviewerInvite,
+        reviewerInviteError,
+        'Reviewers should not be able to create candidate invites'
+      );
+    });
+
+    test('❌ Managers cannot remove other members', async () => {
+      const carolClient = await createAuthenticatedClient(carol.email, carol.password);
+
+      const { data, error } = await carolClient
+        .from('organization_members')
+        .delete()
+        .eq('org_id', orgId)
+        .eq('user_id', bob.id)
+        .select();
+
+      expectUnauthorized(data, error, 'Managers should not be able to remove other members');
+    });
+
     test('❌ Regular members cannot remove other members', async () => {
       // Bob (regular member) tries to remove Alice (owner)
       const bobClient = await createAuthenticatedClient(bob.email, bob.password);
@@ -475,6 +566,19 @@ describe('Extended RLS Privacy Policies', () => {
         error,
         'Bob should not be able to remove Alice from the organization'
       );
+    });
+
+    test('✅ Org owners can remove team members', async () => {
+      const aliceClient = await createAuthenticatedClient(alice.email, alice.password);
+
+      const { data, error } = await aliceClient
+        .from('organization_members')
+        .delete()
+        .eq('org_id', orgId)
+        .eq('user_id', carol.id)
+        .select();
+
+      expectAuthorized(data, error, 'Org owners should be able to remove team members');
     });
   });
 

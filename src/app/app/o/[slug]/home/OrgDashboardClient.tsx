@@ -39,6 +39,7 @@ import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { sanitizeLayout } from '@/lib/dashboard/layout';
 import { WidgetGridSkeleton } from '@/components/dashboard/WidgetGridSkeleton';
+import { normalizeAuthorizedOrgRole } from '@/lib/authz';
 
 interface OrgDashboardClientProps {
   orgSlug: string;
@@ -180,6 +181,7 @@ export function OrgDashboardClient({
   userRole,
   initialData,
 }: OrgDashboardClientProps) {
+  const normalizedUserRole = normalizeAuthorizedOrgRole(userRole);
   const [layout, setLayout] = useState<DashboardWidget[]>(DEFAULT_ORG_LAYOUT);
   const [widgetVisibility, setWidgetVisibility] = useState<Record<string, boolean>>({});
   const [editMode, setEditMode] = useState(false);
@@ -301,7 +303,8 @@ export function OrgDashboardClient({
   }, []);
 
   const getWidgetComponent = (widgetId: string) => {
-    const canManageSettings = userRole === 'owner' || userRole === 'admin';
+    const canManageSettings =
+      normalizedUserRole === 'org_owner' || normalizedUserRole === 'org_manager';
 
     switch (widgetId) {
       case 'org-pipeline':
@@ -382,8 +385,8 @@ export function OrgDashboardClient({
 
   const visibleWidgets = layout.filter((w) => w.visible && widgetVisibility[w.widgetId] !== false);
 
-  // Only show customize button to admins/owners
-  const canCustomize = userRole === 'owner' || userRole === 'admin';
+  // Only show customize button to managers/owners.
+  const canCustomize = normalizedUserRole === 'org_owner' || normalizedUserRole === 'org_manager';
 
   return (
     <div className="space-y-4">

@@ -1,13 +1,6 @@
 import { db } from '@/db';
 import { createClient } from '@/lib/supabase/server';
-import {
-  organizationMembers,
-  profiles,
-  assignments,
-  matches,
-  matchInterest,
-  conversations,
-} from '@/db/schema';
+import { assignments, matches, matchInterest, conversations } from '@/db/schema';
 import { eq, and, sql, isNull } from 'drizzle-orm';
 import { getOrganizationReadinessCached } from '@/lib/readiness/organization';
 import {
@@ -16,6 +9,7 @@ import {
 } from '@/lib/momentum/summary';
 import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
 import { isFeatureEnabled } from '@/lib/feature-flags/server';
+import { getCanonicalOrgTeamData } from '@/lib/organizations/team';
 
 export async function getOrgGoalsData(orgId: string) {
   try {
@@ -59,49 +53,16 @@ export async function getOrgProjectsData(orgId: string) {
 
 export async function getOrgTeamData(orgId: string) {
   try {
-    const members = await db
-      .select({
-        userId: organizationMembers.userId,
-        role: organizationMembers.role,
-        status: organizationMembers.status,
-        displayName: profiles.displayName,
-        handle: profiles.handle,
-        avatarUrl: profiles.avatarUrl,
-        createdAt: organizationMembers.joinedAt,
-      })
-      .from(organizationMembers)
-      .innerJoin(profiles, eq(profiles.id, organizationMembers.userId))
-      .where(eq(organizationMembers.orgId, orgId))
-      .orderBy(
-        sql`case 
-          when ${organizationMembers.role} = 'owner' then 1 
-          when ${organizationMembers.role} = 'admin' then 2 
-          when ${organizationMembers.role} = 'member' then 3 
-          else 4 
-        end`
-      );
-
-    const roleStats = await db
-      .select({
-        role: organizationMembers.role,
-        count: sql<number>`count(*)::int`,
-      })
-      .from(organizationMembers)
-      .where(and(eq(organizationMembers.orgId, orgId), eq(organizationMembers.status, 'active')))
-      .groupBy(organizationMembers.role);
-
-    const stats = {
-      total: roleStats.reduce((sum, r) => sum + (r.count || 0), 0),
-      owners: roleStats.find((r) => r.role === 'owner')?.count || 0,
-      admins: roleStats.find((r) => r.role === 'admin')?.count || 0,
-      members: roleStats.find((r) => r.role === 'member')?.count || 0,
-      viewers: roleStats.find((r) => r.role === 'viewer')?.count || 0,
-    };
-
-    return { members, stats };
+    return await getCanonicalOrgTeamData(orgId);
   } catch (error) {
     console.error('Error fetching org team data:', error);
-    return { members: [], stats: { total: 0, owners: 0, admins: 0, members: 0, viewers: 0 } };
+    return {
+      members: [],
+      stats: {
+        total: 0,
+        byRole: { org_owner: 0, org_manager: 0, org_reviewer: 0 },
+      },
+    };
   }
 }
 
