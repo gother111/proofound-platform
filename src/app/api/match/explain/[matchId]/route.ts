@@ -11,10 +11,12 @@ import { sql } from 'drizzle-orm';
 import { getRows } from '@/lib/db/rows';
 import { isActiveOrgMember, requireApiAuth } from '@/lib/api/auth';
 import {
+  buildProofFirstReviewCard,
   buildFairnessUiContract,
   canRevealExactRank,
   getOrgMembershipRole,
   getRankBand,
+  getReviewCardProofPackMap,
   getReasonLedgerEntries,
   normalizeFairnessStatus,
   renderExplanationFromReasonCodes,
@@ -316,6 +318,19 @@ export async function GET(
       fairnessStatus,
       audience: match.profile_id === authResult.user.id ? 'candidate' : 'org',
     });
+    const proofPackByProfileId = await getReviewCardProofPackMap([match.profile_id]);
+    const reviewCard = buildProofFirstReviewCard({
+      profileId: match.profile_id,
+      reasonCodes: Array.isArray(match.reason_codes) ? match.reason_codes : [],
+      fairnessStatus,
+      verificationCount: userSkills.filter(
+        (skill) =>
+          skill.evidence_strength != null &&
+          String(skill.evidence_strength).trim().toLowerCase() !== 'none'
+      ).length,
+      proofPack: proofPackByProfileId.get(match.profile_id) ?? null,
+      fallbackHeadline: renderedExplanation.summary[0] ?? null,
+    });
 
     const subscores = (match.subscores_json as Record<string, number> | null) || {};
 
@@ -340,6 +355,7 @@ export async function GET(
         evaluatedAt: match.fairness_evaluated_at,
         warning: fairnessUi.warning,
       },
+      reviewCard,
       reasonSummary: renderedExplanation.summary,
       reasonSections: renderedExplanation.sections,
       rank: exactRankAllowed ? rank : undefined,

@@ -156,10 +156,10 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
       <Alert className="border-green-200 bg-green-50 dark:bg-green-950/20">
         <CheckCircle2 className="h-4 w-4 text-green-600" />
         <AlertDescription className="text-green-900 dark:text-green-100">
-          <strong>Verification email sent!</strong>
+          <strong>Confirmation email sent.</strong>
           <br />
-          Please check your inbox at <strong>{workEmail}</strong> and click the verification link.
-          The link will expire in 24 hours.
+          Please check your inbox at <strong>{workEmail}</strong> and click the confirmation link.
+          This keeps your work email compatibility signal current for 24 hours.
         </AlertDescription>
       </Alert>
     );
@@ -187,7 +187,8 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
         </div>
         {emailError && <p className="text-sm text-red-600 dark:text-red-400">{emailError}</p>}
         <p className="text-xs text-muted-foreground">
-          Use your company or organization email address, not a personal email.
+          Use your company or organization email address, not a personal email. This supports
+          account compatibility and organization linking only.
         </p>
       </div>
 
@@ -221,7 +222,7 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
           </p>
         ) : (
           <p className="text-xs text-muted-foreground">
-            Link your profile to an organization. You can change this later.
+            Link this account to an organization if relevant. You can change it later.
           </p>
         )}
       </div>
@@ -247,7 +248,7 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
           ) : (
             <>
               <Mail className="w-4 h-4" />
-              Send Verification Email
+              Send confirmation email
             </>
           )}
         </button>
@@ -257,11 +258,11 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
         <p className="text-xs text-muted-foreground">
           <strong>How it works:</strong>
           <br />
-          1. We&apos;ll send a verification link to your work email
+          1. We&apos;ll send a confirmation link to your work email
           <br />
-          2. Click the link to verify you own this email
+          2. Click the link to confirm you control that inbox
           <br />
-          3. Your profile will be marked as verified
+          3. Proofound records a work email compatibility signal for account-side use
         </p>
       </div>
     </form>

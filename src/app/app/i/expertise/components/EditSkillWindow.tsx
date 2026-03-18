@@ -429,7 +429,8 @@ export function EditSkillWindow({
         url: result.url || current.url,
         filePath: result.path || '',
         uploadedFileId: result.uploadedFileId || '',
-        title: current.title.trim() || result.fileName || file.name || '',
+        title:
+          current.title.trim() || result.artifactDisplayName || result.fileName || file.name || '',
       }));
       setProofUploadError(null);
     } catch (error) {
@@ -473,6 +474,15 @@ export function EditSkillWindow({
   };
 
   const handleRequestVerification = async () => {
+    if (proofs.length === 0) {
+      toast({
+        title: 'Add proof first',
+        description: 'Attach a proof link or document before asking someone to confirm this skill.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const normalizedVerifierEmail = newVerificationRequest.verifierEmail.trim().toLowerCase();
     if (!normalizedVerifierEmail) {
       return;
@@ -599,7 +609,8 @@ export function EditSkillWindow({
           <DialogHeader>
             <DialogTitle className="text-2xl font-semibold text-foreground">Edit Skill</DialogTitle>
             <DialogDescription className="text-muted-foreground">
-              Update your skill details, add proofs, and request verification.
+              Update your skill details, attach proof, and request proof-scoped confirmation when
+              needed.
             </DialogDescription>
           </DialogHeader>
 
@@ -684,6 +695,7 @@ export function EditSkillWindow({
 
             <div ref={verificationSectionRef}>
               <VerificationSection
+                hasProofContext={proofs.length > 0}
                 verificationRequests={verificationRequests}
                 loadingVerifications={loadingVerifications}
                 showRequestVerification={showRequestVerification}

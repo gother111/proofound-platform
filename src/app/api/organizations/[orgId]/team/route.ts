@@ -11,11 +11,6 @@ import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { organizationMembers, profiles } from '@/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
-import {
-  buildCanonicalOrgRoleStats,
-  getCanonicalOrgRolePriority,
-  normalizeAuthorizedOrgRole,
-} from '@/lib/authz';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,27 +59,33 @@ export async function GET(
       .where(eq(organizationMembers.orgId, orgId))
       .orderBy(
         sql`case 
-          when ${organizationMembers.role} in ('org_owner', 'owner') then 1
-          when ${organizationMembers.role} in ('org_manager', 'admin') then 2
-          when ${organizationMembers.role} in ('org_reviewer', 'member', 'viewer') then 3
-          else 4
+          when ${organizationMembers.role} = 'owner' then 1 
+          when ${organizationMembers.role} = 'admin' then 2 
+          when ${organizationMembers.role} = 'member' then 3 
+          else 4 
         end`
       );
 
-    const canonicalMembers = members
-      .map((member) => ({
-        ...member,
-        role: normalizeAuthorizedOrgRole(member.role) ?? 'org_reviewer',
-      }))
-      .sort(
-        (left, right) =>
-          getCanonicalOrgRolePriority(left.role) - getCanonicalOrgRolePriority(right.role)
-      );
+    // Get role stats
+    const roleStats = await db
+      .select({
+        role: organizationMembers.role,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(organizationMembers)
+      .where(and(eq(organizationMembers.orgId, orgId), eq(organizationMembers.status, 'active')))
+      .groupBy(organizationMembers.role);
 
-    const stats = buildCanonicalOrgRoleStats(canonicalMembers);
+    const stats = {
+      total: roleStats.reduce((sum, r) => sum + (r.count || 0), 0),
+      owners: roleStats.find((r) => r.role === 'owner')?.count || 0,
+      admins: roleStats.find((r) => r.role === 'admin')?.count || 0,
+      members: roleStats.find((r) => r.role === 'member')?.count || 0,
+      viewers: roleStats.find((r) => r.role === 'viewer')?.count || 0,
+    };
 
     return NextResponse.json({
-      members: canonicalMembers,
+      members,
       stats,
     });
   } catch (error) {
@@ -93,14 +94,7 @@ export async function GET(
     return NextResponse.json(
       {
         members: [],
-        stats: {
-          total: 0,
-          byRole: {
-            org_owner: 0,
-            org_manager: 0,
-            org_reviewer: 0,
-          },
-        },
+        stats: { total: 0, owners: 0, admins: 0, members: 0, viewers: 0 },
         error: error instanceof Error ? error.message : 'Failed to fetch team members',
       },
       { status: 200 }

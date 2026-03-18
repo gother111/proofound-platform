@@ -109,6 +109,11 @@ export function RespondDialog({
   const breadcrumb = getBreadcrumb(request);
   const requesterName = getRequesterName(request);
   const competencyLevel = request.skills?.competency_level;
+  const proofLabel = request?.proofLabel || request?.canonicalPackTitle || skillName;
+  const claimSummary = request?.claimSummary || 'Confirm this skill claim from direct observation.';
+  const confirmationOutcome =
+    request?.confirmationOutcome ||
+    'This request records a bounded attestation linked to the underlying proof.';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -118,39 +123,44 @@ export function RespondDialog({
             {action === 'accept' ? (
               <>
                 <CheckCircle2 className="w-5 h-5" style={{ color: '#10B981' }} />
-                Accept Verification
+                Confirm attestation
               </>
             ) : (
               <>
                 <XCircle className="w-5 h-5" style={{ color: '#EF4444' }} />
-                Decline Verification
+                Decline attestation
               </>
             )}
           </DialogTitle>
           <DialogDescription style={{ color: '#6B7470' }}>
             {action === 'accept'
-              ? `You are about to verify ${requesterName}'s skill.`
-              : `You are declining to verify ${requesterName}'s skill.`}
+              ? `You are about to confirm ${requesterName}'s proof-backed claim.`
+              : `You are declining to confirm ${requesterName}'s proof-backed claim.`}
           </DialogDescription>
         </DialogHeader>
 
-        {/* Skill Details */}
         <div
           className="p-4 rounded-lg border"
           style={{ borderColor: 'rgba(232, 230, 221, 0.6)', backgroundColor: '#F7F6F1' }}
         >
           <h4 className="font-semibold text-sm mb-2" style={{ color: '#2D3330' }}>
-            Skill Details
+            Proof scope
           </h4>
           <div className="space-y-1">
             <p className="text-sm" style={{ color: '#2D3330' }}>
-              <span className="font-medium">Skill:</span> {skillName}
+              <span className="font-medium">Proof:</span> {proofLabel}
+            </p>
+            <p className="text-sm" style={{ color: '#2D3330' }}>
+              <span className="font-medium">Claim:</span> {claimSummary}
             </p>
             {breadcrumb && (
               <p className="text-xs" style={{ color: '#6B7470' }}>
                 {breadcrumb}
               </p>
             )}
+            <p className="text-xs" style={{ color: '#6B7470' }}>
+              If confirmed: {confirmationOutcome}
+            </p>
             {competencyLevel && (
               <p className="text-sm" style={{ color: '#2D3330' }}>
                 <span className="font-medium">Competency:</span>{' '}
@@ -160,11 +170,10 @@ export function RespondDialog({
           </div>
         </div>
 
-        {/* Original Message */}
         {request.message && (
           <div className="p-4 rounded border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
             <h4 className="font-semibold text-sm mb-2" style={{ color: '#2D3330' }}>
-              Their Message
+              Request note
             </h4>
             <p className="text-sm" style={{ color: '#2D3330' }}>
               &ldquo;{request.message}&rdquo;
@@ -172,7 +181,6 @@ export function RespondDialog({
           </div>
         )}
 
-        {/* Response Message */}
         <div className="space-y-2">
           <Label htmlFor="response-message" style={{ color: '#2D3330' }}>
             Add a message (optional)
@@ -185,8 +193,8 @@ export function RespondDialog({
             }
             placeholder={
               action === 'accept'
-                ? 'Add a congratulatory message or feedback...'
-                : "Optionally explain why you're declining..."
+                ? 'Optionally add context about what you observed...'
+                : 'Optionally explain why you cannot confirm this claim...'
             }
             rows={3}
             disabled={isSubmitting}
@@ -203,7 +211,6 @@ export function RespondDialog({
           />
         )}
 
-        {/* Error Message */}
         {error && (
           <div className="flex items-center gap-2 p-3 rounded bg-red-50 border border-red-200">
             <AlertCircle className="w-4 h-4 text-red-600" />
@@ -234,12 +241,12 @@ export function RespondDialog({
             ) : action === 'accept' ? (
               <>
                 <CheckCircle2 className="w-4 h-4 mr-1" />
-                Confirm Accept
+                Confirm attestation
               </>
             ) : (
               <>
                 <XCircle className="w-4 h-4 mr-1" />
-                Confirm Decline
+                Confirm decline
               </>
             )}
           </Button>

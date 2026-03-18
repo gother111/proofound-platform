@@ -20,7 +20,6 @@ import { Settings, Loader2, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { DashboardCustomizer, type DashboardWidget } from './DashboardCustomizer';
 import { DashboardSkeleton } from './DashboardSkeleton';
-import { ExpertiseDepthWidget } from './ExpertiseDepthWidget';
 
 interface DynamicDashboardProps {
   userId: string;
@@ -214,8 +213,16 @@ function getWidgetContent(widgetId: string): {
     },
     'expertise-depth': {
       icon: '⚡',
-      title: 'Expertise Depth',
-      content: <ExpertiseDepthWidget />,
+      title: 'Portfolio Readiness',
+      content: (
+        <div className="text-sm text-muted-foreground">
+          <p className="overline mb-3">Keep the launch corridor proof-first</p>
+          <p>
+            Add strong Proof Packs, tighten visibility, and publish your portfolio before spending
+            time on broader skill dashboards.
+          </p>
+        </div>
+      ),
     },
     'next-action': {
       icon: '💡',

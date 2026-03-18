@@ -348,7 +348,7 @@ export function ImpactStoryForm({
       mimeType: file.type || null,
       isUploading: false,
       error: null,
-      title: (result.fileName || file.name || '').trim(),
+      title: (result.artifactDisplayName || result.fileName || file.name || '').trim(),
     });
   };
 
@@ -587,7 +587,7 @@ export function ImpactStoryForm({
       setVerificationFeedbackMessage(
         result.verification.warning
           ? result.verification.warning
-          : 'Verification request sent. Status is now pending.'
+          : 'Proof confirmation request sent. Status is now pending.'
       );
     } catch (error) {
       setVerificationFeedbackMessage(
@@ -610,8 +610,8 @@ export function ImpactStoryForm({
           <DialogHeader>
             <DialogTitle>{currentStoryId ? 'Edit Impact Story' : 'Add Impact Story'}</DialogTitle>
             <DialogDescription>
-              Capture structured impact, save changes independently, and send verification requests
-              when needed.
+              Capture structured impact, save changes independently, and ask someone to confirm this
+              proof only when needed.
             </DialogDescription>
           </DialogHeader>
 
@@ -1096,13 +1096,30 @@ export function ImpactStoryForm({
             <div className="space-y-3 rounded-lg border p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <Label htmlFor="verifier-email" className="text-sm font-medium">
-                  Verification request
+                  Proof confirmation request
                 </Label>
                 {verificationStatus && (
                   <Badge variant={verificationStatus === 'failed' ? 'destructive' : 'outline'}>
                     {getVerificationStatusLabel(verificationStatus)}
                   </Badge>
                 )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Optional. Skipping is fine while getting portfolio-ready, but intro-readiness may
+                still wait on a non-self trust anchor tied to this proof.
+              </p>
+              <div className="rounded-md bg-muted/40 p-3 text-xs text-muted-foreground">
+                <p>
+                  <strong>What this request supports:</strong> {title.trim() || 'This impact story'}
+                </p>
+                <p className="mt-1">
+                  <strong>What they will confirm:</strong> Your role, the outcomes, and the
+                  supporting evidence attached here.
+                </p>
+                <p className="mt-1">
+                  <strong>What changes if confirmed:</strong> This proof gains a non-self
+                  confirmation signal for intro-readiness review.
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -1150,7 +1167,7 @@ export function ImpactStoryForm({
                     id="verification-message"
                     value={verificationMessage}
                     onChange={(e) => setVerificationMessage(e.target.value)}
-                    placeholder="Add context for the verifier"
+                    placeholder="Explain what part of this proof you want them to confirm"
                     rows={3}
                   />
                 </div>
@@ -1163,12 +1180,12 @@ export function ImpactStoryForm({
                   onClick={() => void handleSendVerification()}
                   disabled={isSendingVerification || isSaving}
                 >
-                  {isSendingVerification ? 'Sending...' : 'Send Request'}
+                  {isSendingVerification ? 'Sending...' : 'Ask to confirm this proof'}
                 </Button>
                 <p className="text-xs text-muted-foreground">
                   {currentStoryId
-                    ? 'For existing stories, Send Request auto-saves current edits first and keeps this dialog open.'
-                    : 'For new stories, Send Request auto-saves first and keeps this dialog open.'}
+                    ? 'For existing stories, this auto-saves current edits first and keeps the dialog open.'
+                    : 'For new stories, this auto-saves first and keeps the dialog open.'}
                 </p>
               </div>
 
@@ -1180,7 +1197,7 @@ export function ImpactStoryForm({
                       : 'text-proofound-forest bg-[#EEF6F2] border-[#B8D8C8]'
                   }`}
                 >
-                  {verificationFeedbackMessage || 'Verification request status updated.'}
+                  {verificationFeedbackMessage || 'Proof confirmation status updated.'}
                   {verificationRequestedAt
                     ? ` Requested on ${new Date(verificationRequestedAt).toLocaleDateString()}.`
                     : ''}

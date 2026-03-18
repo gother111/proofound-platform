@@ -33,6 +33,42 @@ describe('launch surface policy', () => {
     expect(getArchivedApiPolicy('/api/metrics')).toMatchObject({
       surfaceLabel: 'Metrics API',
     });
+    expect(getArchivedApiPolicy('/api/contracts')).toMatchObject({
+      surfaceLabel: 'Contracts API',
+    });
+    expect(getArchivedApiPolicy('/api/projects/project-1')).toMatchObject({
+      surfaceLabel: 'Projects API',
+    });
+    expect(getArchivedApiPolicy('/api/skill-gaps/overview')).toMatchObject({
+      surfaceLabel: 'Skill Gap API',
+    });
+    expect(getArchivedApiPolicy('/api/integrations')).toMatchObject({
+      surfaceLabel: 'Integrations API',
+    });
+    expect(getArchivedApiPolicy('/api/expertise/profile')).toMatchObject({
+      surfaceLabel: 'Legacy Expertise API',
+    });
+    expect(getArchivedApiPolicy('/api/expertise/auto-suggest')).toMatchObject({
+      surfaceLabel: 'Legacy Expertise API',
+    });
+    expect(getArchivedApiPolicy('/api/expertise/gap-analysis')).toMatchObject({
+      surfaceLabel: 'Legacy Expertise API',
+    });
+    expect(getArchivedApiPolicy('/api/expertise/stats')).toMatchObject({
+      surfaceLabel: 'Legacy Expertise API',
+    });
+    expect(getArchivedApiPolicy('/api/expertise/cv-import/wizard-suggest')).toMatchObject({
+      surfaceLabel: 'Legacy Expertise API',
+    });
+    expect(getArchivedApiPolicy('/api/expertise/linkedin-import')).toMatchObject({
+      surfaceLabel: 'Legacy Expertise API',
+    });
+    expect(getArchivedApiPolicy('/api/expertise/linkedin-status')).toMatchObject({
+      surfaceLabel: 'Legacy Expertise API',
+    });
+    expect(getArchivedApiPolicy('/api/expertise/linkedin-disconnect')).toMatchObject({
+      surfaceLabel: 'Legacy Expertise API',
+    });
     expect(getArchivedApiPolicy('/api/org/org-1/dashboard')).toMatchObject({
       surfaceLabel: 'Organization Dashboard API',
     });
@@ -49,6 +85,24 @@ describe('launch surface policy', () => {
       surfaceLabel: 'Organization Suite API',
     });
     expect(getArchivedApiPolicy('/api/organizations/org-1/structure/export')).toMatchObject({
+      surfaceLabel: 'Organization Suite API',
+    });
+    expect(getArchivedApiPolicy('/api/organizations/org-1/causes')).toMatchObject({
+      surfaceLabel: 'Organization Suite API',
+    });
+    expect(getArchivedApiPolicy('/api/organizations/org-1/goals')).toMatchObject({
+      surfaceLabel: 'Organization Suite API',
+    });
+    expect(getArchivedApiPolicy('/api/organizations/org-1/goals/goal-1')).toMatchObject({
+      surfaceLabel: 'Organization Suite API',
+    });
+    expect(getArchivedApiPolicy('/api/organizations/org-1/ownership')).toMatchObject({
+      surfaceLabel: 'Organization Suite API',
+    });
+    expect(getArchivedApiPolicy('/api/organizations/org-1/partnerships')).toMatchObject({
+      surfaceLabel: 'Organization Suite API',
+    });
+    expect(getArchivedApiPolicy('/api/organizations/org-1/test-matches')).toMatchObject({
       surfaceLabel: 'Organization Suite API',
     });
     expect(getArchivedApiPolicy('/api/assignment-templates')).toMatchObject({
@@ -81,6 +135,9 @@ describe('launch surface policy', () => {
     });
     expect(getArchivedApiPolicy('/api/verification/skill/respond')).toMatchObject({
       surfaceLabel: 'Legacy Verification API',
+    });
+    expect(getArchivedApiPolicy('/api/sandbox/future-surface')).toMatchObject({
+      surfaceLabel: 'Archived API',
     });
   });
 
@@ -118,8 +175,19 @@ describe('launch surface policy', () => {
     expect(classifyLaunchApiPath('/api/dashboard/layout')).toBe('archived');
     expect(classifyLaunchApiPath('/api/momentum/summary')).toBe('archived');
     expect(classifyLaunchApiPath('/api/metrics')).toBe('archived');
+    expect(classifyLaunchApiPath('/api/contracts')).toBe('archived');
+    expect(classifyLaunchApiPath('/api/projects/project-1')).toBe('archived');
+    expect(classifyLaunchApiPath('/api/skill-gaps')).toBe('archived');
+    expect(classifyLaunchApiPath('/api/integrations')).toBe('archived');
+    expect(classifyLaunchApiPath('/api/expertise/profile')).toBe('archived');
     expect(classifyLaunchApiPath('/api/org/org-1/coverage')).toBe('archived');
     expect(classifyLaunchApiPath('/api/organizations/org-1/projects')).toBe('archived');
+    expect(classifyLaunchApiPath('/api/organizations/org-1/causes')).toBe('archived');
+    expect(classifyLaunchApiPath('/api/organizations/org-1/goals')).toBe('archived');
+    expect(classifyLaunchApiPath('/api/organizations/org-1/ownership')).toBe('archived');
+    expect(classifyLaunchApiPath('/api/organizations/org-1/partnerships')).toBe('archived');
+    expect(classifyLaunchApiPath('/api/organizations/org-1/test-matches')).toBe('archived');
+    expect(classifyLaunchApiPath('/api/verification/skill/request')).toBe('archived');
     expect(classifyLaunchApiPath('/api/admin/audit')).toBe('internal_only_launch_ops');
     expect(classifyLaunchApiPath('/api/assignments')).toBe('active_launch_path');
   });
@@ -134,6 +202,15 @@ describe('launch surface policy', () => {
     expect(classifyLaunchApiPath('/api/feature-flags')).toBe('active_launch_path');
     expect(classifyLaunchApiPath('/api/monitoring/launch-status')).toBe('active_launch_path');
     expect(classifyLaunchApiPath('/api/monitoring/perf-status')).toBe('active_launch_path');
+    expect(classifyLaunchApiPath('/api/expertise/taxonomy')).toBe('active_launch_path');
+    expect(classifyLaunchApiPath('/api/expertise/jd-to-l4')).toBe('active_launch_path');
+    expect(classifyLaunchApiPath('/api/integrations/video/status')).toBe('active_launch_path');
+    expect(classifyLaunchApiPath('/api/integrations/video/generate-link')).toBe(
+      'active_launch_path'
+    );
+    expect(classifyLaunchApiPath('/api/integrations/google/connect')).toBe('active_launch_path');
+    expect(classifyLaunchApiPath('/api/integrations/zoom/callback')).toBe('active_launch_path');
+    expect(getArchivedApiPolicy('/api/integrations/video/status')).toBeNull();
   });
 
   it('keeps the registry explicit enough to audit the locked MVP boundary', () => {

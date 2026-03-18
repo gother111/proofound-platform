@@ -101,6 +101,25 @@ interface MatchExplainerProps {
   reasonSummary?: string[];
   reasonSections?: Record<string, string[]>;
   fairnessWarning?: string | null;
+  reviewCard?: {
+    candidateLabel: string;
+    strongestProof: {
+      summary: string | null;
+      outcome: string | null;
+      ownership: string | null;
+      anchorContext: string | null;
+      freshnessLabel: string | null;
+    };
+    verification: {
+      summaryLabel: string;
+      count: number | null;
+    };
+    fitSummary: {
+      headline: string;
+      bullets: string[];
+      reasonCodes: string[];
+    };
+  };
 
   // Custom trigger button (optional)
   trigger?: React.ReactNode;
@@ -121,6 +140,7 @@ export function MatchExplainerModal({
   reasonSummary = [],
   reasonSections,
   fairnessWarning,
+  reviewCard,
   trigger,
 }: MatchExplainerProps) {
   const [open, setOpen] = useState(false);
@@ -175,45 +195,62 @@ export function MatchExplainerModal({
         <DialogHeader className="md:px-0 px-2 text-left">
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Zap className="w-6 h-6 text-proofound-forest" />
-            Why This Match?
+            Proof-Backed Fit Review
           </DialogTitle>
           <p className="text-sm text-muted-foreground mt-1">
-            Complete transparency into how we calculated this match
+            Review proof, reasoning, and only then the comparative score detail
           </p>
         </DialogHeader>
 
-        {/* Overall Score & Rank */}
-        <div className="bg-gradient-to-br from-[#E8F5E1] to-[#F7F6F1] rounded-xl p-6 border border-proofound-stone">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Overall Match Score</p>
-              <p className="text-4xl font-bold text-proofound-forest">{overallPercent}%</p>
-            </div>
-            {(rank || rankBand) && (
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground mb-1">Your Ranking</p>
-                <div className="flex items-center gap-2">
-                  <Award className="w-5 h-5" style={{ color: getRankColor() }} />
-                  <p className="text-xl font-semibold" style={{ color: getRankColor() }}>
-                    {getRankDisplay()}
-                  </p>
-                </div>
-                {rankMode === 'band' && exactRankAvailable ? (
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Exact rank is hidden while privacy or fairness limits apply.
-                  </p>
-                ) : null}
+        {reviewCard ? (
+          <div className="rounded-xl border border-proofound-stone bg-proofound-parchment/35 p-5">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Strongest relevant proof
+                </p>
+                <p className="mt-1 text-base font-semibold text-proofound-charcoal">
+                  {reviewCard.fitSummary.headline}
+                </p>
               </div>
-            )}
+              <div className="flex flex-wrap gap-2">
+                {reviewCard.strongestProof.anchorContext ? (
+                  <Badge variant="outline">{reviewCard.strongestProof.anchorContext}</Badge>
+                ) : null}
+                {reviewCard.strongestProof.freshnessLabel ? (
+                  <Badge variant="outline">{reviewCard.strongestProof.freshnessLabel}</Badge>
+                ) : null}
+                <Badge variant="outline">{reviewCard.verification.summaryLabel}</Badge>
+              </div>
+            </div>
+
+            <div className="space-y-2 text-sm text-proofound-charcoal">
+              <p>{reviewCard.strongestProof.summary || 'Proof-backed evidence is available.'}</p>
+              {reviewCard.strongestProof.outcome ? (
+                <p>Outcome: {reviewCard.strongestProof.outcome}</p>
+              ) : null}
+              {reviewCard.strongestProof.ownership ? (
+                <p>Ownership: {reviewCard.strongestProof.ownership}</p>
+              ) : null}
+            </div>
+
+            {reviewCard.fitSummary.bullets.length > 0 ? (
+              <div className="mt-4 rounded-lg bg-white p-4">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Reason-coded fit summary
+                </p>
+                <ul className="space-y-2 text-sm text-foreground">
+                  {reviewCard.fitSummary.bullets.map((item) => (
+                    <li key={item} className="flex items-start gap-2">
+                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-proofound-forest" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </div>
-
-          <Progress value={overallPercent} className="h-3" />
-
-          <p className="text-xs text-muted-foreground mt-3">
-            This score combines your skills, purpose alignment, constraints match, and credential
-            strength.
-          </p>
-        </div>
+        ) : null}
 
         {fairnessWarning ? (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
@@ -249,6 +286,38 @@ export function MatchExplainerModal({
             ) : null}
           </div>
         ) : null}
+
+        {/* Overall Score & Rank */}
+        <div className="bg-gradient-to-br from-[#E8F5E1] to-[#F7F6F1] rounded-xl p-6 border border-proofound-stone">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Comparative score detail</p>
+              <p className="text-4xl font-bold text-proofound-forest">{overallPercent}%</p>
+            </div>
+            {(rank || rankBand) && (
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground mb-1">Ranking signal</p>
+                <div className="flex items-center gap-2">
+                  <Award className="w-5 h-5" style={{ color: getRankColor() }} />
+                  <p className="text-xl font-semibold" style={{ color: getRankColor() }}>
+                    {getRankDisplay()}
+                  </p>
+                </div>
+                {rankMode === 'band' && exactRankAvailable ? (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Exact rank is hidden while privacy or fairness limits apply.
+                  </p>
+                ) : null}
+              </div>
+            )}
+          </div>
+
+          <Progress value={overallPercent} className="h-3" />
+
+          <p className="text-xs text-muted-foreground mt-3">
+            This score stays secondary to proof, outcome, and verification context.
+          </p>
+        </div>
 
         {/* Tabbed Breakdown */}
         <Tabs defaultValue="overview" className="w-full">

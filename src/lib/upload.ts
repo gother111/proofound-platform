@@ -33,6 +33,7 @@ export interface UploadResult {
   uploadedFileId?: string;
   url?: string;
   path?: string;
+  artifactDisplayName?: string;
   fileName?: string;
   fileSize?: number;
   fileType?: string;

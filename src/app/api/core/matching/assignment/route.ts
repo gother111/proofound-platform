@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { db } from '@/db';
-import { assignments, matches, organizationMembers } from '@/db/schema';
+import { assignments, matches, matchReviewStates, organizationMembers } from '@/db/schema';
 import { requireApiAuthContext } from '@/lib/auth';
 import { normalizeAuthorizedOrgRole } from '@/lib/authz';
 import { computeAssignmentMatches } from '@/lib/core/matching/assignmentMatcher';
@@ -14,10 +14,12 @@ import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
 import { log } from '@/lib/log';
 import {
   appendSystemReasonLedger,
-  buildVisibilitySafeWhy,
   buildCanonicalMatchPersistenceFields,
+  buildProofFirstReviewCard,
+  buildVisibilitySafeWhy,
   canMutateReview,
   ensureMatchReviewState,
+  getReviewCardProofPackMap,
   getRankBand,
   getVisibleIdentityFields,
   normalizeFairnessStatus,
@@ -207,6 +209,24 @@ export async function POST(request: NextRequest) {
       fairnessStatus,
     });
     const matchIdByProfileId = new Map(upserted.map((row) => [row.profileId, row.id]));
+    const reviewStateRows = upserted.length
+      ? await db.query.matchReviewStates.findMany({
+          where: sql`${matchReviewStates.matchId} IN (${sql.join(
+            upserted.map((row) => sql`${row.id}`),
+            sql`, `
+          )})`,
+          columns: {
+            matchId: true,
+            reviewStage: true,
+            revealScope: true,
+            operationalFallbackMode: true,
+          },
+        })
+      : [];
+    const reviewStateByMatchId = new Map(reviewStateRows.map((row) => [row.matchId, row]));
+    const proofPackByProfileId = await getReviewCardProofPackMap(
+      items.map((item) => item.profileId)
+    );
     const showExactRank = canViewExactRank && fairnessStatus === 'pass' && exactRankLive;
 
     emitLaunchTrace(trace, {
@@ -219,37 +239,65 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({
-      items: items.map((item, index) => ({
-        profileId: item.profileId,
-        score: item.score,
-        scoreTotal: item.scoreTotal,
-        subscoresJson: item.subscoresJson,
-        scoreSnapshotJson: item.scoreSnapshotJson,
-        reasonCodes: item.reasonCodes,
-        profile: item.profile,
-        id: matchIdByProfileId.get(item.profileId) ?? null,
-        reviewStage: 'blind_review',
-        revealScope: 'blind',
-        visibleIdentityFields: getVisibleIdentityFields('blind'),
-        ...resolveCanonicalCorridor({
-          reviewStage: 'blind_review',
-          revealScope: 'blind',
+      items: items.map((item, index) => {
+        const matchId = matchIdByProfileId.get(item.profileId) ?? null;
+        const reviewState =
+          (matchId ? reviewStateByMatchId.get(matchId) : null) ??
+          ({
+            reviewStage: 'blind_review',
+            revealScope: 'blind',
+            operationalFallbackMode: primaryFallbackMode,
+          } as const);
+        const rankBand = getRankBand(index + 1, items.length);
+        const corridor = resolveCanonicalCorridor({
+          reviewStage: reviewState.reviewStage,
+          revealScope: reviewState.revealScope,
           surface: 'assignment_card',
           fairnessStatus,
-          operationalFallbackMode: primaryFallbackMode,
-        }),
-        fairness: {
-          status: fairnessStatus,
-        },
-        rank: showExactRank ? index + 1 : null,
-        rankBand: getRankBand(index + 1, items.length),
-        why: buildVisibilitySafeWhy({
+          operationalFallbackMode: reviewState.operationalFallbackMode ?? primaryFallbackMode,
+        });
+        const verificationCount =
+          item.profile &&
+          typeof item.profile === 'object' &&
+          'verified' in item.profile &&
+          item.profile.verified &&
+          typeof item.profile.verified === 'object'
+            ? Object.values(item.profile.verified as Record<string, unknown>).filter(Boolean).length
+            : 0;
+
+        return {
+          profileId: item.profileId,
+          score: item.score,
+          scoreTotal: item.scoreTotal,
+          subscoresJson: item.subscoresJson,
+          scoreSnapshotJson: item.scoreSnapshotJson,
           reasonCodes: item.reasonCodes,
-          fairnessStatus,
-          fallbackState: canonicalFallbackState,
-          rankBand: getRankBand(index + 1, items.length),
-        }),
-      })),
+          profile: item.profile,
+          id: matchId,
+          reviewStage: reviewState.reviewStage,
+          revealScope: reviewState.revealScope,
+          visibleIdentityFields: getVisibleIdentityFields(reviewState.revealScope),
+          ...corridor,
+          fairness: {
+            status: fairnessStatus,
+          },
+          rank: showExactRank ? index + 1 : null,
+          rankBand,
+          why: buildVisibilitySafeWhy({
+            reasonCodes: item.reasonCodes,
+            fairnessStatus,
+            fallbackState: canonicalFallbackState,
+            rankBand,
+          }),
+          reviewCard: buildProofFirstReviewCard({
+            profileId: item.profileId,
+            reasonCodes: item.reasonCodes,
+            fairnessStatus,
+            verificationCount,
+            proofPack: proofPackByProfileId.get(item.profileId) ?? null,
+          }),
+        };
+      }),
       meta: {
         ...meta,
         fairness: {

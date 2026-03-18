@@ -19,7 +19,6 @@ import {
   AlertCircle,
   ExternalLink,
   Shield,
-  TrendingUp,
   Award,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -48,6 +47,32 @@ interface AutomatedCheckResult {
   };
   recommendation: 'approve' | 'review_manually' | 'reject';
   sources: string[];
+}
+
+function getResultHeadline(result: AutomatedCheckResult) {
+  if (result.linkedinVerificationStatus === 'verified') {
+    if (result.linkedinVerificationLevel === 'identity') {
+      return 'LinkedIn identity signal recorded';
+    }
+
+    if (result.linkedinVerificationLevel === 'workplace') {
+      return 'LinkedIn workplace signal recorded';
+    }
+  }
+
+  return 'LinkedIn compatibility check complete';
+}
+
+function getResultBody(result: AutomatedCheckResult) {
+  if (result.linkedinVerificationLevel === 'identity') {
+    return 'LinkedIn returned an identity signal. Proofound keeps that as an account-side compatibility signal only, not as public proof trust.';
+  }
+
+  if (result.linkedinVerificationLevel === 'workplace') {
+    return 'LinkedIn returned a workplace signal. Proofound keeps that as an account-side compatibility signal only, not as public proof trust.';
+  }
+
+  return 'The LinkedIn check ran successfully. If further review is needed, it stays account-side and does not change proof trust on its own.';
 }
 
 export function LinkedInVerification({
@@ -203,20 +228,8 @@ export function LinkedInVerification({
         <Alert className="border-[#0A66C2] bg-[#0A66C2]/5">
           <CheckCircle2 className="h-4 w-4 text-[#0A66C2]" />
           <AlertDescription>
-            <strong>
-              {checkResult.linkedinVerificationStatus === 'verified'
-                ? checkResult.linkedinVerificationLevel === 'identity'
-                  ? 'LinkedIn Identity Verification Approved!'
-                  : 'LinkedIn Workplace Verification Approved!'
-                : 'Verification Check Complete!'}
-            </strong>
-            <p className="mt-2">
-              {checkResult.linkedinVerificationLevel === 'identity'
-                ? 'LinkedIn identity verification was detected and your profile now has identity-level verification.'
-                : checkResult.linkedinVerificationLevel === 'workplace'
-                  ? 'LinkedIn workplace verification was detected. Your profile now has workplace-level verification.'
-                  : 'Your LinkedIn profile has been analyzed. Pending admin review.'}
-            </p>
+            <strong>{getResultHeadline(checkResult)}</strong>
+            <p className="mt-2">{getResultBody(checkResult)}</p>
           </AlertDescription>
         </Alert>
 
@@ -224,7 +237,7 @@ export function LinkedInVerification({
           <div className="space-y-4">
             {/* Confidence Score */}
             <div>
-              <h4 className="font-semibold mb-2">Confidence Score</h4>
+              <h4 className="font-semibold mb-2">Check result</h4>
               <div className="flex items-center gap-3">
                 {getConfidenceBadge(checkResult.confidence)}
                 {checkResult.hasIdentityVerification && (
@@ -315,13 +328,13 @@ export function LinkedInVerification({
                   </>
                 ) : checkResult.linkedinVerificationLevel === 'workplace' ? (
                   <>
-                    <strong>Next Steps:</strong> Your workplace verification is active. Run the
-                    check again after enabling LinkedIn identity verification to upgrade.
+                    <strong>Next Steps:</strong> Your workplace signal is recorded for account-side
+                    compatibility. Run the check again later only if your LinkedIn status changes.
                   </>
                 ) : (
                   <>
-                    <strong>Next Steps:</strong> Your verification request is now pending admin
-                    review. You&apos;ll receive a notification once the review is complete.
+                    <strong>Next Steps:</strong> No immediate action is required. If a manual review
+                    happens, it stays account-side and does not replace proof-scoped trust.
                   </>
                 )}
               </p>
@@ -341,10 +354,10 @@ export function LinkedInVerification({
             <Linkedin className="w-6 h-6 text-[#0A66C2]" />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-lg mb-2">LinkedIn Identity Verification</h3>
+            <h3 className="font-semibold text-lg mb-2">LinkedIn compatibility signal</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              We&apos;ll automatically check if your LinkedIn profile has an identity verification
-              badge and analyze other trust signals. Fast and free!
+              Run an account-side check against LinkedIn official signals. This can support
+              compatibility and organization linking, but it never creates public trust by itself.
             </p>
 
             {/* How it works */}
@@ -352,9 +365,9 @@ export function LinkedInVerification({
               <h4 className="font-medium text-sm">How it works:</h4>
               <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
                 <li>Connect your LinkedIn account (OAuth)</li>
-                <li>Automated check runs in 5-10 seconds</li>
-                <li>Auto-approval happens for LinkedIn identity or workplace signals</li>
-                <li>Without official signals, admins review the automated findings</li>
+                <li>Proofound checks for official LinkedIn identity or workplace signals</li>
+                <li>The result is stored as an account compatibility signal</li>
+                <li>Proof-backed trust still comes from proof-scoped attestations and reviews</li>
               </ol>
             </div>
 
@@ -364,19 +377,15 @@ export function LinkedInVerification({
               <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <Award className="w-3 h-3" />
-                  <span>LinkedIn verification badge</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3" />
-                  <span>Connection count</span>
+                  <span>Official LinkedIn signal</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Shield className="w-3 h-3" />
-                  <span>Profile completeness</span>
+                  <span>Profile consistency</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <ExternalLink className="w-3 h-3" />
-                  <span>Account age</span>
+                  <span>Public profile metadata</span>
                 </div>
               </div>
             </div>
@@ -401,20 +410,20 @@ export function LinkedInVerification({
               ) : loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Analyzing LinkedIn Profile...
+                  Running LinkedIn check...
                 </>
               ) : (
                 <>
                   <Linkedin className="w-4 h-4 mr-2" />
-                  {connected ? 'Start Verification Check' : 'Connect LinkedIn'}
+                  {connected ? 'Run LinkedIn check' : 'Connect LinkedIn'}
                 </>
               )}
             </Button>
 
             <p className="text-xs text-center text-muted-foreground mt-3">
               {connected
-                ? 'We will use your connected LinkedIn account to fetch your public profile and run a quick verification check.'
-                : 'Connect your LinkedIn account via OAuth. We only read public profile information.'}
+                ? 'We use your connected LinkedIn account to read public profile information and check for official LinkedIn signals.'
+                : 'Connect your LinkedIn account via OAuth. Proofound only reads public profile information for this check.'}
             </p>
           </div>
         </div>
@@ -423,8 +432,9 @@ export function LinkedInVerification({
       <Alert>
         <Shield className="h-4 w-4" />
         <AlertDescription>
-          <strong>Privacy:</strong> We use automated tools to check your public LinkedIn profile.
-          Your data is only used for verification and is not shared with third parties.
+          <strong>Privacy:</strong> Proofound uses automated tools to check your public LinkedIn
+          profile for account compatibility signals. The result stays account-side and does not
+          replace proof-scoped trust.
         </AlertDescription>
       </Alert>
     </div>

@@ -474,6 +474,45 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     );
   });
 
+  it('persists pass as a review-stage mutation and keeps identity hidden', async () => {
+    mocks.matchReviewStateFindFirst.mockResolvedValueOnce({
+      reviewStage: 'passed',
+      revealScope: 'blind',
+    });
+    mocks.resolveCanonicalCorridor.mockReturnValue({
+      progressiveRevealStage: 'stage1_capability_and_proof',
+      corridorState: 'pass',
+      fallbackState: null,
+    });
+
+    const response = await POST(
+      new NextRequest('https://example.com/api/org/proofound/matches/match-1/review', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'pass' }),
+      }),
+      {
+        params: Promise.resolve({ id: 'proofound', matchId: 'match-1' }),
+      } as any
+    );
+
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.reviewStage).toBe('passed');
+    expect(body.revealScope).toBe('blind');
+    expect(body.visibleIdentityFields).toEqual([]);
+    expect(body.corridorState).toBe('pass');
+    expect(mocks.setMatchReviewStage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        matchId: 'match-1',
+        reviewStage: 'passed',
+        reasonCode: 'passed_for_now',
+        sourceSurface: 'org_review_route',
+      })
+    );
+    expect(mocks.getOrCreateIntroWorkflow).not.toHaveBeenCalled();
+  });
+
   it('records reveal requests as pending candidate approval without unlocking identity', async () => {
     mocks.getOrgMembershipRole.mockResolvedValue('org_reviewer');
     mocks.resolveCanonicalCorridor.mockReturnValue({

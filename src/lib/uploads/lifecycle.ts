@@ -10,6 +10,7 @@ import {
   collectUploadMetadataFlags,
   isUploadHeldForPrivacyReview,
   parseUploadPrivacyReviewReasons,
+  resolveArtifactDisplayName,
   sanitizeUploadFilename,
 } from '@/lib/uploads/privacy';
 
@@ -41,10 +42,13 @@ type UploadOwner = {
 
 type UploadedFileRow = {
   id: string;
+  upload_kind: string;
   lifecycle_state: string;
   safety_status: string;
   safety_reason: string | null;
+  original_filename?: string;
   sanitized_filename?: string;
+  detected_mime?: string | null;
   metadata_status: string;
   attach_status: string;
   public_bucket: string | null;
@@ -65,7 +69,7 @@ type UploadLifecycleResult = {
   storagePath: string | null;
   safetyReason: string | null;
   detectedMime: string | null;
-  displayName: string;
+  artifactDisplayName: string;
 };
 
 const MAX_SIZE_BYTES_BY_KIND: Record<UploadKind, number> = {
@@ -211,11 +215,14 @@ async function loadUploadedFile(uploadedFileId: string): Promise<UploadedFileRow
   const result = await db.execute(sql`
     SELECT
       id,
+      upload_kind,
       size_bytes,
       lifecycle_state,
       safety_status,
       safety_reason,
+      original_filename,
       sanitized_filename,
+      detected_mime,
       metadata_status,
       attach_status,
       public_bucket,
@@ -328,6 +335,12 @@ export async function ingestUploadedFile(
   const validation = validateMimeForKind(context.uploadKind, declaredMime, detectedMime);
   const isEvidenceUpload = EVIDENCE_UPLOAD_KINDS.has(context.uploadKind);
   const sanitizedFilename = sanitizeUploadFilename(file.name);
+  const artifactDisplayName = resolveArtifactDisplayName({
+    sanitizedFilename,
+    originalFilename: file.name,
+    detectedMime,
+    uploadKind: context.uploadKind,
+  });
   const fileHash = sha256Buffer(buffer);
   const now = Date.now();
   const quarantinePath = `${context.ownerType}/${context.ownerId}/${context.uploadKind}/${now}-${sanitizedFilename}`;
@@ -441,7 +454,7 @@ export async function ingestUploadedFile(
       storagePath: null,
       safetyReason: validation.safetyReason,
       detectedMime,
-      displayName: sanitizedFilename,
+      artifactDisplayName,
     };
   }
 
@@ -514,7 +527,7 @@ export async function ingestUploadedFile(
       storagePath: quarantinePath,
       safetyReason: privacyAssessment.safetyReason,
       detectedMime,
-      displayName: sanitizedFilename,
+      artifactDisplayName,
     };
   }
 
@@ -538,7 +551,7 @@ export async function ingestUploadedFile(
       storagePath: quarantinePath,
       safetyReason: null,
       detectedMime,
-      displayName: sanitizedFilename,
+      artifactDisplayName,
     };
   }
 
@@ -619,7 +632,7 @@ export async function ingestUploadedFile(
     storagePath: destinationPath,
     safetyReason: null,
     detectedMime,
-    displayName: sanitizedFilename,
+    artifactDisplayName,
   };
 }
 
@@ -676,6 +689,12 @@ export async function getUploadedFileStatus(uploadedFileId: string, ownerId: str
   }
 
   return {
+    artifactDisplayName: resolveArtifactDisplayName({
+      sanitizedFilename: row.sanitized_filename ?? null,
+      originalFilename: row.original_filename ?? null,
+      detectedMime: row.detected_mime ?? null,
+      uploadKind: row.upload_kind,
+    }),
     id: row.id,
     status: isUploadHeldForPrivacyReview({
       safetyStatus: row.safety_status,
@@ -693,6 +712,5 @@ export async function getUploadedFileStatus(uploadedFileId: string, ownerId: str
       safetyReason: row.safety_reason,
     }),
     privacyReviewReasons: parseUploadPrivacyReviewReasons(row.safety_reason),
-    sanitizedFilename: row.sanitized_filename ?? null,
   };
 }

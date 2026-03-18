@@ -1,11 +1,25 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const { redirectMock } = vi.hoisted(() => ({
+  redirectMock: vi.fn(() => {
+    throw new Error('NEXT_REDIRECT');
+  }),
+}));
+
+vi.mock('next/navigation', () => ({
+  redirect: redirectMock,
+}));
 
 import OrganizationSettingsPage from '@/app/app/o/[slug]/settings/page';
 import OrganizationIntegrationsSettingsPage from '@/app/app/o/[slug]/settings/integrations/page';
 
 describe('organization non-MVP settings surfaces', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('marks the main settings hub as gated for launch', async () => {
     const element = await OrganizationSettingsPage({
       params: Promise.resolve({ slug: 'acme' }),
@@ -20,17 +34,13 @@ describe('organization non-MVP settings surfaces', () => {
     );
   });
 
-  it('marks integrations as a non-MVP org surface', async () => {
-    const element = await OrganizationIntegrationsSettingsPage({
-      params: Promise.resolve({ slug: 'acme' }),
-    });
+  it('redirects integrations subpage to the launch-safe org fallback', async () => {
+    await expect(
+      OrganizationIntegrationsSettingsPage({
+        params: Promise.resolve({ slug: 'acme' }),
+      })
+    ).rejects.toThrow('NEXT_REDIRECT');
 
-    render(element);
-
-    expect(screen.getByText(/integrations settings are gated for launch/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /back to overview/i })).toHaveAttribute(
-      'href',
-      '/app/o/acme/home'
-    );
+    expect(redirectMock).toHaveBeenCalledWith('/app/o/acme/home');
   });
 });

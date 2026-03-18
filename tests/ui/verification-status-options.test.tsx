@@ -32,7 +32,7 @@ describe('VerificationStatus', () => {
     vi.unstubAllGlobals();
   });
 
-  it('shows work email and LinkedIn options but hides Government ID option', async () => {
+  it('shows the three verification groups and keeps account signals separate from proof trust', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
@@ -74,9 +74,15 @@ describe('VerificationStatus', () => {
     render(<VerificationStatus />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Verify with Work Email/i)).toBeInTheDocument();
+      expect(screen.getByText(/Proof verifications \/ attestations/i)).toBeInTheDocument();
     });
-    expect(screen.getByText(/Verify with LinkedIn/i)).toBeInTheDocument();
+    expect(screen.getByText(/Intro-readiness trust anchors/i)).toBeInTheDocument();
+    expect(screen.getByText(/Account compatibility signals/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Add work email/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Run LinkedIn check/i })).toBeInTheDocument();
+    expect(
+      screen.getByText(/They are transport and compatibility signals, not proof trust/i)
+    ).toBeInTheDocument();
     expect(screen.queryByText(/Government ID Verification/i)).not.toBeInTheDocument();
   });
 
@@ -130,10 +136,13 @@ describe('VerificationStatus', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          /The account has a workplace-linked compatibility signal\. It does not create a public trust badge or matching lift on its own\./i
+          /This account has a workplace-linked compatibility signal\. It can help with organization linking, but not with public trust or intro eligibility by itself\./i
         )
       ).toBeInTheDocument();
     });
-    expect(screen.getByRole('button', { name: /Check LinkedIn Again/i })).toBeInTheDocument();
+    expect(
+      screen.getByText(/Skipping verification is fine while getting portfolio-ready/i)
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Run LinkedIn check/i })).toBeInTheDocument();
   });
 });

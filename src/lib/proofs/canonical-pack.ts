@@ -30,7 +30,7 @@ import {
   PRIMARY_ANCHOR_CONTEXT_SUBJECT_TYPES,
   type PrimaryAnchorContextSubjectType,
 } from '@/lib/proofs/pack-anchor';
-import { isUploadHeldForPrivacyReview } from '@/lib/uploads/privacy';
+import { isUploadHeldForPrivacyReview, resolveArtifactDisplayName } from '@/lib/uploads/privacy';
 
 export {
   hasPrimaryAnchorContext,
@@ -51,7 +51,16 @@ export type CanonicalProofItemAggregate = {
   effectiveVisibility: EffectiveVisibility;
   uploadedFile: Pick<
     UploadedFileRow,
-    'id' | 'lifecycleState' | 'safetyStatus' | 'safetyReason' | 'attachStatus' | 'safeForPublic'
+    | 'id'
+    | 'uploadKind'
+    | 'originalFilename'
+    | 'sanitizedFilename'
+    | 'detectedMime'
+    | 'lifecycleState'
+    | 'safetyStatus'
+    | 'safetyReason'
+    | 'attachStatus'
+    | 'safeForPublic'
   > | null;
 };
 
@@ -88,6 +97,7 @@ export type CanonicalOwnerProofPackProjection = {
       artifactKind: ProofArtifactRow['artifactKind'];
       lifecycleState: ProofArtifactRow['lifecycleState'];
       title: string;
+      artifactDisplayName: string | null;
       description: string | null;
       sourceUrl: string | null;
       storagePath: string | null;
@@ -140,6 +150,7 @@ export type CanonicalPublicSafeProofPackProjection = {
     position: number;
     artifactKind: ProofArtifactRow['artifactKind'];
     title: string;
+    artifactDisplayName: string | null;
     description: string | null;
     sourceUrl: string | null;
     issuedAt: string | null;
@@ -454,6 +465,60 @@ function computePackEffectiveVisibility(
   });
 }
 
+function normalizeUploadDerivedLabel(value: string | null | undefined) {
+  return value?.trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+}
+
+function deriveArtifactDisplayName(input: {
+  artifact: Pick<ProofArtifactRow, 'title' | 'storagePath' | 'uploadedFileId'>;
+  uploadedFile: CanonicalProofItemAggregate['uploadedFile'];
+}) {
+  if (!input.artifact.uploadedFileId || !input.uploadedFile) {
+    return null;
+  }
+
+  return resolveArtifactDisplayName({
+    sanitizedFilename: input.uploadedFile.sanitizedFilename ?? null,
+    originalFilename: input.uploadedFile.originalFilename ?? null,
+    detectedMime: input.uploadedFile.detectedMime ?? null,
+    uploadKind: input.uploadedFile.uploadKind ?? null,
+  });
+}
+
+function shouldPreferUploadedArtifactDisplayName(input: {
+  title: string | null | undefined;
+  artifactDisplayName: string | null;
+  storagePath: string | null | undefined;
+}) {
+  if (!input.artifactDisplayName) {
+    return false;
+  }
+
+  const normalizedTitle = normalizeUploadDerivedLabel(input.title);
+  if (!normalizedTitle) {
+    return true;
+  }
+
+  if (normalizedTitle === normalizeUploadDerivedLabel(input.artifactDisplayName)) {
+    return true;
+  }
+
+  if (normalizedTitle.startsWith('uploaded ')) {
+    return true;
+  }
+
+  if (!input.storagePath) {
+    return false;
+  }
+
+  const lastSegment = input.storagePath.split('/').filter(Boolean).pop() ?? null;
+  if (!lastSegment) {
+    return false;
+  }
+
+  return normalizedTitle === normalizeUploadDerivedLabel(lastSegment);
+}
+
 export function buildCanonicalOwnerProofPackProjection(input: {
   pack: ProofPackRow;
   items: CanonicalProofItemAggregate[];
@@ -485,7 +550,7 @@ export function buildCanonicalOwnerProofPackProjection(input: {
     lastVerifiedAt: toIsoString(input.pack.lastVerifiedAt),
     lastRefreshedAt: toIsoString(input.pack.lastRefreshedAt || input.latestEvidenceAt),
     portabilityMeta,
-    items: input.items.map(({ item, artifact, effectiveVisibility }) => ({
+    items: input.items.map(({ item, artifact, effectiveVisibility, uploadedFile }) => ({
       artifactId: artifact.id,
       position: item.position,
       includedFields: toStringArray(item.includedFields),
@@ -497,6 +562,7 @@ export function buildCanonicalOwnerProofPackProjection(input: {
         artifactKind: artifact.artifactKind,
         lifecycleState: artifact.lifecycleState,
         title: artifact.title,
+        artifactDisplayName: deriveArtifactDisplayName({ artifact, uploadedFile }),
         description: artifact.description,
         sourceUrl: artifact.sourceUrl,
         storagePath: artifact.storagePath,
@@ -556,16 +622,28 @@ export function buildCanonicalPublicProofPackProjection(input: {
       }
       return true;
     })
-    .map(({ item, artifact }) => ({
-      artifactId: artifact.id,
-      position: item.position,
-      artifactKind: artifact.artifactKind,
-      title: artifact.title,
-      description: artifact.description,
-      sourceUrl: artifact.sourceUrl,
-      issuedAt: toIsoString(artifact.issuedAt),
-      expiresAt: toIsoString(artifact.expiresAt),
-    }));
+    .map(({ item, artifact, uploadedFile }) => {
+      const artifactDisplayName = deriveArtifactDisplayName({ artifact, uploadedFile });
+      const title = shouldPreferUploadedArtifactDisplayName({
+        title: artifact.title,
+        artifactDisplayName,
+        storagePath: artifact.storagePath,
+      })
+        ? artifactDisplayName || artifact.title
+        : artifact.title;
+
+      return {
+        artifactId: artifact.id,
+        position: item.position,
+        artifactKind: artifact.artifactKind,
+        title,
+        artifactDisplayName,
+        description: artifact.description,
+        sourceUrl: artifact.sourceUrl,
+        issuedAt: toIsoString(artifact.issuedAt),
+        expiresAt: toIsoString(artifact.expiresAt),
+      };
+    });
 
   if (safeItems.length === 0) {
     return null;
@@ -679,6 +757,10 @@ export async function listCanonicalProofPackAggregatesForOwner(
       ? await db
           .select({
             id: uploadedFiles.id,
+            uploadKind: uploadedFiles.uploadKind,
+            originalFilename: uploadedFiles.originalFilename,
+            sanitizedFilename: uploadedFiles.sanitizedFilename,
+            detectedMime: uploadedFiles.detectedMime,
             lifecycleState: uploadedFiles.lifecycleState,
             safetyStatus: uploadedFiles.safetyStatus,
             safetyReason: uploadedFiles.safetyReason,

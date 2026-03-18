@@ -44,7 +44,7 @@ function createSupabaseStub(options?: {
     } | null;
     orgId: string;
     userId: string;
-    role: 'org_owner' | 'org_manager' | 'org_reviewer';
+    role: 'owner' | 'admin' | 'member' | 'viewer';
     status: 'active' | 'pending' | 'inactive';
     joinedAt: Date;
   }>;
@@ -97,7 +97,7 @@ function createSupabaseStub(options?: {
       membership: {
         orgId: 'org-1',
         userId: 'user-1',
-        role: 'org_owner',
+        role: 'owner',
         status: 'active',
         joinedAt: new Date('2026-01-01T00:00:00.000Z'),
       },
@@ -220,7 +220,7 @@ describe('auth request-scoped caching', () => {
           },
           orgId: 'org-1',
           userId: 'user-1',
-          role: 'org_owner',
+          role: 'owner',
           status: 'active',
           joinedAt: new Date('2026-01-01T00:00:00.000Z'),
         },

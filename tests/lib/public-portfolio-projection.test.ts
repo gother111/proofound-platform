@@ -151,7 +151,8 @@ describe('public portfolio projection', () => {
             {
               artifactId: 'artifact-public',
               artifactKind: 'link',
-              title: 'Anchored proof',
+              title: 'Uploaded document',
+              artifactDisplayName: 'safe_name.pdf',
               description: 'Visible evidence',
               sourceUrl: 'https://example.com/public-proof',
               issuedAt: '2026-01-15T00:00:00.000Z',
@@ -212,7 +213,7 @@ describe('public portfolio projection', () => {
 
     expect(projection).not.toBeNull();
     expect(projection?.publicProofCount).toBe(1);
-    expect(projection?.featuredProofs.map((proof) => proof.title)).toEqual(['Anchored proof']);
+    expect(projection?.featuredProofs.map((proof) => proof.title)).toEqual(['safe_name.pdf']);
     expect(projection?.publicSkills).toEqual(['Anchored Skill']);
     expect(projection?.exportData.signals.proofs.count).toBe(1);
     expect(projection?.exportData.skills).toEqual([
@@ -225,8 +226,15 @@ describe('public portfolio projection', () => {
     expect(projection?.exportData.proofPacks).toEqual([
       expect.objectContaining({
         id: 'pack-anchored',
+        selectedEvidence: [
+          expect.objectContaining({
+            title: 'safe_name.pdf',
+            artifactDisplayName: 'safe_name.pdf',
+          }),
+        ],
       }),
     ]);
+    expect(JSON.stringify(projection)).not.toContain('Jane Doe Resume.pdf');
   });
 
   it('does not let orphan packs or floating skills raise public trust projections', async () => {

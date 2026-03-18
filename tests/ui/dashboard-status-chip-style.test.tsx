@@ -27,13 +27,13 @@ describe('Dashboard status badge styling', () => {
   it('uses shared status chip classes in matching readiness header', () => {
     render(<MatchingReadinessCard useMockData />);
 
-    const badge = screen.getByText('Discoverable');
+    const badge = screen.getByText('Portfolio ready');
     expectClassTokens(badge.className, DASHBOARD_STATUS_CHIP_CLASS);
     expect(badge.className).toContain('whitespace-nowrap');
     expect(badge.className).toContain('shrink-0');
   });
 
-  it('uses shared status chip classes when portfolio status falls back to draft', async () => {
+  it('uses shared status chip classes when portfolio status falls back to the first launch state', async () => {
     apiFetchMock
       .mockRejectedValueOnce(new Error('completeness failed'))
       .mockRejectedValueOnce(new Error('stats failed'));
@@ -41,10 +41,10 @@ describe('Dashboard status badge styling', () => {
     render(<ProfileActivationCard />);
 
     await waitFor(() => {
-      expect(screen.getByText('Portfolio draft')).toBeInTheDocument();
+      expect(screen.getByText('Portfolio ready')).toBeInTheDocument();
     });
 
-    const badge = screen.getByText('Portfolio draft');
+    const badge = screen.getByText('Portfolio ready');
     expectClassTokens(badge.className, DASHBOARD_STATUS_CHIP_CLASS);
     expect(badge.className).toContain('whitespace-nowrap');
     expect(badge.className).toContain('shrink-0');

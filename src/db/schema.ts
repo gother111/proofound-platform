@@ -248,7 +248,17 @@ export const canonicalUploadAttachStates = [
   'attached',
   'rejected',
 ] as const;
-export const canonicalOrgRoleValues = ['org_owner', 'org_manager', 'org_reviewer'] as const;
+export const canonicalOrgRoleValues = [
+  'org_owner',
+  'org_manager',
+  'org_reviewer',
+  'individual',
+  'trust_admin',
+  'owner',
+  'admin',
+  'member',
+  'viewer',
+] as const;
 export const canonicalOrgMembershipStates = [
   'invited_pending',
   'active',
