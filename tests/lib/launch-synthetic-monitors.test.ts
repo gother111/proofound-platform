@@ -205,6 +205,47 @@ describe('launch synthetic monitor persistence', () => {
     }
   });
 
+  it('binds db.execute when persisting live monitor results', async () => {
+    const executeWithContext = vi.fn(function (this: unknown) {
+      if (this !== db) {
+        throw new Error('db.execute lost its bound context');
+      }
+
+      return Promise.resolve([]);
+    });
+
+    (db as { execute?: unknown }).execute = executeWithContext;
+
+    (fs.readFile as any).mockResolvedValue(
+      JSON.stringify(buildSmokeArtifact('2026-03-12T10:00:00.000Z'))
+    );
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string | URL) => {
+        const url = String(input);
+        if (url.endsWith('/api/health')) {
+          return new Response(JSON.stringify({ status: 'healthy' }), { status: 200 });
+        }
+
+        return new Response('ok', { status: 200 });
+      })
+    );
+
+    const result = await getCurrentLaunchSyntheticStatus(
+      {
+        baseUrl: 'https://example.com',
+        artifactPath: '.artifacts/launch-smoke-report.json',
+        persist: true,
+      },
+      new Date('2026-03-12T10:59:00.000Z')
+    );
+
+    expect(result.ok).toBe(true);
+    expect(result.evidence.persisted).toBe(true);
+    expect(executeWithContext).toHaveBeenCalled();
+  });
+
   it('marks current smoke-backed monitors unverified when the smoke artifact itself is stale', async () => {
     (fs.readFile as any).mockResolvedValue(
       JSON.stringify(buildSmokeArtifact('2020-01-01T00:00:00.000Z'))
@@ -702,7 +743,7 @@ describe('launch synthetic monitor persistence', () => {
     ).toBe(true);
   });
 
-  it('blocks persisted readiness when endpoint evidence is incomplete', async () => {
+  it('marks persisted readiness unverified when endpoint evidence is incomplete', async () => {
     (db.execute as any).mockResolvedValue(
       LAUNCH_MONITOR_DEFINITIONS.filter(
         (definition) => definition.kind === 'http' && definition.monitorKey !== 'api_health'
@@ -732,7 +773,79 @@ describe('launch synthetic monitor persistence', () => {
     );
 
     expect(result.ok).toBe(false);
-    expect(result.readinessState).toBe('blocked');
+    expect(result.readinessState).toBe('unverified');
     expect(result.missingMonitorKeys).toContain('api_health');
+  });
+
+  it('keeps persisted readiness blocked when a fresh smoke corridor is failing', async () => {
+    (db.execute as any).mockResolvedValue(
+      LAUNCH_MONITOR_DEFINITIONS.filter((definition) => definition.kind === 'http').map(
+        (definition) => ({
+          monitor_key: definition.monitorKey,
+          monitor_group: definition.monitorGroup,
+          status: 'pass',
+          severity: definition.severity,
+          response_time_ms: 42,
+          expected_state: definition.expectedState,
+          observed_state: definition.expectedState,
+          failure_class: null,
+          checked_at: '2026-03-12T10:58:00.000Z',
+          details: {},
+        })
+      )
+    );
+
+    const smokeChecks = LAUNCH_SMOKE_MATRIX.map((scenario) => ({
+      id: scenario.id,
+      corridor: scenario.corridor,
+      label: scenario.label,
+      runner: scenario.runner,
+      status:
+        scenario.id === 'full_org_corridor_review_to_engagement_verification'
+          ? ('fail' as const)
+          : ('pass' as const),
+      expectedState: scenario.expectedState,
+      durationMs: 25,
+      generatedAt: '2026-03-12T10:00:00.000Z',
+      evidence: scenario.evidence,
+      message:
+        scenario.id === 'full_org_corridor_review_to_engagement_verification'
+          ? 'Organization corridor failed'
+          : undefined,
+    }));
+
+    (fs.readFile as any).mockResolvedValue(
+      JSON.stringify({
+        schemaVersion: 2,
+        generatedAt: '2026-03-12T10:00:00.000Z',
+        freshnessThresholdMinutes: 60,
+        expiresAt: '2026-03-12T11:00:00.000Z',
+        overallStatus: 'fail',
+        corridors: buildLaunchSmokeCorridors(smokeChecks, '2026-03-12T10:00:00.000Z'),
+        checks: smokeChecks,
+      })
+    );
+
+    const result = await getPersistedLaunchSyntheticStatus(
+      {
+        artifactPath: '.artifacts/launch-smoke-report.json',
+      },
+      new Date('2026-03-12T10:30:00.000Z')
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.readinessState).toBe('blocked');
+    expect(
+      result.rows.find(
+        (row) => row.monitorKey === 'full_org_corridor_review_to_engagement_verification'
+      )
+    ).toEqual(
+      expect.objectContaining({
+        status: 'fail',
+        freshnessState: 'fresh',
+        blocking: true,
+        stale: false,
+      })
+    );
   });
 });
