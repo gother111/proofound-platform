@@ -380,7 +380,7 @@ describe('organization invitations', () => {
                     org_id: 'org-1',
                     membership_id: null,
                     email: 'candidate@proofound.test',
-                    role: 'admin',
+                    role: 'org_manager',
                     status: 'pending',
                     expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
                     accepted_at: null,

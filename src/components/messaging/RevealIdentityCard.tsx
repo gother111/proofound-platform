@@ -17,7 +17,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,8 +27,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Eye, EyeOff, Clock, CheckCircle2, Info } from 'lucide-react';
+import { Eye, EyeOff, Clock, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { ConsentExplainer } from '@/components/workflow/ConsentExplainer';
 
 interface RevealIdentityCardProps {
   currentUserWantsReveal: boolean;
@@ -100,17 +100,20 @@ export function RevealIdentityCard({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Alert>
-              <Info className="h-4 w-4" />
-              <AlertDescription className="text-sm">
-                <strong>Why reveal?</strong> Revealing identities allows you to:
-                <ul className="mt-1 ml-4 list-disc space-y-1">
-                  <li>See each other's full profiles</li>
-                  <li>Share contact information safely</li>
-                  <li>Connect on other platforms</li>
-                </ul>
-              </AlertDescription>
-            </Alert>
+            <ConsentExplainer
+              nowVisible={[
+                'Name',
+                'Allowed avatar or photo',
+                'Public portfolio link if it is published and permitted',
+                'Permitted organization or school names',
+              ]}
+              hiddenUntilLater={[
+                'Direct contact details',
+                'Scheduling links and meeting logistics',
+                'Any identity-bearing details that are still outside the approved reveal scope',
+              ]}
+              whyThisRequestExists="Reveal exists to move the hiring corridor from blind review into identity-bearing coordination. Approval is required before that handoff happens."
+            />
 
             <Button onClick={handleRevealClick} className="w-full" disabled={revealing}>
               <Eye className="mr-2 h-4 w-4" />
@@ -129,12 +132,13 @@ export function RevealIdentityCard({
             <AlertDialogHeader>
               <AlertDialogTitle>Reveal Your Identity?</AlertDialogTitle>
               <AlertDialogDescription className="space-y-3">
+                <p>This asks the other person to approve identity-bearing reveal.</p>
                 <p>
-                  This will request to reveal identities. If the other person agrees, you'll both be
-                  able to see each other's full profiles.
+                  If they agree, both of you can see the allowed identity fields now, while direct
+                  contact details still stay hidden until interview coordination requires them.
                 </p>
                 <p className="text-sm font-semibold">
-                  This action cannot be undone once both parties agree.
+                  Blind review remains in place until the other person approves this request.
                 </p>
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -188,12 +192,20 @@ export function RevealIdentityCard({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Alert>
-              <Info className="h-4 w-4" />
-              <AlertDescription className="text-sm">
-                They won't see your information until you also agree to reveal.
-              </AlertDescription>
-            </Alert>
+            <ConsentExplainer
+              nowVisible={[
+                'Name',
+                'Allowed avatar or photo',
+                'Public portfolio link if it is published and permitted',
+                'Permitted organization or school names',
+              ]}
+              hiddenUntilLater={[
+                'Direct contact details',
+                'Scheduling links and meeting logistics',
+                'Any identity-bearing details that still require interview coordination',
+              ]}
+              whyThisRequestExists="The other side wants to continue the hiring corridor beyond blind review. They cannot see identity-bearing details unless you approve this reveal step."
+            />
 
             <Button onClick={handleRevealClick} className="w-full" disabled={revealing}>
               <Eye className="mr-2 h-4 w-4" />
@@ -213,10 +225,16 @@ export function RevealIdentityCard({
               <AlertDialogTitle>Reveal Identities?</AlertDialogTitle>
               <AlertDialogDescription className="space-y-3">
                 <p>
-                  By agreeing, both of you will be able to see each other's full profiles, including
-                  names, avatars, and other public information.
+                  By agreeing, both of you will be able to see the approved identity-bearing fields
+                  now, including names and other permitted public information.
                 </p>
-                <p className="text-sm font-semibold">This action cannot be undone.</p>
+                <p>
+                  Direct contact details and scheduling logistics still stay hidden until interview
+                  coordination requires them.
+                </p>
+                <p className="text-sm font-semibold">
+                  Public portfolio publication does not widen this reveal by itself.
+                </p>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

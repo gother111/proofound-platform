@@ -1141,15 +1141,44 @@ export async function ensureDecisionRecordForInterview(params: {
       existing.latestInterviewId !== params.interviewId ||
       existing.interviewId !== params.interviewId
     ) {
+      const now = new Date();
+      const previousInterviewId = existing.latestInterviewId ?? existing.interviewId ?? null;
+      const shouldResetState = existing.state !== 'pending';
       const [updated] = await db
         .update(decisions)
         .set({
           interviewId: params.interviewId,
           latestInterviewId: params.interviewId,
-          updatedAt: new Date(),
+          decision: shouldResetState ? 'hold' : existing.decision,
+          feedback: shouldResetState ? null : existing.feedback,
+          hoursSinceInterview: shouldResetState ? '0.00' : existing.hoursSinceInterview,
+          withinSla: shouldResetState ? true : existing.withinSla,
+          state: shouldResetState ? 'pending' : existing.state,
+          holdUntil: shouldResetState ? null : existing.holdUntil,
+          reasonCode: shouldResetState ? null : existing.reasonCode,
+          internalNote: shouldResetState ? null : existing.internalNote,
+          madeByActorType: shouldResetState ? null : existing.madeByActorType,
+          madeByActorId: shouldResetState ? null : existing.madeByActorId,
+          reopenedAt: shouldResetState ? now : existing.reopenedAt,
+          withdrawnAt: shouldResetState ? null : existing.withdrawnAt,
+          closedAt: shouldResetState ? null : existing.closedAt,
+          updatedAt: now,
         })
         .where(eq(decisions.id, existing.id))
         .returning();
+
+      if (shouldResetState) {
+        await appendDecisionTransition(existing.id, existing.state, 'pending', {
+          trigger: 'next_interview_round_started',
+          actorType: params.actorType,
+          actorId: params.actorId ?? null,
+          metadata: {
+            previousInterviewId,
+            interviewId: params.interviewId,
+          },
+        });
+      }
+
       return updated;
     }
     return existing;

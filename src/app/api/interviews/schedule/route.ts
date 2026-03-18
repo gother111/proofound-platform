@@ -17,6 +17,8 @@ import {
   normalizeInterviewPlatform,
 } from '@/lib/contracts/domain';
 import { postInterviewUpdateMessageBestEffort } from '@/lib/interviews/messaging';
+import { getHiringCorridorRecordForMatch } from '@/lib/hiring-corridor/service';
+import { buildHiringCorridorSnapshot } from '@/lib/hiring-corridor/snapshot';
 import { classifyGoogleScheduleError } from '@/lib/interviews/schedule-errors';
 import { log } from '@/lib/log';
 import { registerScheduledInterviewWorkflow } from '@/lib/workflow/service';
@@ -366,6 +368,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const corridorSource = await getHiringCorridorRecordForMatch(data.matchId);
+    const corridor = corridorSource
+      ? buildHiringCorridorSnapshot({
+          source: corridorSource,
+          viewerUserId: user.id,
+          perspective: 'organization',
+        })
+      : null;
+
+    const canScheduleFromCorridor =
+      corridor &&
+      (corridor.nextAction.id === 'schedule_interview' ||
+        corridor.nextAction.id === 'advance_to_next_interview');
+    const allowCompletedInterviewReplacement =
+      corridor?.nextAction.id === 'advance_to_next_interview';
+
+    if (!canScheduleFromCorridor) {
+      return NextResponse.json(
+        {
+          error: 'Interview scheduling is not available from the current corridor stage',
+          code: 'INTERVIEW_HANDOFF_NOT_READY',
+          corridor,
+          nextAction:
+            corridor?.nextAction ??
+            ({
+              id: 'request_intro',
+              label: 'Request intro',
+              description: 'The corridor must reach reveal approval before interview scheduling.',
+            } as const),
+        },
+        { status: 409 }
+      );
+    }
+
     // 2. Check if a non-cancelled interview already exists for this match.
     const duplicateCheckStartedAt = Date.now();
     const { data: interviewsForMatch, error: interviewsForMatchError } = await supabase
@@ -396,7 +432,9 @@ export async function POST(request: NextRequest) {
     } else {
       hasBlockingInterview = (interviewsForMatch ?? []).some(
         (interview: { status?: string | null }) =>
-          interview.status !== 'cancelled' && interview.status !== 'no_show'
+          interview.status !== 'cancelled' &&
+          interview.status !== 'no_show' &&
+          !(allowCompletedInterviewReplacement && interview.status === 'completed')
       );
     }
 
