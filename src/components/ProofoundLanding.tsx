@@ -1,121 +1,34 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { motion, useScroll, useSpring, useReducedMotion, useTransform } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { LayoutGrid, Menu, X, ArrowRight } from 'lucide-react';
-import { MagneticButton } from '@/components/ui/magnetic-button';
+import { LayoutGrid, Menu, X } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
 
-// Import all section components
 import { HeroSection } from './landing/sections/HeroSection';
-import { ProblemSection } from './landing/sections/ProblemSection';
 import { HowItWorksSection } from './landing/sections/HowItWorksSection';
-import { PrinciplesSection } from './landing/sections/PrinciplesSection';
 import { PersonasSection } from './landing/sections/PersonasSection';
-import { WhyNowSection } from './landing/sections/WhyNowSection';
 import { ProofSection } from './landing/sections/ProofSection';
-import { StewardOwnershipSection } from './landing/sections/StewardOwnershipSection';
-import { ProductsSection } from './landing/sections/ProductsSection';
 import { FinalCTASection } from './landing/sections/FinalCTASection';
-import { FinalQuoteSection } from './landing/sections/FinalQuoteSection';
 import { FooterSection } from './landing/sections/FooterSection';
-import SectionSeparator from '@/components/ui/SectionSeparator';
-
-import Lenis from 'lenis';
-
-// --- Shared Components ---
-
-const NetworkBackground = ({
-  shouldReduceMotion,
-  scrollYProgress,
-}: {
-  shouldReduceMotion: boolean;
-  scrollYProgress: any;
-}) => {
-  // Parallax mapping for the blobs
-  const y1 = useTransform(scrollYProgress, [0, 1], [0, 400]);
-  const y2 = useTransform(scrollYProgress, [0, 1], [0, 200]);
-
-  return (
+const CalmBackground = () => (
+  <div
+    className="absolute inset-0 z-0 pointer-events-none overflow-hidden"
+    data-testid="landing-network-background"
+  >
+    <div className="absolute inset-0 bg-background" />
     <div
-      className="absolute inset-0 z-0 pointer-events-none overflow-hidden"
-      data-testid="landing-network-background"
-    >
-      <div className="absolute inset-0 bg-background" />
-      {/* Global Noise Texture */}
-      <div
-        className="absolute inset-0 opacity-[0.03] mix-blend-overlay"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`,
-        }}
-      />
-      <div
-        className="absolute inset-0 opacity-[0.02] dark:opacity-[0.04]"
-        style={{
-          backgroundImage: 'radial-gradient(var(--proofound-forest) 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
-        }}
-      />
-      {/* Organic blobs - Animated with parallax + fluid motion */}
-      <motion.div
-        style={{ y: y1 }}
-        animate={
-          shouldReduceMotion
-            ? undefined
-            : {
-                x: [0, 50, -20, 0],
-                scale: [1, 1.1, 0.9, 1],
-                rotate: [0, 10, -5, 0],
-              }
-        }
-        transition={
-          shouldReduceMotion
-            ? undefined
-            : {
-                duration: 25,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }
-        }
-        className="absolute top-[-10%] right-[-5%] w-[60vw] h-[60vw] bg-extended-sage/10 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen"
-      />
-      <motion.div
-        style={{ y: y2 }}
-        animate={
-          shouldReduceMotion
-            ? undefined
-            : {
-                x: [0, -40, 30, 0],
-                scale: [1, 1.2, 0.95, 1],
-                rotate: [0, -15, 10, 0],
-              }
-        }
-        transition={
-          shouldReduceMotion
-            ? undefined
-            : {
-                duration: 30,
-                repeat: Infinity,
-                ease: 'easeInOut',
-                delay: 2,
-              }
-        }
-        className="absolute bottom-[-10%] left-[-5%] w-[50vw] h-[50vw] bg-proofound-terracotta/10 rounded-full blur-[100px] mix-blend-multiply dark:mix-blend-screen"
-      />
-    </div>
-  );
-};
-
-const ProgressIndicator = ({ scrollYProgress }: { scrollYProgress: any }) => (
-  <motion.div
-    className="fixed top-0 left-0 right-0 h-1 bg-proofound-terracotta origin-left z-50"
-    style={{ scaleX: scrollYProgress }}
-  />
+      className="absolute inset-0 opacity-[0.03] mix-blend-overlay"
+      style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`,
+      }}
+    />
+    <div className="absolute top-[-10%] right-[-5%] h-[45vw] w-[45vw] rounded-full bg-extended-sage/10 blur-[120px]" />
+    <div className="absolute bottom-[-15%] left-[-10%] h-[40vw] w-[40vw] rounded-full bg-proofound-terracotta/10 blur-[110px]" />
+  </div>
 );
-
-// StickyMiniCTA removed from floating bottom right, now merged into header.
 
 // --- Main Component ---
 
@@ -130,58 +43,10 @@ export function ProofoundLanding({
   onIndividualSignup,
   onOrganizationSignup,
 }: ProofoundLandingProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [showStickyProgress, setShowStickyProgress] = useState(false);
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion() ?? false;
   const menuContentId = 'landing-menu';
-
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start start', 'end end'],
-  });
-
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001,
-  });
-
-  // Initialize Lenis Smooth Scroll
-  useEffect(() => {
-    if (shouldReduceMotion) return;
-
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      orientation: 'vertical',
-      gestureOrientation: 'vertical',
-      smoothWheel: true,
-      wheelMultiplier: 1,
-      touchMultiplier: 2,
-    });
-
-    let rafId = 0;
-    function raf(time: number) {
-      lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
-    }
-
-    rafId = requestAnimationFrame(raf);
-
-    return () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      lenis.destroy();
-    };
-  }, [shouldReduceMotion]);
-
-  useEffect(() => {
-    const unsubscribe = scrollYProgress.on('change', (v) => {
-      setShowStickyProgress(v > 0.1 && v < 0.9);
-    });
-    return () => unsubscribe();
-  }, [scrollYProgress]);
 
   const handleIndividualSignup = () => {
     if (onIndividualSignup) {
@@ -208,21 +73,16 @@ export function ProofoundLanding({
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="relative bg-background text-foreground overflow-x-clip min-h-screen"
-    >
-      {/* Network Background with Parallax */}
-      <NetworkBackground shouldReduceMotion={shouldReduceMotion} scrollYProgress={smoothProgress} />
+    <div className="relative min-h-screen overflow-x-clip bg-background text-foreground">
+      <CalmBackground />
 
-      {/* Header with accessible menu */}
       <motion.header
         initial={{ y: shouldReduceMotion ? 0 : -100 }}
         animate={{ y: 0 }}
         transition={
           shouldReduceMotion ? { duration: 0 } : { duration: 0.6, ease: [0.22, 1, 0.36, 1] }
         }
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-6 pointer-events-none"
+        className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between px-6 py-6 pointer-events-none md:px-12"
       >
         <div className="pointer-events-auto">
           <Link href="/" aria-label="Proofound home">
@@ -238,28 +98,7 @@ export function ProofoundLanding({
           </Link>
         </div>
 
-        <div className="flex items-center gap-4 pointer-events-none">
-          {/* Header Sticky CTA (appears on scroll) */}
-          <motion.div
-            initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.9, x: 20 }}
-            animate={
-              showStickyProgress
-                ? { opacity: 1, scale: 1, x: 0 }
-                : { opacity: 0, scale: 0.9, x: 20 }
-            }
-            transition={
-              shouldReduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 150, damping: 20 }
-            }
-            className={`pointer-events-auto ${showStickyProgress ? '' : 'hidden md:block invisible'}`}
-          >
-            <MagneticButton
-              onClick={handleGetStarted}
-              className="rounded-full shadow-lg hover:shadow-xl transition-all font-sans hidden sm:flex items-center justify-center px-4 py-2"
-            >
-              Get Started
-            </MagneticButton>
-          </motion.div>
-
+        <div className="pointer-events-none flex items-center gap-4">
           <div className="pointer-events-auto">
             <Dialog.Root open={menuOpen} onOpenChange={setMenuOpen}>
               <Dialog.Trigger asChild>
@@ -338,10 +177,9 @@ export function ProofoundLanding({
                       data-testid="landing-menu-nav"
                     >
                       {[
-                        { label: 'Mission', href: '#the-problem' },
                         { label: 'How it Works', href: '#how-it-works' },
-                        { label: 'Principles', href: '#principles' },
-                        { label: 'Pricing', href: '#products' },
+                        { label: 'For Organizations', href: '#personas' },
+                        { label: 'Trust & Privacy', href: '#proof' },
                         { label: 'Log in', href: '/login' },
                       ].map((item) => (
                         <div key={item.label} className="overflow-hidden">
@@ -384,74 +222,23 @@ export function ProofoundLanding({
         </div>
       </motion.header>
 
-      {/* Progress Indicator */}
-      <ProgressIndicator scrollYProgress={smoothProgress} />
-
-      <main>
-        {/* Section 1: Hero - The Promise */}
+      <main className="relative z-10">
         <HeroSection
           shouldReduceMotion={shouldReduceMotion}
           onIndividualSignup={handleIndividualSignup}
           onOrganizationSignup={handleOrganizationSignup}
         />
-
-        <SectionSeparator direction="up" className="-mt-20 relative z-0" />
-
-        {/* Section 2: The Problem - Pains we solve */}
-        <ProblemSection shouldReduceMotion={shouldReduceMotion} />
-
-        <SectionSeparator
-          direction="down"
-          fill="hsl(var(--background))"
-          className="-mb-20 relative z-20"
-        />
-
-        {/* Section 3: How It Works - The Solution */}
         <HowItWorksSection shouldReduceMotion={shouldReduceMotion} />
-
-        {/* Section 4: Principles - Trustworthy Foundation */}
-        <PrinciplesSection shouldReduceMotion={shouldReduceMotion} />
-
-        <SectionSeparator direction="up" className="-mt-20 relative z-20" />
-
-        {/* Section 5: Personas - Tailored Value */}
         <PersonasSection
           shouldReduceMotion={shouldReduceMotion}
           onIndividualSignup={handleIndividualSignup}
           onOrganizationSignup={handleOrganizationSignup}
         />
-
-        {/* Section 6: Why Now - Urgency */}
-        <WhyNowSection shouldReduceMotion={shouldReduceMotion} />
-
-        <SectionSeparator direction="down" className="-mb-20 relative z-20" />
-
-        {/* Section 7: Proof - Credibility */}
         <ProofSection shouldReduceMotion={shouldReduceMotion} />
-
-        <SectionSeparator direction="up" className="-mt-20 relative z-20" />
-
-        {/* Section 8: Steward Ownership - Business Model */}
-        <StewardOwnershipSection shouldReduceMotion={shouldReduceMotion} />
-
-        <SectionSeparator direction="down" className="-mb-20 relative z-20" />
-
-        {/* Section 9: Products & Pricing */}
-        <ProductsSection
-          shouldReduceMotion={shouldReduceMotion}
-          onIndividualSignup={handleIndividualSignup}
-          onOrganizationSignup={handleOrganizationSignup}
-        />
-
-        {/* Section 10: Final CTA */}
         <FinalCTASection onGetStarted={handleGetStarted} shouldReduceMotion={shouldReduceMotion} />
-
-        {/* Section 11: Final Quote */}
-        <FinalQuoteSection shouldReduceMotion={shouldReduceMotion} />
-
-        {/* Section 12: Footer */}
-        <FooterSection shouldReduceMotion={shouldReduceMotion} />
       </main>
+
+      <FooterSection shouldReduceMotion={shouldReduceMotion} />
     </div>
   );
 }

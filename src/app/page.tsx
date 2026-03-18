@@ -19,23 +19,23 @@ function getSiteUrl(): string {
 const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
-  title: 'Proofound | Publish a Public Proof Portfolio on Day 1',
+  title: 'Proofound | Proof-Backed Review, Stronger Signal Than CVs',
   description:
-    'Proofound helps individuals and organizations publish a clean public proof portfolio link on day 1, then grow into matching and collaboration workflows.',
+    'Proofound helps people publish a public proof portfolio on day one and helps organizations review stronger signal than CVs through blind-by-default review and candidate-consented reveal.',
   keywords: [
     'Proofound',
-    'public portfolio',
-    'proof-based portfolio',
-    'verified profile',
-    'professional credibility',
-    'organization portfolio',
-    'evidence based matching',
+    'proof-backed review',
+    'Proof Pack',
+    'blind-by-default review',
+    'consented reveal',
+    'proof portfolio',
+    'stronger signal than CVs',
   ],
   alternates: { canonical: '/' },
   openGraph: {
-    title: 'Proofound | Public Proof Portfolio, Ready to Share',
+    title: 'Proofound | Proof-Backed Review, Blind by Default',
     description:
-      'Create a clean proof-based public portfolio link on day 1. Matching stays available as a secondary benefit as your profile grows.',
+      'Add proof into a Proof Pack, publish a public proof portfolio on day one, and let organizations review stronger signal than CVs before any consented identity reveal.',
     url: siteUrl,
     siteName: 'Proofound',
     type: 'website',
@@ -50,9 +50,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Proofound | Public Proof Portfolio',
+    title: 'Proofound | Proof-Backed Review',
     description:
-      'Publish a clean public proof portfolio link today, then unlock matching and collaboration.',
+      'Public proof portfolio on day one. Blind-by-default review. Identity-bearing reveal only with candidate consent.',
     images: [`${siteUrl}/hero-visual.jpg`],
   },
 };
@@ -60,9 +60,9 @@ export const metadata: Metadata = {
 export default function Home() {
   const jsonLdItems = buildStaticPageJsonLd({
     path: '/',
-    title: 'Proofound | Publish a Public Proof Portfolio on Day 1',
+    title: 'Proofound | Proof-Backed Review, Stronger Signal Than CVs',
     description:
-      'Build and share a clean proof-based public portfolio link on day 1, then use matching and workflows as you scale.',
+      'Build a public proof portfolio on day one and move into blind-by-default, proof-backed review with candidate-consented reveal.',
   });
 
   // Auth check disabled for debugging/verification of landing page

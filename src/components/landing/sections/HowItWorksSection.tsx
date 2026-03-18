@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
-import { motion, useInView, useScroll, useTransform } from 'framer-motion';
-import { Sparkles, Key, Eye } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React, { useRef } from 'react';
+import { motion, useInView } from 'framer-motion';
+import { Building2, EyeOff, FolderKanban } from 'lucide-react';
 
 interface HowItWorksSectionProps {
   shouldReduceMotion?: boolean | null;
@@ -14,156 +13,80 @@ export function HowItWorksSection({ shouldReduceMotion }: HowItWorksSectionProps
   const ref = useRef<HTMLElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.1 });
   const effectiveInView = reduceMotion ? true : isInView;
-  const [activeStep, setActiveStep] = useState(0);
 
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ['start end', 'end start'],
-  });
-
-  const blob1Y = useTransform(scrollYProgress, [0, 1], ['-15%', '15%']);
-  const blob2Y = useTransform(scrollYProgress, [0, 1], ['15%', '-15%']);
-
-  const features = [
+  const steps = [
     {
-      icon: Sparkles,
-      title: 'Add your proofs',
-      desc: 'Build a portable portfolio of verified work, not just another CV.',
+      icon: FolderKanban,
+      step: 'Step 1',
+      title: 'Add proof into a Proof Pack',
+      desc: 'The first meaningful action is add proof. Capture real work, structure it into a Proof Pack, and publish a public proof portfolio on day one.',
     },
     {
-      icon: Eye,
-      title: 'Blind-by-default review',
-      desc: 'Share your proof safely. Identity is hidden initially to ensure fair, unbiased, and merit-based evaluation.',
+      icon: Building2,
+      step: 'Step 2',
+      title: 'Open the organization corridor',
+      desc: 'Organizations publish a trust page and create one structured assignment so candidates know what the work is and why the review is credible.',
     },
     {
-      icon: Key,
-      title: 'Consented reveal',
-      desc: 'You control the keys. Progress to identity-bearing reveal only when there is mutual interest and your explicit consent.',
+      icon: EyeOff,
+      step: 'Step 3',
+      title: 'Review proof before identity',
+      desc: 'Blind-by-default summaries give stronger signal than CVs. Progressive reveal keeps identity hidden until the candidate consents to an identity-bearing reveal.',
     },
   ];
-
-  useEffect(() => {
-    // Set up an Intersection Observer to track which feature card is currently most centered in the viewport
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const index = Number((entry.target as HTMLElement).dataset.index);
-            if (!isNaN(index)) {
-              setActiveStep(index);
-            }
-          }
-        });
-      },
-      {
-        rootMargin: '-40% 0px -40% 0px', // Trigger when card hits the middle 20% of the screen
-        threshold: 0,
-      }
-    );
-
-    const cards = document.querySelectorAll('.step-card');
-    cards.forEach((card) => observer.observe(card));
-
-    return () => observer.disconnect();
-  }, []);
 
   return (
     <section
       id="how-it-works"
       ref={ref}
-      className="py-16 md:py-32 lg:py-40 px-6 md:px-12 relative bg-background scroll-mt-24"
+      className="relative bg-background px-6 py-16 md:px-12 md:py-24 lg:py-28 scroll-mt-24"
     >
-      {/* Organic Background Shapes */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          style={{ y: reduceMotion ? 0 : blob1Y }}
-          className="absolute top-[15%] left-[-15%] w-[60vw] h-[70vw] bg-extended-sage rounded-[40%] opacity-30 blur-3xl transform -rotate-12"
-        />
-        <motion.div
-          style={{ y: reduceMotion ? 0 : blob2Y }}
-          className="absolute top-[5%] right-[-15%] w-[60vw] h-[80vw] bg-proofound-terracotta rounded-[45%] opacity-20 blur-3xl transform rotate-12"
-        />
-      </div>
-
       <div className="max-w-7xl mx-auto relative z-10">
-        <div className="flex flex-col md:grid md:grid-cols-12 gap-12 md:gap-24">
-          {/* Left Column: Sticky Narrative & Progress */}
-          <div className="md:col-span-5 relative">
-            <div className="md:sticky md:top-40 md:h-[calc(100vh-20rem)] flex flex-col justify-start pt-12">
-              <motion.div
-                initial={reduceMotion ? false : { opacity: 0, y: 30 }}
-                animate={effectiveInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-                transition={
-                  reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 100, damping: 20 }
-                }
-              >
-                <h2 className="text-5xl md:text-6xl font-display text-foreground mb-6 tracking-tight text-balance">
-                  How Proofound works
-                </h2>
-                <p className="text-xl md:text-2xl text-muted-foreground font-sans text-balance mb-12">
-                  A straightforward, privacy-first process for verifiable connection.
-                </p>
+        <motion.div
+          initial={reduceMotion ? false : { opacity: 0, y: 24 }}
+          animate={effectiveInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
+          transition={reduceMotion ? { duration: 0 } : { duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+          className="mx-auto max-w-3xl text-center"
+        >
+          <p className="text-sm font-medium uppercase tracking-[0.22em] text-proofound-forest/80">
+            The narrow corridor
+          </p>
+          <h2 className="mt-4 text-4xl font-serif tracking-tight text-foreground text-balance md:text-5xl lg:text-6xl">
+            How Proofound works
+          </h2>
+          <p className="mt-5 text-lg font-sans leading-relaxed text-muted-foreground md:text-xl">
+            One hiring corridor for launch: proof first, trust page plus assignment, then
+            blind-by-default review with progressive reveal.
+          </p>
+        </motion.div>
 
-                {/* Progress Indicator (Desktop only) */}
-                <div className="hidden md:flex flex-col gap-4 relative pl-5 border-l-2 border-border/50">
-                  <motion.div
-                    className="absolute left-[-2px] top-0 w-[2px] bg-proofound-forest transition-all duration-500 ease-out origin-top"
-                    style={{ height: `${((activeStep + 1) / features.length) * 100}%` }}
-                  />
-                  {features.map((f, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      tabIndex={-1}
-                      onClick={() => {
-                        document
-                          .querySelector(`[data-index="${i}"]`)
-                          ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                      }}
-                      className={cn(
-                        'text-left text-sm font-medium transition-all duration-300',
-                        activeStep === i
-                          ? 'text-foreground translate-x-1'
-                          : 'text-muted-foreground hover:text-foreground/80 hover:translate-x-0.5'
-                      )}
-                    >
-                      {f.title}
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            </div>
-          </div>
-
-          {/* Right Column: Scrolling Cards */}
-          <div className="md:col-span-7 flex flex-col gap-8 md:gap-24 pb-12 md:pb-32">
-            {features.map((feature, idx) => (
-              <div
-                key={idx}
-                data-index={idx}
-                className={cn(
-                  'step-card group bg-card/60 backdrop-blur-xl border border-border rounded-[2rem] p-6 md:p-10 lg:p-12 shadow-xl md:transition-all md:duration-700',
-                  activeStep === idx
-                    ? 'md:opacity-100 md:scale-100'
-                    : 'md:opacity-30 md:scale-[0.98]'
-                )}
-              >
-                <div className="space-y-6">
-                  <div className="w-16 h-16 rounded-2xl bg-muted/50 flex flex-shrink-0 items-center justify-center">
-                    <feature.icon className="w-8 h-8 text-foreground stroke-[1.5]" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl md:text-3xl font-display text-foreground leading-tight mb-4">
-                      {feature.title}
-                    </h3>
-                    <p className="text-lg text-foreground/90 font-sans leading-relaxed">
-                      {feature.desc}
-                    </p>
-                  </div>
-                </div>
+        <div className="mt-12 grid gap-5 md:grid-cols-3">
+          {steps.map((step, idx) => (
+            <motion.div
+              key={step.title}
+              initial={reduceMotion ? false : { opacity: 0, y: 24 }}
+              animate={effectiveInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
+              transition={
+                reduceMotion
+                  ? { duration: 0 }
+                  : { duration: 0.65, delay: idx * 0.08, ease: [0.22, 1, 0.36, 1] }
+              }
+              className="rounded-[2rem] border border-border bg-card/70 p-6 shadow-sm backdrop-blur-sm md:p-8"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-proofound-forest/10 text-proofound-forest">
+                <step.icon className="h-6 w-6" aria-hidden="true" />
               </div>
-            ))}
-          </div>
+              <p className="mt-6 text-sm font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                {step.step}
+              </p>
+              <h3 className="mt-3 text-2xl font-serif leading-tight text-foreground">
+                {step.title}
+              </h3>
+              <p className="mt-4 text-base font-sans leading-relaxed text-muted-foreground md:text-lg">
+                {step.desc}
+              </p>
+            </motion.div>
+          ))}
         </div>
       </div>
     </section>
