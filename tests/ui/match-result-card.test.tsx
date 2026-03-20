@@ -70,6 +70,8 @@ describe('MatchResultCard', () => {
               summaryLabel: 'Verified proof signal present',
               count: 2,
             },
+            trustLabels: ['Verified proof signal present', 'Auditable verification history'],
+            fitBand: 'Top 10',
             fitSummary: {
               headline: 'Proof signals align with the assignment needs.',
               bullets: [
@@ -86,6 +88,7 @@ describe('MatchResultCard', () => {
 
     expect(screen.getByText('Candidate A7F2')).toBeInTheDocument();
     expect(screen.getByText('Blind by default')).toBeInTheDocument();
+    expect(screen.getByText('Top 10')).toBeInTheDocument();
     expect(screen.getByText('Strongest relevant proof')).toBeInTheDocument();
     expect(
       screen.getByText('Led a privacy-safe launch proof for a complex hiring workflow.')
@@ -99,7 +102,10 @@ describe('MatchResultCard', () => {
     expect(screen.getByText('Anchored in prior project work')).toBeInTheDocument();
     expect(screen.getByText('Fresh')).toBeInTheDocument();
     expect(screen.getByText('Verified proof signal present')).toBeInTheDocument();
+    expect(screen.getByText('Auditable verification history')).toBeInTheDocument();
     expect(screen.getByText('Reason-coded fit summary')).toBeInTheDocument();
+    expect(screen.getByText('skills_strong')).toBeInTheDocument();
+    expect(screen.getByText('verification_ready')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: MATCH_EXPLAINER_TRIGGER_LABEL })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Shortlist' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Pass' })).toBeInTheDocument();

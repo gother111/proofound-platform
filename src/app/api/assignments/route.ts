@@ -36,6 +36,9 @@ export const dynamic = 'force-dynamic';
 const AssignmentStatusInputSchema = z
   .enum(['draft', 'active', 'hold', 'paused', 'closed'])
   .transform((value) => (value === 'paused' ? 'hold' : value));
+const AssignmentCreationStatusSchema = z
+  .enum(['draft', 'assignment_ready', 'review_ready', 'pending_review'])
+  .transform((value) => (value === 'pending_review' ? 'review_ready' : value));
 
 // Validation schemas
 const SkillRequirementSchema = z.object({
@@ -85,7 +88,7 @@ const AssignmentBaseSchema = z.object({
   businessValue: z.string().optional(),
   proofExpectations: z.string().optional(),
   expectedImpact: z.string().optional(),
-  creationStatus: z.enum(['draft', 'assignment_ready', 'review_ready']).optional(),
+  creationStatus: AssignmentCreationStatusSchema.optional(),
   status: AssignmentStatusInputSchema.optional(),
   expectedOutcomes: z.array(z.any()).optional(),
   valuesRequired: z.array(z.string()).optional(),

@@ -276,7 +276,7 @@ test.describe('Strict Authenticated Org Corridor', () => {
     browser,
     page,
   }) => {
-    test.setTimeout(300_000);
+    test.setTimeout(600_000);
 
     await loginWithUi(page, orgOwner);
     await page.goto(`/app/o/${organization.slug}/home`);

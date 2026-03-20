@@ -10,7 +10,9 @@ const mocks = vi.hoisted(() => ({
   matchReviewStateFindFirst: vi.fn(),
   getOrgMembershipRole: vi.fn(),
   appendManualOverrideReason: vi.fn(),
+  buildProofFirstReviewCard: vi.fn(),
   buildVisibilitySafeWhy: vi.fn(),
+  getReviewCardProofPackMap: vi.fn(),
   getVisibleIdentityFields: vi.fn(),
   normalizeFairnessStatus: vi.fn(),
   persistFairnessEvaluationForAssignment: vi.fn(),
@@ -50,7 +52,9 @@ vi.mock('@/db', () => ({
 
 vi.mock('@/lib/matching/review-contract', () => ({
   appendManualOverrideReason: mocks.appendManualOverrideReason,
+  buildProofFirstReviewCard: mocks.buildProofFirstReviewCard,
   buildVisibilitySafeWhy: mocks.buildVisibilitySafeWhy,
+  getReviewCardProofPackMap: mocks.getReviewCardProofPackMap,
   getOrgMembershipRole: mocks.getOrgMembershipRole,
   getVisibleIdentityFields: mocks.getVisibleIdentityFields,
   normalizeFairnessStatus: mocks.normalizeFairnessStatus,
@@ -93,6 +97,28 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
       user: { id: 'user-1' },
     });
     mocks.getOrgMembershipRole.mockResolvedValue('org_manager');
+    mocks.getReviewCardProofPackMap.mockResolvedValue(new Map());
+    mocks.buildProofFirstReviewCard.mockReturnValue({
+      candidateLabel: 'Candidate A7F2',
+      strongestProof: {
+        summary: 'Proof-backed review signal.',
+        outcome: 'Outcome summary.',
+        ownership: 'Ownership summary.',
+        anchorContext: 'Anchored in prior proof',
+        freshnessLabel: 'Fresh',
+      },
+      verification: {
+        summaryLabel: 'Verified proof signal present',
+        count: 1,
+      },
+      trustLabels: ['Verified proof signal present'],
+      fitBand: null,
+      fitSummary: {
+        headline: 'Proof signals align with the assignment needs.',
+        bullets: ['Evidence points to a strong skills fit for this assignment.'],
+        reasonCodes: ['skills_strong'],
+      },
+    });
     mocks.getVisibleIdentityFields.mockReturnValue([]);
     mocks.normalizeFairnessStatus.mockReturnValue('pass');
     mocks.resolveCanonicalFallbackState.mockReturnValue(null);
@@ -183,6 +209,11 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     expect(response.status).toBe(409);
     expect(body.error).toContain('Stage 2');
     expect(body.corridorState).toBe('intro_hold');
+    expect(body.reviewCard).toEqual(
+      expect.objectContaining({
+        candidateLabel: 'Candidate A7F2',
+      })
+    );
     expect(mocks.getOrCreateIntroWorkflow).not.toHaveBeenCalled();
   });
 
@@ -248,6 +279,11 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     expect(body.corridorState).toBe('intro_approved');
     expect(body.revealScope).toBe('shortlist_identity');
     expect(body.visibleIdentityFields).toEqual([]);
+    expect(body.reviewCard).toEqual(
+      expect.objectContaining({
+        candidateLabel: 'Candidate A7F2',
+      })
+    );
     expect(body.conversationId).toBe('conversation-1');
     expect(mocks.syncIntroWorkflowFromInterest).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -580,6 +616,11 @@ describe('POST /api/org/[id]/matches/[matchId]/review', () => {
     expect(response.status).toBe(200);
     expect(body.corridorState).toBe('request_reveal');
     expect(body.waitingForCandidateApproval).toBe(true);
+    expect(body.reviewCard).toEqual(
+      expect.objectContaining({
+        candidateLabel: 'Candidate A7F2',
+      })
+    );
     expect(body.message).toContain('candidate approves');
     expect(mocks.recordRevealEvent).toHaveBeenCalledWith(
       expect.objectContaining({

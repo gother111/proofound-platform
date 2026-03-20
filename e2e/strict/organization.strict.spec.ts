@@ -229,7 +229,7 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
       details?: { blocks?: unknown[]; missing?: unknown[] };
     };
     expect(publishPayload.assignment?.status).toBe('active');
-    expect(publishPayload.assignment?.creationStatus).toBe('published');
+    expect(publishPayload.assignment?.creationStatus).toBe('review_ready');
     if (assignmentForLifecycle) {
       assignmentForLifecycle.status = 'active';
     }
@@ -507,7 +507,7 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
       error?: string;
     };
     expect(publishPayload.assignment?.status).toBe('active');
-    expect(publishPayload.assignment?.creationStatus).toBe('published');
+    expect(publishPayload.assignment?.creationStatus).toBe('review_ready');
   });
 
   test('O-13..O-16 feedback, offer, deliverables, and verification paths are strict', async ({

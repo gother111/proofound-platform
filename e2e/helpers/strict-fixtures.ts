@@ -271,12 +271,15 @@ export async function createRuntimeOrganization(
   options?: {
     prefix?: string;
     displayName?: string;
+    readyForPublish?: boolean;
   }
 ): Promise<StrictRuntimeOrganization> {
   const supabase = adminClient();
   const prefix = options?.prefix ?? 'strict-org';
   const slug = normalizeHandle(uniqueSuffix(prefix));
   const displayName = options?.displayName ?? `Strict Org ${slug.slice(-6)}`;
+  const readyForPublish = options?.readyForPublish ?? true;
+  const trustedWebsite = `https://${slug}.proofound-e2e.test`;
 
   const { data: org, error: orgError } = await supabase
     .from('organizations')
@@ -285,6 +288,21 @@ export async function createRuntimeOrganization(
       display_name: displayName,
       type: 'company',
       created_by: ownerUserId,
+      mission: readyForPublish
+        ? 'Run a narrow, proof-first hiring corridor with explicit reveal consent.'
+        : null,
+      tagline: readyForPublish
+        ? 'We review candidates through proof quality, outcomes, and clear ownership.'
+        : null,
+      working_context: readyForPublish
+        ? 'Small launch team with tight async review loops and explicit privacy boundaries.'
+        : null,
+      website: readyForPublish ? trustedWebsite : null,
+      website_verified_at: readyForPublish ? new Date().toISOString() : null,
+      trust_status: readyForPublish ? 'platform_reviewed' : 'unverified',
+      org_trust_tier: readyForPublish ? 'reviewed' : 'unreviewed',
+      org_readiness: readyForPublish ? 'org_ready' : 'draft',
+      verified: readyForPublish,
     })
     .select('id, slug, display_name')
     .single();

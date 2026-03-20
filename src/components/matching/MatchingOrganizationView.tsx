@@ -142,6 +142,8 @@ export function MatchingOrganizationView({
                 corridorState: data.corridorState,
                 visibleIdentityFields: data.visibleIdentityFields,
                 fairness: data.fairness ?? match.fairness,
+                why: data.why ?? match.why,
+                reviewCard: data.reviewCard ?? match.reviewCard,
               }
             : match
         )

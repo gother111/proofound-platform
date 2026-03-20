@@ -18,7 +18,9 @@ import { emitFirstQualifiedIntroAsync, emitMatchActioned } from '@/lib/analytics
 import { log } from '@/lib/log';
 import {
   appendManualOverrideReason,
+  buildProofFirstReviewCard,
   buildVisibilitySafeWhy,
+  getReviewCardProofPackMap,
   getOrgMembershipRole,
   normalizeFairnessStatus,
   resolveCanonicalCorridor,
@@ -79,6 +81,21 @@ async function getOrgByIdOrSlug(orgIdOrSlug: string) {
     .limit(1);
 
   return org ?? null;
+}
+
+async function buildReviewCardPayload(params: {
+  profileId: string;
+  reasonCodes: string[];
+  fairnessStatus: ReturnType<typeof normalizeFairnessStatus>;
+}) {
+  const proofPackByProfileId = await getReviewCardProofPackMap([params.profileId]);
+
+  return buildProofFirstReviewCard({
+    profileId: params.profileId,
+    reasonCodes: params.reasonCodes,
+    fairnessStatus: params.fairnessStatus,
+    proofPack: proofPackByProfileId.get(params.profileId) ?? null,
+  });
 }
 
 export async function POST(
@@ -208,6 +225,11 @@ export async function POST(
             matchRow.reviewOperationalFallbackMode ?? matchRow.assignmentOperationalFallbackMode,
           introApproved: true,
         });
+        const reviewCard = await buildReviewCardPayload({
+          profileId: matchRow.profileId,
+          reasonCodes: ['reveal_full_identity'],
+          fairnessStatus,
+        });
 
         return NextResponse.json({
           matchId: matchRow.matchId,
@@ -215,6 +237,7 @@ export async function POST(
           revealScope: 'full_identity',
           visibleIdentityFields: getVisibleIdentityFields('full_identity'),
           conversationId: syncedConversation.id,
+          reviewCard,
           ...corridor,
           why: buildVisibilitySafeWhy({
             reasonCodes: ['reveal_full_identity'],
@@ -280,6 +303,11 @@ export async function POST(
           matchRow.reviewOperationalFallbackMode ?? matchRow.assignmentOperationalFallbackMode,
         revealRequestPending: true,
       });
+      const reviewCard = await buildReviewCardPayload({
+        profileId: matchRow.profileId,
+        reasonCodes: ['org_reveal_request_pending'],
+        fairnessStatus,
+      });
 
       return NextResponse.json({
         matchId: matchRow.matchId,
@@ -288,6 +316,7 @@ export async function POST(
         visibleIdentityFields: getVisibleIdentityFields(matchRow.revealScope),
         conversationId: syncedConversation.id,
         waitingForCandidateApproval: true,
+        reviewCard,
         ...corridor,
         why: buildVisibilitySafeWhy({
           reasonCodes: ['org_reveal_request_pending'],
@@ -335,6 +364,11 @@ export async function POST(
           operationalFallbackMode: fallbackMode,
           introRequested: true,
         });
+        const reviewCard = await buildReviewCardPayload({
+          profileId: matchRow.profileId,
+          reasonCodes: ['fairness_ranking_suppressed'],
+          fairnessStatus,
+        });
 
         return NextResponse.json(
           {
@@ -345,6 +379,7 @@ export async function POST(
             reviewStage: matchRow.reviewStage,
             revealScope: matchRow.revealScope,
             visibleIdentityFields: getVisibleIdentityFields(matchRow.revealScope),
+            reviewCard,
             ...corridor,
             why: buildVisibilitySafeWhy({
               reasonCodes: ['fairness_ranking_suppressed'],
@@ -393,6 +428,11 @@ export async function POST(
           operationalFallbackMode: null,
           introRequested: true,
         });
+        const reviewCard = await buildReviewCardPayload({
+          profileId: matchRow.profileId,
+          reasonCodes: ['shortlist_selected'],
+          fairnessStatus,
+        });
 
         return NextResponse.json({
           matchId: matchRow.matchId,
@@ -403,6 +443,7 @@ export async function POST(
           introWorkflowState: intro.state,
           introApproved: false,
           requiresCandidateInterest: true,
+          reviewCard,
           ...corridor,
           why: buildVisibilitySafeWhy({
             reasonCodes: ['shortlist_selected'],
@@ -475,6 +516,11 @@ export async function POST(
           operationalFallbackMode: null,
           introApproved: true,
         });
+        const reviewCard = await buildReviewCardPayload({
+          profileId: matchRow.profileId,
+          reasonCodes: ['intro_accepted_masked'],
+          fairnessStatus,
+        });
 
         return NextResponse.json({
           matchId: matchRow.matchId,
@@ -485,6 +531,7 @@ export async function POST(
           introWorkflowState: 'conversation_open',
           introApproved: true,
           conversationId,
+          reviewCard,
           ...corridor,
           why: buildVisibilitySafeWhy({
             reasonCodes: ['intro_accepted_masked'],
@@ -559,6 +606,11 @@ export async function POST(
         operationalFallbackMode: null,
         introApproved: true,
       });
+      const reviewCard = await buildReviewCardPayload({
+        profileId: matchRow.profileId,
+        reasonCodes: ['intro_accepted_masked'],
+        fairnessStatus,
+      });
 
       return NextResponse.json({
         matchId: matchRow.matchId,
@@ -569,6 +621,7 @@ export async function POST(
         introWorkflowState: 'conversation_open',
         introApproved: true,
         conversationId,
+        reviewCard,
         ...corridor,
         why: buildVisibilitySafeWhy({
           reasonCodes: ['intro_accepted_masked'],
@@ -676,12 +729,18 @@ export async function POST(
           ? [payload.reasonCode]
           : []
         : getReviewMutationReasonCodes(payload.action);
+    const reviewCard = await buildReviewCardPayload({
+      profileId: matchRow.profileId,
+      reasonCodes,
+      fairnessStatus: nextFairnessStatus,
+    });
 
     return NextResponse.json({
       matchId: matchRow.matchId,
       reviewStage: nextReviewStage,
       revealScope: nextRevealScope,
       visibleIdentityFields: getVisibleIdentityFields(nextRevealScope),
+      reviewCard,
       ...corridor,
       why: buildVisibilitySafeWhy({
         reasonCodes,

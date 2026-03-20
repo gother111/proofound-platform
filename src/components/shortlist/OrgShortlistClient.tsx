@@ -28,6 +28,31 @@ export interface ShortlistItem {
   fairness: {
     status: string;
   };
+  why?: {
+    summary?: string[];
+    reasonCodes?: string[];
+  };
+  reviewCard?: {
+    candidateLabel: string;
+    strongestProof: {
+      summary: string | null;
+      outcome: string | null;
+      ownership: string | null;
+      anchorContext: string | null;
+      freshnessLabel: string | null;
+    };
+    verification: {
+      summaryLabel: string;
+      count: number | null;
+    };
+    trustLabels: string[];
+    fitBand: string | null;
+    fitSummary: {
+      headline: string;
+      bullets: string[];
+      reasonCodes: string[];
+    };
+  };
   rankBand: string;
   shortlistedAt: string | null;
 }
@@ -64,12 +89,20 @@ export function OrgShortlistClient({ items }: Props) {
       const query = search.toLowerCase();
       next = next.filter((item) => {
         const searchValues = [
-          item.candidate.displayName,
-          item.candidate.headline,
-          item.candidate.tagline,
-          ...item.candidate.desiredRoles,
-          ...item.candidate.valuesTags,
-          ...item.candidate.causeTags,
+          item.assignmentRole,
+          item.reviewCard?.candidateLabel,
+          item.reviewCard?.strongestProof.summary,
+          item.reviewCard?.strongestProof.outcome,
+          item.reviewCard?.strongestProof.ownership,
+          item.reviewCard?.strongestProof.anchorContext,
+          item.reviewCard?.verification.summaryLabel,
+          item.reviewCard?.fitBand,
+          item.reviewCard?.fitSummary.headline,
+          ...(item.reviewCard?.fitSummary.bullets || []),
+          ...(item.reviewCard?.fitSummary.reasonCodes || []),
+          ...(item.reviewCard?.trustLabels || []),
+          ...(item.why?.summary || []),
+          ...(item.why?.reasonCodes || []),
         ]
           .filter(Boolean)
           .join(' ')
@@ -162,17 +195,18 @@ export function OrgShortlistClient({ items }: Props) {
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1">
                   <div className="text-sm font-medium text-proofound-charcoal">
-                    {item.candidate.displayName || 'Candidate'}
+                    {item.reviewCard?.candidateLabel || 'Candidate'}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {item.candidate.headline ||
-                      item.candidate.tagline ||
-                      'Identity stays partially hidden until a later reveal trigger.'}
+                    {item.reviewCard?.fitSummary.headline ||
+                      'Proof-led review stays anonymous until a later reveal trigger.'}
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="secondary">{item.assignmentStatus ?? 'active'}</Badge>
-                  <Badge variant="outline">{item.rankBand}</Badge>
+                  <Badge variant="outline">
+                    {item.reviewCard?.fitBand || item.rankBand || 'Shortlisted'}
+                  </Badge>
                 </div>
               </div>
 
@@ -181,17 +215,69 @@ export function OrgShortlistClient({ items }: Props) {
                 {item.assignmentRole || 'Untitled role'}
               </div>
 
+              <div className="rounded-lg border border-proofound-stone/80 bg-proofound-parchment/35 p-3">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Strongest relevant proof
+                </p>
+                <p className="text-sm font-medium text-proofound-charcoal">
+                  {item.reviewCard?.strongestProof.summary || 'Proof-backed evidence is available.'}
+                </p>
+                {item.reviewCard?.strongestProof.outcome ? (
+                  <p className="mt-2 text-sm text-proofound-charcoal/85">
+                    Outcome: {item.reviewCard.strongestProof.outcome}
+                  </p>
+                ) : null}
+                {item.reviewCard?.strongestProof.ownership ? (
+                  <p className="mt-2 text-sm text-proofound-charcoal/85">
+                    Ownership: {item.reviewCard.strongestProof.ownership}
+                  </p>
+                ) : null}
+              </div>
+
               <div className="flex flex-wrap gap-2">
-                {item.candidate.desiredRoles.slice(0, 2).map((role) => (
-                  <Badge key={role} variant="outline">
-                    {role}
+                {item.reviewCard?.strongestProof.anchorContext ? (
+                  <Badge variant="outline">{item.reviewCard.strongestProof.anchorContext}</Badge>
+                ) : null}
+                {item.reviewCard?.strongestProof.freshnessLabel ? (
+                  <Badge variant="outline">{item.reviewCard.strongestProof.freshnessLabel}</Badge>
+                ) : null}
+                {(item.reviewCard?.trustLabels || []).map((label) => (
+                  <Badge key={label} variant="outline">
+                    {label}
                   </Badge>
                 ))}
-                {item.candidate.valuesTags.slice(0, 2).map((value) => (
-                  <Badge key={value} variant="outline">
-                    {value}
-                  </Badge>
-                ))}
+              </div>
+
+              <div className="rounded-lg border border-proofound-stone/80 bg-white p-3">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Reason-coded fit summary
+                </p>
+                <ul className="space-y-2 text-sm text-proofound-charcoal/85">
+                  {(item.reviewCard?.fitSummary.bullets || item.why?.summary || []).map(
+                    (bullet) => (
+                      <li key={bullet} className="flex items-start gap-2">
+                        <span className="mt-1 h-1.5 w-1.5 rounded-full bg-proofound-forest" />
+                        <span>{bullet}</span>
+                      </li>
+                    )
+                  )}
+                </ul>
+                {(item.reviewCard?.fitSummary.reasonCodes || item.why?.reasonCodes || []).length >
+                0 ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {(item.reviewCard?.fitSummary.reasonCodes || item.why?.reasonCodes || []).map(
+                      (reasonCode) => (
+                        <Badge
+                          key={reasonCode}
+                          variant="secondary"
+                          className="font-mono text-[11px]"
+                        >
+                          {reasonCode}
+                        </Badge>
+                      )
+                    )}
+                  </div>
+                ) : null}
               </div>
 
               <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">

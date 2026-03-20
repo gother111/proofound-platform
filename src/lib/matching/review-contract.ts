@@ -157,6 +157,8 @@ export type ProofFirstReviewCard = {
     summaryLabel: string;
     count: number | null;
   };
+  trustLabels: string[];
+  fitBand: string | null;
   fitSummary: {
     headline: string;
     bullets: string[];
@@ -360,6 +362,31 @@ function getFreshnessLabel(state: string | null | undefined) {
     default:
       return null;
   }
+}
+
+function buildTrustLabels(input: {
+  fairnessStatus: FairnessStatus;
+  verificationSummaryLabel: string;
+  proofPack: ReviewCardProofPackSnapshot | null;
+  verificationCount: number | null;
+}) {
+  const labels = [input.verificationSummaryLabel];
+
+  if (input.proofPack?.verificationStatus === 'verified') {
+    labels.push('Auditable verification history');
+  } else if (input.proofPack?.verificationStatus === 'partially_verified') {
+    labels.push('Verification partially complete');
+  } else if ((input.verificationCount ?? 0) > 0) {
+    labels.push('Compatibility signals present');
+  } else {
+    labels.push('Verification still narrow');
+  }
+
+  if (input.fairnessStatus !== 'pass') {
+    labels.push('Fairness protected');
+  }
+
+  return Array.from(new Set(labels.filter(Boolean)));
 }
 
 function getAnchorContextLabel(
@@ -1647,6 +1674,7 @@ export function buildProofFirstReviewCard(input: {
   verificationCount?: number | null;
   proofPack?: ReviewCardProofPackSnapshot | null;
   fallbackHeadline?: string | null;
+  fitBand?: string | null;
 }): ProofFirstReviewCard {
   const rendered = renderExplanationFromReasonCodes({
     reasonCodes: input.reasonCodes,
@@ -1689,6 +1717,12 @@ export function buildProofFirstReviewCard(input: {
         : verificationCount && verificationCount > 0
           ? `${verificationCount} compatibility signal${verificationCount === 1 ? '' : 's'} present`
           : 'No verification signal recorded yet');
+  const trustLabels = buildTrustLabels({
+    fairnessStatus: input.fairnessStatus,
+    verificationSummaryLabel,
+    proofPack,
+    verificationCount,
+  });
 
   return {
     candidateLabel: getStableCandidateLabel(input.profileId),
@@ -1705,6 +1739,8 @@ export function buildProofFirstReviewCard(input: {
       summaryLabel: verificationSummaryLabel,
       count: verificationCount,
     },
+    trustLabels,
+    fitBand: input.fitBand ?? null,
     fitSummary: {
       headline:
         input.fallbackHeadline?.trim() ||

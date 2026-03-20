@@ -246,6 +246,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             verificationCount,
             proofPack: proofPackByProfileId.get(row.profileId) ?? null,
             fallbackHeadline: row.headline ?? row.tagline ?? null,
+            fitBand: rankBand,
           }),
           shortlistedAt: row.shortlistedAt,
         };

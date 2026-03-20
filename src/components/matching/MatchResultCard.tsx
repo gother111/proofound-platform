@@ -48,6 +48,8 @@ interface MatchResultCardProps {
         summaryLabel: string;
         count: number | null;
       };
+      trustLabels: string[];
+      fitBand: string | null;
       fitSummary: {
         headline: string;
         bullets: string[];
@@ -238,6 +240,9 @@ export function MatchResultCard({
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline">{privacyCue}</Badge>
                 <Badge variant="secondary">{stateBadgeLabel}</Badge>
+                {orgReviewCard?.fitBand ? (
+                  <Badge variant="outline">{orgReviewCard.fitBand}</Badge>
+                ) : null}
                 {result.fairness?.status && result.fairness.status !== 'pass' ? (
                   <Badge variant="outline">Fairness protected</Badge>
                 ) : null}
@@ -313,9 +318,11 @@ export function MatchResultCard({
             {orgReviewCard?.strongestProof.freshnessLabel ? (
               <Badge variant="outline">{orgReviewCard.strongestProof.freshnessLabel}</Badge>
             ) : null}
-            {orgReviewCard?.verification.summaryLabel ? (
-              <Badge variant="outline">{orgReviewCard.verification.summaryLabel}</Badge>
-            ) : null}
+            {(orgReviewCard?.trustLabels || []).map((label: string) => (
+              <Badge key={label} variant="outline">
+                {label}
+              </Badge>
+            ))}
           </div>
 
           <div className="flex-1 rounded-xl border border-proofound-stone/80 bg-white p-4">
@@ -333,6 +340,15 @@ export function MatchResultCard({
                 </li>
               ))}
             </ul>
+            {(orgReviewCard?.fitSummary.reasonCodes || []).length > 0 ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {orgReviewCard?.fitSummary.reasonCodes.map((reasonCode: string) => (
+                  <Badge key={reasonCode} variant="secondary" className="font-mono text-[11px]">
+                    {reasonCode}
+                  </Badge>
+                ))}
+              </div>
+            ) : null}
           </div>
 
           {showOrgPrimaryAction ? (

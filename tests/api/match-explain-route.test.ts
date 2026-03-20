@@ -152,6 +152,8 @@ describe('GET /api/match/explain/[matchId]', () => {
         summaryLabel: 'Verified proof signal present',
         count: 1,
       },
+      trustLabels: ['Verified proof signal present'],
+      fitBand: 'Top tier',
       fitSummary: {
         headline: 'Proof signals align with this role.',
         bullets: ['Strong skill overlap'],
@@ -242,6 +244,8 @@ describe('GET /api/match/explain/[matchId]', () => {
         verification: expect.objectContaining({
           summaryLabel: 'Verified proof signal present',
         }),
+        trustLabels: ['Verified proof signal present'],
+        fitBand: 'Top tier',
       })
     );
     expect(body.reviewCard).not.toHaveProperty('displayName');

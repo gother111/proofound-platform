@@ -116,6 +116,8 @@ interface MatchExplainerProps {
       summaryLabel: string;
       count: number | null;
     };
+    trustLabels: string[];
+    fitBand: string | null;
     fitSummary: {
       headline: string;
       bullets: string[];
@@ -225,13 +227,18 @@ export function MatchExplainerModal({
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
+                {reviewCard.fitBand ? <Badge variant="outline">{reviewCard.fitBand}</Badge> : null}
                 {reviewCard.strongestProof.anchorContext ? (
                   <Badge variant="outline">{reviewCard.strongestProof.anchorContext}</Badge>
                 ) : null}
                 {reviewCard.strongestProof.freshnessLabel ? (
                   <Badge variant="outline">{reviewCard.strongestProof.freshnessLabel}</Badge>
                 ) : null}
-                <Badge variant="outline">{reviewCard.verification.summaryLabel}</Badge>
+                {reviewCard.trustLabels.map((label) => (
+                  <Badge key={label} variant="outline">
+                    {label}
+                  </Badge>
+                ))}
               </div>
             </div>
 
@@ -258,6 +265,15 @@ export function MatchExplainerModal({
                     </li>
                   ))}
                 </ul>
+                {reviewCard.fitSummary.reasonCodes.length > 0 ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {reviewCard.fitSummary.reasonCodes.map((reasonCode) => (
+                      <Badge key={reasonCode} variant="secondary" className="font-mono text-[11px]">
+                        {reasonCode}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </div>

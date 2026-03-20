@@ -112,6 +112,8 @@ describe('MatchExplainerModal', () => {
             summaryLabel: 'Verified proof signal present',
             count: 2,
           },
+          trustLabels: ['Verified proof signal present', 'Auditable verification history'],
+          fitBand: 'Top 10',
           fitSummary: {
             headline: 'Proof signals align with the role needs.',
             bullets: ['Evidence points to a strong skills fit for this assignment.'],
@@ -154,10 +156,12 @@ describe('MatchExplainerModal', () => {
       MATCH_EXPLAINER_DIALOG_DESCRIPTION
     );
     expect(screen.getByText('Strongest relevant proof')).toBeInTheDocument();
+    expect(screen.getAllByText('Top 10').length).toBeGreaterThan(0);
     expect(
       screen.getByText('Built a blind review corridor around proof-backed evaluation.')
     ).toBeInTheDocument();
     expect(screen.getByText('Reason-coded fit summary')).toBeInTheDocument();
+    expect(screen.getByText('skills_strong')).toBeInTheDocument();
     expect(screen.getByText('Privacy-safe explanation')).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -168,6 +172,7 @@ describe('MatchExplainerModal', () => {
       screen.getAllByText('Evidence points to a strong skills fit for this assignment.')
     ).toHaveLength(2);
     expect(screen.getByText('A reviewer manually shortlisted this candidate.')).toBeInTheDocument();
+    expect(screen.getByText('Auditable verification history')).toBeInTheDocument();
     expect(screen.getByText('Comparative score detail')).toBeInTheDocument();
     expect(
       screen.getByText('Exact ranking detail is suppressed while fairness remediation is active.')

@@ -331,6 +331,7 @@ export async function GET(
       ).length,
       proofPack: proofPackByProfileId.get(match.profile_id) ?? null,
       fallbackHeadline: renderedExplanation.summary[0] ?? null,
+      fitBand: rankBand,
     });
 
     const subscores = (match.subscores_json as Record<string, number> | null) || {};

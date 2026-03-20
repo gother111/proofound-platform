@@ -295,6 +295,7 @@ export async function POST(request: NextRequest) {
             fairnessStatus,
             verificationCount,
             proofPack: proofPackByProfileId.get(item.profileId) ?? null,
+            fitBand: rankBand,
           }),
         };
       }),

@@ -27,6 +27,9 @@ export const dynamic = 'force-dynamic';
 const AssignmentStatusUpdateSchema = z
   .enum(['draft', 'active', 'hold', 'paused', 'closed'])
   .transform((value) => (value === 'paused' ? 'hold' : value));
+const AssignmentCreationStatusSchema = z
+  .enum(['draft', 'assignment_ready', 'review_ready', 'pending_review'])
+  .transform((value) => (value === 'pending_review' ? 'review_ready' : value));
 
 const EngagementTypeSchema = z.enum(canonicalEngagementTypeValues);
 const PracticalConstraintsSchema = z
@@ -198,7 +201,7 @@ const AssignmentUpdateSchema = z.object({
   expectedImpact: z.string().optional(),
   expectedOutcomes: z.array(z.any()).optional(),
   status: AssignmentStatusUpdateSchema.optional(),
-  creationStatus: z.enum(['draft', 'assignment_ready', 'review_ready']).optional(),
+  creationStatus: AssignmentCreationStatusSchema.optional(),
   valuesRequired: z.array(z.string()).optional(),
   causeTags: z.array(z.string()).optional(),
   mustHaveSkills: z

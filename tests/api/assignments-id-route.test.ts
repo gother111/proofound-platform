@@ -137,6 +137,48 @@ describe('assignment [id] mutation routes', () => {
     expect(checkAndEmitAssignmentActivation).toHaveBeenCalledTimes(1);
   });
 
+  it('PUT normalizes pending_review into review_ready for the narrow publish corridor', async () => {
+    (verifyExplicitAssignmentMutationAccess as any).mockResolvedValue({
+      status: 'ok',
+      role: 'org_owner',
+      orgId: principalOrgId,
+      membershipId: 'membership-1',
+    });
+    const returningMock = vi.fn().mockResolvedValue([
+      {
+        id: 'assignment-1',
+        orgId: 'org-1',
+        createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        status: 'draft',
+        creationStatus: 'review_ready',
+        role: 'Updated role',
+      },
+    ]);
+    const whereMock = vi.fn().mockReturnValue({ returning: returningMock });
+    const setMock = vi.fn().mockReturnValue({ where: whereMock });
+    (db.update as any).mockReturnValue({ set: setMock });
+
+    const req = new NextRequest('http://localhost/api/assignments/assignment-1', {
+      method: 'PUT',
+      body: JSON.stringify({
+        role: 'Updated role',
+        creationStatus: 'pending_review',
+        principalContext: { principalType: 'organization', orgId: principalOrgId },
+      }),
+    });
+
+    const res = await PUT(req, params);
+    const payload = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(payload.assignment.creationStatus).toBe('review_ready');
+    expect(setMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        creationStatus: 'review_ready',
+      })
+    );
+  });
+
   it('DELETE returns 403 for reviewer role', async () => {
     (verifyExplicitAssignmentMutationAccess as any).mockResolvedValue({
       status: 'insufficient_role',
