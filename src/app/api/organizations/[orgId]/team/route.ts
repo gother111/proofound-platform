@@ -9,8 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
-import { organizationMembers } from '@/db/schema';
-import { and, eq } from 'drizzle-orm';
+import { getCanonicalActiveOrgMembership } from '@/lib/api/auth';
 import { getCanonicalOrgTeamData } from '@/lib/organizations/team';
 
 export const dynamic = 'force-dynamic';
@@ -27,14 +26,7 @@ export async function GET(
     const { user } = authContext;
     const { orgId } = await params;
 
-    // Verify user is a member
-    const membership = await db.query.organizationMembers.findFirst({
-      where: and(
-        eq(organizationMembers.orgId, orgId),
-        eq(organizationMembers.userId, user.id),
-        eq(organizationMembers.state, 'active')
-      ),
-    });
+    const membership = await getCanonicalActiveOrgMembership(authContext.supabase, user.id, orgId);
 
     if (!membership) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });

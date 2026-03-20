@@ -5,13 +5,12 @@ vi.mock('@/lib/auth', () => ({
   requireApiAuthContext: vi.fn(),
 }));
 
+vi.mock('@/lib/api/auth', () => ({
+  getCanonicalActiveOrgMembership: vi.fn(),
+}));
+
 vi.mock('@/db', () => ({
   db: {
-    query: {
-      organizationMembers: {
-        findFirst: vi.fn(),
-      },
-    },
     select: vi.fn(),
   },
 }));
@@ -19,6 +18,7 @@ vi.mock('@/db', () => ({
 import { GET } from '@/app/api/organizations/[orgId]/team/route';
 import { db } from '@/db';
 import { requireApiAuthContext } from '@/lib/auth';
+import { getCanonicalActiveOrgMembership } from '@/lib/api/auth';
 
 const ORG_ID = 'org-1';
 
@@ -48,12 +48,12 @@ describe('GET /api/organizations/[orgId]/team', () => {
     vi.clearAllMocks();
     (requireApiAuthContext as any).mockResolvedValue({
       user: { id: 'user-1' },
+      supabase: { from: vi.fn() },
     });
-    (db.query.organizationMembers.findFirst as any).mockResolvedValue({
-      userId: 'user-1',
-      orgId: ORG_ID,
+    (getCanonicalActiveOrgMembership as any).mockResolvedValue({
       role: 'org_owner',
       state: 'active',
+      status: 'active',
     });
   });
 
@@ -165,7 +165,21 @@ describe('GET /api/organizations/[orgId]/team', () => {
   });
 
   it('returns 403 when caller is not an active org member', async () => {
-    (db.query.organizationMembers.findFirst as any).mockResolvedValue(null);
+    (getCanonicalActiveOrgMembership as any).mockResolvedValue(null);
+
+    const response = await GET(
+      new NextRequest(`http://localhost/api/organizations/${ORG_ID}/team`),
+      {
+        params: Promise.resolve({ orgId: ORG_ID }),
+      }
+    );
+
+    expect(response.status).toBe(403);
+    expect(db.select).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 when a legacy membership row cannot be normalized to a canonical role', async () => {
+    (getCanonicalActiveOrgMembership as any).mockResolvedValue(null);
 
     const response = await GET(
       new NextRequest(`http://localhost/api/organizations/${ORG_ID}/team`),

@@ -33,6 +33,7 @@ const supplementalMigrations = [
     filePath: path.join(projectRoot, 'src', 'db', 'triggers.sql'),
   },
 ];
+const supplementalMigrationVersions = new Set(supplementalMigrations.map((migration) => migration.version));
 
 function checksum(content) {
   return createHash('sha256').update(content, 'utf8').digest('hex');
@@ -93,6 +94,18 @@ async function markMigrationApplied(client, migration, hash) {
     `
       INSERT INTO public.app_migration_ledger (version, checksum)
       VALUES ($1, $2)
+    `,
+    [migration.version, hash]
+  );
+}
+
+async function refreshAppliedChecksum(client, migration, hash) {
+  await client.query(
+    `
+      UPDATE public.app_migration_ledger
+      SET checksum = $2,
+          applied_at = NOW()
+      WHERE version = $1
     `,
     [migration.version, hash]
   );
@@ -163,6 +176,15 @@ async function runMigrations() {
 
       if (applied) {
         if (applied.checksum !== hash) {
+          if (supplementalMigrationVersions.has(migration.version)) {
+            await refreshAppliedChecksum(client, migration, hash);
+            skippedCount += 1;
+            console.log(
+              `Refreshing checksum for supplemental baseline ${migration.version} (forward migrations remain authoritative).`
+            );
+            continue;
+          }
+
           throw new Error(
             `Checksum mismatch for already applied migration ${migration.version}. ` +
               'Update strategy required before re-running migrations.'

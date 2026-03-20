@@ -75,6 +75,8 @@ AS $$
   );
 $$;
 
+DROP FUNCTION IF EXISTS public.normalize_org_role_compat(TEXT);
+
 CREATE OR REPLACE FUNCTION public.is_trust_admin(actor_id UUID DEFAULT auth.uid())
 RETURNS boolean
 LANGUAGE sql

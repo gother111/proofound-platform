@@ -1,6 +1,11 @@
 export const CANONICAL_ORG_ROLE_VALUES = ['org_owner', 'org_manager', 'org_reviewer'] as const;
 export const ORG_ROLE_VALUES = [...CANONICAL_ORG_ROLE_VALUES] as const;
 export type OrgRole = (typeof CANONICAL_ORG_ROLE_VALUES)[number];
+export const ORG_ROLE_LABELS: Record<OrgRole, string> = {
+  org_owner: 'Owner',
+  org_manager: 'Manager',
+  org_reviewer: 'Reviewer',
+};
 
 export const ORG_ACTIVE_MEMBERSHIP_STATES = ['active'] as const;
 export type ActiveMembershipState = (typeof ORG_ACTIVE_MEMBERSHIP_STATES)[number];

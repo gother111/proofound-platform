@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api/fetch';
+import { ORG_ROLE_LABELS } from '@/lib/authz';
 import Link from 'next/link';
 
 interface TeamRolesCardProps {
@@ -52,9 +53,19 @@ interface TeamStats {
 
 // Role configuration
 const roleConfig = {
-  org_owner: { label: 'Owner', icon: Crown, color: '#F59E0B', bg: '#FEF3C7' },
-  org_manager: { label: 'Manager', icon: Shield, color: '#1C4D3A', bg: '#D8EDE4' },
-  org_reviewer: { label: 'Reviewer', icon: User, color: '#3B82F6', bg: '#DBEAFE' },
+  org_owner: { label: ORG_ROLE_LABELS.org_owner, icon: Crown, color: '#F59E0B', bg: '#FEF3C7' },
+  org_manager: {
+    label: ORG_ROLE_LABELS.org_manager,
+    icon: Shield,
+    color: '#1C4D3A',
+    bg: '#D8EDE4',
+  },
+  org_reviewer: {
+    label: ORG_ROLE_LABELS.org_reviewer,
+    icon: User,
+    color: '#3B82F6',
+    bg: '#DBEAFE',
+  },
 };
 
 // Get initials from name
