@@ -46,8 +46,10 @@ vi.mock('@/lib/matching/review-contract', () => ({
   appendSystemReasonLedger: vi.fn(),
   buildVisibilitySafeWhy: vi.fn(() => ({ summary: 'fallback active' })),
   buildCanonicalMatchPersistenceFields: vi.fn(),
+  buildProofFirstReviewCard: vi.fn(),
   canMutateReview: vi.fn(() => true),
   ensureMatchReviewState: vi.fn(),
+  getReviewCardProofPackMap: vi.fn(async () => new Map()),
   getRankBand: vi.fn(() => 'top_band'),
   getVisibleIdentityFields: vi.fn(() => []),
   normalizeFairnessStatus: vi.fn(() => 'pass'),
@@ -75,7 +77,7 @@ describe('/api/core/matching/assignment', () => {
       orgId: 'org-1',
     });
     (db.query.organizationMembers.findFirst as any).mockResolvedValue({
-      role: 'owner',
+      role: 'org_owner',
       status: 'active',
     });
   });

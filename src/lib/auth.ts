@@ -168,13 +168,17 @@ function mapOrganization(
 
 function mapMembership(
   row: Partial<OrganizationMemberRow> & { orgId: string; userId: string }
-): OrganizationMemberRow {
+): OrganizationMemberRow | null {
+  const role = normalizeAuthorizedOrgRole(row.role as string | null | undefined);
+  if (!role) {
+    return null;
+  }
+
   return {
     id: row.id ?? '',
     orgId: row.orgId,
     userId: row.userId,
-    role: (normalizeAuthorizedOrgRole(row.role as string | null | undefined) ??
-      'org_reviewer') as OrganizationMemberRow['role'],
+    role,
     state: normalizeMembershipState(row.state as string | null | undefined),
     joinedAt: row.joinedAt ? new Date(row.joinedAt as unknown as string | number) : new Date(),
   };
@@ -320,18 +324,22 @@ const getUserOrganizationsCached = cache(async (userId: string) => {
         return null;
       }
 
+      const membership = mapMembership({
+        id: item.id as string,
+        orgId: item.orgId as string,
+        userId: item.userId as string,
+        role: item.role as OrganizationMemberRow['role'],
+        state: item.state as OrganizationMemberRow['state'],
+        joinedAt: item.joinedAt ? new Date(item.joinedAt as unknown as string | number) : undefined,
+      });
+
+      if (!membership) {
+        return null;
+      }
+
       return {
         org: mapOrganization(orgRecord as OrganizationRow),
-        membership: mapMembership({
-          id: item.id as string,
-          orgId: item.orgId as string,
-          userId: item.userId as string,
-          role: item.role as OrganizationMemberRow['role'],
-          state: item.state as OrganizationMemberRow['state'],
-          joinedAt: item.joinedAt
-            ? new Date(item.joinedAt as unknown as string | number)
-            : undefined,
-        }),
+        membership,
       };
     })
     .filter((item): item is NonNullable<typeof item> => item !== null);
@@ -409,6 +417,21 @@ const getActiveOrgCached = cache(async (slug: string, userId: string) => {
     return null;
   }
 
+  const membership = mapMembership({
+    id: membershipRow.id as string,
+    orgId: membershipRow.orgId as string,
+    userId: membershipRow.userId as string,
+    role: membershipRow.role as OrganizationMemberRow['role'],
+    state: membershipRow.state as OrganizationMemberRow['state'],
+    joinedAt: membershipRow.joinedAt
+      ? new Date(membershipRow.joinedAt as unknown as string | number)
+      : undefined,
+  });
+
+  if (!membership) {
+    return null;
+  }
+
   return {
     org: mapOrganization({
       id: data.id,
@@ -463,16 +486,7 @@ const getActiveOrgCached = cache(async (slug: string, userId: string) => {
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
     } as Partial<OrganizationRow> & { id: string; slug: string }),
-    membership: mapMembership({
-      id: membershipRow.id as string,
-      orgId: membershipRow.orgId as string,
-      userId: membershipRow.userId as string,
-      role: membershipRow.role as OrganizationMemberRow['role'],
-      state: membershipRow.state as OrganizationMemberRow['state'],
-      joinedAt: membershipRow.joinedAt
-        ? new Date(membershipRow.joinedAt as unknown as string | number)
-        : undefined,
-    }),
+    membership,
   };
 });
 

@@ -143,7 +143,7 @@ export async function isActiveOrgMember(
     return Boolean(role && roles.includes(role));
   }
 
-  return Boolean(role);
+  return role !== null;
 }
 
 export function requireMobilePlatformAdmin(

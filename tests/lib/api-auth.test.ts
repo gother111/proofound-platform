@@ -17,11 +17,11 @@ function createSupabaseMembershipStub(result: {
 }
 
 describe('api auth org membership boundary', () => {
-  it('canonicalizes persisted legacy aliases at the API boundary', async () => {
+  it('accepts canonical persisted org roles at the API boundary', async () => {
     await expect(
       getCanonicalActiveOrgMembership(
         createSupabaseMembershipStub({
-          data: { role: 'owner', state: 'active' },
+          data: { role: 'org_owner', state: 'active' },
           error: null,
         }),
         'user-1',
@@ -36,7 +36,7 @@ describe('api auth org membership boundary', () => {
     await expect(
       getCanonicalActiveOrgMembership(
         createSupabaseMembershipStub({
-          data: { role: 'admin', status: 'active' },
+          data: { role: 'org_manager', status: 'active' },
           error: null,
         }),
         'user-1',
@@ -51,22 +51,7 @@ describe('api auth org membership boundary', () => {
     await expect(
       getCanonicalActiveOrgMembership(
         createSupabaseMembershipStub({
-          data: { role: 'member', state: 'active' },
-          error: null,
-        }),
-        'user-1',
-        'org-1'
-      )
-    ).resolves.toEqual({
-      role: 'org_reviewer',
-      state: 'active',
-      status: null,
-    });
-
-    await expect(
-      getCanonicalActiveOrgMembership(
-        createSupabaseMembershipStub({
-          data: { role: 'viewer', state: 'active' },
+          data: { role: 'org_reviewer', state: 'active' },
           error: null,
         }),
         'user-1',
@@ -79,11 +64,22 @@ describe('api auth org membership boundary', () => {
     });
   });
 
-  it('rejects inactive or unknown memberships after canonicalization', async () => {
+  it('rejects inactive, legacy, or unknown memberships at the API boundary', async () => {
     await expect(
       getCanonicalActiveOrgMembership(
         createSupabaseMembershipStub({
           data: { role: 'org_owner', state: 'inactive' },
+          error: null,
+        }),
+        'user-1',
+        'org-1'
+      )
+    ).resolves.toBeNull();
+
+    await expect(
+      getCanonicalActiveOrgMembership(
+        createSupabaseMembershipStub({
+          data: { role: 'owner', state: 'active' },
           error: null,
         }),
         'user-1',

@@ -14,14 +14,14 @@ describe('membership normalization', () => {
     expect(isActiveMembershipState('removed')).toBe(false);
   });
 
-  it('maps legacy roles and states to canonical values', () => {
+  it('accepts only canonical roles while still normalizing legacy states', () => {
     expect(normalizeAuthorizedOrgRole('org_owner')).toBe('org_owner');
     expect(normalizeAuthorizedOrgRole('org_manager')).toBe('org_manager');
     expect(normalizeAuthorizedOrgRole('org_reviewer')).toBe('org_reviewer');
-    expect(normalizeAuthorizedOrgRole('owner')).toBe('org_owner');
-    expect(normalizeAuthorizedOrgRole('admin')).toBe('org_manager');
-    expect(normalizeAuthorizedOrgRole('member')).toBe('org_reviewer');
-    expect(normalizeAuthorizedOrgRole('viewer')).toBe('org_reviewer');
+    expect(normalizeAuthorizedOrgRole('owner')).toBeNull();
+    expect(normalizeAuthorizedOrgRole('admin')).toBeNull();
+    expect(normalizeAuthorizedOrgRole('member')).toBeNull();
+    expect(normalizeAuthorizedOrgRole('viewer')).toBeNull();
     expect(normalizeMembershipState('invited')).toBe('invited_pending');
     expect(normalizeAuthorizedOrgRole('trust_admin')).toBeNull();
     expect(normalizeAuthorizedOrgRole('individual')).toBeNull();

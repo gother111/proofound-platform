@@ -56,9 +56,9 @@ export async function getCanonicalOrgTeamData(orgId: string): Promise<OrgTeamDat
     .where(eq(organizationMembers.orgId, orgId))
     .orderBy(
       sql`case
-        when ${organizationMembers.role} in ('org_owner', 'owner') then 1
-        when ${organizationMembers.role} in ('org_manager', 'admin') then 2
-        when ${organizationMembers.role} in ('org_reviewer', 'member', 'viewer') then 3
+        when ${organizationMembers.role} = 'org_owner' then 1
+        when ${organizationMembers.role} = 'org_manager' then 2
+        when ${organizationMembers.role} = 'org_reviewer' then 3
         else 4
       end`,
       organizationMembers.joinedAt

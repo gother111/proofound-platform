@@ -38,20 +38,6 @@ CREATE POLICY "Users can insert own individual profile"
   ON public.individual_profiles FOR INSERT
   WITH CHECK (user_id = auth.uid());
 
-CREATE OR REPLACE FUNCTION public.normalize_org_role_compat(role_value TEXT)
-RETURNS TEXT
-LANGUAGE sql
-IMMUTABLE
-AS $$
-  SELECT CASE role_value
-    WHEN 'owner' THEN 'org_owner'
-    WHEN 'admin' THEN 'org_manager'
-    WHEN 'member' THEN 'org_reviewer'
-    WHEN 'viewer' THEN 'org_reviewer'
-    ELSE role_value
-  END;
-$$;
-
 CREATE OR REPLACE FUNCTION public.has_active_org_membership(target_org_id UUID, actor_id UUID DEFAULT auth.uid())
 RETURNS boolean
 LANGUAGE sql
@@ -85,7 +71,7 @@ AS $$
     WHERE om.org_id = target_org_id
       AND om.user_id = actor_id
       AND om.state = 'active'
-      AND public.normalize_org_role_compat(om.role) = ANY (allowed_roles)
+      AND om.role = ANY (allowed_roles)
   );
 $$;
 
@@ -158,8 +144,8 @@ CREATE POLICY "Org owners can insert members"
     OR public.is_trust_admin()
     -- Allow org creator to add first owner (themselves)
     OR (
-      auth.uid() = user_id 
-      AND public.normalize_org_role_compat(role) = 'org_owner'
+      auth.uid() = user_id
+      AND role = 'org_owner'
       AND EXISTS (
         SELECT 1 FROM public.organizations
         WHERE organizations.id = organization_members.org_id

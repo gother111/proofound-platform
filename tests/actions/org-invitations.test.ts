@@ -312,7 +312,7 @@ describe('organization invitations', () => {
     expect(issueCapabilityToken).not.toHaveBeenCalled();
   });
 
-  it('accepts a tokenized invitation and canonicalizes a persisted legacy invite role', async () => {
+  it('accepts a tokenized invitation with a canonical invite role', async () => {
     const invitationUpdateEq = vi.fn().mockResolvedValue({ error: null });
     const memberInsertSingle = vi.fn().mockResolvedValue({
       data: { id: 'membership-2' },
@@ -380,7 +380,7 @@ describe('organization invitations', () => {
                     org_id: 'org-1',
                     membership_id: null,
                     email: 'candidate@proofound.test',
-                    role: 'admin',
+                    role: 'org_manager',
                     status: 'pending',
                     expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
                     accepted_at: null,
@@ -427,5 +427,89 @@ describe('organization invitations', () => {
     );
     expect(invitationUpdateEq).toHaveBeenCalledWith('id', 'invite-1');
     expect(revalidatePath).toHaveBeenCalledWith('/app/o/proofound');
+  });
+
+  it('rejects a tokenized invitation that still carries a legacy role', async () => {
+    vi.mocked(requireAuth).mockResolvedValue({ id: 'candidate-user' } as any);
+    vi.mocked(redeemCapabilityToken).mockResolvedValue({
+      ok: true,
+      token: { source_id: 'invite-1' },
+    } as any);
+    vi.mocked(createClient).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: {
+            user: {
+              email: 'candidate@proofound.test',
+            },
+          },
+          error: null,
+        }),
+      },
+      from: vi.fn((table: string) => {
+        if (table === 'organizations') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: {
+                    id: 'org-1',
+                    slug: 'proofound',
+                    display_name: 'Proofound Org',
+                  },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+
+        if (table === 'audit_logs') {
+          return {
+            insert: vi.fn().mockResolvedValue({ error: null }),
+          };
+        }
+
+        throw new Error(`Unexpected table ${table}`);
+      }),
+    } as any);
+    vi.mocked(createAdminClient).mockReturnValue({
+      from: vi.fn((table: string) => {
+        if (table === 'org_invitations') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: {
+                    id: 'invite-1',
+                    org_id: 'org-1',
+                    membership_id: null,
+                    email: 'candidate@proofound.test',
+                    role: 'admin',
+                    status: 'pending',
+                    expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+                    accepted_at: null,
+                    revoked_at: null,
+                  },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+
+        if (table === 'organization_members') {
+          return {
+            insert: vi.fn(),
+          };
+        }
+
+        throw new Error(`Unexpected table ${table}`);
+      }),
+    } as any);
+
+    const result = await acceptInvitation('raw-token');
+
+    expect(result).toEqual({ error: 'Invitation role is invalid' });
   });
 });

@@ -61,11 +61,11 @@ describe('GET /api/organizations/[orgId]/team', () => {
     mockTeamQuery({
       members: [
         {
-          userId: 'user-legacy-owner',
-          role: 'owner',
+          userId: 'user-owner',
+          role: 'org_owner',
           state: 'active',
-          displayName: 'Legacy Owner',
-          handle: 'legacy-owner',
+          displayName: 'Owner',
+          handle: 'owner',
           avatarUrl: null,
           createdAt: new Date('2026-03-01T10:00:00.000Z'),
         },
@@ -79,19 +79,19 @@ describe('GET /api/organizations/[orgId]/team', () => {
           createdAt: new Date('2026-03-02T10:00:00.000Z'),
         },
         {
-          userId: 'user-viewer',
-          role: 'viewer',
-          state: 'invited',
-          displayName: 'Legacy Viewer',
-          handle: 'legacy-viewer',
+          userId: 'user-reviewer',
+          role: 'org_reviewer',
+          state: 'invited_pending',
+          displayName: 'Reviewer',
+          handle: 'reviewer',
           avatarUrl: null,
           createdAt: new Date('2026-03-03T10:00:00.000Z'),
         },
       ],
       roleStats: [
-        { role: 'owner', count: 1 },
+        { role: 'org_owner', count: 1 },
         { role: 'org_manager', count: 2 },
-        { role: 'viewer', count: 3 },
+        { role: 'org_reviewer', count: 3 },
       ],
     });
 
@@ -126,6 +126,42 @@ describe('GET /api/organizations/[orgId]/team', () => {
     expect(body.stats.admins).toBeUndefined();
     expect(body.stats.members).toBeUndefined();
     expect(body.stats.viewers).toBeUndefined();
+  });
+
+  it('filters malformed member roles out of the response payload', async () => {
+    mockTeamQuery({
+      members: [
+        {
+          userId: 'user-invalid',
+          role: 'owner',
+          state: 'active',
+          displayName: 'Legacy Owner',
+          handle: 'legacy-owner',
+          avatarUrl: null,
+          createdAt: new Date('2026-03-01T10:00:00.000Z'),
+        },
+      ],
+      roleStats: [{ role: 'owner', count: 1 }],
+    });
+
+    const response = await GET(
+      new NextRequest(`http://localhost/api/organizations/${ORG_ID}/team`),
+      {
+        params: Promise.resolve({ orgId: ORG_ID }),
+      }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.members).toEqual([]);
+    expect(body.stats).toEqual({
+      total: 0,
+      byRole: {
+        org_owner: 0,
+        org_manager: 0,
+        org_reviewer: 0,
+      },
+    });
   });
 
   it('returns 403 when caller is not an active org member', async () => {

@@ -131,8 +131,8 @@ export const testDb = {
     await db.insert(organizationMembers).values({
       userId: data.adminUserId,
       orgId: data.orgId,
-      role: 'admin',
-      status: 'active',
+      role: 'org_manager',
+      state: 'active',
       joinedAt: new Date(),
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -169,16 +169,12 @@ export function createTestSupabaseClient() {
     throw new Error('Missing Supabase environment variables for testing');
   }
 
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    }
-  );
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 }
 
 // Mock request helper

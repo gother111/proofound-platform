@@ -213,7 +213,7 @@ describe('POST /api/candidate-invites/[token]/claim', () => {
       .mockReturnValueOnce({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue([{ userId: 'org-rep-1', role: 'owner' }]),
+            limit: vi.fn().mockResolvedValue([{ userId: 'org-rep-1', role: 'org_owner' }]),
           }),
         }),
       })

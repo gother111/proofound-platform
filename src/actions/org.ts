@@ -376,7 +376,12 @@ export async function acceptInvitation(token: string) {
     }
 
     let membershipId = invitation.membership_id as string | null;
-    const invitationRole = normalizeAuthorizedOrgRole(invitation.role) ?? 'org_reviewer';
+    const invitationRole = normalizeAuthorizedOrgRole(invitation.role);
+    if (!invitationRole) {
+      console.error('Invitation contains non-canonical role:', invitation.role);
+      return { error: 'Invitation role is invalid' };
+    }
+
     const membershipUpdatePayload = {
       user_id: user.id,
       role: invitationRole,

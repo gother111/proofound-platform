@@ -39,7 +39,7 @@ describe('/api/feature-flags', () => {
       },
     });
 
-    const where = vi.fn().mockResolvedValue([{ orgId: 'org-1', role: 'owner' }]);
+    const where = vi.fn().mockResolvedValue([{ orgId: 'org-1', role: 'org_owner' }]);
     const from = vi.fn().mockReturnValue({ where });
     (db.select as any).mockReturnValue({ from });
 
