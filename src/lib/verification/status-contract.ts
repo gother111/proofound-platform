@@ -55,6 +55,7 @@ export type VerificationStatusContract = {
     | 'orgReviewBadges'
     | 'internalBadges'
     | 'slots'
+    | 'scopedSignals'
     | 'activeIssues'
   >;
   workflow: WorkflowView | null;
@@ -99,6 +100,7 @@ function toSummaryPayload(summary: VerificationPolicySummary) {
     orgReviewBadges: summary.orgReviewBadges,
     internalBadges: summary.internalBadges,
     slots: summary.slots,
+    scopedSignals: summary.scopedSignals,
     activeIssues: summary.activeIssues,
   };
 }

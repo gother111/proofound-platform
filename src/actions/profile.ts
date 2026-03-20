@@ -53,6 +53,7 @@ import {
   normalizeEmail,
   writeVerificationAuditLog,
 } from '@/lib/verification/integrity';
+import { getClaimTemplateLabel } from '@/lib/verification/scoped-contract';
 import { syncReadinessMilestones } from '@/lib/readiness/analytics';
 import type {
   ProfileData,
@@ -1141,12 +1142,7 @@ function isImpactDuplicateConstraintError(error: unknown): boolean {
   }
 
   const errorText = collectSchemaErrorText(error).toLowerCase();
-  return (
-    errorText.includes('idx_impact_verification_active_unique_verifier') ||
-    (errorText.includes('impact_story_verification_requests') &&
-      errorText.includes('requester_profile_id') &&
-      errorText.includes('impact_story_id'))
-  );
+  return errorText.includes('idx_impact_verification_active_unique_verifier');
 }
 
 async function findExistingActiveImpactVerificationRequest(args: {
@@ -1345,6 +1341,8 @@ function buildClaimSnapshot(
     requesterName?: string | null;
   }
 ) {
+  const roleClaimTemplate =
+    data.roleScope === 'contributed' ? 'contributed_this_part' : 'did_this_work';
   const measuredOutcomeClaims = (data.measuredOutcomes || [])
     .map((outcome, index) => {
       const changeText = (outcome.change || outcome.label || '').trim() || `Outcome ${index + 1}`;
@@ -1359,7 +1357,9 @@ function buildClaimSnapshot(
       return {
         id: `outcome:${outcomeId}`,
         outcomeId,
-        label: valueSuffix ? `${changeText} (${valueSuffix})` : changeText,
+        template: 'outcome_happened' as const,
+        label: getClaimTemplateLabel('outcome_happened'),
+        detail: valueSuffix ? `${changeText} (${valueSuffix})` : changeText,
       };
     })
     .filter((claim) => claim.label.trim().length > 0);
@@ -1372,24 +1372,31 @@ function buildClaimSnapshot(
         ? [
             {
               id: 'outcome:legacy',
-              label: legacyOutcomeClaimLabel,
+              template: 'outcome_happened' as const,
+              label: getClaimTemplateLabel('outcome_happened'),
+              detail: legacyOutcomeClaimLabel,
             },
           ]
         : [];
 
   return {
     verificationType: 'impact_story',
+    claimTemplate: roleClaimTemplate,
+    claimLabel: getClaimTemplateLabel(roleClaimTemplate),
     title: data.title,
     roleClaim: {
       id: 'role',
-      label: `Role participation (${data.roleTitle || 'Contributor'}, ${data.roleScope || 'contributed'})`,
+      template: roleClaimTemplate,
+      label: getClaimTemplateLabel(roleClaimTemplate),
+      detail: `${data.roleTitle || 'Contributor'}${data.roleScope ? `, ${data.roleScope}` : ''}`,
     },
     outcomeClaims,
     artifactsClaim: {
       id: 'artifacts',
-      label: 'Supporting artifacts authenticity',
+      label: 'Supporting evidence only',
       enabled: (data.supportingArtifacts || []).length > 0,
     },
+    roleScope: data.roleScope || null,
     context: {
       verifierRelationship: context?.verifierRelationship || null,
       requesterDomain: context?.requesterDomain || null,
@@ -1915,7 +1922,7 @@ export async function createImpactStory(data: Omit<ImpactStory, 'id'>) {
         'Impact story saved, but verification storage is unavailable until the latest migrations are applied.';
       if (!saveWarning) {
         saveWarning =
-          'Saved in compatibility mode because verification request tables are unavailable in the active schema.';
+          'Saved in compatibility mode because canonical verification storage is unavailable in the active schema.';
       }
       if (saveMode !== 'legacy_fallback') {
         saveMode = 'legacy_fallback';

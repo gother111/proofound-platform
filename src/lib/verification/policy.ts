@@ -11,6 +11,16 @@ import type {
   DisputeState,
 } from '@/lib/contracts/canonical-domain';
 import { toIsoOrNull, toTimestampOrNull } from '@/lib/datetime/normalize';
+import {
+  getClaimTemplateLabel,
+  getFreshnessStateLabel,
+  getSupportLabel,
+  getTrustTypeLabel,
+  resolveClaimTemplate,
+  resolveFreshnessState,
+  resolveTrustType,
+  type ScopedSignalSummary,
+} from '@/lib/verification/scoped-contract';
 
 export const BADGE_SEMANTICS_VERSION = 2;
 
@@ -103,6 +113,7 @@ export type VerificationPolicySummary = {
     latestVerifiedAt: string | null;
     publicLabel: string | null;
   };
+  scopedSignals: ScopedSignalSummary[];
   activeIssues: Array<{
     slot: VerificationSlot | 'evidence.attestation';
     state: VerificationStatus;
@@ -597,6 +608,76 @@ function buildEvidenceBadge(
   };
 }
 
+function buildScopedSignals(
+  records: VerificationRecordRow[],
+  nowMs: number
+): ScopedSignalSummary[] {
+  return records
+    .filter((record) => {
+      const slot = record.verificationSlot || mapKindToSlot(record.verificationKind);
+      return (
+        slot === 'skill.attestation' ||
+        slot === 'impact_story.attestation' ||
+        slot === 'artifact.attestation'
+      );
+    })
+    .map((record) => {
+      const effectiveState = resolveEffectiveState(record, nowMs);
+      const freshnessState = resolveFreshnessState({
+        effectiveState,
+        isStale: hasStaleAttestation(record, nowMs),
+      });
+
+      if (!freshnessState) {
+        return null;
+      }
+
+      const claimSnapshot =
+        record.claimSnapshot && typeof record.claimSnapshot === 'object'
+          ? (record.claimSnapshot as Record<string, unknown>)
+          : {};
+      const claimTemplate = resolveClaimTemplate({
+        subjectType: record.subjectType,
+        verificationKind: record.verificationKind,
+        claimSnapshot,
+      });
+      const claimLabel =
+        typeof claimSnapshot.claimLabel === 'string' && claimSnapshot.claimLabel.trim().length > 0
+          ? claimSnapshot.claimLabel
+          : getClaimTemplateLabel(claimTemplate);
+      const trustType = resolveTrustType({
+        verificationKind: record.verificationKind,
+        verifierClass: inferVerifierClass(record.verificationKind, record.verifierClass),
+        claimSnapshot,
+        riskSignals:
+          record.riskSignals && typeof record.riskSignals === 'object'
+            ? (record.riskSignals as Record<string, unknown>)
+            : null,
+      });
+
+      return {
+        verificationRecordId: record.id,
+        subjectType: record.subjectType,
+        subjectId: record.subjectId,
+        claimTemplate,
+        claimLabel,
+        trustType,
+        trustLabel: getTrustTypeLabel(trustType),
+        supportLabel: getSupportLabel(claimTemplate),
+        freshnessState,
+        freshnessLabel: getFreshnessStateLabel(freshnessState),
+        verifiedAt: toIso(record.verifiedAt),
+        updatedAt: toIso(record.updatedAt),
+        contradictedAt: toIso(record.contradictedAt),
+        revokedAt: toIso(record.revokedAt),
+        correctedAt: toIso(record.downgradedAt ?? record.supersededAt),
+        verificationKind: record.verificationKind,
+      } satisfies ScopedSignalSummary;
+    })
+    .filter((signal): signal is ScopedSignalSummary => Boolean(signal))
+    .sort((left, right) => (toMs(right.updatedAt) ?? 0) - (toMs(left.updatedAt) ?? 0));
+}
+
 export function summarizeVerificationPolicy(input: {
   records: VerificationRecordRow[];
   legacyProfile?: LegacyProfileCompatInput | null;
@@ -640,6 +721,7 @@ export function summarizeVerificationPolicy(input: {
         resolveEffectiveState(record, nowMs) === 'verified' && !hasStaleAttestation(record, nowMs)
     )
     .sort((left, right) => (toMs(right.verifiedAt) ?? 0) - (toMs(left.verifiedAt) ?? 0));
+  const scopedSignals = buildScopedSignals(input.records, nowMs);
 
   const activeIssues = [identity, workplace, organizationDomain, organizationPlatformReview]
     .filter((summary) => summary.issueKey && summary.state !== 'none')
@@ -743,6 +825,7 @@ export function summarizeVerificationPolicy(input: {
       latestVerifiedAt: toIso(verifiedEvidence[0]?.verifiedAt ?? null),
       publicLabel: verifiedEvidence.length > 0 ? 'Evidence attested' : null,
     },
+    scopedSignals,
     activeIssues,
     publicBadges,
     orgReviewBadges,

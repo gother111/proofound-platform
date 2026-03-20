@@ -24,6 +24,9 @@ type VerifyItem = {
   artifact_type: 'skill' | 'experience' | 'education' | 'impact_story' | 'project' | 'volunteering';
   artifact_id: string;
   display_label: string;
+  claim_template: string;
+  claim_label: string;
+  support_label: string;
   status: 'pending' | 'accepted' | 'declined' | 'expired';
 };
 
@@ -309,10 +312,18 @@ export default function VerifyCustomRequestPage() {
                   key={item.id}
                   className="rounded-md border border-proofound-stone bg-white px-3 py-2 flex items-start justify-between gap-3"
                 >
-                  <p className="text-sm text-foreground">{item.display_label}</p>
-                  <Badge variant="outline" className="text-xs whitespace-nowrap">
-                    {artifactTypeLabel(item.artifact_type)}
-                  </Badge>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-foreground">{item.claim_label}</p>
+                    <p className="text-xs text-muted-foreground">Context: {item.display_label}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <Badge variant="outline" className="text-xs whitespace-nowrap">
+                      {artifactTypeLabel(item.artifact_type)}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs capitalize whitespace-nowrap">
+                      {item.support_label}
+                    </Badge>
+                  </div>
                 </div>
               ))}
             </div>

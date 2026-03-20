@@ -24,6 +24,11 @@ import {
   updateCanonicalImpactVerificationRequest,
 } from '@/lib/verification/canonical-impact-requests';
 import { normalizeEmail } from '@/lib/verification/integrity';
+import {
+  getClaimTemplateLabel,
+  getSupportLabel,
+  resolveClaimTemplate,
+} from '@/lib/verification/scoped-contract';
 
 type VerificationRecordRow = typeof verificationRecords.$inferSelect;
 
@@ -65,6 +70,9 @@ export type CanonicalBundleItem = {
   artifact_type: CanonicalBundleArtifactType;
   artifact_id: string;
   display_label: string;
+  claim_template: string;
+  claim_label: string;
+  support_label: string;
   status: 'pending' | 'accepted' | 'declined' | 'expired';
   created_at: string;
   updated_at: string;
@@ -198,6 +206,21 @@ function mapCanonicalBundleRows(rows: VerificationRecordRow[]): CanonicalBundle 
     email_error: typeof firstMetadata.emailError === 'string' ? firstMetadata.emailError : null,
     items: orderedRows.map((row) => {
       const metadata = toMetadata(row);
+      const claimSnapshot =
+        row.claimSnapshot &&
+        typeof row.claimSnapshot === 'object' &&
+        !Array.isArray(row.claimSnapshot)
+          ? (row.claimSnapshot as Record<string, unknown>)
+          : {};
+      const claimTemplate = resolveClaimTemplate({
+        subjectType: row.subjectType,
+        verificationKind: row.verificationKind,
+        claimSnapshot,
+      });
+      const claimLabel =
+        typeof claimSnapshot.claimLabel === 'string' && claimSnapshot.claimLabel.trim().length > 0
+          ? claimSnapshot.claimLabel
+          : getClaimTemplateLabel(claimTemplate);
       return {
         id: row.id,
         artifact_type: row.subjectType as CanonicalBundleArtifactType,
@@ -206,6 +229,9 @@ function mapCanonicalBundleRows(rows: VerificationRecordRow[]): CanonicalBundle 
           typeof metadata.displayLabel === 'string' && metadata.displayLabel.trim().length > 0
             ? metadata.displayLabel
             : row.subjectId,
+        claim_template: claimTemplate,
+        claim_label: claimLabel,
+        support_label: getSupportLabel(claimTemplate),
         status: toBundleItemStatus(row.status),
         created_at: row.createdAt.toISOString(),
         updated_at: row.updatedAt.toISOString(),
@@ -374,6 +400,31 @@ async function createBundleRecords(
           artifactType: artifact.type,
           displayLabel: artifact.label,
           requestTransport: getTransportForArtifact(artifact),
+          claimTemplate: resolveClaimTemplate({
+            subjectType: artifact.type,
+            verificationKind: resolveVerificationKind(
+              artifact,
+              params.verifierSource,
+              params.requestKind
+            ),
+            claimSnapshot: {
+              subjectType: artifact.type,
+            },
+          }),
+          claimLabel: getClaimTemplateLabel(
+            resolveClaimTemplate({
+              subjectType: artifact.type,
+              verificationKind: resolveVerificationKind(
+                artifact,
+                params.verifierSource,
+                params.requestKind
+              ),
+              claimSnapshot: {
+                subjectType: artifact.type,
+              },
+            })
+          ),
+          subjectType: artifact.type,
         },
         sourceRequestTable: 'verification_records',
         sourceRequestId: bundleId,

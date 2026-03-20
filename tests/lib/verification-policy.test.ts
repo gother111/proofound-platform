@@ -206,4 +206,41 @@ describe('summarizeVerificationPolicy', () => {
     expect(summary.compatibility.verificationMethod).toBe('linkedin');
     expect(summary.publicBadges).toEqual([]);
   });
+
+  it('builds scoped proof labels from canonical attestation records only', () => {
+    const summary = summarizeVerificationPolicy({
+      records: [
+        makeRecord({
+          subjectType: 'skill',
+          subjectId: 'skill-1',
+          verificationKind: 'skill_attestation_peer',
+          verificationSlot: 'skill.attestation',
+          status: 'verified',
+          verifierClass: 'authenticated_peer',
+          verifiedAt: new Date('2026-03-10T00:00:00.000Z'),
+          completedAt: new Date('2026-03-10T00:00:00.000Z'),
+          updatedAt: new Date('2026-03-10T00:00:00.000Z'),
+          lastRefreshedAt: new Date('2026-03-10T00:00:00.000Z'),
+          claimSnapshot: {
+            claimTemplate: 'skill_observed_in_context',
+            claimLabel: 'This skill was directly observed in this context',
+          },
+        }),
+      ],
+    });
+
+    expect(summary.scopedSignals).toEqual([
+      expect.objectContaining({
+        subjectType: 'skill',
+        subjectId: 'skill-1',
+        claimTemplate: 'skill_observed_in_context',
+        claimLabel: 'This skill was directly observed in this context',
+        trustType: 'peer_attested',
+        trustLabel: 'peer-attested',
+        supportLabel: 'artifact-backed',
+        freshnessState: 'active',
+        freshnessLabel: null,
+      }),
+    ]);
+  });
 });

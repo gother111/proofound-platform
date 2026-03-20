@@ -7,6 +7,10 @@ const mockRequireAuth = vi.hoisted(() => vi.fn());
 const mockSendEmail = vi.hoisted(() => vi.fn());
 const mockCreateClient = vi.hoisted(() => vi.fn());
 const mockHeaders = vi.hoisted(() => vi.fn());
+const mockCreateCanonicalImpactVerificationRequest = vi.hoisted(() => vi.fn());
+const mockFindExistingCanonicalImpactVerificationRequest = vi.hoisted(() => vi.fn());
+const mockMapCanonicalImpactVerificationRequestRecord = vi.hoisted(() => vi.fn());
+const mockUpdateCanonicalImpactVerificationRequest = vi.hoisted(() => vi.fn());
 
 vi.mock('@/db', () => ({
   db: {
@@ -28,6 +32,15 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: mockCreateClient,
 }));
 
+vi.mock('@/lib/verification/canonical-impact-requests', () => ({
+  createCanonicalImpactVerificationRequest: mockCreateCanonicalImpactVerificationRequest,
+  findExistingCanonicalImpactVerificationRequest:
+    mockFindExistingCanonicalImpactVerificationRequest,
+  listCanonicalImpactVerificationRequestsForOwner: vi.fn(),
+  mapCanonicalImpactVerificationRequestRecord: mockMapCanonicalImpactVerificationRequestRecord,
+  updateCanonicalImpactVerificationRequest: mockUpdateCanonicalImpactVerificationRequest,
+}));
+
 vi.mock('next/headers', () => ({
   headers: mockHeaders,
 }));
@@ -37,7 +50,7 @@ vi.mock('next/cache', () => ({
 }));
 
 import { createImpactStory } from '@/actions/profile';
-import { impactStories, impactStoryVerificationRequests } from '@/db/schema';
+import { impactStories } from '@/db/schema';
 
 const BASE_STORY = {
   title: 'Community Climate Accelerator',
@@ -101,6 +114,17 @@ describe('createImpactStory schema-drift compatibility', () => {
       },
     });
     mockHeaders.mockResolvedValue(new Headers());
+    mockFindExistingCanonicalImpactVerificationRequest.mockResolvedValue(null);
+    mockCreateCanonicalImpactVerificationRequest.mockResolvedValue({
+      record: {
+        id: 'canonical-impact-request-1',
+        createdAt: new Date('2026-03-15T10:00:00.000Z'),
+        integrityStatus: 'clear',
+      },
+      rawToken: 'impact-capability-token',
+    });
+    mockMapCanonicalImpactVerificationRequestRecord.mockImplementation((row: any) => row);
+    mockUpdateCanonicalImpactVerificationRequest.mockResolvedValue({});
   });
 
   it('falls back to legacy insert mode when structured impact columns are unavailable', async () => {
@@ -143,7 +167,7 @@ describe('createImpactStory schema-drift compatibility', () => {
     expect(impactPayloads[1]).not.toHaveProperty('timelineStructured');
   });
 
-  it('keeps story save successful when verification table is missing', async () => {
+  it('keeps story save successful when canonical verification storage is missing', async () => {
     mockDbInsert.mockImplementation((table: unknown) => ({
       values: vi.fn((payload: Record<string, unknown>) => {
         if (table === impactStories) {
@@ -152,18 +176,13 @@ describe('createImpactStory schema-drift compatibility', () => {
           };
         }
 
-        if (table === impactStoryVerificationRequests) {
-          return {
-            returning: vi.fn().mockRejectedValue({
-              code: '42P01',
-              message: 'relation "impact_story_verification_requests" does not exist',
-            }),
-          };
-        }
-
         throw new Error(`Unexpected table insert: ${String(table)}`);
       }),
     }));
+    mockCreateCanonicalImpactVerificationRequest.mockRejectedValue({
+      code: '42P01',
+      message: 'relation "verification_records" does not exist',
+    });
 
     const result = await createImpactStory({
       ...(BASE_STORY as any),
@@ -177,27 +196,12 @@ describe('createImpactStory schema-drift compatibility', () => {
 
     expect(result.id).toBe('story-1');
     expect(result.saveMode).toBe('legacy_fallback');
-    expect(result.saveWarning).toMatch(/verification request tables are unavailable/i);
+    expect(result.saveWarning).toMatch(/canonical verification storage is unavailable/i);
     expect(result.verificationWarning).toMatch(/verification storage is unavailable/i);
     expect(mockSendEmail).not.toHaveBeenCalled();
   });
 
-  it('reuses existing active impact verification requests and avoids duplicate inserts', async () => {
-    mockDbSelect.mockReturnValue({
-      from: vi.fn().mockReturnValue({
-        where: vi.fn().mockResolvedValue([
-          {
-            id: 'existing-impact-request',
-            status: 'accepted',
-            verifierEmail: 'verifier@example.com',
-            createdAt: new Date('2026-02-20T10:00:00.000Z'),
-            emailSentAt: new Date('2026-02-20T10:05:00.000Z'),
-            emailError: null,
-          },
-        ]),
-      }),
-    });
-
+  it('reuses existing canonical impact verification requests and avoids duplicate inserts', async () => {
     mockDbInsert.mockImplementation((table: unknown) => ({
       values: vi.fn((payload: Record<string, unknown>) => {
         if (table === impactStories) {
@@ -206,15 +210,20 @@ describe('createImpactStory schema-drift compatibility', () => {
           };
         }
 
-        if (table === impactStoryVerificationRequests) {
-          return {
-            returning: vi.fn().mockResolvedValue([{ id: 'should-not-be-created' }]),
-          };
-        }
-
         throw new Error(`Unexpected table insert: ${String(table)}`);
       }),
     }));
+    mockFindExistingCanonicalImpactVerificationRequest.mockResolvedValue({
+      id: 'existing-impact-request',
+    });
+    mockMapCanonicalImpactVerificationRequestRecord.mockReturnValue({
+      id: 'existing-impact-request',
+      status: 'accepted',
+      verifier_email: 'verifier@example.com',
+      created_at: '2026-02-20T10:00:00.000Z',
+      email_sent: true,
+      email_error: null,
+    });
 
     const result = await createImpactStory({
       ...(BASE_STORY as any),
@@ -231,10 +240,6 @@ describe('createImpactStory schema-drift compatibility', () => {
     expect(result.verificationVerifierEmail).toBe('verifier@example.com');
     expect(result.verificationWarning).toMatch(/active verification request already exists/i);
     expect(mockSendEmail).not.toHaveBeenCalled();
-
-    const verificationInsertCalls = mockDbInsert.mock.calls.filter(
-      ([table]) => table === impactStoryVerificationRequests
-    );
-    expect(verificationInsertCalls).toHaveLength(0);
+    expect(mockCreateCanonicalImpactVerificationRequest).not.toHaveBeenCalled();
   });
 });

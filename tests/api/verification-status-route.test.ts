@@ -454,4 +454,59 @@ describe('GET /api/verification/status', () => {
     expect(body.channels.linkedin.hasIdentitySignal).toBe(true);
     expect(body.summary.publicBadges).toEqual([]);
   });
+
+  it('returns claim-scoped trust labels and freshness from canonical proof verification records', async () => {
+    const supabase = createSupabaseMock({
+      profile: {
+        verified: false,
+        verification_method: null,
+        verification_status: 'unverified',
+        verified_at: null,
+        work_email: null,
+        work_email_verified: false,
+        work_email_verified_at: null,
+        work_email_reverify_due_at: null,
+        work_email_token: null,
+        work_email_token_expires: null,
+      },
+    });
+    vi.mocked(listVerificationRecordsForOwner as any).mockResolvedValue([
+      makeVerificationRecord({
+        subjectType: 'skill',
+        subjectId: 'skill-1',
+        verificationKind: 'skill_attestation_peer',
+        verificationSlot: 'skill.attestation',
+        status: 'verified',
+        verifierClass: 'authenticated_peer',
+        verifiedAt: new Date('2026-03-10T00:00:00.000Z'),
+        completedAt: new Date('2026-03-10T00:00:00.000Z'),
+        updatedAt: new Date('2026-03-10T00:00:00.000Z'),
+        lastRefreshedAt: new Date('2026-03-10T00:00:00.000Z'),
+        claimSnapshot: {
+          claimTemplate: 'skill_observed_in_context',
+          claimLabel: 'This skill was directly observed in this context',
+        },
+      }),
+    ]);
+    (createClient as any).mockResolvedValue(supabase);
+
+    const response = await GET(makeRequest());
+    expect(response.status).toBe(200);
+
+    const body = await response.json();
+    expect(body.summary.scopedSignals).toEqual([
+      expect.objectContaining({
+        subjectType: 'skill',
+        subjectId: 'skill-1',
+        claimTemplate: 'skill_observed_in_context',
+        claimLabel: 'This skill was directly observed in this context',
+        trustType: 'peer_attested',
+        trustLabel: 'peer-attested',
+        supportLabel: 'artifact-backed',
+        freshnessState: 'active',
+        freshnessLabel: null,
+      }),
+    ]);
+    expect(body).not.toHaveProperty('verificationTier');
+  });
 });
