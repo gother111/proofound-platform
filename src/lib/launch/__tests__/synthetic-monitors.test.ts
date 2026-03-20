@@ -56,6 +56,7 @@ describe('getLatestLaunchSyntheticStatus', () => {
 
     expect(result.rows).toHaveLength(1);
     expect(result.rows[0]?.monitorKey).toBe('api_health');
+    expect(result.rows[0]?.lastSuccessfulCheckedAt).toBe('2026-03-12T23:23:12.000Z');
     expect(result.missingMonitorKeys).not.toContain('api_health');
     expect(result.rows.some((row) => row.monitorKey === 'signup_auth')).toBe(false);
   });

@@ -43,6 +43,9 @@ function buildPersistedStatusRow(monitorKey: string, overrides: Record<string, u
     freshnessState: 'fresh',
     blocking: false,
     stale: false,
+    lastSuccessfulCheckedAt: '2026-03-12T10:58:00.000Z',
+    evidenceSource: 'persisted',
+    refreshState: definition.kind === 'http' ? 'not_attempted' : 'not_applicable',
     details: {},
     ...overrides,
   };
@@ -157,13 +160,23 @@ describe('launch synthetic monitor persistence', () => {
     expect(result.evidence.smokeArtifactAgeMinutes).toBe(59);
     expect(result.evidence.smokeFreshnessThresholdMinutes).toBe(60);
     expect(result.evidence.smokeFreshnessState).toBe('fresh');
+    expect(result.liveRefresh).toEqual(
+      expect.objectContaining({
+        attempted: false,
+        finalHttpEvidenceSource: 'live',
+      })
+    );
     expect(result.rows).toHaveLength(LAUNCH_MONITOR_DEFINITIONS.length);
     expect(
       result.rows.every(
-        (row) => row.stale === false && row.freshnessState === 'fresh' && row.blocking === false
+        (row) =>
+          row.stale === false &&
+          row.freshnessState === 'fresh' &&
+          row.blocking === false &&
+          row.lastSuccessfulCheckedAt != null
       )
     ).toBe(true);
-    expect(db.execute).not.toHaveBeenCalled();
+    expect(db.execute).toHaveBeenCalledTimes(1);
   });
 
   it('runs live monitors without crashing when persistence is requested but db.execute is unavailable', async () => {
@@ -327,6 +340,7 @@ describe('launch synthetic monitor persistence', () => {
     expect(result.evidence.smokeFreshnessState).toBe('fresh');
     expect(result.rows).toHaveLength(LAUNCH_MONITOR_DEFINITIONS.length);
     expect(result.missingMonitorKeys).toEqual([]);
+    expect(result.rows[0]?.lastSuccessfulCheckedAt).toBe('2026-03-12T10:58:00.000Z');
   });
 
   it('revalidates stale persisted HTTP failures while preserving fresh smoke evidence', async () => {
@@ -347,6 +361,14 @@ describe('launch synthetic monitor persistence', () => {
       ok: false,
       readinessState: 'blocked' as const,
       source: 'persisted' as const,
+      liveRefresh: {
+        attempted: false,
+        refreshedMonitorKeys: [],
+        recoveredMonitorKeys: [],
+        failedMonitorKeys: [],
+        finalHttpEvidenceSource: 'persisted' as const,
+        error: null,
+      },
       evidence: {
         source: 'persisted' as const,
         artifactPath: '.artifacts/launch-smoke-report.json',
@@ -387,6 +409,14 @@ describe('launch synthetic monitor persistence', () => {
     expect(result.ok).toBe(true);
     expect(result.readinessState).toBe('ready');
     expect(result.evidence.persisted).toBe(false);
+    expect(result.liveRefresh).toEqual(
+      expect.objectContaining({
+        attempted: true,
+        refreshedMonitorKeys: ['api_health'],
+        recoveredMonitorKeys: ['api_health'],
+        failedMonitorKeys: [],
+      })
+    );
     expect(result.rows).toHaveLength(LAUNCH_MONITOR_DEFINITIONS.length);
     expect(result.rows.find((row) => row.monitorKey === 'api_health')).toEqual(
       expect.objectContaining({
@@ -396,6 +426,9 @@ describe('launch synthetic monitor persistence', () => {
         blocking: false,
         stale: false,
         observedState: 'health_contract_ok',
+        evidenceSource: 'live',
+        refreshState: 'refreshed_from_stale',
+        lastSuccessfulCheckedAt: expect.any(String),
       })
     );
     expect(fetch).toHaveBeenCalledTimes(1);
@@ -417,8 +450,16 @@ describe('launch synthetic monitor persistence', () => {
     const persistedStatus = {
       generatedAt: '2026-03-12T10:59:00.000Z',
       ok: false,
-      readinessState: 'unverified' as const,
+      readinessState: 'blocked' as const,
       source: 'persisted' as const,
+      liveRefresh: {
+        attempted: false,
+        refreshedMonitorKeys: [],
+        recoveredMonitorKeys: [],
+        failedMonitorKeys: [],
+        finalHttpEvidenceSource: 'persisted' as const,
+        error: null,
+      },
       evidence: {
         source: 'persisted' as const,
         artifactPath: '.artifacts/launch-smoke-report.json',
@@ -468,11 +509,21 @@ describe('launch synthetic monitor persistence', () => {
     expect(result.source).toBe('live');
     expect(result.ok).toBe(false);
     expect(result.readinessState).toBe('blocked');
+    expect(result.liveRefresh).toEqual(
+      expect.objectContaining({
+        attempted: true,
+        refreshedMonitorKeys: ['api_health'],
+        recoveredMonitorKeys: ['api_health'],
+        failedMonitorKeys: [],
+      })
+    );
     expect(result.rows.find((row) => row.monitorKey === 'api_health')).toEqual(
       expect.objectContaining({
         status: 'pass',
         freshnessState: 'fresh',
         blocking: false,
+        evidenceSource: 'live',
+        refreshState: 'refreshed_from_stale',
       })
     );
     expect(
@@ -503,6 +554,14 @@ describe('launch synthetic monitor persistence', () => {
       ok: false,
       readinessState: 'blocked' as const,
       source: 'persisted' as const,
+      liveRefresh: {
+        attempted: false,
+        refreshedMonitorKeys: [],
+        recoveredMonitorKeys: [],
+        failedMonitorKeys: [],
+        finalHttpEvidenceSource: 'persisted' as const,
+        error: null,
+      },
       evidence: {
         source: 'persisted' as const,
         artifactPath: '.artifacts/launch-smoke-report.json',
@@ -548,6 +607,8 @@ describe('launch synthetic monitor persistence', () => {
         blocking: true,
         stale: false,
         observedState: 'missing_payload_key',
+        evidenceSource: 'live',
+        refreshState: 'refreshed_from_stale',
       })
     );
   });
@@ -570,6 +631,14 @@ describe('launch synthetic monitor persistence', () => {
       ok: false,
       readinessState: 'blocked' as const,
       source: 'persisted' as const,
+      liveRefresh: {
+        attempted: false,
+        refreshedMonitorKeys: [],
+        recoveredMonitorKeys: [],
+        failedMonitorKeys: [],
+        finalHttpEvidenceSource: 'persisted' as const,
+        error: null,
+      },
       evidence: {
         source: 'persisted' as const,
         artifactPath: '.artifacts/launch-smoke-report.json',
@@ -747,7 +816,7 @@ describe('launch synthetic monitor persistence', () => {
     ).toBe(true);
   });
 
-  it('marks persisted readiness unverified when endpoint evidence is incomplete', async () => {
+  it('marks persisted readiness blocked when endpoint evidence is incomplete', async () => {
     (db.execute as any).mockResolvedValue(
       LAUNCH_MONITOR_DEFINITIONS.filter(
         (definition) => definition.kind === 'http' && definition.monitorKey !== 'api_health'
@@ -777,7 +846,7 @@ describe('launch synthetic monitor persistence', () => {
     );
 
     expect(result.ok).toBe(false);
-    expect(result.readinessState).toBe('unverified');
+    expect(result.readinessState).toBe('blocked');
     expect(result.missingMonitorKeys).toContain('api_health');
   });
 

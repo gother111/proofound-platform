@@ -13,6 +13,7 @@ import {
   evaluateLaunchSmokeArtifact,
   validateLaunchSmokeArtifact,
 } from '../src/lib/launch/smoke-artifact';
+import { formatLaunchBlockingReasons } from '../src/lib/launch/status-report';
 import { CLIENT_FEATURE_FLAG_RESPONSE_MAP } from '../src/lib/featureFlags';
 
 const BASE_URL = normalizeLaunchBaseUrl(process.env.BASE_URL || 'http://localhost:3000');
@@ -55,34 +56,6 @@ function checkSafeModeFlags() {
       fail(`feature flag route does not expose required safe-mode flag: ${flag}`);
     }
   }
-}
-
-function formatNotReadyReasons(reasons: unknown): string {
-  if (!Array.isArray(reasons) || reasons.length === 0) {
-    return 'No explicit not-ready reasons were returned.';
-  }
-
-  return reasons
-    .map((reason) => {
-      const code =
-        typeof reason === 'object' && reason != null && 'code' in reason ? String(reason.code) : '';
-      const message =
-        typeof reason === 'object' && reason != null && 'message' in reason
-          ? String(reason.message)
-          : '';
-      const monitorKeys =
-        typeof reason === 'object' &&
-        reason != null &&
-        'monitorKeys' in reason &&
-        Array.isArray(reason.monitorKeys)
-          ? reason.monitorKeys.map(String)
-          : [];
-
-      return [code, message, monitorKeys.length > 0 ? `monitors=${monitorKeys.join(',')}` : '']
-        .filter(Boolean)
-        .join(' | ');
-    })
-    .join('; ');
 }
 
 function runLaunchSmokeRunner(reason: string) {
@@ -171,19 +144,9 @@ async function checkLaunchStatus() {
 
   const data = await response.json();
   if (!data.ok || data.readinessState !== 'ready') {
-    const reasons = formatNotReadyReasons(data.notReadyReasons);
-
-    if (data.readinessState === 'unverified') {
-      fail(
-        `launch-status is unverified and launch cannot proceed yet. Refresh smoke evidence and rerun launch synthetics. reasons=${reasons}`
-      );
-    }
-
-    if (data.readinessState === 'blocked') {
-      fail(
-        `launch-status is blocked. Resolve the blocking monitor evidence before launch. reasons=${reasons}`
-      );
-    }
+    const reasons = formatLaunchBlockingReasons(
+      Array.isArray(data.notReadyReasons) ? data.notReadyReasons : []
+    );
 
     fail(
       `launch-status is not ready (ok=${String(data.ok)}, readinessState=${String(data.readinessState)}, reasons=${reasons})`

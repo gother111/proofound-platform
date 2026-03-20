@@ -34,6 +34,23 @@ export type SyntheticMonitorResult = {
   blocking?: boolean;
 };
 
+export type LaunchMonitorEvidenceSource = 'persisted' | 'live';
+export type LaunchMonitorRefreshState =
+  | 'not_applicable'
+  | 'not_attempted'
+  | 'retained_persisted'
+  | 'refreshed_from_stale'
+  | 'refreshed_from_missing';
+
+export type LaunchLiveRefreshSummary = {
+  attempted: boolean;
+  refreshedMonitorKeys: string[];
+  recoveredMonitorKeys: string[];
+  failedMonitorKeys: string[];
+  finalHttpEvidenceSource: 'persisted' | 'live' | 'mixed';
+  error: string | null;
+};
+
 export type CurrentLaunchSyntheticStatus = {
   generatedAt: string;
   rows: LaunchSyntheticStatusRow[];
@@ -41,6 +58,7 @@ export type CurrentLaunchSyntheticStatus = {
   ok: boolean;
   readinessState: LaunchReadinessState;
   source: 'live';
+  liveRefresh: LaunchLiveRefreshSummary;
   evidence: {
     source: 'live';
     artifactPath: string;
@@ -67,6 +85,9 @@ export type LaunchSyntheticStatusRow = {
   freshnessState: LaunchSmokeFreshnessState;
   blocking: boolean;
   stale: boolean;
+  lastSuccessfulCheckedAt: string | null;
+  evidenceSource: LaunchMonitorEvidenceSource;
+  refreshState: LaunchMonitorRefreshState;
   details: Record<string, unknown>;
 };
 
@@ -77,6 +98,7 @@ export type PersistedLaunchSyntheticStatus = {
   ok: boolean;
   readinessState: LaunchReadinessState;
   source: 'persisted';
+  liveRefresh: LaunchLiveRefreshSummary;
   evidence: {
     source: 'persisted';
     artifactPath: string;
@@ -110,6 +132,19 @@ function getFreshnessState(observedState: string): LaunchSmokeFreshnessState {
   return 'fresh';
 }
 
+function buildEmptyLiveRefreshSummary(
+  finalHttpEvidenceSource: LaunchLiveRefreshSummary['finalHttpEvidenceSource']
+): LaunchLiveRefreshSummary {
+  return {
+    attempted: false,
+    refreshedMonitorKeys: [],
+    recoveredMonitorKeys: [],
+    failedMonitorKeys: [],
+    finalHttpEvidenceSource,
+    error: null,
+  };
+}
+
 function isBlockingMonitorRow(
   row:
     | Pick<LaunchSyntheticStatusRow, 'status' | 'freshnessState' | 'blocking'>
@@ -130,33 +165,31 @@ function evaluateLaunchReadiness(
   rows: LaunchSyntheticStatusRow[],
   missingMonitorKeys: string[]
 ): Pick<LaunchSyntheticStatusSnapshot, 'ok' | 'readinessState'> {
-  const hasBlockingRows = rows.some((row) => isBlockingMonitorRow(row));
-  const hasUnverifiedRows =
-    missingMonitorKeys.length > 0 || rows.some((row) => row.freshnessState !== 'fresh');
+  const hasBlockingRows =
+    missingMonitorKeys.length > 0 ||
+    rows.some((row) => isBlockingMonitorRow(row) || row.freshnessState !== 'fresh');
 
-  if (missingMonitorKeys.length === 0 && !hasBlockingRows && !hasUnverifiedRows) {
+  if (!hasBlockingRows) {
     return {
       ok: true,
       readinessState: 'ready',
     };
   }
 
-  if (hasBlockingRows) {
-    return {
-      ok: false,
-      readinessState: 'blocked',
-    };
-  }
-
   return {
     ok: false,
-    readinessState: 'unverified',
+    readinessState: 'blocked',
   };
 }
 
 function mapResultToStatusRow(
   result: SyntheticMonitorResult,
-  now = new Date()
+  now = new Date(),
+  options: {
+    lastSuccessfulCheckedAt?: string | null;
+    evidenceSource?: LaunchMonitorEvidenceSource;
+    refreshState?: LaunchMonitorRefreshState;
+  } = {}
 ): LaunchSyntheticStatusRow {
   const checkedAt = result.checkedAt ? new Date(result.checkedAt) : null;
   const ageMinutes = checkedAt
@@ -181,6 +214,9 @@ function mapResultToStatusRow(
         ? result.blocking
         : freshnessState === 'fresh' && result.status !== 'pass',
     stale: freshnessState !== 'fresh',
+    lastSuccessfulCheckedAt: options.lastSuccessfulCheckedAt ?? null,
+    evidenceSource: options.evidenceSource ?? 'live',
+    refreshState: options.refreshState ?? 'not_attempted',
     details: result.details,
   };
 }
@@ -188,6 +224,7 @@ function mapResultToStatusRow(
 function buildMissingSmokeArtifactRows(
   rows: Awaited<ReturnType<typeof getLatestLaunchSyntheticStatus>>['rows'],
   artifactPath: string,
+  lastSuccessfulByMonitorKey: Map<string, string | null>,
   now = new Date()
 ): LaunchSyntheticStatusRow[] {
   const rowMap = new Map<string, LaunchSyntheticStatusRow>(
@@ -215,6 +252,12 @@ function buildMissingSmokeArtifactRows(
       freshnessState: 'missing',
       blocking: true,
       stale: true,
+      lastSuccessfulCheckedAt:
+        lastSuccessfulByMonitorKey.get(definition.monitorKey) ??
+        existing?.lastSuccessfulCheckedAt ??
+        null,
+      evidenceSource: 'persisted',
+      refreshState: 'not_applicable',
       details: {
         ...(existing?.details ?? {}),
         artifactPath,
@@ -258,6 +301,56 @@ function isSmokeArtifactMonitorDefinition(
 
 function getLaunchMonitorDefinition(monitorKey: string) {
   return LAUNCH_MONITOR_DEFINITIONS.find((definition) => definition.monitorKey === monitorKey);
+}
+
+async function getLastSuccessfulMonitorRunMap() {
+  const execute = getDbExecute();
+  if (!execute) {
+    return new Map<string, string | null>();
+  }
+
+  const latestSuccessfulRuns = await execute(sql`
+    SELECT monitor_key, MAX(checked_at) AS last_successful_checked_at
+    FROM synthetic_monitor_runs
+    WHERE status = 'pass'
+    GROUP BY monitor_key
+  `);
+  if (latestSuccessfulRuns == null) {
+    return new Map<string, string | null>();
+  }
+
+  return new Map(
+    getRows<Record<string, unknown>>(latestSuccessfulRuns as any).map((row) => [
+      String(row.monitor_key),
+      row.last_successful_checked_at
+        ? new Date(String(row.last_successful_checked_at)).toISOString()
+        : row.checked_at
+          ? new Date(String(row.checked_at)).toISOString()
+          : null,
+    ])
+  );
+}
+
+export function getHttpMonitorKeysNeedingRefresh(
+  status: Pick<PersistedLaunchSyntheticStatus, 'rows' | 'missingMonitorKeys'>
+) {
+  const refreshMonitorKeys = new Set<string>();
+  const persistedRowMap = new Map(status.rows.map((row) => [row.monitorKey, row] as const));
+
+  for (const definition of getHttpMonitorDefinitions()) {
+    const row = persistedRowMap.get(definition.monitorKey);
+    if (
+      !row ||
+      row.failureClass === 'stale_monitor_result' ||
+      row.freshnessState !== 'fresh' ||
+      row.stale ||
+      row.observedState === 'stale'
+    ) {
+      refreshMonitorKeys.add(definition.monitorKey);
+    }
+  }
+
+  return [...refreshMonitorKeys];
 }
 
 function getHttpMonitorDefinitions() {
@@ -506,6 +599,7 @@ export async function runLaunchSyntheticMonitors(
   now = new Date()
 ) {
   const results: SyntheticMonitorResult[] = [];
+  const lastSuccessfulByMonitorKey = await getLastSuccessfulMonitorRunMap();
   const smokeArtifact = await readLaunchSmokeArtifactFromFile(params.artifactPath);
   const generatedAt = now;
   const smokeArtifactEvaluation = evaluateLaunchSmokeArtifact(smokeArtifact, { now: generatedAt });
@@ -570,6 +664,7 @@ export async function runLaunchSyntheticMonitors(
       smokeFreshnessState,
       persisted,
     },
+    lastSuccessfulByMonitorKey,
   };
 }
 
@@ -578,7 +673,16 @@ export async function getCurrentLaunchSyntheticStatus(
   now = new Date()
 ): Promise<CurrentLaunchSyntheticStatus> {
   const evaluation = await runLaunchSyntheticMonitors(params, now);
-  const rows = evaluation.results.map((result) => mapResultToStatusRow(result, now));
+  const rows = evaluation.results.map((result) =>
+    mapResultToStatusRow(result, now, {
+      lastSuccessfulCheckedAt:
+        evaluation.lastSuccessfulByMonitorKey.get(result.monitorKey) ??
+        (result.status === 'pass' ? result.checkedAt : null) ??
+        null,
+      evidenceSource: 'live',
+      refreshState: result.monitorGroup === 'endpoint' ? 'not_attempted' : 'not_applicable',
+    })
+  );
 
   const missingMonitorKeys = LAUNCH_MONITOR_DEFINITIONS.map((item) => item.monitorKey).filter(
     (monitorKey) => !rows.some((row) => row.monitorKey === monitorKey)
@@ -592,6 +696,7 @@ export async function getCurrentLaunchSyntheticStatus(
     ok: readiness.ok,
     readinessState: readiness.readinessState,
     source: 'live',
+    liveRefresh: buildEmptyLiveRefreshSummary('live'),
     evidence: evaluation.evidence,
   };
 }
@@ -608,42 +713,54 @@ export async function getLaunchSyntheticStatusWithFreshHttpRevalidation(
     params.persistedStatus ??
     (await getPersistedLaunchSyntheticStatus({ artifactPath: params.artifactPath }, now));
 
-  const refreshMonitorKeys = new Set<string>();
+  const refreshMonitorKeys = new Set(getHttpMonitorKeysNeedingRefresh(persisted));
   const persistedRowMap = new Map(persisted.rows.map((row) => [row.monitorKey, row] as const));
-
-  for (const definition of getHttpMonitorDefinitions()) {
-    const row = persistedRowMap.get(definition.monitorKey);
-    if (
-      !row ||
-      row.failureClass === 'stale_monitor_result' ||
-      row.stale ||
-      row.observedState === 'stale'
-    ) {
-      refreshMonitorKeys.add(definition.monitorKey);
-    }
-  }
+  const lastSuccessfulByMonitorKey = await getLastSuccessfulMonitorRunMap();
 
   const refreshedHttpRows = await Promise.all(
     getHttpMonitorDefinitions()
       .filter((definition) => refreshMonitorKeys.has(definition.monitorKey))
-      .map(async (definition) =>
-        mapResultToStatusRow(await executeHttpMonitor(definition, params.baseUrl), now)
-      )
+      .map(async (definition) => {
+        const persistedRow = persistedRowMap.get(definition.monitorKey);
+        const refreshState = persistedRow ? 'refreshed_from_stale' : 'refreshed_from_missing';
+        const result = await executeHttpMonitor(definition, params.baseUrl);
+
+        return mapResultToStatusRow(result, now, {
+          lastSuccessfulCheckedAt:
+            result.status === 'pass'
+              ? result.checkedAt
+              : (lastSuccessfulByMonitorKey.get(definition.monitorKey) ?? null),
+          evidenceSource: 'live',
+          refreshState,
+        });
+      })
   );
 
-  const retainedHttpRows = persisted.rows.filter((row) => {
-    const definition = getLaunchMonitorDefinition(row.monitorKey);
-    return (
-      definition != null &&
-      isHttpMonitorDefinition(definition) &&
-      !refreshMonitorKeys.has(row.monitorKey)
-    );
-  });
+  const retainedHttpRows = persisted.rows
+    .filter((row) => {
+      const definition = getLaunchMonitorDefinition(row.monitorKey);
+      return (
+        definition != null &&
+        isHttpMonitorDefinition(definition) &&
+        !refreshMonitorKeys.has(row.monitorKey)
+      );
+    })
+    .map((row) => ({
+      ...row,
+      evidenceSource: 'persisted' as const,
+      refreshState: 'retained_persisted' as const,
+    }));
 
-  const smokeRows = persisted.rows.filter((row) => {
-    const definition = getLaunchMonitorDefinition(row.monitorKey);
-    return definition != null && isSmokeArtifactMonitorDefinition(definition);
-  });
+  const smokeRows = persisted.rows
+    .filter((row) => {
+      const definition = getLaunchMonitorDefinition(row.monitorKey);
+      return definition != null && isSmokeArtifactMonitorDefinition(definition);
+    })
+    .map((row) => ({
+      ...row,
+      evidenceSource: 'persisted' as const,
+      refreshState: 'not_applicable' as const,
+    }));
 
   const rows = buildPersistedRowsInContractOrder(
     [...retainedHttpRows, ...refreshedHttpRows],
@@ -661,6 +778,23 @@ export async function getLaunchSyntheticStatusWithFreshHttpRevalidation(
     ok: readiness.ok,
     readinessState: readiness.readinessState,
     source: 'live',
+    liveRefresh: {
+      attempted: refreshMonitorKeys.size > 0,
+      refreshedMonitorKeys: [...refreshMonitorKeys],
+      recoveredMonitorKeys: refreshedHttpRows
+        .filter((row) => row.status === 'pass' && row.freshnessState === 'fresh')
+        .map((row) => row.monitorKey),
+      failedMonitorKeys: refreshedHttpRows
+        .filter((row) => row.status !== 'pass' || row.freshnessState !== 'fresh')
+        .map((row) => row.monitorKey),
+      finalHttpEvidenceSource:
+        refreshMonitorKeys.size === 0
+          ? 'persisted'
+          : retainedHttpRows.length === 0
+            ? 'live'
+            : 'mixed',
+      error: null,
+    },
     evidence: {
       source: 'live',
       artifactPath: persisted.evidence.artifactPath,
@@ -679,6 +813,9 @@ export async function getPersistedLaunchSyntheticStatus(
   now = new Date()
 ): Promise<PersistedLaunchSyntheticStatus> {
   const latest = await getLatestLaunchSyntheticStatus(now);
+  const lastSuccessfulByMonitorKey = new Map(
+    latest.rows.map((row) => [row.monitorKey, row.lastSuccessfulCheckedAt] as const)
+  );
   const endpointRows = latest.rows.filter((row) => {
     const definition = LAUNCH_MONITOR_DEFINITIONS.find(
       (item) => item.monitorKey === row.monitorKey
@@ -707,7 +844,13 @@ export async function getPersistedLaunchSyntheticStatus(
         acc.push(
           mapResultToStatusRow(
             runSmokeArtifactMonitor(definition, artifact, params.artifactPath, now),
-            now
+            now,
+            {
+              lastSuccessfulCheckedAt:
+                lastSuccessfulByMonitorKey.get(definition.monitorKey) ?? null,
+              evidenceSource: 'persisted',
+              refreshState: 'not_applicable',
+            }
           )
         );
         return acc;
@@ -719,7 +862,12 @@ export async function getPersistedLaunchSyntheticStatus(
       throw error;
     }
 
-    smokeRows = buildMissingSmokeArtifactRows(latest.rows, params.artifactPath, now);
+    smokeRows = buildMissingSmokeArtifactRows(
+      latest.rows,
+      params.artifactPath,
+      lastSuccessfulByMonitorKey,
+      now
+    );
   }
 
   const rows = buildPersistedRowsInContractOrder(endpointRows, smokeRows);
@@ -735,6 +883,7 @@ export async function getPersistedLaunchSyntheticStatus(
     ok: readiness.ok,
     readinessState: readiness.readinessState,
     source: 'persisted',
+    liveRefresh: buildEmptyLiveRefreshSummary('persisted'),
     evidence: {
       source: 'persisted',
       artifactPath: params.artifactPath,
@@ -760,7 +909,8 @@ export async function getLatestLaunchSyntheticStatus(now = new Date()) {
     };
   }
 
-  const latestRuns = await execute(sql`
+  const [latestRuns, latestSuccessfulRuns] = await Promise.all([
+    execute(sql`
     SELECT DISTINCT ON (monitor_key)
       monitor_key,
       monitor_group,
@@ -774,9 +924,30 @@ export async function getLatestLaunchSyntheticStatus(now = new Date()) {
       details
     FROM synthetic_monitor_runs
     ORDER BY monitor_key, checked_at DESC
-  `);
+  `),
+    execute(sql`
+    SELECT monitor_key, MAX(checked_at) AS last_successful_checked_at
+    FROM synthetic_monitor_runs
+    WHERE status = 'pass'
+    GROUP BY monitor_key
+  `),
+  ]);
 
-  const rows = getRows<Record<string, unknown>>(latestRuns as any)
+  const lastSuccessfulByMonitorKey = new Map(
+    (latestSuccessfulRuns == null
+      ? []
+      : getRows<Record<string, unknown>>(latestSuccessfulRuns as any)
+    ).map((row) => [
+      String(row.monitor_key),
+      row.last_successful_checked_at
+        ? new Date(String(row.last_successful_checked_at)).toISOString()
+        : row.checked_at
+          ? new Date(String(row.checked_at)).toISOString()
+          : null,
+    ])
+  );
+
+  const rows = (latestRuns == null ? [] : getRows<Record<string, unknown>>(latestRuns as any))
     .filter((row) => activeMonitorKeys.has(String(row.monitor_key)))
     .map<LaunchSyntheticStatusRow>((row) => {
       const definition = getLaunchMonitorDefinition(String(row.monitor_key));
@@ -810,6 +981,9 @@ export async function getLatestLaunchSyntheticStatus(now = new Date()) {
         freshnessState,
         blocking: freshnessState === 'fresh' && status !== 'pass',
         stale,
+        lastSuccessfulCheckedAt: lastSuccessfulByMonitorKey.get(String(row.monitor_key)) ?? null,
+        evidenceSource: 'persisted',
+        refreshState: definition?.kind === 'http' ? 'not_attempted' : 'not_applicable',
         details: (row.details as Record<string, unknown> | null) ?? {},
       };
     });

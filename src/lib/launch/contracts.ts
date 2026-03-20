@@ -13,23 +13,35 @@ export type LaunchAlertSeverity = (typeof LAUNCH_ALERT_SEVERITY_VALUES)[number];
 export const LAUNCH_MONITOR_STATUS_VALUES = ['pass', 'degraded', 'fail'] as const;
 export type LaunchMonitorStatus = (typeof LAUNCH_MONITOR_STATUS_VALUES)[number];
 
-export const LAUNCH_READINESS_STATE_VALUES = ['ready', 'blocked', 'unverified'] as const;
+export const LAUNCH_READINESS_STATE_VALUES = ['ready', 'blocked'] as const;
 export type LaunchReadinessState = (typeof LAUNCH_READINESS_STATE_VALUES)[number];
 
 export const LAUNCH_NOT_READY_REASON_CODE_VALUES = [
-  'stale_http_evidence',
-  'missing_http_evidence',
+  'smoke_corridor_failure',
   'stale_smoke_artifact',
   'missing_smoke_artifact',
-  'fresh_failing_http_monitor',
-  'fresh_failing_smoke_monitor',
+  'live_endpoint_failure',
+  'stale_persisted_monitor_evidence',
+  'missing_persisted_monitor_evidence',
 ] as const;
 export type LaunchNotReadyReasonCode = (typeof LAUNCH_NOT_READY_REASON_CODE_VALUES)[number];
+
+export const LAUNCH_NOT_READY_REASON_SOURCE_VALUES = [
+  'smoke_artifact',
+  'persisted_http',
+  'live_http',
+] as const;
+export type LaunchNotReadyReasonSource = (typeof LAUNCH_NOT_READY_REASON_SOURCE_VALUES)[number];
 
 export type LaunchNotReadyReason = {
   code: LaunchNotReadyReasonCode;
   message: string;
   monitorKeys: string[];
+  source: LaunchNotReadyReasonSource;
+  freshnessState: LaunchSmokeFreshnessState;
+  checkedAt: Array<string | null>;
+  lastSuccessfulCheckedAt: Array<string | null>;
+  liveRefreshAttempted: boolean;
 };
 
 export const LAUNCH_SMOKE_CORRIDOR_VALUES = [
