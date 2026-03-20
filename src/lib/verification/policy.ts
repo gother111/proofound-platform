@@ -621,7 +621,7 @@ function buildScopedSignals(
         slot === 'artifact.attestation'
       );
     })
-    .map((record) => {
+    .reduce<ScopedSignalSummary[]>((signals, record) => {
       const effectiveState = resolveEffectiveState(record, nowMs);
       const freshnessState = resolveFreshnessState({
         effectiveState,
@@ -629,7 +629,7 @@ function buildScopedSignals(
       });
 
       if (!freshnessState) {
-        return null;
+        return signals;
       }
 
       const claimSnapshot =
@@ -655,7 +655,7 @@ function buildScopedSignals(
             : null,
       });
 
-      return {
+      signals.push({
         verificationRecordId: record.id,
         subjectType: record.subjectType,
         subjectId: record.subjectId,
@@ -672,9 +672,10 @@ function buildScopedSignals(
         revokedAt: toIso(record.revokedAt),
         correctedAt: toIso(record.downgradedAt ?? record.supersededAt),
         verificationKind: record.verificationKind,
-      } satisfies ScopedSignalSummary;
-    })
-    .filter((signal): signal is ScopedSignalSummary => Boolean(signal))
+      });
+
+      return signals;
+    }, [])
     .sort((left, right) => (toMs(right.updatedAt) ?? 0) - (toMs(left.updatedAt) ?? 0));
 }
 

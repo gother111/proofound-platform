@@ -43,6 +43,7 @@ describe('VerificationStatus', () => {
             publicBadges: [],
             orgReviewBadges: [],
             internalBadges: [],
+            scopedSignals: [],
             slots: {
               identity: { state: 'none' },
               workplace: { state: 'none' },
@@ -97,6 +98,7 @@ describe('VerificationStatus', () => {
             publicBadges: [],
             orgReviewBadges: [],
             internalBadges: [],
+            scopedSignals: [],
             slots: {
               identity: { state: 'none' },
               workplace: { state: 'verified' },

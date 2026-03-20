@@ -21,6 +21,8 @@ import {
   POST as postVerifyCustom,
 } from '@/app/api/verify/custom/[token]/route';
 
+const ensureInternalOpsQueueItemMock = vi.fn();
+
 vi.mock('@/lib/auth', () => ({
   requireAuth: vi.fn(),
 }));
@@ -48,6 +50,10 @@ vi.mock('@/lib/verification/canonical-bundles', () => ({
 vi.mock('@/lib/verification/canonical-requests', () => ({
   listCanonicalSkillVerificationRequestsForOwner: vi.fn(),
   mapCanonicalSkillVerificationRequestRecord: vi.fn((record: any) => record),
+}));
+
+vi.mock('@/lib/internal-ops/queue', () => ({
+  ensureInternalOpsQueueItem: (...args: any[]) => ensureInternalOpsQueueItemMock(...args),
 }));
 
 vi.mock('@/lib/security/capability-tokens', () => ({
@@ -149,6 +155,7 @@ describe('canonical custom verification routes', () => {
     vi.mocked(updateCanonicalBundleDeliveryState).mockResolvedValue(undefined as any);
     vi.mocked(respondCanonicalBundle).mockResolvedValue(makeCanonicalBundle() as any);
     vi.mocked(listCanonicalSkillVerificationRequestsForOwner).mockResolvedValue([]);
+    ensureInternalOpsQueueItemMock.mockResolvedValue(undefined);
   });
 
   it('loads selectable artifacts from the active custom artifacts route', async () => {
@@ -446,5 +453,102 @@ describe('canonical custom verification routes', () => {
     await expect(response.json()).resolves.toMatchObject({
       error: 'Verification request not found',
     });
+  });
+
+  it('records partial custom attestation responses and queues them for manual review', async () => {
+    vi.mocked(getCanonicalBundleById).mockResolvedValue(
+      makeCanonicalBundle({
+        request_kind: 'human_observed_attestation',
+        attestation_request: {
+          requestKind: 'human_observed_attestation',
+          skillIds: ['22222222-2222-4222-8222-222222222222'],
+          skillLabels: ['TypeScript'],
+          skillFamilies: ['communication'],
+        },
+        items: [
+          {
+            id: 'skill-request-1',
+            artifact_type: 'skill',
+            artifact_id: '22222222-2222-4222-8222-222222222222',
+            display_label: 'TypeScript',
+            claim_template: 'skill_observed_in_context',
+            claim_label: 'Observed in context',
+            support_label: 'artifact-backed',
+            status: 'pending',
+            created_at: '2026-03-15T10:00:00.000Z',
+            updated_at: '2026-03-15T10:00:00.000Z',
+          },
+        ],
+      }) as any
+    );
+    vi.mocked(respondCanonicalBundle).mockResolvedValue(
+      makeCanonicalBundle({
+        status: 'accepted',
+        request_kind: 'human_observed_attestation',
+        attestation_response: {
+          verdict: 'partly',
+        },
+      }) as any
+    );
+
+    const admin = {
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          in: vi.fn().mockResolvedValue({ data: [], error: null }),
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: { evidence_strength: '0.3' },
+              error: null,
+            }),
+          }),
+        })),
+        update: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            in: vi.fn().mockResolvedValue({ error: null }),
+          })),
+        })),
+      })),
+    };
+    vi.mocked(createAdminClient).mockReturnValue(admin as any);
+
+    const response = await postVerifyCustom(
+      new NextRequest('http://localhost/api/verify/custom/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'accept',
+          message: 'Partly confirmed',
+          attestation: {
+            verdict: 'partly',
+            relationshipToSubject: 'Peer',
+            workedTogetherWhere: 'We worked together on a client migration project.',
+            observationDuration: '4 months',
+            observationRecency: 'Most recently observed in January 2026',
+            skillIds: ['22222222-2222-4222-8222-222222222222'],
+            observedBehaviorNote:
+              'I observed solid communication during design reviews, but I did not directly observe the entire requested scope.',
+            confidenceLevel: 'medium',
+            conflictBiasDisclosure: '',
+          },
+        }),
+      }),
+      { params: Promise.resolve({ token: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' }) }
+    );
+
+    expect(response.status).toBe(200);
+    expect(respondCanonicalBundle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'accept',
+        attestationResponse: expect.objectContaining({
+          verdict: 'partly',
+        }),
+      })
+    );
+    expect(ensureInternalOpsQueueItemMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queueType: 'verification',
+        linkedEntityType: 'verification_bundle',
+        linkedEntityId: 'bundle-1',
+      })
+    );
   });
 });

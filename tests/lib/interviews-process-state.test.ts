@@ -23,6 +23,7 @@ describe('mergeInterviewProcessState', () => {
             status: 'pending_both_confirmations',
             statusLabel: 'Awaiting both confirmations',
             engagementType: 'full_time',
+            createdAt: '2026-03-13T11:00:00.000Z',
             candidateConfirmedAt: null,
             organizationConfirmedAt: null,
             uploadedEvidencePresent: false,

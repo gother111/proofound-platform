@@ -19,7 +19,7 @@ import {
 } from '@/lib/workflow/queue';
 import { recordDecisionTransition } from '@/lib/workflow/service';
 
-export type DecisionType = 'hire' | 'advance' | 'hold' | 'reject';
+export type DecisionType = 'hire' | 'advance' | 'hold' | 'reject' | 'withdraw';
 
 export interface Decision {
   id: string;

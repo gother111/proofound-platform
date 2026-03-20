@@ -65,13 +65,14 @@ describe('human-observed attestation policy', () => {
 
     const valid = parseHumanObservedAttestationResponse(
       {
-        verifierIdentityReference: 'Taylor, engineering lead',
-        relationshipToUser: 'Manager',
-        observationContext: 'Observed during two product launches.',
+        verdict: 'yes',
+        relationshipToSubject: 'Manager',
+        workedTogetherWhere: 'Observed during two product launches in the infrastructure team.',
         observationDuration: '8 months',
-        lastObservedAt: '2026-02',
+        observationRecency: 'Most recently observed in February 2026',
         skillIds: ['11111111-1111-4111-8111-111111111111'],
-        observedBehaviors: ['Ran clear retrospectives', 'Resolved conflicts early'],
+        observedBehaviorNote:
+          'I directly observed leadership in retrospectives, planning, and conflict resolution across the team.',
         confidenceLevel: 'high',
         conflictBiasDisclosure: 'Direct manager for one quarter.',
       },
@@ -82,13 +83,14 @@ describe('human-observed attestation policy', () => {
 
     const invalid = parseHumanObservedAttestationResponse(
       {
-        verifierIdentityReference: 'Taylor',
-        relationshipToUser: 'Manager',
-        observationContext: 'Observed during launches.',
+        verdict: 'no',
+        relationshipToSubject: 'Manager',
+        workedTogetherWhere: 'Observed during launches and planning.',
         observationDuration: '8 months',
-        lastObservedAt: '2026-02',
+        observationRecency: 'Most recently observed in February 2026',
         skillIds: ['33333333-3333-4333-8333-333333333333'],
-        observedBehaviors: ['Led clearly'],
+        observedBehaviorNote:
+          'I did not directly observe the requested leadership scope, so I cannot confirm this claim.',
         confidenceLevel: 'high',
         conflictBiasDisclosure: 'Direct manager.',
       },
@@ -106,13 +108,15 @@ describe('human-observed attestation policy', () => {
         integrityStatus: 'clear',
         status: 'accepted',
         attestationResponse: {
-          verifierIdentityReference: 'Taylor',
-          relationshipToUser: 'Manager',
-          observationContext: 'Observed during launches.',
+          verdict: 'yes',
+          relationshipToSubject: 'Manager',
+          workedTogetherWhere: 'Observed during launches and planning sessions.',
           observationDuration: '8 months',
-          lastObservedAt: '2026-02',
+          observationRecency: 'Most recently observed in February 2026',
           skillIds: ['11111111-1111-4111-8111-111111111111'],
-          observedBehaviors: ['Ran clear retrospectives'],
+          skillLabels: ['Leadership'],
+          observedBehaviorNote:
+            'I directly observed clear leadership in retrospectives, planning, and stakeholder updates.',
           confidenceLevel: 'high',
           conflictBiasDisclosure: 'Direct manager.',
         },
@@ -128,5 +132,29 @@ describe('human-observed attestation policy', () => {
         attestationResponse: null,
       })
     ).toBe(0.5);
+  });
+
+  it('does not grant trust lift for partial human-observed attestations', () => {
+    expect(
+      applySkillVerificationTrustLift({
+        currentStrength: 0.3,
+        requestKind: 'human_observed_attestation',
+        integrityStatus: 'clear',
+        status: 'accepted',
+        attestationResponse: {
+          verdict: 'partly',
+          relationshipToSubject: 'Manager',
+          workedTogetherWhere: 'Observed during one migration project.',
+          observationDuration: '3 months',
+          observationRecency: 'Most recently observed in February 2026',
+          skillIds: ['11111111-1111-4111-8111-111111111111'],
+          skillLabels: ['Leadership'],
+          observedBehaviorNote:
+            'I observed some leadership behaviors in planning, but not enough of the requested scope to confirm fully.',
+          confidenceLevel: 'medium',
+          conflictBiasDisclosure: 'Direct manager.',
+        },
+      })
+    ).toBe(0.3);
   });
 });

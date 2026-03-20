@@ -4,10 +4,10 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import OrganizationInterviewsPage from '@/app/app/o/[slug]/interviews/page';
 
-const getInterviewsMock = vi.fn();
+const getInterviewCorridorItemsMock = vi.fn();
 
 vi.mock('@/app/actions/interviews', () => ({
-  getInterviews: (...args: any[]) => getInterviewsMock(...args),
+  getInterviewCorridorItems: (...args: any[]) => getInterviewCorridorItemsMock(...args),
 }));
 
 vi.mock('@/components/ui/v2/AppSurface', () => ({
@@ -20,6 +20,10 @@ vi.mock('@/components/ui/button', () => ({
 
 vi.mock('@/components/decisions/DecisionDialog', () => ({
   DecisionDialog: () => <div data-testid="decision-dialog" />,
+}));
+
+vi.mock('@/components/interviews/HiringCorridorTimeline', () => ({
+  HiringCorridorTimeline: () => <div data-testid="corridor-timeline" />,
 }));
 
 vi.mock('@/components/ui/dialog', () => ({
@@ -38,31 +42,69 @@ vi.mock('sonner', () => ({
 }));
 
 describe('organization interviews page actions', () => {
+  const buildCorridor = (overrides: Record<string, unknown> = {}) => ({
+    subjectLabel: 'Candidate',
+    currentStep: 'interviews',
+    nextAction: {
+      id: 'wait_for_interview',
+      label: 'Wait',
+    },
+    engagementVerification: null,
+    ...overrides,
+  });
+
+  const buildInterviewItem = (overrides: Record<string, unknown> = {}) => ({
+    id: 'match-1',
+    matchId: 'match-1',
+    assignmentTitle: 'Engineer',
+    organizationName: 'Proofound',
+    candidateDisplayName: 'Candidate',
+    introAcceptedAt: new Date().toISOString(),
+    interview: {
+      id: 'interview-1',
+      scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      duration: 30,
+      platform: 'zoom',
+      meetingUrl: 'https://zoom.us/j/example',
+      manualMeetingProvider: null,
+      rescheduleCount: 0,
+      status: 'scheduled',
+      completedAt: null,
+      cancelledAt: null,
+      noShowAt: null,
+    },
+    corridor: buildCorridor(),
+    decisionState: null,
+    engagementVerification: null,
+    ...overrides,
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
-    getInterviewsMock.mockReset();
+    getInterviewCorridorItemsMock.mockReset();
   });
 
   it('shows edit/cancel actions and calls edit + cancel APIs with refresh', async () => {
     const upcomingInterviewAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     const fetchCalls: Array<{ url: string; init?: RequestInit }> = [];
 
-    getInterviewsMock.mockImplementation(async () => ({
-      interviews: [
-        {
-          id: 'interview-1',
-          matchId: 'match-1',
-          scheduledAt: upcomingInterviewAt,
-          duration: 30,
-          platform: 'zoom',
-          meetingUrl: 'https://zoom.us/j/example',
-          status: 'scheduled',
-          candidateName: 'Candidate',
-          assignmentTitle: 'Engineer',
-          matchAgreedAt: new Date().toISOString(),
-          decisionState: null,
-          engagementVerification: null,
-        },
+    getInterviewCorridorItemsMock.mockImplementation(async () => ({
+      items: [
+        buildInterviewItem({
+          interview: {
+            id: 'interview-1',
+            scheduledAt: upcomingInterviewAt,
+            duration: 30,
+            platform: 'zoom',
+            meetingUrl: 'https://zoom.us/j/example',
+            manualMeetingProvider: null,
+            rescheduleCount: 0,
+            status: 'scheduled',
+            completedAt: null,
+            cancelledAt: null,
+            noShowAt: null,
+          },
+        }),
       ],
     }));
 
@@ -127,38 +169,72 @@ describe('organization interviews page actions', () => {
     });
 
     await waitFor(() => {
-      expect(getInterviewsMock.mock.calls.length).toBeGreaterThanOrEqual(3);
+      expect(getInterviewCorridorItemsMock.mock.calls.length).toBeGreaterThanOrEqual(3);
     });
   });
 
   it('renders decision and engagement status separately and confirms engagement after hire', async () => {
     const upcomingInterviewAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-    const initialInterview = {
-      id: 'interview-1',
-      matchId: 'match-1',
-      scheduledAt: upcomingInterviewAt,
-      duration: 30,
-      platform: 'zoom',
-      meetingUrl: 'https://zoom.us/j/example',
-      status: 'completed',
-      candidateName: 'Candidate',
-      assignmentTitle: 'Engineer',
-      matchAgreedAt: new Date().toISOString(),
+    const initialInterview = buildInterviewItem({
+      interview: {
+        id: 'interview-1',
+        scheduledAt: upcomingInterviewAt,
+        duration: 30,
+        platform: 'zoom',
+        meetingUrl: 'https://zoom.us/j/example',
+        manualMeetingProvider: null,
+        rescheduleCount: 0,
+        status: 'completed',
+        completedAt: new Date().toISOString(),
+        cancelledAt: null,
+        noShowAt: null,
+      },
       decisionState: 'hire',
+      corridor: buildCorridor({
+        nextAction: {
+          id: 'confirm_engagement',
+          label: 'Confirm engagement',
+        },
+        engagementVerification: {
+          id: 'engagement-1',
+          status: 'pending_both_confirmations',
+          statusLabel: 'Awaiting both confirmations',
+          engagementType: null,
+          candidateConfirmedAt: null,
+          organizationConfirmedAt: null,
+          uploadedEvidencePresent: false,
+          proofHookStatus: 'not_ready',
+          verifiedAt: null,
+        },
+      }),
       engagementVerification: {
         id: 'engagement-1',
         status: 'pending_both_confirmations',
         statusLabel: 'Awaiting both confirmations',
         engagementType: null,
+        createdAt: new Date().toISOString(),
         candidateConfirmedAt: null,
         organizationConfirmedAt: null,
         uploadedEvidencePresent: false,
         proofHookStatus: 'not_ready',
         verifiedAt: null,
       },
-    };
+    });
     const confirmedInterview = {
       ...initialInterview,
+      corridor: buildCorridor({
+        nextAction: {
+          id: 'wait_for_engagement_confirmation',
+          label: 'Wait',
+        },
+        engagementVerification: {
+          ...initialInterview.engagementVerification,
+          status: 'pending_candidate_confirmation',
+          statusLabel: 'Awaiting candidate confirmation',
+          engagementType: 'full_time',
+          organizationConfirmedAt: new Date().toISOString(),
+        },
+      }),
       engagementVerification: {
         ...initialInterview.engagementVerification,
         status: 'pending_candidate_confirmation',
@@ -170,10 +246,10 @@ describe('organization interviews page actions', () => {
     const fetchCalls: Array<{ url: string; init?: RequestInit }> = [];
     let loadCount = 0;
 
-    getInterviewsMock.mockImplementation(async () => {
+    getInterviewCorridorItemsMock.mockImplementation(async () => {
       loadCount += 1;
       return {
-        interviews: [loadCount === 1 ? initialInterview : confirmedInterview],
+        items: [loadCount === 1 ? initialInterview : confirmedInterview],
       };
     });
 
@@ -236,23 +312,23 @@ describe('organization interviews page actions', () => {
   it('shows reschedule history and blocks a second reschedule on the interviews surface', async () => {
     const upcomingInterviewAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
-    getInterviewsMock.mockResolvedValue({
-      interviews: [
-        {
-          id: 'interview-1',
-          matchId: 'match-1',
-          scheduledAt: upcomingInterviewAt,
-          duration: 30,
-          platform: 'zoom',
-          meetingUrl: 'https://zoom.us/j/example',
-          status: 'scheduled',
-          rescheduleCount: 1,
-          candidateName: 'Candidate',
-          assignmentTitle: 'Engineer',
-          matchAgreedAt: new Date().toISOString(),
-          decisionState: null,
-          engagementVerification: null,
-        },
+    getInterviewCorridorItemsMock.mockResolvedValue({
+      items: [
+        buildInterviewItem({
+          interview: {
+            id: 'interview-1',
+            scheduledAt: upcomingInterviewAt,
+            duration: 30,
+            platform: 'zoom',
+            meetingUrl: 'https://zoom.us/j/example',
+            manualMeetingProvider: null,
+            rescheduleCount: 1,
+            status: 'scheduled',
+            completedAt: null,
+            cancelledAt: null,
+            noShowAt: null,
+          },
+        }),
       ],
     });
 

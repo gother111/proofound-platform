@@ -26,8 +26,8 @@ export default async function AdminPage() {
               Verification queue
             </CardTitle>
             <CardDescription>
-              Review pending LinkedIn identity checks and keep trust corrections inside the locked
-              MVP corridor.
+              Review the four narrow internal ops queues that support verification, privacy,
+              corrections, and pilot follow-through inside the locked MVP corridor.
             </CardDescription>
           </CardHeader>
           <CardContent>

@@ -9,6 +9,7 @@ import {
 } from '@/db/schema';
 import { log } from '@/lib/log';
 import { attachUploadedFile } from '@/lib/uploads/lifecycle';
+import { ensureInternalOpsQueueItem } from '@/lib/internal-ops/queue';
 import {
   assertAllowedTransition,
   getAllowedActions,
@@ -31,6 +32,7 @@ export type EngagementVerificationSummary = {
   status: EngagementVerificationWorkflowState;
   statusLabel: string;
   engagementType: CanonicalEngagementType | null;
+  createdAt: string;
   candidateConfirmedAt: string | null;
   organizationConfirmedAt: string | null;
   uploadedEvidencePresent: boolean;
@@ -78,6 +80,7 @@ function toSummary(record: EngagementVerificationRow): EngagementVerificationSum
     status: record.state,
     statusLabel: getWorkflowLabel('engagement_verification', record.state),
     engagementType: record.engagementType as CanonicalEngagementType | null,
+    createdAt: toIso(record.createdAt) ?? new Date(0).toISOString(),
     candidateConfirmedAt: toIso(record.candidateConfirmedAt),
     organizationConfirmedAt: toIso(record.organizationConfirmedAt),
     uploadedEvidencePresent: Boolean(record.uploadedFileId),
@@ -198,6 +201,22 @@ export async function ensureEngagementVerificationForDecision(params: {
     metadata: {
       decisionId: params.decision.id,
       engagementType: normalizedEngagementType,
+    },
+  });
+
+  await ensureInternalOpsQueueItem({
+    queueType: 'pilot_ops',
+    linkedEntityType: 'engagement_verification',
+    linkedEntityId: inserted.id,
+    summary: 'Hire recorded. Engagement confirmation still needs pilot follow-through.',
+    priority: 'normal',
+    actorType: params.actorType,
+    actorId: params.actorId ?? null,
+    metadata: {
+      decisionId: params.decision.id,
+      assignmentId: params.decision.assignmentId,
+      candidateProfileId: params.decision.candidateProfileId,
+      orgId: params.decision.orgId,
     },
   });
 

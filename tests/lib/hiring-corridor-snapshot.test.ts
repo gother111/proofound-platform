@@ -130,6 +130,7 @@ describe('buildHiringCorridorSnapshot', () => {
           status: 'pending_candidate_confirmation',
           statusLabel: 'Waiting for candidate confirmation',
           engagementType: 'full_time',
+          createdAt: '2026-03-13T11:00:00.000Z',
           candidateConfirmedAt: null,
           organizationConfirmedAt: '2026-03-13T11:05:00.000Z',
           uploadedEvidencePresent: false,
@@ -148,7 +149,7 @@ describe('buildHiringCorridorSnapshot', () => {
 
     expect(snapshot).toEqual(
       expect.objectContaining({
-        currentStep: 'decision',
+        currentStep: 'engagement_recorded',
         nextAction: expect.objectContaining({
           id: 'confirm_engagement',
         }),
@@ -178,7 +179,7 @@ describe('buildHiringCorridorSnapshot', () => {
 
     expect(snapshot).toEqual(
       expect.objectContaining({
-        currentStep: 'interview_scheduled',
+        currentStep: 'interviews',
         nextAction: expect.objectContaining({
           id: 'prepare_for_interview',
         }),

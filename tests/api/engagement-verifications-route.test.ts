@@ -78,6 +78,7 @@ describe('PATCH /api/engagement-verifications/[id]', () => {
       status: 'pending_organization_confirmation',
       statusLabel: 'Awaiting organization confirmation',
       engagementType: 'contract_consulting',
+      createdAt: '2026-03-12T09:55:00.000Z',
       candidateConfirmedAt: '2026-03-12T10:00:00.000Z',
       organizationConfirmedAt: null,
       uploadedEvidencePresent: false,

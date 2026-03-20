@@ -19,13 +19,56 @@ import {
   applySkillVerificationTrustLift,
   parseHumanObservedAttestationResponse,
   type HumanObservedAttestationRequestPayload,
+  type HumanObservedVerdict,
 } from '@/lib/verification/human-attestations';
+import { ensureInternalOpsQueueItem } from '@/lib/internal-ops/queue';
 
 const RespondSchema = z.object({
-  action: z.enum(['accept', 'decline']),
+  action: z.enum(['accept', 'decline']).optional(),
   message: z.string().max(2000).optional(),
   attestation: z.unknown().optional(),
 });
+
+function getHumanObservedVerdict(attestation: unknown): HumanObservedVerdict | null {
+  if (!attestation || typeof attestation !== 'object') {
+    return null;
+  }
+
+  const verdict = (attestation as { verdict?: unknown }).verdict;
+  if (verdict === 'yes' || verdict === 'partly' || verdict === 'no') {
+    return verdict;
+  }
+
+  return null;
+}
+
+function resolveVerificationAction(params: {
+  requestKind: 'generic_verification' | 'human_observed_attestation';
+  action?: 'accept' | 'decline';
+  attestation?: unknown;
+}) {
+  if (params.requestKind !== 'human_observed_attestation') {
+    return params.action ?? null;
+  }
+
+  const verdict = getHumanObservedVerdict(params.attestation);
+  if (!verdict) {
+    return params.action ?? null;
+  }
+
+  return verdict === 'no' ? 'decline' : 'accept';
+}
+
+function isCompatibleHumanObservedAction(params: {
+  action: 'accept' | 'decline';
+  verdict: HumanObservedVerdict;
+}) {
+  if (params.action === 'accept') {
+    return params.verdict === 'yes' || params.verdict === 'partly';
+  }
+
+  return params.verdict === 'no';
+}
 
 function toResponseStatus(status: string): 'pending' | 'accepted' | 'declined' | 'expired' {
   if (status === 'accepted' || status === 'declined' || status === 'expired') {
@@ -311,6 +354,11 @@ export async function POST(
       bundle.request_kind === 'human_observed_attestation'
         ? 'human_observed_attestation'
         : 'generic_verification';
+    const resolvedAction = resolveVerificationAction({
+      requestKind,
+      action: parsed.data.action,
+      attestation: parsed.data.attestation,
+    });
     const attestationRequest =
       requestKind === 'human_observed_attestation' &&
       bundle.attestation_request &&
@@ -319,7 +367,7 @@ export async function POST(
         : null;
 
     let attestationResponse: Record<string, unknown> | null = null;
-    if (requestKind === 'human_observed_attestation' && parsed.data.action === 'accept') {
+    if (requestKind === 'human_observed_attestation') {
       if (!attestationRequest) {
         return NextResponse.json(
           { error: 'This attestation request is missing its bounded skill scope.' },
@@ -339,12 +387,37 @@ export async function POST(
       }
 
       attestationResponse = parsedAttestation.data;
+
+      if (
+        parsed.data.action &&
+        !isCompatibleHumanObservedAction({
+          action: parsed.data.action,
+          verdict: attestationResponse.verdict as HumanObservedVerdict,
+        })
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              parsed.data.action === 'accept'
+                ? 'Structured attestations marked accept must use verdict yes or partly.'
+                : 'Structured attestations marked decline must use verdict no.',
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (!resolvedAction) {
+      return NextResponse.json(
+        { error: 'Verification responses must include an explicit action or structured verdict.' },
+        { status: 400 }
+      );
     }
 
     const pendingItems = bundle.items.filter((item) => item.status === 'pending');
     await respondCanonicalBundle({
       bundleId: bundle.id,
-      action: parsed.data.action,
+      action: resolvedAction,
       responseMessage: parsed.data.message?.trim() || null,
       attestationResponse,
       verifierProfileId: bundle.verifier_profile_id || null,
@@ -354,7 +427,7 @@ export async function POST(
       responseActorEmail: bundle.verifier_email,
     });
 
-    if (parsed.data.action === 'accept') {
+    if (resolvedAction === 'accept') {
       await applyAcceptedArtifactEffects({
         admin,
         requesterProfileId: bundle.requester_profile_id,
@@ -368,13 +441,48 @@ export async function POST(
       });
     }
 
+    const attestationVerdict = getHumanObservedVerdict(attestationResponse);
+    if (requestKind === 'human_observed_attestation') {
+      if (attestationVerdict === 'partly') {
+        await ensureInternalOpsQueueItem({
+          queueType: 'verification',
+          linkedEntityType: 'verification_bundle',
+          linkedEntityId: bundle.id,
+          summary:
+            'A bundle verifier responded partly. Manual review is needed before trust can advance.',
+          priority: 'normal',
+          actorType: 'service_account',
+          metadata: {
+            verdict: attestationVerdict,
+            requestKind,
+            verifierEmail: bundle.verifier_email,
+          },
+        });
+      } else if (attestationVerdict === 'no') {
+        await ensureInternalOpsQueueItem({
+          queueType: 'correction_revocation',
+          linkedEntityType: 'verification_bundle',
+          linkedEntityId: bundle.id,
+          summary:
+            'A bundle verifier responded no. Review whether trust needs correction or revocation handling.',
+          priority: 'high',
+          actorType: 'service_account',
+          metadata: {
+            verdict: attestationVerdict,
+            requestKind,
+            verifierEmail: bundle.verifier_email,
+          },
+        });
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      status: parsed.data.action === 'accept' ? 'accepted' : 'declined',
+      status: resolvedAction === 'accept' ? 'accepted' : 'declined',
       message:
-        parsed.data.action === 'accept'
+        resolvedAction === 'accept'
           ? requestKind === 'human_observed_attestation'
-            ? 'Thank you for recording these observed-in-practice attestations.'
+            ? 'Thank you for recording these structured observed-in-practice attestations.'
             : 'Thank you for verifying these artifacts!'
           : 'Your response has been recorded.',
     });

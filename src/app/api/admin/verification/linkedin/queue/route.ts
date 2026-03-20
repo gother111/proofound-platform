@@ -1,26 +1,10 @@
-/**
- * Admin LinkedIn Verification Queue
- *
- * GET /api/admin/verification/linkedin/queue
- *
- * Returns all pending LinkedIn verifications sorted by confidence score
- * High-confidence cases appear first for quick approvals
- */
-
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { db } from '@/db';
-import { individualProfiles, profiles } from '@/db/schema';
-import { eq, and, or, desc, sql } from 'drizzle-orm';
-import {
-  resolveHasLinkedInIdentityVerification,
-  resolveHasLinkedInWorkplaceVerification,
-} from '@/lib/linkedin-verified';
-import { resolveLinkedInVerificationLevel } from '@/lib/verification/tier';
 
-export async function GET(request: NextRequest) {
+import { createClient } from '@/lib/supabase/server';
+import { listInternalOpsQueueItems } from '@/lib/internal-ops/queue';
+
+export async function GET(_request: NextRequest) {
   try {
-    // 1. Check if user is admin
     const supabase = await createClient();
     const {
       data: { user },
@@ -31,7 +15,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check admin role
     const { data: profile } = await supabase
       .from('profiles')
       .select('platform_role')
@@ -45,97 +28,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    // 2. Get all pending LinkedIn verifications
-    const pendingVerifications = await db
-      .select({
-        userId: profiles.id,
-        userName: profiles.displayName,
-        userEmail: sql<string>`NULL`, // Email stored in Supabase auth
-        userAvatar: profiles.avatarUrl,
-        linkedinUrl: individualProfiles.linkedinProfileUrl,
-        verificationData: individualProfiles.linkedinVerificationData,
-        verificationStatus: individualProfiles.verificationStatus,
-        linkedinVerificationStatus: individualProfiles.linkedinVerificationStatus,
-        linkedinVerificationLevel: individualProfiles.linkedinVerificationLevel,
-        createdAt: profiles.updatedAt,
-      })
-      .from(individualProfiles)
-      .innerJoin(profiles, eq(profiles.id, individualProfiles.userId))
-      .where(
-        and(
-          or(
-            eq(individualProfiles.linkedinVerificationStatus, 'pending'),
-            eq(individualProfiles.verificationStatus, 'pending')
-          )
-        )
-      )
-      .orderBy(desc(profiles.updatedAt));
-
-    // 3. Sort by confidence score (high confidence first)
-    const sortedVerifications = pendingVerifications
-      .map((v) => {
-        const data = v.verificationData as any;
-        const confidence = data?.automatedCheck?.confidence || 0;
-        const hasIdentityVerification = resolveHasLinkedInIdentityVerification(data);
-        const hasWorkplaceVerification = resolveHasLinkedInWorkplaceVerification(data);
-        const hasVerificationBadge =
-          hasIdentityVerification ||
-          hasWorkplaceVerification ||
-          Boolean(data?.hasVerificationBadge);
-        const recommendation = data?.automatedCheck?.recommendation || 'review_manually';
-        const linkedinVerificationLevel =
-          v.linkedinVerificationLevel ||
-          resolveLinkedInVerificationLevel({
-            linkedinVerificationStatus: v.linkedinVerificationStatus,
-            linkedinVerificationData: data,
-          });
-
-        return {
-          ...v,
-          confidence,
-          hasIdentityVerification,
-          hasWorkplaceVerification,
-          linkedinVerificationLevel,
-          hasVerificationBadge,
-          recommendation,
-          signals: {
-            hasVerificationBadge: false,
-            connectionCount: null,
-            experienceCount: 0,
-            profileCompleteness: 0,
-            hasProfilePhoto: false,
-            accountAge: 'new',
-            ...(data?.automatedCheck?.signals || {}),
-          },
-          sources: data?.automatedCheck?.sources || ['playwright'],
-        };
-      })
-      .sort((a, b) => b.confidence - a.confidence);
-
-    // 4. Group by confidence level for easier admin review
-    const highConfidence = sortedVerifications.filter((v) => v.confidence >= 80);
-    const mediumConfidence = sortedVerifications.filter(
-      (v) => v.confidence >= 50 && v.confidence < 80
-    );
-    const lowConfidence = sortedVerifications.filter((v) => v.confidence < 50);
+    const queues = await listInternalOpsQueueItems();
 
     return NextResponse.json({
       success: true,
-      queue: {
-        all: sortedVerifications,
-        highConfidence,
-        mediumConfidence,
-        lowConfidence,
-      },
+      queues,
       stats: {
-        total: sortedVerifications.length,
-        high: highConfidence.length,
-        medium: mediumConfidence.length,
-        low: lowConfidence.length,
+        total: queues.reduce((sum, queue) => sum + queue.items.length, 0),
+        open: queues.reduce((sum, queue) => sum + queue.openCount, 0),
       },
     });
   } catch (error) {
-    console.error('Error fetching LinkedIn verification queue:', error);
+    console.error('Error fetching internal ops queue:', error);
     return NextResponse.json(
       {
         error: 'Failed to fetch verification queue',

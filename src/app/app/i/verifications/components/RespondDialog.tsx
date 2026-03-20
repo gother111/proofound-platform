@@ -53,6 +53,20 @@ export function RespondDialog({
 
   const isAttestationRequest = request?.requestKind === 'human_observed_attestation';
 
+  const resolveAttestationPayload = () => {
+    if (!isAttestationRequest) {
+      return undefined;
+    }
+
+    return buildHumanObservedAttestationPayload({
+      form: {
+        ...attestationForm,
+        verdict: action === 'decline' ? 'no' : attestationForm.verdict,
+      },
+      skillIds: request?.attestationRequest?.skillIds || [request?.subjectId].filter(Boolean),
+    });
+  };
+
   useEffect(() => {
     if (!open) {
       return;
@@ -78,14 +92,7 @@ export function RespondDialog({
         body: JSON.stringify({
           action,
           responseMessage: responseMessage.trim() || undefined,
-          attestation:
-            isAttestationRequest && action === 'accept'
-              ? buildHumanObservedAttestationPayload({
-                  form: attestationForm,
-                  skillIds:
-                    request?.attestationRequest?.skillIds || [request?.subjectId].filter(Boolean),
-                })
-              : undefined,
+          attestation: resolveAttestationPayload(),
         }),
       });
 

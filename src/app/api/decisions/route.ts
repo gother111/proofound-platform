@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'interviewId and decision are required' }, { status: 400 });
     }
 
-    const validDecisions = ['hire', 'advance', 'hold', 'reject'];
+    const validDecisions = ['hire', 'advance', 'hold', 'reject', 'withdraw'];
     if (!validDecisions.includes(decision)) {
       return NextResponse.json(
         { error: `decision must be one of: ${validDecisions.join(', ')}` },

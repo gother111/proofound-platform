@@ -8,7 +8,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { CheckCircle2, XCircle, Clock, Shield, Loader2, AlertCircle } from 'lucide-react';
+import {
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Shield,
+  Loader2,
+  AlertCircle,
+  MinusCircle,
+} from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
 import {
   HumanObservedAttestationFields,
@@ -94,6 +102,28 @@ function isImpactVerification(data: VerificationData | null): data is ImpactVeri
   return Boolean(data && data.verification_type === 'impact_story');
 }
 
+function resolveHumanObservedSubmitPayload(args: {
+  action: 'accept' | 'decline';
+  requestKind?: 'generic_verification' | 'human_observed_attestation';
+  attestationRequest?: {
+    skillIds: string[];
+  } | null;
+  form: HumanObservedAttestationFormValue;
+  verdict?: 'yes' | 'partly' | 'no';
+}) {
+  if (args.requestKind !== 'human_observed_attestation') {
+    return undefined;
+  }
+
+  return buildHumanObservedAttestationPayload({
+    form: {
+      ...args.form,
+      verdict: args.verdict ?? (args.action === 'decline' ? 'no' : args.form.verdict),
+    },
+    skillIds: args.attestationRequest?.skillIds || [],
+  });
+}
+
 function skillProofTypeLabel(value: string): string {
   switch (value) {
     case 'certification':
@@ -145,7 +175,9 @@ export default function VerifySkillPage() {
   const [responseMessage, setResponseMessage] = useState('');
   const [confirmedClaimIds, setConfirmedClaimIds] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
-  const [submittedAction, setSubmittedAction] = useState<'accepted' | 'declined' | null>(null);
+  const [submittedAction, setSubmittedAction] = useState<'accepted' | 'declined' | 'partly' | null>(
+    null
+  );
   const [authRequired, setAuthRequired] = useState(false);
   const [attestationForm, setAttestationForm] = useState<HumanObservedAttestationFormValue>(
     createDefaultHumanObservedAttestationForm()
@@ -216,7 +248,10 @@ export default function VerifySkillPage() {
     return claims;
   };
 
-  const handleSubmit = async (action: 'accept' | 'decline') => {
+  const handleSubmit = async (
+    action: 'accept' | 'decline',
+    humanObservedVerdict?: 'yes' | 'partly' | 'no'
+  ) => {
     if (!data) return;
 
     if (isImpactVerification(data) && action === 'accept' && confirmedClaimIds.length === 0) {
@@ -236,15 +271,15 @@ export default function VerifySkillPage() {
           action,
           message: responseMessage || undefined,
           confirmedClaimIds: isImpactVerification(data) ? confirmedClaimIds : undefined,
-          attestation:
-            !isImpactVerification(data) &&
-            data.request_kind === 'human_observed_attestation' &&
-            action === 'accept'
-              ? buildHumanObservedAttestationPayload({
-                  form: attestationForm,
-                  skillIds: data.attestation_request?.skillIds || [],
-                })
-              : undefined,
+          attestation: !isImpactVerification(data)
+            ? resolveHumanObservedSubmitPayload({
+                action,
+                requestKind: data.request_kind,
+                attestationRequest: data.attestation_request,
+                form: attestationForm,
+                verdict: humanObservedVerdict,
+              })
+            : undefined,
         }),
       });
 
@@ -261,7 +296,9 @@ export default function VerifySkillPage() {
       }
 
       setSubmitted(true);
-      setSubmittedAction(action === 'accept' ? 'accepted' : 'declined');
+      setSubmittedAction(
+        humanObservedVerdict === 'partly' ? 'partly' : action === 'accept' ? 'accepted' : 'declined'
+      );
     } catch {
       setError('Failed to submit response');
     } finally {
@@ -385,6 +422,17 @@ export default function VerifySkillPage() {
                     : data.request_kind === 'human_observed_attestation'
                       ? `You've recorded a bounded observed-in-practice attestation for ${data.requester_name}.`
                       : `You've successfully submitted verification for ${data.requester_name}.`}
+                </p>
+              </>
+            ) : submittedAction === 'partly' ? (
+              <>
+                <MinusCircle className="h-16 w-16 text-amber-600 mx-auto mb-4" />
+                <h2 className="text-2xl font-semibold text-foreground mb-2">
+                  Partial Response Recorded
+                </h2>
+                <p className="text-muted-foreground">
+                  You recorded a structured partial attestation. It has been stored for review and
+                  audit.
                 </p>
               </>
             ) : (
@@ -642,35 +690,76 @@ export default function VerifySkillPage() {
         </CardContent>
 
         <CardFooter className="flex gap-3 border-t pt-6">
-          <Button
-            variant="outline"
-            className="flex-1 border-[#C76B4A] text-proofound-terracotta hover:bg-[#FFF0F0]"
-            onClick={() => handleSubmit('decline')}
-            disabled={submitting}
-          >
-            {submitting ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : (
-              <XCircle className="h-4 w-4 mr-2" />
-            )}
-            Decline
-          </Button>
-          <Button
-            className="flex-1 bg-proofound-forest text-white hover:bg-proofound-forest/90"
-            onClick={() => handleSubmit('accept')}
-            disabled={submitting}
-          >
-            {submitting ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : (
-              <CheckCircle2 className="h-4 w-4 mr-2" />
-            )}
-            {isImpactVerification(data)
-              ? 'Confirm Claims'
-              : data.request_kind === 'human_observed_attestation'
-                ? 'Record Observation'
-                : 'Verify Skill'}
-          </Button>
+          {isImpactVerification(data) || data.request_kind !== 'human_observed_attestation' ? (
+            <>
+              <Button
+                variant="outline"
+                className="flex-1 border-[#C76B4A] text-proofound-terracotta hover:bg-[#FFF0F0]"
+                onClick={() => handleSubmit('decline')}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <XCircle className="h-4 w-4 mr-2" />
+                )}
+                Decline
+              </Button>
+              <Button
+                className="flex-1 bg-proofound-forest text-white hover:bg-proofound-forest/90"
+                onClick={() => handleSubmit('accept')}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                )}
+                {isImpactVerification(data) ? 'Confirm Claims' : 'Verify Skill'}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                className="flex-1 border-[#C76B4A] text-proofound-terracotta hover:bg-[#FFF0F0]"
+                onClick={() => handleSubmit('decline', 'no')}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <XCircle className="h-4 w-4 mr-2" />
+                )}
+                No
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 border-amber-300 text-amber-800 hover:bg-amber-50"
+                onClick={() => handleSubmit('accept', 'partly')}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <MinusCircle className="h-4 w-4 mr-2" />
+                )}
+                Partly
+              </Button>
+              <Button
+                className="flex-1 bg-proofound-forest text-white hover:bg-proofound-forest/90"
+                onClick={() => handleSubmit('accept', 'yes')}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                )}
+                Yes
+              </Button>
+            </>
+          )}
         </CardFooter>
       </Card>
     </div>

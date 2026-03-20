@@ -17,9 +17,9 @@ describe('workflow contracts', () => {
     );
   });
 
-  it('keeps withdrawn decisions terminal on the same record', () => {
-    expect(WORKFLOW_TRANSITIONS.decision.withdrawn).toEqual([]);
-    expect(() => assertAllowedTransition('decision', 'withdrawn', 'pending')).toThrow(
+  it('keeps withdraw decisions terminal on the same record', () => {
+    expect(WORKFLOW_TRANSITIONS.decision.withdraw).toEqual([]);
+    expect(() => assertAllowedTransition('decision', 'withdraw', 'pending')).toThrow(
       /Forbidden decision transition/i
     );
   });

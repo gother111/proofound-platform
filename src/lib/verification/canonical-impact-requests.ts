@@ -15,6 +15,7 @@ import {
 import { getRows } from '@/lib/db/rows';
 import { normalizeEmail } from '@/lib/verification/integrity';
 import { CANONICAL_REQUEST_TRANSPORTS } from '@/lib/verification/canonical-requests';
+import { getClaimTemplateLabel, resolveClaimTemplate } from '@/lib/verification/scoped-contract';
 
 type VerificationRecordRow = typeof verificationRecords.$inferSelect;
 
@@ -307,6 +308,19 @@ export async function createCanonicalImpactVerificationRequest(params: {
       requestTransport: CANONICAL_REQUEST_TRANSPORTS.impact,
       impactStoryId: params.impactStoryId,
       storyTitle: params.storyTitle,
+      claimTemplate: resolveClaimTemplate({
+        subjectType: 'impact_story',
+        verificationKind: 'impact_attestation',
+        claimSnapshot: params.claimSnapshot,
+      }),
+      claimLabel: getClaimTemplateLabel(
+        resolveClaimTemplate({
+          subjectType: 'impact_story',
+          verificationKind: 'impact_attestation',
+          claimSnapshot: params.claimSnapshot,
+        })
+      ),
+      subjectType: 'impact_story',
     },
     sourceRequestTable: 'verification_records',
     sourceRequestId: requestId,

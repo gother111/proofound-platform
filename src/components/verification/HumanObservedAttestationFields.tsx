@@ -6,15 +6,17 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   HUMAN_OBSERVED_CONFIDENCE_LEVELS,
   type HumanObservedConfidenceLevel,
+  HUMAN_OBSERVED_VERDICTS,
+  type HumanObservedVerdict,
 } from '@/lib/verification/human-attestations';
 
 export type HumanObservedAttestationFormValue = {
-  verifierIdentityReference: string;
-  relationshipToUser: string;
-  observationContext: string;
+  verdict: HumanObservedVerdict;
+  relationshipToSubject: string;
+  workedTogetherWhere: string;
   observationDuration: string;
-  lastObservedAt: string;
-  observedBehaviors: string;
+  observationRecency: string;
+  observedBehaviorNote: string;
   confidenceLevel: HumanObservedConfidenceLevel;
   conflictBiasDisclosure: string;
 };
@@ -31,31 +33,28 @@ export function buildHumanObservedAttestationPayload(args: {
   skillIds: string[];
 }) {
   return {
-    verifierIdentityReference: args.form.verifierIdentityReference.trim(),
-    relationshipToUser: args.form.relationshipToUser.trim(),
-    observationContext: args.form.observationContext.trim(),
+    verdict: args.form.verdict,
+    relationshipToSubject: args.form.relationshipToSubject.trim(),
+    workedTogetherWhere: args.form.workedTogetherWhere.trim(),
     observationDuration: args.form.observationDuration.trim(),
-    lastObservedAt: args.form.lastObservedAt.trim(),
+    observationRecency: args.form.observationRecency.trim(),
     skillIds: args.skillIds,
-    observedBehaviors: args.form.observedBehaviors
-      .split('\n')
-      .map((line) => line.trim())
-      .filter(Boolean),
+    observedBehaviorNote: args.form.observedBehaviorNote.trim(),
     confidenceLevel: args.form.confidenceLevel,
-    conflictBiasDisclosure: args.form.conflictBiasDisclosure.trim(),
+    conflictBiasDisclosure: args.form.conflictBiasDisclosure.trim() || null,
   };
 }
 
 export function createDefaultHumanObservedAttestationForm(
-  relationshipToUser = ''
+  relationshipToSubject = ''
 ): HumanObservedAttestationFormValue {
   return {
-    verifierIdentityReference: '',
-    relationshipToUser,
-    observationContext: '',
+    verdict: 'yes',
+    relationshipToSubject,
+    workedTogetherWhere: '',
     observationDuration: '',
-    lastObservedAt: '',
-    observedBehaviors: '',
+    observationRecency: '',
+    observedBehaviorNote: '',
     confidenceLevel: 'medium',
     conflictBiasDisclosure: '',
   };
@@ -88,22 +87,28 @@ export function HumanObservedAttestationFields({
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="attestation-verifier-reference">Your identity or reference</Label>
-          <Input
-            id="attestation-verifier-reference"
-            value={value.verifierIdentityReference}
-            onChange={(event) => update('verifierIdentityReference', event.target.value)}
-            placeholder="Name, role, or reference link"
+          <Label htmlFor="attestation-verdict">Your verdict</Label>
+          <select
+            id="attestation-verdict"
+            value={value.verdict}
+            onChange={(event) => update('verdict', event.target.value as HumanObservedVerdict)}
             disabled={disabled}
-          />
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            {HUMAN_OBSERVED_VERDICTS.map((verdict) => (
+              <option key={verdict} value={verdict}>
+                {verdict === 'yes' ? 'Yes' : verdict === 'partly' ? 'Partly' : 'No'}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="attestation-relationship">Relationship to the user</Label>
+          <Label htmlFor="attestation-relationship">Relationship to the subject</Label>
           <Input
             id="attestation-relationship"
-            value={value.relationshipToUser}
-            onChange={(event) => update('relationshipToUser', event.target.value)}
+            value={value.relationshipToSubject}
+            onChange={(event) => update('relationshipToSubject', event.target.value)}
             placeholder="Manager, colleague, client, mentor"
             disabled={disabled}
           />
@@ -111,12 +116,12 @@ export function HumanObservedAttestationFields({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="attestation-context">Work, project, or learning context</Label>
+        <Label htmlFor="attestation-context">Where you worked together</Label>
         <Textarea
           id="attestation-context"
-          value={value.observationContext}
-          onChange={(event) => update('observationContext', event.target.value)}
-          placeholder="Describe where you observed this work."
+          value={value.workedTogetherWhere}
+          onChange={(event) => update('workedTogetherWhere', event.target.value)}
+          placeholder="Project, team, course, client engagement, or delivery context."
           rows={3}
           disabled={disabled}
         />
@@ -135,25 +140,25 @@ export function HumanObservedAttestationFields({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="attestation-last-observed">Last observed</Label>
+          <Label htmlFor="attestation-last-observed">Recency</Label>
           <Input
             id="attestation-last-observed"
-            value={value.lastObservedAt}
-            onChange={(event) => update('lastObservedAt', event.target.value)}
-            placeholder="2026-02 or February 2026"
+            value={value.observationRecency}
+            onChange={(event) => update('observationRecency', event.target.value)}
+            placeholder="Most recently observed in 2026-02 or February 2026"
             disabled={disabled}
           />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="attestation-behaviors">Observed behaviors</Label>
+        <Label htmlFor="attestation-behaviors">Concrete observed behavior or scope note</Label>
         <Textarea
           id="attestation-behaviors"
-          value={value.observedBehaviors}
-          onChange={(event) => update('observedBehaviors', event.target.value)}
+          value={value.observedBehaviorNote}
+          onChange={(event) => update('observedBehaviorNote', event.target.value)}
           placeholder={
-            'One behavior per line\nExplained tradeoffs clearly\nClosed feedback loops quickly'
+            'Describe what you directly observed, what was in scope, and why your verdict is yes, partly, or no.'
           }
           rows={4}
           disabled={disabled}
@@ -188,7 +193,7 @@ export function HumanObservedAttestationFields({
           id="attestation-bias"
           value={value.conflictBiasDisclosure}
           onChange={(event) => update('conflictBiasDisclosure', event.target.value)}
-          placeholder="State any reporting line, commercial tie, or reason your view may be biased."
+          placeholder="State any reporting line, commercial tie, or leave blank if none is relevant."
           rows={3}
           disabled={disabled}
         />

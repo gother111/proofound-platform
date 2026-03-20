@@ -12,6 +12,7 @@ import {
 } from '@/lib/verification/integrity';
 import {
   parseHumanObservedAttestationResponse,
+  type HumanObservedVerdict,
   type HumanObservedAttestationRequestPayload,
 } from '@/lib/verification/human-attestations';
 import {
@@ -25,6 +26,17 @@ const RespondSchema = z.object({
   responseMessage: z.string().optional(),
   attestation: z.unknown().optional(),
 });
+
+function isCompatibleHumanObservedAction(params: {
+  action: 'accept' | 'decline';
+  verdict: HumanObservedVerdict;
+}) {
+  if (params.action === 'accept') {
+    return params.verdict === 'yes' || params.verdict === 'partly';
+  }
+
+  return params.verdict === 'no';
+}
 
 export async function POST(
   request: NextRequest,
@@ -84,7 +96,7 @@ export async function POST(
         : null;
 
     let attestationResponse: Record<string, unknown> | null = null;
-    if (requestKind === 'human_observed_attestation' && validated.action === 'accept') {
+    if (requestKind === 'human_observed_attestation') {
       if (!attestationRequest) {
         return NextResponse.json(
           { error: 'This attestation request is missing its bounded skill scope.' },
@@ -105,6 +117,23 @@ export async function POST(
       }
 
       attestationResponse = parsedAttestation.data;
+
+      if (
+        !isCompatibleHumanObservedAction({
+          action: validated.action,
+          verdict: attestationResponse.verdict as HumanObservedVerdict,
+        })
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              validated.action === 'accept'
+                ? 'Structured attestations marked accept must use verdict yes or partly.'
+                : 'Structured attestations marked decline must use verdict no.',
+          },
+          { status: 400 }
+        );
+      }
     }
 
     const respondedAt = new Date().toISOString();

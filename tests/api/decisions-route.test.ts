@@ -92,6 +92,7 @@ describe('POST /api/decisions', () => {
       engagementVerification: {
         id: 'engagement-1',
         status: 'pending_both_confirmations',
+        createdAt: '2026-03-12T10:00:00.000Z',
       },
     });
   });
@@ -123,7 +124,40 @@ describe('POST /api/decisions', () => {
     expect(body.engagementVerification).toEqual({
       id: 'engagement-1',
       status: 'pending_both_confirmations',
+      createdAt: '2026-03-12T10:00:00.000Z',
     });
+  });
+
+  it('accepts withdraw as an explicit terminal decision state', async () => {
+    mocks.isActiveOrgMember.mockResolvedValue(true);
+    mocks.recordDecisionTransition.mockResolvedValue({
+      id: 'decision-2',
+      state: 'withdraw',
+      holdUntil: null,
+      reasonCode: 'candidate_withdrew',
+      updatedAt: '2026-03-12T11:00:00.000Z',
+      workflow: { state: 'withdraw' },
+      engagementVerification: null,
+    });
+
+    const response = await POST(
+      buildRequest({
+        interviewId: 'interview-1',
+        decision: 'withdraw',
+        reasonCode: 'candidate_withdrew',
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(mocks.recordDecisionTransition).toHaveBeenCalledWith(
+      expect.objectContaining({
+        interviewId: 'interview-1',
+        toState: 'withdraw',
+        reasonCode: 'candidate_withdrew',
+      })
+    );
   });
 
   it('rejects managers and reviewers because final decisions are owner-only', async () => {

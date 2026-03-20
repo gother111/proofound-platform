@@ -31,7 +31,7 @@ interface DecisionDialogProps {
   onDecisionMade?: () => void;
 }
 
-type DecisionType = 'hire' | 'advance' | 'hold' | 'reject';
+type DecisionType = 'hire' | 'advance' | 'hold' | 'reject' | 'withdraw';
 
 interface DecisionWindow {
   hoursRemaining: number;
@@ -226,6 +226,15 @@ export function DecisionDialog({
       color: 'text-red-600 dark:text-red-400',
       bgColor: 'bg-red-50 dark:bg-red-900/20',
       borderColor: 'border-red-200 dark:border-red-800',
+    },
+    {
+      value: 'withdraw' as DecisionType,
+      label: 'Withdraw',
+      description: 'Close the corridor without a hiring outcome',
+      icon: AlertTriangle,
+      color: 'text-stone-700 dark:text-stone-300',
+      bgColor: 'bg-stone-50 dark:bg-stone-900/20',
+      borderColor: 'border-stone-200 dark:border-stone-700',
     },
   ];
 

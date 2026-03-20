@@ -6,8 +6,9 @@ export const HIRING_CORRIDOR_STEPS = [
   'intro_accepted',
   'reveal_requested',
   'reveal_approved',
-  'interview_scheduled',
+  'interviews',
   'decision',
+  'engagement_recorded',
   'engagement_verified',
 ] as const;
 
@@ -120,10 +121,12 @@ function stepLabel(step: HiringCorridorStep) {
       return 'Reveal requested';
     case 'reveal_approved':
       return 'Reveal approved';
-    case 'interview_scheduled':
-      return 'Interview scheduled';
+    case 'interviews':
+      return 'Interview(s)';
     case 'decision':
       return 'Decision';
+    case 'engagement_recorded':
+      return 'Engagement recorded';
     case 'engagement_verified':
       return 'Engagement verified';
   }
@@ -238,6 +241,7 @@ export function buildHiringCorridorSnapshot(params: {
     Boolean(source.decisionId);
   const interviewScheduled = Boolean(source.interviewId);
   const decisionComplete = Boolean(source.decisionState && source.decisionState !== 'pending');
+  const engagementRecorded = Boolean(source.engagementVerification?.id);
   const engagementVerified = source.engagementVerification?.status === 'verified';
   const activeInterviewInProgress = source.interviewStatus === 'scheduled';
 
@@ -245,12 +249,14 @@ export function buildHiringCorridorSnapshot(params: {
 
   if (engagementVerified) {
     currentStep = 'engagement_verified';
+  } else if (engagementRecorded) {
+    currentStep = 'engagement_recorded';
   } else if (activeInterviewInProgress) {
-    currentStep = 'interview_scheduled';
+    currentStep = 'interviews';
   } else if (decisionComplete) {
     currentStep = 'decision';
   } else if (interviewScheduled) {
-    currentStep = 'interview_scheduled';
+    currentStep = 'interviews';
   } else if (revealApproved) {
     currentStep = 'reveal_approved';
   } else if (revealRequest.pending) {
@@ -368,7 +374,7 @@ export function buildHiringCorridorSnapshot(params: {
       };
       summary = 'Reveal is approved. The corridor is ready for interview scheduling.';
     }
-  } else if (currentStep === 'interview_scheduled') {
+  } else if (currentStep === 'interviews') {
     const interviewFinished =
       source.interviewStatus === 'completed' ||
       Boolean(source.interviewCompletedAt) ||
@@ -401,7 +407,7 @@ export function buildHiringCorridorSnapshot(params: {
           label: 'Record decision',
           description: 'Complete the decision step now that the interview has finished.',
         };
-        summary = 'The interview is complete and the corridor is waiting for a decision.';
+        summary = 'The interview round is complete and the corridor is waiting for a decision.';
       } else {
         nextAction = {
           id: 'wait_for_decision',
@@ -409,16 +415,16 @@ export function buildHiringCorridorSnapshot(params: {
           description: 'The organization is expected to record the next decision.',
         };
         summary =
-          'The interview is complete and the corridor is waiting for the organization’s decision.';
+          'The interview round is complete and the corridor is waiting for the organization’s decision.';
       }
     } else {
       nextAction = {
         id: 'prepare_for_interview',
         label: 'Prepare for interview',
         description:
-          'The interview is scheduled and coordination details are now visible to both sides.',
+          'The interview round is scheduled and coordination details are now visible to both sides.',
       };
-      summary = 'The interview is scheduled and the corridor is in coordination mode.';
+      summary = 'The interview stage is active and the corridor is in coordination mode.';
     }
   } else if (currentStep === 'decision') {
     if (source.decisionState === 'hire') {
@@ -476,7 +482,7 @@ export function buildHiringCorridorSnapshot(params: {
         description: 'The corridor is on hold until the organization records the next decision.',
       };
       summary = 'The decision is on hold.';
-    } else if (source.decisionState === 'reject' || source.decisionState === 'withdrawn') {
+    } else if (source.decisionState === 'reject' || source.decisionState === 'withdraw') {
       nextAction = {
         id: 'corridor_closed',
         label: 'Corridor closed',
@@ -491,6 +497,42 @@ export function buildHiringCorridorSnapshot(params: {
           'The current decision keeps the corridor open, but no further action is available yet.',
       };
       summary = 'The corridor is waiting on the next decision update.';
+    }
+  } else if (currentStep === 'engagement_recorded') {
+    const organizationConfirmed =
+      source.engagementVerification?.organizationConfirmedAt &&
+      source.engagementVerification.organizationConfirmedAt.length > 0;
+    const candidateConfirmed =
+      source.engagementVerification?.candidateConfirmedAt &&
+      source.engagementVerification.candidateConfirmedAt.length > 0;
+
+    if (perspective === 'organization' && !organizationConfirmed) {
+      nextAction = {
+        id: 'confirm_engagement',
+        label: 'Confirm engagement',
+        description:
+          'Record the engagement details so the candidate can complete the final verification step.',
+      };
+      summary =
+        'The hire decision is recorded and the corridor is waiting for the organization to record the engagement.';
+    } else if (perspective === 'individual' && !candidateConfirmed) {
+      nextAction = {
+        id: 'confirm_engagement',
+        label: 'Confirm engagement',
+        description:
+          'The engagement has been recorded and now needs your confirmation to finish the corridor.',
+      };
+      summary =
+        'The engagement has been recorded and the corridor is waiting for your confirmation.';
+    } else {
+      nextAction = {
+        id: 'wait_for_engagement_confirmation',
+        label: 'Wait for engagement confirmation',
+        description:
+          'One side has already recorded the engagement. The corridor will complete after the remaining confirmation.',
+      };
+      summary =
+        'The engagement is recorded and the corridor is waiting for the remaining confirmation.';
     }
   } else {
     nextAction = {
@@ -507,6 +549,13 @@ export function buildHiringCorridorSnapshot(params: {
         ? source.candidateDisplayName || 'Candidate'
         : getMaskedCounterpartyLabel(source, viewerUserId)
       : source.organizationName || source.assignmentTitle || 'Organization';
+
+  const engagementRecordedAt = source.engagementVerification?.createdAt
+    ? new Date(source.engagementVerification.createdAt)
+    : null;
+  const engagementVerifiedAt = source.engagementVerification?.verifiedAt
+    ? new Date(source.engagementVerification.verifiedAt)
+    : null;
 
   return {
     currentStep,
@@ -527,15 +576,13 @@ export function buildHiringCorridorSnapshot(params: {
                   ? toIso(
                       source.revealedAt ?? source.fullIdentityUnlockedAt ?? source.introUpdatedAt
                     )
-                  : step === 'interview_scheduled'
+                  : step === 'interviews'
                     ? toIso(source.interviewScheduledAt)
                     : step === 'decision'
                       ? toIso(source.decisionUpdatedAt)
-                      : toIso(
-                          source.engagementVerification?.verifiedAt
-                            ? new Date(source.engagementVerification.verifiedAt)
-                            : null
-                        ),
+                      : step === 'engagement_recorded'
+                        ? toIso(engagementRecordedAt)
+                        : toIso(engagementVerifiedAt),
     })),
     nextAction,
     privacyStage: getPrivacyStage(source),

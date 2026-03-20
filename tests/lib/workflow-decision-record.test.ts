@@ -383,6 +383,7 @@ describe('workflow decision bootstrap', () => {
     mocks.ensureEngagementVerificationForDecision.mockResolvedValue({
       id: 'engagement-1',
       status: 'pending_both_confirmations',
+      createdAt: '2026-03-15T01:00:00.000Z',
     });
 
     const result = await recordDecisionTransition({
@@ -404,6 +405,7 @@ describe('workflow decision bootstrap', () => {
     expect(result.engagementVerification).toEqual({
       id: 'engagement-1',
       status: 'pending_both_confirmations',
+      createdAt: '2026-03-15T01:00:00.000Z',
     });
   });
 });

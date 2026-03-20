@@ -21,6 +21,7 @@ import {
   applySkillVerificationTrustLift,
   parseHumanObservedAttestationResponse,
   type HumanObservedAttestationRequestPayload,
+  type HumanObservedVerdict,
 } from '@/lib/verification/human-attestations';
 import {
   getCanonicalSkillVerificationRequestByToken,
@@ -30,13 +31,56 @@ import {
   getCanonicalImpactVerificationRequestByToken,
   updateCanonicalImpactVerificationRequest,
 } from '@/lib/verification/canonical-impact-requests';
+import { getClaimTemplateLabel } from '@/lib/verification/scoped-contract';
+import { ensureInternalOpsQueueItem } from '@/lib/internal-ops/queue';
 
 const VerifyResponseSchema = z.object({
-  action: z.enum(['accept', 'decline']),
+  action: z.enum(['accept', 'decline']).optional(),
   message: z.string().optional(),
   confirmedClaimIds: z.array(z.string()).optional(),
   attestation: z.unknown().optional(),
 });
+
+function getHumanObservedVerdict(attestation: unknown): HumanObservedVerdict | null {
+  if (!attestation || typeof attestation !== 'object') {
+    return null;
+  }
+
+  const verdict = (attestation as { verdict?: unknown }).verdict;
+  if (verdict === 'yes' || verdict === 'partly' || verdict === 'no') {
+    return verdict;
+  }
+
+  return null;
+}
+
+function resolveVerificationAction(params: {
+  requestKind: 'generic_verification' | 'human_observed_attestation';
+  action?: 'accept' | 'decline';
+  attestation?: unknown;
+}) {
+  if (params.requestKind !== 'human_observed_attestation') {
+    return params.action ?? null;
+  }
+
+  const verdict = getHumanObservedVerdict(params.attestation);
+  if (!verdict) {
+    return params.action ?? null;
+  }
+
+  return verdict === 'no' ? 'decline' : 'accept';
+}
+
+function isCompatibleHumanObservedAction(params: {
+  action: 'accept' | 'decline';
+  verdict: HumanObservedVerdict;
+}) {
+  if (params.action === 'accept') {
+    return params.verdict === 'yes' || params.verdict === 'partly';
+  }
+
+  return params.verdict === 'no';
+}
 
 function isMissingColumnError(error: unknown, column: string) {
   if (!error || typeof error !== 'object') {
@@ -191,6 +235,8 @@ function getResponseAuthMethod(identity: OptionalAuthIdentity): 'token' | 'authe
 type ImpactClaim = {
   id: string;
   label: string;
+  template?: string;
+  detail?: string;
   outcomeId?: string;
   enabled?: boolean;
 };
@@ -248,21 +294,26 @@ function parseSnapshotOutcomeClaims(value: unknown): ImpactClaim[] {
     return [];
   }
 
-  return value
-    .map((row) => {
-      if (!row || typeof row !== 'object') {
-        return null;
-      }
-      const claim = row as Record<string, unknown>;
-      const id = toStringOrNull(claim.id);
-      if (!id) {
-        return null;
-      }
-      const label = toStringOrNull(claim.label) || 'Outcome confirmation';
-      const outcomeId = toStringOrNull(claim.outcomeId);
-      return outcomeId ? { id, label, outcomeId } : { id, label };
-    })
-    .filter((row): row is ImpactClaim => Boolean(row));
+  return value.reduce<ImpactClaim[]>((claims, row) => {
+    if (!row || typeof row !== 'object') {
+      return claims;
+    }
+    const claim = row as Record<string, unknown>;
+    const id = toStringOrNull(claim.id);
+    if (!id) {
+      return claims;
+    }
+    const label = toStringOrNull(claim.label) || getClaimTemplateLabel('outcome_happened');
+    const outcomeId = toStringOrNull(claim.outcomeId);
+    const template = toStringOrNull(claim.template) || 'outcome_happened';
+    const detail = toStringOrNull(claim.detail);
+    claims.push(
+      outcomeId
+        ? { id, label, outcomeId, template, detail: detail || undefined }
+        : { id, label, template, detail: detail || undefined }
+    );
+    return claims;
+  }, []);
 }
 
 function parseStoryOutcomeClaims(measuredOutcomes: unknown): ImpactClaim[] {
@@ -270,34 +321,46 @@ function parseStoryOutcomeClaims(measuredOutcomes: unknown): ImpactClaim[] {
     return [];
   }
 
-  return measuredOutcomes
-    .map((row, index) => {
-      if (!row || typeof row !== 'object') {
-        return null;
-      }
+  return measuredOutcomes.reduce<ImpactClaim[]>((claims, row, index) => {
+    if (!row || typeof row !== 'object') {
+      return claims;
+    }
 
-      const outcome = row as Record<string, unknown>;
-      const outcomeId = toStringOrNull(outcome.id);
-      const label =
-        toStringOrNull(outcome.change) || toStringOrNull(outcome.label) || `Outcome ${index + 1}`;
-      const value = outcome.value;
-      const unit = toStringOrNull(outcome.unit);
-      const renderedValue =
-        typeof value === 'number' || typeof value === 'string' ? String(value).trim() : null;
+    const outcome = row as Record<string, unknown>;
+    const outcomeId = toStringOrNull(outcome.id);
+    const label =
+      toStringOrNull(outcome.change) || toStringOrNull(outcome.label) || `Outcome ${index + 1}`;
+    const value = outcome.value;
+    const unit = toStringOrNull(outcome.unit);
+    const renderedValue =
+      typeof value === 'number' || typeof value === 'string' ? String(value).trim() : null;
 
-      const valueSuffix =
-        renderedValue && unit
-          ? ` (${renderedValue} ${unit})`
-          : renderedValue
-            ? ` (${renderedValue})`
-            : '';
+    const valueSuffix =
+      renderedValue && unit
+        ? ` (${renderedValue} ${unit})`
+        : renderedValue
+          ? ` (${renderedValue})`
+          : '';
 
-      const id = outcomeId ? `outcome:${outcomeId}` : `outcome:generated:${index + 1}`;
-      return outcomeId
-        ? { id, outcomeId, label: `${label}${valueSuffix}` }
-        : { id, label: `${label}${valueSuffix}` };
-    })
-    .filter((row): row is ImpactClaim => Boolean(row));
+    const id = outcomeId ? `outcome:${outcomeId}` : `outcome:generated:${index + 1}`;
+    claims.push(
+      outcomeId
+        ? {
+            id,
+            outcomeId,
+            template: 'outcome_happened',
+            label: getClaimTemplateLabel('outcome_happened'),
+            detail: `${label}${valueSuffix}`,
+          }
+        : {
+            id,
+            template: 'outcome_happened',
+            label: getClaimTemplateLabel('outcome_happened'),
+            detail: `${label}${valueSuffix}`,
+          }
+    );
+    return claims;
+  }, []);
 }
 
 function parseLegacyOutcomeClaimLabel(outcomesText: unknown): string | null {
@@ -327,17 +390,22 @@ function parseLegacyOutcomeClaims(outcomesText: unknown): ImpactClaim[] {
   return [
     {
       id: 'outcome:legacy',
-      label: `Outcome confirmation (${label})`,
+      template: 'outcome_happened',
+      label: getClaimTemplateLabel('outcome_happened'),
+      detail: `Outcome confirmation (${label})`,
     },
   ];
 }
 
 function buildFallbackRoleClaim(impactStory: ImpactStoryContext | null): ImpactClaim {
   const roleTitle = toStringOrNull(impactStory?.role_title) || 'Contributor';
-  const roleScope = (toStringOrNull(impactStory?.role_scope) || 'contributed').replace(/_/g, ' ');
+  const roleScope = toStringOrNull(impactStory?.role_scope) || 'contributed';
+  const claimTemplate = roleScope === 'contributed' ? 'contributed_this_part' : 'did_this_work';
   return {
     id: 'role',
-    label: `Role participation (${roleTitle}, ${roleScope})`,
+    template: claimTemplate,
+    label: getClaimTemplateLabel(claimTemplate),
+    detail: `${roleTitle}, ${roleScope.replace(/_/g, ' ')}`,
   };
 }
 
@@ -364,10 +432,17 @@ function resolveImpactClaims(
       : null;
   const roleClaimId = toStringOrNull(roleClaimRaw?.id);
   const roleClaimLabel = toStringOrNull(roleClaimRaw?.label);
+  const roleClaimTemplate = toStringOrNull(roleClaimRaw?.template);
+  const roleClaimDetail = toStringOrNull(roleClaimRaw?.detail);
 
   const roleClaim: ImpactClaim =
     roleClaimId && roleClaimLabel
-      ? { id: roleClaimId, label: roleClaimLabel }
+      ? {
+          id: roleClaimId,
+          label: roleClaimLabel,
+          template: roleClaimTemplate || undefined,
+          detail: roleClaimDetail || undefined,
+        }
       : buildFallbackRoleClaim(impactStory);
 
   const outcomeClaimsFromSnapshot = parseSnapshotOutcomeClaims(snapshotRecord.outcomeClaims);
@@ -1108,6 +1183,7 @@ export async function POST(
       | Awaited<ReturnType<typeof createClient>> = supabase;
 
     const validated = VerifyResponseSchema.parse(body);
+    const explicitAction = validated.action ?? null;
     const impactRedeemSessionNonce =
       request.cookies.get(
         getCapabilityRedeemSessionCookieName(CAPABILITY_TOKEN_CLASSES.IMPACT_VERIFICATION_RESPONSE)
@@ -1139,6 +1215,13 @@ export async function POST(
       }
 
       if (impactVerification) {
+        if (!explicitAction) {
+          return NextResponse.json(
+            { error: 'Impact verification responses must include an explicit action.' },
+            { status: 400 }
+          );
+        }
+
         if (isContradictedVerificationState(impactVerification)) {
           return toCanonicalLookupErrorResponse('revoked');
         }
@@ -1197,7 +1280,7 @@ export async function POST(
           redeemSessionNonce: impactRedeemSessionNonce,
           metadata: {
             requestId: impactVerification.id,
-            action: validated.action,
+            action: explicitAction,
           },
         });
 
@@ -1220,16 +1303,16 @@ export async function POST(
         const artifactsClaimId = claims.artifactsClaim.id;
 
         const confirmedOutcomeIds =
-          validated.action === 'accept'
+          explicitAction === 'accept'
             ? outcomeClaims
                 .filter((claim) => claim.id && confirmedClaimIds.has(claim.id))
                 .map((claim) => claim.outcomeId)
                 .filter((outcomeId): outcomeId is string => Boolean(outcomeId))
             : [];
 
-        const confirmedRole = validated.action === 'accept' && confirmedClaimIds.has(roleClaimId);
+        const confirmedRole = explicitAction === 'accept' && confirmedClaimIds.has(roleClaimId);
         const confirmedArtifacts =
-          validated.action === 'accept' &&
+          explicitAction === 'accept' &&
           Boolean(claims.artifactsClaim.enabled) &&
           confirmedClaimIds.has(artifactsClaimId);
 
@@ -1263,7 +1346,7 @@ export async function POST(
           },
         };
 
-        const nextStatus = validated.action === 'accept' ? 'accepted' : 'declined';
+        const nextStatus = explicitAction === 'accept' ? 'accepted' : 'declined';
         const updatedCanonicalImpact = await updateCanonicalImpactVerificationRequest({
           requestId: impactVerification.id,
           status: nextStatus,
@@ -1299,9 +1382,9 @@ export async function POST(
         }
 
         if (
-          validated.action === 'accept' &&
+          explicitAction === 'accept' &&
           mergedIntegrity.integrityStatus === 'clear' &&
-          (confirmedRole || confirmedArtifacts || confirmedOutcomeIds.length > 0)
+          (confirmedRole || confirmedOutcomeIds.length > 0)
         ) {
           const { error: impactStoryUpdateError } = await adminClient
             .from('impact_stories')
@@ -1330,10 +1413,9 @@ export async function POST(
             .maybeSingle();
 
           if (requesterProfile?.email) {
-            const actionLabel = validated.action === 'accept' ? 'accepted' : 'declined';
+            const actionLabel = explicitAction === 'accept' ? 'accepted' : 'declined';
             const storyTitle = impactStory?.title || 'impact story';
-            const confirmedCount =
-              (confirmedRole ? 1 : 0) + (confirmedArtifacts ? 1 : 0) + confirmedOutcomeIds.length;
+            const confirmedCount = (confirmedRole ? 1 : 0) + confirmedOutcomeIds.length;
 
             await sendEmail({
               to: requesterProfile.email,
@@ -1345,7 +1427,7 @@ export async function POST(
                     ${impactVerification.verifier_email} has <strong>${actionLabel}</strong> your verification request for <strong>${storyTitle}</strong>.
                   </p>
                   ${
-                    validated.action === 'accept'
+                    explicitAction === 'accept'
                       ? `<p style="color: #4a4a4a; line-height: 1.6;">Confirmed claims: <strong>${confirmedCount}</strong>.</p>`
                       : ''
                   }
@@ -1370,7 +1452,7 @@ export async function POST(
           targetId: impactVerification.id,
           meta: {
             response_status: nextStatus,
-            response_action: validated.action,
+            response_action: explicitAction,
             requires_authenticated_verifier:
               impactVerification.requires_authenticated_verifier || false,
             response_auth_method: getResponseAuthMethod(authIdentity),
@@ -1394,7 +1476,7 @@ export async function POST(
             outcomes: confirmedOutcomeIds,
           },
           message:
-            validated.action === 'accept'
+            explicitAction === 'accept'
               ? 'Impact story claims verified successfully.'
               : 'Your response has been recorded.',
         });
@@ -1487,6 +1569,11 @@ export async function POST(
     }
 
     const requestKind = normalizedVerification.request_kind;
+    const resolvedAction = resolveVerificationAction({
+      requestKind,
+      action: explicitAction ?? undefined,
+      attestation: validated.attestation,
+    });
     const attestationRequest =
       requestKind === 'human_observed_attestation' &&
       normalizedVerification.attestation_request &&
@@ -1495,7 +1582,7 @@ export async function POST(
         : null;
 
     let attestationResponse: Record<string, unknown> | null = null;
-    if (requestKind === 'human_observed_attestation' && validated.action === 'accept') {
+    if (requestKind === 'human_observed_attestation') {
       if (!attestationRequest) {
         return NextResponse.json(
           { error: 'This attestation request is missing its bounded skill scope.' },
@@ -1515,6 +1602,31 @@ export async function POST(
       }
 
       attestationResponse = parsedAttestation.data;
+
+      if (
+        explicitAction &&
+        !isCompatibleHumanObservedAction({
+          action: explicitAction,
+          verdict: attestationResponse.verdict as HumanObservedVerdict,
+        })
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              explicitAction === 'accept'
+                ? 'Structured attestations marked accept must use verdict yes or partly.'
+                : 'Structured attestations marked decline must use verdict no.',
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (!resolvedAction) {
+      return NextResponse.json(
+        { error: 'Verification responses must include an explicit action or structured verdict.' },
+        { status: 400 }
+      );
     }
 
     const redeemedSkillToken = await redeemCapabilityToken(token, {
@@ -1531,7 +1643,7 @@ export async function POST(
       redeemSessionNonce: skillRedeemSessionNonce,
       metadata: {
         requestId: normalizedVerification.id,
-        action: validated.action,
+        action: resolvedAction,
       },
     });
 
@@ -1539,7 +1651,7 @@ export async function POST(
       return toNeutralCapabilityTokenError(redeemedSkillToken.reason);
     }
 
-    const newStatus = validated.action === 'accept' ? 'accepted' : 'declined';
+    const newStatus = resolvedAction === 'accept' ? 'accepted' : 'declined';
     const respondedAt = new Date().toISOString();
     const sameDeviceSignal = hasSameDeviceSignal({
       requesterIpHash: normalizedVerification.requester_ip_hash,
@@ -1572,7 +1684,7 @@ export async function POST(
 
     const updatedCanonicalRecord = await updateCanonicalSkillVerificationRequest({
       requestId: normalizedVerification.id,
-      status: validated.action === 'accept' ? 'accepted' : 'declined',
+      status: resolvedAction === 'accept' ? 'accepted' : 'declined',
       respondedAt,
       responseMessage: validated.message || null,
       attestationResponse,
@@ -1599,7 +1711,7 @@ export async function POST(
       return NextResponse.json({ error: 'Failed to update verification status' }, { status: 500 });
     }
 
-    if (validated.action === 'accept' && mergedIntegrity.integrityStatus === 'clear') {
+    if (resolvedAction === 'accept' && mergedIntegrity.integrityStatus === 'clear') {
       const { data: skill } = await skillDataClient
         .from('skills')
         .select('evidence_strength')
@@ -1615,13 +1727,52 @@ export async function POST(
         attestationResponse,
       });
 
-      await skillDataClient
-        .from('skills')
-        .update({
-          evidence_strength: newStrength.toString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', normalizedVerification.skill_id);
+      if (newStrength !== currentStrength) {
+        await skillDataClient
+          .from('skills')
+          .update({
+            evidence_strength: newStrength.toString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', normalizedVerification.skill_id);
+      }
+    }
+
+    const attestationVerdict = getHumanObservedVerdict(attestationResponse);
+    if (requestKind === 'human_observed_attestation') {
+      if (attestationVerdict === 'partly') {
+        await ensureInternalOpsQueueItem({
+          queueType: 'verification',
+          linkedEntityType: 'verification_request',
+          linkedEntityId: normalizedVerification.id,
+          summary:
+            'A verifier responded partly. Manual trust review is needed before this attestation can count.',
+          priority: 'normal',
+          actorType: authIdentity.isAuthenticated ? 'candidate' : 'service_account',
+          actorId: authIdentity.profileId,
+          metadata: {
+            verdict: attestationVerdict,
+            requestKind,
+            verifierEmail: authIdentity.email || normalizedSkillVerifierEmail || null,
+          },
+        });
+      } else if (attestationVerdict === 'no') {
+        await ensureInternalOpsQueueItem({
+          queueType: 'correction_revocation',
+          linkedEntityType: 'verification_request',
+          linkedEntityId: normalizedVerification.id,
+          summary:
+            'A verifier responded no. Review whether trust needs correction, contradiction handling, or revocation.',
+          priority: 'high',
+          actorType: authIdentity.isAuthenticated ? 'candidate' : 'service_account',
+          actorId: authIdentity.profileId,
+          metadata: {
+            verdict: attestationVerdict,
+            requestKind,
+            verifierEmail: authIdentity.email || normalizedSkillVerifierEmail || null,
+          },
+        });
+      }
     }
 
     const canonicalRecordId = normalizedVerification.id;
@@ -1634,7 +1785,7 @@ export async function POST(
         {
           skill_id: normalizedVerification.skill_id,
           requester_id: normalizedVerification.requester_profile_id,
-          action: validated.action === 'accept' ? 'accepted' : 'declined',
+          action: resolvedAction === 'accept' ? 'accepted' : 'declined',
         }
       );
     } catch (analyticsError) {
@@ -1661,14 +1812,18 @@ export async function POST(
         }
 
         const actionText =
-          validated.action === 'accept'
+          resolvedAction === 'accept'
             ? requestKind === 'human_observed_attestation'
-              ? 'recorded an observed-in-practice attestation for'
+              ? attestationVerdict === 'partly'
+                ? 'recorded a partial observed-in-practice attestation for'
+                : 'recorded an observed-in-practice attestation for'
               : 'verified'
             : requestKind === 'human_observed_attestation'
-              ? 'declined to record an attestation for'
+              ? attestationVerdict === 'no'
+                ? 'recorded a negative observed-in-practice attestation for'
+                : 'recorded a partial observed-in-practice attestation for'
               : 'declined to verify';
-        const actionEmoji = validated.action === 'accept' ? '✅' : '❌';
+        const actionEmoji = resolvedAction === 'accept' ? '✅' : '❌';
         const relationshipText =
           normalizedVerification.verifier_relationship ||
           normalizedVerification.verifier_source ||
@@ -1681,7 +1836,7 @@ export async function POST(
 
         await sendEmail({
           to: requesterProfile.email,
-          subject: `${actionEmoji} Your skill verification request was ${validated.action === 'accept' ? 'accepted' : 'declined'}`,
+          subject: `${actionEmoji} Your skill verification request was ${resolvedAction === 'accept' ? 'accepted' : attestationVerdict === 'partly' ? 'partly confirmed' : 'declined'}`,
           html: `
             <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <h2 style="color: #1a1a1a; margin-bottom: 16px;">
@@ -1697,7 +1852,7 @@ export async function POST(
               ${
                 validated.message
                   ? `
-                <div style="background: #f5f5f5; border-left: 4px solid ${validated.action === 'accept' ? '#22c55e' : '#ef4444'}; padding: 16px; margin: 20px 0; border-radius: 4px;">
+                <div style="background: #f5f5f5; border-left: 4px solid ${resolvedAction === 'accept' ? '#22c55e' : '#ef4444'}; padding: 16px; margin: 20px 0; border-radius: 4px;">
                   <p style="color: #6b6b6b; font-size: 14px; margin: 0 0 8px 0;">Their message:</p>
                   <p style="color: #4a4a4a; font-size: 15px; margin: 0; font-style: italic;">"${validated.message}"</p>
                 </div>
@@ -1712,7 +1867,7 @@ export async function POST(
               </div>
             </div>
           `,
-          text: `Your skill verification request was ${validated.action === 'accept' ? 'accepted' : 'declined'}.\n\n${relationshipText} (${normalizedVerification.verifier_email}) has ${actionText} your "${skillName}" skill.${validated.message ? `\n\nTheir message: "${validated.message}"` : ''}\n\nView your Expertise Atlas: ${expertiseUrl}`,
+          text: `Your skill verification request was ${resolvedAction === 'accept' ? 'accepted' : attestationVerdict === 'partly' ? 'partly confirmed' : 'declined'}.\n\n${relationshipText} (${normalizedVerification.verifier_email}) has ${actionText} your "${skillName}" skill.${validated.message ? `\n\nTheir message: "${validated.message}"` : ''}\n\nView your Expertise Atlas: ${expertiseUrl}`,
         });
       }
     } catch (emailError) {
@@ -1726,7 +1881,7 @@ export async function POST(
       targetId: normalizedVerification.id,
       meta: {
         response_status: newStatus,
-        response_action: validated.action,
+        response_action: resolvedAction,
         requires_authenticated_verifier:
           normalizedVerification.requires_authenticated_verifier || false,
         response_auth_method: getResponseAuthMethod(authIdentity),
@@ -1749,9 +1904,9 @@ export async function POST(
         mergedIntegrity.integrityStatus === 'flagged' ? mergedIntegrity.integrityReason : null,
       canonical_record_id: canonicalRecordId,
       message:
-        validated.action === 'accept'
+        resolvedAction === 'accept'
           ? requestKind === 'human_observed_attestation'
-            ? 'Thank you for recording this observed-in-practice attestation.'
+            ? 'Thank you for recording this structured observed-in-practice attestation.'
             : 'Thank you for verifying this skill!'
           : 'Your response has been recorded.',
     });

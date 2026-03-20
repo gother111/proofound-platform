@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Mail, Loader2, AlertCircle, Linkedin } from 'lucide-react';
 import { toast } from 'sonner';
 import { WorkEmailVerificationForm } from './WorkEmailVerificationForm';
@@ -16,6 +17,24 @@ interface VerificationStatusData {
     publicBadges: unknown[];
     orgReviewBadges?: unknown[];
     internalBadges?: unknown[];
+    scopedSignals: Array<{
+      verificationRecordId: string;
+      subjectType: string;
+      subjectId: string;
+      claimTemplate: string;
+      claimLabel: string;
+      trustType: string;
+      trustLabel: string;
+      supportLabel: string;
+      freshnessState: string;
+      freshnessLabel: string | null;
+      verifiedAt: string | null;
+      updatedAt: string | null;
+      contradictedAt: string | null;
+      revokedAt: string | null;
+      correctedAt: string | null;
+      verificationKind: string | null;
+    }>;
     slots: {
       identity: { state: string };
       workplace: { state: string };
@@ -415,11 +434,10 @@ function VerificationOverview({
   onWorkEmail: () => void;
   onLinkedIn: () => void;
 }) {
-  const hasTrustAnchor =
-    status.summary.publicBadges.length > 0 ||
-    (status.summary.orgReviewBadges?.length || 0) > 0 ||
-    status.summary.slots.workplace.state === 'verified' ||
-    status.summary.slots.organizationPlatformReview.state === 'verified';
+  const scopedSignals = status.summary.scopedSignals || [];
+  const hasTrustAnchor = scopedSignals.some(
+    (signal) => signal.trustType !== 'self_claimed' && signal.freshnessState === 'active'
+  );
 
   return (
     <div className="space-y-6">
@@ -428,17 +446,56 @@ function VerificationOverview({
         title="Attach trust to proof, not to profile hype"
         body="Proof-backed trust belongs on specific Proof Packs and claim snapshots. Use the verification requests area to see which proof, claim, verifier, and outcome each request is tied to."
       >
-        <div className="flex flex-wrap gap-3">
-          <Button
-            variant="outline"
-            onClick={() => window.location.assign('/app/i/verifications')}
-            className="border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5"
-          >
-            Open proof verification requests
-          </Button>
-          <p className="max-w-xl text-sm text-muted-foreground">
-            Ask for verification only when a specific proof or claim needs independent confirmation.
-          </p>
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-3">
+            <Button
+              variant="outline"
+              onClick={() => window.location.assign('/app/i/verifications')}
+              className="border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5"
+            >
+              Open proof verification requests
+            </Button>
+            <p className="max-w-xl text-sm text-muted-foreground">
+              Ask for verification only when a specific proof or claim needs independent
+              confirmation.
+            </p>
+          </div>
+          {scopedSignals.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No scoped proof verifications are active yet. That is okay while staying
+              portfolio-ready.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {scopedSignals.map((signal) => (
+                <div
+                  key={signal.verificationRecordId}
+                  className="rounded-xl border border-proofound-stone/80 bg-muted/20 p-4"
+                >
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline">{signal.claimLabel}</Badge>
+                    <Badge variant="outline" className="capitalize">
+                      {signal.trustLabel}
+                    </Badge>
+                    <Badge variant="outline" className="capitalize">
+                      {signal.freshnessLabel || signal.freshnessState}
+                    </Badge>
+                  </div>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Scope: {signal.subjectType.replace(/_/g, ' ')}
+                    {' • '}
+                    Basis: {signal.supportLabel}
+                  </p>
+                  {(signal.updatedAt || signal.verifiedAt) && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Updated on{' '}
+                      {new Date(signal.updatedAt || signal.verifiedAt || '').toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </VerificationGroupCard>
 
@@ -482,6 +539,7 @@ function getDefaultStatus(): VerificationStatusData {
       publicBadges: [],
       orgReviewBadges: [],
       internalBadges: [],
+      scopedSignals: [],
       slots: {
         identity: { state: 'none' },
         workplace: { state: 'none' },

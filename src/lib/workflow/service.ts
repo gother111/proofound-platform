@@ -46,6 +46,7 @@ import {
   appendVerificationTransitionLogEntry,
 } from '@/lib/verification/log-entries';
 import { ensureEngagementVerificationForDecision } from '@/lib/engagement-verifications/service';
+import { ensureInternalOpsQueueItem } from '@/lib/internal-ops/queue';
 
 async function getInterviewWorkflowRow(interviewId: string) {
   const result = await db.execute(sql`
@@ -206,7 +207,8 @@ export async function syncRevealRequestTimeoutState(params: {
   conversation: RevealRequestConversationState;
   now?: Date;
 }) {
-  const timeout = getRevealRequestTimeoutSnapshot(params.conversation, params.now ?? new Date());
+  const now = params.now ?? new Date();
+  const timeout = getRevealRequestTimeoutSnapshot(params.conversation, now);
 
   if (!timeout.expired) {
     return {
@@ -223,7 +225,7 @@ export async function syncRevealRequestTimeoutState(params: {
       participantTwoWantsReveal: false,
       participantOneRevealRequestedAt: null,
       participantTwoRevealRequestedAt: null,
-      updatedAt: params.now ?? new Date(),
+      updatedAt: now,
     })
     .where(eq(conversations.id, params.conversation.id))
     .returning({
@@ -240,6 +242,22 @@ export async function syncRevealRequestTimeoutState(params: {
       updatedAt: conversations.updatedAt,
     });
 
+  await ensureInternalOpsQueueItem({
+    queueType: 'privacy_reveal_exception',
+    linkedEntityType: 'conversation',
+    linkedEntityId: params.conversation.id,
+    summary: 'Reveal request timed out and was reset back into the masked corridor.',
+    priority: 'normal',
+    actorType: 'system',
+    metadata: {
+      requestedBy: timeout.requestedBy,
+      requestedAt: timeout.requestedAt?.toISOString() ?? null,
+      expiresAt: timeout.expiresAt?.toISOString() ?? null,
+      timedOutParticipantId: timeout.timedOutParticipantId,
+      resetAt: now.toISOString(),
+    },
+  });
+
   return {
     conversation: updated ?? {
       ...params.conversation,
@@ -247,7 +265,7 @@ export async function syncRevealRequestTimeoutState(params: {
       participantTwoWantsReveal: false,
       participantOneRevealRequestedAt: null,
       participantTwoRevealRequestedAt: null,
-      updatedAt: params.now ?? new Date(),
+      updatedAt: now,
     },
     timeout,
     reset: true,
@@ -1462,7 +1480,7 @@ export async function recordDecisionTransition(params: {
       madeByActorType: params.actorType,
       madeByActorId: params.actorId ?? null,
       reopenedAt: params.toState === 'pending' ? now : decision.reopenedAt,
-      withdrawnAt: params.toState === 'withdrawn' ? now : null,
+      withdrawnAt: params.toState === 'withdraw' ? now : null,
       closedAt: params.toState === 'closed' ? now : null,
       updatedAt: now,
     })
@@ -1537,9 +1555,9 @@ export async function recordDecisionTransition(params: {
     await emitDecisionMade(params.actorId, params.interviewId, {
       interview_id: params.interviewId,
       decision:
-        params.toState === 'closed' || params.toState === 'withdrawn'
+        params.toState === 'closed'
           ? 'hold'
-          : (params.toState as 'hire' | 'advance' | 'hold' | 'reject'),
+          : (params.toState as 'hire' | 'advance' | 'hold' | 'reject' | 'withdraw'),
       hours_since_interview: hoursSinceInterview,
       feedback_provided: Boolean(params.internalNote),
     });

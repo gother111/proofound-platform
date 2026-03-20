@@ -504,7 +504,7 @@ export const CANONICAL_RELATIONSHIP_LIFECYCLE_CONTRACT = {
     assignment_closed_without_hire: 'closed_lost',
     unrecovered_no_show: 'closed_lost',
   },
-  supersedesLegacyReopenLoops: ['withdrawn -> pending_*', 'no_show -> scheduled'] as const,
+  supersedesLegacyReopenLoops: ['withdraw -> pending_*', 'no_show -> scheduled'] as const,
 } as const;
 
 export const WORKFLOW_LABELS = {
@@ -538,7 +538,7 @@ export const WORKFLOW_LABELS = {
     hold: 'On hold',
     hold_expired: 'Hold expired',
     reject: 'Not moving forward',
-    withdrawn: 'Withdrawn',
+    withdraw: 'Withdrawn',
     closed: 'Closed',
   },
   engagement_verification: {
@@ -603,13 +603,13 @@ export const WORKFLOW_TRANSITIONS = {
     no_show: [],
   },
   decision: {
-    pending: ['advance', 'hire', 'hold', 'reject', 'withdrawn', 'closed'],
+    pending: ['advance', 'hire', 'hold', 'reject', 'withdraw', 'closed'],
     advance: ['pending', 'closed'],
     hire: ['closed'],
-    hold: ['advance', 'hire', 'reject', 'hold_expired', 'withdrawn', 'closed'],
-    hold_expired: ['pending', 'advance', 'hire', 'reject', 'closed'],
+    hold: ['advance', 'hire', 'reject', 'hold_expired', 'withdraw', 'closed'],
+    hold_expired: ['pending', 'advance', 'hire', 'reject', 'withdraw', 'closed'],
     reject: ['pending', 'closed'],
-    withdrawn: [],
+    withdraw: [],
     closed: [],
   },
   engagement_verification: {

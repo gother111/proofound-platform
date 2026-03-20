@@ -12,6 +12,7 @@ const updateCanonicalSkillVerificationRequestMock = vi.fn();
 const getCanonicalImpactVerificationRequestByTokenMock = vi.fn();
 const updateCanonicalImpactVerificationRequestMock = vi.fn();
 const emitVerificationProvidedMock = vi.fn();
+const ensureInternalOpsQueueItemMock = vi.fn();
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: () => createClientMock(),
@@ -57,6 +58,10 @@ vi.mock('@/lib/verification/canonical-impact-requests', () => ({
 
 vi.mock('@/lib/analytics/events', () => ({
   emitVerificationProvided: (...args: any[]) => emitVerificationProvidedMock(...args),
+}));
+
+vi.mock('@/lib/internal-ops/queue', () => ({
+  ensureInternalOpsQueueItem: (...args: any[]) => ensureInternalOpsQueueItemMock(...args),
 }));
 
 import { GET, POST } from '@/app/api/verify/[token]/route';
@@ -192,6 +197,7 @@ describe('verify token route', () => {
     sendEmailMock.mockResolvedValue(undefined);
     redeemCapabilityTokenMock.mockResolvedValue({ ok: true });
     emitVerificationProvidedMock.mockResolvedValue(undefined);
+    ensureInternalOpsQueueItemMock.mockResolvedValue(undefined);
     listCanonicalSkillProofRowsForOwnerSkillMock.mockResolvedValue([]);
   });
 
@@ -596,6 +602,129 @@ describe('verify token route', () => {
     expect(response.status).toBe(400);
     expect(body.error).toBe('Validation failed');
     expect(updateCanonicalSkillVerificationRequestMock).not.toHaveBeenCalled();
+  });
+
+  it('POST records partly attestations as accepted responses without trust lift', async () => {
+    let skillUpdatePayload: Record<string, unknown> | null = null;
+
+    createClientMock.mockReturnValue(createClientWithAuth(null));
+    createAdminClientMock.mockReturnValue(
+      createAdminClient({
+        skillStrength: '0.3',
+        onSkillUpdate: (payload) => {
+          skillUpdatePayload = payload;
+        },
+      })
+    );
+    getCanonicalImpactVerificationRequestByTokenMock.mockResolvedValue({ data: null, error: null });
+    getCanonicalSkillVerificationRequestByTokenMock.mockResolvedValue({
+      data: {
+        id: 'skill-request-1',
+        skill_id: '11111111-1111-4111-8111-111111111111',
+        requester_profile_id: 'user-1',
+        requester_email_snapshot: 'requester@example.com',
+        verifier_email: 'verifier@example.com',
+        verifier_source: 'manager',
+        verifier_relationship: 'Manager',
+        verifier_profile_id: null,
+        request_kind: 'human_observed_attestation',
+        attestation_request: {
+          requestKind: 'human_observed_attestation',
+          skillIds: ['11111111-1111-4111-8111-111111111111'],
+          skillLabels: ['System Design'],
+          skillFamilies: ['leadership'],
+        },
+        attestation_response: null,
+        message: 'Please record what you observed.',
+        status: 'pending',
+        requires_authenticated_verifier: false,
+        integrity_status: 'clear',
+        integrity_reason: null,
+        integrity_meta: {},
+        integrity_flagged_at: null,
+        risk_signals: {},
+        requester_ip_hash: null,
+        requester_user_agent_hash: null,
+        created_at: '2026-02-24T00:00:00.000Z',
+        expires_at: '2099-02-24T00:00:00.000Z',
+        source_request_table: 'verification_records',
+        source_request_id: 'skill-request-1',
+      },
+      error: null,
+    });
+    updateCanonicalSkillVerificationRequestMock.mockImplementation(
+      async (payload: Record<string, unknown>) => ({
+        id: 'skill-request-1',
+        skill_id: '11111111-1111-4111-8111-111111111111',
+        requester_profile_id: 'user-1',
+        requester_email_snapshot: 'requester@example.com',
+        verifier_email: 'verifier@example.com',
+        verifier_source: 'manager',
+        verifier_relationship: 'Manager',
+        verifier_profile_id: null,
+        request_kind: 'human_observed_attestation',
+        attestation_request: payload.attestationRequest ?? null,
+        attestation_response: payload.attestationResponse ?? null,
+        message: 'Please record what you observed.',
+        status: payload.status,
+        requires_authenticated_verifier: false,
+        integrity_status: 'clear',
+        integrity_reason: null,
+        integrity_meta: {},
+        integrity_flagged_at: null,
+        risk_signals: {},
+        requester_ip_hash: null,
+        requester_user_agent_hash: null,
+        created_at: '2026-02-24T00:00:00.000Z',
+        responded_at: payload.respondedAt,
+        response_message: payload.responseMessage,
+        expires_at: '2099-02-24T00:00:00.000Z',
+      })
+    );
+
+    const response = await POST(
+      new NextRequest(`http://localhost/api/verify/${TOKEN}`, {
+        method: 'POST',
+        headers: {
+          cookie: 'pf_cap_skill_verification_response=skill-nonce',
+        },
+        body: JSON.stringify({
+          action: 'accept',
+          attestation: {
+            verdict: 'partly',
+            relationshipToSubject: 'Manager',
+            workedTogetherWhere: 'We worked together on two architecture migrations.',
+            observationDuration: '8 months',
+            observationRecency: 'Most recently observed in February 2026',
+            skillIds: ['11111111-1111-4111-8111-111111111111'],
+            observedBehaviorNote:
+              'I directly observed strong system design in one migration, but not across the full requested scope.',
+            confidenceLevel: 'medium',
+            conflictBiasDisclosure: 'Direct manager for one quarter.',
+          },
+        }),
+      }),
+      { params: Promise.resolve({ token: TOKEN }) }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.status).toBe('accepted');
+    expect(updateCanonicalSkillVerificationRequestMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'accepted',
+        attestationResponse: expect.objectContaining({
+          verdict: 'partly',
+        }),
+      })
+    );
+    expect(skillUpdatePayload).toBeNull();
+    expect(ensureInternalOpsQueueItemMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queueType: 'verification',
+        linkedEntityId: 'skill-request-1',
+      })
+    );
   });
 
   it('GET returns 410 for expired canonical skill tokens', async () => {

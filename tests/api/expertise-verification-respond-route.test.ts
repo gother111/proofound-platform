@@ -192,4 +192,108 @@ describe('POST /api/verification/requests/skill/[requestId]/respond', () => {
       error: 'Validation failed',
     });
   });
+
+  it('records structured no verdicts for human-observed declines', async () => {
+    const requestId = '11111111-1111-4111-8111-111111111111';
+    const verificationRequest = {
+      id: requestId,
+      requester_profile_id: '22222222-2222-4222-8222-222222222222',
+      verifier_profile_id: null,
+      verifier_email: 'verifier@example.com',
+      verifier_relationship: 'manager',
+      request_kind: 'human_observed_attestation',
+      attestation_request: {
+        requestKind: 'human_observed_attestation',
+        skillIds: ['33333333-3333-4333-8333-333333333333'],
+        skillLabels: ['Leadership'],
+        skillFamilies: ['leadership'],
+      },
+      status: 'pending',
+      integrity_status: 'clear',
+      integrity_reason: null,
+      integrity_meta: {},
+      integrity_flagged_at: null,
+      risk_signals: {},
+      requester_ip_hash: null,
+      requester_user_agent_hash: null,
+    };
+
+    const supabase = {
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: {
+            user: {
+              email: 'verifier@example.com',
+            },
+          },
+          error: null,
+        }),
+      },
+      from: vi.fn(() => ({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: {
+                display_name: 'Requester Person',
+                handle: 'requester-person',
+              },
+              error: null,
+            }),
+          }),
+        }),
+      })),
+    };
+
+    (getCanonicalSkillVerificationRequestById as any).mockResolvedValue(verificationRequest);
+    (updateCanonicalSkillVerificationRequest as any).mockImplementation(
+      async (payload: Record<string, unknown>) => ({
+        ...verificationRequest,
+        status: payload.status,
+        attestation_response: payload.attestationResponse,
+        response_message: payload.responseMessage,
+        verifier_profile_id: payload.verifierProfileId,
+        response_auth_method: payload.responseAuthMethod,
+        response_actor_email: payload.responseActorEmail,
+        responded_at: payload.respondedAt,
+      })
+    );
+    (requireApiAuthContext as any).mockResolvedValue({
+      user: { id: '44444444-4444-4444-8444-444444444444' },
+      supabase,
+    });
+
+    const response = await POST(
+      new NextRequest(`http://localhost/api/verification/requests/skill/${requestId}/respond`, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'decline',
+          responseMessage: 'I did not directly observe this scope.',
+          attestation: {
+            verdict: 'no',
+            relationshipToSubject: 'Manager',
+            workedTogetherWhere: 'We worked together in one delivery team.',
+            observationDuration: '3 months',
+            observationRecency: 'Most recently observed in March 2026',
+            skillIds: ['33333333-3333-4333-8333-333333333333'],
+            observedBehaviorNote:
+              'I did not directly observe the leadership behaviors requested, so I cannot confirm this scope.',
+            confidenceLevel: 'medium',
+            conflictBiasDisclosure: 'Direct manager for one sprint.',
+          },
+        }),
+      }),
+      { params: Promise.resolve({ requestId }) }
+    );
+
+    expect(response.status).toBe(200);
+    expect(updateCanonicalSkillVerificationRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestId,
+        status: 'declined',
+        attestationResponse: expect.objectContaining({
+          verdict: 'no',
+        }),
+      })
+    );
+  });
 });

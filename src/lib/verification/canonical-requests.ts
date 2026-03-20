@@ -14,6 +14,7 @@ import {
   issueCapabilityToken,
 } from '@/lib/security/capability-tokens';
 import { normalizeEmail } from '@/lib/verification/integrity';
+import { getClaimTemplateLabel } from '@/lib/verification/scoped-contract';
 
 export const CANONICAL_REQUEST_TRANSPORTS = {
   skill: 'skill_verification_request',
@@ -312,6 +313,7 @@ export async function createCanonicalSkillVerificationRequest(params: {
     ownerId: params.ownerId,
     subjectType: 'skill',
     subjectId: params.skillId,
+    verificationSlot: 'skill.attestation',
     verificationKind:
       params.requestKind === 'human_observed_attestation'
         ? params.verifierSource === 'manager'
@@ -320,6 +322,12 @@ export async function createCanonicalSkillVerificationRequest(params: {
         : 'skill_attestation_peer',
     status: 'pending',
     verifierPrincipalType: params.verifierProfileId ? 'user_account' : 'external_email',
+    verifierClass:
+      params.verifierSource === 'manager'
+        ? 'authenticated_manager'
+        : params.verifierSource === 'peer'
+          ? 'authenticated_peer'
+          : 'authenticated_external',
     verifierProfileId: params.verifierProfileId || null,
     verifierEmailHash: hashOpaqueToken(normalizedVerifierEmail),
     verifierDomainSnapshot: normalizedVerifierEmail.split('@')[1] || null,
@@ -332,6 +340,9 @@ export async function createCanonicalSkillVerificationRequest(params: {
       skillName: params.skillName,
       requestKind: params.requestKind,
       attestationRequest: params.attestationRequest || null,
+      claimTemplate: 'skill_observed_in_context',
+      claimLabel: getClaimTemplateLabel('skill_observed_in_context'),
+      subjectType: 'skill',
     },
     sourceRequestTable: 'verification_records',
     sourceRequestId: requestId,

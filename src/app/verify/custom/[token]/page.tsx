@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { AlertCircle, CheckCircle2, Clock, Loader2, Shield, XCircle } from 'lucide-react';
+import {
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  Loader2,
+  MinusCircle,
+  Shield,
+  XCircle,
+} from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -49,6 +57,28 @@ type VerificationData = {
   items: VerifyItem[];
 };
 
+function resolveHumanObservedSubmitPayload(args: {
+  action: 'accept' | 'decline';
+  requestKind?: 'generic_verification' | 'human_observed_attestation';
+  attestationRequest?: {
+    skillIds: string[];
+  } | null;
+  form: HumanObservedAttestationFormValue;
+  verdict?: 'yes' | 'partly' | 'no';
+}) {
+  if (args.requestKind !== 'human_observed_attestation') {
+    return undefined;
+  }
+
+  return buildHumanObservedAttestationPayload({
+    form: {
+      ...args.form,
+      verdict: args.verdict ?? (args.action === 'decline' ? 'no' : args.form.verdict),
+    },
+    skillIds: args.attestationRequest?.skillIds || [],
+  });
+}
+
 function artifactTypeLabel(type: VerifyItem['artifact_type']): string {
   switch (type) {
     case 'impact_story':
@@ -78,7 +108,9 @@ export default function VerifyCustomRequestPage() {
   const [data, setData] = useState<VerificationData | null>(null);
   const [responseMessage, setResponseMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
-  const [submittedAction, setSubmittedAction] = useState<'accepted' | 'declined' | null>(null);
+  const [submittedAction, setSubmittedAction] = useState<'accepted' | 'declined' | 'partly' | null>(
+    null
+  );
   const [attestationForm, setAttestationForm] = useState<HumanObservedAttestationFormValue>(
     createDefaultHumanObservedAttestationForm()
   );
@@ -116,7 +148,10 @@ export default function VerifyCustomRequestPage() {
     }
   }, [token]);
 
-  const handleSubmit = async (action: 'accept' | 'decline') => {
+  const handleSubmit = async (
+    action: 'accept' | 'decline',
+    humanObservedVerdict?: 'yes' | 'partly' | 'no'
+  ) => {
     if (!data) {
       return;
     }
@@ -133,13 +168,13 @@ export default function VerifyCustomRequestPage() {
         body: JSON.stringify({
           action,
           message: responseMessage.trim() || undefined,
-          attestation:
-            data.request_kind === 'human_observed_attestation' && action === 'accept'
-              ? buildHumanObservedAttestationPayload({
-                  form: attestationForm,
-                  skillIds: data.attestation_request?.skillIds || [],
-                })
-              : undefined,
+          attestation: resolveHumanObservedSubmitPayload({
+            action,
+            requestKind: data.request_kind,
+            attestationRequest: data.attestation_request,
+            form: attestationForm,
+            verdict: humanObservedVerdict,
+          }),
         }),
       });
 
@@ -150,7 +185,9 @@ export default function VerifyCustomRequestPage() {
       }
 
       setSubmitted(true);
-      setSubmittedAction(action === 'accept' ? 'accepted' : 'declined');
+      setSubmittedAction(
+        humanObservedVerdict === 'partly' ? 'partly' : action === 'accept' ? 'accepted' : 'declined'
+      );
     } catch (_submitError) {
       setError('Failed to submit response');
     } finally {
@@ -246,6 +283,17 @@ export default function VerifyCustomRequestPage() {
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Your response helps strengthen trust and credibility on Proofound.
+                </p>
+              </>
+            ) : submittedAction === 'partly' ? (
+              <>
+                <MinusCircle className="h-16 w-16 text-amber-600 mx-auto mb-4" />
+                <h2 className="text-2xl font-semibold text-foreground mb-2">
+                  Partial Response Recorded
+                </h2>
+                <p className="text-muted-foreground">
+                  You recorded a structured partial attestation. It has been stored for review and
+                  audit.
                 </p>
               </>
             ) : (
@@ -377,33 +425,76 @@ export default function VerifyCustomRequestPage() {
         </CardContent>
 
         <CardFooter className="flex gap-3 border-t pt-6">
-          <Button
-            variant="outline"
-            className="flex-1 border-[#C76B4A] text-proofound-terracotta hover:bg-[#FFF0F0]"
-            onClick={() => handleSubmit('decline')}
-            disabled={submitting}
-          >
-            {submitting ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : (
-              <XCircle className="h-4 w-4 mr-2" />
-            )}
-            Decline
-          </Button>
-          <Button
-            className="flex-1 bg-proofound-forest text-white hover:bg-proofound-forest/90"
-            onClick={() => handleSubmit('accept')}
-            disabled={submitting}
-          >
-            {submitting ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : (
-              <CheckCircle2 className="h-4 w-4 mr-2" />
-            )}
-            {data?.request_kind === 'human_observed_attestation'
-              ? 'Record Observation'
-              : 'Verify Artifacts'}
-          </Button>
+          {data?.request_kind === 'human_observed_attestation' ? (
+            <>
+              <Button
+                variant="outline"
+                className="flex-1 border-[#C76B4A] text-proofound-terracotta hover:bg-[#FFF0F0]"
+                onClick={() => handleSubmit('decline', 'no')}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <XCircle className="h-4 w-4 mr-2" />
+                )}
+                No
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 border-amber-300 text-amber-800 hover:bg-amber-50"
+                onClick={() => handleSubmit('accept', 'partly')}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <MinusCircle className="h-4 w-4 mr-2" />
+                )}
+                Partly
+              </Button>
+              <Button
+                className="flex-1 bg-proofound-forest text-white hover:bg-proofound-forest/90"
+                onClick={() => handleSubmit('accept', 'yes')}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                )}
+                Yes
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                className="flex-1 border-[#C76B4A] text-proofound-terracotta hover:bg-[#FFF0F0]"
+                onClick={() => handleSubmit('decline')}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <XCircle className="h-4 w-4 mr-2" />
+                )}
+                Decline
+              </Button>
+              <Button
+                className="flex-1 bg-proofound-forest text-white hover:bg-proofound-forest/90"
+                onClick={() => handleSubmit('accept')}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                )}
+                Verify Artifacts
+              </Button>
+            </>
+          )}
         </CardFooter>
       </Card>
     </div>

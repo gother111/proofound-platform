@@ -10,6 +10,8 @@ export type AttestationRequestKind = (typeof ATTESTATION_REQUEST_KINDS)[number];
 
 export const HUMAN_OBSERVED_CONFIDENCE_LEVELS = ['low', 'medium', 'high'] as const;
 export type HumanObservedConfidenceLevel = (typeof HUMAN_OBSERVED_CONFIDENCE_LEVELS)[number];
+export const HUMAN_OBSERVED_VERDICTS = ['yes', 'partly', 'no'] as const;
+export type HumanObservedVerdict = (typeof HUMAN_OBSERVED_VERDICTS)[number];
 
 export const HUMAN_OBSERVED_SKILL_FAMILIES = [
   'communication',
@@ -38,32 +40,65 @@ export type HumanObservedAttestationRequestPayload = {
 };
 
 export type HumanObservedAttestationResponsePayload = {
-  verifierIdentityReference: string;
-  relationshipToUser: string;
-  observationContext: string;
+  verdict: HumanObservedVerdict;
+  relationshipToSubject: string;
+  workedTogetherWhere: string;
   observationDuration: string;
-  lastObservedAt: string;
+  observationRecency: string;
   skillIds: string[];
   skillLabels: string[];
-  observedBehaviors: string[];
+  observedBehaviorNote: string;
   confidenceLevel: HumanObservedConfidenceLevel;
-  conflictBiasDisclosure: string;
+  conflictBiasDisclosure: string | null;
 };
 
 const SkillIdSchema = z.string().uuid();
-const ObservedBehaviorSchema = z.string().trim().min(3).max(280);
+const ObservedBehaviorNoteSchema = z.string().trim().min(20).max(560);
 
-export const HumanObservedAttestationResponseSchema = z.object({
-  verifierIdentityReference: z.string().trim().min(2).max(160),
-  relationshipToUser: z.string().trim().min(2).max(120),
-  observationContext: z.string().trim().min(5).max(400),
-  observationDuration: z.string().trim().min(2).max(120),
-  lastObservedAt: z.string().trim().min(4).max(80),
-  skillIds: z.array(SkillIdSchema).min(1).max(MAX_SKILLS_PER_ATTESTATION),
-  observedBehaviors: z.array(ObservedBehaviorSchema).min(1).max(5),
-  confidenceLevel: z.enum(HUMAN_OBSERVED_CONFIDENCE_LEVELS),
-  conflictBiasDisclosure: z.string().trim().min(2).max(400),
-});
+const GENERIC_PRAISE_PATTERNS = [
+  /\b(great|excellent|amazing|strong|good|fantastic)\b/i,
+  /\b(team player|hard worker|rockstar|superstar)\b/i,
+  /\b(highly recommend|would recommend)\b/i,
+];
+
+function looksLikeGenericPraise(value: string) {
+  const normalized = value.replace(/\s+/g, ' ').trim();
+  if (
+    normalized.length < 40 &&
+    GENERIC_PRAISE_PATTERNS.some((pattern) => pattern.test(normalized))
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+export const HumanObservedAttestationResponseSchema = z
+  .object({
+    verdict: z.enum(HUMAN_OBSERVED_VERDICTS),
+    relationshipToSubject: z.string().trim().min(2).max(120),
+    workedTogetherWhere: z.string().trim().min(5).max(400),
+    observationDuration: z.string().trim().min(2).max(120),
+    observationRecency: z.string().trim().min(4).max(80),
+    skillIds: z.array(SkillIdSchema).min(1).max(MAX_SKILLS_PER_ATTESTATION),
+    observedBehaviorNote: ObservedBehaviorNoteSchema,
+    confidenceLevel: z.enum(HUMAN_OBSERVED_CONFIDENCE_LEVELS),
+    conflictBiasDisclosure: z
+      .string()
+      .trim()
+      .max(400)
+      .optional()
+      .transform((value) => (value && value.length > 0 ? value : null)),
+  })
+  .superRefine((value, ctx) => {
+    if (looksLikeGenericPraise(value.observedBehaviorNote)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['observedBehaviorNote'],
+        message: 'Use a concrete observed behavior or scoped note, not generic praise.',
+      });
+    }
+  });
 
 function normalizeToken(value: string | null | undefined) {
   return (value || '')
@@ -267,7 +302,8 @@ export function isStructuredHumanObservedAttestationEligible(args: {
     return false;
   }
 
-  return HumanObservedAttestationResponseSchema.safeParse(args.attestationResponse).success;
+  const parsed = HumanObservedAttestationResponseSchema.safeParse(args.attestationResponse);
+  return parsed.success && parsed.data.verdict === 'yes';
 }
 
 export function applySkillVerificationTrustLift(args: {
@@ -281,6 +317,11 @@ export function applySkillVerificationTrustLift(args: {
     return args.currentStrength;
   }
 
-  const increment = isStructuredHumanObservedAttestationEligible(args) ? 0.1 : 0.2;
+  const increment =
+    args.requestKind === 'human_observed_attestation'
+      ? isStructuredHumanObservedAttestationEligible(args)
+        ? 0.1
+        : 0
+      : 0.2;
   return Math.min(args.currentStrength + increment, 1);
 }

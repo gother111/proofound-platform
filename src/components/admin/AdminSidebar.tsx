@@ -34,7 +34,7 @@ const navItems = [
     title: 'Verification',
     href: '/admin/verification',
     icon: BadgeCheck,
-    description: 'LinkedIn verification queue',
+    description: 'Internal ops queues',
   },
   {
     title: 'Audit Log',

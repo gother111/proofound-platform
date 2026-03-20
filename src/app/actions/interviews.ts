@@ -238,8 +238,9 @@ export async function getInterviewCorridorItems(params: {
         organizationName: row.organizationName,
         candidateDisplayName:
           corridor.currentStep === 'reveal_approved' ||
-          corridor.currentStep === 'interview_scheduled' ||
+          corridor.currentStep === 'interviews' ||
           corridor.currentStep === 'decision' ||
+          corridor.currentStep === 'engagement_recorded' ||
           corridor.currentStep === 'engagement_verified'
             ? row.candidateDisplayName
             : null,

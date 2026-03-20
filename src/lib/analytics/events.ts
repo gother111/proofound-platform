@@ -852,7 +852,7 @@ export async function emitDecisionMade(
   interviewId: string,
   properties: {
     interview_id: string;
-    decision: 'hire' | 'advance' | 'hold' | 'reject';
+    decision: 'hire' | 'advance' | 'hold' | 'reject' | 'withdraw';
     hours_since_interview: number; // For 48h SLA tracking
     feedback_provided: boolean;
   }

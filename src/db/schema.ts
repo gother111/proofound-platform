@@ -190,7 +190,7 @@ export const canonicalDecisionWorkflowStates = [
   'hold',
   'hold_expired',
   'reject',
-  'withdrawn',
+  'withdraw',
   'closed',
 ] as const;
 export const canonicalEngagementTypeValues = [
@@ -206,6 +206,28 @@ export const canonicalEngagementVerificationWorkflowStates = [
   'verified',
 ] as const;
 export const canonicalEngagementProofHookStatuses = ['not_ready', 'eligible'] as const;
+export const canonicalInternalOpsQueueTypes = [
+  'verification',
+  'privacy_reveal_exception',
+  'correction_revocation',
+  'pilot_ops',
+] as const;
+export const canonicalInternalOpsQueueStatuses = [
+  'open',
+  'in_progress',
+  'resolved',
+  'cancelled',
+] as const;
+export const canonicalInternalOpsQueuePriorities = ['low', 'normal', 'high', 'urgent'] as const;
+export const canonicalInternalOpsQueueEntityTypes = [
+  'verification_request',
+  'verification_bundle',
+  'conversation',
+  'decision',
+  'engagement_verification',
+  'match',
+  'organization',
+] as const;
 export const canonicalConsentObligationStates = [
   'active',
   'expiring',
@@ -5131,6 +5153,57 @@ export const engagementVerificationStateTransitions = pgTable(
     engagementVerificationCreatedAtIdx: index(
       'engagement_verification_state_transitions_created_at_idx'
     ).on(table.engagementVerificationId, table.createdAt),
+  })
+);
+
+export const internalOpsQueueItems = pgTable(
+  'internal_ops_queue_items',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    queueType: text('queue_type', {
+      enum: canonicalInternalOpsQueueTypes,
+    }).notNull(),
+    status: text('status', {
+      enum: canonicalInternalOpsQueueStatuses,
+    })
+      .default('open')
+      .notNull(),
+    priority: text('priority', {
+      enum: canonicalInternalOpsQueuePriorities,
+    })
+      .default('normal')
+      .notNull(),
+    linkedEntityType: text('linked_entity_type', {
+      enum: canonicalInternalOpsQueueEntityTypes,
+    }).notNull(),
+    linkedEntityId: uuid('linked_entity_id').notNull(),
+    summary: text('summary').notNull(),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    createdByActorType: text('created_by_actor_type', {
+      enum: canonicalWorkflowActorTypes,
+    }).notNull(),
+    createdByActorId: uuid('created_by_actor_id').references(() => profiles.id, {
+      onDelete: 'set null',
+    }),
+    resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+    resolvedByActorId: uuid('resolved_by_actor_id').references(() => profiles.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    queueTypeStatusIdx: index('internal_ops_queue_type_status_idx').on(
+      table.queueType,
+      table.status
+    ),
+    linkedEntityIdx: index('internal_ops_queue_linked_entity_idx').on(
+      table.linkedEntityType,
+      table.linkedEntityId,
+      table.status
+    ),
   })
 );
 
