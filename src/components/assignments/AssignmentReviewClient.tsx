@@ -10,17 +10,21 @@ import { Badge } from '@/components/ui/badge';
 interface Assignment {
   id: string;
   orgId?: string;
+  title?: string;
+  engagementType?: string;
   role: string;
   description?: string;
+  rolePurpose?: string;
   businessValue: string;
+  proofExpectations?: string;
   expectedImpact?: string;
+  expectedOutcomes?: any[];
   outcomes: any[];
   compensationMin?: number;
   compensationMax?: number;
   currency: string;
   location?: string;
   requiredSkills: any[];
-  niceToHaveSkills: any[];
   verificationGates?: string[];
   status: string;
 }
@@ -213,11 +217,19 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
           <div className="space-y-3 ml-10">
             <div>
               <p className="text-sm text-muted-foreground">Role</p>
-              <p className="font-medium text-foreground">{assignment.role}</p>
+              <p className="font-medium text-foreground">{assignment.title || assignment.role}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Engagement type</p>
+              <p className="text-foreground">
+                {assignment.engagementType?.replaceAll('_', ' ') || 'Not specified'}
+              </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Role purpose</p>
-              <p className="text-foreground">{assignment.businessValue}</p>
+              <p className="text-foreground">
+                {assignment.rolePurpose || assignment.businessValue}
+              </p>
             </div>
           </div>
         </Card>
@@ -239,19 +251,24 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
                 {assignment.description || 'No work summary has been saved yet.'}
               </p>
             </div>
-            {assignment.outcomes && assignment.outcomes.length > 0 ? (
+            {(assignment.expectedOutcomes || assignment.outcomes)?.length > 0 ? (
               <div className="space-y-3">
-                {assignment.outcomes.map((outcome: any, index: number) => (
-                  <div key={index} className="flex items-center gap-3 p-3 bg-japandi-bg rounded-lg">
-                    <Check className="h-5 w-5 text-proofound-forest" />
-                    <div className="flex-1">
-                      <p className="font-medium text-foreground">{outcome.metric}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Target: {outcome.target} • Timeframe: {outcome.timeframe}
-                      </p>
+                {(assignment.expectedOutcomes || assignment.outcomes).map(
+                  (outcome: any, index: number) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-3 p-3 bg-japandi-bg rounded-lg"
+                    >
+                      <Check className="h-5 w-5 text-proofound-forest" />
+                      <div className="flex-1">
+                        <p className="font-medium text-foreground">{outcome.metric}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Target: {outcome.target} • Timeframe: {outcome.timeframe}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                )}
               </div>
             ) : (
               <p className="text-muted-foreground">No outcomes defined</p>
@@ -265,15 +282,15 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
             <div className="w-8 h-8 rounded-full bg-proofound-forest text-white flex items-center justify-center font-semibold">
               3
             </div>
-            <h2 className="text-xl font-semibold text-foreground">
-              What proof would convince the org
-            </h2>
+            <h2 className="text-xl font-semibold text-foreground">What proof would count</h2>
           </div>
           <div className="ml-10 space-y-4">
             <div>
               <p className="text-sm text-muted-foreground">Proof expectations</p>
               <p className="text-foreground">
-                {assignment.expectedImpact || 'No proof expectations have been saved yet.'}
+                {assignment.proofExpectations ||
+                  assignment.expectedImpact ||
+                  'No proof expectations have been saved yet.'}
               </p>
             </div>
             {assignment.verificationGates && assignment.verificationGates.length > 0 && (
@@ -302,7 +319,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
               4
             </div>
             <h2 className="text-xl font-semibold text-foreground">
-              What practical constraints apply
+              What practical constraints are real
             </h2>
           </div>
           <div className="ml-10 space-y-4">
@@ -338,7 +355,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
             {assignment.requiredSkills && assignment.requiredSkills.length > 0 ? (
               <>
                 <p className="mb-3 text-sm text-muted-foreground">
-                  Required skills and proof expectations are ready for internal review.
+                  Must-have skills and proof expectations are ready for internal review.
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {assignment.requiredSkills.map((skill: any, index: number) => (

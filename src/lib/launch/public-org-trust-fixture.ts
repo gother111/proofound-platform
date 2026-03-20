@@ -16,8 +16,6 @@ export const SEEDED_PUBLIC_ORG_TRUST_FIXTURE = {
       'Build proof-first hiring infrastructure that helps organizations review real work without widening privacy or identity risk.',
     workingContext:
       'Small distributed team working asynchronously with tight review loops and documented decisions.',
-    hiringProcessSummary:
-      'Every assignment is internally reviewed before publish, blind review stays default, and reveal requires candidate consent.',
     operatingRegion: 'Europe/Stockholm',
     publicPortfolioState: 'public_noindex' as const,
     trustStatus: 'platform_reviewed' as const,

@@ -6,6 +6,7 @@ import {
 } from '@/lib/portfolio/public-contract';
 import { mergeVisibilityFlags } from '@/lib/portfolio/visibility';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
+import { getVerifiedOrganizationDomainPath } from '@/lib/organizations/trust-profile';
 import {
   hasPrimaryAnchorContext,
   listCanonicalProofPackAggregatesForOwner,
@@ -70,17 +71,12 @@ export type OrganizationTrustExportData = {
     id: string;
     slug: string;
     displayName: string;
-    tagline?: string;
+    verifiedDomainPath?: string;
     mission?: string;
+    whyWorkMatters?: string;
+    operatingContext?: string;
     website?: string;
-    type?: string;
     verified: boolean;
-    values: string[];
-    causes: string[];
-  };
-  metrics: {
-    activeAssignments: number;
-    teamMembers: number;
   };
 };
 
@@ -133,38 +129,6 @@ type ProfileExportRow = {
       }
     | null;
 };
-
-function toValueLabels(values: unknown): string[] {
-  if (!Array.isArray(values)) {
-    return [];
-  }
-
-  return values
-    .map((item) => {
-      if (typeof item === 'string') {
-        return item.trim();
-      }
-      if (item && typeof item === 'object' && 'label' in item) {
-        const label = (item as { label?: unknown }).label;
-        return typeof label === 'string' ? label.trim() : '';
-      }
-      return '';
-    })
-    .filter((item) => item.length > 0)
-    .slice(0, 8);
-}
-
-function toStringList(value: unknown): string[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value
-    .filter((entry): entry is string => typeof entry === 'string')
-    .map((entry) => entry.trim())
-    .filter((entry) => entry.length > 0)
-    .slice(0, 8);
-}
 
 function toRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value)
@@ -532,11 +496,11 @@ export async function fetchOrganizationTrustExportData(
         display_name,
         tagline,
         mission,
+        working_context,
         website,
-        type,
-        values,
-        causes,
-        verified
+        verified,
+        trust_status,
+        website_verified_at
       `
     )
     .eq('id', orgId)
@@ -546,35 +510,23 @@ export async function fetchOrganizationTrustExportData(
     return null;
   }
 
-  const [activeAssignmentsResult, teamMembersResult] = await Promise.all([
-    supabase
-      .from('assignments')
-      .select('id', { count: 'exact', head: true })
-      .eq('org_id', organization.id)
-      .eq('status', 'active'),
-    supabase
-      .from('organization_members')
-      .select('user_id', { count: 'exact', head: true })
-      .eq('org_id', organization.id)
-      .eq('status', 'active'),
-  ]);
-
   return {
     organization: {
       id: organization.id,
       slug: organization.slug,
       displayName: organization.display_name || organization.slug,
-      tagline: organization.tagline || undefined,
+      verifiedDomainPath:
+        getVerifiedOrganizationDomainPath({
+          website: organization.website,
+          websiteVerifiedAt: organization.website_verified_at,
+          trustStatus: organization.trust_status,
+          verified: organization.verified,
+        }) || undefined,
       mission: organization.mission || undefined,
+      whyWorkMatters: organization.tagline || undefined,
+      operatingContext: organization.working_context || undefined,
       website: normalizeOrganizationWebsite(organization.website).value || undefined,
-      type: organization.type || undefined,
       verified: Boolean(organization.verified),
-      values: toValueLabels(organization.values),
-      causes: toStringList(organization.causes),
-    },
-    metrics: {
-      activeAssignments: activeAssignmentsResult.count || 0,
-      teamMembers: teamMembersResult.count || 0,
     },
   };
 }

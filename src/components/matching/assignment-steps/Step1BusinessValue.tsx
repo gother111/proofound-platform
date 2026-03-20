@@ -7,6 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 
 interface Step1Props {
@@ -25,8 +32,10 @@ export function Step1BusinessValue({ form, onNext }: Step1Props) {
   } = form;
 
   const role = watch('role');
+  const engagementType = watch('engagementType');
   const businessValue = watch('businessValue');
-  const isValid = role && role.length >= 3 && businessValue && businessValue.trim().length > 0;
+  const isValid =
+    role && role.length >= 3 && engagementType && businessValue && businessValue.trim().length > 0;
 
   return (
     <div className="space-y-6">
@@ -44,7 +53,7 @@ export function Step1BusinessValue({ form, onNext }: Step1Props) {
 
       <div className="space-y-2">
         <Label htmlFor="role">
-          Role title <span className="text-destructive">*</span>
+          Title <span className="text-destructive">*</span>
         </Label>
         <Input
           id="role"
@@ -61,8 +70,30 @@ export function Step1BusinessValue({ form, onNext }: Step1Props) {
       </div>
 
       <div className="space-y-2">
+        <Label htmlFor="engagementType">
+          Engagement type <span className="text-destructive">*</span>
+        </Label>
+        <Select
+          value={engagementType}
+          onValueChange={(value) =>
+            form.setValue('engagementType', value, { shouldDirty: true, shouldTouch: true })
+          }
+        >
+          <SelectTrigger id="engagementType">
+            <SelectValue placeholder="Select engagement type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="full_time">Full time</SelectItem>
+            <SelectItem value="part_time">Part time</SelectItem>
+            <SelectItem value="contract_consulting">Contract or consulting</SelectItem>
+            <SelectItem value="fractional_project">Fractional or project-based</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
         <Label htmlFor="businessValue">
-          Why this role exists <span className="text-destructive">*</span>
+          Role purpose <span className="text-destructive">*</span>
         </Label>
         <Textarea
           id="businessValue"

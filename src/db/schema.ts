@@ -160,6 +160,12 @@ export const canonicalVerifierClasses = [
   'manual_platform_reviewer',
 ] as const;
 export const canonicalAssignmentWorkflowStates = ['draft', 'active', 'hold', 'closed'] as const;
+export const canonicalOrganizationReadinessStates = ['draft', 'org_ready'] as const;
+export const canonicalAssignmentReadinessStates = [
+  'draft',
+  'assignment_ready',
+  'review_ready',
+] as const;
 export const canonicalIntroWorkflowStates = [
   'pending_candidate_interest',
   'pending_org_interest',
@@ -703,6 +709,11 @@ export const organizations = pgTable('organizations', {
   orgTrustTierUpdatedAt: timestamp('org_trust_tier_updated_at'),
   trustStatusUpdatedAt: timestamp('trust_status_updated_at'),
   websiteVerifiedAt: timestamp('website_verified_at'),
+  orgReadiness: text('org_readiness', {
+    enum: canonicalOrganizationReadinessStates,
+  })
+    .default('draft')
+    .notNull(),
   operatingRegion: text('operating_region'),
   legalName: text('legal_name'),
   displayName: text('display_name').notNull(),
@@ -2636,13 +2647,16 @@ export const assignments = pgTable('assignments', {
   closedReason: text('closed_reason'),
   // Assignment creation workflow fields
   creationStatus: text('creation_status', {
-    enum: ['draft', 'pipeline_in_progress', 'pending_review', 'ready_to_publish', 'published'],
+    enum: canonicalAssignmentReadinessStates,
   })
     .default('draft')
     .notNull(),
   builderMode: text('builder_mode', { enum: ['basic', 'advanced'] })
     .default('basic')
     .notNull(),
+  engagementType: text('engagement_type', {
+    enum: canonicalEngagementTypeValues,
+  }),
   businessValue: text('business_value'),
   expectedImpact: text('expected_impact'),
   valuesRequired: text('values_required')

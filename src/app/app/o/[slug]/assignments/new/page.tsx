@@ -17,6 +17,7 @@ import { AppSurface } from '@/components/ui/v2/AppSurface';
 export const dynamic = 'force-dynamic';
 
 interface AssignmentFormData {
+  engagementType?: 'full_time' | 'part_time' | 'contract_consulting' | 'fractional_project';
   role: string;
   businessValue: string;
   description: string;
@@ -44,17 +45,14 @@ interface AssignmentFormData {
     linkedToBV?: boolean;
     linkedToTO?: boolean;
   }>;
-  niceToHaveSkills: Array<{ id: string; label: string; level?: number }>;
-  educationRequired: boolean;
-  educationJustification?: string;
 }
 
 const STEPS = [
   { id: 1, name: 'Why this role exists', description: 'Purpose and value' },
-  { id: 2, name: 'What work will be done', description: 'Responsibilities and outcomes' },
+  { id: 2, name: 'What work will actually be done', description: 'Responsibilities and outcomes' },
   { id: 3, name: 'What proof would count', description: 'Evidence and skills' },
-  { id: 4, name: 'Practical constraints', description: 'Logistics and timing' },
-  { id: 5, name: 'Internal review', description: 'Review before publish' },
+  { id: 4, name: 'What practical constraints are real', description: 'Logistics and timing' },
+  { id: 5, name: 'Internal review and publish', description: 'Review before publish' },
 ];
 
 export default function AssignmentBuilderPage() {
@@ -83,6 +81,7 @@ export default function AssignmentBuilderPage() {
 
   const form = useForm<AssignmentFormData>({
     defaultValues: {
+      engagementType: 'full_time',
       role: '',
       businessValue: '',
       description: '',
@@ -96,9 +95,6 @@ export default function AssignmentBuilderPage() {
       hoursMax: 40,
       verificationGates: [],
       mustHaveSkills: [],
-      niceToHaveSkills: [],
-      educationRequired: false,
-      educationJustification: '',
     },
   });
 
@@ -127,6 +123,7 @@ export default function AssignmentBuilderPage() {
         }
 
         form.reset({
+          engagementType: assignment.engagementType || 'full_time',
           role: assignment.role || '',
           businessValue: assignment.businessValue || '',
           description: assignment.description || '',
@@ -144,9 +141,6 @@ export default function AssignmentBuilderPage() {
           startLatest: normalizeDateInput(assignment.startLatest),
           verificationGates: assignment.verificationGates || [],
           mustHaveSkills: assignment.requiredSkills || [],
-          niceToHaveSkills: assignment.niceToHaveSkills || [],
-          educationRequired: assignment.educationRequired ?? false,
-          educationJustification: assignment.educationJustification || '',
         });
 
         setAssignmentId(assignment.id);
@@ -168,24 +162,19 @@ export default function AssignmentBuilderPage() {
       data: AssignmentFormData,
       overrides?: {
         status?: 'draft' | 'active' | 'hold' | 'closed';
-        creationStatus?:
-          | 'draft'
-          | 'pipeline_in_progress'
-          | 'pending_review'
-          | 'ready_to_publish'
-          | 'published';
+        creationStatus?: 'draft' | 'assignment_ready' | 'review_ready';
       }
     ) => ({
       orgSlug: slug,
       builderMode: 'basic' as const,
-      role: data.role,
+      title: data.role,
+      engagementType: data.engagementType,
       description: data.description,
-      businessValue: data.businessValue,
-      expectedImpact: data.expectedImpact,
+      rolePurpose: data.businessValue,
+      proofExpectations: data.expectedImpact,
       status: overrides?.status ?? 'draft',
-      creationStatus: overrides?.creationStatus ?? 'pipeline_in_progress',
+      creationStatus: overrides?.creationStatus ?? 'draft',
       mustHaveSkills: data.mustHaveSkills,
-      niceToHaveSkills: data.niceToHaveSkills,
       locationMode: data.locationMode,
       city: data.city,
       country: data.country,
@@ -204,7 +193,8 @@ export default function AssignmentBuilderPage() {
 
   const shouldAutoSaveDraft = useCallback((data: AssignmentFormData) => {
     return Boolean(
-      data.role ||
+      data.engagementType ||
+        data.role ||
         data.businessValue ||
         data.description ||
         data.expectedImpact ||
@@ -243,7 +233,6 @@ export default function AssignmentBuilderPage() {
   const saveExpertiseMatrix = useCallback(
     async (targetAssignmentId: string) => {
       const mustHaveSkills = form.getValues('mustHaveSkills') || [];
-      const niceToHaveSkills = form.getValues('niceToHaveSkills') || [];
 
       const outcomesResponse = await fetch(`/api/assignments/${targetAssignmentId}/outcomes`);
       let outcomes: any[] = [];
@@ -262,16 +251,11 @@ export default function AssignmentBuilderPage() {
             ? `Linked to${skill.linkedToBV ? ' role purpose' : ''}${skill.linkedToTO ? ' and assignment outcomes' : ''}`.trim()
             : undefined,
       }));
-      const niceRows = niceToHaveSkills.map((skill: any) => ({
-        skillCode: skill.id,
-        requiredLevel: skill.level || 1,
-        stakeholderRole: 'nice',
-      }));
 
       await fetch(`/api/assignments/${targetAssignmentId}/expertise-matrix`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ expertiseMatrix: [...mustRows, ...niceRows] }),
+        body: JSON.stringify({ expertiseMatrix: mustRows }),
       });
     },
     [form]
@@ -288,17 +272,12 @@ export default function AssignmentBuilderPage() {
   const persistDraft = useCallback(
     async (options?: {
       status?: 'draft' | 'active' | 'hold' | 'closed';
-      creationStatus?:
-        | 'draft'
-        | 'pipeline_in_progress'
-        | 'pending_review'
-        | 'ready_to_publish'
-        | 'published';
+      creationStatus?: 'draft' | 'assignment_ready' | 'review_ready';
     }) => {
       const currentAssignmentId = assignmentIdRef.current;
       const payload = buildAssignmentPayload(form.getValues(), {
         status: options?.status ?? 'draft',
-        creationStatus: options?.creationStatus ?? 'pipeline_in_progress',
+        creationStatus: options?.creationStatus ?? 'draft',
       });
 
       const response = currentAssignmentId
@@ -369,7 +348,7 @@ export default function AssignmentBuilderPage() {
     try {
       const persisted = await persistDraft({
         status: 'draft',
-        creationStatus: 'pipeline_in_progress',
+        creationStatus: 'draft',
       });
       await syncRelatedData(persisted.assignmentId);
       setCurrentStep((step) => Math.min(step + 1, 4));
@@ -390,7 +369,7 @@ export default function AssignmentBuilderPage() {
     try {
       const persisted = await persistDraft({
         status: 'draft',
-        creationStatus: 'pending_review',
+        creationStatus: 'review_ready',
       });
       await syncRelatedData(persisted.assignmentId);
       toast.success('Assignment saved for internal review');

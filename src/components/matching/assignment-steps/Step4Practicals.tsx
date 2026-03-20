@@ -53,7 +53,7 @@ export function Step4Practicals({ form, onNext, onBack }: Step4Props) {
     <div className="space-y-6">
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Step 4: What practical constraints apply</h2>
+          <h2 className="text-2xl font-bold">Step 4: What practical constraints are real</h2>
           <span className="text-sm text-muted-foreground">Step 4 of 5</span>
         </div>
         <p className="text-muted-foreground">
@@ -207,7 +207,7 @@ export function Step4Practicals({ form, onNext, onBack }: Step4Props) {
           Back
         </Button>
         <Button onClick={onNext} disabled={!isValid}>
-          Continue to internal review
+          Continue to internal review and publish
         </Button>
       </div>
     </div>

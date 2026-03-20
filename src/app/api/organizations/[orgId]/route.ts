@@ -7,13 +7,13 @@ import { getCanonicalActiveOrgMembership } from '@/lib/api/auth';
 import { requireApiAuthContext } from '@/lib/auth';
 import { ensureOrganizationPrincipal } from '@/lib/authz';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
+import { resolveOrganizationReadiness } from '@/lib/organizations/trust-profile';
 
 const TRUST_PROFILE_KEYS = new Set([
   'displayName',
-  'tagline',
+  'whyWorkMatters',
   'mission',
-  'workingContext',
-  'hiringProcessSummary',
+  'operatingContext',
   'website',
   'principalContext',
 ]);
@@ -79,7 +79,7 @@ export async function PUT(
       return NextResponse.json(
         {
           error:
-            'Only launch trust profile fields can be updated from this endpoint: displayName, tagline, mission, workingContext, hiringProcessSummary, and website.',
+            'Only launch trust profile fields can be updated from this endpoint: displayName, whyWorkMatters, mission, operatingContext, and website.',
           details: { unsupportedFields },
         },
         { status: 400 }
@@ -91,14 +91,28 @@ export async function PUT(
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
-    const { displayName, tagline, mission, workingContext, hiringProcessSummary, website } = body;
+    const existingOrg = await db.query.organizations.findFirst({
+      where: eq(organizations.id, orgId),
+    });
+    if (!existingOrg) {
+      return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
+    }
+
+    const { displayName, whyWorkMatters, mission, operatingContext, website } = body;
 
     if (displayName !== undefined && (typeof displayName !== 'string' || !displayName.trim())) {
       return NextResponse.json({ error: 'Organization name cannot be empty' }, { status: 400 });
     }
 
-    if (tagline !== undefined && tagline !== null && typeof tagline !== 'string') {
-      return NextResponse.json({ error: 'Tagline must be a string or null' }, { status: 400 });
+    if (
+      whyWorkMatters !== undefined &&
+      whyWorkMatters !== null &&
+      typeof whyWorkMatters !== 'string'
+    ) {
+      return NextResponse.json(
+        { error: 'Why this work matters must be a string or null' },
+        { status: 400 }
+      );
     }
 
     if (mission !== undefined && mission !== null && typeof mission !== 'string') {
@@ -106,23 +120,12 @@ export async function PUT(
     }
 
     if (
-      workingContext !== undefined &&
-      workingContext !== null &&
-      typeof workingContext !== 'string'
+      operatingContext !== undefined &&
+      operatingContext !== null &&
+      typeof operatingContext !== 'string'
     ) {
       return NextResponse.json(
-        { error: 'Working context must be a string or null' },
-        { status: 400 }
-      );
-    }
-
-    if (
-      hiringProcessSummary !== undefined &&
-      hiringProcessSummary !== null &&
-      typeof hiringProcessSummary !== 'string'
-    ) {
-      return NextResponse.json(
-        { error: 'Hiring process summary must be a string or null' },
+        { error: 'Operating context must be a string or null' },
         { status: 400 }
       );
     }
@@ -144,21 +147,33 @@ export async function PUT(
     if (displayName !== undefined) {
       updateData.displayName = displayName.trim();
     }
-    if (tagline !== undefined) {
-      updateData.tagline = tagline?.trim() || null;
+    if (whyWorkMatters !== undefined) {
+      updateData.tagline = whyWorkMatters?.trim() || null;
     }
     if (mission !== undefined) {
       updateData.mission = mission?.trim() || null;
     }
-    if (workingContext !== undefined) {
-      updateData.workingContext = workingContext?.trim() || null;
-    }
-    if (hiringProcessSummary !== undefined) {
-      updateData.hiringProcessSummary = hiringProcessSummary?.trim() || null;
+    if (operatingContext !== undefined) {
+      updateData.workingContext = operatingContext?.trim() || null;
     }
     if (website !== undefined) {
       updateData.website = normalizeOrganizationWebsite(website).value;
     }
+    updateData.orgReadiness = resolveOrganizationReadiness({
+      displayName: displayName !== undefined ? displayName.trim() : existingOrg.displayName,
+      mission: mission !== undefined ? mission?.trim() || null : existingOrg.mission,
+      whyWorkMatters:
+        whyWorkMatters !== undefined ? whyWorkMatters?.trim() || null : existingOrg.tagline,
+      operatingContext:
+        operatingContext !== undefined
+          ? operatingContext?.trim() || null
+          : existingOrg.workingContext,
+      website:
+        website !== undefined ? normalizeOrganizationWebsite(website).value : existingOrg.website,
+      websiteVerifiedAt: existingOrg.websiteVerifiedAt,
+      trustStatus: existingOrg.trustStatus,
+      verified: existingOrg.verified,
+    });
 
     const [updatedOrg] = await db
       .update(organizations)

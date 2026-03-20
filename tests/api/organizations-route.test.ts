@@ -13,6 +13,7 @@ vi.mock('@/db', () => ({
   db: {
     query: {
       organizationMembers: { findFirst: vi.fn() },
+      organizations: { findFirst: vi.fn() },
     },
     update: vi.fn(),
   },
@@ -45,6 +46,17 @@ function mockUpdateReturningOrganization() {
 describe('organizations [orgId] route', () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    (db.query.organizations.findFirst as any).mockResolvedValue({
+      id: ORG_ID,
+      displayName: 'Acme Org',
+      mission: 'Ship trust-first hiring',
+      tagline: 'Join a focused team',
+      workingContext: 'Remote-first collaboration',
+      website: 'https://example.com/',
+      trustStatus: 'platform_reviewed',
+      websiteVerifiedAt: '2026-03-01T00:00:00.000Z',
+      verified: true,
+    });
     (requireApiAuthContext as any).mockResolvedValue({
       user: { id: 'user-1' },
       supabase: {
@@ -150,11 +162,10 @@ describe('organizations [orgId] route', () => {
     const response = await PUT(
       buildPutRequest({
         displayName: 'Acme Org',
-        tagline: 'Join a focused team',
+        whyWorkMatters: 'Join a focused team',
         mission: 'Ship trust-first hiring',
         website: 'example.com',
-        workingContext: 'Remote-first collaboration',
-        hiringProcessSummary: 'Structured interviews with scorecards',
+        operatingContext: 'Remote-first collaboration',
       }),
       params
     );
@@ -166,7 +177,7 @@ describe('organizations [orgId] route', () => {
         tagline: 'Join a focused team',
         mission: 'Ship trust-first hiring',
         workingContext: 'Remote-first collaboration',
-        hiringProcessSummary: 'Structured interviews with scorecards',
+        orgReadiness: 'org_ready',
         website: 'https://example.com/',
       })
     );

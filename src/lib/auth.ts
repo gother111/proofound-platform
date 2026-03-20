@@ -37,6 +37,9 @@ type OrganizationRow = Pick<
   | 'mission'
   | 'workingContext'
   | 'hiringProcessSummary'
+  | 'trustStatus'
+  | 'websiteVerifiedAt'
+  | 'orgReadiness'
   | 'vision'
   | 'missionLinks'
   | 'visionLinks'
@@ -141,6 +144,9 @@ function mapOrganization(
     mission: row.mission ?? null,
     workingContext: row.workingContext ?? null,
     hiringProcessSummary: row.hiringProcessSummary ?? null,
+    trustStatus: (row.trustStatus as OrganizationRow['trustStatus']) ?? null,
+    websiteVerifiedAt: (row.websiteVerifiedAt as OrganizationRow['websiteVerifiedAt']) ?? null,
+    orgReadiness: (row.orgReadiness as OrganizationRow['orgReadiness']) ?? 'draft',
     vision: row.vision ?? null,
     missionLinks: (row.missionLinks as OrganizationRow['missionLinks']) ?? null,
     visionLinks: (row.visionLinks as OrganizationRow['visionLinks']) ?? null,
@@ -274,6 +280,9 @@ const getUserOrganizationsCached = cache(async (userId: string) => {
           mission,
           workingContext:working_context,
           hiringProcessSummary:hiring_process_summary,
+          trustStatus:trust_status,
+          websiteVerifiedAt:website_verified_at,
+          orgReadiness:org_readiness,
           vision,
           missionLinks:mission_links,
           visionLinks:vision_links,
@@ -365,6 +374,11 @@ const getActiveOrgCached = cache(async (slug: string, userId: string) => {
         coverImageUrl:cover_image_url,
         tagline,
         mission,
+        workingContext:working_context,
+        hiringProcessSummary:hiring_process_summary,
+        trustStatus:trust_status,
+        websiteVerifiedAt:website_verified_at,
+        orgReadiness:org_readiness,
         vision,
         missionLinks:mission_links,
         visionLinks:vision_links,
@@ -444,6 +458,17 @@ const getActiveOrgCached = cache(async (slug: string, userId: string) => {
       coverImageUrl: (data as Record<string, unknown>).coverImageUrl as string | null | undefined,
       tagline: (data as Record<string, unknown>).tagline as string | null | undefined,
       mission: (data as Record<string, unknown>).mission as string | null | undefined,
+      workingContext: (data as Record<string, unknown>).workingContext as string | null | undefined,
+      hiringProcessSummary: (data as Record<string, unknown>).hiringProcessSummary as
+        | string
+        | null
+        | undefined,
+      trustStatus: (data as Record<string, unknown>).trustStatus as string | null | undefined,
+      websiteVerifiedAt: (data as Record<string, unknown>).websiteVerifiedAt as
+        | string
+        | null
+        | undefined,
+      orgReadiness: (data as Record<string, unknown>).orgReadiness as string | null | undefined,
       vision: (data as Record<string, unknown>).vision as string | null | undefined,
       missionLinks: (data as Record<string, unknown>).missionLinks as
         | OrganizationRow['missionLinks']

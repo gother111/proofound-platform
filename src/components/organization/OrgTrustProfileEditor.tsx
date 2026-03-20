@@ -15,10 +15,9 @@ type OrgTrustProfileEditorProps = {
   org: {
     id: string;
     displayName: string;
-    tagline: string | null;
+    whyWorkMatters: string | null;
     mission: string | null;
-    workingContext: string | null;
-    hiringProcessSummary: string | null;
+    operatingContext: string | null;
     website: string | null;
   };
   canEdit: boolean;
@@ -28,35 +27,31 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
   const router = useRouter();
   const { toast } = useToast();
   const [displayName, setDisplayName] = useState(org.displayName);
-  const [tagline, setTagline] = useState(org.tagline ?? '');
+  const [whyWorkMatters, setWhyWorkMatters] = useState(org.whyWorkMatters ?? '');
   const [mission, setMission] = useState(org.mission ?? '');
-  const [workingContext, setWorkingContext] = useState(org.workingContext ?? '');
-  const [hiringProcessSummary, setHiringProcessSummary] = useState(org.hiringProcessSummary ?? '');
+  const [operatingContext, setOperatingContext] = useState(org.operatingContext ?? '');
   const [website, setWebsite] = useState(org.website ?? '');
   const [isPending, setIsPending] = useState(false);
 
   const hasUnsavedChanges = useMemo(() => {
     return (
       displayName !== org.displayName ||
-      tagline !== (org.tagline ?? '') ||
+      whyWorkMatters !== (org.whyWorkMatters ?? '') ||
       mission !== (org.mission ?? '') ||
-      workingContext !== (org.workingContext ?? '') ||
-      hiringProcessSummary !== (org.hiringProcessSummary ?? '') ||
+      operatingContext !== (org.operatingContext ?? '') ||
       website !== (org.website ?? '')
     );
   }, [
     displayName,
-    hiringProcessSummary,
     mission,
     org.displayName,
-    org.hiringProcessSummary,
     org.mission,
-    org.tagline,
+    org.operatingContext,
     org.website,
-    tagline,
+    org.whyWorkMatters,
+    operatingContext,
     website,
-    workingContext,
-    org.workingContext,
+    whyWorkMatters,
   ]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -85,10 +80,9 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
             orgId: org.id,
           },
           displayName,
-          tagline: tagline || null,
+          whyWorkMatters: whyWorkMatters || null,
           mission: mission || null,
-          workingContext: workingContext || null,
-          hiringProcessSummary: hiringProcessSummary || null,
+          operatingContext: operatingContext || null,
           website: website || null,
         }),
       });
@@ -119,8 +113,8 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
       <CardHeader>
         <CardTitle>Trust profile</CardTitle>
         <CardDescription>
-          Keep the launch story narrow and practical: mission, why the work matters, working
-          context, and how seriously the team handles hiring.
+          Keep the launch story narrow and credible: org name, verified domain path, mission, why
+          the work matters, and the essential operating context.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -136,14 +130,14 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="org-tagline">Why join</Label>
+            <Label htmlFor="org-why-work-matters">Why this work matters</Label>
             <Textarea
-              id="org-tagline"
-              value={tagline}
-              onChange={(event) => setTagline(event.target.value)}
+              id="org-why-work-matters"
+              value={whyWorkMatters}
+              onChange={(event) => setWhyWorkMatters(event.target.value)}
               disabled={!canEdit || isPending}
               rows={3}
-              placeholder="Describe the opportunity in one concise paragraph."
+              placeholder="Explain why the work matters in practical terms."
             />
           </div>
 
@@ -160,37 +154,25 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="org-working-context">Working context</Label>
+            <Label htmlFor="org-operating-context">Essential operating context</Label>
             <Textarea
-              id="org-working-context"
-              value={workingContext}
-              onChange={(event) => setWorkingContext(event.target.value)}
+              id="org-operating-context"
+              value={operatingContext}
+              onChange={(event) => setOperatingContext(event.target.value)}
               disabled={!canEdit || isPending}
               rows={4}
-              placeholder="Describe the day-to-day context, team setup, or operating environment."
+              placeholder="Describe the real operating environment candidates should understand."
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="org-hiring-process-summary">Hiring process clarity</Label>
-            <Textarea
-              id="org-hiring-process-summary"
-              value={hiringProcessSummary}
-              onChange={(event) => setHiringProcessSummary(event.target.value)}
-              disabled={!canEdit || isPending}
-              rows={4}
-              placeholder="Explain how the team reviews assignments, evidence, and internal sign-off before publish."
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="org-website">Public website</Label>
+            <Label htmlFor="org-website">Verified website or domain path</Label>
             <Input
               id="org-website"
               value={website}
               onChange={(event) => setWebsite(event.target.value)}
               disabled={!canEdit || isPending}
-              placeholder="https://example.org"
+              placeholder="https://example.org/team"
             />
           </div>
 

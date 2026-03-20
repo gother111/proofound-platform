@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
-import { assignmentExpertiseMatrix, assignments, matches, skillsTaxonomy } from '@/db/schema';
+import {
+  assignmentExpertiseMatrix,
+  assignments,
+  canonicalEngagementTypeValues,
+  matches,
+  skillsTaxonomy,
+} from '@/db/schema';
 import { eq, and, inArray, sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { jsonErrorWithRequest, withApiObservability } from '@/lib/api/observability';
@@ -51,21 +57,43 @@ const LanguageRequirementSchema = z.object({
   level: z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']),
 });
 
-const AssignmentSchema = z.object({
+const EngagementTypeSchema = z.enum(canonicalEngagementTypeValues);
+
+const PracticalConstraintsSchema = z
+  .object({
+    locationMode: z.enum(['remote', 'onsite', 'hybrid']).optional(),
+    radiusKm: z.number().optional(),
+    country: z.string().optional(),
+    city: z.string().optional(),
+    compMin: z.number().optional(),
+    compMax: z.number().optional(),
+    currency: z.string().optional(),
+    hoursMin: z.number().optional(),
+    hoursMax: z.number().optional(),
+    startEarliest: z.string().optional(),
+    startLatest: z.string().optional(),
+  })
+  .partial();
+
+const AssignmentBaseSchema = z.object({
   builderMode: z.enum(['basic', 'advanced']).optional(),
-  role: z.string().min(1),
+  title: z.string().min(1).optional(),
+  role: z.string().min(1).optional(),
+  engagementType: EngagementTypeSchema.optional(),
+  rolePurpose: z.string().optional(),
   description: z.string().optional(),
   businessValue: z.string().optional(),
+  proofExpectations: z.string().optional(),
   expectedImpact: z.string().optional(),
-  creationStatus: z
-    .enum(['draft', 'pipeline_in_progress', 'pending_review', 'ready_to_publish', 'published'])
-    .optional(),
+  creationStatus: z.enum(['draft', 'assignment_ready', 'review_ready']).optional(),
   status: AssignmentStatusInputSchema.optional(),
+  expectedOutcomes: z.array(z.any()).optional(),
   valuesRequired: z.array(z.string()).optional(),
   causeTags: z.array(z.string()).optional(),
   mustHaveSkills: z.array(SkillRequirementSchema).optional(),
   niceToHaveSkills: z.array(SkillRequirementSchema).optional(),
   minLanguage: LanguageRequirementSchema.optional(),
+  practicalConstraints: PracticalConstraintsSchema.optional(),
   locationMode: z.enum(['remote', 'onsite', 'hybrid']).optional(),
   radiusKm: z.number().optional(),
   country: z.string().optional(),
@@ -81,11 +109,28 @@ const AssignmentSchema = z.object({
   weights: z.record(z.number()).nullable().optional(),
 });
 
-const AssignmentCreateSchema = AssignmentSchema.extend({
+const AssignmentSchema = AssignmentBaseSchema.superRefine((value, ctx) => {
+  if (!value.title && !value.role) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Assignment title is required',
+      path: ['title'],
+    });
+  }
+});
+
+const AssignmentCreateSchema = AssignmentBaseSchema.extend({
   orgId: z.string().uuid().optional(),
   orgSlug: z.string().min(1).optional(),
   principalContext: PrincipalContextSchema.optional(),
 }).superRefine((value, ctx) => {
+  if (!value.title && !value.role) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Assignment title is required',
+      path: ['title'],
+    });
+  }
   if (!value.orgId && !value.orgSlug && !value.principalContext?.orgId) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -339,12 +384,28 @@ export async function POST(request: NextRequest) {
       const {
         principalContext: _principalContext,
         orgSlug: _orgSlug,
+        title: _title,
+        rolePurpose: _rolePurpose,
+        proofExpectations: _proofExpectations,
+        practicalConstraints: _practicalConstraints,
+        expectedOutcomes: _expectedOutcomes,
         ...assignmentInput
       } = validatedData;
+      const practicalConstraints = validatedData.practicalConstraints ?? {};
+      const resolvedRole = validatedData.title ?? validatedData.role;
+
+      if (!resolvedRole) {
+        return jsonErrorWithRequest(ctx.requestId, 'Assignment title is required', 400);
+      }
 
       const assignmentData = {
         orgId,
         ...assignmentInput,
+        role: resolvedRole,
+        engagementType: validatedData.engagementType ?? 'full_time',
+        businessValue: validatedData.rolePurpose ?? validatedData.businessValue,
+        expectedImpact: validatedData.proofExpectations ?? validatedData.expectedImpact,
+        ...practicalConstraints,
         builderMode: (await isFeatureEnabled(
           FEATURE_FLAG_KEYS.ASSIGNMENT_BASIC_MODE,
           { userId: user.id, orgId },

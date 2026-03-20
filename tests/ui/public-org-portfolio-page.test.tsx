@@ -38,6 +38,7 @@ function buildProjection(overrides: Partial<any> = {}) {
     shareUrl: 'https://proofound.io/portfolio/org/acme',
     publicDisplayName: 'Acme',
     publicSummary: 'Build trust',
+    verifiedDomainPath: 'acme.org',
     visibility: {
       display_name: 'public',
       mission: 'public',
@@ -57,14 +58,7 @@ function buildProjection(overrides: Partial<any> = {}) {
       tagline: 'This work matters because trustworthy hiring is still too rare.',
       mission: 'Ship impact',
       working_context: 'Small distributed team across Europe with weekly async check-ins.',
-      hiring_process_summary: 'Every assignment goes through internal review before publish.',
       type: 'company',
-    },
-    assignment: {
-      id: 'assignment-1',
-      role: 'Founding product engineer',
-      business_value: 'Ship the first trustworthy shortlist',
-      location_mode: 'remote',
     },
     verificationSummary: {
       publicBadges: [
@@ -88,17 +82,12 @@ function buildProjection(overrides: Partial<any> = {}) {
         id: 'org-1',
         slug: 'acme',
         displayName: 'Acme',
-        tagline: 'Build trust',
+        verifiedDomainPath: 'acme.org',
         mission: 'Ship impact',
+        whyWorkMatters: 'Build trust',
+        operatingContext: 'Small distributed team across Europe with weekly async check-ins.',
         website: 'https://acme.org/',
-        type: 'company',
         verified: true,
-        values: [],
-        causes: [],
-      },
-      metrics: {
-        activeAssignments: 1,
-        teamMembers: 2,
       },
     },
     minimumContentMet: true,
@@ -144,16 +133,10 @@ describe('Organization public portfolio page', () => {
     expect(screen.getByRole('heading', { name: /trust basics/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /purpose/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /why the work matters/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /working context/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /hiring process clarity/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /durable trust signals/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /active assignment/i })).toBeInTheDocument();
-    expect(screen.getAllByText('Platform reviewed').length).toBeGreaterThan(0);
-    expect(screen.getByText('Domain verified')).toBeInTheDocument();
-    expect(screen.getByText('Founding product engineer')).toBeInTheDocument();
     expect(
-      screen.getByText(/every assignment goes through internal review before publish/i)
+      screen.getByRole('heading', { name: /essential operating context/i })
     ).toBeInTheDocument();
+    expect(screen.getByText('acme.org')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /return to menu/i })).toHaveAttribute(
       'href',
       '/app/o/acme/home'
@@ -164,6 +147,13 @@ describe('Organization public portfolio page', () => {
     expect(screen.queryByRole('heading', { name: /projects/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /partnerships/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /goals/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: /hiring process clarity/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: /durable trust signals/i })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /active assignment/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/team members/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/owner@|reviewer@|member@/i)).not.toBeInTheDocument();
   });
@@ -171,7 +161,6 @@ describe('Organization public portfolio page', () => {
   it('falls back to return-home link when returnTo is unsafe', async () => {
     vi.mocked(getPublicOrganizationPortfolioProjectionBySlug).mockResolvedValue(
       buildProjection({
-        assignment: null,
         visibility: {
           display_name: 'public',
           mission: 'owner_only',
@@ -191,7 +180,6 @@ describe('Organization public portfolio page', () => {
           tagline: 'Build trust',
           mission: null,
           working_context: null,
-          hiring_process_summary: null,
           type: 'company',
         },
       }) as any
@@ -206,7 +194,9 @@ describe('Organization public portfolio page', () => {
 
     expect(screen.getByRole('link', { name: /return home/i })).toHaveAttribute('href', '/');
     expect(screen.getAllByText('Build trust').length).toBeGreaterThan(0);
-    expect(screen.getByText(/no active assignment yet/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/working context will appear here once the organization publishes it/i)
+    ).toBeInTheDocument();
   });
 
   it('returns generic noindex metadata by default', async () => {

@@ -69,6 +69,7 @@ describe('assignment publish route', () => {
     (db.query.organizations.findFirst as any).mockResolvedValue({
       id: orgId,
       slug: 'proofound-org',
+      orgReadiness: 'org_ready',
       trustStatus: 'platform_reviewed',
       orgTrustTier: 'reviewed',
       verified: true,
@@ -80,9 +81,10 @@ describe('assignment publish route', () => {
       id: assignmentId,
       orgId,
       builderMode: 'basic',
-      creationStatus: 'pending_review',
+      creationStatus: 'review_ready',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
+      engagementType: 'full_time',
       businessValue:
         'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
       description:
@@ -103,7 +105,7 @@ describe('assignment publish route', () => {
         orgId,
         createdAt: new Date('2026-01-01T00:00:00.000Z'),
         status: 'active',
-        creationStatus: 'published',
+        creationStatus: 'review_ready',
       },
     ]);
     const updateWhere = vi.fn().mockReturnValue({ returning: updateReturning });
@@ -125,7 +127,7 @@ describe('assignment publish route', () => {
 
     expect(res.status).toBe(200);
     expect(payload.assignment.status).toBe('active');
-    expect(payload.assignment.creationStatus).toBe('published');
+    expect(payload.assignment.creationStatus).toBe('review_ready');
   });
 
   it('returns explicit block reasons for missing launch requirements', async () => {
@@ -133,7 +135,7 @@ describe('assignment publish route', () => {
       id: assignmentId,
       orgId,
       builderMode: 'basic',
-      creationStatus: 'pending_review',
+      creationStatus: 'review_ready',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: '',
       description: '',
@@ -169,7 +171,7 @@ describe('assignment publish route', () => {
         }),
         expect.objectContaining({
           blockCode: 'proof_expectations_required',
-          field: 'expectedImpact',
+          field: 'proofExpectations',
         }),
         expect.objectContaining({ blockCode: 'outcomes_required', field: 'outcomes' }),
         expect.objectContaining({
@@ -186,7 +188,7 @@ describe('assignment publish route', () => {
       id: assignmentId,
       orgId,
       builderMode: 'basic',
-      creationStatus: 'pending_review',
+      creationStatus: 'review_ready',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
       businessValue: 'Join our team and make an impact.',
@@ -215,7 +217,7 @@ describe('assignment publish route', () => {
       expect.arrayContaining([
         expect.objectContaining({
           blockCode: 'generic_assignment_language',
-          field: 'businessValue',
+          field: 'rolePurpose',
         }),
         expect.objectContaining({
           blockCode: 'generic_assignment_language',
@@ -223,18 +225,18 @@ describe('assignment publish route', () => {
         }),
         expect.objectContaining({
           blockCode: 'generic_assignment_language',
-          field: 'expectedImpact',
+          field: 'proofExpectations',
         }),
       ])
     );
   });
 
-  it('returns an explicit trust block when org publishing is restricted', async () => {
+  it('blocks publish until the organization reaches org_ready', async () => {
     (db.query.assignments.findFirst as any).mockResolvedValue({
       id: assignmentId,
       orgId,
       builderMode: 'basic',
-      creationStatus: 'pending_review',
+      creationStatus: 'review_ready',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
       businessValue:
@@ -253,6 +255,52 @@ describe('assignment publish route', () => {
     (db.query.organizations.findFirst as any).mockResolvedValue({
       id: orgId,
       slug: 'proofound-org',
+      orgReadiness: 'draft',
+      trustStatus: 'platform_reviewed',
+      orgTrustTier: 'reviewed',
+      verified: true,
+    });
+
+    const req = new NextRequest(`http://localhost/api/assignments/${assignmentId}/publish`, {
+      method: 'POST',
+      body: JSON.stringify({
+        principalContext: { principalType: 'organization', orgId },
+      }),
+    });
+
+    const res = await POST(req, { params: Promise.resolve({ id: assignmentId }) });
+    const payload = await res.json();
+
+    expect(res.status).toBe(409);
+    expect(payload.error).toBe('ORG_NOT_READY');
+    expect(payload.details.currentOrgReadiness).toBe('draft');
+  });
+
+  it('returns an explicit trust block when org publishing is restricted', async () => {
+    (db.query.assignments.findFirst as any).mockResolvedValue({
+      id: assignmentId,
+      orgId,
+      builderMode: 'basic',
+      creationStatus: 'review_ready',
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      role: 'Product Designer',
+      businessValue:
+        'Improve candidate quality by turning vague hiring decisions into proof-backed review choices.',
+      description:
+        'Lead the assignment review workflow, define concrete deliverables, and keep the team aligned on what strong work actually looks like.',
+      expectedImpact:
+        'Convincing proof includes real shipped work, evidence of ownership, and a clear explanation of tradeoffs from past assignments.',
+      mustHaveSkills: ['Research', 'UX', 'Figma'],
+      locationMode: 'remote',
+      compMin: 80000,
+      compMax: 100000,
+      verificationGates: [],
+    });
+    (db.query.assignmentOutcomes.findMany as any).mockResolvedValue([{ id: 'outcome-1' }]);
+    (db.query.organizations.findFirst as any).mockResolvedValue({
+      id: orgId,
+      slug: 'proofound-org',
+      orgReadiness: 'org_ready',
       trustStatus: 'unverified',
       orgTrustTier: 'restricted',
       verified: false,
@@ -285,7 +333,7 @@ describe('assignment publish route', () => {
       id: assignmentId,
       orgId,
       builderMode: 'basic',
-      creationStatus: 'pending_review',
+      creationStatus: 'review_ready',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
       businessValue:
@@ -306,6 +354,7 @@ describe('assignment publish route', () => {
     (db.query.organizations.findFirst as any).mockResolvedValue({
       id: orgId,
       slug: 'proofound-org',
+      orgReadiness: 'org_ready',
       trustStatus: 'domain_verified',
       orgTrustTier: 'basic_trusted',
       verified: false,
@@ -338,7 +387,7 @@ describe('assignment publish route', () => {
       id: assignmentId,
       orgId,
       builderMode: 'basic',
-      creationStatus: 'pending_review',
+      creationStatus: 'review_ready',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Product Designer',
       businessValue:
@@ -383,7 +432,7 @@ describe('assignment publish route', () => {
       id: assignmentId,
       orgId,
       builderMode: 'basic',
-      creationStatus: 'pending_review',
+      creationStatus: 'review_ready',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       role: 'Support Advocate',
       businessValue:
@@ -404,6 +453,7 @@ describe('assignment publish route', () => {
     (db.query.organizations.findFirst as any).mockResolvedValue({
       id: orgId,
       slug: 'proofound-org',
+      orgReadiness: 'org_ready',
       trustStatus: 'domain_verified',
       orgTrustTier: 'basic_trusted',
       verified: false,
@@ -484,6 +534,6 @@ describe('assignment publish route', () => {
     expect(res.status).toBe(409);
     expect(payload.error).toBe('ASSIGNMENT_INTERNAL_REVIEW_REQUIRED');
     expect(payload.details.currentCreationStatus).toBe('draft');
-    expect(payload.details.allowedCreationStatuses).toEqual(['pending_review', 'ready_to_publish']);
+    expect(payload.details.allowedCreationStatuses).toEqual(['review_ready']);
   });
 });

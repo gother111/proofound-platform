@@ -352,18 +352,13 @@ export type OrganizationProfilePdfInput = {
   organization: {
     displayName: string;
     slug: string;
-    tagline?: string;
+    verifiedDomainPath?: string;
     mission?: string;
+    whyWorkMatters?: string;
+    operatingContext?: string;
     website?: string;
-    type?: string;
     verified: boolean;
-    values: string[];
-    causes: string[];
     shareUrl: string;
-  };
-  metrics: {
-    activeAssignments: number;
-    teamMembers: number;
   };
 };
 
@@ -407,8 +402,8 @@ export async function generateOrganizationProfilePdf(
         lineBreak: false,
       });
     const orgNarrative =
-      input.organization.tagline ||
-      'Public organization portfolio with mission, values, causes, and trust indicators.';
+      input.organization.whyWorkMatters ||
+      'Public organization trust card with only the minimum credible launch fields.';
     doc
       .fillColor('#4D5A55')
       .fontSize(8)
@@ -420,8 +415,8 @@ export async function generateOrganizationProfilePdf(
       });
     const topBadges = [
       input.organization.verified ? 'Verified' : 'Public',
-      'Mission-first',
-      'Transparent',
+      'Proof-first',
+      'Review-centered',
     ];
     topBadges.slice(0, 3).forEach((badge, idx) => {
       drawTag(doc, badge, leftX + 10 + idx * 80, sectionTop + 84, 'forest');
@@ -439,20 +434,30 @@ export async function generateOrganizationProfilePdf(
         height: 32,
       });
 
-    drawCard(doc, leftX, sectionTop + 216, leftWidth, 64, 'Values & causes');
-    const valuesAndCauses = [...input.organization.values, ...input.organization.causes].slice(
-      0,
-      4
-    );
-    valuesAndCauses.forEach((entry, idx) => {
-      drawTag(doc, truncate(entry, 12), leftX + 10 + idx * 68, sectionTop + 240, 'forest');
-    });
+    drawCard(doc, leftX, sectionTop + 216, leftWidth, 64, 'Operating context');
+    doc
+      .fillColor('#4D5A55')
+      .fontSize(8)
+      .font('Helvetica')
+      .text(
+        truncate(
+          input.organization.operatingContext || 'Operating context is not published yet.',
+          120
+        ),
+        leftX + 10,
+        sectionTop + 240,
+        {
+          width: leftWidth - 20,
+          lineGap: 2,
+          height: 24,
+        }
+      );
 
-    drawCard(doc, rightX, sectionTop, rightWidth, 82, 'Proof summary');
+    drawCard(doc, rightX, sectionTop, rightWidth, 82, 'Trust basics');
     const orgRows: Array<[string, string]> = [
-      ['Active assignments', `${input.metrics.activeAssignments}`],
-      ['Team members', `${input.metrics.teamMembers}`],
-      ['Organization type', input.organization.type || 'Not specified'],
+      ['Verified domain path', input.organization.verifiedDomainPath || 'Not verified yet'],
+      ['Website', input.organization.website || 'Not published'],
+      ['Trust mode', input.organization.verified ? 'Verified' : 'Public'],
     ];
     let rowY = sectionTop + 24;
     orgRows.forEach(([label, value]) => {

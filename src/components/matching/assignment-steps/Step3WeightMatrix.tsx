@@ -86,7 +86,7 @@ export function Step3WeightMatrix({ form, onNext, onBack }: Step3Props) {
 
       <div className="space-y-2">
         <Label htmlFor="expectedImpact">
-          What proof would convince you <span className="text-destructive">*</span>
+          What proof would count <span className="text-destructive">*</span>
         </Label>
         <Textarea
           id="expectedImpact"
@@ -113,6 +113,7 @@ export function Step3WeightMatrix({ form, onNext, onBack }: Step3Props) {
         form={form}
         onBack={onBack}
         onSubmit={onNext}
+        hideOptionalSections
         hideProgressHeader
         hideNavigation
       />
@@ -149,7 +150,7 @@ export function Step3WeightMatrix({ form, onNext, onBack }: Step3Props) {
           Back
         </Button>
         <Button onClick={onNext} disabled={!isValid}>
-          Next: Practical constraints
+          Next: What practical constraints are real
         </Button>
       </div>
     </div>

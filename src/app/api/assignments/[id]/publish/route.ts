@@ -15,7 +15,7 @@ import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
-const PUBLISHABLE_CREATION_STATUSES = ['pending_review', 'ready_to_publish'] as const;
+const PUBLISHABLE_CREATION_STATUSES = ['review_ready'] as const;
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   let assignmentId: string | undefined;
@@ -84,6 +84,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       columns: {
         id: true,
         slug: true,
+        orgReadiness: true,
         trustStatus: true,
         orgTrustTier: true,
         verified: true,
@@ -93,6 +94,21 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const orgSlug = request.nextUrl.searchParams.get('orgSlug');
     if (orgSlug && (!org || org.slug !== orgSlug)) {
       return NextResponse.json({ error: 'Organization context mismatch' }, { status: 403 });
+    }
+
+    if (!org || org.orgReadiness !== 'org_ready') {
+      return NextResponse.json(
+        {
+          error: 'ORG_NOT_READY',
+          message:
+            'Organization trust basics must be complete and domain-verified before an assignment can be published.',
+          details: {
+            currentOrgReadiness: org?.orgReadiness ?? 'draft',
+            requiredOrgReadiness: 'org_ready',
+          },
+        },
+        { status: 409 }
+      );
     }
 
     const outcomes = await db.query.assignmentOutcomes.findMany({
@@ -160,7 +176,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       .update(assignments)
       .set({
         status: 'active',
-        creationStatus: 'published',
+        creationStatus: 'review_ready',
         updatedAt: new Date(),
       })
       .where(eq(assignments.id, assignmentId))

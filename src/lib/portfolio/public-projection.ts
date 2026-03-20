@@ -3,6 +3,7 @@ import { sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { getRows } from '@/lib/db/rows';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
+import { getVerifiedOrganizationDomainPath } from '@/lib/organizations/trust-profile';
 import {
   deriveEffectivePublicPortfolioState,
   isAccessiblePublicPortfolioState,
@@ -75,19 +76,12 @@ export type PublicOrganizationTrustExportData = {
     id: string;
     slug: string;
     displayName: string;
-    tagline?: string;
+    verifiedDomainPath?: string;
     mission?: string;
-    workingContext?: string;
-    hiringProcessSummary?: string;
+    whyWorkMatters?: string;
+    operatingContext?: string;
     website?: string;
-    type?: string;
     verified: boolean;
-    values: string[];
-    causes: string[];
-  };
-  metrics: {
-    activeAssignments: number;
-    teamMembers: number;
   };
 };
 
@@ -138,20 +132,12 @@ type OrganizationRow = {
   tagline: string | null;
   mission: string | null;
   working_context: string | null;
-  hiring_process_summary: string | null;
   type: string | null;
 };
 
 type OrganizationVisibilityRow = {
   display_name?: string | null;
   mission?: string | null;
-};
-
-type AssignmentSummaryRow = {
-  id: string;
-  role?: string | null;
-  business_value?: string | null;
-  location_mode?: string | null;
 };
 
 type FeaturedProof = {
@@ -227,9 +213,9 @@ export type PublicOrganizationPortfolioProjection = {
   shareUrl: string;
   publicDisplayName: string;
   publicSummary: string;
+  verifiedDomainPath: string | null;
   visibility: OrganizationVisibilityRow | null;
   organization: OrganizationRow;
-  assignment: AssignmentSummaryRow | null;
   verificationSummary: VerificationPolicySummary;
   metadata: {
     path: string;
@@ -995,7 +981,6 @@ async function loadOrganizationBySlug(slug: string): Promise<OrganizationRow | n
       tagline,
       mission,
       working_context,
-      hiring_process_summary,
       type
     FROM organizations
     WHERE slug = ${slug}
@@ -1044,45 +1029,17 @@ export async function getPublicOrganizationPortfolioProjectionBySlug(
     return null;
   }
 
-  const [visibilityResult, assignmentResult, verificationRecords, metricsResult] =
-    await Promise.all([
-      db.execute(sql`
+  const [visibilityResult, verificationRecords] = await Promise.all([
+    db.execute(sql`
       SELECT display_name, mission
       FROM organization_field_visibility
       WHERE org_id = ${organization.id}::uuid
       LIMIT 1
     `),
-      db.execute(sql`
-      SELECT id, role, business_value, location_mode
-      FROM assignments
-      WHERE org_id = ${organization.id}::uuid
-        AND status = 'active'
-      ORDER BY created_at DESC
-      LIMIT 1
-    `),
-      listVerificationRecordsForOwner('organization', organization.id).catch(() => []),
-      db.execute(sql`
-      SELECT
-        (
-          SELECT COUNT(*)::int
-          FROM assignments
-          WHERE org_id = ${organization.id}::uuid
-            AND status = 'active'
-        ) AS active_assignments,
-        (
-          SELECT COUNT(*)::int
-          FROM organization_members
-          WHERE org_id = ${organization.id}::uuid
-            AND COALESCE(state, status, 'active') IN ('active')
-        ) AS team_members
-    `),
-    ]);
+    listVerificationRecordsForOwner('organization', organization.id).catch(() => []),
+  ]);
 
   const visibility = getRows<OrganizationVisibilityRow>(visibilityResult as any)[0] ?? null;
-  const assignment = getRows<AssignmentSummaryRow>(assignmentResult as any)[0] ?? null;
-  const metrics = getRows<{ active_assignments?: number; team_members?: number }>(
-    metricsResult as any
-  )[0] ?? { active_assignments: 0, team_members: 0 };
   const verificationSummary = summarizeVerificationPolicy({
     records: verificationRecords,
     legacyOrganization: {
@@ -1098,12 +1055,18 @@ export async function getPublicOrganizationPortfolioProjectionBySlug(
   });
 
   const publicDisplayName = resolvePublicOrganizationName(organization, visibility);
+  const verifiedDomainPath = getVerifiedOrganizationDomainPath({
+    website: organization.website,
+    websiteVerifiedAt: organization.website_verified_at,
+    trustStatus: organization.trust_status,
+    verified: organization.verified,
+  });
   const publicSummary =
     (visibility?.mission === 'public'
       ? organization.mission?.trim()
       : organization.tagline?.trim()) ||
     organization.tagline?.trim() ||
-    normalizeOrganizationWebsite(organization.website).value ||
+    verifiedDomainPath ||
     'Public organization trust card on Proofound.';
 
   const minimumContentMet = Boolean(
@@ -1130,9 +1093,9 @@ export async function getPublicOrganizationPortfolioProjectionBySlug(
     shareUrl: `${SITE_URL}/portfolio/org/${encodeURIComponent(organization.slug)}`,
     publicDisplayName,
     publicSummary,
+    verifiedDomainPath,
     visibility,
     organization,
-    assignment,
     verificationSummary,
     metadata: {
       path: `/portfolio/org/${encodeURIComponent(organization.slug)}`,
@@ -1158,19 +1121,12 @@ export async function getPublicOrganizationPortfolioProjectionBySlug(
         id: organization.id,
         slug: organization.slug,
         displayName: publicDisplayName,
-        tagline: organization.tagline || undefined,
+        verifiedDomainPath: verifiedDomainPath || undefined,
         mission: visibility?.mission === 'public' ? organization.mission || undefined : undefined,
-        workingContext: organization.working_context || undefined,
-        hiringProcessSummary: organization.hiring_process_summary || undefined,
+        whyWorkMatters: organization.tagline || undefined,
+        operatingContext: organization.working_context || undefined,
         website: normalizeOrganizationWebsite(organization.website).value || undefined,
-        type: organization.type || undefined,
         verified: Boolean(organization.verified),
-        values: [],
-        causes: [],
-      },
-      metrics: {
-        activeAssignments: Number(metrics.active_assignments ?? 0),
-        teamMembers: Number(metrics.team_members ?? 0),
       },
     },
     minimumContentMet,

@@ -30,6 +30,7 @@ interface Step5Props {
   progressValue?: number;
   hideProgressHeader?: boolean;
   hideNavigation?: boolean;
+  hideOptionalSections?: boolean;
 }
 
 interface TaxonomyNode {
@@ -168,6 +169,7 @@ export function Step5ExpertiseMapping({
   progressValue = 100,
   hideProgressHeader = false,
   hideNavigation = false,
+  hideOptionalSections = false,
 }: Step5Props) {
   const { watch, setValue } = form;
 
@@ -378,8 +380,8 @@ export function Step5ExpertiseMapping({
             <span className="text-sm text-muted-foreground">Step {stepNumber} of 5</span>
           </div>
           <p className="text-muted-foreground">
-            Pick skills, link them to the assignment, and specify education requirements only when
-            truly necessary.
+            Pick must-have skills and link them back to the role purpose or expected outcomes when
+            it helps the reviewer understand why they matter.
           </p>
           <Progress value={progressValue} className="mt-4" />
         </div>
@@ -462,15 +464,17 @@ export function Step5ExpertiseMapping({
                     >
                       Must-have
                     </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => addSkill(skill, 'nice')}
-                      disabled={selected}
-                    >
-                      Nice-to-have
-                    </Button>
+                    {!hideOptionalSections ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => addSkill(skill, 'nice')}
+                        disabled={selected}
+                      >
+                        Nice-to-have
+                      </Button>
+                    ) : null}
                   </div>
                 </div>
               );
@@ -555,90 +559,94 @@ export function Step5ExpertiseMapping({
         )}
       </div>
 
-      <div className="space-y-4">
-        <Label>Nice-to-Have Skills</Label>
-        {niceToHaveSkills.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No nice-to-have skills added.</p>
-        ) : (
-          niceToHaveSkills.map((skill: AssignmentSkill, index: number) => (
-            <div key={`${skill.id}-${index}`} className="border rounded-lg p-4 space-y-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="font-medium">{getSkillLabel(skill)}</p>
-                  {skillPathText(skill) && (
-                    <p className="text-xs text-muted-foreground">{skillPathText(skill)}</p>
-                  )}
-                  <p className="text-xs text-muted-foreground">{skill.id}</p>
+      {!hideOptionalSections ? (
+        <>
+          <div className="space-y-4">
+            <Label>Nice-to-Have Skills</Label>
+            {niceToHaveSkills.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No nice-to-have skills added.</p>
+            ) : (
+              niceToHaveSkills.map((skill: AssignmentSkill, index: number) => (
+                <div key={`${skill.id}-${index}`} className="border rounded-lg p-4 space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-medium">{getSkillLabel(skill)}</p>
+                      {skillPathText(skill) && (
+                        <p className="text-xs text-muted-foreground">{skillPathText(skill)}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground">{skill.id}</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeNiceToHaveSkill(index)}
+                      type="button"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm">Proficiency Level</Label>
+                      <span className="text-sm font-medium">{skill.level}/5</span>
+                    </div>
+                    <Slider
+                      value={[skill.level]}
+                      onValueChange={(value) => updateNiceToHaveSkill(index, 'level', value[0])}
+                      min={1}
+                      max={5}
+                      step={1}
+                    />
+                  </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeNiceToHaveSkill(index)}
-                  type="button"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">Proficiency Level</Label>
-                  <span className="text-sm font-medium">{skill.level}/5</span>
-                </div>
-                <Slider
-                  value={[skill.level]}
-                  onValueChange={(value) => updateNiceToHaveSkill(index, 'level', value[0])}
-                  min={1}
-                  max={5}
-                  step={1}
-                />
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
-      <div className="space-y-4 pt-4 border-t">
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="educationRequired"
-            checked={educationRequired}
-            onCheckedChange={(checked) => setValue('educationRequired', checked === true)}
-          />
-          <Label htmlFor="educationRequired" className="font-normal cursor-pointer">
-            Formal education required for this role
-          </Label>
-        </div>
-
-        {educationRequired && (
-          <div className="space-y-2">
-            <Label htmlFor="educationJustification">
-              Education Justification <span className="text-destructive">*</span>
-            </Label>
-            <Textarea
-              id="educationJustification"
-              placeholder="Explain why formal education is required for this role..."
-              className="min-h-[100px]"
-              maxLength={500}
-              value={educationJustification}
-              onChange={(event) => setValue('educationJustification', event.target.value)}
-            />
-            <div className="flex justify-between">
-              <p className="text-sm text-muted-foreground">
-                Required by PRD: Explain why formal education is necessary
-              </p>
-              <span className="text-xs text-muted-foreground">
-                {educationJustification?.length || 0}/500
-              </span>
-            </div>
-            {educationRequired && !educationJustification && (
-              <p className="text-sm text-destructive">
-                Justification is required when education is mandatory
-              </p>
+              ))
             )}
           </div>
-        )}
-      </div>
+
+          <div className="space-y-4 pt-4 border-t">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="educationRequired"
+                checked={educationRequired}
+                onCheckedChange={(checked) => setValue('educationRequired', checked === true)}
+              />
+              <Label htmlFor="educationRequired" className="font-normal cursor-pointer">
+                Formal education required for this role
+              </Label>
+            </div>
+
+            {educationRequired && (
+              <div className="space-y-2">
+                <Label htmlFor="educationJustification">
+                  Education Justification <span className="text-destructive">*</span>
+                </Label>
+                <Textarea
+                  id="educationJustification"
+                  placeholder="Explain why formal education is required for this role..."
+                  className="min-h-[100px]"
+                  maxLength={500}
+                  value={educationJustification}
+                  onChange={(event) => setValue('educationJustification', event.target.value)}
+                />
+                <div className="flex justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    Required by PRD: Explain why formal education is necessary
+                  </p>
+                  <span className="text-xs text-muted-foreground">
+                    {educationJustification?.length || 0}/500
+                  </span>
+                </div>
+                {educationRequired && !educationJustification && (
+                  <p className="text-sm text-destructive">
+                    Justification is required when education is mandatory
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </>
+      ) : null}
 
       {mustHaveSkills.length === 0 && (
         <p className="text-sm text-destructive">At least one must-have skill is required</p>

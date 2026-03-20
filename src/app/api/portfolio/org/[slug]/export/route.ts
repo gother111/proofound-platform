@@ -85,16 +85,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
       organization: {
         displayName: data.organization.displayName,
         slug: data.organization.slug,
-        tagline: data.organization.tagline,
+        verifiedDomainPath: data.organization.verifiedDomainPath,
         mission: data.organization.mission,
+        whyWorkMatters: data.organization.whyWorkMatters,
+        operatingContext: data.organization.operatingContext,
         website: data.organization.website,
-        type: data.organization.type,
         verified: data.organization.verified,
-        values: data.organization.values,
-        causes: data.organization.causes,
         shareUrl,
       },
-      metrics: data.metrics,
     });
 
     const exportedSlug = data.organization.slug;

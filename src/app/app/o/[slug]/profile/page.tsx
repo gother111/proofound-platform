@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { getActiveOrg, requireAuth } from '@/lib/auth';
+import { getVerifiedOrganizationDomainPath } from '@/lib/organizations/trust-profile';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +26,12 @@ export default async function OrganizationProfilePage({
 
   const { org, membership } = result;
   const canEdit = membership.role === 'org_owner' || membership.role === 'org_manager';
+  const verifiedDomainPath = getVerifiedOrganizationDomainPath({
+    website: org.website,
+    websiteVerifiedAt: org.websiteVerifiedAt ?? null,
+    trustStatus: org.trustStatus ?? null,
+    verified: org.verified,
+  });
 
   return (
     <AppSurface>
@@ -51,6 +58,12 @@ export default async function OrganizationProfilePage({
                 corridor. Culture hubs, governance showcases, and other org-suite surfaces stay
                 outside the MVP.
               </p>
+              <p>
+                Verified domain path:{' '}
+                <span className="font-medium text-foreground">
+                  {verifiedDomainPath ?? 'Needs verified domain signal'}
+                </span>
+              </p>
             </CardContent>
           </Card>
 
@@ -66,7 +79,7 @@ export default async function OrganizationProfilePage({
                 <ShieldCheck className="mt-0.5 h-4 w-4 text-foreground/70" />
                 <div>
                   <p className="font-medium text-foreground">Trust profile</p>
-                  <p>Mission, why the work matters, working context, and hiring-process clarity.</p>
+                  <p>Mission, why the work matters, verified domain path, and operating context.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -99,10 +112,9 @@ export default async function OrganizationProfilePage({
           org={{
             id: org.id,
             displayName: org.displayName,
-            tagline: org.tagline,
+            whyWorkMatters: org.tagline,
             mission: org.mission,
-            workingContext: org.workingContext ?? null,
-            hiringProcessSummary: org.hiringProcessSummary ?? null,
+            operatingContext: org.workingContext ?? null,
             website: org.website,
           }}
           canEdit={canEdit}

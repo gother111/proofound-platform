@@ -3,7 +3,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { db } from '@/db';
-import { assignmentExpertiseMatrix, assignmentOutcomes, assignments } from '@/db/schema';
+import {
+  assignmentExpertiseMatrix,
+  assignmentOutcomes,
+  assignments,
+  canonicalEngagementTypeValues,
+} from '@/db/schema';
 import {
   buildMatrixRowsFromRequirements,
   deriveRequirementsFromMatrix,
@@ -22,6 +27,86 @@ export const dynamic = 'force-dynamic';
 const AssignmentStatusUpdateSchema = z
   .enum(['draft', 'active', 'hold', 'paused', 'closed'])
   .transform((value) => (value === 'paused' ? 'hold' : value));
+
+const EngagementTypeSchema = z.enum(canonicalEngagementTypeValues);
+const PracticalConstraintsSchema = z
+  .object({
+    locationMode: z.enum(['remote', 'onsite', 'hybrid']).optional(),
+    radiusKm: z.number().optional(),
+    country: z.string().optional(),
+    city: z.string().optional(),
+    compMin: z.number().optional(),
+    compMax: z.number().optional(),
+    currency: z.string().optional(),
+    hoursMin: z.number().optional(),
+    hoursMax: z.number().optional(),
+    startEarliest: z.string().optional(),
+    startLatest: z.string().optional(),
+  })
+  .partial();
+
+function buildAssignmentResponse(
+  assignment: typeof assignments.$inferSelect,
+  input: {
+    outcomes: Array<{ id: string; metric: string; target: string; timeframe: string }>;
+    requiredSkills: unknown[];
+    niceToHaveSkills: unknown[];
+  }
+) {
+  const weights = (assignment.weights as Record<string, number> | null) || {};
+
+  return {
+    id: assignment.id,
+    orgId: assignment.orgId,
+    title: assignment.role,
+    role: assignment.role,
+    engagementType: assignment.engagementType,
+    rolePurpose: assignment.businessValue ?? '',
+    businessValue: assignment.businessValue ?? '',
+    workSummary: assignment.description ?? '',
+    description: assignment.description ?? '',
+    proofExpectations: assignment.expectedImpact ?? '',
+    expectedImpact: assignment.expectedImpact ?? '',
+    expectedOutcomes: input.outcomes,
+    outcomes: input.outcomes,
+    missionWeight: weights.mission ?? 33,
+    expertiseWeight: weights.expertise ?? 34,
+    workModeWeight: weights.workMode ?? 33,
+    compensationMin: assignment.compMin,
+    compensationMax: assignment.compMax,
+    compMin: assignment.compMin,
+    compMax: assignment.compMax,
+    currency: assignment.currency,
+    hoursMin: assignment.hoursMin,
+    hoursMax: assignment.hoursMax,
+    locationMode: assignment.locationMode,
+    city: assignment.city,
+    country: assignment.country,
+    startEarliest: assignment.startEarliest,
+    startLatest: assignment.startLatest,
+    practicalConstraints: {
+      locationMode: assignment.locationMode,
+      city: assignment.city,
+      country: assignment.country,
+      compMin: assignment.compMin,
+      compMax: assignment.compMax,
+      currency: assignment.currency,
+      hoursMin: assignment.hoursMin,
+      hoursMax: assignment.hoursMax,
+      startEarliest: assignment.startEarliest,
+      startLatest: assignment.startLatest,
+    },
+    weights,
+    location: assignment.locationMode || assignment.city || assignment.country || '',
+    mustHaveSkills: input.requiredSkills,
+    requiredSkills: input.requiredSkills,
+    niceToHaveSkills: input.niceToHaveSkills,
+    verificationGates: assignment.verificationGates || [],
+    status: assignment.status,
+    creationStatus: assignment.creationStatus,
+    builderMode: assignment.builderMode || 'basic',
+  };
+}
 
 /**
  * GET /api/assignments/[id]
@@ -80,43 +165,15 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       };
     });
 
-    const weights = (assignment.weights as Record<string, number> | null) || {};
-    const responseAssignment = {
-      id: assignment.id,
-      orgId: assignment.orgId,
-      role: assignment.role,
-      description: assignment.description ?? '',
-      businessValue: assignment.businessValue ?? '',
-      expectedImpact: assignment.expectedImpact ?? '',
-      outcomes: normalizedOutcomes,
-      missionWeight: weights.mission ?? 33,
-      expertiseWeight: weights.expertise ?? 34,
-      workModeWeight: weights.workMode ?? 33,
-      compensationMin: assignment.compMin,
-      compensationMax: assignment.compMax,
-      compMin: assignment.compMin,
-      compMax: assignment.compMax,
-      currency: assignment.currency,
-      hoursMin: assignment.hoursMin,
-      hoursMax: assignment.hoursMax,
-      locationMode: assignment.locationMode,
-      city: assignment.city,
-      country: assignment.country,
-      startEarliest: assignment.startEarliest,
-      startLatest: assignment.startLatest,
-      weights,
-      location: assignment.locationMode || assignment.city || assignment.country || '',
-      requiredSkills:
-        derivedRequirements?.mustHaveSkills ?? ((assignment.mustHaveSkills as any) || []),
-      niceToHaveSkills:
-        derivedRequirements?.niceToHaveSkills ?? ((assignment.niceToHaveSkills as any) || []),
-      verificationGates: assignment.verificationGates || [],
-      status: assignment.status,
-      creationStatus: assignment.creationStatus,
-      builderMode: assignment.builderMode || 'basic',
-    };
-
-    return NextResponse.json({ assignment: responseAssignment });
+    return NextResponse.json({
+      assignment: buildAssignmentResponse(assignment, {
+        outcomes: normalizedOutcomes,
+        requiredSkills:
+          derivedRequirements?.mustHaveSkills ?? ((assignment.mustHaveSkills as any) || []),
+        niceToHaveSkills:
+          derivedRequirements?.niceToHaveSkills ?? ((assignment.niceToHaveSkills as any) || []),
+      }),
+    });
   } catch (error) {
     log.error('assignment.get.failed', {
       assignmentId,
@@ -131,14 +188,17 @@ const AssignmentUpdateSchema = z.object({
   orgId: z.string().uuid().optional(),
   orgSlug: z.string().min(1).optional(),
   builderMode: z.enum(['basic', 'advanced']).optional(),
+  title: z.string().min(1).optional(),
   role: z.string().min(1).optional(),
+  engagementType: EngagementTypeSchema.optional(),
+  rolePurpose: z.string().optional(),
   description: z.string().optional(),
   businessValue: z.string().optional(),
+  proofExpectations: z.string().optional(),
   expectedImpact: z.string().optional(),
+  expectedOutcomes: z.array(z.any()).optional(),
   status: AssignmentStatusUpdateSchema.optional(),
-  creationStatus: z
-    .enum(['draft', 'pipeline_in_progress', 'pending_review', 'ready_to_publish', 'published'])
-    .optional(),
+  creationStatus: z.enum(['draft', 'assignment_ready', 'review_ready']).optional(),
   valuesRequired: z.array(z.string()).optional(),
   causeTags: z.array(z.string()).optional(),
   mustHaveSkills: z
@@ -163,6 +223,7 @@ const AssignmentUpdateSchema = z.object({
       level: z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']),
     })
     .optional(),
+  practicalConstraints: PracticalConstraintsSchema.optional(),
   locationMode: z.enum(['remote', 'onsite', 'hybrid']).optional(),
   radiusKm: z.number().optional(),
   country: z.string().optional(),
@@ -242,10 +303,21 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       principalContext: _principalContext,
       orgId: _orgId,
       orgSlug: _orgSlug,
+      title: _title,
+      rolePurpose: _rolePurpose,
+      proofExpectations: _proofExpectations,
+      practicalConstraints: _practicalConstraints,
+      expectedOutcomes: _expectedOutcomes,
       ...updatePayload
     } = validatedData;
+    const practicalConstraints = validatedData.practicalConstraints ?? {};
     const updateData = {
       ...updatePayload,
+      role: validatedData.title ?? validatedData.role,
+      engagementType: validatedData.engagementType,
+      businessValue: validatedData.rolePurpose ?? validatedData.businessValue,
+      expectedImpact: validatedData.proofExpectations ?? validatedData.expectedImpact,
+      ...practicalConstraints,
       status: updatePayload.status,
       ...(derivedRequirements
         ? {
@@ -304,7 +376,16 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       });
     }
 
-    return NextResponse.json({ assignment: updatedAssignment });
+    return NextResponse.json({
+      assignment: buildAssignmentResponse(updatedAssignment, {
+        outcomes: [],
+        requiredSkills:
+          derivedRequirements?.mustHaveSkills ?? ((updatedAssignment.mustHaveSkills as any) || []),
+        niceToHaveSkills:
+          derivedRequirements?.niceToHaveSkills ??
+          ((updatedAssignment.niceToHaveSkills as any) || []),
+      }),
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Invalid input', details: error.errors }, { status: 400 });

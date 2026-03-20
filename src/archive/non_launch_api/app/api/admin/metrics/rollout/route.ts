@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
       .where(
         and(
           gte(assignments.createdAt, since),
-          inArray(assignments.creationStatus, ['published', 'ready_to_publish'])
+          inArray(assignments.creationStatus, ['review_ready'])
         )
       );
 

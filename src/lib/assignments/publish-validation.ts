@@ -12,7 +12,7 @@ const ALLOWED_VERIFICATION_GATES = new Set([
 export type AssignmentPublishBlock = {
   blockCode:
     | 'role_required'
-    | 'business_value_required'
+    | 'role_purpose_required'
     | 'work_summary_required'
     | 'proof_expectations_required'
     | 'outcomes_required'
@@ -33,9 +33,9 @@ export type AssignmentPublishBlock = {
     | 'cross_border_restricted';
   field:
     | 'role'
-    | 'businessValue'
+    | 'rolePurpose'
     | 'description'
-    | 'expectedImpact'
+    | 'proofExpectations'
     | 'outcomes'
     | 'mustHaveSkills'
     | 'constraints'
@@ -106,15 +106,15 @@ export function validateAssignmentPublishReadiness({
     blocks.push({
       blockCode: 'role_required',
       field: 'role',
-      message: 'Add a clear role title before publishing this assignment.',
+      message: 'Add a clear assignment title before publishing this assignment.',
     });
   }
 
   if (!assignment.businessValue?.trim()) {
     blocks.push({
-      blockCode: 'business_value_required',
-      field: 'businessValue',
-      message: 'Add the business value or mission need before publishing this assignment.',
+      blockCode: 'role_purpose_required',
+      field: 'rolePurpose',
+      message: 'Add the role purpose before publishing this assignment.',
     });
   }
 
@@ -129,7 +129,7 @@ export function validateAssignmentPublishReadiness({
   if (!assignment.expectedImpact?.trim()) {
     blocks.push({
       blockCode: 'proof_expectations_required',
-      field: 'expectedImpact',
+      field: 'proofExpectations',
       message: 'Explain what proof would convince the organization before publishing.',
     });
   }
@@ -179,12 +179,12 @@ export function validateAssignmentPublishReadiness({
   }
 
   const specificityChecks: Array<{
-    field: 'businessValue' | 'description' | 'expectedImpact';
+    field: 'rolePurpose' | 'description' | 'proofExpectations';
     value: string | null | undefined;
     message: string;
   }> = [
     {
-      field: 'businessValue',
+      field: 'rolePurpose',
       value: assignment.businessValue,
       message:
         'Explain why this role exists in concrete terms. Generic recruiting language is not enough.',
@@ -196,7 +196,7 @@ export function validateAssignmentPublishReadiness({
         'Describe the actual work in concrete terms. Generic job-description filler is not enough.',
     },
     {
-      field: 'expectedImpact',
+      field: 'proofExpectations',
       value: assignment.expectedImpact,
       message:
         'Describe what proof would count in concrete terms before publishing this assignment.',

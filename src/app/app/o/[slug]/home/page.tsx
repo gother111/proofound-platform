@@ -12,7 +12,7 @@ import {
 import { inviteMember } from '@/actions/org';
 import { getActiveOrg, requireAuth } from '@/lib/auth';
 import type { OrgRole } from '@/lib/authz';
-import { normalizeOrganizationValues } from '@/lib/organizations/normalizeValues';
+import { getVerifiedOrganizationDomainPath } from '@/lib/organizations/trust-profile';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,10 +43,15 @@ export default async function OrganizationHomePage({
   }
 
   const { org, membership } = result;
-  const values = normalizeOrganizationValues(org.values);
   const roleLabel = getRoleLabel(membership.role);
   const canEditTrustProfile = ['org_owner', 'org_manager'].includes(membership.role);
   const canInviteCollaborators = membership.role === 'org_owner';
+  const verifiedDomainPath = getVerifiedOrganizationDomainPath({
+    website: org.website,
+    websiteVerifiedAt: org.websiteVerifiedAt ?? null,
+    trustStatus: org.trustStatus ?? null,
+    verified: org.verified,
+  });
 
   const inviteAction = async (
     _state: OrgInviteFormState,
@@ -121,7 +126,8 @@ export default async function OrganizationHomePage({
                 Trust Profile
               </CardTitle>
               <CardDescription>
-                Mission, why join, public website, core values, and lightweight work norms.
+                Org name, verified domain path, mission, why the work matters, and operating
+                context.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 text-sm text-muted-foreground">
@@ -129,9 +135,9 @@ export default async function OrganizationHomePage({
                 {org.mission?.trim() ? 'Mission is present.' : 'Mission still needs to be added.'}
               </p>
               <p>
-                {values.length > 0
-                  ? `${values.length} core value${values.length === 1 ? '' : 's'} set.`
-                  : 'Core values still need to be added.'}
+                {verifiedDomainPath
+                  ? `Verified domain path is ${verifiedDomainPath}.`
+                  : 'Verified domain signal still needs to be confirmed.'}
               </p>
               <Button asChild variant="outline" className="w-full justify-between">
                 <Link href={`/app/o/${slug}/profile`}>
@@ -149,11 +155,15 @@ export default async function OrganizationHomePage({
                 One Assignment Path
               </CardTitle>
               <CardDescription>
-                Create and refine assignments from a single flow, with Basic mode as the default.
+                Build one assignment through five review-centered steps, then publish from internal
+                review.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 text-sm text-muted-foreground">
-              <p>Basic mode stays the default. Advanced mode only appears after explicit opt-in.</p>
+              <p>
+                The builder stays narrow: role purpose, actual work, proof expectations, practical
+                constraints, and review.
+              </p>
               <Button asChild variant="outline" className="w-full justify-between">
                 <Link href={`/app/o/${slug}/assignments/new`}>
                   Create or continue assignment
@@ -176,8 +186,8 @@ export default async function OrganizationHomePage({
             <CardContent className="space-y-3 text-sm text-muted-foreground">
               <p>You are currently signed in as {roleLabel}.</p>
               <p>
-                Reviewers can review the queue and published work, but they cannot change org
-                settings outside the launch corridor.
+                Reviewers can review the queue and published work, but they cannot broaden the org
+                corridor into a larger suite.
               </p>
               {canInviteCollaborators ? (
                 <OrgCollaboratorInviteCard action={inviteAction} />

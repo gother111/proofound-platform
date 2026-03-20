@@ -147,10 +147,10 @@ describe('Assignment builder lean corridor', () => {
 
     expect(await screen.findByText(/lean assignment corridor/i)).toBeInTheDocument();
     expect(screen.getByText('Why this role exists')).toBeInTheDocument();
-    expect(screen.getByText('What work will be done')).toBeInTheDocument();
+    expect(screen.getByText('What work will actually be done')).toBeInTheDocument();
     expect(screen.getByText('What proof would count')).toBeInTheDocument();
-    expect(screen.getByText('Practical constraints')).toBeInTheDocument();
-    expect(screen.getByText('Internal review')).toBeInTheDocument();
+    expect(screen.getByText('What practical constraints are real')).toBeInTheDocument();
+    expect(screen.getByText('Internal review and publish')).toBeInTheDocument();
     expect(screen.queryByTestId('advanced-mode-opt-in')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Advanced' })).not.toBeInTheDocument();
     expect(screen.queryByText('Weight Matrix')).not.toBeInTheDocument();

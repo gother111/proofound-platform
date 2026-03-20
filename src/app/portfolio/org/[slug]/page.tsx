@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { notFound, permanentRedirect } from 'next/navigation';
-import { ArrowLeft, Building2, Globe2, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Building2, Globe2 } from 'lucide-react';
 
 import { PublicProfileEmptyState } from '@/components/public-profile/PublicProfileEmptyState';
 import { PublicProfileSection } from '@/components/public-profile/PublicProfileSection';
@@ -120,22 +120,6 @@ export default async function OrganizationPortfolioPage({
     : { count: 0 };
 
   const viewerIsMember = Boolean(membershipResult.count && membershipResult.count > 0);
-  const trustSignals = data.verificationSummary.publicBadges
-    .filter((badge) => badge.key === 'domain_confirmed' || badge.key === 'platform_reviewed')
-    .map((badge) => badge.label)
-    .slice(0, 2);
-
-  if (trustSignals.length === 0) {
-    if (data.organization.verified || data.organization.trust_status === 'platform_reviewed') {
-      trustSignals.push('Platform reviewed');
-    }
-    if (
-      data.organization.website_verified_at ||
-      data.organization.trust_status === 'domain_verified'
-    ) {
-      trustSignals.push('Domain verified');
-    }
-  }
 
   const pagePath = `/portfolio/org/${encodeURIComponent(data.slug)}`;
   const jsonLdItems = [
@@ -225,27 +209,15 @@ export default async function OrganizationPortfolioPage({
           <PublicProfileSection title="Trust basics">
             <div className="space-y-3">
               <SummaryRow label="Organization" value={data.publicDisplayName} />
-              <SummaryRow label="Type" value={data.organization.type || 'Not specified'} />
+              <SummaryRow
+                label="Verified domain path"
+                value={data.verifiedDomainPath || 'Not verified yet'}
+              />
               <SummaryRow label="Website" value={data.organization.website || 'Not published'} />
               <SummaryRow
-                label="Trust status"
-                value={
-                  data.verificationSummary.publicBadges.find(
-                    (badge) => badge.key === 'platform_reviewed' || badge.key === 'domain_confirmed'
-                  )?.label ||
-                  (data.organization.verified ||
-                  data.organization.trust_status === 'platform_reviewed'
-                    ? 'Platform reviewed'
-                    : data.organization.website_verified_at ||
-                        data.organization.trust_status === 'domain_verified'
-                      ? 'Domain verified'
-                      : 'No active trust badge')
-                }
-                icon={<ShieldCheck className="h-4 w-4 text-proofound-forest" />}
+                label="Trust mode"
+                value={data.organization.verified ? 'Verified' : 'Public trust card'}
               />
-              {data.organization.operating_region ? (
-                <SummaryRow label="Operating region" value={data.organization.operating_region} />
-              ) : null}
             </div>
           </PublicProfileSection>
 
@@ -265,57 +237,11 @@ export default async function OrganizationPortfolioPage({
             </p>
           </PublicProfileSection>
 
-          <PublicProfileSection title="Working context">
+          <PublicProfileSection title="Essential operating context">
             <p className="whitespace-pre-line text-sm leading-6 text-foreground">
               {data.organization.working_context?.trim() ||
                 'Working context will appear here once the organization publishes it.'}
             </p>
-          </PublicProfileSection>
-        </div>
-
-        <div className="space-y-4">
-          <PublicProfileSection title="Hiring process clarity">
-            <p className="whitespace-pre-line text-sm leading-6 text-foreground">
-              {data.organization.hiring_process_summary?.trim() ||
-                'The organization has not published its review and publish process yet.'}
-            </p>
-          </PublicProfileSection>
-
-          <PublicProfileSection title="Durable trust signals">
-            {trustSignals.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {trustSignals.map((signal) => (
-                  <span
-                    key={signal}
-                    className="rounded-full border border-[#D9D5CC] bg-japandi-bg px-2.5 py-1 text-xs text-foreground"
-                  >
-                    {signal}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <PublicProfileEmptyState message="Trust review has not produced a durable public signal yet." />
-            )}
-          </PublicProfileSection>
-
-          <PublicProfileSection title="Active assignment">
-            {data.assignment ? (
-              <div className="space-y-2 rounded-xl border border-white/40 bg-white/40 p-3 shadow-sm">
-                <p className="text-sm font-semibold text-foreground">
-                  {data.assignment.role || 'Active assignment'}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {data.assignment.business_value || 'Assignment summary is still being prepared.'}
-                </p>
-                {data.assignment.location_mode ? (
-                  <p className="text-xs uppercase tracking-[0.06em] text-muted-foreground">
-                    {data.assignment.location_mode}
-                  </p>
-                ) : null}
-              </div>
-            ) : (
-              <PublicProfileEmptyState message="No active assignment yet." />
-            )}
           </PublicProfileSection>
         </div>
       </div>

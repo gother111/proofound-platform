@@ -110,17 +110,12 @@ describe('/api/portfolio/org/[slug]/export', () => {
         id: 'org-1',
         slug: 'acme',
         displayName: 'Acme',
-        tagline: 'Build trust',
+        verifiedDomainPath: 'acme.org',
         mission: 'Ship impact',
+        whyWorkMatters: 'Build trust',
+        operatingContext: 'Small distributed team with tight review loops.',
         website: 'https://acme.org',
-        type: 'company',
         verified: true,
-        values: ['Transparency'],
-        causes: ['Climate'],
-      },
-      metrics: {
-        activeAssignments: 4,
-        teamMembers: 8,
       },
     });
     (generateOrganizationProfilePdf as any).mockResolvedValue(Buffer.from('%PDF-1.4 org-pdf'));
