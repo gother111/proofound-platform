@@ -135,6 +135,7 @@ describe('canonical proof pack projections', () => {
     const publicProjection = buildCanonicalPublicProofPackProjection({
       pack,
       items: [publicItem, privateItem],
+      verificationReferences: [],
       verificationStatus,
       freshnessState: 'fresh',
       latestEvidenceAt: daysAgo(30),
@@ -144,9 +145,19 @@ describe('canonical proof pack projections', () => {
     expect(publicProjection?.items).toEqual([
       expect.objectContaining({
         artifactId: 'artifact-public',
+        itemClass: 'url_link',
+        semanticsNote: 'Supporting evidence only, not full verification.',
         title: 'Artifact artifact-public',
       }),
     ]);
+    expect(ownerProjection.contract.primaryClaim.statement).toBe('Canonical proof pack');
+    expect(ownerProjection.contract.linkedSkills).toEqual([
+      expect.objectContaining({
+        skillId: '22222222-2222-4222-8222-222222222222',
+        evidenceClasses: expect.arrayContaining(['artifact_backed']),
+      }),
+    ]);
+    expect(publicProjection?.contract.schemaVersion).toBe('proof_pack/v2');
     expect(JSON.stringify(publicProjection)).not.toContain('Private artifact');
     expect(JSON.stringify(publicProjection)).not.toContain('private-artifact');
   });
@@ -254,6 +265,38 @@ describe('canonical proof pack projections', () => {
 
     expect(buildCanonicalProofPackPortabilityHash('owner_full', ownerProjection)).toBe(
       buildCanonicalProofPackPortabilityHash('owner_full', ownerProjection)
+    );
+  });
+
+  it('derives subordinate evidence classes and honest semantics from credential-backed proof items', () => {
+    const pack = makePack({
+      primaryClaimType: 'credential_fact',
+      summary: 'Earned a role-relevant credential.',
+    });
+    const credentialItem = makeItemAggregate('artifact-credential', {
+      artifactKind: 'credential',
+      metadata: { artifactSubtype: 'certificate' },
+      sourceUrl: 'https://example.com/certificate',
+    });
+
+    const projection = buildCanonicalOwnerProofPackProjection({
+      pack,
+      items: [credentialItem],
+      verificationReferences: [],
+      verificationStatus: 'unverified',
+      freshnessState: 'fresh',
+      latestEvidenceAt: daysAgo(10),
+    });
+
+    expect(projection.contract.primaryClaim.type).toBe('credential_fact');
+    expect(projection.contract.linkedEvidenceItems[0]).toEqual(
+      expect.objectContaining({
+        itemClass: 'credential_evidence',
+        semanticsNote: 'Shows credential facts, not job performance.',
+      })
+    );
+    expect(projection.contract.linkedSkills[0]?.evidenceClasses).toEqual(
+      expect.arrayContaining(['artifact_backed', 'credential_backed'])
     );
   });
 });

@@ -12,6 +12,8 @@ import {
 } from '@/lib/contracts/canonical-domain';
 import {
   getProofFreshnessState,
+  resolveProofPackItemClass,
+  resolveProofPackItemSubtypeMetadata,
   syncCanonicalProofPackState,
   type PrimaryAnchorContextSubjectType,
 } from '@/lib/proofs/canonical-pack';
@@ -247,6 +249,12 @@ async function ensureCompatibilityProofPackForArtifact(params: {
     throw new Error('Primary anchor context is required for canonical proof packs');
   }
 
+  const primaryClaimType: (typeof proofPacks.$inferInsert)['primaryClaimType'] =
+    typeof params.metadata?.artifactSubtype === 'string' &&
+    ['certificate', 'degree', 'license'].includes(params.metadata.artifactSubtype)
+      ? 'credential_fact'
+      : 'contribution';
+
   const [pack] = await db
     .insert(proofPacks)
     .values(
@@ -258,14 +266,17 @@ async function ensureCompatibilityProofPackForArtifact(params: {
           primarySubjectType: params.primaryAnchor.type,
           primarySubjectId: params.primaryAnchor.id,
           lifecycleState: 'published' as const,
+          primaryClaimType,
           title: params.title,
-          summary: params.summary ?? null,
+          summary: params.summary ?? params.title,
           contextJson: {
             compatibilitySource: 'skill_proofs',
             primaryAnchorType: params.primaryAnchor.type,
             primaryAnchorId: params.primaryAnchor.id,
             linkedSkillId: params.skillId,
           },
+          verificationSummary: 'No scoped verification is recorded for this Proof Pack yet.',
+          schemaVersion: 'proof_pack/v2',
           evidenceSummary: params.summary ?? null,
           outcomesSummary: null,
           visibility: params.visibility,
@@ -296,6 +307,8 @@ async function ensureCompatibilityProofPackForArtifact(params: {
         title: sql`excluded.title`,
         summary: sql`excluded.summary`,
         contextJson: sql`excluded.context_json`,
+        verificationSummary: sql`excluded.verification_summary`,
+        schemaVersion: sql`excluded.schema_version`,
         evidenceSummary: sql`excluded.evidence_summary`,
         visibility: sql`excluded.visibility`,
         revealGate: sql`excluded.reveal_gate`,
@@ -311,6 +324,8 @@ async function ensureCompatibilityProofPackForArtifact(params: {
       packId: pack.id,
       artifactId: params.artifactId,
       position: 0,
+      itemClass: 'file_upload',
+      subtypeMetadata: {},
       includedFields: ['title', 'description', 'sourceUrl', 'issuedAt', 'expiresAt'],
     })
     .onConflictDoNothing();
@@ -387,6 +402,12 @@ async function upsertCanonicalProofPackForArtifact(params: {
     throw new Error('Primary anchor context is required for canonical proof packs');
   }
 
+  const primaryClaimType: (typeof proofPacks.$inferInsert)['primaryClaimType'] =
+    typeof params.metadata?.artifactSubtype === 'string' &&
+    ['certificate', 'degree', 'license'].includes(params.metadata.artifactSubtype)
+      ? 'credential_fact'
+      : 'contribution';
+
   const packValues = {
     ownerType: 'individual_profile' as const,
     ownerId: params.profileId,
@@ -394,8 +415,9 @@ async function upsertCanonicalProofPackForArtifact(params: {
     primarySubjectType: params.primaryAnchor.type,
     primarySubjectId: params.primaryAnchor.id,
     lifecycleState: 'published' as const,
+    primaryClaimType,
     title: params.title,
-    summary: params.summary ?? null,
+    summary: params.summary ?? params.title,
     contextJson: {
       primaryAnchorType: params.primaryAnchor.type,
       primaryAnchorId: params.primaryAnchor.id,
@@ -403,6 +425,7 @@ async function upsertCanonicalProofPackForArtifact(params: {
       importedFrom: params.importedFrom ?? null,
       primaryAnchorRequiredForIntroEligibility: true,
     },
+    verificationSummary: 'No scoped verification is recorded for this Proof Pack yet.',
     evidenceSummary: params.summary ?? null,
     outcomesSummary: null,
     visibility: params.visibility,
@@ -410,6 +433,7 @@ async function upsertCanonicalProofPackForArtifact(params: {
     createdBy: params.profileId,
     verificationStatus: 'unverified' as const,
     freshnessState: params.freshnessState,
+    schemaVersion: 'proof_pack/v2',
     freshnessEvaluatedAt: new Date(),
     lastRefreshedAt: params.evidenceAt,
     portabilityMeta: {
@@ -440,6 +464,8 @@ async function upsertCanonicalProofPackForArtifact(params: {
       packId: pack.id,
       artifactId: params.artifactId,
       position: 0,
+      itemClass: 'file_upload',
+      subtypeMetadata: {},
       includedFields: ['title', 'description', 'sourceUrl', 'issuedAt', 'expiresAt'],
     })
     .onConflictDoNothing();
@@ -700,6 +726,22 @@ export async function upsertCanonicalSkillProof(
         })
         .returning();
 
+  const packItemClass = resolveProofPackItemClass({
+    artifact: {
+      artifactKind: artifact.artifactKind,
+      title: artifact.title,
+      sourceUrl: artifact.sourceUrl,
+      metadata: artifact.metadata,
+    },
+  });
+  const packItemSubtypeMetadata = resolveProofPackItemSubtypeMetadata({
+    artifact: {
+      artifactKind: artifact.artifactKind,
+      sourceUrl: artifact.sourceUrl,
+      metadata: artifact.metadata,
+    },
+  });
+
   const eventName = existingArtifact ? 'proof_artifact_updated' : 'proof_artifact_created';
   const changedFields = getArtifactChangedFields(existingArtifact ?? null, artifact);
 
@@ -789,6 +831,15 @@ export async function upsertCanonicalSkillProof(
     evidenceAt: artifact.updatedAt ?? artifact.issuedAt ?? null,
   });
 
+  await db
+    .update(proofPackItems)
+    .set({
+      itemClass: packItemClass,
+      subtypeMetadata: packItemSubtypeMetadata,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(proofPackItems.packId, pack.id), eq(proofPackItems.artifactId, artifact.id)));
+
   await refreshIndividualProofTrustSnapshots(input.profileId);
 
   return {
@@ -865,6 +916,22 @@ export async function upsertCanonicalProofArtifactFromSkillProof(input: SkillPro
       },
     })
     .returning();
+
+  const packItemClass = resolveProofPackItemClass({
+    artifact: {
+      artifactKind: row.artifactKind,
+      title: row.title,
+      sourceUrl: row.sourceUrl,
+      metadata: row.metadata,
+    },
+  });
+  const packItemSubtypeMetadata = resolveProofPackItemSubtypeMetadata({
+    artifact: {
+      artifactKind: row.artifactKind,
+      sourceUrl: row.sourceUrl,
+      metadata: row.metadata,
+    },
+  });
 
   const eventName = existing ? 'proof_artifact_updated' : 'proof_artifact_created';
   const changedFields = getArtifactChangedFields(existing ?? null, row);
@@ -955,6 +1022,26 @@ export async function upsertCanonicalProofArtifactFromSkillProof(input: SkillPro
       compatibilitySource: 'skill_proofs',
     },
   });
+
+  const compatibilityPack = await db.query.proofPacks.findFirst({
+    where: and(
+      eq(proofPacks.legacySourceTable, 'skill_proofs'),
+      eq(proofPacks.legacySourceId, input.id)
+    ),
+  });
+
+  if (compatibilityPack) {
+    await db
+      .update(proofPackItems)
+      .set({
+        itemClass: packItemClass,
+        subtypeMetadata: packItemSubtypeMetadata,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(eq(proofPackItems.packId, compatibilityPack.id), eq(proofPackItems.artifactId, row.id))
+      );
+  }
 
   await refreshIndividualProofTrustSnapshots(input.profileId);
 

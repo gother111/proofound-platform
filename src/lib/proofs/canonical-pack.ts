@@ -10,7 +10,9 @@ import {
   verificationRecords,
 } from '@/db/schema';
 import {
+  type ProofPackItemClass,
   type ProofFreshnessState,
+  type ProofPackPrimaryClaimType,
   type ProofPackVerificationStatus,
   stableHashPayload,
 } from '@/lib/contracts/canonical-domain';
@@ -85,9 +87,12 @@ export type CanonicalOwnerProofPackProjection = {
   lastVerifiedAt: string | null;
   lastRefreshedAt: string | null;
   portabilityMeta: Record<string, unknown>;
+  contract: CanonicalProofPackContract;
   items: Array<{
     artifactId: string;
     position: number;
+    itemClass: ProofPackItemClass;
+    subtypeMetadata: Record<string, unknown>;
     includedFields: string[];
     effectiveVisibility: EffectiveVisibility;
     artifact: {
@@ -145,9 +150,13 @@ export type CanonicalPublicSafeProofPackProjection = {
   lastRefreshedAt: string | null;
   provenanceSummary: string | null;
   portabilityMeta: Record<string, unknown>;
+  contract: CanonicalProofPackContract;
   items: Array<{
     artifactId: string;
     position: number;
+    itemClass: ProofPackItemClass;
+    subtypeMetadata: Record<string, unknown>;
+    semanticsNote: string;
     artifactKind: ProofArtifactRow['artifactKind'];
     title: string;
     artifactDisplayName: string | null;
@@ -201,6 +210,64 @@ export type CanonicalProofOwnerSummary = {
 };
 
 export type CanonicalSkillVerificationSource = 'self' | 'peer' | 'manager' | 'external';
+export type CanonicalProofPackSkillEvidenceClass =
+  | 'artifact_backed'
+  | 'credential_backed'
+  | 'human_observed'
+  | 'context_backed';
+
+export type CanonicalProofPackContractEvidenceItem = {
+  artifactId: string;
+  itemClass: ProofPackItemClass;
+  subtypeMetadata: Record<string, unknown>;
+  artifactKind: ProofArtifactRow['artifactKind'] | null;
+  title: string;
+  artifactDisplayName: string | null;
+  description: string | null;
+  sourceUrl: string | null;
+  issuedAt: string | null;
+  expiresAt: string | null;
+  skillId: string | null;
+  semanticsNote: string;
+};
+
+export type CanonicalProofPackContract = {
+  id: string;
+  packKind: ProofPackRow['packKind'];
+  status: ProofPackRow['lifecycleState'];
+  title: string;
+  primaryClaim: {
+    type: ProofPackPrimaryClaimType;
+    statement: string;
+  };
+  primaryAnchor: {
+    subjectType: ProofPackRow['primarySubjectType'];
+    subjectId: string | null;
+    label: string | null;
+  };
+  roleContext: string | null;
+  ownershipStatement: string | null;
+  timeframe: {
+    start: string | null;
+    end: string | null;
+    label: string | null;
+  };
+  outcomeSummary: string | null;
+  linkedSkills: Array<{
+    skillId: string;
+    evidenceClasses: CanonicalProofPackSkillEvidenceClass[];
+  }>;
+  linkedEvidenceItems: CanonicalProofPackContractEvidenceItem[];
+  visibilityState: ProofPackRow['visibility'];
+  freshnessState: ProofFreshnessState;
+  verificationSummary: {
+    status: ProofPackVerificationStatus;
+    summary: string;
+    lastVerifiedAt: string | null;
+  };
+  proofQualityScore: number | null;
+  schemaVersion: string;
+};
 
 export type CanonicalLegacySkillProofRow = {
   id: string;
@@ -249,6 +316,398 @@ function toStringArray(value: unknown): string[] {
 
 const toIsoString = toIsoOrNull;
 const toDate = toDateOrNull;
+
+function toNullableNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string' && value.trim().length > 0) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return null;
+}
+
+function inferSubtypeFromArtifact(input: {
+  artifactKind: ProofArtifactRow['artifactKind'] | null;
+  sourceUrl: string | null | undefined;
+  metadata: Record<string, unknown>;
+}) {
+  const explicitSubtype =
+    typeof input.metadata.artifactSubtype === 'string' ? input.metadata.artifactSubtype : null;
+  if (explicitSubtype) {
+    return explicitSubtype;
+  }
+
+  const url = input.sourceUrl ?? '';
+  if (/github\.com\/.+\/pull\//i.test(url)) return 'pr';
+  if (/github\.com\/.+\/commit\//i.test(url)) return 'commit';
+  if (/github\.com\//i.test(url)) return 'repo';
+
+  switch (input.artifactKind) {
+    case 'image':
+      return 'photo';
+    case 'video':
+      return 'video';
+    case 'document':
+      return 'doc';
+    case 'credential':
+      return 'certificate';
+    default:
+      return null;
+  }
+}
+
+export function resolveProofPackItemClass(input: {
+  itemClass?: ProofPackItemRow['itemClass'] | null;
+  artifact: Pick<ProofArtifactRow, 'artifactKind' | 'title' | 'sourceUrl' | 'metadata'>;
+}): ProofPackItemClass {
+  if (typeof input.itemClass === 'string' && input.itemClass.length > 0) {
+    return input.itemClass as ProofPackItemClass;
+  }
+
+  const metadata = toRecord(input.artifact.metadata);
+  const evidenceSubtype =
+    typeof metadata.evidenceSubtype === 'string' ? metadata.evidenceSubtype : null;
+  const title = input.artifact.title.toLowerCase();
+  const url = input.artifact.sourceUrl ?? '';
+
+  if (input.artifact.artifactKind === 'credential') {
+    return 'credential_evidence';
+  }
+  if (
+    evidenceSubtype === 'engagement' ||
+    /(invoice|contract|agreement|statement of work|sow|offer letter)/i.test(title)
+  ) {
+    return 'engagement_evidence';
+  }
+  if (
+    evidenceSubtype === 'reviewer_note' ||
+    evidenceSubtype === 'structured_reviewer_note' ||
+    input.artifact.artifactKind === 'reference'
+  ) {
+    return 'reviewer_note';
+  }
+  if (evidenceSubtype === 'case_fragment' || evidenceSubtype === 'case_study_fragment') {
+    return 'case_fragment';
+  }
+  if (/github\.com\/.+\/(pull|pulls|commit)\//i.test(url) || /github\.com\//i.test(url)) {
+    return 'repo_activity';
+  }
+  if (input.artifact.sourceUrl) {
+    return 'url_link';
+  }
+  return 'file_upload';
+}
+
+export function resolveProofPackItemSubtypeMetadata(input: {
+  subtypeMetadata?: ProofPackItemRow['subtypeMetadata'] | null;
+  artifact: Pick<ProofArtifactRow, 'artifactKind' | 'sourceUrl' | 'metadata'>;
+}): Record<string, unknown> {
+  const itemSubtypeMetadata = toRecord(input.subtypeMetadata);
+  if (Object.keys(itemSubtypeMetadata).length > 0) {
+    return itemSubtypeMetadata;
+  }
+
+  const artifactMetadata = toRecord(input.artifact.metadata);
+  const inferredSubtype = inferSubtypeFromArtifact({
+    artifactKind: input.artifact.artifactKind,
+    sourceUrl: input.artifact.sourceUrl,
+    metadata: artifactMetadata,
+  });
+
+  return Object.fromEntries(
+    Object.entries({
+      subtype: inferredSubtype,
+      artifactKind: input.artifact.artifactKind,
+    }).filter(([, value]) => value != null)
+  );
+}
+
+export function resolveProofEvidenceSemanticsNote(item: {
+  itemClass: ProofPackItemClass;
+  subtypeMetadata: Record<string, unknown>;
+}) {
+  const subtype =
+    typeof item.subtypeMetadata.subtype === 'string' ? item.subtypeMetadata.subtype : '';
+
+  if (item.itemClass === 'repo_activity' || ['repo', 'commit', 'pr'].includes(subtype)) {
+    return 'Shows activity and contribution cues, not full mastery.';
+  }
+  if (item.itemClass === 'credential_evidence') {
+    return 'Shows credential facts, not job performance.';
+  }
+  if (item.itemClass === 'engagement_evidence') {
+    return 'Shows engagement facts, not work quality.';
+  }
+  if (item.itemClass === 'reviewer_note') {
+    return 'Scoped reviewer observation, not a global endorsement.';
+  }
+  return 'Supporting evidence only, not full verification.';
+}
+
+function resolvePrimaryClaimType(input: {
+  pack: ProofPackRow;
+  linkedEvidenceItems: CanonicalProofPackContractEvidenceItem[];
+}): ProofPackPrimaryClaimType {
+  if (typeof input.pack.primaryClaimType === 'string' && input.pack.primaryClaimType.length > 0) {
+    return input.pack.primaryClaimType as ProofPackPrimaryClaimType;
+  }
+  if (input.linkedEvidenceItems.some((item) => item.itemClass === 'credential_evidence')) {
+    return 'credential_fact';
+  }
+  if (input.linkedEvidenceItems.some((item) => item.itemClass === 'engagement_evidence')) {
+    return 'engagement_fact';
+  }
+  if (
+    typeof input.pack.outcomesSummary === 'string' &&
+    input.pack.outcomesSummary.trim().length > 0
+  ) {
+    return 'outcome';
+  }
+  return 'contribution';
+}
+
+function resolvePrimaryClaimStatement(pack: ProofPackRow) {
+  const contextJson = toRecord(pack.contextJson);
+  const contextClaim =
+    typeof contextJson.proofPackClaim === 'string' ? contextJson.proofPackClaim.trim() : '';
+  const summary = typeof pack.summary === 'string' ? pack.summary.trim() : '';
+
+  if (contextClaim.length > 0) {
+    return contextClaim;
+  }
+  if (summary.length > 0) {
+    return summary;
+  }
+  return pack.title;
+}
+
+function resolveOwnershipStatement(pack: ProofPackRow) {
+  const contextJson = toRecord(pack.contextJson);
+  const explicitOwnership =
+    typeof pack.ownershipStatement === 'string' && pack.ownershipStatement.trim().length > 0
+      ? pack.ownershipStatement.trim()
+      : null;
+  if (explicitOwnership) {
+    return explicitOwnership;
+  }
+
+  const legacyOwnership =
+    typeof contextJson.proofPackOwnership === 'string' &&
+    contextJson.proofPackOwnership.trim().length > 0
+      ? contextJson.proofPackOwnership.trim()
+      : null;
+  if (legacyOwnership) {
+    return legacyOwnership;
+  }
+
+  const summary = typeof pack.summary === 'string' ? pack.summary.trim() : '';
+  const primaryClaim = resolvePrimaryClaimStatement(pack);
+  if (summary.length > 0 && summary !== primaryClaim) {
+    return summary;
+  }
+  return null;
+}
+
+function resolveRoleContext(pack: ProofPackRow) {
+  if (typeof pack.roleContext === 'string' && pack.roleContext.trim().length > 0) {
+    return pack.roleContext.trim();
+  }
+
+  const contextJson = toRecord(pack.contextJson);
+  if (typeof contextJson.contextTitle === 'string' && contextJson.contextTitle.trim().length > 0) {
+    return contextJson.contextTitle.trim();
+  }
+
+  return null;
+}
+
+function resolveTimeframe(pack: ProofPackRow) {
+  const contextJson = toRecord(pack.contextJson);
+  const timeframeStart = pack.timeframeStart ? toIsoString(pack.timeframeStart) : null;
+  const timeframeEnd = pack.timeframeEnd ? toIsoString(pack.timeframeEnd) : null;
+  return {
+    start: timeframeStart,
+    end: timeframeEnd,
+    label:
+      typeof pack.timeframeLabel === 'string' && pack.timeframeLabel.trim().length > 0
+        ? pack.timeframeLabel.trim()
+        : typeof contextJson.contextDuration === 'string' &&
+            contextJson.contextDuration.trim().length > 0
+          ? contextJson.contextDuration.trim()
+          : null,
+  };
+}
+
+function resolvePrimaryAnchorLabel(pack: ProofPackRow) {
+  switch (pack.primarySubjectType) {
+    case 'experience':
+      return 'Primary work context';
+    case 'education':
+      return 'Primary learning context';
+    case 'volunteering':
+      return 'Primary volunteering context';
+    default:
+      return null;
+  }
+}
+
+function deriveProofQualityScore(input: {
+  pack: ProofPackRow;
+  linkedEvidenceItems: CanonicalProofPackContractEvidenceItem[];
+  verificationStatus: ProofPackVerificationStatus;
+  freshnessState: ProofFreshnessState;
+}) {
+  const storedScore = toNullableNumber(input.pack.proofQualityScore);
+  if (storedScore != null) {
+    return storedScore;
+  }
+
+  let score = 0;
+  if (resolvePrimaryClaimStatement(input.pack).trim().length > 0) score += 0.2;
+  if ((input.pack.outcomesSummary ?? '').trim().length > 0) score += 0.2;
+  if (input.linkedEvidenceItems.length > 0) score += 0.2;
+  if (input.verificationStatus === 'verified') score += 0.2;
+  else if (input.verificationStatus === 'partially_verified') score += 0.1;
+  if (input.freshnessState === 'fresh') score += 0.2;
+  else if (input.freshnessState === 'review_soon') score += 0.1;
+
+  return Number(score.toFixed(2));
+}
+
+function buildVerificationSummary(input: {
+  pack: ProofPackRow;
+  verificationStatus: ProofPackVerificationStatus;
+  lastVerifiedAt: string | null;
+}) {
+  const storedSummary =
+    typeof input.pack.verificationSummary === 'string' ? input.pack.verificationSummary.trim() : '';
+  if (storedSummary.length > 0) {
+    return {
+      status: input.verificationStatus,
+      summary: storedSummary,
+      lastVerifiedAt: input.lastVerifiedAt,
+    };
+  }
+
+  const summary =
+    input.verificationStatus === 'verified'
+      ? 'Scoped verification supports this Proof Pack.'
+      : input.verificationStatus === 'partially_verified'
+        ? 'Some scoped verification supports parts of this Proof Pack.'
+        : input.verificationStatus === 'disputed'
+          ? 'Verification is disputed or contradicted for this Proof Pack.'
+          : 'No scoped verification is recorded for this Proof Pack yet.';
+
+  return {
+    status: input.verificationStatus,
+    summary,
+    lastVerifiedAt: input.lastVerifiedAt,
+  };
+}
+
+function buildLinkedSkills(input: {
+  pack: ProofPackRow;
+  linkedEvidenceItems: CanonicalProofPackContractEvidenceItem[];
+  verificationReferences: VerificationRecordRow[];
+}) {
+  const skills = new Map<string, Set<CanonicalProofPackSkillEvidenceClass>>();
+
+  for (const item of input.linkedEvidenceItems) {
+    if (!item.skillId) {
+      continue;
+    }
+
+    const evidenceClasses =
+      skills.get(item.skillId) ?? new Set<CanonicalProofPackSkillEvidenceClass>();
+    evidenceClasses.add('artifact_backed');
+    if (item.itemClass === 'credential_evidence') {
+      evidenceClasses.add('credential_backed');
+    }
+    if (hasPrimaryAnchorContext(input.pack)) {
+      evidenceClasses.add('context_backed');
+    }
+    skills.set(item.skillId, evidenceClasses);
+  }
+
+  for (const record of input.verificationReferences) {
+    if (
+      record.status !== 'verified' ||
+      record.integrityStatus !== 'clear' ||
+      (record.verificationKind !== 'skill_attestation_manager' &&
+        record.verificationKind !== 'skill_attestation_peer' &&
+        record.verificationKind !== 'impact_attestation')
+    ) {
+      continue;
+    }
+
+    if (record.subjectType !== 'skill' || typeof record.subjectId !== 'string') {
+      continue;
+    }
+
+    const evidenceClasses =
+      skills.get(record.subjectId) ?? new Set<CanonicalProofPackSkillEvidenceClass>();
+    evidenceClasses.add('human_observed');
+    if (hasPrimaryAnchorContext(input.pack)) {
+      evidenceClasses.add('context_backed');
+    }
+    skills.set(record.subjectId, evidenceClasses);
+  }
+
+  return [...skills.entries()]
+    .map(([skillId, evidenceClassSet]) => ({
+      skillId,
+      evidenceClasses: [...evidenceClassSet].sort(),
+    }))
+    .sort((left, right) => left.skillId.localeCompare(right.skillId));
+}
+
+export function buildCanonicalProofPackContract(input: {
+  pack: ProofPackRow;
+  linkedEvidenceItems: CanonicalProofPackContractEvidenceItem[];
+  verificationReferences: VerificationRecordRow[];
+  verificationStatus: ProofPackVerificationStatus;
+  freshnessState: ProofFreshnessState;
+  visibilityState: ProofPackRow['visibility'];
+  lastVerifiedAt: string | null;
+}): CanonicalProofPackContract {
+  const primaryClaimType = resolvePrimaryClaimType(input);
+  const primaryClaimStatement = resolvePrimaryClaimStatement(input.pack);
+
+  return {
+    id: input.pack.id,
+    packKind: input.pack.packKind,
+    status: input.pack.lifecycleState,
+    title: input.pack.title,
+    primaryClaim: {
+      type: primaryClaimType,
+      statement: primaryClaimStatement,
+    },
+    primaryAnchor: {
+      subjectType: input.pack.primarySubjectType,
+      subjectId: input.pack.primarySubjectId,
+      label: resolvePrimaryAnchorLabel(input.pack),
+    },
+    roleContext: resolveRoleContext(input.pack),
+    ownershipStatement: resolveOwnershipStatement(input.pack),
+    timeframe: resolveTimeframe(input.pack),
+    outcomeSummary: input.pack.outcomesSummary,
+    linkedSkills: buildLinkedSkills(input),
+    linkedEvidenceItems: input.linkedEvidenceItems,
+    visibilityState: input.visibilityState,
+    freshnessState: input.freshnessState,
+    verificationSummary: buildVerificationSummary({
+      pack: input.pack,
+      verificationStatus: input.verificationStatus,
+      lastVerifiedAt: input.lastVerifiedAt,
+    }),
+    proofQualityScore: deriveProofQualityScore(input),
+    schemaVersion: input.pack.schemaVersion || 'proof_pack/v2',
+  };
+}
 
 function maxDate(values: Array<Date | null>): Date | null {
   return values.reduce<Date | null>((current, value) => {
@@ -528,6 +987,65 @@ export function buildCanonicalOwnerProofPackProjection(input: {
   latestEvidenceAt: Date | null;
 }): CanonicalOwnerProofPackProjection {
   const portabilityMeta = toRecord(input.pack.portabilityMeta);
+  const ownerItems = input.items.map(({ item, artifact, effectiveVisibility, uploadedFile }) => {
+    const itemClass = resolveProofPackItemClass({ itemClass: item.itemClass, artifact });
+    const subtypeMetadata = resolveProofPackItemSubtypeMetadata({
+      subtypeMetadata: item.subtypeMetadata,
+      artifact,
+    });
+
+    return {
+      artifactId: artifact.id,
+      position: item.position,
+      itemClass,
+      subtypeMetadata,
+      includedFields: toStringArray(item.includedFields),
+      effectiveVisibility,
+      artifact: {
+        id: artifact.id,
+        subjectType: artifact.subjectType,
+        subjectId: artifact.subjectId,
+        artifactKind: artifact.artifactKind,
+        lifecycleState: artifact.lifecycleState,
+        title: artifact.title,
+        artifactDisplayName: deriveArtifactDisplayName({ artifact, uploadedFile }),
+        description: artifact.description,
+        sourceUrl: artifact.sourceUrl,
+        storagePath: artifact.storagePath,
+        mimeType: artifact.mimeType,
+        issuedAt: toIsoString(artifact.issuedAt),
+        expiresAt: toIsoString(artifact.expiresAt),
+        visibility: artifact.visibility,
+        revealGate: artifact.revealGate,
+        metadata: toRecord(artifact.metadata),
+      },
+    };
+  });
+  const contract = buildCanonicalProofPackContract({
+    pack: input.pack,
+    linkedEvidenceItems: ownerItems.map((item) => ({
+      artifactId: item.artifactId,
+      itemClass: item.itemClass,
+      subtypeMetadata: item.subtypeMetadata,
+      artifactKind: item.artifact.artifactKind,
+      title: item.artifact.title,
+      artifactDisplayName: item.artifact.artifactDisplayName,
+      description: item.artifact.description,
+      sourceUrl: item.artifact.sourceUrl,
+      issuedAt: item.artifact.issuedAt,
+      expiresAt: item.artifact.expiresAt,
+      skillId: item.artifact.subjectType === 'skill' ? item.artifact.subjectId : null,
+      semanticsNote: resolveProofEvidenceSemanticsNote({
+        itemClass: item.itemClass,
+        subtypeMetadata: item.subtypeMetadata,
+      }),
+    })),
+    verificationReferences: input.verificationReferences,
+    verificationStatus: input.verificationStatus,
+    freshnessState: input.freshnessState,
+    visibilityState: input.pack.visibility,
+    lastVerifiedAt: toIsoString(input.pack.lastVerifiedAt),
+  });
 
   return {
     id: input.pack.id,
@@ -550,30 +1068,8 @@ export function buildCanonicalOwnerProofPackProjection(input: {
     lastVerifiedAt: toIsoString(input.pack.lastVerifiedAt),
     lastRefreshedAt: toIsoString(input.pack.lastRefreshedAt || input.latestEvidenceAt),
     portabilityMeta,
-    items: input.items.map(({ item, artifact, effectiveVisibility, uploadedFile }) => ({
-      artifactId: artifact.id,
-      position: item.position,
-      includedFields: toStringArray(item.includedFields),
-      effectiveVisibility,
-      artifact: {
-        id: artifact.id,
-        subjectType: artifact.subjectType,
-        subjectId: artifact.subjectId,
-        artifactKind: artifact.artifactKind,
-        lifecycleState: artifact.lifecycleState,
-        title: artifact.title,
-        artifactDisplayName: deriveArtifactDisplayName({ artifact, uploadedFile }),
-        description: artifact.description,
-        sourceUrl: artifact.sourceUrl,
-        storagePath: artifact.storagePath,
-        mimeType: artifact.mimeType,
-        issuedAt: toIsoString(artifact.issuedAt),
-        expiresAt: toIsoString(artifact.expiresAt),
-        visibility: artifact.visibility,
-        revealGate: artifact.revealGate,
-        metadata: toRecord(artifact.metadata),
-      },
-    })),
+    contract,
+    items: ownerItems,
     verificationReferences: input.verificationReferences.map((record) => ({
       id: record.id,
       subjectType: record.subjectType,
@@ -595,6 +1091,7 @@ export function buildCanonicalOwnerProofPackProjection(input: {
 export function buildCanonicalPublicProofPackProjection(input: {
   pack: ProofPackRow;
   items: CanonicalProofItemAggregate[];
+  verificationReferences: VerificationRecordRow[];
   verificationStatus: ProofPackVerificationStatus;
   freshnessState: ProofFreshnessState;
   latestEvidenceAt: Date | null;
@@ -631,10 +1128,18 @@ export function buildCanonicalPublicProofPackProjection(input: {
       })
         ? artifactDisplayName || artifact.title
         : artifact.title;
+      const itemClass = resolveProofPackItemClass({ itemClass: item.itemClass, artifact });
+      const subtypeMetadata = resolveProofPackItemSubtypeMetadata({
+        subtypeMetadata: item.subtypeMetadata,
+        artifact,
+      });
 
       return {
         artifactId: artifact.id,
         position: item.position,
+        itemClass,
+        subtypeMetadata,
+        semanticsNote: resolveProofEvidenceSemanticsNote({ itemClass, subtypeMetadata }),
         artifactKind: artifact.artifactKind,
         title,
         artifactDisplayName,
@@ -642,6 +1147,7 @@ export function buildCanonicalPublicProofPackProjection(input: {
         sourceUrl: artifact.sourceUrl,
         issuedAt: toIsoString(artifact.issuedAt),
         expiresAt: toIsoString(artifact.expiresAt),
+        skillId: artifact.subjectType === 'skill' ? artifact.subjectId : null,
       };
     });
 
@@ -653,6 +1159,29 @@ export function buildCanonicalPublicProofPackProjection(input: {
     typeof toRecord(input.pack.portabilityMeta).provenanceSummary === 'string'
       ? (toRecord(input.pack.portabilityMeta).provenanceSummary as string)
       : null;
+  const contract = buildCanonicalProofPackContract({
+    pack: input.pack,
+    linkedEvidenceItems: safeItems.map((item) => ({
+      artifactId: item.artifactId,
+      itemClass: item.itemClass,
+      subtypeMetadata: item.subtypeMetadata,
+      artifactKind: item.artifactKind,
+      title: item.title,
+      artifactDisplayName: item.artifactDisplayName,
+      description: item.description,
+      sourceUrl: item.sourceUrl,
+      issuedAt: item.issuedAt,
+      expiresAt: item.expiresAt,
+      skillId: item.skillId,
+      semanticsNote: item.semanticsNote,
+    })),
+    verificationReferences: input.verificationReferences,
+    verificationStatus:
+      input.verificationStatus === 'disputed' ? 'unverified' : input.verificationStatus,
+    freshnessState: input.freshnessState,
+    visibilityState: input.pack.visibility,
+    lastVerifiedAt: toIsoString(input.pack.lastVerifiedAt),
+  });
 
   return {
     id: input.pack.id,
@@ -673,7 +1202,8 @@ export function buildCanonicalPublicProofPackProjection(input: {
     lastRefreshedAt: toIsoString(input.pack.lastRefreshedAt || input.latestEvidenceAt),
     provenanceSummary: provenanceSummaryRaw,
     portabilityMeta: toRecord(input.pack.portabilityMeta),
-    items: safeItems,
+    contract,
+    items: safeItems.map(({ skillId: _skillId, ...item }) => item),
   };
 }
 
@@ -847,6 +1377,7 @@ export async function listCanonicalProofPackAggregatesForOwner(
     const publicSafe = buildCanonicalPublicProofPackProjection({
       pack,
       items,
+      verificationReferences: linkedVerificationReferences,
       verificationStatus,
       freshnessState,
       latestEvidenceAt,
@@ -1132,12 +1663,21 @@ export async function syncCanonicalProofPackState(packId: string) {
   const latestVerificationAt = maxDate(
     aggregate.verificationReferences.map((record) => toDate(record.verifiedAt))
   );
+  const contract = aggregate.ownerFull.contract;
 
   const [updated] = await db
     .update(proofPacks)
     .set({
+      primaryClaimType: contract.primaryClaim.type,
+      roleContext: contract.roleContext,
+      ownershipStatement: contract.ownershipStatement,
+      timeframeLabel: contract.timeframe.label,
+      verificationSummary: contract.verificationSummary.summary,
       verificationStatus: aggregate.verificationStatus,
       freshnessState: aggregate.freshnessState,
+      proofQualityScore:
+        contract.proofQualityScore != null ? contract.proofQualityScore.toString() : null,
+      schemaVersion: contract.schemaVersion,
       freshnessEvaluatedAt: new Date(),
       lastVerifiedAt: latestVerificationAt ?? aggregate.pack.lastVerifiedAt ?? null,
       lastRefreshedAt: aggregate.latestEvidenceAt ?? aggregate.pack.lastRefreshedAt ?? null,

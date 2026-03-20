@@ -46,6 +46,7 @@ describe('buildCanonicalPublicProofPackProjection', () => {
           },
         },
       ],
+      verificationReferences: [],
       verificationStatus: 'verified',
       freshnessState: 'fresh',
       latestEvidenceAt: null,

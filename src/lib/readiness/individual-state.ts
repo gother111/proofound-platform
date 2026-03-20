@@ -901,10 +901,13 @@ export async function getIndividualReadinessState(
   );
   const recentActiveSkillCount = recentSkillIds.size;
 
-  const anchoredAggregates = canonicalAggregates.filter((aggregate) =>
+  const proofFacingAggregates = canonicalAggregates.filter(
+    (aggregate) => aggregate.pack.packKind === 'verification_bundle'
+  );
+  const anchoredAggregates = proofFacingAggregates.filter((aggregate) =>
     hasPrimaryAnchorContext(aggregate.pack)
   );
-  const orphanAggregates = canonicalAggregates.filter(
+  const orphanAggregates = proofFacingAggregates.filter(
     (aggregate) => !hasPrimaryAnchorContext(aggregate.pack)
   );
 

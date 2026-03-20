@@ -9,6 +9,7 @@ import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsi
 import {
   hasPrimaryAnchorContext,
   listCanonicalProofPackAggregatesForOwner,
+  resolveProofEvidenceSemanticsNote,
   summarizeCanonicalProofOwnerAggregates,
 } from '@/lib/proofs/canonical-pack';
 import { resolvePublicIndividualPortfolioAccessByHandle } from '@/lib/portfolio/public-projection';
@@ -21,12 +22,17 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 type TrustExportProofPack = {
   id: string;
   scope: 'owner_full' | 'public_safe';
+  status: string;
   title: string;
   summary: string | null;
+  ownershipStatement: string | null;
   evidenceSummary: string | null;
   outcomesSummary: string | null;
   verificationStatus: string;
+  verificationSummary: string;
   freshnessState: string;
+  proofQualityScore: number | null;
+  schemaVersion: string;
   artifactCount: number;
   contextLabel: string | null;
   selectedEvidence: Array<{
@@ -35,6 +41,7 @@ type TrustExportProofPack = {
     artifactKind: string | null;
     issuedAt: string | null;
     description: string | null;
+    semanticsNote: string;
   }>;
 };
 
@@ -225,6 +232,7 @@ function buildExportProofPack(
           artifactKind: item.artifactKind ?? null,
           issuedAt: item.issuedAt ?? null,
           description: item.description ?? null,
+          semanticsNote: item.semanticsNote,
         }))
       : ownerItems.slice(0, 3).map((item) => ({
           title: item.artifact.title,
@@ -232,17 +240,28 @@ function buildExportProofPack(
           artifactKind: item.artifact.artifactKind ?? null,
           issuedAt: item.artifact.issuedAt ?? null,
           description: item.artifact.description ?? null,
+          semanticsNote: resolveProofEvidenceSemanticsNote({
+            itemClass: item.itemClass,
+            subtypeMetadata: item.subtypeMetadata,
+          }),
         }));
+
+  const contract = projection?.contract ?? aggregate.ownerFull.contract;
 
   return {
     id: aggregate.pack.id,
     scope,
+    status: contract.status,
     title: projection?.title || aggregate.pack.title || selectedEvidence[0]?.title || 'Proof Pack',
-    summary: projection?.summary ?? aggregate.pack.summary ?? null,
+    summary: contract.primaryClaim.statement,
+    ownershipStatement: contract.ownershipStatement,
     evidenceSummary: projection?.evidenceSummary ?? aggregate.pack.evidenceSummary ?? null,
     outcomesSummary: projection?.outcomesSummary ?? aggregate.pack.outcomesSummary ?? null,
     verificationStatus: aggregate.verificationStatus,
+    verificationSummary: contract.verificationSummary.summary,
     freshnessState: aggregate.freshnessState,
+    proofQualityScore: contract.proofQualityScore,
+    schemaVersion: contract.schemaVersion,
     artifactCount: scope === 'public_safe' ? publicItems.length : aggregate.ownerFull.items.length,
     contextLabel: resolveProofPackContextLabel(aggregate.pack),
     selectedEvidence,
@@ -266,8 +285,11 @@ async function loadCanonicalTrustState(
 
   const scopedAggregates =
     scope === 'public_safe'
-      ? aggregates.filter((aggregate) => aggregate.publicSafe !== null)
-      : aggregates;
+      ? aggregates.filter(
+          (aggregate) =>
+            aggregate.pack.packKind === 'verification_bundle' && aggregate.publicSafe !== null
+        )
+      : aggregates.filter((aggregate) => aggregate.pack.packKind === 'verification_bundle');
   const summary = summarizeCanonicalProofOwnerAggregates(scopedAggregates);
   const verifiedReferences = new Map(
     scopedAggregates

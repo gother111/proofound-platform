@@ -66,6 +66,19 @@ function validateOrganizationSlug(value: string): string | null {
   return null;
 }
 
+function resolveOnboardingProofItemSubtype(proofUrl: string) {
+  if (/github\.com\/.+\/pull\//i.test(proofUrl)) {
+    return 'pr';
+  }
+  if (/github\.com\/.+\/commit\//i.test(proofUrl)) {
+    return 'commit';
+  }
+  if (/github\.com\//i.test(proofUrl)) {
+    return 'repo';
+  }
+  return null;
+}
+
 export async function choosePersona(formData: FormData) {
   const user = await requireAuth();
 
@@ -330,6 +343,7 @@ export async function completeIndividualOnboarding(formData: FormData) {
 
     const artifactId = randomUUID();
     const packId = randomUUID();
+    const proofItemSubtype = resolveOnboardingProofItemSubtype(proofUrl);
     const proofMetadata = {
       imported_from: 'onboarding',
       context_type: contextType,
@@ -341,6 +355,7 @@ export async function completeIndividualOnboarding(formData: FormData) {
       focus_area: focusArea,
       candidate_evidence: true,
       public_signal: true,
+      artifactSubtype: proofItemSubtype,
     };
 
     const proofArtifactInsert = await supabase.from('proof_artifacts').insert({
@@ -397,8 +412,12 @@ export async function completeIndividualOnboarding(formData: FormData) {
       primary_subject_type: contextType,
       primary_subject_id: contextId,
       lifecycle_state: 'published',
-      title: proofPackClaim,
-      summary: proofPackOwnership,
+      primary_claim_type: proofPackOutcome ? 'outcome' : 'contribution',
+      title: proofTitle,
+      summary: proofPackClaim,
+      role_context: contextTitle,
+      ownership_statement: proofPackOwnership,
+      timeframe_label: contextDuration,
       context_json: {
         importedFrom: 'onboarding',
         contextType,
@@ -419,11 +438,14 @@ export async function completeIndividualOnboarding(formData: FormData) {
       },
       evidence_summary: proofSummary,
       outcomes_summary: proofPackOutcome,
+      verification_summary: 'No scoped verification is recorded for this Proof Pack yet.',
       visibility: 'public',
       reveal_gate: 'none',
       created_by: user.id,
       verification_status: 'unverified',
       freshness_state: 'fresh',
+      proof_quality_score: '0.60',
+      schema_version: 'proof_pack/v2',
       freshness_evaluated_at: nowIso,
       last_refreshed_at: nowIso,
       portability_meta: {
@@ -450,6 +472,8 @@ export async function completeIndividualOnboarding(formData: FormData) {
       pack_id: packId,
       artifact_id: artifactId,
       position: 0,
+      item_class: proofItemSubtype ? 'repo_activity' : 'url_link',
+      subtype_metadata: proofItemSubtype ? { subtype: proofItemSubtype, artifactKind: 'link' } : {},
       included_fields: ['title', 'description', 'sourceUrl', 'issuedAt', 'expiresAt'],
       created_at: nowIso,
       updated_at: nowIso,

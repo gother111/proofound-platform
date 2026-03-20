@@ -124,6 +124,7 @@ describe('public portfolio projection', () => {
         pack: {
           id: 'pack-anchored',
           ownerId: 'user-1',
+          packKind: 'verification_bundle',
           primarySubjectType: 'experience',
           primarySubjectId: 'experience-1',
           title: 'Anchored pack',
@@ -143,6 +144,17 @@ describe('public portfolio projection', () => {
         ],
         verificationReferences: [],
         publicSafe: {
+          contract: {
+            status: 'published',
+            title: 'Anchored pack',
+            primaryClaim: { statement: 'Anchored pack claim' },
+            ownershipStatement: 'Owned the anchored contribution.',
+            verificationSummary: {
+              summary: 'Scoped verification supports this Proof Pack.',
+            },
+            proofQualityScore: 0.8,
+            schemaVersion: 'proof_pack/v2',
+          },
           title: 'Anchored pack',
           summary: null,
           evidenceSummary: null,
@@ -157,6 +169,7 @@ describe('public portfolio projection', () => {
               sourceUrl: 'https://example.com/public-proof',
               issuedAt: '2026-01-15T00:00:00.000Z',
               expiresAt: null,
+              semanticsNote: 'Supporting evidence only, not full verification.',
             },
           ],
         },
@@ -168,6 +181,7 @@ describe('public portfolio projection', () => {
         pack: {
           id: 'pack-orphan',
           ownerId: 'user-1',
+          packKind: 'verification_bundle',
           primarySubjectType: 'skill',
           primarySubjectId: 'skill-floating',
           title: 'Floating pack',
@@ -187,6 +201,17 @@ describe('public portfolio projection', () => {
         ],
         verificationReferences: [],
         publicSafe: {
+          contract: {
+            status: 'published',
+            title: 'Floating pack',
+            primaryClaim: { statement: 'Floating pack claim' },
+            ownershipStatement: null,
+            verificationSummary: {
+              summary: 'No scoped verification is recorded for this Proof Pack yet.',
+            },
+            proofQualityScore: 0.4,
+            schemaVersion: 'proof_pack/v2',
+          },
           title: 'Floating pack',
           summary: null,
           evidenceSummary: null,
@@ -200,6 +225,7 @@ describe('public portfolio projection', () => {
               sourceUrl: 'https://example.com/floating-proof',
               issuedAt: '2026-01-12T00:00:00.000Z',
               expiresAt: null,
+              semanticsNote: 'Supporting evidence only, not full verification.',
             },
           ],
         },
@@ -244,6 +270,7 @@ describe('public portfolio projection', () => {
         pack: {
           id: 'pack-orphan',
           ownerId: 'user-1',
+          packKind: 'verification_bundle',
           primarySubjectType: 'skill',
           primarySubjectId: 'skill-floating',
           title: 'Floating pack',
@@ -263,6 +290,17 @@ describe('public portfolio projection', () => {
         ],
         verificationReferences: [],
         publicSafe: {
+          contract: {
+            status: 'published',
+            title: 'Floating pack',
+            primaryClaim: { statement: 'Floating pack claim' },
+            ownershipStatement: null,
+            verificationSummary: {
+              summary: 'No scoped verification is recorded for this Proof Pack yet.',
+            },
+            proofQualityScore: 0.4,
+            schemaVersion: 'proof_pack/v2',
+          },
           title: 'Floating pack',
           summary: null,
           evidenceSummary: null,
@@ -276,6 +314,7 @@ describe('public portfolio projection', () => {
               sourceUrl: 'https://example.com/floating-proof',
               issuedAt: '2026-01-12T00:00:00.000Z',
               expiresAt: null,
+              semanticsNote: 'Supporting evidence only, not full verification.',
             },
           ],
         },

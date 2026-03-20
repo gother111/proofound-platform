@@ -62,6 +62,7 @@ function createAnchoredAggregate({
   return {
     pack: {
       id: 'pack-anchored',
+      packKind: 'verification_bundle',
       primarySubjectType: 'experience',
       primarySubjectId: 'ctx-1',
     },
@@ -97,6 +98,7 @@ function createOrphanAggregate(skillIds: string[]) {
   return {
     pack: {
       id: 'pack-orphan',
+      packKind: 'verification_bundle',
       primarySubjectType: 'skill',
       primarySubjectId: skillIds[0] ?? 'skill-floating',
     },

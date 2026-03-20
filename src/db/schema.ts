@@ -60,6 +60,12 @@ export const canonicalProofPackKinds = [
   'organization_export',
   'verification_bundle',
 ] as const;
+export const canonicalProofPackPrimaryClaimTypes = [
+  'contribution',
+  'outcome',
+  'credential_fact',
+  'engagement_fact',
+] as const;
 export const canonicalProofPackLifecycleStates = [
   'draft',
   'ready',
@@ -74,6 +80,15 @@ export const canonicalProofPackVerificationStatuses = [
   'partially_verified',
   'verified',
   'disputed',
+] as const;
+export const canonicalProofPackItemClasses = [
+  'file_upload',
+  'url_link',
+  'repo_activity',
+  'case_fragment',
+  'credential_evidence',
+  'engagement_evidence',
+  'reviewer_note',
 ] as const;
 export const canonicalSubmissionKinds = [
   'assignment_section',
@@ -1682,13 +1697,22 @@ export const proofPacks = pgTable(
     })
       .default('draft')
       .notNull(),
+    primaryClaimType: text('primary_claim_type', {
+      enum: canonicalProofPackPrimaryClaimTypes,
+    }).default('contribution'),
     title: text('title').notNull(),
     summary: text('summary'),
     contextJson: jsonb('context_json')
       .default(sql`'{}'::jsonb`)
       .notNull(),
+    roleContext: text('role_context'),
+    ownershipStatement: text('ownership_statement'),
+    timeframeStart: date('timeframe_start'),
+    timeframeEnd: date('timeframe_end'),
+    timeframeLabel: text('timeframe_label'),
     evidenceSummary: text('evidence_summary'),
     outcomesSummary: text('outcomes_summary'),
+    verificationSummary: text('verification_summary'),
     visibility: text('visibility', {
       enum: canonicalVisibilityLevels,
     })
@@ -1712,6 +1736,8 @@ export const proofPacks = pgTable(
     })
       .default('stale')
       .notNull(),
+    proofQualityScore: numeric('proof_quality_score'),
+    schemaVersion: text('schema_version').default('proof_pack/v2').notNull(),
     freshnessEvaluatedAt: timestamp('freshness_evaluated_at', { withTimezone: true }),
     lastVerifiedAt: timestamp('last_verified_at', { withTimezone: true }),
     lastRefreshedAt: timestamp('last_refreshed_at', { withTimezone: true }),
@@ -1760,6 +1786,12 @@ export const proofPackItems = pgTable(
       .references(() => proofArtifacts.id, { onDelete: 'cascade' })
       .notNull(),
     position: integer('position').default(0).notNull(),
+    itemClass: text('item_class', {
+      enum: canonicalProofPackItemClasses,
+    }).default('file_upload'),
+    subtypeMetadata: jsonb('subtype_metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
     includedFields: jsonb('included_fields')
       .default(sql`'[]'::jsonb`)
       .notNull(),

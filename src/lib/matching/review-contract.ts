@@ -31,6 +31,11 @@ import {
   type MatchScoreState,
 } from '@/lib/matching/match-score-contract';
 import {
+  hasPrimaryAnchorContext,
+  listCanonicalProofPackAggregatesForOwner,
+  type CanonicalProofPackContract,
+} from '@/lib/proofs/canonical-pack';
+import {
   MATCH_REASON_CODE_VALUES,
   type MatchReasonCategory,
   type MatchReasonCode,
@@ -127,10 +132,14 @@ type ReviewCardProofPackSnapshot = {
   title: string;
   summary: string | null;
   contextJson: Record<string, unknown>;
+  ownershipStatement: string | null;
   evidenceSummary: string | null;
   outcomesSummary: string | null;
+  verificationSummary: string;
   verificationStatus: string;
   freshnessState: string;
+  proofQualityScore: number | null;
+  contract: CanonicalProofPackContract;
   updatedAt: Date | null;
   publishedAt: Date | null;
 };
@@ -470,6 +479,11 @@ function getBestReviewProofPackSnapshot(
       return verificationScore;
     }
 
+    const qualityScore = (right.proofQualityScore ?? 0) - (left.proofQualityScore ?? 0);
+    if (qualityScore !== 0) {
+      return qualityScore;
+    }
+
     const freshnessScore = freshnessRank(right.freshnessState) - freshnessRank(left.freshnessState);
     if (freshnessScore !== 0) {
       return freshnessScore;
@@ -494,56 +508,46 @@ export async function getReviewCardProofPackMap(profileIds: string[]) {
     return new Map<string, ReviewCardProofPackSnapshot | null>();
   }
 
-  const rows = await db
-    .select({
-      ownerId: proofPacks.ownerId,
-      primarySubjectType: proofPacks.primarySubjectType,
-      lifecycleState: proofPacks.lifecycleState,
-      title: proofPacks.title,
-      summary: proofPacks.summary,
-      contextJson: proofPacks.contextJson,
-      evidenceSummary: proofPacks.evidenceSummary,
-      outcomesSummary: proofPacks.outcomesSummary,
-      verificationStatus: proofPacks.verificationStatus,
-      freshnessState: proofPacks.freshnessState,
-      updatedAt: proofPacks.updatedAt,
-      publishedAt: proofPacks.publishedAt,
-    })
-    .from(proofPacks)
-    .where(
-      and(
-        eq(proofPacks.ownerType, 'individual_profile'),
-        inArray(proofPacks.ownerId, uniqueProfileIds),
-        isNull(proofPacks.deletedAt)
-      )
-    );
-
-  const grouped = new Map<string, ReviewCardProofPackSnapshot[]>();
-  for (const row of rows) {
-    const snapshots = grouped.get(row.ownerId) ?? [];
-    snapshots.push({
-      ownerId: row.ownerId,
-      primarySubjectType: row.primarySubjectType,
-      lifecycleState: row.lifecycleState,
-      title: row.title,
-      summary: row.summary,
-      contextJson:
-        row.contextJson && typeof row.contextJson === 'object' && !Array.isArray(row.contextJson)
-          ? (row.contextJson as Record<string, unknown>)
-          : {},
-      evidenceSummary: row.evidenceSummary,
-      outcomesSummary: row.outcomesSummary,
-      verificationStatus: row.verificationStatus,
-      freshnessState: row.freshnessState,
-      updatedAt: row.updatedAt,
-      publishedAt: row.publishedAt,
-    });
-    grouped.set(row.ownerId, snapshots);
-  }
-
   const snapshotMap = new Map<string, ReviewCardProofPackSnapshot | null>();
-  for (const profileId of uniqueProfileIds) {
-    snapshotMap.set(profileId, getBestReviewProofPackSnapshot(grouped.get(profileId) ?? []));
+  const aggregatesByProfile = await Promise.all(
+    uniqueProfileIds.map(async (profileId) => ({
+      profileId,
+      aggregates: await listCanonicalProofPackAggregatesForOwner('individual_profile', profileId),
+    }))
+  );
+
+  for (const { profileId, aggregates } of aggregatesByProfile) {
+    const snapshots = aggregates
+      .filter(
+        (aggregate) =>
+          aggregate.pack.packKind === 'verification_bundle' &&
+          hasPrimaryAnchorContext(aggregate.pack)
+      )
+      .map((aggregate) => ({
+        ownerId: aggregate.pack.ownerId,
+        primarySubjectType: aggregate.pack.primarySubjectType,
+        lifecycleState: aggregate.ownerFull.contract.status,
+        title: aggregate.ownerFull.contract.title,
+        summary: aggregate.ownerFull.contract.primaryClaim.statement,
+        contextJson:
+          aggregate.pack.contextJson &&
+          typeof aggregate.pack.contextJson === 'object' &&
+          !Array.isArray(aggregate.pack.contextJson)
+            ? (aggregate.pack.contextJson as Record<string, unknown>)
+            : {},
+        ownershipStatement: aggregate.ownerFull.contract.ownershipStatement,
+        evidenceSummary: aggregate.pack.evidenceSummary,
+        outcomesSummary: aggregate.ownerFull.contract.outcomeSummary,
+        verificationSummary: aggregate.ownerFull.contract.verificationSummary.summary,
+        verificationStatus: aggregate.verificationStatus,
+        freshnessState: aggregate.freshnessState,
+        proofQualityScore: aggregate.ownerFull.contract.proofQualityScore,
+        contract: aggregate.ownerFull.contract,
+        updatedAt: aggregate.pack.updatedAt,
+        publishedAt: aggregate.pack.publishedAt,
+      }));
+
+    snapshotMap.set(profileId, getBestReviewProofPackSnapshot(snapshots));
   }
 
   return snapshotMap;
@@ -1653,16 +1657,17 @@ export function buildProofFirstReviewCard(input: {
   const proofPack = input.proofPack ?? null;
   const contextJson = proofPack?.contextJson ?? {};
   const strongestProofSummary =
-    redactReviewText(proofPack?.evidenceSummary, contextJson) ??
+    redactReviewText(proofPack?.contract.primaryClaim.statement, contextJson) ??
     redactReviewText(proofPack?.title, contextJson) ??
     rendered.sections.positive_match[0] ??
     null;
-  const strongestProofOutcome = redactReviewText(proofPack?.outcomesSummary, contextJson);
+  const strongestProofOutcome = redactReviewText(
+    proofPack?.contract.outcomeSummary ?? proofPack?.outcomesSummary,
+    contextJson
+  );
   const ownership =
     redactReviewText(
-      (typeof contextJson.proofPackOwnership === 'string'
-        ? contextJson.proofPackOwnership
-        : proofPack?.summary) ?? null,
+      proofPack?.contract.ownershipStatement ?? proofPack?.ownershipStatement ?? null,
       contextJson
     ) ?? 'Ownership statement available after deeper review.';
 
@@ -1676,13 +1681,14 @@ export function buildProofFirstReviewCard(input: {
 
   const verificationCount = input.verificationCount ?? null;
   const verificationSummaryLabel =
-    proofPack?.verificationStatus === 'verified'
+    proofPack?.contract.verificationSummary.summary ??
+    (proofPack?.verificationStatus === 'verified'
       ? 'Verified proof signal present'
       : proofPack?.verificationStatus === 'partially_verified'
         ? 'Partial verification signal present'
         : verificationCount && verificationCount > 0
           ? `${verificationCount} compatibility signal${verificationCount === 1 ? '' : 's'} present`
-          : 'No verification signal recorded yet';
+          : 'No verification signal recorded yet');
 
   return {
     candidateLabel: getStableCandidateLabel(input.profileId),
@@ -1690,7 +1696,9 @@ export function buildProofFirstReviewCard(input: {
       summary: strongestProofSummary,
       outcome: strongestProofOutcome,
       ownership,
-      anchorContext: getAnchorContextLabel(proofPack?.primarySubjectType ?? null, contextJson),
+      anchorContext:
+        proofPack?.contract.primaryAnchor.label ??
+        getAnchorContextLabel(proofPack?.primarySubjectType ?? null, contextJson),
       freshnessLabel: getFreshnessLabel(proofPack?.freshnessState),
     },
     verification: {

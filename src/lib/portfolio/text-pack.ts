@@ -32,7 +32,9 @@ function resolveProofPackLine(pack: TrustExportData['proofPacks'][number]): stri
   const parts = [
     pack.outcomesSummary?.trim(),
     pack.summary?.trim(),
-    pack.evidenceSummary?.trim(),
+    'ownershipStatement' in pack && typeof pack.ownershipStatement === 'string'
+      ? pack.ownershipStatement.trim()
+      : null,
   ].filter((value): value is string => Boolean(value));
 
   return parts[0] ?? 'Proof details are available in the selected pack.';
@@ -81,14 +83,22 @@ export function buildTextPack(data: TrustExportData): string {
       if (pack.summary && pack.summary !== pack.outcomesSummary) {
         lines.push(`  Claim: ${pack.summary}`);
       }
-      if (pack.evidenceSummary) {
-        lines.push(`  Verification summary: ${pack.evidenceSummary}`);
+      if ('ownershipStatement' in pack && typeof pack.ownershipStatement === 'string') {
+        lines.push(`  Ownership: ${pack.ownershipStatement}`);
+      }
+      if ('verificationSummary' in pack && typeof pack.verificationSummary === 'string') {
+        lines.push(`  Verification summary: ${pack.verificationSummary}`);
       }
       const selectedEvidence = Array.isArray(pack.selectedEvidence) ? pack.selectedEvidence : [];
       if (selectedEvidence.length > 0) {
         lines.push(
           `  Selected evidence: ${selectedEvidence
-            .map((item) => (item.href ? `${item.title} (${item.href})` : item.title))
+            .map((item) => {
+              const base = item.href ? `${item.title} (${item.href})` : item.title;
+              return 'semanticsNote' in item && typeof item.semanticsNote === 'string'
+                ? `${base} [${item.semanticsNote}]`
+                : base;
+            })
             .join('; ')}`
         );
       }

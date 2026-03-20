@@ -161,10 +161,17 @@ describe('onboarding actions', () => {
     expect(proofArtifactInsert).toHaveBeenCalledTimes(1);
     expect(proofPackInsert).toHaveBeenCalledWith(
       expect.objectContaining({
+        primary_claim_type: 'outcome',
         title: 'Proof-first corridor launch',
-        summary: 'I owned the contribution shown in this proof inside this context.',
+        summary: 'Proof-first corridor launch',
+        role_context: 'Onboarding lead',
+        ownership_statement: 'I owned the contribution shown in this proof inside this context.',
+        timeframe_label: '2025 to present',
         evidence_summary: 'Launch note showing the first proof-backed onboarding launch.',
         outcomes_summary: 'Reduced the corridor to one calm proof-first path.',
+        verification_summary: 'No scoped verification is recorded for this Proof Pack yet.',
+        proof_quality_score: '0.60',
+        schema_version: 'proof_pack/v2',
         context_json: expect.objectContaining({
           contextSummary: 'Led the MVP onboarding corridor.',
           contextOutcome: 'Reduced the corridor to one calm proof-first path.',
@@ -174,6 +181,12 @@ describe('onboarding actions', () => {
       })
     );
     expect(proofPackItemInsert).toHaveBeenCalledTimes(1);
+    expect(proofPackItemInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        item_class: 'url_link',
+        subtype_metadata: {},
+      })
+    );
     expect(reconcileVerifierContradictions).toHaveBeenCalledWith({
       verifierProfileId: 'user-1',
     });
@@ -331,8 +344,10 @@ describe('onboarding actions', () => {
     expect(proofPackInsert).toHaveBeenCalledWith(
       expect.objectContaining({
         title: 'Proof Pack Launch',
-        summary: 'I owned the contribution shown in this proof inside this context.',
+        summary: 'Proof Pack Launch',
+        ownership_statement: 'I owned the contribution shown in this proof inside this context.',
         outcomes_summary: 'Built a proof-first onboarding prototype.',
+        schema_version: 'proof_pack/v2',
       })
     );
     expect(proofPackItemInsert).toHaveBeenCalledTimes(1);

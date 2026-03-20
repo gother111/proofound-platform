@@ -51,6 +51,14 @@ export const PROOF_PACK_KIND_VALUES = [
 ] as const;
 export type ProofPackKind = (typeof PROOF_PACK_KIND_VALUES)[number];
 export const ProofPackKindSchema = z.enum(PROOF_PACK_KIND_VALUES);
+export const PROOF_PACK_PRIMARY_CLAIM_TYPE_VALUES = [
+  'contribution',
+  'outcome',
+  'credential_fact',
+  'engagement_fact',
+] as const;
+export type ProofPackPrimaryClaimType = (typeof PROOF_PACK_PRIMARY_CLAIM_TYPE_VALUES)[number];
+export const ProofPackPrimaryClaimTypeSchema = z.enum(PROOF_PACK_PRIMARY_CLAIM_TYPE_VALUES);
 export const PROOF_PACK_LIFECYCLE_STATE_VALUES = [
   'draft',
   'ready',
@@ -73,6 +81,17 @@ export const ProofPackVerificationStatusSchema = z.enum(PROOF_PACK_VERIFICATION_
 export const PROOF_FRESHNESS_STATE_VALUES = ['fresh', 'review_soon', 'stale', 'expired'] as const;
 export type ProofFreshnessState = (typeof PROOF_FRESHNESS_STATE_VALUES)[number];
 export const ProofFreshnessStateSchema = z.enum(PROOF_FRESHNESS_STATE_VALUES);
+export const PROOF_PACK_ITEM_CLASS_VALUES = [
+  'file_upload',
+  'url_link',
+  'repo_activity',
+  'case_fragment',
+  'credential_evidence',
+  'engagement_evidence',
+  'reviewer_note',
+] as const;
+export type ProofPackItemClass = (typeof PROOF_PACK_ITEM_CLASS_VALUES)[number];
+export const ProofPackItemClassSchema = z.enum(PROOF_PACK_ITEM_CLASS_VALUES);
 
 export const SUBMISSION_KIND_VALUES = [
   'assignment_section',
@@ -290,11 +309,18 @@ export const ProofPackSchema = z.object({
   primarySubjectType: ProofSubjectTypeSchema.nullable(),
   primarySubjectId: z.string().uuid().nullable(),
   lifecycleState: ProofPackLifecycleStateSchema,
+  primaryClaimType: ProofPackPrimaryClaimTypeSchema.nullable().optional(),
   title: z.string().min(1),
   summary: z.string().nullable(),
   contextJson: z.record(z.any()),
+  roleContext: z.string().nullable().optional(),
+  ownershipStatement: z.string().nullable().optional(),
+  timeframeStart: z.string().nullable().optional(),
+  timeframeEnd: z.string().nullable().optional(),
+  timeframeLabel: z.string().nullable().optional(),
   evidenceSummary: z.string().nullable(),
   outcomesSummary: z.string().nullable(),
+  verificationSummary: z.string().nullable().optional(),
   visibility: VisibilityLevelSchema,
   revealGate: RevealGateSchema,
   shareTokenHash: z.string().nullable(),
@@ -302,6 +328,8 @@ export const ProofPackSchema = z.object({
   createdBy: z.string().uuid().nullable(),
   verificationStatus: ProofPackVerificationStatusSchema,
   freshnessState: ProofFreshnessStateSchema,
+  proofQualityScore: z.union([z.number(), z.string()]).nullable().optional(),
+  schemaVersion: z.string().min(1).optional(),
   freshnessEvaluatedAt: z.string().datetime().nullable(),
   lastVerifiedAt: z.string().datetime().nullable(),
   lastRefreshedAt: z.string().datetime().nullable(),
@@ -322,6 +350,8 @@ export const ProofPackItemSchema = z.object({
   packId: z.string().uuid(),
   artifactId: z.string().uuid(),
   position: z.number().int().nonnegative(),
+  itemClass: ProofPackItemClassSchema.nullable().optional(),
+  subtypeMetadata: z.record(z.any()).optional(),
   includedFields: z.array(z.string()),
 });
 export type ProofPackItem = z.infer<typeof ProofPackItemSchema>;

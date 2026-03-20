@@ -34,12 +34,17 @@ describe('buildTextPack', () => {
         {
           id: 'pack-1',
           scope: 'public_safe',
+          status: 'published',
           title: 'Proof Pack: Product Strategy',
           summary: 'Led a launch-critical product strategy cycle.',
+          ownershipStatement: 'Owned the product strategy contribution for this launch.',
           evidenceSummary: 'Cross-checked against a public launch memo.',
           outcomesSummary: 'Shipped the MVP in two weeks.',
           verificationStatus: 'verified',
+          verificationSummary: 'Scoped verification supports this Proof Pack.',
           freshnessState: 'fresh',
+          proofQualityScore: 0.8,
+          schemaVersion: 'proof_pack/v2',
           artifactCount: 1,
           contextLabel: 'Product Strategy',
           selectedEvidence: [
@@ -49,6 +54,7 @@ describe('buildTextPack', () => {
               artifactKind: 'link',
               issuedAt: '2026-02-20',
               description: 'Public launch memo',
+              semanticsNote: 'Supporting evidence only, not full verification.',
             },
           ],
         },
@@ -72,8 +78,13 @@ describe('buildTextPack', () => {
     expect(text).toContain('Context: Product Strategy');
     expect(text).toContain('Verification: Verified evidence');
     expect(text).toContain('Freshness: Fresh');
+    expect(text).toContain('Ownership: Owned the product strategy contribution for this launch.');
+    expect(text).toContain('Verification summary: Scoped verification supports this Proof Pack.');
     expect(text).toContain('Skills evidenced in selected proof:');
     expect(text).toContain('Product Strategy, Delivery');
+    expect(text).toContain(
+      'Launch memo (https://example.com/launch-memo) [Supporting evidence only, not full verification.]'
+    );
     expect(text.indexOf('Proof-backed summary:')).toBeLessThan(
       text.indexOf('Skills evidenced in selected proof:')
     );

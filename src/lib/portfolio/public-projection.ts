@@ -44,12 +44,17 @@ export type PublicTrustExportData = {
   proofPacks: Array<{
     id: string;
     scope: 'owner_full' | 'public_safe';
+    status: string;
     title: string;
     summary: string | null;
+    ownershipStatement: string | null;
     evidenceSummary: string | null;
     outcomesSummary: string | null;
     verificationStatus: string;
+    verificationSummary: string;
     freshnessState: string;
+    proofQualityScore: number | null;
+    schemaVersion: string;
     artifactCount: number;
     contextLabel: string | null;
     selectedEvidence: Array<{
@@ -59,6 +64,7 @@ export type PublicTrustExportData = {
       artifactKind: string | null;
       issuedAt: string | null;
       description: string | null;
+      semanticsNote: string;
     }>;
   }>;
   visibility: ReturnType<typeof mergeVisibilityFlags>;
@@ -563,6 +569,10 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
   let hasRevealGatedContent = false;
 
   for (const aggregate of aggregates) {
+    if (aggregate.pack.packKind !== 'verification_bundle') {
+      continue;
+    }
+
     if (!hasPrimaryAnchorContext(aggregate.pack)) {
       continue;
     }
@@ -590,12 +600,21 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
     publicProofPacks.push({
       id: aggregate.pack.id,
       scope: 'public_safe',
-      title: publicSafePack.title || aggregate.pack.title || 'Proof Pack',
-      summary: publicSafePack.summary ?? aggregate.pack.summary ?? null,
+      status: publicSafePack.contract.status,
+      title:
+        publicSafePack.contract.title ||
+        publicSafePack.title ||
+        aggregate.pack.title ||
+        'Proof Pack',
+      summary: publicSafePack.contract.primaryClaim.statement,
+      ownershipStatement: publicSafePack.contract.ownershipStatement,
       evidenceSummary: publicSafePack.evidenceSummary ?? aggregate.pack.evidenceSummary ?? null,
       outcomesSummary: publicSafePack.outcomesSummary ?? aggregate.pack.outcomesSummary ?? null,
       verificationStatus: aggregate.verificationStatus,
+      verificationSummary: publicSafePack.contract.verificationSummary.summary,
       freshnessState: aggregate.freshnessState,
+      proofQualityScore: publicSafePack.contract.proofQualityScore,
+      schemaVersion: publicSafePack.contract.schemaVersion,
       artifactCount: publicSafePack.items.length,
       contextLabel: resolvePublicProofPackContextLabel({ pack: aggregate.pack }),
       selectedEvidence: publicSafePack.items.slice(0, 3).map((item) => ({
@@ -608,6 +627,7 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
         artifactKind: item.artifactKind ?? null,
         issuedAt: item.issuedAt ?? null,
         description: item.description ?? null,
+        semanticsNote: item.semanticsNote,
       })),
     });
 
