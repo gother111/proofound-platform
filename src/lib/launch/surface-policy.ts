@@ -4,7 +4,7 @@ export type LaunchSurfaceClassification =
   | 'gated_non_mvp'
   | 'archived';
 
-type ApiSurfacePolicy = {
+type SurfacePolicy = {
   classification: Extract<
     LaunchSurfaceClassification,
     'active_launch_path' | 'internal_only_launch_ops' | 'archived'
@@ -27,21 +27,25 @@ export const ACTIVE_LAUNCH_ANALYTICS_API_PATHS = [
   '/api/analytics/web-vitals',
 ] as const;
 
-export const ACTIVE_LAUNCH_EXACT_API_PATHS = [
+const ACTIVE_LAUNCH_EXACT_API_PATHS = [
   ...ACTIVE_LAUNCH_ANALYTICS_API_PATHS,
   '/api/csrf-token',
   '/api/data-export',
   '/api/feature-flags',
   '/api/health',
   '/api/individual/readiness',
-  '/api/integrations/google/connect',
-  '/api/integrations/google/callback',
+  '/api/location/autocomplete',
   '/api/monitoring/launch-status',
   '/api/monitoring/perf-status',
   '/api/org/readiness',
   '/api/performance/track',
   '/api/verification/linkedin/initiate',
+  '/api/verification/status',
+  '/api/verification/work-email/send',
+  '/api/verification/work-email/verify',
 ] as const;
+
+const ACTIVE_LAUNCH_EXACT_API_PATH_SET = new Set<string>(ACTIVE_LAUNCH_EXACT_API_PATHS);
 
 const matchExact =
   (path: string) =>
@@ -63,164 +67,126 @@ const matchPattern =
   (pathname: string): boolean =>
     pattern.test(pathname);
 
-const ACTIVE_LAUNCH_EXACT_API_PATH_SET = new Set<string>(ACTIVE_LAUNCH_EXACT_API_PATHS);
-const ARCHIVED_ORG_REVIEW_SUBROUTES = /^\/api\/org\/[^/]+\/(?:dashboard|coverage)(?:\/.*)?$/;
-const RESERVED_ORGANIZATION_DETAIL_PATHS = new Set(['evidence-pack']);
+const normalizePathname = (pathname: string): string => {
+  if (!pathname) return '/';
+  if (pathname === '/') return '/';
+  return pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+};
 
 const ACTIVE_API_POLICIES = [
   {
     classification: 'active_launch_path',
-    surfaceLabel: 'Launch Analytics API',
-    detail: 'This telemetry endpoint remains in the locked launch MVP corridor.',
+    surfaceLabel: 'Launch Support API',
+    detail:
+      'This telemetry, health, or launch support endpoint remains in the locked MVP corridor.',
     matches: (pathname: string) => ACTIVE_LAUNCH_EXACT_API_PATH_SET.has(pathname),
   },
   {
     classification: 'active_launch_path',
     surfaceLabel: 'Assignments API',
-    detail: 'Assignment drafting, publishing, invites, and review remain launch-binding.',
-    matches: matchExactOrPrefix('/api/assignments'),
+    detail: 'Assignment drafting, publishing, and review remain inside the locked launch corridor.',
+    matches: (pathname: string) =>
+      matchExactOrPrefix('/api/assignments')(pathname) &&
+      !matchExactOrPrefix('/api/assignments/invite')(pathname),
   },
   {
     classification: 'active_launch_path',
     surfaceLabel: 'Auth API',
-    detail: 'Authentication and compatibility callbacks remain launch-safe support surfaces.',
-    matches: matchExactOrPrefix('/api/auth'),
+    detail: 'Launch-safe authentication callbacks remain active.',
+    matches: (pathname: string) =>
+      pathname === '/api/auth/google/callback' ||
+      pathname === '/api/auth/linkedin' ||
+      pathname === '/api/auth/linkedin/callback',
   },
   {
     classification: 'active_launch_path',
-    surfaceLabel: 'Candidate Invites API',
-    detail: 'Candidate invite flows remain part of the launch hiring corridor.',
+    surfaceLabel: 'Candidate Invite API',
+    detail: 'Candidate invite and claim flows remain active in the launch corridor.',
     matches: matchExactOrPrefix('/api/candidate-invites'),
   },
   {
     classification: 'active_launch_path',
     surfaceLabel: 'Conversations API',
-    detail: 'Conversation, reveal, and messaging flows remain part of the launch hiring corridor.',
+    detail: 'Conversation, reveal, and messaging flows remain active in the launch corridor.',
     matches: matchExactOrPrefix('/api/conversations'),
   },
   {
     classification: 'active_launch_path',
-    surfaceLabel: 'Core Matching API',
-    detail: 'Core matching computation remains active for the launch corridor.',
-    matches: matchExactOrPrefix('/api/core'),
-  },
-  {
-    classification: 'active_launch_path',
     surfaceLabel: 'Decisions API',
-    detail: 'Interview and decision lifecycle routes remain active for the launch corridor.',
+    detail: 'Decision and interview outcome routes remain active in the launch corridor.',
     matches: matchExactOrPrefix('/api/decisions'),
   },
   {
     classification: 'active_launch_path',
     surfaceLabel: 'Engagement Verification API',
-    detail: 'Post-decision engagement verification remains active for the launch corridor.',
+    detail: 'Post-decision engagement verification remains active in the launch corridor.',
     matches: matchExactOrPrefix('/api/engagement-verifications'),
   },
   {
     classification: 'active_launch_path',
     surfaceLabel: 'Feedback API',
-    detail: 'Interview feedback and workflow feedback remain active for launch.',
-    matches: matchExactOrPrefix('/api/feedback'),
+    detail: 'Only launch-critical interview feedback routes remain active.',
+    matches: (pathname: string) =>
+      pathname === '/api/feedback/submit' ||
+      (pathname !== '/api/feedback/why-not-shortlisted' &&
+        pathname !== '/api/feedback/sus' &&
+        /^\/api\/feedback\/[^/]+$/.test(pathname)) ||
+      /^\/api\/feedback\/token\/[^/]+$/.test(pathname),
   },
   {
     classification: 'active_launch_path',
     surfaceLabel: 'Interview Integration API',
-    detail: 'Interview video integrations remain active for the launch interview corridor.',
-    matches: matchExactOrPrefix('/api/integrations/video'),
-  },
-  {
-    classification: 'active_launch_path',
-    surfaceLabel: 'Interview Integration API',
-    detail: 'Interview video integrations remain active for the launch interview corridor.',
-    matches: matchExactOrPrefix('/api/integrations/google'),
+    detail:
+      'Google Meet and narrow video scheduling integrations remain active for launch interviews.',
+    matches: (pathname: string) =>
+      pathname === '/api/integrations/google/connect' ||
+      pathname === '/api/integrations/google/callback' ||
+      matchExactOrPrefix('/api/integrations/video')(pathname),
   },
   {
     classification: 'active_launch_path',
     surfaceLabel: 'Interviews API',
-    detail: 'Interview scheduling and lifecycle routes remain active for launch.',
+    detail: 'Interview scheduling and lifecycle routes remain active in the launch corridor.',
     matches: matchExactOrPrefix('/api/interviews'),
   },
   {
     classification: 'active_launch_path',
-    surfaceLabel: 'Location API',
-    detail: 'Location autocomplete remains active for launch profile and assignment forms.',
-    matches: matchExactOrPrefix('/api/location'),
-  },
-  {
-    classification: 'active_launch_path',
-    surfaceLabel: 'Match API',
-    detail: 'Match browsing, explainability, and profile flows remain active for launch.',
-    matches: matchExactOrPrefix('/api/match'),
-  },
-  {
-    classification: 'active_launch_path',
-    surfaceLabel: 'Matches API',
-    detail: 'Match state routes remain active for launch.',
-    matches: matchExactOrPrefix('/api/matches'),
-  },
-  {
-    classification: 'active_launch_path',
-    surfaceLabel: 'Matching Profile API',
-    detail: 'Matching profile routes remain active for launch.',
-    matches: matchExactOrPrefix('/api/matching-profile'),
-  },
-  {
-    classification: 'active_launch_path',
-    surfaceLabel: 'Messages API',
-    detail: 'Direct message routes remain active for the launch corridor.',
-    matches: matchExactOrPrefix('/api/messages'),
-  },
-  {
-    classification: 'active_launch_path',
-    surfaceLabel: 'Notifications API',
-    detail: 'Workflow notifications remain active for launch.',
-    matches: matchExactOrPrefix('/api/notifications'),
+    surfaceLabel: 'Matching API',
+    detail: 'The narrow matching corridor remains active for proof-first review.',
+    matches: (pathname: string) =>
+      pathname === '/api/matching-profile' ||
+      /^\/api\/matching\/profile(?:\/[^/]+)?$/.test(pathname) ||
+      pathname === '/api/match/assignment' ||
+      pathname === '/api/match/gates' ||
+      pathname === '/api/match/hide' ||
+      pathname === '/api/match/interest' ||
+      pathname === '/api/match/profile' ||
+      pathname === '/api/match/snoozed' ||
+      pathname === '/api/match/test' ||
+      /^\/api\/match\/explain\/[^/]+$/.test(pathname) ||
+      /^\/api\/match\/visible-fields\/[^/]+$/.test(pathname) ||
+      /^\/api\/matches\/[^/]+\/snooze$/.test(pathname),
   },
   {
     classification: 'active_launch_path',
     surfaceLabel: 'Organization Review API',
-    detail: 'Shortlist and review routes remain active for the launch hiring corridor.',
+    detail: 'The narrow organization shortlist and review corridor remains active for launch.',
     matches: (pathname: string) =>
-      matchExactOrPrefix('/api/org')(pathname) && !ARCHIVED_ORG_REVIEW_SUBROUTES.test(pathname),
+      /^\/api\/org\/[^/]+\/shortlist(?:\/.*)?$/.test(pathname) ||
+      /^\/api\/org\/[^/]+\/matches\/[^/]+\/review$/.test(pathname),
   },
   {
     classification: 'active_launch_path',
     surfaceLabel: 'Organization API',
-    detail: 'Organization trust profile and launch assignment management remain active.',
-    matches: matchExact('/api/organizations'),
-  },
-  {
-    classification: 'active_launch_path',
-    surfaceLabel: 'Organization API',
-    detail: 'Organization trust profile and launch assignment management remain active.',
-    matches: (pathname: string) => {
-      const match = pathname.match(/^\/api\/organizations\/([^/]+)$/);
-      return Boolean(match && !RESERVED_ORGANIZATION_DETAIL_PATHS.has(match[1]!));
-    },
-  },
-  {
-    classification: 'active_launch_path',
-    surfaceLabel: 'Organization API',
-    detail: 'Organization launch assignment management remains active.',
-    matches: matchPattern(/^\/api\/organizations\/[^/]+\/assignments(?:\/.*)?$/),
-  },
-  {
-    classification: 'active_launch_path',
-    surfaceLabel: 'Organization API',
-    detail: 'Candidate invite management remains active for the launch hiring corridor.',
-    matches: matchPattern(/^\/api\/organizations\/[^/]+\/candidate-invites(?:\/.*)?$/),
-  },
-  {
-    classification: 'active_launch_path',
-    surfaceLabel: 'Organization API',
-    detail: 'Team membership management remains active for the launch hiring corridor.',
-    matches: matchPattern(/^\/api\/organizations\/[^/]+\/team(?:\/.*)?$/),
-  },
-  {
-    classification: 'active_launch_path',
-    surfaceLabel: 'Organization Visibility API',
-    detail: 'Public trust-page visibility controls remain active for launch.',
-    matches: matchPattern(/^\/api\/organizations\/[^/]+\/visibility$/),
+    detail:
+      'Organization trust profile, assignment, visibility, and team membership routes remain active for launch.',
+    matches: (pathname: string) =>
+      pathname === '/api/organizations' ||
+      /^\/api\/organizations\/[^/]+$/.test(pathname) ||
+      /^\/api\/organizations\/[^/]+\/assignments(?:\/.*)?$/.test(pathname) ||
+      /^\/api\/organizations\/[^/]+\/candidate-invites(?:\/.*)?$/.test(pathname) ||
+      /^\/api\/organizations\/[^/]+\/team(?:\/.*)?$/.test(pathname) ||
+      /^\/api\/organizations\/[^/]+\/visibility$/.test(pathname),
   },
   {
     classification: 'active_launch_path',
@@ -230,27 +196,12 @@ const ACTIVE_API_POLICIES = [
   },
   {
     classification: 'active_launch_path',
-    surfaceLabel: 'Policy API',
-    detail: 'Policy routes remain active for launch.',
-    matches: matchExactOrPrefix('/api/policy'),
-  },
-  {
-    classification: 'active_launch_path',
     surfaceLabel: 'Profile API',
-    detail: 'Profile and privacy routes remain active for launch.',
-    matches: matchExactOrPrefix('/api/profile'),
-  },
-  {
-    classification: 'active_launch_path',
-    surfaceLabel: 'Profiles API',
-    detail: 'Profile lookup routes remain active for launch.',
-    matches: matchExactOrPrefix('/api/profiles'),
-  },
-  {
-    classification: 'active_launch_path',
-    surfaceLabel: 'Surveys API',
-    detail: 'Operational surveys remain active for launch.',
-    matches: matchExactOrPrefix('/api/surveys'),
+    detail: 'Profile readiness and privacy routes remain active for launch.',
+    matches: (pathname: string) =>
+      pathname === '/api/profile/completeness' ||
+      pathname === '/api/profile/privacy-settings' ||
+      pathname === '/api/profile/visibility',
   },
   {
     classification: 'active_launch_path',
@@ -261,44 +212,39 @@ const ACTIVE_API_POLICIES = [
   {
     classification: 'active_launch_path',
     surfaceLabel: 'User API',
-    detail: 'Account, settings, privacy, export, and delete routes remain active for launch.',
-    matches: matchExactOrPrefix('/api/user'),
+    detail: 'Account, privacy, export, and deletion basics remain active for launch.',
+    matches: (pathname: string) =>
+      pathname === '/api/user/account' ||
+      pathname === '/api/user/account/cancel-deletion' ||
+      pathname === '/api/user/audit-log' ||
+      pathname === '/api/user/audit-log/purpose' ||
+      pathname === '/api/user/consent' ||
+      pathname === '/api/user/consent/check' ||
+      pathname === '/api/user/email' ||
+      pathname === '/api/user/export' ||
+      pathname === '/api/user/me' ||
+      pathname === '/api/user/password' ||
+      pathname === '/api/user/privacy-settings',
   },
   {
     classification: 'active_launch_path',
     surfaceLabel: 'Verification API',
     detail: 'Canonical verification and trust routes remain active for launch.',
     matches: (pathname: string) =>
-      matchExactOrPrefix('/api/verification')(pathname) &&
-      !matchExactOrPrefix('/api/verification/skill')(pathname),
-  },
-  {
-    classification: 'active_launch_path',
-    surfaceLabel: 'Verification API',
-    detail: 'Canonical verification and trust routes remain active for launch.',
-    matches: matchExactOrPrefix('/api/verify'),
+      matchExactOrPrefix('/api/verification/requests')(pathname) ||
+      matchExactOrPrefix('/api/verify')(pathname),
   },
   {
     classification: 'active_launch_path',
     surfaceLabel: 'Assignment Expertise API',
-    detail: 'Assignment drafting expertise support remains active for launch.',
-    matches: matchExact('/api/expertise/taxonomy'),
-  },
-  {
-    classification: 'active_launch_path',
-    surfaceLabel: 'Assignment Expertise API',
-    detail: 'Assignment drafting expertise support remains active for launch.',
-    matches: matchExact('/api/expertise/jd-to-l4'),
-  },
-  {
-    classification: 'active_launch_path',
-    surfaceLabel: 'Portfolio Skill Tagging API',
-    detail: 'Portfolio proof-to-skill tagging remains active inside the launch proof corridor.',
+    detail:
+      'Assignment drafting and proof tagging support remain active inside the launch corridor.',
     matches: (pathname: string) =>
-      matchExactOrPrefix('/api/expertise/user-skills')(pathname) &&
-      !matchPattern(/^\/api\/expertise\/user-skills\/[^/]+\/verification-request$/)(pathname),
+      pathname === '/api/expertise/jd-to-l4' ||
+      pathname === '/api/expertise/taxonomy' ||
+      matchExactOrPrefix('/api/expertise/user-skills')(pathname),
   },
-] as const satisfies readonly ApiSurfacePolicy[];
+] as const satisfies readonly SurfacePolicy[];
 
 const INTERNAL_ONLY_API_POLICIES = [
   {
@@ -335,57 +281,18 @@ const INTERNAL_ONLY_API_POLICIES = [
     classification: 'internal_only_launch_ops',
     surfaceLabel: 'Launch Ops API',
     detail: 'This cron route stays available only for launch monitoring and operational safety.',
-    matches: matchExact('/api/cron/account-deletion-workflow'),
+    matches: (pathname: string) =>
+      pathname === '/api/cron/account-deletion-workflow' ||
+      pathname === '/api/cron/decision-reminders' ||
+      pathname === '/api/cron/health-check' ||
+      pathname === '/api/cron/launch-synthetic-checks' ||
+      pathname === '/api/cron/performance-check' ||
+      pathname === '/api/cron/process-deletions' ||
+      pathname === '/api/cron/refresh-matches' ||
+      pathname === '/api/cron/refresh-matches-worker' ||
+      pathname === '/api/cron/send-deletion-reminders',
   },
-  {
-    classification: 'internal_only_launch_ops',
-    surfaceLabel: 'Launch Ops API',
-    detail: 'This cron route stays available only for launch monitoring and operational safety.',
-    matches: matchExact('/api/cron/decision-reminders'),
-  },
-  {
-    classification: 'internal_only_launch_ops',
-    surfaceLabel: 'Launch Ops API',
-    detail: 'This cron route stays available only for launch monitoring and operational safety.',
-    matches: matchExact('/api/cron/health-check'),
-  },
-  {
-    classification: 'internal_only_launch_ops',
-    surfaceLabel: 'Launch Ops API',
-    detail: 'This cron route stays available only for launch monitoring and operational safety.',
-    matches: matchExact('/api/cron/launch-synthetic-checks'),
-  },
-  {
-    classification: 'internal_only_launch_ops',
-    surfaceLabel: 'Launch Ops API',
-    detail: 'This cron route stays available only for launch monitoring and operational safety.',
-    matches: matchExact('/api/cron/performance-check'),
-  },
-  {
-    classification: 'internal_only_launch_ops',
-    surfaceLabel: 'Launch Ops API',
-    detail: 'This cron route stays available only for launch monitoring and operational safety.',
-    matches: matchExact('/api/cron/process-deletions'),
-  },
-  {
-    classification: 'internal_only_launch_ops',
-    surfaceLabel: 'Launch Ops API',
-    detail: 'This cron route stays available only for launch monitoring and operational safety.',
-    matches: matchExact('/api/cron/refresh-matches'),
-  },
-  {
-    classification: 'internal_only_launch_ops',
-    surfaceLabel: 'Launch Ops API',
-    detail: 'This cron route stays available only for launch monitoring and operational safety.',
-    matches: matchExact('/api/cron/refresh-matches-worker'),
-  },
-  {
-    classification: 'internal_only_launch_ops',
-    surfaceLabel: 'Launch Ops API',
-    detail: 'This cron route stays available only for launch monitoring and operational safety.',
-    matches: matchExact('/api/cron/send-deletion-reminders'),
-  },
-] as const satisfies readonly ApiSurfacePolicy[];
+] as const satisfies readonly SurfacePolicy[];
 
 const ARCHIVED_API_POLICIES = [
   {
@@ -409,31 +316,6 @@ const ARCHIVED_API_POLICIES = [
   },
   {
     classification: 'archived',
-    surfaceLabel: 'Dashboard API',
-    detail:
-      'Dashboard customization and aggregate dashboard surfaces are archived outside the locked launch MVP.',
-    matches: matchExactOrPrefix('/api/dashboard'),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Momentum API',
-    detail: 'Momentum summary surfaces are archived outside the locked launch MVP.',
-    matches: matchExactOrPrefix('/api/momentum'),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Impact API',
-    detail: 'Legacy impact snapshot surfaces are archived outside the locked launch MVP.',
-    matches: matchExactOrPrefix('/api/impact'),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Metrics API',
-    detail: 'Broad metrics dashboards are archived outside the locked launch MVP.',
-    matches: matchExactOrPrefix('/api/metrics'),
-  },
-  {
-    classification: 'archived',
     surfaceLabel: 'Contracts API',
     detail:
       'Contract-signing and contract record surfaces are archived outside the locked launch MVP.',
@@ -453,207 +335,169 @@ const ARCHIVED_API_POLICIES = [
   },
   {
     classification: 'archived',
+    surfaceLabel: 'Assignments API',
+    detail: 'Stakeholder assignment invite flows are archived outside the locked launch MVP.',
+    matches: matchExactOrPrefix('/api/assignments/invite'),
+  },
+  {
+    classification: 'archived',
     surfaceLabel: 'Interview Integration API',
-    detail: 'Zoom provider routes are archived outside the locked launch MVP.',
-    matches: matchExactOrPrefix('/api/integrations/zoom'),
+    detail: 'Zoom compatibility routes are archived outside the locked launch MVP.',
+    matches: (pathname: string) =>
+      pathname === '/api/auth/zoom/callback' || pathname.startsWith('/api/integrations/zoom'),
   },
   {
     classification: 'archived',
     surfaceLabel: 'Integrations API',
     detail: 'Broad integration surfaces are archived outside the locked launch MVP.',
-    matches: matchExact('/api/integrations'),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Integrations API',
-    detail: 'Broad integration surfaces are archived outside the locked launch MVP.',
-    matches: matchPattern(/^\/api\/integrations\/[^/]+\/(?:connect|disconnect)$/),
+    matches: (pathname: string) =>
+      pathname === '/api/integrations' ||
+      /^\/api\/integrations\/[^/]+\/(?:connect|disconnect)$/.test(pathname),
   },
   {
     classification: 'archived',
     surfaceLabel: 'Legacy Expertise API',
-    detail: 'Individual expertise and import surfaces are archived outside the locked launch MVP.',
-    matches: matchExact('/api/expertise/profile'),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Legacy Expertise API',
-    detail: 'Individual expertise and import surfaces are archived outside the locked launch MVP.',
-    matches: matchExact('/api/expertise/auto-suggest'),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Legacy Expertise API',
-    detail: 'Individual expertise and import surfaces are archived outside the locked launch MVP.',
-    matches: matchExact('/api/expertise/gap-analysis'),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Legacy Expertise API',
-    detail: 'Individual expertise and import surfaces are archived outside the locked launch MVP.',
-    matches: matchExact('/api/expertise/stats'),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Legacy Expertise API',
-    detail: 'Individual expertise and import surfaces are archived outside the locked launch MVP.',
-    matches: matchPrefix('/api/expertise/cv-import/'),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Legacy Expertise API',
-    detail: 'Individual expertise and import surfaces are archived outside the locked launch MVP.',
-    matches: matchExact('/api/expertise/linkedin-import'),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Legacy Expertise API',
-    detail: 'Individual expertise and import surfaces are archived outside the locked launch MVP.',
-    matches: matchExact('/api/expertise/linkedin-status'),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Legacy Expertise API',
-    detail: 'Individual expertise and import surfaces are archived outside the locked launch MVP.',
-    matches: matchExact('/api/expertise/linkedin-disconnect'),
+    detail: 'Broad expertise and import surfaces are archived outside the locked launch MVP.',
+    matches: (pathname: string) =>
+      pathname.startsWith('/api/expertise') &&
+      !pathname.startsWith('/api/expertise/jd-to-l4') &&
+      !pathname.startsWith('/api/expertise/taxonomy') &&
+      !pathname.startsWith('/api/expertise/user-skills'),
   },
   {
     classification: 'archived',
     surfaceLabel: 'Legacy Verification API',
     detail: 'This legacy verification transport is archived outside the locked launch MVP.',
-    matches: matchPattern(/^\/api\/expertise\/user-skills\/[^/]+\/verification-request$/),
+    matches: (pathname: string) =>
+      /^\/api\/expertise\/user-skills\/[^/]+\/verification-request$/.test(pathname) ||
+      pathname.startsWith('/api/expertise/verification/') ||
+      pathname.startsWith('/api/expertise/verifications/') ||
+      pathname === '/api/verification/skill/request' ||
+      pathname === '/api/verification/skill/respond' ||
+      pathname.startsWith('/api/verification/veriff/'),
   },
   {
     classification: 'archived',
-    surfaceLabel: 'Legacy Verification API',
-    detail: 'This legacy verification transport is archived outside the locked launch MVP.',
-    matches: matchPrefix('/api/expertise/verification/'),
+    surfaceLabel: 'Core Matching API',
+    detail: 'Broad matching internals outside the user-facing corridor are archived for launch.',
+    matches: (pathname: string) =>
+      pathname.startsWith('/api/core/') ||
+      pathname === '/api/match/decision' ||
+      pathname === '/api/match/snooze',
   },
   {
     classification: 'archived',
-    surfaceLabel: 'Legacy Verification API',
-    detail: 'This legacy verification transport is archived outside the locked launch MVP.',
-    matches: matchPrefix('/api/expertise/verifications/'),
+    surfaceLabel: 'Messages API',
+    detail:
+      'Legacy message compatibility routes are archived in favor of canonical conversations routes.',
+    matches: matchExactOrPrefix('/api/messages'),
   },
   {
     classification: 'archived',
-    surfaceLabel: 'Legacy Verification API',
-    detail: 'This legacy verification transport is archived outside the locked launch MVP.',
-    matches: matchExact('/api/verification/skill/request'),
+    surfaceLabel: 'Notifications API',
+    detail: 'Notification surfaces are archived outside the locked launch MVP corridor.',
+    matches: matchExactOrPrefix('/api/notifications'),
   },
   {
     classification: 'archived',
-    surfaceLabel: 'Legacy Verification API',
-    detail: 'This legacy verification transport is archived outside the locked launch MVP.',
-    matches: matchExact('/api/verification/skill/respond'),
+    surfaceLabel: 'Moderation API',
+    detail: 'Moderation surfaces are archived outside the locked launch MVP corridor.',
+    matches: matchExactOrPrefix('/api/moderation'),
   },
   {
     classification: 'archived',
-    surfaceLabel: 'Organization Dashboard API',
-    detail: 'Legacy organization dashboard aggregates are archived outside the locked launch MVP.',
-    matches: matchPattern(/^\/api\/org\/[^/]+\/dashboard(?:\/.*)?$/),
+    surfaceLabel: 'Surveys API',
+    detail:
+      'Survey and SUS collection surfaces are archived outside the locked launch MVP corridor.',
+    matches: (pathname: string) =>
+      pathname.startsWith('/api/surveys') || pathname.startsWith('/api/feedback/sus'),
   },
   {
     classification: 'archived',
-    surfaceLabel: 'Organization Coverage API',
-    detail: 'Team coverage analytics are archived outside the locked launch MVP.',
-    matches: matchPattern(/^\/api\/org\/[^/]+\/coverage(?:\/.*)?$/),
+    surfaceLabel: 'Feedback API',
+    detail:
+      'Broad shortlist and survey feedback routes are archived outside the locked launch MVP corridor.',
+    matches: (pathname: string) => pathname === '/api/feedback/why-not-shortlisted',
+  },
+  {
+    classification: 'archived',
+    surfaceLabel: 'Policy API',
+    detail: 'Broad policy explainer surfaces are archived outside the locked launch MVP corridor.',
+    matches: matchExactOrPrefix('/api/policy'),
+  },
+  {
+    classification: 'archived',
+    surfaceLabel: 'Profiles API',
+    detail:
+      'Public profile lookup and snippet surfaces are archived outside the locked launch MVP corridor.',
+    matches: (pathname: string) =>
+      pathname === '/api/profile/snippet' || pathname.startsWith('/api/profiles'),
+  },
+  {
+    classification: 'archived',
+    surfaceLabel: 'Data Import API',
+    detail: 'Import surfaces are archived outside the locked launch MVP corridor.',
+    matches: matchExactOrPrefix('/api/data-import'),
+  },
+  {
+    classification: 'archived',
+    surfaceLabel: 'User API',
+    detail: 'Broad user tooling outside privacy/export/delete basics is archived for launch.',
+    matches: (pathname: string) =>
+      pathname === '/api/user/import' || pathname === '/api/user/tour-status',
+  },
+  {
+    classification: 'archived',
+    surfaceLabel: 'Updates API',
+    detail: 'Update feed surfaces are archived outside the locked launch MVP corridor.',
+    matches: matchExactOrPrefix('/api/updates'),
+  },
+  {
+    classification: 'archived',
+    surfaceLabel: 'Taxonomy API',
+    detail: 'Broad taxonomy browsing surfaces are archived outside the locked launch MVP corridor.',
+    matches: matchExactOrPrefix('/api/taxonomy'),
+  },
+  {
+    classification: 'archived',
+    surfaceLabel: 'Lifecycle API',
+    detail: 'Lifecycle recovery surfaces are archived outside the locked launch MVP corridor.',
+    matches: matchExactOrPrefix('/api/lifecycle'),
+  },
+  {
+    classification: 'archived',
+    surfaceLabel: 'Internal API',
+    detail: 'Internal worker surfaces are archived outside the locked launch MVP corridor.',
+    matches: (pathname: string) =>
+      pathname.startsWith('/api/internal/') || pathname === '/api/internal/python-jobs',
+  },
+  {
+    classification: 'archived',
+    surfaceLabel: 'Dashboard API',
+    detail:
+      'Dashboard, momentum, and metrics surfaces are archived outside the locked launch MVP corridor.',
+    matches: (pathname: string) =>
+      pathname.startsWith('/api/dashboard') ||
+      pathname.startsWith('/api/momentum') ||
+      pathname.startsWith('/api/impact') ||
+      pathname.startsWith('/api/metrics'),
   },
   {
     classification: 'archived',
     surfaceLabel: 'Organization Suite API',
-    detail: 'Organization culture surfaces are archived outside the locked launch MVP.',
-    matches: matchPattern(/^\/api\/organizations\/[^/]+\/culture(?:\/.*)?$/),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Organization Suite API',
-    detail: 'Organization impact surfaces are archived outside the locked launch MVP.',
-    matches: matchPattern(/^\/api\/organizations\/[^/]+\/impact(?:\/.*)?$/),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Organization Suite API',
-    detail: 'Organization project-library surfaces are archived outside the locked launch MVP.',
-    matches: matchPattern(/^\/api\/organizations\/[^/]+\/projects(?:\/.*)?$/),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Organization Suite API',
-    detail: 'Organization structure surfaces are archived outside the locked launch MVP.',
-    matches: matchPattern(/^\/api\/organizations\/[^/]+\/structure(?:\/.*)?$/),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Organization Suite API',
-    detail: 'Organization causes editing is archived outside the locked launch MVP.',
-    matches: matchPattern(/^\/api\/organizations\/[^/]+\/causes$/),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Organization Suite API',
-    detail: 'Organization goals are archived outside the locked launch MVP.',
-    matches: matchPattern(/^\/api\/organizations\/[^/]+\/goals(?:\/.*)?$/),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Organization Suite API',
-    detail: 'Organization ownership surfaces are archived outside the locked launch MVP.',
-    matches: matchPattern(/^\/api\/organizations\/[^/]+\/ownership(?:\/.*)?$/),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Organization Suite API',
-    detail: 'Organization partnerships are archived outside the locked launch MVP.',
-    matches: matchPattern(/^\/api\/organizations\/[^/]+\/partnerships(?:\/.*)?$/),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Organization Suite API',
-    detail: 'Organization test-match tooling is archived outside the locked launch MVP.',
-    matches: matchPattern(/^\/api\/organizations\/[^/]+\/test-matches(?:\/.*)?$/),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Assignment Templates API',
-    detail: 'Assignment template libraries are archived outside the locked launch MVP.',
-    matches: matchExactOrPrefix('/api/assignment-templates'),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Goals API',
-    detail: 'Goal tracking is archived outside the locked launch MVP.',
-    matches: matchExactOrPrefix('/api/goals'),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Evidence Pack API',
-    detail: 'Evidence-pack exports are archived outside the locked launch MVP.',
-    matches: matchExactOrPrefix('/api/evidence-pack'),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Evidence Pack API',
-    detail: 'Organization evidence-pack exports are archived outside the locked launch MVP.',
-    matches: matchExactOrPrefix('/api/organizations/evidence-pack'),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Evidence Pack API',
-    detail: 'Organization evidence-pack exports are archived outside the locked launch MVP.',
-    matches: matchPattern(/^\/api\/organizations\/[^/]+\/evidence-pack(?:\/.*)?$/),
+    detail:
+      'Broad organization-suite surfaces are archived outside the locked launch MVP corridor.',
+    matches: (pathname: string) =>
+      /^\/api\/org\/[^/]+\/(?:dashboard|coverage)(?:\/.*)?$/.test(pathname) ||
+      /^\/api\/organizations\/[^/]+\/(?:audit\/export|causes|goals(?:\/.*)?|ownership(?:\/.*)?|partnerships(?:\/.*)?|projects(?:\/.*)?|structure(?:\/.*)?|culture(?:\/.*)?|impact(?:\/.*)?|test-matches(?:\/.*)?)$/.test(
+        pathname
+      ),
   },
   {
     classification: 'archived',
     surfaceLabel: 'Admin API',
     detail: 'This admin surface is archived outside the locked launch MVP.',
-    matches: matchPrefix('/api/admin/'),
-  },
-  {
-    classification: 'archived',
-    surfaceLabel: 'Admin API',
-    detail: 'This admin surface is archived outside the locked launch MVP.',
-    matches: matchExact('/api/admin'),
+    matches: (pathname: string) => pathname === '/api/admin' || pathname.startsWith('/api/admin/'),
   },
   {
     classification: 'archived',
@@ -661,7 +505,7 @@ const ARCHIVED_API_POLICIES = [
     detail: 'This cron route is archived outside the locked launch MVP.',
     matches: matchExactOrPrefix('/api/cron'),
   },
-] as const satisfies readonly ApiSurfacePolicy[];
+] as const satisfies readonly SurfacePolicy[];
 
 export const LAUNCH_API_SURFACE_POLICIES = [
   ...INTERNAL_ONLY_API_POLICIES,
@@ -669,26 +513,164 @@ export const LAUNCH_API_SURFACE_POLICIES = [
   ...ARCHIVED_API_POLICIES,
 ] as const;
 
+const ACTIVE_PAGE_POLICIES = [
+  {
+    classification: 'active_launch_path',
+    surfaceLabel: 'Launch Public Pages',
+    detail: 'This public page remains inside the locked MVP corridor.',
+    matches: (pathname: string) =>
+      pathname === '/' ||
+      pathname === '/403' ||
+      pathname === '/privacy' ||
+      pathname === '/terms' ||
+      pathname === '/cookies' ||
+      pathname === '/cookies/settings' ||
+      pathname === '/accept-invite' ||
+      pathname === '/verify-work-email' ||
+      pathname === '/login' ||
+      pathname === '/auth/login' ||
+      matchExactOrPrefix('/signup')(pathname) ||
+      matchExactOrPrefix('/reset-password')(pathname) ||
+      matchExactOrPrefix('/verify-email')(pathname) ||
+      matchExactOrPrefix('/onboarding')(pathname) ||
+      /^\/candidate-invite\/[^/]+$/.test(pathname) ||
+      /^\/feedback\/[^/]+$/.test(pathname) ||
+      matchExactOrPrefix('/verify')(pathname) ||
+      /^\/portfolio\/[^/]+$/.test(pathname) ||
+      /^\/portfolio\/org\/[^/]+$/.test(pathname) ||
+      /^\/o\/[^/]+\/assignments\/new$/.test(pathname),
+  },
+  {
+    classification: 'active_launch_path',
+    surfaceLabel: 'Individual App Pages',
+    detail: 'This individual launch surface remains inside the locked MVP corridor.',
+    matches: (pathname: string) =>
+      pathname === '/app/i/home' ||
+      pathname === '/app/i/profile' ||
+      pathname === '/app/i/portfolio' ||
+      pathname === '/app/i/matching' ||
+      pathname === '/app/i/matching/preferences' ||
+      pathname === '/app/i/messages' ||
+      pathname === '/app/i/interviews' ||
+      pathname === '/app/i/verifications' ||
+      pathname === '/app/i/settings' ||
+      pathname === '/app/i/settings/privacy' ||
+      pathname === '/app/i/settings/audit-log' ||
+      /^\/app\/interviews\/[^/]+\/feedback$/.test(pathname),
+  },
+  {
+    classification: 'active_launch_path',
+    surfaceLabel: 'Organization App Pages',
+    detail: 'This organization launch surface remains inside the locked MVP corridor.',
+    matches: (pathname: string) =>
+      /^\/app\/o\/[^/]+\/home$/.test(pathname) ||
+      /^\/app\/o\/[^/]+\/matching$/.test(pathname) ||
+      /^\/app\/o\/[^/]+\/assignments$/.test(pathname) ||
+      /^\/app\/o\/[^/]+\/assignments\/new$/.test(pathname) ||
+      /^\/app\/o\/[^/]+\/assignments\/[^/]+\/review$/.test(pathname) ||
+      /^\/app\/o\/[^/]+\/shortlist$/.test(pathname) ||
+      /^\/app\/o\/[^/]+\/messages$/.test(pathname) ||
+      /^\/app\/o\/[^/]+\/interviews$/.test(pathname) ||
+      /^\/app\/o\/[^/]+\/profile$/.test(pathname) ||
+      /^\/app\/o\/[^/]+\/portfolio$/.test(pathname) ||
+      /^\/app\/o\/[^/]+\/invitations\/[^/]+$/.test(pathname),
+  },
+] as const satisfies readonly SurfacePolicy[];
+
+const INTERNAL_ONLY_PAGE_POLICIES = [
+  {
+    classification: 'internal_only_launch_ops',
+    surfaceLabel: 'Internal Ops Pages',
+    detail: 'This internal ops page remains available only for launch-critical manual operations.',
+    matches: (pathname: string) =>
+      INTERNAL_OPS_APP_PATHS.includes(pathname as (typeof INTERNAL_OPS_APP_PATHS)[number]),
+  },
+] as const satisfies readonly SurfacePolicy[];
+
+const ARCHIVED_PAGE_POLICIES = [
+  {
+    classification: 'archived',
+    surfaceLabel: 'Internal Ops Pages',
+    detail: 'Non-critical admin pages are archived outside the locked launch MVP corridor.',
+    matches: (pathname: string) => pathname === '/admin' || pathname.startsWith('/admin/'),
+  },
+  {
+    classification: 'archived',
+    surfaceLabel: 'Individual Pages',
+    detail: 'This individual page is archived outside the locked launch MVP corridor.',
+    matches: (pathname: string) =>
+      pathname.startsWith('/app/i/expertise') ||
+      pathname.startsWith('/app/i/projects') ||
+      pathname.startsWith('/app/i/skill-gaps') ||
+      pathname.startsWith('/app/i/zen') ||
+      pathname.startsWith('/app/i/notifications') ||
+      pathname.startsWith('/app/i/opportunities') ||
+      pathname.startsWith('/app/i/matching/snoozed') ||
+      pathname.startsWith('/app/i/settings/fairness') ||
+      pathname.startsWith('/app/i/settings/notifications') ||
+      pathname.startsWith('/app/i/settings/integrations'),
+  },
+  {
+    classification: 'archived',
+    surfaceLabel: 'Organization Pages',
+    detail: 'This organization page is archived outside the locked launch MVP corridor.',
+    matches: (pathname: string) =>
+      /^\/app\/o\/[^/]+\/(?:analytics(?:\/.*)?|candidates|members|opportunities|projects|settings(?:\/.*)?|team(?:\/.*)?)$/.test(
+        pathname
+      ),
+  },
+  {
+    classification: 'archived',
+    surfaceLabel: 'Public Pages',
+    detail: 'This public page is archived outside the locked launch MVP corridor.',
+    matches: (pathname: string) =>
+      pathname === '/fairness' ||
+      pathname === '/accessibility' ||
+      pathname === '/about' ||
+      pathname === '/careers' ||
+      pathname === '/contact' ||
+      pathname === '/manifesto' ||
+      pathname === '/support' ||
+      pathname === '/verify-skill' ||
+      pathname.startsWith('/docs/') ||
+      pathname.startsWith('/p/') ||
+      pathname.startsWith('/assign/'),
+  },
+] as const satisfies readonly SurfacePolicy[];
+
+export const LAUNCH_PAGE_SURFACE_POLICIES = [
+  ...INTERNAL_ONLY_PAGE_POLICIES,
+  ...ACTIVE_PAGE_POLICIES,
+  ...ARCHIVED_PAGE_POLICIES,
+] as const;
+
 function getPolicyByClassification(
   pathname: string,
   classification: Extract<
     LaunchSurfaceClassification,
     'active_launch_path' | 'internal_only_launch_ops' | 'archived'
-  >
-): ApiSurfacePolicy | null {
+  >,
+  policies: readonly SurfacePolicy[]
+): SurfacePolicy | null {
+  const normalized = normalizePathname(pathname);
   return (
-    LAUNCH_API_SURFACE_POLICIES.find(
-      (policy) => policy.classification === classification && policy.matches(pathname)
+    policies.find(
+      (policy) => policy.classification === classification && policy.matches(normalized)
     ) ?? null
   );
 }
 
-function getFallbackArchivedApiPolicy(pathname: string): ApiSurfacePolicy {
-  const family = pathname.split('/')[2] || 'api';
+function getFallbackArchivedPolicy(pathname: string, kind: 'api' | 'page'): SurfacePolicy {
+  const normalized = normalizePathname(pathname);
+  const family = normalized.split('/').filter(Boolean)[kind === 'api' ? 1 : 0] || kind;
+
   return {
     classification: 'archived',
-    surfaceLabel: 'Archived API',
-    detail: `/${family} is outside the locked launch MVP corridor and is served only as an archived compatibility surface.`,
+    surfaceLabel: kind === 'api' ? 'Archived API' : 'Archived Page',
+    detail:
+      kind === 'api'
+        ? `/${family} is outside the locked launch MVP corridor and is served only as an archived compatibility surface.`
+        : `/${family} is outside the locked launch MVP corridor and is not reachable in the launch surface.`,
     matches: () => true,
   };
 }
@@ -697,16 +679,43 @@ export function getArchivedApiPolicy(pathname: string): {
   surfaceLabel: string;
   detail: string;
 } | null {
-  if (getPolicyByClassification(pathname, 'internal_only_launch_ops')) {
+  if (
+    getPolicyByClassification(pathname, 'internal_only_launch_ops', LAUNCH_API_SURFACE_POLICIES)
+  ) {
     return null;
   }
 
-  if (getPolicyByClassification(pathname, 'active_launch_path')) {
+  if (getPolicyByClassification(pathname, 'active_launch_path', LAUNCH_API_SURFACE_POLICIES)) {
     return null;
   }
 
   const policy =
-    getPolicyByClassification(pathname, 'archived') ?? getFallbackArchivedApiPolicy(pathname);
+    getPolicyByClassification(pathname, 'archived', LAUNCH_API_SURFACE_POLICIES) ??
+    getFallbackArchivedPolicy(pathname, 'api');
+
+  return {
+    surfaceLabel: policy.surfaceLabel,
+    detail: policy.detail,
+  };
+}
+
+export function getArchivedPagePolicy(pathname: string): {
+  surfaceLabel: string;
+  detail: string;
+} | null {
+  if (
+    getPolicyByClassification(pathname, 'internal_only_launch_ops', LAUNCH_PAGE_SURFACE_POLICIES)
+  ) {
+    return null;
+  }
+
+  if (getPolicyByClassification(pathname, 'active_launch_path', LAUNCH_PAGE_SURFACE_POLICIES)) {
+    return null;
+  }
+
+  const policy =
+    getPolicyByClassification(pathname, 'archived', LAUNCH_PAGE_SURFACE_POLICIES) ??
+    getFallbackArchivedPolicy(pathname, 'page');
 
   return {
     surfaceLabel: policy.surfaceLabel,
@@ -715,11 +724,27 @@ export function getArchivedApiPolicy(pathname: string): {
 }
 
 export function classifyLaunchApiPath(pathname: string): LaunchSurfaceClassification {
-  if (getPolicyByClassification(pathname, 'internal_only_launch_ops')) {
+  if (
+    getPolicyByClassification(pathname, 'internal_only_launch_ops', LAUNCH_API_SURFACE_POLICIES)
+  ) {
     return 'internal_only_launch_ops';
   }
 
-  if (getPolicyByClassification(pathname, 'active_launch_path')) {
+  if (getPolicyByClassification(pathname, 'active_launch_path', LAUNCH_API_SURFACE_POLICIES)) {
+    return 'active_launch_path';
+  }
+
+  return 'archived';
+}
+
+export function classifyLaunchPagePath(pathname: string): LaunchSurfaceClassification {
+  if (
+    getPolicyByClassification(pathname, 'internal_only_launch_ops', LAUNCH_PAGE_SURFACE_POLICIES)
+  ) {
+    return 'internal_only_launch_ops';
+  }
+
+  if (getPolicyByClassification(pathname, 'active_launch_path', LAUNCH_PAGE_SURFACE_POLICIES)) {
     return 'active_launch_path';
   }
 

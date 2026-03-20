@@ -6,8 +6,8 @@ export const ORG_SURFACE_STATUS = {
   assignments: 'mvp',
   profile: 'mvp',
   portfolio: 'mvp',
+  shortlist: 'mvp',
   candidates: 'gated_non_mvp',
-  shortlist: 'gated_non_mvp',
   projects: 'gated_non_mvp',
   team: 'gated_non_mvp',
   members: 'gated_non_mvp',
@@ -49,7 +49,6 @@ export function getOrgSurfaceStatus(surface: string): OrgSurfaceStatus {
 export function getOrgSurfaceFallbackHref(slug: string, surface: string): string {
   switch (surface) {
     case 'candidates':
-    case 'shortlist':
     case 'opportunities':
       return `/app/o/${slug}/matching`;
     case 'projects':
@@ -58,6 +57,8 @@ export function getOrgSurfaceFallbackHref(slug: string, surface: string): string
     case 'settings':
     case 'analytics':
       return `/app/o/${slug}/home`;
+    case 'shortlist':
+      return `/app/o/${slug}/matching`;
     default:
       return `/app/o/${slug}/home`;
   }

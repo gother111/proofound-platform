@@ -20,7 +20,7 @@ interface SettingsContentProps {
   userId: string;
 }
 
-const ALLOWED_TABS = ['account', 'interviews', 'notifications', 'privacy'] as const;
+const ALLOWED_TABS = ['account', 'interviews', 'privacy'] as const;
 type AllowedTab = (typeof ALLOWED_TABS)[number];
 
 export function SettingsContent({ userId }: SettingsContentProps) {
@@ -102,7 +102,6 @@ export function SettingsContent({ userId }: SettingsContentProps) {
           <TabsList className="bg-white dark:bg-card border border-proofound-stone dark:border-border">
             <TabsTrigger value="account">Account</TabsTrigger>
             <TabsTrigger value="interviews">Interview Scheduling</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="privacy">Privacy & Data</TabsTrigger>
           </TabsList>
 
@@ -230,25 +229,6 @@ export function SettingsContent({ userId }: SettingsContentProps) {
               </CardHeader>
               <CardContent className="space-y-6">
                 <VideoIntegrationsManager />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Notifications Tab */}
-          <TabsContent value="notifications" className="space-y-6">
-            <Card variant="bento" className="border-proofound-stone dark:border-border rounded-2xl">
-              <CardHeader>
-                <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
-                  Notifications
-                </CardTitle>
-                <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-                  Configure how you receive updates
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-proofound-charcoal/70 dark:text-muted-foreground">
-                  Notification preferences coming soon
-                </p>
               </CardContent>
             </Card>
           </TabsContent>

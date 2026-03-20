@@ -1,7 +1,6 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -14,7 +13,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { signOut } from '@/actions/auth';
 import { Logo } from '@/components/brand/Logo';
-import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { getRouteMeta } from '@/lib/ui/v2/routeMeta';
 import { cn } from '@/lib/utils';
 
@@ -54,21 +52,11 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
 
     if (pathname.includes('/home')) return 'Overview';
     if (pathname.includes('/matching')) return 'Matching';
-    if (pathname.includes('/expertise')) return 'Expertise';
     if (pathname.includes('/interviews')) return 'Interviews';
     if (pathname.includes('/messages')) return 'Messages';
-    if (pathname.includes('/notifications')) return 'Notifications';
-    if (pathname.includes('/opportunities')) return 'Launch note';
     if (pathname.includes('/profile')) return 'Profile';
-    if (pathname.includes('/zen')) return 'Private check-ins';
     if (pathname.includes('/settings')) return 'Settings';
     if (pathname.includes('/verifications')) return 'Verifications';
-    if (pathname.includes('/projects')) return 'Launch note';
-    if (pathname.includes('/experiences')) return 'Experiences';
-    if (pathname.includes('/education')) return 'Education';
-    if (pathname.includes('/volunteering')) return 'Volunteering';
-    if (pathname.includes('/impact')) return 'Impact';
-    if (pathname.includes('/partnerships')) return 'Partnerships';
     if (pathname.includes('/assignments')) return 'Assignments';
 
     return 'Overview';
@@ -113,9 +101,8 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
           </h1>
         </div>
 
-        {/* Right: Notification Bell + Avatar */}
+        {/* Right: Avatar */}
         <div className="flex items-center gap-2 md:gap-3">
-          <NotificationBell />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { nanoid } from 'nanoid';
 import { csrfProtection, getOrGenerateCSRFToken, setCSRFTokenCookie } from '@/lib/csrf';
-import { getArchivedApiPolicy } from '@/lib/launch/surface-policy';
+import { getArchivedApiPolicy, getArchivedPagePolicy } from '@/lib/launch/surface-policy';
 import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit/index';
 import { sendDebugIngest } from '@/lib/debug-ingest';
 
@@ -92,6 +92,24 @@ function buildArchivedApiResponse(
   return response;
 }
 
+function buildArchivedPageResponse(
+  request: NextRequest,
+  requestId: string,
+  surface: string,
+  detail: string,
+  status = 404
+) {
+  const response = new NextResponse(`Not found\n\n${surface}: ${detail}`, {
+    status,
+    headers: {
+      'content-type': 'text/plain; charset=utf-8',
+    },
+  });
+  response.headers.set('x-request-id', requestId);
+  applySecurityHeaders(response, request);
+  return response;
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const requestId = request.headers.get('x-request-id') || nanoid(12);
@@ -100,7 +118,9 @@ export async function middleware(request: NextRequest) {
     const isDev = process.env.NODE_ENV !== 'production';
     const isStaticAsset =
       pathname.startsWith('/_next') ||
-      pathname.match(/\.(ico|png|jpg|jpeg|gif|svg|css|js|webp|woff2?|ttf|otf|map)$/);
+      pathname.match(
+        /\.(ico|png|jpg|jpeg|gif|svg|css|js|webp|woff2?|ttf|otf|map|txt|xml|webmanifest)$/
+      );
 
     // Short-circuit obvious scanner paths before heavier logic.
     if (SUSPICIOUS_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
@@ -231,26 +251,22 @@ export async function middleware(request: NextRequest) {
       return response;
     }
 
-    // Allow public/static routes without extra checks
-    if (
-      pathname.startsWith('/auth') ||
-      pathname.startsWith('/login') ||
-      pathname.startsWith('/signup') ||
-      pathname.startsWith('/reset-password') ||
-      pathname.startsWith('/verify-email') ||
-      pathname.startsWith('/onboarding') ||
-      pathname.startsWith('/cookies') ||
-      pathname === '/' ||
-      pathname === '/403' ||
-      isStaticAsset
-    ) {
-      const csrfToken = getOrGenerateCSRFToken(request);
+    if (isStaticAsset) {
       const response = NextResponse.next();
       response.headers.set('x-request-id', requestId);
-      setCSRFTokenCookie(response, csrfToken);
       attachRateLimitHeaders(response);
       applySecurityHeaders(response, request);
       return response;
+    }
+
+    const archivedPagePolicy = getArchivedPagePolicy(pathname);
+    if (archivedPagePolicy) {
+      return buildArchivedPageResponse(
+        request,
+        requestId,
+        archivedPagePolicy.surfaceLabel,
+        archivedPagePolicy.detail
+      );
     }
 
     const csrfToken = getOrGenerateCSRFToken(request);
@@ -261,17 +277,14 @@ export async function middleware(request: NextRequest) {
     applySecurityHeaders(response, request);
     return response;
   } catch (error) {
-    console.error('[middleware] unexpected failure; failing open', {
-      path: request.nextUrl.pathname,
-      error,
-    });
-    const fallback = NextResponse.next();
-    fallback.headers.set('x-request-id', requestId);
-    applySecurityHeaders(fallback, request);
-    return fallback;
+    console.error('[middleware] unexpected error', error);
+    const response = NextResponse.next();
+    response.headers.set('x-request-id', requestId);
+    applySecurityHeaders(response, request);
+    return response;
   }
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };
