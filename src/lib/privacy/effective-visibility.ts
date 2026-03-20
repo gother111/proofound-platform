@@ -55,6 +55,7 @@ export function computeEffectiveVisibility(input: {
   childVisibility?: string | null;
   workflowRevealCeiling?: string | null;
   policyCeiling?: string | null;
+  moderationCeiling?: string | null;
   source?: 'profile' | 'organization' | 'proof';
 }): EffectiveVisibility {
   const source = input.source ?? 'profile';
@@ -63,6 +64,7 @@ export function computeEffectiveVisibility(input: {
     normalizeEffectiveVisibility(input.childVisibility ?? 'public', source),
     normalizeEffectiveVisibility(input.workflowRevealCeiling ?? 'public', source),
     normalizeEffectiveVisibility(input.policyCeiling ?? 'public', source),
+    normalizeEffectiveVisibility(input.moderationCeiling ?? 'public', source),
   ];
 
   return values.reduce((narrowest, current) =>

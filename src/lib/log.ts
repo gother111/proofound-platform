@@ -36,18 +36,56 @@ interface LogEntry {
   [key: string]: unknown;
 }
 
+const REDACTED_FILE_VALUE = '[REDACTED_FILE]';
+const SENSITIVE_META_KEY_PATTERN =
+  /(email|name|displayname|filename|originalfilename|filepath|storagepath|sourceurl)/i;
+const FILE_VALUE_PATTERN = /\b[\w./-]+\.(pdf|doc|docx|txt|md|png|jpe?g|webp|csv|xls|xlsx)\b/i;
+
 /**
  * Check if we should log at this level
  */
-function shouldLog(level: 'info' | 'warn' | 'error' | 'debug' | 'security_warning' | 'security_critical'): boolean {
+function shouldLog(
+  level: 'info' | 'warn' | 'error' | 'debug' | 'security_warning' | 'security_critical'
+): boolean {
   const logLevel =
     process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug');
 
-  const levels = { debug: 0, info: 1, warn: 2, error: 3, security_warning: 3, security_critical: 4 };
+  const levels = {
+    debug: 0,
+    info: 1,
+    warn: 2,
+    error: 3,
+    security_warning: 3,
+    security_critical: 4,
+  };
   const currentLevel = levels[logLevel as keyof typeof levels] || levels.info;
   const messageLevel = levels[level];
 
   return messageLevel >= currentLevel;
+}
+
+function sanitizeMetaValue(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((entry) => sanitizeMetaValue(entry));
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([key, entry]) => {
+        if (SENSITIVE_META_KEY_PATTERN.test(key)) {
+          return [key, REDACTED_FILE_VALUE];
+        }
+
+        return [key, sanitizeMetaValue(entry)];
+      })
+    );
+  }
+
+  if (typeof value === 'string' && FILE_VALUE_PATTERN.test(value)) {
+    return REDACTED_FILE_VALUE;
+  }
+
+  return value;
 }
 
 /**
@@ -74,7 +112,7 @@ function writeLog(
     ...(context?.userId && { userId: context.userId }),
     ...(context?.path && { path: context.path }),
     ...(context?.method && { method: context.method }),
-    ...meta,
+    ...(meta ? (sanitizeMetaValue(meta) as Record<string, unknown>) : {}),
   };
 
   // Remove any PII that might have been accidentally included

@@ -212,6 +212,11 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
           unlockTrigger: 'conversation_reveal',
           context: {
             conversationId,
+            consentApprovedByBothParticipants: true,
+            participantOneApprovedAt:
+              revealedConversation.participantOneRevealRequestedAt?.toISOString?.() ?? null,
+            participantTwoApprovedAt:
+              revealedConversation.participantTwoRevealRequestedAt?.toISOString?.() ?? null,
           },
         });
       }

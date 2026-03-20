@@ -33,6 +33,7 @@ import {
 import {
   hasPrimaryAnchorContext,
   listCanonicalProofPackAggregatesForOwner,
+  type CanonicalProofPackAggregate,
   type CanonicalProofPackContract,
 } from '@/lib/proofs/canonical-pack';
 import {
@@ -443,6 +444,7 @@ function redactReviewText(
   let output = input
     .replace(/https?:\/\/\S+/gi, '')
     .replace(/\b[\w.+-]+@[\w.-]+\.\w+\b/g, '')
+    .replace(/\b[\w.-]+\.(pdf|doc|docx|txt|md|png|jpe?g|webp|csv|xls|xlsx)\b/gi, 'shared document')
     .replace(/@\w+/g, '')
     .trim();
 
@@ -453,6 +455,45 @@ function redactReviewText(
   output = output.replace(/\s+/g, ' ').trim();
 
   return output.length > 0 ? output : null;
+}
+
+function resolveReviewSafePackTitle(aggregate: CanonicalProofPackAggregate) {
+  const reviewSafeUploadLabel = aggregate.items
+    .filter(
+      ({ effectiveVisibility, artifact, uploadedFile }) =>
+        uploadedFile &&
+        effectiveVisibility !== 'owner_only' &&
+        !artifact.deletedAt &&
+        !artifact.revokedAt &&
+        artifact.lifecycleState !== 'deleted'
+    )
+    .map(({ uploadedFile }) => {
+      const uploadMetadata =
+        uploadedFile?.metadata &&
+        typeof uploadedFile.metadata === 'object' &&
+        !Array.isArray(uploadedFile.metadata)
+          ? (uploadedFile.metadata as Record<string, unknown>)
+          : null;
+      const surfaceLabels =
+        uploadMetadata?.surfaceLabels &&
+        typeof uploadMetadata.surfaceLabels === 'object' &&
+        !Array.isArray(uploadMetadata.surfaceLabels)
+          ? (uploadMetadata.surfaceLabels as Record<string, unknown>)
+          : undefined;
+
+      return typeof surfaceLabels?.review === 'string' ? surfaceLabels.review.trim() : null;
+    })
+    .find((value): value is string => Boolean(value));
+
+  const title = aggregate.ownerFull.contract.title || aggregate.pack.title;
+  if (
+    reviewSafeUploadLabel &&
+    /\b[\w.-]+\.(pdf|doc|docx|txt|md|png|jpe?g|webp|csv|xls|xlsx)\b/i.test(title)
+  ) {
+    return reviewSafeUploadLabel;
+  }
+
+  return title;
 }
 
 function verificationStatusRank(status: string) {
@@ -554,7 +595,7 @@ export async function getReviewCardProofPackMap(profileIds: string[]) {
         ownerId: aggregate.pack.ownerId,
         primarySubjectType: aggregate.pack.primarySubjectType,
         lifecycleState: aggregate.ownerFull.contract.status,
-        title: aggregate.ownerFull.contract.title,
+        title: resolveReviewSafePackTitle(aggregate),
         summary: aggregate.ownerFull.contract.primaryClaim.statement,
         contextJson:
           aggregate.pack.contextJson &&

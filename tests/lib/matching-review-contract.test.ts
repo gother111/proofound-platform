@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildProofFirstReviewCard,
   buildCandidateReviewProjection,
   buildFairnessUiContract,
   buildVisibilitySafeWhy,
@@ -216,6 +217,72 @@ describe('matching review contract', () => {
 
     expect(why.reasonCodes).toContain('fairness_ranking_suppressed');
     expect(why.summary).toContain('Rank band: Top 10');
+  });
+
+  it('redacts upload-derived filenames from early review cards', () => {
+    const reviewCard = buildProofFirstReviewCard({
+      profileId: 'profile-1',
+      reasonCodes: ['skills_strong'],
+      fairnessStatus: 'pass',
+      proofPack: {
+        ownerId: 'profile-1',
+        primarySubjectType: 'experience',
+        lifecycleState: 'published',
+        title: 'safe_name.pdf',
+        summary: null,
+        contextJson: {},
+        ownershipStatement: 'Owned the shared document and shipped it with the team.',
+        evidenceSummary: null,
+        outcomesSummary: 'Demonstrated outcome in safe_name.pdf.',
+        verificationSummary: 'Scoped verification supports this Proof Pack.',
+        verificationStatus: 'verified',
+        freshnessState: 'fresh',
+        proofQualityScore: 0.9,
+        updatedAt: new Date('2026-03-18T10:00:00Z'),
+        publishedAt: new Date('2026-03-18T10:00:00Z'),
+        contract: {
+          id: 'pack-1',
+          packKind: 'verification_bundle',
+          status: 'published',
+          title: 'safe_name.pdf',
+          primaryClaim: {
+            type: 'outcome_statement',
+            statement: 'Evidence attached in safe_name.pdf shows the result.',
+          },
+          primaryAnchor: {
+            subjectType: 'experience',
+            subjectId: 'experience-1',
+            label: 'Prior work',
+          },
+          roleContext: null,
+          ownershipStatement: 'Owned the shared document and delivery.',
+          timeframe: {
+            start: null,
+            end: null,
+            label: null,
+          },
+          outcomeSummary: 'safe_name.pdf captured the shipped outcome.',
+          linkedSkills: [],
+          linkedEvidenceItems: [],
+          verificationSummary: {
+            summary: 'Scoped verification supports this Proof Pack.',
+            evidenceCount: 1,
+            verifiedEvidenceCount: 1,
+            verificationTypes: ['platform_manual_review'],
+            badges: [],
+          },
+          proofQualityScore: 0.9,
+          visibilityState: 'matched_org',
+          freshnessState: 'fresh',
+          lastVerifiedAt: null,
+          schemaVersion: 'proof_pack/v2',
+        },
+      },
+    });
+
+    expect(reviewCard.strongestProof.summary).toContain('shared document');
+    expect(reviewCard.strongestProof.summary).not.toContain('safe_name.pdf');
+    expect(reviewCard.strongestProof.outcome).not.toContain('safe_name.pdf');
   });
 
   it('keeps fairness cohort checks separate from Zen opt-in state', () => {

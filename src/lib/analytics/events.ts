@@ -40,6 +40,36 @@ export interface AnalyticsEvent {
   sessionId?: string; // For anonymous session stitching (non-PII)
 }
 
+const REDACTED_ANALYTICS_FILE_VALUE = '[REDACTED_FILE]';
+const ANALYTICS_SENSITIVE_KEY_PATTERN =
+  /(filename|originalfilename|filepath|storagepath|sourceurl)/i;
+const ANALYTICS_FILE_VALUE_PATTERN =
+  /\b[\w./-]+\.(pdf|doc|docx|txt|md|png|jpe?g|webp|csv|xls|xlsx)\b/i;
+
+function sanitizeAnalyticsValue(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((entry) => sanitizeAnalyticsValue(entry));
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([key, entry]) => {
+        if (ANALYTICS_SENSITIVE_KEY_PATTERN.test(key)) {
+          return [key, REDACTED_ANALYTICS_FILE_VALUE];
+        }
+
+        return [key, sanitizeAnalyticsValue(entry)];
+      })
+    );
+  }
+
+  if (typeof value === 'string' && ANALYTICS_FILE_VALUE_PATTERN.test(value)) {
+    return REDACTED_ANALYTICS_FILE_VALUE;
+  }
+
+  return value;
+}
+
 function isUndefinedColumnError(error: unknown): boolean {
   return Boolean(
     error && typeof error === 'object' && (error as { code?: string }).code === '42703'
@@ -56,7 +86,7 @@ function normalizeEntityReference(event: AnalyticsEvent): {
   entityId: string | null;
   properties: Record<string, any>;
 } {
-  const properties = { ...(event.properties || {}) };
+  const properties = sanitizeAnalyticsValue({ ...(event.properties || {}) }) as Record<string, any>;
   const rawEntityId = typeof event.entityId === 'string' ? event.entityId.trim() : '';
 
   if (!rawEntityId) {

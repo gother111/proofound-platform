@@ -30,6 +30,7 @@ export type EvidenceUploadPrivacyAssessment = {
   requiresReview: boolean;
   reasons: UploadPrivacyReviewReason[];
   safetyReason: string | null;
+  sensitivity: UploadSensitivityAssessment;
 };
 
 type ArtifactDisplayNameInput = {
@@ -39,9 +40,21 @@ type ArtifactDisplayNameInput = {
   uploadKind?: string | null;
 };
 
+export type ArtifactDisplaySurface = 'owner' | 'review' | 'public';
+
+export type UploadSensitivityAssessment = {
+  sensitiveDocument: boolean;
+  sensitivityReason: 'engagement_document' | null;
+  recommendedVisibility: 'owner_only' | 'matched_org' | null;
+  recommendedRevealGate: 'none' | 'conversation_started' | null;
+};
+
 const FILENAME_REVIEW_PATTERN =
   /[\/\\]|(\.\.)|[\u0000-\u001f\u007f]|[\u202A-\u202E\u2066-\u2069]|[<>:"|?*]/;
 const PRIVACY_REVIEW_REASON_PREFIX = 'privacy_review_required:';
+const SENSITIVE_ENGAGEMENT_DOCUMENT_PATTERN =
+  /\b(invoice|contract|agreement|statement[\s_-]*of[\s_-]*work|sow|offer[\s_-]*letter)\b/i;
+const COMMON_UPLOAD_EXTENSION_PATTERN = /\.(pdf|doc|docx|txt|md|png|jpe?g|webp|csv|xls|xlsx)$/i;
 
 export function sanitizeUploadFilename(fileName: string): string {
   const ext = path.extname(fileName).toLowerCase();
@@ -81,6 +94,10 @@ function resolveTypedArtifactFallbackLabel(input: {
   }
 }
 
+function normalizeLabel(value: string | null | undefined) {
+  return value?.trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ') ?? null;
+}
+
 function normalizeStoredSanitizedFilename(fileName: string | null | undefined) {
   const trimmed = fileName?.trim();
   if (!trimmed) {
@@ -92,7 +109,16 @@ function normalizeStoredSanitizedFilename(fileName: string | null | undefined) {
   return normalized.trim().length > 0 ? normalized : null;
 }
 
-export function resolveArtifactDisplayName(input: ArtifactDisplayNameInput) {
+export function resolveArtifactDisplayNameForSurface(
+  input: ArtifactDisplayNameInput,
+  surface: ArtifactDisplaySurface = 'owner'
+) {
+  const fallbackLabel = resolveTypedArtifactFallbackLabel(input);
+
+  if (surface !== 'owner') {
+    return fallbackLabel;
+  }
+
   const sanitized = normalizeStoredSanitizedFilename(input.sanitizedFilename);
   if (sanitized) {
     return sanitized;
@@ -103,7 +129,61 @@ export function resolveArtifactDisplayName(input: ArtifactDisplayNameInput) {
     return originalSanitized;
   }
 
-  return resolveTypedArtifactFallbackLabel(input);
+  return fallbackLabel;
+}
+
+export function resolveArtifactDisplayName(input: ArtifactDisplayNameInput) {
+  return resolveArtifactDisplayNameForSurface(input, 'owner');
+}
+
+export function classifyUploadSensitivity(input: {
+  originalFilename: string;
+  uploadKind?: string | null;
+}): UploadSensitivityAssessment {
+  const normalizedFilename = path
+    .basename(input.originalFilename || '')
+    .replace(COMMON_UPLOAD_EXTENSION_PATTERN, '')
+    .replace(/[_-]+/g, ' ')
+    .trim()
+    .toLowerCase();
+  const isSensitiveDocument =
+    Boolean(normalizedFilename) &&
+    ['proof', 'certificate', 'artifact', 'document'].includes(input.uploadKind ?? 'document') &&
+    SENSITIVE_ENGAGEMENT_DOCUMENT_PATTERN.test(normalizedFilename);
+
+  return {
+    sensitiveDocument: isSensitiveDocument,
+    sensitivityReason: isSensitiveDocument ? 'engagement_document' : null,
+    recommendedVisibility: isSensitiveDocument ? 'owner_only' : null,
+    recommendedRevealGate: isSensitiveDocument ? 'conversation_started' : null,
+  };
+}
+
+export function isUploadDerivedTitle(
+  title: string | null | undefined,
+  input: ArtifactDisplayNameInput
+) {
+  const titleValue = title?.trim() ?? '';
+  const normalizedTitle = normalizeLabel(title);
+  if (!normalizedTitle) {
+    return false;
+  }
+
+  const normalizedOwnerSafe = normalizeLabel(resolveArtifactDisplayNameForSurface(input, 'owner'));
+  const normalizedPublicSafe = normalizeLabel(
+    resolveArtifactDisplayNameForSurface(input, 'public')
+  );
+  const normalizedOriginalFilename = normalizeLabel(
+    input.originalFilename ? path.basename(input.originalFilename) : null
+  );
+
+  return (
+    normalizedTitle === normalizedOwnerSafe ||
+    normalizedTitle === normalizedPublicSafe ||
+    normalizedTitle === normalizedOriginalFilename ||
+    normalizedTitle.startsWith('uploaded ') ||
+    COMMON_UPLOAD_EXTENSION_PATTERN.test(titleValue)
+  );
 }
 
 export function collectUploadMetadataFlags(
@@ -145,9 +225,14 @@ export function assessUploadFilenamePrivacy(fileName: string): UploadFilenameAss
 export function assessEvidenceUploadPrivacy(input: {
   originalFilename: string;
   metadataFlags: UploadMetadataFlags;
+  uploadKind?: string | null;
 }): EvidenceUploadPrivacyAssessment {
   const filename = assessUploadFilenamePrivacy(input.originalFilename);
   const reasons: UploadPrivacyReviewReason[] = [...filename.reasons];
+  const sensitivity = classifyUploadSensitivity({
+    originalFilename: input.originalFilename,
+    uploadKind: input.uploadKind,
+  });
 
   if (input.metadataFlags.hasExif) {
     reasons.push('metadata_exif');
@@ -171,6 +256,7 @@ export function assessEvidenceUploadPrivacy(input: {
     reasons: uniqueReasons,
     safetyReason:
       uniqueReasons.length > 0 ? `${PRIVACY_REVIEW_REASON_PREFIX}${uniqueReasons.join(',')}` : null,
+    sensitivity,
   };
 }
 

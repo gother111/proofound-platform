@@ -62,4 +62,40 @@ describe('POST /api/upload/document', () => {
     );
     expect(JSON.stringify(payload)).not.toContain('../unsafe name.pdf');
   });
+
+  it('returns owner-safe labels while keeping sensitive engagement uploads out of public-safe handling', async () => {
+    vi.mocked(ingestUploadedFile).mockResolvedValue({
+      uploadedFileId: 'upload-2',
+      status: 'ready',
+      url: null,
+      storagePath: 'individual_profile/user-1/document/123-service_agreement.pdf',
+      safetyReason: null,
+      detectedMime: 'application/pdf',
+      artifactDisplayName: 'service_agreement.pdf',
+    } as any);
+
+    const formData = new FormData();
+    formData.set(
+      'file',
+      new File(['agreement'], 'service agreement.pdf', {
+        type: 'application/pdf',
+      })
+    );
+
+    const response = await POST({
+      formData: async () => formData,
+    } as NextRequest);
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload).toEqual(
+      expect.objectContaining({
+        status: 'attachable',
+        url: null,
+        artifactDisplayName: 'service_agreement.pdf',
+        fileName: 'service_agreement.pdf',
+      })
+    );
+    expect(JSON.stringify(payload)).not.toContain('service agreement.pdf');
+  });
 });

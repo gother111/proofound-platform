@@ -3,10 +3,12 @@ import { describe, expect, it } from 'vitest';
 import {
   assessEvidenceUploadPrivacy,
   assessUploadFilenamePrivacy,
+  classifyUploadSensitivity,
   collectUploadMetadataFlags,
   isUploadHeldForPrivacyReview,
   parseUploadPrivacyReviewReasons,
   resolveArtifactDisplayName,
+  resolveArtifactDisplayNameForSurface,
   sanitizeUploadFilename,
 } from '@/lib/uploads/privacy';
 
@@ -28,6 +30,7 @@ describe('upload privacy helpers', () => {
     const assessment = assessEvidenceUploadPrivacy({
       originalFilename: 'portfolio.pdf',
       metadataFlags,
+      uploadKind: 'proof',
     });
 
     expect(metadataFlags.publicSafeEligible).toBe(false);
@@ -58,6 +61,32 @@ describe('upload privacy helpers', () => {
     ).toBe('safe_name.pdf');
   });
 
+  it('uses generic typed labels for review and public surfaces', () => {
+    expect(
+      resolveArtifactDisplayNameForSurface(
+        {
+          sanitizedFilename: 'safe_name.pdf',
+          originalFilename: 'Jane Doe Resume.pdf',
+          detectedMime: 'application/pdf',
+          uploadKind: 'document',
+        },
+        'review'
+      )
+    ).toBe('Uploaded PDF document');
+
+    expect(
+      resolveArtifactDisplayNameForSurface(
+        {
+          sanitizedFilename: 'safe_name.pdf',
+          originalFilename: 'Jane Doe Resume.pdf',
+          detectedMime: 'application/pdf',
+          uploadKind: 'document',
+        },
+        'public'
+      )
+    ).toBe('Uploaded PDF document');
+  });
+
   it('falls back to sanitizing legacy original filenames when needed', () => {
     expect(
       resolveArtifactDisplayName({
@@ -78,5 +107,19 @@ describe('upload privacy helpers', () => {
         uploadKind: 'document',
       })
     ).toBe('Uploaded PDF document');
+  });
+
+  it('classifies sensitive engagement documents as owner-only by default', () => {
+    expect(
+      classifyUploadSensitivity({
+        originalFilename: 'signed_consulting_agreement.pdf',
+        uploadKind: 'document',
+      })
+    ).toEqual({
+      sensitiveDocument: true,
+      sensitivityReason: 'engagement_document',
+      recommendedVisibility: 'owner_only',
+      recommendedRevealGate: 'conversation_started',
+    });
   });
 });

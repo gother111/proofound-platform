@@ -32,6 +32,16 @@ describe('effective visibility', () => {
         policyCeiling: 'public',
       })
     ).toBe('owner_only');
+
+    expect(
+      computeEffectiveVisibility({
+        parentMaxVisibility: 'public',
+        childVisibility: 'public',
+        workflowRevealCeiling: 'public',
+        policyCeiling: 'public',
+        moderationCeiling: 'matched_org',
+      })
+    ).toBe('matched_org');
   });
 
   it('does not let public publication override reveal-stage ceilings', () => {

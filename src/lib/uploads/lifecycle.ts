@@ -11,6 +11,7 @@ import {
   isUploadHeldForPrivacyReview,
   parseUploadPrivacyReviewReasons,
   resolveArtifactDisplayName,
+  resolveArtifactDisplayNameForSurface,
   sanitizeUploadFilename,
 } from '@/lib/uploads/privacy';
 
@@ -60,6 +61,7 @@ type UploadedFileRow = {
   owner_id: string;
   size_bytes?: number;
   proof_pack_id?: string | null;
+  metadata?: Record<string, unknown> | null;
 };
 
 type UploadLifecycleResult = {
@@ -232,7 +234,8 @@ async function loadUploadedFile(uploadedFileId: string): Promise<UploadedFileRow
       durable_bucket,
       durable_path,
       owner_id,
-      proof_pack_id
+      proof_pack_id,
+      metadata
     FROM uploaded_files
     WHERE id = ${uploadedFileId}
     LIMIT 1
@@ -477,6 +480,7 @@ export async function ingestUploadedFile(
   const privacyAssessment = assessEvidenceUploadPrivacy({
     originalFilename: file.name,
     metadataFlags,
+    uploadKind: context.uploadKind,
   });
 
   await db.execute(sql`
@@ -493,6 +497,36 @@ export async function ingestUploadedFile(
           required: privacyAssessment.requiresReview,
           reasons: privacyAssessment.reasons,
         },
+        surfaceLabels: {
+          owner: resolveArtifactDisplayNameForSurface(
+            {
+              sanitizedFilename,
+              originalFilename: file.name,
+              detectedMime,
+              uploadKind: context.uploadKind,
+            },
+            'owner'
+          ),
+          review: resolveArtifactDisplayNameForSurface(
+            {
+              sanitizedFilename,
+              originalFilename: file.name,
+              detectedMime,
+              uploadKind: context.uploadKind,
+            },
+            'review'
+          ),
+          public: resolveArtifactDisplayNameForSurface(
+            {
+              sanitizedFilename,
+              originalFilename: file.name,
+              detectedMime,
+              uploadKind: context.uploadKind,
+            },
+            'public'
+          ),
+        },
+        sensitivity: privacyAssessment.sensitivity,
       })}::jsonb,
       updated_at = NOW()
     WHERE id = ${inserted.id}
@@ -501,6 +535,14 @@ export async function ingestUploadedFile(
     metadataFlags,
     filenameAssessment: privacyAssessment.filename,
   });
+
+  if (privacyAssessment.sensitivity.sensitiveDocument) {
+    await recordUploadEvent(inserted.id, 'sensitivity_classified', {
+      sensitivityReason: privacyAssessment.sensitivity.sensitivityReason,
+      recommendedVisibility: privacyAssessment.sensitivity.recommendedVisibility,
+      recommendedRevealGate: privacyAssessment.sensitivity.recommendedRevealGate,
+    });
+  }
 
   if (isEvidenceUpload && privacyAssessment.requiresReview) {
     await db.execute(sql`

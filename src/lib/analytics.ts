@@ -4,13 +4,13 @@ import { anonymizeIP, anonymizeUserAgent } from '@/lib/utils/privacy';
 
 /**
  * Analytics Event Tracking System
- * 
+ *
  * This module provides GDPR-compliant event tracking by:
  * - Hashing IP addresses and user agents before storage
  * - Tracking key user actions for product metrics
  * - Supporting both authenticated and anonymous events
- * 
- * Reference: 
+ *
+ * Reference:
  * - CROSS_DOCUMENT_PRIVACY_AUDIT.md Section 6.1
  * - CRITICAL_GAPS_IMPLEMENTATION_GUIDE.md Section 2.2
  */
@@ -66,29 +66,59 @@ export type AnalyticsEventType =
   | 'account_deletion_cancelled'
   | 'account_deletion_reminder_sent';
 
+const REDACTED_ANALYTICS_FILE_VALUE = '[REDACTED_FILE]';
+const ANALYTICS_SENSITIVE_KEY_PATTERN =
+  /(filename|originalfilename|filepath|storagepath|sourceurl)/i;
+const ANALYTICS_FILE_VALUE_PATTERN =
+  /\b[\w./-]+\.(pdf|doc|docx|txt|md|png|jpe?g|webp|csv|xls|xlsx)\b/i;
+
+function sanitizeAnalyticsProperties(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((entry) => sanitizeAnalyticsProperties(entry));
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([key, entry]) => {
+        if (ANALYTICS_SENSITIVE_KEY_PATTERN.test(key)) {
+          return [key, REDACTED_ANALYTICS_FILE_VALUE];
+        }
+
+        return [key, sanitizeAnalyticsProperties(entry)];
+      })
+    );
+  }
+
+  if (typeof value === 'string' && ANALYTICS_FILE_VALUE_PATTERN.test(value)) {
+    return REDACTED_ANALYTICS_FILE_VALUE;
+  }
+
+  return value;
+}
+
 // =============================================================================
 // CORE TRACKING FUNCTION
 // =============================================================================
 
 /**
  * Track an analytics event with GDPR-compliant IP/UA hashing.
- * 
+ *
  * This function:
  * 1. Extracts IP address and User Agent from request headers
  * 2. Hashes them using SHA-256 (one-way, irreversible)
  * 3. Stores the event in the database with hashed values
- * 
+ *
  * @param eventType - Type of event being tracked
  * @param properties - Additional event metadata (JSON object)
  * @param request - Next.js Request object (to extract IP/UA)
  * @param userId - Optional user ID (for authenticated events)
  * @param orgId - Optional organization ID
- * 
+ *
  * @example
  * ```typescript
  * // Track a signup event
  * await trackEvent('signed_up', { method: 'email' }, request, user.id);
- * 
+ *
  * // Track a match view
  * await trackEvent('match_viewed', { matchId, score: 0.87 }, request, user.id);
  * ```
@@ -116,14 +146,15 @@ export async function trackEvent(
     const userAgentHash = anonymizeUserAgent(userAgent);
 
     // Extract session ID if available (can be passed in properties)
-    const sessionId = (properties.sessionId as string | undefined) || null;
+    const sanitizedProperties = sanitizeAnalyticsProperties(properties) as Record<string, any>;
+    const sessionId = (sanitizedProperties.sessionId as string | undefined) || null;
 
     // Insert event into database
     await db.insert(analyticsEvents).values({
       eventType,
       userId: userId || null,
       orgId: orgId || null,
-      properties: properties as any,
+      properties: sanitizedProperties as any,
       sessionId,
       ipHash, // ✅ Hashed, not raw IP
       userAgentHash, // ✅ Hashed, not raw UA
@@ -135,7 +166,7 @@ export async function trackEvent(
       console.log(`📊 [Analytics] ${eventType}`, {
         userId,
         orgId,
-        properties,
+        properties: sanitizedProperties,
         ipHash: ipHash.substring(0, 8) + '...', // Show first 8 chars only
       });
     }
@@ -155,7 +186,7 @@ export async function trackEvent(
 
 /**
  * Track user signup event.
- * 
+ *
  * @param userId - User ID (from auth system)
  * @param method - Signup method (email, google, linkedin)
  * @param request - Next.js Request object
@@ -170,7 +201,7 @@ export async function trackSignUp(
 
 /**
  * Track profile creation event.
- * 
+ *
  * @param userId - User ID
  * @param persona - User persona type (individual or organization)
  * @param request - Next.js Request object
@@ -185,7 +216,7 @@ export async function trackProfileCreated(
 
 /**
  * Track when profile is ready for matching.
- * 
+ *
  * @param userId - User ID
  * @param completionScore - Profile completion percentage (0-100)
  * @param request - Next.js Request object
@@ -200,7 +231,7 @@ export async function trackProfileReadyForMatch(
 
 /**
  * Track match acceptance event.
- * 
+ *
  * @param matchId - Match ID
  * @param score - Match score (0-1)
  * @param userId - User ID
@@ -217,7 +248,7 @@ export async function trackMatchAccepted(
 
 /**
  * Track match decline event.
- * 
+ *
  * @param matchId - Match ID
  * @param reason - Optional decline reason
  * @param userId - User ID
@@ -234,7 +265,7 @@ export async function trackMatchDeclined(
 
 /**
  * Track verification completion event.
- * 
+ *
  * @param requestId - Verification request ID
  * @param status - Verification status
  * @param userId - User ID (verifier)
@@ -251,7 +282,7 @@ export async function trackVerificationCompleted(
 
 /**
  * Track assignment publication event.
- * 
+ *
  * @param assignmentId - Assignment ID
  * @param orgId - Organization ID
  * @param userId - User ID (poster)
@@ -268,7 +299,7 @@ export async function trackAssignmentPublished(
 
 /**
  * Track organization verification event.
- * 
+ *
  * @param orgId - Organization ID
  * @param verifierType - Type of verifier (admin, manual, automated)
  * @param request - Next.js Request object
@@ -283,7 +314,7 @@ export async function trackOrgVerified(
 
 /**
  * Track content report event.
- * 
+ *
  * @param entityType - Type of entity being reported (profile, message, assignment)
  * @param entityId - Entity ID
  * @param reason - Report reason
@@ -306,20 +337,17 @@ export async function trackContentReported(
 
 /**
  * Track privacy dashboard view event.
- * 
+ *
  * @param userId - User ID
  * @param request - Next.js Request object
  */
-export async function trackPrivacyDashboardViewed(
-  userId: string,
-  request: Request
-): Promise<void> {
+export async function trackPrivacyDashboardViewed(userId: string, request: Request): Promise<void> {
   await trackEvent('privacy_dashboard_viewed', {}, request, userId);
 }
 
 /**
  * Track data export request event.
- * 
+ *
  * @param userId - User ID
  * @param dataCategories - Array of data categories being exported
  * @param request - Next.js Request object
@@ -334,7 +362,7 @@ export async function trackDataExportRequested(
 
 /**
  * Track audit log view event.
- * 
+ *
  * @param userId - User ID
  * @param eventsViewed - Number of events viewed
  * @param request - Next.js Request object
@@ -349,7 +377,7 @@ export async function trackAuditLogViewed(
 
 /**
  * Track account deletion request event.
- * 
+ *
  * @param userId - User ID
  * @param scheduledFor - ISO date string when deletion will occur
  * @param reason - Optional reason for deletion
@@ -366,7 +394,7 @@ export async function trackAccountDeletionRequested(
 
 /**
  * Track account deletion cancellation event.
- * 
+ *
  * @param userId - User ID
  * @param daysRemaining - Number of days remaining in grace period
  * @param request - Next.js Request object
@@ -378,4 +406,3 @@ export async function trackAccountDeletionCancelled(
 ): Promise<void> {
   await trackEvent('account_deletion_cancelled', { daysRemaining }, request, userId);
 }
-
