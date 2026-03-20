@@ -106,6 +106,10 @@ describe('/api/portfolio/org/[slug]/export', () => {
   it('returns a downloadable PDF on success', async () => {
     mockSupabase({ user: { id: 'user-1' } });
     (fetchOrganizationTrustExportData as any).mockResolvedValue({
+      schemaVersion: 'proofound.portfolio-export.v1',
+      surface: 'organization_public',
+      exportedAt: '2026-03-21T10:00:00.000Z',
+      shareUrl: 'https://proofound.io/portfolio/org/acme',
       organization: {
         id: 'org-1',
         slug: 'acme',
@@ -116,6 +120,14 @@ describe('/api/portfolio/org/[slug]/export', () => {
         operatingContext: 'Small distributed team with tight review loops.',
         website: 'https://acme.org',
         verified: true,
+      },
+      assignmentSnapshot: {
+        role: 'Proof-first product designer',
+        engagementType: 'full_time',
+        businessValue: 'Own the assignment review loop.',
+        description: 'Clarify the work and keep delivery aligned.',
+        expectedImpact: 'Proof should show delivery and ownership.',
+        outcomes: ['Reduce vague review decisions'],
       },
     });
     (generateOrganizationProfilePdf as any).mockResolvedValue(Buffer.from('%PDF-1.4 org-pdf'));
@@ -129,6 +141,85 @@ describe('/api/portfolio/org/[slug]/export', () => {
     expect(response.headers.get('content-type')).toBe('application/pdf');
     expect(response.headers.get('content-disposition')).toContain('proofound-org-acme.pdf');
     expect(bytes.length).toBeGreaterThan(0);
+  });
+
+  it('returns canonical JSON when format=json is requested', async () => {
+    mockSupabase({ user: { id: 'user-1' } });
+    (fetchOrganizationTrustExportData as any).mockResolvedValue({
+      schemaVersion: 'proofound.portfolio-export.v1',
+      surface: 'organization_public',
+      exportedAt: '2026-03-21T10:00:00.000Z',
+      shareUrl: 'https://proofound.io/portfolio/org/acme',
+      organization: {
+        id: 'org-1',
+        slug: 'acme',
+        displayName: 'Acme',
+        verifiedDomainPath: 'acme.org',
+        mission: 'Ship impact',
+        whyWorkMatters: 'Build trust',
+        operatingContext: 'Small distributed team with tight review loops.',
+        website: 'https://acme.org',
+        verified: true,
+      },
+      assignmentSnapshot: undefined,
+    });
+
+    const response = await GET(
+      new Request('http://localhost/api/portfolio/org/acme/export?format=json'),
+      {
+        params: Promise.resolve({ slug: 'acme' }),
+      }
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('application/json');
+    expect(await response.json()).toMatchObject({
+      schemaVersion: 'proofound.portfolio-export.v1',
+      surface: 'organization_public',
+      organization: { slug: 'acme' },
+    });
+    expect(generateOrganizationProfilePdf).not.toHaveBeenCalled();
+  });
+
+  it('returns text export when format=text is requested', async () => {
+    mockSupabase({ user: { id: 'user-1' } });
+    (fetchOrganizationTrustExportData as any).mockResolvedValue({
+      schemaVersion: 'proofound.portfolio-export.v1',
+      surface: 'organization_public',
+      exportedAt: '2026-03-21T10:00:00.000Z',
+      shareUrl: 'https://proofound.io/portfolio/org/acme',
+      organization: {
+        id: 'org-1',
+        slug: 'acme',
+        displayName: 'Acme',
+        verifiedDomainPath: 'acme.org',
+        mission: 'Ship impact',
+        whyWorkMatters: 'Build trust',
+        operatingContext: 'Small distributed team with tight review loops.',
+        website: 'https://acme.org',
+        verified: true,
+      },
+      assignmentSnapshot: {
+        role: 'Proof-first product designer',
+        engagementType: 'full_time',
+        businessValue: 'Own the assignment review loop.',
+        description: 'Clarify the work and keep delivery aligned.',
+        expectedImpact: 'Proof should show delivery and ownership.',
+        outcomes: ['Reduce vague review decisions'],
+      },
+    });
+
+    const response = await GET(
+      new Request('http://localhost/api/portfolio/org/acme/export?format=text'),
+      {
+        params: Promise.resolve({ slug: 'acme' }),
+      }
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('text/plain');
+    expect(await response.text()).toContain('Seriousness of review:');
+    expect(generateOrganizationProfilePdf).not.toHaveBeenCalled();
   });
 
   it('returns 403 for canonical reviewer membership', async () => {

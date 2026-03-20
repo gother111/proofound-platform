@@ -89,6 +89,10 @@ function buildProjection(overrides: Partial<any> = {}) {
       publicBadges: [],
     },
     exportData: {
+      schemaVersion: 'proofound.portfolio-export.v1',
+      surface: 'individual_public',
+      exportedAt: '2026-03-21T10:00:00.000Z',
+      shareUrl: 'https://proofound.io/portfolio/jane',
       profile: {
         id: 'user-1',
         handle: 'jane',
@@ -112,7 +116,35 @@ function buildProjection(overrides: Partial<any> = {}) {
         activeIssues: [],
       },
       skills: [],
-      proofPacks: [],
+      proofPacks: [
+        {
+          id: 'pack-1',
+          scope: 'public_safe',
+          status: 'published',
+          title: 'Proof Pack: Product Strategy',
+          summary: 'Launch evidence for Product Strategy',
+          ownershipStatement: 'Owned the product strategy contribution.',
+          evidenceSummary: 'Verified against a public launch memo.',
+          outcomesSummary: 'Shipped the MVP in two weeks.',
+          verificationStatus: 'verified',
+          verificationSummary: 'Scoped verification supports this Proof Pack.',
+          freshnessState: 'fresh',
+          proofQualityScore: 0.8,
+          schemaVersion: 'proof_pack/v2',
+          artifactCount: 1,
+          contextLabel: 'Product Strategy',
+          selectedEvidence: [
+            {
+              title: 'Launch memo',
+              href: 'https://example.com/launch-memo',
+              artifactKind: 'link',
+              issuedAt: '2026-02-20',
+              description: 'Public launch memo',
+              semanticsNote: 'Supporting evidence only, not full verification.',
+            },
+          ],
+        },
+      ],
       visibility: {
         header: true,
         proofBar: true,
@@ -193,6 +225,21 @@ describe('Public individual portfolio page', () => {
           contact: false,
         },
         featuredProofs: [],
+        exportData: {
+          ...buildProjection().exportData,
+          proofPacks: [],
+          visibility: {
+            header: true,
+            proofBar: true,
+            workEmail: false,
+            linkedin: true,
+            identity: true,
+            counts: true,
+            skills: false,
+            bio: true,
+            contact: false,
+          },
+        },
       }) as any,
     });
 
@@ -205,12 +252,13 @@ describe('Public individual portfolio page', () => {
 
     expect(screen.getByRole('heading', { name: 'Jane Doe' })).toBeInTheDocument();
     expect(screen.getByText('Shareable by direct link')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /proof-based summary/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /featured proofs/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /selected proof packs/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /selected trust summary/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /selected outcomes/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /skills snapshot/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /contact & share/i })).toBeInTheDocument();
-    expect(screen.getByText(/no public summary is published yet/i)).toBeInTheDocument();
-    expect(screen.getByText(/no public proof is available yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/no selected proof packs are available yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/no public outcome summary is published yet/i)).toBeInTheDocument();
     expect(
       screen.getByText(/skills are not shared publicly in this portfolio/i)
     ).toBeInTheDocument();
@@ -254,18 +302,38 @@ describe('Public individual portfolio page', () => {
     vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue({
       status: 'accessible',
       projection: buildProjection({
-        featuredProofs: [
-          {
-            id: 'proof-1',
-            title: 'Hidden asset proof',
-            role: 'Project',
-            timeframe: 'Jan 15, 2026',
-            outcomes: ['Internal child asset omitted'],
-            evidence: [],
-            verifiedBy: 'Public evidence',
-            proofPackHref: null,
-          },
-        ],
+        exportData: {
+          ...buildProjection().exportData,
+          proofPacks: [
+            {
+              id: 'pack-1',
+              scope: 'public_safe',
+              status: 'published',
+              title: 'Proof Pack: Hidden asset proof',
+              summary: 'Internal child asset omitted',
+              ownershipStatement: 'Owned the contribution.',
+              evidenceSummary: null,
+              outcomesSummary: 'Internal child asset omitted',
+              verificationStatus: 'unverified',
+              verificationSummary: 'Public-safe proof only.',
+              freshnessState: 'fresh',
+              proofQualityScore: null,
+              schemaVersion: 'proof_pack/v2',
+              artifactCount: 1,
+              contextLabel: 'Project',
+              selectedEvidence: [
+                {
+                  title: 'Hidden asset proof',
+                  href: null,
+                  artifactKind: 'link',
+                  issuedAt: '2026-01-15',
+                  description: 'Internal child asset omitted',
+                  semanticsNote: 'Supporting evidence only, not full verification.',
+                },
+              ],
+            },
+          ],
+        },
       }) as any,
     });
 
@@ -276,7 +344,7 @@ describe('Public individual portfolio page', () => {
 
     render(element);
 
-    expect(screen.getByText('Hidden asset proof')).toBeInTheDocument();
+    expect(screen.getAllByText('Hidden asset proof').length).toBeGreaterThan(0);
     expect(screen.queryByRole('link', { name: /open evidence/i })).not.toBeInTheDocument();
   });
 

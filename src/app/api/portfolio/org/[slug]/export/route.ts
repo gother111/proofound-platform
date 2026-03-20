@@ -3,15 +3,20 @@ import { getCanonicalActiveOrgMembership } from '@/lib/api/auth';
 import { createClient } from '@/lib/supabase/server';
 import { authorize, type OrgRole } from '@/lib/authz';
 import { fetchOrganizationTrustExportData } from '@/lib/portfolio/export-data';
+import {
+  resolvePortfolioExportFormat,
+  respondWithJson,
+  respondWithPdf,
+  respondWithText,
+} from '@/lib/portfolio/export-response';
 import { generateOrganizationProfilePdf } from '@/lib/portfolio/pdf';
+import { buildOrganizationTextPack } from '@/lib/portfolio/text-pack';
 import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
-
-const FALLBACK_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const trace = startLaunchTrace({
     flow: 'export',
     actorType: 'anonymous',
@@ -79,7 +84,34 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
       return NextResponse.json({ error: 'Organization profile unavailable' }, { status: 404 });
     }
 
-    const shareUrl = `${FALLBACK_URL.replace(/\/$/, '')}/portfolio/org/${data.organization.slug}`;
+    const format = resolvePortfolioExportFormat(request);
+
+    if (format === 'json') {
+      emitLaunchTrace(trace, {
+        outcome: 'success',
+        state: 'organization_export_ready',
+        details: {
+          orgSlug: data.organization.slug,
+          format,
+        },
+      });
+      return respondWithJson(data, `proofound-org-${data.organization.slug}.json`);
+    }
+
+    if (format === 'text') {
+      emitLaunchTrace(trace, {
+        outcome: 'success',
+        state: 'organization_export_ready',
+        details: {
+          orgSlug: data.organization.slug,
+          format,
+        },
+      });
+      return respondWithText(
+        buildOrganizationTextPack(data),
+        `proofound-org-${data.organization.slug}.txt`
+      );
+    }
 
     const buffer = await generateOrganizationProfilePdf({
       organization: {
@@ -91,7 +123,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
         operatingContext: data.organization.operatingContext,
         website: data.organization.website,
         verified: data.organization.verified,
-        shareUrl,
+        shareUrl: data.shareUrl,
       },
     });
 
@@ -104,14 +136,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
         orgSlug: exportedSlug,
       },
     });
-    return new NextResponse(bytes, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="proofound-org-${exportedSlug}.pdf"`,
-        'Content-Length': bytes.byteLength.toString(),
-      },
-    });
+    return respondWithPdf(bytes, `proofound-org-${exportedSlug}.pdf`);
   } catch (error) {
     console.error('organization portfolio export failed', {
       name: error instanceof Error ? error.name : 'UnknownError',

@@ -16,6 +16,10 @@ describe('fetchPublicTrustExportDataByHandle', () => {
 
   it('returns export data only when the public portfolio is accessible', async () => {
     const exportData = {
+      schemaVersion: 'proofound.portfolio-export.v1',
+      surface: 'individual_public',
+      exportedAt: '2026-03-21T10:00:00.000Z',
+      shareUrl: 'https://proofound.io/portfolio/jane',
       profile: {
         id: 'user-1',
         handle: 'jane',

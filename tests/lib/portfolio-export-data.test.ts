@@ -133,6 +133,7 @@ describe('fetchTrustExportData', () => {
       {
         pack: {
           id: 'pack-anchored',
+          packKind: 'verification_bundle',
           ownerType: 'individual_profile',
           ownerId: 'user-1',
           primarySubjectType: 'experience',
@@ -143,6 +144,14 @@ describe('fetchTrustExportData', () => {
           outcomesSummary: 'Shipped the MVP in two weeks.',
         },
         ownerFull: {
+          contract: {
+            status: 'published',
+            primaryClaim: { statement: 'Anchored proof summary' },
+            ownershipStatement: 'Owned the anchored contribution.',
+            verificationSummary: { summary: 'Scoped verification supports this Proof Pack.' },
+            proofQualityScore: 0.8,
+            schemaVersion: 'proof_pack/v2',
+          },
           title: 'Anchored pack',
           summary: 'Anchored proof summary',
           evidenceSummary: 'Reviewed by a project lead.',
@@ -150,6 +159,8 @@ describe('fetchTrustExportData', () => {
           items: [
             {
               artifactId: 'artifact-1',
+              itemClass: 'linked_evidence',
+              subtypeMetadata: {},
               artifact: {
                 subjectType: 'skill',
                 subjectId: 'skill-anchored',
@@ -170,6 +181,14 @@ describe('fetchTrustExportData', () => {
           ],
         },
         publicSafe: {
+          contract: {
+            status: 'published',
+            primaryClaim: { statement: 'Anchored proof summary' },
+            ownershipStatement: 'Owned the anchored contribution.',
+            verificationSummary: { summary: 'Scoped verification supports this Proof Pack.' },
+            proofQualityScore: 0.8,
+            schemaVersion: 'proof_pack/v2',
+          },
           title: 'Anchored pack',
           summary: 'Anchored proof summary',
           evidenceSummary: 'Reviewed by a project lead.',
@@ -189,6 +208,7 @@ describe('fetchTrustExportData', () => {
       {
         pack: {
           id: 'pack-orphan',
+          packKind: 'verification_bundle',
           ownerType: 'individual_profile',
           ownerId: 'user-1',
           primarySubjectType: 'skill',
@@ -199,6 +219,14 @@ describe('fetchTrustExportData', () => {
           outcomesSummary: null,
         },
         ownerFull: {
+          contract: {
+            status: 'published',
+            primaryClaim: { statement: 'Legacy floating proof' },
+            ownershipStatement: 'Owned the floating contribution.',
+            verificationSummary: { summary: 'Supporting evidence only.' },
+            proofQualityScore: 0.4,
+            schemaVersion: 'proof_pack/v2',
+          },
           title: 'Floating pack',
           summary: 'Legacy floating proof',
           evidenceSummary: null,
@@ -206,6 +234,8 @@ describe('fetchTrustExportData', () => {
           items: [
             {
               artifactId: 'artifact-2',
+              itemClass: 'linked_evidence',
+              subtypeMetadata: {},
               artifact: {
                 subjectType: 'skill',
                 subjectId: 'skill-floating',

@@ -14,6 +14,10 @@ function buildAccessibleAccess() {
     status: 'accessible' as const,
     projection: {
       exportData: {
+        schemaVersion: 'proofound.portfolio-export.v1',
+        surface: 'individual_public',
+        exportedAt: '2026-03-21T10:00:00.000Z',
+        shareUrl: 'https://proofound.io/portfolio/jane',
         profile: {
           id: 'user-1',
           handle: 'jane',
@@ -38,10 +42,14 @@ function buildAccessibleAccess() {
             scope: 'public_safe',
             title: 'Proof Pack: Product Strategy',
             summary: 'Launch evidence for Product Strategy',
+            ownershipStatement: 'Owned the launch contribution.',
             evidenceSummary: 'Verified against a public launch memo.',
             outcomesSummary: 'Shipped the MVP in two weeks.',
             verificationStatus: 'verified',
+            verificationSummary: 'Scoped verification supports this Proof Pack.',
             freshnessState: 'fresh',
+            proofQualityScore: 0.8,
+            schemaVersion: 'proof_pack/v2',
             artifactCount: 1,
             contextLabel: 'Product Strategy',
             selectedEvidence: [
@@ -113,6 +121,7 @@ describe('/api/portfolio/public/[handle]/summary', () => {
     expect(body).toContain('Context: Product Strategy');
     expect(body).toContain('Verification: Verified evidence');
     expect(body).toContain('Freshness: Fresh');
+    expect(body).toContain('Portfolio: https://proofound.io/portfolio/jane');
     expect(body).toContain('Selected evidence: Launch memo (https://example.com/launch-memo)');
     expect(body).toContain('Skills evidenced in selected proof:');
     expect(body).toContain('Product Strategy');

@@ -74,6 +74,10 @@ function buildProjection() {
       publicBadges: [],
     },
     exportData: {
+      schemaVersion: 'proofound.portfolio-export.v1',
+      surface: 'individual_public',
+      exportedAt: '2026-03-21T10:00:00.000Z',
+      shareUrl: 'https://proofound.io/portfolio/jane',
       profile: {
         id: 'user-1',
         handle: 'jane',
@@ -95,7 +99,26 @@ function buildProjection() {
         activeIssues: [],
       },
       skills: [],
-      proofPacks: [],
+      proofPacks: [
+        {
+          id: 'pack-1',
+          scope: 'public_safe',
+          status: 'published',
+          title: 'Proof Pack: Strategy delivery',
+          summary: 'Structured proof for strategy delivery.',
+          ownershipStatement: 'Owned the delivery scope.',
+          evidenceSummary: 'Public memo reviewed.',
+          outcomesSummary: 'Shipped a measurable result.',
+          verificationStatus: 'verified',
+          verificationSummary: 'Scoped verification supports this Proof Pack.',
+          freshnessState: 'fresh',
+          proofQualityScore: 0.8,
+          schemaVersion: 'proof_pack/v2',
+          artifactCount: 1,
+          contextLabel: 'Strategy',
+          selectedEvidence: [],
+        },
+      ],
       visibility: {
         header: true,
         proofBar: true,

@@ -5,6 +5,10 @@ import { buildTextPack } from '@/lib/portfolio/text-pack';
 describe('buildTextPack', () => {
   it('leads with proof-backed summary details before proof-linked skills', () => {
     const text = buildTextPack({
+      schemaVersion: 'proofound.portfolio-export.v1',
+      surface: 'individual_public',
+      exportedAt: '2026-03-21T10:00:00.000Z',
+      shareUrl: 'https://proofound.io/portfolio/jane',
       profile: {
         id: 'user-1',
         handle: 'jane',
@@ -85,6 +89,7 @@ describe('buildTextPack', () => {
     expect(text).toContain(
       'Launch memo (https://example.com/launch-memo) [Supporting evidence only, not full verification.]'
     );
+    expect(text).toContain('Portfolio: https://proofound.io/portfolio/jane');
     expect(text.indexOf('Proof-backed summary:')).toBeLessThan(
       text.indexOf('Skills evidenced in selected proof:')
     );
@@ -92,6 +97,10 @@ describe('buildTextPack', () => {
 
   it('does not fall back to raw top-skill percentages when no proof packs are selected', () => {
     const text = buildTextPack({
+      schemaVersion: 'proofound.portfolio-export.v1',
+      surface: 'individual_public',
+      exportedAt: '2026-03-21T10:00:00.000Z',
+      shareUrl: 'https://proofound.io/portfolio/jane',
       profile: {
         id: 'user-1',
         handle: 'jane',

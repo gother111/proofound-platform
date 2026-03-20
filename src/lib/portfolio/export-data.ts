@@ -1,84 +1,37 @@
 import { buildTrustSignals } from '@/lib/portfolio/trust-signals';
 import {
+  PORTFOLIO_EXPORT_SCHEMA_VERSION,
+  type IndividualPortfolioExportData,
+  type OrganizationPortfolioExportData,
+  type PortfolioExportProofPack,
+} from '@/lib/portfolio/export-contract';
+import {
   deriveEffectivePublicPortfolioState,
   isAccessiblePublicPortfolioState,
   resolveRequestedPublicPortfolioState,
 } from '@/lib/portfolio/public-contract';
 import { mergeVisibilityFlags } from '@/lib/portfolio/visibility';
-import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
-import { getVerifiedOrganizationDomainPath } from '@/lib/organizations/trust-profile';
 import {
   hasPrimaryAnchorContext,
   listCanonicalProofPackAggregatesForOwner,
   resolveProofEvidenceSemanticsNote,
   summarizeCanonicalProofOwnerAggregates,
 } from '@/lib/proofs/canonical-pack';
-import { resolvePublicIndividualPortfolioAccessByHandle } from '@/lib/portfolio/public-projection';
+import { getPublicSiteUrl } from '@/lib/seo/public-metadata';
+import {
+  getPublicOrganizationPortfolioProjectionForPublicationState,
+  resolvePublicIndividualPortfolioAccessByHandle,
+} from '@/lib/portfolio/public-projection';
 import {
   listVerificationRecordsForOwner,
   summarizeVerificationPolicy,
 } from '@/lib/verification/policy';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-type TrustExportProofPack = {
-  id: string;
-  scope: 'owner_full' | 'public_safe';
-  status: string;
-  title: string;
-  summary: string | null;
-  ownershipStatement: string | null;
-  evidenceSummary: string | null;
-  outcomesSummary: string | null;
-  verificationStatus: string;
-  verificationSummary: string;
-  freshnessState: string;
-  proofQualityScore: number | null;
-  schemaVersion: string;
-  artifactCount: number;
-  contextLabel: string | null;
-  selectedEvidence: Array<{
-    title: string;
-    href: string | null;
-    artifactKind: string | null;
-    issuedAt: string | null;
-    description: string | null;
-    semanticsNote: string;
-  }>;
-};
+const SITE_URL = getPublicSiteUrl();
 
-export type TrustExportData = {
-  profile: {
-    id: string;
-    handle: string;
-    displayName: string;
-    headline: string;
-    bio?: string;
-    contactEmail?: string;
-  };
-  publication: {
-    requestedState: string;
-    effectiveState: string;
-    searchIndexingEnabled: boolean;
-  };
-  signals: ReturnType<typeof buildTrustSignals>;
-  skills: Array<{ id: string; name: string; level: number }>;
-  proofPacks: TrustExportProofPack[];
-  visibility: ReturnType<typeof mergeVisibilityFlags>;
-};
-
-export type OrganizationTrustExportData = {
-  organization: {
-    id: string;
-    slug: string;
-    displayName: string;
-    verifiedDomainPath?: string;
-    mission?: string;
-    whyWorkMatters?: string;
-    operatingContext?: string;
-    website?: string;
-    verified: boolean;
-  };
-};
+export type TrustExportData = IndividualPortfolioExportData;
+export type OrganizationTrustExportData = OrganizationPortfolioExportData;
 
 type ProfileExportRow = {
   id: string;
@@ -184,7 +137,7 @@ function resolveProofPackContextLabel(pack: {
 function buildExportProofPack(
   aggregate: Awaited<ReturnType<typeof listCanonicalProofPackAggregatesForOwner>>[number],
   scope: 'owner_full' | 'public_safe'
-): TrustExportProofPack {
+): PortfolioExportProofPack {
   const projection = scope === 'public_safe' ? aggregate.publicSafe : aggregate.ownerFull;
   const ownerItems = aggregate.ownerFull.items ?? [];
   const publicItems = aggregate.publicSafe?.items ?? [];
@@ -408,6 +361,10 @@ function buildTrustExportPayload(
   }
 
   return {
+    schemaVersion: PORTFOLIO_EXPORT_SCHEMA_VERSION,
+    surface: 'individual_owner',
+    exportedAt: new Date().toISOString(),
+    shareUrl: `${SITE_URL}/portfolio/${encodeURIComponent(profile.handle)}`,
     profile: {
       id: profile.id,
       handle: profile.handle,
@@ -487,46 +444,15 @@ export async function fetchOrganizationTrustExportData(
   supabase: SupabaseClient,
   orgId: string
 ): Promise<OrganizationTrustExportData | null> {
-  const { data: organization } = await supabase
-    .from('organizations')
-    .select(
-      `
-        id,
-        slug,
-        display_name,
-        tagline,
-        mission,
-        working_context,
-        website,
-        verified,
-        trust_status,
-        website_verified_at
-      `
-    )
-    .eq('id', orgId)
-    .maybeSingle();
+  void supabase;
 
-  if (!organization || !organization.slug) {
+  const projection = await getPublicOrganizationPortfolioProjectionForPublicationState(orgId);
+  if (!projection || !isAccessiblePublicPortfolioState(projection.effectiveState)) {
     return null;
   }
 
   return {
-    organization: {
-      id: organization.id,
-      slug: organization.slug,
-      displayName: organization.display_name || organization.slug,
-      verifiedDomainPath:
-        getVerifiedOrganizationDomainPath({
-          website: organization.website,
-          websiteVerifiedAt: organization.website_verified_at,
-          trustStatus: organization.trust_status,
-          verified: organization.verified,
-        }) || undefined,
-      mission: organization.mission || undefined,
-      whyWorkMatters: organization.tagline || undefined,
-      operatingContext: organization.working_context || undefined,
-      website: normalizeOrganizationWebsite(organization.website).value || undefined,
-      verified: Boolean(organization.verified),
-    },
+    ...projection.exportData,
+    shareUrl: projection.shareUrl,
   };
 }

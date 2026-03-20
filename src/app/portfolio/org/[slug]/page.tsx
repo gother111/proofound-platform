@@ -110,6 +110,22 @@ export default async function OrganizationPortfolioPage({
     return renderUnavailablePage(slug);
   }
 
+  const assignmentSnapshot = data.assignmentSnapshot;
+  const reviewSignals = [
+    data.verifiedDomainPath
+      ? `Verified domain path: ${data.verifiedDomainPath}`
+      : 'Public trust card only',
+    data.organization.trust_status === 'platform_reviewed'
+      ? 'Organization trust has been platform reviewed.'
+      : data.organization.verified
+        ? 'Organization trust is verified.'
+        : 'Organization trust is still in direct-link mode.',
+    assignmentSnapshot
+      ? 'A review-ready assignment is active, so proof review standards are already defined.'
+      : 'Assignment standards are published before broader review starts.',
+    'Blind-by-default review stays separate from this public page until candidate consented reveal.',
+  ];
+
   const membershipResult = user?.id
     ? await supabase
         .from('organization_members')
@@ -206,6 +222,91 @@ export default async function OrganizationPortfolioPage({
       <JsonLdScripts items={jsonLdItems} idPrefix="public-org-portfolio-jsonld" />
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <div className="space-y-4">
+          <PublicProfileSection title="Mission / purpose">
+            <p className="whitespace-pre-line text-sm leading-6 text-foreground">
+              {(data.visibility?.mission === 'public'
+                ? data.organization.mission
+                : data.organization.tagline) ||
+                'A short purpose statement has not been published yet.'}
+            </p>
+          </PublicProfileSection>
+
+          <PublicProfileSection title="What work is offered">
+            <div className="space-y-3">
+              <SummaryRow
+                label="Work offered"
+                value={
+                  assignmentSnapshot?.role ||
+                  data.organization.tagline?.trim() ||
+                  'A concise statement of the work offered has not been published yet.'
+                }
+              />
+              <SummaryRow
+                label="Engagement"
+                value={
+                  assignmentSnapshot?.engagementType
+                    ? humanizeEngagementType(assignmentSnapshot.engagementType)
+                    : 'Not published'
+                }
+              />
+              <p className="whitespace-pre-line text-sm leading-6 text-foreground">
+                {assignmentSnapshot?.businessValue ||
+                  data.organization.tagline?.trim() ||
+                  'Why this work exists has not been published yet.'}
+              </p>
+            </div>
+          </PublicProfileSection>
+
+          <PublicProfileSection title="Assignment clarity">
+            <div className="space-y-3">
+              <p className="whitespace-pre-line text-sm leading-6 text-foreground">
+                {assignmentSnapshot?.description?.trim() ||
+                  data.organization.working_context?.trim() ||
+                  'Assignment detail will appear here once the organization publishes it.'}
+              </p>
+              <SummaryRow
+                label="Proof expectations"
+                value={
+                  assignmentSnapshot?.expectedImpact?.trim() || 'Proof expectations not published'
+                }
+              />
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+                  Expected outcomes
+                </p>
+                {assignmentSnapshot?.outcomes.length ? (
+                  <ul className="space-y-2 text-sm text-foreground">
+                    {assignmentSnapshot.outcomes.map((outcome) => (
+                      <li key={outcome} className="flex gap-2">
+                        <span className="mt-1 text-proofound-forest">•</span>
+                        <span>{outcome}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Outcome detail is not published yet.
+                  </p>
+                )}
+              </div>
+            </div>
+          </PublicProfileSection>
+        </div>
+
+        <div className="space-y-4">
+          <PublicProfileSection title="Seriousness of review">
+            <div className="space-y-3">
+              {reviewSignals.map((signal) => (
+                <p
+                  key={signal}
+                  className="rounded-xl border border-white/40 bg-white/40 px-3 py-2 text-sm text-foreground shadow-sm"
+                >
+                  {signal}
+                </p>
+              ))}
+            </div>
+          </PublicProfileSection>
+
           <PublicProfileSection title="Trust basics">
             <div className="space-y-3">
               <SummaryRow label="Organization" value={data.publicDisplayName} />
@@ -219,29 +320,6 @@ export default async function OrganizationPortfolioPage({
                 value={data.organization.verified ? 'Verified' : 'Public trust card'}
               />
             </div>
-          </PublicProfileSection>
-
-          <PublicProfileSection title="Purpose">
-            <p className="whitespace-pre-line text-sm leading-6 text-foreground">
-              {(data.visibility?.mission === 'public'
-                ? data.organization.mission
-                : data.organization.tagline) ||
-                'A short purpose statement has not been published yet.'}
-            </p>
-          </PublicProfileSection>
-
-          <PublicProfileSection title="Why the work matters">
-            <p className="whitespace-pre-line text-sm leading-6 text-foreground">
-              {data.organization.tagline?.trim() ||
-                'A concise explanation of why this work matters has not been published yet.'}
-            </p>
-          </PublicProfileSection>
-
-          <PublicProfileSection title="Essential operating context">
-            <p className="whitespace-pre-line text-sm leading-6 text-foreground">
-              {data.organization.working_context?.trim() ||
-                'Working context will appear here once the organization publishes it.'}
-            </p>
           </PublicProfileSection>
         </div>
       </div>
@@ -261,4 +339,19 @@ function SummaryRow({ label, value, icon }: { label: string; value: string; icon
       </p>
     </div>
   );
+}
+
+function humanizeEngagementType(value: string) {
+  switch (value) {
+    case 'full_time':
+      return 'Full time';
+    case 'part_time':
+      return 'Part time';
+    case 'contract_consulting':
+      return 'Contract / consulting';
+    case 'fractional_project':
+      return 'Fractional / project';
+    default:
+      return value;
+  }
 }

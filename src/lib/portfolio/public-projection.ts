@@ -5,6 +5,12 @@ import { getRows } from '@/lib/db/rows';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
 import { getVerifiedOrganizationDomainPath } from '@/lib/organizations/trust-profile';
 import {
+  PORTFOLIO_EXPORT_SCHEMA_VERSION,
+  type IndividualPortfolioExportData,
+  type OrganizationPortfolioExportData,
+  type PortfolioAssignmentSnapshot,
+} from '@/lib/portfolio/export-contract';
+import {
   deriveEffectivePublicPortfolioState,
   isAccessiblePublicPortfolioState,
   isVisibleOnPublicPage,
@@ -26,64 +32,8 @@ import {
   type VerificationPolicySummary,
 } from '@/lib/verification/policy';
 
-export type PublicTrustExportData = {
-  profile: {
-    id: string;
-    handle: string;
-    displayName: string;
-    headline: string;
-    bio?: string;
-    contactEmail?: string;
-  };
-  publication: {
-    requestedState: string;
-    effectiveState: string;
-    searchIndexingEnabled: boolean;
-  };
-  signals: ReturnType<typeof buildTrustSignals>;
-  skills: Array<{ id: string; name: string; level: number }>;
-  proofPacks: Array<{
-    id: string;
-    scope: 'owner_full' | 'public_safe';
-    status: string;
-    title: string;
-    summary: string | null;
-    ownershipStatement: string | null;
-    evidenceSummary: string | null;
-    outcomesSummary: string | null;
-    verificationStatus: string;
-    verificationSummary: string;
-    freshnessState: string;
-    proofQualityScore: number | null;
-    schemaVersion: string;
-    artifactCount: number;
-    contextLabel: string | null;
-    selectedEvidence: Array<{
-      title: string;
-      artifactDisplayName?: string | null;
-      href: string | null;
-      artifactKind: string | null;
-      issuedAt: string | null;
-      description: string | null;
-      semanticsNote: string;
-    }>;
-  }>;
-  visibility: ReturnType<typeof mergeVisibilityFlags>;
-};
-
-export type PublicOrganizationTrustExportData = {
-  organization: {
-    id: string;
-    slug: string;
-    displayName: string;
-    verifiedDomainPath?: string;
-    mission?: string;
-    whyWorkMatters?: string;
-    operatingContext?: string;
-    website?: string;
-    verified: boolean;
-  };
-};
+export type PublicTrustExportData = IndividualPortfolioExportData;
+export type PublicOrganizationTrustExportData = OrganizationPortfolioExportData;
 
 type IndividualProfileRow = {
   id: string;
@@ -133,6 +83,21 @@ type OrganizationRow = {
   mission: string | null;
   working_context: string | null;
   type: string | null;
+};
+
+type OrganizationAssignmentRow = {
+  id: string;
+  role: string | null;
+  engagement_type: string | null;
+  business_value: string | null;
+  description: string | null;
+  expected_impact: string | null;
+  updated_at: string | null;
+};
+
+type OrganizationAssignmentOutcomeRow = {
+  title: string | null;
+  description: string | null;
 };
 
 type OrganizationVisibilityRow = {
@@ -229,6 +194,7 @@ export type PublicOrganizationPortfolioProjection = {
     description: string;
   };
   exportData: PublicOrganizationTrustExportData;
+  assignmentSnapshot: PortfolioAssignmentSnapshot | null;
   minimumContentMet: boolean;
 };
 
@@ -697,6 +663,7 @@ function buildIndividualExportData(input: {
     verifiedSkillCount: number;
   };
   proofPacks: PublicTrustExportData['proofPacks'];
+  shareUrl: string;
 }): PublicTrustExportData {
   const profileCompat = {
     id: input.profile.id,
@@ -728,6 +695,10 @@ function buildIndividualExportData(input: {
   );
 
   return {
+    schemaVersion: PORTFOLIO_EXPORT_SCHEMA_VERSION,
+    surface: 'individual_public',
+    exportedAt: new Date().toISOString(),
+    shareUrl: input.shareUrl,
     profile: {
       id: input.profile.id,
       handle: input.profile.handle,
@@ -888,6 +859,7 @@ export async function getPublicIndividualPortfolioProjectionByHandle(
       verifiedSkillCount: verifiedSkillIds.size,
     },
     proofPacks: proofOverview.publicProofPacks,
+    shareUrl: `${SITE_URL}/portfolio/${encodeURIComponent(profile.handle)}`,
   });
   const proofFirstDescription = buildProofFirstDescription({
     publicDisplayName,
@@ -1021,6 +993,55 @@ function resolvePublicOrganizationName(
   return 'Proofound organization';
 }
 
+async function loadPublicOrganizationAssignmentSnapshot(
+  organizationId: string
+): Promise<PortfolioAssignmentSnapshot | null> {
+  const assignmentResult = await db.execute(sql`
+    SELECT
+      id,
+      role,
+      engagement_type,
+      business_value,
+      description,
+      expected_impact,
+      updated_at
+    FROM assignments
+    WHERE org_id = ${organizationId}::uuid
+      AND status = 'active'
+      AND creation_status = 'review_ready'
+    ORDER BY updated_at DESC NULLS LAST
+    LIMIT 1
+  `);
+
+  const assignment = getRows<OrganizationAssignmentRow>(assignmentResult as any)[0] ?? null;
+  if (!assignment || !assignment.role?.trim()) {
+    return null;
+  }
+
+  const outcomeResult = await db.execute(sql`
+    SELECT
+      title,
+      description
+    FROM assignment_outcomes
+    WHERE assignment_id = ${assignment.id}::uuid
+    ORDER BY created_at ASC
+    LIMIT 3
+  `);
+
+  const outcomes = getRows<OrganizationAssignmentOutcomeRow>(outcomeResult as any)
+    .map((row) => row.title?.trim() || row.description?.trim() || '')
+    .filter((value) => value.length > 0);
+
+  return {
+    role: assignment.role.trim(),
+    engagementType: assignment.engagement_type,
+    businessValue: assignment.business_value?.trim() || null,
+    description: assignment.description?.trim() || null,
+    expectedImpact: assignment.expected_impact?.trim() || null,
+    outcomes,
+  };
+}
+
 export async function getPublicOrganizationPortfolioProjectionBySlug(
   slug: string
 ): Promise<PublicOrganizationPortfolioProjection | null> {
@@ -1029,7 +1050,7 @@ export async function getPublicOrganizationPortfolioProjectionBySlug(
     return null;
   }
 
-  const [visibilityResult, verificationRecords] = await Promise.all([
+  const [visibilityResult, verificationRecords, assignmentSnapshot] = await Promise.all([
     db.execute(sql`
       SELECT display_name, mission
       FROM organization_field_visibility
@@ -1037,6 +1058,7 @@ export async function getPublicOrganizationPortfolioProjectionBySlug(
       LIMIT 1
     `),
     listVerificationRecordsForOwner('organization', organization.id).catch(() => []),
+    loadPublicOrganizationAssignmentSnapshot(organization.id),
   ]);
 
   const visibility = getRows<OrganizationVisibilityRow>(visibilityResult as any)[0] ?? null;
@@ -1085,12 +1107,14 @@ export async function getPublicOrganizationPortfolioProjectionBySlug(
     minimumContentMet,
   });
 
+  const shareUrl = `${SITE_URL}/portfolio/org/${encodeURIComponent(organization.slug)}`;
+
   return {
     organizationId: organization.id,
     slug: organization.slug,
     requestedState: resolveRequestedPublicPortfolioState(organization.public_portfolio_state),
     effectiveState,
-    shareUrl: `${SITE_URL}/portfolio/org/${encodeURIComponent(organization.slug)}`,
+    shareUrl,
     publicDisplayName,
     publicSummary,
     verifiedDomainPath,
@@ -1117,6 +1141,10 @@ export async function getPublicOrganizationPortfolioProjectionBySlug(
       description: publicSummary,
     },
     exportData: {
+      schemaVersion: PORTFOLIO_EXPORT_SCHEMA_VERSION,
+      surface: 'organization_public',
+      exportedAt: new Date().toISOString(),
+      shareUrl,
       organization: {
         id: organization.id,
         slug: organization.slug,
@@ -1128,7 +1156,9 @@ export async function getPublicOrganizationPortfolioProjectionBySlug(
         website: normalizeOrganizationWebsite(organization.website).value || undefined,
         verified: Boolean(organization.verified),
       },
+      assignmentSnapshot: assignmentSnapshot ?? undefined,
     },
+    assignmentSnapshot,
     minimumContentMet,
   };
 }

@@ -78,6 +78,10 @@ function buildProjection(overrides: Partial<any> = {}) {
       description: 'Build trust',
     },
     exportData: {
+      schemaVersion: 'proofound.portfolio-export.v1',
+      surface: 'organization_public',
+      exportedAt: '2026-03-21T10:00:00.000Z',
+      shareUrl: 'https://proofound.io/portfolio/org/acme',
       organization: {
         id: 'org-1',
         slug: 'acme',
@@ -89,6 +93,22 @@ function buildProjection(overrides: Partial<any> = {}) {
         website: 'https://acme.org/',
         verified: true,
       },
+      assignmentSnapshot: {
+        role: 'Proof-first product designer',
+        engagementType: 'full_time',
+        businessValue: 'Own the assignment review loop and tighten decision quality.',
+        description: 'Clarify what work is expected and keep the team aligned on delivery.',
+        expectedImpact: 'Proof should show delivery, ownership, and tradeoff reasoning.',
+        outcomes: ['Improve assignment clarity', 'Reduce vague review decisions'],
+      },
+    },
+    assignmentSnapshot: {
+      role: 'Proof-first product designer',
+      engagementType: 'full_time',
+      businessValue: 'Own the assignment review loop and tighten decision quality.',
+      description: 'Clarify what work is expected and keep the team aligned on delivery.',
+      expectedImpact: 'Proof should show delivery, ownership, and tradeoff reasoning.',
+      outcomes: ['Improve assignment clarity', 'Reduce vague review decisions'],
     },
     minimumContentMet: true,
     ...overrides,
@@ -130,13 +150,14 @@ describe('Organization public portfolio page', () => {
     expect(screen.getByRole('heading', { name: 'Acme' })).toBeInTheDocument();
     expect(screen.getByText(/public organization trust card/i)).toBeInTheDocument();
     expect(screen.getByText('Shareable by direct link')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /mission \/ purpose/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /what work is offered/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /assignment clarity/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /seriousness of review/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /trust basics/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /purpose/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /why the work matters/i })).toBeInTheDocument();
-    expect(
-      screen.getByRole('heading', { name: /essential operating context/i })
-    ).toBeInTheDocument();
     expect(screen.getByText('acme.org')).toBeInTheDocument();
+    expect(screen.getByText(/proof-first product designer/i)).toBeInTheDocument();
+    expect(screen.getByText(/own the assignment review loop/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /return to menu/i })).toHaveAttribute(
       'href',
       '/app/o/acme/home'
@@ -147,13 +168,6 @@ describe('Organization public portfolio page', () => {
     expect(screen.queryByRole('heading', { name: /projects/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /partnerships/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /goals/i })).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('heading', { name: /hiring process clarity/i })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('heading', { name: /durable trust signals/i })
-    ).not.toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: /active assignment/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/team members/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/owner@|reviewer@|member@/i)).not.toBeInTheDocument();
   });
@@ -182,6 +196,22 @@ describe('Organization public portfolio page', () => {
           working_context: null,
           type: 'company',
         },
+        assignmentSnapshot: null,
+        exportData: {
+          ...buildProjection().exportData,
+          assignmentSnapshot: undefined,
+          organization: {
+            id: 'org-1',
+            slug: 'acme',
+            displayName: 'Acme',
+            verifiedDomainPath: undefined,
+            mission: undefined,
+            whyWorkMatters: 'Build trust',
+            operatingContext: undefined,
+            website: 'https://acme.org/',
+            verified: false,
+          },
+        },
       }) as any
     );
 
@@ -195,7 +225,7 @@ describe('Organization public portfolio page', () => {
     expect(screen.getByRole('link', { name: /return home/i })).toHaveAttribute('href', '/');
     expect(screen.getAllByText('Build trust').length).toBeGreaterThan(0);
     expect(
-      screen.getByText(/working context will appear here once the organization publishes it/i)
+      screen.getByText(/assignment detail will appear here once the organization publishes it/i)
     ).toBeInTheDocument();
   });
 
@@ -211,6 +241,30 @@ describe('Organization public portfolio page', () => {
     expect(metadata.robots).toMatchObject({ index: false, follow: false });
     expect(metadata.title).toBe('Proofound organization portfolio');
     expect(metadata.alternates?.canonical).toContain('/portfolio/org/acme');
+  });
+
+  it('returns page-specific metadata when indexing is explicitly enabled', async () => {
+    vi.mocked(getPublicOrganizationPortfolioProjectionBySlug).mockResolvedValue(
+      buildProjection({
+        effectiveState: 'public_indexable',
+        metadata: {
+          path: '/portfolio/org/acme',
+          title: 'Acme Labs | Proofound',
+          description: 'Mission-driven proof corridor.',
+          ogTitle: 'Acme Labs on Proofound',
+          ogDescription: 'Mission-driven proof corridor.',
+          useGenericPreview: false,
+        },
+      }) as any
+    );
+
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ slug: 'acme' }),
+    });
+
+    expect(metadata.robots).toMatchObject({ index: true, follow: true });
+    expect(metadata.title).toBe('Acme Labs | Proofound');
+    expect(metadata.openGraph?.title).toBe('Acme Labs on Proofound');
   });
 
   it('calls notFound when slug has no public portfolio', async () => {

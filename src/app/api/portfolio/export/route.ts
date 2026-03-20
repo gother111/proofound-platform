@@ -1,15 +1,21 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { fetchTrustExportData } from '@/lib/portfolio/export-data';
+import {
+  resolvePortfolioExportFormat,
+  respondWithJson,
+  respondWithPdf,
+  respondWithText,
+} from '@/lib/portfolio/export-response';
 import { generateTrustPdf } from '@/lib/portfolio/pdf';
+import { buildTextPack } from '@/lib/portfolio/text-pack';
 import { emitPortfolioPdfExportSucceeded } from '@/lib/analytics/events';
 import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
 
-const FALLBACK_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: Request) {
   const trace = startLaunchTrace({
     flow: 'export',
     actorType: 'anonymous',
@@ -43,7 +49,31 @@ export async function GET() {
     }
     trace.objectRefs.profileId = data.profile.id;
 
-    const shareUrl = `${FALLBACK_URL.replace(/\/$/, '')}/portfolio/${data.profile.handle}`;
+    const format = resolvePortfolioExportFormat(request);
+
+    if (format === 'json') {
+      emitLaunchTrace(trace, {
+        outcome: 'success',
+        state: 'portfolio_export_ready',
+        details: {
+          handle: data.profile.handle,
+          format,
+        },
+      });
+      return respondWithJson(data, `proofound-${data.profile.handle}-trust.json`);
+    }
+
+    if (format === 'text') {
+      emitLaunchTrace(trace, {
+        outcome: 'success',
+        state: 'portfolio_export_ready',
+        details: {
+          handle: data.profile.handle,
+          format,
+        },
+      });
+      return respondWithText(buildTextPack(data), `proofound-${data.profile.handle}-trust.txt`);
+    }
 
     const buffer = await generateTrustPdf({
       profile: {
@@ -52,7 +82,7 @@ export async function GET() {
         headline: data.profile.headline,
         bio: data.profile.bio,
         contactEmail: data.profile.contactEmail,
-        shareUrl,
+        shareUrl: data.shareUrl,
       },
       signals: data.signals,
       skills: data.skills.map((s) => ({ name: s.name, level: s.level })),
@@ -83,14 +113,7 @@ export async function GET() {
       },
     });
 
-    return new NextResponse(bytes, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': 'attachment; filename="proofound-trust.pdf"',
-        'Content-Length': bytes.byteLength.toString(),
-      },
-    });
+    return respondWithPdf(bytes, 'proofound-trust.pdf');
   } catch (error) {
     console.error('portfolio export failed', {
       name: error instanceof Error ? error.name : 'UnknownError',

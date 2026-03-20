@@ -19,6 +19,10 @@ function buildAccessibleAccess() {
     status: 'accessible' as const,
     projection: {
       exportData: {
+        schemaVersion: 'proofound.portfolio-export.v1',
+        surface: 'individual_public',
+        exportedAt: '2026-03-21T10:00:00.000Z',
+        shareUrl: 'https://proofound.io/portfolio/jane',
         profile: {
           id: 'user-1',
           handle: 'jane',
@@ -43,10 +47,14 @@ function buildAccessibleAccess() {
             scope: 'public_safe',
             title: 'Proof Pack: Product Strategy',
             summary: 'Launch evidence for Product Strategy',
+            ownershipStatement: 'Owned the strategy contribution.',
             evidenceSummary: 'Verified against a public launch memo.',
             outcomesSummary: 'Shipped the MVP in two weeks.',
             verificationStatus: 'verified',
+            verificationSummary: 'Scoped verification supports this Proof Pack.',
             freshnessState: 'fresh',
+            proofQualityScore: 0.8,
+            schemaVersion: 'proof_pack/v2',
             artifactCount: 1,
             contextLabel: 'Product Strategy',
             selectedEvidence: [],
@@ -122,6 +130,47 @@ describe('/api/portfolio/public/[handle]/export', () => {
         }),
       })
     );
+  });
+
+  it('returns canonical JSON when format=json is requested', async () => {
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue(
+      buildAccessibleAccess() as any
+    );
+
+    const response = await GET(
+      new Request('http://localhost/api/portfolio/public/jane/export?format=json'),
+      {
+        params: Promise.resolve({ handle: 'jane' }),
+      }
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('application/json');
+    expect(await response.json()).toMatchObject({
+      schemaVersion: 'proofound.portfolio-export.v1',
+      surface: 'individual_public',
+      shareUrl: 'https://proofound.io/portfolio/jane',
+      profile: { handle: 'jane' },
+    });
+    expect(generateTrustPdf).not.toHaveBeenCalled();
+  });
+
+  it('returns text export when format=text is requested', async () => {
+    vi.mocked(resolvePublicIndividualPortfolioAccessByHandle).mockResolvedValue(
+      buildAccessibleAccess() as any
+    );
+
+    const response = await GET(
+      new Request('http://localhost/api/portfolio/public/jane/export?format=text'),
+      {
+        params: Promise.resolve({ handle: 'jane' }),
+      }
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('text/plain');
+    expect(await response.text()).toContain('Proof-backed summary:');
+    expect(generateTrustPdf).not.toHaveBeenCalled();
   });
 
   it.each(['unavailable', 'private', 'draft', 'unpublished', 'blocked'])(

@@ -40,7 +40,7 @@ describe('/api/portfolio/export', () => {
   it('returns 401 when user is unauthenticated', async () => {
     mockSupabaseUser(null);
 
-    const response = await GET();
+    const response = await GET(new Request('http://localhost/api/portfolio/export'));
     const body = await response.json();
 
     expect(response.status).toBe(401);
@@ -51,7 +51,7 @@ describe('/api/portfolio/export', () => {
     mockSupabaseUser({ id: 'user-1' });
     (fetchTrustExportData as any).mockResolvedValue(null);
 
-    const response = await GET();
+    const response = await GET(new Request('http://localhost/api/portfolio/export'));
     const body = await response.json();
 
     expect(response.status).toBe(404);
@@ -62,6 +62,10 @@ describe('/api/portfolio/export', () => {
   it('returns a non-empty PDF response with expected headers', async () => {
     mockSupabaseUser({ id: 'user-1' });
     (fetchTrustExportData as any).mockResolvedValue({
+      schemaVersion: 'proofound.portfolio-export.v1',
+      surface: 'individual_owner',
+      exportedAt: '2026-03-21T10:00:00.000Z',
+      shareUrl: 'https://proofound.io/portfolio/jane',
       profile: {
         id: 'user-1',
         handle: 'jane',
@@ -86,10 +90,14 @@ describe('/api/portfolio/export', () => {
           scope: 'owner_full',
           title: 'Proof Pack: Launch delivery',
           summary: 'Delivered a launch-critical workflow.',
+          ownershipStatement: 'Owned the launch workflow.',
           evidenceSummary: 'Reviewed against a launch runbook.',
           outcomesSummary: 'Shipped a proof-first MVP launch flow.',
           verificationStatus: 'verified',
+          verificationSummary: 'Scoped verification supports this Proof Pack.',
           freshnessState: 'fresh',
+          proofQualityScore: 0.8,
+          schemaVersion: 'proof_pack/v2',
           artifactCount: 1,
           contextLabel: 'Launch delivery',
           selectedEvidence: [],
@@ -110,7 +118,7 @@ describe('/api/portfolio/export', () => {
     (generateTrustPdf as any).mockResolvedValue(Buffer.from('%PDF-1.4 test-pdf-content'));
     (emitPortfolioPdfExportSucceeded as any).mockResolvedValue(undefined);
 
-    const response = await GET();
+    const response = await GET(new Request('http://localhost/api/portfolio/export'));
     const bytes = new Uint8Array(await response.arrayBuffer());
 
     expect(response.status).toBe(200);
@@ -129,6 +137,10 @@ describe('/api/portfolio/export', () => {
 
     mockSupabaseUser({ id: 'user-1' });
     (fetchTrustExportData as any).mockResolvedValue({
+      schemaVersion: 'proofound.portfolio-export.v1',
+      surface: 'individual_owner',
+      exportedAt: '2026-03-21T10:00:00.000Z',
+      shareUrl: 'https://proofound.io/portfolio/jane',
       profile: {
         id: 'user-1',
         handle: 'jane',
@@ -151,10 +163,14 @@ describe('/api/portfolio/export', () => {
           scope: 'owner_full',
           title: 'Proof Pack: Launch delivery',
           summary: 'Delivered a launch-critical workflow.',
+          ownershipStatement: 'Owned the launch workflow.',
           evidenceSummary: 'Reviewed against a launch runbook.',
           outcomesSummary: 'Shipped a proof-first MVP launch flow.',
           verificationStatus: 'verified',
+          verificationSummary: 'Scoped verification supports this Proof Pack.',
           freshnessState: 'fresh',
+          proofQualityScore: 0.8,
+          schemaVersion: 'proof_pack/v2',
           artifactCount: 1,
           contextLabel: 'Launch delivery',
           selectedEvidence: [],
@@ -175,7 +191,7 @@ describe('/api/portfolio/export', () => {
     (generateTrustPdf as any).mockResolvedValue(Buffer.from('%PDF-1.4 test-pdf-content'));
     (emitPortfolioPdfExportSucceeded as any).mockRejectedValue(new Error('analytics down'));
 
-    const response = await GET();
+    const response = await GET(new Request('http://localhost/api/portfolio/export'));
     const bytes = new Uint8Array(await response.arrayBuffer());
 
     expect(response.status).toBe(200);
@@ -188,5 +204,109 @@ describe('/api/portfolio/export', () => {
       expect.any(Error)
     );
     consoleErrorSpy.mockRestore();
+  });
+
+  it('returns canonical JSON when format=json is requested', async () => {
+    mockSupabaseUser({ id: 'user-1' });
+    (fetchTrustExportData as any).mockResolvedValue({
+      schemaVersion: 'proofound.portfolio-export.v1',
+      surface: 'individual_owner',
+      exportedAt: '2026-03-21T10:00:00.000Z',
+      shareUrl: 'https://proofound.io/portfolio/jane',
+      profile: {
+        id: 'user-1',
+        handle: 'jane',
+        displayName: 'Jane Doe',
+        headline: 'Builder',
+      },
+      publication: {
+        requestedState: 'public_link_only',
+        effectiveState: 'public_link_only',
+        searchIndexingEnabled: false,
+      },
+      signals: {
+        identity: { verified: true },
+        workEmail: { verified: false },
+        linkedin: { verificationStatus: 'verified' },
+        proofs: { count: 1 },
+        verifications: { count: 1 },
+        badges: [],
+        activeIssues: [],
+      },
+      skills: [],
+      proofPacks: [],
+      visibility: {
+        header: true,
+        proofBar: true,
+        workEmail: false,
+        linkedin: true,
+        identity: true,
+        counts: true,
+        skills: true,
+        bio: true,
+        contact: false,
+      },
+    });
+
+    const response = await GET(new Request('http://localhost/api/portfolio/export?format=json'));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('application/json');
+    expect(await response.json()).toMatchObject({
+      schemaVersion: 'proofound.portfolio-export.v1',
+      surface: 'individual_owner',
+      profile: { handle: 'jane' },
+    });
+    expect(generateTrustPdf).not.toHaveBeenCalled();
+  });
+
+  it('returns text export when format=text is requested', async () => {
+    mockSupabaseUser({ id: 'user-1' });
+    (fetchTrustExportData as any).mockResolvedValue({
+      schemaVersion: 'proofound.portfolio-export.v1',
+      surface: 'individual_owner',
+      exportedAt: '2026-03-21T10:00:00.000Z',
+      shareUrl: 'https://proofound.io/portfolio/jane',
+      profile: {
+        id: 'user-1',
+        handle: 'jane',
+        displayName: 'Jane Doe',
+        headline: 'Builder',
+      },
+      publication: {
+        requestedState: 'public_link_only',
+        effectiveState: 'public_link_only',
+        searchIndexingEnabled: false,
+      },
+      signals: {
+        identity: { verified: true },
+        workEmail: { verified: false },
+        linkedin: { verificationStatus: 'verified' },
+        proofs: { count: 1 },
+        verifications: { count: 1 },
+        badges: [],
+        activeIssues: [],
+      },
+      skills: [],
+      proofPacks: [],
+      visibility: {
+        header: true,
+        proofBar: true,
+        workEmail: false,
+        linkedin: true,
+        identity: true,
+        counts: true,
+        skills: true,
+        bio: true,
+        contact: false,
+      },
+    });
+
+    const response = await GET(new Request('http://localhost/api/portfolio/export?format=text'));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('text/plain');
+    expect(await response.text()).toContain('Selected proof packs:');
+    expect(generateTrustPdf).not.toHaveBeenCalled();
   });
 });
