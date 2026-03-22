@@ -429,14 +429,15 @@ describe('VerificationsPage', () => {
       canonicalPackTitle: 'Proof Pack: Product Strategy',
       canonicalEvidenceTitles: ['Launch memo'],
       proofLabel: 'Proof Pack: Product Strategy',
-      claimSummary: 'Observed skill claim for Product Strategy',
+      claimSummary: 'That this proof demonstrates Product Strategy in real work.',
     });
     expect(props.sentRequests.find((request) => request.id === 'impact-sent-1')).toMatchObject({
       canonicalPackTitle: 'Proof Pack: Climate Adaptation',
       canonicalVerificationStatus: 'partially_verified',
       canonicalOutcomesSummary: 'Reduced planning time by 35%.',
       proofLabel: 'Proof Pack: Climate Adaptation',
-      confirmationOutcome: 'Adds a non-self confirmation signal to this impact proof.',
+      confirmationOutcome:
+        'If confirmed, this Proof Pack gains a scoped impact attestation for the role, outcomes, or artifacts named here.',
     });
   });
 
@@ -585,7 +586,7 @@ describe('VerificationsPage', () => {
         verifierSource: 'peer',
         message: 'Please confirm this work.',
         proofLabel: 'Proof Pack: Systems Thinking launch',
-        claimSummary: 'Observed skill claim for Systems Thinking',
+        claimSummary: 'That this proof demonstrates Systems Thinking in real work.',
         confirmationOutcome: 'This skill keeps a bounded attestation linked to the attached proof.',
         profiles: {
           display_name: 'Jordan Sender',
@@ -612,7 +613,7 @@ describe('VerificationsPage', () => {
 
     expect(screen.getByText(/Proof verification requests/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/Claim: Observed skill claim for Systems Thinking/i)
+      screen.getByText(/Claim: That this proof demonstrates Systems Thinking in real work\./i)
     ).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /Custom verification request/i })

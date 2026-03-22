@@ -3,6 +3,14 @@
 Date: `2026-03-15`
 Block: `final-launch-evidence-after-blocks-1-7`
 
+Update note, current workspace `2026-03-22`:
+
+- This report remains historical March 15 launch evidence.
+- Its older assumptions about mixed live verification transport are now stale in the current workspace.
+- A fresh 2026-03-22 validation found no active `skill_verification_requests` or `impact_story_verification_requests` references under `src/app` or `src/lib`, and the focused canonical verification suites passed under Node `20.20.0`.
+- The protected prod org-corridor rerun was attempted but is currently blocked by an unrelated Next production build/runtime failure: `next start` crashed on missing `.next/server/chunks/1960.js`, and a clean `npm run build` later failed with `PageNotFoundError: Cannot find module for page: /_document`.
+- Treat any March 15 language in this report that still implies active mixed legacy verification transport as superseded by the 2026-03-22 verification validation.
+
 Authority stack used:
 
 1. `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`
@@ -20,6 +28,22 @@ Read-order mismatch noted:
 ## Verdict
 
 `NO-GO`
+
+## 2026-03-22 Verification Addendum
+
+Fresh verification-transport evidence:
+
+- `rg -n "skill_verification_requests|impact_story_verification_requests" src/app src/lib` returned no matches.
+- `npm run test -- tests/lib/canonical-verification-request-token-resolution.test.ts` passed.
+- `npm run test -- tests/api/verify-impact-token-route.test.ts tests/api/expertise-verification-respond-route.test.ts tests/api/expertise-skill-verification-request-route.test.ts tests/api/expertise-verifications-sent-delete-route.test.ts` passed.
+- `npm run test -- tests/ui/verifications-page.test.tsx tests/ui/verifications-client.test.tsx` passed after refreshing stale UI expectations to the current canonical wording and archived-button labels.
+- `npm run test -- tests/lib/engagement-verifications.test.ts tests/lib/workflow-contracts.test.ts` passed.
+
+Current scope conclusion:
+
+- Active verification request creation, listing, token lookup, and response update no longer show live dependency on legacy skill or impact request tables in `src/app` or `src/lib`.
+- Archived `/api/verification/skill/*` behavior remains `410` and was left unchanged in this block.
+- The missing fresh end-to-end org-corridor evidence is a build/runtime blocker in the current workspace, not a verification-transport blocker.
 
 Fresh launch evidence is now present and mostly green:
 

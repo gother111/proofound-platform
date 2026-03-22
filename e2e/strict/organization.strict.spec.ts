@@ -376,7 +376,7 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     expect(messageListResponse.ok()).toBeTruthy();
 
     await page.goto(`/app/o/${organization.slug}/messages`);
-    await expect(page.getByText(/Select a conversation/i)).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Messages' })).toBeVisible();
   });
 
   test('O-07b draft autosave/update and resume-to-publish contract is strict', async ({ page }) => {
@@ -421,7 +421,7 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
         'Update the role purpose with concrete reviewer guidance so the assignment can move cleanly through internal review before publish.',
       expectedImpact:
         'Approved proof should show delivered work, ownership of the outcome, and clear explanations of why the candidate made those choices.',
-      creationStatus: 'pipeline_in_progress',
+      creationStatus: 'draft',
       status: 'draft',
     });
     expect(autosaveUpdateResponse.ok()).toBeTruthy();

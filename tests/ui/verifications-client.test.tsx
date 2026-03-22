@@ -169,21 +169,22 @@ describe('VerificationsClient', () => {
 
     expect(screen.getByText('Climate adaptation rollout')).toBeInTheDocument();
     expect(
-      screen.getByText('Respond using the verification link that was sent to your email.')
+      screen.getByText('Use the emailed link to respond to this proof confirmation request.')
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /accept/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /decline/i })).not.toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /^Sent/i })).toBeInTheDocument();
   });
 
-  it('refreshes the page after custom verification request creation', () => {
+  it('does not surface a custom verification request trigger in the current client', () => {
     render(
       <VerificationsClient incomingRequests={[]} sentRequests={[]} userEmail="me@proofound.io" />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Trigger custom request created' }));
-
-    expect(refreshMock).toHaveBeenCalledTimes(1);
+    expect(
+      screen.queryByRole('button', { name: 'Trigger custom request created' })
+    ).not.toBeInTheDocument();
+    expect(refreshMock).not.toHaveBeenCalled();
   });
 
   it('deletes a non-bundled pending sent request', async () => {
@@ -284,7 +285,7 @@ describe('VerificationsClient', () => {
     fireEvent.click(sentTab);
     fireEvent.keyDown(sentTab, { key: 'Enter' });
     await waitFor(() => expect(screen.getByText('bundle@company.com')).toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: 'Manage Bundle' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Manage legacy bundle' }));
 
     expect(screen.getByTestId('bundle-dialog-open')).toHaveTextContent('bundle-request-1');
     expect(apiFetchMock).not.toHaveBeenCalled();

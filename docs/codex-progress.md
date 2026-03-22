@@ -3,9 +3,9 @@
 ## Machine-readable state
 
 ```yaml
-last_updated: 2026-03-15T09:07:20Z
-current_block: '5-rerun'
-current_goal: 'Run a fresh hard verification rerun against the current locked-MVP launch candidate, replace stale final evidence, and produce an evidence-backed launch-readiness verdict without broadening scope.'
+last_updated: 2026-03-22T00:00:00Z
+current_block: 'verification-validation-rerun'
+current_goal: 'Validate canonical verification transport against repo truth, refresh stale verification evidence, and only widen scope if a live mixed-transport path still exists.'
 authority_stack:
   - 'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md'
   - 'PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md'
@@ -32,12 +32,12 @@ current_status:
   logging_policy_override: 'This block updates docs/codex-progress.md because the user explicitly required checkpointed progress plus a close-out report for the rerun.'
 backlog:
   p1_remaining_gaps:
-    - 'Fresh March 15 rerun evidence is still being regenerated for the final launch-readiness verdict.'
-    - 'Current dirty-tree drift and runtime behavior must be revalidated against the locked MVP before any green claim.'
-    - 'Any corridor not rerun in this block remains UNVERIFIED, even if older block evidence exists.'
+    - 'The focused verification corridor is now validated as canonical in active code, but the full prod org strict rerun is blocked by an unrelated Next production build/runtime failure (`PageNotFoundError: /_document`, missing `.next/server/chunks/1960.js`).'
+    - 'Any launch verdict that depends on fresh prod org-corridor evidence must wait for that unrelated build/runtime blocker to be resolved and rerun.'
+    - 'Anything not rerun in this block remains UNVERIFIED, even if older block evidence exists.'
   p2_hardening_items:
     - 'There are still 2 pre-existing landing `<img>` lint warnings unrelated to the locked-MVP corridor.'
-    - 'The stale March 13 final verification report must be replaced with fresh March 15 evidence.'
+    - 'Stale March verification docs and audit notes that still claim mixed legacy verification transport must stay clearly marked as superseded by the 2026-03-22 validation.'
   aligned_areas_to_protect:
     - 'proof-first onboarding'
     - 'Proof Pack anchor enforcement'
@@ -45,6 +45,9 @@ backlog:
     - 'distinct engagement verification workflow'
     - 'launch-surface archive policy'
 latest_verified_evidence:
+  - '2026-03-22 repo-wide search found no active `skill_verification_requests` or `impact_story_verification_requests` references under `src/app` or `src/lib`.'
+  - '2026-03-22 focused verification reruns passed under Node `20.20.0`: canonical token resolution, `/api/verify/[token]` skill and impact response coverage, skill request wrappers, sent-item delete, and verifications page/client rendering.'
+  - '2026-03-22 focused post-hire corridor protections also passed under Node `20.20.0`: `tests/lib/engagement-verifications.test.ts` and `tests/lib/workflow-contracts.test.ts`.'
   - '2026-03-14 audit marks proof-first onboarding as aligned and still the active individual corridor.'
   - '2026-03-14 audit marks Proof Pack anchor enforcement as aligned at the schema, migration, and runtime-policy layers.'
   - '2026-03-14 audit marks public portfolio summary and export gating as aligned, with runtime 404 evidence for hidden handles.'
@@ -54,18 +57,18 @@ latest_verified_evidence:
   - '2026-03-14 Block 8 launch-surface policy now allowlists only admin audit, moderation, LinkedIn verification, and org audit/verify internal ops endpoints; `feature-flags` and `metrics/rollout` are no longer preserved launch ops.'
   - '2026-03-14 Block 8 acceptance rerun passed: launch-surface tests green, lint green with 2 pre-existing landing `<img>` warnings, and typecheck green under Node v20.20.0.'
 unverified_items:
-  - 'Block 8 does not rerun proof-first onboarding, blind review, candidate-consented reveal, assignment publish, the full review-to-engagement flow, or export/delete; those corridors remain UNVERIFIED in this block unless the latest audit proves FAIL.'
-  - 'Authenticated org review, reveal, and explanation were not rerun end to end in the 2026-03-14 audit pass.'
+  - 'This block does not freshly rerun proof-first onboarding, blind review, candidate-consented reveal, assignment publish, full review-to-engagement, or export/delete; those corridors remain UNVERIFIED unless a newer focused rerun says otherwise.'
+  - 'The full authenticated org review, reveal, interview, decision, hire, and engagement corridor still lacks a fresh prod-mode rerun in this block because the current workspace production build/runtime fails before the combined strict pass completes.'
 next_recommended_block:
-  id: '5-rerun'
-  title: 'Finish the fresh locked-MVP hard verification rerun and write the final launch-readiness report.'
+  id: 'verification-validation-followup'
+  title: 'Resolve the unrelated Next prod build/runtime blocker and rerun fresh org strict evidence.'
 resume_steps:
   - 'Open docs/codex-progress.md first.'
   - 'Re-read the authority stack in order.'
-  - 'Treat docs/proofound-hard-audit-2026-03-14-rerun.md as the evidence baseline only.'
-  - 'Treat docs/block-5-report.md as preserved historical evidence and write docs/block-5-rerun-report.md for the fresh rerun.'
-  - 'Replace docs/proofound-hard-verification-rerun-final.md with fresh March 15 evidence once the rerun is complete.'
-  - 'Protect the already-aligned proof-first, Proof Pack, public gating, engagement verification, and launch archive areas while verifying the current launch candidate.'
+  - 'Treat older March audit docs as historical evidence only when they contradict current repo truth.'
+  - 'Use the 2026-03-22 focused verification validation as the current source of evidence for canonical verification transport.'
+  - 'Resolve the unrelated production build/runtime blocker before trying to refresh full org strict evidence.'
+  - 'Protect the already-aligned proof-first, Proof Pack, public gating, engagement verification, and launch archive areas while rerunning the blocked corridor.'
   - 'Append a new checkpoint after every meaningful step, rerun, timeout, restart, or blocker.'
 ```
 
@@ -73,7 +76,7 @@ resume_steps:
 
 ### Current objective
 
-Narrow the active repo/runtime surface so the current system matches the locked MVP more closely: preserve only the proven internal-ops admin corridor, move non-launch API families out of active routing, and keep the launch-surface policy explicit and testable.
+Validate the current verification corridor against repo truth, replace stale mixed-transport claims with fresh evidence, and keep any follow-up strictly limited to real blockers exposed by the reruns.
 
 ### Authority and evidence rules
 
@@ -93,9 +96,9 @@ Narrow the active repo/runtime surface so the current system matches the locked 
 
 #### P1 remaining gaps
 
-1. Verification request transport still mixes canonical records with legacy request tables.
-2. Verification semantics are cleaner, but compatibility-side channels still keep the corridor short of fully canonical end-to-end behavior.
-3. The authenticated org review, reveal, and explanation corridor remains evidence-incomplete in the 2026-03-14 audit pass.
+1. The focused verification transport checks are green, but the full prod org strict rerun is blocked by an unrelated Next production build/runtime failure.
+2. Any fresh launch verdict that depends on the combined org strict evidence is still pending that build/runtime fix.
+3. The authenticated org review, reveal, and explanation corridor remains evidence-incomplete in this block for that reason, not because of a reproduced verification transport regression.
 
 #### P2 hardening items
 
@@ -115,9 +118,9 @@ Narrow the active repo/runtime surface so the current system matches the locked 
 1. Read this file.
 2. Reconfirm the authority stack in order.
 3. Open `docs/verification-checklist.md` for the current launch-binding contract.
-4. Open `docs/proofound-hard-audit-2026-03-14-rerun.md` for the latest evidence baseline.
-5. Keep `docs/block-1-report.md` through `docs/block-7-report.md` intact as preserved evidence and use `docs/block-8-report.md` as the latest close-out.
-6. Resume by finishing canonical verification request transport and then rerunning the authenticated org review/reveal/explanation corridor without regressing the protected aligned areas.
+4. Treat older March audit docs as historical evidence only when they conflict with current repo truth.
+5. Keep `docs/block-1-report.md` through `docs/block-8-report.md` intact as preserved evidence.
+6. Resume by fixing the unrelated production build/runtime blocker, then rerun the authenticated org review/reveal/explanation corridor without regressing the protected aligned areas.
 
 ### Checkpoint journal
 
@@ -258,6 +261,11 @@ Entries:
 - `2026-03-15T00:57:52Z` `INVESTIGATING` Traced the remaining post-hire blocker to the org interviews surface load contract. `getInterviews()` already enriches decision and engagement state, but the client page still collapses thrown fetch errors into the same empty-state shell as a genuine zero-interview result, so the next step is to distinguish load failure from load timing with a fresh strict prod rerun before patching.
 - `2026-03-15T01:01:24Z` `RUNTIME_FINDINGS` Re-ran the strict prod org corridor and confirmed the post-hire interviews page is no longer the blocker. The live flow reached the final organization engagement-confirmation call, which failed with `403 CSRF validation failed` because the strict spec used `page.request.patch` instead of the browser-context CSRF helper already used for the rest of the authenticated mutation corridor.
 - `2026-03-15T01:04:55Z` `VERIFY_PASS` Re-ran `PLAYWRIGHT_SERVER_MODE=prod NEXT_PUBLIC_USE_MOCK_SUPABASE=false node ./scripts/playwright-node20.mjs test e2e/strict/org-corridor.strict.spec.ts --project=chromium --reporter=line --workers=1` under Node `v20.20.0`. The authenticated org corridor passed end to end in live runtime, including collaborator invite, blind shortlist review, masked intro, consented reveal, interview reschedule, explicit `hire`, and the separate organization engagement confirmation step returning `pending_candidate_confirmation`.
+- `2026-03-22T00:00:00Z` `BLOCK_START` Began a narrow canonical verification corridor validation block after repo docs and current code diverged on whether legacy verification request-table transport was still active.
+- `2026-03-22T00:00:00Z` `VERIFY_PASS` `rg -n "skill_verification_requests|impact_story_verification_requests" src/app src/lib` returned no active matches, contradicting stale audit language that still described mixed live transport in the current workspace.
+- `2026-03-22T00:00:00Z` `VERIFY_PASS` Focused Node `v20.20.0` reruns passed for canonical token resolution, `/api/verify/[token]` GET/POST skill and impact coverage, skill request wrappers, sent-item delete, verifications page/client rendering, engagement verifications, and workflow contracts.
+- `2026-03-22T00:00:00Z` `VERIFY_FAIL_BUILD_BLOCKER` The protected prod org strict rerun could not be refreshed because `next start` crashed on missing `.next/server/chunks/1960.js`, and subsequent clean `npm run build` attempts failed with `PageNotFoundError: Cannot find module for page: /_document`.
+- `2026-03-22T00:00:00Z` `DOCS_REFRESH` Updated the verification checklist, final evidence addendum, and stale audit/progress notes so current workspace truth now records canonical verification transport as validated while clearly separating the unrelated production build/runtime blocker.
 - `2026-03-15T01:06:12Z` `CODE_CLEANUP` Removed temporary strict-spec debug logs and invite-action debug `console.log` traces after the end-to-end corridor passed, preserving the same behavior while keeping launch-runtime evidence readable for the final acceptance reruns.
 - `2026-03-15T01:10:41Z` `VERIFY_PASS` Re-ran the cleaned strict corridor harness under `PLAYWRIGHT_SERVER_MODE=prod` after removing temporary debug logs; the spec still passed end to end in live runtime, so the final evidence no longer depends on debug-instrumented output.
 - `2026-03-15T01:10:55Z` `VERIFY_FAIL_ACCEPTANCE` The broader `PLAYWRIGHT_SERVER_MODE=prod npm run test:e2e:org:strict` acceptance rerun exposed one remaining mismatch in the legacy org suite: `O-08..O-12` still assumes the shortlist payload must include the candidate whenever both interest endpoints return `200`, but the current launch-aligned privacy/reveal corridor appears to make that assumption brittle. Inspecting whether the failure is a stale test contract or a real shortlist regression next.

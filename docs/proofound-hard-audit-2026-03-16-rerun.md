@@ -8,7 +8,10 @@ Update note, later same worktree:
 - The current workspace has since deleted the previously cited non-MVP route handlers under `src/app/api/analytics/**`, `src/app/api/dashboard/**`, `src/app/api/momentum/**`, `src/app/api/organizations/[orgId]/{culture,impact,projects,structure,evidence-pack}/**`, and `src/app/api/org/[id]/dashboard`.
 - The current workspace has also deleted the archived legacy verification handlers under `src/app/api/expertise/**/verification*`, `src/app/api/expertise/verifications/**`, and `src/app/api/verification/skill/{request,respond}`.
 - The current workspace also archives `GET /api/org/[id]/coverage` as non-MVP analytics and removes its implementation.
+- A later 2026-03-22 validation also found that active `src/app` and `src/lib` code no longer references `skill_verification_requests` or `impact_story_verification_requests`, and the focused canonical verification suites passed under Node `20.20.0`.
+- The same 2026-03-22 block could not refresh the full protected prod org corridor because the current workspace production build/runtime fails with missing chunk output and `PageNotFoundError: /_document`, which is unrelated to the verification transport conclusion.
 - As a result, statements below that describe those route files as still compiled and reachable are stale and should be read as rerun-time findings, not current workspace truth.
+- Statements below that still describe live mixed legacy verification request-table transport are also stale and should be read as rerun-time findings, not current workspace truth.
 
 Audit basis:
 
@@ -49,7 +52,7 @@ What keeps the system out of a clean locked-MVP verdict:
 
 - `GET /api/monitoring/launch-status` is still blocked and now fails more broadly because persisted endpoint checks and smoke evidence are stale.
 - The compiled route surface remains materially broader than the locked MVP. Analytics, dashboard, org-suite, fairness, momentum, and other non-MVP APIs are still shipped and reachable behind auth.
-- Verification transport is cleaner but not exclusive. `/api/verify/[token]` still supports mixed legacy and canonical request paths.
+- The older mixed verification transport conclusion in this rerun is now stale in the current workspace. Later 2026-03-22 validation found canonical-only active transport in `src/app` and `src/lib`, while the remaining fresh blocker is an unrelated prod build/runtime failure.
 
 ## 2. Top 10 findings
 
@@ -78,14 +81,14 @@ What keeps the system out of a clean locked-MVP verdict:
      - `HEAD /api/analytics/fairness` returned `401`, not `410`
      - `npm run build` route inventory still includes these families as active routes
 
-3. `P1 | PARTIALLY_IMPLEMENTED` Verification transport is now canonical-first in active request routes, but still mixed end to end.
+3. `STALE_LATER_WORKTREE` This rerun's mixed verification transport finding is superseded by later workspace validation.
    - Code evidence:
      - `src/app/api/verification/requests/skill/route.ts`
      - `src/app/api/verification/requests/skill/[requestId]/respond/route.ts`
      - `src/app/api/verification/requests/custom/route.ts`
      - `src/app/api/verify/[token]/route.ts`
-   - Canonical request creation and response routes are real.
-   - The token review route still supports legacy request-table paths.
+   - Canonical request creation and response routes were already real at rerun time.
+   - Later 2026-03-22 validation found no active `skill_verification_requests` or `impact_story_verification_requests` references under `src/app` or `src/lib`, and the focused canonical verification suites passed.
 
 4. `P2 | ALIGNED_IMPLEMENTED` Public org trust is now a verified, live MVP surface.
    - Code evidence:
@@ -150,7 +153,7 @@ What keeps the system out of a clean locked-MVP verdict:
 | ------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | -------- | --------------------------------------------------------------------------------- |
 | MVP scope is narrow                         | No ATS, HRIS, org-suite, fairness, dashboard, marketplace, or wellbeing sprawl in active launch flow | active compiled API families in `src/app/api/analytics/**`, `src/app/api/dashboard/**`, `src/app/api/organizations/[orgId]/{culture,impact,projects,structure}/**`, `src/app/api/momentum/**`; runtime `401` on `/api/analytics/fairness` | `CONTRADICTS_SOURCE_OF_TRUTH` | `P1`     | Deletions helped, but the live compiled surface is still broad                    |
 | Individual corridor starts with first proof | “Add your first proof” is the real onboarding path                                                   | `src/components/onboarding/IndividualSetup.tsx`, `src/actions/onboarding.ts`, `tests/ui/individual-setup-proof-first.test.tsx`                                                                                                            | `ALIGNED_IMPLEMENTED`         | `P2`     | Still aligned                                                                     |
-| Proof Pack is canonical proof object        | Proof-backed surfaces resolve through Proof Packs                                                    | canonical routes and pack enforcement exist; `/api/verify/[token]` still mixes canonical and legacy paths                                                                                                                                 | `PARTIALLY_IMPLEMENTED`       | `P1`     | Stronger than before, not exclusive                                               |
+| Proof Pack is canonical proof object        | Proof-backed surfaces resolve through Proof Packs                                                    | canonical routes and pack enforcement exist; later 2026-03-22 validation found no active legacy skill/impact request-table transport in `src/app` or `src/lib`, with focused canonical verification reruns passing under Node `20.20.0`   | `ALIGNED_IMPLEMENTED`         | `P2`     | This row is superseded by later workspace evidence                                |
 | Every Proof Pack has one anchor             | No orphan packs are structurally possible                                                            | `src/db/schema.ts`, `src/lib/proofs/pack-anchor.ts`, `tests/lib/proof-pack-anchor.test.ts`                                                                                                                                                | `ALIGNED_IMPLEMENTED`         | `P2`     | Still aligned                                                                     |
 | Skills are subordinate to proof/context     | No floating unsupported skills in launch corridor                                                    | proof-first onboarding is aligned; older expertise verification semantics still exist in archived or compatibility routes                                                                                                                 | `PARTIALLY_IMPLEMENTED`       | `P1`     | Better than earlier reruns                                                        |
 | Verification is claim-scoped and narrow     | No inflated public trust shortcut from work email or LinkedIn                                        | `src/lib/verification/status-contract.ts`, `src/app/api/verification/status/route.ts`, `src/components/settings/VerificationStatus.tsx`                                                                                                   | `PARTIALLY_IMPLEMENTED`       | `P1`     | Bounded in UI/API, but legacy profile fields still feed the contract              |
@@ -401,7 +404,7 @@ Documented but not fully verified in runtime:
 Old semantics still present:
 
 - Legacy role normalization in `src/lib/authz/policy.ts`
-- Mixed token-resolution support in `src/app/api/verify/[token]/route.ts`
+- Schema-shape compatibility support remains in `src/app/api/verify/[token]/route.ts`, but the older mixed request-table transport conclusion is stale in the current workspace.
 
 Hidden scope creep:
 
@@ -416,7 +419,7 @@ Real blockers only:
 ## 7. Recommended fix order
 
 1. Fix launch-status so stale smoke artifacts and stale monitor rows do not keep readiness blocked when fresh live checks are available.
-2. Finish removing mixed legacy transport from `/api/verify/[token]`.
+2. Resolve the unrelated production build/runtime failure, then refresh the protected org strict evidence that is now blocked.
 3. Archive or remove active non-MVP API families that are still compiled and reachable behind auth.
 4. Keep the new public org trust fixture wired into smoke coverage so this corridor stays directly auditable.
 
@@ -444,7 +447,7 @@ What is truly implemented:
 
 What is partially implemented:
 
-- End-to-end canonical verification transport
+- Fresh full prod org-corridor evidence after the unrelated build/runtime blocker is fixed
 - Claim-scoped verification semantics
 - Authenticated reveal and org review runtime validation
 - Launch readiness and monitor freshness
@@ -462,7 +465,7 @@ What contradicts the source of truth:
 What should be archived or removed:
 
 - Broad analytics, dashboard, momentum, and org-suite API families outside the locked MVP
-- Remaining mixed legacy verification token transport
+- The unrelated Next production build/runtime failure now blocking fresh protected org reruns
 
 ## 9. Fixed since the 2026-03-15 rerun
 
@@ -476,7 +479,7 @@ What should be archived or removed:
 
 - Launch-status remains blocked.
 - The compiled product surface is still wider than the locked MVP.
-- `/api/verify/[token]` still supports mixed legacy and canonical request transport.
+- The older `/api/verify/[token]` mixed-transport conclusion is stale in the current workspace; later focused verification validation found no active legacy skill/impact request-table transport in `src/app` or `src/lib`.
 - Legacy role normalization remains in policy code.
 
 ## 11. Newly introduced regressions
