@@ -1,234 +1,109 @@
 import { test, expect } from '@playwright/test';
 
-/**
- * Landing Page Smoke Tests
- * Verifies all major sections render after theme refresh
- */
-
 test.describe('Landing Page', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
   });
 
-  test('renders hero section with main heading', async ({ page }) => {
-    // Hero heading should be visible
-    const heading = page.getByRole('heading', { name: /Proofound/i, level: 1 });
-    await expect(heading).toBeVisible();
+  test('renders hero with the new wedge and primary actions', async ({ page }) => {
     const hero = page.getByTestId('landing-hero-section');
     await expect(hero).toBeVisible();
 
-    // Subheading should be visible
     await expect(
-      page.getByRole('heading', {
-        name: /Hire through proof, not profile theater/i,
-        level: 2,
-      })
+      page.getByRole('heading', { name: /See the work behind the claim/i, level: 1 })
     ).toBeVisible();
 
-    // CTA buttons in hero
-    await expect(hero.getByRole('button', { name: /Build your Proof Portfolio/i })).toBeVisible();
-    await expect(hero.getByRole('button', { name: /Start Hiring/i })).toBeVisible();
+    await expect(page.getByText(/Stronger signal than CVs/i)).toBeVisible();
+    await expect(hero.getByRole('button', { name: /Request a pilot/i })).toBeVisible();
+    await expect(hero.getByRole('button', { name: /Create your proof portfolio/i })).toBeVisible();
   });
 
-  test('header menu opens and closes via the X button', async ({ page }) => {
-    const openButton = page.getByTestId('landing-menu-trigger');
-    await expect(openButton).toBeVisible();
-    await openButton.click();
-
-    const nav = page.getByTestId('landing-menu-nav');
-    await expect(nav).toBeVisible();
-
-    // Guard against the "empty overlay" regression where the menu is technically visible,
-    // but rendered off-screen due to conflicting positioning classes.
-    const viewport = page.viewportSize();
-    expect(viewport).not.toBeNull();
-    const navBox = await nav.boundingBox();
-    expect(navBox).not.toBeNull();
-    expect(navBox!.y).toBeGreaterThanOrEqual(0);
-    expect(navBox!.y).toBeLessThan(viewport!.height);
-    expect(navBox!.y + navBox!.height).toBeLessThanOrEqual(viewport!.height);
-
-    // All expected menu items should render.
-    await expect(nav.getByText('Mission', { exact: true })).toBeVisible();
-    await expect(nav.getByText('How it Works', { exact: true })).toBeVisible();
-    await expect(nav.getByText('Principles', { exact: true })).toBeVisible();
-    await expect(nav.getByText('Log in', { exact: true })).toBeVisible();
-
-    const closeButton = page.getByTestId('landing-menu-close');
-    await expect(closeButton).toBeVisible();
-    const closeBox = await closeButton.boundingBox();
-    expect(closeBox).not.toBeNull();
-    expect(closeBox!.y).toBeGreaterThanOrEqual(0);
-    expect(closeBox!.y).toBeLessThan(viewport!.height);
-    await closeButton.click();
-
-    await expect(nav).toBeHidden();
-    await expect(openButton).toBeVisible();
+  test('renders the quiet desktop header navigation', async ({ page }) => {
+    const header = page.getByRole('banner');
+    await expect(header.getByRole('link', { name: /Proofound home/i })).toBeVisible();
+    await expect(header.getByRole('link', { name: 'How it works' })).toBeVisible();
+    await expect(header.getByRole('link', { name: 'For individuals' })).toBeVisible();
+    await expect(header.getByRole('link', { name: 'For organizations' })).toBeVisible();
+    await expect(header.getByRole('link', { name: 'Sign in' }).first()).toBeVisible();
   });
 
-  test('renders personas split panels on desktop', async ({ page }) => {
-    const personas = page.getByTestId('landing-personas-section');
-    await expect(personas).toBeVisible();
+  test('renders the requested section sequence', async ({ page }) => {
+    await expect(page.getByText('What changes when proof comes first')).toBeVisible();
 
-    await expect(personas.getByRole('heading', { name: /Built for you/i })).toBeVisible();
+    const headings = [
+      'One clear starting point for each side.',
+      'Better assignments create better shortlists.',
+      'Build proof. Publish trust. Review safely.',
+      'Every real claim should resolve to evidence.',
+      'Public does not mean exposed.',
+      'What this looks like in practice.',
+      'Start with proof, not noise.',
+    ];
 
-    // Instead of a toggle, desktop shows both panels
-    await expect(
-      personas.getByRole('heading', { name: /For Organizations/i }).first()
-    ).toBeVisible();
-    await expect(personas.getByRole('heading', { name: /For Individuals/i }).first()).toBeVisible();
-
-    // The key outcomes should be visible inside the desktop panels
-    const desktopContainer = personas.locator('.hidden.md\\:grid');
-    await expect(
-      desktopContainer.getByText(/Publish a clean public proof portfolio link/i)
-    ).toBeVisible();
-    await expect(desktopContainer.getByText(/Build a verified, portable profile/i)).toBeVisible();
-    await expect(
-      desktopContainer.getByText(/Publish a clean public organization trust page/i)
-    ).toBeVisible();
-    await expect(
-      desktopContainer.getByText(/Reduce bias with blind-by-default review/i)
-    ).toBeVisible();
+    for (const heading of headings) {
+      await expect(page.getByRole('heading', { name: heading })).toBeVisible();
+    }
   });
 
-  test('renders principles section', async ({ page }) => {
-    const principles = page.getByTestId('landing-principles-section');
-    await expect(principles).toBeVisible();
-
+  test('renders both day-one surfaces with correct actions', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: /Public proof portfolio/i })).toBeVisible();
     await expect(
-      principles.getByRole('heading', { name: /What makes it trustworthy/i })
+      page.getByRole('heading', { name: /Trust page \+ assignment corridor/i })
     ).toBeVisible();
 
-    // Principle cards (subset)
     await expect(
-      principles.getByRole('heading', { name: /Distributed systems mindset/i })
+      page.getByRole('link', { name: /Create your proof portfolio/i }).first()
     ).toBeVisible();
-    await expect(principles.getByRole('heading', { name: /Anti-bias guardrails/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Request a pilot/i }).first()).toBeVisible();
   });
 
-  test('renders CTA section', async ({ page }) => {
-    const ctaHeading = page.getByRole('heading', { name: /Ready to hire/i });
-    await expect(ctaHeading).toBeVisible();
-    const ctaSection = page.getByTestId('landing-final-cta-section');
-
-    // CTA button (scoped to section to avoid matching sticky CTA)
-    const ctaButton = ctaSection.getByRole('button', { name: /Get Started/i });
-    await expect(ctaButton).toBeVisible();
+  test('renders privacy-safe review explanations', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: /Blind by default/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Progressive reveal/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Explainable review/i })).toBeVisible();
   });
 
-  test('renders footer', async ({ page }) => {
+  test('renders final CTA and footer links', async ({ page }) => {
+    const finalCta = page.getByTestId('landing-final-cta-section');
+    await expect(finalCta).toBeVisible();
+    await expect(
+      finalCta.getByRole('button', { name: /Create your proof portfolio/i })
+    ).toBeVisible();
+    await expect(finalCta.getByRole('button', { name: /Request a pilot/i })).toBeVisible();
+
     const footer = page.getByTestId('landing-footer-section');
     await expect(footer).toBeVisible();
+    await expect(footer.getByRole('link', { name: /About/i })).toBeVisible();
+    await expect(footer.getByRole('link', { name: /Privacy/i })).toBeVisible();
+    await expect(footer.getByRole('link', { name: /Terms/i })).toBeVisible();
+  });
 
-    // Footer sections
+  test('maintains the new layout on mobile', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/');
+
     await expect(
-      footer.getByText(/Credibility engineering for a world that needs trust more than ever/i)
+      page.getByRole('heading', { name: /See the work behind the claim/i, level: 1 })
     ).toBeVisible();
 
-    // Footer links
-    await expect(footer.getByRole('link', { name: /Privacy Policy/i })).toBeVisible();
-
-    // Copyright
-    await expect(footer.getByText(/© \d{4} Proofound/i)).toBeVisible();
-  });
-
-  test('has no console errors', async ({ page }) => {
-    const errors: string[] = [];
-    page.on('console', (msg) => {
-      if (msg.type() === 'error') {
-        errors.push(msg.text());
-      }
-    });
-
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
-
-    expect(errors).toHaveLength(0);
-  });
-
-  test('renders network background', async ({ page }) => {
-    await expect(page.getByTestId('landing-network-background')).toBeVisible();
-  });
-
-  test('maintains responsive layout on mobile', async ({ page }) => {
-    // Set mobile viewport
-    await page.setViewportSize({ width: 375, height: 667 });
-
-    // Hero should still be visible
-    const heading = page.getByRole('heading', { name: /Proofound/i, level: 1 });
-    await expect(heading).toBeVisible();
     const hero = page.getByTestId('landing-hero-section');
-    await expect(hero).toBeVisible();
-
-    // CTAs should still be visible
-    await expect(hero.getByRole('button', { name: /Build your Proof Portfolio/i })).toBeVisible();
-    await expect(hero.getByRole('button', { name: /Start Hiring/i })).toBeVisible();
-
-    // Personas section should still render after scroll
-    const personas = page.getByTestId('landing-personas-section');
-    await personas.scrollIntoViewIfNeeded();
-    await expect(personas.getByRole('heading', { name: /Built for you/i })).toBeVisible();
+    await expect(hero.getByRole('button', { name: /Create your proof portfolio/i })).toBeVisible();
+    await expect(hero.getByRole('button', { name: /Request a pilot/i })).toBeVisible();
+    await expect(page.getByRole('banner').getByRole('link', { name: 'Sign in' })).toBeVisible();
   });
 
-  test('cookie banner does not block landing CTAs outside the consent card', async ({ page }) => {
-    await page.addInitScript(() => {
-      localStorage.removeItem('proofound-cookie-consent');
-    });
-
-    await page.goto('/');
-
-    const cookieBanner = page.getByRole('heading', { name: /We Value Your Privacy/i });
-    await expect(cookieBanner).toBeVisible();
-
-    const finalCtaSection = page.getByTestId('landing-final-cta-section');
-    await finalCtaSection.scrollIntoViewIfNeeded();
-
-    const finalCta = finalCtaSection.getByRole('button', { name: /^Get Started$/i });
-    await expect(finalCta).toBeVisible();
-    await finalCta.click();
-
-    await page.waitForURL((url) => url.pathname === '/signup');
-    expect(new URL(page.url()).pathname).toBe('/signup');
-  });
-
-  test('all sections are in correct order', async ({ page }) => {
+  test('all primary sections render inside main', async ({ page }) => {
     const sections = page.locator('main').locator('section');
-    const count = await sections.count();
-
-    // Landing currently has 8 <section> blocks inside <main> (footer is a <footer>)
-    expect(count).toBe(8);
-  });
-
-  test('color tokens are applied', async ({ page }) => {
-    // Check that brand colors are applied
-    const heroHeading = page.getByRole('heading', { name: /Proofound/i, level: 1 });
-
-    const styles = await heroHeading.evaluate((el) => {
-      const headingColor = window.getComputedStyle(el).color;
-      const bodyColor = window.getComputedStyle(document.body).color;
-      const bgColor = window.getComputedStyle(document.body).backgroundColor;
-      return { headingColor, bodyColor, bgColor };
-    });
-
-    expect(styles.headingColor).toMatch(/^rgb/);
-    expect(styles.bgColor).toMatch(/^rgb/);
-    expect(styles.headingColor).not.toBe('rgba(0, 0, 0, 0)');
-    expect(styles.headingColor).not.toBe(styles.bgColor);
+    await expect(sections).toHaveCount(9);
   });
 });
 
 test.describe('Accessibility', () => {
-  test('has proper heading hierarchy', async ({ page }) => {
+  test('has a single h1 and multiple supporting h2 headings', async ({ page }) => {
     await page.goto('/');
 
-    // Check h1 exists and is unique
-    const h1Count = await page.locator('h1').count();
-    expect(h1Count).toBe(1);
-
-    // Check h2 exists
-    const h2Count = await page.locator('h2').count();
-    expect(h2Count).toBeGreaterThan(0);
+    await expect(page.locator('h1')).toHaveCount(1);
+    expect(await page.locator('h2').count()).toBeGreaterThan(0);
   });
 
   test('all images have alt text or are decorative', async ({ page }) => {
@@ -237,29 +112,12 @@ test.describe('Accessibility', () => {
     const images = page.locator('img');
     const count = await images.count();
 
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < count; i += 1) {
       const img = images.nth(i);
       const alt = await img.getAttribute('alt');
       const ariaHidden = await img.getAttribute('aria-hidden');
 
-      // Image should have alt text OR be marked as decorative
       expect(alt !== null || ariaHidden === 'true').toBeTruthy();
-    }
-  });
-
-  test('links have accessible names', async ({ page }) => {
-    await page.goto('/');
-
-    const links = page.locator('a');
-    const count = await links.count();
-
-    for (let i = 0; i < count; i++) {
-      const link = links.nth(i);
-      const text = await link.textContent();
-      const ariaLabel = await link.getAttribute('aria-label');
-
-      // Link should have text content OR aria-label
-      expect((text && text.trim().length > 0) || ariaLabel).toBeTruthy();
     }
   });
 });

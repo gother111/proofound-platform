@@ -1,8 +1,7 @@
 'use client';
 
-import { MagneticButton } from '@/components/ui/magnetic-button';
-import { ArrowRight, UserCircle2, Building2 } from 'lucide-react';
 import Link from 'next/link';
+import { MagneticButton } from '@/components/ui/magnetic-button';
 
 interface FinalCTASectionProps {
   onIndividualSignup?: () => void;
@@ -13,62 +12,50 @@ interface FinalCTASectionProps {
 export function FinalCTASection({
   onIndividualSignup,
   onOrganizationSignup,
-  shouldReduceMotion = false,
 }: FinalCTASectionProps) {
   return (
-    <section className="w-full py-32 bg-background relative z-10 border-t border-border">
-      <div className="max-w-4xl mx-auto px-6 text-center">
-        <h2 className="text-4xl md:text-5xl lg:text-6xl font-display text-proofound-forest dark:text-foreground mb-6">
+    <section data-testid="landing-final-cta-section" className="bg-[var(--landing-bg)] py-32">
+      <div className="mx-auto max-w-[920px] px-6 text-center lg:px-10">
+        <h2 className="font-display text-[3.2rem] leading-[1.02] tracking-[-0.035em] text-[var(--landing-dark)] md:text-[4rem]">
           Start with proof, not noise.
         </h2>
-        <p className="text-lg md:text-xl text-muted-foreground mb-16">
+        <p className="mx-auto mt-5 max-w-[30rem] text-[1.02rem] leading-8 text-[var(--landing-text)]">
           Choose the first action that matches your role.
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
-          {/* Action 1: Individuals */}
-          <div className="flex flex-col border border-border/40 bg-card/60 backdrop-blur-sm p-8 lg:p-10 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] transition-all duration-500 hover:-translate-y-1 items-center text-center group">
-            <div className="w-16 h-16 bg-proofound-forest/5 dark:bg-white/5 rounded-full flex items-center justify-center mb-6 group-hover:bg-proofound-forest/10 transition-colors">
-              <UserCircle2 className="w-8 h-8 text-proofound-forest dark:text-foreground" />
-            </div>
-            <span className="text-sm font-semibold tracking-widest uppercase text-muted-foreground mb-6 block">
+        <div className="mt-14 border-t border-[var(--landing-border)] pt-8">
+          <div className="flex flex-col items-center justify-center gap-4 md:flex-row">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--landing-muted)]">
               For individuals
-            </span>
+            </div>
             <button
               onClick={onIndividualSignup}
-              className="px-6 py-3.5 bg-proofound-forest text-proofound-sand dark:bg-[#D4C4A8] dark:text-proofound-forest rounded-full font-medium hover:opacity-90 transition-opacity w-full border border-transparent hover:border-proofound-forest/20"
+              className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-[var(--landing-border)] bg-[var(--landing-surface-soft)] px-6 py-3 text-sm font-semibold text-[var(--landing-dark)] transition-colors hover:border-[var(--landing-accent)] hover:text-[var(--landing-dark)]"
             >
               Create your proof portfolio
             </button>
-          </div>
-
-          {/* Action 2: Organizations */}
-          <div className="flex flex-col border border-border/40 bg-card/60 backdrop-blur-sm p-8 lg:p-10 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] transition-all duration-500 hover:-translate-y-1 items-center text-center group">
-            <div className="w-16 h-16 bg-proofound-terracotta/10 rounded-full flex items-center justify-center mb-6 group-hover:bg-proofound-terracotta/20 transition-colors">
-              <Building2 className="w-8 h-8 text-proofound-terracotta" />
-            </div>
-            <span className="text-sm font-semibold tracking-widest uppercase text-muted-foreground mb-6 block">
+            <div className="hidden h-5 w-px bg-[var(--landing-border)] md:block" />
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--landing-muted)]">
               For organizations
-            </span>
+            </div>
             <MagneticButton
               onClick={onOrganizationSignup}
-              className="bg-proofound-terracotta text-white rounded-full px-6 py-3.5 flex items-center justify-center font-medium shadow-sm hover:shadow-lg transition-all w-full ring-1 ring-proofound-terracotta/30"
+              className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-[var(--landing-action)] px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 hover:bg-[var(--landing-dark-soft)]"
             >
               Request a pilot
-              <ArrowRight className="ml-2 w-4 h-4" />
             </MagneticButton>
           </div>
         </div>
 
-        <div className="mt-12 text-muted-foreground">
+        <p className="mt-10 text-sm text-[var(--landing-text)]">
           Already using Proofound?{' '}
           <Link
             href="/login"
-            className="text-proofound-forest dark:text-[#D4C4A8] font-medium hover:underline"
+            className="font-semibold text-[var(--landing-dark)] hover:text-[var(--landing-clay)]"
           >
             Sign in.
           </Link>
-        </div>
+        </p>
       </div>
     </section>
   );

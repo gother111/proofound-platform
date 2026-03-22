@@ -1,71 +1,59 @@
 'use client';
 
+const steps = [
+  {
+    number: '01',
+    title: 'Build proof',
+    body: 'Candidates add context, outcomes, artifacts, and trust anchors through Proof Packs.',
+  },
+  {
+    number: '02',
+    title: 'Publish trust',
+    body: 'A public proof portfolio or organization trust page becomes shareable without exposing review-stage data.',
+  },
+  {
+    number: '03',
+    title: 'Review safely',
+    body: 'Organizations review stronger signal first, then move through intro, reveal, interview, and decision with explanation and consent built in.',
+  },
+];
+
 export function ThreeStepCorridorSection() {
   return (
-    <section className="w-full py-24 bg-background relative z-10 border-t border-border">
-      <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <div className="mb-24 md:text-center flex flex-col items-center">
-          <span className="inline-block text-proofound-terracotta font-semibold tracking-[0.1em] text-xs mb-4 uppercase border border-proofound-terracotta/20 rounded-full px-4 py-1.5 bg-proofound-terracotta/5">
-            The canonical flow
+    <section className="bg-[var(--landing-bg)] py-32">
+      <div className="mx-auto max-w-[1240px] px-6 lg:px-10">
+        <div className="max-w-[780px]">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--landing-clay)]">
+            How it works
           </span>
-          <h2 className="text-4xl md:text-5xl lg:text-[3.5rem] font-display text-proofound-forest dark:text-foreground mb-6 leading-tight">
-            How the corridor works.
+          <h2 className="mt-5 font-display text-[3rem] leading-[1.02] tracking-[-0.03em] text-[var(--landing-dark)] md:text-[3.45rem]">
+            Build proof. Publish trust. Review safely.
           </h2>
-          <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto text-center">
-            A linear progression from gathering evidence to making a privacy-safe match.
+          <p className="mt-5 text-[1.08rem] leading-8 text-[var(--landing-text)]">
+            Explain the product in three steps only.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-8 relative">
-          {/* Subtle connecting line for desktop */}
-          <div className="hidden md:block absolute top-[4.5rem] left-[15%] right-[15%] h-[1px] bg-gradient-to-r from-transparent via-border/60 to-transparent -z-10" />
-
-          {/* Step 1 */}
-          <div className="relative flex flex-col items-center text-center group">
-            <div className="w-24 h-24 rounded-full bg-card border border-border/40 flex items-center justify-center mb-8 shadow-sm group-hover:shadow-[0_10px_30px_rgb(0,0,0,0.06)] transition-all duration-500 group-hover:-translate-y-1">
-              <span className="text-[2.5rem] font-display text-proofound-terracotta leading-none">
-                1
-              </span>
-            </div>
-            <h3 className="text-2xl font-display text-proofound-forest dark:text-foreground mb-4">
-              Build proof
-            </h3>
-            <p className="text-muted-foreground leading-relaxed max-w-[280px]">
-              Candidates add context, outcomes, artifacts, and trust anchors through Proof Packs.
-            </p>
-          </div>
-
-          {/* Step 2 */}
-          <div className="relative flex flex-col items-center text-center group">
-            <div className="w-24 h-24 rounded-full bg-card border border-border/40 flex items-center justify-center mb-8 shadow-sm group-hover:shadow-[0_10px_30px_rgb(0,0,0,0.06)] transition-all duration-500 group-hover:-translate-y-1">
-              <span className="text-[2.5rem] font-display text-proofound-forest dark:text-[#D4C4A8] leading-none">
-                2
-              </span>
-            </div>
-            <h3 className="text-2xl font-display text-proofound-forest dark:text-foreground mb-4">
-              Publish trust
-            </h3>
-            <p className="text-muted-foreground leading-relaxed max-w-[280px]">
-              A public proof portfolio or organization trust page becomes shareable without exposing
-              review-stage data.
-            </p>
-          </div>
-
-          {/* Step 3 */}
-          <div className="relative flex flex-col items-center text-center group">
-            <div className="w-24 h-24 rounded-full bg-card border border-border/40 flex items-center justify-center mb-8 shadow-sm group-hover:shadow-[0_10px_30px_rgb(0,0,0,0.06)] transition-all duration-500 group-hover:-translate-y-1">
-              <span className="text-[2.5rem] font-display text-proofound-forest dark:text-[#D4C4A8] leading-none">
-                3
-              </span>
-            </div>
-            <h3 className="text-2xl font-display text-proofound-forest dark:text-foreground mb-4">
-              Review safely
-            </h3>
-            <p className="text-muted-foreground leading-relaxed max-w-[280px]">
-              Organizations review stronger signal first, then move through intro, reveal,
-              interview, and decision with explanation.
-            </p>
-          </div>
+        <div className="mt-16 grid gap-10 lg:grid-cols-3">
+          {steps.map((step) => (
+            <article
+              key={step.number}
+              className="flex min-h-[280px] flex-col justify-between border-t border-[var(--landing-border)] pt-8"
+            >
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--landing-muted)]">
+                  Step {step.number}
+                </div>
+                <h3 className="mt-8 font-display text-[2.15rem] leading-tight text-[var(--landing-dark)]">
+                  {step.title}
+                </h3>
+                <p className="mt-4 text-[1.02rem] leading-7 text-[var(--landing-text)]">
+                  {step.body}
+                </p>
+              </div>
+              <div className="mt-10 h-px w-full bg-gradient-to-r from-[color:var(--landing-clay)]/45 via-[color:var(--landing-action)]/14 to-transparent" />
+            </article>
+          ))}
         </div>
       </div>
     </section>

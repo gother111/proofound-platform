@@ -1,48 +1,49 @@
 'use client';
 
-import { motion } from 'framer-motion';
+const columns = [
+  {
+    title: 'Less self-claim',
+    body: 'Vague summaries, pedigree shorthand, and keyword theater stop doing most of the work.',
+  },
+  {
+    title: 'More evidence',
+    body: 'Outcomes, artifacts, context, and scoped trust signals become the center of review.',
+  },
+  {
+    title: 'Safer early review',
+    body: 'Organizations can review proof first and reveal identity only when it matters.',
+  },
+];
 
 export function TranslationBandSection() {
   return (
-    <section className="w-full py-20 bg-proofound-forest/5 dark:bg-[#121212] border-y border-border/40 relative z-10">
-      <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <div className="text-center mb-16">
-          <span className="text-proofound-terracotta text-xs font-semibold tracking-[0.15em] uppercase border border-proofound-terracotta/20 rounded-full px-4 py-1.5 bg-proofound-terracotta/5">
+    <section className="border-y border-[var(--landing-border-soft)] bg-[var(--landing-surface-soft)] py-20">
+      <div className="mx-auto max-w-[1240px] px-6 lg:px-10">
+        <div className="mb-12">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--landing-clay)]">
             What changes when proof comes first
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 divide-y md:divide-y-0 md:divide-x divide-border/30">
-          {/* Column 1 */}
-          <div className="flex flex-col items-center text-center pt-8 md:pt-0 md:px-8 first:pt-0">
-            <h3 className="text-2xl font-display text-proofound-forest dark:text-foreground mb-4">
-              Less self-claim
-            </h3>
-            <p className="text-muted-foreground leading-relaxed text-lg max-w-sm">
-              Vague summaries, pedigree shorthand, and keyword theater stop doing most of the work.
-            </p>
-          </div>
-
-          {/* Column 2 */}
-          <div className="flex flex-col items-center text-center pt-8 md:pt-0 md:px-8">
-            <h3 className="text-2xl font-display text-proofound-forest dark:text-foreground mb-4">
-              More evidence
-            </h3>
-            <p className="text-muted-foreground leading-relaxed text-lg max-w-sm">
-              Outcomes, artifacts, context, and scoped trust signals become the center of review.
-            </p>
-          </div>
-
-          {/* Column 3 */}
-          <div className="flex flex-col items-center text-center pt-8 md:pt-0 md:px-8">
-            <h3 className="text-2xl font-display text-proofound-forest dark:text-foreground mb-4">
-              Safer early review
-            </h3>
-            <p className="text-muted-foreground leading-relaxed text-lg max-w-sm">
-              Organizations can review proof first and reveal identity only when mutual interest
-              exists.
-            </p>
-          </div>
+        <div className="grid gap-10 md:grid-cols-3 md:gap-8">
+          {columns.map((column, index) => (
+            <div
+              key={column.title}
+              className={`border-[var(--landing-border)] md:px-6 ${
+                index > 0 ? 'md:border-l md:pl-8' : 'md:pl-0'
+              }`}
+            >
+              <div className="mb-6 text-[11px] uppercase tracking-[0.22em] text-[var(--landing-muted)]">
+                0{index + 1}
+              </div>
+              <h2 className="max-w-[11ch] font-display text-[2.35rem] leading-[1.02] text-[var(--landing-dark)]">
+                {column.title}
+              </h2>
+              <p className="mt-5 max-w-[23rem] text-[1rem] leading-8 text-[var(--landing-text)]">
+                {column.body}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
     </section>

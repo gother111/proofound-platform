@@ -1,52 +1,56 @@
 'use client';
 
+const points = [
+  {
+    title: 'Clearer inputs',
+    body: 'Define the work, expected outcomes, and useful evidence before applications start.',
+  },
+  {
+    title: 'Better early review',
+    body: 'Review proof-backed candidates instead of drowning in polished claims.',
+  },
+  {
+    title: 'Faster downstream decisions',
+    body: 'Interview fewer people and use the same corridor again on the next role.',
+  },
+];
+
 export function HiringTeamsSection() {
   return (
-    <section className="w-full py-24 bg-[#E0D5C7]/10 dark:bg-muted/5 relative z-10 border-t border-border/40">
-      <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <div className="mb-20 md:text-center flex flex-col items-center">
-          <span className="inline-block text-proofound-forest dark:text-[#D4C4A8] font-medium tracking-[0.1em] text-xs mb-4 uppercase border border-proofound-forest/10 dark:border-[#D4C4A8]/20 rounded-full px-4 py-1.5 bg-proofound-forest/5 dark:bg-[#D4C4A8]/5">
+    <section className="border-y border-[var(--landing-border-soft)] bg-[var(--landing-surface)] py-32">
+      <div className="mx-auto grid max-w-[1240px] gap-14 px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-10">
+        <div className="max-w-[33rem]">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--landing-action)]">
             For hiring teams
           </span>
-          <h2 className="text-4xl md:text-5xl lg:text-[3.5rem] font-display text-proofound-forest dark:text-white mb-6 leading-tight">
-            Better assignments <br className="hidden md:block" /> create better shortlists.
+          <h2 className="mt-5 max-w-[11ch] font-display text-[3rem] leading-[1.02] tracking-[-0.03em] text-[var(--landing-dark)] md:text-[3.45rem]">
+            Better assignments create better shortlists.
           </h2>
-          <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto text-center">
+          <p className="mt-5 text-[1.08rem] leading-8 text-[var(--landing-text)]">
             Proofound is not another talent feed. It helps lean teams define the work clearly,
             review fewer stronger candidates, and waste less interview time.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
-          {/* Card 1 */}
-          <div className="bg-card/60 backdrop-blur-sm border border-border/40 hover:border-proofound-forest/20 p-8 lg:p-10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] transition-all duration-500 hover:-translate-y-1">
-            <h3 className="text-2xl font-display text-proofound-forest dark:text-foreground mb-4">
-              Clearer inputs
-            </h3>
-            <p className="text-muted-foreground leading-relaxed text-lg">
-              Define the work, expected outcomes, and useful evidence before applications start.
-            </p>
-          </div>
-
-          {/* Card 2 */}
-          <div className="bg-card/60 backdrop-blur-sm border border-border/40 hover:border-proofound-forest/20 p-8 lg:p-10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] transition-all duration-500 hover:-translate-y-1">
-            <h3 className="text-2xl font-display text-proofound-forest dark:text-foreground mb-4">
-              Better early review
-            </h3>
-            <p className="text-muted-foreground leading-relaxed text-lg">
-              Review proof-backed candidates instead of drowning in polished generic claims.
-            </p>
-          </div>
-
-          {/* Card 3 */}
-          <div className="bg-card/60 backdrop-blur-sm border border-border/40 hover:border-proofound-forest/20 p-8 lg:p-10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] transition-all duration-500 hover:-translate-y-1">
-            <h3 className="text-2xl font-display text-proofound-forest dark:text-foreground mb-4">
-              Faster decisions
-            </h3>
-            <p className="text-muted-foreground leading-relaxed text-lg">
-              Interview fewer people and use the same structured corridor again on the next role.
-            </p>
-          </div>
+        <div className="grid gap-0 border-t border-[var(--landing-border)]">
+          {points.map((point, index) => (
+            <article
+              key={point.title}
+              className="grid gap-5 border-b border-[var(--landing-border)] py-8 md:grid-cols-[88px_1fr] md:items-start"
+            >
+              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--landing-muted)] md:pt-2">
+                0{index + 1}
+              </div>
+              <div>
+                <h3 className="max-w-[14ch] font-display text-[2.15rem] leading-[1.04] text-[var(--landing-dark)]">
+                  {point.title}
+                </h3>
+                <p className="mt-4 max-w-[32rem] text-[1rem] leading-8 text-[var(--landing-text)]">
+                  {point.body}
+                </p>
+              </div>
+            </article>
+          ))}
         </div>
       </div>
     </section>

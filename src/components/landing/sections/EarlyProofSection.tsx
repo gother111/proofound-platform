@@ -1,69 +1,75 @@
 'use client';
 
+const stories = [
+  {
+    title: 'From scattered links to one proof-backed profile',
+    body: 'A career-switching designer turns work samples, context, and stakeholder-backed proof into one calm public portfolio that is easier to trust than a resume plus five separate links.',
+    detail:
+      'Placeholder structure designed so pilot evidence can replace this copy later without redesigning the section.',
+  },
+  {
+    title: 'From resume pile to stronger shortlist',
+    body: 'A lean hiring team defines the work clearly, reviews proof before identity, and reaches interviews with fewer but higher-signal candidates.',
+    detail:
+      'The card leaves room for future pilot notes, reviewer quotes, or before-and-after workflow proof.',
+  },
+];
+
 export function EarlyProofSection() {
   return (
-    <section className="w-full py-32 bg-background relative z-10 border-t border-border/40">
-      <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <div className="mb-24">
-          <span className="inline-block text-proofound-forest dark:text-[#D4C4A8] font-medium tracking-[0.1em] text-xs mb-4 uppercase border border-proofound-forest/10 dark:border-[#D4C4A8]/20 rounded-full px-4 py-1.5 bg-proofound-forest/5 dark:bg-[#D4C4A8]/5">
+    <section className="border-t border-[var(--landing-border-soft)] bg-[var(--landing-surface-soft)] py-32">
+      <div className="mx-auto max-w-[1240px] px-6 lg:px-10">
+        <div className="max-w-[760px]">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--landing-action)]">
             Early proof
           </span>
-          <h2 className="text-4xl md:text-5xl lg:text-[3.5rem] font-display text-proofound-forest dark:text-foreground mb-6 leading-[1.1]">
-            What this looks like <br className="hidden md:block" /> in practice.
+          <h2 className="mt-5 font-display text-[3rem] leading-[1.02] tracking-[-0.03em] text-[var(--landing-dark)] md:text-[3.45rem]">
+            What this looks like in practice.
           </h2>
-          <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl">
-            Real outcomes from early usage, where structured proof separates concrete signal from
-            generic noise.
+          <p className="mt-5 text-[1.08rem] leading-8 text-[var(--landing-text)]">
+            Use compact, credible before-and-after stories instead of generic logo soup.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-          {/* Story 1 */}
-          <div className="group bg-card/60 backdrop-blur-sm border border-border/40 p-8 lg:p-14 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] transition-all duration-500 hover:-translate-y-1">
-            <h3 className="text-3xl font-display text-proofound-forest dark:text-foreground mb-6 leading-tight">
-              From scattered links to one proof-backed profile
-            </h3>
-            <p className="text-muted-foreground leading-relaxed text-lg mb-10">
-              A career-switching designer turns work samples, context, and stakeholder-backed proof
-              into one calm public portfolio that is easier to trust than a résumé plus five
-              separate links.
-            </p>
-            <div className="border border-border/40 shadow-sm rounded-2xl p-8 bg-background flex flex-col gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-proofound-forest/5 dark:bg-white/5" />
-                <div className="flex-1 h-3 rounded bg-border/50" />
+        <div className="mt-16 grid gap-12 lg:grid-cols-2">
+          {stories.map((story, index) => (
+            <article key={story.title} className="border-t border-[var(--landing-border)] pt-8">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--landing-clay)]">
+                Story 0{index + 1}
               </div>
-              <div className="w-full h-8 rounded bg-border/30 mt-4" />
-              <div className="w-full h-8 rounded bg-border/30" />
-            </div>
-          </div>
+              <h3 className="mt-5 max-w-[16ch] font-display text-[2.15rem] leading-tight text-[var(--landing-dark)]">
+                {story.title}
+              </h3>
+              <p className="mt-5 text-[1.02rem] leading-7 text-[var(--landing-text)]">
+                {story.body}
+              </p>
 
-          {/* Story 2 */}
-          <div className="group bg-card/60 backdrop-blur-sm border border-border/40 p-8 lg:p-14 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] transition-all duration-500 hover:-translate-y-1">
-            <h3 className="text-3xl font-display text-proofound-forest dark:text-foreground mb-6 leading-tight">
-              From résumé pile to stronger shortlist
-            </h3>
-            <p className="text-muted-foreground leading-relaxed text-lg mb-10">
-              A lean hiring team defines the work clearly, reviews proof before identity, and
-              reaches structured interviews with fewer but higher-signal candidates.
-            </p>
-            <div className="border border-border/40 shadow-sm rounded-2xl p-8 bg-background flex flex-col gap-5">
-              <div className="flex justify-between items-end border-b border-border/50 pb-5">
-                <div className="space-y-3">
-                  <div className="w-24 h-3 rounded bg-border/50" />
-                  <div className="w-32 h-6 rounded bg-border/80" />
+              <div className="mt-8 grid gap-5 md:grid-cols-[0.92fr_1.08fr]">
+                <div className="border-l border-[var(--landing-border)] pl-5">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--landing-muted)]">
+                    Snapshot
+                  </div>
+                  <div className="mt-4 space-y-3">
+                    <div className="h-2.5 w-[72%] rounded-full bg-[var(--landing-surface-strong)]" />
+                    <div className="h-2.5 w-[54%] rounded-full bg-[var(--landing-surface)]" />
+                    <div className="border-l-2 border-[var(--landing-clay)]/40 pl-4 text-sm leading-7 text-[var(--landing-text)]">
+                      {index === 0
+                        ? 'Portfolio becomes one calm place to inspect work, context, and trust.'
+                        : 'Review moves from resume pile to proof-backed shortlist before interviews.'}
+                    </div>
+                  </div>
                 </div>
-                <div className="w-20 h-8 rounded-full bg-proofound-terracotta/10 flex items-center justify-center">
-                  <span className="w-10 h-2 rounded bg-proofound-terracotta/40" />
+                <div className="border-l border-[var(--landing-border)] pl-5">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--landing-muted)]">
+                    Pilot-ready placeholder
+                  </div>
+                  <p className="mt-3 text-sm leading-7 text-[var(--landing-text)]">
+                    {story.detail}
+                  </p>
                 </div>
               </div>
-              <div className="flex gap-4 pt-3">
-                <div className="w-12 h-12 rounded bg-border/30" />
-                <div className="w-12 h-12 rounded bg-border/30" />
-                <div className="w-12 h-12 rounded bg-border/30" />
-              </div>
-            </div>
-          </div>
+            </article>
+          ))}
         </div>
       </div>
     </section>

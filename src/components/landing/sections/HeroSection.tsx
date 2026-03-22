@@ -1,8 +1,8 @@
 'use client';
 
-import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { ArrowRight, EyeOff, ShieldCheck } from 'lucide-react';
 import { useRef } from 'react';
-import { ArrowRight, CheckCircle2, ShieldCheck, EyeOff, LayoutTemplate } from 'lucide-react';
 import { MagneticButton } from '@/components/ui/magnetic-button';
 
 interface HeroSectionProps {
@@ -19,204 +19,203 @@ export function HeroSection({
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ['start start', 'end start'],
+    offset: ['start start', 'end end'],
   });
 
-  // Animation values for the CV to Proof transformation
-  const fadeOutNoise = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
-  const blurNoise = useTransform(scrollYProgress, [0, 0.3], [0, 10]);
-
-  const emergeProof = useTransform(scrollYProgress, [0.4, 0.7], [0, 1]);
-  const yProof = useTransform(scrollYProgress, [0.4, 0.7], [20, 0]);
+  const traceOpacity = useTransform(scrollYProgress, [0, 0.18, 0.32], [1, 1, 0]);
+  const proofOpacity = useTransform(scrollYProgress, [0.28, 0.5, 0.9], [0, 1, 1]);
+  const handoffOpacity = useTransform(scrollYProgress, [0.76, 0.94], [0, 1]);
+  const artifactScale = useTransform(scrollYProgress, [0, 1], [1.02, 1]);
+  const artifactY = useTransform(scrollYProgress, [0, 1], [20, 0]);
 
   return (
-    <section ref={containerRef} className="relative w-full h-[200vh]">
-      <div className="sticky top-0 h-screen w-full flex items-center overflow-hidden">
-        <div className="max-w-7xl mx-auto w-full px-6 lg:px-12 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Left Column: Copy */}
-          <div className="flex flex-col z-10">
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={{
-                hidden: { opacity: 0 },
-                visible: {
-                  opacity: 1,
-                  transition: { staggerChildren: 0.15, delayChildren: 0.1 },
-                },
-              }}
-            >
-              <motion.span
-                variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }}
-                className="inline-block text-proofound-terracotta font-semibold tracking-[0.15em] text-xs mb-6 uppercase"
-              >
-                Stronger signal than CVs
-              </motion.span>
-              <motion.h1
-                variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0 } }}
-                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                className="text-5xl md:text-6xl lg:text-[5rem] font-display text-proofound-forest dark:text-foreground leading-[1.05] mb-8 tracking-tight"
-              >
-                See the work <br className="hidden sm:block" /> behind the claim.
-              </motion.h1>
-              <motion.p
-                variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0 } }}
-                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-xl mb-12"
-              >
-                Proofound helps people turn real work into structured proof and helps organizations
-                review candidates through proof-backed, privacy-safe, explainable signal instead of
-                profile theater.
-              </motion.p>
+    <section
+      ref={containerRef}
+      data-testid="landing-hero-section"
+      className="relative min-h-[200svh] overflow-clip bg-[var(--landing-bg)]"
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_14%,rgba(176,185,168,0.18),transparent_20%),radial-gradient(circle_at_63%_48%,rgba(224,207,195,0.28),transparent_24%),linear-gradient(180deg,#f6f2ea_0%,#efe8de_48%,#f3f0e8_100%)]" />
 
-              <motion.div
-                variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0 } }}
-                className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-12"
-              >
-                <MagneticButton
-                  onClick={onOrganizationSignup}
-                  className="bg-proofound-terracotta text-white rounded-full px-8 py-3.5 flex items-center justify-center font-medium shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all text-base w-full sm:w-auto ring-1 ring-proofound-terracotta/50"
+      <div className="sticky top-0 flex min-h-[100svh] items-center pt-24">
+        <div className="mx-auto w-full max-w-[1460px] px-0 lg:px-0">
+          <motion.div
+            className="relative min-h-[calc(100svh-6rem)] overflow-hidden border-y border-[var(--landing-border)] bg-[var(--landing-surface)] shadow-[0_42px_120px_rgba(94,94,94,0.08)] lg:min-h-[calc(100svh-7rem)] lg:rounded-[42px] lg:border"
+            style={{
+              scale: shouldReduceMotion ? 1 : artifactScale,
+              y: shouldReduceMotion ? 0 : artifactY,
+            }}
+          >
+            <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.42),transparent_28%),radial-gradient(circle_at_76%_24%,rgba(176,185,168,0.14),transparent_22%)]" />
+
+            <div className="relative grid min-h-[calc(100svh-6rem)] items-end gap-10 px-6 pb-8 pt-8 md:px-10 md:pb-10 md:pt-10 lg:min-h-[calc(100svh-7rem)] lg:grid-cols-[0.48fr_1.52fr] lg:px-14 lg:pb-12 lg:pt-12">
+              <div className="relative z-10 max-w-[390px] self-end">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[var(--landing-muted)]">
+                  Proofound
+                </div>
+                <div className="mt-4 max-w-[12ch] font-display text-[2.15rem] leading-[0.92] tracking-[-0.04em] text-[var(--landing-dark)] md:text-[2.8rem]">
+                  A calmer standard for seeing work clearly.
+                </div>
+
+                <div className="mt-10 text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--landing-clay)]">
+                  Stronger signal than CVs
+                </div>
+
+                <h1 className="mt-5 max-w-[8ch] font-display text-[3.7rem] leading-[0.9] tracking-[-0.055em] text-[var(--landing-dark)] md:text-[4.8rem] lg:text-[5.2rem]">
+                  See the work behind the claim.
+                </h1>
+
+                <p className="mt-5 max-w-[18rem] text-[0.96rem] leading-8 text-[var(--landing-text)]">
+                  Proof-backed, privacy-safe review that helps teams compare real work instead of
+                  polished claims.
+                </p>
+
+                <div className="mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+                  <MagneticButton
+                    onClick={onOrganizationSignup}
+                    className="inline-flex min-h-[54px] items-center justify-center rounded-full bg-[var(--landing-action)] px-7 py-3 text-sm font-semibold text-white shadow-[0_16px_34px_rgba(96,108,90,0.18)] transition-all hover:-translate-y-0.5 hover:bg-[var(--landing-dark-soft)]"
+                  >
+                    Request a pilot
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </MagneticButton>
+
+                  <button
+                    onClick={onIndividualSignup}
+                    className="inline-flex min-h-[54px] items-center justify-center rounded-full border border-[var(--landing-border)] bg-transparent px-7 py-3 text-sm font-semibold text-[var(--landing-dark)] transition-colors hover:border-[var(--landing-clay)] hover:text-[var(--landing-clay)]"
+                  >
+                    Create your proof portfolio
+                  </button>
+                </div>
+
+                <p className="mt-5 max-w-[18rem] text-[13px] leading-7 text-[var(--landing-muted)]">
+                  For lean teams hiring through work, not noise, and for under-credited talent with
+                  real work to show.
+                </p>
+              </div>
+
+              <div className="relative min-h-[540px] lg:min-h-[660px]">
+                <motion.div
+                  className="absolute left-[4%] top-[8%] z-0 w-[34%] rotate-[-5deg] border border-[var(--landing-border)] bg-[color:var(--landing-surface-soft)]/88 px-5 py-4 text-[var(--landing-muted)] shadow-[0_18px_40px_rgba(94,94,94,0.06)] backdrop-blur-sm"
+                  style={{ opacity: shouldReduceMotion ? 0 : traceOpacity }}
                 >
-                  Request a pilot
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </MagneticButton>
+                  <div className="text-[10px] uppercase tracking-[0.24em]">Resume shorthand</div>
+                  <div className="mt-3 text-sm leading-7">
+                    Maya Chen
+                    <br />
+                    ex-Stripe
+                    <br />
+                    Berkeley
+                    <br />
+                    Strategic leader
+                  </div>
+                </motion.div>
 
-                <button
-                  onClick={onIndividualSignup}
-                  className="px-6 py-3.5 text-proofound-forest dark:text-foreground hover:text-proofound-terracotta transition-colors font-medium border-b border-transparent hover:border-proofound-terracotta/30 pb-1 w-full sm:w-auto flex justify-center items-center group"
+                <motion.div
+                  className="relative z-10 ml-auto h-full w-full max-w-[980px]"
+                  style={{ opacity: shouldReduceMotion ? 1 : proofOpacity }}
                 >
-                  Create your proof portfolio
-                  <ArrowRight className="ml-2 w-3.5 h-3.5 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
-                </button>
-              </motion.div>
+                  <div className="relative h-full overflow-hidden rounded-[34px] border border-[var(--landing-border)] bg-[var(--landing-surface-soft)] p-6 shadow-[0_34px_100px_rgba(94,94,94,0.08)] md:p-8">
+                    <div className="absolute left-10 top-0 h-12 w-px -translate-y-5 bg-[var(--landing-surface-strong)]" />
+                    <div className="absolute right-10 top-0 h-12 w-px -translate-y-5 bg-[var(--landing-surface-strong)]" />
+                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.58),transparent_24%)]" />
 
-              <motion.p
-                variants={{ hidden: { opacity: 0 }, visible: { opacity: 1 } }}
-                transition={{ delay: 0.8 }}
-                className="text-sm text-muted-foreground/70 max-w-md leading-relaxed border-l-2 border-proofound-terracotta/20 pl-4 py-1 italic"
-              >
-                For lean teams hiring through work, not noise — and for under-credited talent with
-                real work to show.
-              </motion.p>
-            </motion.div>
-          </div>
-
-          {/* Right Column: Visual Transformation */}
-          <div className="relative h-[600px] w-full flex items-center justify-center lg:justify-end hidden md:flex perspective-1000">
-            {/* The Main Surface */}
-            <div className="relative w-full max-w-[480px] aspect-[3/4] bg-white dark:bg-[#1a1a1a] border border-border/40 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] rounded-3xl overflow-hidden group-hover:shadow-[0_30px_70px_-15px_rgba(0,0,0,0.15)] transition-shadow duration-700">
-              {/* STATE 1: Noisy CV Surface */}
-              <motion.div
-                className="absolute inset-0 p-8 flex flex-col pointer-events-none"
-                style={{ opacity: fadeOutNoise, filter: `blur(${blurNoise}px)` }}
-              >
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="w-16 h-16 rounded-full bg-muted animate-pulse" />
-                  <div>
-                    <div className="h-6 w-48 bg-muted rounded mb-2" />
-                    <div className="h-4 w-32 bg-muted/60 rounded" />
-                  </div>
-                </div>
-
-                <div className="space-y-3 mb-8">
-                  <div className="h-3 w-full bg-muted/40 rounded" />
-                  <div className="h-3 w-5/6 bg-muted/40 rounded" />
-                  <div className="h-3 w-4/6 bg-muted/40 rounded" />
-                </div>
-
-                <div className="h-4 w-24 bg-muted/80 rounded mb-4" />
-                <div className="flex flex-wrap gap-2 mb-8">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="h-8 w-20 bg-muted/30 rounded-full" />
-                  ))}
-                </div>
-
-                <div className="mt-auto flex justify-between items-center pt-6 border-t border-border">
-                  <div className="flex -space-x-2">
-                    <div className="w-8 h-8 rounded-full bg-muted border-2 border-white dark:border-card" />
-                    <div className="w-8 h-8 rounded-full bg-muted border-2 border-white dark:border-card" />
-                    <div className="w-8 h-8 rounded-full bg-muted border-2 border-white dark:border-card" />
-                  </div>
-                  <div className="h-4 w-32 bg-muted/50 rounded" />
-                </div>
-              </motion.div>
-
-              {/* STATE 2: Proof-first Structure */}
-              <motion.div
-                className="absolute inset-0 p-8 bg-white dark:bg-card flex flex-col"
-                style={{ opacity: emergeProof, y: yProof }}
-              >
-                <div className="flex items-center gap-3 mb-8 pb-6 border-b border-border/50">
-                  <div className="w-10 h-10 rounded bg-proofound-forest/5 dark:bg-white/5 flex items-center justify-center">
-                    <LayoutTemplate className="w-5 h-5 text-proofound-forest dark:text-muted-foreground" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-foreground">
-                      Operations lead · B2B SaaS
-                    </div>
-                    <div className="text-xs text-muted-foreground">Team of 6</div>
-                  </div>
-                </div>
-
-                <div className="space-y-8 flex-1">
-                  <div>
-                    <span className="text-[10px] font-semibold tracking-wider uppercase text-proofound-terracotta mb-2 block">
-                      Outcome
-                    </span>
-                    <h3 className="text-xl font-display text-proofound-forest dark:text-foreground">
-                      Reduced onboarding time by 31%
-                    </h3>
-                  </div>
-
-                  <div>
-                    <span className="text-[10px] font-semibold tracking-wider uppercase text-muted-foreground mb-2 block">
-                      Artifact
-                    </span>
-                    <div className="flex items-center gap-2 text-sm text-foreground bg-muted/30 py-2 px-3 rounded-md border border-border/50">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                      Onboarding redesign deck
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <span className="text-[10px] font-semibold tracking-wider uppercase text-muted-foreground mb-2 block">
-                        Verification
-                      </span>
-                      <div className="flex items-center gap-1.5 text-sm text-foreground">
-                        <ShieldCheck className="w-4 h-4 text-proofound-terracotta" />
-                        Peer-attested
+                    <div className="relative flex items-start justify-between gap-4 border-b border-[var(--landing-border-soft)] pb-5">
+                      <div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--landing-clay)]">
+                          Proof Pack
+                        </div>
+                        <div className="mt-3 font-display text-[2.3rem] leading-none text-[var(--landing-dark)] md:text-[3rem]">
+                          Onboarding redesign
+                        </div>
+                      </div>
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--landing-muted)]">
+                        Review-safe
                       </div>
                     </div>
-                    <div>
-                      <span className="text-[10px] font-semibold tracking-wider uppercase text-muted-foreground mb-2 block">
-                        Fit cue
-                      </span>
-                      <div className="flex flex-wrap gap-1">
-                        <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">
-                          Workflow design
-                        </span>
+
+                    <div className="relative mt-6 grid gap-5 lg:grid-cols-[1.16fr_0.84fr]">
+                      <div className="rounded-[30px] bg-[#f8f4ee] p-7 shadow-[0_16px_36px_rgba(94,94,94,0.04)]">
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--landing-clay)]">
+                          Outcome
+                        </div>
+                        <div className="mt-4 max-w-[8ch] font-display text-[3.45rem] leading-[0.9] text-[var(--landing-dark)] md:text-[4rem]">
+                          Reduced onboarding time by 31%
+                        </div>
+                        <div className="mt-6 max-w-[23rem] border-l-2 border-[var(--landing-clay)]/45 pl-4 text-sm leading-7 text-[var(--landing-text)]">
+                          One documented path replaced fragmented handoffs across product, success,
+                          and ops.
+                        </div>
+                      </div>
+
+                      <div className="grid gap-5">
+                        <div className="rounded-[26px] bg-[var(--landing-surface)] p-5">
+                          <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--landing-muted)]">
+                            Review rail
+                          </div>
+                          <div className="mt-4 space-y-4 text-sm leading-7 text-[var(--landing-text)]">
+                            <div>Operations lead · B2B SaaS · team of 6</div>
+                            <div className="inline-flex items-center gap-2 text-[var(--landing-action)]">
+                              <ShieldCheck className="h-4 w-4" />
+                              Peer-attested
+                            </div>
+                            <div className="inline-flex items-center gap-2 text-[var(--landing-action)]">
+                              <EyeOff className="h-4 w-4" />
+                              Identity hidden during early review
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
 
-                {/* Privacy Hint */}
-                <div className="mt-auto pt-6 border-t border-border flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                  <EyeOff className="w-3.5 h-3.5" />
-                  Identity hidden during early review
-                </div>
-              </motion.div>
+                    <div className="relative mt-5 overflow-hidden rounded-[28px] bg-[var(--landing-blush)] p-6">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--landing-muted)]">
+                          Artifact excerpt
+                        </div>
+                        <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--landing-muted)]">
+                          Easier to trust than a CV
+                        </div>
+                      </div>
+
+                      <div className="mt-4 rounded-[22px] bg-[var(--landing-surface-soft)] p-5 shadow-[0_14px_30px_rgba(94,94,94,0.035)]">
+                        <div className="h-2.5 w-[78%] rounded-full bg-[var(--landing-surface-strong)]" />
+                        <div className="mt-3 h-2.5 w-[58%] rounded-full bg-[var(--landing-surface)]" />
+                        <div className="mt-5 grid grid-cols-3 gap-3">
+                          <div className="rounded-[14px] bg-[var(--landing-surface)] p-3">
+                            <div className="h-2.5 w-10 rounded-full bg-[var(--landing-surface-strong)]" />
+                            <div className="mt-3 h-10 rounded-[10px] bg-[var(--landing-surface-strong)]" />
+                          </div>
+                          <div className="rounded-[14px] bg-[var(--landing-surface)] p-3">
+                            <div className="h-2.5 w-12 rounded-full bg-[var(--landing-surface-strong)]" />
+                            <div className="mt-3 h-10 rounded-[10px] bg-[var(--landing-surface-strong)]" />
+                          </div>
+                          <div className="rounded-[14px] bg-[var(--landing-surface)] p-3">
+                            <div className="h-2.5 w-8 rounded-full bg-[var(--landing-surface-strong)]" />
+                            <div className="mt-3 h-10 rounded-[10px] bg-[var(--landing-surface-strong)]" />
+                          </div>
+                        </div>
+                        <div className="mt-5 border-l-2 border-[var(--landing-clay)]/45 pl-4 text-sm leading-7 text-[var(--landing-text)]">
+                          Deck excerpt and rollout notes give a reviewer something inspectable
+                          instead of a polished claim.
+                        </div>
+                      </div>
+                    </div>
+
+                    <motion.div
+                      className="pointer-events-none absolute bottom-6 right-6 rounded-[20px] bg-[color:var(--landing-surface-soft)]/92 px-5 py-4 shadow-[0_18px_42px_rgba(94,94,94,0.08)]"
+                      style={{ opacity: handoffOpacity }}
+                    >
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--landing-muted)]">
+                        Review handoff
+                      </div>
+                      <div className="mt-2 text-sm leading-7 text-[var(--landing-text)]">
+                        Shared into a privacy-safe assignment corridor.
+                      </div>
+                    </motion.div>
+                  </div>
+                </motion.div>
+              </div>
             </div>
-
-            {/* Interpretive Caption */}
-            <motion.div
-              style={{ opacity: emergeProof }}
-              className="absolute -bottom-6 right-0 bg-background/80 backdrop-blur-sm border border-border py-2 px-4 rounded-full text-sm text-foreground shadow-sm"
-            >
-              When noise recedes, real work becomes easier to compare.
-            </motion.div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
