@@ -16,6 +16,8 @@ test.describe('Landing Page', () => {
     await expect(page.getByText(/Stronger signal than CVs/i)).toBeVisible();
     await expect(hero.getByRole('button', { name: /Request a pilot/i })).toBeVisible();
     await expect(hero.getByRole('button', { name: /Create your proof portfolio/i })).toBeVisible();
+    await expect(hero.getByText(/Review handoff/i)).toBeVisible();
+    await expect(hero.getByText(/Shared into a privacy-safe assignment corridor\./i)).toBeVisible();
   });
 
   test('renders the quiet desktop header navigation', async ({ page }) => {

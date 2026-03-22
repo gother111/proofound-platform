@@ -24,7 +24,7 @@ export function HeroSection({
 
   const traceOpacity = useTransform(scrollYProgress, [0, 0.18, 0.32], [1, 1, 0]);
   const proofOpacity = useTransform(scrollYProgress, [0.28, 0.5, 0.9], [0, 1, 1]);
-  const handoffOpacity = useTransform(scrollYProgress, [0.76, 0.94], [0, 1]);
+  const handoffOpacity = useTransform(scrollYProgress, [0.62, 0.82], [0, 1]);
   const artifactScale = useTransform(scrollYProgress, [0, 1], [1.02, 1]);
   const artifactY = useTransform(scrollYProgress, [0, 1], [20, 0]);
 
@@ -201,13 +201,14 @@ export function HeroSection({
                     </div>
 
                     <motion.div
-                      className="pointer-events-none absolute bottom-6 right-6 rounded-[20px] bg-[color:var(--landing-surface-soft)]/92 px-5 py-4 shadow-[0_18px_42px_rgba(94,94,94,0.08)]"
+                      className="pointer-events-none absolute bottom-6 right-6 overflow-hidden rounded-[20px] border border-[var(--landing-action)]/18 bg-[linear-gradient(145deg,rgba(87,98,83,0.96),rgba(103,114,95,0.93))] px-5 py-4 text-white shadow-[0_26px_52px_rgba(82,91,78,0.24)]"
                       style={{ opacity: handoffOpacity }}
                     >
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--landing-muted)]">
+                      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.16),transparent_38%)]" />
+                      <div className="relative text-[11px] font-semibold uppercase tracking-[0.22em] text-[#f2eadf]">
                         Review handoff
                       </div>
-                      <div className="mt-2 text-sm leading-7 text-[var(--landing-text)]">
+                      <div className="relative mt-2 max-w-[18rem] text-[15px] font-medium leading-7 text-white">
                         Shared into a privacy-safe assignment corridor.
                       </div>
                     </motion.div>
