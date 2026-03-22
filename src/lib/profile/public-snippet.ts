@@ -10,6 +10,11 @@ export type SnippetProfileType = 'individual' | 'organization';
 export type SnippetTheme = 'light' | 'dark' | 'auto';
 export type SnippetFormat = 'card' | 'mini' | 'full';
 
+function normalizeSnippetTheme(theme: SnippetTheme | null | undefined): SnippetTheme {
+  void theme;
+  return 'light';
+}
+
 type DbSnippetRow = {
   id: string;
   user_id: string;
@@ -339,7 +344,7 @@ export async function getSnippetByToken(token: string): Promise<PublicSnippet | 
     id: row.id,
     userId: row.user_id,
     fields: parseSnippetFields(row.fields),
-    theme: row.theme ?? 'auto',
+    theme: normalizeSnippetTheme(row.theme),
     format: row.format ?? 'card',
     expiresAt: row.expires_at,
     createdAt: row.created_at,

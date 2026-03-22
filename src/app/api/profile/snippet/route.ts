@@ -59,7 +59,8 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { fields, theme, format, expiresInDays } = body;
+    const { fields, format, expiresInDays } = body;
+    const normalizedTheme = 'light' as const;
 
     if (!isSnippetFields(fields)) {
       return NextResponse.json({ error: 'Invalid fields payload' }, { status: 400 });
@@ -139,7 +140,7 @@ export async function POST(req: NextRequest) {
         ${user.id},
         ${issued.token.id}::uuid,
         ${JSON.stringify(fields)}::jsonb,
-        ${theme || 'auto'},
+        ${normalizedTheme},
         ${format || 'card'},
         ${profileType},
         ${profileType === 'organization' ? orgId : null},
@@ -166,7 +167,7 @@ export async function POST(req: NextRequest) {
         shareToken: issued.rawToken,
         url: buildPublicProfileURL(issued.rawToken),
         fields: snippet.fields,
-        theme: snippet.theme,
+        theme: normalizedTheme,
         format: snippet.format,
         profileType: snippet.profile_type,
         orgId: snippet.org_id,
@@ -218,7 +219,7 @@ export async function GET(req: NextRequest) {
       shareToken: null,
       url: null,
       fields: row.fields,
-      theme: row.theme,
+      theme: 'light',
       format: row.format,
       profileType: row.profile_type || 'individual',
       orgId: row.org_id || null,

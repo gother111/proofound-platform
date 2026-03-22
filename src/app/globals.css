@@ -9,79 +9,50 @@
 @layer base {
   :root {
     /*
-     * Proofound Japandi Design System - Light Mode
-     * 
-     * Design Philosophy:
-     * - Natural, warm color palette inspired by Japanese and Scandinavian design
-     * - Earthy tones for a calm, professional feel
-     * - High contrast for accessibility (WCAG AAA where possible)
-     * 
-     * Base font size set to 16px to prevent iOS zoom on focus
+     * Proofound Global Japandi Design System
+     *
+     * Light-first theme using a unified Japandi palette across the full app.
+     * Dark mode is intentionally disabled in favor of one calm, editorial system.
      */
     --font-size: 16px;
 
-    /* 
-     * Proofound Brand Colors - Exact from Figma Design System
-     * These are the core brand colors that define Proofound's visual identity
-     * 
-     * WCAG 2.1 AA Color Contrast Audit:
-     * All combinations tested and meet or exceed minimum requirements
-     * 
-     * Primary Text Combinations:
-     * - Charcoal (#2D3330) on Parchment (#F7F6F1): 11.2:1 (AAA ✓)
-     * - Forest (#1C4D3A) on Parchment (#F7F6F1): 10.8:1 (AAA ✓)
-     * - White on Forest (#1C4D3A): 10.8:1 (AAA ✓)
-     * - White on Terracotta (#C76B4A): 4.8:1 (AA ✓)
-     * 
-     * Secondary Text Combinations:
-     * - Muted text (#6B6760) on Parchment: 5.1:1 (AA+ ✓)
-     * - Muted text on White: 5.3:1 (AA+ ✓)
-     * 
-     * Border & Subtle Elements:
-     * - Stone (#E8E6DD) on Parchment: 1.1:1 (visible, not for text)
-     */
-    --proofound-forest: #1c4d3a;
-    /* Primary brand color - deep forest green */
-    --proofound-parchment: #f7f6f1;
-    /* Background color - warm off-white */
-    --proofound-terracotta: #c76b4a;
-    /* Accent color - warm terracotta */
-    --proofound-charcoal: #2d3330;
-    /* Text color - rich charcoal */
-    --proofound-stone: #e8e6dd;
-    /* Border color - soft stone */
+    /* Global Japandi palette */
+    --proofound-forest: #606c5a;
+    --proofound-parchment: #f3f0e8;
+    --proofound-terracotta: #c09e85;
+    --proofound-charcoal: #5e5e5e;
+    --proofound-stone: #d5caba;
 
-    /* Japandi Natural Palette - Aligned with Figma */
-    --background: 210 20% 98%; /* #f7f8fa - Very soft, light modern gray/off-white */
-    --foreground: 150 7% 19%;
-    --card: 0 0% 100%;
-    --card-foreground: 150 7% 19%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 150 7% 19%;
-    --primary: 157 47% 21%;
+    --background: 44 31% 93%;
+    --foreground: 0 0% 37%;
+    --card: 40 11% 89%;
+    --card-foreground: 0 0% 37%;
+    --popover: 40 11% 89%;
+    --popover-foreground: 0 0% 37%;
+    --primary: 100 9% 39%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 16 53% 54%;
+    --secondary: 25 32% 64%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 49 19% 89%;
-    --muted-foreground: 38 5% 40%;
-    --accent: 16 53% 54%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 17 60% 44%;
+    --muted: 40 11% 89%;
+    --muted-foreground: 26 9% 52%;
+    --accent: 33 56% 69%;
+    --accent-foreground: 0 0% 37%;
+    --destructive: 25 32% 64%;
     --destructive-foreground: 0 0% 100%;
-    --border: 210 14% 89%; /* softer, less saturated border for cleaner grid lines */
-    --input: 210 14% 89%;
-    --input-background: #ffffff;
-    --switch-background: #e8e6dd;
-    --ring: 157 47% 21%;
+    --border: 36 24% 78%;
+    --input: 36 24% 78%;
+    --input-background: #f6f2ea;
+    --switch-background: #d5caba;
+    --ring: 100 9% 39%;
 
-    /* Extended Palette - Exact from Figma */
-    --sage: #7a9278;
-    --teal: #5c8b89;
-    --ochre: #d4a574;
-    --clay: #c9a57b;
-    --sand: #e0d5c7;
-    --bamboo: #6b7f5f;
-    --olive: #8b9556;
+    /* Extended palette */
+    --sage: #b9b99d;
+    --teal: #b0b9a8;
+    --ochre: #dcb482;
+    --clay: #c09e85;
+    --sand: #d5caba;
+    --bamboo: #606c5a;
+    --olive: #8f837a;
 
     /* Border Radius - Design System Standard */
     --radius: 0.75rem;
@@ -89,61 +60,21 @@
     --radius-md: 0.5rem;
     --radius-sm: 0.25rem;
   }
-
-  .dark {
-    /* Proofound Japandi Dark Mode - Exact from Figma Design System */
-    --background: 231 28% 14%;
-    --foreground: 40 44% 84%;
-
-    --card: 228 17% 17%;
-    --card-foreground: 40 44% 84%;
-
-    --popover: 225 21% 22%;
-    --popover-foreground: 40 44% 84%;
-
-    /* Primary - Warm Beige Stone */
-    --primary: 38 34% 75%;
-    --primary-foreground: 231 28% 14%;
-
-    /* Secondary - Deep Terracotta */
-    --secondary: 16 53% 54%;
-    --secondary-foreground: 40 44% 84%;
-
-    --muted: 225 21% 22%;
-    --muted-foreground: 36 9% 50%;
-
-    --accent: 38 34% 75%;
-    --accent-foreground: 231 28% 14%;
-
-    --destructive: 11 54% 63%;
-    --destructive-foreground: 231 28% 14%;
-
-    --border: 38 34% 75% / 0.1;
-    --input: 225 21% 22%;
-    --input-background: #2c3244;
-    --switch-background: #2c3244;
-    --ring: 38 34% 75% / 0.4;
-
-    /* Extended Palette - Dark Mode Variants */
-    --sage: #5a8f6f;
-    --teal: #6faaa0;
-    --ochre: #d49860;
-    --clay: #c86b4a;
-    --sand: #c9b89a;
-    --bamboo: #5a8f6f;
-    --olive: #5a8f6f;
-  }
 }
 
 @layer base {
+  html {
+    color-scheme: light;
+  }
+
   * {
     @apply border-border;
   }
 
   body {
     /* Fallback to ensure text stays visible if CSS vars fail */
-    background-color: #f5f3ee;
-    color: #2d3330;
+    background-color: #f3f0e8;
+    color: #5e5e5e;
     @apply bg-background text-foreground antialiased;
     font-family:
       'Inter',
@@ -262,6 +193,25 @@
     clip: auto;
     white-space: normal;
   }
+
+  .landing-japandi {
+    --landing-bg: var(--proofound-parchment);
+    --landing-surface: #e6e4e0;
+    --landing-surface-soft: #f6f2ea;
+    --landing-surface-strong: var(--proofound-stone);
+    --landing-sage-soft: var(--sage);
+    --landing-sage-mist: var(--teal);
+    --landing-blush: #e0cfc3;
+    --landing-clay: var(--proofound-terracotta);
+    --landing-text: var(--proofound-charcoal);
+    --landing-muted: #8f837a;
+    --landing-action: var(--proofound-forest);
+    --landing-accent: #dcb482;
+    --landing-border: #d8cec0;
+    --landing-border-soft: #e3dbcf;
+    --landing-dark: #4f4d4a;
+    --landing-dark-soft: #6d6a66;
+  }
 }
 
 /* Landing personas tile micro-animation keyframes */
@@ -358,15 +308,19 @@
   }
 
   .glass-panel {
-    @apply bg-white/60 backdrop-blur-md border border-proofound-stone/30 shadow-sm dark:bg-background/80 dark:border-border;
+    background-color: rgb(243 240 232 / 0.72);
+    border-color: rgb(213 202 186 / 0.45);
+    @apply border backdrop-blur-md shadow-sm;
   }
 
   .glass-panel-heavy {
-    @apply bg-white/50 backdrop-blur-xl border border-proofound-stone/60 shadow-sm transition-all duration-300 transform-gpu dark:bg-card/80 dark:border-border;
+    background-color: rgb(246 242 234 / 0.7);
+    border-color: rgb(213 202 186 / 0.7);
+    @apply border backdrop-blur-xl shadow-sm transition-all duration-300 transform-gpu;
   }
 
   .card-flat {
-    @apply border-proofound-stone/30 bg-transparent shadow-none dark:border-border;
+    @apply border-proofound-stone/30 bg-transparent shadow-none;
   }
 
   .safe-area-inset-bottom {

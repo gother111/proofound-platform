@@ -130,7 +130,7 @@ export function ShareProfileDialog({
     getDefaultFields(profileType)
   );
 
-  const [theme, setTheme] = useState<'light' | 'dark' | 'auto'>('auto');
+  const theme = 'light' as const;
   const [format, setFormat] = useState<'card' | 'mini' | 'full'>('card');
   const [expiresInDays, setExpiresInDays] = useState<number | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -274,29 +274,11 @@ export function ShareProfileDialog({
             </RadioGroup>
           </div>
 
-          {/* Theme Selection */}
-          <div>
-            <Label className="text-base font-semibold mb-3 block">Theme</Label>
-            <RadioGroup value={theme} onValueChange={(v: any) => setTheme(v)}>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="light" id="light" />
-                <Label htmlFor="light" className="cursor-pointer">
-                  Light
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="dark" id="dark" />
-                <Label htmlFor="dark" className="cursor-pointer">
-                  Dark
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="auto" id="auto" />
-                <Label htmlFor="auto" className="cursor-pointer">
-                  Auto (Match viewer's preference)
-                </Label>
-              </div>
-            </RadioGroup>
+          <div className="rounded-xl border border-border bg-card p-4">
+            <Label className="mb-1 block text-base font-semibold">Theme</Label>
+            <p className="text-sm text-muted-foreground">
+              Public snippets now use the global Japandi light theme by default.
+            </p>
           </div>
 
           {/* Expiration */}

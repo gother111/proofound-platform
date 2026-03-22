@@ -10,9 +10,7 @@ type PublicSnippetViewProps = {
 };
 
 function themeWrapper(theme: PublicSnippetViewModel['theme']): string {
-  if (theme === 'dark') {
-    return 'bg-[#1E2421]';
-  }
+  void theme;
   return 'bg-japandi-bg';
 }
 

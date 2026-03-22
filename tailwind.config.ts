@@ -33,29 +33,29 @@ const config: Config = {
       colors: {
         // Figma Design System Colors - Primary Brand
         proofound: {
-          forest: '#1C4D3A', // Primary brand
-          terracotta: '#C76B4A', // Accent
-          parchment: '#F7F6F1', // Background
-          charcoal: '#2D3330', // Text
-          stone: '#E8E6DD', // Borders
+          forest: '#606C5A',
+          terracotta: '#C09E85',
+          parchment: '#F3F0E8',
+          charcoal: '#5E5E5E',
+          stone: '#D5CABA',
         },
         // Extended Japandi Palette
         extended: {
-          sage: '#7A9278',
-          teal: '#5C8B89',
-          ochre: '#D4A574',
-          clay: '#C9A57B',
-          sand: '#E0D5C7',
-          bamboo: '#6B7F5F',
+          sage: '#B9B99D',
+          teal: '#B0B9A8',
+          ochre: '#DCB482',
+          clay: '#C09E85',
+          sand: '#D5CABA',
+          bamboo: '#606C5A',
         },
         // V3 semantic tokens
-        'proofound-success-tint': '#E8F5E1',
+        'proofound-success-tint': '#EEF1EA',
         // shadcn/ui semantic tokens
-        'japandi-bg': '#F7F6F1',
-        'japandi-sage': '#8A9A5B',
-        'japandi-terracotta': '#E2725B',
-        'japandi-charcoal': '#333333',
-        'japandi-gray': '#E5E5E5',
+        'japandi-bg': '#F3F0E8',
+        'japandi-sage': '#B9B99D',
+        'japandi-terracotta': '#C09E85',
+        'japandi-charcoal': '#5E5E5E',
+        'japandi-gray': '#E6E4E0',
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
@@ -104,13 +104,13 @@ const config: Config = {
         error: brandTokens.colors.semantic.error,
         info: brandTokens.colors.semantic.info,
         // Nature-inspired colors (direct from design system)
-        sage: '#7A9278',
-        teal: '#5C8B89',
-        clay: '#C9A57B',
-        sand: '#E0D5C7',
-        bamboo: '#6B7F5F',
-        ochre: '#D4A574',
-        olive: '#8B9556',
+        sage: '#B9B99D',
+        teal: '#B0B9A8',
+        clay: '#C09E85',
+        sand: '#D5CABA',
+        bamboo: '#606C5A',
+        ochre: '#DCB482',
+        olive: '#8F837A',
       },
       fontFamily: {
         display: brandTokens.typography.fontFamilies.display.split(','),

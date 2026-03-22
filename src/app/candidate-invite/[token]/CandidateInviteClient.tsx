@@ -212,7 +212,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
           profileType: 'individual',
           fields: CANDIDATE_PROOF_CARD_DEFAULT_FIELDS,
           format: 'card',
-          theme: 'auto',
+          theme: 'light',
         }),
       });
 
