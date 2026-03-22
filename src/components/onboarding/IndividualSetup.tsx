@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { type FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
@@ -200,6 +200,26 @@ export function IndividualSetup() {
     }
   }
 
+  function submitSafeShell(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    handleSafeShellSubmit(new FormData(event.currentTarget));
+  }
+
+  function submitContext(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    handleContextSubmit(new FormData(event.currentTarget));
+  }
+
+  function submitProof(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    handleProofSubmit(new FormData(event.currentTarget));
+  }
+
+  function submitProofPack(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    handleProofPackSubmit();
+  }
+
   function handleSafeShellSubmit(formData: FormData) {
     setSafeShell({
       displayName: String(formData.get('displayName') || '').trim(),
@@ -287,7 +307,7 @@ export function IndividualSetup() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form action={handleSafeShellSubmit} className="space-y-5">
+            <form onSubmit={submitSafeShell} className="space-y-5">
               <div className="grid gap-5 md:grid-cols-2">
                 <div>
                   <Label htmlFor="displayName">Display name *</Label>
@@ -433,7 +453,7 @@ export function IndividualSetup() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form action={handleContextSubmit} className="space-y-5">
+            <form onSubmit={submitContext} className="space-y-5">
               <div>
                 <Label htmlFor="contextType">Context type *</Label>
                 <select
@@ -546,7 +566,7 @@ export function IndividualSetup() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form action={handleProofSubmit} className="space-y-5">
+            <form onSubmit={submitProof} className="space-y-5">
               <div>
                 <Label htmlFor="proofTitle">Proof title *</Label>
                 <Input
@@ -622,7 +642,7 @@ export function IndividualSetup() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form action={handleProofPackSubmit} className="space-y-5">
+            <form onSubmit={submitProofPack} className="space-y-5">
               <div>
                 <Label htmlFor="proofPackClaim">Claim *</Label>
                 <Input

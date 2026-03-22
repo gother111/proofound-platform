@@ -1,4 +1,4 @@
-> Reference-only wrapper: active MVP implementation now uses `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, `PRD_for_a_web_platform_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, and `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`.
+> Reference-only wrapper: active MVP implementation now uses `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, and `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`.
 > Do not use this file as the active technical contract.
 
 # Proofound MVP Technical Requirements — Aligned Rewrite
@@ -25,7 +25,7 @@ It keeps only the architecture, data model, lifecycle, privacy, security, operat
 
 Proofound MVP is a web application that supports:
 
-- proof-first individual portfolios
+- proof-first Proof Pack creation and public proof portfolio surfaces
 - private contextual scaffolding
 - organization trust pages and assignments
 - blind-by-default review with progressive reveal

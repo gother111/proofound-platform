@@ -12,18 +12,17 @@
 
 This document is the current source of truth for the MVP.
 
-When this document conflicts with older narrative or exploratory material, this document wins.
+When this document conflicts with older narrative, exploratory, audit, or implementation-adjacent material, this document wins.
 
 Precedence order:
 
-1. This locked source-of-truth document
-2. `PRD_for_a_web_platform_MVP.aligned-rewrite.2026-03-11.md` for launch-bound product detail that does not conflict with this document
-3. `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md` for implementation detail that does not conflict with this document
-4. `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md` for operating guidance only
-5. `Proofound_Project_Specification_2026-03-11.md` as reference-only strategic and implementation context
-6. Broader strategy, architecture, audit, repo-governance material, and historical wrappers as reference only, including `PRD_for_a_web_platform_MVP.master-latest.md`, `PRD_TECHNICAL_REQUIREMENTS.md`, `LAUNCH_RUNBOOK.md`, `docs/proofound-hard-audit-2026-03-12.md`, `README.md`, `project/Prompt.md`, and `project/Architecture.md`
+1. `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`
+2. `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `Proofound_Project_Specification_2026-03-11.md`, and `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md` for implementation and product detail that do not conflict with this document
+3. `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md` for operating guidance only
+4. `Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md` for market framing and launch messaging only
+5. Audits, reviews, and older exploratory materials as advisory only
 
-This document is intentionally narrower than the broader platform vision. It protects launch focus.
+This document is intentionally narrower than the broader company vision. For MVP, Proofound is a proof-backed hiring credibility corridor centered on Proof Packs. The public portfolio is a selected output surface, not the product center.
 
 ---
 
@@ -31,10 +30,12 @@ This document is intentionally narrower than the broader platform vision. It pro
 
 ### 1.1 Exact purpose of the MVP
 
-Proofound MVP is a **proof-first, privacy-first, portfolio-first** platform that helps:
+Proofound MVP is a **proof-first, privacy-first hiring credibility corridor** centered on **Proof Packs**.
 
-- individuals show what they can actually do through structured proof, not just self-claimed CV bullets
-- organizations review people through stronger signal than CVs by using proof-backed, explainable, privacy-safe review
+It helps:
+
+- individuals turn real work into structured Proof Packs and publish a trustworthy proof portfolio
+- organizations define clearer assignments and review people through proof-backed, explainable, privacy-safe early review instead of CV theater
 
 The MVP exists to solve a trust problem:
 
@@ -43,7 +44,7 @@ The MVP exists to solve a trust problem:
 
 ### 1.2 One-sentence product promise
 
-**Proofound helps people prove what they can do, and helps organizations review candidates through proof instead of profile theater.**
+**Proofound helps people turn real work into structured Proof Packs, and helps organizations review candidates through proof instead of profile theater.**
 
 ### 1.3 Core wedge
 
@@ -367,6 +368,8 @@ It is not included to bring back public résumé theater.
 ## 6.1 Canonical proof object
 
 The **Proof Pack** is the canonical proof object in the MVP.
+
+The public portfolio is a selected publication surface derived from Proof Packs; it is not the core object.
 
 Everything important should resolve back to Proof Packs:
 
@@ -1336,18 +1339,18 @@ Specific cleanup tasks:
 - delete or move broad org-surface requirements to post-MVP appendix
 - delete any visible vanity metrics from public or owner-facing MVP surfaces
 - remove any language that suggests public candidate browsing
-- keep portfolio-first day-1 activation as the primary UX promise
+- keep proof-first day-1 activation as the primary UX promise, with a fast portfolio output as the first visible reward
 - ensure technical requirements and implementation tasks treat privacy / RLS proof as launch-critical
 
 ---
 
 ## 21. Final locked MVP statement
 
-Proofound MVP is a narrow, proof-first hiring and credibility corridor.
+Proofound MVP is a narrow, proof-first hiring credibility corridor centered on Proof Packs.
 
-It helps individuals turn real work into structured proof and publish a trustworthy portfolio.
-It helps organizations define clearer assignments and review people through privacy-safe, explainable proof.
-It includes private contextual scaffolding, bounded verification, and an explicit hiring-to-engagement corridor.
-It excludes generic HR SaaS sprawl, open-marketplace sprawl, vanity mechanics, and integration-heavy replacement ambitions.
+It helps individuals turn real work into structured Proof Packs and publish a trustworthy proof portfolio.
+It helps organizations define clearer assignments and review people through privacy-safe, explainable proof-backed early review.
+It includes private contextual scaffolding, bounded verification, and an explicit intro-to-engagement corridor.
+It excludes generic HR SaaS sprawl, public marketplace sprawl, vanity mechanics, and integration-heavy replacement ambitions.
 
 That is the MVP to build.

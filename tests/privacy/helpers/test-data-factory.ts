@@ -155,6 +155,28 @@ export async function createTestConversation(
   const client = createServiceRoleClient();
   const stageValue = stage === 2 || stage === 'revealed' ? 'revealed' : 'masked';
 
+  for (const participantId of [participantOneId, participantTwoId]) {
+    const { data: existingProfile, error: profileLookupError } = await client
+      .from('profiles')
+      .select('id')
+      .eq('id', participantId)
+      .maybeSingle();
+
+    if (profileLookupError) {
+      throw new Error(
+        `Failed to check test profile ${participantId}: ${profileLookupError.message}`
+      );
+    }
+
+    if (!existingProfile) {
+      await createTestProfile(participantId, {
+        displayName: `Test User ${participantId.slice(0, 8)}`,
+        handle: `test_${participantId.slice(0, 8)}`,
+        persona: 'individual',
+      });
+    }
+  }
+
   // Create a dummy organization to satisfy NOT NULL org_id on assignments
   const slug = `test-org-${Math.random().toString(36).slice(2, 8)}`;
   const { data: org, error: orgError } = await client
@@ -163,6 +185,7 @@ export async function createTestConversation(
       slug,
       display_name: `Test Org ${slug}`,
       type: 'company',
+      created_by: participantOneId,
     })
     .select()
     .single();
@@ -181,7 +204,7 @@ export async function createTestConversation(
     {
       org_id: org.id,
       user_id: participantOneId,
-      role: 'org_manager',
+      role: 'org_owner',
       state: 'active',
     },
     {
@@ -208,26 +231,81 @@ export async function createTestConversation(
     .select()
     .single();
 
-  if (assignmentError) {
-    throw new Error(`Failed to create test assignment: ${assignmentError.message}`);
+  if (assignmentError || !assignment) {
+    throw new Error(
+      `Failed to create test assignment: ${assignmentError?.message ?? 'missing assignment row'}`
+    );
   }
 
-  // Create a dummy match
-  const { data: match, error: matchError } = await client
-    .from('matches')
-    .insert({
-      assignment_id: assignment.id,
-      profile_id: participantOneId,
-      score: 0.85,
-      vector: {},
-      weights: {},
-      subscores: {},
-    })
-    .select()
-    .single();
+  // Create a dummy match. Retry once if the test fixture parents need to be repaired.
+  let assignmentId = assignment.id;
+  let match: Record<string, any> | null = null;
+  let matchError: { code?: string; details?: string | null; message: string } | null = null;
 
-  if (matchError) {
-    throw new Error(`Failed to create test match: ${matchError.message}`);
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const result = await client
+      .from('matches')
+      .insert({
+        assignment_id: assignmentId,
+        profile_id: participantOneId,
+        score: 0.85,
+        vector: {},
+        weights: {},
+        subscores: {},
+        is_test_match: true,
+      })
+      .select()
+      .single();
+
+    match = result.data;
+    matchError = result.error;
+
+    if (!matchError && match) {
+      break;
+    }
+
+    const details = `${matchError?.details ?? ''} ${matchError?.message ?? ''}`;
+
+    if (attempt === 0 && details.includes('profile_id')) {
+      await createTestProfile(participantOneId, {
+        displayName: `Test User ${participantOneId.slice(0, 8)}`,
+        handle: `test_${participantOneId.slice(0, 8)}`,
+        persona: 'individual',
+      });
+      continue;
+    }
+
+    if (attempt === 0 && details.includes('assignment_id')) {
+      const assignmentRetry = await client
+        .from('assignments')
+        .insert({
+          org_id: org.id,
+          role: 'Test Assignment',
+          description: 'Test assignment for RLS testing',
+          status: 'active',
+          values_required: [],
+          cause_tags: [],
+          must_have_skills: [],
+          nice_to_have_skills: [],
+        })
+        .select('id')
+        .single();
+
+      if (assignmentRetry.error || !assignmentRetry.data?.id) {
+        throw new Error(
+          `Failed to repair test assignment before creating match: ${assignmentRetry.error?.message ?? 'missing assignment id'}`
+        );
+      }
+
+      assignmentId = assignmentRetry.data.id;
+      continue;
+    }
+
+    break;
+  }
+
+  if (matchError || !match) {
+    throw new Error(`Failed to create test match: ${matchError?.message ?? 'unknown error'}`);
   }
 
   // Create conversation
@@ -235,7 +313,7 @@ export async function createTestConversation(
     .from('conversations')
     .insert({
       match_id: match.id,
-      assignment_id: assignment.id,
+      assignment_id: assignmentId,
       participant_one_id: participantOneId,
       participant_two_id: participantTwoId,
       stage: stageValue,
@@ -247,7 +325,14 @@ export async function createTestConversation(
     throw new Error(`Failed to create test conversation: ${conversationError.message}`);
   }
 
-  return { conversation, match, assignment };
+  return {
+    conversation,
+    match,
+    assignment: {
+      ...assignment,
+      id: assignmentId,
+    },
+  };
 }
 
 /**

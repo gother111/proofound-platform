@@ -48,13 +48,12 @@ test.describe('Seeded public org trust smoke', () => {
       page.getByRole('heading', { name: SEEDED_PUBLIC_ORG_TRUST_FIXTURE.organization.displayName })
     ).toBeVisible();
     await expect(page.getByText(/public organization trust card/i)).toBeVisible();
+    await expect(page.getByText(/shareable by direct link/i)).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Mission / purpose' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'What work is offered' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Assignment clarity' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Seriousness of review' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Trust basics' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Purpose' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Why the work matters' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Working context' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Hiring process clarity' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Durable trust signals' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Active assignment' })).toBeVisible();
     await expect(page.getByText('Platform reviewed').first()).toBeVisible();
     await expect(page.getByText(SEEDED_PUBLIC_ORG_TRUST_FIXTURE.assignment.role)).toBeVisible();
 

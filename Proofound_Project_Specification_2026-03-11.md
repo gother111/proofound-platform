@@ -1,7 +1,7 @@
 # Proofound Project Specification — MVP Build Specification
 
 > Reference-only note: this document captures broader strategy and implementation context.
-> Active MVP implementation authority lives in `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, then `PRD_for_a_web_platform_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, then this file.
+> Active MVP implementation authority lives in `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, then `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, then this file.
 > This document must not override the locked MVP authority stack.
 
 **Status:** Project specification for implementation  
@@ -13,12 +13,12 @@
 
 ## 1. Project overview
 
-Proofound MVP is a proof-first, privacy-first, portfolio-first hiring and credibility corridor.
+Proofound MVP is a proof-first, privacy-first hiring and credibility corridor centered on Proof Packs.
 
 The system has two user sides:
 
-- **individuals** who turn real work into structured proof and publish a trustworthy portfolio
-- **organizations** that define clearer assignments and review people through privacy-safe, explainable proof
+- **individuals** who turn real work into structured Proof Packs and publish a trustworthy proof portfolio
+- **organizations** that define clearer assignments and review people through privacy-safe, explainable proof-backed early review
 
 This is not a full recruiting suite, not a public social network, and not an ATS replacement.
 
@@ -185,15 +185,16 @@ Real-world mapping:
 ## 7. Product rules to protect
 
 1. Proof Pack is the canonical proof object.
-2. Publicly, the product is proof-first.
-3. Privately, the product stores contextual scaffolding.
-4. Blind-by-default review is mandatory.
-5. Identity reveal requires candidate consent.
-6. Public publication is separate from matching reveal.
-7. Skills must be tied to proof or context.
-8. Intro-eligible must be harder than portfolio-ready.
-9. Verification is claim-scoped, not global.
-10. No vanity counters or public popularity mechanics.
+2. The public portfolio is a selected publication surface derived from Proof Packs.
+3. Publicly, the product is proof-first.
+4. Privately, the product stores contextual scaffolding.
+5. Blind-by-default review is mandatory.
+6. Identity reveal requires candidate consent.
+7. Public publication is separate from matching reveal.
+8. Skills must be tied to proof or context.
+9. Intro-eligible must be harder than portfolio-ready.
+10. Verification is claim-scoped, not global.
+11. No vanity counters or public popularity mechanics.
 
 ---
 

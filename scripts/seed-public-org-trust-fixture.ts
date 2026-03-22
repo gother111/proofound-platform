@@ -235,7 +235,7 @@ async function main() {
       role: assignment.role,
       description: assignment.businessValue,
       status: 'active',
-      creation_status: 'published',
+      creation_status: 'review_ready',
       business_value: assignment.businessValue,
       values_required: [],
       cause_tags: [],

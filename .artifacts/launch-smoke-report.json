@@ -1,33 +1,35 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-03-16T16:13:39.183Z",
+  "generatedAt": "2026-03-21T23:17:31.403Z",
+  "targetBaseUrl": "http://localhost:3000",
+  "executionMode": "local",
   "freshnessThresholdMinutes": 60,
-  "expiresAt": "2026-03-16T17:13:39.183Z",
-  "overallStatus": "fail",
+  "expiresAt": "2026-03-22T00:17:31.403Z",
+  "overallStatus": "pass",
   "corridors": [
     {
       "id": "individual",
       "label": "Individual corridor",
       "status": "pass",
       "checkIds": ["public_individual_portfolio_visible", "proof_creation_case"],
-      "generatedAt": "2026-03-16T16:13:39.183Z"
+      "generatedAt": "2026-03-21T23:17:31.403Z"
     },
     {
       "id": "organization",
       "label": "Organization corridor",
-      "status": "fail",
+      "status": "pass",
       "checkIds": [
         "public_org_trust_fixture_live",
         "full_org_corridor_review_to_engagement_verification"
       ],
-      "generatedAt": "2026-03-16T16:13:39.183Z"
+      "generatedAt": "2026-03-21T23:17:31.403Z"
     },
     {
       "id": "trust_privacy",
       "label": "Trust / privacy corridor",
       "status": "pass",
       "checkIds": ["hidden_portfolio_protected", "privacy_no_leak_case"],
-      "generatedAt": "2026-03-16T16:13:39.183Z"
+      "generatedAt": "2026-03-21T23:17:31.403Z"
     }
   ],
   "checks": [
@@ -42,9 +44,9 @@
       },
       "status": "pass",
       "expectedState": "public_individual_portfolio_visible",
-      "durationMs": 2028,
-      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild\n\n ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 87ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  17:10:08\n   Duration  1.28s (transform 122ms, setup 177ms, collect 223ms, tests 87ms, environment 345ms, prepare 58ms)\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
-      "generatedAt": "2026-03-16T16:10:10.053Z"
+      "durationMs": 1490,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops\n\n ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 65ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  00:11:15\n   Duration  846ms (transform 101ms, setup 96ms, collect 157ms, tests 65ms, environment 181ms, prepare 39ms)\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
+      "generatedAt": "2026-03-21T23:11:15.925Z"
     },
     {
       "id": "proof_creation_case",
@@ -57,9 +59,9 @@
       },
       "status": "pass",
       "expectedState": "proof_creation_case_live",
-      "durationMs": 1335,
-      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops\n\n ✓ tests/api/expertise-user-skill-proofs-route.test.ts  (4 tests) 13ms\n\n Test Files  1 passed (1)\n      Tests  4 passed (4)\n   Start at  17:10:10\n   Duration  826ms (transform 53ms, setup 109ms, collect 51ms, tests 13ms, environment 210ms, prepare 45ms)\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
-      "generatedAt": "2026-03-16T16:10:11.390Z"
+      "durationMs": 1391,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  override existing env vars with { override: true }\n\n ✓ tests/api/expertise-user-skill-proofs-route.test.ts  (4 tests) 11ms\n\n Test Files  1 passed (1)\n      Tests  4 passed (4)\n   Start at  00:11:16\n   Duration  688ms (transform 53ms, setup 90ms, collect 50ms, tests 11ms, environment 176ms, prepare 35ms)\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
+      "generatedAt": "2026-03-21T23:11:17.317Z"
     },
     {
       "id": "public_org_trust_fixture_live",
@@ -78,9 +80,9 @@
       },
       "status": "pass",
       "expectedState": "public_org_trust_fixture_live",
-      "durationMs": 24045,
-      "outputSnippet": "[seed_public_org_trust_fixture]\n> seed:public-org-trust-fixture\n> tsx scripts/seed-public-org-trust-fixture.ts\n\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }\n{\n  \"ok\": true,\n  \"slug\": \"proofound-labs\",\n  \"path\": \"/portfolio/org/proofound-labs\",\n  \"publicationState\": \"public_noindex\",\n  \"seededAt\": \"2026-03-16T16:10:11.759Z\"\n}\n\n[seeded_public_org_trust_smoke]\n> test:e2e:org-trust:smoke\n> node ./scripts/playwright-node20.mjs test e2e/public-org-trust.smoke.spec.ts --project=chromium --reporter=line --workers=1\n\n\n\n\n\nRunning 1 test using 1 worker\n\n\u001b[1A\u001b[2K[1/1] [chromium] › e2e/public-org-trust.smoke.spec.ts:9:3 › Seeded public org trust smoke › seeded org trust page returns 200 and stays MVP-safe\n\n\u001b[1A\u001b[2K  1 passed (19.7s)\n\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m(node:7504) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n\u001b[2m[WebServer] \u001b[22m(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22mImage with src \"/hero-shape.png\" is using quality \"55\" which is not configured in images.qualities. This config will be required starting in Next.js 16.\n\u001b[2m[WebServer] \u001b[22mRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m ⚠ Cross origin request detected from 127.0.0.1 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure \"allowedDevOrigins\" in next.config to allow this.\n\u001b[2m[WebServer] \u001b[22mRead more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins",
-      "generatedAt": "2026-03-16T16:10:35.435Z",
+      "durationMs": 22323,
+      "outputSnippet": "[seed_public_org_trust_fixture]\n> seed:public-org-trust-fixture\n> tsx scripts/seed-public-org-trust-fixture.ts\n\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }\n{\n  \"ok\": true,\n  \"mode\": \"seeded\",\n  \"slug\": \"proofound-labs\",\n  \"path\": \"/portfolio/org/proofound-labs\",\n  \"publicationState\": \"public_noindex\",\n  \"seededAt\": \"2026-03-21T23:11:17.847Z\",\n  \"verificationUrl\": null,\n  \"verifiedAt\": null,\n  \"httpStatus\": null\n}\n\n(node:73911) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n\n[seeded_public_org_trust_smoke]\n> test:e2e:org-trust:smoke\n> node ./scripts/playwright-node20.mjs test e2e/public-org-trust.smoke.spec.ts --project=chromium --reporter=line --workers=1\n\n\n\n\nRunning 1 test using 1 worker\n\n\u001b[1A\u001b[2K[1/1] [chromium] › e2e/public-org-trust.smoke.spec.ts:44:3 › Seeded public org trust smoke › seeded org trust page returns 200 and stays MVP-safe\n\u001b[1A\u001b[2K  1 passed (19.0s)\n\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m(node:73972) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n\u001b[2m[WebServer] \u001b[22m(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
+      "generatedAt": "2026-03-21T23:11:39.641Z",
       "evidence": {
         "fixtureSlug": "proofound-labs",
         "fixturePath": "/portfolio/org/proofound-labs"
@@ -106,12 +108,11 @@
           "NEXT_PUBLIC_USE_MOCK_SUPABASE": "false"
         }
       },
-      "status": "fail",
+      "status": "pass",
       "expectedState": "full_org_corridor_review_to_engagement_verification_live",
-      "durationMs": 179631,
-      "message": "Full org corridor review to engagement verification case failed",
-      "outputSnippet": "nding authenticated org corridor end to end\n\n\n\n\n\n\u001b[1A\u001b[2K  1) [chromium] › e2e/strict/org-corridor.strict.spec.ts:230:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end \n\n    Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\n    Locator: getByRole('heading', { name: /Why This Match\\?/i })\n    Expected: visible\n    Timeout: 10000ms\n    Error: element(s) not found\n\n    Call log:\n    \u001b[2m  - Expect \"toBeVisible\" with timeout 10000ms\u001b[22m\n    \u001b[2m  - waiting for getByRole('heading', { name: /Why This Match\\?/i })\u001b[22m\n\n\n      397 |     await expect(explanationTrigger).toBeVisible({ timeout: 10_000 });\n      398 |     await explanationTrigger.click({ force: true });\n    > 399 |     await expect(page.getByRole('heading', { name: /Why This Match\\?/i })).toBeVisible();\n          |                                                                            ^\n      400 |     await expect(page.getByText('Privacy-safe explanation')).toBeVisible();\n      401 |     await expect(\n      402 |       page.getByText(/Evidence points to a strong skills fit|Required proof and verification signals are in place/i)\n        at /Users/yuriibakurov/proofound/e2e/strict/org-corridor.strict.spec.ts:399:76\n\n    Error Context: test-results/strict-org-corridor.strict-d91f7-ted-org-corridor-end-to-end-chromium/error-context.md\n\n\n\u001b[1A\u001b[2K  1 failed\n    [chromium] › e2e/strict/org-corridor.strict.spec.ts:230:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end \n\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m(node:7591) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n\u001b[2m[WebServer] \u001b[22m(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (187kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (129kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (139kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22mImage with src \"/hero-shape.png\" is using quality \"55\" which is not configured in images.qualities. This config will be required starting in Next.js 16.\n\u001b[2m[WebServer] \u001b[22mRead more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities\n\u001b[1A\u001b[2K(node:7692) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m ⚠ Cross origin request detected from 127.0.0.1 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure \"allowedDevOrigins\" in next.config to allow this.\n\u001b[2m[WebServer] \u001b[22mRead more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m{\"level\":\"warn\",\"event\":\"api.slow\",\"timestamp\":\"2026-03-16T16:12:00.201Z\",\"requestId\":\"HpC9DGRVX6g8\",\"path\":\"/api/assignments\",\"method\":\"POST\",\"route\":\"/api/assignments\",\"durationMs\":5581}\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[Performance Alert] /api/assignments P95 7740ms exceeds 1500ms\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m{\"level\":\"warn\",\"event\":\"api.slow\",\"timestamp\":\"2026-03-16T16:12:55.869Z\",\"requestId\":\"gDeTmMDNFsCe\",\"path\":\"/api/assignments\",\"method\":\"GET\",\"route\":\"/api/assignments\",\"durationMs\":4652}\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[Performance Alert] /api/assignments P95 7740ms exceeds 1500ms",
-      "generatedAt": "2026-03-16T16:13:35.066Z"
+      "durationMs": 348077,
+      "outputSnippet": "[strict_org_corridor_smoke]\n[dotenv@17.2.3] injecting env (39) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }\n\nRunning 1 test using 1 worker\n\n\u001b[1A\u001b[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }\n\n\n\u001b[1A\u001b[2K[1/1] [chromium] › e2e/strict/org-corridor.strict.spec.ts:275:3 › Strict Authenticated Org Corridor › reruns the launch-binding authenticated org corridor end to end\n\n\n\n\n\n\n\n\n\u001b[1A\u001b[2K  Slow test file: [chromium] › e2e/strict/org-corridor.strict.spec.ts (5.4m)\n  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel\n  1 passed (5.8m)\n\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m(node:74125) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n\u001b[2m[WebServer] \u001b[22m(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (187kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (129kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (139kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`\n\u001b[1A\u001b[2K(node:74178) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m ⨯ [Error: aborted]\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m{\"level\":\"warn\",\"event\":\"api.slow\",\"timestamp\":\"2026-03-21T23:12:56.773Z\",\"requestId\":\"spYjRIqQ9qfl\",\"path\":\"/api/assignments\",\"method\":\"POST\",\"route\":\"/api/assignments\",\"durationMs\":7622}\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[Performance Alert] /api/assignments P95 7271ms exceeds 1500ms\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m{\"level\":\"warn\",\"event\":\"api.slow\",\"timestamp\":\"2026-03-21T23:13:46.656Z\",\"requestId\":\"8l6PFs_lAd_r\",\"path\":\"/api/assignments\",\"method\":\"GET\",\"route\":\"/api/assignments\",\"durationMs\":3907}\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m[Performance Alert] /api/assignments P95 7271ms exceeds 1500ms\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22m{\"level\":\"error\",\"event\":\"identity_revealed_email.missing_email\",\"timestamp\":\"2026-03-21T23:15:58.783Z\",\"conversationId\":\"b50397dc-a9a2-4055-9f15-24b63ce36f24\",\"hasUserOneEmail\":\"[REDACTED_FILE]\",\"hasUserTwoEmail\":\"[REDACTED_FILE]\"}\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22mInterview completion feedback invites failed {\n\u001b[2m[WebServer] \u001b[22m  code: \u001b[32m'PGRST204'\u001b[39m,\n\u001b[2m[WebServer] \u001b[22m  details: \u001b[1mnull\u001b[22m,\n\u001b[2m[WebServer] \u001b[22m  hint: \u001b[1mnull\u001b[22m,\n\u001b[2m[WebServer] \u001b[22m  message: \u001b[32m\"Could not find the 'id' column of 'feedback_tokens' in the schema cache\"\u001b[39m\n\u001b[2m[WebServer] \u001b[22m}\n\u001b[1A\u001b[2K\u001b[2m[WebServer] \u001b[22minternal_ops_queue.ensure.compatibility_fallback [Error [PostgresError]: relation \"internal_ops_queue_items\" does not exist] {\n\u001b[2m[WebServer] \u001b[22m  severity_local: \u001b[32m'ERROR'\u001b[39m,\n\u001b[2m[WebServer] \u001b[22m  severity: \u001b[32m'ERROR'\u001b[39m,\n\u001b[2m[WebServer] \u001b[22m  code: \u001b[32m'42P01'\u001b[39m,\n\u001b[2m[WebServer] \u001b[22m  position: \u001b[32m'234'\u001b[39m,\n\u001b[2m[WebServer] \u001b[22m  file: \u001b[32m'parse_relation.c'\u001b[39m,\n\u001b[2m[WebServer] \u001b[22m  line: \u001b[32m'1449'\u001b[39m,\n\u001b[2m[WebServer] \u001b[22m  routine: \u001b[32m'parserOpenTable'\u001b[39m\n\u001b[2m[WebServer] \u001b[22m}",
+      "generatedAt": "2026-03-21T23:17:27.718Z"
     },
     {
       "id": "hidden_portfolio_protected",
@@ -124,9 +125,9 @@
       },
       "status": "pass",
       "expectedState": "hidden_portfolio_protected",
-      "durationMs": 2241,
-      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops\n\n ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 90ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  17:13:35\n   Duration  1.62s (transform 198ms, setup 189ms, collect 304ms, tests 90ms, environment 380ms, prepare 107ms)\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
-      "generatedAt": "2026-03-16T16:13:37.307Z"
+      "durationMs": 1884,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops\n\n ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 65ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  00:17:28\n   Duration  1.05s (transform 102ms, setup 128ms, collect 178ms, tests 65ms, environment 268ms, prepare 50ms)\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`",
+      "generatedAt": "2026-03-21T23:17:29.602Z"
     },
     {
       "id": "privacy_no_leak_case",
@@ -143,9 +144,9 @@
       },
       "status": "pass",
       "expectedState": "privacy_no_leak_enforced",
-      "durationMs": 1876,
-      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops\n\n ✓ tests/lib/effective-visibility.test.ts  (5 tests) 2ms\n ✓ tests/api/org-match-review-route.test.ts  (8 tests) 20ms\n ✓ tests/api/conversation-reveal-route.test.ts  (3 tests) 13ms\n\n Test Files  3 passed (3)\n      Tests  16 passed (16)\n   Start at  17:13:37\n   Duration  1.30s (transform 242ms, setup 358ms, collect 753ms, tests 35ms, environment 651ms, prepare 153ms)\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`\nstderr | tests/api/org-match-review-route.test.ts > POST /api/org/[id]/matches/[matchId]/review > keeps shortlist updates live when fairness persistence fails\norg review fairness persistence failed {\n  matchId: 'match-1',\n  assignmentId: 'assignment-1',\n  error: 'fairness insert failed'\n}\n\nstderr | tests/api/org-match-review-route.test.ts > POST /api/org/[id]/matches/[matchId]/review > returns privacy-safe why payloads for reject decisions without exposing identity-bearing fields\norg review fairness persistence failed {\n  matchId: 'match-1',\n  assignmentId: 'assignment-1',\n  error: 'fairness insert failed'\n}",
-      "generatedAt": "2026-03-16T16:13:39.183Z"
+      "durationMs": 1801,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  override existing env vars with { override: true }\n\n ✓ tests/lib/effective-visibility.test.ts  (5 tests) 2ms\n ✓ tests/api/org-match-review-route.test.ts  (10 tests) 23ms\n ✓ tests/api/conversation-reveal-route.test.ts  (3 tests) 9ms\n\n Test Files  3 passed (3)\n      Tests  18 passed (18)\n   Start at  00:17:30\n   Duration  1.13s (transform 210ms, setup 298ms, collect 752ms, tests 34ms, environment 582ms, prepare 117ms)\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`\nstderr | tests/api/org-match-review-route.test.ts > POST /api/org/[id]/matches/[matchId]/review > persists pass as a review-stage mutation and keeps identity hidden\norg review fairness persistence failed {\n  matchId: 'match-1',\n  assignmentId: 'assignment-1',\n  error: \"Cannot read properties of undefined (reading 'id')\"\n}\n\nstderr | tests/api/org-match-review-route.test.ts > POST /api/org/[id]/matches/[matchId]/review > keeps shortlist updates live when fairness persistence fails\norg review fairness persistence failed {\n  matchId: 'match-1',\n  assignmentId: 'assignment-1',\n  error: 'fairness insert failed'\n}\n\nstderr | tests/api/org-match-review-route.test.ts > POST /api/org/[id]/matches/[matchId]/review > returns privacy-safe why payloads for reject decisions without exposing identity-bearing fields\norg review fairness persistence failed {\n  matchId: 'match-1',\n  assignmentId: 'assignment-1',\n  error: 'fairness insert failed'\n}\n\n(node:74942) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
+      "generatedAt": "2026-03-21T23:17:31.403Z"
     }
   ]
 }

@@ -5,14 +5,14 @@
 
 This file is a compatibility mirror for workflows that still open `PRD_for_a_web_platform_MVP.md`.
 
-**Canonical source stack:** `Proofound_Project_Specification_2026-03-11.md`, then `PRD_TECHNICAL_REQUIREMENTS.md`, then `PRD_for_a_web_platform_MVP.master-latest.md`, then `LAUNCH_RUNBOOK.md`  
+**Canonical source stack:** `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, then `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, then `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, then `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, then `Proofound_Project_Specification_2026-03-11.md`
 **Mirror policy:** This file summarizes the active stack and must never widen scope or override the stable canonical docs.
 
 ## Product Frame
 
-- Proofound MVP is a proof-first, privacy-first, portfolio-first credibility and hiring platform.
+- Proofound MVP is a proof-first, privacy-first hiring credibility corridor centered on Proof Packs.
 - The launch corridor stays narrow: one individual side and one organization side.
-- The wedge is structured proof, blind-by-default review, progressive reveal, and a calm public portfolio.
+- The wedge is structured Proof Packs, blind-by-default review, progressive reveal, and a calm public proof portfolio derived from selected Proof Packs.
 - The MVP is not an ATS replacement, HRIS, public candidate directory, social feed, or broad marketplace.
 
 ## Core MVP Objects

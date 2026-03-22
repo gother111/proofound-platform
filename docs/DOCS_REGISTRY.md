@@ -265,7 +265,7 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 | `verification.md`                                                                                       | `active`         | `root`        | `repo+live`         | `2026-02-26`  | `-`                                                                                                     | `true`    |
 
 | `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md` | `active` | `root` | `repo+live` | `2026-03-12` | `-` | `false` |
-| `PRD_for_a_web_platform_MVP.aligned-rewrite.2026-03-11.md` | `active` | `root` | `repo+live` | `2026-03-12` | `-` | `false` |
+| `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md` | `active` | `root` | `repo+live` | `2026-03-12` | `-` | `false` |
 | `PRD_for_a_web_platform_MVP.master-latest.md` | `reference-spec` | `root` | `repo` | `2026-03-12` | `-` | `false` |
 | `agent/runbooks/geo-audit.md` | `governance` | `agent` | `repo+live` | `2026-03-09` | `-` | `false` |
 | `agent/runbooks/expertise-taxonomy-recovery.md` | `active` | `agent` | `repo+live` | `2026-02-26` | `-` | `false` |

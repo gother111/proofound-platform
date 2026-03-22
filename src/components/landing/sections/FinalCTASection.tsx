@@ -1,140 +1,74 @@
 'use client';
 
-import React, { useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
-import { MagneticButton } from '@/components/landing/MagneticButton';
-import { ArrowRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { MagneticButton } from '@/components/ui/magnetic-button';
+import { ArrowRight, UserCircle2, Building2 } from 'lucide-react';
+import Link from 'next/link';
 
 interface FinalCTASectionProps {
-  onGetStarted?: () => void;
-  shouldReduceMotion?: boolean | null;
+  onIndividualSignup?: () => void;
+  onOrganizationSignup?: () => void;
+  shouldReduceMotion?: boolean;
 }
 
-export function FinalCTASection({ onGetStarted, shouldReduceMotion }: FinalCTASectionProps) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, amount: 0.3 });
-  const reduceMotion = !!shouldReduceMotion;
-  const effectiveInView = reduceMotion ? true : isInView;
-
+export function FinalCTASection({
+  onIndividualSignup,
+  onOrganizationSignup,
+  shouldReduceMotion = false,
+}: FinalCTASectionProps) {
   return (
-    <section
-      ref={ref}
-      className="py-16 md:py-32 lg:py-40 px-6 md:px-12 relative bg-japandi-charcoal text-white overflow-hidden flex items-center justify-center min-h-[80dvh] scroll-mt-24"
-      data-testid="landing-final-cta-section"
-    >
-      {/* Background Decoration */}
-      <div className="absolute inset-0 opacity-20 pointer-events-none">
-        <div className="absolute top-0 left-0 w-full h-full bg-[url('/noise.png')] opacity-30 mix-blend-overlay" />
-        <motion.div
-          animate={
-            reduceMotion
-              ? undefined
-              : {
-                  scale: [1, 1.2, 1],
-                  opacity: [0.3, 0.5, 0.3],
-                  rotate: [0, 10, 0],
-                }
-          }
-          transition={
-            reduceMotion ? undefined : { duration: 20, repeat: Infinity, ease: 'easeInOut' }
-          }
-          className="absolute -top-1/2 -left-1/2 w-[150%] h-[150%] bg-gradient-to-br from-japandi-sage/40 to-transparent rounded-full blur-[150px]"
-        />
-        <motion.div
-          animate={
-            reduceMotion
-              ? undefined
-              : {
-                  scale: [1, 1.3, 1],
-                  opacity: [0.2, 0.4, 0.2],
-                  rotate: [0, -15, 0],
-                }
-          }
-          transition={
-            reduceMotion
-              ? undefined
-              : { duration: 25, repeat: Infinity, ease: 'easeInOut', delay: 2 }
-          }
-          className="absolute -bottom-1/2 -right-1/2 w-[150%] h-[150%] bg-gradient-to-tl from-japandi-terracotta/40 to-transparent rounded-full blur-[150px]"
-        />
-      </div>
+    <section className="w-full py-32 bg-background relative z-10 border-t border-border">
+      <div className="max-w-4xl mx-auto px-6 text-center">
+        <h2 className="text-4xl md:text-5xl lg:text-6xl font-display text-proofound-forest dark:text-foreground mb-6">
+          Start with proof, not noise.
+        </h2>
+        <p className="text-lg md:text-xl text-muted-foreground mb-16">
+          Choose the first action that matches your role.
+        </p>
 
-      <div className="max-w-5xl mx-auto text-center relative z-10">
-        <motion.h2
-          initial={reduceMotion ? false : { opacity: 0, y: 50 }}
-          animate={effectiveInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-          transition={
-            reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 80, damping: 20 }
-          }
-          className="text-5xl md:text-7xl lg:text-9xl font-display mb-12 leading-[0.9] tracking-tight text-balance"
-        >
-          Ready to share <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-japandi-sage to-white">
-            proof today?
-          </span>
-        </motion.h2>
-
-        <motion.p
-          initial={reduceMotion ? false : { opacity: 0, y: 30 }}
-          animate={effectiveInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-          transition={
-            reduceMotion
-              ? { duration: 0 }
-              : { type: 'spring', stiffness: 80, damping: 20, delay: 0.2 }
-          }
-          className="text-xl md:text-2xl text-white/60 mb-16 max-w-2xl mx-auto font-sans leading-relaxed"
-        >
-          Start with a clean public proof portfolio link, then grow into matching and collaboration
-          workflows at your pace.
-        </motion.p>
-
-        <motion.div
-          initial={reduceMotion ? false : { opacity: 0, scale: 0.9 }}
-          animate={effectiveInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.9 }}
-          transition={
-            reduceMotion
-              ? { duration: 0 }
-              : { type: 'spring', stiffness: 100, damping: 20, delay: 0.4 }
-          }
-        >
-          <motion.div
-            whileHover={reduceMotion ? {} : { scale: 1.05 }}
-            whileTap={reduceMotion ? {} : { scale: 0.95 }}
-            className="inline-block"
-          >
-            <MagneticButton
-              size="lg"
-              onClick={onGetStarted}
-              className={cn(
-                'bg-white text-foreground hover:bg-white/90 text-xl px-16 py-10 rounded-full shadow-[0_0_50px_-10px_rgba(255,255,255,0.3)] hover:shadow-[0_0_80px_-10px_rgba(255,255,255,0.5)] font-sans relative overflow-hidden',
-                reduceMotion
-                  ? 'transition-colors transition-shadow duration-300'
-                  : 'transition-colors transition-shadow duration-500 group'
-              )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
+          {/* Action 1: Individuals */}
+          <div className="flex flex-col border border-border/40 bg-card/60 backdrop-blur-sm p-8 lg:p-10 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] transition-all duration-500 hover:-translate-y-1 items-center text-center group">
+            <div className="w-16 h-16 bg-proofound-forest/5 dark:bg-white/5 rounded-full flex items-center justify-center mb-6 group-hover:bg-proofound-forest/10 transition-colors">
+              <UserCircle2 className="w-8 h-8 text-proofound-forest dark:text-foreground" />
+            </div>
+            <span className="text-sm font-semibold tracking-widest uppercase text-muted-foreground mb-6 block">
+              For individuals
+            </span>
+            <button
+              onClick={onIndividualSignup}
+              className="px-6 py-3.5 bg-proofound-forest text-proofound-sand dark:bg-[#D4C4A8] dark:text-proofound-forest rounded-full font-medium hover:opacity-90 transition-opacity w-full border border-transparent hover:border-proofound-forest/20"
             >
-              <span className="relative z-10 flex items-center gap-3">
-                Get Started
-                <ArrowRight
-                  className={cn(
-                    'w-6 h-6',
-                    reduceMotion
-                      ? ''
-                      : 'group-hover:translate-x-2 transition-transform duration-300'
-                  )}
-                />
-              </span>
-              <div
-                className={cn(
-                  'absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent translate-x-[-150%]',
-                  reduceMotion
-                    ? 'hidden'
-                    : 'group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out'
-                )}
-              />
+              Create your proof portfolio
+            </button>
+          </div>
+
+          {/* Action 2: Organizations */}
+          <div className="flex flex-col border border-border/40 bg-card/60 backdrop-blur-sm p-8 lg:p-10 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] transition-all duration-500 hover:-translate-y-1 items-center text-center group">
+            <div className="w-16 h-16 bg-proofound-terracotta/10 rounded-full flex items-center justify-center mb-6 group-hover:bg-proofound-terracotta/20 transition-colors">
+              <Building2 className="w-8 h-8 text-proofound-terracotta" />
+            </div>
+            <span className="text-sm font-semibold tracking-widest uppercase text-muted-foreground mb-6 block">
+              For organizations
+            </span>
+            <MagneticButton
+              onClick={onOrganizationSignup}
+              className="bg-proofound-terracotta text-white rounded-full px-6 py-3.5 flex items-center justify-center font-medium shadow-sm hover:shadow-lg transition-all w-full ring-1 ring-proofound-terracotta/30"
+            >
+              Request a pilot
+              <ArrowRight className="ml-2 w-4 h-4" />
             </MagneticButton>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
+
+        <div className="mt-12 text-muted-foreground">
+          Already using Proofound?{' '}
+          <Link
+            href="/login"
+            className="text-proofound-forest dark:text-[#D4C4A8] font-medium hover:underline"
+          >
+            Sign in.
+          </Link>
+        </div>
       </div>
     </section>
   );

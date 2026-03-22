@@ -3,7 +3,7 @@
 **Status:** Aligned rewrite for current MVP  
 **Date:** 2026-03-11  
 **Audience:** Engineering, product, QA, operations  
-**Authority:** This is the active technical contract beneath `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md` and `PRD_for_a_web_platform_MVP.aligned-rewrite.2026-03-11.md`. `Proofound_Project_Specification_2026-03-11.md` is reference-only implementation context and must not broaden this document.
+**Authority:** This is the active technical contract beneath `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md` and `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`. `Proofound_Project_Specification_2026-03-11.md` is reference-only implementation context and must not broaden this document.
 
 ---
 
@@ -22,7 +22,7 @@ It keeps only the architecture, data model, lifecycle, privacy, security, operat
 
 Proofound MVP is a web application that supports:
 
-- proof-first individual portfolios
+- proof-first Proof Pack creation and public proof portfolio surfaces
 - private contextual scaffolding
 - organization trust pages and assignments
 - blind-by-default review with progressive reveal
@@ -211,8 +211,12 @@ Minimum fields:
 - `owner_profile_id`
 - `title`
 - `summary`
+- `primary_claim_type`
+- `claim_statement`
 - `primary_context_type`
 - `primary_context_id`
+- `verification_target_type`
+- `verification_target_scope`
 - `secondary_context_refs[]`
 - `role_context`
 - `ownership_statement`
@@ -229,6 +233,7 @@ Minimum fields:
 Launch rules:
 
 - every Proof Pack must have one primary anchor context
+- every Proof Pack must express one primary claim that can be shown and verified separately from its child evidence items
 - intro-eligible users may not have orphan Proof Packs
 - public visibility never overrides review-stage privacy ceilings
 - proof schema must be versioned for future exportability

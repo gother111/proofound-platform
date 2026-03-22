@@ -1,4 +1,4 @@
-# Proofound MVP PRD — Aligned Rewrite
+# Proofound MVP PRD — Proof-First Hiring Corridor
 
 **Status:** Aligned rewrite for current MVP  
 **Date:** 2026-03-11  
@@ -26,11 +26,11 @@ This rewrite intentionally replaces broader legacy product sprawl with launch-bi
 
 ### 1.1 Product category and promise
 
-Proofound MVP is a **proof-first, privacy-first, portfolio-first credibility and hiring platform**.
+Proofound MVP is a **proof-first, privacy-first hiring credibility corridor** centered on **Proof Packs**.
 
 It helps:
 
-- individuals prove what they can do through structured proof, not just CV bullets
+- individuals prove what they can do through structured Proof Packs, not just CV bullets
 - organizations review people through proof-backed, privacy-safe, explainable signal instead of profile theater
 
 ### 1.2 Core trust problem
@@ -44,10 +44,10 @@ The MVP solves a trust problem on both sides:
 
 The MVP wedge is:
 
-- portable proof of real work
+- portable proof of real work packaged as structured Proof Packs
 - privacy-safe blind-by-default review
-- explainable matching and shortlist logic
-- a calm public proof portfolio that is shareable from day one
+- clearer assignments before candidate review
+- a calm public proof portfolio generated from selected Proof Packs
 
 The MVP is **not**:
 
@@ -212,7 +212,7 @@ The first user journey is:
 3. add 1–3 real proofs
 4. structure proof into Proof Packs
 5. request verification where useful
-6. publish a public proof portfolio
+6. publish a public proof portfolio generated from selected Proof Packs
 7. progress toward intro eligibility
 
 The first action should feel like **“add proof”**, not **“complete your profile.”**
@@ -226,7 +226,7 @@ The individual private workspace includes three private-by-default contextual la
 - education / learning experience
 
 These are not public résumé sections by default.
-They exist to anchor proofs, explain context, and improve matching coherence.
+They exist to anchor proofs, explain context, and improve review coherence without turning the product back into resume bureaucracy.
 
 Minimum structure per context type:
 
@@ -255,6 +255,8 @@ Minimum structure per context type:
 ### 5.3 Proof Packs
 
 Proof Pack is the canonical proof object.
+
+The public portfolio is a selected publication surface derived from Proof Packs; it is not the core object.
 
 Each Proof Pack must contain:
 
@@ -781,8 +783,8 @@ This PRD is considered aligned when:
 
 ## 12. Final PRD statement
 
-Proofound MVP is a narrow, proof-first hiring and credibility corridor.
+Proofound MVP is a narrow, proof-first hiring credibility corridor centered on Proof Packs.
 
-It helps individuals turn real work into structured proof and publish a trustworthy portfolio.
-It helps organizations define stronger assignments and review candidates through privacy-safe, explainable proof.
-It includes private contextual scaffolding, bounded verification, and an explicit hiring-to-engagement flow.
+It helps individuals turn real work into structured Proof Packs and publish a trustworthy proof portfolio.
+It helps organizations define stronger assignments and review candidates through privacy-safe, explainable proof-backed early review.
+It includes private contextual scaffolding, bounded verification, and an explicit intro-to-engagement flow.

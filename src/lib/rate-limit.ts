@@ -1,16 +1,18 @@
 /**
  * Rate Limiting Utilities
- * 
+ *
  * Provides rate limiting for various API endpoints to prevent abuse.
  * Verification requests: 5/hour, 20/day per user
- * 
+ *
  * Reference: DATA_SECURITY_PRIVACY_ARCHITECTURE.md Section 11
  */
 
-import { db, verificationRequests } from '@/db';
-import { eq, and, gte, ne } from 'drizzle-orm';
+import { db } from '@/db';
+import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
-import {  detectRateLimitExceeded } from '@/lib/security/incident-detection';
+import { detectRateLimitExceeded } from '@/lib/security/incident-detection';
+import { CAPABILITY_TOKEN_CLASSES, inspectCapabilityToken } from '@/lib/security/capability-tokens';
+import { getRows } from '@/lib/db/rows';
 
 /**
  * Rate limit configuration
@@ -32,11 +34,11 @@ export const RATE_LIMITS = {
 
 /**
  * Check if user has exceeded verification rate limit
- * 
+ *
  * Limits:
  * - 5 requests per hour
  * - 20 requests per 24 hours
- * 
+ *
  * @param userId - User ID to check
  * @returns Object with allowed status and remaining counts
  */
@@ -55,29 +57,13 @@ export async function checkVerificationRateLimit(userId: string): Promise<{
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-    // Count requests in last hour
-    const hourlyRequests = await db
-      .select()
-      .from(verificationRequests)
-      .where(
-        and(
-          eq(verificationRequests.profileId, userId),
-          gte(verificationRequests.createdAt, oneHourAgo)
-        )
-      );
-
-    const hourlyCount = hourlyRequests.length;
+    const hourlyCount = await countRecentCanonicalVerificationRequests(userId, oneHourAgo);
     const hourlyLimit = RATE_LIMITS.verification.hourly;
     const hourlyRemaining = Math.max(0, hourlyLimit - hourlyCount);
 
     // Check hourly limit
     if (hourlyCount >= hourlyLimit) {
-      detectRateLimitExceeded(
-        userId,
-        '/api/verification',
-        hourlyCount,
-        hourlyLimit
-      );
+      detectRateLimitExceeded(userId, '/api/verification', hourlyCount, hourlyLimit);
 
       return {
         allowed: false,
@@ -91,29 +77,13 @@ export async function checkVerificationRateLimit(userId: string): Promise<{
       };
     }
 
-    // Count requests in last 24 hours
-    const dailyRequests = await db
-      .select()
-      .from(verificationRequests)
-      .where(
-        and(
-          eq(verificationRequests.profileId, userId),
-          gte(verificationRequests.createdAt, oneDayAgo)
-        )
-      );
-
-    const dailyCount = dailyRequests.length;
+    const dailyCount = await countRecentCanonicalVerificationRequests(userId, oneDayAgo);
     const dailyLimit = RATE_LIMITS.verification.daily;
     const dailyRemaining = Math.max(0, dailyLimit - dailyCount);
 
     // Check daily limit
     if (dailyCount >= dailyLimit) {
-      detectRateLimitExceeded(
-        userId,
-        '/api/verification',
-        dailyCount,
-        dailyLimit
-      );
+      detectRateLimitExceeded(userId, '/api/verification', dailyCount, dailyLimit);
 
       return {
         allowed: false,
@@ -157,11 +127,33 @@ export async function checkVerificationRateLimit(userId: string): Promise<{
   }
 }
 
+async function countRecentCanonicalVerificationRequests(
+  userId: string,
+  createdAfter: Date
+): Promise<number> {
+  const result = await db.execute(sql`
+    SELECT COUNT(DISTINCT COALESCE(source_request_id::text, id::text)) AS request_count
+    FROM verification_records
+    WHERE owner_type = 'individual_profile'
+      AND owner_id = ${userId}::uuid
+      AND created_at >= ${createdAfter.toISOString()}::timestamptz
+      AND metadata->>'requestTransport' IN (
+        'skill_verification_request',
+        'impact_verification_request',
+        'custom_verification_bundle'
+      )
+  `);
+
+  const row = getRows(result)[0] as { request_count?: number | string } | undefined;
+  const count = Number(row?.request_count ?? 0);
+  return Number.isFinite(count) ? count : 0;
+}
+
 /**
  * Generate unique verification token
- * 
+ *
  * Format: base64url(random 32 bytes) for URL safety
- * 
+ *
  * @returns URL-safe token string
  */
 export function generateVerificationToken(): string {
@@ -171,17 +163,14 @@ export function generateVerificationToken(): string {
 
   // Convert to base64url (URL-safe)
   const base64 = Buffer.from(buffer).toString('base64');
-  const base64url = base64
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
+  const base64url = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 
   return base64url;
 }
 
 /**
  * Calculate token expiration date (14 days from now)
- * 
+ *
  * @returns Date object 14 days in the future
  */
 export function getTokenExpiryDate(): Date {
@@ -192,7 +181,7 @@ export function getTokenExpiryDate(): Date {
 
 /**
  * Check if verification token is valid
- * 
+ *
  * @param token - Token to validate
  * @returns Object with validation status
  */
@@ -202,39 +191,44 @@ export async function validateVerificationToken(token: string): Promise<{
   request?: any;
 }> {
   try {
-    // Find verification request by token
-    const request = await db.query.verificationRequests.findFirst({
-      where: eq(verificationRequests.token, token),
-    });
+    const tokenClasses = [
+      CAPABILITY_TOKEN_CLASSES.SKILL_VERIFICATION_RESPONSE,
+      CAPABILITY_TOKEN_CLASSES.IMPACT_VERIFICATION_RESPONSE,
+      CAPABILITY_TOKEN_CLASSES.CUSTOM_VERIFICATION_RESPONSE,
+    ] as const;
 
-    if (!request) {
-      return {
-        valid: false,
-        reason: 'Invalid verification token',
-      };
-    }
+    for (const tokenClass of tokenClasses) {
+      const lookup = await inspectCapabilityToken(token, {
+        tokenClass,
+        metadata: { surface: 'legacy_rate_limit.validate_token' },
+      });
 
-    // Check if expired
-    if (new Date() > new Date(request.expiresAt)) {
-      return {
-        valid: false,
-        reason: 'Verification token has expired',
-        request,
-      };
-    }
+      if (!lookup.ok) {
+        if (lookup.reason === 'invalid') {
+          continue;
+        }
 
-    // Check if request is still pending
-    if (request.status !== 'pending') {
+        return {
+          valid: false,
+          reason:
+            lookup.reason === 'expired'
+              ? 'Verification token has expired'
+              : 'Verification request is no longer available',
+        };
+      }
+
       return {
-        valid: false,
-        reason: `Verification request is ${request.status}`,
-        request,
+        valid: true,
+        request: {
+          sourceId: lookup.token.source_id || null,
+          tokenClass,
+        },
       };
     }
 
     return {
-      valid: true,
-      request,
+      valid: false,
+      reason: 'Invalid verification token',
     };
   } catch (error) {
     log.error('token_validation.failed', {
@@ -257,7 +251,7 @@ class InMemoryRateLimiter {
 
   /**
    * Check if request is allowed
-   * 
+   *
    * @param key - Unique identifier (userId + endpoint)
    * @param limit - Max requests
    * @param windowMs - Time window in milliseconds
@@ -309,7 +303,7 @@ if (typeof setInterval !== 'undefined') {
 
 /**
  * Check message sending rate limit
- * 
+ *
  * @param userId - User ID
  * @returns Object with allowed status
  */

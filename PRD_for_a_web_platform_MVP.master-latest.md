@@ -1,7 +1,7 @@
-> Reference-only wrapper: active MVP implementation now uses `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, `PRD_for_a_web_platform_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, and `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`.
+> Reference-only wrapper: active MVP implementation now uses `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, and `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`.
 > Do not use this file as the active MVP product contract.
 
-# Proofound MVP PRD — Aligned Rewrite
+# Proofound MVP PRD — Proof-First Hiring Corridor
 
 **Status:** Aligned rewrite for current MVP  
 **Date:** 2026-03-11  
@@ -29,7 +29,7 @@ This rewrite intentionally replaces broader legacy product sprawl with launch-bi
 
 ### 1.1 Product category and promise
 
-Proofound MVP is a **proof-first, privacy-first, portfolio-first credibility and hiring platform**.
+Proofound MVP is a **proof-first, privacy-first hiring credibility corridor** centered on **Proof Packs**.
 
 It helps:
 
@@ -784,8 +784,8 @@ This PRD is considered aligned when:
 
 ## 12. Final PRD statement
 
-Proofound MVP is a narrow, proof-first hiring and credibility corridor.
+Proofound MVP is a narrow, proof-first hiring credibility corridor centered on Proof Packs.
 
-It helps individuals turn real work into structured proof and publish a trustworthy portfolio.
-It helps organizations define stronger assignments and review candidates through privacy-safe, explainable proof.
+It helps individuals turn real work into structured Proof Packs and publish a trustworthy proof portfolio.
+It helps organizations define stronger assignments and review candidates through privacy-safe, explainable proof-backed early review.
 It includes private contextual scaffolding, bounded verification, and an explicit hiring-to-engagement flow.

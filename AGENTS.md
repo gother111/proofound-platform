@@ -7,7 +7,7 @@
 
 - For active MVP implementation, use this authority order:
   1. `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`
-  2. `PRD_for_a_web_platform_MVP.aligned-rewrite.2026-03-11.md`
+  2. `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`
   3. `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`
   4. `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`
   5. `Proofound_Project_Specification_2026-03-11.md`
@@ -22,7 +22,7 @@
 
 1. `AGENTS.md`
 2. `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`
-3. `PRD_for_a_web_platform_MVP.aligned-rewrite.2026-03-11.md`
+3. `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`
 4. `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`
 5. `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`
 6. `Proofound_Project_Specification_2026-03-11.md`

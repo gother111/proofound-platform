@@ -7,7 +7,7 @@
 ## Canonical Launch Contract
 
 - The canonical MVP implementation contract starts with `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`.
-- `PRD_for_a_web_platform_MVP.aligned-rewrite.2026-03-11.md` is the authoritative supporting product PRD beneath the locked MVP document.
+- `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md` is the authoritative supporting product PRD beneath the locked MVP document.
 - `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md` is the authoritative technical launch contract beneath the locked MVP document.
 - `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md` is operator-facing execution guidance only.
 - `Proofound_Project_Specification_2026-03-11.md` is the last reference layer in the active chain.

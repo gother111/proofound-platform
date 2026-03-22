@@ -2,6 +2,27 @@
 > Sync Pair: `Documentation.md`
 > Last Verified: `2026-03-12`
 
+## 2026-03-18: Landing Page Redesign (Upstream Hiring Credibility Layer)
+
+What changed:
+
+- Completely redesigned the landing page (`src/app/page.tsx`, `src/components/ProofoundLanding.tsx`) to narrow positioning towards an upstream hiring credibility layer.
+- Removed outdated sections (Personas, Principles, Why Now, Protocol, Steward Ownership, Problem Grid) from `src/components/landing/sections/`.
+- Built a new subtractive Hero section animation transitioning a noisy CV to a calm proof object.
+- Built new focused MVP sections: Translation Band, Day One Surfaces, Hiring Teams, Three Step Corridor, Proof Object, Privacy Safe Review, and Early Proof stories.
+- Updated the header and footer to be minimal, keeping the warm, editorial palette while reducing heavy glass, blur, and blob effects.
+
+Why:
+
+- The previous landing page was too broad and behaved like a marketing page for a future ecosystem. The new design focuses tightly on the MVP wedge: structured proof for individuals, and privacy-safe review for organizations.
+
+How to verify:
+
+- `npm run dev` and visually inspect the homepage at `/` on desktop and mobile.
+- Verify the scroll-driven subtractive animation in the Hero section.
+- `npm run lint`
+- `npm run typecheck`
+
 ## 2026-03-12: Restored locked MVP implementation authority
 
 What changed:

@@ -38,6 +38,7 @@ describe('IndividualSetup', () => {
 
   it('keeps the context step light and turns Proof Pack into a real editor', () => {
     render(<IndividualSetup />);
+    const contextOutcome = 'Reduced friction so one session could reach portfolio-ready.';
 
     fireEvent.change(screen.getByLabelText(/display name/i), {
       target: { value: 'Jane Founder' },
@@ -63,7 +64,10 @@ describe('IndividualSetup', () => {
     fireEvent.change(screen.getByLabelText(/engagement preference/i), {
       target: { value: 'contract' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /continue to real context/i }));
+
+    fireEvent.submit(
+      screen.getByRole('button', { name: /continue to real context/i }).closest('form')!
+    );
 
     expect(screen.getByLabelText(/context type/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/title or focus/i)).toBeInTheDocument();
@@ -87,9 +91,11 @@ describe('IndividualSetup', () => {
       target: { value: 'Led the MVP onboarding corridor.' },
     });
     fireEvent.change(screen.getByLabelText(/outcome or contribution/i), {
-      target: { value: 'Reduced friction so one session could reach portfolio-ready.' },
+      target: { value: contextOutcome },
     });
-    fireEvent.click(screen.getByRole('button', { name: /continue to add your first proof/i }));
+    fireEvent.submit(
+      screen.getByRole('button', { name: /continue to add your first proof/i }).closest('form')!
+    );
 
     fireEvent.change(screen.getByLabelText(/proof title/i), {
       target: { value: 'Proof-first corridor launch' },
@@ -100,11 +106,13 @@ describe('IndividualSetup', () => {
     fireEvent.change(screen.getByLabelText(/evidence item note/i), {
       target: { value: 'Launch note showing the shipped proof-first onboarding corridor.' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /continue to structure proof pack/i }));
+    fireEvent.submit(
+      screen.getByRole('button', { name: /continue to structure proof pack/i }).closest('form')!
+    );
 
     expect(screen.getByLabelText(/claim/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/ownership/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/^outcome \*/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^outcome/i)).toBeInTheDocument();
     expect(screen.getByText(/proof pack preview/i)).toBeInTheDocument();
     expect(screen.getByText(/claim:/i)).toBeInTheDocument();
     expect(screen.getByText(/ownership:/i)).toBeInTheDocument();
@@ -112,8 +120,6 @@ describe('IndividualSetup', () => {
     expect(screen.getByText(/evidence item:/i)).toBeInTheDocument();
     expect(screen.getByText(/visibility summary:/i)).toBeInTheDocument();
     expect(screen.getByDisplayValue('Proof-first corridor launch')).toBeInTheDocument();
-    expect(
-      screen.getByDisplayValue('Reduced friction so one session could reach portfolio-ready.')
-    ).toBeInTheDocument();
+    expect(screen.getByDisplayValue(contextOutcome)).toBeInTheDocument();
   });
 });

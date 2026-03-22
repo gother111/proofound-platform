@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   insert: vi.fn(),
   update: vi.fn(),
   attachUploadedFile: vi.fn(),
+  ensureInternalOpsQueueItem: vi.fn(),
   logInfo: vi.fn(),
 }));
 
@@ -28,6 +29,10 @@ vi.mock('@/lib/uploads/lifecycle', () => ({
   attachUploadedFile: mocks.attachUploadedFile,
 }));
 
+vi.mock('@/lib/internal-ops/queue', () => ({
+  ensureInternalOpsQueueItem: mocks.ensureInternalOpsQueueItem,
+}));
+
 vi.mock('@/lib/log', () => ({
   log: {
     info: mocks.logInfo,
@@ -46,6 +51,10 @@ describe('engagement verification service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.attachUploadedFile.mockResolvedValue({ id: 'upload-1' });
+    mocks.ensureInternalOpsQueueItem.mockResolvedValue({
+      id: 'queue-1',
+      queueType: 'pilot_ops',
+    });
   });
 
   it.each([
@@ -152,6 +161,13 @@ describe('engagement verification service', () => {
     expect(transitionValues).toHaveBeenCalledWith(
       expect.objectContaining({
         toState: 'pending_both_confirmations',
+      })
+    );
+    expect(mocks.ensureInternalOpsQueueItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        linkedEntityId: 'engagement-1',
+        linkedEntityType: 'engagement_verification',
+        queueType: 'pilot_ops',
       })
     );
   });

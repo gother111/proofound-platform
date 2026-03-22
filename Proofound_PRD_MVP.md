@@ -3,12 +3,12 @@
 
 # Proofound MVP Executive Summary
 
-**Canonical source stack:** `Proofound_Project_Specification_2026-03-11.md`, then `PRD_TECHNICAL_REQUIREMENTS.md`, then `PRD_for_a_web_platform_MVP.master-latest.md`, then `LAUNCH_RUNBOOK.md`  
+**Canonical source stack:** `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`, then `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`, then `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`, then `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, then `Proofound_Project_Specification_2026-03-11.md`
 **Purpose of this file:** Executive summary only. It does not define product behavior independently.
 
 ## Product Promise
 
-Proofound MVP is a proof-first, privacy-first, portfolio-first credibility and hiring platform for individuals and lean organizations. It helps individuals turn real work into structured proof and helps organizations review people through privacy-safe, explainable evidence instead of profile theater.
+Proofound MVP is a proof-first, privacy-first hiring credibility corridor centered on Proof Packs for individuals and lean organizations. It helps individuals turn real work into structured Proof Packs and helps organizations review people through privacy-safe, explainable evidence instead of profile theater.
 
 ## Minimum Valuable Experience
 

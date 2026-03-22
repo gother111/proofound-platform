@@ -9,13 +9,13 @@ Refresh the durable Codex resume harness so later sessions resume from the 2026-
 - `date -u '+%Y-%m-%dT%H:%M:%SZ'`
 - `rg --files docs | sort`
 - `ls -1`
-- `rg --files -g 'AGENTS.md' -g 'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md' -g 'PRD_for_a_web_platform_MVP.aligned-rewrite.2026-03-11.md' -g 'PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md' -g 'LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md' -g 'Proofound_Project_Specification_2026-03-11.md' -g 'proofound-hard-audit-2026-03-14-rerun.md'`
+- `rg --files -g 'AGENTS.md' -g 'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md' -g 'PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md' -g 'PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md' -g 'LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md' -g 'Proofound_Project_Specification_2026-03-11.md' -g 'proofound-hard-audit-2026-03-14-rerun.md'`
 - `sed -n '1,220p' docs/codex-progress.md`
 - `sed -n '1,220p' docs/verification-checklist.md`
 - `sed -n '1,220p' docs/block-0-report.md`
 - `sed -n '1,260p' docs/block-7-report.md`
 - `sed -n '1,320p' docs/proofound-hard-audit-2026-03-14-rerun.md`
-- `rg -n "proof-first|Proof Pack|anchor|blind|reveal|candidate consent|assignment|internal review|publish|interview|decision|hire|engagement verification|export|delete|audit" Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md PRD_for_a_web_platform_MVP.aligned-rewrite.2026-03-11.md PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md Proofound_Project_Specification_2026-03-11.md`
+- `rg -n "proof-first|Proof Pack|anchor|blind|reveal|candidate consent|assignment|internal review|publish|interview|decision|hire|engagement verification|export|delete|audit" Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md Proofound_Project_Specification_2026-03-11.md`
 - `npm run docs:freshness`
 - `npm run lint`
 - `npm run typecheck`
