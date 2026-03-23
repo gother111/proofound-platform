@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getCronAuthStatus } from '@/lib/api/cron-auth';
-import { processWeeklyDigests } from '@/lib/notifications/weekly-digest';
+import {
+  getWeeklyDigestAvailability,
+  processWeeklyDigests,
+} from '@/lib/notifications/weekly-digest';
 import { log } from '@/lib/log';
 
 export const runtime = 'nodejs';
@@ -19,6 +22,21 @@ export async function GET(request: NextRequest) {
     }
 
     const force = request.nextUrl.searchParams.get('force') === 'true';
+    const digestAvailability = getWeeklyDigestAvailability();
+
+    if (!digestAvailability.enabled) {
+      return NextResponse.json({
+        success: true,
+        status: 'skipped',
+        reason: digestAvailability.reason,
+        processed: 0,
+        emailed: 0,
+        createdInApp: 0,
+        skipped: 0,
+        errors: [],
+      });
+    }
+
     const result = await processWeeklyDigests(force);
 
     log.info('weekly-digest.cron.complete', {

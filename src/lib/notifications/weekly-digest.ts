@@ -8,6 +8,8 @@ import type { WeeklyDigestPayload } from '@/lib/momentum/types';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const WEEKLY_DIGEST_DISABLED_REASON =
+  'Weekly digest delivery is disabled unless ENABLE_WEEKLY_DIGEST=true';
 
 function buildDigestSubject(persona: 'individual' | 'organization'): string {
   const dateLabel = new Date().toLocaleDateString('en-US', {
@@ -106,6 +108,15 @@ export type WeeklyDigestResult = {
   errors: Array<{ userId: string; reason: string }>;
 };
 
+export function getWeeklyDigestAvailability(): { enabled: boolean; reason: string | null } {
+  const enabled = process.env.ENABLE_WEEKLY_DIGEST === 'true';
+
+  return {
+    enabled,
+    reason: enabled ? null : WEEKLY_DIGEST_DISABLED_REASON,
+  };
+}
+
 function shouldSendDigest(lastDigestSentAt: Date | null | undefined): boolean {
   if (!lastDigestSentAt) return true;
   return Date.now() - lastDigestSentAt.getTime() >= ONE_WEEK_MS;
@@ -116,6 +127,17 @@ function normalizePersona(rawPersona: string | null): 'individual' | 'organizati
 }
 
 export async function processWeeklyDigests(force = false): Promise<WeeklyDigestResult> {
+  const availability = getWeeklyDigestAvailability();
+  if (!availability.enabled) {
+    return {
+      processed: 0,
+      emailed: 0,
+      createdInApp: 0,
+      skipped: 0,
+      errors: [],
+    };
+  }
+
   const adminClient = createAdminClient();
 
   const users = await db

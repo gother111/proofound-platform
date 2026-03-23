@@ -13,7 +13,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processDecisionReminders } from '@/lib/decisions/automation';
 import { checkPerformanceHealth, sendPerformanceAlert } from '@/lib/analytics/health-check';
-import { processWeeklyDigests } from '@/lib/notifications/weekly-digest';
+import {
+  getWeeklyDigestAvailability,
+  processWeeklyDigests,
+} from '@/lib/notifications/weekly-digest';
 import { log } from '@/lib/log';
 import { processWorkflowAsyncJobs } from '@/lib/workflow/processor';
 
@@ -105,10 +108,10 @@ export async function GET(req: NextRequest) {
       reason?: string;
     } = { status: 'skipped', reason: 'Not scheduled today' };
 
-    const isWeeklyDigestEnabled = process.env.ENABLE_WEEKLY_DIGEST !== 'false';
+    const digestAvailability = getWeeklyDigestAvailability();
     const isMondayUtc = new Date().getUTCDay() === 1;
-    if (!isWeeklyDigestEnabled) {
-      weeklyDigest = { status: 'skipped', reason: 'ENABLE_WEEKLY_DIGEST=false' };
+    if (!digestAvailability.enabled) {
+      weeklyDigest = { status: 'skipped', reason: digestAvailability.reason || 'Disabled' };
     } else if (!isMondayUtc) {
       weeklyDigest = { status: 'skipped', reason: 'Runs on Monday UTC only' };
     } else {
