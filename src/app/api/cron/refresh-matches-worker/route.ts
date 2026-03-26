@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
 
     await runWithConcurrency(claimedJobs, concurrency, async (job) => {
       try {
-        const response = await fetch(`${baseUrl}/api/core/matching/profile`, {
+        const response = await fetch(`${baseUrl}/api/match/profile`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

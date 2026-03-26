@@ -177,7 +177,7 @@ export function NextBestActionsWidget({
   const actions = completeness?.actions || [];
   const topActions = actions.slice(0, 5); // Show top 5 actions
 
-  // Determine portfolio-first status
+  // Determine the current readiness tier across proof freshness and intro progress.
   const getProfileStatus = () => {
     if (percentage >= 85) return { text: 'Qualified intro progress', color: 'text-green-600' };
     if (percentage >= 60) return { text: 'Browse progress', color: 'text-blue-600' };

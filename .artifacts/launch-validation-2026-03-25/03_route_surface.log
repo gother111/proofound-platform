@@ -1,0 +1,75 @@
+
+> test
+> vitest run tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts src/lib/launch/__tests__/surface-policy.test.ts src/lib/__tests__/middleware-launch-archive.test.ts tests/ui/archived-mvp-routes.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+ ✓ tests/ui/archived-mvp-routes.test.ts  (2 tests) 7ms
+ ✓ src/lib/launch/__tests__/surface-policy.test.ts  (8 tests) 7ms
+ ❯ tests/api/launch-surface-inventory.test.ts  (4 tests | 1 failed) 89ms
+   ❯ tests/api/launch-surface-inventory.test.ts > launch surface inventory > keeps every compiled API route inside the explicit launch or internal-only corridor
+     → expected [ …(18) ] to deeply equal []
+ ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 40ms
+ ✓ tests/api/launch-page-inventory.test.ts  (5 tests) 146ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/api/launch-surface-inventory.test.ts > launch surface inventory > keeps every compiled API route inside the explicit launch or internal-only corridor
+AssertionError: expected [ …(18) ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   "/api/core/matching/assignment",
++   "/api/core/matching/interest",
++   "/api/core/matching/matching-profile",
++   "/api/core/matching/near-matches",
++   "/api/core/matching/profile",
++   "/api/cron/cv-import-temp-cleanup",
++   "/api/cron/fairness-note",
++   "/api/cron/fairness-report",
++   "/api/cron/generate-fairness-note",
++   "/api/cron/python-internal-worker",
++   "/api/cron/sla-enforcement",
++   "/api/cron/weekly-digest",
++   "/api/cron/workflow-jobs",
++   "/api/internal/python-jobs",
++   "/api/match/decision",
++   "/api/match/snooze",
++   "/api/organizations/[orgId]/audit/export",
++   "/api/user/tour-status",
++ ]
+
+ ❯ tests/api/launch-surface-inventory.test.ts:262:30
+    241|     expect(disallowedRoutes).toEqual([]);
+    242|   });
+    243| });
+       |    ^
+    244| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed | 4 passed (5)
+      Tests  1 failed | 24 passed (25)
+   Start at  21:05:58
+   Duration  1.22s (transform 176ms, setup 1.08s, collect 296ms, tests 289ms, environment 2.09s, prepare 312ms)
+

@@ -1,24 +1,15 @@
-/**
- * Deprecated matching profile adapter.
- *
- * Canonical endpoint: /api/core/matching/matching-profile
- */
-
 import { NextRequest } from 'next/server';
 import {
-  GET as getCanonicalMatchingProfile,
-  PUT as putCanonicalMatchingProfile,
-} from '@/app/api/core/matching/matching-profile/route';
-import { addDeprecationHeaders } from '@/lib/api/deprecation';
+  GET as getMatchingProfile,
+  PUT as putMatchingProfile,
+} from '@/app/api/core/matching/matching-profile/handler';
 
-const CanonicalPath = '/api/core/matching/matching-profile';
+export { dynamic } from '@/app/api/core/matching/matching-profile/handler';
 
 export async function GET() {
-  const response = await getCanonicalMatchingProfile();
-  return addDeprecationHeaders(response, CanonicalPath);
+  return getMatchingProfile();
 }
 
 export async function PUT(request: NextRequest) {
-  const response = await putCanonicalMatchingProfile(request);
-  return addDeprecationHeaders(response, CanonicalPath);
+  return putMatchingProfile(request);
 }

@@ -1,5 +1,10 @@
 # Block 3 Report
 
+> Superseded note added 2026-03-25:
+> - This file is preserved as historical evidence only and does not override the locked MVP stack or newer `.artifacts/*` current-state evidence.
+> - Stale categories in or around this report: mixed live verification transport conclusions, any `PageNotFoundError: /_document` build-blocker claims, any `pilot-launchable` or similar launch verdict treated as current truth, and older route-surface claims where newer route inventory disagrees.
+> - Current repo truth differs: `npm run build` and `npm run typecheck` now pass under Node `20.20.0`, fresh strict org-corridor evidence is not green today, and route breadth remains an open launch risk.
+
 ## Objective
 
 Reduce the latency and brittleness of the organization corridor so shortlist generation, reveal flow support, and interview scheduling run materially faster and the tested runtime path is stable enough for launch confidence.

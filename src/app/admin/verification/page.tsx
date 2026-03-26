@@ -8,8 +8,8 @@ export default async function AdminVerificationPage() {
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-foreground">Internal Ops Queues</h1>
         <p className="text-muted-foreground mt-1">
-          Review the narrow launch-critical queues for verification, privacy, corrections, and pilot
-          follow-through.
+          Review the narrow launch-critical queues for verification, privacy disputes, risky
+          uploads, and pilot follow-through.
         </p>
       </div>
 

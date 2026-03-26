@@ -5,6 +5,12 @@
 
 This guide explains how to set up and configure the LinkedIn identity verification feature.
 
+Stale admin-surface note:
+
+- the LinkedIn-flavored admin queue and review endpoints were archived for the locked MVP on `2026-03-25`
+- current internal handling uses `GET /api/admin/internal-ops/queues` and `PATCH /api/admin/internal-ops/queues/[id]`
+- do not treat the old LinkedIn admin routes as current MVP truth
+
 ## Overview
 
 The LinkedIn verification feature allows users to connect LinkedIn and classify trust at two official levels:
@@ -291,8 +297,11 @@ npx playwright install chromium
 
 ### Admin Endpoints
 
-- `GET /api/admin/verification/linkedin/queue` - Get pending verifications
-- `POST /api/admin/verification/linkedin/[userId]/review` - Approve/reject
+- Archived on `2026-03-25`: `GET /api/admin/verification/linkedin/queue`
+- Archived on `2026-03-25`: `POST /api/admin/verification/linkedin/[userId]/review`
+- Current MVP internal queue endpoints:
+  - `GET /api/admin/internal-ops/queues`
+  - `PATCH /api/admin/internal-ops/queues/[id]`
 
 ## Success Metrics
 

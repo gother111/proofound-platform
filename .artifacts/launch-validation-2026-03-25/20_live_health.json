@@ -1,0 +1,1 @@
+{"status":"healthy","database":{"connected":true,"usingMockDb":false},"environment":{"hasSupabaseUrl":true,"hasSupabaseAnonKey":true,"hasDatabaseUrl":true,"hasSiteUrl":true,"hasServiceRoleKey":true},"warnings":[],"timestamp":"2026-03-25T20:07:14.756Z","version":"9ffab0b06c4822619e3da95db6fce93475642b29"}

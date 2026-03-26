@@ -227,6 +227,7 @@ export const canonicalInternalOpsQueueEntityTypes = [
   'engagement_verification',
   'match',
   'organization',
+  'uploaded_file',
 ] as const;
 export const canonicalConsentObligationStates = [
   'active',

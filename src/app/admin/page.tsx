@@ -23,7 +23,7 @@ export default async function AdminPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <BadgeCheck className="h-5 w-5 text-proofound-forest" />
-              Verification queue
+              Internal ops queues
             </CardTitle>
             <CardDescription>
               Review the four narrow internal ops queues that support verification, privacy,
@@ -33,7 +33,7 @@ export default async function AdminPage() {
           <CardContent>
             <Button asChild variant="outline" className="w-full justify-between">
               <Link href="/admin/verification">
-                Open verification queue
+                Open internal ops queues
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>

@@ -3,15 +3,15 @@
 const stories = [
   {
     title: 'From scattered links to one proof-backed profile',
-    body: 'A career-switching designer turns work samples, context, and stakeholder-backed proof into one calm public portfolio that is easier to trust than a resume plus five separate links.',
+    body: 'A career-switching designer turns work samples, context, and stakeholder-backed proof into one calm public proof portfolio that gives hiring teams stronger signal than CVs.',
     detail:
-      'Placeholder structure designed so pilot evidence can replace this copy later without redesigning the section.',
+      'Each claim resolves to visible work, reviewer-backed context, and public-safe evidence that can travel cleanly into a structured assignment corridor.',
   },
   {
     title: 'From resume pile to stronger shortlist',
-    body: 'A lean hiring team defines the work clearly, reviews proof before identity, and reaches interviews with fewer but higher-signal candidates.',
+    body: 'A lean hiring team publishes a clearer assignment, pairs it with an org trust page, and reviews privacy-safe proof before identity to reach interviews with fewer but higher-signal candidates.',
     detail:
-      'The card leaves room for future pilot notes, reviewer quotes, or before-and-after workflow proof.',
+      'The shortlist stays explainable, the review stays proof-backed, and reveal only happens after the work clears the bar.',
   },
 ];
 
@@ -27,7 +27,7 @@ export function EarlyProofSection() {
             What this looks like in practice.
           </h2>
           <p className="mt-5 text-[1.08rem] leading-8 text-[var(--landing-text)]">
-            Use compact, credible before-and-after stories instead of generic logo soup.
+            Use compact, credible proof stories that reinforce stronger signal than CVs.
           </p>
         </div>
 
@@ -61,7 +61,7 @@ export function EarlyProofSection() {
                 </div>
                 <div className="border-l border-[var(--landing-border)] pl-5">
                   <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--landing-muted)]">
-                    Pilot-ready placeholder
+                    Review handoff
                   </div>
                   <p className="mt-3 text-sm leading-7 text-[var(--landing-text)]">
                     {story.detail}

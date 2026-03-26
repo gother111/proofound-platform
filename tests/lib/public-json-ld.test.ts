@@ -11,9 +11,9 @@ import {
 describe('public JSON-LD helpers', () => {
   it('builds static page graph entries for public pages', () => {
     const items = buildStaticPageJsonLd({
-      path: '/about',
-      title: 'About Proofound',
-      description: 'Learn about Proofound.',
+      path: '/',
+      title: 'Proofound | Hire through proof, not profile theater',
+      description: 'Proof-first hiring corridor with privacy-safe review and public trust surfaces.',
     });
 
     expect(items).toHaveLength(4);
@@ -65,10 +65,10 @@ describe('public JSON-LD helpers', () => {
   it('builds breadcrumb lists with absolute item URLs', () => {
     const item = buildBreadcrumbJsonLd([
       { name: 'Home', path: '/' },
-      { name: 'Support', path: '/support' },
+      { name: 'Privacy', path: '/privacy' },
     ]);
 
     expect(item['@type']).toBe('BreadcrumbList');
-    expect((item.itemListElement as Array<Record<string, unknown>>)[1].item).toContain('/support');
+    expect((item.itemListElement as Array<Record<string, unknown>>)[1].item).toContain('/privacy');
   });
 });

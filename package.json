@@ -55,6 +55,7 @@
     "perf:budgets": "node ./scripts/perf-budgets.mjs",
     "monitor:launch": "tsx ./scripts/run-launch-synthetic-monitors.ts",
     "test:launch:smoke": "tsx ./scripts/launch-smoke-runner.ts",
+    "launch:checklist": "tsx ./scripts/final-launch-checklist-status.ts",
     "go:no-go": "tsx ./scripts/go-no-go-check.ts",
     "geo:audit": "node ./scripts/geo-audit.mjs",
     "gates:mvp:strict": "node ./scripts/run-mvp-strict-gates.mjs",

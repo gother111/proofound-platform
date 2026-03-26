@@ -43,10 +43,6 @@ vi.mock('@/components/settings/PrivacyOverview', () => ({
   PrivacyOverview: () => <div data-testid="privacy-overview" />,
 }));
 
-vi.mock('@/components/settings/VideoIntegrationsManager', () => ({
-  VideoIntegrationsManager: () => <div data-testid="video-integrations-manager" />,
-}));
-
 vi.mock('@/components/settings/PortfolioVisibilityCard', () => ({
   PortfolioVisibilityCard: () => <div data-testid="portfolio-visibility-card" />,
 }));
@@ -66,14 +62,12 @@ describe('Settings interview scheduling discoverability', () => {
     vi.restoreAllMocks();
   });
 
-  it('shows inline Google interview scheduling controls on the same settings tab', async () => {
+  it('keeps launch interview scheduling manual-first on the same settings tab', async () => {
     render(<SettingsContent userId="user-1" />);
 
-    expect(await screen.findByTestId('video-integrations-manager')).toBeInTheDocument();
+    expect(await screen.findByText(/Manual meeting links are the MVP default/i)).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Interview Scheduling' })).toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: 'Dashboard' })).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('link', { name: /manage zoom & google integrations/i })
-    ).not.toBeInTheDocument();
+    expect(screen.getByText(/No Google Meet or third-party calendar connection is required/i)).toBeInTheDocument();
   });
 });

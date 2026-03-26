@@ -151,6 +151,7 @@ const createToken = async (
 
   const { error } = await admin.from('feedback_tokens').insert({
     id: feedbackTokenId,
+    token: issued.rawToken,
     token_hash: issued.tokenHash,
     interview_id: params.interviewId,
     template_id: params.templateId,

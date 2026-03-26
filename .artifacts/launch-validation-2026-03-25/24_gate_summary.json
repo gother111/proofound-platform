@@ -1,0 +1,190 @@
+{
+  "generatedAt": "2026-03-25T20:12:51.222Z",
+  "workspace": "/Users/yuriibakurov/proofound",
+  "branch": "master",
+  "head": "de2cde6d5b121630b753b1641f449fabf51fd559",
+  "authoritativeBaseUrl": "https://proofound.io",
+  "verdict": "NO_GO",
+  "recommendation": "NO_GO because live launch-status is still blocked and local prod parity plus route-surface gates did not clear.",
+  "blockingGateIds": [
+    "prod_build",
+    "prod_boot",
+    "local_api_health",
+    "local_launch_status",
+    "route_surface_and_archived_routes",
+    "strict_org_corridor_local_prod",
+    "live_launch_status"
+  ],
+  "gates": [
+    {
+      "id": "prod_build",
+      "status": "FAIL",
+      "summary": "next build compiled but failed during page-data collection with PageNotFoundError for /_document, leaving no usable production build output.",
+      "evidence": [
+        "01_local_build.log"
+      ]
+    },
+    {
+      "id": "prod_boot",
+      "status": "FAIL",
+      "summary": "next start failed because .next did not contain a valid production build.",
+      "evidence": [
+        "02_local_start.log"
+      ]
+    },
+    {
+      "id": "local_api_health",
+      "status": "BLOCKED",
+      "summary": "Skipped because local prod boot never came up; curl to local /api/health failed.",
+      "evidence": [
+        "05_local_health_meta.json"
+      ]
+    },
+    {
+      "id": "local_launch_status",
+      "status": "BLOCKED",
+      "summary": "Skipped because local prod boot never came up; curl to local /api/monitoring/launch-status failed.",
+      "evidence": [
+        "06_local_launch_status_meta.json"
+      ]
+    },
+    {
+      "id": "route_surface_and_archived_routes",
+      "status": "FAIL",
+      "summary": "18 compiled API routes remain outside the explicit launch/internal-only corridor.",
+      "disallowedRoutes": [
+        "/api/core/matching/assignment",
+        "/api/core/matching/interest",
+        "/api/core/matching/matching-profile",
+        "/api/core/matching/near-matches",
+        "/api/core/matching/profile",
+        "/api/cron/cv-import-temp-cleanup",
+        "/api/cron/fairness-note",
+        "/api/cron/fairness-report",
+        "/api/cron/generate-fairness-note",
+        "/api/cron/python-internal-worker",
+        "/api/cron/sla-enforcement",
+        "/api/cron/weekly-digest",
+        "/api/cron/workflow-jobs",
+        "/api/internal/python-jobs",
+        "/api/match/decision",
+        "/api/match/snooze",
+        "/api/organizations/[orgId]/audit/export",
+        "/api/user/tour-status"
+      ],
+      "evidence": [
+        "03_route_surface.log"
+      ]
+    },
+    {
+      "id": "public_org_trust_smoke",
+      "status": "PASS",
+      "summary": "Read-only Playwright smoke passed against the live seeded public org trust page.",
+      "mode": "live_read_only",
+      "evidence": [
+        "04_public_org_trust_smoke_live.log"
+      ]
+    },
+    {
+      "id": "strict_org_corridor_local_prod",
+      "status": "BLOCKED",
+      "summary": "Local prod rerun was not executed because prod boot failed; running the local-targeted strict corridor spec without a stable local app would create live DB fixtures under a broken server target.",
+      "evidence": [
+        "01_local_build.log",
+        "02_local_start.log",
+        "21_live_launch_smoke.log"
+      ]
+    },
+    {
+      "id": "privacy_rls_live_db",
+      "status": "PASS",
+      "summary": "Both privacy suites passed against the configured Supabase target, but the before/after residue counts were unchanged, confirming pre-existing leftover test-pattern rows rather than new cleanup regressions from this run.",
+      "beforeCounts": {
+        "auth_users": 10,
+        "profiles": 2,
+        "individual_profiles": 0
+      },
+      "afterCounts": {
+        "auth_users": 10,
+        "profiles": 2,
+        "individual_profiles": 0
+      },
+      "evidence": [
+        "db-target.json",
+        "10_privacy_residue_before.json",
+        "11_test_privacy.log",
+        "12_test_privacy_extended.log",
+        "13_privacy_residue_after.json"
+      ]
+    },
+    {
+      "id": "live_api_health",
+      "status": "PASS",
+      "summary": "Live /api/health returned healthy with a connected non-mock database.",
+      "evidence": [
+        "20_live_health.json"
+      ]
+    },
+    {
+      "id": "live_launch_smoke_artifact_refresh",
+      "status": "PASS",
+      "summary": "Live-targeted launch smoke artifact refreshed locally with overall status pass.",
+      "smokeChecks": [
+        {
+          "id": "public_individual_portfolio_visible",
+          "status": "pass",
+          "durationMs": 1509
+        },
+        {
+          "id": "proof_creation_case",
+          "status": "pass",
+          "durationMs": 1274
+        },
+        {
+          "id": "public_org_trust_fixture_live",
+          "status": "pass",
+          "durationMs": 9354
+        },
+        {
+          "id": "full_org_corridor_review_to_engagement_verification",
+          "status": "pass",
+          "durationMs": 133209
+        },
+        {
+          "id": "hidden_portfolio_protected",
+          "status": "pass",
+          "durationMs": 1774
+        },
+        {
+          "id": "privacy_no_leak_case",
+          "status": "pass",
+          "durationMs": 1755
+        }
+      ],
+      "evidence": [
+        "21_live_launch_smoke.log",
+        "../launch-smoke-report.json"
+      ]
+    },
+    {
+      "id": "workspace_monitor_launch",
+      "status": "PASS",
+      "summary": "Workspace monitor run passed using the freshly generated local smoke artifact against the live site.",
+      "evidence": [
+        "22_live_monitor_launch.log"
+      ]
+    },
+    {
+      "id": "live_launch_status",
+      "status": "FAIL",
+      "summary": "Live /api/monitoring/launch-status remained blocked because missing_smoke_artifact.",
+      "readinessState": "blocked",
+      "notReadyReasonCodes": [
+        "missing_smoke_artifact"
+      ],
+      "evidence": [
+        "23_live_launch_status.json"
+      ]
+    }
+  ]
+}

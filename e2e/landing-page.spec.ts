@@ -13,7 +13,7 @@ test.describe('Landing Page', () => {
       page.getByRole('heading', { name: /See the work behind the claim/i, level: 1 })
     ).toBeVisible();
 
-    await expect(page.getByText(/Stronger signal than CVs/i)).toBeVisible();
+    await expect(hero.getByText(/Stronger signal than CVs/i)).toBeVisible();
     await expect(hero.getByRole('button', { name: /Request a pilot/i })).toBeVisible();
     await expect(hero.getByRole('button', { name: /Create your proof portfolio/i })).toBeVisible();
     await expect(hero.getByText(/Review handoff/i)).toBeVisible();
@@ -75,7 +75,8 @@ test.describe('Landing Page', () => {
 
     const footer = page.getByTestId('landing-footer-section');
     await expect(footer).toBeVisible();
-    await expect(footer.getByRole('link', { name: /About/i })).toBeVisible();
+    await expect(footer.getByRole('link', { name: /Cookies/i })).toBeVisible();
+    await expect(footer.getByRole('link', { name: /Cookie settings/i })).toBeVisible();
     await expect(footer.getByRole('link', { name: /Privacy/i })).toBeVisible();
     await expect(footer.getByRole('link', { name: /Terms/i })).toBeVisible();
   });

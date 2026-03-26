@@ -1,0 +1,12 @@
+
+> test:launch:smoke
+> tsx ./scripts/launch-smoke-runner.ts
+
+Running launch smoke checks against https://proofound.io (live)
+PASS public_individual_portfolio_visible
+PASS proof_creation_case
+PASS public_org_trust_fixture_live
+PASS full_org_corridor_review_to_engagement_verification
+PASS hidden_portfolio_protected
+PASS privacy_no_leak_case
+Launch smoke artifact written to .artifacts/launch-smoke-report.json

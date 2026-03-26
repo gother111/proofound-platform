@@ -4,23 +4,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 
 import { VerificationStatus } from '@/components/settings/VerificationStatus';
 
-vi.mock('next/navigation', () => ({
-  useSearchParams: () => new URLSearchParams(''),
-}));
-
-vi.mock('sonner', () => ({
-  toast: {
-    success: vi.fn(),
-    error: vi.fn(),
-  },
-}));
-
 vi.mock('@/components/settings/WorkEmailVerificationForm', () => ({
   WorkEmailVerificationForm: () => <div>work-email-form</div>,
-}));
-
-vi.mock('@/components/settings/LinkedInVerification', () => ({
-  LinkedInVerification: () => <div>linkedin-verification-form</div>,
 }));
 
 describe('VerificationStatus', () => {
@@ -80,10 +65,10 @@ describe('VerificationStatus', () => {
     expect(screen.getByText(/Intro-readiness trust anchors/i)).toBeInTheDocument();
     expect(screen.getByText(/Account compatibility signals/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Add work email/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Run LinkedIn check/i })).toBeInTheDocument();
     expect(
-      screen.getByText(/They are transport and compatibility signals, not proof trust/i)
+      screen.getByText(/Work email remains the only launch-active account-side compatibility signal/i)
     ).toBeInTheDocument();
+    expect(screen.getByText(/LinkedIn compatibility checks are outside the locked MVP corridor/i)).toBeInTheDocument();
     expect(screen.queryByText(/Government ID Verification/i)).not.toBeInTheDocument();
   });
 
@@ -145,6 +130,6 @@ describe('VerificationStatus', () => {
     expect(
       screen.getByText(/Skipping verification is fine while getting portfolio-ready/i)
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Run LinkedIn check/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Run LinkedIn check/i })).not.toBeInTheDocument();
   });
 });

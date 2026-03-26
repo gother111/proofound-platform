@@ -25,7 +25,8 @@ import { DeferredAppEnhancements } from '@/components/root/DeferredAppEnhancemen
 
 export const metadata: Metadata = {
   title: 'Proofound - Focus on what matters',
-  description: 'A credibility and connection platform built for authenticity, not algorithms.',
+  description:
+    'A proof-first hiring corridor centered on Proof Packs, privacy-safe review, and clear assignment-based hiring.',
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },

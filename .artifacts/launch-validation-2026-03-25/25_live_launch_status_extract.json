@@ -1,0 +1,48 @@
+{
+  "generatedAt": "2026-03-25T20:10:03.158Z",
+  "ok": false,
+  "readinessState": "blocked",
+  "summary": {
+    "expectedMonitors": 9,
+    "reportedMonitors": 9,
+    "missingMonitors": 0,
+    "p1Failures": 5,
+    "p2Failures": 1,
+    "staleMonitors": 0,
+    "missingEvidenceMonitors": 6,
+    "blockedMonitors": 6
+  },
+  "notReadyReasons": [
+    {
+      "code": "missing_smoke_artifact",
+      "message": "Launch readiness is blocked because required launch smoke evidence is missing. Generate the smoke artifact before launch.",
+      "source": "smoke_artifact",
+      "freshnessState": "missing",
+      "liveRefreshAttempted": true,
+      "monitorKeys": [
+        "public_individual_portfolio_visible",
+        "proof_creation_case",
+        "public_org_trust_fixture_live",
+        "full_org_corridor_review_to_engagement_verification",
+        "hidden_portfolio_protected",
+        "privacy_no_leak_case"
+      ],
+      "checkedAt": [
+        "2026-03-25T08:00:31.000Z",
+        "2026-03-25T08:00:31.000Z",
+        "2026-03-25T08:00:31.000Z",
+        "2026-03-25T08:00:31.000Z",
+        "2026-03-25T08:00:31.000Z",
+        "2026-03-25T08:00:31.000Z"
+      ],
+      "lastSuccessfulCheckedAt": [
+        "2026-03-25T08:00:31.000Z",
+        "2026-03-25T08:00:31.000Z",
+        "2026-03-25T08:00:31.000Z",
+        "2026-03-25T08:00:31.000Z",
+        "2026-03-25T08:00:31.000Z",
+        "2026-03-25T08:00:31.000Z"
+      ]
+    }
+  ]
+}

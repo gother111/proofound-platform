@@ -29,6 +29,7 @@ vi.mock('@/db/schema', () => ({
     'engagement_verification',
     'match',
     'organization',
+    'uploaded_file',
   ],
   canonicalInternalOpsQueuePriorities: ['low', 'normal', 'high', 'urgent'],
   canonicalInternalOpsQueueStatuses: ['open', 'in_progress', 'resolved', 'cancelled'],
@@ -60,7 +61,11 @@ vi.mock('@/db/schema', () => ({
   },
 }));
 
-import { ensureInternalOpsQueueItem, listInternalOpsQueueItems } from '@/lib/internal-ops/queue';
+import {
+  ensureInternalOpsQueueItem,
+  listInternalOpsQueueItems,
+  transitionInternalOpsQueueItem,
+} from '@/lib/internal-ops/queue';
 
 describe('internal ops queue compatibility fallback', () => {
   beforeEach(() => {
@@ -134,5 +139,108 @@ describe('internal ops queue compatibility fallback', () => {
       })
     );
     warnSpy.mockRestore();
+  });
+
+  it('falls back cleanly when uploaded_file is rejected by a pre-migration DB constraint', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    mocks.findFirst.mockResolvedValue(null);
+
+    const returning = vi.fn().mockRejectedValue({
+      code: '23514',
+      message:
+        'new row for relation "internal_ops_queue_items" violates check constraint "internal_ops_queue_items_linked_entity_type_check"',
+    });
+    const values = vi.fn().mockReturnValue({ returning });
+    mocks.insert.mockReturnValue({ values });
+
+    const result = await ensureInternalOpsQueueItem({
+      queueType: 'correction_revocation',
+      linkedEntityType: 'uploaded_file',
+      linkedEntityId: 'upload-1',
+      summary: 'Risky evidence upload held for privacy-safe review.',
+      metadata: { sanitizedFilename: 'safe_name.pdf' },
+      actorType: 'candidate',
+      actorId: 'candidate-1',
+    });
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        id: 'compat-fallback:correction_revocation:upload-1',
+        linkedEntityType: 'uploaded_file',
+        metadata: expect.objectContaining({
+          sanitizedFilename: 'safe_name.pdf',
+          schemaCompatibilityFallback: true,
+        }),
+      })
+    );
+    expect(warnSpy).toHaveBeenCalledWith(
+      'internal_ops_queue.ensure.compatibility_fallback',
+      expect.objectContaining({
+        code: '23514',
+      })
+    );
+    warnSpy.mockRestore();
+  });
+
+  it('updates queue item status, resolution fields, and latest operator note', async () => {
+    mocks.findFirst.mockResolvedValue({
+      id: 'queue-1',
+      queueType: 'correction_revocation',
+      status: 'in_progress',
+      priority: 'high',
+      linkedEntityType: 'uploaded_file',
+      linkedEntityId: 'upload-1',
+      summary: 'Risky evidence upload held for privacy-safe review.',
+      metadata: { reviewReasons: ['metadata_exif'] },
+      createdAt: new Date('2026-03-21T10:00:00.000Z'),
+      updatedAt: new Date('2026-03-21T11:00:00.000Z'),
+      resolvedAt: null,
+    });
+
+    const returning = vi.fn().mockResolvedValue([
+      {
+        id: 'queue-1',
+        queueType: 'correction_revocation',
+        status: 'resolved',
+        priority: 'high',
+        linkedEntityType: 'uploaded_file',
+        linkedEntityId: 'upload-1',
+        summary: 'Risky evidence upload held for privacy-safe review.',
+        metadata: {
+          reviewReasons: ['metadata_exif'],
+          latestOperatorAction: 'resolved',
+          latestOperatorNote: 'Safe after review.',
+          latestOperatorActorId: 'admin-1',
+        },
+        createdAt: new Date('2026-03-21T10:00:00.000Z'),
+        updatedAt: new Date('2026-03-21T12:00:00.000Z'),
+        resolvedAt: new Date('2026-03-21T12:00:00.000Z'),
+      },
+    ]);
+    const where = vi.fn().mockReturnValue({ returning });
+    const set = vi.fn().mockReturnValue({ where });
+    mocks.update.mockReturnValue({ set });
+
+    const result = await transitionInternalOpsQueueItem({
+      id: 'queue-1',
+      nextStatus: 'resolved',
+      actorId: 'admin-1',
+      note: 'Safe after review.',
+    });
+
+    expect(set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'resolved',
+        resolvedByActorId: 'admin-1',
+        metadata: expect.objectContaining({
+          latestOperatorAction: 'resolved',
+          latestOperatorNote: 'Safe after review.',
+          latestOperatorActorId: 'admin-1',
+        }),
+      })
+    );
+    expect(result.current.status).toBe('resolved');
+    expect(result.current.resolvedAt).toBe('2026-03-21T12:00:00.000Z');
+    expect(result.note).toBe('Safe after review.');
   });
 });

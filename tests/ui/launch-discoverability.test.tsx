@@ -42,9 +42,6 @@ vi.mock('@/components/settings/EmailManager', () => ({
 vi.mock('@/components/settings/PasswordChangeForm', () => ({
   PasswordChangeForm: () => <div>PasswordChangeForm</div>,
 }));
-vi.mock('@/components/settings/VideoIntegrationsManager', () => ({
-  VideoIntegrationsManager: () => <div>VideoIntegrationsManager</div>,
-}));
 vi.mock('@/components/settings/PortfolioVisibilityCard', () => ({
   PortfolioVisibilityCard: () => <div>PortfolioVisibilityCard</div>,
 }));

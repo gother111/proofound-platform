@@ -13,17 +13,17 @@ export function OrgCandidatesWorkspace({ orgId }: OrgCandidatesWorkspaceProps) {
   return (
     <AppSurface>
       <div className="space-y-4">
-        <Tabs defaultValue="marketplace" className="space-y-4">
+        <Tabs defaultValue="candidate-review" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
+            <TabsTrigger value="candidate-review">Candidate review</TabsTrigger>
             <TabsTrigger value="invited-candidates">Invited candidates</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="marketplace" className="space-y-4">
+          <TabsContent value="candidate-review" className="space-y-4">
             <header className="px-1">
               <h1 className="text-2xl font-semibold text-primary-500">Candidates</h1>
               <p className="text-sm text-neutral-dark-600">
-                Candidate discovery and assignment context share the same matching workspace for
+                Assignment review and candidate context stay in one privacy-safe workspace for
                 faster shortlisting.
               </p>
             </header>

@@ -10,8 +10,14 @@ import { test, expect } from '@playwright/test';
 
 async function expectAuthRedirect(page: any, path: string) {
   await page.goto(path);
-  await expect(page).toHaveURL(/\/auth\/login/);
+  await expect(page).toHaveURL(/\/(?:auth\/)?login/);
   await expect(page.locator('input[type="email"]')).toBeVisible();
+}
+
+async function expectLaunchNotFound(page: any, path: string) {
+  await page.goto(path);
+  await expect(page.locator('body')).toContainText(/not found/i);
+  await expect(page.locator('input[type="email"]')).toHaveCount(0);
 }
 
 test.describe('Organization Flows - Unauthenticated Contract Onboarding (O-01 to O-07)', () => {
@@ -42,8 +48,10 @@ test.describe('Organization Flows - Unauthenticated Contract Onboarding (O-01 to
 });
 
 test.describe('Organization Flows - Unauthenticated Contract Team & Profile (O-08 to O-12)', () => {
-  test('O-08: Team management page accessible', async ({ page }) => {
-    await expectAuthRedirect(page, '/app/o/test-org/team');
+  test('O-08: Team management page is hard-gated outside the launch corridor', async ({
+    page,
+  }) => {
+    await expectLaunchNotFound(page, '/app/o/test-org/team');
   });
 
   test('O-09: Organization profile page accessible', async ({ page }) => {
@@ -56,29 +64,33 @@ test.describe('Organization Flows - Unauthenticated Contract Assignments (O-13 t
     await expectAuthRedirect(page, '/app/o/test-org/assignments');
   });
 
-  test('O-15: Candidates/matches page accessible', async ({ page }) => {
-    await expectAuthRedirect(page, '/app/o/test-org/candidates');
+  test('O-15: Archived candidates page is not reachable in launch flow', async ({ page }) => {
+    await expectLaunchNotFound(page, '/app/o/test-org/candidates');
   });
 });
 
 test.describe('Organization Flows - Unauthenticated Contract Enterprise (O-18 to O-20)', () => {
-  test('O-18: Enterprise Atlas page accessible', async ({ page }) => {
-    await expectAuthRedirect(page, '/app/o/test-org/atlas');
+  test('O-18: Enterprise Atlas page is not reachable in launch flow', async ({ page }) => {
+    await expectLaunchNotFound(page, '/app/o/test-org/atlas');
   });
 
-  test('O-20: Organization settings accessible', async ({ page }) => {
-    await expectAuthRedirect(page, '/app/o/test-org/settings');
+  test('O-20: Organization settings are hard-gated for launch', async ({ page }) => {
+    await expectLaunchNotFound(page, '/app/o/test-org/settings');
   });
 
-  test('O-20a: Organization profile settings subpage accessible', async ({ page }) => {
-    await expectAuthRedirect(page, '/app/o/test-org/settings/profile');
+  test('O-20a: Archived profile settings subpage is not reachable in launch flow', async ({
+    page,
+  }) => {
+    await expectLaunchNotFound(page, '/app/o/test-org/settings/profile');
   });
 
-  test('O-20b: Organization team settings subpage accessible', async ({ page }) => {
-    await expectAuthRedirect(page, '/app/o/test-org/settings/team');
+  test('O-20b: Team settings subpage is hard-gated for launch', async ({ page }) => {
+    await expectLaunchNotFound(page, '/app/o/test-org/settings/team');
   });
 
-  test('O-20c: Organization goals settings subpage accessible', async ({ page }) => {
-    await expectAuthRedirect(page, '/app/o/test-org/settings/goals');
+  test('O-20c: Archived goals settings subpage is not reachable in launch flow', async ({
+    page,
+  }) => {
+    await expectLaunchNotFound(page, '/app/o/test-org/settings/goals');
   });
 });

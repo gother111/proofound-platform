@@ -62,12 +62,11 @@ export function ScheduleInterviewModal({
   const isDesktop = useResponsiveModalMode(isOpen);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
-  const [platform, setPlatform] = useState<'google_meet' | 'manual'>('manual');
+  const [platform, setPlatform] = useState<'manual'>('manual');
   const [manualMeetingLink, setManualMeetingLink] = useState('');
   const [manualMeetingProvider, setManualMeetingProvider] = useState<ManualMeetingProvider | ''>(
     ''
   );
-  const [providerConnections, setProviderConnections] = useState({ google: false });
   const [timezone, setTimezone] = useState(
     Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
   );
@@ -76,38 +75,6 @@ export function ScheduleInterviewModal({
 
   const isReschedule = existingInterviewsCount > 0;
   const canReschedule = existingInterviewsCount < 1;
-
-  useEffect(() => {
-    let active = true;
-
-    async function loadProviderStatus() {
-      try {
-        const response = await fetch('/api/integrations/video/status');
-        if (!response.ok) return;
-
-        const data = await response.json();
-        if (!active) return;
-
-        const googleConnected = data.google?.connected === true;
-
-        setProviderConnections({ google: googleConnected });
-
-        if (!googleConnected) {
-          setPlatform('manual');
-          return;
-        }
-
-        setPlatform('google_meet');
-      } catch (statusError) {
-        console.error('Failed to load provider status:', statusError);
-      }
-    }
-
-    loadProviderStatus();
-    return () => {
-      active = false;
-    };
-  }, []);
 
   const maxDate = useMemo(() => {
     const max = new Date(matchAgreedAt);
@@ -279,55 +246,45 @@ export function ScheduleInterviewModal({
           <Video className="w-4 h-4 inline mr-2" />
           Video Platform
         </Label>
-        <Select
-          value={platform}
-          onValueChange={(val) => setPlatform(val as 'google_meet' | 'manual')}
-        >
+        <Select value={platform} onValueChange={() => setPlatform('manual')}>
           <SelectTrigger id="platform">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="manual">Manual link (no integration required)</SelectItem>
-            <SelectItem value="google_meet" disabled={!providerConnections.google}>
-              Google Meet{' '}
-              {providerConnections.google ? '(connected)' : '(connect in Settings first)'}
-            </SelectItem>
+            <SelectItem value="manual">Manual link (launch default)</SelectItem>
           </SelectContent>
         </Select>
         <p className="text-xs text-[#6B6760]">
-          {platform === 'manual'
-            ? 'Manual mode works with any valid meeting link. Select which provider the link belongs to.'
-            : 'Connected mode creates the meeting from your linked Google provider account automatically.'}
+          Manual mode works with any valid meeting link. Select which provider the link belongs
+          to, then paste the URL you want participants to use.
         </p>
       </div>
 
-      {platform === 'manual' && (
-        <div className="space-y-2">
-          <Label htmlFor="manualMeetingProvider">Manual Link Provider</Label>
-          <Select
-            value={manualMeetingProvider || undefined}
-            onValueChange={(value) => setManualMeetingProvider(value as ManualMeetingProvider)}
-          >
-            <SelectTrigger id="manualMeetingProvider">
-              <SelectValue placeholder="Select provider" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="teams">Microsoft Teams</SelectItem>
-              <SelectItem value="google_meet">Google Meet</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-          <Label htmlFor="manualMeetingLink">Meeting Link</Label>
-          <input
-            id="manualMeetingLink"
-            type="url"
-            value={manualMeetingLink}
-            onChange={(event) => setManualMeetingLink(event.target.value)}
-            placeholder="https://meet.google.com/... or another secure meeting URL"
-            className="flex h-11 w-full rounded-lg border border-proofound-stone dark:border-border bg-white dark:bg-background px-4 py-2 text-base text-proofound-charcoal dark:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest"
-          />
-        </div>
-      )}
+      <div className="space-y-2">
+        <Label htmlFor="manualMeetingProvider">Manual Link Provider</Label>
+        <Select
+          value={manualMeetingProvider || undefined}
+          onValueChange={(value) => setManualMeetingProvider(value as ManualMeetingProvider)}
+        >
+          <SelectTrigger id="manualMeetingProvider">
+            <SelectValue placeholder="Select provider" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="teams">Microsoft Teams</SelectItem>
+            <SelectItem value="google_meet">Google Meet</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
+          </SelectContent>
+        </Select>
+        <Label htmlFor="manualMeetingLink">Meeting Link</Label>
+        <input
+          id="manualMeetingLink"
+          type="url"
+          value={manualMeetingLink}
+          onChange={(event) => setManualMeetingLink(event.target.value)}
+          placeholder="https://meet.google.com/... or another secure meeting URL"
+          className="flex h-11 w-full rounded-lg border border-proofound-stone dark:border-border bg-white dark:bg-background px-4 py-2 text-base text-proofound-charcoal dark:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest"
+        />
+      </div>
 
       {error && (
         <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">

@@ -2,7 +2,7 @@
 
 > Doc Class: `active`
 > Verification Source: `src/app/api/**/route.ts`, `src/middleware.ts`, `package.json`, `.github/workflows/ci.yml`, `vercel.json`
-> Last Verified: `2026-03-06`
+> Last Verified: `2026-03-25`
 
 Canonical API documentation generated from the current App Router route handlers under `src/app/api/**/route.ts`.
 
@@ -63,8 +63,8 @@ Canonical API documentation generated from the current App Router route handlers
 | `GET`   | `/api/admin/users`                                 | `public`                   | -                                | `src/app/api/admin/users/route.ts`                                 |
 | `PATCH` | `/api/admin/users/[userId]/role`                   | `public`                   | -                                | `src/app/api/admin/users/[userId]/role/route.ts`                   |
 | `POST`  | `/api/admin/users/[userId]/suspend`                | `public`                   | -                                | `src/app/api/admin/users/[userId]/suspend/route.ts`                |
-| `POST`  | `/api/admin/verification/linkedin/[userId]/review` | `public`                   | -                                | `src/app/api/admin/verification/linkedin/[userId]/review/route.ts` |
-| `GET`   | `/api/admin/verification/linkedin/queue`           | `session`                  | -                                | `src/app/api/admin/verification/linkedin/queue/route.ts`           |
+| `GET`   | `/api/admin/internal-ops/queues`                   | `session`                  | launch-internal queue list       | `src/app/api/admin/internal-ops/queues/route.ts`                   |
+| `PATCH` | `/api/admin/internal-ops/queues/[id]`              | `session`                  | launch-internal queue transition | `src/app/api/admin/internal-ops/queues/[id]/route.ts`              |
 
 ### analytics
 

@@ -80,7 +80,6 @@ export function csrfProtection(request: NextRequest): NextResponse | null {
   // The Supabase session cookie with SameSite=Lax provides CSRF protection.
   const internalAuthRoutes = [
     '/api/match/',
-    '/api/core/matching/',
     '/api/assignments',
     '/api/interviews/',
     '/api/analytics/',

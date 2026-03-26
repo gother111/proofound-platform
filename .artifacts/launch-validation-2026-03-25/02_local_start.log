@@ -1,0 +1,10 @@
+
+> start
+> next start -p 33124
+
+   ▲ Next.js 15.5.12
+   - Local:        http://localhost:33124
+   - Network:      http://192.168.1.141:33124
+
+ ✓ Starting...
+[Error: Could not find a production build in the '.next' directory. Try building your app with 'next build' before starting the production server. https://nextjs.org/docs/messages/production-start-no-build-id]

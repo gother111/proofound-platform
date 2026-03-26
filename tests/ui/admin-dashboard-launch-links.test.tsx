@@ -35,7 +35,7 @@ describe('admin launch links', () => {
   it('keeps the real admin page limited to verification and audit launch actions', async () => {
     render(await AdminPage());
 
-    expect(screen.getByRole('link', { name: /open verification queue/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /open internal ops queues/i })).toHaveAttribute(
       'href',
       '/admin/verification'
     );

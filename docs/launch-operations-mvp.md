@@ -1,9 +1,11 @@
 > Doc Class: `active`
-> Last Verified: `2026-03-11`
+> Last Verified: `2026-03-25`
 
 # Block 9: Launch-Safe Operations, Fallback, Flags, and Structured Feedback
 
 > Canonical scope note: `Proofound_Project_Specification_2026-03-11.md` defines launch product scope first. `PRD_TECHNICAL_REQUIREMENTS.md` and `PRD_for_a_web_platform_MVP.master-latest.md` provide supporting technical and product detail. This operations note is background material only and must not widen launch scope.
+
+> Superseded note: for current pilot manual procedures, use [internal-ops/index.md](./internal-ops/index.md). This document remains background operating guidance only.
 
 ## A. Operational fallback model
 

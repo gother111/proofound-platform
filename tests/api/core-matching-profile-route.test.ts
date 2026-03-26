@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
-import { GET, PUT } from '@/app/api/core/matching/matching-profile/route';
+import { GET, PUT } from '@/app/api/core/matching/matching-profile/handler';
 import { db } from '@/db';
 import { requireApiAuthContext, requireAuth } from '@/lib/auth';
 import { evaluateIndividualMatchability } from '@/lib/matching/eligibility';

@@ -68,9 +68,9 @@ export default function PrivacyPolicyPage() {
                 <h2 className="font-display text-2xl font-semibold text-foreground">1. Scope</h2>
                 <p className="mt-3 leading-7">
                   This policy explains how Proofound collects, uses, stores, and protects personal
-                  information across account creation, matching, verification, moderation, and
-                  support. Processing is performed under applicable privacy laws, including GDPR and
-                  ePrivacy rules.
+                  information across account creation, Proof Pack creation, portfolio publication,
+                  assignment review, verification, and user rights handling. Processing is performed
+                  under applicable privacy laws, including GDPR and ePrivacy rules.
                 </p>
               </section>
 
@@ -189,13 +189,12 @@ export default function PrivacyPolicyPage() {
             <Button asChild className="bg-proofound-forest text-white hover:bg-[#2D5D4A]">
               <Link href="/cookies">View Cookie Policy</Link>
             </Button>
-            <Button
-              asChild
-              variant="outline"
-              className="border-proofound-stone text-foreground hover:border-proofound-forest hover:bg-proofound-forest/5"
+            <a
+              href="mailto:privacy@proofound.com"
+              className="inline-flex items-center justify-center rounded-md border border-proofound-stone px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-proofound-forest hover:bg-proofound-forest/5"
             >
-              <Link href="/support">Visit Support</Link>
-            </Button>
+              Email privacy
+            </a>
           </div>
         </main>
 

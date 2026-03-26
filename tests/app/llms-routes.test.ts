@@ -13,7 +13,9 @@ describe('llms routes', () => {
     expect(response.headers.get('cache-control')).toContain('stale-while-revalidate');
     expect(body).toContain('# Proofound');
     expect(body).toContain('## Core Pages');
-    expect(body).toContain('/about');
+    expect(body).toContain('privacy-safe review');
+    expect(body).toContain('/privacy');
+    expect(body).not.toContain('/about');
     expect(body).toContain('hello@proofound.io');
   });
 

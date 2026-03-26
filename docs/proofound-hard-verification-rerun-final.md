@@ -3,13 +3,10 @@
 Date: `2026-03-15`
 Block: `final-launch-evidence-after-blocks-1-7`
 
-Update note, current workspace `2026-03-22`:
-
-- This report remains historical March 15 launch evidence.
-- Its older assumptions about mixed live verification transport are now stale in the current workspace.
-- A fresh 2026-03-22 validation found no active `skill_verification_requests` or `impact_story_verification_requests` references under `src/app` or `src/lib`, and the focused canonical verification suites passed under Node `20.20.0`.
-- The protected prod org-corridor rerun was attempted but is currently blocked by an unrelated Next production build/runtime failure: `next start` crashed on missing `.next/server/chunks/1960.js`, and a clean `npm run build` later failed with `PageNotFoundError: Cannot find module for page: /_document`.
-- Treat any March 15 language in this report that still implies active mixed legacy verification transport as superseded by the 2026-03-22 verification validation.
+> Superseded note added 2026-03-25:
+> - This file is preserved as historical evidence only and does not override the locked MVP stack or newer `.artifacts/*` current-state evidence.
+> - Stale categories in or around this report: mixed live verification transport conclusions, any `PageNotFoundError: /_document` build-blocker claims, any `pilot-launchable` or similar launch verdict treated as current truth, and older route-surface claims where newer route inventory disagrees.
+> - Current repo truth differs: `npm run build` and `npm run typecheck` now pass under Node `20.20.0`, fresh strict org-corridor evidence is not green today, and route breadth remains an open launch risk.
 
 Authority stack used:
 

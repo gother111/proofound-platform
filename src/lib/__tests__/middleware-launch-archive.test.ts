@@ -23,6 +23,8 @@ describe('middleware launch archive behavior', () => {
       ['http://localhost/api/verification/veriff/session', 'Legacy Verification API'],
       ['http://localhost/api/organizations/org-1/projects/project-1', 'Organization Suite API'],
       ['http://localhost/api/admin/organizations', 'Admin API'],
+      ['http://localhost/api/admin/verification/linkedin/queue', 'Admin API'],
+      ['http://localhost/api/admin/verification/linkedin/user-1/review', 'Admin API'],
     ] as const;
 
     for (const [path, surface] of archivedPaths) {
@@ -48,12 +50,13 @@ describe('middleware launch archive behavior', () => {
     const archivedPaths = [
       'http://localhost/app/i/notifications',
       'http://localhost/app/i/settings/notifications',
-      'http://localhost/app/o/acme/settings',
       'http://localhost/app/o/acme/candidates',
+      'http://localhost/app/o/acme/settings/profile',
       'http://localhost/fairness',
       'http://localhost/docs/expertise-atlas',
       'http://localhost/p/token-value',
       'http://localhost/assign/token-value',
+      'http://localhost/o/acme/assignments/new',
       'http://localhost/admin/users',
     ];
 
@@ -66,11 +69,28 @@ describe('middleware launch archive behavior', () => {
     }
   });
 
+  it('returns 404 for hard-gated page routes before auth checks run', async () => {
+    const hardGatedPaths = [
+      'http://localhost/app/i/opportunities',
+      'http://localhost/app/o/acme/settings',
+      'http://localhost/app/o/acme/settings/team',
+      'http://localhost/app/o/acme/team',
+    ];
+
+    for (const path of hardGatedPaths) {
+      const response = await middleware(new NextRequest(path, { method: 'GET' }));
+      const body = await response.text();
+
+      expect(response.status).toBe(404);
+      expect(body).toContain('Not found');
+    }
+  });
+
   it('still passes through preserved internal ops admin endpoints', async () => {
     const preservedPaths = [
       'http://localhost/api/admin/audit?limit=10',
-      'http://localhost/api/admin/verification/linkedin/queue',
-      'http://localhost/api/admin/verification/linkedin/user-1/review',
+      'http://localhost/api/admin/internal-ops/queues',
+      'http://localhost/api/admin/internal-ops/queues/11111111-1111-1111-1111-111111111111',
       'http://localhost/api/admin/organizations/org-1/audit?reason=test',
       'http://localhost/api/admin/organizations/org-1/verify',
       'http://localhost/admin',

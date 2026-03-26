@@ -1,11 +1,22 @@
 # Codex Progress
 
+## 2026-03-24 refresh note
+
+- Repo and prompt mismatch: the current-state snapshot family lives under `.artifacts/`, not at repo root.
+- Repo and prompt mismatch: the repo governance order remains the implementation authority; the prompt's reordered layer-2 list is task-local guidance only.
+- Stale claims explicitly superseded in current repo truth:
+  - mixed live verification transport is no longer the active blocker in current code
+  - `npm run build` blocked by `PageNotFoundError: /_document` is no longer current workspace truth
+- Current blockers after the refresh:
+  - strict org-corridor evidence is not freshly green today
+  - route breadth remains wider than the locked MVP corridor
+
 ## Machine-readable state
 
 ```yaml
-last_updated: 2026-03-22T00:00:00Z
-current_block: 'verification-validation-rerun'
-current_goal: 'Validate canonical verification transport against repo truth, refresh stale verification evidence, and only widen scope if a live mixed-transport path still exists.'
+last_updated: 2026-03-25T00:00:00Z
+current_block: 'mvp-truth-reconciliation'
+current_goal: 'Reconcile stale launch-visible copy, tests, comments, and evidence notes to locked MVP truth without broadening scope.'
 authority_stack:
   - 'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md'
   - 'PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md'
@@ -32,12 +43,11 @@ current_status:
   logging_policy_override: 'This block updates docs/codex-progress.md because the user explicitly required checkpointed progress plus a close-out report for the rerun.'
 backlog:
   p1_remaining_gaps:
-    - 'The focused verification corridor is now validated as canonical in active code, but the full prod org strict rerun is blocked by an unrelated Next production build/runtime failure (`PageNotFoundError: /_document`, missing `.next/server/chunks/1960.js`).'
-    - 'Any launch verdict that depends on fresh prod org-corridor evidence must wait for that unrelated build/runtime blocker to be resolved and rerun.'
-    - 'Anything not rerun in this block remains UNVERIFIED, even if older block evidence exists.'
+    - 'Fresh authenticated org strict evidence is still not green today even though `npm run build` and `npm run typecheck` now pass in the current workspace under Node `20.20.0`.'
+    - 'Route breadth remains materially wider than the locked MVP corridor, so broader org-suite scope is still an open launch risk.'
   p2_hardening_items:
     - 'There are still 2 pre-existing landing `<img>` lint warnings unrelated to the locked-MVP corridor.'
-    - 'Stale March verification docs and audit notes that still claim mixed legacy verification transport must stay clearly marked as superseded by the 2026-03-22 validation.'
+    - 'Historical March verification docs and audit notes must stay clearly marked as superseded where they still imply mixed live verification transport, a current `/_document` build blocker, or older route-surface truth.'
   aligned_areas_to_protect:
     - 'proof-first onboarding'
     - 'Proof Pack anchor enforcement'
@@ -45,6 +55,10 @@ backlog:
     - 'distinct engagement verification workflow'
     - 'launch-surface archive policy'
 latest_verified_evidence:
+  - '2026-03-25 current workspace `npm run build` passes under Node `20.20.0`.'
+  - '2026-03-25 current workspace `npm run typecheck` also passes under Node `20.20.0` after the build regenerates the required `.next/types/**` entries.'
+  - '2026-03-24 `.artifacts/launch-readiness-summary.md` marks the older broader-than-wedge homepage claim and the old `PageNotFoundError: /_document` build blocker as stale.'
+  - '2026-03-24 `.artifacts/proofound-route-inventory.md` still shows route breadth wider than the locked MVP corridor.'
   - '2026-03-22 repo-wide search found no active `skill_verification_requests` or `impact_story_verification_requests` references under `src/app` or `src/lib`.'
   - '2026-03-22 focused verification reruns passed under Node `20.20.0`: canonical token resolution, `/api/verify/[token]` skill and impact response coverage, skill request wrappers, sent-item delete, and verifications page/client rendering.'
   - '2026-03-22 focused post-hire corridor protections also passed under Node `20.20.0`: `tests/lib/engagement-verifications.test.ts` and `tests/lib/workflow-contracts.test.ts`.'
@@ -58,16 +72,17 @@ latest_verified_evidence:
   - '2026-03-14 Block 8 acceptance rerun passed: launch-surface tests green, lint green with 2 pre-existing landing `<img>` warnings, and typecheck green under Node v20.20.0.'
 unverified_items:
   - 'This block does not freshly rerun proof-first onboarding, blind review, candidate-consented reveal, assignment publish, full review-to-engagement, or export/delete; those corridors remain UNVERIFIED unless a newer focused rerun says otherwise.'
-  - 'The full authenticated org review, reveal, interview, decision, hire, and engagement corridor still lacks a fresh prod-mode rerun in this block because the current workspace production build/runtime fails before the combined strict pass completes.'
+  - 'The full authenticated org review, reveal, interview, decision, hire, and engagement corridor still lacks a fresh green rerun in this block even though the earlier `/_document` build blocker is now stale.'
 next_recommended_block:
-  id: 'verification-validation-followup'
-  title: 'Resolve the unrelated Next prod build/runtime blocker and rerun fresh org strict evidence.'
+  id: 'org-corridor-freshness-followup'
+  title: 'Rerun fresh org strict evidence against the still-broad route surface and keep Node `20.20.0` as the verification runtime.'
 resume_steps:
   - 'Open docs/codex-progress.md first.'
   - 'Re-read the authority stack in order.'
   - 'Treat older March audit docs as historical evidence only when they contradict current repo truth.'
   - 'Use the 2026-03-22 focused verification validation as the current source of evidence for canonical verification transport.'
-  - 'Resolve the unrelated production build/runtime blocker before trying to refresh full org strict evidence.'
+  - 'Treat the old `PageNotFoundError: /_document` build blocker as stale because `npm run build` now passes in the current workspace.'
+  - 'Keep Node `20.20.0` active for verification runs so `npm run build` and `npm run typecheck` reflect current repo truth.'
   - 'Protect the already-aligned proof-first, Proof Pack, public gating, engagement verification, and launch archive areas while rerunning the blocked corridor.'
   - 'Append a new checkpoint after every meaningful step, rerun, timeout, restart, or blocker.'
 ```
@@ -76,7 +91,7 @@ resume_steps:
 
 ### Current objective
 
-Validate the current verification corridor against repo truth, replace stale mixed-transport claims with fresh evidence, and keep any follow-up strictly limited to real blockers exposed by the reruns.
+Reconcile stale launch-visible copy, comments, tests, and historical evidence notes to current locked-MVP truth, while keeping the follow-up strictly limited to real current blockers.
 
 ### Authority and evidence rules
 
@@ -96,9 +111,10 @@ Validate the current verification corridor against repo truth, replace stale mix
 
 #### P1 remaining gaps
 
-1. The focused verification transport checks are green, but the full prod org strict rerun is blocked by an unrelated Next production build/runtime failure.
-2. Any fresh launch verdict that depends on the combined org strict evidence is still pending that build/runtime fix.
-3. The authenticated org review, reveal, and explanation corridor remains evidence-incomplete in this block for that reason, not because of a reproduced verification transport regression.
+1. `npm run build` now passes, so the old `PageNotFoundError: /_document` blocker is stale.
+2. `npm run typecheck` also passes again under Node `20.20.0`, so current repo gates are greener than the earlier stale docs claimed.
+3. The authenticated org review, reveal, and explanation corridor still lacks a fresh green strict rerun today.
+4. Route breadth remains wider than the locked MVP corridor, so broader org-suite scope is still a launch risk.
 
 #### P2 hardening items
 
@@ -120,7 +136,7 @@ Validate the current verification corridor against repo truth, replace stale mix
 3. Open `docs/verification-checklist.md` for the current launch-binding contract.
 4. Treat older March audit docs as historical evidence only when they conflict with current repo truth.
 5. Keep `docs/block-1-report.md` through `docs/block-8-report.md` intact as preserved evidence.
-6. Resume by fixing the unrelated production build/runtime blocker, then rerun the authenticated org review/reveal/explanation corridor without regressing the protected aligned areas.
+6. Resume by rerunning the authenticated org review/reveal/explanation corridor under Node `20.20.0` without regressing the protected aligned areas.
 
 ### Checkpoint journal
 
@@ -291,3 +307,6 @@ Entries:
 - `2026-03-15T09:00:22Z` `REPORT_WRITTEN` Wrote `docs/block-5-rerun-report.md` and replaced `docs/proofound-hard-verification-rerun-final.md` with fresh March 15 evidence, including the close-state `git diff --name-only` inventory for the full dirty workspace under test.
 - `2026-03-15T09:00:22Z` `BLOCK_5_RERUN_COMPLETE` Final verdict is `PARTIALLY, WITH BLOCKERS`: locked-MVP corridors passed on fresh runtime and test evidence, but the current dirty workspace still fails `npm run db:drift-check` and still exposes a broader active `src/app/api/**` surface than the narrow locked launch corridor.
 - `2026-03-15T09:07:20Z` `RUNTIME_CLEANUP` Stopped the local production server on port `33120` after the reports were written, preserving the rerun evidence while leaving no lingering local launch process.
+- `2026-03-25T00:00:00Z` `STALE_EVIDENCE` Confirmed the earlier `PageNotFoundError: /_document` build blocker is stale in the current workspace because `npm run build` now passes under Node `v20.20.0`.
+- `2026-03-25T00:00:00Z` `VERIFY_PASS` `npm run typecheck` passes under Node `v20.20.0` after the build regenerates the required `.next/types/**` entries.
+- `2026-03-25T00:00:00Z` `DOCS_REFRESH` Reconciled stale launch-visible copy, strict copy assertions, current-truth docs, and historical superseded notes to the locked MVP stack without changing runtime product behavior.

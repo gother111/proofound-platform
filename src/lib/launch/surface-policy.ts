@@ -7,7 +7,7 @@ export type LaunchSurfaceClassification =
 type SurfacePolicy = {
   classification: Extract<
     LaunchSurfaceClassification,
-    'active_launch_path' | 'internal_only_launch_ops' | 'archived'
+    'active_launch_path' | 'internal_only_launch_ops' | 'gated_non_mvp' | 'archived'
   >;
   surfaceLabel: string;
   detail: string;
@@ -39,7 +39,6 @@ const ACTIVE_LAUNCH_EXACT_API_PATHS = [
   '/api/monitoring/perf-status',
   '/api/org/readiness',
   '/api/performance/track',
-  '/api/verification/linkedin/initiate',
   '/api/verification/status',
   '/api/verification/work-email/send',
   '/api/verification/work-email/verify',
@@ -91,15 +90,6 @@ const ACTIVE_API_POLICIES = [
   },
   {
     classification: 'active_launch_path',
-    surfaceLabel: 'Auth API',
-    detail: 'Launch-safe authentication callbacks remain active.',
-    matches: (pathname: string) =>
-      pathname === '/api/auth/google/callback' ||
-      pathname === '/api/auth/linkedin' ||
-      pathname === '/api/auth/linkedin/callback',
-  },
-  {
-    classification: 'active_launch_path',
     surfaceLabel: 'Candidate Invite API',
     detail: 'Candidate invite and claim flows remain active in the launch corridor.',
     matches: matchExactOrPrefix('/api/candidate-invites'),
@@ -132,16 +122,6 @@ const ACTIVE_API_POLICIES = [
         pathname !== '/api/feedback/sus' &&
         /^\/api\/feedback\/[^/]+$/.test(pathname)) ||
       /^\/api\/feedback\/token\/[^/]+$/.test(pathname),
-  },
-  {
-    classification: 'active_launch_path',
-    surfaceLabel: 'Interview Integration API',
-    detail:
-      'Google Meet and narrow video scheduling integrations remain active for launch interviews.',
-    matches: (pathname: string) =>
-      pathname === '/api/integrations/google/connect' ||
-      pathname === '/api/integrations/google/callback' ||
-      matchExactOrPrefix('/api/integrations/video')(pathname),
   },
   {
     classification: 'active_launch_path',
@@ -257,13 +237,7 @@ const INTERNAL_ONLY_API_POLICIES = [
     classification: 'internal_only_launch_ops',
     surfaceLabel: 'Admin API',
     detail: 'This admin route stays available only for launch-critical internal ops.',
-    matches: matchExact('/api/admin/verification/linkedin/queue'),
-  },
-  {
-    classification: 'internal_only_launch_ops',
-    surfaceLabel: 'Admin API',
-    detail: 'This admin route stays available only for launch-critical internal ops.',
-    matches: matchPattern(/^\/api\/admin\/verification\/linkedin\/[^/]+\/review$/),
+    matches: matchExactOrPrefix('/api/admin/internal-ops/queues'),
   },
   {
     classification: 'internal_only_launch_ops',
@@ -283,14 +257,34 @@ const INTERNAL_ONLY_API_POLICIES = [
     detail: 'This cron route stays available only for launch monitoring and operational safety.',
     matches: (pathname: string) =>
       pathname === '/api/cron/account-deletion-workflow' ||
+      pathname === '/api/cron/cv-import-temp-cleanup' ||
       pathname === '/api/cron/decision-reminders' ||
+      pathname === '/api/cron/fairness-note' ||
+      pathname === '/api/cron/fairness-report' ||
+      pathname === '/api/cron/generate-fairness-note' ||
       pathname === '/api/cron/health-check' ||
       pathname === '/api/cron/launch-synthetic-checks' ||
       pathname === '/api/cron/performance-check' ||
+      pathname === '/api/cron/python-internal-worker' ||
       pathname === '/api/cron/process-deletions' ||
       pathname === '/api/cron/refresh-matches' ||
       pathname === '/api/cron/refresh-matches-worker' ||
-      pathname === '/api/cron/send-deletion-reminders',
+      pathname === '/api/cron/send-deletion-reminders' ||
+      pathname === '/api/cron/sla-enforcement' ||
+      pathname === '/api/cron/weekly-digest' ||
+      pathname === '/api/cron/workflow-jobs',
+  },
+  {
+    classification: 'internal_only_launch_ops',
+    surfaceLabel: 'Internal Worker API',
+    detail: 'This worker route stays available only for launch-critical internal operations.',
+    matches: (pathname: string) => pathname === '/api/internal/python-jobs',
+  },
+  {
+    classification: 'internal_only_launch_ops',
+    surfaceLabel: 'Organization Audit API',
+    detail: 'This export route remains available only for authorized audit and launch evidence workflows.',
+    matches: (pathname: string) => /^\/api\/organizations\/[^/]+\/audit\/export$/.test(pathname),
   },
 ] as const satisfies readonly SurfacePolicy[];
 
@@ -341,10 +335,22 @@ const ARCHIVED_API_POLICIES = [
   },
   {
     classification: 'archived',
-    surfaceLabel: 'Interview Integration API',
-    detail: 'Zoom compatibility routes are archived outside the locked launch MVP.',
+    surfaceLabel: 'Auth API',
+    detail: 'Legacy OAuth compatibility routes are archived outside the locked launch MVP.',
     matches: (pathname: string) =>
-      pathname === '/api/auth/zoom/callback' || pathname.startsWith('/api/integrations/zoom'),
+      pathname === '/api/auth/google/callback' ||
+      pathname === '/api/auth/linkedin' ||
+      pathname === '/api/auth/linkedin/callback',
+  },
+  {
+    classification: 'archived',
+    surfaceLabel: 'Interview Integration API',
+    detail: 'Interview-provider integrations are archived outside the locked launch MVP.',
+    matches: (pathname: string) =>
+      pathname === '/api/auth/zoom/callback' ||
+      pathname.startsWith('/api/integrations/google/') ||
+      pathname.startsWith('/api/integrations/video') ||
+      pathname.startsWith('/api/integrations/zoom'),
   },
   {
     classification: 'archived',
@@ -372,6 +378,7 @@ const ARCHIVED_API_POLICIES = [
       /^\/api\/expertise\/user-skills\/[^/]+\/verification-request$/.test(pathname) ||
       pathname.startsWith('/api/expertise/verification/') ||
       pathname.startsWith('/api/expertise/verifications/') ||
+      pathname === '/api/verification/linkedin/initiate' ||
       pathname === '/api/verification/skill/request' ||
       pathname === '/api/verification/skill/respond' ||
       pathname.startsWith('/api/verification/veriff/'),
@@ -537,8 +544,7 @@ const ACTIVE_PAGE_POLICIES = [
       /^\/feedback\/[^/]+$/.test(pathname) ||
       matchExactOrPrefix('/verify')(pathname) ||
       /^\/portfolio\/[^/]+$/.test(pathname) ||
-      /^\/portfolio\/org\/[^/]+$/.test(pathname) ||
-      /^\/o\/[^/]+\/assignments\/new$/.test(pathname),
+      /^\/portfolio\/org\/[^/]+$/.test(pathname),
   },
   {
     classification: 'active_launch_path',
@@ -577,6 +583,32 @@ const ACTIVE_PAGE_POLICIES = [
   },
 ] as const satisfies readonly SurfacePolicy[];
 
+const GATED_NON_MVP_PAGE_POLICIES = [
+  {
+    classification: 'gated_non_mvp',
+    surfaceLabel: 'Individual Pages',
+    detail:
+      'Opportunity browsing is named in the MVP, but it stays hard-gated until the launch-safe matching corridor is ready.',
+    matches: (pathname: string) => pathname.startsWith('/app/i/opportunities'),
+  },
+  {
+    classification: 'gated_non_mvp',
+    surfaceLabel: 'Organization Pages',
+    detail:
+      'Team membership and role management stay named in the MVP, but the dedicated team surface remains hard-gated for launch.',
+    matches: (pathname: string) => /^\/app\/o\/[^/]+\/team$/.test(pathname),
+  },
+  {
+    classification: 'gated_non_mvp',
+    surfaceLabel: 'Organization Pages',
+    detail:
+      'The org settings hub stays hard-gated for launch so the active corridor remains centered on trust, assignments, and review.',
+    matches: (pathname: string) =>
+      /^\/app\/o\/[^/]+\/settings$/.test(pathname) ||
+      /^\/app\/o\/[^/]+\/settings\/team$/.test(pathname),
+  },
+] as const satisfies readonly SurfacePolicy[];
+
 const INTERNAL_ONLY_PAGE_POLICIES = [
   {
     classification: 'internal_only_launch_ops',
@@ -604,7 +636,6 @@ const ARCHIVED_PAGE_POLICIES = [
       pathname.startsWith('/app/i/skill-gaps') ||
       pathname.startsWith('/app/i/zen') ||
       pathname.startsWith('/app/i/notifications') ||
-      pathname.startsWith('/app/i/opportunities') ||
       pathname.startsWith('/app/i/matching/snoozed') ||
       pathname.startsWith('/app/i/settings/fairness') ||
       pathname.startsWith('/app/i/settings/notifications') ||
@@ -615,9 +646,17 @@ const ARCHIVED_PAGE_POLICIES = [
     surfaceLabel: 'Organization Pages',
     detail: 'This organization page is archived outside the locked launch MVP corridor.',
     matches: (pathname: string) =>
-      /^\/app\/o\/[^/]+\/(?:analytics(?:\/.*)?|candidates|members|opportunities|projects|settings(?:\/.*)?|team(?:\/.*)?)$/.test(
-        pathname
-      ),
+      /^\/app\/o\/[^/]+\/analytics(?:\/.*)?$/.test(pathname) ||
+      /^\/app\/o\/[^/]+\/(?:candidates|members|opportunities|projects)$/.test(pathname) ||
+      /^\/app\/o\/[^/]+\/settings\/(?:goals|integrations|profile)(?:\/.*)?$/.test(pathname) ||
+      /^\/app\/o\/[^/]+\/team\/coverage$/.test(pathname),
+  },
+  {
+    classification: 'archived',
+    surfaceLabel: 'Compatibility Pages',
+    detail:
+      'Legacy org assignment shortcut pages are archived outside the locked launch MVP corridor.',
+    matches: (pathname: string) => /^\/o\/[^/]+\/assignments\/new$/.test(pathname),
   },
   {
     classification: 'archived',
@@ -641,15 +680,13 @@ const ARCHIVED_PAGE_POLICIES = [
 export const LAUNCH_PAGE_SURFACE_POLICIES = [
   ...INTERNAL_ONLY_PAGE_POLICIES,
   ...ACTIVE_PAGE_POLICIES,
+  ...GATED_NON_MVP_PAGE_POLICIES,
   ...ARCHIVED_PAGE_POLICIES,
 ] as const;
 
 function getPolicyByClassification(
   pathname: string,
-  classification: Extract<
-    LaunchSurfaceClassification,
-    'active_launch_path' | 'internal_only_launch_ops' | 'archived'
-  >,
+  classification: LaunchSurfaceClassification,
   policies: readonly SurfacePolicy[]
 ): SurfacePolicy | null {
   const normalized = normalizePathname(pathname);
@@ -714,6 +751,7 @@ export function getArchivedPagePolicy(pathname: string): {
   }
 
   const policy =
+    getPolicyByClassification(pathname, 'gated_non_mvp', LAUNCH_PAGE_SURFACE_POLICIES) ??
     getPolicyByClassification(pathname, 'archived', LAUNCH_PAGE_SURFACE_POLICIES) ??
     getFallbackArchivedPolicy(pathname, 'page');
 
@@ -746,6 +784,10 @@ export function classifyLaunchPagePath(pathname: string): LaunchSurfaceClassific
 
   if (getPolicyByClassification(pathname, 'active_launch_path', LAUNCH_PAGE_SURFACE_POLICIES)) {
     return 'active_launch_path';
+  }
+
+  if (getPolicyByClassification(pathname, 'gated_non_mvp', LAUNCH_PAGE_SURFACE_POLICIES)) {
+    return 'gated_non_mvp';
   }
 
   return 'archived';

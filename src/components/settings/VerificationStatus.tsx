@@ -1,15 +1,12 @@
 'use client';
 
 import { useState, useEffect, type ReactNode } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Mail, Loader2, AlertCircle, Linkedin } from 'lucide-react';
-import { toast } from 'sonner';
 import { WorkEmailVerificationForm } from './WorkEmailVerificationForm';
-import { LinkedInVerification } from './LinkedInVerification';
 
 interface VerificationStatusData {
   summary: {
@@ -84,11 +81,6 @@ interface VerificationStatusData {
   };
 }
 
-interface OAuthFeedbackBanner {
-  type: 'success' | 'error';
-  message: string;
-}
-
 type SignalTone = 'neutral' | 'positive' | 'warning' | 'negative';
 
 function getLinkedInStatusText(status: VerificationStatusData) {
@@ -141,15 +133,15 @@ function getLinkedInStatusText(status: VerificationStatusData) {
     return {
       label: 'Check failed',
       helper:
-        'LinkedIn check did not complete. Retry if you still want this account-side compatibility signal.',
+        'A legacy LinkedIn check did not complete before this surface was archived from the launch corridor.',
       tone: 'negative' as SignalTone,
     };
   }
 
   return {
-    label: 'Not added',
+    label: 'Archived for launch',
     helper:
-      'Run a LinkedIn check only if you want an account-side compatibility signal alongside proof-backed trust.',
+      'LinkedIn compatibility checks are outside the locked MVP corridor. Any earlier LinkedIn signal remains read-only and never creates proof trust.',
     tone: 'neutral' as SignalTone,
   };
 }
@@ -298,23 +290,6 @@ function VerificationGroupCard({
   );
 }
 
-function StatusFeedbackAlert({ feedback }: { feedback: OAuthFeedbackBanner | null }) {
-  if (!feedback) {
-    return null;
-  }
-
-  return (
-    <Alert variant={feedback.type === 'error' ? 'destructive' : 'default'}>
-      {feedback.type === 'error' ? (
-        <AlertCircle className="h-4 w-4" />
-      ) : (
-        <CheckCircle2 className="h-4 w-4" />
-      )}
-      <AlertDescription>{feedback.message}</AlertDescription>
-    </Alert>
-  );
-}
-
 function AccountSignalAlerts({ status }: { status: VerificationStatusData }) {
   const workEmailChannel = status.channels.workEmail;
   const linkedinChannel = status.channels.linkedin;
@@ -358,19 +333,14 @@ function AccountSignalAlerts({ status }: { status: VerificationStatusData }) {
 function AccountSignalActions({
   status,
   onWorkEmail,
-  onLinkedIn,
 }: {
   status: VerificationStatusData;
   onWorkEmail: () => void;
-  onLinkedIn: () => void;
 }) {
   const workEmailConfirmed = status.channels.workEmail.state === 'verified';
-  const linkedInChecked =
-    status.channels.linkedin.state === 'verified' ||
-    status.channels.linkedin.signalLevel !== 'none';
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4">
       <Card
         variant="bento"
         className="border-2 transition-colors hover:border-proofound-terracotta/30"
@@ -397,30 +367,6 @@ function AccountSignalActions({
           </div>
         </CardContent>
       </Card>
-
-      <Card variant="bento" className="border-2 transition-colors hover:border-[#0A66C2]/30">
-        <CardContent className="p-6">
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-[#0A66C2]/10">
-              <Linkedin className="h-6 w-6 text-[#0A66C2]" />
-            </div>
-            <div className="flex-1">
-              <h4 className="font-semibold">LinkedIn</h4>
-              <p className="mb-4 mt-1 text-sm text-muted-foreground">
-                Check LinkedIn only if you want an account-side compatibility signal from official
-                LinkedIn data. It never creates public reputation on its own.
-              </p>
-              <Button
-                onClick={onLinkedIn}
-                variant="outline"
-                className="border-[#0A66C2] text-[#0A66C2] hover:bg-[#0A66C2]/10"
-              >
-                {linkedInChecked ? 'Run LinkedIn check again' : 'Run LinkedIn check'}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
@@ -428,11 +374,9 @@ function AccountSignalActions({
 function VerificationOverview({
   status,
   onWorkEmail,
-  onLinkedIn,
 }: {
   status: VerificationStatusData;
   onWorkEmail: () => void;
-  onLinkedIn: () => void;
 }) {
   const scopedSignals = status.summary.scopedSignals || [];
   const hasTrustAnchor = scopedSignals.some(
@@ -517,7 +461,7 @@ function VerificationOverview({
       <VerificationGroupCard
         eyebrow="Account compatibility signals"
         title="Keep account-side checks narrow and honest"
-        body="Work email and LinkedIn can help with compatibility and organization linking. They are transport and compatibility signals, not proof trust and not public reputation."
+        body="Work email remains the only launch-active account-side compatibility signal here. Any LinkedIn state is read-only legacy history and never counts as proof trust or public reputation."
       >
         <div className="space-y-4">
           <AccountSignalAlerts status={status} />
@@ -525,7 +469,7 @@ function VerificationOverview({
             <WorkEmailStatusPanel status={status} />
             <LinkedInStatusPanel status={status} />
           </div>
-          <AccountSignalActions status={status} onWorkEmail={onWorkEmail} onLinkedIn={onLinkedIn} />
+          <AccountSignalActions status={status} onWorkEmail={onWorkEmail} />
         </div>
       </VerificationGroupCard>
     </div>
@@ -572,54 +516,10 @@ export function VerificationStatus() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showWorkEmailForm, setShowWorkEmailForm] = useState(false);
-  const [showLinkedInFlow, setShowLinkedInFlow] = useState(false);
-  const [oauthFeedback, setOauthFeedback] = useState<OAuthFeedbackBanner | null>(null);
-  const [autoStartLinkedInCheck, setAutoStartLinkedInCheck] = useState(false);
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     fetchStatus();
   }, []);
-
-  useEffect(() => {
-    const verification = searchParams?.get('verification');
-    const verificationError = searchParams?.get('verification_error');
-    const message = searchParams?.get('message');
-
-    if (verification !== 'linkedin_connected' && verificationError !== 'linkedin_auth_failed') {
-      return;
-    }
-
-    if (verification === 'linkedin_connected') {
-      setShowLinkedInFlow(true);
-      setAutoStartLinkedInCheck(true);
-      setOauthFeedback({
-        type: 'success',
-        message: 'LinkedIn connected successfully. Running verification check now.',
-      });
-      toast.success('LinkedIn connected successfully.');
-    } else if (verificationError === 'linkedin_auth_failed') {
-      const errorMessage = message || 'LinkedIn connection failed. Please try again.';
-      setOauthFeedback({
-        type: 'error',
-        message: errorMessage,
-      });
-      toast.error(errorMessage);
-    }
-
-    fetchStatus();
-
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      urlParams.delete('verification');
-      urlParams.delete('verification_error');
-      urlParams.delete('message');
-
-      const query = urlParams.toString();
-      const nextUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname;
-      window.history.replaceState({}, '', nextUrl);
-    }
-  }, [searchParams]);
 
   const fetchStatus = async () => {
     try {
@@ -662,8 +562,6 @@ export function VerificationStatus() {
 
   const handleVerificationSuccess = () => {
     setShowWorkEmailForm(false);
-    setShowLinkedInFlow(false);
-    setAutoStartLinkedInCheck(false);
     fetchStatus();
   };
 
@@ -706,39 +604,14 @@ export function VerificationStatus() {
         <Button variant="ghost" onClick={() => setShowWorkEmailForm(false)} className="mb-2">
           ← Back to account signals
         </Button>
-        <StatusFeedbackAlert feedback={oauthFeedback} />
         <WorkEmailVerificationForm onSuccess={handleVerificationSuccess} />
-      </div>
-    );
-  }
-
-  if (showLinkedInFlow) {
-    return (
-      <div className="space-y-4">
-        <Button variant="ghost" onClick={() => setShowLinkedInFlow(false)} className="mb-2">
-          ← Back to account signals
-        </Button>
-        <StatusFeedbackAlert feedback={oauthFeedback} />
-        <LinkedInVerification
-          onSuccess={handleVerificationSuccess}
-          autoStart={autoStartLinkedInCheck}
-          onAutoStartHandled={() => setAutoStartLinkedInCheck(false)}
-          connectedByDefault={
-            autoStartLinkedInCheck || status.channels.linkedin.state !== 'unverified'
-          }
-        />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <StatusFeedbackAlert feedback={oauthFeedback} />
-      <VerificationOverview
-        status={status}
-        onWorkEmail={() => setShowWorkEmailForm(true)}
-        onLinkedIn={() => setShowLinkedInFlow(true)}
-      />
+      <VerificationOverview status={status} onWorkEmail={() => setShowWorkEmailForm(true)} />
       <div className="flex justify-end">
         <Button onClick={fetchStatus} variant="outline">
           <Loader2 className="mr-2 h-4 w-4" />

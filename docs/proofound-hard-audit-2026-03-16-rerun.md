@@ -2,16 +2,10 @@
 
 Date: 2026-03-16
 
-Update note, later same worktree:
-
-- The route-surface pruning continued after this rerun was written.
-- The current workspace has since deleted the previously cited non-MVP route handlers under `src/app/api/analytics/**`, `src/app/api/dashboard/**`, `src/app/api/momentum/**`, `src/app/api/organizations/[orgId]/{culture,impact,projects,structure,evidence-pack}/**`, and `src/app/api/org/[id]/dashboard`.
-- The current workspace has also deleted the archived legacy verification handlers under `src/app/api/expertise/**/verification*`, `src/app/api/expertise/verifications/**`, and `src/app/api/verification/skill/{request,respond}`.
-- The current workspace also archives `GET /api/org/[id]/coverage` as non-MVP analytics and removes its implementation.
-- A later 2026-03-22 validation also found that active `src/app` and `src/lib` code no longer references `skill_verification_requests` or `impact_story_verification_requests`, and the focused canonical verification suites passed under Node `20.20.0`.
-- The same 2026-03-22 block could not refresh the full protected prod org corridor because the current workspace production build/runtime fails with missing chunk output and `PageNotFoundError: /_document`, which is unrelated to the verification transport conclusion.
-- As a result, statements below that describe those route files as still compiled and reachable are stale and should be read as rerun-time findings, not current workspace truth.
-- Statements below that still describe live mixed legacy verification request-table transport are also stale and should be read as rerun-time findings, not current workspace truth.
+> Superseded note added 2026-03-25:
+> - This file is preserved as historical evidence only and does not override the locked MVP stack or newer `.artifacts/*` current-state evidence.
+> - Stale categories in or around this rerun: mixed live verification transport conclusions, any `PageNotFoundError: /_document` build-blocker claims, any `pilot-launchable` or similar launch verdict treated as current truth, and older route-surface claims where newer route inventory disagrees.
+> - Current repo truth differs: `npm run build` and `npm run typecheck` now pass under Node `20.20.0`, fresh strict org-corridor evidence is not green today, and route breadth remains an open launch risk.
 
 Audit basis:
 

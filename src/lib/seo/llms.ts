@@ -19,42 +19,7 @@ const BASE_SECTIONS: LlmsSection[] = [
         title: 'Homepage',
         path: '/',
         description:
-          'Overview of Proofound, its public proof portfolio model, and the trust-first product positioning.',
-      },
-      {
-        title: 'About Proofound',
-        path: '/about',
-        description:
-          'Explains the trust, privacy, and fairness principles behind the Proofound platform.',
-      },
-      {
-        title: 'Proofound Manifesto',
-        path: '/manifesto',
-        description:
-          'Product philosophy and operating commitments for evidence-first credibility and accountable matching.',
-      },
-      {
-        title: 'Careers at Proofound',
-        path: '/careers',
-        description:
-          'Hiring page describing team values, operating model, and the kinds of work Proofound is building.',
-      },
-    ],
-  },
-  {
-    heading: 'Support',
-    entries: [
-      {
-        title: 'Contact Proofound',
-        path: '/contact',
-        description:
-          'Primary contact route for support, partnerships, and product questions with response expectations.',
-      },
-      {
-        title: 'Support',
-        path: '/support',
-        description:
-          'Support routing guidance for product issues, accessibility feedback, privacy requests, and security concerns.',
+          'Overview of the proof-first hiring corridor, including Proof Packs, privacy-safe review, and structured assignment flow.',
       },
     ],
   },
@@ -122,7 +87,7 @@ export function renderLlmsTxt({ detailed = false }: { detailed?: boolean } = {})
   const lines: string[] = [
     '# Proofound',
     '',
-    '> Proofound is a trust-first platform for public proof portfolios, privacy-safe credibility signals, and accountable collaboration workflows.',
+    '> Proofound is a proof-first hiring corridor centered on Proof Packs, privacy-safe review, public proof portfolios, and organization trust pages.',
     '',
   ];
 
@@ -137,16 +102,12 @@ export function renderLlmsTxt({ detailed = false }: { detailed?: boolean } = {})
 
   lines.push('## Key Facts');
   lines.push('');
-  lines.push(
-    '- Proofound supports public proof portfolios for both individuals and organizations.'
-  );
+  lines.push('- Proofound supports public proof portfolios for individuals and trust pages for organizations.');
   lines.push('- Public portfolio visibility is explicit and privacy-constrained by default.');
   lines.push(
-    '- Search indexing is limited to portfolios that satisfy Proofound publication requirements.'
+    '- Search indexing is limited to portfolios and trust pages that satisfy publication requirements.'
   );
-  lines.push(
-    '- Matching and collaboration workflows exist, but public proof portfolios are the primary public web surface.'
-  );
+  lines.push('- Review stays blind by default until a reveal step is needed inside the hiring corridor.');
   lines.push('');
   lines.push('## Contact');
   lines.push('');

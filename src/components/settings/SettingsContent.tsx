@@ -11,8 +11,7 @@ import { PasswordChangeForm } from './PasswordChangeForm';
 import { resetTour } from '@/actions/tour';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { RotateCcw, Loader2 } from 'lucide-react';
-import { VideoIntegrationsManager } from './VideoIntegrationsManager';
+import { RotateCcw, Loader2, Calendar, Shield } from 'lucide-react';
 import { PortfolioVisibilityCard } from './PortfolioVisibilityCard';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 
@@ -223,12 +222,37 @@ export function SettingsContent({ userId }: SettingsContentProps) {
                   Interview Scheduling
                 </CardTitle>
                 <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-                  Connect Google Meet for automatic links, or use manual meeting links when you
-                  prefer to stay unconnected.
+                  Launch scheduling stays manual-first. Proofound uses secure meeting links without
+                  requiring a connected calendar provider in the MVP corridor.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <VideoIntegrationsManager />
+                <div className="rounded-2xl border border-proofound-stone dark:border-border bg-muted/20 p-5">
+                  <div className="flex items-start gap-3">
+                    <Calendar className="mt-0.5 h-5 w-5 text-proofound-forest" />
+                    <div className="space-y-2">
+                      <p className="font-medium text-foreground">Manual meeting links are the MVP default</p>
+                      <p className="text-sm text-muted-foreground">
+                        When an interview is scheduled, the host can add a secure meeting URL
+                        directly. No Google Meet or third-party calendar connection is required for
+                        the launch corridor.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-proofound-stone dark:border-border bg-proofound-success-tint/30 p-5">
+                  <div className="flex items-start gap-3">
+                    <Shield className="mt-0.5 h-5 w-5 text-proofound-forest" />
+                    <div className="space-y-2">
+                      <p className="font-medium text-foreground">Why this changed</p>
+                      <p className="text-sm text-muted-foreground">
+                        The locked MVP keeps interview coordination inside one narrow trust corridor
+                        and avoids launch-time integration sprawl. Manual ops stay acceptable when
+                        they preserve privacy and keep the corridor reliable.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

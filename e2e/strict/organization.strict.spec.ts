@@ -10,6 +10,7 @@ import {
   createRuntimeMatch,
   createRuntimeOrganization,
   createRuntimeUser,
+  gotoWithReadyState,
   loginWithUi,
   seedPortfolioReadyCandidate,
   type StrictFixtureState,
@@ -117,8 +118,9 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
   }) => {
     await loginWithUi(page, orgUser);
 
-    await page.goto(`/app/o/${organization.slug}/home`);
-    await expect(page.getByRole('heading', { name: organization.displayName })).toBeVisible();
+    await gotoWithReadyState(page, `/app/o/${organization.slug}/home`, async () => {
+      await expect(page.getByRole('heading', { name: organization.displayName })).toBeVisible();
+    });
     await expect(page.getByText('The org launch corridor is intentionally narrow')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Trust Profile' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'One Assignment Path' })).toBeVisible();
@@ -128,8 +130,9 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     ).toBeVisible();
     await expect(page.getByText('You are currently signed in as Owner.')).toBeVisible();
 
-    await page.goto(`/app/o/${organization.slug}/profile`);
-    await expect(page.getByRole('heading', { name: 'Organization trust profile' })).toBeVisible();
+    await gotoWithReadyState(page, `/app/o/${organization.slug}/profile`, async () => {
+      await expect(page.getByRole('heading', { name: 'Organization trust profile' })).toBeVisible();
+    });
     await expect(page.getByRole('textbox', { name: 'Organization name' })).toHaveValue(
       organization.displayName
     );
@@ -375,8 +378,9 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     );
     expect(messageListResponse.ok()).toBeTruthy();
 
-    await page.goto(`/app/o/${organization.slug}/messages`);
-    await expect(page.getByRole('heading', { name: 'Messages' })).toBeVisible();
+    await gotoWithReadyState(page, `/app/o/${organization.slug}/messages`, async () => {
+      await expect(page.getByRole('heading', { name: 'Messages', level: 1 })).toBeVisible();
+    });
   });
 
   test('O-07b draft autosave/update and resume-to-publish contract is strict', async ({ page }) => {
@@ -458,9 +462,14 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     );
     expect(sameRoleAssignments.length).toBe(1);
 
-    await page.goto(`/app/o/${organization.slug}/assignments/new?draftId=${draftId}`);
-    await expect(page.getByLabel(/role title/i)).toHaveValue(uniqueRole);
-    await expect(page.getByLabel(/why this role exists/i)).toHaveValue(
+    await gotoWithReadyState(
+      page,
+      `/app/o/${organization.slug}/assignments/new?draftId=${draftId}`,
+      async () => {
+        await expect(page.getByLabel(/^Title \*$/i)).toHaveValue(uniqueRole);
+      }
+    );
+    await expect(page.getByLabel(/^Role purpose \*$/i)).toHaveValue(
       'Update the role purpose with concrete reviewer guidance so the assignment can move cleanly through internal review before publish.'
     );
 
@@ -510,71 +519,19 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     expect(publishPayload.assignment?.creationStatus).toBe('review_ready');
   });
 
-  test('O-13..O-16 feedback, offer, deliverables, and verification paths are strict', async ({
+  test('O-13..O-16 interview, archived contract gating, and verification surfaces stay aligned', async ({
     page,
   }) => {
     await loginWithUi(page, orgUser);
-
-    const scheduledAt = new Date(Date.now() + 1000 * 60 * 60 * 3).toISOString();
-    const scheduleInterviewResponse = await apiPostJson(
-      page.request,
-      '/api/interviews/schedule',
-      {
-        matchId: seededMatch.id,
-        scheduledAt,
-        platform: 'manual',
-        manualMeetingProvider: 'google_meet',
-        participantUserIds: [candidateUser.id, orgUser.id],
-        manualMeetingLink: 'https://meet.google.com/strict-org-manual',
-      },
-      {
-        timeoutMs: 120_000,
-      }
-    );
-    expect(scheduleInterviewResponse.ok()).toBeTruthy();
-    const scheduleInterviewPayload = (await scheduleInterviewResponse.json()) as {
-      interview?: { id?: string };
-    };
-    const interviewId = scheduleInterviewPayload.interview?.id;
-    if (interviewId) {
-      fixture.interviewIds.add(interviewId);
-    }
-
-    if (interviewId) {
-      const feedbackResponse = await page.request.get(`/api/feedback/${interviewId}`);
-      expect(feedbackResponse.ok()).toBeTruthy();
-    }
-
-    let contractResponse = await apiPostJson(page.request, '/api/contracts', {
-      assignmentId: seededAssignment.id,
-      userId: candidateUser.id,
-      contractType: 'contract',
-      orgAttestation: true,
-      notes: 'Strict org-side offer confirmation',
+    await gotoWithReadyState(page, `/app/o/${organization.slug}/interviews`, async () => {
+      await expect(page.getByRole('heading', { name: 'Interviews' })).toBeVisible();
     });
 
-    if (contractResponse.status() === 403) {
-      await page.goto(`/app/o/${organization.slug}/interviews`);
-      contractResponse = await apiPostJson(page.request, '/api/contracts', {
-        assignmentId: seededAssignment.id,
-        userId: candidateUser.id,
-        contractType: 'contract',
-        orgAttestation: true,
-        notes: 'Strict org-side offer confirmation',
-      });
-    }
+    const interviewListResponse = await page.request.get('/api/interviews/schedule');
+    expect(interviewListResponse.ok()).toBeTruthy();
 
-    const contractStatus = contractResponse.status();
-    expect([200, 201, 403]).toContain(contractStatus);
-    if (contractStatus !== 403) {
-      const contractPayload = (await contractResponse.json()) as {
-        contract?: { id?: string; orgAttestation?: boolean };
-      };
-      expect(contractPayload.contract?.orgAttestation).toBe(true);
-      if (contractPayload.contract?.id) {
-        fixture.contractIds.add(contractPayload.contract.id);
-      }
-    }
+    const archivedContractsResponse = await page.request.get('/api/contracts');
+    expect(archivedContractsResponse.status()).toBe(410);
 
     const verificationStatusResponse = await page.request.get('/api/verification/status');
     expect(verificationStatusResponse.ok()).toBeTruthy();
@@ -591,11 +548,8 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
 
     await page.goto(`/app/o/${organization.slug}/settings`);
     await expect(
-      page.getByRole('heading', { name: 'Broad org settings are gated for launch' })
-    ).toBeVisible();
-    await expect(
       page.getByText(
-        'Only trust-profile updates remain in scope for launch. Wider settings, integrations, and admin dashboards are isolated until after MVP.'
+        'Not found Organization Pages: The org settings hub stays hard-gated for launch so the active corridor remains centered on trust, assignments, and review.'
       )
     ).toBeVisible();
 

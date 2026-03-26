@@ -1,0 +1,39 @@
+
+> test:privacy
+> vitest run --config vitest.supabase.config.ts tests/privacy/rls-policies.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (10) from .env.test -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | tests/privacy/setup.ts:40:11
+✅ Loaded environment from .env.test
+
+stdout | tests/privacy/setup.ts:68:9
+✅ All required environment variables are set
+
+stdout | tests/privacy/setup.ts:69:9
+📍 Test Supabase URL: https://cjpfrgmsxwxhuomnvciq.supabase.co
+
+stdout | tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+🔧 Setting up test users...
+
+stdout | tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+✅ Test users created successfully
+
+stdout | tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+🧹 Cleaning up test data...
+
+stdout | tests/privacy/rls-policies.test.ts > RLS Privacy Policies
+✅ Cleanup complete
+
+ ✓ tests/privacy/rls-policies.test.ts  (20 tests) 40219ms
+
+ Test Files  1 passed (1)
+      Tests  20 passed (20)
+   Start at  21:03:52
+   Duration  41.07s (transform 199ms, setup 20ms, collect 272ms, tests 40.22s, environment 0ms, prepare 59ms)
+

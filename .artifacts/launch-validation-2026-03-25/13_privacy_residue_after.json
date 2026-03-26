@@ -1,0 +1,18 @@
+[dotenv@17.2.3] injecting env (10) from .env.test -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (35) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+{
+  "capturedAt": "2026-03-25T20:05:27.613Z",
+  "patterns": [
+    "alice\\_rls\\_test+%@test.com",
+    "bob\\_rls\\_test+%@test.com",
+    "carol\\_rls\\_test+%@test.com",
+    "alice\\_extended+%@test.com",
+    "bob\\_extended+%@test.com",
+    "carol\\_extended+%@test.com"
+  ],
+  "counts": {
+    "auth_users": 10,
+    "profiles": 2,
+    "individual_profiles": 0
+  }
+}

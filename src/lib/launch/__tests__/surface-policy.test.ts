@@ -61,12 +61,21 @@ describe('launch surface policy', () => {
 
   it('preserves the narrow internal admin and cron ops allowlist', () => {
     expect(getArchivedApiPolicy('/api/admin/audit')).toBeNull();
-    expect(getArchivedApiPolicy('/api/admin/verification/linkedin/queue')).toBeNull();
-    expect(getArchivedApiPolicy('/api/admin/verification/linkedin/user-1/review')).toBeNull();
+    expect(getArchivedApiPolicy('/api/admin/internal-ops/queues')).toBeNull();
+    expect(getArchivedApiPolicy('/api/admin/internal-ops/queues/11111111-1111-1111-1111-111111111111')).toBeNull();
     expect(getArchivedApiPolicy('/api/admin/organizations/org-1/audit')).toBeNull();
     expect(getArchivedApiPolicy('/api/admin/organizations/org-1/verify')).toBeNull();
     expect(getArchivedApiPolicy('/api/cron/launch-synthetic-checks')).toBeNull();
     expect(getArchivedApiPolicy('/api/cron/process-deletions')).toBeNull();
+  });
+
+  it('archives stale linkedin-flavored internal queue routes', () => {
+    expect(getArchivedApiPolicy('/api/admin/verification/linkedin/queue')).toMatchObject({
+      surfaceLabel: 'Admin API',
+    });
+    expect(getArchivedApiPolicy('/api/admin/verification/linkedin/user-1/review')).toMatchObject({
+      surfaceLabel: 'Admin API',
+    });
   });
 
   it('keeps representative corridor APIs active', () => {
@@ -114,10 +123,19 @@ describe('launch surface policy', () => {
     expect(classifyLaunchPagePath('/app/o/acme/shortlist')).toBe('active_launch_path');
     expect(classifyLaunchPagePath('/admin')).toBe('internal_only_launch_ops');
 
+    expect(classifyLaunchPagePath('/app/i/opportunities')).toBe('gated_non_mvp');
+    expect(classifyLaunchPagePath('/app/o/acme/settings')).toBe('gated_non_mvp');
+    expect(classifyLaunchPagePath('/app/o/acme/settings/team')).toBe('gated_non_mvp');
+    expect(classifyLaunchPagePath('/app/o/acme/team')).toBe('gated_non_mvp');
+
     expect(classifyLaunchPagePath('/app/i/notifications')).toBe('archived');
     expect(classifyLaunchPagePath('/app/i/settings/notifications')).toBe('archived');
-    expect(classifyLaunchPagePath('/app/o/acme/settings')).toBe('archived');
     expect(classifyLaunchPagePath('/app/o/acme/candidates')).toBe('archived');
+    expect(classifyLaunchPagePath('/app/o/acme/settings/profile')).toBe('archived');
+    expect(classifyLaunchPagePath('/o/acme/assignments/new')).toBe('archived');
+    expect(classifyLaunchPagePath('/about')).toBe('archived');
+    expect(classifyLaunchPagePath('/contact')).toBe('archived');
+    expect(classifyLaunchPagePath('/support')).toBe('archived');
     expect(classifyLaunchPagePath('/fairness')).toBe('archived');
     expect(classifyLaunchPagePath('/docs/expertise-atlas')).toBe('archived');
     expect(classifyLaunchPagePath('/p/token')).toBe('archived');
@@ -126,11 +144,17 @@ describe('launch surface policy', () => {
   });
 
   it('returns archived metadata for representative page surfaces', () => {
-    expect(getArchivedPagePolicy('/app/i/notifications')).toMatchObject({
+    expect(getArchivedPagePolicy('/app/i/opportunities')).toMatchObject({
       surfaceLabel: 'Individual Pages',
     });
     expect(getArchivedPagePolicy('/app/o/acme/settings')).toMatchObject({
       surfaceLabel: 'Organization Pages',
+    });
+    expect(getArchivedPagePolicy('/app/i/notifications')).toMatchObject({
+      surfaceLabel: 'Individual Pages',
+    });
+    expect(getArchivedPagePolicy('/o/acme/assignments/new')).toMatchObject({
+      surfaceLabel: 'Compatibility Pages',
     });
     expect(getArchivedPagePolicy('/fairness')).toMatchObject({
       surfaceLabel: 'Public Pages',

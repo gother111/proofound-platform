@@ -58,7 +58,7 @@ vi.mock('@/lib/matching/review-contract', () => ({
   resolveCanonicalFallbackState: vi.fn(() => 'browse_only_low_candidate_supply'),
 }));
 
-import { POST } from '@/app/api/core/matching/assignment/route';
+import { POST } from '@/app/api/core/matching/assignment/handler';
 import { db } from '@/db';
 import { requireApiAuthContext } from '@/lib/auth';
 import { computeAssignmentMatches } from '@/lib/core/matching/assignmentMatcher';

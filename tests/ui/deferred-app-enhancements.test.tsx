@@ -14,10 +14,6 @@ vi.mock('@/components/support/ChatWidget', () => ({
   ChatWidget: () => <div data-testid="chat-widget">chat</div>,
 }));
 
-vi.mock('@/components/surveys/SUSPromptHost', () => ({
-  SUSPromptHost: () => <div data-testid="sus-prompt-host">sus</div>,
-}));
-
 describe('DeferredAppEnhancements', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -32,7 +28,6 @@ describe('DeferredAppEnhancements', () => {
     render(<DeferredAppEnhancements />);
 
     expect(screen.queryByTestId('chat-widget')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('sus-prompt-host')).not.toBeInTheDocument();
   });
 
   it('mounts on /app routes only after idle callback', async () => {
@@ -46,7 +41,6 @@ describe('DeferredAppEnhancements', () => {
     render(<DeferredAppEnhancements />);
 
     expect(screen.queryByTestId('chat-widget')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('sus-prompt-host')).not.toBeInTheDocument();
 
     await waitFor(() => {
       expect((window as any).requestIdleCallback).toHaveBeenCalledTimes(1);
@@ -58,7 +52,6 @@ describe('DeferredAppEnhancements', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('chat-widget')).toBeInTheDocument();
-      expect(screen.getByTestId('sus-prompt-host')).toBeInTheDocument();
     });
   });
 
@@ -68,6 +61,5 @@ describe('DeferredAppEnhancements', () => {
     render(<DeferredAppEnhancements />);
 
     expect(screen.queryByTestId('chat-widget')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('sus-prompt-host')).not.toBeInTheDocument();
   });
 });

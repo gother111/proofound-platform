@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
-import { POST as postProfile } from '@/app/api/core/matching/profile/route';
-import { POST as postNearMatches } from '@/app/api/core/matching/near-matches/route';
+import { POST as postProfile } from '@/app/api/core/matching/profile/handler';
+import { POST as postNearMatches } from '@/app/api/core/matching/near-matches/handler';
 import { evaluateIndividualMatchability } from '@/lib/matching/eligibility';
 import { requireApiAuth } from '@/lib/api/auth';
 import { requireApiAuthContext, requireAuth } from '@/lib/auth';

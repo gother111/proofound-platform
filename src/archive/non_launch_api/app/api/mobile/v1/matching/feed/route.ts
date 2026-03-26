@@ -7,7 +7,7 @@ import { assignments, matches, organizations } from '@/db/schema';
 import { getInternalApiSecret } from '@/lib/api/auth';
 import { requireMobileAuth } from '@/lib/api/mobile/auth';
 import { mobileError, mobileSuccess } from '@/lib/api/mobile/response';
-import { POST as computeMatches } from '@/app/api/core/matching/profile/route';
+import { POST as computeMatches } from '@/app/api/core/matching/profile/handler';
 import {
   isWithinStaleGraceWindow,
   resolveEffectiveScoreState,
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       const sharedSecret = getInternalApiSecret();
       if (sharedSecret) {
         const internalRequest = new NextRequest(
-          new URL('/api/core/matching/profile', request.url),
+          new URL('/api/match/profile', request.url),
           {
             method: 'POST',
             headers: {

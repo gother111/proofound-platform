@@ -4,6 +4,7 @@ import { sql } from 'drizzle-orm';
 
 import { db } from '@/db';
 import { getRows } from '@/lib/db/rows';
+import { ensureInternalOpsQueueItem } from '@/lib/internal-ops/queue';
 import { createAdminClient } from '@/lib/supabase/admin';
 import {
   assessEvidenceUploadPrivacy,
@@ -100,6 +101,27 @@ const EVIDENCE_UPLOAD_KINDS = new Set<UploadKind>([
 ]);
 export const MAX_PROOF_PACK_FILES = 10;
 export const MAX_PROOF_PACK_AGGREGATE_BYTES = 100 * 1024 * 1024;
+
+function resolveUploadQueueActor(context: UploadOwner) {
+  if (context.ownerType === 'individual_profile') {
+    return {
+      actorType: 'candidate' as const,
+      actorId: context.ownerId,
+    };
+  }
+
+  if (context.ownerType === 'organization') {
+    return {
+      actorType: 'organization_member' as const,
+      actorId: null,
+    };
+  }
+
+  return {
+    actorType: 'system' as const,
+    actorId: null,
+  };
+}
 
 function sha256Buffer(buffer: Buffer): string {
   return crypto.createHash('sha256').update(buffer).digest('hex');
@@ -560,6 +582,28 @@ export async function ingestUploadedFile(
       reasons: privacyAssessment.reasons,
       metadataFlags,
       filenameAssessment: privacyAssessment.filename,
+    });
+    const queueActor = resolveUploadQueueActor(context);
+
+    await ensureInternalOpsQueueItem({
+      queueType: 'correction_revocation',
+      linkedEntityType: 'uploaded_file',
+      linkedEntityId: inserted.id,
+      summary: 'Risky evidence upload held for privacy-safe review before it can enter the Proof Pack corridor.',
+      priority: 'high',
+      actorType: queueActor.actorType,
+      actorId: queueActor.actorId,
+      metadata: {
+        uploadKind: context.uploadKind,
+        sourceSurface: context.sourceSurface,
+        sanitizedFilename,
+        reviewReasons: privacyAssessment.reasons,
+        safetyReason: privacyAssessment.safetyReason,
+        sensitivityReason: privacyAssessment.sensitivity.sensitivityReason,
+        recommendedVisibility: privacyAssessment.sensitivity.recommendedVisibility,
+        recommendedRevealGate: privacyAssessment.sensitivity.recommendedRevealGate,
+        artifactDisplayName,
+      },
     });
 
     return {

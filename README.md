@@ -1,16 +1,16 @@
-# Proofound Platform MVP
+# Proofound MVP
 
 > Doc Class: `active`
 > Last Verified: `2026-03-12`
 
-Production-ready scaffold for a proof-first, privacy-first hiring credibility corridor centered on Proof Packs, with one individual side and one organization side.
+Production-ready scaffold for a proof-first, privacy-first hiring corridor centered on Proof Packs, with one individual side and one organization side.
 
 ## Overview
 
-Proofound is a platform built for authenticity, not algorithms. It features:
+Proofound is a narrow proof-first hiring corridor. It centers the product on Proof Packs and keeps the public portfolio as a derived trust surface. Core launch scope:
 
 - **Two MVP Corridors**: One clean Individual corridor and one clean Organization corridor
-- **Proof-first, Portfolio-first Profiles**: Verifiable achievements, public trust surfaces, and structured evidence of real work
+- **Proof Packs First**: Structured proof of real work, selected public portfolio output, and clear trust anchors
 - **Privacy by Design**: Blind-by-default review, progressive reveal, row-level security, and user-controlled visibility
 - **Calm, Launchable Scope**: One clean individual side, one clean organization side, and no launch drift into ATS, HRIS, public-directory, or social-feed behavior
 
@@ -69,7 +69,7 @@ flowchart LR
 - APIs: `docs/API_REFERENCE.md` (generated from `src/app/api/**/route.ts` via `node scripts/generate-api-reference.mjs`; historical API specs remain archived under `docs/archive/legacy-platform/api-reference-history/`).
 - Runbooks: `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`, `PRODUCTION_CHECKLIST.md`, `APPLY_MIGRATIONS_MANUAL.md`, `RUN_MIGRATIONS_GUIDE.md`, `OAUTH_SETUP_GUIDE.md`, `SETUP_SUPABASE.md`.
 - Archives: historical docs are grouped under `docs/archive/legacy-platform/`, status reports under `docs/archive/status-reports/`, demo artifacts under `docs/archive/demos/`.
-- Public/legal pages and metadata surfaces: `/about`, `/manifesto`, `/careers`, `/contact`, `/support`, `/privacy`, `/terms`, `/cookies`, `/cookies/settings`, `src/lib/seo/public-metadata.ts`, `src/app/sitemap.ts`, `src/app/layout.tsx`, and `public/favicon.svg`.
+- Public/legal pages and metadata surfaces: `/`, `/login`, `/auth/login`, `/signup/**`, `/onboarding`, `/privacy`, `/terms`, `/cookies`, `/cookies/settings`, `/portfolio/[handle]`, `/portfolio/org/[slug]`, `src/lib/seo/public-metadata.ts`, `src/app/sitemap.ts`, `src/app/layout.tsx`, and `public/favicon.svg`.
 
 ## Tech Stack
 
@@ -533,35 +533,15 @@ Design tokens from Figma Style Guidelines:
 - Dark mode support (media + class strategy)
 - Reduced motion respected (`prefers-reduced-motion`)
 
-## What's Next
+## Locked MVP Boundary
 
-### Phase 2 Features
-
-- Public organization pages (`/org/[slug]`)
-- Verifications module (proofs, endorsements)
-- Connections & network graph
-- Activity feeds and notifications
-- Search & discovery
-- 2FA implementation
-- Export data (GDPR compliance)
-
-### Design Enhancements
-
-- Animated illustrations with expressive motion
-- Micro-interactions (success animations, hover effects)
-- Advanced data visualization (org analytics charts)
-
-### Platform Features
-
-- API for third-party integrations
-- Admin dashboard with analytics
-- Advanced RBAC (custom roles, permissions)
-- Webhooks for org events
-- SSO (SAML, OAuth providers)
+- Keep the product centered on Proof Packs, privacy-safe review, public proof portfolios, org trust pages, and one structured assignment corridor.
+- Treat public portfolios as selected output surfaces, not the product center.
+- Do not broaden launch messaging into marketplace behavior, ATS replacement, public directories, social feeds, or dashboard-heavy org suites.
 
 ## PRD Flow Seed (Supabase)
 
-Use this seed to preload the PRD personas, orgs, assignments, matches, and Zen Hub data for end-to-end testing.
+Use this seed to preload representative personas, organizations, assignments, and review data for end-to-end testing.
 
 1. Ensure `.env.local` contains `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (service role is required to bypass RLS during seed).
 2. Run the seed: `npm run seed:prd-supabase`
@@ -572,12 +552,11 @@ Use this seed to preload the PRD personas, orgs, assignments, matches, and Zen H
 
 What this populates:
 
-- Minimal taxonomy slice (L1-L4) for skills used in matches
-- Individual profiles with mission/vision/values/causes, matching profiles, skills + proofs, visibility settings
-- Zen Hub opt-ins and check-ins
-- Organizations (GreenGrid, Bridges for Youth, CityWorks) with field visibility and admin members
-- Assignments with verification gates, outcomes, expertise matrix
-- Matches, conversations/messages, interviews, and analytics events
+- Minimal taxonomy slice (L1-L4) for skills used in review
+- Individual profiles, proof objects, visibility settings, and portfolio-safe data
+- Organizations with trust-page fields and admin members
+- Assignments with review gates, outcomes, and expertise matrix
+- Matches, conversations, interviews, and analytics events
 
 ## Troubleshooting
 
@@ -644,7 +623,7 @@ MIT License - see LICENSE file for details
 
 ---
 
-Built with ❤️ for authentic human connections.
+Built for proof-first, privacy-safe hiring.
 
 ### Lint in restricted CI
 

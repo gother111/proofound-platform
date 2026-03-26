@@ -4,6 +4,13 @@ Date: `2026-03-22`
 Scope: `Current workspace truth, focused canonical verification validation, and current launch-blocking status`
 Doc class: `governance`
 
+> Superseded note added 2026-03-25:
+> - This file is preserved as historical evidence only and does not override the locked MVP stack or newer `.artifacts/*` current-state evidence.
+> - Stale categories in or around this audit: mixed live verification transport conclusions, any `PageNotFoundError: /_document` build-blocker claims, any `pilot-launchable` or similar launch verdict treated as current truth, and older route-surface claims where newer route inventory disagrees.
+> - Current 2026-03-25 repo truth is narrower and different: `npm run lint`, `npm run typecheck`, and `npm run build` pass under Node `20.20.0`; focused verification/privacy packs pass; the strict org corridor and full org strict bundle both pass in prod mode; the smoke artifact and live monitors are fresh again; and route breadth remains the open launch risk.
+> - Fresh blocker-1 closure evidence on 2026-03-25: `node -v` -> `v20.20.0`; `npm -v` -> `10.8.2`; `rm -rf .next && NEXT_CLEAN_BUILD_CACHE=1 npm run build` -> `PASS`; `PORT=3101 npm run start -- --hostname 127.0.0.1 --port 3101` -> `Ready`; `curl /api/health`, `/`, and `/login` -> `200`; `curl /about` -> intentional archived-scope `404`.
+> - The earlier “no safe current-block strict rerun was attempted” statement is now stale. Fresh isolated corridor evidence passed `1 passed (3.4m)` and `PLAYWRIGHT_SERVER_MODE=prod npm run test:e2e:org:strict` passed `7 passed (5.7m)`.
+
 ## Authority stack
 
 This master audit uses the locked MVP authority order defined in [AGENTS.md](/Users/yuriibakurov/proofound/AGENTS.md):
@@ -27,7 +34,7 @@ Fresh 2026-03-22 validation shows:
 - current verification feed and `/api/verify/[token]` behavior do not show live dependency on legacy request tables
 - archived `/api/verification/skill/*` routes remain `410` and were not reactivated
 
-The main blocker in the current workspace is no longer a reproduced mixed verification transport issue. The current blocker is an unrelated Next production build/runtime failure that prevented a fresh protected prod org-corridor rerun.
+The main blocker in the current workspace is no longer a reproduced mixed verification transport issue. Blocker 1, the historical Next production build/runtime failure, is now closed with fresh Node `20.20.0` evidence. The remaining launch-critical blocker shifts to missing fresh protected prod org-corridor evidence in block 2.
 
 ## Verdict
 
@@ -46,9 +53,9 @@ What is not freshly validated in this block:
 
 Why the verdict is not `PASS`:
 
-- `npm run build` currently fails in this workspace with `PageNotFoundError: Cannot find module for page: /_document`
-- a prod `next start` attempt also crashed on missing `.next/server/chunks/1960.js`
-- that unrelated build/runtime failure blocks fresh end-to-end org-corridor evidence
+- the clean blocker-1 rerun now passes, so the historical `/_document` and missing-chunk failures are retired as stale evidence
+- no fresh protected prod org-corridor rerun was completed in this block, so review, reveal, interview, decision, hire, and engagement verification remain unrefreshed
+- persisted smoke evidence is still stale and route breadth remains an open launch risk outside blocker 1
 
 ## Current findings
 
@@ -97,24 +104,36 @@ The following existing docs contained stale conclusions relative to current work
 Corrected conclusion:
 
 - stale “mixed live verification transport” language is no longer accurate for current active code
-- the remaining fresh blocker is the unrelated prod build/runtime issue
+- the remaining fresh blocker is missing protected org-corridor evidence, not blocker 1 build/runtime stability
 
-### 4. Protected prod org-corridor evidence could not be refreshed
+### 4. Build/runtime blocker 1 is closed in the current workspace
 
-Attempted:
+Fresh blocker-1 verification under Node `20.20.0`:
 
 ```bash
-PLAYWRIGHT_SERVER_MODE=prod NEXT_PUBLIC_USE_MOCK_SUPABASE=false npm run test:e2e:org:strict
+export PATH="/opt/homebrew/opt/node@20/bin:$PATH"; node -v; npm -v
+rm -rf .next && NEXT_CLEAN_BUILD_CACHE=1 npm run build
+PORT=3101 npm run start -- --hostname 127.0.0.1 --port 3101
+curl http://127.0.0.1:3101/api/health
+curl http://127.0.0.1:3101/
+curl http://127.0.0.1:3101/login
+curl http://127.0.0.1:3101/about
 ```
 
-Fresh blockers observed in the current workspace:
+Observed outcomes:
 
-- `next start` runtime crash on missing `.next/server/chunks/1960.js`
-- `npm run build` failure with `PageNotFoundError: Cannot find module for page: /_document`
+- `node -v` -> `v20.20.0`
+- `npm -v` -> `10.8.2`
+- clean `npm run build` -> `PASS`
+- prod `next start` -> `Ready`
+- `/api/health`, `/`, and `/login` -> `200`
+- `/about` -> archived-scope `404` with no runtime crash
 
 Interpretation:
 
-- the missing fresh end-to-end org evidence is a build/runtime problem, not a reproduced verification transport regression
+- the historical `PageNotFoundError: /_document` and missing `.next/server/chunks/1960.js` failures are stale current-state evidence
+- blocker 1 is fully closed
+- missing fresh end-to-end org evidence is no longer attributable to build/runtime failure
 
 ## Current status by area
 
@@ -123,9 +142,9 @@ Interpretation:
 | Proof Pack canonicality                                                  | `PASS`         | No active legacy skill/impact request-table references in `src/app` or `src/lib`; focused canonical verification reruns passed |
 | Bounded verification semantics                                           | `PASS`         | Skill and impact request creation, response, token review, and feed rendering passed focused reruns                            |
 | Distinct engagement verification                                         | `PASS`         | `tests/lib/engagement-verifications.test.ts` and `tests/lib/workflow-contracts.test.ts` passed                                 |
-| Assignment create/edit/publish                                           | `UNVERIFIED`   | Fresh protected prod rerun blocked by unrelated build/runtime failure                                                          |
-| Review -> intro -> reveal -> interview -> decision -> hire -> engagement | `UNVERIFIED`   | Fresh protected prod rerun blocked by unrelated build/runtime failure                                                          |
-| Launch readiness in current workspace                                    | `BLOCKED`      | `npm run build` fails with `/ _document` page-not-found error; prod runtime also crashed on missing chunk output               |
+| Assignment create/edit/publish                                           | `UNVERIFIED`   | Fresh protected prod rerun still missing; blocker 1 is closed, so the remaining gap shifts to block 2 evidence collection     |
+| Review -> intro -> reveal -> interview -> decision -> hire -> engagement | `UNVERIFIED`   | Fresh protected prod rerun still missing; blocker 1 is closed, so the remaining gap shifts to block 2 evidence collection     |
+| Launch readiness in current workspace                                    | `BLOCKED`      | Build/runtime blocker 1 is closed; launch is still blocked by missing fresh protected org-corridor evidence and stale smoke   |
 
 ## Commands and results
 
@@ -161,28 +180,50 @@ source ~/.nvm/nvm.sh >/dev/null 2>&1 && nvm use 20.20.0 >/dev/null && npm run te
 
 - `PASS`
 
-### Protected corridor rerun attempts
+### Blocker 1 closure evidence
 
 ```bash
-source ~/.nvm/nvm.sh >/dev/null 2>&1 && nvm use 20.20.0 >/dev/null && PLAYWRIGHT_SERVER_MODE=prod NEXT_PUBLIC_USE_MOCK_SUPABASE=false npm run test:e2e:org:strict
+export PATH="/opt/homebrew/opt/node@20/bin:$PATH"; node -v; npm -v
 ```
 
-- `BLOCKED`
-- prod server instability and later build/runtime failure prevented a clean fresh full rerun
+- `PASS`
+- output: `v20.20.0`, `10.8.2`
 
 ```bash
-source ~/.nvm/nvm.sh >/dev/null 2>&1 && nvm use 20.20.0 >/dev/null && npm run build
+export PATH="/opt/homebrew/opt/node@20/bin:$PATH"; rm -rf .next; NEXT_CLEAN_BUILD_CACHE=1 npm run build
 ```
 
-- `FAIL`
-- `PageNotFoundError: Cannot find module for page: /_document`
+- `PASS`
+- clean production build completed with no `/_document` error
 
 ```bash
-source ~/.nvm/nvm.sh >/dev/null 2>&1 && nvm use 20.20.0 >/dev/null && NEXT_CLEAN_BUILD_CACHE=1 npm run build
+export PATH="/opt/homebrew/opt/node@20/bin:$PATH"; PORT=3101 npm run start -- --hostname 127.0.0.1 --port 3101
 ```
 
-- `FAIL`
-- same `/ _document` failure after cache cleanup
+- `PASS`
+- output reached `Ready`
+
+```bash
+curl -sS -o /tmp/proofound-health.json -w "%{http_code}\n" http://127.0.0.1:3101/api/health
+curl -sS -o /tmp/proofound-home.html -w "%{http_code}\n" http://127.0.0.1:3101/
+curl -sS -o /tmp/proofound-login.html -w "%{http_code}\n" http://127.0.0.1:3101/login
+curl -sS -o /tmp/proofound-about.html -w "%{http_code}\n" http://127.0.0.1:3101/about
+```
+
+- `PASS`
+- `/api/health` -> `200`
+- `/` -> `200`
+- `/login` -> `200`
+- `/about` -> `404` with body `Public Pages: This public page is archived outside the locked launch MVP corridor.`
+
+### Protected corridor rerun status
+
+```bash
+PLAYWRIGHT_SERVER_MODE=prod NEXT_PUBLIC_USE_MOCK_SUPABASE=false npm run test:e2e:org:strict
+```
+
+- `NOT ATTEMPTED` in blocker 1 closure
+- blocker 2 remains the next launch-critical evidence task because the suite writes service-role-backed runtime fixtures against the configured Supabase target
 
 ### Repo hygiene
 
@@ -217,11 +258,10 @@ They remain historically useful as rerun-time findings, but they have been super
 
 ## Recommended next step
 
-Fix the unrelated Next production build/runtime failure first, then rerun:
+Proceed to block 2 and refresh the protected org-corridor evidence:
 
 ```bash
-source ~/.nvm/nvm.sh >/dev/null 2>&1 && nvm use 20.20.0 >/dev/null && npm run build
-source ~/.nvm/nvm.sh >/dev/null 2>&1 && nvm use 20.20.0 >/dev/null && PLAYWRIGHT_SERVER_MODE=prod NEXT_PUBLIC_USE_MOCK_SUPABASE=false npm run test:e2e:org:strict
+PLAYWRIGHT_SERVER_MODE=prod NEXT_PUBLIC_USE_MOCK_SUPABASE=false npm run test:e2e:org:strict
 ```
 
-Once those pass, this master audit should be updated with fresh full protected org-corridor evidence and the remaining `UNVERIFIED` rows can be reclassified.
+Blocker 1 no longer needs a code fix or further evidence refresh beyond the current build/runtime closure record. The next reclassification opportunity is a fresh org-corridor rerun that can move the remaining `UNVERIFIED` rows.

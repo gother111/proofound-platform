@@ -31,21 +31,31 @@ export type InternalOpsQueueSummary = {
   resolvedAt: string | null;
 };
 
+export type InternalOpsQueueGroup = {
+  id: InternalOpsQueueType;
+  label: string;
+  description: string;
+  items: InternalOpsQueueSummary[];
+  openCount: number;
+};
+
 export const INTERNAL_OPS_QUEUE_META = {
   verification: {
-    label: 'Verification queue',
+    label: 'Verification',
     description: 'Manual trust review items that need scoped verification follow-up.',
   },
   privacy_reveal_exception: {
-    label: 'Privacy / reveal exception queue',
-    description: 'Reveal corridor issues that need privacy-safe operator review.',
+    label: 'Privacy / reveal disputes',
+    description:
+      'Privacy-safe reveal disputes, exception requests, and reveal corridor issues that need operator review.',
   },
   correction_revocation: {
-    label: 'Correction / revocation queue',
-    description: 'Contradictions, corrections, and trust reversals that need auditable handling.',
+    label: 'Redaction / risky upload',
+    description:
+      'Redaction holds, risky uploads, contradictions, and trust reversals that need auditable handling.',
   },
   pilot_ops: {
-    label: 'Pilot ops queue',
+    label: 'Pilot ops',
     description: 'Pilot coordination tasks that keep the hiring corridor narrow and moving.',
   },
 } satisfies Record<
@@ -55,6 +65,20 @@ export const INTERNAL_OPS_QUEUE_META = {
     description: string;
   }
 >;
+
+export class InternalOpsQueueMutationError extends Error {
+  constructor(
+    readonly code:
+      | 'not_found'
+      | 'invalid_transition'
+      | 'note_required'
+      | 'compatibility_fallback_unavailable',
+    message: string
+  ) {
+    super(message);
+    this.name = 'InternalOpsQueueMutationError';
+  }
+}
 
 function toSummary(row: typeof internalOpsQueueItems.$inferSelect): InternalOpsQueueSummary {
   return {
@@ -72,25 +96,46 @@ function toSummary(row: typeof internalOpsQueueItems.$inferSelect): InternalOpsQ
   };
 }
 
+function isInternalOpsQueueLegacyEntityConstraintError(error: unknown) {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const typed = error as { code?: string | number; message?: string; detail?: string | null };
+  const code = typeof typed.code === 'string' ? typed.code : String(typed.code ?? '');
+  const text = [typed.message, typed.detail]
+    .filter((value): value is string => typeof value === 'string' && value.length > 0)
+    .join(' ')
+    .toLowerCase();
+
+  return (
+    code === '23514' &&
+    text.includes('internal_ops_queue_items') &&
+    text.includes('linked_entity_type')
+  );
+}
+
 function isInternalOpsQueueCompatibilityError(error: unknown) {
-  return isSchemaCompatibilityError(error, {
-    relations: ['internal_ops_queue_items'],
-    columns: [
-      'queue_type',
-      'status',
-      'priority',
-      'linked_entity_type',
-      'linked_entity_id',
-      'summary',
-      'metadata',
-      'created_by_actor_type',
-      'created_by_actor_id',
-      'resolved_at',
-      'resolved_by_actor_id',
-      'created_at',
-      'updated_at',
-    ],
-  });
+  return (
+    isSchemaCompatibilityError(error, {
+      relations: ['internal_ops_queue_items'],
+      columns: [
+        'queue_type',
+        'status',
+        'priority',
+        'linked_entity_type',
+        'linked_entity_id',
+        'summary',
+        'metadata',
+        'created_by_actor_type',
+        'created_by_actor_id',
+        'resolved_at',
+        'resolved_by_actor_id',
+        'created_at',
+        'updated_at',
+      ],
+    }) || isInternalOpsQueueLegacyEntityConstraintError(error)
+  );
 }
 
 function warnCompatibilityFallback(operation: 'ensure' | 'list', error: unknown) {
@@ -123,7 +168,7 @@ function buildCompatibilityFallbackItem(
   };
 }
 
-function buildEmptyQueueGroups() {
+function buildEmptyQueueGroups(): InternalOpsQueueGroup[] {
   return Object.entries(INTERNAL_OPS_QUEUE_META).map(([queueType, meta]) => ({
     id: queueType as InternalOpsQueueType,
     label: meta.label,
@@ -203,7 +248,7 @@ export async function ensureInternalOpsQueueItem(params: {
   }
 }
 
-export async function listInternalOpsQueueItems() {
+export async function listInternalOpsQueueItems(): Promise<InternalOpsQueueGroup[]> {
   try {
     const rows = await db.query.internalOpsQueueItems.findMany({
       orderBy: [asc(internalOpsQueueItems.queueType), desc(internalOpsQueueItems.updatedAt)],
@@ -228,5 +273,111 @@ export async function listInternalOpsQueueItems() {
 
     warnCompatibilityFallback('list', error);
     return buildEmptyQueueGroups();
+  }
+}
+
+const INTERNAL_OPS_QUEUE_ALLOWED_TRANSITIONS: Record<
+  InternalOpsQueueStatus,
+  InternalOpsQueueStatus[]
+> = {
+  open: ['in_progress', 'resolved', 'cancelled'],
+  in_progress: ['resolved', 'cancelled'],
+  resolved: ['open'],
+  cancelled: ['open'],
+};
+
+export async function transitionInternalOpsQueueItem(params: {
+  id: string;
+  nextStatus: InternalOpsQueueStatus;
+  actorId: string;
+  note?: string | null;
+}) {
+  try {
+    if (params.id.startsWith('compat-fallback:')) {
+      throw new InternalOpsQueueMutationError(
+        'compatibility_fallback_unavailable',
+        'Queue mutations require the internal ops queue table to be available.'
+      );
+    }
+
+    const existing = await db.query.internalOpsQueueItems.findFirst({
+      where: eq(internalOpsQueueItems.id, params.id),
+    });
+
+    if (!existing) {
+      throw new InternalOpsQueueMutationError('not_found', 'Queue item not found.');
+    }
+
+    const allowedTransitions = INTERNAL_OPS_QUEUE_ALLOWED_TRANSITIONS[
+      existing.status as InternalOpsQueueStatus
+    ];
+
+    if (!allowedTransitions.includes(params.nextStatus)) {
+      throw new InternalOpsQueueMutationError(
+        'invalid_transition',
+        `Cannot move queue item from ${existing.status} to ${params.nextStatus}.`
+      );
+    }
+
+    const trimmedNote = params.note?.trim() ?? null;
+    const noteRequired =
+      params.nextStatus === 'resolved' ||
+      params.nextStatus === 'cancelled' ||
+      (params.nextStatus === 'open' &&
+        (existing.status === 'resolved' || existing.status === 'cancelled'));
+
+    if (noteRequired && !trimmedNote) {
+      throw new InternalOpsQueueMutationError(
+        'note_required',
+        'An operator note is required for resolve, cancel, and reopen actions.'
+      );
+    }
+
+    const now = new Date();
+    const nextMetadata = {
+      ...((existing.metadata as Record<string, unknown> | null) ?? {}),
+      latestOperatorAction:
+        params.nextStatus === 'open' && existing.status !== 'open'
+          ? 'reopened'
+          : params.nextStatus,
+      latestOperatorActionAt: now.toISOString(),
+      latestOperatorActorId: params.actorId,
+      ...(trimmedNote ? { latestOperatorNote: trimmedNote } : {}),
+    };
+
+    const [updated] = await db
+      .update(internalOpsQueueItems)
+      .set({
+        status: params.nextStatus,
+        metadata: nextMetadata,
+        resolvedAt:
+          params.nextStatus === 'resolved' || params.nextStatus === 'cancelled' ? now : null,
+        resolvedByActorId:
+          params.nextStatus === 'resolved' || params.nextStatus === 'cancelled'
+            ? params.actorId
+            : null,
+        updatedAt: now,
+      })
+      .where(eq(internalOpsQueueItems.id, existing.id))
+      .returning();
+
+    return {
+      previous: toSummary(existing),
+      current: toSummary(updated),
+      note: trimmedNote,
+    };
+  } catch (error) {
+    if (error instanceof InternalOpsQueueMutationError) {
+      throw error;
+    }
+
+    if (isInternalOpsQueueCompatibilityError(error)) {
+      throw new InternalOpsQueueMutationError(
+        'compatibility_fallback_unavailable',
+        'Queue mutations require the internal ops queue table to be available.'
+      );
+    }
+
+    throw error;
   }
 }

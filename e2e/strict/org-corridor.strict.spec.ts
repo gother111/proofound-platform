@@ -11,6 +11,7 @@ import {
   createRuntimeMatch,
   createRuntimeOrganization,
   createRuntimeUser,
+  gotoWithReadyState,
   loginWithUi,
   seedPortfolioReadyCandidate,
   type StrictFixtureState,
@@ -279,15 +280,19 @@ test.describe('Strict Authenticated Org Corridor', () => {
     test.setTimeout(600_000);
 
     await loginWithUi(page, orgOwner);
-    await page.goto(`/app/o/${organization.slug}/home`);
-    await expect(page.getByRole('heading', { name: organization.displayName })).toBeVisible();
+    await gotoWithReadyState(page, `/app/o/${organization.slug}/home`, async () => {
+      await expect(page.getByRole('heading', { name: organization.displayName })).toBeVisible();
+    });
     await expect(page.getByLabel('Collaborator email')).toBeVisible();
     await expect(page.getByLabel('Launch role')).toBeVisible();
 
-    await page.goto(`/app/o/${organization.slug}/profile`);
-    await expect(page.getByRole('heading', { name: 'Organization trust profile' })).toBeVisible();
+    await gotoWithReadyState(page, `/app/o/${organization.slug}/profile`, async () => {
+      await expect(page.getByRole('heading', { name: 'Organization trust profile' })).toBeVisible();
+    });
 
-    await page.goto(`/app/o/${organization.slug}/home`);
+    await gotoWithReadyState(page, `/app/o/${organization.slug}/home`, async () => {
+      await expect(page.getByRole('heading', { name: organization.displayName })).toBeVisible();
+    });
     await page.getByLabel('Collaborator email').fill(reviewer.email);
     await page.getByLabel('Launch role').selectOption('org_reviewer');
     await page.getByRole('button', { name: 'Send collaborator invite' }).click();
@@ -431,11 +436,11 @@ test.describe('Strict Authenticated Org Corridor', () => {
     expect(blindMatch?.profile?.displayName ?? null).toBeNull();
     expect(blindMatch?.profile?.handle ?? null).toBeNull();
 
-    await page.goto(`/app/o/${organization.slug}/matching`);
-    await dismissBlockingOverlays(page);
-
     const explanationTrigger = page.getByTestId('match-explainer-trigger').first();
-    await expect(explanationTrigger).toBeVisible({ timeout: 30_000 });
+    await gotoWithReadyState(page, `/app/o/${organization.slug}/matching`, async () => {
+      await dismissBlockingOverlays(page);
+      await expect(explanationTrigger).toBeVisible({ timeout: 30_000 });
+    });
     await expect(page.getByText(candidate.displayName)).toHaveCount(0);
     await expect(page.getByText(candidate.email)).toHaveCount(0);
 
@@ -729,8 +734,9 @@ test.describe('Strict Authenticated Org Corridor', () => {
     expect(decisionPayload.decision?.decision).toBe('hire');
     expect(decisionPayload.engagementVerification?.status).toBe('pending_both_confirmations');
 
-    await page.goto(`/app/o/${organization.slug}/interviews`);
-    await expect(page.getByRole('heading', { name: 'Interviews' })).toBeVisible();
+    await gotoWithReadyState(page, `/app/o/${organization.slug}/interviews`, async () => {
+      await expect(page.getByRole('heading', { name: 'Interviews' })).toBeVisible();
+    });
 
     const engagementConfirmResponse = await browserRequestJson(
       page,

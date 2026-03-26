@@ -308,21 +308,44 @@ export async function createTestConversation(
     throw new Error(`Failed to create test match: ${matchError?.message ?? 'unknown error'}`);
   }
 
-  // Create conversation
-  const { data: conversation, error: conversationError } = await client
-    .from('conversations')
-    .insert({
-      match_id: match.id,
-      assignment_id: assignmentId,
-      participant_one_id: participantOneId,
-      participant_two_id: participantTwoId,
-      stage: stageValue,
-    })
-    .select()
-    .single();
+  let conversation: Record<string, any> | null = null;
+  let conversationError: { message: string } | null = null;
 
-  if (conversationError) {
-    throw new Error(`Failed to create test conversation: ${conversationError.message}`);
+  // The hosted test target can occasionally lag just long enough for the
+  // immediate conversation insert to miss the freshly created match FK.
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const result = await client
+      .from('conversations')
+      .insert({
+        match_id: match.id,
+        assignment_id: assignmentId,
+        participant_one_id: participantOneId,
+        participant_two_id: participantTwoId,
+        stage: stageValue,
+      })
+      .select()
+      .single();
+
+    conversation = result.data;
+    conversationError = result.error;
+
+    if (!conversationError && conversation) {
+      break;
+    }
+
+    const shouldRetry =
+      attempt < 2 &&
+      conversationError?.message?.includes('conversations_match_id_matches_id_fk');
+
+    if (!shouldRetry) {
+      break;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 300 * (attempt + 1)));
+  }
+
+  if (conversationError || !conversation) {
+    throw new Error(`Failed to create test conversation: ${conversationError?.message ?? 'unknown error'}`);
   }
 
   return {

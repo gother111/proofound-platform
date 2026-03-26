@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
-import { POST } from '@/app/api/core/matching/interest/route';
+import { POST } from '@/app/api/core/matching/interest/handler';
 import { db } from '@/db';
 import { requireApiAuthContext, requireAuth } from '@/lib/auth';
 import { getIndividualReadinessState } from '@/lib/readiness/individual-state';

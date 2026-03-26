@@ -1,0 +1,317 @@
+
+> monitor:launch
+> tsx ./scripts/run-launch-synthetic-monitors.ts
+
+
+═════════════════════════════════════════════════════════════════════
+❌ CRITICAL: DATABASE_URL is missing!
+═════════════════════════════════════════════════════════════════════
+
+Your application is using an IN-MEMORY MOCK DATABASE.
+This means:
+  ❌ Data will NOT be saved
+  ❌ All operations will appear to work but data is lost on restart
+  ❌ Users will see "Failed to save" errors in production
+
+🔧 How to fix:
+  1. Set DATABASE_URL in your environment variables
+  2. Format: postgresql://user:password@host:port/database
+  3. For Vercel: Go to Settings → Environment Variables
+  4. For local dev: Add to .env.local file
+
+📚 See docs/ENV_VARIABLES.md for detailed instructions
+═════════════════════════════════════════════════════════════════════
+
+{
+  "ok": true,
+  "status": "pass",
+  "generatedAt": "2026-03-25T20:09:52.476Z",
+  "results": [
+    {
+      "monitorKey": "site_root",
+      "monitorGroup": "endpoint",
+      "status": "pass",
+      "severity": "p2",
+      "responseTimeMs": 739,
+      "expectedState": "landing_live",
+      "observedState": "landing_live",
+      "failureClass": null,
+      "details": {
+        "kind": "http",
+        "path": "/",
+        "httpStatus": 200
+      },
+      "checkedAt": "2026-03-25T20:09:53.220Z"
+    },
+    {
+      "monitorKey": "login_entry",
+      "monitorGroup": "endpoint",
+      "status": "pass",
+      "severity": "p1",
+      "responseTimeMs": 621,
+      "expectedState": "login_live",
+      "observedState": "login_live",
+      "failureClass": null,
+      "details": {
+        "kind": "http",
+        "path": "/login",
+        "httpStatus": 200
+      },
+      "checkedAt": "2026-03-25T20:09:53.842Z"
+    },
+    {
+      "monitorKey": "api_health",
+      "monitorGroup": "endpoint",
+      "status": "pass",
+      "severity": "p1",
+      "responseTimeMs": 968,
+      "expectedState": "health_contract_ok",
+      "observedState": "health_contract_ok",
+      "failureClass": null,
+      "details": {
+        "kind": "http",
+        "path": "/api/health",
+        "httpStatus": 200,
+        "payload": {
+          "status": "healthy",
+          "database": {
+            "connected": true,
+            "usingMockDb": false
+          },
+          "environment": {
+            "hasSupabaseUrl": true,
+            "hasSupabaseAnonKey": true,
+            "hasDatabaseUrl": true,
+            "hasSiteUrl": true,
+            "hasServiceRoleKey": true
+          },
+          "warnings": [],
+          "timestamp": "2026-03-25T20:09:55.026Z",
+          "version": "9ffab0b06c4822619e3da95db6fce93475642b29"
+        }
+      },
+      "checkedAt": "2026-03-25T20:09:54.813Z"
+    },
+    {
+      "monitorKey": "public_org_trust_page",
+      "monitorGroup": "endpoint",
+      "status": "pass",
+      "severity": "p2",
+      "responseTimeMs": 1979,
+      "expectedState": "seeded_public_org_trust_page_live",
+      "observedState": "seeded_public_org_trust_page_live",
+      "failureClass": null,
+      "details": {
+        "kind": "http",
+        "path": "/portfolio/org/proofound-labs",
+        "httpStatus": 200
+      },
+      "checkedAt": "2026-03-25T20:09:56.792Z"
+    },
+    {
+      "monitorKey": "public_individual_portfolio_visible",
+      "monitorGroup": "synthetic-smoke",
+      "status": "pass",
+      "severity": "p1",
+      "responseTimeMs": 1509,
+      "expectedState": "public_individual_portfolio_visible",
+      "observedState": "public_individual_portfolio_visible",
+      "failureClass": null,
+      "details": {
+        "artifactPath": ".artifacts/launch-smoke-report.json",
+        "artifactSchemaVersion": 2,
+        "artifactGeneratedAt": "2026-03-25T20:09:48.294Z",
+        "artifactAgeMinutes": 0,
+        "freshnessThresholdMinutes": 60,
+        "smokeArtifactState": "fresh_passing",
+        "smokeStatus": "pass",
+        "smokeMessage": null,
+        "artifactMessage": "launch smoke artifact is fresh and passing",
+        "smokeFreshnessState": "fresh"
+      },
+      "checkedAt": "2026-03-25T20:09:52.476Z",
+      "blocking": false
+    },
+    {
+      "monitorKey": "proof_creation_case",
+      "monitorGroup": "synthetic-smoke",
+      "status": "pass",
+      "severity": "p1",
+      "responseTimeMs": 1274,
+      "expectedState": "proof_creation_case_live",
+      "observedState": "proof_creation_case_live",
+      "failureClass": null,
+      "details": {
+        "artifactPath": ".artifacts/launch-smoke-report.json",
+        "artifactSchemaVersion": 2,
+        "artifactGeneratedAt": "2026-03-25T20:09:48.294Z",
+        "artifactAgeMinutes": 0,
+        "freshnessThresholdMinutes": 60,
+        "smokeArtifactState": "fresh_passing",
+        "smokeStatus": "pass",
+        "smokeMessage": null,
+        "artifactMessage": "launch smoke artifact is fresh and passing",
+        "smokeFreshnessState": "fresh"
+      },
+      "checkedAt": "2026-03-25T20:09:52.476Z",
+      "blocking": false
+    },
+    {
+      "monitorKey": "public_org_trust_fixture_live",
+      "monitorGroup": "synthetic-smoke",
+      "status": "pass",
+      "severity": "p2",
+      "responseTimeMs": 9354,
+      "expectedState": "public_org_trust_fixture_live",
+      "observedState": "public_org_trust_fixture_live",
+      "failureClass": null,
+      "details": {
+        "artifactPath": ".artifacts/launch-smoke-report.json",
+        "artifactSchemaVersion": 2,
+        "artifactGeneratedAt": "2026-03-25T20:09:48.294Z",
+        "artifactAgeMinutes": 0,
+        "freshnessThresholdMinutes": 60,
+        "smokeArtifactState": "fresh_passing",
+        "smokeStatus": "pass",
+        "smokeMessage": null,
+        "artifactMessage": "launch smoke artifact is fresh and passing",
+        "smokeFreshnessState": "fresh"
+      },
+      "checkedAt": "2026-03-25T20:09:52.476Z",
+      "blocking": false
+    },
+    {
+      "monitorKey": "full_org_corridor_review_to_engagement_verification",
+      "monitorGroup": "synthetic-smoke",
+      "status": "pass",
+      "severity": "p1",
+      "responseTimeMs": 133209,
+      "expectedState": "full_org_corridor_review_to_engagement_verification_live",
+      "observedState": "full_org_corridor_review_to_engagement_verification_live",
+      "failureClass": null,
+      "details": {
+        "artifactPath": ".artifacts/launch-smoke-report.json",
+        "artifactSchemaVersion": 2,
+        "artifactGeneratedAt": "2026-03-25T20:09:48.294Z",
+        "artifactAgeMinutes": 0,
+        "freshnessThresholdMinutes": 60,
+        "smokeArtifactState": "fresh_passing",
+        "smokeStatus": "pass",
+        "smokeMessage": null,
+        "artifactMessage": "launch smoke artifact is fresh and passing",
+        "smokeFreshnessState": "fresh"
+      },
+      "checkedAt": "2026-03-25T20:09:52.476Z",
+      "blocking": false
+    },
+    {
+      "monitorKey": "hidden_portfolio_protected",
+      "monitorGroup": "synthetic-smoke",
+      "status": "pass",
+      "severity": "p1",
+      "responseTimeMs": 1774,
+      "expectedState": "hidden_portfolio_protected",
+      "observedState": "hidden_portfolio_protected",
+      "failureClass": null,
+      "details": {
+        "artifactPath": ".artifacts/launch-smoke-report.json",
+        "artifactSchemaVersion": 2,
+        "artifactGeneratedAt": "2026-03-25T20:09:48.294Z",
+        "artifactAgeMinutes": 0,
+        "freshnessThresholdMinutes": 60,
+        "smokeArtifactState": "fresh_passing",
+        "smokeStatus": "pass",
+        "smokeMessage": null,
+        "artifactMessage": "launch smoke artifact is fresh and passing",
+        "smokeFreshnessState": "fresh"
+      },
+      "checkedAt": "2026-03-25T20:09:52.476Z",
+      "blocking": false
+    },
+    {
+      "monitorKey": "privacy_no_leak_case",
+      "monitorGroup": "synthetic-smoke",
+      "status": "pass",
+      "severity": "p1",
+      "responseTimeMs": 1755,
+      "expectedState": "privacy_no_leak_enforced",
+      "observedState": "privacy_no_leak_enforced",
+      "failureClass": null,
+      "details": {
+        "artifactPath": ".artifacts/launch-smoke-report.json",
+        "artifactSchemaVersion": 2,
+        "artifactGeneratedAt": "2026-03-25T20:09:48.294Z",
+        "artifactAgeMinutes": 0,
+        "freshnessThresholdMinutes": 60,
+        "smokeArtifactState": "fresh_passing",
+        "smokeStatus": "pass",
+        "smokeMessage": null,
+        "artifactMessage": "launch smoke artifact is fresh and passing",
+        "smokeFreshnessState": "fresh"
+      },
+      "checkedAt": "2026-03-25T20:09:52.476Z",
+      "blocking": false
+    }
+  ],
+  "summary": {
+    "total": 10,
+    "pass": 10,
+    "degraded": 0,
+    "fail": 0,
+    "p1Failures": 0,
+    "p2Failures": 0
+  },
+  "alertSummary": [
+    {
+      "monitorKey": "site_root",
+      "alertStatus": "healthy"
+    },
+    {
+      "monitorKey": "login_entry",
+      "alertStatus": "healthy"
+    },
+    {
+      "monitorKey": "api_health",
+      "alertStatus": "healthy"
+    },
+    {
+      "monitorKey": "public_org_trust_page",
+      "alertStatus": "healthy"
+    },
+    {
+      "monitorKey": "public_individual_portfolio_visible",
+      "alertStatus": "healthy"
+    },
+    {
+      "monitorKey": "proof_creation_case",
+      "alertStatus": "healthy"
+    },
+    {
+      "monitorKey": "public_org_trust_fixture_live",
+      "alertStatus": "healthy"
+    },
+    {
+      "monitorKey": "full_org_corridor_review_to_engagement_verification",
+      "alertStatus": "healthy"
+    },
+    {
+      "monitorKey": "hidden_portfolio_protected",
+      "alertStatus": "healthy"
+    },
+    {
+      "monitorKey": "privacy_no_leak_case",
+      "alertStatus": "healthy"
+    }
+  ],
+  "evidence": {
+    "source": "live",
+    "artifactPath": ".artifacts/launch-smoke-report.json",
+    "smokeArtifactSchemaVersion": 2,
+    "smokeArtifactGeneratedAt": "2026-03-25T20:09:48.294Z",
+    "smokeArtifactAgeMinutes": 0,
+    "smokeFreshnessThresholdMinutes": 60,
+    "smokeFreshnessState": "fresh",
+    "persisted": false
+  },
+  "lastSuccessfulByMonitorKey": {}
+}

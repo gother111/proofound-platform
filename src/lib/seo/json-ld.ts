@@ -51,7 +51,7 @@ export function buildProofoundOrganizationJsonLd(description?: string): JsonLd {
     sameAs: [],
     description:
       description ||
-      'Proofound is a credibility platform built for public proof portfolios first, with matching and collaboration layered on after.',
+      'Proofound is a proof-first hiring corridor centered on Proof Packs, privacy-safe review, and public trust surfaces derived from real work.',
   };
 }
 
@@ -65,7 +65,7 @@ export function buildProofoundWebsiteJsonLd(description?: string): JsonLd {
     url: siteUrl,
     description:
       description ||
-      'Public proof portfolios for individuals and organizations, with matching and collaboration workflows.',
+      'Proof Packs, privacy-safe candidate review, public proof portfolios, and organization trust pages for stronger signal than CVs.',
   };
 }
 

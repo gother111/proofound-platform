@@ -140,9 +140,9 @@ export default async function CookieSettingsPage({
         <div className="mt-8 text-center">
           <p className="text-sm text-muted-foreground">
             Have questions about cookies or privacy?{' '}
-            <Link href="/support" className="text-primary hover:underline">
-              Contact our support team
-            </Link>
+            <a href="mailto:privacy@proofound.com" className="text-primary hover:underline">
+              Email our privacy team
+            </a>
           </p>
         </div>
       </main>

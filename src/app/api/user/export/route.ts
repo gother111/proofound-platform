@@ -40,6 +40,7 @@ import { getRows } from '@/lib/db/rows';
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { listCanonicalProofPackAggregatesForOwner } from '@/lib/proofs/canonical-pack';
 import { isQuarantinedProofPack, validateProofPackAnchor } from '@/lib/proofs/pack-anchor';
+import { buildPortableUploadManifest } from '@/lib/uploads/export';
 
 export const dynamic = 'force-dynamic';
 
@@ -285,28 +286,13 @@ export async function GET() {
 
     const individualProfile = individualProfileData[0] || null;
     const uploadedFilesResult = await db.execute(sql`
-      SELECT id, upload_kind, original_filename, durable_path, public_path, deleted_at
+      SELECT id, upload_kind, sanitized_filename, detected_mime, durable_path, public_path, deleted_at
       FROM uploaded_files
       WHERE owner_id = ${user.id}::uuid
       ORDER BY created_at ASC
     `);
     const uploadedFiles = getRows<any>(uploadedFilesResult as any);
-    const omittedFiles = uploadedFiles
-      .filter((file) => file.deleted_at)
-      .map((file) => ({
-        fileId: file.id,
-        reason: 'deleted_before_export',
-        uploadKind: file.upload_kind,
-        originalFilename: file.original_filename,
-      }));
-    const includedFiles = uploadedFiles
-      .filter((file) => !file.deleted_at)
-      .map((file) => ({
-        fileId: file.id,
-        uploadKind: file.upload_kind,
-        originalFilename: file.original_filename,
-        storagePath: file.durable_path || file.public_path || null,
-      }));
+    const { includedFiles, omittedFiles } = buildPortableUploadManifest(uploadedFiles);
 
     const serializeForExport = <T>(value: T): T =>
       JSON.parse(

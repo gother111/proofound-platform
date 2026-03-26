@@ -303,7 +303,7 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
 
     await page.goto('/app/i/home');
     await expect(page.getByRole('heading', { name: /welcome back/i })).toBeVisible();
-    await expect(page.getByText(/proof first\. portfolio first\./i)).toBeVisible();
+    await expect(page.getByText(/proof packs first\. public proof when you are ready\./i)).toBeVisible();
   });
 
   test('I-15..I-17 messaging, interview scheduling, and offer attestation work', async ({

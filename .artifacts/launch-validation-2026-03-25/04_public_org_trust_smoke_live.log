@@ -1,0 +1,9 @@
+
+> test:e2e:org-trust:smoke
+> node ./scripts/playwright-node20.mjs test e2e/public-org-trust.smoke.spec.ts --project=chromium --reporter=line --workers=1
+
+
+Running 1 test using 1 worker
+
+[1A[2K[1/1] [chromium] › e2e/public-org-trust.smoke.spec.ts:44:3 › Seeded public org trust smoke › seeded org trust page returns 200 and stays MVP-safe
+[1A[2K  1 passed (8.6s)

@@ -1,15 +1,21 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { access } from 'node:fs/promises';
+import path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
-import FairnessPage from '@/app/fairness/page';
+import { classifyLaunchPagePath, getArchivedPagePolicy } from '@/lib/launch/surface-policy';
+
+const PUBLIC_FAIRNESS_PAGE = path.join(process.cwd(), 'src/app/fairness/page.tsx');
 
 describe('Public fairness note', () => {
-  it('renders the launch-safe transparency note without dashboard copy', () => {
-    render(<FairnessPage />);
+  it('keeps the public fairness note archived and out of the compiled app tree', async () => {
+    expect(classifyLaunchPagePath('/fairness')).toBe('archived');
+    expect(getArchivedPagePolicy('/fairness')).toMatchObject({
+      surfaceLabel: 'Public Pages',
+    });
 
-    expect(screen.getByText('Fairness is monitored, not productized')).toBeInTheDocument();
-    expect(screen.queryByText(/Latest Fairness Note/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Historical Reports/i)).not.toBeInTheDocument();
+    await expect(access(PUBLIC_FAIRNESS_PAGE)).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
   });
 });

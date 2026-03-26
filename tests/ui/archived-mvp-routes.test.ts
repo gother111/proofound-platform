@@ -1,91 +1,160 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { access } from 'node:fs/promises';
+import path from 'node:path';
 
-const { notFoundMock, redirectMock } = vi.hoisted(() => ({
-  notFoundMock: vi.fn(() => {
-    const error = new Error('NEXT_NOT_FOUND');
-    (error as Error & { digest?: string }).digest = 'NEXT_HTTP_ERROR_FALLBACK;404';
-    throw error;
-  }),
-  redirectMock: vi.fn(() => {
-    throw new Error('NEXT_REDIRECT');
-  }),
-}));
+import { describe, expect, it } from 'vitest';
 
-vi.mock('next/navigation', () => ({
-  notFound: notFoundMock,
-  redirect: redirectMock,
-}));
+import { classifyLaunchPagePath, getArchivedPagePolicy } from '@/lib/launch/surface-policy';
 
-import IndividualExpertisePage from '@/app/app/i/expertise/page';
-import IndividualProjectsPage from '@/app/app/i/projects/page';
-import IndividualProjectPage from '@/app/app/i/projects/[id]/page';
-import IndividualSkillGapsPage from '@/app/app/i/skill-gaps/page';
-import IndividualZenPage from '@/app/app/i/zen/page';
-import IndividualFairnessSettingsPage from '@/app/app/i/settings/fairness/page';
-import OrgFairnessAnalyticsPage from '@/app/app/o/[slug]/analytics/fairness/page';
-import OrgProjectsPage from '@/app/app/o/[slug]/projects/page';
-import OrgSettingsGoalsPage from '@/app/app/o/[slug]/settings/goals/page';
-import VerifySkillPage from '@/app/verify-skill/page';
+const HARD_GATED_PAGE_CASES = [
+  {
+    pathname: '/app/i/opportunities',
+    file: 'src/app/app/i/opportunities/page.tsx',
+    surfaceLabel: 'Individual Pages',
+  },
+  {
+    pathname: '/app/o/[slug]/settings',
+    file: 'src/app/app/o/[slug]/settings/page.tsx',
+    surfaceLabel: 'Organization Pages',
+  },
+  {
+    pathname: '/app/o/[slug]/settings/team',
+    file: 'src/app/app/o/[slug]/settings/team/page.tsx',
+    surfaceLabel: 'Organization Pages',
+  },
+  {
+    pathname: '/app/o/[slug]/team',
+    file: 'src/app/app/o/[slug]/team/page.tsx',
+    surfaceLabel: 'Organization Pages',
+  },
+] as const;
 
-async function expectNotFound(renderRoute: () => unknown | Promise<unknown>) {
-  await expect(Promise.resolve().then(renderRoute)).rejects.toMatchObject({
-    digest: 'NEXT_HTTP_ERROR_FALLBACK;404',
-  });
-}
-
-async function expectRedirect(renderRoute: () => unknown | Promise<unknown>, expectedHref: string) {
-  await expect(Promise.resolve().then(renderRoute)).rejects.toThrow('NEXT_REDIRECT');
-  expect(redirectMock).toHaveBeenLastCalledWith(expectedHref);
-}
+const ARCHIVED_PAGE_CASES = [
+  {
+    pathname: '/app/i/expertise',
+    file: 'src/app/app/i/expertise/page.tsx',
+    surfaceLabel: 'Individual Pages',
+  },
+  {
+    pathname: '/app/i/projects',
+    file: 'src/app/app/i/projects/page.tsx',
+    surfaceLabel: 'Individual Pages',
+  },
+  {
+    pathname: '/app/i/projects/[id]',
+    file: 'src/app/app/i/projects/[id]/page.tsx',
+    surfaceLabel: 'Individual Pages',
+  },
+  {
+    pathname: '/app/i/skill-gaps',
+    file: 'src/app/app/i/skill-gaps/page.tsx',
+    surfaceLabel: 'Individual Pages',
+  },
+  {
+    pathname: '/app/i/zen',
+    file: 'src/app/app/i/zen/page.tsx',
+    surfaceLabel: 'Individual Pages',
+  },
+  {
+    pathname: '/app/i/settings/fairness',
+    file: 'src/app/app/i/settings/fairness/page.tsx',
+    surfaceLabel: 'Individual Pages',
+  },
+  {
+    pathname: '/app/o/[slug]/analytics/fairness',
+    file: 'src/app/app/o/[slug]/analytics/fairness/page.tsx',
+    surfaceLabel: 'Organization Pages',
+  },
+  {
+    pathname: '/app/o/[slug]/projects',
+    file: 'src/app/app/o/[slug]/projects/page.tsx',
+    surfaceLabel: 'Organization Pages',
+  },
+  {
+    pathname: '/app/o/[slug]/settings/goals',
+    file: 'src/app/app/o/[slug]/settings/goals/page.tsx',
+    surfaceLabel: 'Organization Pages',
+  },
+  {
+    pathname: '/about',
+    file: 'src/app/(marketing)/about/page.tsx',
+    surfaceLabel: 'Public Pages',
+  },
+  {
+    pathname: '/careers',
+    file: 'src/app/(marketing)/careers/page.tsx',
+    surfaceLabel: 'Public Pages',
+  },
+  {
+    pathname: '/contact',
+    file: 'src/app/(marketing)/contact/page.tsx',
+    surfaceLabel: 'Public Pages',
+  },
+  {
+    pathname: '/manifesto',
+    file: 'src/app/(marketing)/manifesto/page.tsx',
+    surfaceLabel: 'Public Pages',
+  },
+  {
+    pathname: '/support',
+    file: 'src/app/(marketing)/support/page.tsx',
+    surfaceLabel: 'Public Pages',
+  },
+  {
+    pathname: '/accessibility',
+    file: 'src/app/accessibility/page.tsx',
+    surfaceLabel: 'Public Pages',
+  },
+  {
+    pathname: '/fairness',
+    file: 'src/app/fairness/page.tsx',
+    surfaceLabel: 'Public Pages',
+  },
+  {
+    pathname: '/p/[token]',
+    file: 'src/app/p/[token]/page.tsx',
+    surfaceLabel: 'Public Pages',
+  },
+  {
+    pathname: '/p/[token]/embed',
+    file: 'src/app/p/[token]/embed/page.tsx',
+    surfaceLabel: 'Public Pages',
+  },
+  {
+    pathname: '/verify-skill',
+    file: 'src/app/verify-skill/page.tsx',
+    surfaceLabel: 'Public Pages',
+  },
+  {
+    pathname: '/o/[slug]/assignments/new',
+    file: 'src/app/o/[slug]/assignments/new/page.tsx',
+    surfaceLabel: 'Compatibility Pages',
+  },
+] as const;
 
 describe('archived non-MVP routes', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+  it('classifies hard-gated routes explicitly and removes their page handlers from src/app', async () => {
+    for (const route of HARD_GATED_PAGE_CASES) {
+      expect(classifyLaunchPagePath(route.pathname)).toBe('gated_non_mvp');
+      expect(getArchivedPagePolicy(route.pathname)).toMatchObject({
+        surfaceLabel: route.surfaceLabel,
+      });
+
+      await expect(access(path.join(process.cwd(), route.file))).rejects.toMatchObject({
+        code: 'ENOENT',
+      });
+    }
   });
 
-  it('archives the individual zen route', async () => {
-    await expectNotFound(() => IndividualZenPage());
-  });
+  it('classifies archived routes explicitly and removes their page handlers from src/app', async () => {
+    for (const route of ARCHIVED_PAGE_CASES) {
+      expect(classifyLaunchPagePath(route.pathname)).toBe('archived');
+      expect(getArchivedPagePolicy(route.pathname)).toMatchObject({
+        surfaceLabel: route.surfaceLabel,
+      });
 
-  it('archives the individual fairness settings route', async () => {
-    await expectNotFound(() => IndividualFairnessSettingsPage());
-  });
-
-  it('archives the individual expertise route', async () => {
-    await expectNotFound(() => IndividualExpertisePage());
-  });
-
-  it('archives the individual projects hub', async () => {
-    await expectNotFound(() => IndividualProjectsPage());
-  });
-
-  it('archives the individual project detail route', async () => {
-    await expectNotFound(() => IndividualProjectPage());
-  });
-
-  it('archives the legacy skill gaps alias', async () => {
-    await expectNotFound(() => IndividualSkillGapsPage());
-  });
-
-  it('archives the org fairness analytics route', async () => {
-    await expectNotFound(() => OrgFairnessAnalyticsPage());
-  });
-
-  it('redirects archived org projects back into the MVP corridor', async () => {
-    await expectRedirect(
-      () => OrgProjectsPage({ params: Promise.resolve({ slug: 'acme' }) }),
-      '/app/o/acme/home'
-    );
-  });
-
-  it('redirects archived org goals settings back into the MVP corridor', async () => {
-    await expectRedirect(
-      () => OrgSettingsGoalsPage({ params: Promise.resolve({ slug: 'acme' }) }),
-      '/app/o/acme/home'
-    );
-  });
-
-  it('archives the legacy verify-skill page', async () => {
-    await expectNotFound(() => VerifySkillPage());
+      await expect(access(path.join(process.cwd(), route.file))).rejects.toMatchObject({
+        code: 'ENOENT',
+      });
+    }
   });
 });

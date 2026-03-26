@@ -20,14 +20,14 @@ export function FooterSection() {
         </div>
 
         <nav className="flex flex-wrap gap-x-8 gap-y-3 text-sm text-[var(--landing-text)]">
-          <Link href="/about" className="transition-colors hover:text-[var(--landing-dark)]">
-            About
+          <Link href="/cookies" className="transition-colors hover:text-[var(--landing-dark)]">
+            Cookies
           </Link>
-          <Link href="/contact" className="transition-colors hover:text-[var(--landing-dark)]">
-            Contact
-          </Link>
-          <Link href="/support" className="transition-colors hover:text-[var(--landing-dark)]">
-            Support
+          <Link
+            href="/cookies/settings"
+            className="transition-colors hover:text-[var(--landing-dark)]"
+          >
+            Cookie settings
           </Link>
           <Link href="/privacy" className="transition-colors hover:text-[var(--landing-dark)]">
             Privacy

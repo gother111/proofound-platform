@@ -1,134 +1,64 @@
 # Proofound Implementation Status Snapshot
 
-Date: 2026-03-21  
+Date: `2026-03-25`  
 Workspace: `/Users/yuriibakurov/proofound`
 
-## Executive Summary
+## Current Snapshot
 
-- Current workspace truth is materially stronger than the March 16 snapshot.
-- The launch smoke artifact is fresh again and currently passes all three corridor buckets:
-  - individual
-  - organization
-  - trust / privacy
-- The launch-binding strict org corridor now passes end to end in the current workspace.
-- The targeted corridor suites, privacy suites, lint, typecheck, and build all pass in this run.
-- The older authority filename `PRD_for_a_web_platform_MVP.aligned-rewrite.2026-03-11.md` is not present in this workspace. The active aligned PRD file in repo truth is `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`.
-- Two runtime environment risks still surfaced during the live org corridor:
-  - hosted PostgREST still reports `feedback_tokens.id` missing from schema cache during interview-feedback invite issuance
-  - hosted database still lacks `internal_ops_queue_items`
-- Those two issues no longer break the launch corridor because the code now degrades safely, but they still need environment cleanup for full operational confidence.
-- Route breadth is still far wider than the narrow locked MVP corridor, so surface reduction remains an open launch risk even though the current launch smoke is green.
+This file supersedes the earlier March 21 implementation snapshot with fresh current-state evidence from the narrowed launch pass.
 
-## Authority Applied
+### Fresh verified green in this pass
 
-Implementation authority used for this pass:
+- `npm run lint` -> `PASS`
+- `npm run typecheck` -> `PASS`
+- `npm run build` -> `PASS`
+- focused launch and verification packs -> `PASS`
+- `npm run test:privacy` -> `PASS`
+- `npm run test:privacy:extended` -> `PASS`
+- isolated strict org corridor rerun -> `1 passed (3.4m)`
+- `PLAYWRIGHT_SERVER_MODE=prod npm run test:e2e:org:strict` -> `7 passed (5.7m)`
+- `npm run test:e2e:landing` -> `10 passed (19.9s)`
+- `npm run test:e2e:landing:visual` -> `1 passed (15.8s)`
+- `BASE_URL=https://proofound.io npm run test:launch:smoke` -> `PASS`
+- live synthetic monitors against the configured site URL -> `10/10` healthy
 
-1. `Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md`
-2. `PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md`
-3. `PRD_TECHNICAL_REQUIREMENTS.aligned-rewrite.2026-03-11.md`
-4. `LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md`
-5. `Proofound_Project_Specification_2026-03-11.md`
+### Fresh corridor and verification truth
 
-Execution-lens documents used as companion evidence, not authority:
+- `/api/verification/status` remains the canonical user-facing verification source.
+- Runtime authz and real-DB RLS/privacy checks are aligned in this pass.
+- The org review corridor now reruns cleanly in prod mode through review, reveal, interview, decision, `hire`, and separate engagement verification.
+- The wider organization strict suite was narrowed to the locked MVP surface:
+  - archived `/api/contracts` is asserted as `410`
+  - archived `/app/o/[slug]/settings` is asserted as not found
+  - stale broader-flow assumptions were removed from that suite
 
-- `.artifacts/proofound-priority-file-map.md`
-- `.artifacts/proofound-route-inventory.md`
+### Fresh launch-ops truth
+
 - `.artifacts/launch-smoke-report.json`
-- `docs/proofound-hard-audit-2026-03-15-rerun.md`
-- `docs/proofound-hard-audit-2026-03-16-rerun.md`
+  - `generatedAt: 2026-03-25T08:00:27.400Z`
+  - `expiresAt: 2026-03-25T09:00:27.400Z`
+  - `overallStatus: pass`
+- `npm run monitor:launch`
+  - `ok: true`
+  - `status: pass`
+  - `summary.total: 10`
+  - `summary.pass: 10`
 
-## What Is Verified Green In This Run
+### Remaining blocker
 
-### Launch truth
+The remaining current blocker is route breadth, not corridor health:
 
-- `.artifacts/launch-smoke-report.json` was refreshed at `2026-03-21T23:17:31.403Z`.
-- Fresh smoke status is `overallStatus: "pass"`.
-- `src/app/api/monitoring/__tests__/launch-status-route.test.ts` passes against the current launch-status logic.
+- total APIs: `149`
+- total pages: `50`
+- active launch APIs: `117`
+- active launch pages: `38`
+- internal-only APIs: `14`
+- internal-only pages: `3`
+- archived APIs: `18`
+- archived pages: `9`
 
-### Narrow corridor behavior
+This is materially narrower than the stale `187` / `91` route snapshot, but it still exceeds the locked MVP launch corridor.
 
-- Proof-first onboarding passes in the current staged UI.
-- Public individual portfolio privacy checks pass.
-- Public organization trust page checks pass.
-- Verification token resolution passes.
-- Org review, reveal, decision, and engagement-verification route coverage pass.
-- Upload privacy checks pass.
-- RLS and extended RLS privacy suites pass.
-- The dedicated strict org corridor Playwright spec passes in the current workspace.
+## Historical Note
 
-### Core repo gates
-
-- `npm run lint` passes.
-  - Remaining warning only: raw `<img>` in `src/components/ProofoundLanding.tsx`
-- `npm run typecheck` passes.
-- `npm run build` passes.
-  - Deploy-readiness env warnings still appear when expected env vars are absent locally, but the build completes.
-
-## Commands Run In This Pass
-
-Focused corridor and regression tests:
-
-- `npm run test -- tests/ui/individual-setup-proof-first.test.tsx`
-- `npm run test -- tests/lib/engagement-verifications.test.ts`
-- `npm run test:privacy:extended`
-- `npm run test -- tests/actions/onboarding.test.ts tests/routes/onboarding-page.test.ts tests/ui/individual-setup-proof-first.test.tsx tests/ui/public-portfolio-access-consistency.test.tsx tests/ui/public-portfolio-page.test.tsx tests/ui/public-org-portfolio-page.test.tsx src/app/api/monitoring/__tests__/launch-status-route.test.ts tests/lib/canonical-verification-request-token-resolution.test.ts tests/api/verify-impact-token-route.test.ts tests/api/org-match-review-route.test.ts tests/api/conversation-reveal-route.test.ts tests/api/decisions-route.test.ts tests/api/engagement-verifications-route.test.ts tests/lib/engagement-verifications.test.ts tests/lib/uploads-privacy.test.ts tests/lib/public-organization-portfolio.test.ts tests/lib/public-portfolio-projection.test.ts tests/lib/workflow-decision-record.test.ts`
-- `npm run test:privacy`
-- `npm run test:privacy:extended`
-- `npm run test -- tests/lib/internal-ops-queue.test.ts tests/lib/engagement-verifications.test.ts tests/api/decisions-route.test.ts`
-- `npm run test -- src/app/api/monitoring/__tests__/launch-status-route.test.ts`
-
-Strict browser validation:
-
-- `node ./scripts/playwright-node20.mjs test e2e/strict/org-corridor.strict.spec.ts --project=chromium --reporter=line --workers=1`
-- `npm run seed:public-org-trust-fixture`
-- `npm run test:e2e:org-trust:smoke`
-- `BASE_URL=http://localhost:3000 npm run test:launch:smoke`
-
-Core repo gates:
-
-- `npm run lint`
-- `npm run typecheck`
-- `npm run build`
-
-## Current Repo Truth By Area
-
-### Fully done in code and verified in this pass
-
-- Proof-first onboarding tests match the current staged onboarding flow.
-- Canonical org corridor decision flow still distinguishes `hire` from engagement verification.
-- Public org trust fixture and smoke now align with the narrowed trust-card page.
-- Internal ops queue writes no longer hard-fail the org corridor when the runtime schema lags behind code.
-- The launch smoke artifact is current again and no longer contradicts the code.
-
-### Still real risks after the rerun
-
-- Hosted runtime schema drift remains visible:
-  - `feedback_tokens` PostgREST schema cache is stale enough to warn during interview completion
-  - `internal_ops_queue_items` relation is absent in the current hosted database target
-- Those issues are currently fail-soft in code, not fail-stop, so the launch corridor can complete. Operational queue visibility is still incomplete until the runtime schema is updated.
-- Route surface breadth remains high:
-  - `src/app/api/**` route handlers: `187`
-  - `src/app/**/page.tsx`: `91`
-  - Broad active families still include `cron`, `organizations`, `verification`, `user`, `match`, `feedback`, `integrations`, `admin`, and `expertise`
-- The repo is closer to launch truth than it was on March 16, but route reduction and environment cleanup are still open work.
-
-## Launch Readiness Interpretation
-
-- Launch-corridor evidence is current and green in this workspace.
-- No corridor-blocking test failure remains in this rerun.
-- Remaining concerns are launch risks, not smoke-red blockers:
-  - hosted schema drift
-  - overly broad active route surface
-
-## Primary Files To Reload First Next Time
-
-- `scripts/launch-smoke-runner.ts`
-- `.artifacts/launch-smoke-report.json`
-- `src/app/api/monitoring/launch-status/route.ts`
-- `e2e/strict/org-corridor.strict.spec.ts`
-- `e2e/public-org-trust.smoke.spec.ts`
-- `scripts/seed-public-org-trust-fixture.ts`
-- `src/lib/internal-ops/queue.ts`
-- `src/lib/workflow/service.ts`
-- `src/lib/engagement-verifications/service.ts`
-- `.artifacts/proofound-route-inventory.md`
+The older March 21 snapshot remains useful as historical evidence only. Its stale claims about a fresh March 21 smoke artifact, a then-current strict org corridor pass, and older route counts should not be treated as current truth after this refresh.

@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 import { ChatWidget } from '@/components/support/ChatWidget';
-import { SUSPromptHost } from '@/components/surveys/SUSPromptHost';
 
 const IDLE_TIMEOUT_MS = 1500;
 
@@ -64,7 +63,6 @@ export function DeferredAppEnhancements() {
 
   return (
     <>
-      <SUSPromptHost />
       <ChatWidget />
     </>
   );

@@ -79,8 +79,9 @@ export default function TermsOfServicePage() {
                   2. Service Scope
                 </h2>
                 <p className="mt-3 leading-7">
-                  Proofound is a platform for profile-based matching, verification workflows, and
-                  moderated communication between participants and organizations.
+                  Proofound is a proof-first hiring corridor centered on Proof Packs, public proof
+                  portfolios, organization trust pages, and privacy-safe review inside structured
+                  assignment flows.
                 </p>
               </section>
 
@@ -180,7 +181,8 @@ export default function TermsOfServicePage() {
                   We maintain operational safeguards to keep availability and integrity within
                   reasonable expectations. During incidents, we may temporarily limit selected
                   features to protect platform stability or user safety. Material disruptions are
-                  communicated through established support channels whenever practical.
+                  communicated through our published legal and privacy contact channels whenever
+                  practical.
                 </p>
               </section>
 
@@ -209,13 +211,12 @@ export default function TermsOfServicePage() {
             <Button asChild className="bg-proofound-terracotta text-white hover:bg-[#B5673F]">
               <Link href="/cookies">View Cookie Policy</Link>
             </Button>
-            <Button
-              asChild
-              variant="outline"
-              className="border-proofound-stone text-foreground hover:border-proofound-terracotta hover:bg-proofound-terracotta/5"
+            <a
+              href="mailto:legal@proofound.com"
+              className="inline-flex items-center justify-center rounded-md border border-proofound-stone px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-proofound-terracotta hover:bg-proofound-terracotta/5"
             >
-              <Link href="/support">Visit Support</Link>
-            </Button>
+              Email legal
+            </a>
           </div>
         </main>
 

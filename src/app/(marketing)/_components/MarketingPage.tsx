@@ -18,7 +18,6 @@ export function MarketingPage({
   ctaHref = '/',
 }: MarketingPageProps) {
   const trustLinks = [
-    { label: 'Support', href: '/support' },
     { label: 'Privacy Policy', href: '/privacy' },
     { label: 'Terms of Service', href: '/terms' },
     { label: 'Cookie Policy', href: '/cookies' },
@@ -47,7 +46,7 @@ export function MarketingPage({
 
       <div className="rounded-xl border border-border bg-card/30 p-4">
         <p className="text-sm text-muted-foreground">
-          Need help or policy details? Use our support and legal links:
+          Need policy details? Use these launch-safe legal links:
         </p>
         <nav aria-label="Support and legal navigation" className="mt-3 flex flex-wrap gap-4">
           {trustLinks.map((link) => (

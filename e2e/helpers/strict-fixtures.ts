@@ -876,6 +876,60 @@ export async function loginWithUi(page: Page, user: StrictRuntimeUser): Promise<
   }
 }
 
+export async function gotoWithReadyState(
+  page: Page,
+  path: string,
+  assertReady: () => Promise<void>,
+  options?: {
+    attempts?: number;
+    retryDelayMs?: number;
+  }
+): Promise<void> {
+  const attempts =
+    Number.isFinite(options?.attempts) && (options?.attempts ?? 0) > 0 ? options!.attempts! : 3;
+  const retryDelayMs =
+    Number.isFinite(options?.retryDelayMs) && (options?.retryDelayMs ?? 0) >= 0
+      ? options!.retryDelayMs!
+      : 1000;
+
+  let lastError: unknown = null;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    await page.goto(path);
+
+    try {
+      await assertReady();
+      return;
+    } catch (error) {
+      lastError = error;
+
+      if (attempt === attempts) {
+        throw error;
+      }
+
+      const appErrorVisible = await page
+        .getByRole('heading', { name: 'Something went wrong' })
+        .isVisible()
+        .catch(() => false);
+
+      console.warn(
+        `[strict-fixtures] retrying ${path} after failed readiness check on attempt ${attempt}/${attempts}${appErrorVisible ? ' (app error boundary visible)' : ''}`
+      );
+
+      if (appErrorVisible) {
+        const retryButton = page.getByRole('button', { name: 'Try again' });
+        if (await retryButton.isVisible().catch(() => false)) {
+          await retryButton.click().catch(() => null);
+        }
+      }
+
+      await page.waitForTimeout(retryDelayMs * attempt);
+    }
+  }
+
+  throw lastError ?? new Error(`Failed to load ${path}`);
+}
+
 export async function getCsrfToken(request: APIRequestContext): Promise<string> {
   const response = await request.get(`/api/csrf-token?ts=${Date.now()}`, {
     headers: {

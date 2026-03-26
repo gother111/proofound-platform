@@ -259,13 +259,13 @@ export async function middleware(request: NextRequest) {
       return response;
     }
 
-    const archivedPagePolicy = getArchivedPagePolicy(pathname);
-    if (archivedPagePolicy) {
+    const nonLaunchPagePolicy = getArchivedPagePolicy(pathname);
+    if (nonLaunchPagePolicy) {
       return buildArchivedPageResponse(
         request,
         requestId,
-        archivedPagePolicy.surfaceLabel,
-        archivedPagePolicy.detail
+        nonLaunchPagePolicy.surfaceLabel,
+        nonLaunchPagePolicy.detail
       );
     }
 

@@ -1,0 +1,271 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { NextRequest, NextResponse } from 'next/server';
+
+const mocks = vi.hoisted(() => {
+  class MockInternalOpsQueueMutationError extends Error {
+    constructor(
+      readonly code:
+        | 'not_found'
+        | 'invalid_transition'
+        | 'note_required'
+        | 'compatibility_fallback_unavailable',
+      message: string
+    ) {
+      super(message);
+      this.name = 'InternalOpsQueueMutationError';
+    }
+  }
+
+  return {
+    adminListGuardMock: vi.fn(),
+    requirePlatformAdminJsonMock: vi.fn(),
+    listInternalOpsQueueItemsMock: vi.fn(),
+    transitionInternalOpsQueueItemMock: vi.fn(),
+    logAdminActionMock: vi.fn(),
+    MockInternalOpsQueueMutationError,
+  };
+});
+
+vi.mock('@/app/api/admin/_utils', () => ({
+  adminListGuard: (...args: any[]) => mocks.adminListGuardMock(...args),
+}));
+
+vi.mock('@/lib/api/route-helpers', () => ({
+  requirePlatformAdminJson: (...args: any[]) => mocks.requirePlatformAdminJsonMock(...args),
+  jsonError: (message: string, status = 400, details?: unknown) =>
+    NextResponse.json({ error: message, details }, { status }),
+}));
+
+vi.mock('@/lib/internal-ops/queue', () => ({
+  listInternalOpsQueueItems: (...args: any[]) => mocks.listInternalOpsQueueItemsMock(...args),
+  transitionInternalOpsQueueItem: (...args: any[]) =>
+    mocks.transitionInternalOpsQueueItemMock(...args),
+  InternalOpsQueueMutationError: mocks.MockInternalOpsQueueMutationError,
+}));
+
+vi.mock('@/lib/audit/admin-logger', () => ({
+  logAdminAction: (...args: any[]) => mocks.logAdminActionMock(...args),
+}));
+
+import { GET } from '@/app/api/admin/internal-ops/queues/route';
+import { PATCH } from '@/app/api/admin/internal-ops/queues/[id]/route';
+
+describe('internal ops queue admin routes', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns the four narrow internal ops queues from the generic GET route', async () => {
+    mocks.adminListGuardMock.mockResolvedValue({
+      adminUser: { userId: 'admin-1' },
+      params: { page: 1, limit: 10, search: '', sortField: 'createdAt', sortDir: 'desc' },
+    });
+    mocks.listInternalOpsQueueItemsMock.mockResolvedValue([
+      {
+        id: 'verification',
+        label: 'Verification',
+        description: 'Manual trust review items.',
+        openCount: 1,
+        items: [
+          {
+            id: 'queue-1',
+            queueType: 'verification',
+            status: 'open',
+            priority: 'normal',
+            linkedEntityType: 'verification_request',
+            linkedEntityId: '11111111-1111-1111-1111-111111111111',
+            summary: 'Verifier responded partly.',
+            metadata: { verdict: 'partly' },
+            createdAt: '2026-03-20T10:00:00.000Z',
+            updatedAt: '2026-03-20T10:00:00.000Z',
+            resolvedAt: null,
+          },
+        ],
+      },
+      {
+        id: 'privacy_reveal_exception',
+        label: 'Privacy / reveal disputes',
+        description: 'Reveal disputes.',
+        openCount: 0,
+        items: [],
+      },
+      {
+        id: 'correction_revocation',
+        label: 'Redaction / risky upload',
+        description: 'Risky upload handling.',
+        openCount: 1,
+        items: [
+          {
+            id: 'queue-2',
+            queueType: 'correction_revocation',
+            status: 'in_progress',
+            priority: 'high',
+            linkedEntityType: 'uploaded_file',
+            linkedEntityId: '22222222-2222-2222-2222-222222222222',
+            summary: 'Risky evidence upload held for privacy-safe review.',
+            metadata: { reviewReasons: ['metadata_exif'] },
+            createdAt: '2026-03-21T10:00:00.000Z',
+            updatedAt: '2026-03-21T11:00:00.000Z',
+            resolvedAt: null,
+          },
+        ],
+      },
+      {
+        id: 'pilot_ops',
+        label: 'Pilot ops',
+        description: 'Pilot follow-through.',
+        openCount: 0,
+        items: [],
+      },
+    ]);
+
+    const response = await GET(
+      new NextRequest('https://proofound.io/api/admin/internal-ops/queues', { method: 'GET' })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.queues).toHaveLength(4);
+    expect(body.stats.total).toBe(2);
+    expect(body.stats.open).toBe(2);
+  });
+
+  it('returns the guard response for non-admin GET access', async () => {
+    mocks.adminListGuardMock.mockResolvedValue(
+      NextResponse.json({ error: 'Forbidden', details: null }, { status: 403 })
+    );
+
+    const response = await GET(
+      new NextRequest('https://proofound.io/api/admin/internal-ops/queues', { method: 'GET' })
+    );
+
+    expect(response.status).toBe(403);
+    expect(mocks.listInternalOpsQueueItemsMock).not.toHaveBeenCalled();
+  });
+
+  it('updates queue status through the generic PATCH route and emits an audit event', async () => {
+    mocks.requirePlatformAdminJsonMock.mockResolvedValue({
+      adminLevel: 'platform_admin',
+      userId: 'admin-1',
+      email: 'ops@proofound.io',
+      platformRole: 'platform_admin',
+    });
+    mocks.transitionInternalOpsQueueItemMock.mockResolvedValue({
+      previous: {
+        id: '33333333-3333-4333-8333-333333333333',
+        queueType: 'correction_revocation',
+        status: 'in_progress',
+        priority: 'high',
+        linkedEntityType: 'uploaded_file',
+        linkedEntityId: '22222222-2222-2222-2222-222222222222',
+        summary: 'Risky evidence upload held for privacy-safe review.',
+        metadata: {},
+        createdAt: '2026-03-21T10:00:00.000Z',
+        updatedAt: '2026-03-21T11:00:00.000Z',
+        resolvedAt: null,
+      },
+      current: {
+        id: '33333333-3333-4333-8333-333333333333',
+        queueType: 'correction_revocation',
+        status: 'resolved',
+        priority: 'high',
+        linkedEntityType: 'uploaded_file',
+        linkedEntityId: '22222222-2222-2222-2222-222222222222',
+        summary: 'Risky evidence upload held for privacy-safe review.',
+        metadata: { latestOperatorNote: 'Safe after review.' },
+        createdAt: '2026-03-21T10:00:00.000Z',
+        updatedAt: '2026-03-21T12:00:00.000Z',
+        resolvedAt: '2026-03-21T12:00:00.000Z',
+      },
+      note: 'Safe after review.',
+    });
+
+    const response = await PATCH(
+      new NextRequest(
+        'https://proofound.io/api/admin/internal-ops/queues/33333333-3333-4333-8333-333333333333',
+        {
+          method: 'PATCH',
+          body: JSON.stringify({
+            status: 'resolved',
+            note: 'Safe after review.',
+          }),
+        }
+      ),
+      { params: Promise.resolve({ id: '33333333-3333-4333-8333-333333333333' }) }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(mocks.transitionInternalOpsQueueItemMock).toHaveBeenCalledWith({
+      id: '33333333-3333-4333-8333-333333333333',
+      nextStatus: 'resolved',
+      note: 'Safe after review.',
+      actorId: 'admin-1',
+    });
+    expect(mocks.logAdminActionMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        adminId: 'admin-1',
+        action: 'internal_ops_queue_status_changed',
+        targetType: 'internal_ops_queue_item',
+        targetId: '33333333-3333-4333-8333-333333333333',
+        reason: 'Safe after review.',
+      })
+    );
+    expect(body.item.status).toBe('resolved');
+  });
+
+  it('returns a validation error when a queue transition requires a note', async () => {
+    mocks.requirePlatformAdminJsonMock.mockResolvedValue({
+      adminLevel: 'platform_admin',
+      userId: 'admin-1',
+      email: 'ops@proofound.io',
+      platformRole: 'platform_admin',
+    });
+    mocks.transitionInternalOpsQueueItemMock.mockRejectedValue(
+      new mocks.MockInternalOpsQueueMutationError(
+        'note_required',
+        'An operator note is required for resolve, cancel, and reopen actions.'
+      )
+    );
+
+    const response = await PATCH(
+      new NextRequest(
+        'https://proofound.io/api/admin/internal-ops/queues/33333333-3333-4333-8333-333333333333',
+        {
+          method: 'PATCH',
+          body: JSON.stringify({
+            status: 'resolved',
+          }),
+        }
+      ),
+      { params: Promise.resolve({ id: '33333333-3333-4333-8333-333333333333' }) }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toContain('operator note');
+    expect(mocks.logAdminActionMock).not.toHaveBeenCalled();
+  });
+
+  it('returns the guard response for non-admin PATCH access', async () => {
+    mocks.requirePlatformAdminJsonMock.mockResolvedValue(
+      NextResponse.json({ error: 'Unauthorized', details: null }, { status: 401 })
+    );
+
+    const response = await PATCH(
+      new NextRequest(
+        'https://proofound.io/api/admin/internal-ops/queues/33333333-3333-4333-8333-333333333333',
+        {
+          method: 'PATCH',
+          body: JSON.stringify({
+            status: 'in_progress',
+          }),
+        }
+      ),
+      { params: Promise.resolve({ id: '33333333-3333-4333-8333-333333333333' }) }
+    );
+
+    expect(response.status).toBe(401);
+    expect(mocks.transitionInternalOpsQueueItemMock).not.toHaveBeenCalled();
+  });
+});

@@ -1,0 +1,10 @@
+[dotenv@17.2.3] injecting env (10) from .env.test -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (35) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+{
+  "capturedAt": "2026-03-25T19:58:38.992Z",
+  "supabaseHost": "cjpfrgmsxwxhuomnvciq.supabase.co",
+  "supabaseProjectRef": "cjpfrgmsxwxhuomnvciq",
+  "databaseHost": "aws-1-eu-west-1.pooler.supabase.com",
+  "databaseName": "postgres",
+  "databaseUsesSslModeRequire": false
+}

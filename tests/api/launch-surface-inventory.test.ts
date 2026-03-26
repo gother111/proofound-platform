@@ -41,13 +41,6 @@ const REQUIRED_ACTIVE_ROUTES = [
   '/api/feedback/token/[token]',
   '/api/health',
   '/api/individual/readiness',
-  '/api/integrations/google/connect',
-  '/api/integrations/google/callback',
-  '/api/integrations/video',
-  '/api/integrations/video/[provider]',
-  '/api/integrations/video/[provider]/auth',
-  '/api/integrations/video/generate-link',
-  '/api/integrations/video/status',
   '/api/interviews',
   '/api/interviews/cancel',
   '/api/interviews/complete',
@@ -106,7 +99,6 @@ const REQUIRED_ACTIVE_ROUTES = [
   '/api/user/me',
   '/api/user/password',
   '/api/user/privacy-settings',
-  '/api/verification/linkedin/initiate',
   '/api/verification/requests',
   '/api/verification/requests/bundles/[requestId]',
   '/api/verification/requests/custom',
@@ -123,9 +115,27 @@ const REQUIRED_ACTIVE_ROUTES = [
   '/api/verify/custom/[token]',
 ] as const;
 
-const REMOVED_ROUTE_FILES = ['/api/assignments/invite', '/api/assignments/invite/[token]'] as const;
+const REQUIRED_INTERNAL_ONLY_ROUTES = [
+  '/api/admin/audit',
+  '/api/admin/internal-ops/queues',
+  '/api/admin/internal-ops/queues/[id]',
+  '/api/admin/organizations/[orgId]/audit',
+  '/api/admin/organizations/[orgId]/verify',
+  '/api/cron/account-deletion-workflow',
+  '/api/cron/decision-reminders',
+  '/api/cron/health-check',
+  '/api/cron/launch-synthetic-checks',
+  '/api/cron/performance-check',
+  '/api/cron/process-deletions',
+  '/api/cron/refresh-matches',
+  '/api/cron/refresh-matches-worker',
+  '/api/cron/send-deletion-reminders',
+] as const;
 
 const REQUIRED_ARCHIVED_COMPAT_PATHS = [
+  '/api/auth/google/callback',
+  '/api/auth/linkedin',
+  '/api/auth/linkedin/callback',
   '/api/auth/zoom/callback',
   '/api/contracts',
   '/api/contracts/[id]',
@@ -134,6 +144,13 @@ const REQUIRED_ARCHIVED_COMPAT_PATHS = [
   '/api/skill-gaps',
   '/api/skill-gaps/overview',
   '/api/integrations',
+  '/api/integrations/google/connect',
+  '/api/integrations/google/callback',
+  '/api/integrations/video',
+  '/api/integrations/video/[provider]',
+  '/api/integrations/video/[provider]/auth',
+  '/api/integrations/video/generate-link',
+  '/api/integrations/video/status',
   '/api/integrations/zoom/connect',
   '/api/messages',
   '/api/messages/[conversationId]',
@@ -149,6 +166,7 @@ const REQUIRED_ARCHIVED_COMPAT_PATHS = [
   '/api/expertise/linkedin-import',
   '/api/expertise/linkedin-status',
   '/api/expertise/linkedin-disconnect',
+  '/api/verification/linkedin/initiate',
   '/api/verification/skill/request',
   '/api/verification/veriff/session',
   '/api/feedback/why-not-shortlisted',
@@ -198,11 +216,12 @@ describe('launch surface inventory', () => {
     }
   });
 
-  it('removes explicit non-MVP route handlers from the compiled launch surface', async () => {
+  it('keeps internal launch ops routes explicit and narrow', async () => {
     const routes = await collectRoutePaths(API_ROOT);
 
-    for (const route of REMOVED_ROUTE_FILES) {
-      expect(routes).not.toContain(route);
+    for (const route of REQUIRED_INTERNAL_ONLY_ROUTES) {
+      expect(routes).toContain(route);
+      expect(classifyLaunchApiPath(route)).toBe('internal_only_launch_ops');
     }
   });
 
@@ -210,5 +229,15 @@ describe('launch surface inventory', () => {
     for (const route of REQUIRED_ARCHIVED_COMPAT_PATHS) {
       expect(classifyLaunchApiPath(route)).toBe('archived');
     }
+  });
+
+  it('keeps every compiled API route inside the explicit launch or internal-only corridor', async () => {
+    const routes = await collectRoutePaths(API_ROOT);
+    const disallowedRoutes = routes.filter((route) => {
+      const classification = classifyLaunchApiPath(route);
+      return classification !== 'active_launch_path' && classification !== 'internal_only_launch_ops';
+    });
+
+    expect(disallowedRoutes).toEqual([]);
   });
 });

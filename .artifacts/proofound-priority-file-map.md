@@ -1,106 +1,96 @@
 # Proofound Priority File Map
 
-Generated: 2026-03-21  
+Generated: 2026-03-25  
 Workspace: `/Users/yuriibakurov/proofound`
 
 ## Purpose
 
-This map narrows the repo to the files most worth loading first for the current launch-truth and hardening state.
+This map narrows the repo to the files most worth loading first for the current reality-check and launch-risk state.
 
 ## Tier 1: Start Here
 
-### Launch truth
+### Current-state truth
 
-- `scripts/launch-smoke-runner.ts`
-  - Writes the current smoke artifact and is the fastest way to understand launch evidence.
-- `.artifacts/launch-smoke-report.json`
-  - Fresh corridor evidence from this run.
+- `.artifacts/proofound-current-state-reality-check.md`
+  - Canonical current-block classification matrix for this refresh.
+- `.artifacts/launch-readiness-summary.md`
+  - Current top-line launch verdict with stale-claim retirement notes.
+- `.artifacts/proofound-route-inventory.md`
+  - Fresh route-surface counts, highest-volume families, and route-breadth evidence.
+- `docs/verification-checklist.md`
+  - Requirement-by-requirement locked-MVP checklist that the current-state matrix maps from.
+
+### Launch-status and smoke truth
+
 - `src/app/api/monitoring/launch-status/route.ts`
-  - Readiness endpoint that consumes smoke freshness and persisted monitor state.
-- `scripts/go-no-go-check.ts`
-  - Defines the repo’s final launch gate expectations.
+  - Readiness endpoint that consumes persisted smoke evidence and live refresh behavior.
+- `src/app/api/monitoring/__tests__/launch-status-route.test.ts`
+  - Fresh current-block verification that stale smoke evidence blocks readiness.
+- `.artifacts/launch-smoke-report.json`
+  - Historical persisted smoke artifact. Treat as stale until rerun.
+- `scripts/launch-smoke-runner.ts`
+  - Artifact writer for future smoke refreshes.
 
-### Org corridor
+## Tier 2: Corridor And Surface Risk Files
 
-- `e2e/strict/org-corridor.strict.spec.ts`
-  - Launch-binding end-to-end org corridor.
+### Review and reveal corridor
+
+- `tests/api/org-match-review-route.test.ts`
+  - Fresh current-block route coverage for Stage 2 gating, masked review, shortlist updates, and privacy-safe rejection reasons.
+- `tests/api/conversation-reveal-route.test.ts`
+  - Fresh current-block route coverage for pending reveal, dual approval, and timeout reset behavior.
+- `tests/api/decisions-route.test.ts`
+  - Fresh current-block decision route coverage.
 - `src/app/api/org/[id]/matches/[matchId]/review/route.ts`
-  - Blind review and shortlist mutation boundary.
+  - Blind-review mutation boundary.
 - `src/app/api/conversations/[conversationId]/reveal/route.ts`
   - Progressive reveal with consent.
 - `src/app/api/decisions/route.ts`
   - Canonical decision route.
-- `src/lib/workflow/service.ts`
-  - Shared workflow transitions, including decision progression.
-- `src/lib/engagement-verifications/service.ts`
-  - Separate post-hire engagement verification lifecycle.
 
-### Public org trust
+### Full strict corridor rerun boundary
 
-- `scripts/seed-public-org-trust-fixture.ts`
-  - Seeds the canonical trust card fixture.
-- `e2e/public-org-trust.smoke.spec.ts`
-  - Smoke contract for the public org trust card.
-- `src/lib/launch/public-org-trust-fixture.ts`
-  - Canonical fixture payload.
-- `src/app/portfolio/org/[slug]/page.tsx`
-  - Public organization trust page.
-- `src/lib/portfolio/public-projection.ts`
-  - Public-safe organization projection shaping.
-
-## Tier 2: High-Value Supporting Files
-
-### Compatibility and runtime hardening
-
-- `src/lib/internal-ops/queue.ts`
-  - Now contains the schema-compatibility fallback that stopped missing queue tables from breaking the org corridor.
-- `tests/lib/internal-ops-queue.test.ts`
-  - Regression coverage for queue fallback behavior.
-- `tests/lib/engagement-verifications.test.ts`
-  - Unit coverage around post-hire engagement verification.
-- `tests/api/decisions-route.test.ts`
-  - Canonical decision route coverage.
-
-### Onboarding and public privacy
-
-- `src/components/onboarding/IndividualSetup.tsx`
-  - Current proof-first staged onboarding UI.
-- `tests/ui/individual-setup-proof-first.test.tsx`
-  - Updated to the current onboarding surface.
-- `tests/ui/public-portfolio-access-consistency.test.tsx`
-  - Public individual portfolio privacy contract.
-- `tests/ui/public-org-portfolio-page.test.tsx`
-  - Public org trust rendering contract.
-- `tests/privacy/rls-policies.test.ts`
-  - Core privacy/RLS suite.
-- `tests/privacy/rls-policies-extended.test.ts`
-  - Extended conversation/reveal RLS coverage.
-
-## Tier 3: Remaining Risk And Scope Files
+- `e2e/strict/org-corridor.strict.spec.ts`
+  - Launch-binding strict org corridor, but stateful.
+- `e2e/helpers/strict-fixtures.ts`
+  - Service-role-backed runtime fixture creation and cleanup. Read before deciding whether a live rerun is safe.
 
 ### Route breadth
 
-- `.artifacts/proofound-route-inventory.md`
-  - Current route-surface summary and counts.
 - `src/lib/launch/surface-policy.ts`
   - Explicit launch-surface gate and archive policy.
 - `tests/api/launch-surface-inventory.test.ts`
-  - Route-surface contract test.
+  - Fresh current-block contract showing which routes are still treated as active or archived.
 
-### Runtime environment drift
+## Tier 3: Supporting Public And Runtime Files
+
+### Public trust and projection
+
+- `scripts/seed-public-org-trust-fixture.ts`
+  - Canonical trust-page fixture seed script.
+- `e2e/public-org-trust.smoke.spec.ts`
+  - Public org trust smoke contract.
+- `src/lib/launch/public-org-trust-fixture.ts`
+  - Canonical org trust fixture payload.
+- `src/app/portfolio/org/[slug]/page.tsx`
+  - Public organization trust page.
+- `src/lib/portfolio/public-projection.ts`
+  - Public-safe projection shaping.
+
+### Runtime drift and compatibility risk
 
 - `src/app/api/interviews/complete/route.ts`
-  - Current best-effort feedback invite handling when hosted PostgREST schema cache lags.
+  - Feedback invite completion path.
 - `src/lib/feedback/service.ts`
-  - Feedback token issuance path that still surfaces hosted schema-cache warnings.
+  - Feedback token issuance path, including the recent `token` insert compatibility update in the current branch.
 - `src/app/api/admin/verification/linkedin/queue/route.ts`
-  - Admin queue surface that depends on internal ops queue persistence being available in the runtime database.
+  - Admin queue surface that still depends on runtime queue persistence.
 
-### Homepage reference
+<!-- final-launch-checklist:start -->
+- `.artifacts/launch-validation-YYYY-MM-DD/final-launch-checklist-status.md`
+  - Operational Section 12 checklist with evidence-backed PASS / FAIL / BLOCKED / UNVERIFIED rows.
+- `.artifacts/launch-validation-YYYY-MM-DD/final-launch-checklist-status.json`
+  - Machine-readable bundle for the same checklist run.
 
-- `src/app/page.tsx`
-  - Homepage route metadata and JSON-LD.
-- `src/components/ProofoundLanding.tsx`
-  - Current landing page composition and header navigation.
-- `docs/landing-page-master-reference.md`
-  - Current implementation reference for the homepage.
+Current generated paths: `.artifacts/launch-validation-2026-03-25/final-launch-checklist-status.md`, `.artifacts/launch-validation-2026-03-25/final-launch-checklist-status.json`
+<!-- final-launch-checklist:end -->

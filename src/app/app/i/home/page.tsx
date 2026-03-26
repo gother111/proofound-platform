@@ -34,7 +34,7 @@ export default async function IndividualHomePage() {
 
   const heroStats = [
     {
-      label: 'Portfolio readiness',
+      label: 'Public proof readiness',
       value: `${metrics.portfolioReadinessPercent}%`,
     },
     {
@@ -60,9 +60,9 @@ export default async function IndividualHomePage() {
               Welcome back, {firstName}
             </h1>
             <p className="text-white/80 text-lg leading-relaxed max-w-2xl">
-              Proof first. Portfolio first. Privacy first. Calm by design. Start from the public
-              portfolio, keep proofs current, and only move into qualified introductions when trust
-              is ready.
+              Proof Packs first. Public proof when you are ready. Privacy first. Calm by design.
+              Keep your Proof Packs current, share a public-safe portfolio, and only move into
+              qualified introductions when trust is ready.
             </p>
 
             <div className="flex flex-wrap gap-4 pt-2">
@@ -117,7 +117,8 @@ export default async function IndividualHomePage() {
               Public portfolio
             </CardTitle>
             <CardDescription>
-              Your primary launch surface. Keep it public-safe, proof-backed, and easy to share.
+              A public-safe proof surface derived from your Proof Packs and ready to share when you
+              choose.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">

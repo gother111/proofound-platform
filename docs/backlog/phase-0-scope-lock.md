@@ -1,0 +1,21 @@
+> Doc Class: `active`
+> Last Verified: `2026-03-25`
+
+# Phase 0: Scope Lock and Route-Surface Reduction
+
+Execution crosswalk: pre-feature launch gate that applies the locked MVP scope boundaries before authoritative MVP Phase 1 can continue.
+
+Current status: `ACTIVE` and `launch-blocking`.
+
+Phase goal: remove route breadth as the only active current-state blocker and replace mixed route-count truth with one authoritative backlog baseline.
+
+| Task ID | Task | Owner | Depends On | Launch Blocking | Exit Criteria | Evidence / Verification |
+| --- | --- | --- | --- | --- | --- | --- |
+| `P0-1` | Freeze the canonical launch allowlist from the later 2026-03-25 artifacts and explicitly mark the earlier same-day `149 / 117` counts in [`../../.artifacts/proofound-implementation-status-snapshot.md`](../../.artifacts/proofound-implementation-status-snapshot.md) as stale in favor of the later `138 / 106` counts in [`../../.artifacts/proofound-route-inventory.md`](../../.artifacts/proofound-route-inventory.md) and [`../../.artifacts/proofound-current-state-reality-check.md`](../../.artifacts/proofound-current-state-reality-check.md). | Platform + Product | `none` | `Yes` | One authoritative backlog baseline names the active, internal-only, hard-gated, archived, and deletion-candidate families, and no later backlog item uses the stale count snapshot as current truth. | Review [`../../.artifacts/proofound-route-inventory.md`](../../.artifacts/proofound-route-inventory.md), [`../../.artifacts/proofound-current-state-reality-check.md`](../../.artifacts/proofound-current-state-reality-check.md), [`../../.artifacts/proofound-implementation-status-snapshot.md`](../../.artifacts/proofound-implementation-status-snapshot.md), [`../scope-compliance-report-2026-03-24.md`](../scope-compliance-report-2026-03-24.md), and [`../verification-checklist.md`](../verification-checklist.md). |
+| `P0-2` | Reduce the compiled launch surface to the strict MVP corridor by archiving, deleting, or hard-gating active families that smoke, strict corridor, privacy, and public trust flows do not require. Prioritize duplicate or compatibility-heavy families first: notifications, updates, policy explainers, data-import adapters, legacy messages, org goals and ownership, org causes and partnerships, moderation and SUS, and any additional route family that remains outside the frozen allowlist. | Backend + Frontend | `P0-1` | `Yes` | The active allowlist is materially smaller than `106` APIs and `38` pages, and excluded non-MVP surfaces cannot be reactivated accidentally through routing, navigation, or compatibility aliases. | Use [`../../src/lib/launch/surface-policy.ts`](../../src/lib/launch/surface-policy.ts), [`../../tests/api/launch-surface-inventory.test.ts`](../../tests/api/launch-surface-inventory.test.ts), [`../../tests/api/launch-page-inventory.test.ts`](../../tests/api/launch-page-inventory.test.ts), [`../scope-compliance-report-2026-03-24.md`](../scope-compliance-report-2026-03-24.md), and [`../../.artifacts/proofound-route-inventory.md`](../../.artifacts/proofound-route-inventory.md). |
+| `P0-3` | Refresh route-surface evidence and launch truth after the reductions, then rerun the launch-surface contracts, smoke artifact, and synthetic monitor pack until the repo’s current-state docs all agree on the narrowed corridor. | QA + Platform | `P0-2` | `Yes` | [`../verification-checklist.md`](../verification-checklist.md) flips `no non-MVP launch surface` to `PASS`, and fresh `.artifacts/` evidence replaces the stale route-breadth claims everywhere that still matters for launch decisions. | Run `npm run build`; `npm run test -- tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts src/lib/launch/__tests__/surface-policy.test.ts src/app/api/monitoring/__tests__/launch-status-route.test.ts`; `BASE_URL=https://proofound.io npm run test:launch:smoke`; `npm run monitor:launch`. |
+
+Phase notes:
+
+- Do not treat gated-but-underbuilt surfaces as active MVP wins. If they stay gated, they belong in later phase disposition work, not in the active Phase 0 allowlist.
+- The goal of this phase is to make the corridor smaller and clearer, not to rescue older platform breadth.
