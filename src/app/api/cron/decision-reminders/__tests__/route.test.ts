@@ -60,7 +60,7 @@ describe('/api/cron/decision-reminders', () => {
     });
     mocks.getWeeklyDigestAvailability.mockReturnValue({
       enabled: false,
-      reason: 'Weekly digest delivery is disabled unless ENABLE_WEEKLY_DIGEST=true',
+      reason: 'Weekly digest delivery is temporarily disabled.',
     });
     mocks.processWorkflowAsyncJobs.mockResolvedValue({ processed: 0 });
   });
@@ -117,7 +117,7 @@ describe('/api/cron/decision-reminders', () => {
     expect(body.performanceHealthCheck.status).toBe('healthy');
     expect(body.weeklyDigest).toEqual({
       status: 'skipped',
-      reason: 'Weekly digest delivery is disabled unless ENABLE_WEEKLY_DIGEST=true',
+      reason: 'Weekly digest delivery is temporarily disabled.',
     });
     expect(mocks.processDecisionReminders).toHaveBeenCalledTimes(1);
     expect(mocks.checkPerformanceHealth).toHaveBeenCalledTimes(1);
@@ -132,7 +132,7 @@ describe('/api/cron/decision-reminders', () => {
     vi.stubEnv('INTERNAL_API_SECRET', '');
     mocks.getWeeklyDigestAvailability.mockReturnValue({
       enabled: false,
-      reason: 'Weekly digest delivery is disabled unless ENABLE_WEEKLY_DIGEST=true',
+      reason: 'Weekly digest delivery is temporarily disabled.',
     });
 
     const response = await GET(
@@ -145,18 +145,18 @@ describe('/api/cron/decision-reminders', () => {
     expect(response.status).toBe(200);
     expect(body.weeklyDigest).toEqual({
       status: 'skipped',
-      reason: 'Weekly digest delivery is disabled unless ENABLE_WEEKLY_DIGEST=true',
+      reason: 'Weekly digest delivery is temporarily disabled.',
     });
     expect(mocks.processWeeklyDigests).not.toHaveBeenCalled();
   });
 
-  it('runs weekly digest on Monday only when explicitly enabled', async () => {
+  it('still skips weekly digest on Monday even when the env is true', async () => {
     vi.stubEnv('CRON_SECRET', 'top-secret');
     vi.stubEnv('INTERNAL_API_SECRET', '');
     vi.stubEnv('ENABLE_WEEKLY_DIGEST', 'true');
     mocks.getWeeklyDigestAvailability.mockReturnValue({
-      enabled: true,
-      reason: null,
+      enabled: false,
+      reason: 'Weekly digest delivery is temporarily disabled.',
     });
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-03-23T10:00:00.000Z'));
@@ -169,14 +169,10 @@ describe('/api/cron/decision-reminders', () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(mocks.processWeeklyDigests).toHaveBeenCalledWith(false);
+    expect(mocks.processWeeklyDigests).not.toHaveBeenCalled();
     expect(body.weeklyDigest).toEqual({
-      status: 'success',
-      processed: 3,
-      emailed: 3,
-      createdInApp: 3,
-      skipped: 0,
-      errors: 0,
+      status: 'skipped',
+      reason: 'Weekly digest delivery is temporarily disabled.',
     });
   });
 });

@@ -39,7 +39,7 @@ These routes may remain callable but should not be scheduled:
 - `/api/cron/send-deletion-reminders`
 - `/api/cron/process-deletions`
 - `/api/cron/generate-fairness-note`
-- `/api/cron/weekly-digest`
+- `/api/cron/weekly-digest` (currently returns `skipped`; weekly digest delivery is temporarily disabled)
 
 ## Required Environment
 

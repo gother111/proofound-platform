@@ -8,8 +8,7 @@ import type { WeeklyDigestPayload } from '@/lib/momentum/types';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-const WEEKLY_DIGEST_DISABLED_REASON =
-  'Weekly digest delivery is disabled unless ENABLE_WEEKLY_DIGEST=true';
+const WEEKLY_DIGEST_DISABLED_REASON = 'Weekly digest delivery is temporarily disabled.';
 
 function buildDigestSubject(persona: 'individual' | 'organization'): string {
   const dateLabel = new Date().toLocaleDateString('en-US', {
@@ -109,11 +108,9 @@ export type WeeklyDigestResult = {
 };
 
 export function getWeeklyDigestAvailability(): { enabled: boolean; reason: string | null } {
-  const enabled = process.env.ENABLE_WEEKLY_DIGEST === 'true';
-
   return {
-    enabled,
-    reason: enabled ? null : WEEKLY_DIGEST_DISABLED_REASON,
+    enabled: false,
+    reason: WEEKLY_DIGEST_DISABLED_REASON,
   };
 }
 

@@ -35,7 +35,7 @@ describe('/api/cron/weekly-digest', () => {
     mocks.getCronAuthStatus.mockReturnValue('authorized');
     mocks.getWeeklyDigestAvailability.mockReturnValue({
       enabled: false,
-      reason: 'Weekly digest delivery is disabled unless ENABLE_WEEKLY_DIGEST=true',
+      reason: 'Weekly digest delivery is temporarily disabled.',
     });
     mocks.processWeeklyDigests.mockResolvedValue({
       processed: 2,
@@ -58,7 +58,7 @@ describe('/api/cron/weekly-digest', () => {
     expect(body).toEqual({
       success: true,
       status: 'skipped',
-      reason: 'Weekly digest delivery is disabled unless ENABLE_WEEKLY_DIGEST=true',
+      reason: 'Weekly digest delivery is temporarily disabled.',
       processed: 0,
       emailed: 0,
       createdInApp: 0,
@@ -68,26 +68,23 @@ describe('/api/cron/weekly-digest', () => {
     expect(mocks.processWeeklyDigests).not.toHaveBeenCalled();
   });
 
-  it('runs the processor when weekly digest delivery is explicitly enabled', async () => {
-    mocks.getWeeklyDigestAvailability.mockReturnValue({
-      enabled: true,
-      reason: null,
-    });
-
+  it('returns skipped for force requests while the digest is temporarily disabled', async () => {
     const response = await GET(
       new NextRequest('https://example.com/api/cron/weekly-digest?force=true')
     );
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(mocks.processWeeklyDigests).toHaveBeenCalledWith(true);
     expect(body).toEqual({
       success: true,
-      processed: 2,
-      emailed: 2,
-      createdInApp: 2,
+      status: 'skipped',
+      reason: 'Weekly digest delivery is temporarily disabled.',
+      processed: 0,
+      emailed: 0,
+      createdInApp: 0,
       skipped: 0,
       errors: [],
     });
+    expect(mocks.processWeeklyDigests).not.toHaveBeenCalled();
   });
 });

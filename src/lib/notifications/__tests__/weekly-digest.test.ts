@@ -34,13 +34,13 @@ describe('weekly digest availability', () => {
     vi.clearAllMocks();
   });
 
-  it('defaults to disabled when ENABLE_WEEKLY_DIGEST is unset', async () => {
+  it('defaults to disabled', async () => {
     const availability = getWeeklyDigestAvailability();
     const result = await processWeeklyDigests();
 
     expect(availability).toEqual({
       enabled: false,
-      reason: 'Weekly digest delivery is disabled unless ENABLE_WEEKLY_DIGEST=true',
+      reason: 'Weekly digest delivery is temporarily disabled.',
     });
     expect(result).toEqual({
       processed: 0,
@@ -52,15 +52,15 @@ describe('weekly digest availability', () => {
     expect(mocks.sendEmail).not.toHaveBeenCalled();
   });
 
-  it('stays disabled when ENABLE_WEEKLY_DIGEST is false', async () => {
-    vi.stubEnv('ENABLE_WEEKLY_DIGEST', 'false');
+  it('stays disabled even when ENABLE_WEEKLY_DIGEST is true', async () => {
+    vi.stubEnv('ENABLE_WEEKLY_DIGEST', 'true');
 
     const availability = getWeeklyDigestAvailability();
     const result = await processWeeklyDigests();
 
     expect(availability).toEqual({
       enabled: false,
-      reason: 'Weekly digest delivery is disabled unless ENABLE_WEEKLY_DIGEST=true',
+      reason: 'Weekly digest delivery is temporarily disabled.',
     });
     expect(result).toEqual({
       processed: 0,

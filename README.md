@@ -283,6 +283,12 @@ npm run db:seed          # Seed database
 
 # Vercel
 npm run vercel:preflight  # Check Vercel project link + required env key presence
+npm run vercel:pull       # Pull preview env values into .vercel/
+npm run vercel:pull:production  # Pull production env values into .vercel/
+npm run vercel:build      # Build .vercel/output using preview/local envs
+npm run vercel:build:production # Build .vercel/output using production envs
+npm run vercel:deploy:prebuilt  # Upload prebuilt preview output
+npm run vercel:deploy:prebuilt:production # Upload prebuilt production output
 npm run vercel:env-parity # Optional env parity snapshot vs legacy project
 
 # Testing
@@ -300,7 +306,7 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
 - Primary scheduler: Vercel Cron for daily core business automation. Use cron-job.org for the sub-daily Python worker plus explicitly managed observability jobs.
 - Auth: cron routes require `Authorization: Bearer ${CRON_SECRET}` unless explicitly documented otherwise, such as `/api/cron/health-check`.
 - Routes and schedules (UTC):
-  - `/api/cron/decision-reminders` — 10:00 (decision reminders, performance-health summary, Monday weekly digest)
+  - `/api/cron/decision-reminders` — 10:00 (decision reminders and performance-health summary; weekly digest temporarily disabled)
   - `/api/cron/refresh-matches` — 03:00 (enqueue match refresh jobs)
   - `/api/cron/refresh-matches-worker` — 03:15 (drain queued refresh jobs)
   - `/api/cron/sla-enforcement` — 08:00 (expire stale matches and flag overdue interview decisions)
@@ -336,7 +342,7 @@ npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
   - `/api/cron/send-deletion-reminders` — legacy no-op compatibility route
   - `/api/cron/process-deletions` — legacy no-op compatibility route
   - `/api/cron/generate-fairness-note` — manual fairness-note trigger with alert fan-out
-  - `/api/cron/weekly-digest` — manual fallback; scheduled digest runs through `decision-reminders`
+  - `/api/cron/weekly-digest` — manual compatibility route; weekly digest delivery is temporarily disabled
 - Tracking & troubleshooting:
   - cron-job.org History for status/body; enable notifications on non-200.
   - Vercel function logs for detailed errors.
@@ -448,10 +454,24 @@ E2E tests include `@axe-core/playwright` for WCAG AA compliance checks on key pa
 
 ### Vercel (Recommended)
 
-1. Push code to GitHub
-2. Connect repo to Vercel
-3. Configure environment variables in Vercel dashboard
-4. Deploy!
+Production deploys default to a GitHub Actions prebuilt workflow:
+
+1. Merge the release PR into `master`
+2. GitHub Actions runs `vercel pull --environment=production`
+3. GitHub Actions runs `vercel build --prod`
+4. GitHub Actions runs `vercel deploy --prebuilt --prod`
+
+Preview deployments remain Git-integrated for now so release branches and PRs still receive the normal Vercel preview URL.
+
+**Manual production parity flow:**
+
+```bash
+npm run vercel:preflight
+npm run vercel:pull:production
+npm run vercel:build:production
+ls .vercel/output
+npm run vercel:deploy:prebuilt:production
+```
 
 **Environment Variable Groups:**
 
@@ -459,18 +479,20 @@ E2E tests include `@axe-core/playwright` for WCAG AA compliance checks on key pa
 - **Resend**: API key, FROM email
 - **App**: NEXT_PUBLIC_SITE_URL, NEXT_PUBLIC_APP_ENV=production
 
-**Build Settings:**
+**Prebuilt deployment caveats:**
 
-- Framework: Next.js
-- Build Command: `npm run build`
-- Output Directory: `.next`
-- Install Command: `npm install`
+- `vercel pull` writes build-time env files under `.vercel/` and those files stay gitignored.
+- `vercel build --prod` is the production build source of truth for CI and local parity.
+- `vercel deploy --prebuilt` uploads `.vercel/output`; it does not fix missing build-time env vars after the build is already done.
+- If Vercel Git auto-deploys remain enabled for production, Vercel can still create cloud-build deployments alongside the prebuilt workflow until that setting is intentionally disabled.
+- Preview deployments remain Git-based for now. If the team later moves previews to prebuilt deploys too, preserve Git metadata and validate branch-specific env/domain behavior first.
 
 **Post-Deployment:**
 
 - Apply database migrations explicitly via `npm run db:migrate` (do not use `db:push` for production)
 - Verify email sending works
 - Test auth flows end-to-end
+- Verify `https://proofound.io/api/health` returns the deployed commit SHA
 
 ### Database Migrations on Deploy
 

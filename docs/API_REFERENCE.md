@@ -35,36 +35,36 @@ Canonical API documentation generated from the current App Router route handlers
 
 ### admin
 
-| Methods | Path                                               | Auth Tier                  | Notes                            | Source                                                             |
-| ------- | -------------------------------------------------- | -------------------------- | -------------------------------- | ------------------------------------------------------------------ | ------------------------------------------ | ------------------------------------------------ |
-| `GET`   | `/api/admin/analytics/cv-import-spend`             | `public`                   | -                                | `src/app/api/admin/analytics/cv-import-spend/route.ts`             |
-| `GET`   | `/api/admin/analytics/growth`                      | `public`                   | -                                | `src/app/api/admin/analytics/growth/route.ts`                      |
-| `GET`   | `/api/admin/analytics/metrics-dashboard`           | `public`                   | -                                | `src/app/api/admin/analytics/metrics-dashboard/route.ts`           |
-| `GET`   | `/api/admin/analytics/overview`                    | `public`                   | -                                | `src/app/api/admin/analytics/overview/route.ts`                    |
-| `GET`   | `/api/admin/analytics/pac`                         | `public`                   | -                                | `src/app/api/admin/analytics/pac/route.ts`                         |
-| `GET`   | `/api/admin/analytics/ttfqi`                       | `public`                   | -                                | `src/app/api/admin/analytics/ttfqi/route.ts`                       |
-| `GET`   | `/api/admin/analytics/ttv`                         | `public`                   | -                                | `src/app/api/admin/analytics/ttv/route.ts`                         |
-| `GET`   | `/api/admin/audit`                                 | `public`                   | -                                | `src/app/api/admin/audit/route.ts`                                 |
-| `GET`   | `/api/admin/cron/summary`                          | `public`                   | -                                | `src/app/api/admin/cron/summary/route.ts`                          |
-| `GET`   | `/api/admin/fairness-metrics`                      | `public`                   | -                                | `src/app/api/admin/fairness-metrics/route.ts`                      |
-| `POST`  | `/api/admin/fairness-report`                       | `public`                   | -                                | `src/app/api/admin/fairness-report/route.ts`                       |
-| `POST`  | `/api/admin/fairness/generate-note`                | `session`                  | -                                | `src/app/api/admin/fairness/generate-note/route.ts`                |
-| `GET`   | `/api/admin/fairness/notes`                        | `public`                   | -                                | `src/app/api/admin/fairness/notes/route.ts`                        |
-| `GET`   | `/api/admin/fairness/notes/[version]`              | `public`                   | -                                | `src/app/api/admin/fairness/notes/[version]/route.ts`              |
-| `GET    | POST`                                              | `/api/admin/feature-flags` | `public`                         | -                                                                  | `src/app/api/admin/feature-flags/route.ts` |
-| `GET    | PATCH                                              | DELETE`                    | `/api/admin/feature-flags/[key]` | `public`                                                           | -                                          | `src/app/api/admin/feature-flags/[key]/route.ts` |
-| `GET`   | `/api/admin/metrics/overview`                      | `public`                   | -                                | `src/app/api/admin/metrics/overview/route.ts`                      |
-| `GET`   | `/api/admin/metrics/rollout`                       | `public`                   | -                                | `src/app/api/admin/metrics/rollout/route.ts`                       |
-| `POST`  | `/api/admin/moderation/action`                     | `session`                  | -                                | `src/app/api/admin/moderation/action/route.ts`                     |
-| `GET`   | `/api/admin/moderation/queue`                      | `public`                   | -                                | `src/app/api/admin/moderation/queue/route.ts`                      |
-| `GET`   | `/api/admin/organizations`                         | `public`                   | -                                | `src/app/api/admin/organizations/route.ts`                         |
-| `POST`  | `/api/admin/organizations/[orgId]/verify`          | `public`                   | -                                | `src/app/api/admin/organizations/[orgId]/verify/route.ts`          |
-| `GET`   | `/api/admin/performance/metrics`                   | `public`                   | -                                | `src/app/api/admin/performance/metrics/route.ts`                   |
-| `GET`   | `/api/admin/users`                                 | `public`                   | -                                | `src/app/api/admin/users/route.ts`                                 |
-| `PATCH` | `/api/admin/users/[userId]/role`                   | `public`                   | -                                | `src/app/api/admin/users/[userId]/role/route.ts`                   |
-| `POST`  | `/api/admin/users/[userId]/suspend`                | `public`                   | -                                | `src/app/api/admin/users/[userId]/suspend/route.ts`                |
-| `GET`   | `/api/admin/internal-ops/queues`                   | `session`                  | launch-internal queue list       | `src/app/api/admin/internal-ops/queues/route.ts`                   |
-| `PATCH` | `/api/admin/internal-ops/queues/[id]`              | `session`                  | launch-internal queue transition | `src/app/api/admin/internal-ops/queues/[id]/route.ts`              |
+| Methods | Path                                      | Auth Tier                  | Notes                            | Source                                                    |
+| ------- | ----------------------------------------- | -------------------------- | -------------------------------- | --------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------ |
+| `GET`   | `/api/admin/analytics/cv-import-spend`    | `public`                   | -                                | `src/app/api/admin/analytics/cv-import-spend/route.ts`    |
+| `GET`   | `/api/admin/analytics/growth`             | `public`                   | -                                | `src/app/api/admin/analytics/growth/route.ts`             |
+| `GET`   | `/api/admin/analytics/metrics-dashboard`  | `public`                   | -                                | `src/app/api/admin/analytics/metrics-dashboard/route.ts`  |
+| `GET`   | `/api/admin/analytics/overview`           | `public`                   | -                                | `src/app/api/admin/analytics/overview/route.ts`           |
+| `GET`   | `/api/admin/analytics/pac`                | `public`                   | -                                | `src/app/api/admin/analytics/pac/route.ts`                |
+| `GET`   | `/api/admin/analytics/ttfqi`              | `public`                   | -                                | `src/app/api/admin/analytics/ttfqi/route.ts`              |
+| `GET`   | `/api/admin/analytics/ttv`                | `public`                   | -                                | `src/app/api/admin/analytics/ttv/route.ts`                |
+| `GET`   | `/api/admin/audit`                        | `public`                   | -                                | `src/app/api/admin/audit/route.ts`                        |
+| `GET`   | `/api/admin/cron/summary`                 | `public`                   | -                                | `src/app/api/admin/cron/summary/route.ts`                 |
+| `GET`   | `/api/admin/fairness-metrics`             | `public`                   | -                                | `src/app/api/admin/fairness-metrics/route.ts`             |
+| `POST`  | `/api/admin/fairness-report`              | `public`                   | -                                | `src/app/api/admin/fairness-report/route.ts`              |
+| `POST`  | `/api/admin/fairness/generate-note`       | `session`                  | -                                | `src/app/api/admin/fairness/generate-note/route.ts`       |
+| `GET`   | `/api/admin/fairness/notes`               | `public`                   | -                                | `src/app/api/admin/fairness/notes/route.ts`               |
+| `GET`   | `/api/admin/fairness/notes/[version]`     | `public`                   | -                                | `src/app/api/admin/fairness/notes/[version]/route.ts`     |
+| `GET    | POST`                                     | `/api/admin/feature-flags` | `public`                         | -                                                         | `src/app/api/admin/feature-flags/route.ts` |
+| `GET    | PATCH                                     | DELETE`                    | `/api/admin/feature-flags/[key]` | `public`                                                  | -                                          | `src/app/api/admin/feature-flags/[key]/route.ts` |
+| `GET`   | `/api/admin/metrics/overview`             | `public`                   | -                                | `src/app/api/admin/metrics/overview/route.ts`             |
+| `GET`   | `/api/admin/metrics/rollout`              | `public`                   | -                                | `src/app/api/admin/metrics/rollout/route.ts`              |
+| `POST`  | `/api/admin/moderation/action`            | `session`                  | -                                | `src/app/api/admin/moderation/action/route.ts`            |
+| `GET`   | `/api/admin/moderation/queue`             | `public`                   | -                                | `src/app/api/admin/moderation/queue/route.ts`             |
+| `GET`   | `/api/admin/organizations`                | `public`                   | -                                | `src/app/api/admin/organizations/route.ts`                |
+| `POST`  | `/api/admin/organizations/[orgId]/verify` | `public`                   | -                                | `src/app/api/admin/organizations/[orgId]/verify/route.ts` |
+| `GET`   | `/api/admin/performance/metrics`          | `public`                   | -                                | `src/app/api/admin/performance/metrics/route.ts`          |
+| `GET`   | `/api/admin/users`                        | `public`                   | -                                | `src/app/api/admin/users/route.ts`                        |
+| `PATCH` | `/api/admin/users/[userId]/role`          | `public`                   | -                                | `src/app/api/admin/users/[userId]/role/route.ts`          |
+| `POST`  | `/api/admin/users/[userId]/suspend`       | `public`                   | -                                | `src/app/api/admin/users/[userId]/suspend/route.ts`       |
+| `GET`   | `/api/admin/internal-ops/queues`          | `session`                  | launch-internal queue list       | `src/app/api/admin/internal-ops/queues/route.ts`          |
+| `PATCH` | `/api/admin/internal-ops/queues/[id]`     | `session`                  | launch-internal queue transition | `src/app/api/admin/internal-ops/queues/[id]/route.ts`     |
 
 ### analytics
 
@@ -165,7 +165,7 @@ Canonical API documentation generated from the current App Router route handlers
 | `GET`   | `/api/cron/refresh-matches-worker`    | `cron`                      | -                               | `src/app/api/cron/refresh-matches-worker/route.ts`    |
 | `GET`   | `/api/cron/send-deletion-reminders`   | `cron`                      | legacy/compat markers in source | `src/app/api/cron/send-deletion-reminders/route.ts`   |
 | `GET`   | `/api/cron/sla-enforcement`           | `cron`                      | -                               | `src/app/api/cron/sla-enforcement/route.ts`           |
-| `GET`   | `/api/cron/weekly-digest`             | `cron`                      | -                               | `src/app/api/cron/weekly-digest/route.ts`             |
+| `GET`   | `/api/cron/weekly-digest`             | `cron`                      | temporarily disabled            | `src/app/api/cron/weekly-digest/route.ts`             |
 
 ### csrf-token
 
