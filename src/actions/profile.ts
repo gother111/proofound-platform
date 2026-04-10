@@ -689,8 +689,17 @@ export async function getProfileData(): Promise<ProfileData> {
       volunteering: volunteeringRows,
       fieldVisibility:
         profile?.fieldVisibility && typeof profile.fieldVisibility === 'object'
-          ? (profile.fieldVisibility as FieldVisibility)
-          : {},
+          ? ({
+              experiences: 'private',
+              education: 'private',
+              volunteering: 'private',
+              ...(profile.fieldVisibility as FieldVisibility),
+            } as FieldVisibility)
+          : {
+              experiences: 'private',
+              education: 'private',
+              volunteering: 'private',
+            },
       redactMode: profile?.redactMode ?? false,
       guidedSetup: {
         handle: profileBasics?.handle ?? null,
@@ -742,7 +751,11 @@ export async function getProfileData(): Promise<ProfileData> {
       experiences: [],
       education: [],
       volunteering: [],
-      fieldVisibility: {},
+      fieldVisibility: {
+        experiences: 'private',
+        education: 'private',
+        volunteering: 'private',
+      },
       redactMode: false,
       guidedSetup: {
         handle: null,

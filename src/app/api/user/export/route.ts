@@ -41,6 +41,7 @@ import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { listCanonicalProofPackAggregatesForOwner } from '@/lib/proofs/canonical-pack';
 import { isQuarantinedProofPack, validateProofPackAnchor } from '@/lib/proofs/pack-anchor';
 import { buildPortableUploadManifest } from '@/lib/uploads/export';
+import { buildUserExportDownloadFilename } from '@/lib/privacy/export-download';
 
 export const dynamic = 'force-dynamic';
 
@@ -510,7 +511,7 @@ export async function GET() {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Content-Disposition': `attachment; filename="proofound-data-export-${user.id.substring(0, 8)}-${new Date().toISOString().split('T')[0]}.json"`,
+        'Content-Disposition': `attachment; filename="${buildUserExportDownloadFilename()}"`,
         'Cache-Control': 'no-store, no-cache, must-revalidate',
       },
     });

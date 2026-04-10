@@ -27,6 +27,18 @@ describe('launch surface policy', () => {
     expect(getArchivedApiPolicy('/api/projects/project-1')).toMatchObject({
       surfaceLabel: 'Projects API',
     });
+    expect(getArchivedApiPolicy('/api/data-export')).toMatchObject({
+      surfaceLabel: 'Export API',
+    });
+    expect(getArchivedApiPolicy('/api/portfolio/view')).toMatchObject({
+      surfaceLabel: 'Portfolio API',
+    });
+    expect(getArchivedApiPolicy('/api/matching/profile')).toMatchObject({
+      surfaceLabel: 'Matching API',
+    });
+    expect(getArchivedApiPolicy('/api/matching/profile/profile-1')).toMatchObject({
+      surfaceLabel: 'Matching API',
+    });
     expect(getArchivedApiPolicy('/api/skill-gaps/overview')).toMatchObject({
       surfaceLabel: 'Skill Gap API',
     });
@@ -62,7 +74,9 @@ describe('launch surface policy', () => {
   it('preserves the narrow internal admin and cron ops allowlist', () => {
     expect(getArchivedApiPolicy('/api/admin/audit')).toBeNull();
     expect(getArchivedApiPolicy('/api/admin/internal-ops/queues')).toBeNull();
-    expect(getArchivedApiPolicy('/api/admin/internal-ops/queues/11111111-1111-1111-1111-111111111111')).toBeNull();
+    expect(
+      getArchivedApiPolicy('/api/admin/internal-ops/queues/11111111-1111-1111-1111-111111111111')
+    ).toBeNull();
     expect(getArchivedApiPolicy('/api/admin/organizations/org-1/audit')).toBeNull();
     expect(getArchivedApiPolicy('/api/admin/organizations/org-1/verify')).toBeNull();
     expect(getArchivedApiPolicy('/api/cron/launch-synthetic-checks')).toBeNull();

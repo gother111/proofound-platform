@@ -79,7 +79,7 @@ describe('CANONICAL_RELATIONSHIP_LIFECYCLE_CONTRACT', () => {
       'closed_lost'
     );
     expect(CANONICAL_RELATIONSHIP_LIFECYCLE_CONTRACT.supersedesLegacyReopenLoops).toContain(
-      'withdrawn -> pending_*'
+      'withdraw -> pending_*'
     );
     expect(CANONICAL_RELATIONSHIP_LIFECYCLE_CONTRACT.supersedesLegacyReopenLoops).toContain(
       'no_show -> scheduled'

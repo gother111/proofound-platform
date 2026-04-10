@@ -11,6 +11,12 @@ import { db } from '@/db';
 import { individualProfiles } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
+const PRIVATE_CONTEXT_VISIBILITY_DEFAULTS = {
+  experiences: 'private',
+  education: 'private',
+  volunteering: 'private',
+} as const;
+
 export async function GET(req: NextRequest) {
   try {
     const supabase = await createClient();
@@ -36,15 +42,15 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({
-      fieldVisibility: profile.fieldVisibility || {},
+      fieldVisibility: {
+        ...PRIVATE_CONTEXT_VISIBILITY_DEFAULTS,
+        ...((profile.fieldVisibility as Record<string, unknown> | null) || {}),
+      },
       redactMode: profile.redactMode || false,
     });
   } catch (error) {
     console.error('Failed to fetch privacy settings:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -65,25 +71,22 @@ export async function POST(req: NextRequest) {
 
     // Validate fieldVisibility structure
     if (fieldVisibility && typeof fieldVisibility !== 'object') {
-      return NextResponse.json(
-        { error: 'Invalid fieldVisibility format' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid fieldVisibility format' }, { status: 400 });
     }
 
     // Validate redactMode is boolean
     if (typeof redactMode !== 'boolean') {
-      return NextResponse.json(
-        { error: 'Invalid redactMode value' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid redactMode value' }, { status: 400 });
     }
 
     // Update profile
     await db
       .update(individualProfiles)
       .set({
-        fieldVisibility: fieldVisibility || {},
+        fieldVisibility: {
+          ...PRIVATE_CONTEXT_VISIBILITY_DEFAULTS,
+          ...((fieldVisibility as Record<string, unknown> | null) || {}),
+        },
         redactMode,
       })
       .where(eq(individualProfiles.userId, user.id));
@@ -101,10 +104,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Failed to update privacy settings:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

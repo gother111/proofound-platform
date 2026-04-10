@@ -136,19 +136,19 @@ const FIELDS = [
   {
     key: 'experiences',
     label: 'Work Experience',
-    recommended: 'network_only',
+    recommended: 'private',
     description: 'Employment history',
   },
   {
     key: 'education',
     label: 'Education',
-    recommended: 'public',
+    recommended: 'private',
     description: 'Academic background',
   },
   {
     key: 'volunteering',
     label: 'Volunteering',
-    recommended: 'public',
+    recommended: 'private',
     description: 'Volunteer work and community service',
   },
   {
@@ -173,9 +173,9 @@ export function IndividualFieldVisibilityControls({
     vision: initialVisibility.vision || 'public',
     values: initialVisibility.values || 'public',
     causes: initialVisibility.causes || 'public',
-    experiences: initialVisibility.experiences || 'network_only',
-    education: initialVisibility.education || 'public',
-    volunteering: initialVisibility.volunteering || 'public',
+    experiences: initialVisibility.experiences || 'private',
+    education: initialVisibility.education || 'private',
+    volunteering: initialVisibility.volunteering || 'private',
     skills: initialVisibility.skills || 'public',
     impactStories: initialVisibility.impactStories || 'match_only',
   });

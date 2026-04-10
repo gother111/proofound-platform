@@ -17,6 +17,12 @@ import { emitVisibilityChanged, emitRedactModeToggled } from '@/lib/analytics/ev
 
 export const dynamic = 'force-dynamic';
 
+const PRIVATE_CONTEXT_VISIBILITY_DEFAULTS = {
+  experiences: 'private',
+  education: 'private',
+  volunteering: 'private',
+} as const;
+
 /**
  * GET: Fetch user's privacy settings
  */
@@ -44,7 +50,10 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      fieldVisibility: profile.fieldVisibility || {},
+      fieldVisibility: {
+        ...PRIVATE_CONTEXT_VISIBILITY_DEFAULTS,
+        ...((profile.fieldVisibility as Record<string, unknown> | null) || {}),
+      },
       redactMode: profile.redactMode || false,
     });
   } catch (error) {
@@ -85,7 +94,10 @@ export async function POST(request: NextRequest) {
     await db
       .update(individualProfiles)
       .set({
-        fieldVisibility: fieldVisibility || {},
+        fieldVisibility: {
+          ...PRIVATE_CONTEXT_VISIBILITY_DEFAULTS,
+          ...((fieldVisibility as Record<string, unknown> | null) || {}),
+        },
         redactMode: redactMode || false,
       })
       .where(eq(individualProfiles.userId, user.id));

@@ -308,22 +308,18 @@ Cron ownership is split between Vercel Cron and cron-job.org.
 #### cron-job.org Dashboard - Verification
 
 - [ ] Enabled external jobs:
-  - [ ] Proofound - Python Internal Worker
-  - [ ] Proofound - CV Import Temp Cleanup
-  - [ ] Proofound – Fairness Note Refresh
   - [ ] Proofound – Health Check
   - [ ] Proofound – Performance Check
 - [ ] Disabled external jobs:
-  - [ ] Proofound – Fairness Report
   - [ ] Proofound - Account Deletion Workflow
+  - [ ] Proofound - Python Internal Worker
+  - [ ] Proofound - CV Import Temp Cleanup
   - [ ] Proofound - Send Deletion Reminders
   - [ ] Proofound - Process Deletions
   - [ ] Proofound - Refresh Matches
   - [ ] Proofound - SLA Enforcement
 - [ ] Correct URLs configured (`https://proofound.io/api/cron/*`)
 - [ ] Authorization headers set for protected routes
-- [ ] `Proofound - Python Internal Worker` runs every minute
-- [ ] `Proofound - CV Import Temp Cleanup` runs daily at 04:20 UTC
 
 #### Test Cron Endpoints
 
@@ -339,23 +335,10 @@ curl -X GET https://proofound.io/api/cron/sla-enforcement \
   -H "Authorization: Bearer YOUR_CRON_SECRET"
 
 # cron-job.org-owned workers and observability
-curl -X GET https://proofound.io/api/cron/python-internal-worker \
-  -H "Authorization: Bearer YOUR_CRON_SECRET"
-curl -X GET https://proofound.io/api/cron/cv-import-temp-cleanup \
-  -H "Authorization: Bearer YOUR_CRON_SECRET"
-curl -X GET https://proofound.io/api/cron/fairness-note \
-  -H "Authorization: Bearer YOUR_CRON_SECRET"
 curl -X GET https://proofound.io/api/cron/performance-check \
   -H "Authorization: Bearer YOUR_CRON_SECRET"
 curl -X GET https://proofound.io/api/cron/health-check
 ```
-
-#### CV Import Async Extract Verification
-
-- [ ] `POST /api/expertise/cv-import/wizard-extract` returns `202` with `job_id`
-- [ ] `GET /api/expertise/cv-import/wizard-extract/status?job_id=...` reaches `completed` or `failed` without Vercel request timeout
-- [ ] Private Supabase storage bucket `cv-import-temp` exists and is not public
-- [ ] Temp CV objects are removed after successful extraction or by the cleanup cron within the TTL window
 
 #### Verify in Vercel Logs
 

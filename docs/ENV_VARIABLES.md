@@ -337,9 +337,8 @@ CRON_SECRET=K7x9mP2nQ4vL8wR6yT3zC5bN1aM0hF
 - `/api/cron/refresh-matches`
 - `/api/cron/refresh-matches-worker`
 - `/api/cron/sla-enforcement`
-- `/api/cron/python-internal-worker`
-- `/api/cron/fairness-note`
 - `/api/cron/performance-check`
+- `/api/cron/health-check`
 - Legacy/manual compatibility routes such as `/api/cron/account-deletion-workflow`
 
 **How to Generate**:
@@ -383,9 +382,8 @@ CRON_API_KEY=your_cron_job_org_api_token
 **Behavior**:
 
 - Lets the repo reconcile the managed cron-job.org job set via `npm run cron:sync`.
-- Ensures `/api/cron/python-internal-worker` exists and stays enabled.
 - Ensures the intended observability jobs remain enabled or disabled according to repo policy.
-- Disables overlapping legacy external jobs such as `/api/cron/account-deletion-workflow`, `/api/cron/send-deletion-reminders`, `/api/cron/process-deletions`, `/api/cron/refresh-matches`, and `/api/cron/sla-enforcement`.
+- Disables overlapping or retired external jobs such as `/api/cron/account-deletion-workflow`, `/api/cron/python-internal-worker`, `/api/cron/cv-import-temp-cleanup`, `/api/cron/send-deletion-reminders`, `/api/cron/process-deletions`, `/api/cron/refresh-matches`, and `/api/cron/sla-enforcement`.
 - Intended for Hobby deployments where Vercel cron cannot run sub-daily schedules.
 
 **Without This**:
@@ -452,7 +450,7 @@ PYTHON_CV_IMPORT_BASE_URL=https://python-internal.proofound.internal
 
 ### PYTHON_INTERNAL_JOBS_ENABLED
 
-**Purpose**: Toggle the Postgres-backed Python internal job queue worker
+**Purpose**: Toggle the archived Postgres-backed Python internal job queue helpers
 
 **Format**:
 
@@ -462,14 +460,13 @@ PYTHON_INTERNAL_JOBS_ENABLED=true
 
 **Used By**:
 
-- `/api/internal/python-jobs`
-- `/api/cron/python-internal-worker`
 - `src/lib/python-internal/job-queue.ts`
 
 **Behavior**:
 
-- `true` or unset: queueing and draining remain active.
-- `false`: enqueue and worker routes return a skip response without touching the queue.
+- This now only affects archived internal helper code. It is no longer part of the locked MVP launch surface.
+- `true` or unset: helper functions still consider the queue enabled.
+- `false`: helper functions return skip behavior if they are invoked by non-launch code.
 
 ---
 

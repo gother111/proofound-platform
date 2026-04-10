@@ -30,7 +30,6 @@ export const ACTIVE_LAUNCH_ANALYTICS_API_PATHS = [
 const ACTIVE_LAUNCH_EXACT_API_PATHS = [
   ...ACTIVE_LAUNCH_ANALYTICS_API_PATHS,
   '/api/csrf-token',
-  '/api/data-export',
   '/api/feature-flags',
   '/api/health',
   '/api/individual/readiness',
@@ -135,7 +134,6 @@ const ACTIVE_API_POLICIES = [
     detail: 'The narrow matching corridor remains active for proof-first review.',
     matches: (pathname: string) =>
       pathname === '/api/matching-profile' ||
-      /^\/api\/matching\/profile(?:\/[^/]+)?$/.test(pathname) ||
       pathname === '/api/match/assignment' ||
       pathname === '/api/match/gates' ||
       pathname === '/api/match/hide' ||
@@ -172,7 +170,8 @@ const ACTIVE_API_POLICIES = [
     classification: 'active_launch_path',
     surfaceLabel: 'Portfolio API',
     detail: 'Portfolio and public trust routes remain active for launch.',
-    matches: matchExactOrPrefix('/api/portfolio'),
+    matches: (pathname: string) =>
+      matchExactOrPrefix('/api/portfolio')(pathname) && pathname !== '/api/portfolio/view',
   },
   {
     classification: 'active_launch_path',
@@ -257,33 +256,21 @@ const INTERNAL_ONLY_API_POLICIES = [
     detail: 'This cron route stays available only for launch monitoring and operational safety.',
     matches: (pathname: string) =>
       pathname === '/api/cron/account-deletion-workflow' ||
-      pathname === '/api/cron/cv-import-temp-cleanup' ||
       pathname === '/api/cron/decision-reminders' ||
-      pathname === '/api/cron/fairness-note' ||
-      pathname === '/api/cron/fairness-report' ||
-      pathname === '/api/cron/generate-fairness-note' ||
       pathname === '/api/cron/health-check' ||
       pathname === '/api/cron/launch-synthetic-checks' ||
       pathname === '/api/cron/performance-check' ||
-      pathname === '/api/cron/python-internal-worker' ||
       pathname === '/api/cron/process-deletions' ||
       pathname === '/api/cron/refresh-matches' ||
       pathname === '/api/cron/refresh-matches-worker' ||
       pathname === '/api/cron/send-deletion-reminders' ||
-      pathname === '/api/cron/sla-enforcement' ||
-      pathname === '/api/cron/weekly-digest' ||
-      pathname === '/api/cron/workflow-jobs',
-  },
-  {
-    classification: 'internal_only_launch_ops',
-    surfaceLabel: 'Internal Worker API',
-    detail: 'This worker route stays available only for launch-critical internal operations.',
-    matches: (pathname: string) => pathname === '/api/internal/python-jobs',
+      pathname === '/api/cron/sla-enforcement',
   },
   {
     classification: 'internal_only_launch_ops',
     surfaceLabel: 'Organization Audit API',
-    detail: 'This export route remains available only for authorized audit and launch evidence workflows.',
+    detail:
+      'This export route remains available only for authorized audit and launch evidence workflows.',
     matches: (pathname: string) => /^\/api\/organizations\/[^/]+\/audit\/export$/.test(pathname),
   },
 ] as const satisfies readonly SurfacePolicy[];
@@ -307,6 +294,36 @@ const ARCHIVED_API_POLICIES = [
     detail: 'Broad analytics surfaces are archived outside the locked launch MVP.',
     matches: (pathname: string) =>
       pathname.startsWith('/api/analytics/') && !ACTIVE_LAUNCH_EXACT_API_PATH_SET.has(pathname),
+  },
+  {
+    classification: 'archived',
+    surfaceLabel: 'Workflow Cron API',
+    detail:
+      'The standalone workflow queue cron is archived because launch processing now flows through retained internal cron routes.',
+    matches: (pathname: string) => pathname === '/api/cron/workflow-jobs',
+  },
+  {
+    classification: 'archived',
+    surfaceLabel: 'Python Worker API',
+    detail:
+      'The orphaned Python worker and temp-cleanup cron surfaces are archived outside the locked launch MVP corridor.',
+    matches: (pathname: string) =>
+      pathname === '/api/cron/python-internal-worker' ||
+      pathname === '/api/cron/cv-import-temp-cleanup' ||
+      pathname === '/api/internal/python-jobs',
+  },
+  {
+    classification: 'archived',
+    surfaceLabel: 'Export API',
+    detail: 'Deprecated export aliases are archived in favor of the canonical user export surface.',
+    matches: (pathname: string) => pathname === '/api/data-export',
+  },
+  {
+    classification: 'archived',
+    surfaceLabel: 'Portfolio API',
+    detail:
+      'Owner-facing portfolio view counters are archived outside the locked launch MVP corridor.',
+    matches: (pathname: string) => pathname === '/api/portfolio/view',
   },
   {
     classification: 'archived',
@@ -394,6 +411,14 @@ const ARCHIVED_API_POLICIES = [
   },
   {
     classification: 'archived',
+    surfaceLabel: 'Matching API',
+    detail:
+      'Legacy matching profile compatibility routes are archived in favor of /api/matching-profile.',
+    matches: (pathname: string) =>
+      pathname === '/api/matching/profile' || /^\/api\/matching\/profile\/[^/]+$/.test(pathname),
+  },
+  {
+    classification: 'archived',
     surfaceLabel: 'Messages API',
     detail:
       'Legacy message compatibility routes are archived in favor of canonical conversations routes.',
@@ -439,6 +464,17 @@ const ARCHIVED_API_POLICIES = [
       'Public profile lookup and snippet surfaces are archived outside the locked launch MVP corridor.',
     matches: (pathname: string) =>
       pathname === '/api/profile/snippet' || pathname.startsWith('/api/profiles'),
+  },
+  {
+    classification: 'archived',
+    surfaceLabel: 'Archived Cron API',
+    detail:
+      'Fairness automation and digest cron surfaces are archived outside the locked launch MVP corridor.',
+    matches: (pathname: string) =>
+      pathname === '/api/cron/fairness-note' ||
+      pathname === '/api/cron/fairness-report' ||
+      pathname === '/api/cron/generate-fairness-note' ||
+      pathname === '/api/cron/weekly-digest',
   },
   {
     classification: 'archived',

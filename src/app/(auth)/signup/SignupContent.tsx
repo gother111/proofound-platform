@@ -147,8 +147,8 @@ export function SignupContent() {
                         Organization
                       </h3>
                       <p className="text-sm leading-6 text-[#44504B]">
-                        For organizations that need a shareable proof portfolio on day 1, with
-                        candidate matching and hiring workflows after that.
+                        For organizations that need a credible trust page on day 1, then one
+                        assignment and a privacy-safe shortlist.
                       </p>
                     </div>
                     <div className="mt-auto">

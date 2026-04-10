@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   getUser: vi.fn(),
-  listUsers: vi.fn(),
+  getUserById: vi.fn(),
   conversationFindFirst: vi.fn(),
   matchReviewStateFindFirst: vi.fn(),
   profileFindFirst: vi.fn(),
@@ -22,8 +22,15 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn().mockResolvedValue({
     auth: {
       getUser: mocks.getUser,
+    },
+  }),
+}));
+
+vi.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: vi.fn().mockReturnValue({
+    auth: {
       admin: {
-        listUsers: mocks.listUsers,
+        getUserById: mocks.getUserById,
       },
     },
   }),
@@ -107,14 +114,15 @@ describe('POST /api/conversations/[conversationId]/reveal', () => {
       },
       error: null,
     });
-    mocks.listUsers.mockResolvedValue({
+    mocks.getUserById.mockImplementation(async (userId: string) => ({
       data: {
-        users: [
-          { id: 'user-1', email: 'user-1@example.com' },
-          { id: 'candidate-1', email: 'candidate-1@example.com' },
-        ],
+        user:
+          userId === 'user-1'
+            ? { id: 'user-1', email: 'user-1@example.com' }
+            : { id: 'candidate-1', email: 'candidate-1@example.com' },
       },
-    });
+      error: null,
+    }));
     const profileRows = [
       { id: 'user-1', displayName: 'Alex' },
       { id: 'candidate-1', displayName: 'Jordan' },
@@ -355,5 +363,82 @@ describe('POST /api/conversations/[conversationId]/reveal', () => {
       })
     );
     expect(mocks.unlockFullIdentityForMatch).not.toHaveBeenCalled();
+  });
+
+  it('logs and skips email delivery when a participant email lookup fails', async () => {
+    mocks.getUser.mockResolvedValue({
+      data: {
+        user: {
+          id: 'candidate-1',
+        },
+      },
+      error: null,
+    });
+    mocks.getUserById.mockImplementation(async (userId: string) => ({
+      data: {
+        user:
+          userId === 'user-1'
+            ? { id: 'user-1', email: 'user-1@example.com' }
+            : { id: 'candidate-1', email: undefined },
+      },
+      error: null,
+    }));
+    mocks.conversationFindFirst.mockResolvedValue({
+      id: 'conversation-1',
+      matchId: 'match-1',
+      participantOneId: 'user-1',
+      participantTwoId: 'candidate-1',
+      participantOneWantsReveal: true,
+      participantTwoWantsReveal: false,
+      stage: 'masked',
+      revealedAt: null,
+    });
+    mockConversationUpdateReturning([
+      {
+        id: 'conversation-1',
+        matchId: 'match-1',
+        participantOneId: 'user-1',
+        participantTwoId: 'candidate-1',
+        participantOneWantsReveal: true,
+        participantTwoWantsReveal: true,
+        stage: 'masked',
+        revealedAt: null,
+      },
+    ]);
+    mockConversationUpdateReturning([
+      {
+        id: 'conversation-1',
+        matchId: 'match-1',
+        participantOneId: 'user-1',
+        participantTwoId: 'candidate-1',
+        participantOneWantsReveal: true,
+        participantTwoWantsReveal: true,
+        stage: 'revealed',
+        revealedAt: new Date('2026-03-14T12:00:00Z'),
+      },
+    ]);
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/conversations/conversation-1/reveal', {
+        method: 'POST',
+      }),
+      {
+        params: Promise.resolve({ conversationId: 'conversation-1' }),
+      }
+    );
+
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.revealed).toBe(true);
+    expect(mocks.resendSend).not.toHaveBeenCalled();
+    expect(mocks.logError).toHaveBeenCalledWith(
+      'identity_revealed_email.missing_email',
+      expect.objectContaining({
+        conversationId: 'conversation-1',
+        hasUserOneEmail: true,
+        hasUserTwoEmail: false,
+      })
+    );
   });
 });

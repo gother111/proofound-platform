@@ -31,9 +31,9 @@ export const PROFILE_VISIBILITY_DEFAULTS: Record<string, ProfileVisibilityLevel>
   vision: 'public',
   values: 'public',
   causes: 'public',
-  experiences: 'network_only',
-  education: 'public',
-  volunteering: 'public',
+  experiences: 'private',
+  education: 'private',
+  volunteering: 'private',
   skills: 'public',
   impactStories: 'match_only',
 };

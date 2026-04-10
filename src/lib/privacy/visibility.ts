@@ -27,10 +27,10 @@ export const DEFAULT_VISIBILITY: Record<string, VisibilityLevel> = {
   tagline: 'public',
   location: 'network_only',
   skills: 'public',
-  experiences: 'network_only',
-  education: 'network_only',
+  experiences: 'private',
+  education: 'private',
   impactStories: 'match_only',
-  volunteering: 'match_only',
+  volunteering: 'private',
   certifications: 'match_only',
   contact: 'private', // Email, phone always private
   compensation: 'private', // Compensation expectations always private

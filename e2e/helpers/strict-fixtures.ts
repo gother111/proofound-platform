@@ -857,20 +857,26 @@ export async function createRuntimeConversation(
 }
 
 export async function loginWithUi(page: Page, user: StrictRuntimeUser): Promise<void> {
-  await page.goto('/login');
-  await expect(page.getByTestId('login-email')).toBeVisible();
+  const emailField = page.getByTestId('login-email');
+  const passwordField = page.getByTestId('login-password');
+  const submitButton = page.getByTestId('login-submit');
+
   const attemptLogin = async () => {
-    await page.getByTestId('login-email').fill(user.email);
-    await page.getByTestId('login-password').fill(user.password);
-    await page.getByTestId('login-submit').click();
+    await page.goto('/login');
+    await expect(emailField).toBeVisible({ timeout: 30000 });
+    await expect(emailField).toBeEditable({ timeout: 30000 });
+    await expect(passwordField).toBeVisible({ timeout: 30000 });
+    await expect(passwordField).toBeEditable({ timeout: 30000 });
+    await emailField.fill(user.email);
+    await passwordField.fill(user.password);
+    await submitButton.click();
   };
 
-  await attemptLogin();
-
   try {
+    await attemptLogin();
     await page.waitForURL(/\/(app|onboarding)(\/|$)/, { timeout: 45000 });
   } catch {
-    // One retry smooths over transient auth/session timing under CI load.
+    // Retry from a clean login navigation when the form hydrates slowly or loses editability.
     await attemptLogin();
     await page.waitForURL(/\/(app|onboarding)(\/|$)/, { timeout: 30000 });
   }

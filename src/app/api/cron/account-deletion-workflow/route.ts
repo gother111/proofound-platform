@@ -8,8 +8,7 @@ export const dynamic = 'force-dynamic';
  * Legacy compatibility endpoint for the retired account-deletion cron workflow.
  *
  * Account deletion is immediate in /api/user/account, so scheduled reminder/deletion
- * processing is intentionally disabled and fairness-note generation is owned by
- * /api/cron/fairness-note.
+ * processing is intentionally disabled in the locked launch MVP.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -38,15 +37,14 @@ export async function GET(request: NextRequest) {
 
     log.info('cron.account_deletion_workflow.deletion_model_immediate', {
       message:
-        'Scheduled reminder/deletion processing skipped because account deletion is immediate and fairness-note generation moved to /api/cron/fairness-note.',
+        'Scheduled reminder/deletion processing skipped because account deletion is immediate in the locked launch MVP.',
     });
 
     return NextResponse.json({
       success: true,
       timestamp: now.toISOString(),
       mode: 'legacy_noop',
-      message:
-        'Account deletion is immediate. This endpoint remains for compatibility only and no longer generates fairness notes.',
+      message: 'Account deletion is immediate. This endpoint remains for compatibility only.',
       reminders: {
         processed: 0,
         results: [],

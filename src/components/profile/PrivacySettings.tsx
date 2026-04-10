@@ -76,8 +76,8 @@ export function PrivacySettings({ userId: _userId, currentProfile }: PrivacySett
     tagline: 'public',
     location: 'network_only',
     skills: 'public',
-    experiences: 'network_only',
-    education: 'public',
+    experiences: 'private',
+    education: 'private',
     impactStories: 'match_only',
   });
 

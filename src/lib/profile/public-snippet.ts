@@ -83,8 +83,8 @@ const INDIVIDUAL_VISIBILITY_DEFAULTS: Record<string, 'public' | 'network' | 'pri
   values: 'public',
   causes: 'public',
   skills: 'public',
-  experiences: 'network',
-  education: 'public',
+  experiences: 'private',
+  education: 'private',
   avatar: 'public',
   displayName: 'public',
 };

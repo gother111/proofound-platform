@@ -20,6 +20,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Download, User, Briefcase, MessageSquare, BarChart3, Shield } from 'lucide-react';
+import { buildUserExportDownloadFilename } from '@/lib/privacy/export-download';
 
 interface DataCategory {
   id: string;
@@ -130,7 +131,7 @@ export function DataBreakdown() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `proofound-data-export-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = buildUserExportDownloadFilename();
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

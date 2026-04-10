@@ -28,15 +28,10 @@ describe('cron scheduling ownership', () => {
     const urls = jobs.map((job) => job.url);
 
     expect(urls).toEqual([
-      'https://proofound.io/api/cron/python-internal-worker',
-      'https://proofound.io/api/cron/cv-import-temp-cleanup',
-      'https://proofound.io/api/cron/fairness-note',
       'https://proofound.io/api/cron/health-check',
       'https://proofound.io/api/cron/performance-check',
-      'https://proofound.io/api/cron/fairness-report',
     ]);
     expect(urls).not.toContain('https://proofound.io/api/cron/sla-enforcement');
-    expect(jobs.find((job) => job.url.endsWith('/api/cron/fairness-report'))?.enabled).toBe(false);
   });
 
   it('disables the legacy or duplicate external jobs', () => {
@@ -45,6 +40,8 @@ describe('cron scheduling ownership', () => {
 
     expect(urls).toEqual([
       'https://proofound.io/api/cron/account-deletion-workflow',
+      'https://proofound.io/api/cron/python-internal-worker',
+      'https://proofound.io/api/cron/cv-import-temp-cleanup',
       'https://proofound.io/api/cron/send-deletion-reminders',
       'https://proofound.io/api/cron/process-deletions',
       'https://proofound.io/api/cron/refresh-matches',

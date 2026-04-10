@@ -23,6 +23,7 @@ import { EnhancedDataImportDialog } from './EnhancedDataImportDialog';
 import { VisibilitySettingsModal } from '../privacy/VisibilitySettingsModal';
 import { apiFetch } from '@/lib/api/fetch';
 import { CLIENT_FF_DEFAULTS } from '@/lib/featureFlags';
+import { buildUserExportDownloadFilename } from '@/lib/privacy/export-download';
 
 interface PrivacyOverviewProps {
   userId: string;
@@ -90,7 +91,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `proofound-data-export-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = buildUserExportDownloadFilename();
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

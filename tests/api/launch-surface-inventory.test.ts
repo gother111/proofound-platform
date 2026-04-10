@@ -25,7 +25,6 @@ const REQUIRED_ACTIVE_ROUTES = [
   '/api/conversations/[conversationId]/messages',
   '/api/conversations/[conversationId]/reveal',
   '/api/csrf-token',
-  '/api/data-export',
   '/api/decisions',
   '/api/decisions/window/[interviewId]',
   '/api/engagement-verifications/[id]',
@@ -59,8 +58,6 @@ const REQUIRED_ACTIVE_ROUTES = [
   '/api/match/visible-fields/[matchId]',
   '/api/matches/[id]/snooze',
   '/api/matching-profile',
-  '/api/matching/profile',
-  '/api/matching/profile/[id]',
   '/api/monitoring/launch-status',
   '/api/monitoring/perf-status',
   '/api/org/[id]/matches/[matchId]/review',
@@ -79,7 +76,6 @@ const REQUIRED_ACTIVE_ROUTES = [
   '/api/portfolio/public/[handle]/export',
   '/api/portfolio/public/[handle]/summary',
   '/api/portfolio/text-pack',
-  '/api/portfolio/view',
   '/api/portfolio/visibility',
   '/api/profile/completeness',
   '/api/profile/privacy-settings',
@@ -130,6 +126,8 @@ const REQUIRED_INTERNAL_ONLY_ROUTES = [
   '/api/cron/refresh-matches',
   '/api/cron/refresh-matches-worker',
   '/api/cron/send-deletion-reminders',
+  '/api/cron/sla-enforcement',
+  '/api/organizations/[orgId]/audit/export',
 ] as const;
 
 const REQUIRED_ARCHIVED_COMPAT_PATHS = [
@@ -157,6 +155,9 @@ const REQUIRED_ARCHIVED_COMPAT_PATHS = [
   '/api/notifications',
   '/api/moderation/report',
   '/api/data-import',
+  '/api/data-export',
+  '/api/matching/profile',
+  '/api/matching/profile/[id]',
   '/api/profile/snippet',
   '/api/expertise/profile',
   '/api/expertise/auto-suggest',
@@ -169,7 +170,12 @@ const REQUIRED_ARCHIVED_COMPAT_PATHS = [
   '/api/verification/linkedin/initiate',
   '/api/verification/skill/request',
   '/api/verification/veriff/session',
+  '/api/cron/python-internal-worker',
+  '/api/cron/cv-import-temp-cleanup',
+  '/api/internal/python-jobs',
+  '/api/cron/workflow-jobs',
   '/api/feedback/why-not-shortlisted',
+  '/api/portfolio/view',
   '/api/feedback/sus',
   '/api/surveys/sus',
   '/api/organizations/[orgId]/causes',
@@ -235,7 +241,9 @@ describe('launch surface inventory', () => {
     const routes = await collectRoutePaths(API_ROOT);
     const disallowedRoutes = routes.filter((route) => {
       const classification = classifyLaunchApiPath(route);
-      return classification !== 'active_launch_path' && classification !== 'internal_only_launch_ops';
+      return (
+        classification !== 'active_launch_path' && classification !== 'internal_only_launch_ops'
+      );
     });
 
     expect(disallowedRoutes).toEqual([]);

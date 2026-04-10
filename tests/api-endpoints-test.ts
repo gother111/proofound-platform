@@ -95,7 +95,7 @@ async function testExpertiseEndpoints(): Promise<void> {
 async function testMatchingEndpoints(): Promise<void> {
   console.log('Testing Matching Endpoints...');
 
-  results.push(await testApiEndpoint('/api/matching/profile', 'GET', undefined, 401)); // Requires auth
+  results.push(await testApiEndpoint('/api/matching-profile', 'GET', undefined, 401)); // Requires auth
 }
 
 async function testAssignmentEndpoints(): Promise<void> {

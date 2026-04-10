@@ -12,6 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { db, conversations, profiles } from '@/db';
 import { matchReviewStates } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -344,14 +345,28 @@ async function sendIdentityRevealedEmails(
       },
     });
 
-    // Get emails from Supabase auth (RLS protected)
-    const supabase = await createClient();
+    // Resolve participant emails directly by id so reveal delivery does not depend on a
+    // paginated auth user listing.
+    const adminClient = createAdminClient();
+    const [
+      { data: participantOneAuth, error: participantOneAuthError },
+      { data: participantTwoAuth, error: participantTwoAuthError },
+    ] = await Promise.all([
+      adminClient.auth.admin.getUserById(participantOneId),
+      adminClient.auth.admin.getUserById(participantTwoId),
+    ]);
 
-    // Use service role to fetch emails (admin access)
-    const { data: userData } = await supabase.auth.admin.listUsers();
+    if (participantOneAuthError || participantTwoAuthError) {
+      log.error('identity_revealed_email.lookup_failed', {
+        conversationId,
+        participantOneLookupFailed: Boolean(participantOneAuthError),
+        participantTwoLookupFailed: Boolean(participantTwoAuthError),
+      });
+      return;
+    }
 
-    const userOneEmail = userData?.users.find((u) => u.id === participantOneId)?.email;
-    const userTwoEmail = userData?.users.find((u) => u.id === participantTwoId)?.email;
+    const userOneEmail = participantOneAuth.user?.email;
+    const userTwoEmail = participantTwoAuth.user?.email;
 
     if (!userOneEmail || !userTwoEmail) {
       log.error('identity_revealed_email.missing_email', {
