@@ -25,10 +25,18 @@ export class PythonCvExtractError extends Error {
 }
 
 function resolveTargetUrl(request?: NextRequest): string {
-  const baseUrl = resolvePythonInternalServiceBaseUrl(request);
-  const targetUrl = new URL('/api/python/cv_import', `${baseUrl}/`);
-  targetUrl.searchParams.set('endpoint', 'extract');
-  return targetUrl.toString();
+  try {
+    const baseUrl = resolvePythonInternalServiceBaseUrl(request);
+    const targetUrl = new URL('/api/python/cv_import', `${baseUrl}/`);
+    targetUrl.searchParams.set('endpoint', 'extract');
+    return targetUrl.toString();
+  } catch (error) {
+    throw new PythonCvExtractError(
+      error instanceof Error ? error.message : 'Python CV extract service is unavailable.',
+      503,
+      'CV_IMPORT_PROXY_UNAVAILABLE'
+    );
+  }
 }
 
 export function resolvePythonExtractTimeoutMs(): number {

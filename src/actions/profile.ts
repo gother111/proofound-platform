@@ -21,7 +21,7 @@ import { requireAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { triggerProfileActivationSurvey } from '@/lib/surveys/sus-triggers';
 import { sendEmail } from '@/lib/email/sender';
-import { resolveSiteUrlFromHeaders } from '@/lib/env';
+import { resolveCanonicalSiteUrl } from '@/lib/env';
 import { buildExperienceTimeline } from '@/lib/profile/experience-timeline';
 import { resolveIndustryFromInputs } from '@/lib/industry/options';
 import {
@@ -1422,7 +1422,7 @@ function buildClaimSnapshot(
 
 function normalizeBaseUrl(url?: string | null) {
   const base = (url || '').trim();
-  if (!base) return 'http://localhost:3000';
+  if (!base) return '';
   return base.endsWith('/') ? base.slice(0, -1) : base;
 }
 
@@ -1662,13 +1662,14 @@ async function createImpactStoryVerificationRequestInternal(
     },
   });
 
-  const headerBaseUrl = input.requestHeaders ? resolveSiteUrlFromHeaders(input.requestHeaders) : '';
-  const baseUrl = normalizeBaseUrl(
-    headerBaseUrl ||
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      process.env.NEXT_PUBLIC_APP_URL ||
-      process.env.SITE_URL
-  );
+  const baseUrl = normalizeBaseUrl(resolveCanonicalSiteUrl());
+  if (!baseUrl) {
+    return {
+      verification: null,
+      warning: 'Verification email configuration is unavailable.',
+      storageUnavailable: false,
+    };
+  }
   const verifyUrl = `${baseUrl}/verify/${verificationRequest.rawToken}`;
 
   const emailResult = await sendEmail({

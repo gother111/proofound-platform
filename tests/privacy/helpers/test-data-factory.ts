@@ -313,7 +313,7 @@ export async function createTestConversation(
 
   // The hosted test target can occasionally lag just long enough for the
   // immediate conversation insert to miss the freshly created match FK.
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
     const result = await client
       .from('conversations')
       .insert({
@@ -334,8 +334,7 @@ export async function createTestConversation(
     }
 
     const shouldRetry =
-      attempt < 2 &&
-      conversationError?.message?.includes('conversations_match_id_matches_id_fk');
+      attempt < 4 && conversationError?.message?.includes('conversations_match_id_matches_id_fk');
 
     if (!shouldRetry) {
       break;
@@ -345,7 +344,9 @@ export async function createTestConversation(
   }
 
   if (conversationError || !conversation) {
-    throw new Error(`Failed to create test conversation: ${conversationError?.message ?? 'unknown error'}`);
+    throw new Error(
+      `Failed to create test conversation: ${conversationError?.message ?? 'unknown error'}`
+    );
   }
 
   return {

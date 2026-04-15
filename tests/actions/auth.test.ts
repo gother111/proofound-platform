@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { requestPasswordReset, signUp, verifyEmail } from '@/actions/auth';
+import { resolveCanonicalSiteUrl } from '@/lib/env';
 
 // Mock dependencies
 vi.mock('next/headers', () => ({
@@ -18,6 +19,7 @@ vi.mock('@/lib/env', () => ({
     SITE_URL: 'http://localhost',
     DATABASE_URL: 'postgresql://localhost/proofound_test',
   })),
+  resolveCanonicalSiteUrl: vi.fn(() => 'http://localhost'),
   resolveSiteUrlFromHeaders: vi.fn(() => 'http://localhost'),
   normalizeSiteUrl: vi.fn(() => 'http://localhost'),
   stripTrailingSlash: vi.fn((url) => url),
@@ -162,6 +164,23 @@ describe('Auth Actions', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('valid email');
+    });
+
+    it('fails closed when the canonical public site url is unavailable', async () => {
+      vi.mocked(resolveCanonicalSiteUrl).mockReturnValueOnce('');
+
+      const formData = new FormData();
+      formData.append('email', 'test@org.com');
+      formData.append('password', 'password123');
+      formData.append('persona', 'individual');
+      formData.append('gdprConsent', 'true');
+      formData.append('marketingOptIn', 'false');
+
+      const result = await signUp(undefined, formData);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Unable to complete signup');
+      expect(mockSupabase.auth.signUp).not.toHaveBeenCalled();
     });
 
     it('returns retry-safe error and keeps email verification semantics when signup is rate-limited', async () => {

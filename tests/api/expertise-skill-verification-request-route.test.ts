@@ -122,6 +122,7 @@ function createSupabaseGetMock(options?: { skillProfileId?: string }) {
 describe('POST /api/verification/requests/skill', () => {
   const originalSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   const originalAppUrl = process.env.NEXT_PUBLIC_APP_URL;
+  const originalVercelEnv = process.env.VERCEL_ENV;
   let authContext: { user: { id: string; email: string }; supabase: any };
 
   beforeEach(() => {
@@ -179,9 +180,10 @@ describe('POST /api/verification/requests/skill', () => {
   afterEach(() => {
     process.env.NEXT_PUBLIC_SITE_URL = originalSiteUrl;
     process.env.NEXT_PUBLIC_APP_URL = originalAppUrl;
+    process.env.VERCEL_ENV = originalVercelEnv;
   });
 
-  it('normalizes verifier email and sends token link using configured site url', async () => {
+  it('normalizes verifier email and sends token link using the configured canonical site url', async () => {
     process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
     process.env.NEXT_PUBLIC_APP_URL = '';
 
@@ -190,7 +192,7 @@ describe('POST /api/verification/requests/skill', () => {
     (sendEmail as any).mockResolvedValue({ success: true, id: 'email-1' });
 
     const response = await POST(
-      createRequest('https://proofound.io', {
+      createRequest('https://attacker.example', {
         verifierSource: 'peer',
         verifierEmail: 'Mentor@Example.COM',
         message: 'Please verify my artifact history.',
@@ -227,9 +229,32 @@ describe('POST /api/verification/requests/skill', () => {
     const sentEmailPayload = (sendEmail as any).mock.calls[0][0];
     expect(sentEmailPayload.subject).toBe('Proofound verification request');
     expect(sentEmailPayload.html).toContain('https://proofound.io/verify/issued-token-123');
+    expect(sentEmailPayload.html).not.toContain('https://attacker.example/verify/issued-token-123');
     expect(sentEmailPayload.html).not.toContain('Alice');
     expect(sentEmailPayload.html).not.toContain('system design');
     expect(sentEmailPayload.html).not.toContain('Please verify my artifact history.');
+  });
+
+  it('fails closed when no canonical site url is configured in a production-like runtime', async () => {
+    process.env.NEXT_PUBLIC_SITE_URL = '';
+    process.env.NEXT_PUBLIC_APP_URL = '';
+    process.env.VERCEL_ENV = 'preview';
+
+    const { supabase } = createSupabaseMock();
+    authContext.supabase = supabase;
+
+    const response = await POST(
+      createRequest('https://attacker.example', {
+        verifierSource: 'peer',
+        verifierEmail: 'mentor@example.com',
+      })
+    );
+
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toMatchObject({
+      error: 'Verification request email configuration is unavailable.',
+    });
+    expect(sendEmail).not.toHaveBeenCalled();
   });
 
   it('marks eligible interpersonal requests as bounded attestation mode', async () => {
@@ -298,7 +323,7 @@ describe('POST /api/verification/requests/skill', () => {
   });
 
   it('returns email_sent=false while keeping request persisted when email fails', async () => {
-    process.env.NEXT_PUBLIC_SITE_URL = '';
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://staging.proofound.io';
     process.env.NEXT_PUBLIC_APP_URL = '';
 
     const { supabase } = createSupabaseMock();
@@ -306,7 +331,7 @@ describe('POST /api/verification/requests/skill', () => {
     (sendEmail as any).mockResolvedValue({ success: false, error: 'Email service not configured' });
 
     const response = await POST(
-      createRequest('https://staging.proofound.io', {
+      createRequest('https://attacker.example', {
         verifierSource: 'manager',
         verifierEmail: 'Boss@Company.COM',
       })

@@ -8,18 +8,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
-import { conversations, messages, profiles, assignments, matches } from '@/db/schema';
+import { conversations, messages, profiles, assignments } from '@/db/schema';
 import { eq, or, and, sql, desc } from 'drizzle-orm';
 import { z } from 'zod';
-import { nanoid } from 'nanoid';
 import { log } from '@/lib/log';
+import {
+  ConversationAccessError,
+  ensureConversationForMatch,
+  resolveConversationParticipantsForMatch,
+} from '@/lib/messaging/conversation-access';
 
 // Schema for creating a conversation
 const CreateConversationSchema = z.object({
   matchId: z.string().uuid(),
-  assignmentId: z.string().uuid(),
-  participantOneId: z.string().uuid(), // Individual
-  participantTwoId: z.string().uuid(), // Org representative
 });
 
 export async function GET(request: NextRequest) {
@@ -167,9 +168,6 @@ export async function GET(request: NextRequest) {
  *
  * Required fields:
  * - matchId: The match that triggered the conversation
- * - assignmentId: The assignment being discussed
- * - participantOneId: First participant (typically the individual)
- * - participantTwoId: Second participant (typically the org representative)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -194,99 +192,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { matchId, assignmentId, participantOneId, participantTwoId } = validation.data;
+    const { matchId } = validation.data;
+    const participantContext = await resolveConversationParticipantsForMatch(matchId);
 
-    // Verify user is one of the participants
-    if (user.id !== participantOneId && user.id !== participantTwoId) {
+    const callerIsCandidate = user.id === participantContext.candidateId;
+    const callerIsResolvedOrgRep = user.id === participantContext.orgParticipantId;
+    if (!callerIsCandidate && !callerIsResolvedOrgRep) {
       return NextResponse.json(
         { error: 'You must be a participant to create a conversation' },
         { status: 403 }
       );
     }
 
-    // Check if conversation already exists for this match
-    const existingConversation = await db
-      .select()
-      .from(conversations)
-      .where(eq(conversations.matchId, matchId))
-      .limit(1);
+    const { conversation, created } = await ensureConversationForMatch(matchId, {
+      preferredOrgUserId: callerIsResolvedOrgRep ? user.id : undefined,
+    });
 
-    if (existingConversation.length > 0) {
-      // Return existing conversation instead of creating duplicate
-      log.info('conversation.already_exists', {
-        matchId,
-        conversationId: existingConversation[0].id,
-      });
-      return NextResponse.json({
-        conversation: existingConversation[0],
-        created: false,
-      });
-    }
-
-    // Verify match exists
-    const match = await db.select().from(matches).where(eq(matches.id, matchId)).limit(1);
-
-    if (!match.length) {
-      return NextResponse.json({ error: 'Match not found' }, { status: 404 });
-    }
-
-    // Get participant profiles to generate masked handles
-    const [participantOne, participantTwo] = await Promise.all([
-      db
-        .select({ persona: profiles.persona })
-        .from(profiles)
-        .where(eq(profiles.id, participantOneId))
-        .limit(1),
-      db
-        .select({ persona: profiles.persona })
-        .from(profiles)
-        .where(eq(profiles.id, participantTwoId))
-        .limit(1),
-    ]);
-
-    // Generate masked handles based on persona type
-    // Format: "Candidate #ABC123" or "Organization Representative #XYZ789"
-    const maskedHandleOne =
-      participantOne[0]?.persona === 'individual'
-        ? `Candidate #${nanoid(6).toUpperCase()}`
-        : `Organization #${nanoid(6).toUpperCase()}`;
-
-    const maskedHandleTwo =
-      participantTwo[0]?.persona === 'individual'
-        ? `Candidate #${nanoid(6).toUpperCase()}`
-        : `Organization #${nanoid(6).toUpperCase()}`;
-
-    // Create the conversation
-    const [newConversation] = await db
-      .insert(conversations)
-      .values({
-        matchId,
-        assignmentId,
-        participantOneId,
-        participantTwoId,
-        stage: 'masked', // Start with masked identities per PRD
-        maskedHandleOne,
-        maskedHandleTwo,
-        lastMessageAt: new Date(),
-      })
-      .returning();
-
-    log.info('conversation.created', {
-      conversationId: newConversation.id,
+    log.info(created ? 'conversation.created' : 'conversation.already_exists', {
+      conversationId: conversation.id,
       matchId,
-      assignmentId,
-      participantOneId,
-      participantTwoId,
+      assignmentId: participantContext.assignmentId,
+      participantOneId: conversation.participantOneId,
+      participantTwoId: conversation.participantTwoId,
     });
 
     return NextResponse.json(
       {
-        conversation: newConversation,
-        created: true,
+        conversation,
+        created,
       },
-      { status: 201 }
+      { status: created ? 201 : 200 }
     );
   } catch (error) {
+    if (error instanceof ConversationAccessError) {
+      if (error.code === 'MATCH_NOT_FOUND') {
+        return NextResponse.json({ error: 'Match not found' }, { status: 404 });
+      }
+
+      return NextResponse.json(
+        { error: 'No eligible organization representative is available for this match' },
+        { status: 409 }
+      );
+    }
+
     console.error('Create conversation error:', error);
     log.error('conversation.create.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',

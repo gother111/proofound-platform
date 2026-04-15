@@ -1,7 +1,9 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
-import { ingestUploadedFile, UPLOAD_KINDS } from '@/lib/uploads/lifecycle';
+import { authorize } from '@/lib/authz';
+import { getCanonicalActiveOrgMembership } from '@/lib/api/auth';
+import { deleteUploadedFile, ingestUploadedFile, UPLOAD_KINDS } from '@/lib/uploads/lifecycle';
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,6 +19,23 @@ export async function POST(request: NextRequest) {
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+    }
+
+    const supabase = await createClient();
+    if (profileType === 'organization' && orgId) {
+      const membership = await getCanonicalActiveOrgMembership(supabase, user.id, orgId);
+      if (
+        !authorize({
+          resource: 'org_profile',
+          action: 'update',
+          orgRole: membership?.role,
+        }).allowed
+      ) {
+        return NextResponse.json(
+          { error: 'Only organization owners can update organization cover images' },
+          { status: 403 }
+        );
+      }
     }
 
     const attachedSubjectType =
@@ -43,8 +62,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient();
-
     // Update appropriate profile
     if (profileType === 'organization' && orgId) {
       const { error: updateError } = await supabase
@@ -53,6 +70,13 @@ export async function POST(request: NextRequest) {
         .eq('id', orgId);
 
       if (updateError) {
+        await deleteUploadedFile(upload.uploadedFileId, orgId).catch((cleanupError) => {
+          console.error('Failed to clean up organization cover upload after update error:', {
+            uploadedFileId: upload.uploadedFileId,
+            orgId,
+            error: cleanupError instanceof Error ? cleanupError.message : cleanupError,
+          });
+        });
         console.error('Organization update error:', updateError);
         return NextResponse.json(
           { error: 'Failed to update organization', details: updateError.message },
@@ -66,6 +90,13 @@ export async function POST(request: NextRequest) {
         .eq('profile_id', user.id);
 
       if (updateError) {
+        await deleteUploadedFile(upload.uploadedFileId, user.id).catch((cleanupError) => {
+          console.error('Failed to clean up individual cover upload after update error:', {
+            uploadedFileId: upload.uploadedFileId,
+            userId: user.id,
+            error: cleanupError instanceof Error ? cleanupError.message : cleanupError,
+          });
+        });
         console.error('Profile update error:', updateError);
         return NextResponse.json(
           { error: 'Failed to update profile', details: updateError.message },

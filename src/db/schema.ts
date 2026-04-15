@@ -662,6 +662,7 @@ export const individualProfiles = pgTable('individual_profiles', {
     onDelete: 'set null',
   }),
   workEmailToken: text('work_email_token'),
+  workEmailTokenHash: text('work_email_token_hash'),
   workEmailTokenExpires: timestamp('work_email_token_expires'),
   // Field-level visibility controls (PRD: Fine-grained privacy)
   fieldVisibility: jsonb('field_visibility'), // { fieldName: 'public' | 'network' | 'private' | 'hidden' }
@@ -4734,9 +4735,9 @@ export const notificationPreferences = pgTable('notification_preferences', {
   pushAssignmentPublished: boolean('push_assignment_published').default(true).notNull(),
   pushInterviewScheduled: boolean('push_interview_scheduled').default(true).notNull(),
   pushContractSigned: boolean('push_contract_signed').default(true).notNull(),
-  emailWeeklyDigest: boolean('email_weekly_digest').default(true).notNull(),
+  emailWeeklyDigest: boolean('email_weekly_digest').default(false).notNull(),
   digestFrequency: text('digest_frequency', { enum: ['weekly', 'disabled'] })
-    .default('weekly')
+    .default('disabled')
     .notNull(),
   lastDigestSentAt: timestamp('last_digest_sent_at'),
   // Audit fields

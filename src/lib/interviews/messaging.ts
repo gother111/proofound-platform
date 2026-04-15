@@ -1,11 +1,11 @@
-import { eq, inArray, sql } from 'drizzle-orm';
-import { nanoid } from 'nanoid';
+import { eq, sql } from 'drizzle-orm';
 
-import { db, conversations, matches, messages, profiles } from '@/db';
+import { db, matches, messages } from '@/db';
 import { isActiveOrgMember } from '@/lib/api/auth';
 import { getRows } from '@/lib/db/rows';
 import { toIsoOrNull as toIso } from '@/lib/datetime/normalize';
 import { log } from '@/lib/log';
+import { ensureConversationForMatch as ensureCanonicalConversationForMatch } from '@/lib/messaging/conversation-access';
 import { createClient } from '@/lib/supabase/server';
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
@@ -76,14 +76,6 @@ function formatInterviewUpdateMessage(params: PostInterviewUpdateMessageParams):
   }
 
   return lines.join('\n');
-}
-
-function maskedHandleForPersona(persona: string | null | undefined): string {
-  if (persona === 'individual') {
-    return `Candidate #${nanoid(6).toUpperCase()}`;
-  }
-
-  return `Organization #${nanoid(6).toUpperCase()}`;
 }
 
 export async function getInterviewAccessContext(
@@ -166,68 +158,10 @@ export async function ensureConversationForMatch(
   participantOneId: string;
   participantTwoId: string;
 }> {
-  const existingConversation = await db.query.conversations.findFirst({
-    where: eq(conversations.matchId, matchId),
-    columns: {
-      id: true,
-      participantOneId: true,
-      participantTwoId: true,
-    },
+  const result = await ensureCanonicalConversationForMatch(matchId, {
+    preferredOrgUserId: actorOrgUserId,
   });
-
-  if (existingConversation) {
-    return existingConversation;
-  }
-
-  const [match] = await db
-    .select({
-      id: matches.id,
-      assignmentId: matches.assignmentId,
-      candidateId: matches.profileId,
-    })
-    .from(matches)
-    .where(eq(matches.id, matchId))
-    .limit(1);
-
-  if (!match) {
-    throw new Error(`Match ${matchId} not found`);
-  }
-
-  const relatedProfiles = await db
-    .select({
-      id: profiles.id,
-      persona: profiles.persona,
-    })
-    .from(profiles)
-    .where(inArray(profiles.id, [match.candidateId, actorOrgUserId]));
-
-  const profileMap = new Map(relatedProfiles.map((profile) => [profile.id, profile.persona]));
-  const candidatePersona = profileMap.get(match.candidateId);
-  const actorPersona = profileMap.get(actorOrgUserId);
-
-  const [createdConversation] = await db
-    .insert(conversations)
-    .values({
-      matchId: match.id,
-      assignmentId: match.assignmentId,
-      participantOneId: match.candidateId,
-      participantTwoId: actorOrgUserId,
-      stage: 'masked',
-      maskedHandleOne: maskedHandleForPersona(candidatePersona),
-      maskedHandleTwo: maskedHandleForPersona(actorPersona),
-      lastMessageAt: new Date(),
-    })
-    .returning({
-      id: conversations.id,
-      participantOneId: conversations.participantOneId,
-      participantTwoId: conversations.participantTwoId,
-    });
-
-  if (!createdConversation) {
-    throw new Error(`Failed to create conversation for match ${matchId}`);
-  }
-
-  return createdConversation;
+  return result.conversation;
 }
 
 export async function postInterviewUpdateMessage(

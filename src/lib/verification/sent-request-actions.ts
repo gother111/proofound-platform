@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { requireApiAuthContext } from '@/lib/auth';
 import { sendEmail } from '@/lib/email/sender';
-import { resolveSiteUrlFromHeaders } from '@/lib/env';
+import { resolveCanonicalSiteUrl } from '@/lib/env';
 import { createAdminClient } from '@/lib/supabase/admin';
 import {
   artifactTypeLabel,
@@ -51,7 +51,7 @@ type SkillVerifierSource = 'peer' | 'manager' | 'external';
 function normalizeBaseUrl(value: string | null | undefined): string {
   const trimmed = (value || '').trim();
   if (!trimmed) {
-    return 'http://localhost:3000';
+    return '';
   }
 
   return trimmed.endsWith('/') ? trimmed.slice(0, -1) : trimmed;
@@ -162,10 +162,8 @@ async function fetchSkillName(
 }
 
 function buildBaseUrl(request: NextRequest): string {
-  const fromHeaders = resolveSiteUrlFromHeaders(request.headers);
-  return normalizeBaseUrl(
-    fromHeaders || process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL
-  );
+  void request;
+  return normalizeBaseUrl(resolveCanonicalSiteUrl());
 }
 
 function buildSkillVerificationScopeKey(skillId: string, verifierEmail: string) {
@@ -307,7 +305,14 @@ async function resendBundleRequest(
   }
 
   const requesterName = await fetchRequesterDisplayName(admin, userId);
-  const verifyUrl = `${buildBaseUrl(request)}/verify/custom/${resentBundle.rawToken}`;
+  const baseUrl = buildBaseUrl(request);
+  if (!baseUrl) {
+    return NextResponse.json(
+      { error: 'Verification request email configuration is unavailable.' },
+      { status: 500 }
+    );
+  }
+  const verifyUrl = `${baseUrl}/verify/custom/${resentBundle.rawToken}`;
   const emailResult = await sendBundleResendEmail({
     verifierEmail: bundle.verifier_email,
     requesterName,
@@ -435,6 +440,12 @@ export async function resendSkillVerificationRequest(
   const requesterName = await fetchRequesterDisplayName(admin, user.id);
   const skillName = await fetchSkillName(admin, verificationRequest.skill_id);
   const baseUrl = buildBaseUrl(request);
+  if (!baseUrl) {
+    return NextResponse.json(
+      { error: 'Verification request email configuration is unavailable.' },
+      { status: 500 }
+    );
+  }
   const reusedRecord = verificationRequest.status === 'pending';
   let resentRequestId = verificationRequest.id;
   let resendToken = '';

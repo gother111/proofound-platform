@@ -1,6 +1,6 @@
 'use server';
 
-import { normalizeSiteUrl, resolveSiteUrlFromHeaders, stripTrailingSlash } from '@/lib/env';
+import { resolveCanonicalSiteUrl } from '@/lib/env';
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -50,17 +50,8 @@ function isRedirectError(error: unknown): error is { digest: string } {
 }
 
 function resolveRequestSiteUrl(headersList: Headers): string {
-  const siteUrlFromHeaders = resolveSiteUrlFromHeaders(headersList);
-  if (siteUrlFromHeaders) {
-    return stripTrailingSlash(siteUrlFromHeaders);
-  }
-
-  const origin = normalizeSiteUrl(headersList.get('origin'), { allowPreviewHosts: true });
-  if (origin) {
-    return stripTrailingSlash(origin);
-  }
-
-  return '';
+  void headersList;
+  return resolveCanonicalSiteUrl();
 }
 
 function sanitizeNextPath(value: string | null | undefined): string | null {

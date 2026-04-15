@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { ArrowLeft, Cookie } from 'lucide-react';
 import { CookieSettingsClient } from '@/components/cookies/CookieSettingsClient';
 import { JsonLdScripts } from '@/components/seo/JsonLdScripts';
+import { sanitizeReturnPath } from '@/lib/navigation/sanitize-return-path';
 import { buildStaticPageJsonLd } from '@/lib/seo/json-ld';
 import { buildPublicMetadata } from '@/lib/seo/public-metadata';
 
@@ -32,7 +33,7 @@ export default async function CookieSettingsPage({
   searchParams: Promise<{ returnTo?: string }>;
 }) {
   const { returnTo: returnToParam } = await searchParams;
-  const returnTo = returnToParam || '/';
+  const returnTo = sanitizeReturnPath(returnToParam, '/');
   const jsonLdItems = buildStaticPageJsonLd({
     path: '/cookies/settings',
     title: 'Cookie Settings | Manage Proofound consent preferences',

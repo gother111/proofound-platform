@@ -22,7 +22,7 @@ export type VerificationStatusProfile = {
   workEmailVerified?: boolean | null;
   workEmailVerifiedAt?: string | null;
   workEmailReverifyDueAt?: string | null;
-  workEmailToken?: string | null;
+  workEmailTokenHash?: string | null;
   workEmailTokenExpires?: string | null;
   linkedinVerificationStatus?: LinkedInVerificationStatus;
   linkedinVerificationLevel?: LinkedInVerificationLevel;
@@ -77,7 +77,7 @@ export type VerificationStatusContract = {
 };
 
 function hasActiveWorkEmailToken(profile: VerificationStatusProfile) {
-  if (!profile.workEmailToken || profile.workEmailVerified) {
+  if (!profile.workEmailTokenHash || profile.workEmailVerified) {
     return false;
   }
 

@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { requireApiAuthContext } from '@/lib/auth';
 import { buildBlindSafeVerificationRequestEmail } from '@/lib/email/privacy';
 import { sendEmail } from '@/lib/email/sender';
-import { resolveSiteUrlFromHeaders } from '@/lib/env';
+import { resolveCanonicalSiteUrl } from '@/lib/env';
 import {
   VERIFICATION_INTEGRITY_REASONS,
   assessVerificationRequestIntegrity,
@@ -265,12 +265,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create verification request' }, { status: 500 });
     }
 
-    const baseUrl =
-      resolveSiteUrlFromHeaders(request.headers) ||
-      new URL(request.url).origin ||
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      process.env.NEXT_PUBLIC_APP_URL ||
-      'http://localhost:3000';
+    const baseUrl = resolveCanonicalSiteUrl();
+    if (!baseUrl) {
+      return NextResponse.json(
+        { error: 'Verification request email configuration is unavailable.' },
+        { status: 500 }
+      );
+    }
     const verifyUrl = `${baseUrl}/verify/${linkToken}`;
 
     const reviewCta =

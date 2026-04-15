@@ -32,23 +32,42 @@ export function getPythonInternalServiceSecret(): string {
   return isProductionLikeRuntime() ? '' : LOCAL_DEV_PYTHON_SERVICE_SECRET;
 }
 
-export function resolvePythonInternalServiceBaseUrl(request?: Request | NextRequest): string {
+function normalizePythonBaseUrl(configured: string, allowLocalHttp: boolean): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(configured);
+  } catch {
+    throw new Error('PYTHON_CV_IMPORT_BASE_URL is not a valid absolute URL.');
+  }
+
+  const hostname = parsed.hostname.toLowerCase();
+  const isLocalHttpHost = hostname === 'localhost' || hostname === '127.0.0.1';
+
+  if (parsed.protocol === 'https:') {
+    return parsed.origin;
+  }
+
+  if (allowLocalHttp && parsed.protocol === 'http:' && isLocalHttpHost) {
+    return parsed.origin;
+  }
+
+  if (parsed.protocol !== 'https:') {
+    throw new Error('PYTHON_CV_IMPORT_BASE_URL must use https outside local development.');
+  }
+
+  throw new Error('PYTHON_CV_IMPORT_BASE_URL must target a trusted https origin.');
+}
+
+export function resolvePythonInternalServiceBaseUrl(_request?: Request | NextRequest): string {
   const configured = process.env.PYTHON_CV_IMPORT_BASE_URL?.trim();
   if (configured) {
-    return configured.replace(/\/$/, '');
+    return normalizePythonBaseUrl(configured, !isProductionLikeRuntime());
   }
 
-  if (request) {
-    if ('nextUrl' in request) {
-      return request.nextUrl.origin;
-    }
-
-    return new URL(request.url).origin;
-  }
-
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  if (siteUrl) {
-    return siteUrl.replace(/\/$/, '');
+  if (isProductionLikeRuntime()) {
+    throw new Error(
+      'PYTHON_CV_IMPORT_BASE_URL must be configured in production-like environments.'
+    );
   }
 
   return 'http://127.0.0.1:3000';

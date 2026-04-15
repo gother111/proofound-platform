@@ -73,7 +73,7 @@ describe('mobile verification status route', () => {
               workEmailVerified: false,
               workEmailVerifiedAt: null,
               workEmailReverifyDueAt: null,
-              workEmailToken: null,
+              workEmailTokenHash: null,
               workEmailTokenExpires: null,
             },
           ]),

@@ -21,10 +21,9 @@ export async function triggerPythonInternalWorker(
     return false;
   }
 
-  const baseUrl = resolvePythonInternalServiceBaseUrl();
-  const targetUrl = new URL('/api/cron/python-internal-worker', `${baseUrl}/`);
-
   try {
+    const baseUrl = resolvePythonInternalServiceBaseUrl();
+    const targetUrl = new URL('/api/cron/python-internal-worker', `${baseUrl}/`);
     const response = await withTimeout(
       fetch(targetUrl.toString(), {
         method: 'GET',

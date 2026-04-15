@@ -28,6 +28,7 @@ import {
 } from '@/lib/candidate-invite-policy';
 import { normalizeAuthorizedOrgRole } from '@/lib/authz';
 import { emitLaunchTrace, startLaunchTrace } from '@/lib/launch/trace';
+import { pickPrioritizedOrgRepresentative } from '@/lib/messaging/conversation-access';
 import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -286,12 +287,10 @@ export async function POST(
         throw new Error('ORG_REP_NOT_FOUND');
       }
 
-      const prioritizedOrgRepId =
-        (invite.invitedBy &&
-          canonicalOrgLeads.find((member) => member.userId === invite.invitedBy)?.userId) ||
-        canonicalOrgLeads.find((member) => normalizeAuthorizedOrgRole(member.role) === 'org_owner')
-          ?.userId ||
-        canonicalOrgLeads[0]?.userId;
+      const prioritizedOrgRepId = pickPrioritizedOrgRepresentative(
+        canonicalOrgLeads,
+        invite.invitedBy
+      );
 
       if (!prioritizedOrgRepId) {
         throw new Error('ORG_REP_NOT_FOUND');

@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
         workEmailVerified: individualProfiles.workEmailVerified,
         workEmailVerifiedAt: individualProfiles.workEmailVerifiedAt,
         workEmailReverifyDueAt: individualProfiles.workEmailReverifyDueAt,
-        workEmailToken: individualProfiles.workEmailToken,
+        workEmailTokenHash: individualProfiles.workEmailTokenHash,
         workEmailTokenExpires: individualProfiles.workEmailTokenExpires,
       })
       .from(individualProfiles)
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
         workEmailVerified: profile.workEmailVerified,
         workEmailVerifiedAt: profile.workEmailVerifiedAt?.toISOString() || null,
         workEmailReverifyDueAt: profile.workEmailReverifyDueAt?.toISOString() || null,
-        workEmailToken: profile.workEmailToken,
+        workEmailTokenHash: profile.workEmailTokenHash,
         workEmailTokenExpires: profile.workEmailTokenExpires?.toISOString() || null,
         linkedinVerificationStatus: profile.linkedinVerificationStatus,
         linkedinVerificationLevel: profile.linkedinVerificationLevel,

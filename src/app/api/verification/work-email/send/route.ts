@@ -4,6 +4,7 @@ import { sendWorkEmailVerification } from '@/lib/email';
 import crypto from 'crypto';
 import { z } from 'zod';
 import { buildWorkflowView, syncWorkEmailVerificationRequested } from '@/lib/workflow/service';
+import { hashWorkEmailVerificationToken } from '@/lib/verification/work-email-token';
 
 const SendWorkEmailVerificationSchema = z.object({
   workEmail: z.string().email('Invalid email address'),
@@ -59,6 +60,7 @@ export async function POST(request: NextRequest) {
 
     // Generate verification token
     const token = crypto.randomBytes(32).toString('hex');
+    const tokenHash = hashWorkEmailVerificationToken(token);
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     // Update or create individual profile with work email and token
@@ -68,7 +70,8 @@ export async function POST(request: NextRequest) {
       {
         user_id: user.id,
         work_email: normalizedEmail,
-        work_email_token: token,
+        work_email_token: null,
+        work_email_token_hash: tokenHash,
         work_email_token_expires: expiresAt.toISOString(),
         work_email_org_id: orgId || null,
         work_email_verified: false, // Not verified yet, so unique constraint doesn't apply

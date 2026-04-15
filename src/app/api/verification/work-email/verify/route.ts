@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { reconcileVerifierContradictions } from '@/lib/verification/contradiction';
+import { hashWorkEmailVerificationToken } from '@/lib/verification/work-email-token';
 import {
   buildWorkflowView,
   getLatestWorkEmailVerification,
@@ -26,6 +27,7 @@ export async function GET(request: NextRequest) {
     if (!token) {
       return NextResponse.json({ error: 'Verification token is required' }, { status: 400 });
     }
+    const tokenHash = hashWorkEmailVerificationToken(token);
 
     const supabase = await createClient();
 
@@ -33,7 +35,7 @@ export async function GET(request: NextRequest) {
     const { data: profile, error: findError } = await supabase
       .from('individual_profiles')
       .select('user_id, work_email, work_email_token_expires, work_email_org_id')
-      .eq('work_email_token', token)
+      .eq('work_email_token_hash', tokenHash)
       .single();
 
     if (findError || !profile) {
@@ -79,6 +81,7 @@ export async function GET(request: NextRequest) {
         work_email_verified_at: nowIso,
         work_email_reverify_due_at: reverifyDueAtIso,
         work_email_token: null, // Clear the token
+        work_email_token_hash: null,
         work_email_token_expires: null,
       })
       .eq('user_id', profile.user_id);

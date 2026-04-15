@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { buildBlindSafeVerificationRequestEmail } from '@/lib/email/privacy';
 import { sendEmail } from '@/lib/email/sender';
+import { resolveCanonicalSiteUrl } from '@/lib/env';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import {
@@ -575,10 +576,13 @@ export async function POST(request: NextRequest) {
       artifacts: selectedArtifacts,
     });
 
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      'http://localhost:3000';
+    const baseUrl = resolveCanonicalSiteUrl();
+    if (!baseUrl) {
+      return NextResponse.json(
+        { error: 'Verification request email configuration is unavailable.' },
+        { status: 500 }
+      );
+    }
     const verifyUrl = `${baseUrl}/verify/custom/${bundle.rawToken}`;
 
     const emailCopy = buildBlindSafeVerificationRequestEmail({

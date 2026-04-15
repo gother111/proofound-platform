@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Loader2, MailCheck, MailX, Send } from 'lucide-react';
+import { Loader2, MailCheck, Send } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
@@ -51,7 +51,7 @@ type ArtifactsResponse = {
   total: number;
 };
 
-type EmailHintKind = 'proofound_user' | 'external_verifier';
+type EmailHintKind = 'verifier_email_ready';
 
 const GROUP_LABELS: Record<ArtifactType, string> = {
   skill: 'Skills',
@@ -305,15 +305,10 @@ export function CustomVerificationRequestDialog({ open, onOpenChange, onCreated 
                 <p className="text-xs" style={{ color: '#6B7470' }}>
                   Checking account status...
                 </p>
-              ) : emailHint === 'proofound_user' ? (
+              ) : emailHint === 'verifier_email_ready' ? (
                 <p className="text-xs inline-flex items-center gap-1" style={{ color: '#1C4D3A' }}>
                   <MailCheck className="h-3.5 w-3.5" />
-                  Proofound user
-                </p>
-              ) : emailHint === 'external_verifier' ? (
-                <p className="text-xs inline-flex items-center gap-1" style={{ color: '#6B7470' }}>
-                  <MailX className="h-3.5 w-3.5" />
-                  External verifier
+                  We&apos;ll send the request to this email address
                 </p>
               ) : null}
             </div>

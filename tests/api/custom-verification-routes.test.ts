@@ -404,19 +404,6 @@ describe('canonical custom verification routes', () => {
   });
 
   it('serves active email hints without expertise transport imports', async () => {
-    vi.mocked(createClient).mockResolvedValue({
-      from: vi.fn(() => ({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            maybeSingle: vi.fn().mockResolvedValue({
-              data: { id: 'profile-1' },
-              error: null,
-            }),
-          })),
-        })),
-      })),
-    } as any);
-
     const response = await getEmailHint(
       new NextRequest(
         'http://localhost/api/verification/requests/email-hint?email=founder@example.com'
@@ -424,6 +411,9 @@ describe('canonical custom verification routes', () => {
     );
 
     expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      kind: 'verifier_email_ready',
+    });
   });
 
   it('expires canonical bundles when public links are stale', async () => {

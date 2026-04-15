@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const { data: profile, error: profileError } = await supabase
       .from('individual_profiles')
       .select(
-        'work_email, work_email_verified, work_email_verified_at, work_email_reverify_due_at, work_email_token, work_email_token_expires, linkedin_verification_status, linkedin_verification_level, linkedin_verified_at, linkedin_verification_data'
+        'work_email, work_email_verified, work_email_verified_at, work_email_reverify_due_at, work_email_token_hash, work_email_token_expires, linkedin_verification_status, linkedin_verification_level, linkedin_verified_at, linkedin_verification_data'
       )
       .eq('user_id', user.id)
       .maybeSingle();
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
         workEmailVerified: profile.work_email_verified,
         workEmailVerifiedAt: profile.work_email_verified_at,
         workEmailReverifyDueAt: profile.work_email_reverify_due_at,
-        workEmailToken: profile.work_email_token,
+        workEmailTokenHash: profile.work_email_token_hash,
         workEmailTokenExpires: profile.work_email_token_expires,
         linkedinVerificationStatus: profile.linkedin_verification_status,
         linkedinVerificationLevel: profile.linkedin_verification_level,

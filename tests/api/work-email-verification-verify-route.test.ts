@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
+import crypto from 'crypto';
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
@@ -100,11 +101,17 @@ describe('GET /api/verification/work-email/verify', () => {
 
     const response = await GET(request);
     expect(response.status).toBe(200);
+    expect(tokenLookupQuery.eq).toHaveBeenCalledWith(
+      'work_email_token_hash',
+      crypto.createHash('sha256').update('token-123').digest('hex')
+    );
 
     expect(updatePayload).toBeTruthy();
     expect(updatePayload?.work_email_verified).toBe(true);
     expect(updatePayload?.work_email_verified_at).toBeTruthy();
     expect(updatePayload?.work_email_reverify_due_at).toBeTruthy();
+    expect(updatePayload?.work_email_token).toBeNull();
+    expect(updatePayload?.work_email_token_hash).toBeNull();
     expect(updatePayload).not.toHaveProperty('verification_tier');
     expect(updatePayload).not.toHaveProperty('verification_tier_source');
     expect(updatePayload).not.toHaveProperty('verified');

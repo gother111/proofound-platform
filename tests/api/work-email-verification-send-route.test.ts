@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
+import crypto from 'crypto';
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
@@ -144,6 +145,8 @@ describe('POST /api/verification/work-email/send', () => {
       work_email_org_id: '123e4567-e89b-42d3-a456-426614174000',
       work_email_verified: false,
     });
+    expect(upsertPayloads[0].work_email_token).toBeNull();
+    expect(typeof upsertPayloads[0].work_email_token_hash).toBe('string');
     expect(sendWorkEmailVerification).toHaveBeenCalledTimes(1);
     const [sentEmail, sentToken] = vi.mocked(sendWorkEmailVerification).mock.calls[0] as [
       string,
@@ -153,6 +156,9 @@ describe('POST /api/verification/work-email/send', () => {
     expect(sentEmail).toBe('Alice@Acme.Org');
     expect(typeof sentToken).toBe('string');
     expect(sentToken).toMatch(/^[a-f0-9]{64}$/);
+    expect(upsertPayloads[0].work_email_token_hash).toBe(
+      crypto.createHash('sha256').update(sentToken).digest('hex')
+    );
     expect(vi.mocked(sendWorkEmailVerification).mock.calls[0][2]).toBe('Alice Researcher');
   });
 

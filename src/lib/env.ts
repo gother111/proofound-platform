@@ -90,6 +90,14 @@ function isPreviewDeployment(): boolean {
   return process.env.VERCEL_ENV === 'preview' || process.env.NODE_ENV !== 'production';
 }
 
+function isProductionLikeRuntime(): boolean {
+  return (
+    process.env.NODE_ENV === 'production' ||
+    process.env.VERCEL_ENV === 'production' ||
+    process.env.VERCEL_ENV === 'preview'
+  );
+}
+
 function resolveProtocol(host: string, forwardedProto?: string): string {
   if (forwardedProto) {
     return forwardedProto;
@@ -119,13 +127,9 @@ function getHeaderValue(
 }
 
 function aggregateEnv(): EnvShape {
-  const supabaseUrl = (
-    process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    process.env.SUPABASE_URL
-  )?.trim();
+  const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL)?.trim();
   const supabaseAnonKey = (
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    process.env.SUPABASE_ANON_KEY
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
   )?.trim();
   const supabaseServiceRoleKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
   const siteUrl = normalizeSiteUrl(process.env.NEXT_PUBLIC_SITE_URL ?? process.env.SITE_URL, {
@@ -242,6 +246,24 @@ export function resolveSiteUrlFromHeaders(
   const vercelUrl = normalizeSiteUrl(process.env.VERCEL_URL, { allowPreviewHosts: true });
   if (vercelUrl) {
     return stripTrailingSlash(vercelUrl);
+  }
+
+  return '';
+}
+
+/**
+ * Resolve the canonical public site URL for security-sensitive links.
+ * Production-like runtimes require an explicit configured URL.
+ * Local and test environments may fall back to localhost for developer ergonomics.
+ */
+export function resolveCanonicalSiteUrl(): string {
+  const { SITE_URL: configuredSiteUrl } = aggregateEnv();
+  if (configuredSiteUrl) {
+    return stripTrailingSlash(configuredSiteUrl);
+  }
+
+  if (!isProductionLikeRuntime()) {
+    return 'http://localhost:3000';
   }
 
   return '';

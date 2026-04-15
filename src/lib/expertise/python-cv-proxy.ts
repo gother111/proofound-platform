@@ -130,9 +130,6 @@ export async function proxyCvRequestToPython(
   endpointPath: EndpointPath,
   timeoutMs = DEFAULT_PROXY_TIMEOUT_MS
 ): Promise<NextResponse> {
-  const baseUrl = resolvePythonInternalServiceBaseUrl(request);
-  const targetUrl = resolveTargetUrl(request, baseUrl, endpointPath);
-
   const contentType = resolveContentType(request);
   const isMultipart = Boolean(contentType?.startsWith('multipart/form-data'));
   const body: BodyInit | null = isMultipart ? request.body : await request.arrayBuffer();
@@ -157,6 +154,18 @@ export async function proxyCvRequestToPython(
   headers['x-python-service-secret'] = internalSecret;
   headers['x-cv-proxy-secret'] = internalSecret;
   headers['x-proofound-contract-version'] = PYTHON_INTERNAL_CONTRACT_VERSION;
+
+  let targetUrl: string;
+  try {
+    const baseUrl = resolvePythonInternalServiceBaseUrl(request);
+    targetUrl = resolveTargetUrl(request, baseUrl, endpointPath);
+  } catch (error) {
+    return buildUnavailableResponse(
+      endpointPath,
+      error instanceof Error ? error.message : 'Python CV service is unavailable.',
+      503
+    );
+  }
 
   let response: Response;
   try {

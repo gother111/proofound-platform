@@ -41,7 +41,7 @@ describe('CustomVerificationRequestDialog', () => {
       if (url.includes('/api/verification/requests/email-hint')) {
         return {
           ok: true,
-          json: async () => ({ kind: 'proofound_user' }),
+          json: async () => ({ kind: 'verifier_email_ready' }),
         } as Response;
       }
 
@@ -67,7 +67,7 @@ describe('CustomVerificationRequestDialog', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Proofound user')).toBeInTheDocument();
+      expect(screen.getByText("We'll send the request to this email address")).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByRole('checkbox'));

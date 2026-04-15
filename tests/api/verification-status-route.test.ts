@@ -47,7 +47,7 @@ type VerificationProfile = {
   work_email_verified: boolean;
   work_email_verified_at: string | null;
   work_email_reverify_due_at: string | null;
-  work_email_token: string | null;
+  work_email_token_hash: string | null;
   work_email_token_expires: string | null;
 };
 
@@ -184,7 +184,7 @@ describe('GET /api/verification/status', () => {
         work_email_verified: false,
         work_email_verified_at: null,
         work_email_reverify_due_at: null,
-        work_email_token: 'token-123',
+        work_email_token_hash: 'token-hash-123',
         work_email_token_expires: expiresAt,
       },
     });
@@ -213,7 +213,7 @@ describe('GET /api/verification/status', () => {
         work_email_verified: false,
         work_email_verified_at: null,
         work_email_reverify_due_at: null,
-        work_email_token: 'token-123',
+        work_email_token_hash: 'token-hash-123',
         work_email_token_expires: expiresAt,
       },
     });
@@ -241,7 +241,7 @@ describe('GET /api/verification/status', () => {
         work_email_verified: true,
         work_email_verified_at: verifiedAt,
         work_email_reverify_due_at: pastDue,
-        work_email_token: null,
+        work_email_token_hash: null,
         work_email_token_expires: null,
       },
     });
@@ -270,7 +270,7 @@ describe('GET /api/verification/status', () => {
         work_email_verified: true,
         work_email_verified_at: verifiedAt,
         work_email_reverify_due_at: futureDue,
-        work_email_token: null,
+        work_email_token_hash: null,
         work_email_token_expires: null,
       },
     });
@@ -299,7 +299,7 @@ describe('GET /api/verification/status', () => {
         work_email_verified: true,
         work_email_verified_at: verifiedAt,
         work_email_reverify_due_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-        work_email_token: null,
+        work_email_token_hash: null,
         work_email_token_expires: null,
       },
     });
@@ -336,7 +336,7 @@ describe('GET /api/verification/status', () => {
         work_email_verified: false,
         work_email_verified_at: null,
         work_email_reverify_due_at: null,
-        work_email_token: null,
+        work_email_token_hash: null,
         work_email_token_expires: null,
       },
     });
@@ -390,7 +390,7 @@ describe('GET /api/verification/status', () => {
         work_email_verified: false,
         work_email_verified_at: null,
         work_email_reverify_due_at: null,
-        work_email_token: null,
+        work_email_token_hash: null,
         work_email_token_expires: null,
       },
     });
@@ -427,7 +427,7 @@ describe('GET /api/verification/status', () => {
         work_email_verified: false,
         work_email_verified_at: null,
         work_email_reverify_due_at: null,
-        work_email_token: null,
+        work_email_token_hash: null,
         work_email_token_expires: null,
       },
     });
@@ -466,7 +466,7 @@ describe('GET /api/verification/status', () => {
         work_email_verified: false,
         work_email_verified_at: null,
         work_email_reverify_due_at: null,
-        work_email_token: null,
+        work_email_token_hash: null,
         work_email_token_expires: null,
       },
     });
