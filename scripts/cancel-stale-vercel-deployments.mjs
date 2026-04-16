@@ -129,7 +129,6 @@ async function main() {
 
   const result = await api(`/v6/deployments?${params.toString()}`);
   const deployments = (result.deployments ?? [])
-    .filter((deployment) => deployment.source === 'git')
     .filter((deployment) => isCancelableState(deployment.readyState))
     .filter((deployment) => {
       if (!targetFilter) return true;

@@ -8,6 +8,7 @@ import {
   FINAL_LAUNCH_CHECKLIST_DEFINITIONS,
   generateFinalLaunchChecklistReport,
 } from '@/lib/launch/final-launch-checklist';
+import { REPO_READY_VALIDATION_FILE_NAME } from '@/lib/launch/repo-ready-validation';
 
 const createdDirs: string[] = [];
 
@@ -17,7 +18,7 @@ async function writeFile(root: string, relativePath: string, content: string) {
   await fs.writeFile(absolutePath, content, 'utf8');
 }
 
-async function createWorkspaceFixture() {
+async function createWorkspaceFixture(options: { includeRepoReadyBundle?: boolean } = {}) {
   const workspace = await fs.mkdtemp(path.join(os.tmpdir(), 'proofound-launch-checklist-'));
   createdDirs.push(workspace);
 
@@ -306,6 +307,87 @@ queue item must say which checklist point failed or passed
     )
   );
 
+  if (options.includeRepoReadyBundle) {
+    await writeFile(
+      workspace,
+      `.artifacts/launch-validation-2026-04-14/${REPO_READY_VALIDATION_FILE_NAME}`,
+      JSON.stringify(
+        {
+          schemaVersion: 1,
+          kind: 'repo_ready_validation',
+          scope: 'repo',
+          generatedAt: '2026-04-14T21:00:00.000Z',
+          authoritativeBaseUrl: 'http://127.0.0.1:33124',
+          verdict: 'READY',
+          gates: [
+            {
+              id: 'prod_build',
+              status: 'PASS',
+              summary: 'Fresh local build passed.',
+              evidence: ['repo-ready-build.log'],
+            },
+            {
+              id: 'prod_boot',
+              status: 'PASS',
+              summary: 'Fresh local prod boot passed.',
+              evidence: ['repo-ready-prod-start.log'],
+            },
+            {
+              id: 'route_surface_and_archived_routes',
+              status: 'PASS',
+              summary: 'Fresh route inventory tests passed.',
+              evidence: ['repo-ready-route-surface.log'],
+            },
+            {
+              id: 'launch_status_route_logic',
+              status: 'PASS',
+              summary: 'Fresh launch-status route tests passed.',
+              evidence: ['repo-ready-launch-status-route.log'],
+            },
+            {
+              id: 'live_launch_smoke_artifact_refresh',
+              status: 'PASS',
+              summary: 'Fresh smoke artifact refresh passed.',
+              evidence: ['repo-ready-launch-smoke.log'],
+            },
+            {
+              id: 'public_org_trust_smoke',
+              status: 'PASS',
+              summary: 'Fresh public org trust smoke passed.',
+              evidence: ['repo-ready-launch-smoke.log'],
+            },
+            {
+              id: 'private_context_scaffolding',
+              status: 'PASS',
+              summary: 'Private context scaffolding tests passed.',
+              evidence: ['repo-ready-private-context.log'],
+            },
+            {
+              id: 'workflow_email_privacy',
+              status: 'PASS',
+              summary: 'Workflow email privacy tests passed.',
+              evidence: ['repo-ready-workflow-email-privacy.log'],
+            },
+            {
+              id: 'manual_privacy_sweep',
+              status: 'PASS',
+              summary: 'Manual privacy validation tests passed.',
+              evidence: ['repo-ready-manual-privacy.log'],
+            },
+            {
+              id: 'internal_admin_surfaces',
+              status: 'PASS',
+              summary: 'Internal admin surface tests passed.',
+              evidence: ['repo-ready-internal-admin.log'],
+            },
+          ],
+        },
+        null,
+        2
+      )
+    );
+  }
+
   return workspace;
 }
 
@@ -343,7 +425,9 @@ describe('final launch checklist pipeline', () => {
       fetchImpl: globalThis.fetch,
     });
 
-    const signoffItem = report.items.find((item) => item.id === 'founder_go_no_go_signed_after_green');
+    const signoffItem = report.items.find(
+      (item) => item.id === 'founder_go_no_go_signed_after_green'
+    );
 
     expect(signoffItem?.status).toBe('BLOCKED');
     expect(signoffItem?.blockerIds).toContain('engineering_build_clean');
@@ -365,7 +449,9 @@ describe('final launch checklist pipeline', () => {
     const markdownPath = path.join(workspace, report.outputs.markdownPath);
     const jsonPath = path.join(workspace, report.outputs.jsonPath);
     const markdown = await fs.readFile(markdownPath, 'utf8');
-    const json = JSON.parse(await fs.readFile(jsonPath, 'utf8')) as { items: Array<{ id: string }> };
+    const json = JSON.parse(await fs.readFile(jsonPath, 'utf8')) as {
+      items: Array<{ id: string }>;
+    };
 
     expect(markdown).toContain('## Product');
     expect(markdown).toContain('## Engineering');
@@ -373,5 +459,52 @@ describe('final launch checklist pipeline', () => {
     expect(markdown).toContain('## Ops');
     expect(markdown).toContain('## Founder / GTM');
     expect(json.items).toHaveLength(FINAL_LAUNCH_CHECKLIST_DEFINITIONS.length);
+  });
+
+  it('prefers the freshest repo-ready bundle in repo scope over older full-launch bundles', async () => {
+    const workspace = await createWorkspaceFixture({ includeRepoReadyBundle: true });
+
+    const report = await generateFinalLaunchChecklistReport({
+      workspaceRoot: workspace,
+      scope: 'repo',
+      now: new Date('2026-04-14T21:10:00.000Z'),
+      fetchImpl: globalThis.fetch,
+    });
+
+    const buildItem = report.items.find((item) => item.id === 'engineering_build_clean');
+
+    expect(report.scope).toBe('repo');
+    expect(report.latestLaunchBundleDir).toBe('.artifacts/launch-validation-2026-04-14');
+    expect(buildItem?.status).toBe('PASS');
+    expect(buildItem?.summary).toContain('Fresh local build passed');
+  });
+
+  it('treats external prerequisites as non-blocking in repo scope but blocking in full scope', async () => {
+    const workspace = await createWorkspaceFixture({ includeRepoReadyBundle: true });
+
+    const repoReport = await generateFinalLaunchChecklistReport({
+      workspaceRoot: workspace,
+      scope: 'repo',
+      now: new Date('2026-04-14T21:10:00.000Z'),
+      fetchImpl: globalThis.fetch,
+    });
+    const fullReport = await generateFinalLaunchChecklistReport({
+      workspaceRoot: workspace,
+      scope: 'full',
+      now: new Date('2026-04-14T21:10:00.000Z'),
+      fetchImpl: globalThis.fetch,
+    });
+
+    expect(
+      repoReport.externalPrerequisites.some(
+        (item) => item.id === 'founder_icp_design_partner_locked'
+      )
+    ).toBe(true);
+    expect(
+      repoReport.trueBlockers.some((item) => item.id === 'founder_icp_design_partner_locked')
+    ).toBe(false);
+    expect(
+      fullReport.trueBlockers.some((item) => item.id === 'founder_icp_design_partner_locked')
+    ).toBe(true);
   });
 });

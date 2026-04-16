@@ -35,6 +35,8 @@
 13. `agent/checklists/preflight.md`
 14. `agent/checklists/verification.md`
 
+For UI, landing, public-page, or visual-system work, also read `DESIGN.md` after the MVP authority stack and before editing.
+
 ## Logging Policy (Conflict Prevention)
 
 - Legacy shared files are history/index surfaces:

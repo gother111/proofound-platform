@@ -158,8 +158,8 @@ export async function processWeeklyDigests(force = false): Promise<WeeklyDigestR
   };
 
   for (const row of users) {
-    const digestEnabled = row.emailWeeklyDigest ?? true;
-    const digestFrequency = row.digestFrequency ?? 'weekly';
+    const digestEnabled = row.emailWeeklyDigest ?? false;
+    const digestFrequency = row.digestFrequency ?? 'disabled';
 
     if (!digestEnabled || digestFrequency === 'disabled') {
       result.skipped += 1;

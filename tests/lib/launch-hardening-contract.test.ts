@@ -4,6 +4,8 @@ import {
   LAUNCH_MONITOR_DEFINITIONS,
   LAUNCH_SMOKE_CORRIDOR_VALUES,
   LAUNCH_SMOKE_MATRIX,
+  REPO_READY_LAUNCH_SMOKE_SCENARIO_IDS,
+  getLaunchSmokeMatrix,
   REQUIRED_SAFE_MODE_FLAGS,
   isLocalLaunchBaseUrl,
   normalizeLaunchBaseUrl,
@@ -38,6 +40,28 @@ describe('launch hardening contract', () => {
         expect(scenario.runner.command.length).toBeGreaterThan(0);
       }
     }
+  });
+
+  it('keeps repo-ready smoke focused on fast repo-owned coverage while full launch stays strict', () => {
+    expect(REPO_READY_LAUNCH_SMOKE_SCENARIO_IDS).toEqual([
+      'public_individual_portfolio_visible',
+      'proof_creation_case',
+      'public_org_trust_fixture_live',
+      'hidden_portfolio_protected',
+      'privacy_no_leak_case',
+    ]);
+
+    expect(getLaunchSmokeMatrix('repo').map((item) => item.id)).toEqual(
+      REPO_READY_LAUNCH_SMOKE_SCENARIO_IDS
+    );
+    expect(
+      getLaunchSmokeMatrix('repo').some(
+        (item) => item.id === 'full_org_corridor_review_to_engagement_verification'
+      )
+    ).toBe(false);
+    expect(getLaunchSmokeMatrix('full').map((item) => item.id)).toEqual(
+      LAUNCH_SMOKE_MATRIX.map((item) => item.id)
+    );
   });
 
   it('keeps the seeded public org trust fixture inside the permanent smoke evidence pack', () => {

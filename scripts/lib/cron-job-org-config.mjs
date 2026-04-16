@@ -46,47 +46,6 @@ function buildJob({
 export function buildManagedJobs(siteUrl, cronSecret) {
   return [
     buildJob({
-      title: 'Proofound - Python Internal Worker',
-      url: `${siteUrl}/api/cron/python-internal-worker`,
-      enabled: true,
-      requestTimeout: 300,
-      schedule: {
-        hours: [-1],
-        mdays: [-1],
-        minutes: [-1],
-        months: [-1],
-        wdays: [-1],
-      },
-      cronSecret,
-    }),
-    buildJob({
-      title: 'Proofound - CV Import Temp Cleanup',
-      url: `${siteUrl}/api/cron/cv-import-temp-cleanup`,
-      enabled: true,
-      requestTimeout: 300,
-      schedule: {
-        hours: [4],
-        mdays: [-1],
-        minutes: [20],
-        months: [-1],
-        wdays: [-1],
-      },
-      cronSecret,
-    }),
-    buildJob({
-      title: 'Proofound – Fairness Note Refresh',
-      url: `${siteUrl}/api/cron/fairness-note`,
-      enabled: true,
-      schedule: {
-        hours: [2],
-        mdays: [-1],
-        minutes: [0],
-        months: [-1],
-        wdays: [-1],
-      },
-      cronSecret,
-    }),
-    buildJob({
       title: 'Proofound – Health Check',
       url: `${siteUrl}/api/cron/health-check`,
       enabled: true,
@@ -113,19 +72,6 @@ export function buildManagedJobs(siteUrl, cronSecret) {
       },
       cronSecret,
     }),
-    buildJob({
-      title: 'Proofound – Fairness Report',
-      url: `${siteUrl}/api/cron/fairness-report`,
-      enabled: false,
-      schedule: {
-        hours: [3],
-        mdays: [-1],
-        minutes: [30],
-        months: [-1],
-        wdays: [-1],
-      },
-      cronSecret,
-    }),
   ];
 }
 
@@ -134,6 +80,14 @@ export function buildLegacyJobsToDisable(siteUrl) {
     {
       title: 'Proofound - Account Deletion Workflow',
       url: `${siteUrl}/api/cron/account-deletion-workflow`,
+    },
+    {
+      title: 'Proofound - Python Internal Worker',
+      url: `${siteUrl}/api/cron/python-internal-worker`,
+    },
+    {
+      title: 'Proofound - CV Import Temp Cleanup',
+      url: `${siteUrl}/api/cron/cv-import-temp-cleanup`,
     },
     {
       title: 'Proofound - Send Deletion Reminders',
@@ -146,6 +100,10 @@ export function buildLegacyJobsToDisable(siteUrl) {
     {
       title: 'Proofound - Refresh Matches',
       url: `${siteUrl}/api/cron/refresh-matches`,
+    },
+    {
+      title: 'Proofound - Weekly Digest',
+      url: `${siteUrl}/api/cron/weekly-digest`,
     },
     {
       title: 'Proofound - SLA Enforcement',

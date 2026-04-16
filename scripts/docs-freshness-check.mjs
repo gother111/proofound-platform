@@ -33,6 +33,7 @@ const ACTIVE_PATTERN_EXEMPT = new Set([
 ]);
 
 const REGISTRY_EXEMPT_PREFIXES = [
+  '.artifacts/launch-validation-',
   'agent/scratchpad/entries/',
   'project/changes/entries/',
 ];

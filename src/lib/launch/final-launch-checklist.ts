@@ -4,6 +4,7 @@ import { spawnSync } from 'node:child_process';
 import type { Dirent } from 'node:fs';
 
 import { normalizeLaunchBaseUrl } from '@/lib/launch/contracts';
+import { REPO_READY_VALIDATION_FILE_NAME } from '@/lib/launch/repo-ready-validation';
 
 export const FINAL_LAUNCH_CHECKLIST_STATUS_VALUES = [
   'PASS',
@@ -13,6 +14,9 @@ export const FINAL_LAUNCH_CHECKLIST_STATUS_VALUES = [
 ] as const;
 
 export type FinalLaunchChecklistStatus = (typeof FINAL_LAUNCH_CHECKLIST_STATUS_VALUES)[number];
+
+export const FINAL_LAUNCH_CHECKLIST_SCOPE_VALUES = ['repo', 'full'] as const;
+export type FinalLaunchChecklistScope = (typeof FINAL_LAUNCH_CHECKLIST_SCOPE_VALUES)[number];
 
 export const FINAL_LAUNCH_CHECKLIST_SECTIONS = [
   'Product',
@@ -49,10 +53,9 @@ export type FinalLaunchChecklistItemDefinition = {
   label: string;
   authorityRefs: string[];
   evidenceSources: string[];
+  blocksVerdictIn?: 'both' | 'repo' | 'full' | 'never';
   upstreamBlockers?: string[];
-  evaluateDirect: (
-    context: FinalLaunchChecklistContext
-  ) => FinalLaunchChecklistObservation[];
+  evaluateDirect: (context: FinalLaunchChecklistContext) => FinalLaunchChecklistObservation[];
 };
 
 export type FinalLaunchChecklistItemResult = {
@@ -67,6 +70,8 @@ export type FinalLaunchChecklistItemResult = {
   blockerIds: string[];
   retiredStaleClaims: string[];
   sourceLabel: string;
+  blocksVerdict: boolean;
+  blockingScope: 'repo' | 'full' | 'both' | 'never';
 };
 
 type ParsedChecklistRow = {
@@ -88,6 +93,7 @@ type ParsedGateSummaryGate = {
 
 type ParsedLaunchValidationBundle = {
   dir: string;
+  kind: 'full_launch' | 'repo_ready';
   generatedAt: string | null;
   authoritativeBaseUrl: string | null;
   verdict: string | null;
@@ -116,6 +122,7 @@ type StatefulCheckResult = {
 };
 
 export type FinalLaunchChecklistContext = {
+  scope: FinalLaunchChecklistScope;
   workspaceRoot: string;
   generatedAt: string;
   currentDate: string;
@@ -125,6 +132,8 @@ export type FinalLaunchChecklistContext = {
   artifactRoot: string;
   outputDir: string;
   latestLaunchBundle: ParsedLaunchValidationBundle | null;
+  latestRepoReadyBundle: ParsedLaunchValidationBundle | null;
+  latestFullLaunchBundle: ParsedLaunchValidationBundle | null;
   currentStateRealityCheck: Map<string, ParsedChecklistRow>;
   verificationChecklist: Map<string, ParsedChecklistRow>;
   routeInventory: string | null;
@@ -156,6 +165,7 @@ export type FinalLaunchChecklistContext = {
 };
 
 export type FinalLaunchChecklistReport = {
+  scope: FinalLaunchChecklistScope;
   generatedAt: string;
   currentDate: string;
   workspaceRoot: string;
@@ -168,6 +178,7 @@ export type FinalLaunchChecklistReport = {
   statusCounts: Record<FinalLaunchChecklistStatus, number>;
   items: FinalLaunchChecklistItemResult[];
   trueBlockers: FinalLaunchChecklistItemResult[];
+  externalPrerequisites: FinalLaunchChecklistItemResult[];
   missingEvidence: FinalLaunchChecklistItemResult[];
   retiredStaleClaims: string[];
   outputs: {
@@ -181,6 +192,7 @@ export type GenerateFinalLaunchChecklistOptions = {
   now?: Date;
   liveBaseUrl?: string | null;
   includeStateful?: boolean;
+  scope?: FinalLaunchChecklistScope;
   artifactRoot?: string;
   fetchImpl?: typeof fetch;
 };
@@ -213,11 +225,7 @@ function normalizeChecklistLabel(value: string) {
 
 function mapStatus(value: string | null | undefined): FinalLaunchChecklistStatus | null {
   const normalized = stripBackticks(value ?? '').toUpperCase();
-  if (
-    FINAL_LAUNCH_CHECKLIST_STATUS_VALUES.includes(
-      normalized as FinalLaunchChecklistStatus
-    )
-  ) {
+  if (FINAL_LAUNCH_CHECKLIST_STATUS_VALUES.includes(normalized as FinalLaunchChecklistStatus)) {
     return normalized as FinalLaunchChecklistStatus;
   }
   return null;
@@ -325,7 +333,11 @@ function tableRowsFromMarkdown(markdown: string) {
   return tables;
 }
 
-function parseChecklistRowsFromMarkdown(markdown: string, sourcePath: string, observedAt: string | null) {
+function parseChecklistRowsFromMarkdown(
+  markdown: string,
+  sourcePath: string,
+  observedAt: string | null
+) {
   const tables = tableRowsFromMarkdown(markdown);
   const parsed = new Map<string, ParsedChecklistRow>();
 
@@ -412,7 +424,84 @@ async function readOptionalJson(filePath: string) {
   }
 }
 
-async function findLatestLaunchValidationBundle(artifactRoot: string) {
+function parseBundleGates(payload: Record<string, unknown>) {
+  const gates = new Map<string, ParsedGateSummaryGate>();
+  const rawGates = Array.isArray(payload.gates)
+    ? (payload.gates as Array<Record<string, unknown>>)
+    : [];
+
+  for (const gate of rawGates) {
+    const id = typeof gate.id === 'string' ? gate.id : null;
+    const status = mapStatus(typeof gate.status === 'string' ? gate.status : null);
+    if (!id || !status) {
+      continue;
+    }
+    gates.set(id, {
+      id,
+      status,
+      summary: typeof gate.summary === 'string' ? gate.summary : id,
+      evidence: Array.isArray(gate.evidence)
+        ? gate.evidence.filter((value): value is string => typeof value === 'string')
+        : [],
+      raw: gate,
+    });
+  }
+
+  return gates;
+}
+
+async function parseLaunchBundleFromDir(
+  artifactRoot: string,
+  bundleDir: string,
+  fileName: string,
+  kind: ParsedLaunchValidationBundle['kind']
+) {
+  const bundlePath = path.join(bundleDir, fileName);
+  const bundleResult = await readOptionalJson(bundlePath);
+  if (!bundleResult?.payload) {
+    return null;
+  }
+
+  const fileEntries = await fs.readdir(bundleDir, 'utf8').catch((): string[] => []);
+  const liveLaunchStatusName =
+    fileEntries.find((name) => name.endsWith('live_launch_status_extract.json')) ??
+    fileEntries.find((name) => name.endsWith('live_launch_status.json')) ??
+    fileEntries.find((name) => name.endsWith('final-launch-checklist-live-launch-status.json')) ??
+    null;
+  const liveLaunchStatusResult =
+    liveLaunchStatusName == null
+      ? null
+      : await readOptionalJson(path.join(bundleDir, liveLaunchStatusName));
+
+  return {
+    dir: path.relative(artifactRoot, bundleDir),
+    kind,
+    generatedAt:
+      typeof bundleResult.payload.generatedAt === 'string'
+        ? bundleResult.payload.generatedAt
+        : bundleResult.observedAt,
+    authoritativeBaseUrl:
+      typeof bundleResult.payload.authoritativeBaseUrl === 'string'
+        ? normalizeLaunchBaseUrl(bundleResult.payload.authoritativeBaseUrl)
+        : null,
+    verdict: typeof bundleResult.payload.verdict === 'string' ? bundleResult.payload.verdict : null,
+    recommendation:
+      typeof bundleResult.payload.recommendation === 'string'
+        ? bundleResult.payload.recommendation
+        : null,
+    gates: parseBundleGates(bundleResult.payload),
+    liveLaunchStatusExtractPath:
+      liveLaunchStatusName == null
+        ? null
+        : path.relative(artifactRoot, path.join(bundleDir, liveLaunchStatusName)),
+    liveLaunchStatusExtract: liveLaunchStatusResult?.payload ?? null,
+  } satisfies ParsedLaunchValidationBundle;
+}
+
+async function findLatestLaunchValidationBundle(
+  artifactRoot: string,
+  scope: FinalLaunchChecklistScope
+) {
   const artifactsDir = path.join(artifactRoot, '.artifacts');
   let entries: Dirent[] = [];
 
@@ -431,72 +520,36 @@ async function findLatestLaunchValidationBundle(artifactRoot: string) {
 
   for (const bundleDir of bundleDirs) {
     const fileEntries = await fs.readdir(bundleDir, 'utf8').catch((): string[] => []);
-    const gateSummaryName = fileEntries.find((name) => name.endsWith('gate_summary.json'));
+    const repoReadyName = fileEntries.includes(REPO_READY_VALIDATION_FILE_NAME)
+      ? REPO_READY_VALIDATION_FILE_NAME
+      : null;
+    const gateSummaryName = fileEntries.find((name) => name.endsWith('gate_summary.json')) ?? null;
+
+    if (scope === 'repo' && repoReadyName) {
+      const repoBundle = await parseLaunchBundleFromDir(
+        artifactRoot,
+        bundleDir,
+        repoReadyName,
+        'repo_ready'
+      );
+      if (repoBundle) {
+        return repoBundle;
+      }
+    }
+
     if (!gateSummaryName) {
       continue;
     }
 
-    const gateSummaryResult = await readOptionalJson(path.join(bundleDir, gateSummaryName));
-    if (!gateSummaryResult?.payload) {
-      continue;
+    const fullBundle = await parseLaunchBundleFromDir(
+      artifactRoot,
+      bundleDir,
+      gateSummaryName,
+      'full_launch'
+    );
+    if (fullBundle) {
+      return fullBundle;
     }
-
-    const liveLaunchStatusName =
-      fileEntries.find((name) => name.endsWith('live_launch_status_extract.json')) ??
-      fileEntries.find((name) => name.endsWith('live_launch_status.json')) ??
-      null;
-    const liveLaunchStatusResult =
-      liveLaunchStatusName == null
-        ? null
-        : await readOptionalJson(path.join(bundleDir, liveLaunchStatusName));
-
-    const gates = new Map<string, ParsedGateSummaryGate>();
-    const rawGates = Array.isArray(gateSummaryResult.payload.gates)
-      ? (gateSummaryResult.payload.gates as Array<Record<string, unknown>>)
-      : [];
-
-    for (const gate of rawGates) {
-      const id = typeof gate.id === 'string' ? gate.id : null;
-      const status = mapStatus(typeof gate.status === 'string' ? gate.status : null);
-      if (!id || !status) {
-        continue;
-      }
-      gates.set(id, {
-        id,
-        status,
-        summary: typeof gate.summary === 'string' ? gate.summary : id,
-        evidence: Array.isArray(gate.evidence)
-          ? gate.evidence.filter((value): value is string => typeof value === 'string')
-          : [],
-        raw: gate,
-      });
-    }
-
-    return {
-      dir: path.relative(artifactRoot, bundleDir),
-      generatedAt:
-        typeof gateSummaryResult.payload.generatedAt === 'string'
-          ? gateSummaryResult.payload.generatedAt
-          : gateSummaryResult.observedAt,
-      authoritativeBaseUrl:
-        typeof gateSummaryResult.payload.authoritativeBaseUrl === 'string'
-          ? normalizeLaunchBaseUrl(gateSummaryResult.payload.authoritativeBaseUrl)
-          : null,
-      verdict:
-        typeof gateSummaryResult.payload.verdict === 'string'
-          ? gateSummaryResult.payload.verdict
-          : null,
-      recommendation:
-        typeof gateSummaryResult.payload.recommendation === 'string'
-          ? gateSummaryResult.payload.recommendation
-          : null,
-      gates,
-      liveLaunchStatusExtractPath:
-        liveLaunchStatusName == null
-          ? null
-          : path.relative(artifactRoot, path.join(bundleDir, liveLaunchStatusName)),
-      liveLaunchStatusExtract: liveLaunchStatusResult?.payload ?? null,
-    } satisfies ParsedLaunchValidationBundle;
   }
 
   return null;
@@ -601,6 +654,11 @@ function gateObservation(
   const gate = bundle?.gates.get(gateId);
   if (!gate || !bundle) return null;
 
+  const resolveEvidencePath = (relativePath: string) =>
+    relativePath.startsWith('.artifacts/') || relativePath.startsWith(bundle.dir)
+      ? relativePath.replace(/\\/g, '/')
+      : path.posix.join(bundle.dir, relativePath).replace(/\\/g, '/');
+
   return {
     sourceId: 'latest_launch_bundle',
     sourceLabel,
@@ -608,12 +666,29 @@ function gateObservation(
     summary: note ? `${gate.summary} ${note}` : gate.summary,
     evidence: gate.evidence.map((relativePath) => ({
       label: `${sourceLabel} evidence`,
-      path: path.posix.join(bundle.dir, relativePath).replace(/\\/g, '/'),
+      path: resolveEvidencePath(relativePath),
     })),
     observedAt: bundle.generatedAt,
     priority: SOURCE_PRIORITY.latest_launch_bundle,
-    staleClaim: `${sourceLabel} disagrees with an older artifact and is treated as current launch-bundle truth.`,
+    staleClaim:
+      bundle.kind === 'repo_ready'
+        ? `${sourceLabel} reflects the freshest repo-ready validation bundle and overrides older launch artifacts for repo scope.`
+        : `${sourceLabel} disagrees with an older artifact and is treated as current launch-bundle truth.`,
   } satisfies FinalLaunchChecklistObservation;
+}
+
+function blocksVerdictForScope(
+  item: Pick<FinalLaunchChecklistItemDefinition, 'blocksVerdictIn'>,
+  scope: FinalLaunchChecklistScope
+) {
+  const blockingScope = item.blocksVerdictIn ?? 'both';
+  if (blockingScope === 'never') {
+    return false;
+  }
+  if (blockingScope === 'both') {
+    return true;
+  }
+  return blockingScope === scope;
 }
 
 function liveEndpointObservation(
@@ -668,11 +743,7 @@ function statefulObservation(
   } satisfies FinalLaunchChecklistObservation;
 }
 
-async function fetchJsonWithTimeout(
-  fetchImpl: typeof fetch,
-  url: string,
-  timeoutMs: number
-) {
+async function fetchJsonWithTimeout(fetchImpl: typeof fetch, url: string, timeoutMs: number) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -711,11 +782,7 @@ function commandBinary(name: string) {
   return process.platform === 'win32' ? `${name}.cmd` : name;
 }
 
-function runCapturedCommand(
-  command: string[],
-  env: Record<string, string>,
-  cwd: string
-) {
+function runCapturedCommand(command: string[], env: Record<string, string>, cwd: string) {
   const [bin, ...args] = command;
   const result = spawnSync(commandBinary(bin), args, {
     cwd,
@@ -752,10 +819,7 @@ async function upsertMarkedSection(filePath: string, content: string) {
 
   if (nextContent.includes(INDEX_SECTION_START) && nextContent.includes(INDEX_SECTION_END)) {
     nextContent = nextContent.replace(
-      new RegExp(
-        `${INDEX_SECTION_START}[\\s\\S]*?${INDEX_SECTION_END}`,
-        'm'
-      ),
+      new RegExp(`${INDEX_SECTION_START}[\\s\\S]*?${INDEX_SECTION_END}`, 'm'),
       managedSection
     );
   } else {
@@ -798,10 +862,13 @@ function buildMarkdownReport(report: FinalLaunchChecklistReport) {
     `# Proofound Final Launch Checklist Status`,
     '',
     `Generated: ${report.generatedAt}`,
+    `Scope: \`${report.scope}\``,
     `Workspace: \`${report.workspaceRoot}\``,
     `Git: \`${report.gitBranch}\` @ \`${report.gitHead}\``,
     `Verdict: \`${report.verdict}\``,
-    report.liveBaseUrl ? `Live base URL: \`${report.liveBaseUrl}\`` : 'Live base URL: not configured',
+    report.liveBaseUrl
+      ? `Live base URL: \`${report.liveBaseUrl}\``
+      : 'Live base URL: not configured',
     report.latestLaunchBundleDir
       ? `Latest launch-validation bundle: \`${report.latestLaunchBundleDir}\``
       : 'Latest launch-validation bundle: none found',
@@ -819,6 +886,15 @@ function buildMarkdownReport(report: FinalLaunchChecklistReport) {
       'No true blockers are currently recorded.'
     ),
     '',
+    `## External Prerequisites`,
+    '',
+    markdownList(
+      report.externalPrerequisites.map(
+        (item) => `${item.section} — ${item.label}: ${item.summary}`
+      ),
+      'No external prerequisites are currently outstanding.'
+    ),
+    '',
     `## Missing Evidence`,
     '',
     markdownList(
@@ -833,15 +909,17 @@ function buildMarkdownReport(report: FinalLaunchChecklistReport) {
     return [
       `## ${section}`,
       '',
-      ...sectionItems.flatMap((item) => [
-        `- [${item.status}] ${item.label}`,
-        `  - Summary: ${item.summary}`,
-        `  - Evidence: ${buildEvidenceText(item.evidence)}`,
-        item.blockerIds.length > 0 ? `  - Blocked by: ${item.blockerIds.join(', ')}` : '',
-        item.retiredStaleClaims.length > 0
-          ? `  - Retired stale claims: ${item.retiredStaleClaims.join(' | ')}`
-          : '',
-      ].filter(Boolean)),
+      ...sectionItems.flatMap((item) =>
+        [
+          `- [${item.status}] ${item.label}`,
+          `  - Summary: ${item.summary}`,
+          `  - Evidence: ${buildEvidenceText(item.evidence)}`,
+          item.blockerIds.length > 0 ? `  - Blocked by: ${item.blockerIds.join(', ')}` : '',
+          item.retiredStaleClaims.length > 0
+            ? `  - Retired stale claims: ${item.retiredStaleClaims.join(' | ')}`
+            : '',
+        ].filter(Boolean)
+      ),
       '',
     ];
   });
@@ -849,10 +927,7 @@ function buildMarkdownReport(report: FinalLaunchChecklistReport) {
   const staleClaimsBlock = [
     `## Retired Stale Claims`,
     '',
-    markdownList(
-      report.retiredStaleClaims,
-      'No explicit stale claims were retired in this run.'
-    ),
+    markdownList(report.retiredStaleClaims, 'No explicit stale claims were retired in this run.'),
     '',
   ];
 
@@ -880,9 +955,12 @@ async function resolveGitValue(args: string[], workspaceRoot: string) {
   return result.output.split(/\r?\n/)[0]?.trim() || 'unknown';
 }
 
-async function buildContext(options: GenerateFinalLaunchChecklistOptions): Promise<FinalLaunchChecklistContext> {
+async function buildContext(
+  options: GenerateFinalLaunchChecklistOptions
+): Promise<FinalLaunchChecklistContext> {
   const workspaceRoot = options.workspaceRoot ?? process.cwd();
   const now = options.now ?? new Date();
+  const scope = options.scope ?? 'repo';
   const generatedAt = now.toISOString();
   const currentDate = getCurrentDate(now);
   const outputDir = path.join(
@@ -918,19 +996,28 @@ async function buildContext(options: GenerateFinalLaunchChecklistOptions): Promi
     reviewRouteTestFile,
     uploadsPrivacyTestFile,
     uploadsLifecycleQueueTestFile,
-    latestLaunchBundle,
+    latestRepoReadyBundle,
+    latestFullLaunchBundle,
   ] = await Promise.all([
     resolveGitValue(['rev-parse', 'HEAD'], workspaceRoot),
     resolveGitValue(['rev-parse', '--abbrev-ref', 'HEAD'], workspaceRoot),
-    readOptionalFile(path.join(workspaceRoot, '.artifacts/proofound-current-state-reality-check.md')),
+    readOptionalFile(
+      path.join(workspaceRoot, '.artifacts/proofound-current-state-reality-check.md')
+    ),
     readOptionalFile(path.join(workspaceRoot, 'docs/verification-checklist.md')),
     readOptionalFile(path.join(workspaceRoot, '.artifacts/proofound-route-inventory.md')),
-    readOptionalFile(path.join(workspaceRoot, '.artifacts/proofound-implementation-status-snapshot.md')),
+    readOptionalFile(
+      path.join(workspaceRoot, '.artifacts/proofound-implementation-status-snapshot.md')
+    ),
     readOptionalFile(path.join(workspaceRoot, '.artifacts/launch-readiness-summary.md')),
     readOptionalFile(path.join(workspaceRoot, '.artifacts/proofound-priority-file-map.md')),
     readOptionalFile(path.join(workspaceRoot, 'LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md')),
-    readOptionalFile(path.join(workspaceRoot, 'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md')),
-    readOptionalFile(path.join(workspaceRoot, 'PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md')),
+    readOptionalFile(
+      path.join(workspaceRoot, 'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md')
+    ),
+    readOptionalFile(
+      path.join(workspaceRoot, 'PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md')
+    ),
     readOptionalFile(path.join(workspaceRoot, 'Proofound_Project_Specification_2026-03-11.md')),
     readOptionalFile(path.join(workspaceRoot, 'README.md')),
     readOptionalFile(path.join(workspaceRoot, 'docs/launch-operations-mvp.md')),
@@ -940,28 +1027,40 @@ async function buildContext(options: GenerateFinalLaunchChecklistOptions): Promi
     readOptionalFile(path.join(workspaceRoot, 'docs/internal-ops/verification-review-sop.md')),
     readOptionalFile(path.join(workspaceRoot, 'docs/internal-ops/redaction-risky-upload-sop.md')),
     readOptionalFile(path.join(workspaceRoot, 'docs/internal-ops/reveal-privacy-dispute-sop.md')),
-    readOptionalFile(path.join(workspaceRoot, 'docs/internal-ops/engagement-verification-evidence-checklist.md')),
+    readOptionalFile(
+      path.join(workspaceRoot, 'docs/internal-ops/engagement-verification-evidence-checklist.md')
+    ),
     readOptionalFile(path.join(workspaceRoot, 'docs/internal-ops/assignment-quality-checklist.md')),
     readOptionalFile(path.join(workspaceRoot, 'tests/api/assignments-publish-route.test.ts')),
     readOptionalFile(path.join(workspaceRoot, 'tests/api/org-match-review-route.test.ts')),
     readOptionalFile(path.join(workspaceRoot, 'tests/lib/uploads-privacy.test.ts')),
     readOptionalFile(path.join(workspaceRoot, 'tests/lib/uploads-lifecycle-queue.test.ts')),
-    findLatestLaunchValidationBundle(workspaceRoot),
+    findLatestLaunchValidationBundle(workspaceRoot, 'repo'),
+    findLatestLaunchValidationBundle(workspaceRoot, 'full'),
   ]);
 
+  const latestLaunchBundle =
+    scope === 'repo' ? (latestRepoReadyBundle ?? latestFullLaunchBundle) : latestFullLaunchBundle;
+
   const liveBaseUrl =
-    options.liveBaseUrl != null
+    scope === 'full' && options.liveBaseUrl != null
       ? normalizeLaunchBaseUrl(options.liveBaseUrl)
-      : latestLaunchBundle?.authoritativeBaseUrl ?? null;
+      : scope === 'full'
+        ? (latestFullLaunchBundle?.authoritativeBaseUrl ?? null)
+        : null;
 
   await fs.mkdir(outputDir, { recursive: true });
 
   let liveApiHealth: LiveEndpointResult | null = null;
   let liveLaunchStatus: LiveEndpointResult | null = null;
-  if (liveBaseUrl && options.fetchImpl) {
+  if (scope === 'full' && liveBaseUrl && options.fetchImpl) {
     const [healthResult, launchStatusResult] = await Promise.all([
       fetchJsonWithTimeout(options.fetchImpl, `${liveBaseUrl}/api/health`, 10_000),
-      fetchJsonWithTimeout(options.fetchImpl, `${liveBaseUrl}/api/monitoring/launch-status`, 12_000),
+      fetchJsonWithTimeout(
+        options.fetchImpl,
+        `${liveBaseUrl}/api/monitoring/launch-status`,
+        12_000
+      ),
     ]);
 
     if (healthResult.payload || healthResult.error || healthResult.status != null) {
@@ -990,8 +1089,15 @@ async function buildContext(options: GenerateFinalLaunchChecklistOptions): Promi
       };
     }
 
-    if (launchStatusResult.payload || launchStatusResult.error || launchStatusResult.status != null) {
-      const launchStatusPath = path.join(outputDir, 'final-launch-checklist-live-launch-status.json');
+    if (
+      launchStatusResult.payload ||
+      launchStatusResult.error ||
+      launchStatusResult.status != null
+    ) {
+      const launchStatusPath = path.join(
+        outputDir,
+        'final-launch-checklist-live-launch-status.json'
+      );
       await fs.writeFile(
         launchStatusPath,
         `${JSON.stringify(
@@ -1062,6 +1168,7 @@ async function buildContext(options: GenerateFinalLaunchChecklistOptions): Promi
   ];
 
   return {
+    scope,
     workspaceRoot,
     generatedAt,
     currentDate,
@@ -1071,6 +1178,8 @@ async function buildContext(options: GenerateFinalLaunchChecklistOptions): Promi
     artifactRoot: options.artifactRoot ?? '.artifacts',
     outputDir,
     latestLaunchBundle,
+    latestRepoReadyBundle,
+    latestFullLaunchBundle,
     currentStateRealityCheck: parseChecklistRowsFromMarkdown(
       currentStateRealityFile?.content ?? '',
       '.artifacts/proofound-current-state-reality-check.md',
@@ -1110,17 +1219,11 @@ async function buildContext(options: GenerateFinalLaunchChecklistOptions): Promi
   };
 }
 
-function realityRow(
-  context: FinalLaunchChecklistContext,
-  label: string
-) {
+function realityRow(context: FinalLaunchChecklistContext, label: string) {
   return context.currentStateRealityCheck.get(normalizeChecklistLabel(label)) ?? null;
 }
 
-function verificationRow(
-  context: FinalLaunchChecklistContext,
-  label: string
-) {
+function verificationRow(context: FinalLaunchChecklistContext, label: string) {
   return context.verificationChecklist.get(normalizeChecklistLabel(label)) ?? null;
 }
 
@@ -1195,15 +1298,24 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
     ],
     evaluateDirect: (context) =>
       compactObservations([
-        checklistRowObservation(realityRow(context, 'Proof Pack canonicality'), 'current_state_reality_check'),
-        checklistRowObservation(verificationRow(context, 'Proof Pack canonicality'), 'verification_checklist'),
+        checklistRowObservation(
+          realityRow(context, 'Proof Pack canonicality'),
+          'current_state_reality_check'
+        ),
+        checklistRowObservation(
+          verificationRow(context, 'Proof Pack canonicality'),
+          'verification_checklist'
+        ),
       ]),
   },
   {
     id: 'product_portfolio_vs_intro_distinct',
     section: 'Product',
     label: 'Portfolio-ready and intro-eligible are clearly distinct',
-    authorityRefs: ['Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md', 'LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md'],
+    authorityRefs: [
+      'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md',
+      'LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md',
+    ],
     evidenceSources: [
       'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md',
       'PRD_Proof_First_Hiring_Corridor_MVP.aligned-rewrite.2026-03-11.md',
@@ -1217,7 +1329,11 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
         sourcePath: 'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md',
         sourceLabel: 'Locked MVP source of truth',
         summary: 'Locked MVP authority explicitly separates portfolio-ready from intro-eligible.',
-        patterns: [/Portfolio-ready/i, /Intro-eligible/i, /Make portfolio-ready easy\. Make intro-eligible hard\./i],
+        patterns: [
+          /Portfolio-ready/i,
+          /Intro-eligible/i,
+          /Make portfolio-ready easy\. Make intro-eligible hard\./i,
+        ],
       }),
       ...passIfDocs(context, {
         markdown: context.launchRunbook,
@@ -1238,37 +1354,27 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
       'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md',
       'tests/ui/education-form-skill-picker.test.tsx',
       'tests/ui/profile-dialogs-edit-routing.test.tsx',
+      'tests/actions/onboarding-private-context-scaffolding.test.ts',
     ],
-    evaluateDirect: (context) => {
-      const evidence = lineMatch(context.lockedMvp, /private work \/ volunteering \/ education scaffolding/i);
-      if (evidence) {
-        return [
-          {
-            sourceId: 'docs',
-            sourceLabel: 'Locked MVP source of truth',
-            status: 'UNVERIFIED',
-            summary:
-              'Authority docs define private work, volunteering, and education scaffolding, but this checklist line has no fresh runtime evidence in the current bundle.',
-            evidence: [
-              {
-                label: 'Locked MVP source of truth',
-                path: 'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md',
-                note: evidence,
-              },
-            ],
-            observedAt: null,
-            priority: SOURCE_PRIORITY.docs,
-          },
-        ];
-      }
-      return [];
-    },
+    evaluateDirect: (context) =>
+      compactObservations([
+        gateObservation(
+          context.latestLaunchBundle,
+          'private_context_scaffolding',
+          context.scope === 'repo'
+            ? 'Repo-ready private context validation'
+            : 'Latest launch bundle private context validation'
+        ),
+      ]),
   },
   {
     id: 'product_public_portfolio_safe_and_separate',
     section: 'Product',
     label: 'Public portfolio is calm, safe, and separate from review reveal',
-    authorityRefs: ['Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md', 'LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md'],
+    authorityRefs: [
+      'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md',
+      'LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md',
+    ],
     evidenceSources: [
       '.artifacts/launch-validation-*/24_gate_summary.json',
       '.artifacts/proofound-current-state-reality-check.md',
@@ -1276,7 +1382,9 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
     ],
     evaluateDirect: (context) => {
       const observations: FinalLaunchChecklistObservation[] = [];
-      const smokeGate = context.latestLaunchBundle?.gates.get('live_launch_smoke_artifact_refresh');
+      const smokeGateId =
+        context.scope === 'repo' ? 'public_org_trust_smoke' : 'live_launch_smoke_artifact_refresh';
+      const smokeGate = context.latestLaunchBundle?.gates.get(smokeGateId);
       const revealRow = verificationRow(context, 'candidate-consented reveal');
       const blindRow = verificationRow(context, 'blind-by-default review');
 
@@ -1348,7 +1456,12 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
         sourceLabel: 'Assignment quality checklist',
         summary:
           'Assignment-quality SOP explicitly checks business value, real work, proof expectation, and practical constraints before publish.',
-        patterns: [/business value/i, /real outcomes/i, /proof expectation/i, /practical constraints/i],
+        patterns: [
+          /business value/i,
+          /real outcomes/i,
+          /proof expectation/i,
+          /practical constraints/i,
+        ],
       }).map((observation) => ({
         ...observation,
         status: 'UNVERIFIED' as const,
@@ -1414,7 +1527,8 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
           sourceId: 'docs',
           sourceLabel: 'Assignment quality checklist',
           status: 'PASS',
-          summary: 'Manual review handling stays reason-coded through checklist-point operator notes.',
+          summary:
+            'Manual review handling stays reason-coded through checklist-point operator notes.',
           evidence: [
             {
               label: 'Assignment quality checklist',
@@ -1470,7 +1584,10 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
     ],
     evaluateDirect: (context) => {
       const corridor = checklistRowObservation(
-        realityRow(context, 'review -> intro -> reveal -> interview -> decision -> hire -> engagement verification'),
+        realityRow(
+          context,
+          'review -> intro -> reveal -> interview -> decision -> hire -> engagement verification'
+        ),
         'current_state_reality_check'
       );
       if (corridor) {
@@ -1527,11 +1644,7 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
     ],
     evaluateDirect: (context) =>
       compactObservations([
-        gateObservation(
-          context.latestLaunchBundle,
-          'prod_boot',
-          'Latest launch bundle prod boot'
-        ),
+        gateObservation(context.latestLaunchBundle, 'prod_boot', 'Latest launch bundle prod boot'),
       ]),
   },
   {
@@ -1604,7 +1717,8 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
         return [
           docObservation({
             status: 'PASS',
-            summary: 'Locked MVP and authz policy keep the canonical organization role model explicit.',
+            summary:
+              'Locked MVP and authz policy keep the canonical organization role model explicit.',
             sourceId: 'docs',
             sourceLabel: 'Locked MVP source of truth',
             sourcePath: 'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md',
@@ -1660,7 +1774,11 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
         sourceLabel: 'Redaction / risky upload SOP',
         summary:
           'Risky-upload SOP requires sanitized filenames, stored review reasons, and privacy-safe handling instead of restoring original metadata.',
-        patterns: [/sanitized filename/i, /metadata/i, /Do not restore identity-bearing names or metadata/i],
+        patterns: [
+          /sanitized filename/i,
+          /metadata/i,
+          /Do not restore identity-bearing names or metadata/i,
+        ],
       }).map((observation) => ({
         ...observation,
         status: 'UNVERIFIED' as const,
@@ -1740,11 +1858,61 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
       'src/app/api/monitoring/launch-status/route.ts',
     ],
     evaluateDirect: (context) => {
+      if (context.scope === 'repo' && context.latestLaunchBundle) {
+        const bundleDir = context.latestLaunchBundle.dir;
+        const resolveEvidencePath = (relativePath: string) =>
+          relativePath.startsWith('.artifacts/') || relativePath.startsWith(bundleDir)
+            ? relativePath.replace(/\\/g, '/')
+            : path.posix.join(bundleDir, relativePath).replace(/\\/g, '/');
+        const smokeGate = context.latestLaunchBundle.gates.get(
+          'live_launch_smoke_artifact_refresh'
+        );
+        const routeGate = context.latestLaunchBundle.gates.get('launch_status_route_logic');
+        if (smokeGate || routeGate) {
+          const statuses = [smokeGate?.status, routeGate?.status].filter(
+            (status): status is FinalLaunchChecklistStatus => status != null
+          );
+          const status = statuses.every((value) => value === 'PASS')
+            ? 'PASS'
+            : statuses.some((value) => value === 'FAIL' || value === 'BLOCKED')
+              ? 'FAIL'
+              : 'UNVERIFIED';
+
+          return [
+            {
+              sourceId: 'latest_launch_bundle',
+              sourceLabel: 'Repo-ready launch-status evidence',
+              status,
+              summary:
+                status === 'PASS'
+                  ? 'Repo-ready launch-status route tests and smoke refresh both passed on fresh local evidence.'
+                  : 'Repo-ready launch-status route logic or smoke refresh did not pass on fresh local evidence.',
+              evidence: [
+                ...(routeGate?.evidence ?? []).map((relativePath) => ({
+                  label: 'Launch-status route evidence',
+                  path: resolveEvidencePath(relativePath),
+                })),
+                ...(smokeGate?.evidence ?? []).map((relativePath) => ({
+                  label: 'Launch smoke evidence',
+                  path: resolveEvidencePath(relativePath),
+                })),
+              ],
+              observedAt: context.latestLaunchBundle.generatedAt,
+              priority: SOURCE_PRIORITY.latest_launch_bundle,
+            } satisfies FinalLaunchChecklistObservation,
+          ];
+        }
+      }
+
       const observations: FinalLaunchChecklistObservation[] = [];
+      const launchStatusGateId =
+        context.scope === 'repo' ? 'launch_status_route_logic' : 'live_launch_status';
       const liveStatusGate = gateObservation(
         context.latestLaunchBundle,
-        'live_launch_status',
-        'Latest launch bundle live launch-status gate'
+        launchStatusGateId,
+        context.scope === 'repo'
+          ? 'Repo-ready launch-status route logic'
+          : 'Latest launch bundle live launch-status gate'
       );
       if (liveStatusGate) observations.push(liveStatusGate);
 
@@ -1787,7 +1955,10 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
       if (stateful) observations.push(stateful);
 
       const reality = checklistRowObservation(
-        realityRow(context, 'review -> intro -> reveal -> interview -> decision -> hire -> engagement verification'),
+        realityRow(
+          context,
+          'review -> intro -> reveal -> interview -> decision -> hire -> engagement verification'
+        ),
         'current_state_reality_check'
       );
       if (reality) observations.push(reality);
@@ -1853,7 +2024,16 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
       '.artifacts/launch-validation-*/21_live_launch_smoke_report.json',
       'docs/internal-ops/reveal-privacy-dispute-sop.md',
     ],
-    evaluateDirect: () => [],
+    evaluateDirect: (context) =>
+      compactObservations([
+        gateObservation(
+          context.latestLaunchBundle,
+          'manual_privacy_sweep',
+          context.scope === 'repo'
+            ? 'Repo-ready manual privacy validation'
+            : 'Latest launch bundle manual privacy validation'
+        ),
+      ]),
   },
   {
     id: 'qa_workflow_email_privacy_sweep',
@@ -1864,7 +2044,16 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
       'agent/checklists/verification.md',
       'docs/internal-ops/workflow-comms-templates.md',
     ],
-    evaluateDirect: () => [],
+    evaluateDirect: (context) =>
+      compactObservations([
+        gateObservation(
+          context.latestLaunchBundle,
+          'workflow_email_privacy',
+          context.scope === 'repo'
+            ? 'Repo-ready workflow email privacy validation'
+            : 'Latest launch bundle workflow email privacy validation'
+        ),
+      ]),
   },
   {
     id: 'qa_archived_route_and_surface_tests',
@@ -1949,10 +2138,7 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
     section: 'Ops',
     label: 'Verification queue has owner and SOP',
     authorityRefs: ['LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md'],
-    evidenceSources: [
-      'docs/internal-ops/index.md',
-      'docs/internal-ops/verification-review-sop.md',
-    ],
+    evidenceSources: ['docs/internal-ops/index.md', 'docs/internal-ops/verification-review-sop.md'],
     evaluateDirect: (context) =>
       passIfDocs(context, {
         markdown: context.internalOpsIndex,
@@ -1960,7 +2146,11 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
         sourcePath: 'docs/internal-ops/index.md',
         sourceLabel: 'Internal ops SOP index',
         summary: 'Internal ops index assigns an owner and queue mapping for verification review.',
-        patterns: [/verification-review-sop\.md/i, /Support \/ verification lead/i, /verification/i],
+        patterns: [
+          /verification-review-sop\.md/i,
+          /Support \/ verification lead/i,
+          /verification/i,
+        ],
       }),
   },
   {
@@ -1979,7 +2169,11 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
         sourcePath: 'docs/internal-ops/index.md',
         sourceLabel: 'Internal ops SOP index',
         summary: 'Internal ops index maps the redaction / risky upload queue to an owner and SOP.',
-        patterns: [/redaction-risky-upload-sop\.md/i, /correction_revocation/i, /Support \/ verification lead/i],
+        patterns: [
+          /redaction-risky-upload-sop\.md/i,
+          /correction_revocation/i,
+          /Support \/ verification lead/i,
+        ],
       }),
   },
   {
@@ -2006,9 +2200,7 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
     section: 'Ops',
     label: 'Engagement verification evidence checklist exists',
     authorityRefs: ['Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md'],
-    evidenceSources: [
-      'docs/internal-ops/engagement-verification-evidence-checklist.md',
-    ],
+    evidenceSources: ['docs/internal-ops/engagement-verification-evidence-checklist.md'],
     evaluateDirect: (context) =>
       passIfDocs(context, {
         markdown: context.engagementVerificationChecklist,
@@ -2016,26 +2208,34 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
         sourcePath: 'docs/internal-ops/engagement-verification-evidence-checklist.md',
         sourceLabel: 'Engagement verification evidence checklist',
         summary: 'A dedicated engagement-verification evidence checklist exists for pilot ops.',
-        patterns: [/Owner: `Support \/ verification lead`/i, /engagement verification/i, /queue note/i],
+        patterns: [
+          /Owner: `Support \/ verification lead`/i,
+          /engagement verification/i,
+          /queue note/i,
+        ],
       }),
   },
   {
     id: 'ops_incident_roles_assigned',
     section: 'Ops',
+    blocksVerdictIn: 'full',
     label: 'Incident owner / support lead roles are assigned',
     authorityRefs: ['LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md'],
-    evidenceSources: [
-      'LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md',
-      'docs/internal-ops/index.md',
-    ],
+    evidenceSources: ['LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md', 'docs/internal-ops/index.md'],
     evaluateDirect: (context) =>
       passIfDocs(context, {
         markdown: context.internalOpsIndex,
         observedAt: null,
         sourcePath: 'docs/internal-ops/index.md',
         sourceLabel: 'Internal ops SOP index',
-        summary: 'Internal ops docs name live owners for pilot operations, but they do not identify specific humans.',
-        patterns: [/Live owners/i, /Support \/ verification lead/i, /Engineering on-call/i, /Product \/ ops lead/i],
+        summary:
+          'Internal ops docs name live owners for pilot operations, but they do not identify specific humans.',
+        patterns: [
+          /Live owners/i,
+          /Support \/ verification lead/i,
+          /Engineering on-call/i,
+          /Product \/ ops lead/i,
+        ],
       }).map((observation) => ({
         ...observation,
         status: 'UNVERIFIED',
@@ -2046,6 +2246,7 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
   {
     id: 'ops_critical_alerts_configured',
     section: 'Ops',
+    blocksVerdictIn: 'full',
     label: 'Critical alerts are configured',
     authorityRefs: ['LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md'],
     evidenceSources: [
@@ -2069,8 +2270,12 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
   {
     id: 'ops_backup_restore_verified',
     section: 'Ops',
+    blocksVerdictIn: 'full',
     label: 'Backups and restore discipline are verified',
-    authorityRefs: ['LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md', 'agent/checklists/verification.md'],
+    authorityRefs: [
+      'LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md',
+      'agent/checklists/verification.md',
+    ],
     evidenceSources: [
       'docs/launch-restore-drill.md',
       'agent/checklists/verification.md',
@@ -2101,17 +2306,15 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
       'tests/api/launch-page-inventory.test.ts',
     ],
     evaluateDirect: (context) =>
-      passIfDocs(context, {
-        markdown: context.internalOpsIndex,
-        observedAt: null,
-        sourcePath: 'docs/internal-ops/index.md',
-        sourceLabel: 'Internal ops SOP index',
-        summary: 'Internal ops docs and route surfaces exist, but this checklist lacks fresh usability evidence for the admin surfaces themselves.',
-        patterns: [/Internal queue view: `\/admin\/verification`/i, /Queue API/i, /Audit trail view/i],
-      }).map((observation) => ({
-        ...observation,
-        status: 'UNVERIFIED',
-      })),
+      compactObservations([
+        gateObservation(
+          context.latestLaunchBundle,
+          'internal_admin_surfaces',
+          context.scope === 'repo'
+            ? 'Repo-ready internal admin surface validation'
+            : 'Latest launch bundle internal admin surface validation'
+        ),
+      ]),
   },
   {
     id: 'founder_first_corridor_chosen',
@@ -2128,7 +2331,8 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
         observedAt: null,
         sourcePath: 'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md',
         sourceLabel: 'Locked MVP source of truth',
-        summary: 'The locked MVP explicitly chooses a proof-first hiring corridor centered on Proof Packs.',
+        summary:
+          'The locked MVP explicitly chooses a proof-first hiring corridor centered on Proof Packs.',
         patterns: [/proof-first/i, /hiring corridor/i, /Proof Packs/i],
       }),
     ],
@@ -2136,6 +2340,7 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
   {
     id: 'founder_icp_design_partner_locked',
     section: 'Founder / GTM',
+    blocksVerdictIn: 'full',
     label: 'ICP and design-partner target list are locked',
     authorityRefs: ['Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md'],
     evidenceSources: [
@@ -2147,6 +2352,7 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
   {
     id: 'founder_pilot_package_documented',
     section: 'Founder / GTM',
+    blocksVerdictIn: 'full',
     label: 'Pilot package, scope, and case-study terms are documented',
     authorityRefs: ['Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md'],
     evidenceSources: ['Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md'],
@@ -2155,6 +2361,7 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
   {
     id: 'founder_outbound_and_homepage_match',
     section: 'Founder / GTM',
+    blocksVerdictIn: 'full',
     label: 'Founder outbound and homepage messaging match the wedge',
     authorityRefs: ['Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md'],
     evidenceSources: ['README.md', 'src/app/page.tsx'],
@@ -2163,6 +2370,7 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
   {
     id: 'founder_public_story_signal_over_cvs',
     section: 'Founder / GTM',
+    blocksVerdictIn: 'full',
     label: 'Public story sells stronger signal than CVs, not broad platform vision',
     authorityRefs: ['Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md'],
     evidenceSources: [
@@ -2173,10 +2381,7 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
     evaluateDirect: (context) => {
       if (
         textContainsAll(context.lockedMvp, [/proof instead of profile theater/i]) &&
-        textContainsAll(
-          context.launchReadinessSummary,
-          [/public and corridor flows/i]
-        )
+        textContainsAll(context.launchReadinessSummary, [/public and corridor flows/i])
       ) {
         return [
           docObservation({
@@ -2197,6 +2402,7 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
   {
     id: 'founder_candidate_supply_plan',
     section: 'Founder / GTM',
+    blocksVerdictIn: 'full',
     label: 'Candidate supply-seeding plan exists for the chosen corridor',
     authorityRefs: ['Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md'],
     evidenceSources: ['Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md'],
@@ -2205,6 +2411,7 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
   {
     id: 'founder_org_onboarding_playbook',
     section: 'Founder / GTM',
+    blocksVerdictIn: 'full',
     label: 'Org onboarding playbook exists',
     authorityRefs: ['Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md'],
     evidenceSources: [
@@ -2216,6 +2423,7 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
   {
     id: 'founder_go_no_go_signed_after_green',
     section: 'Founder / GTM',
+    blocksVerdictIn: 'full',
     label: 'Go/no-go is signed only after fresh evidence is green',
     authorityRefs: ['LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md'],
     evidenceSources: [
@@ -2236,7 +2444,8 @@ export const FINAL_LAUNCH_CHECKLIST_DEFINITIONS: FinalLaunchChecklistItemDefinit
             sourceId: 'latest_launch_bundle',
             sourceLabel: 'Latest launch bundle verdict',
             status: 'UNVERIFIED',
-            summary: 'Latest launch bundle still recommends NO_GO, so launch signoff should remain blocked until fresh evidence turns green.',
+            summary:
+              'Latest launch bundle still recommends NO_GO, so launch signoff should remain blocked until fresh evidence turns green.',
             evidence: [
               {
                 label: 'Latest launch bundle',
@@ -2277,6 +2486,8 @@ function evaluateItemDirect(
       blockerIds: [],
       retiredStaleClaims,
       sourceLabel: selected.sourceLabel,
+      blocksVerdict: blocksVerdictForScope(definition, context.scope),
+      blockingScope: definition.blocksVerdictIn ?? 'both',
     } satisfies FinalLaunchChecklistItemResult;
   }
 
@@ -2295,6 +2506,8 @@ function evaluateItemDirect(
     blockerIds: [],
     retiredStaleClaims: [],
     sourceLabel: 'No evidence selected',
+    blocksVerdict: blocksVerdictForScope(definition, context.scope),
+    blockingScope: definition.blocksVerdictIn ?? 'both',
   } satisfies FinalLaunchChecklistItemResult;
 }
 
@@ -2372,18 +2585,22 @@ export async function generateFinalLaunchChecklistReport(
 
   const statusCounts = FINAL_LAUNCH_CHECKLIST_STATUS_VALUES.reduce<
     Record<FinalLaunchChecklistStatus, number>
-  >((accumulator, status) => {
-    accumulator[status] = items.filter((item) => item.status === status).length;
-    return accumulator;
-  }, {
-    PASS: 0,
-    FAIL: 0,
-    BLOCKED: 0,
-    UNVERIFIED: 0,
-  });
+  >(
+    (accumulator, status) => {
+      accumulator[status] = items.filter((item) => item.status === status).length;
+      return accumulator;
+    },
+    {
+      PASS: 0,
+      FAIL: 0,
+      BLOCKED: 0,
+      UNVERIFIED: 0,
+    }
+  );
 
-  const trueBlockers = items.filter(
-    (item) => item.status === 'FAIL' || (item.status === 'BLOCKED' && item.blockerIds.length === 0)
+  const trueBlockers = items.filter((item) => item.blocksVerdict && item.status !== 'PASS');
+  const externalPrerequisites = items.filter(
+    (item) => !item.blocksVerdict && item.status !== 'PASS'
   );
   const missingEvidence = items.filter((item) => item.status === 'UNVERIFIED');
   const retiredStaleClaims = [
@@ -2403,21 +2620,23 @@ export async function generateFinalLaunchChecklistReport(
   );
 
   const report: FinalLaunchChecklistReport = {
+    scope: context.scope,
     generatedAt: context.generatedAt,
     currentDate: context.currentDate,
     workspaceRoot: context.workspaceRoot,
     gitHead: context.gitHead,
     gitBranch: context.gitBranch,
-    verdict: trueBlockers.length === 0 && statusCounts.BLOCKED === 0 ? 'READY' : 'NOT_READY',
+    verdict: trueBlockers.length === 0 ? 'READY' : 'NOT_READY',
     includeStateful: context.includeStateful,
     liveBaseUrl:
       options.liveBaseUrl != null
         ? normalizeLaunchBaseUrl(options.liveBaseUrl)
-        : context.latestLaunchBundle?.authoritativeBaseUrl ?? null,
+        : (context.latestLaunchBundle?.authoritativeBaseUrl ?? null),
     latestLaunchBundleDir: context.latestLaunchBundle?.dir ?? null,
     statusCounts,
     items,
     trueBlockers,
+    externalPrerequisites,
     missingEvidence,
     retiredStaleClaims,
     outputs: {
@@ -2430,8 +2649,16 @@ export async function generateFinalLaunchChecklistReport(
   const jsonReport = buildJsonReport(report);
 
   await fs.mkdir(context.outputDir, { recursive: true });
-  await fs.writeFile(path.join(context.outputDir, 'final-launch-checklist-status.md'), markdownReport, 'utf8');
-  await fs.writeFile(path.join(context.outputDir, 'final-launch-checklist-status.json'), jsonReport, 'utf8');
+  await fs.writeFile(
+    path.join(context.outputDir, 'final-launch-checklist-status.md'),
+    markdownReport,
+    'utf8'
+  );
+  await fs.writeFile(
+    path.join(context.outputDir, 'final-launch-checklist-status.json'),
+    jsonReport,
+    'utf8'
+  );
   await writeIndexSurfaces(report);
 
   return report;

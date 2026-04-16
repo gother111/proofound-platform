@@ -51,6 +51,9 @@ export const LAUNCH_SMOKE_CORRIDOR_VALUES = [
 ] as const;
 export type LaunchSmokeCorridor = (typeof LAUNCH_SMOKE_CORRIDOR_VALUES)[number];
 
+export const LAUNCH_SMOKE_SCOPE_VALUES = ['repo', 'full'] as const;
+export type LaunchSmokeScope = (typeof LAUNCH_SMOKE_SCOPE_VALUES)[number];
+
 export const LAUNCH_SMOKE_FRESHNESS_STATE_VALUES = ['fresh', 'stale', 'missing'] as const;
 export type LaunchSmokeFreshnessState = (typeof LAUNCH_SMOKE_FRESHNESS_STATE_VALUES)[number];
 
@@ -215,6 +218,23 @@ export const LAUNCH_SMOKE_MATRIX: LaunchSmokeScenario[] = [
     expectedState: 'privacy_no_leak_enforced',
   },
 ];
+
+export const REPO_READY_LAUNCH_SMOKE_SCENARIO_IDS = [
+  'public_individual_portfolio_visible',
+  'proof_creation_case',
+  'public_org_trust_fixture_live',
+  'hidden_portfolio_protected',
+  'privacy_no_leak_case',
+] as const satisfies readonly LaunchSmokeScenario['id'][];
+
+export function getLaunchSmokeMatrix(scope: LaunchSmokeScope = 'full'): LaunchSmokeScenario[] {
+  if (scope === 'full') {
+    return LAUNCH_SMOKE_MATRIX;
+  }
+
+  const repoScenarioIds = new Set<string>(REPO_READY_LAUNCH_SMOKE_SCENARIO_IDS);
+  return LAUNCH_SMOKE_MATRIX.filter((scenario) => repoScenarioIds.has(scenario.id));
+}
 
 export type LaunchMonitorDefinition =
   | {

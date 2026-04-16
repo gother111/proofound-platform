@@ -306,18 +306,20 @@ describe('launch synthetic monitor persistence', () => {
 
   it('builds a ready persisted snapshot from fresh endpoint rows plus a fresh smoke artifact', async () => {
     (db.execute as any).mockResolvedValue(
-      LAUNCH_MONITOR_DEFINITIONS.map((definition) => ({
-        monitor_key: definition.monitorKey,
-        monitor_group: definition.monitorGroup,
-        status: 'pass',
-        severity: definition.severity,
-        response_time_ms: 42,
-        expected_state: definition.expectedState,
-        observed_state: definition.expectedState,
-        failure_class: null,
-        checked_at: '2026-03-12T10:58:00.000Z',
-        details: {},
-      }))
+      LAUNCH_MONITOR_DEFINITIONS.filter((definition) => definition.kind === 'http').map(
+        (definition) => ({
+          monitor_key: definition.monitorKey,
+          monitor_group: definition.monitorGroup,
+          status: 'pass',
+          severity: definition.severity,
+          response_time_ms: 42,
+          expected_state: definition.expectedState,
+          observed_state: definition.expectedState,
+          failure_class: null,
+          checked_at: '2026-03-12T10:58:00.000Z',
+          details: {},
+        })
+      )
     );
 
     (fs.readFile as any).mockResolvedValue(
@@ -341,6 +343,55 @@ describe('launch synthetic monitor persistence', () => {
     expect(result.rows).toHaveLength(LAUNCH_MONITOR_DEFINITIONS.length);
     expect(result.missingMonitorKeys).toEqual([]);
     expect(result.rows[0]?.lastSuccessfulCheckedAt).toBe('2026-03-12T10:58:00.000Z');
+  });
+
+  it('builds a ready persisted snapshot from fresh persisted smoke rows even when the artifact file is absent', async () => {
+    (db.execute as any).mockResolvedValue(
+      LAUNCH_MONITOR_DEFINITIONS.map((definition) => ({
+        monitor_key: definition.monitorKey,
+        monitor_group: definition.monitorGroup,
+        status: 'pass',
+        severity: definition.severity,
+        response_time_ms: 42,
+        expected_state: definition.expectedState,
+        observed_state: definition.expectedState,
+        failure_class: null,
+        checked_at: '2026-03-12T10:58:00.000Z',
+        details:
+          definition.kind === 'smoke_artifact'
+            ? {
+                artifactSchemaVersion: 2,
+                artifactGeneratedAt: '2026-03-12T10:00:00.000Z',
+                artifactAgeMinutes: 59,
+                freshnessThresholdMinutes: 60,
+                smokeArtifactState: 'fresh',
+                smokeFreshnessState: 'fresh',
+              }
+            : {},
+      }))
+    );
+
+    (fs.readFile as any).mockRejectedValue(Object.assign(new Error('missing'), { code: 'ENOENT' }));
+
+    const result = await getPersistedLaunchSyntheticStatus(
+      {
+        artifactPath: '.artifacts/launch-smoke-report.json',
+      },
+      new Date('2026-03-12T10:59:00.000Z')
+    );
+
+    expect(result.source).toBe('persisted');
+    expect(result.ok).toBe(true);
+    expect(result.readinessState).toBe('ready');
+    expect(result.evidence.persisted).toBe(true);
+    expect(result.evidence.smokeFreshnessState).toBe('fresh');
+    expect(result.evidence.smokeEvidenceSource).toBe('db');
+    expect(result.rows).toHaveLength(LAUNCH_MONITOR_DEFINITIONS.length);
+    expect(
+      result.rows
+        .filter((row) => row.monitorGroup === 'synthetic-smoke')
+        .every((row) => row.status === 'pass' && row.freshnessState === 'fresh')
+    ).toBe(true);
   });
 
   it('revalidates stale persisted HTTP failures while preserving fresh smoke evidence', async () => {
@@ -675,7 +726,7 @@ describe('launch synthetic monitor persistence', () => {
     );
   });
 
-  it('blocks persisted readiness when the current smoke artifact is stale even if persisted rows were green', async () => {
+  it('keeps persisted readiness ready when fresh persisted smoke rows exist and the artifact file is stale', async () => {
     (db.execute as any).mockResolvedValue(
       LAUNCH_MONITOR_DEFINITIONS.map((definition) => ({
         monitor_key: definition.monitorKey,
@@ -687,7 +738,17 @@ describe('launch synthetic monitor persistence', () => {
         observed_state: definition.expectedState,
         failure_class: null,
         checked_at: '2026-03-12T10:58:00.000Z',
-        details: {},
+        details:
+          definition.kind === 'smoke_artifact'
+            ? {
+                artifactSchemaVersion: 2,
+                artifactGeneratedAt: '2026-03-12T10:58:00.000Z',
+                artifactAgeMinutes: 1,
+                freshnessThresholdMinutes: 60,
+                smokeArtifactState: 'fresh',
+                smokeFreshnessState: 'fresh',
+              }
+            : {},
       }))
     );
 
@@ -702,19 +763,20 @@ describe('launch synthetic monitor persistence', () => {
       new Date('2026-03-12T10:59:00.000Z')
     );
 
-    expect(result.ok).toBe(false);
-    expect(result.readinessState).toBe('blocked');
-    expect(result.evidence.smokeArtifactAgeMinutes).toBe(179);
-    expect(result.evidence.smokeFreshnessState).toBe('stale');
+    expect(result.ok).toBe(true);
+    expect(result.readinessState).toBe('ready');
+    expect(result.evidence.smokeArtifactAgeMinutes).toBe(1);
+    expect(result.evidence.smokeFreshnessState).toBe('fresh');
+    expect(result.evidence.smokeEvidenceSource).toBe('db');
     expect(
       result.rows
         .filter((row) => row.monitorGroup === 'synthetic-smoke')
         .every(
           (row) =>
-            row.observedState === 'smoke_artifact_stale' &&
-            row.status === 'fail' &&
-            row.freshnessState === 'stale' &&
-            row.blocking === true
+            row.observedState === row.expectedState &&
+            row.status === 'pass' &&
+            row.freshnessState === 'fresh' &&
+            row.blocking === false
         )
     ).toBe(true);
   });
@@ -782,7 +844,17 @@ describe('launch synthetic monitor persistence', () => {
             : definition.expectedState,
         failure_class: definition.monitorKey === 'api_health' ? 'payload_contract_mismatch' : null,
         checked_at: '2026-03-12T10:58:00.000Z',
-        details: {},
+        details:
+          definition.kind === 'smoke_artifact'
+            ? {
+                artifactSchemaVersion: 2,
+                artifactGeneratedAt: '2026-03-12T10:58:00.000Z',
+                artifactAgeMinutes: 1,
+                freshnessThresholdMinutes: 60,
+                smokeArtifactState: 'fresh',
+                smokeFreshnessState: 'fresh',
+              }
+            : {},
       }))
     );
 
@@ -811,7 +883,7 @@ describe('launch synthetic monitor persistence', () => {
       result.rows
         .filter((row) => row.monitorGroup === 'synthetic-smoke')
         .every(
-          (row) => row.freshnessState === 'stale' && row.status === 'fail' && row.blocking === true
+          (row) => row.freshnessState === 'fresh' && row.status === 'pass' && row.blocking === false
         )
     ).toBe(true);
   });

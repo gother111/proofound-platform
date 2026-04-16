@@ -48,19 +48,32 @@ node -v  # expect v20.20.0
   - Sender: `no-reply@proofound.io`
 - `RESEND_API_KEY` in app env is for non-auth transactional emails (invitations, notifications, reports), not Supabase Auth SMTP.
 
-## Vercel Deploy Retry Automation
+## Vercel Production Prebuilt Deployment
 
-Use this when production can lag behind `master` because Vercel deploy quota is temporarily exhausted.
+Use this when production should be deployed from CI-built output instead of a normal Vercel cloud build.
 
 - Workflow:
   - `.github/workflows/retry-vercel-deploy.yml`
 - Behavior:
-  - Runs on push to `master`, every 30 minutes, and manual dispatch.
+  - Runs on push to `master` and manual dispatch.
   - Reads live SHA from `https://proofound.io/api/health` (`version`).
-  - Triggers Vercel deploy hook only when live SHA differs from repo SHA.
-- Required one-time setup:
-  - In Vercel (`proofound-platform`), create a production deploy hook.
-  - In GitHub repo secrets, add `VERCEL_DEPLOY_HOOK_URL` with that hook URL.
+  - If production is behind and no matching prebuilt deployment is already running, it:
+    - runs `vercel pull --yes --environment=production`
+    - runs `vercel build --prod`
+    - runs `vercel deploy --prebuilt --prod`
+  - Writes the deployed URL to the GitHub Actions summary.
+- Required GitHub secrets:
+  - `VERCEL_TOKEN`
+  - `VERCEL_ORG_ID`
+  - `VERCEL_PROJECT_ID`
+- Important caveat:
+  - If Vercel Git auto-deploys are still enabled for production, Vercel can still trigger cloud-build deployments for `master` until those settings are intentionally disabled.
+- Local parity path:
+  - `npm run vercel:preflight`
+  - `npm run vercel:pull:production`
+  - `npm run vercel:build:production`
+  - `ls .vercel/output`
+  - `npm run vercel:deploy:prebuilt:production`
 - Operational check:
   - `gh workflow run "Retry Vercel Deploy Until Synced" --ref master`
   - `gh run list --workflow "Retry Vercel Deploy Until Synced" --limit 1`

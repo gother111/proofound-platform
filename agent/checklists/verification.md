@@ -64,21 +64,30 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Ensure Node version matches `.nvmrc`/engines (source: .nvmrc, package.json)
 - Run `npm run vercel:preflight` to validate canonical Vercel linkage, production branch, and required env key presence.
 - Optional drift report between projects: `npm run vercel:env-parity`
-- Pull production project/env settings (creates `.vercel/`, which is gitignored): `npx vercel@latest pull --yes --environment=production` (source: .gitignore)
-- Run a prod-equivalent build locally: `npx vercel@latest build --prod`
-  - If CLI auth is missing, use `--token` with a valid `VERCEL_TOKEN` (do not print it).
+- Pull production project/env settings (creates `.vercel/`, which is gitignored): `npm run vercel:pull:production` (source: .gitignore)
+- Run a prod-equivalent prebuilt build locally: `npm run vercel:build:production`
+- Inspect prebuilt output:
+  - `test -f .vercel/output/config.json`
+  - `test -f .vercel/output/builds.json`
+- Optional manual upload test:
+  - `npm run vercel:deploy:prebuilt:production`
+  - Confirm the command returns a deployment URL and that the target environment is production.
 - Validate the ignored build step logic before relying on it:
   - `npm run vercel:should-build -- --changed-files project/example.md` should exit `0` (skip)
   - `npm run vercel:should-build -- --changed-files src/app/page.tsx` should exit `1` (build)
   - `npm run vercel:should-build -- --changed-files next.config.js` should exit `1` (build)
   - `npm run vercel:should-build` without a resolvable base SHA should exit `1` (safe build)
+- Caveat:
+  - If Vercel Git auto-deploys are still enabled for production, cloud builds can still run alongside the prebuilt workflow until they are intentionally disabled.
 
-## Production Sync Guard (Vercel Quota Recovery)
+## Production Sync Guard (Prebuilt Workflow)
 
-- Auto-retry workflow location:
+- Production prebuilt workflow location:
   - `.github/workflows/retry-vercel-deploy.yml`
 - Required GitHub secret:
-  - `VERCEL_DEPLOY_HOOK_URL` (production deploy hook URL for `proofound-platform`)
+  - `VERCEL_TOKEN`
+  - `VERCEL_ORG_ID`
+  - `VERCEL_PROJECT_ID`
 - If the project has multiple queued or building deployments for the same branch, prune the stale ones before retrying:
   - `npm run vercel:cancel-stale -- --apply --target production --branch master`
 - Validate live commit after pushing to `master`:
@@ -88,6 +97,7 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - `gh workflow run "Retry Vercel Deploy Until Synced" --ref master`
 - Confirm latest workflow run:
   - `gh run list --workflow "Retry Vercel Deploy Until Synced" --limit 1`
+- Confirm the workflow summary records the prebuilt deployment URL when a deploy was required.
 
 ## Release Batch Flow (Single Vercel Project)
 
@@ -96,6 +106,7 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Confirm the workflow pushes a `release/<date>-<name>` branch.
 - Confirm the PR to `master` passes the release-branch gate only when the head branch matches `release/*`.
 - Confirm the release branch receives a normal preview deployment before merging to `master`.
+- Confirm merging to `master` triggers the prebuilt production workflow instead of relying on a normal Vercel cloud build.
 
 ## CI Gate Parity (When Appropriate)
 

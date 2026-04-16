@@ -51,19 +51,19 @@ Before deploying, ensure you have:
 
 ## Environment Setup
 
-### 1. Staging Environment (Recommended First)
+### 1. Preview Environment (Recommended First)
 
-Create a staging environment before production:
+Validate changes on a release branch or PR preview before production:
 
 **Branch Strategy:**
 
 ```bash
-# Create staging branch
-git checkout -b staging
-git push -u origin staging
+# Create a release branch through the repo workflow or locally
+git checkout -b release/<date>-<name>
+git push -u origin release/<date>-<name>
 
-# Production deploys from master
-# Staging deploys from staging
+# Production deploys from master through GitHub Actions prebuilt deploys
+# Preview deploys continue to come from Vercel Git integration for non-master branches
 ```
 
 ### 2. Environment Variables
@@ -252,6 +252,8 @@ ALTER TABLE skills ENABLE ROW LEVEL SECURITY;
 3. Select your Proofound repository
 4. Click "Import"
 
+This remains required because preview deployments are still Git-integrated, even though production now deploys through prebuilt GitHub Actions builds.
+
 ### 2. Configure Project Settings
 
 **Framework Preset:** Next.js (auto-detected)
@@ -325,29 +327,43 @@ After deployment, check logs for:
 
 ### 5. Deploy
 
-**Initial Deployment:**
+**Preferred production path: prebuilt deploys from GitHub Actions**
 
-Click "Deploy" button in Vercel dashboard.
+Production merges to `master` should deploy through the repo workflow:
 
-**Deployment from Git:**
+1. `vercel pull --yes --environment=production`
+2. `vercel build --prod`
+3. `vercel deploy --prebuilt --prod`
 
-Every push to `master` triggers production deployment.
-Every push to `staging` triggers staging deployment.
-Every PR creates a preview deployment.
+This keeps the CI build output as the source of truth and avoids relying on a normal Vercel cloud build for production deploys.
 
-**Monitor Deployment:**
+**Manual parity flow (local or CI shell):**
 
-1. View build logs in Vercel dashboard
-2. Check for errors during build
-3. Wait for deployment to complete (~2-3 minutes)
-
-**Deployment URL:**
-
-Vercel provides auto-generated URL:
-
+```bash
+npm run vercel:preflight
+npm run vercel:pull:production
+npm run vercel:build:production
+ls .vercel/output
+npm run vercel:deploy:prebuilt:production
 ```
-https://proofound-xxx.vercel.app
-```
+
+**Preview deployments:**
+
+- Release branches and PRs still use Vercel Git integration for preview URLs.
+- This repo does not currently define a separate custom `staging` environment in automation.
+
+**Operational caveats:**
+
+- `vercel pull` writes env material into `.vercel/.env.*.local`; keep those files untracked.
+- `vercel build --prod` must succeed before `vercel deploy --prebuilt --prod` can work.
+- If Vercel Git auto-deploys remain enabled for production, they can still trigger cloud builds and duplicate deployment activity until intentionally disabled in Vercel project settings.
+- If the team later wants prebuilt preview deployments too, pass Git metadata on CLI deploys and validate branch-specific env/domain behavior before disabling Git previews.
+
+**Monitor deployment:**
+
+1. Review the GitHub Actions summary for the prebuilt deployment URL
+2. Check the deployment logs in Vercel
+3. Confirm `https://proofound.io/api/health` returns the deployed commit SHA
 
 ---
 

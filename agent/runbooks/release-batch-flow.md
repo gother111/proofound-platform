@@ -36,9 +36,12 @@ Use this flow to ship smaller production batches while keeping Vercel on the sin
 ## Promote to production
 
 - Merge the release PR into `master` with squash merge.
-- Confirm the new production deployment completes.
+- Confirm the GitHub Actions prebuilt production workflow completes:
+  - `gh run list --workflow "Retry Vercel Deploy Until Synced" --limit 1`
 - Confirm the deployed commit matches `master`:
   - `curl -sS https://proofound.io/api/health`
+- Note:
+  - If Vercel Git auto-deploys are still enabled for production, Vercel can still create cloud-build deployments until that setting is intentionally disabled.
 
 ## Failure handling
 

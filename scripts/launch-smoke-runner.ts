@@ -6,7 +6,8 @@ import { spawnSync } from 'node:child_process';
 
 import {
   LAUNCH_SMOKE_FRESHNESS_THRESHOLD_MINUTES,
-  LAUNCH_SMOKE_MATRIX,
+  LAUNCH_SMOKE_SCOPE_VALUES,
+  getLaunchSmokeMatrix,
   isLocalLaunchBaseUrl,
   normalizeLaunchBaseUrl,
 } from '../src/lib/launch/contracts';
@@ -20,6 +21,21 @@ function readArg(flag: string) {
   const index = process.argv.indexOf(flag);
   if (index === -1) return null;
   return process.argv[index + 1] ?? null;
+}
+
+function readSmokeScope() {
+  const rawScope = readArg('--scope')?.trim().toLowerCase();
+  if (!rawScope) {
+    return 'full' as const;
+  }
+
+  if ((LAUNCH_SMOKE_SCOPE_VALUES as readonly string[]).includes(rawScope)) {
+    return rawScope as (typeof LAUNCH_SMOKE_SCOPE_VALUES)[number];
+  }
+
+  throw new Error(
+    `Unsupported smoke scope "${rawScope}". Expected one of: ${LAUNCH_SMOKE_SCOPE_VALUES.join(', ')}`
+  );
 }
 
 function command(name: string) {
@@ -44,6 +60,7 @@ function collectCommandOutput(run: ReturnType<typeof spawnSync>) {
 }
 
 async function main() {
+  const scope = readSmokeScope();
   const artifactPath =
     readArg('--artifact') ??
     process.env.LAUNCH_SMOKE_ARTIFACT_PATH ??
@@ -53,12 +70,13 @@ async function main() {
   );
   const executionMode = isLocalLaunchBaseUrl(baseUrl) ? 'local' : 'live';
   const reporter = process.env.LAUNCH_SMOKE_REPORTER ?? 'basic';
+  const scenarios = getLaunchSmokeMatrix(scope);
   const checks: LaunchSmokeCheckResult[] = [];
   const sharedEnv = { BASE_URL: baseUrl };
 
-  console.log(`Running launch smoke checks against ${baseUrl} (${executionMode})`);
+  console.log(`Running ${scope} launch smoke checks against ${baseUrl} (${executionMode})`);
 
-  for (const scenario of LAUNCH_SMOKE_MATRIX) {
+  for (const scenario of scenarios) {
     const startedAt = Date.now();
     const outputSegments: string[] = [];
     let status: LaunchSmokeCheckResult['status'] = 'pass';
@@ -133,6 +151,7 @@ async function main() {
   const freshnessThresholdMinutes = LAUNCH_SMOKE_FRESHNESS_THRESHOLD_MINUTES;
   const artifact = {
     schemaVersion: 2 as const,
+    scope,
     generatedAt,
     targetBaseUrl: baseUrl,
     executionMode,

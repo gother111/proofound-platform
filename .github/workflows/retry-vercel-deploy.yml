@@ -1,6 +1,8 @@
 name: Retry Vercel Deploy Until Synced
 
 on:
+  push:
+    branches: [master]
   workflow_dispatch:
 
 permissions:
@@ -24,6 +26,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Read repository head SHA
         id: repo
@@ -88,7 +94,7 @@ jobs:
             const hasActiveDeploy = (json.deployments ?? []).some((deployment) => {
               const state = String(deployment.readyState || '').toUpperCase();
               return (
-                deployment.source === 'git' &&
+                deployment.meta?.proofoundDeploymentKind === 'prebuilt' &&
                 deployment.meta?.githubCommitRef === 'master' &&
                 deployment.meta?.githubCommitSha === repoSha &&
                 ['BUILDING', 'INITIALIZING', 'QUEUED'].includes(state)
@@ -105,45 +111,51 @@ jobs:
         run: |
           echo "Repo SHA: ${{ steps.repo.outputs.sha }}"
           echo "Live SHA: ${{ steps.live.outputs.sha }}"
-          echo "Active deploy for repo SHA: ${{ steps.pending.outputs.exists }}"
+          echo "Active prebuilt deploy for repo SHA: ${{ steps.pending.outputs.exists }}"
 
-      - name: Trigger production deploy
+      - name: Pull production Vercel environment
         if: steps.repo.outputs.sha != steps.live.outputs.sha && steps.pending.outputs.exists != 'true'
         env:
-          VERCEL_CLI_VERSION: 41.7.3
-          VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: npm run vercel:pull:production
+
+      - name: Build production deployment output
+        if: steps.repo.outputs.sha != steps.live.outputs.sha && steps.pending.outputs.exists != 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: npm run vercel:build:production
+
+      - name: Inspect prebuilt output
+        if: steps.repo.outputs.sha != steps.live.outputs.sha && steps.pending.outputs.exists != 'true'
+        run: |
+          test -f .vercel/output/config.json
+          test -f .vercel/output/builds.json
+
+      - name: Deploy production prebuilt output
+        id: deploy
+        if: steps.repo.outputs.sha != steps.live.outputs.sha && steps.pending.outputs.exists != 'true'
+        env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          if [ -n "${VERCEL_DEPLOY_HOOK_URL}" ]; then
-            echo "Triggering production deploy hook."
-            curl -fsS -X POST "$VERCEL_DEPLOY_HOOK_URL"
-            exit 0
-          fi
+          deployment_url="$(npm run --silent vercel:deploy:prebuilt:production)"
+          echo "url=${deployment_url}" >> "$GITHUB_OUTPUT"
 
-          if [ -z "${VERCEL_TOKEN}" ] || [ -z "${VERCEL_ORG_ID}" ] || [ -z "${VERCEL_PROJECT_ID}" ]; then
-            echo "Missing Vercel deploy credentials. Set either VERCEL_DEPLOY_HOOK_URL or VERCEL_TOKEN + VERCEL_ORG_ID + VERCEL_PROJECT_ID."
-            exit 1
-          fi
-
-          echo "Deploy hook secret not set. Falling back to Vercel CLI deploy with retries."
-          attempts=0
-          max_attempts=3
-          while [ "$attempts" -lt "$max_attempts" ]; do
-            attempts=$((attempts + 1))
-            echo "Vercel deploy attempt ${attempts}/${max_attempts}"
-            if timeout 1200 npx "vercel@${VERCEL_CLI_VERSION}" deploy --prod --yes --token "${VERCEL_TOKEN}"; then
-              exit 0
+      - name: Write deployment summary
+        if: always()
+        run: |
+          {
+            echo "## Production deployment sync"
+            echo
+            echo "- Repo SHA: \`${{ steps.repo.outputs.sha }}\`"
+            echo "- Live SHA before workflow: \`${{ steps.live.outputs.sha || 'unknown' }}\`"
+            echo "- Active prebuilt deploy already running: \`${{ steps.pending.outputs.exists }}\`"
+            if [ -n "${{ steps.deploy.outputs.url }}" ]; then
+              echo "- Prebuilt deployment URL: ${{ steps.deploy.outputs.url }}"
             fi
-            status=$?
-            if [ "$status" -eq 124 ]; then
-              echo "Deploy attempt ${attempts} timed out after 20 minutes."
-            fi
-            sleep_seconds=$((attempts * 30))
-            echo "Deploy attempt ${attempts} failed. Waiting ${sleep_seconds}s before retry."
-            sleep "${sleep_seconds}"
-          done
-
-          echo "All Vercel deploy attempts failed."
-          exit 1
+          } >> "$GITHUB_STEP_SUMMARY"

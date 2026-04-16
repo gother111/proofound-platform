@@ -67,6 +67,7 @@ export type CurrentLaunchSyntheticStatus = {
     smokeArtifactAgeMinutes: number | null;
     smokeFreshnessThresholdMinutes: number;
     smokeFreshnessState: LaunchSmokeFreshnessState;
+    smokeEvidenceSource?: 'db' | 'artifact' | 'mixed' | 'missing';
     persisted: boolean;
   };
 };
@@ -107,6 +108,7 @@ export type PersistedLaunchSyntheticStatus = {
     smokeArtifactAgeMinutes: number | null;
     smokeFreshnessThresholdMinutes: number;
     smokeFreshnessState: LaunchSmokeFreshnessState;
+    smokeEvidenceSource?: 'db' | 'artifact' | 'mixed' | 'missing';
     persisted: true;
   };
 };
@@ -285,6 +287,47 @@ function buildPersistedRowsInContractOrder(
 
     return row ? [row] : [];
   });
+}
+
+function summarizeSmokeEvidenceFromRows(smokeRows: LaunchSyntheticStatusRow[], now: Date) {
+  const detailsList = smokeRows.map((row) => row.details ?? {});
+  const smokeArtifactGeneratedAt = detailsList.find(
+    (details) => typeof details.artifactGeneratedAt === 'string'
+  )?.artifactGeneratedAt;
+  const smokeFreshnessThresholdMinutes =
+    (detailsList.find((details) => typeof details.freshnessThresholdMinutes === 'number')
+      ?.freshnessThresholdMinutes as number | undefined) ??
+    LAUNCH_SMOKE_FRESHNESS_THRESHOLD_MINUTES;
+  const smokeArtifactSchemaVersion =
+    (detailsList.find((details) => typeof details.artifactSchemaVersion === 'number')
+      ?.artifactSchemaVersion as number | undefined) ?? null;
+  const explicitAgeMinutes =
+    (detailsList.find((details) => typeof details.artifactAgeMinutes === 'number')
+      ?.artifactAgeMinutes as number | undefined) ?? null;
+  const smokeArtifactAgeMinutes =
+    explicitAgeMinutes ??
+    (typeof smokeArtifactGeneratedAt === 'string'
+      ? Math.max(
+          0,
+          Math.round((now.getTime() - new Date(smokeArtifactGeneratedAt).getTime()) / 60_000)
+        )
+      : null);
+  const smokeFreshnessState: LaunchSmokeFreshnessState = smokeRows.some(
+    (row) => row.freshnessState === 'missing'
+  )
+    ? 'missing'
+    : smokeRows.some((row) => row.freshnessState === 'stale')
+      ? 'stale'
+      : 'fresh';
+
+  return {
+    smokeArtifactSchemaVersion,
+    smokeArtifactGeneratedAt:
+      typeof smokeArtifactGeneratedAt === 'string' ? smokeArtifactGeneratedAt : null,
+    smokeArtifactAgeMinutes,
+    smokeFreshnessThresholdMinutes,
+    smokeFreshnessState,
+  };
 }
 
 function isHttpMonitorDefinition(
@@ -662,6 +705,7 @@ export async function runLaunchSyntheticMonitors(
       smokeArtifactAgeMinutes: smokeArtifactEvaluation.ageMinutes,
       smokeFreshnessThresholdMinutes: smokeArtifactEvaluation.freshnessThresholdMinutes,
       smokeFreshnessState,
+      smokeEvidenceSource: 'artifact' as const,
       persisted,
     },
     lastSuccessfulByMonitorKey,
@@ -803,6 +847,7 @@ export async function getLaunchSyntheticStatusWithFreshHttpRevalidation(
       smokeArtifactAgeMinutes: persisted.evidence.smokeArtifactAgeMinutes,
       smokeFreshnessThresholdMinutes: persisted.evidence.smokeFreshnessThresholdMinutes,
       smokeFreshnessState: persisted.evidence.smokeFreshnessState,
+      smokeEvidenceSource: persisted.evidence.smokeEvidenceSource,
       persisted: false,
     },
   };
@@ -822,6 +867,13 @@ export async function getPersistedLaunchSyntheticStatus(
     );
     return definition?.kind === 'http';
   });
+  const persistedSmokeRows = latest.rows.filter((row) => {
+    const definition = LAUNCH_MONITOR_DEFINITIONS.find(
+      (item) => item.monitorKey === row.monitorKey
+    );
+    return definition?.kind === 'smoke_artifact';
+  });
+  const smokeMonitorDefinitions = getSmokeArtifactMonitorDefinitions();
 
   let smokeRows: LaunchSyntheticStatusRow[];
   let smokeArtifactSchemaVersion: number | null = null;
@@ -829,45 +881,101 @@ export async function getPersistedLaunchSyntheticStatus(
   let smokeArtifactAgeMinutes: number | null = null;
   let smokeFreshnessState: LaunchSmokeFreshnessState = 'missing';
   let smokeFreshnessThresholdMinutes = LAUNCH_SMOKE_FRESHNESS_THRESHOLD_MINUTES;
+  let smokeEvidenceSource: 'db' | 'artifact' | 'mixed' | 'missing' = 'missing';
 
-  try {
-    const artifact = await readLaunchSmokeArtifactFromFile(params.artifactPath);
-    const artifactEvaluation = evaluateLaunchSmokeArtifact(artifact, { now });
-    smokeArtifactSchemaVersion = artifact.schemaVersion;
-    smokeArtifactGeneratedAt = artifact.generatedAt;
-    smokeArtifactAgeMinutes = artifactEvaluation.ageMinutes;
-    smokeFreshnessThresholdMinutes = artifactEvaluation.freshnessThresholdMinutes;
-    smokeFreshnessState = artifactEvaluation.stale ? 'stale' : 'fresh';
-
-    smokeRows = getSmokeArtifactMonitorDefinitions().reduce<LaunchSyntheticStatusRow[]>(
-      (acc, definition) => {
-        acc.push(
-          mapResultToStatusRow(
-            runSmokeArtifactMonitor(definition, artifact, params.artifactPath, now),
-            now,
-            {
-              lastSuccessfulCheckedAt:
-                lastSuccessfulByMonitorKey.get(definition.monitorKey) ?? null,
-              evidenceSource: 'persisted',
-              refreshState: 'not_applicable',
-            }
-          )
-        );
-        return acc;
-      },
-      []
+  if (persistedSmokeRows.length === smokeMonitorDefinitions.length) {
+    smokeRows = buildPersistedRowsInContractOrder([], persistedSmokeRows).filter(
+      (row) => row.monitorGroup !== 'endpoint'
     );
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException | undefined)?.code !== 'ENOENT') {
-      throw error;
+    const summary = summarizeSmokeEvidenceFromRows(smokeRows, now);
+    smokeArtifactSchemaVersion = summary.smokeArtifactSchemaVersion;
+    smokeArtifactGeneratedAt = summary.smokeArtifactGeneratedAt;
+    smokeArtifactAgeMinutes = summary.smokeArtifactAgeMinutes;
+    smokeFreshnessThresholdMinutes = summary.smokeFreshnessThresholdMinutes;
+    smokeFreshnessState = summary.smokeFreshnessState;
+    smokeEvidenceSource = 'db';
+  } else {
+    try {
+      const artifact = await readLaunchSmokeArtifactFromFile(params.artifactPath);
+      const artifactEvaluation = evaluateLaunchSmokeArtifact(artifact, { now });
+      smokeArtifactSchemaVersion = artifact.schemaVersion;
+      smokeArtifactGeneratedAt = artifact.generatedAt;
+      smokeArtifactAgeMinutes = artifactEvaluation.ageMinutes;
+      smokeFreshnessThresholdMinutes = artifactEvaluation.freshnessThresholdMinutes;
+      smokeFreshnessState = artifactEvaluation.stale ? 'stale' : 'fresh';
+
+      const artifactRows = getSmokeArtifactMonitorDefinitions().reduce<LaunchSyntheticStatusRow[]>(
+        (acc, definition) => {
+          acc.push(
+            mapResultToStatusRow(
+              runSmokeArtifactMonitor(definition, artifact, params.artifactPath, now),
+              now,
+              {
+                lastSuccessfulCheckedAt:
+                  lastSuccessfulByMonitorKey.get(definition.monitorKey) ?? null,
+                evidenceSource: 'persisted',
+                refreshState: 'not_applicable',
+              }
+            )
+          );
+          return acc;
+        },
+        []
+      );
+
+      if (persistedSmokeRows.length > 0) {
+        const mergedRows = new Map(artifactRows.map((row) => [row.monitorKey, row] as const));
+        for (const persistedRow of persistedSmokeRows) {
+          mergedRows.set(persistedRow.monitorKey, persistedRow);
+        }
+        smokeRows = smokeMonitorDefinitions.flatMap((definition) => {
+          const row = mergedRows.get(definition.monitorKey);
+          return row ? [row] : [];
+        });
+        const summary = summarizeSmokeEvidenceFromRows(smokeRows, now);
+        smokeArtifactSchemaVersion =
+          summary.smokeArtifactSchemaVersion ?? smokeArtifactSchemaVersion;
+        smokeArtifactGeneratedAt = summary.smokeArtifactGeneratedAt ?? smokeArtifactGeneratedAt;
+        smokeArtifactAgeMinutes = summary.smokeArtifactAgeMinutes ?? smokeArtifactAgeMinutes;
+        smokeFreshnessThresholdMinutes = summary.smokeFreshnessThresholdMinutes;
+        smokeFreshnessState = summary.smokeFreshnessState;
+        smokeEvidenceSource = 'mixed';
+      } else {
+        smokeRows = artifactRows;
+        smokeEvidenceSource = 'artifact';
+      }
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException | undefined)?.code !== 'ENOENT') {
+        throw error;
+      }
+
+      const missingRows = buildMissingSmokeArtifactRows(
+        latest.rows,
+        params.artifactPath,
+        lastSuccessfulByMonitorKey,
+        now
+      );
+      if (persistedSmokeRows.length > 0) {
+        const mergedRows = new Map(missingRows.map((row) => [row.monitorKey, row] as const));
+        for (const persistedRow of persistedSmokeRows) {
+          mergedRows.set(persistedRow.monitorKey, persistedRow);
+        }
+        smokeRows = smokeMonitorDefinitions.flatMap((definition) => {
+          const row = mergedRows.get(definition.monitorKey);
+          return row ? [row] : [];
+        });
+        const summary = summarizeSmokeEvidenceFromRows(smokeRows, now);
+        smokeArtifactSchemaVersion = summary.smokeArtifactSchemaVersion;
+        smokeArtifactGeneratedAt = summary.smokeArtifactGeneratedAt;
+        smokeArtifactAgeMinutes = summary.smokeArtifactAgeMinutes;
+        smokeFreshnessThresholdMinutes = summary.smokeFreshnessThresholdMinutes;
+        smokeFreshnessState = summary.smokeFreshnessState;
+        smokeEvidenceSource = 'mixed';
+      } else {
+        smokeRows = missingRows;
+        smokeEvidenceSource = 'missing';
+      }
     }
-
-    smokeRows = buildMissingSmokeArtifactRows(
-      latest.rows,
-      params.artifactPath,
-      lastSuccessfulByMonitorKey,
-      now
-    );
   }
 
   const rows = buildPersistedRowsInContractOrder(endpointRows, smokeRows);
@@ -892,6 +1000,7 @@ export async function getPersistedLaunchSyntheticStatus(
       smokeArtifactAgeMinutes,
       smokeFreshnessThresholdMinutes,
       smokeFreshnessState,
+      smokeEvidenceSource,
       persisted: true,
     },
   };
