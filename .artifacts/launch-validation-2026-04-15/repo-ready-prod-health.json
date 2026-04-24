@@ -1,0 +1,21 @@
+{
+  "url": "http://127.0.0.1:56409/api/health",
+  "observedAt": "2026-04-15T08:19:46.548Z",
+  "payload": {
+    "status": "healthy",
+    "database": {
+      "connected": true,
+      "usingMockDb": false
+    },
+    "environment": {
+      "hasSupabaseUrl": true,
+      "hasSupabaseAnonKey": true,
+      "hasDatabaseUrl": true,
+      "hasSiteUrl": true,
+      "hasServiceRoleKey": true
+    },
+    "warnings": [],
+    "timestamp": "2026-04-15T08:20:40.149Z",
+    "version": "local"
+  }
+}

@@ -330,6 +330,7 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 | `audit/documentation-audit.md` | `reference-spec` | `audit` | `repo` | `2026-03-11` | `-` | `false` |
 | `audit/executive-summary.md` | `reference-spec` | `audit` | `repo` | `2026-03-11` | `-` | `false` |
 | `audit/frontend-ux-audit.md` | `reference-spec` | `audit` | `repo` | `2026-03-11` | `-` | `false` |
+| `audit/full-scale-audit-2026-04-16.md` | `historical` | `audit` | `repo` | `2026-04-16` | `-` | `false` |
 | `audit/prioritized-roadmap.md` | `reference-spec` | `audit` | `repo` | `2026-03-11` | `-` | `false` |
 | `audit/system-overview.md` | `reference-spec` | `audit` | `repo` | `2026-03-11` | `-` | `false` |
 | `audit/testing-and-release-readiness.md` | `reference-spec` | `audit` | `repo` | `2026-03-11` | `-` | `false` |

@@ -1,0 +1,7 @@
+> test:launch:smoke
+> tsx ./scripts/launch-smoke-runner.ts --base-url http://127.0.0.1:51655 --artifact /Users/yuriibakurov/proofound/.artifacts/launch-smoke-report.json
+
+Running launch smoke checks against http://127.0.0.1:51655 (local)
+PASS public_individual_portfolio_visible
+PASS proof_creation_case
+PASS public_org_trust_fixture_live

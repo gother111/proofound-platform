@@ -1,0 +1,24 @@
+{
+  "url": "https://proofound.io/api/health",
+  "ok": true,
+  "status": 200,
+  "payload": {
+    "status": "healthy",
+    "database": {
+      "connected": true,
+      "usingMockDb": false
+    },
+    "environment": {
+      "hasSupabaseUrl": true,
+      "hasSupabaseAnonKey": true,
+      "hasDatabaseUrl": true,
+      "hasSiteUrl": true,
+      "hasServiceRoleKey": true
+    },
+    "warnings": [],
+    "timestamp": "2026-04-14T22:49:27.557Z",
+    "version": "1539dd00f4bfe78d3d5c02f5201c2958566e007d"
+  },
+  "error": null,
+  "observedAt": "2026-04-14T22:49:26.189Z"
+}

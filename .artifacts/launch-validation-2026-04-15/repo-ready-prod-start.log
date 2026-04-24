@@ -1,0 +1,13 @@
+
+> start
+> next start -p 56409
+
+   ▲ Next.js 15.5.12
+   - Local:        http://localhost:56409
+   - Network:      http://192.168.1.162:56409
+
+ ✓ Starting...
+ ✓ Ready in 360ms
+(node:79800) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"level":"warn","event":"database.health.timeout.recovered","timestamp":"2026-04-15T08:20:40.146Z","error":"Timed out after 1200ms"}
