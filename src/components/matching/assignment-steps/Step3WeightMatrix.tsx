@@ -14,6 +14,7 @@ interface Step3Props {
   form: UseFormReturn<any>;
   onNext: () => void;
   onBack: () => void;
+  isSubmitting?: boolean;
 }
 
 const VERIFICATION_GATES = [
@@ -44,12 +45,13 @@ const VERIFICATION_GATES = [
   },
 ];
 
-export function Step3WeightMatrix({ form, onNext, onBack }: Step3Props) {
+export function Step3WeightMatrix({ form, onNext, onBack, isSubmitting = false }: Step3Props) {
   const { watch, setValue } = form;
 
   const expectedImpact = watch('expectedImpact') || '';
   const mustHaveSkills = watch('mustHaveSkills') || [];
   const verificationGates = watch('verificationGates') || [];
+  const minMustHaveSkills = 3;
 
   const toggleVerificationGate = (gateId: string) => {
     const current = verificationGates || [];
@@ -68,7 +70,7 @@ export function Step3WeightMatrix({ form, onNext, onBack }: Step3Props) {
     });
   };
 
-  const isValid = expectedImpact.trim().length > 0 && mustHaveSkills.length > 0;
+  const isValid = expectedImpact.trim().length > 0 && mustHaveSkills.length >= minMustHaveSkills;
 
   return (
     <div className="space-y-6">
@@ -116,6 +118,7 @@ export function Step3WeightMatrix({ form, onNext, onBack }: Step3Props) {
         hideOptionalSections
         hideProgressHeader
         hideNavigation
+        minMustHaveSkills={minMustHaveSkills}
       />
 
       <div className="space-y-4 rounded-lg border p-4">
@@ -146,10 +149,10 @@ export function Step3WeightMatrix({ form, onNext, onBack }: Step3Props) {
       </div>
 
       <div className="flex justify-between border-t pt-4">
-        <Button variant="outline" onClick={onBack}>
+        <Button variant="outline" onClick={onBack} disabled={isSubmitting}>
           Back
         </Button>
-        <Button onClick={onNext} disabled={!isValid}>
+        <Button onClick={onNext} disabled={!isValid || isSubmitting}>
           Next: What practical constraints are real
         </Button>
       </div>

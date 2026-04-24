@@ -1,0 +1,26 @@
+> test
+> vitest run tests/api/admin-internal-ops-queue-route.test.ts tests/ui/admin-dashboard-launch-links.test.tsx src/lib/__tests__/middleware-launch-archive.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+ ✓ tests/api/admin-internal-ops-queue-route.test.ts  (5 tests) 12ms
+ ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 25ms
+ ✓ tests/ui/admin-dashboard-launch-links.test.tsx  (2 tests) 84ms
+
+ Test Files  3 passed (3)
+      Tests  13 passed (13)
+   Start at  12:18:35
+   Duration  793ms (transform 142ms, setup 314ms, collect 246ms, tests 121ms, environment 643ms, prepare 137ms)
+
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`

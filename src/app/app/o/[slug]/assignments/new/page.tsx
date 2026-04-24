@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
@@ -55,6 +55,35 @@ const STEPS = [
   { id: 5, name: 'Internal review and publish', description: 'Review before publish' },
 ];
 
+const DEFAULT_ASSIGNMENT_FORM_VALUES: AssignmentFormData = {
+  engagementType: 'full_time',
+  role: '',
+  businessValue: '',
+  description: '',
+  expectedImpact: '',
+  outcomes: [],
+  locationMode: 'hybrid',
+  compMin: 0,
+  compMax: 0,
+  currency: 'USD',
+  hoursMin: 20,
+  hoursMax: 40,
+  verificationGates: [],
+  mustHaveSkills: [],
+};
+
+function resolveDraftResumeStep(assignment: any) {
+  if (!assignment?.role || !assignment?.businessValue) return 1;
+
+  const outcomes = Array.isArray(assignment.outcomes) ? assignment.outcomes : [];
+  if (outcomes.length === 0) return 2;
+
+  const requiredSkills = Array.isArray(assignment.requiredSkills) ? assignment.requiredSkills : [];
+  if (!assignment.expectedImpact || requiredSkills.length < 3) return 3;
+
+  return 4;
+}
+
 export default function AssignmentBuilderPage() {
   const router = useRouter();
   const params = useParams();
@@ -68,35 +97,36 @@ export default function AssignmentBuilderPage() {
   const draftId = searchParams?.get('draftId');
 
   const [currentStep, setCurrentStep] = useState(1);
+  const [isAdvancing, setIsAdvancing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [assignmentId, setAssignmentId] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [orgId, setOrgId] = useState<string | null>(null);
   const [hasHydratedDraft, setHasHydratedDraft] = useState(false);
   const assignmentIdRef = useRef<string | null>(null);
+  const transitionLockRef = useRef(false);
+  const previousDraftIdRef = useRef<string | null>(draftId);
 
   useEffect(() => {
     assignmentIdRef.current = assignmentId;
   }, [assignmentId]);
 
   const form = useForm<AssignmentFormData>({
-    defaultValues: {
-      engagementType: 'full_time',
-      role: '',
-      businessValue: '',
-      description: '',
-      expectedImpact: '',
-      outcomes: [],
-      locationMode: 'hybrid',
-      compMin: 0,
-      compMax: 0,
-      currency: 'USD',
-      hoursMin: 20,
-      hoursMax: 40,
-      verificationGates: [],
-      mustHaveSkills: [],
-    },
+    defaultValues: DEFAULT_ASSIGNMENT_FORM_VALUES,
   });
+
+  useLayoutEffect(() => {
+    if (previousDraftIdRef.current && !draftId) {
+      form.reset(DEFAULT_ASSIGNMENT_FORM_VALUES);
+      setCurrentStep(1);
+      setAssignmentId(null);
+      setOrgId(null);
+      setLastSaved(null);
+      setHasHydratedDraft(false);
+    }
+
+    previousDraftIdRef.current = draftId;
+  }, [draftId, form]);
 
   const normalizeDateInput = useCallback((value?: string | null) => {
     if (!value) return '';
@@ -146,6 +176,7 @@ export default function AssignmentBuilderPage() {
         setAssignmentId(assignment.id);
         setOrgId(assignment.orgId || null);
         setLastSaved(new Date());
+        setCurrentStep(resolveDraftResumeStep(assignment));
       } catch (error) {
         console.error(error);
         toast.error('Could not load existing draft');
@@ -193,8 +224,7 @@ export default function AssignmentBuilderPage() {
 
   const shouldAutoSaveDraft = useCallback((data: AssignmentFormData) => {
     return Boolean(
-      data.engagementType ||
-        data.role ||
+      data.role ||
         data.businessValue ||
         data.description ||
         data.expectedImpact ||
@@ -325,7 +355,15 @@ export default function AssignmentBuilderPage() {
   );
 
   useEffect(() => {
+    if (draftId && !hasHydratedDraft) {
+      return;
+    }
+
     const interval = setInterval(() => {
+      if (transitionLockRef.current) {
+        return;
+      }
+
       const current = form.getValues();
       if (!shouldAutoSaveDraft(current)) {
         return;
@@ -342,9 +380,13 @@ export default function AssignmentBuilderPage() {
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [form, persistDraft, shouldAutoSaveDraft, syncRelatedData]);
+  }, [draftId, form, hasHydratedDraft, persistDraft, shouldAutoSaveDraft, syncRelatedData]);
 
   const handleNext = async () => {
+    if (transitionLockRef.current || isAdvancing || isSaving) return;
+    transitionLockRef.current = true;
+    setIsAdvancing(true);
+
     try {
       const persisted = await persistDraft({
         status: 'draft',
@@ -355,16 +397,22 @@ export default function AssignmentBuilderPage() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to save draft');
+    } finally {
+      transitionLockRef.current = false;
+      setIsAdvancing(false);
     }
   };
 
   const handleBack = () => {
+    if (transitionLockRef.current || isAdvancing || isSaving) return;
     if (currentStep <= 1) return;
     setCurrentStep((step) => Math.max(step - 1, 1));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSubmit = async () => {
+    if (transitionLockRef.current || isAdvancing || isSaving) return;
+    transitionLockRef.current = true;
     setIsSaving(true);
     try {
       const persisted = await persistDraft({
@@ -378,6 +426,7 @@ export default function AssignmentBuilderPage() {
       console.error('Failed to save assignment:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to save assignment');
     } finally {
+      transitionLockRef.current = false;
       setIsSaving(false);
     }
   };
@@ -385,17 +434,40 @@ export default function AssignmentBuilderPage() {
   let renderedStep;
   switch (currentStep) {
     case 1:
-      renderedStep = <Step1BusinessValue form={form} onNext={handleNext} />;
+      renderedStep = (
+        <Step1BusinessValue form={form} onNext={handleNext} isSubmitting={isAdvancing} />
+      );
       break;
     case 2:
-      renderedStep = <Step2TargetOutcomes form={form} onNext={handleNext} onBack={handleBack} />;
+      renderedStep = (
+        <Step2TargetOutcomes
+          form={form}
+          onNext={handleNext}
+          onBack={handleBack}
+          isSubmitting={isAdvancing}
+        />
+      );
       break;
     case 3:
-      renderedStep = <Step3WeightMatrix form={form} onNext={handleNext} onBack={handleBack} />;
+      renderedStep = (
+        <Step3WeightMatrix
+          form={form}
+          onNext={handleNext}
+          onBack={handleBack}
+          isSubmitting={isAdvancing}
+        />
+      );
       break;
     case 4:
     default:
-      renderedStep = <Step4Practicals form={form} onNext={handleSubmit} onBack={handleBack} />;
+      renderedStep = (
+        <Step4Practicals
+          form={form}
+          onNext={handleSubmit}
+          onBack={handleBack}
+          isSubmitting={isSaving}
+        />
+      );
       break;
   }
 

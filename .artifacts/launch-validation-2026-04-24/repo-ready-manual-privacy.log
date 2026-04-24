@@ -1,0 +1,46 @@
+> test
+> vitest run tests/api/org-match-review-route.test.ts tests/lib/uploads-privacy.test.ts src/lib/__tests__/middleware-launch-archive.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+ ✓ tests/lib/uploads-privacy.test.ts  (7 tests) 3ms
+ ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 25ms
+ ✓ tests/api/org-match-review-route.test.ts  (11 tests) 19ms
+
+ Test Files  3 passed (3)
+      Tests  24 passed (24)
+   Start at  12:18:34
+   Duration  819ms (transform 183ms, setup 313ms, collect 375ms, tests 47ms, environment 595ms, prepare 123ms)
+
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+stderr | tests/api/org-match-review-route.test.ts > POST /api/org/[id]/matches/[matchId]/review > persists pass as a review-stage mutation and keeps identity hidden
+org review fairness persistence failed {
+  matchId: 'match-1',
+  assignmentId: 'assignment-1',
+  error: "Cannot read properties of undefined (reading 'id')"
+}
+
+stderr | tests/api/org-match-review-route.test.ts > POST /api/org/[id]/matches/[matchId]/review > keeps shortlist updates live when fairness persistence fails
+org review fairness persistence failed {
+  matchId: 'match-1',
+  assignmentId: 'assignment-1',
+  error: 'fairness insert failed'
+}
+
+stderr | tests/api/org-match-review-route.test.ts > POST /api/org/[id]/matches/[matchId]/review > returns privacy-safe why payloads for reject decisions without exposing identity-bearing fields
+org review fairness persistence failed {
+  matchId: 'match-1',
+  assignmentId: 'assignment-1',
+  error: 'fairness insert failed'
+}

@@ -1,0 +1,26 @@
+> test
+> vitest run tests/ui/profile-dialogs-edit-routing.test.tsx tests/ui/education-form-skill-picker.test.tsx tests/actions/onboarding-private-context-scaffolding.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+ ✓ tests/ui/profile-dialogs-edit-routing.test.tsx  (1 test) 50ms
+ ✓ tests/ui/education-form-skill-picker.test.tsx  (2 tests) 93ms
+ ✓ tests/actions/onboarding-private-context-scaffolding.test.ts  (3 tests) 4ms
+
+ Test Files  3 passed (3)
+      Tests  6 passed (6)
+   Start at  12:18:30
+   Duration  895ms (transform 216ms, setup 308ms, collect 434ms, tests 147ms, environment 613ms, prepare 143ms)
+
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`

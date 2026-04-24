@@ -19,12 +19,13 @@ import { Textarea } from '@/components/ui/textarea';
 interface Step1Props {
   form: UseFormReturn<any>;
   onNext: () => void;
+  isSubmitting?: boolean;
   onOpenTemplatePicker?: () => void;
   appliedTemplateName?: string | null;
   isLoadingTemplates?: boolean;
 }
 
-export function Step1BusinessValue({ form, onNext }: Step1Props) {
+export function Step1BusinessValue({ form, onNext, isSubmitting = false }: Step1Props) {
   const {
     register,
     watch,
@@ -116,7 +117,7 @@ export function Step1BusinessValue({ form, onNext }: Step1Props) {
       </div>
 
       <div className="flex justify-end border-t pt-4">
-        <Button onClick={onNext} disabled={!isValid}>
+        <Button onClick={onNext} disabled={!isValid || isSubmitting}>
           Next: What work will actually be done
         </Button>
       </div>

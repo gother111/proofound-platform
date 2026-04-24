@@ -121,9 +121,12 @@ export function EditableProfileView() {
         valuesCount: profile?.values.length ?? 0,
         causesCount: profile?.causes.length ?? 0,
         skillsCount: profile?.skills.length ?? 0,
-        proofCount: profile?.proofArtifactCount ?? 0,
+        proofCount: profile?.anchoredProofPackCount ?? profile?.proofArtifactCount ?? 0,
         proofArtifactCount: profile?.proofArtifactCount ?? 0,
+        anchoredProofPackCount: profile?.anchoredProofPackCount ?? 0,
         acceptedVerificationCount: profile?.acceptedVerificationCount ?? 0,
+        publicProofCount: profile?.publicProofCount ?? 0,
+        publishedPortfolio: profile?.publishedPortfolio ?? false,
       }),
     [profile]
   );

@@ -67,7 +67,7 @@ describe('/api/monitoring/perf-status', () => {
     expect(body.source).toBe('probe');
     expect(body.sampleCount).toBe(10);
     expect(body.message).toContain('No api_latency events in the last 24h.');
-    expect(fetchSpy).toHaveBeenCalledTimes(10);
+    expect(fetchSpy).toHaveBeenCalledTimes(11);
     expect(fetchSpy).toHaveBeenCalledWith('https://example.com/api/health', { cache: 'no-store' });
   });
 

@@ -225,11 +225,16 @@ export function MatchingOrganizationView({
             </div>
 
             {isLoading ? (
-              <CardGridSkeleton
-                count={4}
-                columnsClassName="grid grid-cols-1 md:grid-cols-2 gap-4"
-                tileClassName="min-h-[220px]"
-              />
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Preparing proof-backed matches for this assignment...
+                </p>
+                <CardGridSkeleton
+                  count={4}
+                  columnsClassName="grid grid-cols-1 md:grid-cols-2 gap-4"
+                  tileClassName="min-h-[220px]"
+                />
+              </div>
             ) : matches.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-lg mb-2" style={{ color: '#2D3330' }}>

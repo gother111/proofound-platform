@@ -17,6 +17,37 @@ dotenv.config({ path: path.join(process.cwd(), '.env.local') });
 // Only load DOM-specific helpers when a DOM exists (jsdom environment)
 const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
 if (isBrowser) {
+  if (typeof window.localStorage?.clear !== 'function') {
+    const store = new Map<string, string>();
+    const memoryLocalStorage: Storage = {
+      get length() {
+        return store.size;
+      },
+      clear() {
+        store.clear();
+      },
+      getItem(key: string) {
+        return store.get(key) ?? null;
+      },
+      key(index: number) {
+        return Array.from(store.keys())[index] ?? null;
+      },
+      removeItem(key: string) {
+        store.delete(key);
+      },
+      setItem(key: string, value: string) {
+        store.set(key, String(value));
+      },
+    };
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      value: memoryLocalStorage,
+    });
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      value: memoryLocalStorage,
+    });
+  }
   await import('@testing-library/jest-dom/vitest');
   const { cleanup } = await import('@testing-library/react');
   afterEach(() => {

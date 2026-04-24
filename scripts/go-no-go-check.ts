@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { config as loadEnv } from 'dotenv';
 
 import {
   LAUNCH_MONITOR_DEFINITIONS,
@@ -15,6 +16,9 @@ import {
 } from '../src/lib/launch/smoke-artifact';
 import { formatLaunchBlockingReasons } from '../src/lib/launch/status-report';
 import { CLIENT_FEATURE_FLAG_RESPONSE_MAP } from '../src/lib/featureFlags';
+
+loadEnv({ path: '.env.local', quiet: true });
+loadEnv({ quiet: true });
 
 const BASE_URL = normalizeLaunchBaseUrl(process.env.BASE_URL || 'http://localhost:3000');
 const SKIP = process.env.SKIP_GO_NOGO === '1';

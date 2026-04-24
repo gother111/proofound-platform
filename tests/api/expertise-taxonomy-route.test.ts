@@ -2,9 +2,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const createClientMock = vi.fn();
 const searchAtlasSkillMatchesMock = vi.fn();
+const dbExecuteMock = vi.fn();
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: (...args: unknown[]) => createClientMock(...args),
+}));
+
+vi.mock('@/db', () => ({
+  db: {
+    execute: (...args: unknown[]) => dbExecuteMock(...args),
+  },
 }));
 
 vi.mock('@/lib/expertise/atlas-skill-verifier', () => ({
@@ -39,6 +46,9 @@ function createSupabaseMock(params: {
   }>;
 }) {
   return {
+    auth: {
+      getUser: vi.fn(async () => ({ data: { user: null }, error: null })),
+    },
     from: vi.fn((table: string) => {
       if (table === 'skills_taxonomy') {
         const state: { status?: string } = {};
@@ -98,6 +108,7 @@ function createSupabaseMock(params: {
 describe('GET /api/expertise/taxonomy (search mode)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    dbExecuteMock.mockResolvedValue([]);
   });
 
   it('returns atlas-ranked skills with match metadata in cv_import context', async () => {
@@ -258,5 +269,55 @@ describe('GET /api/expertise/taxonomy (search mode)', () => {
     expect(body.l4_skills).toHaveLength(1);
     expect(body.l4_skills[0].code).toBe('skill_project_management');
     expect(body.l4_skills[0].matchMethod).toBe('semantic');
+  });
+
+  it('falls back to direct taxonomy search when atlas returns no ranked skills', async () => {
+    searchAtlasSkillMatchesMock.mockResolvedValue([]);
+    dbExecuteMock.mockResolvedValue([
+      {
+        code: 'skill_quality_audit',
+        cat_id: 2,
+        subcat_id: 20,
+        l3_id: 200,
+        slug: 'quality-audit',
+        name_i18n: { en: 'Quality audit' },
+        description_i18n: { en: 'Review work for completeness and evidence quality.' },
+        tags: ['quality'],
+        status: 'active',
+        version: 1,
+      },
+    ]);
+
+    createClientMock.mockResolvedValue(
+      createSupabaseMock({
+        l1: [{ cat_id: 2, slug: 'foundation', name_i18n: { en: 'Foundation' } }],
+        l2: [{ cat_id: 2, subcat_id: 20, slug: 'operations', name_i18n: { en: 'Operations' } }],
+        l3: [
+          {
+            cat_id: 2,
+            subcat_id: 20,
+            l3_id: 200,
+            slug: 'quality',
+            name_i18n: { en: 'Quality' },
+          },
+        ],
+      })
+    );
+
+    const response = await GET(
+      new Request('http://localhost/api/expertise/taxonomy?search=quality')
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(dbExecuteMock).toHaveBeenCalledTimes(1);
+    expect(body.l4_skills).toHaveLength(1);
+    expect(body.l4_skills[0]).toMatchObject({
+      code: 'skill_quality_audit',
+      nameI18n: { en: 'Quality audit' },
+      l1: { nameI18n: { en: 'Foundation' } },
+      l2: { nameI18n: { en: 'Operations' } },
+      l3: { nameI18n: { en: 'Quality' } },
+    });
   });
 });

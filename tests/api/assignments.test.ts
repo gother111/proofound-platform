@@ -165,6 +165,42 @@ describe('Assignment API', () => {
       expect(db.insert).toHaveBeenCalled();
     });
 
+    it('should normalize empty date strings from builder drafts before persistence', async () => {
+      (db.query.organizationMembers.findFirst as any).mockResolvedValue({
+        orgId: TEST_ORG_ID,
+        role: 'org_owner',
+      });
+
+      const valuesMock = vi.fn(() => ({
+        returning: vi.fn(() =>
+          Promise.resolve([{ id: 'new-assignment-id', role: 'Developer', status: 'draft' }])
+        ),
+      }));
+      (db.insert as any).mockReturnValue({ values: valuesMock });
+
+      const req = new NextRequest('http://localhost/api/assignments', {
+        method: 'POST',
+        body: JSON.stringify({
+          orgId: TEST_ORG_ID,
+          role: 'Software Engineer',
+          status: 'draft',
+          startEarliest: '',
+          startLatest: '   ',
+          mustHaveSkills: [],
+        }),
+      });
+
+      const res = await POST(req);
+
+      expect(res.status).toBe(201);
+      expect(valuesMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          startEarliest: undefined,
+          startLatest: undefined,
+        })
+      );
+    });
+
     it('should accept skill metadata fields and persist them in assignment payload', async () => {
       (db.query.organizationMembers.findFirst as any).mockResolvedValue({
         orgId: TEST_ORG_ID,

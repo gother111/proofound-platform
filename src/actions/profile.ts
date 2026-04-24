@@ -14,6 +14,7 @@ import {
   experiences,
   education,
   volunteering,
+  portfolioPublicationStates,
   skills as skillsTable,
   skillsTaxonomy,
 } from '@/db/schema';
@@ -39,7 +40,13 @@ import {
   pruneIndividualPurposeLinks,
 } from '@/lib/profile/normalizePurposeLinks';
 import { hasRequiredPurposeLinks } from '@/lib/purpose/normalizePurposeLinks';
-import { listCanonicalSkillProofSummariesForOwner } from '@/lib/proofs/canonical-pack';
+import {
+  hasPrimaryAnchorContext,
+  listCanonicalProofPackAggregatesForOwner,
+  listCanonicalSkillProofSummariesForOwner,
+  summarizeCanonicalProofOwnerAggregates,
+} from '@/lib/proofs/canonical-pack';
+import { isAccessiblePublicPortfolioState } from '@/lib/portfolio/public-contract';
 import {
   createCanonicalImpactVerificationRequest,
   findExistingCanonicalImpactVerificationRequest,
@@ -365,6 +372,7 @@ export async function getProfileData(): Promise<ProfileData> {
           handle: profiles.handle,
           avatarUrl: profiles.avatarUrl,
           createdAt: profiles.createdAt,
+          publicPortfolioState: profiles.publicPortfolioState,
         })
         .from(profiles)
         .where(eq(profiles.id, user.id))
@@ -523,7 +531,9 @@ export async function getProfileData(): Promise<ProfileData> {
     // Check for proofs to determine verified status
     let trustedSkillIds = new Set<string>();
     let proofArtifactCount = 0;
+    let anchoredProofPackCount = 0;
     let acceptedVerificationCount = 0;
+    let publicProofCount = 0;
     try {
       const skillProofSummaries = await listCanonicalSkillProofSummariesForOwner(user.id);
       proofArtifactCount = skillProofSummaries.reduce(
@@ -542,6 +552,44 @@ export async function getProfileData(): Promise<ProfileData> {
     } catch {
       // Continue without proof counts
     }
+
+    try {
+      const canonicalProofAggregates = await listCanonicalProofPackAggregatesForOwner(
+        'individual_profile',
+        user.id
+      );
+      const canonicalProofSummary =
+        summarizeCanonicalProofOwnerAggregates(canonicalProofAggregates);
+      anchoredProofPackCount = canonicalProofAggregates.filter((aggregate) =>
+        hasPrimaryAnchorContext(aggregate.pack)
+      ).length;
+      proofArtifactCount = canonicalProofSummary.artifactCount;
+      acceptedVerificationCount = canonicalProofSummary.verifiedVerificationCount;
+      publicProofCount = canonicalProofAggregates.filter(
+        (aggregate) => hasPrimaryAnchorContext(aggregate.pack) && aggregate.publicSafe !== null
+      ).length;
+    } catch (error) {
+      console.error('Failed to fetch canonical proof pack summary:', error);
+      anchoredProofPackCount = proofArtifactCount > 0 ? 1 : 0;
+    }
+
+    let publicationEffectiveState = profileBasics?.publicPortfolioState ?? null;
+    try {
+      const [publicationStateRow] = await db
+        .select({
+          effectiveState: portfolioPublicationStates.effectiveState,
+        })
+        .from(portfolioPublicationStates)
+        .where(eq(portfolioPublicationStates.subjectId, user.id))
+        .limit(1);
+      publicationEffectiveState =
+        publicationStateRow?.effectiveState ?? publicationEffectiveState ?? null;
+    } catch (error) {
+      console.error('Failed to fetch portfolio publication state:', error);
+    }
+    const publishedPortfolio =
+      typeof publicationEffectiveState === 'string' &&
+      isAccessiblePublicPortfolioState(publicationEffectiveState as any);
 
     const mappedSkills: Skill[] = skillRows.map((row: any) => {
       const nameI18n = row.nameI18n as Record<string, string> | null;
@@ -688,7 +736,10 @@ export async function getProfileData(): Promise<ProfileData> {
       causes: mappedCauses,
       skills: mappedSkills, // Now fetched from L4 skills table
       proofArtifactCount,
+      anchoredProofPackCount,
       acceptedVerificationCount,
+      publicProofCount,
+      publishedPortfolio,
       impactStories: impactStoriesWithVerification,
       experiences: mappedExperiences,
       education: educationRows,

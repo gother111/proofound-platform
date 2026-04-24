@@ -61,6 +61,11 @@ const LanguageRequirementSchema = z.object({
 });
 
 const EngagementTypeSchema = z.enum(canonicalEngagementTypeValues);
+const OptionalDateStringSchema = z.preprocess((value) => {
+  if (typeof value !== 'string') return value;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}, z.string().optional());
 
 const PracticalConstraintsSchema = z
   .object({
@@ -73,8 +78,8 @@ const PracticalConstraintsSchema = z
     currency: z.string().optional(),
     hoursMin: z.number().optional(),
     hoursMax: z.number().optional(),
-    startEarliest: z.string().optional(),
-    startLatest: z.string().optional(),
+    startEarliest: OptionalDateStringSchema,
+    startLatest: OptionalDateStringSchema,
   })
   .partial();
 
@@ -106,8 +111,8 @@ const AssignmentBaseSchema = z.object({
   currency: z.string().optional(),
   hoursMin: z.number().optional(),
   hoursMax: z.number().optional(),
-  startEarliest: z.string().optional(), // ISO date string
-  startLatest: z.string().optional(),
+  startEarliest: OptionalDateStringSchema, // ISO date string
+  startLatest: OptionalDateStringSchema,
   verificationGates: z.array(z.string()).optional(),
   weights: z.record(z.number()).nullable().optional(),
 });

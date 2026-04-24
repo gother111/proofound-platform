@@ -1,11 +1,18 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { db } from '@/db';
-import { assignments, matches, matchReviewStates, organizationMembers } from '@/db/schema';
+import {
+  assignments,
+  matches,
+  matchingProfiles,
+  matchReviewStates,
+  organizationMembers,
+} from '@/db/schema';
 import { requireApiAuthContext } from '@/lib/auth';
 import { normalizeAuthorizedOrgRole } from '@/lib/authz';
+import { scrubDisallowedFields } from '@/lib/core/matching/firewall';
 import { computeAssignmentMatches } from '@/lib/core/matching/assignmentMatcher';
 import { getPreset, normalizeWeights, type PresetKey } from '@/lib/core/matching/presets';
 import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
@@ -39,6 +46,7 @@ const MatchRequestSchema = z.object({
   k: z.number().positive().max(100).optional(), // Top k results
   useTwoStage: z.boolean().optional(), // Enable two-stage matching (ANN + re-rank)
   annLimit: z.number().positive().max(1000).optional(), // Stage-1 ANN retrieval limit
+  refresh: z.boolean().optional(), // Force recomputation instead of returning saved matches
 });
 
 /**
@@ -72,6 +80,7 @@ export async function POST(request: NextRequest) {
 
     const validatedData = MatchRequestSchema.parse(body);
     const { assignmentId, mode, k = 20, useTwoStage = false, annLimit = 500 } = validatedData;
+    const refresh = validatedData.refresh === true;
     trace.objectRefs.assignmentId = assignmentId;
 
     const assignment = await db.query.assignments.findFirst({
@@ -97,6 +106,162 @@ export async function POST(request: NextRequest) {
     const membershipRole = normalizeAuthorizedOrgRole(membership.role);
     if (!membershipRole) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    }
+
+    if (!refresh && typeof (db as { select?: unknown }).select === 'function') {
+      const existingMatches = await db
+        .select({
+          id: matches.id,
+          profileId: matches.profileId,
+          assignmentId: matches.assignmentId,
+          score: matches.score,
+          scoreTotal: matches.scoreTotal,
+          subscoresJson: matches.subscoresJson,
+          scoreSnapshotJson: matches.scoreSnapshotJson,
+          reasonCodes: matches.reasonCodes,
+          generatedAt: matches.generatedAt,
+          fairnessStatus: matches.fairnessStatus,
+        })
+        .from(matches)
+        .where(eq(matches.assignmentId, assignmentId))
+        .orderBy(desc(matches.scoreTotal), desc(matches.score), desc(matches.createdAt))
+        .limit(k);
+
+      if (existingMatches.length > 0) {
+        await Promise.all(
+          existingMatches.map((row) =>
+            ensureMatchReviewState({
+              matchId: row.id,
+              assignmentId: row.assignmentId,
+              profileId: row.profileId,
+              orgId: assignment.orgId,
+            })
+          )
+        );
+
+        const matchIds = existingMatches.map((row) => row.id);
+        const profileIds = existingMatches.map((row) => row.profileId);
+        const [reviewStateRows, profileRows, proofPackByProfileId] = await Promise.all([
+          db.query.matchReviewStates.findMany({
+            where: inArray(matchReviewStates.matchId, matchIds),
+            columns: {
+              matchId: true,
+              reviewStage: true,
+              revealScope: true,
+              operationalFallbackMode: true,
+            },
+          }),
+          db.query.matchingProfiles.findMany({
+            where: inArray(matchingProfiles.profileId, profileIds),
+          }),
+          getReviewCardProofPackMap(profileIds),
+        ]);
+        const reviewStateByMatchId = new Map(reviewStateRows.map((row) => [row.matchId, row]));
+        const profileById = new Map(profileRows.map((row) => [row.profileId, row]));
+        const cachedFairnessStatus = normalizeFairnessStatus(existingMatches[0]?.fairnessStatus);
+        const cachedFallbackState = resolveCanonicalFallbackState({
+          operationalFallbackMode: null,
+          fairnessStatus: cachedFairnessStatus,
+        });
+
+        emitLaunchTrace(trace, {
+          outcome: 'success',
+          state: 'shortlist_generated',
+          details: {
+            resultCount: existingMatches.length,
+            cached: true,
+            fairnessStatus: cachedFairnessStatus,
+          },
+        });
+
+        return NextResponse.json({
+          items: existingMatches.map((row, index) => {
+            const profile = profileById.get(row.profileId) ?? null;
+            const reviewState =
+              reviewStateByMatchId.get(row.id) ??
+              ({
+                reviewStage: 'blind_review',
+                revealScope: 'blind',
+                operationalFallbackMode: null,
+              } as const);
+            const fairnessStatus = normalizeFairnessStatus(
+              row.fairnessStatus ?? cachedFairnessStatus
+            );
+            const rankBand = getRankBand(index + 1, existingMatches.length);
+            const corridor = resolveCanonicalCorridor({
+              reviewStage: reviewState.reviewStage,
+              revealScope: reviewState.revealScope,
+              surface: 'assignment_card',
+              fairnessStatus,
+              operationalFallbackMode: reviewState.operationalFallbackMode,
+            });
+            const verificationCount =
+              profile &&
+              typeof profile === 'object' &&
+              'verified' in profile &&
+              profile.verified &&
+              typeof profile.verified === 'object'
+                ? Object.values(profile.verified as Record<string, unknown>).filter(Boolean).length
+                : 0;
+            const reasonCodes = (row.reasonCodes || []) as Array<
+              Parameters<typeof buildVisibilitySafeWhy>[0]['reasonCodes'][number]
+            >;
+
+            return {
+              profileId: row.profileId,
+              score: Number(row.score),
+              scoreTotal: row.scoreTotal,
+              subscoresJson: row.subscoresJson,
+              scoreSnapshotJson: row.scoreSnapshotJson,
+              reasonCodes,
+              profile: profile ? scrubDisallowedFields(profile) : null,
+              id: row.id,
+              reviewStage: reviewState.reviewStage,
+              revealScope: reviewState.revealScope,
+              visibleIdentityFields: getVisibleIdentityFields(reviewState.revealScope),
+              ...corridor,
+              fairness: {
+                status: fairnessStatus,
+              },
+              rank: null,
+              rankBand,
+              why: buildVisibilitySafeWhy({
+                reasonCodes,
+                fairnessStatus,
+                fallbackState: cachedFallbackState,
+                rankBand,
+              }),
+              reviewCard: buildProofFirstReviewCard({
+                profileId: row.profileId,
+                reasonCodes,
+                fairnessStatus,
+                verificationCount,
+                proofPack: proofPackByProfileId.get(row.profileId) ?? null,
+                fitBand: rankBand,
+              }),
+            };
+          }),
+          meta: {
+            total: existingMatches.length,
+            returned: existingMatches.length,
+            durationMs: Date.now() - startTime,
+            weights: {},
+            twoStage: false,
+            hasMissionVisionScores: false,
+            cached: true,
+            fairness: {
+              status: cachedFairnessStatus,
+              evaluationId: null,
+            },
+            launchFallback: {
+              mode: null,
+              activeModes: [],
+              introCorridorLive: null,
+              exactRankLive: null,
+            },
+          },
+        });
+      }
     }
 
     const weights = validatedData.weights

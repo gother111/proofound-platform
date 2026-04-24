@@ -21,6 +21,7 @@ interface Step2Props {
   form: UseFormReturn<any>;
   onNext: () => void;
   onBack: () => void;
+  isSubmitting?: boolean;
 }
 
 const TIMEFRAME_OPTIONS = [
@@ -30,7 +31,7 @@ const TIMEFRAME_OPTIONS = [
   { value: '12mo', label: 'Within 12 months' },
 ];
 
-export function Step2TargetOutcomes({ form, onNext, onBack }: Step2Props) {
+export function Step2TargetOutcomes({ form, onNext, onBack, isSubmitting = false }: Step2Props) {
   const {
     register,
     watch,
@@ -197,10 +198,10 @@ export function Step2TargetOutcomes({ form, onNext, onBack }: Step2Props) {
       </div>
 
       <div className="flex justify-between border-t pt-4">
-        <Button variant="outline" onClick={onBack}>
+        <Button variant="outline" onClick={onBack} disabled={isSubmitting}>
           Back
         </Button>
-        <Button onClick={onNext} disabled={!isValid}>
+        <Button onClick={onNext} disabled={!isValid || isSubmitting}>
           Next: What proof would convince the org
         </Button>
       </div>

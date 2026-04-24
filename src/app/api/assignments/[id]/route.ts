@@ -32,6 +32,24 @@ const AssignmentCreationStatusSchema = z
   .transform((value) => (value === 'pending_review' ? 'review_ready' : value));
 
 const EngagementTypeSchema = z.enum(canonicalEngagementTypeValues);
+const OptionalDateStringSchema = z.preprocess((value) => {
+  if (typeof value !== 'string') return value;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}, z.string().optional());
+const SkillRequirementSchema = z.object({
+  id: z.string(),
+  level: z.number().min(0).max(5),
+  label: z.string().optional(),
+  catId: z.number().optional(),
+  subcatId: z.number().optional(),
+  l3Id: z.number().optional(),
+  l1Label: z.string().optional(),
+  l2Label: z.string().optional(),
+  l3Label: z.string().optional(),
+  linkedToBV: z.boolean().optional(),
+  linkedToTO: z.boolean().optional(),
+});
 const PracticalConstraintsSchema = z
   .object({
     locationMode: z.enum(['remote', 'onsite', 'hybrid']).optional(),
@@ -43,8 +61,8 @@ const PracticalConstraintsSchema = z
     currency: z.string().optional(),
     hoursMin: z.number().optional(),
     hoursMax: z.number().optional(),
-    startEarliest: z.string().optional(),
-    startLatest: z.string().optional(),
+    startEarliest: OptionalDateStringSchema,
+    startLatest: OptionalDateStringSchema,
   })
   .partial();
 
@@ -204,22 +222,8 @@ const AssignmentUpdateSchema = z.object({
   creationStatus: AssignmentCreationStatusSchema.optional(),
   valuesRequired: z.array(z.string()).optional(),
   causeTags: z.array(z.string()).optional(),
-  mustHaveSkills: z
-    .array(
-      z.object({
-        id: z.string(),
-        level: z.number().min(0).max(5),
-      })
-    )
-    .optional(),
-  niceToHaveSkills: z
-    .array(
-      z.object({
-        id: z.string(),
-        level: z.number().min(0).max(5),
-      })
-    )
-    .optional(),
+  mustHaveSkills: z.array(SkillRequirementSchema).optional(),
+  niceToHaveSkills: z.array(SkillRequirementSchema).optional(),
   minLanguage: z
     .object({
       code: z.string(),
@@ -236,8 +240,8 @@ const AssignmentUpdateSchema = z.object({
   currency: z.string().optional(),
   hoursMin: z.number().optional(),
   hoursMax: z.number().optional(),
-  startEarliest: z.string().optional(),
-  startLatest: z.string().optional(),
+  startEarliest: OptionalDateStringSchema,
+  startLatest: OptionalDateStringSchema,
   verificationGates: z.array(z.string()).optional(),
   weights: z.record(z.number()).nullable().optional(),
 });

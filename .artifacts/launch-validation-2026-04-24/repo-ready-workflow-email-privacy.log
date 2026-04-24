@@ -1,0 +1,20 @@
+> test
+> vitest run tests/lib/workflow-email-privacy.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+ ✓ tests/lib/workflow-email-privacy.test.ts  (3 tests) 16ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  12:18:32
+   Duration  948ms (transform 132ms, setup 98ms, collect 387ms, tests 16ms, environment 188ms, prepare 40ms)
+
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+(node:79143) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)

@@ -226,7 +226,10 @@ export interface ProfileData {
   causes: string[];
   skills: Skill[];
   proofArtifactCount?: number;
+  anchoredProofPackCount?: number;
   acceptedVerificationCount?: number;
+  publicProofCount?: number;
+  publishedPortfolio?: boolean;
   impactStories: ImpactStory[];
   experiences: Experience[];
   education: Education[];

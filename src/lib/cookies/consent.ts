@@ -170,6 +170,9 @@ async function syncPreferencesToDatabase(preferences: CookiePreferences): Promis
   });
 
   if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      return;
+    }
     throw new Error('Failed to sync preferences to database');
   }
 }

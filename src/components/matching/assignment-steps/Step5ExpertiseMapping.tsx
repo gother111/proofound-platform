@@ -31,6 +31,7 @@ interface Step5Props {
   hideProgressHeader?: boolean;
   hideNavigation?: boolean;
   hideOptionalSections?: boolean;
+  minMustHaveSkills?: number;
 }
 
 interface TaxonomyNode {
@@ -170,6 +171,7 @@ export function Step5ExpertiseMapping({
   hideProgressHeader = false,
   hideNavigation = false,
   hideOptionalSections = false,
+  minMustHaveSkills = 1,
 }: Step5Props) {
   const { watch, setValue } = form;
 
@@ -368,7 +370,7 @@ export function Step5ExpertiseMapping({
   };
 
   const isValid =
-    mustHaveSkills.length > 0 &&
+    mustHaveSkills.length >= minMustHaveSkills &&
     (!educationRequired || (educationJustification && educationJustification.length > 0));
 
   return (
@@ -490,7 +492,8 @@ export function Step5ExpertiseMapping({
         {mustHaveSkills.length === 0 ? (
           <div className="border-2 border-dashed rounded-lg p-8 text-center">
             <p className="text-muted-foreground">
-              No must-have skills added. Add at least one skill.
+              No must-have skills added. Add at least {minMustHaveSkills} skill
+              {minMustHaveSkills === 1 ? '' : 's'}.
             </p>
           </div>
         ) : (
@@ -648,8 +651,11 @@ export function Step5ExpertiseMapping({
         </>
       ) : null}
 
-      {mustHaveSkills.length === 0 && (
-        <p className="text-sm text-destructive">At least one must-have skill is required</p>
+      {mustHaveSkills.length < minMustHaveSkills && (
+        <p className="text-sm text-destructive">
+          Add {minMustHaveSkills - mustHaveSkills.length} more must-have skill
+          {minMustHaveSkills - mustHaveSkills.length === 1 ? '' : 's'} before continuing.
+        </p>
       )}
 
       {!hideNavigation ? (

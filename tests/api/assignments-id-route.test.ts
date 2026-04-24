@@ -179,6 +179,68 @@ describe('assignment [id] mutation routes', () => {
     );
   });
 
+  it('PUT accepts builder autosave payloads with empty date fields and skill metadata', async () => {
+    (verifyExplicitAssignmentMutationAccess as any).mockResolvedValue({
+      status: 'ok',
+      role: 'org_owner',
+      orgId: principalOrgId,
+      membershipId: 'membership-1',
+    });
+    const returningMock = vi.fn().mockResolvedValue([
+      {
+        id: 'assignment-1',
+        orgId: 'org-1',
+        createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        status: 'draft',
+        role: 'Updated role',
+        mustHaveSkills: [{ id: '03.01.01.001', level: 4 }],
+        niceToHaveSkills: [],
+      },
+    ]);
+    const whereMock = vi.fn().mockReturnValue({ returning: returningMock });
+    const setMock = vi.fn().mockReturnValue({ where: whereMock });
+    (db.update as any).mockReturnValue({ set: setMock });
+
+    const req = new NextRequest('http://localhost/api/assignments/assignment-1', {
+      method: 'PUT',
+      body: JSON.stringify({
+        title: 'Updated role',
+        rolePurpose: 'Validate launch readiness',
+        startEarliest: '',
+        startLatest: '   ',
+        mustHaveSkills: [
+          {
+            id: '03.01.01.001',
+            label: 'Quality audit',
+            level: 4,
+            catId: 2,
+            subcatId: 20,
+            l3Id: 200,
+            l1Label: 'Foundation',
+            l2Label: 'Operations',
+            l3Label: 'Quality',
+            linkedToBV: true,
+            linkedToTO: false,
+          },
+        ],
+        principalContext: { principalType: 'organization', orgId: principalOrgId },
+      }),
+    });
+
+    const res = await PUT(req, params);
+
+    expect(res.status).toBe(200);
+    expect(setMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        role: 'Updated role',
+        businessValue: 'Validate launch readiness',
+        startEarliest: undefined,
+        startLatest: undefined,
+        mustHaveSkills: [expect.objectContaining({ id: '03.01.01.001', level: 4 })],
+      })
+    );
+  });
+
   it('DELETE returns 403 for reviewer role', async () => {
     (verifyExplicitAssignmentMutationAccess as any).mockResolvedValue({
       status: 'insufficient_role',

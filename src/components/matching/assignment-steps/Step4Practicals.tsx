@@ -21,6 +21,7 @@ interface Step4Props {
   form: UseFormReturn<any>;
   onNext: () => void;
   onBack: () => void;
+  isSubmitting?: boolean;
 }
 
 const CURRENCY_OPTIONS = [
@@ -29,7 +30,7 @@ const CURRENCY_OPTIONS = [
   { value: 'GBP', label: 'GBP (£)' },
 ];
 
-export function Step4Practicals({ form, onNext, onBack }: Step4Props) {
+export function Step4Practicals({ form, onNext, onBack, isSubmitting = false }: Step4Props) {
   const {
     register,
     watch,
@@ -203,10 +204,10 @@ export function Step4Practicals({ form, onNext, onBack }: Step4Props) {
       ) : null}
 
       <div className="flex justify-between border-t pt-4">
-        <Button variant="outline" onClick={onBack}>
+        <Button variant="outline" onClick={onBack} disabled={isSubmitting}>
           Back
         </Button>
-        <Button onClick={onNext} disabled={!isValid}>
+        <Button onClick={onNext} disabled={!isValid || isSubmitting}>
           Continue to internal review and publish
         </Button>
       </div>

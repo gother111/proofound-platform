@@ -3,6 +3,9 @@ import { NextResponse } from 'next/server';
 import { getOrSet, CACHE_KEYS, CACHE_TTL } from '@/lib/cache';
 import { createHash } from 'node:crypto';
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
+import { sql } from 'drizzle-orm';
+import { db } from '@/db';
+import { getRows } from '@/lib/db/rows';
 import { isManualReviewOnlyShortToken } from '@/lib/expertise/skill-confidence';
 import { searchAtlasSkillMatches } from '@/lib/expertise/atlas-skill-verifier';
 
@@ -109,9 +112,11 @@ async function emitSearchTelemetry(input: {
   resultCount: number;
   usedFallback: boolean;
   rpcFailed: boolean;
+  userId?: string | null;
   detail?: string;
 }) {
   if (process.env.NODE_ENV === 'test') return;
+  if (!input.userId) return;
 
   const supabaseUrl =
     process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || process.env.SUPABASE_URL?.trim();
@@ -138,6 +143,7 @@ async function emitSearchTelemetry(input: {
 
     const { error } = await admin.from('analytics_events').insert({
       event_type: input.eventType,
+      user_id: input.userId,
       entity_type: 'api',
       properties,
       created_at: new Date().toISOString(),
@@ -213,6 +219,58 @@ async function enrichSkillsWithParentContext(supabase: any, skills: any[]): Prom
   }));
 }
 
+async function fallbackSearchTaxonomySkills(searchTerm: string, limit: number): Promise<any[]> {
+  const normalized = normalizeForComparison(searchTerm);
+  if (!normalized) return [];
+
+  const terms = normalized.split(' ').filter(Boolean).slice(0, 4);
+  const pattern = `%${normalized}%`;
+  const prefixPattern = `${normalized}%`;
+
+  const rows = await db.execute(sql`
+    SELECT *
+    FROM public.skills_taxonomy
+    WHERE status = 'active'
+      AND (
+        lower(coalesce(name_i18n->>'en', '')) LIKE ${pattern}
+        OR lower(code) LIKE ${pattern}
+        OR EXISTS (
+          SELECT 1
+          FROM unnest(coalesce(tags, ARRAY[]::text[])) AS tag
+          WHERE lower(tag) LIKE ${pattern}
+        )
+        OR EXISTS (
+          SELECT 1
+          FROM jsonb_array_elements(coalesce(aliases_i18n, '[]'::jsonb)) AS alias_item
+          WHERE lower(alias_item::text) LIKE ${pattern}
+        )
+      )
+    ORDER BY
+      CASE
+        WHEN lower(coalesce(name_i18n->>'en', '')) = ${normalized} THEN 0
+        WHEN lower(coalesce(name_i18n->>'en', '')) LIKE ${prefixPattern} THEN 1
+        ${
+          terms.length > 0
+            ? sql`WHEN ${sql.join(
+                terms.map(
+                  (term) =>
+                    sql`lower(coalesce(name_i18n->>'en', '')) ~ ${`(^|[^a-z0-9])${term}([^a-z0-9]|$)`}`
+                ),
+                sql` AND `
+              )} THEN 2`
+            : sql``
+        }
+        ELSE 3
+      END,
+      length(coalesce(name_i18n->>'en', '')),
+      coalesce(name_i18n->>'en', ''),
+      code
+    LIMIT ${limit}
+  `);
+
+  return getRows(rows);
+}
+
 /**
  * GET /api/expertise/taxonomy
  *
@@ -252,6 +310,9 @@ export async function GET(request: Request) {
       : SEARCH_RESULT_LIMIT;
     const searchClass = search ? classifySearchQuery(search) : null;
     const searchHash = search ? hashQuery(search) : null;
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     console.log('[Taxonomy API] Request params:', {
       l1,
@@ -367,6 +428,7 @@ export async function GET(request: Request) {
             resultCount: 0,
             usedFallback: false,
             rpcFailed: false,
+            userId: user?.id,
           });
           return NextResponse.json({ l4_skills: [] });
         }
@@ -392,16 +454,20 @@ export async function GET(request: Request) {
 
         const rankedCodes = rankedMatches.map((match) => match.skill_id);
         if (rankedCodes.length === 0) {
-          skills = [];
+          const fallbackSkills = await fallbackSearchTaxonomySkills(normalizedSearch, resultLimit);
+          skills = await enrichSkillsWithParentContext(supabase, fallbackSkills);
           error = null;
-          void emitSearchTelemetry({
-            eventType: 'taxonomy_search_zero_results',
-            searchTerm: normalizedSearch,
-            queryClass,
-            resultCount: 0,
-            usedFallback: false,
-            rpcFailed: false,
-          });
+          if (skills.length === 0) {
+            void emitSearchTelemetry({
+              eventType: 'taxonomy_search_zero_results',
+              searchTerm: normalizedSearch,
+              queryClass,
+              resultCount: 0,
+              usedFallback: true,
+              rpcFailed: false,
+              userId: user?.id,
+            });
+          }
         } else {
           const { data: searchSkills, error: searchError } = await supabase
             .from('skills_taxonomy')
@@ -423,6 +489,7 @@ export async function GET(request: Request) {
               usedFallback: false,
               rpcFailed: false,
               detail: searchError.message,
+              userId: user?.id,
             });
             return NextResponse.json({ error: 'Failed to fetch skills' }, { status: 500 });
           }

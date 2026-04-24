@@ -51,6 +51,7 @@ export default function OrgMatchingPage() {
     return (
       <AppSurface>
         <div className="max-w-6xl mx-auto space-y-6">
+          <p className="text-sm text-muted-foreground">Loading assignments and matches...</p>
           <PageIntroSkeleton />
           <CardGridSkeleton
             count={4}

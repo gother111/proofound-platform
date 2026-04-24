@@ -1,0 +1,10 @@
+> test:launch:smoke
+> tsx ./scripts/launch-smoke-runner.ts --scope repo --base-url http://127.0.0.1:60073 --artifact /Users/yuriibakurov/proofound/.artifacts/launch-validation-2026-04-24/repo-ready-launch-smoke-report.json
+
+Running repo launch smoke checks against http://127.0.0.1:60073 (local)
+PASS public_individual_portfolio_visible
+PASS proof_creation_case
+PASS public_org_trust_fixture_live
+PASS hidden_portfolio_protected
+PASS privacy_no_leak_case
+Launch smoke artifact written to /Users/yuriibakurov/proofound/.artifacts/launch-validation-2026-04-24/repo-ready-launch-smoke-report.json

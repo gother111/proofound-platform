@@ -160,6 +160,10 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
     );
   }
 
+  const isPublished = assignment.status === 'active';
+  const isClosed = assignment.status === 'closed';
+  const publishDisabled = isPublishing || isPublished || isClosed;
+
   return (
     <div className="min-h-screen bg-japandi-bg p-6">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -179,14 +183,22 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
               <Edit className="h-4 w-4 mr-2" />
               Edit
             </Button>
-            <Button
-              onClick={handlePublish}
-              disabled={isPublishing}
-              className="bg-proofound-forest hover:bg-proofound-forest/90"
-            >
-              {isPublishing ? 'Publishing...' : 'Publish Assignment'}
-              <ChevronRight className="h-4 w-4 ml-2" />
-            </Button>
+            {isPublished ? (
+              <Badge className="bg-proofound-forest text-white">Published</Badge>
+            ) : (
+              <Button
+                onClick={handlePublish}
+                disabled={publishDisabled}
+                className="bg-proofound-forest hover:bg-proofound-forest/90"
+              >
+                {isPublishing
+                  ? 'Publishing...'
+                  : isClosed
+                    ? 'Assignment Closed'
+                    : 'Publish Assignment'}
+                {!isClosed ? <ChevronRight className="h-4 w-4 ml-2" /> : null}
+              </Button>
+            )}
           </div>
         </div>
 

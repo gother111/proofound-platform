@@ -12,6 +12,12 @@ async function probeHealthDurations(origin: string, sampleCount = 10): Promise<n
   const healthUrl = `${origin}/api/health`;
   const samples: number[] = [];
 
+  // Prime route compilation and the cached DB health check before measuring fallback latency.
+  const warmupResponse = await fetch(healthUrl, { cache: 'no-store' });
+  if (!warmupResponse.ok) {
+    throw new Error(`/api/health probe failed with status ${warmupResponse.status}`);
+  }
+
   for (let i = 0; i < sampleCount; i += 1) {
     const started = performance.now();
     const response = await fetch(healthUrl, { cache: 'no-store' });

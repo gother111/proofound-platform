@@ -324,4 +324,26 @@ describe('Step5ExpertiseMapping', () => {
 
     expect(screen.getAllByText('legacy-unknown').length).toBeGreaterThan(0);
   });
+
+  it('honors a stricter minimum must-have skill count when embedded in basic publish flow', () => {
+    const { form } = createFormState({
+      mustHaveSkills: [
+        { id: 'skill-1', label: 'Skill 1', level: 3 },
+        { id: 'skill-2', label: 'Skill 2', level: 3 },
+      ],
+    });
+
+    render(
+      <Step5ExpertiseMapping
+        form={form}
+        onSubmit={() => {}}
+        onBack={() => {}}
+        isSubmitting={false}
+        minMustHaveSkills={3}
+      />
+    );
+
+    expect(screen.getByText(/add 1 more must-have skill/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /review & publish/i })).toBeDisabled();
+  });
 });

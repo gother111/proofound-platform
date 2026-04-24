@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 
-import { runLaunchSyntheticMonitors } from '../src/lib/launch/synthetic-monitors';
+import { config as loadEnv } from 'dotenv';
+
+loadEnv({ path: '.env.local', quiet: true });
+loadEnv({ quiet: true });
 
 function readArg(flag: string) {
   const index = process.argv.indexOf(flag);
@@ -9,6 +12,7 @@ function readArg(flag: string) {
 }
 
 async function main() {
+  const { runLaunchSyntheticMonitors } = await import('../src/lib/launch/synthetic-monitors');
   const baseUrl = readArg('--base-url') ?? process.env.BASE_URL ?? 'http://localhost:3000';
   const artifactPath =
     readArg('--artifact') ??

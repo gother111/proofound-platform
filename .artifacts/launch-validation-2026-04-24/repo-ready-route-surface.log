@@ -1,0 +1,22 @@
+> test
+> vitest run tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+ ✓ tests/api/launch-surface-inventory.test.ts  (4 tests) 49ms
+ ✓ tests/api/launch-page-inventory.test.ts  (5 tests) 94ms
+
+ Test Files  2 passed (2)
+      Tests  9 passed (9)
+   Start at  12:18:28
+   Duration  830ms (transform 52ms, setup 286ms, collect 56ms, tests 143ms, environment 601ms, prepare 103ms)
+
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
