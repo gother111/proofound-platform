@@ -494,7 +494,10 @@ test.describe('Strict Authenticated Org Corridor', () => {
       );
       shortlistBody = await shortlistResponse.text();
     }
-    expect(shortlistResponse.ok()).toBeTruthy();
+    expect(
+      shortlistResponse.ok(),
+      `Shortlist request failed with HTTP ${shortlistResponse.status()}: ${shortlistBody}`
+    ).toBeTruthy();
 
     const shortlistViewResponse = await browserGetJson(
       page,

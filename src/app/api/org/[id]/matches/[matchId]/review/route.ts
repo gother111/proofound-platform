@@ -26,6 +26,7 @@ import {
   resolveCanonicalCorridor,
   resolveCanonicalFallbackState,
   getVisibleIdentityFields,
+  ensureMatchReviewState,
   persistFairnessEvaluationForAssignment,
   recordRevealEvent,
   setMatchReviewStage,
@@ -128,7 +129,7 @@ export async function POST(
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
-    const [matchRow] = await db
+    let [matchRow] = await db
       .select({
         matchId: matches.id,
         assignmentId: matches.assignmentId,
@@ -147,7 +148,37 @@ export async function POST(
       .limit(1);
 
     if (!matchRow) {
-      return NextResponse.json({ error: 'Match not found' }, { status: 404 });
+      const [matchWithoutReviewState] = await db
+        .select({
+          matchId: matches.id,
+          assignmentId: matches.assignmentId,
+          profileId: matches.profileId,
+          orgId: assignments.orgId,
+          assignmentOperationalFallbackMode: assignments.operationalFallbackMode,
+          fairnessStatus: matches.fairnessStatus,
+        })
+        .from(matches)
+        .innerJoin(assignments, eq(assignments.id, matches.assignmentId))
+        .where(and(eq(matches.id, matchId), eq(assignments.orgId, org.id)))
+        .limit(1);
+
+      if (!matchWithoutReviewState) {
+        return NextResponse.json({ error: 'Match not found' }, { status: 404 });
+      }
+
+      await ensureMatchReviewState({
+        matchId: matchWithoutReviewState.matchId,
+        assignmentId: matchWithoutReviewState.assignmentId,
+        profileId: matchWithoutReviewState.profileId,
+        orgId: matchWithoutReviewState.orgId,
+      });
+
+      matchRow = {
+        ...matchWithoutReviewState,
+        reviewStage: 'blind_review',
+        revealScope: 'blind',
+        reviewOperationalFallbackMode: null,
+      };
     }
 
     const payload = parsed.data;
