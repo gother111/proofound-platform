@@ -63,14 +63,14 @@ export function ReadinessSprintPanel() {
   return (
     <Card className="overflow-hidden border-proofound-stone/70 bg-white/85">
       <div className="grid gap-0 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <div className="border-b border-proofound-stone/70 bg-[#fbf8f1] p-6 sm:p-8 lg:border-b-0 lg:border-r">
+        <div className="border-b border-proofound-stone/70 bg-[#fbf8f1] p-5 sm:p-6 lg:border-b-0 lg:border-r">
           <div className="flex flex-col gap-4">
             <div>
               <p className="flex items-center gap-2 text-sm font-semibold text-proofound-forest">
                 <Sparkles className="h-4 w-4" />
                 Readiness sprint
               </p>
-              <h2 className="mt-3 text-3xl font-medium leading-tight text-proofound-charcoal">
+              <h2 className="mt-3 text-2xl font-medium leading-tight text-proofound-charcoal md:text-3xl">
                 What should I add next?
               </h2>
               <p className="mt-3 text-sm leading-6 text-muted-foreground">{stateSummary}</p>
@@ -81,9 +81,9 @@ export function ReadinessSprintPanel() {
           </div>
         </div>
 
-        <div className="space-y-5 p-6 sm:p-8">
+        <div className="space-y-4 p-5 sm:p-6">
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_0.9fr]">
-            <div className="rounded-2xl border border-proofound-stone/70 bg-white p-5">
+            <div className="rounded-2xl border border-proofound-stone/70 bg-white p-4">
               <p className="inline-flex items-center gap-2 text-sm font-semibold text-proofound-charcoal">
                 <Sparkles className="h-4 w-4 text-proofound-forest" />
                 One next action
@@ -108,7 +108,7 @@ export function ReadinessSprintPanel() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-proofound-stone/70 bg-[#f7f2ea] p-5">
+            <div className="rounded-2xl border border-proofound-stone/70 bg-[#f7f2ea] p-4">
               <p className="inline-flex items-center gap-2 text-sm font-semibold text-proofound-charcoal">
                 <ShieldCheck className="h-4 w-4 text-proofound-forest" />
                 Short blocker list
@@ -130,7 +130,7 @@ export function ReadinessSprintPanel() {
           </div>
 
           {!data.flags.introEligible && fallbackCopy ? (
-            <div className="rounded-2xl border border-proofound-stone/60 bg-white p-5">
+            <div className="rounded-2xl border border-proofound-stone/60 bg-white p-4">
               <p className="text-sm font-semibold text-proofound-charcoal">Best next steps</p>
               <ul className="mt-3 grid gap-2 text-sm leading-6 text-muted-foreground sm:grid-cols-3">
                 {fallbackCopy.nextActions.map((action) => (
