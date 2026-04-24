@@ -121,7 +121,10 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     await gotoWithReadyState(page, `/app/o/${organization.slug}/home`, async () => {
       await expect(page.getByRole('heading', { name: organization.displayName })).toBeVisible();
     });
-    await expect(page.getByText('The org launch corridor is intentionally narrow')).toBeVisible();
+    await expect(page.getByText('Organization review cockpit')).toBeVisible();
+    await expect(
+      page.getByText('A focused launch desk for one clean hiring corridor')
+    ).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Trust Profile' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'One Assignment Path' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Minimal Access' })).toBeVisible();
