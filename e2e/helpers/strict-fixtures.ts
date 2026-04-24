@@ -472,15 +472,43 @@ export async function createRuntimeMatch(
     );
   }
 
+  let persistedMatch: {
+    id: string;
+    assignment_id: string;
+    profile_id: string;
+  } | null = match;
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const { data: lookup, error: lookupError } = await supabase
+      .from('matches')
+      .select('id, assignment_id, profile_id')
+      .eq('id', match.id)
+      .maybeSingle();
+
+    if (lookup?.id) {
+      persistedMatch = lookup;
+      break;
+    }
+
+    if (lookupError && !isTransientRequestError(lookupError)) {
+      throw new Error(`Failed to verify strict runtime match persistence: ${lookupError.message}`);
+    }
+
+    await wait(250 * (attempt + 1));
+  }
+
+  if (!persistedMatch?.id) {
+    throw new Error(`Strict runtime match ${match.id} was not visible after creation`);
+  }
+
   fixture.matchIds.add(match.id);
 
   let reviewStateError: { message: string } | null = null;
-  for (let attempt = 0; attempt < 10; attempt += 1) {
+  for (let attempt = 0; attempt < 30; attempt += 1) {
     const result = await supabase.from('match_review_states').upsert(
       {
-        match_id: match.id,
-        assignment_id: match.assignment_id,
-        profile_id: match.profile_id,
+        match_id: persistedMatch.id,
+        assignment_id: persistedMatch.assignment_id,
+        profile_id: persistedMatch.profile_id,
         org_id: assignmentRecord.org_id,
         review_stage: 'blind_review',
         reveal_scope: 'blind',
@@ -496,7 +524,7 @@ export async function createRuntimeMatch(
     const isMatchVisibilityRace = reviewStateError.message.includes(
       'match_review_states_match_id_fkey'
     );
-    if (!isMatchVisibilityRace || attempt === 9) {
+    if (!isMatchVisibilityRace || attempt === 29) {
       break;
     }
 
@@ -510,9 +538,9 @@ export async function createRuntimeMatch(
   }
 
   return {
-    id: match.id,
-    assignmentId: match.assignment_id,
-    profileId: match.profile_id,
+    id: persistedMatch.id,
+    assignmentId: persistedMatch.assignment_id,
+    profileId: persistedMatch.profile_id,
   };
 }
 

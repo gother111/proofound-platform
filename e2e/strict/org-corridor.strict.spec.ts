@@ -426,7 +426,7 @@ test.describe('Strict Authenticated Org Corridor', () => {
     const blindMatch = (rankedMatchesPayload.items ?? []).find(
       (item) => item.profileId === candidate.id
     );
-    const activeMatchId = blindMatch?.id ?? corridorMatch.id;
+    let activeMatchId = blindMatch?.id ?? corridorMatch.id;
     expect(activeMatchId).toBeTruthy();
     expect(blindMatch?.reviewStage).toBe('blind_review');
     expect(blindMatch?.revealScope).toBe('blind');
@@ -467,6 +467,28 @@ test.describe('Strict Authenticated Org Corridor', () => {
     }
     await expect(page.getByText(candidate.displayName)).toHaveCount(0);
 
+    const refreshedMatchesResponse = await browserRequestJson(
+      page,
+      'POST',
+      '/api/match/assignment',
+      {
+        assignmentId,
+        mode: 'balanced',
+        k: 20,
+      }
+    );
+    expect(refreshedMatchesResponse.ok()).toBeTruthy();
+    const refreshedMatchesPayload = (await refreshedMatchesResponse.json()) as {
+      items?: Array<{
+        id?: string | null;
+        profileId?: string;
+      }>;
+    };
+    const refreshedBlindMatch = (refreshedMatchesPayload.items ?? []).find(
+      (item) => item.profileId === candidate.id
+    );
+    activeMatchId = refreshedBlindMatch?.id ?? activeMatchId;
+
     let shortlistResponse = await browserRequestJson(
       page,
       'POST',
@@ -496,7 +518,14 @@ test.describe('Strict Authenticated Org Corridor', () => {
     }
     expect(
       shortlistResponse.ok(),
-      `Shortlist request failed with HTTP ${shortlistResponse.status()}: ${shortlistBody}`
+      [
+        `Shortlist request failed with HTTP ${shortlistResponse.status()}: ${shortlistBody}`,
+        `activeMatchId=${activeMatchId}`,
+        `corridorMatchId=${corridorMatch.id}`,
+        `blindMatchId=${blindMatch?.id ?? null}`,
+        `blindMatchProfileId=${blindMatch?.profileId ?? null}`,
+        `refreshedBlindMatchId=${refreshedBlindMatch?.id ?? null}`,
+      ].join('\n')
     ).toBeTruthy();
 
     const shortlistViewResponse = await browserGetJson(
