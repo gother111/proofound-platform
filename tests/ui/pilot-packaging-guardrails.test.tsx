@@ -21,9 +21,8 @@ vi.mock('next/image', () => ({
     alt = '',
     priority: _priority,
     ...props
-  }: React.ImgHTMLAttributes<HTMLImageElement> & { priority?: boolean }) => (
-    <img alt={alt} {...props} />
-  ),
+  }: React.ImgHTMLAttributes<HTMLImageElement> & { priority?: boolean }) =>
+    React.createElement('img', { alt, ...props }),
 }));
 
 vi.mock('framer-motion', () => ({
