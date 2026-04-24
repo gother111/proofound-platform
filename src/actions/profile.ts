@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { revalidatePublicPortfolioByProfileId } from '@/lib/portfolio/public-invalidation';
 import { headers } from 'next/headers';
-import { eq, and, or } from 'drizzle-orm';
+import { eq, and, or, sql } from 'drizzle-orm';
 
 import { db } from '@/db';
 import {
@@ -119,6 +119,12 @@ async function checkAndEmitProfileActivation(userId: string): Promise<void> {
     console.error('Profile activation check failed:', error);
     // Don't throw - activation tracking shouldn't break profile updates
   }
+}
+
+function toJsonbArrayLiteral(value: unknown[]): ReturnType<typeof sql.raw> {
+  const json = JSON.stringify(value);
+  const escapedJson = json.replace(/'/g, "''");
+  return sql.raw(`'${escapedJson}'::jsonb`);
 }
 
 type PurposeVisibility = 'public' | 'network' | 'private';
@@ -2219,6 +2225,8 @@ export async function createExperience(data: Omit<Experience, 'id'>) {
   });
   const normalizedMeasuredOutcomes = normalizeExperienceMeasuredOutcomes(data.measuredOutcomes);
   const normalizedProjectEntries = normalizeExperienceProjectEntries(data.projectEntries);
+  const measuredOutcomesJsonb = toJsonbArrayLiteral(normalizedMeasuredOutcomes);
+  const projectEntriesJsonb = toJsonbArrayLiteral(normalizedProjectEntries);
   const organizationType =
     typeof data.organizationType === 'string' &&
     Object.prototype.hasOwnProperty.call(EXPERIENCE_ORGANIZATION_TYPE_LABELS, data.organizationType)
@@ -2274,8 +2282,8 @@ export async function createExperience(data: Omit<Experience, 'id'>) {
       endDate: timeline.endDate,
       outcomes: outcomesText,
       projects: projectsText,
-      measuredOutcomes: normalizedMeasuredOutcomes,
-      projectEntries: normalizedProjectEntries,
+      measuredOutcomes: measuredOutcomesJsonb,
+      projectEntries: projectEntriesJsonb,
       colleagues: data.colleagues || 'Not specified',
       achievements: data.achievements || 'Not specified',
       verified: data.verified ?? false,
@@ -2310,6 +2318,12 @@ export async function updateExperience(id: string, data: Omit<Experience, 'id'>)
   });
   const normalizedMeasuredOutcomes = normalizeExperienceMeasuredOutcomes(data.measuredOutcomes);
   const normalizedProjectEntries = normalizeExperienceProjectEntries(data.projectEntries);
+  const measuredOutcomesJsonb =
+    data.measuredOutcomes !== undefined
+      ? toJsonbArrayLiteral(normalizedMeasuredOutcomes)
+      : undefined;
+  const projectEntriesJsonb =
+    data.projectEntries !== undefined ? toJsonbArrayLiteral(normalizedProjectEntries) : undefined;
   const hasOutcomeInput =
     normalizedMeasuredOutcomes.length > 0 ||
     (typeof data.outcomes === 'string' && data.outcomes.trim().length > 0);
@@ -2394,9 +2408,8 @@ export async function updateExperience(id: string, data: Omit<Experience, 'id'>)
             (data.projects || '').trim() || 'Not specified'
           )
         : undefined,
-      measuredOutcomes:
-        data.measuredOutcomes !== undefined ? normalizedMeasuredOutcomes : undefined,
-      projectEntries: data.projectEntries !== undefined ? normalizedProjectEntries : undefined,
+      measuredOutcomes: data.measuredOutcomes !== undefined ? measuredOutcomesJsonb : undefined,
+      projectEntries: data.projectEntries !== undefined ? projectEntriesJsonb : undefined,
       colleagues: data.colleagues ?? undefined,
       achievements: data.achievements ?? undefined,
       verified: data.verified ?? false,

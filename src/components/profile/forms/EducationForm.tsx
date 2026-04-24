@@ -174,7 +174,9 @@ export function EducationForm({
                     Add proof-backed portfolio content before attaching education entries.
                   </p>
                   <Button asChild type="button" variant="outline" size="sm">
-                    <Link href="/app/i/portfolio">Open Public Portfolio</Link>
+                    <Link href="/app/i/profile?profileView=full&tab=proof_packs">
+                      Add proof-backed content
+                    </Link>
                   </Button>
                 </div>
               ) : (

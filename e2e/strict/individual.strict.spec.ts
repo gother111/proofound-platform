@@ -10,6 +10,7 @@ import {
   createRuntimeOrganization,
   createRuntimeUser,
   loginWithUi,
+  seedPortfolioReadyCandidate,
   type StrictFixtureState,
   type StrictRuntimeAssignment,
   type StrictRuntimeConversation,
@@ -43,6 +44,10 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
       persona: 'org_member',
       prefix: 'strict-org-member',
       displayName: 'Strict Org Member',
+    });
+
+    await seedPortfolioReadyCandidate(individualUser, {
+      verifierProfileId: orgUser.id,
     });
 
     onboardingUser = await createRuntimeUser(fixture, {
@@ -303,12 +308,16 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
 
     await page.goto('/app/i/home');
     await expect(page.getByRole('heading', { name: /welcome back/i })).toBeVisible();
-    await expect(page.getByText(/proof packs first\. public proof when you are ready\./i)).toBeVisible();
+    await expect(
+      page.getByText(/proof packs first\. public proof when you are ready\./i)
+    ).toBeVisible();
   });
 
   test('I-15..I-17 messaging, interview scheduling, and offer attestation work', async ({
     page,
   }) => {
+    test.setTimeout(300_000);
+
     await loginWithUi(page, individualUser);
 
     const sendMessageResponse = await apiPostJson(
@@ -336,6 +345,72 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
         (message) => message.id === sendMessagePayload.message?.id
       )
     ).toBeTruthy();
+
+    await page.context().clearCookies();
+    await loginWithUi(page, orgUser);
+
+    const shortlistResponse = await apiPostJson(
+      page.request,
+      `/api/org/${organization.slug}/matches/${match.id}/review`,
+      {
+        action: 'shortlist',
+      }
+    );
+    expect(shortlistResponse.ok()).toBeTruthy();
+    const shortlistPayload = (await shortlistResponse.json()) as {
+      reviewStage?: string;
+      revealScope?: string;
+    };
+    expect(shortlistPayload.reviewStage).toBe('shortlisted');
+    expect(shortlistPayload.revealScope).toBe('shortlist_identity');
+
+    const introResponse = await apiPostJson(
+      page.request,
+      `/api/org/${organization.slug}/matches/${match.id}/review`,
+      {
+        action: 'request_intro',
+      }
+    );
+    expect(introResponse.ok()).toBeTruthy();
+    const introPayload = (await introResponse.json()) as {
+      conversationId?: string;
+      introApproved?: boolean;
+    };
+    const conversationId = introPayload.conversationId;
+    expect(conversationId).toBeTruthy();
+    expect(introPayload.introApproved).toBe(true);
+
+    const revealRequestResponse = await apiPostJson(
+      page.request,
+      `/api/org/${organization.slug}/matches/${match.id}/review`,
+      {
+        action: 'reveal_request',
+        requestedScope: 'full_identity',
+      }
+    );
+    expect(revealRequestResponse.ok()).toBeTruthy();
+    const revealRequestPayload = (await revealRequestResponse.json()) as {
+      waitingForCandidateApproval?: boolean;
+      corridorState?: string;
+    };
+    expect(revealRequestPayload.waitingForCandidateApproval).toBe(true);
+    expect(revealRequestPayload.corridorState).toBe('request_reveal');
+
+    await page.context().clearCookies();
+    await loginWithUi(page, individualUser);
+
+    const revealApprovalResponse = await apiPostJson(
+      page.request,
+      `/api/conversations/${conversationId}/reveal`,
+      {}
+    );
+    expect(revealApprovalResponse.ok()).toBeTruthy();
+    const revealApprovalPayload = (await revealApprovalResponse.json()) as {
+      revealed?: boolean;
+      conversation?: { stage?: string };
+    };
+    expect(revealApprovalPayload.revealed).toBe(true);
+    expect(revealApprovalPayload.conversation?.stage).toBe('revealed');
 
     await page.context().clearCookies();
     await loginWithUi(page, orgUser);
@@ -378,37 +453,14 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
       )
     ).toBeTruthy();
 
-    let contractResponse = await apiPostJson(page.request, '/api/contracts', {
+    const contractResponse = await apiPostJson(page.request, '/api/contracts', {
       assignmentId: assignment.id,
       userId: individualUser.id,
       contractType: 'contract',
       userAttestation: true,
       notes: 'Strict individual offer attestation',
     });
-
-    if (contractResponse.status() === 403) {
-      await page.goto('/app/i/interviews');
-      contractResponse = await apiPostJson(page.request, '/api/contracts', {
-        assignmentId: assignment.id,
-        userId: individualUser.id,
-        contractType: 'contract',
-        userAttestation: true,
-        notes: 'Strict individual offer attestation',
-      });
-    }
-
-    const contractStatus = contractResponse.status();
-    expect([200, 201, 403]).toContain(contractStatus);
-
-    if (contractStatus !== 403) {
-      const contractPayload = (await contractResponse.json()) as {
-        contract?: { id?: string; userAttestation?: boolean };
-      };
-      expect(contractPayload.contract?.userAttestation).toBe(true);
-      if (contractPayload.contract?.id) {
-        fixture.contractIds.add(contractPayload.contract.id);
-      }
-    }
+    expect(contractResponse.status()).toBe(410);
   });
 
   test('I-18..I-20 privacy-safe settings, account controls, and archived routes are real', async ({

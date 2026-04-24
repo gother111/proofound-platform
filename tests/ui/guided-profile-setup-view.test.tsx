@@ -25,7 +25,7 @@ describe('GuidedProfileSetupView', () => {
             hasStructuredProofPack: false,
             hasProofForPublishing: false,
             hasPublishedPortfolio: false,
-            hasOptionalVerification: false,
+            hasRequiredVerification: false,
           },
           counts: {
             contexts: 1,
@@ -65,7 +65,7 @@ describe('GuidedProfileSetupView', () => {
       'Add one real context',
       'Add your first proof',
       'Structure your first Proof Pack',
-      'Optional verification',
+      'Required verification',
       'Publish portfolio',
     ];
 

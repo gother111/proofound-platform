@@ -202,9 +202,15 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => window.open('/app/i/portfolio', '_blank', 'noopener,noreferrer')}
+              onClick={() =>
+                window.open(
+                  '/app/i/profile?profileView=full&tab=proof_packs',
+                  '_blank',
+                  'noopener,noreferrer'
+                )
+              }
             >
-              Open Public Portfolio
+              Review Proof Packs
               <ExternalLink className="ml-2 h-4 w-4" />
             </Button>
           </div>

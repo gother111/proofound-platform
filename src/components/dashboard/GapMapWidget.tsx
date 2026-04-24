@@ -54,7 +54,7 @@ export function GapMapWidget() {
   }, []);
 
   const handleViewAll = () => {
-    router.push('/app/i/portfolio');
+    router.push('/app/i/profile?profileView=full&tab=proof_packs');
   };
 
   if (loading) {
@@ -98,7 +98,7 @@ export function GapMapWidget() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => router.push('/app/i/portfolio')}
+              onClick={() => router.push('/app/i/profile?profileView=full&tab=proof_packs')}
               className="border-primary text-primary hover:bg-primary/10"
             >
               Review Portfolio

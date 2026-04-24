@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Briefcase, Globe, PackageOpen, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -19,6 +19,7 @@ type ProfileTabsSectionProps = {
   education: Education[];
   volunteering: Volunteering[];
   completionState: IndividualProfileCompletionState;
+  initialTab?: ProfileTabId;
   proofArtifactCount: number;
   acceptedVerificationCount: number;
   isPending: boolean;
@@ -35,7 +36,20 @@ type ProfileTabsSectionProps = {
   onAddVolunteering: () => void;
   onEditVolunteering: (volunteering: Volunteering) => void;
   onDeleteVolunteering: (id: string) => void;
+  onImportContextComplete?: () => void;
+  onAddFirstProof: () => void;
 };
+
+type ProfileTabId = 'context' | 'proof_packs' | 'verification' | 'visibility';
+
+function isProfileTabId(value: string): value is ProfileTabId {
+  return (
+    value === 'context' ||
+    value === 'proof_packs' ||
+    value === 'verification' ||
+    value === 'visibility'
+  );
+}
 
 export function ProfileTabsSection({
   impactStories,
@@ -43,6 +57,7 @@ export function ProfileTabsSection({
   education,
   volunteering,
   completionState,
+  initialTab = 'context',
   proofArtifactCount,
   acceptedVerificationCount,
   isPending,
@@ -59,14 +74,24 @@ export function ProfileTabsSection({
   onAddVolunteering,
   onEditVolunteering,
   onDeleteVolunteering,
+  onImportContextComplete,
+  onAddFirstProof,
 }: ProfileTabsSectionProps) {
-  const [activeTab, setActiveTab] = useState('context');
+  const [activeTab, setActiveTab] = useState<ProfileTabId>(initialTab);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   return (
     <Tabs
       defaultValue="context"
       value={activeTab}
-      onValueChange={setActiveTab}
+      onValueChange={(value) => {
+        if (isProfileTabId(value)) {
+          setActiveTab(value);
+        }
+      }}
       className="space-y-8"
     >
       <TabsList className="w-full justify-start bg-transparent border-b border-border/40 rounded-none h-auto p-0 gap-6 relative">
@@ -115,6 +140,7 @@ export function ProfileTabsSection({
         onAddVolunteering={onAddVolunteering}
         onEditVolunteering={onEditVolunteering}
         onDeleteVolunteering={onDeleteVolunteering}
+        onImportComplete={onImportContextComplete}
       />
 
       <ImpactTab
@@ -126,6 +152,7 @@ export function ProfileTabsSection({
         completionState={completionState}
         proofArtifactCount={proofArtifactCount}
         acceptedVerificationCount={acceptedVerificationCount}
+        onAddFirstProof={onAddFirstProof}
       />
 
       <VerificationTab acceptedVerificationCount={acceptedVerificationCount} />

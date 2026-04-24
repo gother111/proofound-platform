@@ -75,7 +75,7 @@ export function getGateActionLink(type: VerificationGateType): string {
     case 'peer_attestation':
       return '/app/i/profile#attestations';
     case 'skill_proof':
-      return '/app/i/portfolio';
+      return '/app/i/profile?profileView=full&tab=proof_packs';
     default:
       return '/app/i/settings';
   }

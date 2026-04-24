@@ -96,7 +96,7 @@ export default function MatchingPage() {
         id: 'update-public-portfolio-default',
         title: 'Strengthen public portfolio',
         description: 'Refresh proof-backed work examples and trust signals on your portfolio.',
-        actionUrl: '/app/i/portfolio',
+        actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
       },
       {
         id: 'set-matching-constraints-default',

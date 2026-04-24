@@ -26,7 +26,7 @@ export function IndividualMatchingEmpty({ onSetup }: IndividualMatchingEmptyProp
       id: 'strengthen-portfolio',
       title: 'Strengthen public portfolio',
       description: 'Refresh proof-backed work examples before opening matching further.',
-      onClick: () => router.push('/app/i/portfolio'),
+      onClick: () => router.push('/app/i/profile?profileView=full&tab=proof_packs'),
     },
     {
       id: 'complete-purpose',

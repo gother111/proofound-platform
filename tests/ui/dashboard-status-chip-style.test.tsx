@@ -41,10 +41,15 @@ describe('Dashboard status badge styling', () => {
     render(<ProfileActivationCard />);
 
     await waitFor(() => {
-      expect(screen.getByText('Portfolio ready')).toBeInTheDocument();
+      expect(
+        screen.getAllByText('Portfolio ready').some((node) => node.className.includes('shrink-0'))
+      ).toBe(true);
     });
 
-    const badge = screen.getByText('Portfolio ready');
+    const badge = screen
+      .getAllByText('Portfolio ready')
+      .find((node) => node.className.includes('shrink-0'));
+    expect(badge).toBeDefined();
     expectClassTokens(badge.className, DASHBOARD_STATUS_CHIP_CLASS);
     expect(badge.className).toContain('whitespace-nowrap');
     expect(badge.className).toContain('shrink-0');

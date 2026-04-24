@@ -152,7 +152,7 @@ export function ImpactSnapshotCard() {
             Build your impact profile to showcase your achievements.
           </p>
           <Link
-            href="/app/i/portfolio"
+            href="/app/i/profile?profileView=full&tab=proof_packs"
             className="text-xs hover:underline"
             style={{ color: '#1C4D3A' }}
           >
@@ -174,7 +174,7 @@ export function ImpactSnapshotCard() {
           Impact
         </h5>
         <Link
-          href="/app/i/portfolio"
+          href="/app/i/profile?profileView=full&tab=visibility"
           className="text-xs hover:underline"
           style={{ color: '#1C4D3A' }}
         >

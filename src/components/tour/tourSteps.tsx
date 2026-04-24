@@ -22,7 +22,7 @@ import { UI_VOCABULARY } from '@/lib/copy/vocabulary';
  * 2. Reveal Navigation
  * 3. Reveal Overview
  * 4. Jump to Profile (empty state)
- * 5. Show Public Portfolio
+ * 5. Show profile-owned portfolio visibility
  * 6. Show Matching Profile
  * 7. Show Settings
  * 8. Suggest next actions
@@ -90,13 +90,13 @@ export const individualTourSteps: Step[] = [
     disableBeacon: true,
   },
   {
-    target: '[data-tour="portfolio-link"]',
+    target: '[data-tour="profile-link"]',
     content: (
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-foreground">Public Portfolio</h3>
+        <h3 className="text-base font-semibold text-foreground">Portfolio Visibility</h3>
         <p className="text-sm text-muted-foreground">
-          This is your clean, proof-based link. Copy it and share it right away. Matching remains
-          available as a secondary step after your portfolio is live.
+          Profile owns Proof Packs and the visibility controls for your clean, proof-based link.
+          Matching remains secondary until proof and privacy are ready.
         </p>
       </div>
     ),
@@ -140,16 +140,15 @@ export const individualTourSteps: Step[] = [
       <div className="space-y-3">
         <h2 className="text-lg font-semibold text-foreground">You're all set! 🎉</h2>
         <p className="text-sm text-muted-foreground">
-          Start with your <strong>Public Portfolio</strong>: publish, copy, and share your link.
-          Then strengthen it with Profile details, proof-backed skills, and qualified matching
-          preferences.
+          Start with your <strong>Proof Packs</strong> in Profile, then publish only the public-safe
+          signals you choose. Matching comes after proof and privacy are ready.
         </p>
         <div className="pt-3 border-t border-proofound-stone">
           <p className="text-xs text-muted-foreground">
             <strong>Next steps:</strong>
           </p>
           <ul className="text-xs text-muted-foreground list-disc list-inside space-y-1 mt-1">
-            <li>Share your Public Portfolio link</li>
+            <li>Publish one public-safe proof signal</li>
             <li>Add one proof-backed signal you want to show publicly</li>
             <li>Add one proof-linked skill and one matching preference</li>
             <li>Complete stronger proof and constraints for qualified introductions</li>

@@ -24,7 +24,7 @@ type SetupPhase =
   | 'real_context'
   | 'first_proof'
   | 'proof_pack'
-  | 'optional_verification'
+  | 'verification'
   | 'publish_portfolio'
   | 'success';
 
@@ -71,7 +71,7 @@ const SETUP_STEPS: Array<{
   { id: 'real_context', label: 'Add one real context', icon: Briefcase },
   { id: 'first_proof', label: 'Add first proof', icon: Link2 },
   { id: 'proof_pack', label: 'Structure first Proof Pack', icon: PackageOpen },
-  { id: 'optional_verification', label: 'Optional verification', icon: BadgeCheck },
+  { id: 'verification', label: 'Required verification', icon: BadgeCheck },
   { id: 'publish_portfolio', label: 'Publish portfolio', icon: Rocket },
 ];
 
@@ -267,7 +267,7 @@ export function IndividualSetup() {
 
   function handleProofPackSubmit() {
     setError(null);
-    setPhase('optional_verification');
+    setPhase('verification');
   }
 
   if (phase === 'success' && portfolioUrl) {
@@ -717,7 +717,8 @@ export function IndividualSetup() {
                 </p>
                 <p className="mt-3">
                   <span className="font-medium">Visibility summary:</span> Public portfolio-safe by
-                  default. Blind review stays intact. Verification is currently unverified.
+                  default. Blind review stays intact. Public readiness requires an accepted non-self
+                  verification before this Proof Pack can unlock visibility.
                 </p>
               </div>
 
@@ -735,7 +736,7 @@ export function IndividualSetup() {
         </Card>
       ) : null}
 
-      {phase === 'optional_verification' ? (
+      {phase === 'verification' ? (
         <Card className="mx-auto rounded-2xl border-proofound-stone dark:border-border">
           <CardHeader>
             <button
@@ -747,20 +748,20 @@ export function IndividualSetup() {
               Back to Proof Pack
             </button>
             <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
-              Optional verification
+              Required verification
             </CardTitle>
             <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-              Verification can wait. Skipping it does not block portfolio-ready, but this first
-              Proof Pack will stay unverified until you request a non-self trust signal later.
+              Public readiness needs one accepted non-self verification tied to anchored proof or
+              context. This keeps the portfolio proof-first instead of self-claimed.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-xl border border-proofound-stone bg-proofound-parchment/60 p-4 text-sm text-proofound-charcoal dark:border-border dark:bg-muted dark:text-foreground">
               <p className="font-medium">What happens next</p>
               <p className="mt-1 text-proofound-charcoal/70 dark:text-muted-foreground">
-                We&apos;ll keep your portfolio calm and public-safe. You can publish now, then
-                request verification from the app later if you want stronger trust and future
-                intro-eligible progress.
+                Request verification for the Proof Pack before publishing. Once it is accepted, the
+                portfolio can become public-ready and matching can build from a verified trust
+                signal.
               </p>
             </div>
 
@@ -770,7 +771,7 @@ export function IndividualSetup() {
                 variant="outline"
                 onClick={() => router.push('/app/i/verifications')}
               >
-                Open verification center later
+                Open verification center
               </Button>
               <Button
                 type="button"
@@ -778,7 +779,7 @@ export function IndividualSetup() {
                 className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
                 onClick={() => setPhase('publish_portfolio')}
               >
-                Continue to publish
+                Continue after verification is accepted
               </Button>
             </div>
           </CardContent>
@@ -790,7 +791,7 @@ export function IndividualSetup() {
           <CardHeader>
             <button
               type="button"
-              onClick={() => setPhase('optional_verification')}
+              onClick={() => setPhase('verification')}
               className="mb-4 inline-flex items-center gap-2 text-sm text-proofound-charcoal/70 transition-colors hover:text-proofound-forest dark:text-muted-foreground dark:hover:text-primary"
             >
               <ArrowLeft className="h-4 w-4" />

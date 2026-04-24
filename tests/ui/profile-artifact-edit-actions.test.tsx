@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ImpactTab } from '@/components/profile/editable-profile/ImpactTab';
@@ -39,6 +39,16 @@ vi.mock('framer-motion', () => ({
   },
 }));
 
+function getTabTrigger(name: string) {
+  return screen.getAllByRole('button', { name }).find((node) => node.hasAttribute('data-value'));
+}
+
+function queryTabTrigger(pattern: RegExp) {
+  return screen
+    .queryAllByRole('button')
+    .find((node) => node.hasAttribute('data-value') && pattern.test(node.textContent || ''));
+}
+
 describe('profile launch IA', () => {
   it('replaces legacy profile tabs with launch IA labels', () => {
     render(
@@ -64,7 +74,7 @@ describe('profile launch IA', () => {
             hasStructuredProofPack: false,
             hasProofForPublishing: false,
             hasPublishedPortfolio: false,
-            hasOptionalVerification: false,
+            hasRequiredVerification: false,
           },
           counts: {
             contexts: 1,
@@ -98,22 +108,25 @@ describe('profile launch IA', () => {
         onAddVolunteering={vi.fn()}
         onEditVolunteering={vi.fn()}
         onDeleteVolunteering={vi.fn()}
+        onAddFirstProof={vi.fn()}
       />
     );
 
-    expect(screen.getByRole('button', { name: 'Context' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Proof Packs' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Verification' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Visibility / Portfolio' })).toBeInTheDocument();
+    expect(getTabTrigger('Context')).toBeInTheDocument();
+    expect(getTabTrigger('Proof Packs')).toBeInTheDocument();
+    expect(getTabTrigger('Verification')).toBeInTheDocument();
+    expect(getTabTrigger('Visibility / Portfolio')).toBeInTheDocument();
 
-    expect(screen.queryByRole('button', { name: /journey/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /learning/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /service/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /proof stories/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /network/i })).not.toBeInTheDocument();
+    expect(queryTabTrigger(/journey/i)).toBeUndefined();
+    expect(queryTabTrigger(/learning/i)).toBeUndefined();
+    expect(queryTabTrigger(/service/i)).toBeUndefined();
+    expect(queryTabTrigger(/proof stories/i)).toBeUndefined();
+    expect(queryTabTrigger(/network/i)).toBeUndefined();
   });
 
   it('shows proof-pack blockers and a direct add-proof path', () => {
+    const onAddFirstProof = vi.fn();
+
     render(
       <ImpactTab
         impactStories={[]}
@@ -138,7 +151,7 @@ describe('profile launch IA', () => {
             hasStructuredProofPack: false,
             hasProofForPublishing: false,
             hasPublishedPortfolio: false,
-            hasOptionalVerification: false,
+            hasRequiredVerification: false,
           },
           counts: {
             contexts: 1,
@@ -158,15 +171,14 @@ describe('profile launch IA', () => {
         }}
         proofArtifactCount={0}
         acceptedVerificationCount={0}
+        onAddFirstProof={onAddFirstProof}
       />
     );
 
     expect(screen.getByText(/proof packs/i)).toBeInTheDocument();
     expect(screen.getByText(/readiness blockers/i)).toBeInTheDocument();
     expect(screen.getByText(/add your first proof link or artifact/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /add your first proof/i })).toHaveAttribute(
-      'href',
-      '/app/i/portfolio'
-    );
+    fireEvent.click(screen.getByRole('button', { name: /add your first proof/i }));
+    expect(onAddFirstProof).toHaveBeenCalledTimes(1);
   });
 });

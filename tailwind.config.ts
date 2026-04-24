@@ -33,7 +33,7 @@ const config: Config = {
       colors: {
         // Figma Design System Colors - Primary Brand
         proofound: {
-          forest: '#606C5A',
+          forest: '#56624F',
           terracotta: '#C09E85',
           parchment: '#F3F0E8',
           charcoal: '#5E5E5E',
@@ -46,7 +46,7 @@ const config: Config = {
           ochre: '#DCB482',
           clay: '#C09E85',
           sand: '#D5CABA',
-          bamboo: '#606C5A',
+          bamboo: '#56624F',
         },
         // V3 semantic tokens
         'proofound-success-tint': '#EEF1EA',
@@ -108,7 +108,7 @@ const config: Config = {
         teal: '#B0B9A8',
         clay: '#C09E85',
         sand: '#D5CABA',
-        bamboo: '#606C5A',
+        bamboo: '#56624F',
         ochre: '#DCB482',
         olive: '#8F837A',
       },

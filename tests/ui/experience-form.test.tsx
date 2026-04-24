@@ -46,7 +46,7 @@ describe('ExperienceForm', () => {
     return { onSave, onOpenChange };
   }
 
-  function fillRequiredTextFields() {
+  function fillRequiredTextFields({ includeProject = true }: { includeProject?: boolean } = {}) {
     fireEvent.change(screen.getByLabelText(/Role\/Title/i), { target: { value: 'Product Lead' } });
     fireEvent.change(screen.getByLabelText(/Organization Name/i), {
       target: { value: 'Proofound' },
@@ -58,6 +58,11 @@ describe('ExperienceForm', () => {
     fireEvent.change(screen.getByPlaceholderText(/Hiring cycle time/i), {
       target: { value: 'Reduced hiring cycle time' },
     });
+
+    if (!includeProject) {
+      return;
+    }
+
     fireEvent.change(screen.getByPlaceholderText(/Interview rubric revamp/i), {
       target: { value: 'Interview rubric revamp' },
     });
@@ -105,6 +110,46 @@ describe('ExperienceForm', () => {
         ],
       })
     );
+  });
+
+  it('treats projects as optional in add work context', async () => {
+    const { onSave } = renderForm();
+
+    fillRequiredTextFields({ includeProject: false });
+    expect(screen.getByText(/Optional for now/i)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/Start month/i), { target: { value: '2024-01' } });
+    fireEvent.click(screen.getByLabelText(/Ongoing/i));
+
+    fireEvent.click(screen.getByRole('button', { name: /Add Experience/i }));
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        projects: 'Not specified',
+        projectEntries: [],
+      })
+    );
+  });
+
+  it('requires project name and duration only when a project is started', async () => {
+    const { onSave } = renderForm();
+
+    fillRequiredTextFields({ includeProject: false });
+    fireEvent.change(screen.getByLabelText(/Start month/i), { target: { value: '2024-01' } });
+    fireEvent.click(screen.getByLabelText(/Ongoing/i));
+    fireEvent.change(screen.getByPlaceholderText(/Interview rubric revamp/i), {
+      target: { value: 'Interview rubric revamp' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Add Experience/i }));
+
+    await waitFor(() =>
+      expect(
+        screen.getByText('Project duration is required when adding a project')
+      ).toBeInTheDocument()
+    );
+    expect(onSave).not.toHaveBeenCalled();
   });
 
   it('rejects end month earlier than start month', async () => {

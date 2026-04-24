@@ -962,15 +962,14 @@ export async function apiPostJson(
     timeoutMs?: number;
   }
 ) {
-  return withTransientRequestRetry(`POST ${url}`, async () => {
-    const csrfToken = await getCsrfToken(request);
-    return request.post(url, {
-      data,
-      headers: {
-        'x-csrf-token': csrfToken,
-      },
-      timeout: options?.timeoutMs,
-    });
+  const csrfToken = await getCsrfToken(request);
+  return request.post(url, {
+    data,
+    headers: {
+      'x-csrf-token': csrfToken,
+    },
+    // Avoid retrying mutating requests after client-side timeouts.
+    timeout: options?.timeoutMs ?? 120_000,
   });
 }
 

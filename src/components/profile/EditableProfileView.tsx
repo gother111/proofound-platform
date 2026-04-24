@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import { GuidedProfileSetupView } from './GuidedProfileSetupView';
@@ -16,6 +16,11 @@ import { useProfileData } from '@/hooks/useProfileData';
 import { MobileProfileHeader } from '@/components/profile/MobileProfileHeader';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  FirstProofDialog,
+  type FirstProofAnchorOption,
+  type FirstProofSkillOption,
+} from '@/components/proofs/FirstProofDialog';
 import { evaluateIndividualProfileCompletion } from '@/lib/profile/completion-flow';
 import type { Education, Experience, ImpactStory, Volunteering } from '@/types/profile';
 
@@ -26,9 +31,11 @@ function resolvePortfolioGateMessage(lockReason: string | null): string {
     case 'context':
       return 'Public portfolio is locked until you add one real context.';
     case 'proof':
-      return 'Public portfolio is locked until you add and structure your first proof in the portfolio workspace.';
+      return 'Public portfolio is locked until you add and structure your first proof from the profile Proof Packs tab.';
+    case 'verification':
+      return 'Public portfolio is locked until one accepted non-self verification is tied to anchored proof.';
     case 'publish':
-      return 'Public portfolio is locked until you choose one proof-backed signal to publish from the portfolio workspace.';
+      return 'Public portfolio is locked until you choose one proof-backed signal to publish from the profile Visibility / Portfolio tab.';
     default:
       return 'Complete the required profile steps to unlock your public portfolio.';
   }
@@ -93,6 +100,8 @@ export function EditableProfileView() {
   const [editingExperience, setEditingExperience] = useState<Experience | null>(null);
   const [editingEducation, setEditingEducation] = useState<Education | null>(null);
   const [editingVolunteering, setEditingVolunteering] = useState<Volunteering | null>(null);
+  const [forceFullProfileView, setForceFullProfileView] = useState(false);
+  const [isFirstProofDialogOpen, setIsFirstProofDialogOpen] = useState(false);
 
   const completionState = useMemo(
     () =>
@@ -141,6 +150,29 @@ export function EditableProfileView() {
   const showPortfolioGateNotice = searchParams.get('portfolioLocked') === '1';
   const lockReasonFromRoute = searchParams.get('lockReason');
   const fullProfileOverride = searchParams.get('profileView') === 'full';
+  const shouldOpenFirstProof = searchParams.get('proof') === 'first';
+  const requestedProfileTab = searchParams.get('tab');
+  const profileTab =
+    requestedProfileTab === 'proof_packs' ||
+    requestedProfileTab === 'verification' ||
+    requestedProfileTab === 'visibility' ||
+    requestedProfileTab === 'context'
+      ? requestedProfileTab
+      : undefined;
+
+  useEffect(() => {
+    if (fullProfileOverride) {
+      setForceFullProfileView(true);
+    }
+  }, [fullProfileOverride]);
+
+  useEffect(() => {
+    if (shouldOpenFirstProof) {
+      setForceFullProfileView(true);
+      setIsFirstProofDialogOpen(true);
+    }
+  }, [shouldOpenFirstProof]);
+
   const portfolioGateNotice = showPortfolioGateNotice ? (
     <Card className="mb-6 p-4 border-amber-300 bg-amber-50/70 text-amber-900">
       <p className="text-sm">{resolvePortfolioGateMessage(lockReasonFromRoute)}</p>
@@ -151,10 +183,47 @@ export function EditableProfileView() {
     () => profile?.skills.map((skill) => skill.name).filter(Boolean) ?? [],
     [profile?.skills]
   );
+  const firstProofSkills: FirstProofSkillOption[] = useMemo(
+    () =>
+      profile?.skills.map((skill) => ({
+        id: skill.id,
+        name: skill.name,
+      })) ?? [],
+    [profile?.skills]
+  );
+  const firstProofAnchors: FirstProofAnchorOption[] = useMemo(
+    () =>
+      profile
+        ? [
+            ...profile.experiences.map((experience) => ({
+              id: experience.id,
+              type: 'experience' as const,
+              label: experience.title,
+              detail: [experience.organizationName, experience.duration]
+                .filter(Boolean)
+                .join(' · '),
+            })),
+            ...profile.education.map((education) => ({
+              id: education.id,
+              type: 'education' as const,
+              label: education.degree,
+              detail: [education.institution, education.duration].filter(Boolean).join(' · '),
+            })),
+            ...profile.volunteering.map((volunteering) => ({
+              id: volunteering.id,
+              type: 'volunteering' as const,
+              label: volunteering.title,
+              detail: [volunteering.cause, volunteering.duration].filter(Boolean).join(' · '),
+            })),
+          ]
+        : [],
+    [profile]
+  );
   const valuesCount = profile?.values.length ?? 0;
   const causesCount = profile?.causes.length ?? 0;
 
   const openFullProfileView = useCallback(() => {
+    setForceFullProfileView(true);
     const params = new URLSearchParams(searchParams.toString());
     params.set('profileView', 'full');
 
@@ -177,6 +246,19 @@ export function EditableProfileView() {
       }),
     }).catch(() => undefined);
   }, [causesCount, completionState.stage, pathname, router, searchParams, valuesCount]);
+
+  const openProfileTab = useCallback(
+    (tab: 'proof_packs' | 'verification' | 'visibility') => {
+      setForceFullProfileView(true);
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('profileView', 'full');
+      params.set('tab', tab);
+
+      const query = params.toString();
+      router.replace(`${pathname ?? '/app/i/profile'}${query ? `?${query}` : ''}`);
+    },
+    [pathname, router, searchParams]
+  );
 
   const openAddImpactStory = () => {
     setEditingImpactStory(null);
@@ -320,7 +402,8 @@ export function EditableProfileView() {
   }
 
   const showCompletionBanner = profileCompletion < 80;
-  const showGuidedFlow = !completionState.isPortfolioReady && !fullProfileOverride;
+  const showGuidedFlow =
+    !completionState.isPortfolioReady && !(fullProfileOverride || forceFullProfileView);
 
   if (showGuidedFlow) {
     return (
@@ -337,13 +420,20 @@ export function EditableProfileView() {
             onAddExperience={openAddExperience}
             onAddEducation={openAddEducation}
             onAddVolunteering={openAddVolunteering}
-            onOpenProofs={() => router.push('/app/i/portfolio')}
+            onOpenProofs={() => setIsFirstProofDialogOpen(true)}
             onOpenVerification={() => router.push('/app/i/verifications')}
-            onOpenPortfolio={() => router.push('/app/i/portfolio')}
+            onOpenPortfolio={() => openProfileTab('visibility')}
             onOpenMatchingPreferences={() => router.push('/app/i/matching/preferences')}
           />
         </div>
         {profileDialogs}
+        <FirstProofDialog
+          open={isFirstProofDialogOpen}
+          onOpenChange={setIsFirstProofDialogOpen}
+          skills={firstProofSkills}
+          anchors={firstProofAnchors}
+          onProofAdded={retryLoad}
+        />
       </>
     );
   }
@@ -399,6 +489,7 @@ export function EditableProfileView() {
               education={profile.education}
               volunteering={profile.volunteering}
               completionState={completionState}
+              initialTab={profileTab}
               proofArtifactCount={profile.proofArtifactCount ?? 0}
               acceptedVerificationCount={profile.acceptedVerificationCount ?? 0}
               isPending={isPending}
@@ -415,12 +506,21 @@ export function EditableProfileView() {
               onAddVolunteering={openAddVolunteering}
               onEditVolunteering={openEditVolunteering}
               onDeleteVolunteering={deleteVolunteering}
+              onImportContextComplete={retryLoad}
+              onAddFirstProof={() => setIsFirstProofDialogOpen(true)}
             />
           </div>
         </div>
       </div>
 
       {profileDialogs}
+      <FirstProofDialog
+        open={isFirstProofDialogOpen}
+        onOpenChange={setIsFirstProofDialogOpen}
+        skills={firstProofSkills}
+        anchors={firstProofAnchors}
+        onProofAdded={retryLoad}
+      />
     </div>
   );
 }

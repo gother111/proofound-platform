@@ -80,7 +80,7 @@ describe('MatchingPage soft-gated state', () => {
           id: 'update-public-portfolio',
           title: 'Strengthen public portfolio',
           description: 'Refresh proof-backed work examples and trust signals.',
-          actionUrl: '/app/i/portfolio',
+          actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
         },
       ],
     };

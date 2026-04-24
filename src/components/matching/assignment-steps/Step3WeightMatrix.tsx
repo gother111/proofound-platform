@@ -120,10 +120,10 @@ export function Step3WeightMatrix({ form, onNext, onBack }: Step3Props) {
 
       <div className="space-y-4 rounded-lg border p-4">
         <div className="space-y-1">
-          <Label>Optional verification gates</Label>
+          <Label>Additional verification gates</Label>
           <p className="text-sm text-muted-foreground">
-            Keep these narrow. Optional gates should support trust review, not recreate a broad
-            verification suite.
+            Keep these narrow. These add role-specific requirements on top of the baseline
+            proof-plus-verification readiness rule.
           </p>
         </div>
         <div className="space-y-3">

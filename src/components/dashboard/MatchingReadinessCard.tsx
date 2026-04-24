@@ -37,7 +37,7 @@ export function MatchingReadinessCard({ useMockData, onActionClick }: MatchingRe
               label: 'Three recent skills',
               detail: 'Add at least 3 skills with last-used dates.',
               met: false,
-              actionUrl: '/app/i/portfolio',
+              actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
             },
           ],
           qualified_intro_ready: [],

@@ -27,7 +27,10 @@ export interface EligibilityAction {
   id: string;
   title: string;
   description: string;
-  actionUrl: '/app/i/portfolio' | '/app/i/matching/preferences' | '/app/i/profile';
+  actionUrl:
+    | '/app/i/profile?profileView=full&tab=proof_packs'
+    | '/app/i/matching/preferences'
+    | '/app/i/profile';
 }
 
 export interface EligibilityResult {
@@ -91,12 +94,12 @@ function toEligibilityAction(requirement: ReadinessRequirement): EligibilityActi
     };
   }
 
-  if (requirement.actionUrl === '/app/i/portfolio') {
+  if (requirement.actionUrl.includes('tab=proof_packs')) {
     return {
       id: requirement.id,
       title: 'Strengthen public portfolio proof',
       description: requirement.detail,
-      actionUrl: '/app/i/portfolio',
+      actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
     };
   }
 

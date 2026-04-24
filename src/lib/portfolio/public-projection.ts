@@ -24,6 +24,7 @@ import { resolveHasLinkedInIdentityVerification } from '@/lib/linkedin-verified'
 import {
   hasPrimaryAnchorContext,
   listCanonicalProofPackAggregatesForOwner,
+  type CanonicalProofPackAggregate,
   type CanonicalPublicSafeProofPackProjection,
 } from '@/lib/proofs/canonical-pack';
 import {
@@ -120,6 +121,7 @@ type PublicProofOverview = {
   featuredProofs: FeaturedProof[];
   publicProofPacks: PublicTrustExportData['proofPacks'];
   publicProofCount: number;
+  verifiedPublicProofPackCount: number;
   publicSkillIds: string[];
   hasLinkOnlyContent: boolean;
   hasRevealGatedContent: boolean;
@@ -136,6 +138,7 @@ export type PublicIndividualPortfolioProjection = {
   publicBio: string | null;
   publicSkills: string[];
   publicProofCount: number;
+  verifiedPublicProofPackCount: number;
   featuredProofs: FeaturedProof[];
   visibility: ReturnType<typeof mergeVisibilityFlags>;
   individual: {
@@ -401,13 +404,6 @@ function resolvePublicPortfolioName(
   return 'Proofound profile';
 }
 
-function hasDurableTrustSignal(
-  _profile: IndividualProfileRow,
-  verificationSummary: VerificationPolicySummary
-) {
-  return verificationSummary.publicBadges.length > 0;
-}
-
 async function loadIndividualProfileByHandle(handle: string): Promise<IndividualProfileRow | null> {
   const result = await db.execute(sql`
     SELECT
@@ -483,6 +479,49 @@ function collectPublicSafeSkillIds(aggregate: {
   return skillIds;
 }
 
+const PUBLIC_READY_VERIFICATION_KINDS = new Set([
+  'skill_attestation_peer',
+  'skill_attestation_manager',
+  'impact_attestation',
+  'org_domain',
+  'org_registry_manual',
+  'platform_manual_review',
+]);
+
+function hasAcceptedPublicReadyVerification(aggregate: CanonicalProofPackAggregate) {
+  return aggregate.verificationReferences.some((record) => {
+    if (!PUBLIC_READY_VERIFICATION_KINDS.has(record.verificationKind)) {
+      return false;
+    }
+
+    if (record.status !== 'verified' || record.integrityStatus !== 'clear') {
+      return false;
+    }
+
+    if (record.disputeState === 'open' || record.disputeState === 'under_review') {
+      return false;
+    }
+
+    if (record.proofArtifactId) {
+      return aggregate.items.some((item) => item.artifact.id === record.proofArtifactId);
+    }
+
+    const verifiesLinkedItemSubject = aggregate.items.some(
+      (item) =>
+        item.artifact.subjectType === record.subjectType &&
+        item.artifact.subjectId === record.subjectId
+    );
+    if (verifiesLinkedItemSubject) {
+      return true;
+    }
+
+    return (
+      record.subjectType === aggregate.pack.primarySubjectType &&
+      record.subjectId === aggregate.pack.primarySubjectId
+    );
+  });
+}
+
 async function loadPublicSkillLabels(profileId: string, skillIds: string[]): Promise<string[]> {
   if (skillIds.length === 0) {
     return [];
@@ -516,6 +555,7 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
   const publicSkillIds = new Set<string>();
   const featuredProofsByArtifactId = new Map<string, FeaturedProof & { sortKey: string }>();
   const publicProofPacks: PublicTrustExportData['proofPacks'] = [];
+  let verifiedPublicProofPackCount = 0;
 
   let hasLinkOnlyContent = false;
   let hasRevealGatedContent = false;
@@ -547,6 +587,10 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
     const publicSafePack = aggregate.publicSafe;
     if (!publicSafePack) {
       continue;
+    }
+
+    if (hasAcceptedPublicReadyVerification(aggregate)) {
+      verifiedPublicProofPackCount += 1;
     }
 
     publicProofPacks.push({
@@ -609,6 +653,7 @@ async function loadIndividualProofOverview(profileId: string): Promise<PublicPro
     featuredProofs,
     publicProofPacks,
     publicProofCount: featuredProofsByArtifactId.size,
+    verifiedPublicProofPackCount,
     publicSkillIds: [...publicSkillIds],
     hasLinkOnlyContent,
     hasRevealGatedContent,
@@ -819,10 +864,8 @@ export async function getPublicIndividualPortfolioProjectionByHandle(
   const minimumContentMet = Boolean(
     profile.handle &&
       publicDisplayName &&
-      (publicHeadline ||
-        publicBio ||
-        proofOverview.publicProofCount > 0 ||
-        hasDurableTrustSignal(profile, verificationSummary))
+      proofOverview.publicProofCount > 0 &&
+      proofOverview.verifiedPublicProofPackCount > 0
   );
 
   const effectiveState = deriveEffectivePublicPortfolioState({
@@ -879,6 +922,7 @@ export async function getPublicIndividualPortfolioProjectionByHandle(
     publicBio,
     publicSkills,
     publicProofCount: proofOverview.publicProofCount,
+    verifiedPublicProofPackCount: proofOverview.verifiedPublicProofPackCount,
     featuredProofs: proofOverview.featuredProofs,
     visibility,
     individual: {

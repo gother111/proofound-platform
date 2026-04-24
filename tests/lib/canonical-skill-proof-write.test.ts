@@ -102,7 +102,15 @@ const dbMock = {
 
     throw new Error(`Unexpected insert table: ${String(table)}`);
   }),
-  update: vi.fn(() => {
+  update: vi.fn((table: unknown) => {
+    if (table === proofPackItemsTable) {
+      return {
+        set: () => ({
+          where: async () => [],
+        }),
+      };
+    }
+
     throw new Error('update should not be used in this test');
   }),
 };
@@ -124,6 +132,8 @@ vi.mock('@/lib/analytics/lifecycle-events', () => ({
 
 vi.mock('@/lib/proofs/canonical-pack', () => ({
   getProofFreshnessState: vi.fn(() => 'fresh'),
+  resolveProofPackItemClass: vi.fn(() => 'artifact'),
+  resolveProofPackItemSubtypeMetadata: vi.fn(() => ({})),
   syncCanonicalProofPackState: vi.fn(async () => syncedPackRow),
 }));
 

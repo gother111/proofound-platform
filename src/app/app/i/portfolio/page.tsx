@@ -1,16 +1,27 @@
 import { requireAuth } from '@/lib/auth';
-import { getIndividualReadiness } from '@/lib/readiness/individual';
 import { getIndividualProfileCompletionState } from '@/lib/profile/completion-flow.server';
-import { PortfolioWorkspaceClient } from './PortfolioWorkspaceClient';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
 export default async function IndividualPortfolioPage() {
   const user = await requireAuth();
-  const [completionState, readiness] = await Promise.all([
-    getIndividualProfileCompletionState(user.id),
-    getIndividualReadiness(user.id),
-  ]);
+  const completionState = await getIndividualProfileCompletionState(user.id);
 
-  return <PortfolioWorkspaceClient completionState={completionState} readiness={readiness} />;
+  const params = new URLSearchParams({
+    profileView: 'full',
+    tab: completionState.isPortfolioReady ? 'visibility' : 'proof_packs',
+  });
+
+  if (!completionState.isPortfolioReady) {
+    params.set('portfolioLocked', '1');
+    if (completionState.portfolioLockCode) {
+      params.set('lockReason', completionState.portfolioLockCode);
+    }
+    if (!completionState.checks.hasFirstProof) {
+      params.set('proof', 'first');
+    }
+  }
+
+  redirect(`/app/i/profile?${params.toString()}`);
 }

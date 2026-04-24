@@ -27,7 +27,7 @@ const INDIVIDUAL_BASE_ACTIONS: RecoveryAction[] = [
     id: 'add-proof',
     title: 'Add a proof',
     description: 'Attach a project, credential, or artifact that proves your work.',
-    actionUrl: '/app/i/portfolio',
+    actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
   },
   {
     id: 'add-skill',
@@ -89,7 +89,7 @@ function mapHintToIndividualActionId(hint: RecoveryActionHint): RecoveryAction['
   if (
     title.includes('skill') ||
     id.includes('skill') ||
-    actionUrl.includes('/app/i/portfolio') ||
+    actionUrl.includes('tab=proof_packs') ||
     actionUrl.includes('/app/i/profile')
   ) {
     return 'add-skill';

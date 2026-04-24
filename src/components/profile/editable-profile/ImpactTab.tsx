@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { PackageOpen, Sparkles } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -18,6 +17,7 @@ type ImpactTabProps = {
   completionState: IndividualProfileCompletionState;
   proofArtifactCount: number;
   acceptedVerificationCount: number;
+  onAddFirstProof: () => void;
 };
 
 function resolveProofPackBlockers(completionState: IndividualProfileCompletionState) {
@@ -35,6 +35,10 @@ function resolveProofPackBlockers(completionState: IndividualProfileCompletionSt
     blockers.push('Structure one anchored Proof Pack before you publish.');
   }
 
+  if (!completionState.checks.hasRequiredVerification) {
+    blockers.push('Add one accepted non-self verification tied to anchored proof.');
+  }
+
   if (!completionState.checks.hasPublishedPortfolio) {
     blockers.push('Choose one proof-backed public signal and publish your portfolio.');
   }
@@ -46,10 +50,10 @@ export function ImpactTab({
   completionState,
   proofArtifactCount,
   acceptedVerificationCount,
+  onAddFirstProof,
 }: ImpactTabProps) {
   const blockers = resolveProofPackBlockers(completionState);
-  const primaryCtaLabel =
-    proofArtifactCount > 0 ? 'Open portfolio workspace' : 'Add your first proof';
+  const primaryCtaLabel = proofArtifactCount > 0 ? 'Add another proof' : 'Add your first proof';
 
   return (
     <TabsContent value="proof_packs" className="space-y-6">
@@ -63,7 +67,7 @@ export function ImpactTab({
               <h3 className="text-lg font-semibold text-foreground">Proof Packs</h3>
               <p className="text-sm text-muted-foreground">
                 Proof Pack is the canonical proof object. Keep the story calm and anchored to real
-                context, then manage publication from the portfolio workspace.
+                context, then manage publication from the Visibility / Portfolio tab.
               </p>
             </div>
 
@@ -104,8 +108,12 @@ export function ImpactTab({
               )}
             </div>
 
-            <Button asChild className="bg-proofound-forest text-white hover:bg-proofound-forest/90">
-              <Link href="/app/i/portfolio">{primaryCtaLabel}</Link>
+            <Button
+              type="button"
+              onClick={onAddFirstProof}
+              className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
+            >
+              {primaryCtaLabel}
             </Button>
           </div>
         </div>

@@ -5,6 +5,7 @@ import {
   updateMission,
   getProfileData,
   requestImpactStoryVerification,
+  createExperience,
   updateImpactStory,
   updateExperience,
   updateEducation,
@@ -972,6 +973,62 @@ describe('profile purpose actions', () => {
       expect(whereMock).toHaveBeenCalledTimes(1);
       expect(returningMock).toHaveBeenCalledTimes(1);
       expect(result).toMatchObject({ id: 'exp-1', startDate: '2024-01-01', endDate: null });
+    });
+  });
+
+  describe('createExperience', () => {
+    it('should persist measured outcomes and project entries as jsonb expressions', async () => {
+      const returningMock = vi.fn(() =>
+        Promise.resolve([
+          {
+            id: 'exp-1',
+            title: 'Senior Product Engineer',
+            orgDescription: 'Proofound Testing Studio',
+            duration: 'Jan 2024 - Present',
+            startDate: '2024-01-01',
+            endDate: null,
+            outcomes: 'Deployment stability',
+            projects: 'Migration readiness sprint',
+            colleagues: 'Team',
+            achievements: 'Completed transition',
+            verified: true,
+            measuredOutcomes: [],
+            projectEntries: [],
+          },
+        ])
+      );
+      const valuesMock = vi.fn(() => ({ returning: returningMock }));
+      (db.insert as any).mockReturnValue({ values: valuesMock });
+
+      await createExperience({
+        title: 'Senior Product Engineer',
+        organizationName: 'Proofound Testing Studio',
+        orgDescription: '',
+        duration: 'Jan 2024 - Present',
+        outcomes: 'Deployment stability',
+        projects: 'Migration readiness sprint',
+        colleagues: 'Team',
+        achievements: 'Completed transition',
+        verified: true,
+        measuredOutcomes: [{ id: 'out-1', name: 'Deployments', value: 12, unit: 'units' }],
+        projectEntries: [
+          {
+            id: 'proj-1',
+            name: 'Migration readiness sprint',
+            participationCapacity: 'contributed',
+            duration: '3 months',
+          },
+        ],
+      } as any);
+
+      expect(db.insert).toHaveBeenCalledWith(experiences);
+      expect(valuesMock).toHaveBeenCalledTimes(1);
+      const persistencePayload = valuesMock.mock.calls[0][0];
+
+      expect(persistencePayload.measuredOutcomes).toHaveProperty('queryChunks');
+      expect(persistencePayload.projectEntries).toHaveProperty('queryChunks');
+      expect(Array.isArray(persistencePayload.measuredOutcomes)).toBe(false);
+      expect(Array.isArray(persistencePayload.projectEntries)).toBe(false);
     });
   });
 

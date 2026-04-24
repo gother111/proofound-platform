@@ -30,7 +30,7 @@ describe('CommandPalette archived surface links', () => {
 
     expect(screen.getByText('Overview')).toBeInTheDocument();
     expect(screen.getByText('Matching')).toBeInTheDocument();
-    expect(screen.getByText('Public Portfolio')).toBeInTheDocument();
+    expect(screen.getByText('Portfolio visibility')).toBeInTheDocument();
     expect(screen.getByText('Review verifications')).toBeInTheDocument();
     expect(screen.queryByText('Expertise Atlas')).not.toBeInTheDocument();
   });

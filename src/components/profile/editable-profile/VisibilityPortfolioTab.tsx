@@ -37,12 +37,14 @@ export function VisibilityPortfolioTab({ completionState }: VisibilityPortfolioT
                 {completionState.checks.hasPublishedPortfolio
                   ? 'Your public portfolio is published and accessible.'
                   : completionState.portfolioLockReason ||
-                    'Choose one proof-backed public signal when it is ready and public-safe.'}
+                    'Choose one proof-backed and verified public signal when it is ready and public-safe.'}
               </p>
             </div>
 
             <Button asChild variant="outline">
-              <Link href="/app/i/portfolio">Open portfolio workspace</Link>
+              <Link href="/app/i/profile?profileView=full&tab=visibility">
+                Review portfolio visibility
+              </Link>
             </Button>
           </div>
         </div>

@@ -156,10 +156,10 @@ describe('getIndividualReadinessState', () => {
     volunteeringFindManyMock.mockResolvedValue([]);
   });
 
-  it('keeps portfolio-ready easier than intro-eligible', async () => {
+  it('keeps portfolio-ready narrower than intro-eligible once required verification exists', async () => {
     skillsFindManyMock.mockResolvedValue([]);
     listCanonicalProofPackAggregatesForOwnerMock.mockResolvedValue([
-      createAnchoredAggregate({ skillIds: ['skill-1'], verification: false }),
+      createAnchoredAggregate({ skillIds: ['skill-1'], verification: true }),
     ]);
 
     const state = await getIndividualReadinessState('user-1');

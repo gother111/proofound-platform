@@ -23,8 +23,8 @@ export function VerificationTab({ acceptedVerificationCount }: VerificationTabPr
             <div className="space-y-1">
               <h3 className="text-lg font-semibold text-foreground">Verification</h3>
               <p className="text-sm text-muted-foreground">
-                Verification is scoped, not global. Portfolio-ready is easy. Stronger review and
-                introductions still depend on proof-backed trust signals.
+                Verification is scoped, not global. Public readiness requires at least one accepted
+                non-self trust signal tied to anchored proof.
               </p>
             </div>
 
@@ -38,7 +38,7 @@ export function VerificationTab({ acceptedVerificationCount }: VerificationTabPr
               <p className="mt-2 text-sm text-muted-foreground">
                 {acceptedVerificationCount > 0
                   ? 'Your profile already has non-self trust attached to it.'
-                  : 'No trust signals are attached yet. That is fine for day one, but introductions will ask for more.'}
+                  : 'No trust signals are attached yet. Request verification before publishing a public-ready portfolio.'}
               </p>
             </div>
 

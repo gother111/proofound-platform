@@ -24,7 +24,7 @@ describe('LeftNav portfolio gating', () => {
     window.sessionStorage.clear();
   });
 
-  it('hides Public Portfolio navigation when gate is active', () => {
+  it('keeps the individual nav focused on profile-owned portfolio IA', () => {
     render(
       <LeftNav
         basePath="/app/i"
@@ -39,13 +39,17 @@ describe('LeftNav portfolio gating', () => {
       'href',
       '/app/i/home'
     );
+    expect(screen.getAllByRole('link', { name: /profile/i })[0]).toHaveAttribute(
+      'href',
+      '/app/i/profile'
+    );
     expect(screen.queryByRole('link', { name: /public portfolio/i })).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /public portfolio \(locked\)/i })
     ).not.toBeInTheDocument();
   });
 
-  it('renders Public Portfolio as a normal link when gate is inactive', () => {
+  it('does not re-add Public Portfolio when the gate is inactive', () => {
     render(
       <LeftNav
         basePath="/app/i"
@@ -55,53 +59,8 @@ describe('LeftNav portfolio gating', () => {
       />
     );
 
-    const links = screen.getAllByRole('link', { name: /public portfolio/i });
-    expect(links.length).toBeGreaterThan(0);
-    expect(links[0]).toHaveAttribute('href', '/app/i/portfolio');
-  });
-
-  it('shows one-time toast when portfolio transitions from locked to unlocked', () => {
-    const { rerender } = render(
-      <LeftNav
-        basePath="/app/i"
-        individualPortfolioGate={{
-          locked: true,
-          reason: 'Add 3 skills and one artifact.',
-        }}
-      />
-    );
-
-    rerender(
-      <LeftNav
-        basePath="/app/i"
-        individualPortfolioGate={{
-          locked: false,
-        }}
-      />
-    );
-
-    expect(toastSuccessMock).toHaveBeenCalledWith(
-      'Public Portfolio is now unlocked in your navigation.'
-    );
-
-    rerender(
-      <LeftNav
-        basePath="/app/i"
-        individualPortfolioGate={{
-          locked: true,
-        }}
-      />
-    );
-    rerender(
-      <LeftNav
-        basePath="/app/i"
-        individualPortfolioGate={{
-          locked: false,
-        }}
-      />
-    );
-
-    expect(toastSuccessMock).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('link', { name: /public portfolio/i })).not.toBeInTheDocument();
+    expect(toastSuccessMock).not.toHaveBeenCalled();
   });
 
   it('shows Beta testing marker without archived expertise or zen links', () => {

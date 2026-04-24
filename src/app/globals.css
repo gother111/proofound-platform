@@ -17,7 +17,7 @@
     --font-size: 16px;
 
     /* Global Japandi palette */
-    --proofound-forest: #606c5a;
+    --proofound-forest: #56624f;
     --proofound-parchment: #f3f0e8;
     --proofound-terracotta: #c09e85;
     --proofound-charcoal: #5e5e5e;
@@ -29,12 +29,12 @@
     --card-foreground: 0 0% 37%;
     --popover: 40 11% 89%;
     --popover-foreground: 0 0% 37%;
-    --primary: 100 9% 39%;
+    --primary: 98 11% 35%;
     --primary-foreground: 0 0% 100%;
     --secondary: 25 32% 64%;
     --secondary-foreground: 0 0% 100%;
     --muted: 40 11% 89%;
-    --muted-foreground: 26 9% 52%;
+    --muted-foreground: 28 8% 38%;
     --accent: 33 56% 69%;
     --accent-foreground: 0 0% 37%;
     --destructive: 25 32% 64%;
@@ -43,7 +43,7 @@
     --input: 36 24% 78%;
     --input-background: #f6f2ea;
     --switch-background: #d5caba;
-    --ring: 100 9% 39%;
+    --ring: 98 11% 35%;
 
     /* Extended palette */
     --sage: #b9b99d;
@@ -51,7 +51,7 @@
     --ochre: #dcb482;
     --clay: #c09e85;
     --sand: #d5caba;
-    --bamboo: #606c5a;
+    --bamboo: #56624f;
     --olive: #8f837a;
 
     /* Border Radius - Design System Standard */

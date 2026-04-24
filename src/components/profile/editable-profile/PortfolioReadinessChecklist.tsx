@@ -27,6 +27,11 @@ export function PortfolioReadinessChecklist({ completionState }: PortfolioReadin
       passed: completionState.checks.hasFirstProof && completionState.checks.hasStructuredProofPack,
     },
     {
+      id: 'verification',
+      label: 'One non-self verification is accepted',
+      passed: completionState.checks.hasRequiredVerification,
+    },
+    {
       id: 'publish',
       label: 'Portfolio is published and accessible',
       passed: completionState.checks.hasPublishedPortfolio,
@@ -39,7 +44,8 @@ export function PortfolioReadinessChecklist({ completionState }: PortfolioReadin
         <h2 className="text-sm font-medium text-proofound-charcoal">Public Portfolio readiness</h2>
         <p className="text-xs text-muted-foreground">
           Keep this calm and minimal. Portfolio readiness now depends on a safe shell, one real
-          context, one anchored Proof Pack, and an accessible public portfolio state.
+          context, one anchored Proof Pack, one accepted non-self verification, and an accessible
+          public portfolio state.
         </p>
         <div className="pt-1 space-y-2">
           {checklist.map((item) => (

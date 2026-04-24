@@ -45,6 +45,8 @@ const baseSkill = {
   skill_name: 'TypeScript',
 };
 
+const SKILL_CONFIRMATION_BUTTON_LABEL = /ask for confirmation/i;
+
 describe('EditSkillWindow proof refresh behavior', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -63,7 +65,18 @@ describe('EditSkillWindow proof refresh behavior', () => {
 
     apiFetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
       if (url.endsWith('/proofs') && !init?.method) {
-        return mockResponse({ proofs: [] });
+        return mockResponse({
+          proofs: [
+            {
+              id: 'proof-1',
+              proof_type: 'link',
+              title: 'Launch case study',
+              description: null,
+              url: 'https://example.com/case-study',
+              issued_date: null,
+            },
+          ],
+        });
       }
       if (url === '/api/verification/requests/skill?skillId=skill-1' && !init?.method) {
         return mockResponse({ requests: [] });
@@ -71,7 +84,7 @@ describe('EditSkillWindow proof refresh behavior', () => {
       if (url.endsWith('/proofs') && init?.method === 'POST') {
         return mockResponse({
           proof: {
-            id: 'proof-1',
+            id: 'proof-2',
             proof_type: 'link',
             title: 'Launch case study',
             description: null,
@@ -390,7 +403,18 @@ describe('EditSkillWindow proof refresh behavior', () => {
   it('normalizes verifier email before requesting verification from edit flow', async () => {
     apiFetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
       if (url.endsWith('/proofs') && !init?.method) {
-        return mockResponse({ proofs: [] });
+        return mockResponse({
+          proofs: [
+            {
+              id: 'proof-1',
+              proof_type: 'link',
+              title: 'Launch case study',
+              description: null,
+              url: 'https://example.com/case-study',
+              issued_date: null,
+            },
+          ],
+        });
       }
       if (url === '/api/verification/requests/skill?skillId=skill-1' && !init?.method) {
         return mockResponse({ requests: [] });
@@ -423,8 +447,11 @@ describe('EditSkillWindow proof refresh behavior', () => {
     await waitFor(() =>
       expect(apiFetchMock).toHaveBeenCalledWith('/api/expertise/user-skills/skill-1/proofs')
     );
+    await screen.findByText('Launch case study');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Request Verification' }));
+    fireEvent.click(screen.getByRole('button', { name: SKILL_CONFIRMATION_BUTTON_LABEL }));
+    await waitFor(() => expect(screen.getByLabelText('Verifier Email')).toBeInTheDocument());
+
     fireEvent.change(screen.getByLabelText('Verifier Email'), {
       target: { value: '  Mentor@Example.COM  ' },
     });

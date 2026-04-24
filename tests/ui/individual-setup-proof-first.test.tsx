@@ -27,7 +27,7 @@ describe('IndividualSetup', () => {
       'Add one real context',
       'Add first proof',
       'Structure first Proof Pack',
-      'Optional verification',
+      'Required verification',
       'Publish portfolio',
     ];
 

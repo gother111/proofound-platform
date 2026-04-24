@@ -95,11 +95,13 @@ export function CommandPalette() {
                 <span>Matching</span>
               </Command.Item>
               <Command.Item
-                onSelect={() => runCommand(() => router.push('/app/i/portfolio'))}
+                onSelect={() =>
+                  runCommand(() => router.push('/app/i/profile?profileView=full&tab=visibility'))
+                }
                 className="relative flex cursor-default select-none items-center rounded-sm px-2 py-2.5 text-sm outline-none aria-selected:bg-proofound-forest aria-selected:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50 transition-colors"
               >
                 <Briefcase className="mr-2 h-4 w-4" />
-                <span>Public Portfolio</span>
+                <span>Portfolio visibility</span>
               </Command.Item>
             </Command.Group>
 

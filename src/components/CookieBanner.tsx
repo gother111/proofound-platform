@@ -37,45 +37,42 @@ export function CookieBanner() {
     }
   }, [isSnippetEmbedRoute]);
 
-  const handleAccept = async () => {
-    try {
-      setSaving(true);
+  const persistChoice = (
+    preferences: { essential: boolean; analytics: boolean; marketing: boolean },
+    context: string
+  ) => {
+    setSaving(true);
+    setShow(false);
 
-      await saveCookiePreferences(
-        {
-          essential: true,
-          analytics: true,
-          marketing: false,
-        },
-        true
-      );
-
-      setShow(false);
-    } catch (error) {
-      logError('CookieBanner.handleAccept', error);
-    } finally {
-      setSaving(false);
-    }
+    void saveCookiePreferences(preferences, true)
+      .catch((error) => {
+        logError(context, error);
+      })
+      .finally(() => {
+        setSaving(false);
+      });
   };
 
-  const handleDecline = async () => {
-    try {
-      setSaving(true);
-      await saveCookiePreferences(
-        {
-          essential: true,
-          analytics: false,
-          marketing: false,
-        },
-        true
-      );
-      setShow(false);
-    } catch (error) {
-      logError('CookieBanner.handleDecline', error);
-      setShow(false);
-    } finally {
-      setSaving(false);
-    }
+  const handleAccept = () => {
+    persistChoice(
+      {
+        essential: true,
+        analytics: true,
+        marketing: false,
+      },
+      'CookieBanner.handleAccept'
+    );
+  };
+
+  const handleDecline = () => {
+    persistChoice(
+      {
+        essential: true,
+        analytics: false,
+        marketing: false,
+      },
+      'CookieBanner.handleDecline'
+    );
   };
 
   if (isSnippetEmbedRoute || !show) return null;

@@ -3,10 +3,16 @@ export type IndividualProfileCompletionStage =
   | 'real_context'
   | 'first_proof'
   | 'proof_pack'
-  | 'optional_verification'
+  | 'verification'
   | 'publish_portfolio';
 
-export type PortfolioLockCode = 'safe_shell' | 'context' | 'proof' | 'publish' | null;
+export type PortfolioLockCode =
+  | 'safe_shell'
+  | 'context'
+  | 'proof'
+  | 'verification'
+  | 'publish'
+  | null;
 
 export interface IndividualProfileCompletionInput {
   displayName: string | null | undefined;
@@ -45,7 +51,7 @@ export interface IndividualProfileCompletionChecks {
   hasStructuredProofPack: boolean;
   hasProofForPublishing: boolean;
   hasPublishedPortfolio: boolean;
-  hasOptionalVerification: boolean;
+  hasRequiredVerification: boolean;
 }
 
 export interface IndividualProfileCompletionState {
@@ -121,9 +127,9 @@ export function evaluateIndividualProfileCompletion(
   const hasRealContext = contextCount > 0;
   const hasFirstProof = proofArtifactCount > 0;
   const hasStructuredProofPack = anchoredProofPackCount > 0;
-  const hasProofForPublishing = hasStructuredProofPack;
+  const hasRequiredVerification = acceptedVerificationCount > 0;
+  const hasProofForPublishing = hasStructuredProofPack && hasRequiredVerification;
   const hasPublishedPortfolio = input.publishedPortfolio === true;
-  const hasOptionalVerification = acceptedVerificationCount > 0;
 
   const checks: IndividualProfileCompletionChecks = {
     hasDisplayName: isTwoWordName(input.displayName),
@@ -140,7 +146,7 @@ export function evaluateIndividualProfileCompletion(
     hasStructuredProofPack,
     hasProofForPublishing,
     hasPublishedPortfolio,
-    hasOptionalVerification,
+    hasRequiredVerification,
   };
 
   const isCoreProfileComplete = checks.hasSafeShell;
@@ -154,6 +160,8 @@ export function evaluateIndividualProfileCompletion(
     stage = 'first_proof';
   } else if (!checks.hasStructuredProofPack) {
     stage = 'proof_pack';
+  } else if (!checks.hasRequiredVerification) {
+    stage = 'verification';
   } else if (!checks.hasProofForPublishing) {
     stage = 'publish_portfolio';
   }
@@ -162,6 +170,7 @@ export function evaluateIndividualProfileCompletion(
     isCoreProfileComplete &&
     checks.hasRealContext &&
     checks.hasStructuredProofPack &&
+    checks.hasRequiredVerification &&
     checks.hasPublishedPortfolio;
 
   let portfolioLockCode: PortfolioLockCode = null;
@@ -180,6 +189,10 @@ export function evaluateIndividualProfileCompletion(
       portfolioLockCode = 'proof';
       portfolioLockReason =
         'Add at least one anchored Proof Pack before your portfolio can be ready.';
+    } else if (!checks.hasRequiredVerification) {
+      portfolioLockCode = 'verification';
+      portfolioLockReason =
+        'Add one accepted non-self verification tied to anchored proof before your portfolio can be public-ready.';
     } else if (!checks.hasPublishedPortfolio) {
       portfolioLockCode = 'publish';
       portfolioLockReason =

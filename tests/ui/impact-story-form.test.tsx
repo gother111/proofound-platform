@@ -3,6 +3,8 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ImpactStoryForm } from '@/components/profile/forms/ImpactStoryForm';
 
+const IMPACT_STORY_CONFIRMATION_BUTTON_LABEL = /ask to confirm this proof/i;
+
 const uploadFileMock = vi.fn();
 const validateFileMock = vi.fn();
 
@@ -172,7 +174,7 @@ describe('ImpactStoryForm', () => {
       target: { value: 'invalid-email' },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /send request/i }));
+    fireEvent.click(screen.getByRole('button', { name: IMPACT_STORY_CONFIRMATION_BUTTON_LABEL }));
 
     await waitFor(() => {
       expect(screen.getByText(/Verifier email must be valid/i)).toBeTruthy();
@@ -215,7 +217,7 @@ describe('ImpactStoryForm', () => {
       target: { value: 'verifier@example.com' },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /send request/i }));
+    fireEvent.click(screen.getByRole('button', { name: IMPACT_STORY_CONFIRMATION_BUTTON_LABEL }));
 
     await waitFor(() => expect(onSendVerificationRequest).toHaveBeenCalledTimes(1));
     expect(onSendVerificationRequest.mock.calls[0][0].storyDraft).toBeTruthy();
@@ -300,7 +302,7 @@ describe('ImpactStoryForm', () => {
       target: { value: 'Unsaved changed title' },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /send request/i }));
+    fireEvent.click(screen.getByRole('button', { name: IMPACT_STORY_CONFIRMATION_BUTTON_LABEL }));
 
     await waitFor(() => expect(onSendVerificationRequest).toHaveBeenCalledTimes(1));
     expect(onSendVerificationRequest.mock.calls[0][0]).toMatchObject({
@@ -365,7 +367,7 @@ describe('ImpactStoryForm', () => {
       target: { value: '' },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /send request/i }));
+    fireEvent.click(screen.getByRole('button', { name: IMPACT_STORY_CONFIRMATION_BUTTON_LABEL }));
 
     await waitFor(() => {
       expect(

@@ -6,7 +6,10 @@ import { VolunteerForm } from '@/components/profile/forms/VolunteerForm';
 
 vi.mock('next/link', () => ({
   default: ({ children, href, ...props }: any) => (
-    <a href={typeof href === 'string' ? href : '/app/i/portfolio'} {...props}>
+    <a
+      href={typeof href === 'string' ? href : '/app/i/profile?profileView=full&tab=proof_packs'}
+      {...props}
+    >
       {children}
     </a>
   ),

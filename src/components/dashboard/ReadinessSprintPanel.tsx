@@ -54,6 +54,11 @@ export function ReadinessSprintPanel() {
           ? 'browse_only_low_assignment_supply'
           : 'intro_hold_insufficient_qualified_intros';
   const fallbackCopy = fallbackMode ? FALLBACK_COPY[fallbackMode].individual : null;
+  const fallbackActionUrl =
+    primaryAction?.actionUrl === '/app/i/portfolio'
+      ? '/app/i/profile?profileView=full&tab=proof_packs'
+      : primaryAction?.actionUrl || '/app/i/profile?profileView=full&tab=proof_packs';
+  const fallbackActionTitle = primaryAction?.title || 'Review Proof Packs';
 
   return (
     <Card className="space-y-4 border p-4" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
@@ -73,17 +78,15 @@ export function ReadinessSprintPanel() {
             <Sparkles className="h-4 w-4 text-proofound-forest" />
             One next action
           </p>
-          <p className="mt-2 text-base font-semibold text-foreground">
-            {primaryAction?.title || 'Open portfolio workspace'}
-          </p>
+          <p className="mt-2 text-base font-semibold text-foreground">{fallbackActionTitle}</p>
           <p className="mt-1 text-sm text-muted-foreground">
             {primaryAction?.description ||
               'Keep your proof packs current, public-safe, and easy to share.'}
           </p>
           <div className="mt-4">
             <Button asChild className="bg-proofound-forest text-white hover:bg-proofound-forest/90">
-              <Link href={primaryAction?.actionUrl || '/app/i/portfolio'}>
-                {primaryAction?.title || 'Open portfolio workspace'}
+              <Link href={fallbackActionUrl}>
+                {fallbackActionTitle}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -132,10 +135,10 @@ export function ReadinessSprintPanel() {
           {data.metrics.pendingVerifications === 1 ? '' : 's'}.
         </p>
         <Link
-          href="/app/i/portfolio"
+          href="/app/i/profile?profileView=full&tab=proof_packs"
           className="inline-flex items-center gap-2 text-sm font-medium text-proofound-forest hover:text-proofound-forest/80"
         >
-          Open portfolio workspace
+          Review Proof Packs
           <ArrowRight className="h-4 w-4" />
         </Link>
       </div>

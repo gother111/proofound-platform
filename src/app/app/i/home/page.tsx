@@ -88,10 +88,10 @@ export default async function IndividualHomePage() {
                   className="bg-white text-proofound-forest hover:bg-neutral-light-50 rounded-xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md font-medium text-base h-12 px-6"
                   asChild
                 >
-                  <Link href="/app/i/portfolio">
+                  <Link href="/app/i/profile?profileView=full&tab=proof_packs">
                     {metrics.proofStoriesCount === 0
                       ? 'Add your first proof'
-                      : 'Open portfolio workspace'}
+                      : 'Review Proof Packs'}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Link>
                 </Button>
@@ -127,8 +127,8 @@ export default async function IndividualHomePage() {
               {metrics.proofStoriesCount === 1 ? '' : 's'} currently support the portfolio.
             </p>
             <Button asChild variant="outline" className="w-full justify-between">
-              <Link href="/app/i/portfolio">
-                Open portfolio workspace
+              <Link href="/app/i/profile?profileView=full&tab=visibility">
+                Review portfolio visibility
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>

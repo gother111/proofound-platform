@@ -26,7 +26,7 @@ describe('recovery actions', () => {
         id: 'request-verification',
         title: 'Add proof from verification',
         description: 'Verification hint from readiness service.',
-        actionUrl: '/app/i/portfolio',
+        actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
       },
     ]);
 

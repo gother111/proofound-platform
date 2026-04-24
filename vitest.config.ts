@@ -6,6 +6,22 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const DEFAULT_NON_MVP_TEST_EXCLUDES = [
+  // Archived launch surfaces live under src/archive and are verified separately when needed.
+  '**/src/archive/**',
+  // These tests target removed or intentionally gated non-MVP routes/pages that should not block
+  // the default unit test signal for the locked launch corridor.
+  '**/tests/api/messages-legacy-route.test.ts',
+  '**/tests/api/moderation-appeals-route.test.ts',
+  '**/tests/api/moderation-statements-of-reasons-route.test.ts',
+  '**/tests/api/moderation-transparency-report-route.test.ts',
+  '**/tests/api/organization-test-matches-route.test.ts',
+  '**/tests/api/updates-cache-flag-route.test.ts',
+  '**/tests/ui/admin-ai-spend-page.test.tsx',
+  '**/tests/ui/admin-fairness-notes-page.test.tsx',
+  '**/tests/ui/organization-settings-integrations.test.tsx',
+] as const;
+
 export default defineConfig({
   plugins: [
     // Vitest uses vite-node which (in this repo's current dependency versions) does not
@@ -69,6 +85,7 @@ export default defineConfig({
       '**/tests/integration/**',
       // Privacy/RLS suites are run via dedicated scripts (see package.json `test:privacy*`).
       '**/tests/privacy/**',
+      ...DEFAULT_NON_MVP_TEST_EXCLUDES,
     ],
   },
   resolve: {

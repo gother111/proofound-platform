@@ -60,9 +60,9 @@ const outcomeSchema = z.object({
 
 const projectSchema = z.object({
   id: z.string(),
-  name: z.string().min(1, 'Project name is required'),
+  name: z.string().default(''),
   participationCapacity: z.enum(participationCapacityValues),
-  duration: z.string().min(1, 'Project duration is required'),
+  duration: z.string().default(''),
 });
 
 const experienceSchema = z
@@ -79,7 +79,7 @@ const experienceSchema = z
       .optional()
       .refine((value) => !value || monthInputRegex.test(value), 'End month must be a valid month'),
     outcomes: z.array(outcomeSchema).min(1, 'At least one outcome is required'),
-    projects: z.array(projectSchema).min(1, 'At least one project is required'),
+    projects: z.array(projectSchema),
   })
   .superRefine((value, context) => {
     if (!value.ongoing && !value.endMonth) {
@@ -112,6 +112,31 @@ const experienceSchema = z
           code: z.ZodIssueCode.custom,
           message: 'Measurement unit is required when value is provided',
           path: ['outcomes', index, 'unit'],
+        });
+      }
+    });
+
+    value.projects.forEach((project, index) => {
+      const hasName = project.name.trim().length > 0;
+      const hasDuration = project.duration.trim().length > 0;
+
+      if (!hasName && !hasDuration) {
+        return;
+      }
+
+      if (!hasName) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Project name is required when adding a project',
+          path: ['projects', index, 'name'],
+        });
+      }
+
+      if (!hasDuration) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Project duration is required when adding a project',
+          path: ['projects', index, 'duration'],
         });
       }
     });
@@ -174,6 +199,11 @@ function summarizeProjects(projects: ExperienceFormData['projects']) {
     })
     .filter((entry): entry is string => Boolean(entry))
     .join('; ');
+}
+
+function hasLegacyProjectText(value: string | null | undefined) {
+  const trimmed = value?.trim();
+  return Boolean(trimmed && trimmed.toLowerCase() !== 'not specified');
 }
 
 export function ExperienceForm({ open, onOpenChange, experience, onSave }: ExperienceFormProps) {
@@ -272,13 +302,15 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
                 duration: project.duration,
               })
             )
-          : [
-              createProjectDraft({
-                name: experience.projects,
-                participationCapacity: 'contributed',
-                duration: experience.duration,
-              }),
-            ];
+          : hasLegacyProjectText(experience.projects)
+            ? [
+                createProjectDraft({
+                  name: experience.projects,
+                  participationCapacity: 'contributed',
+                  duration: experience.duration,
+                }),
+              ]
+            : [createProjectDraft()];
 
       reset({
         title: experience.title,
@@ -323,7 +355,11 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
       unit: outcome.unit?.trim() ? outcome.unit.trim() : null,
     }));
 
-    const projectEntries = data.projects.map((project) => ({
+    const completedProjects = data.projects.filter(
+      (project) => project.name.trim().length > 0 && project.duration.trim().length > 0
+    );
+
+    const projectEntries = completedProjects.map((project) => ({
       id: project.id,
       name: project.name.trim(),
       participationCapacity: project.participationCapacity,
@@ -348,7 +384,7 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
       startDate: timeline.startDate,
       endDate: timeline.endDate,
       outcomes: summarizeOutcomes(data.outcomes),
-      projects: summarizeProjects(data.projects),
+      projects: summarizeProjects(completedProjects) || 'Not specified',
       measuredOutcomes,
       projectEntries,
       colleagues: experience?.colleagues || 'Not specified',
@@ -589,7 +625,7 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label>
-                Projects <span className="text-red-500">*</span>
+                Projects <span className="text-muted-foreground">(optional)</span>
               </Label>
               <Button
                 type="button"
@@ -600,6 +636,9 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
                 Add project
               </Button>
             </div>
+            <p className="text-xs text-muted-foreground">
+              Optional for now. Add project detail only when it helps explain the work context.
+            </p>
 
             {projectFields.map((field, index) => (
               <div key={field.id} className="rounded-lg border p-3 space-y-2">

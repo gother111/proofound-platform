@@ -146,7 +146,7 @@ describe('python-cv-proxy', () => {
     expect(fetchSpy).toHaveBeenCalledTimes(1);
 
     const [targetUrl] = fetchSpy.mock.calls[0] as [string, RequestInit];
-    expect(targetUrl).toContain('http://localhost/api/python/cv_import');
+    expect(targetUrl).toContain('http://127.0.0.1:3000/api/python/cv_import');
     expect(targetUrl).not.toContain('attacker.example');
   });
 

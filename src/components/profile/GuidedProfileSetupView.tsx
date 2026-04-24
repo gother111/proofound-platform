@@ -77,7 +77,7 @@ function buildGuidedSteps(
     checks.hasRealContext,
     checks.hasFirstProof,
     checks.hasStructuredProofPack,
-    checks.hasOptionalVerification,
+    checks.hasRequiredVerification,
     checks.hasProofForPublishing,
   ];
   const firstIncompleteIndex = completionMap.findIndex((value) => !value);
@@ -170,16 +170,16 @@ function buildGuidedSteps(
       ],
     },
     {
-      id: 'optional_verification',
-      label: 'Optional verification',
+      id: 'verification',
+      label: 'Required verification',
       detail:
-        'Verification is helpful, but it is optional for portfolio readiness. Request it after your first proof is structured.',
+        'Request one accepted non-self verification tied to anchored proof before the public portfolio can unlock.',
       state: resolveStepState(4, activeIndex),
       icon: BadgeCheck,
       actions: [
         {
           id: 'verification',
-          label: checks.hasOptionalVerification ? 'Review verification' : 'Request verification',
+          label: checks.hasRequiredVerification ? 'Review verification' : 'Request verification',
           onClick: handlers.onOpenVerification,
           variant: 'outline',
           disabled: !checks.hasStructuredProofPack,
@@ -250,17 +250,23 @@ export function GuidedProfileSetupView({
           onClick: onOpenProofs,
           testId: 'guided-dominant-proof-cta',
         }
-      : !completionState.checks.hasProofForPublishing
+      : !completionState.checks.hasRequiredVerification
         ? {
-            label: 'Choose proof to publish',
-            onClick: onOpenProofs,
+            label: 'Request verification',
+            onClick: onOpenVerification,
             testId: 'guided-dominant-proof-cta',
           }
-        : {
-            label: 'Publish portfolio',
-            onClick: onOpenPortfolio,
-            testId: 'guided-dominant-proof-cta',
-          };
+        : !completionState.checks.hasProofForPublishing
+          ? {
+              label: 'Choose proof to publish',
+              onClick: onOpenProofs,
+              testId: 'guided-dominant-proof-cta',
+            }
+          : {
+              label: 'Publish portfolio',
+              onClick: onOpenPortfolio,
+              testId: 'guided-dominant-proof-cta',
+            };
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8" data-testid="guided-profile-setup">
@@ -272,7 +278,7 @@ export function GuidedProfileSetupView({
             </h1>
             <p className="max-w-2xl text-sm text-muted-foreground">
               The locked MVP corridor is simple: build a safe shell, anchor one real context, add
-              one real proof, structure it, optionally verify it, then publish.
+              one real proof, structure it, verify it, then publish.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">

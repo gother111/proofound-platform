@@ -261,7 +261,7 @@ describe('evaluateIndividualMatchability', () => {
               label: 'One public proof-backed signal',
               detail: 'Add one proof link.',
               met: false,
-              actionUrl: '/app/i/portfolio',
+              actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
             },
           ],
           browse_ready: [
@@ -270,7 +270,7 @@ describe('evaluateIndividualMatchability', () => {
               label: 'Three recent skills',
               detail: 'Add recent skills.',
               met: false,
-              actionUrl: '/app/i/portfolio',
+              actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
             },
             {
               id: 'logistics_signal',
@@ -315,7 +315,11 @@ describe('evaluateIndividualMatchability', () => {
       'logisticsSignal',
     ]);
     expect(result.topActions.map((action) => action.actionUrl)).toEqual(
-      expect.arrayContaining(['/app/i/portfolio', '/app/i/matching/preferences', '/app/i/profile'])
+      expect.arrayContaining([
+        '/app/i/profile?profileView=full&tab=proof_packs',
+        '/app/i/matching/preferences',
+        '/app/i/profile',
+      ])
     );
   });
 });

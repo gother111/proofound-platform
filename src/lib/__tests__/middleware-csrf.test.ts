@@ -22,7 +22,7 @@ describe('middleware CSRF behavior', () => {
   });
 
   it('keeps CSRF protection for regular mutating API routes', async () => {
-    const request = new NextRequest('http://localhost/api/expertise/cv-import/wizard-suggest', {
+    const request = new NextRequest('http://localhost/api/conversations', {
       method: 'POST',
     });
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -18,12 +18,10 @@ import {
   Building,
   ClipboardList,
   MessageCircle,
-  UserRound,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { ORG_MVP_NAV_ITEMS } from '@/lib/org/mvp-surface-policy';
-import { toast } from 'sonner';
 
 /**
  * LeftNav Component - Primary Navigation Sidebar
@@ -60,31 +58,16 @@ interface NavItem {
   lockReason?: string | null;
 }
 
-export function LeftNav({
-  basePath = '/app/i',
-  individualPortfolioGate,
-  isBetaTesting = false,
-}: LeftNavProps) {
+export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const pathname = usePathname();
 
   const isOrg = basePath?.startsWith('/app/o/');
-  const isPortfolioLocked = !isOrg && Boolean(individualPortfolioGate?.locked);
-  const portfolioLockReason = individualPortfolioGate?.reason ?? null;
-  const previousPortfolioLockRef = useRef(isPortfolioLocked);
 
   const individualNavItems: NavItem[] = [
     { href: `${basePath}/home`, icon: Home, label: 'Overview', dataTour: 'home-link' },
     { href: `${basePath}/profile`, icon: User, label: 'Profile', dataTour: 'profile-link' },
-    {
-      href: `${basePath}/portfolio`,
-      icon: UserRound,
-      label: 'Public Portfolio',
-      dataTour: 'portfolio-link',
-      locked: isPortfolioLocked,
-      lockReason: portfolioLockReason,
-    },
     {
       href: `${basePath}/matching`,
       icon: Users,
@@ -134,9 +117,7 @@ export function LeftNav({
   }));
 
   const navItems = isOrg ? orgNavItems : individualNavItems;
-  const filteredNavItems = isPortfolioLocked
-    ? navItems.filter((item) => item.href !== `${basePath}/portfolio`)
-    : navItems;
+  const filteredNavItems = navItems;
   const settingsHref = `${basePath}/settings`;
   const settingsNavItem = filteredNavItems.find((item) => item.href === settingsHref);
   const mobileNavItems = settingsNavItem
@@ -147,19 +128,6 @@ export function LeftNav({
     : filteredNavItems.slice(0, 5);
 
   const isV2 = process.env.NEXT_PUBLIC_UI_REFACTOR_V2 === 'true';
-
-  useEffect(() => {
-    if (isOrg) return;
-    const wasLocked = previousPortfolioLockRef.current;
-    if (wasLocked && !isPortfolioLocked && typeof window !== 'undefined') {
-      const key = 'proofound-portfolio-unlock-toast-shown';
-      if (!window.sessionStorage.getItem(key)) {
-        toast.success('Public Portfolio is now unlocked in your navigation.');
-        window.sessionStorage.setItem(key, '1');
-      }
-    }
-    previousPortfolioLockRef.current = isPortfolioLocked;
-  }, [isOrg, isPortfolioLocked]);
 
   return (
     <>

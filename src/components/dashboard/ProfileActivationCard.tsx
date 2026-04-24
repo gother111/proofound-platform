@@ -155,7 +155,7 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
 
         <div className="flex flex-wrap gap-2">
           <Button asChild className="bg-proofound-forest text-white hover:bg-proofound-forest/90">
-            <Link href="/app/i/portfolio">
+            <Link href="/app/i/profile?profileView=full&tab=visibility">
               <ExternalLink className="mr-2 h-4 w-4" />
               Preview portfolio
             </Link>

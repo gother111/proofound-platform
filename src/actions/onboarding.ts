@@ -492,7 +492,6 @@ export async function completeIndividualOnboarding(formData: FormData) {
     revalidatePath('/app/i');
     revalidatePath('/app/i/home');
     revalidatePath('/app/i/profile');
-    revalidatePath('/app/i/portfolio');
     revalidatePath(publicPortfolioPath);
 
     try {

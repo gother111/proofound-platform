@@ -301,4 +301,29 @@ describe('EditableProfileView guided completion and purpose access', () => {
     expect(nextUrl).toContain('lockReason=name');
     expect(nextUrl).toContain('profileView=full');
   });
+
+  it('switches to the full profile shell immediately when opening full profile from guided flow', () => {
+    mockUseProfileData(
+      createProfile({
+        basicInfo: { name: 'Your Name', avatar: null, tagline: '' },
+        guidedSetup: {
+          handle: null,
+          headline: null,
+          timezone: null,
+          desiredRoles: [],
+          workMode: null,
+          engagementType: null,
+        },
+      })
+    );
+
+    render(<EditableProfileView />);
+
+    expect(screen.getByTestId('guided-profile-setup')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'guided-open-full-profile' }));
+
+    expect(screen.queryByTestId('guided-profile-setup')).not.toBeInTheDocument();
+    expect(screen.getByTestId('profile-sidebar')).toBeInTheDocument();
+  });
 });

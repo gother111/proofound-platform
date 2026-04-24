@@ -3,6 +3,7 @@ import { getEnv } from '@/lib/env';
 
 const MOCK_USER_ID = '88888888-8888-4888-8888-888888888888';
 const ORG_ID = '99999999-9999-4999-9999-999999999999';
+const getMockPersona = () => (process.env.MOCK_ORG_MODE === 'true' ? 'org_member' : 'individual');
 const isMockAdminTestContext = () =>
   process.env.NODE_ENV === 'test' || process.env.PLAYWRIGHT === 'true';
 const getMockPlatformRole = (): 'platform_admin' | 'super_admin' | null => {
@@ -121,7 +122,7 @@ const mockSupabaseClient = {
                 id: MOCK_USER_ID,
                 platform_role: getMockPlatformRole(),
                 tour_completed: false,
-                persona: 'org_member',
+                persona: getMockPersona(),
               },
               error: null,
             };

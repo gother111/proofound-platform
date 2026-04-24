@@ -142,7 +142,18 @@ describe('public portfolio projection', () => {
             },
           },
         ],
-        verificationReferences: [],
+        verificationReferences: [
+          {
+            id: 'verification-anchored',
+            status: 'verified',
+            integrityStatus: 'clear',
+            disputeState: 'none',
+            verificationKind: 'skill_attestation_manager',
+            subjectType: 'skill',
+            subjectId: 'skill-anchored',
+            proofArtifactId: null,
+          },
+        ],
         publicSafe: {
           contract: {
             status: 'published',
@@ -239,6 +250,8 @@ describe('public portfolio projection', () => {
 
     expect(projection).not.toBeNull();
     expect(projection?.publicProofCount).toBe(1);
+    expect(projection?.verifiedPublicProofPackCount).toBe(1);
+    expect(projection?.effectiveState).toBe('public_link_only');
     expect(projection?.featuredProofs.map((proof) => proof.title)).toEqual(['Uploaded document']);
     expect(projection?.publicSkills).toEqual(['Anchored Skill']);
     expect(projection?.exportData.signals.proofs.count).toBe(1);
@@ -328,10 +341,84 @@ describe('public portfolio projection', () => {
 
     expect(projection).not.toBeNull();
     expect(projection?.publicProofCount).toBe(0);
+    expect(projection?.verifiedPublicProofPackCount).toBe(0);
     expect(projection?.featuredProofs).toEqual([]);
     expect(projection?.publicSkills).toEqual([]);
     expect(projection?.exportData.skills).toEqual([]);
     expect(projection?.exportData.signals.proofs.count).toBe(0);
     expect(projection?.exportData.proofPacks).toEqual([]);
+  });
+
+  it('blocks public access when anchored proof has no accepted non-self verification', async () => {
+    vi.mocked(db.execute as any)
+      .mockResolvedValueOnce(profileRow())
+      .mockResolvedValueOnce({ rows: [] });
+    vi.mocked(listCanonicalProofPackAggregatesForOwner as any).mockResolvedValue([
+      {
+        pack: {
+          id: 'pack-unverified',
+          ownerId: 'user-1',
+          packKind: 'verification_bundle',
+          primarySubjectType: 'experience',
+          primarySubjectId: 'experience-1',
+          title: 'Unverified anchored pack',
+          summary: null,
+          evidenceSummary: null,
+          outcomesSummary: 'Looks useful but has no accepted verification.',
+        },
+        items: [
+          {
+            effectiveVisibility: 'public',
+            artifact: {
+              id: 'artifact-unverified',
+              subjectType: 'skill',
+              subjectId: 'skill-unverified',
+              revealGate: 'none',
+            },
+          },
+        ],
+        verificationReferences: [],
+        publicSafe: {
+          contract: {
+            status: 'published',
+            title: 'Unverified anchored pack',
+            primaryClaim: { statement: 'Unverified anchored pack claim' },
+            ownershipStatement: 'Owned the work.',
+            verificationSummary: {
+              summary: 'No scoped verification is recorded for this Proof Pack yet.',
+            },
+            proofQualityScore: 0.5,
+            schemaVersion: 'proof_pack/v2',
+          },
+          title: 'Unverified anchored pack',
+          summary: null,
+          evidenceSummary: null,
+          outcomesSummary: 'Looks useful but has no accepted verification.',
+          items: [
+            {
+              artifactId: 'artifact-unverified',
+              artifactKind: 'link',
+              title: 'Unverified proof',
+              description: 'Visible evidence',
+              sourceUrl: 'https://example.com/unverified-proof',
+              issuedAt: '2026-01-12T00:00:00.000Z',
+              expiresAt: null,
+              semanticsNote: 'Supporting evidence only, not full verification.',
+            },
+          ],
+        },
+        verificationStatus: 'unverified',
+        freshnessState: 'fresh',
+        latestEvidenceAt: new Date('2026-01-12T00:00:00.000Z'),
+      },
+    ]);
+
+    const projection = await getPublicIndividualPortfolioProjectionByHandle('jane');
+
+    expect(projection).not.toBeNull();
+    expect(projection?.publicProofCount).toBe(1);
+    expect(projection?.verifiedPublicProofPackCount).toBe(0);
+    expect(projection?.minimumContentMet).toBe(false);
+    expect(projection?.effectiveState).toBe('unavailable');
   });
 });

@@ -465,6 +465,7 @@ export async function POST(
         matchId: matchRow.matchId,
       });
 
+      let resolvedConversationId = intro.conversationId ?? null;
       const [existingConversation] = await db
         .select({
           id: conversations.id,
@@ -487,27 +488,31 @@ export async function POST(
         )
         .limit(1);
 
-      const conversationId =
-        existingConversation?.id ??
-        (
-          await db
-            .insert(conversations)
-            .values({
-              matchId: matchRow.matchId,
-              assignmentId: matchRow.assignmentId,
-              participantOneId: matchRow.profileId,
-              participantTwoId: user.id,
-              stage: 'masked',
-              maskedHandleOne: `Candidate #${nanoid(6).toUpperCase()}`,
-              maskedHandleTwo: `Organization #${nanoid(6).toUpperCase()}`,
-              lastMessageAt: new Date(),
-            })
-            .returning({
-              id: conversations.id,
-            })
-        )[0].id;
+      if (!resolvedConversationId && existingConversation?.id) {
+        resolvedConversationId = existingConversation.id;
+      }
 
-      if (intro.state === 'conversation_open' && conversationId) {
+      if (!resolvedConversationId) {
+        const [insertedConversation] = await db
+          .insert(conversations)
+          .values({
+            matchId: matchRow.matchId,
+            assignmentId: matchRow.assignmentId,
+            participantOneId: matchRow.profileId,
+            participantTwoId: user.id,
+            stage: 'masked',
+            maskedHandleOne: `Candidate #${nanoid(6).toUpperCase()}`,
+            maskedHandleTwo: `Organization #${nanoid(6).toUpperCase()}`,
+            lastMessageAt: new Date(),
+          })
+          .returning({
+            id: conversations.id,
+          });
+
+        resolvedConversationId = insertedConversation?.id ?? null;
+      }
+
+      if (intro.state === 'conversation_open' && resolvedConversationId) {
         const corridor = resolveCanonicalCorridor({
           reviewStage: matchRow.reviewStage,
           revealScope: 'shortlist_identity',
@@ -530,7 +535,7 @@ export async function POST(
           introWorkflowId: intro.id,
           introWorkflowState: 'conversation_open',
           introApproved: true,
-          conversationId,
+          conversationId: resolvedConversationId,
           reviewCard,
           ...corridor,
           why: buildVisibilitySafeWhy({
@@ -563,7 +568,7 @@ export async function POST(
 
       await openIntroConversation({
         introWorkflowId: intro.id,
-        conversationId,
+        conversationId: resolvedConversationId,
         actorType: 'organization_member',
         actorId: user.id,
         matchId: matchRow.matchId,
@@ -620,7 +625,7 @@ export async function POST(
         introWorkflowId: intro.id,
         introWorkflowState: 'conversation_open',
         introApproved: true,
-        conversationId,
+        conversationId: resolvedConversationId,
         reviewCard,
         ...corridor,
         why: buildVisibilitySafeWhy({

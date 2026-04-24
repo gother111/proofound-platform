@@ -45,6 +45,7 @@ describe('cron scheduling ownership', () => {
       'https://proofound.io/api/cron/send-deletion-reminders',
       'https://proofound.io/api/cron/process-deletions',
       'https://proofound.io/api/cron/refresh-matches',
+      'https://proofound.io/api/cron/weekly-digest',
       'https://proofound.io/api/cron/sla-enforcement',
     ]);
   });

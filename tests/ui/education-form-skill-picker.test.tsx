@@ -6,7 +6,10 @@ import { EducationForm } from '@/components/profile/forms/EducationForm';
 
 vi.mock('next/link', () => ({
   default: ({ children, href, ...props }: any) => (
-    <a href={typeof href === 'string' ? href : '/app/i/portfolio'} {...props}>
+    <a
+      href={typeof href === 'string' ? href : '/app/i/profile?profileView=full&tab=proof_packs'}
+      {...props}
+    >
       {children}
     </a>
   ),
@@ -63,9 +66,9 @@ describe('EducationForm skill picker', () => {
     expect(
       screen.getByText(/Add proof-backed portfolio content before attaching education entries/i)
     ).toBeTruthy();
-    expect(screen.getByRole('link', { name: /Open Public Portfolio/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /Add proof-backed content/i })).toHaveAttribute(
       'href',
-      '/app/i/portfolio'
+      '/app/i/profile?profileView=full&tab=proof_packs'
     );
     expect(screen.getByRole('button', { name: /Add Education/i })).toHaveAttribute('disabled');
   });

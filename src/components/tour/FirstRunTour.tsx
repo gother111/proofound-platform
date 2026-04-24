@@ -2,7 +2,7 @@
  * First-Run Guided Tour (Flow I-03)
  *
  * PRD Requirement: First-run guided tour that progressively reveals UI
- * Steps: Navigation → Overview → Profile → Public Portfolio → Matching → Settings
+ * Steps: Navigation → Overview → Profile → Portfolio Visibility → Matching → Settings
  *
  * Features:
  * - Progressive reveal with styled background
@@ -85,11 +85,11 @@ const individualTourSteps: TourStep[] = [
   },
   {
     id: 'portfolio',
-    title: 'Public Portfolio',
+    title: 'Portfolio Visibility',
     description:
-      'This is your share-ready public link. Publish once, then copy and send it to collaborators, partners, or hiring teams immediately.',
+      'Profile owns your Proof Packs and the visibility controls for your share-ready public link.',
     icon: Link2,
-    target: '[data-tour="portfolio-link"]',
+    target: '[data-tour="profile-link"]',
     placement: 'right',
   },
   {

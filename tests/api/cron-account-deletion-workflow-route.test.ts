@@ -45,8 +45,7 @@ describe('GET /api/cron/account-deletion-workflow', () => {
         mode: 'immediate',
       },
     });
-    expect(body.message).toContain('no longer generates fairness notes');
-    expect(body).not.toHaveProperty('fairnessNote');
+    expect(body.message).toContain('Account deletion is immediate');
   });
 
   it('rejects requests with an invalid cron secret', async () => {

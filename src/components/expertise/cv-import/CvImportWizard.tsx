@@ -2455,7 +2455,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-proofound-forest" />
-            CV Skills Import (PDF, Privacy-first)
+            CV Import (PDF, privacy-first)
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -2469,8 +2469,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
               disabled={isParsing || isAnalyzing || isApplying}
             />
             <p className="text-xs text-muted-foreground">
-              Text-based PDFs only. This import flow uses Python extraction and does not fall back
-              to browser-side parsing.
+              Text-based PDFs only. Review extracted context and skills before anything is added to
+              your profile.
             </p>
           </div>
 

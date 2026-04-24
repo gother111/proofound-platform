@@ -85,7 +85,7 @@ describe('validateAssignmentPublishReadiness', () => {
         expect.objectContaining({ blockCode: 'work_summary_required', field: 'description' }),
         expect.objectContaining({
           blockCode: 'proof_expectations_required',
-          field: 'expectedImpact',
+          field: 'proofExpectations',
         }),
       ])
     );
@@ -132,7 +132,7 @@ describe('validateAssignmentPublishReadiness', () => {
       expect.arrayContaining([
         expect.objectContaining({
           blockCode: 'generic_assignment_language',
-          field: 'businessValue',
+          field: 'rolePurpose',
         }),
         expect.objectContaining({
           blockCode: 'generic_assignment_language',
@@ -140,7 +140,7 @@ describe('validateAssignmentPublishReadiness', () => {
         }),
         expect.objectContaining({
           blockCode: 'generic_assignment_language',
-          field: 'expectedImpact',
+          field: 'proofExpectations',
         }),
       ])
     );

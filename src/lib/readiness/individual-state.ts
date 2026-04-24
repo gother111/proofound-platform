@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 
 import { db } from '@/db';
 import {
@@ -8,7 +8,6 @@ import {
   matchingProfiles,
   portfolioPublicationStates,
   profiles,
-  proofPacks,
   skills,
   volunteering,
 } from '@/db/schema';
@@ -140,7 +139,6 @@ type MatchingProfileRow = typeof matchingProfiles.$inferSelect | null;
 type IndividualProfileRow = typeof individualProfiles.$inferSelect | null;
 type ProfileRow = typeof profiles.$inferSelect | null;
 type UnknownRow = Record<string, unknown>;
-type ProofPackRow = typeof proofPacks.$inferSelect;
 type PortfolioCompletionProfileRow = Pick<
   typeof profiles.$inferSelect,
   'id' | 'displayName' | 'handle' | 'publicPortfolioState'
@@ -180,7 +178,7 @@ const READINESS_EVENT_ACTIONS: Record<string, ReadinessAction> = {
       'Start with one real proof link or artifact. This is the fastest path into a shareable portfolio.',
     priority: 'high',
     category: 'profile',
-    actionUrl: '/app/i/portfolio',
+    actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
   },
   structure_first_proof_pack: {
     id: 'structure-first-proof-pack',
@@ -189,14 +187,14 @@ const READINESS_EVENT_ACTIONS: Record<string, ReadinessAction> = {
       'Turn the first proof into a clean Proof Pack with context, evidence, and outcomes.',
     priority: 'high',
     category: 'profile',
-    actionUrl: '/app/i/portfolio',
+    actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
   },
-  request_verification_optional: {
-    id: 'request-verification-optional',
-    title: 'Request verification later',
+  request_required_verification: {
+    id: 'request-required-verification',
+    title: 'Request required verification',
     description:
-      'Verification is optional for day one. Add it once your first proof is already live.',
-    priority: 'medium',
+      'Add one accepted non-self verification tied to anchored proof before the portfolio can be public-ready.',
+    priority: 'high',
     category: 'verification',
     actionUrl: '/app/i/verifications',
   },
@@ -206,7 +204,7 @@ const READINESS_EVENT_ACTIONS: Record<string, ReadinessAction> = {
     description: 'Choose one proof-backed public signal and publish the portfolio.',
     priority: 'high',
     category: 'profile',
-    actionUrl: '/app/i/portfolio',
+    actionUrl: '/app/i/profile?profileView=full&tab=visibility',
   },
   preview_portfolio: {
     id: 'preview-portfolio',
@@ -214,7 +212,7 @@ const READINESS_EVENT_ACTIONS: Record<string, ReadinessAction> = {
     description: 'Open your public portfolio and confirm the proof you want to share.',
     priority: 'medium',
     category: 'profile',
-    actionUrl: '/app/i/portfolio',
+    actionUrl: '/app/i/profile?profileView=full&tab=visibility',
   },
   set_browse_preferences: {
     id: 'set-browse-preferences',
@@ -232,7 +230,7 @@ const READINESS_EVENT_ACTIONS: Record<string, ReadinessAction> = {
       'Introductions need anchored proof on relevant skills, with fresh evidence and no floating orphan packs.',
     priority: 'high',
     category: 'verification',
-    actionUrl: '/app/i/portfolio',
+    actionUrl: '/app/i/profile?profileView=full&tab=proof_packs',
   },
   complete_intro_constraints: {
     id: 'complete-intro-constraints',
@@ -336,6 +334,9 @@ function buildNextBestActions(
     if (missingByState.portfolio_ready.some((item) => item.id === 'anchored_proof_pack')) {
       actionIds.push('structure_first_proof_pack');
     }
+    if (missingByState.portfolio_ready.some((item) => item.id === 'required_verification')) {
+      actionIds.push('request_required_verification');
+    }
     if (missingByState.portfolio_ready.some((item) => item.id === 'published_portfolio')) {
       actionIds.push('publish_portfolio');
     }
@@ -383,9 +384,6 @@ function buildNextBestActions(
     }
     if (missingByState.qualified_intro_ready.some((item) => item.id === 'trusted_signal')) {
       actionIds.push('add_verified_signal');
-    }
-    if (highestState === 'portfolio_ready') {
-      actionIds.push('request_verification_optional');
     }
   }
 
@@ -642,7 +640,6 @@ export async function getIndividualPortfolioReadinessMap(
     educationRows,
     volunteeringRows,
     publicationStateRows,
-    packRows,
   ] = await Promise.all([
     safeSelectRows(() =>
       queryDb.query?.profiles?.findMany?.({
@@ -710,20 +707,6 @@ export async function getIndividualPortfolioReadinessMap(
         },
       })
     ),
-    safeSelectRows(() =>
-      queryDb.query?.proofPacks?.findMany?.({
-        where: and(
-          eq(proofPacks.ownerType, 'individual_profile'),
-          inArray(proofPacks.ownerId, uniqueProfileIds),
-          isNull(proofPacks.deletedAt)
-        ),
-        columns: {
-          ownerId: true,
-          primarySubjectType: true,
-          primarySubjectId: true,
-        },
-      })
-    ),
   ]);
 
   const profileById = new Map(
@@ -772,15 +755,19 @@ export async function getIndividualPortfolioReadinessMap(
     }
   }
 
-  const anchoredPackCountByOwnerId = new Map<string, number>();
-  for (const pack of packRows as Array<
-    Pick<ProofPackRow, 'ownerId' | 'primarySubjectType' | 'primarySubjectId'>
-  >) {
-    if (typeof pack.ownerId !== 'string' || !hasPrimaryAnchorContext(pack)) {
-      continue;
-    }
-    incrementOwnerCount(anchoredPackCountByOwnerId, pack.ownerId);
-  }
+  const aggregateRowsByOwnerId = new Map<string, CanonicalProofPackAggregate[]>();
+  await Promise.all(
+    uniqueProfileIds.map(async (profileId) => {
+      try {
+        aggregateRowsByOwnerId.set(
+          profileId,
+          await listCanonicalProofPackAggregatesForOwner('individual_profile', profileId)
+        );
+      } catch {
+        aggregateRowsByOwnerId.set(profileId, []);
+      }
+    })
+  );
 
   const readinessByProfileId = new Map<string, boolean>();
   for (const profileId of uniqueProfileIds) {
@@ -792,7 +779,20 @@ export async function getIndividualPortfolioReadinessMap(
     const publishedPortfolio =
       typeof publicationEffectiveState === 'string' &&
       isAccessiblePublicPortfolioState(publicationEffectiveState as any);
-    const anchoredProofPackCount = anchoredPackCountByOwnerId.get(profileId) ?? 0;
+    const ownerAggregates = aggregateRowsByOwnerId.get(profileId) ?? [];
+    const anchoredAggregates = ownerAggregates.filter((aggregate) =>
+      hasPrimaryAnchorContext(aggregate.pack)
+    );
+    const seenTrustRecordIds = new Set<string>();
+    const acceptedVerificationCount = anchoredAggregates.reduce(
+      (count, aggregate) =>
+        count +
+        aggregate.verificationReferences.filter((record) =>
+          hasActiveNonSelfTrustAnchor(record, seenTrustRecordIds)
+        ).length,
+      0
+    );
+    const anchoredProofPackCount = anchoredAggregates.length;
     const completionState = evaluateIndividualProfileCompletion(
       buildPortfolioCompletionSnapshotInput({
         profile,
@@ -803,7 +803,7 @@ export async function getIndividualPortfolioReadinessMap(
         proofCount: anchoredProofPackCount,
         proofArtifactCount: anchoredProofPackCount,
         anchoredProofPackCount,
-        acceptedVerificationCount: 0,
+        acceptedVerificationCount,
         publicProofCount: 0,
         publishedPortfolio,
       })
@@ -1086,16 +1086,25 @@ export async function getIndividualReadinessState(
         'anchored_proof_pack',
         'Anchored Proof Pack',
         'Add at least one Proof Pack anchored to a real work, education, or volunteering context.',
-        '/app/i/portfolio',
+        '/app/i/profile?profileView=full&tab=proof_packs',
         completionState.checks.hasStructuredProofPack,
         completionState.counts.anchoredProofPacks,
         1
       ),
       buildRequirement(
+        'required_verification',
+        'Accepted non-self verification',
+        'Add one accepted peer, manager, or external verification tied to anchored proof before public visibility can unlock.',
+        '/app/i/verifications',
+        completionState.checks.hasRequiredVerification,
+        completionState.counts.acceptedVerifications,
+        1
+      ),
+      buildRequirement(
         'published_portfolio',
         'Published portfolio',
-        'Publish the portfolio so the anchored proof is accessible from your public page.',
-        '/app/i/portfolio',
+        'Publish the portfolio so verified anchored proof is accessible from your public page.',
+        '/app/i/profile?profileView=full&tab=visibility',
         completionState.checks.hasPublishedPortfolio
       ),
     ].filter((item) => !item.met),
@@ -1127,7 +1136,7 @@ export async function getIndividualReadinessState(
         'proof_coverage',
         'Three proof-backed role signals',
         'Introductions need at least three role-relevant skills or capabilities that resolve back to anchored Proof Packs.',
-        '/app/i/portfolio',
+        '/app/i/profile?profileView=full&tab=proof_packs',
         roleRelevantProofLinkedL4Count >= 3,
         roleRelevantProofLinkedL4Count,
         3
@@ -1136,7 +1145,7 @@ export async function getIndividualReadinessState(
         'role_relevant_proof',
         'One fresh anchored pack',
         'At least one anchored Proof Pack must be both fresh and relevant to matching.',
-        '/app/i/portfolio',
+        '/app/i/profile?profileView=full&tab=proof_packs',
         freshRoleRelevantAnchoredPackCount >= 1,
         freshRoleRelevantAnchoredPackCount,
         1
@@ -1154,7 +1163,7 @@ export async function getIndividualReadinessState(
         'fresh_proof_24',
         'Fresh supporting proof',
         'Role-relevant anchored Proof Packs should include supporting evidence refreshed within the last 24 months.',
-        '/app/i/portfolio',
+        '/app/i/profile?profileView=full&tab=proof_packs',
         fresh24RoleRelevantSkillIds.size >= 1,
         fresh24RoleRelevantSkillIds.size,
         1
@@ -1163,7 +1172,7 @@ export async function getIndividualReadinessState(
         'fresh_proof_12',
         'One current proof signal',
         'At least one role-relevant anchored Proof Pack should show evidence refreshed within the last 12 months.',
-        '/app/i/portfolio',
+        '/app/i/profile?profileView=full&tab=proof_packs',
         fresh12RoleRelevantSkillIds.size >= 1,
         fresh12RoleRelevantSkillIds.size,
         1
@@ -1221,7 +1230,7 @@ export async function getIndividualReadinessState(
         'orphan_relevant_packs',
         'No orphan Proof Packs',
         'Re-anchor legacy or floating Proof Packs before introductions can unlock.',
-        '/app/i/portfolio',
+        '/app/i/profile?profileView=full&tab=proof_packs',
         orphanRelevantPackCount === 0,
         orphanRelevantPackCount,
         0
