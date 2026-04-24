@@ -178,6 +178,7 @@ const ACTIVE_API_POLICIES = [
     surfaceLabel: 'Profile API',
     detail: 'Profile readiness and privacy routes remain active for launch.',
     matches: (pathname: string) =>
+      pathname === '/api/profile' ||
       pathname === '/api/profile/completeness' ||
       pathname === '/api/profile/privacy-settings' ||
       pathname === '/api/profile/visibility',
@@ -199,6 +200,7 @@ const ACTIVE_API_POLICIES = [
       pathname === '/api/user/audit-log/purpose' ||
       pathname === '/api/user/consent' ||
       pathname === '/api/user/consent/check' ||
+      pathname === '/api/data-export' ||
       pathname === '/api/user/email' ||
       pathname === '/api/user/export' ||
       pathname === '/api/user/me' ||
@@ -217,10 +219,11 @@ const ACTIVE_API_POLICIES = [
     classification: 'active_launch_path',
     surfaceLabel: 'Assignment Expertise API',
     detail:
-      'Assignment drafting and proof tagging support remain active inside the launch corridor.',
+      'Assignment drafting, CV context import, and proof tagging support remain active inside the launch corridor.',
     matches: (pathname: string) =>
       pathname === '/api/expertise/jd-to-l4' ||
       pathname === '/api/expertise/taxonomy' ||
+      matchExactOrPrefix('/api/expertise/cv-import')(pathname) ||
       matchExactOrPrefix('/api/expertise/user-skills')(pathname),
   },
 ] as const satisfies readonly SurfacePolicy[];
@@ -314,12 +317,6 @@ const ARCHIVED_API_POLICIES = [
   },
   {
     classification: 'archived',
-    surfaceLabel: 'Export API',
-    detail: 'Deprecated export aliases are archived in favor of the canonical user export surface.',
-    matches: (pathname: string) => pathname === '/api/data-export',
-  },
-  {
-    classification: 'archived',
     surfaceLabel: 'Portfolio API',
     detail:
       'Owner-facing portfolio view counters are archived outside the locked launch MVP corridor.',
@@ -385,6 +382,7 @@ const ARCHIVED_API_POLICIES = [
       pathname.startsWith('/api/expertise') &&
       !pathname.startsWith('/api/expertise/jd-to-l4') &&
       !pathname.startsWith('/api/expertise/taxonomy') &&
+      !pathname.startsWith('/api/expertise/cv-import') &&
       !pathname.startsWith('/api/expertise/user-skills'),
   },
   {
@@ -572,6 +570,7 @@ const ACTIVE_PAGE_POLICIES = [
       pathname === '/verify-work-email' ||
       pathname === '/login' ||
       pathname === '/auth/login' ||
+      pathname === '/auth/callback' ||
       matchExactOrPrefix('/signup')(pathname) ||
       matchExactOrPrefix('/reset-password')(pathname) ||
       matchExactOrPrefix('/verify-email')(pathname) ||

@@ -393,6 +393,14 @@ Effective visibility = narrowest of:
 
 Public portfolio pages are explicit public surfaces.
 
+They require the individual profile to meet the minimum proof-plus-verification threshold:
+
+- safe shell complete
+- at least one real context
+- at least one anchored public-safe Proof Pack
+- at least one accepted, clear, non-self verification tied to anchored proof or context
+- requested publication state resolves to an accessible public state
+
 They may show:
 
 - selected Proof Packs
@@ -526,7 +534,7 @@ Organization tiers:
 
 Key product rule:
 
-- portfolio-ready is easy
+- portfolio-ready is narrow but requires the minimum proof-plus-verification threshold
 - intro-eligible is meaningfully harder
 
 ### 5.5 Canonical relationship lifecycle contract

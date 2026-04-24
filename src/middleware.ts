@@ -99,12 +99,67 @@ function buildArchivedPageResponse(
   detail: string,
   status = 404
 ) {
-  const response = new NextResponse(`Not found\n\n${surface}: ${detail}`, {
-    status,
-    headers: {
-      'content-type': 'text/plain; charset=utf-8',
-    },
-  });
+  const escapeHtml = (value: string) =>
+    value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+
+  const escapedSurface = escapeHtml(surface);
+  const escapedDetail = escapeHtml(detail);
+  const response = new NextResponse(
+    `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Not found | Proofound</title>
+    <style>
+      :root { color-scheme: light; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #f3f0e8;
+        color: #3f3f3f;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      main {
+        width: min(92vw, 34rem);
+        padding: 2rem;
+        border: 1px solid #d5caba;
+        border-radius: 1rem;
+        background: #e6e4e0;
+      }
+      h1 {
+        margin: 0 0 0.75rem;
+        color: #303030;
+        font-size: clamp(1.75rem, 4vw, 2.25rem);
+        line-height: 1.1;
+      }
+      p { margin: 0; line-height: 1.6; }
+      .surface { margin-top: 1rem; font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Not found</h1>
+      <p>This page is outside the locked launch MVP corridor.</p>
+      <p class="surface">${escapedSurface}: ${escapedDetail}</p>
+    </main>
+  </body>
+</html>`,
+    {
+      status,
+      headers: {
+        'content-type': 'text/html; charset=utf-8',
+      },
+    }
+  );
   response.headers.set('x-request-id', requestId);
   applySecurityHeaders(response, request);
   return response;

@@ -25,7 +25,7 @@ It assumes:
 - Protect privacy before chasing convenience.
 - Protect assignment quality before chasing posting volume.
 - Prefer manual intervention over unsafe automation during launch.
-- Keep the product corridor honest: portfolio-ready can be easy, intro-eligible cannot be cheapened.
+- Keep the product corridor honest: portfolio-ready must be narrow and verified, intro-eligible cannot be cheapened.
 
 ---
 

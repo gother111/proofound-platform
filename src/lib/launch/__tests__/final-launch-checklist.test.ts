@@ -96,7 +96,7 @@ async function createWorkspaceFixture(options: { includeRepoReadyBundle?: boolea
     'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md',
     `# Locked MVP
 
-Make portfolio-ready easy. Make intro-eligible hard.
+Make portfolio-ready narrow and verified. Make intro-eligible hard.
 The proof-first hiring corridor is centered on Proof Packs.
 It includes org_owner, org_manager, and org_reviewer.
 `
@@ -125,7 +125,7 @@ portfolio-ready and intro-eligible are clearly distinct
     'LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md',
     `# Launch Runbook
 
-Keep the product corridor honest: portfolio-ready can be easy, intro-eligible cannot be cheapened.
+Keep the product corridor honest: portfolio-ready must be narrow and verified, intro-eligible cannot be cheapened.
 backups and restore checks have been run
 critical alerts are configured
 `

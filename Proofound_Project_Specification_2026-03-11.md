@@ -207,7 +207,7 @@ Real-world mapping:
 3. add one real context
 4. add 1–3 proofs
 5. turn proof into structured Proof Packs
-6. request useful verification
+6. request at least one accepted non-self verification tied to anchored proof or context
 7. publish public portfolio
 8. see readiness checklist
 
@@ -273,6 +273,10 @@ Required:
 - intro-eligible
 - strongly trusted (optional / derived)
 
+Portfolio-ready requires one safe shell, one real context, one anchored Proof Pack, one accepted
+clear non-self verification tied to anchored proof or context, and an accessible public publication
+state.
+
 ### 8.6 Individual UI priorities
 
 Show prominently:
@@ -337,7 +341,7 @@ Capture:
 
 - must-have skills
 - proof expectations
-- optional verification gates
+- additional verification gates beyond baseline profile readiness
 
 #### Step 4 — Practical constraints
 

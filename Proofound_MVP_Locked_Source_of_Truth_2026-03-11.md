@@ -234,7 +234,7 @@ Organizations can:
 - invite internal collaborators using lightweight roles
 - create and publish one assignment corridor
 - define business value, outcomes, constraints, must-have skills, and proof expectations
-- optionally require simple verification gates
+- add narrow role-specific verification gates beyond the baseline profile-readiness threshold
 - review privacy-safe matches and proof summaries
 - shortlist, pass, request intro, request reveal, schedule interview, and record decision
 - verify engagement outcome after a hire / contract / placement
@@ -270,6 +270,14 @@ The public portfolio is not a traditional résumé. It is a calm trust surface b
 - selected outcomes
 - selected verification summaries
 - selected public-safe context
+
+Minimum individual public-readiness threshold:
+
+- one safe shell
+- one real private context
+- one anchored public-safe Proof Pack
+- one accepted, clear, non-self verification tied to anchored proof or context
+- an accessible public portfolio publication state
 
 ## 5.2 Private foundational scaffolding included from the beginning
 
@@ -737,7 +745,7 @@ Early review may **not** show:
 
 ## 11.1 Product rule to protect
 
-**Make portfolio-ready easy. Make intro-eligible hard.**
+**Make portfolio-ready narrow and verified. Make intro-eligible hard.**
 
 ## 11.2 Individual readiness tiers
 
@@ -749,6 +757,7 @@ Minimum:
 - profile shell complete
 - at least 1 Proof Pack
 - at least 1 anchor context
+- at least 1 accepted, clear, non-self verification tied to anchored proof or context
 - public portfolio link live with safe defaults
 
 ### Discoverable
@@ -851,7 +860,7 @@ For each proof:
 - link to the relevant context
 - choose visibility
 
-### Step 5 — Request verification where useful
+### Step 5 — Request required verification
 
 Prompt for:
 
@@ -1217,7 +1226,7 @@ The following rules are non-negotiable for MVP.
 
 ### 17.4 UX rules
 
-- Public portfolio-ready must be easy.
+- Public portfolio-ready must stay narrow and require the minimum proof-plus-verification threshold.
 - Intro-eligible must be harder.
 - The first user action is “add proof,” not “complete your profile.”
 - No vanity counters, public scoreboards, or gamified profile maintenance.
@@ -1313,7 +1322,7 @@ Use this section as the execution handoff for updating the current doc set.
 - add explicit hiring conclusion, engagement verification, and optional proof issuance
 - add explicit support for multiple engagement types via one structured field
 - add explicit universal / interpersonal skill attestation rules
-- make public portfolio easy and intro eligibility harder
+- make public portfolio narrow and verified while keeping intro eligibility harder
 
 ### 20.3 Remove or move out of MVP
 

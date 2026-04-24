@@ -27,9 +27,6 @@ describe('launch surface policy', () => {
     expect(getArchivedApiPolicy('/api/projects/project-1')).toMatchObject({
       surfaceLabel: 'Projects API',
     });
-    expect(getArchivedApiPolicy('/api/data-export')).toMatchObject({
-      surfaceLabel: 'Export API',
-    });
     expect(getArchivedApiPolicy('/api/portfolio/view')).toMatchObject({
       surfaceLabel: 'Portfolio API',
     });
@@ -114,7 +111,9 @@ describe('launch surface policy', () => {
       '/api/org/org-1/matches/match-1/review',
       '/api/organizations/org-1/team',
       '/api/portfolio/visibility',
+      '/api/profile',
       '/api/profile/privacy-settings',
+      '/api/data-export',
       '/api/upload/document',
       '/api/user/export',
       '/api/verification/requests/skill',
@@ -132,6 +131,7 @@ describe('launch surface policy', () => {
     expect(classifyLaunchPagePath('/portfolio/alex')).toBe('active_launch_path');
     expect(classifyLaunchPagePath('/verify/token-1')).toBe('active_launch_path');
     expect(classifyLaunchPagePath('/candidate-invite/token-1')).toBe('active_launch_path');
+    expect(classifyLaunchPagePath('/auth/callback')).toBe('active_launch_path');
     expect(classifyLaunchPagePath('/app/i/home')).toBe('active_launch_path');
     expect(classifyLaunchPagePath('/app/i/matching/preferences')).toBe('active_launch_path');
     expect(classifyLaunchPagePath('/app/o/acme/shortlist')).toBe('active_launch_path');
@@ -176,6 +176,7 @@ describe('launch surface policy', () => {
     expect(getArchivedPagePolicy('/admin/users')).toMatchObject({
       surfaceLabel: 'Internal Ops Pages',
     });
+    expect(getArchivedPagePolicy('/auth/callback')).toBeNull();
     expect(getArchivedPagePolicy('/app/i/home')).toBeNull();
   });
 

@@ -211,7 +211,7 @@ The first user journey is:
 2. add one real context
 3. add 1–3 real proofs
 4. structure proof into Proof Packs
-5. request verification where useful
+5. request at least one non-self verification tied to anchored proof or context
 6. publish a public proof portfolio generated from selected Proof Packs
 7. progress toward intro eligibility
 
@@ -342,6 +342,14 @@ Attestations must capture:
 
 The public portfolio is a calm trust surface, not a classic résumé and not a social feed.
 
+Minimum public-readiness threshold:
+
+- one safe shell
+- one real context
+- one anchored Proof Pack
+- one accepted, clear, non-self verification tied to anchored proof or context
+- an accessible public portfolio publication state
+
 It should emphasize:
 
 - selected proof
@@ -368,7 +376,7 @@ Individual readiness tiers:
 
 Product protection rule:
 
-- portfolio-ready should be easy
+- portfolio-ready should stay narrow but must include the minimum proof-plus-verification threshold
 - intro-eligible should be meaningfully harder
 
 Intro-eligible users must have:
@@ -460,7 +468,7 @@ Each assignment includes:
 - expected outcomes
 - must-have skills
 - proof expectations
-- optional verification gates
+- additional verification gates beyond the baseline profile-readiness threshold
 - timing / availability constraints
 - optional compensation overlap logic if used
 
@@ -720,7 +728,7 @@ INTERNAL OPS
 
 ### 9.4 UX constraints
 
-- portfolio-ready must be easy
+- portfolio-ready must stay narrow but include the minimum proof-plus-verification threshold
 - intro-eligible must be harder
 - first action is “add proof” not “complete your profile”
 - no vanity counters or public popularity metrics

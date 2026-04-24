@@ -14,7 +14,7 @@ export default function NotFound() {
             <FileQuestion className="w-6 h-6 text-primary-500" />
           </div>
           <CardTitle>Page not found</CardTitle>
-          <CardDescription>
+          <CardDescription className="text-proofound-charcoal">
             The page you&apos;re looking for doesn&apos;t exist or has been moved.
           </CardDescription>
         </CardHeader>

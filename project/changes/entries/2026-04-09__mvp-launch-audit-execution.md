@@ -523,6 +523,74 @@ Operational design rule:
 - Blocker closure:
   - `FULL`
 
+### 13. Checked release migration applicability against safe local-only database targets
+
+- Item implemented:
+  - verified the shipped MVP-scope commit includes migration [`src/db/migrations/20260409143000_private_context_visibility_defaults.sql`](/Users/yuriibakurov/proofound/src/db/migrations/20260409143000_private_context_visibility_defaults.sql)
+  - attempted the canonical migration flow against the existing local Supabase container on `127.0.0.1:54322`
+  - attempted the canonical migration flow against a brand-new isolated Supabase Postgres container on `127.0.0.1:54323`
+- Tests run:
+  - `env DIRECT_URL='postgresql://supabase_admin:postgres@127.0.0.1:54322/postgres' npm run db:backup:checkpoint -- --out /tmp/proofound-db-checkpoints-local-supabase`
+  - `env DIRECT_URL='postgresql://supabase_admin:postgres@127.0.0.1:54322/postgres?sslmode=disable' npm run db:backup:checkpoint -- --out /tmp/proofound-db-checkpoints-local-supabase`
+  - `env DATABASE_URL='postgresql://supabase_admin:postgres@127.0.0.1:54322/postgres?sslmode=disable' npm run db:audit:migrations`
+  - `env DIRECT_URL='postgresql://supabase_admin:postgres@127.0.0.1:54322/postgres?sslmode=disable' npm run db:migrate`
+  - `docker run -d --rm --name proofound-supabase-migrate-test -e POSTGRES_PASSWORD=postgres -e POSTGRES_HOST=/var/run/postgresql -e JWT_SECRET=super-secret-jwt-token-with-at-least-32-characters-long -e JWT_EXP=3600 -e POSTGRES_USER=supabase_admin -e POSTGRES_DB=postgres -e POSTGRES_INITDB_ARGS='--allow-group-access --locale-provider=icu --encoding=UTF-8 --icu-locale=en_US.UTF-8' -p 54323:5432 public.ecr.aws/supabase/postgres:17.6.1.029`
+  - `env DIRECT_URL='postgresql://supabase_admin:postgres@127.0.0.1:54323/postgres?sslmode=disable' npm run db:backup:checkpoint -- --out /tmp/proofound-db-checkpoints-fresh-supabase`
+  - `env DATABASE_URL='postgresql://supabase_admin:postgres@127.0.0.1:54323/postgres?sslmode=disable' npm run db:audit:migrations`
+  - `env DIRECT_URL='postgresql://supabase_admin:postgres@127.0.0.1:54323/postgres?sslmode=disable' npm run db:migrate`
+- Result:
+  - `PARTIAL`
+  - the release migration is relevant, but no authoritative apply was completed in this run
+  - existing local Supabase state on `54322` is not a clean replay target:
+    - checkpoint succeeds only with `?sslmode=disable`
+    - audit fails before replay because `public.app_migration_ledger` is absent
+    - migration replay applies the first two canonical versions, then fails in [`src/db/migrations/20250130_privacy_dashboard.sql`](/Users/yuriibakurov/proofound/src/db/migrations/20250130_privacy_dashboard.sql) because the pre-existing `analytics_events` table shape does not have `ip_hash`
+  - pristine isolated Supabase state on `54323` is also not a full bootstrap target for the canonical runner:
+    - checkpoint fails because `supabase_migrations.schema_migrations` is absent
+    - audit fails before replay because `public.app_migration_ledger` is absent
+    - migration replay fails on the very first canonical app migration because foundational tables like `profiles` do not exist yet
+  - current fresh truth: `src/db/migrations` is not a zero-to-one bootstrap path for a pristine local Supabase database, and the repo does not currently provide a clean local baseline that can safely replay through to the new privacy-default migration without hidden prior state
+- Remaining risk:
+  - [`src/db/migrations/20260409143000_private_context_visibility_defaults.sql`](/Users/yuriibakurov/proofound/src/db/migrations/20260409143000_private_context_visibility_defaults.sql) still needs to be applied on an authoritative environment that already contains the expected app baseline
+  - remote `.env.local` database credentials point at a shared Supabase pooler, and this run did not use them because no remote target was explicitly authorized
+- Blocker closure:
+  - `PARTIAL`
+
+### 14. Applied the release privacy-default migration on production
+
+- Item implemented:
+  - ran the canonical production safety sequence against the authoritative release database target
+  - used pooled `DATABASE_URL` because the configured production `DIRECT_URL` host did not resolve from this machine during the run
+- Tests run:
+  - `set -a; source .vercel/.env.production.local; set +a; PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:backup:checkpoint`
+  - `set -a; source .vercel/.env.production.local; unset DIRECT_URL; set +a; PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:backup:checkpoint`
+  - `set -a; source .vercel/.env.production.local; unset DIRECT_URL; set +a; PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:audit:migrations`
+  - `set -a; source .vercel/.env.production.local; unset DIRECT_URL; set +a; PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:migrate`
+  - `set -a; source .vercel/.env.production.local; unset DIRECT_URL; set +a; PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:audit:migrations`
+  - `set -a; source .vercel/.env.production.local; unset DIRECT_URL; set +a; psql "$DATABASE_URL" -c "select version, applied_at from public.app_migration_ledger where version = '20260409143000_private_context_visibility_defaults' order by applied_at desc limit 1;"`
+- Result:
+  - `PASS`
+  - direct host path failed first with DNS resolution:
+    - `Checkpoint creation failed: getaddrinfo ENOTFOUND db.cjpfrgmsxwxhuomnvciq.supabase.co`
+  - pooled production path succeeded:
+    - backup checkpoint created at `/tmp/proofound-db-checkpoints/2026-04-10T07-21-35-813Z`
+    - pre-migrate canonical audit showed exactly one unapplied local migration:
+      - `20260409143000_private_context_visibility_defaults.sql`
+    - `npm run db:migrate` applied exactly one migration and skipped `107`
+    - post-migrate canonical audit returned:
+      - `Local migration files: 108`
+      - `Applied with local file: 108`
+      - `File present but not applied: 0`
+    - direct ledger verification confirmed:
+      - `20260409143000_private_context_visibility_defaults | 2026-04-10 07:22:13.277682+00`
+  - the pre-existing historical extra ledger row remains non-blocking:
+    - `20260317224741_canonicalize_org_role_constraints`
+- Remaining risk:
+  - pristine local bootstrap for canonical migrations is still unverified and remains a repo-level migration-governance gap
+  - future production DDL runs would benefit from fixing the unresolved `DIRECT_URL` DNS path so backup and migrate can prefer the direct connection as documented
+- Blocker closure:
+  - `FULL`
+
 ## 7. Final Updated Launch Checklist
 
 - [x] Launch surface contains only honest MVP routes and internal-only launch ops.
@@ -541,3 +609,5 @@ Operational design rule:
 - [x] Launch-status truth is refreshed for this run.
 - [x] Logged-out story still sells the narrow wedge only.
 - [x] Pilot packaging remains narrow and honest.
+- [x] Release migration `20260409143000_private_context_visibility_defaults.sql` has been applied on the authoritative database target for this release.
+- [ ] Canonical migration bootstrap is verified on a pristine local Supabase database without hidden prior state.

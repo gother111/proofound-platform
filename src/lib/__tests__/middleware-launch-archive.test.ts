@@ -128,6 +128,7 @@ describe('middleware launch archive behavior', () => {
       'http://localhost/app/i/messages',
       'http://localhost/app/o/acme/matching',
       'http://localhost/app/o/acme/shortlist',
+      'http://localhost/auth/callback?type=email&token_hash=test-token',
       'http://localhost/portfolio/alex',
       'http://localhost/verify/token-1',
       'http://localhost/candidate-invite/token-1',
