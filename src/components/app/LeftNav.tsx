@@ -139,7 +139,7 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
           isV2
             ? 'bg-card/50 backdrop-blur-xl border-r border-black/[0.04] shadow-none rounded-none dark:border-white/5 dark:bg-card'
             : 'bg-neutral-light-50 border-proofound-stone/60',
-          isExpanded ? 'w-52' : 'w-14'
+          isExpanded ? 'w-60' : 'w-14'
         )}
         aria-label={isExpanded ? 'Main navigation' : 'Main navigation (collapsed)'}
       >
@@ -208,7 +208,12 @@ export function LeftNav({ basePath = '/app/i', isBetaTesting = false }: LeftNavP
                     >
                       <Icon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
                       {isExpanded && (
-                        <span className={cn('text-sm whitespace-nowrap', isV2 && 'font-medium')}>
+                        <span
+                          className={cn(
+                            'min-w-0 truncate text-sm whitespace-nowrap',
+                            isV2 && 'font-medium'
+                          )}
+                        >
                           {item.label}
                         </span>
                       )}

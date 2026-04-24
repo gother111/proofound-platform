@@ -409,19 +409,17 @@ export default async function OrganizationHomePage({
                       Guardrails and checks
                     </h3>
                     <div className="space-y-3 text-sm">
-                      <p className="flex items-center justify-between gap-3">
+                      <p className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
                         <span className="text-muted-foreground">Blind-first review</span>
                         <span className="font-medium text-proofound-forest">On</span>
                       </p>
-                      <p className="flex items-center justify-between gap-3">
+                      <p className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
                         <span className="text-muted-foreground">Consent traceability</span>
                         <span className="font-medium text-proofound-forest">On</span>
                       </p>
-                      <p className="flex items-center justify-between gap-3">
+                      <p className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
                         <span className="text-muted-foreground">Minimal roles</span>
-                        <span className="font-medium text-proofound-forest">
-                          Owner/Manager/Reviewer
-                        </span>
+                        <span className="font-medium text-proofound-forest">3 roles</span>
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2 pt-1">
@@ -507,7 +505,7 @@ export default async function OrganizationHomePage({
           </aside>
         </section>
 
-        <section className="grid gap-5 xl:grid-cols-[1fr_1fr_1fr_1.15fr]">
+        <section className="grid items-start gap-5 xl:grid-cols-[1fr_1fr_1fr_1.15fr]">
           <div className="rounded-lg border border-proofound-stone/70 bg-white p-5">
             <div className="flex items-start justify-between gap-3">
               <h2 className="font-display text-xl font-medium text-proofound-charcoal">
