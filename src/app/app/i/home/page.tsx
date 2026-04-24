@@ -58,35 +58,51 @@ export default async function IndividualHomePage() {
   const hasProof = metrics.proofStoriesCount > 0;
   const hasMatchingMotion = metrics.qualifiedMatches > 0 || metrics.activeIntroductions > 0;
   const primaryProofLabel = hasProof ? 'Review Proof Packs' : 'Add your first proof';
-  const proofScore = Math.max(readinessPercent, hasProof ? 68 : 42);
+  const readinessScore = readinessPercent;
+  const readinessTone =
+    readinessScore >= 80
+      ? 'Ready to share'
+      : readinessScore >= 55
+        ? 'Review before sharing'
+        : 'Build the proof base';
 
   const workflowSteps = [
     {
       number: '1',
       label: 'Identity',
-      detail: 'Completed',
+      detail: 'Profile active',
       complete: true,
+      href: '/app/i/profile?profileView=full',
     },
     {
       number: '2',
-      label: 'Documents',
-      detail: hasProof ? 'In progress' : 'Next',
+      label: 'Proof packs',
+      detail: hasProof ? `${metrics.proofStoriesCount} present` : 'Next',
       active: true,
+      href: '/app/i/profile?profileView=full&tab=proof_packs',
     },
     {
       number: '3',
-      label: 'Verification',
-      detail: metrics.pendingVerifications > 0 ? 'Pending' : 'Ready',
+      label: 'Trust anchors',
+      detail:
+        metrics.verifiedSkills > 0
+          ? `${metrics.verifiedSkills} verified`
+          : metrics.pendingVerifications > 0
+            ? `${metrics.pendingVerifications} pending`
+            : 'Request next',
+      href: '/app/i/verifications',
     },
     {
       number: '4',
-      label: 'Review',
-      detail: readinessPercent >= 70 ? 'Ready soon' : 'Pending',
+      label: 'Portfolio',
+      detail: readinessPercent >= 70 ? 'Review visibility' : 'Needs proof',
+      href: '/app/i/profile?profileView=full&tab=visibility',
     },
     {
       number: '5',
       label: 'Share',
-      detail: readinessPercent >= 80 ? 'Ready' : 'Pending',
+      detail: readinessPercent >= 80 ? 'Ready' : 'Locked',
+      href: '/app/i/profile?profileView=full&tab=visibility',
     },
   ];
 
@@ -97,22 +113,40 @@ export default async function IndividualHomePage() {
       detail: 'Proofound ID',
       status: readinessPercent > 0 ? 'Verified' : 'Started',
       tone: 'success',
+      href: '/app/i/profile?profileView=full',
     },
     {
       icon: FileCheck2,
-      title: 'Proof Pack',
+      title: 'Proof Packs',
       detail: hasProof
         ? `${metrics.proofStoriesCount} proof-backed signal${metrics.proofStoriesCount === 1 ? '' : 's'}`
         : 'Add one work sample',
       status: hasProof ? 'Verified' : 'Pending',
       tone: hasProof ? 'success' : 'warning',
+      href: '/app/i/profile?profileView=full&tab=proof_packs',
     },
     {
-      icon: Briefcase,
-      title: 'Work context',
-      detail: 'Role, project, or learning context',
-      status: 'Ready',
-      tone: 'success',
+      icon: ShieldCheck,
+      title: 'Trust anchors',
+      detail:
+        metrics.verifiedSkills > 0
+          ? `${metrics.verifiedSkills} verified skill${metrics.verifiedSkills === 1 ? '' : 's'}`
+          : metrics.pendingVerifications > 0
+            ? `${metrics.pendingVerifications} verification request${metrics.pendingVerifications === 1 ? '' : 's'} pending`
+            : 'No verifier attached yet',
+      status:
+        metrics.verifiedSkills > 0
+          ? 'Verified'
+          : metrics.pendingVerifications > 0
+            ? 'Pending'
+            : 'Needed',
+      tone:
+        metrics.verifiedSkills > 0
+          ? 'success'
+          : metrics.pendingVerifications > 0
+            ? 'warning'
+            : 'neutral',
+      href: '/app/i/verifications',
     },
     {
       icon: Eye,
@@ -120,7 +154,15 @@ export default async function IndividualHomePage() {
       detail: 'Public-safe sharing controls',
       status: readinessPercent >= 70 ? 'Shared' : 'Review',
       tone: readinessPercent >= 70 ? 'info' : 'neutral',
+      href: '/app/i/profile?profileView=full&tab=visibility',
     },
+  ];
+
+  const walletSummary = [
+    `${proofRecords.length} live signals`,
+    `${metrics.verifiedSkills} verified`,
+    `${metrics.pendingVerifications} pending`,
+    readinessPercent >= 80 ? 'Share-ready' : 'Private by default',
   ];
 
   const pendingItems = [
@@ -129,6 +171,7 @@ export default async function IndividualHomePage() {
       title: hasProof ? 'Proof Pack review' : 'First proof artifact',
       detail: hasProof ? 'Check context and visibility' : 'Upload or link one real piece of work',
       action: hasProof ? 'Review status' : 'Add proof',
+      href: '/app/i/profile?profileView=full&tab=proof_packs',
     },
     {
       icon: ShieldCheck,
@@ -138,13 +181,14 @@ export default async function IndividualHomePage() {
           ? `${metrics.pendingVerifications} verification request${metrics.pendingVerifications === 1 ? '' : 's'} pending`
           : 'Ask one credible person or source to confirm the proof',
       action: metrics.pendingVerifications > 0 ? 'View request' : 'Request',
+      href: '/app/i/verifications',
     },
   ];
 
   const scoreItems = [
     {
       label: `${metrics.verifiedSkills} verified skill${metrics.verifiedSkills === 1 ? '' : 's'}`,
-      state: 'ok',
+      state: metrics.verifiedSkills > 0 ? 'ok' : 'warn',
     },
     {
       label: `${metrics.pendingVerifications} pending verification${metrics.pendingVerifications === 1 ? '' : 's'}`,
@@ -160,10 +204,10 @@ export default async function IndividualHomePage() {
     },
   ];
 
-  const activityItems = [
+  const stateItems = [
     {
-      title: 'Identity profile available',
-      detail: 'Ready for proof-backed portfolio work',
+      title: 'Profile shell is active',
+      detail: 'The next useful move is adding evidence, not more navigation.',
     },
     {
       title: hasProof ? 'Proof Pack present' : 'Proof Pack not added yet',
@@ -201,8 +245,9 @@ export default async function IndividualHomePage() {
         <section className="rounded-lg border border-proofound-stone/70 bg-white p-4 shadow-[0_18px_54px_-46px_rgba(86,98,79,0.45)]">
           <div className="grid gap-3 lg:grid-cols-5">
             {workflowSteps.map((step, index) => (
-              <div
+              <Link
                 key={step.label}
+                href={step.href}
                 className={`relative flex items-center gap-3 rounded-lg p-3 ${
                   step.active ? 'bg-[#f1f5ed]' : 'bg-transparent'
                 }`}
@@ -231,7 +276,7 @@ export default async function IndividualHomePage() {
                 {index < workflowSteps.length - 1 ? (
                   <span className="ml-auto hidden h-px w-10 bg-proofound-stone lg:block" />
                 ) : null}
-              </div>
+              </Link>
             ))}
           </div>
         </section>
@@ -295,21 +340,21 @@ export default async function IndividualHomePage() {
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
-                <div className="flex gap-2 border-b border-proofound-stone/70 px-4 py-3 text-sm">
-                  {['All', 'Verified', 'Pending', 'Shared'].map((filter) => (
+                <div className="flex flex-wrap gap-2 border-b border-proofound-stone/70 px-4 py-3 text-sm">
+                  {walletSummary.map((summary) => (
                     <span
-                      key={filter}
+                      key={summary}
                       className="rounded-md border border-proofound-stone/60 bg-[#fbf8f1] px-3 py-1 text-proofound-charcoal"
                     >
-                      {filter}
+                      {summary}
                     </span>
                   ))}
                 </div>
                 <div className="divide-y divide-proofound-stone/70">
-                  {proofRecords.map(({ icon: Icon, title, detail, status, tone }) => (
+                  {proofRecords.map(({ icon: Icon, title, detail, status, tone, href }) => (
                     <Link
                       key={title}
-                      href="/app/i/profile?profileView=full&tab=proof_packs"
+                      href={href}
                       className="flex items-center gap-4 p-4 transition-colors hover:bg-[#fbf8f1]"
                     >
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#eef3e8] text-proofound-forest">
@@ -355,7 +400,7 @@ export default async function IndividualHomePage() {
                   <Badge variant="outline">{pendingItems.length}</Badge>
                 </div>
                 <div className="space-y-5">
-                  {pendingItems.map(({ icon: Icon, title, detail, action }) => (
+                  {pendingItems.map(({ icon: Icon, title, detail, action, href }) => (
                     <div key={title} className="flex items-center gap-4">
                       <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#f2eadf] text-proofound-charcoal">
                         <Icon className="h-6 w-6" />
@@ -365,7 +410,7 @@ export default async function IndividualHomePage() {
                         <p className="mt-1 text-sm leading-5 text-muted-foreground">{detail}</p>
                       </div>
                       <Button size="sm" variant="outline" asChild>
-                        <Link href="/app/i/verifications">{action}</Link>
+                        <Link href={href}>{action}</Link>
                       </Button>
                     </div>
                   ))}
@@ -385,16 +430,16 @@ export default async function IndividualHomePage() {
             <div className="rounded-lg border border-proofound-stone/70 bg-white p-5">
               <div className="flex items-start justify-between gap-3">
                 <h2 className="font-display text-xl font-medium text-proofound-charcoal">
-                  Proof Score
+                  Proof Readiness
                 </h2>
                 <span className="text-xs text-muted-foreground">/100</span>
               </div>
               <div className="mt-5 flex items-end gap-2">
-                <p className="font-display text-5xl text-proofound-forest">{proofScore}</p>
-                <p className="pb-2 text-sm text-muted-foreground">Strong progress.</p>
+                <p className="font-display text-5xl text-proofound-forest">{readinessScore}</p>
+                <p className="pb-2 text-sm text-muted-foreground">{readinessTone}</p>
               </div>
               <div className="mt-4">
-                <ReadinessMeter value={proofScore} label="Proof score" />
+                <ReadinessMeter value={readinessScore} label="Proof readiness" />
               </div>
               <div className="mt-5 space-y-3">
                 {scoreItems.map((item) => (
@@ -412,7 +457,7 @@ export default async function IndividualHomePage() {
                 href="/app/i/profile?profileView=full&tab=proof_packs"
                 className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-proofound-forest"
               >
-                Improve your score
+                Improve readiness
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
@@ -420,14 +465,17 @@ export default async function IndividualHomePage() {
             <div className="rounded-lg border border-proofound-stone/70 bg-white p-5">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="font-display text-xl font-medium text-proofound-charcoal">
-                  Recent Activity
+                  Current State
                 </h2>
-                <Link href="/app/i/messages" className="text-sm font-medium text-proofound-forest">
-                  View all
+                <Link
+                  href="/app/i/profile?profileView=full"
+                  className="text-sm font-medium text-proofound-forest"
+                >
+                  Open profile
                 </Link>
               </div>
               <div className="space-y-4">
-                {activityItems.map((item) => (
+                {stateItems.map((item) => (
                   <div key={item.title} className="flex gap-3">
                     <span className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#dff0d9] text-proofound-forest">
                       <CheckCircle2 className="h-4 w-4" />

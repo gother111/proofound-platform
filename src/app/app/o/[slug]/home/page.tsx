@@ -14,6 +14,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { Badge } from '@/components/ui/badge';
+import {
+  OrgCollaboratorInviteCard,
+  type OrgInviteFormState,
+} from '@/components/org/OrgCollaboratorInviteCard';
+import { inviteMember } from '@/actions/org';
 import { getActiveOrg, requireAuth } from '@/lib/auth';
 import type { OrgRole } from '@/lib/authz';
 import { getVerifiedOrganizationDomainPath } from '@/lib/organizations/trust-profile';
@@ -77,6 +82,7 @@ export default async function OrganizationHomePage({
   const { org, membership } = result;
   const roleLabel = getRoleLabel(membership.role);
   const canEditTrustProfile = ['org_owner', 'org_manager'].includes(membership.role);
+  const canInviteCollaborators = membership.role === 'org_owner';
   const verifiedDomainPath = getVerifiedOrganizationDomainPath({
     website: org.website,
     websiteVerifiedAt: org.websiteVerifiedAt ?? null,
@@ -91,6 +97,7 @@ export default async function OrganizationHomePage({
   const trustReadyCount = [missionReady, domainReady, contextReady].filter(Boolean).length;
   const trustProgress = Math.round((trustReadyCount / 3) * 100);
   const needsTrustWork = trustReadyCount < 3;
+  const assignmentReady = trustReadyCount === 3;
   const primaryActionHref = needsTrustWork
     ? `/app/o/${slug}/profile`
     : `/app/o/${slug}/assignments/new`;
@@ -141,7 +148,8 @@ export default async function OrganizationHomePage({
         ? `Verified path: ${verifiedDomainPath}`
         : 'Confirm legitimacy before relying on review flows',
       priority: domainReady ? 'Ready' : 'High',
-      progress: trustProgress,
+      value: `${trustProgress}%`,
+      meter: trustProgress,
       tone: domainReady ? 'complete' : 'attention',
       href: `/app/o/${slug}/profile`,
     },
@@ -149,9 +157,9 @@ export default async function OrganizationHomePage({
       label: 'One assignment path',
       subject: 'Proof expectations',
       detail: 'Purpose, real work, constraints, and evidence stay in one builder',
-      priority: needsTrustWork ? 'Next' : 'Ready',
-      progress: needsTrustWork ? 55 : 80,
-      tone: needsTrustWork ? 'pending' : 'active',
+      priority: assignmentReady ? 'Ready' : 'Next',
+      value: assignmentReady ? 'Draft' : 'Needs trust',
+      tone: assignmentReady ? 'active' : 'pending',
       href: `/app/o/${slug}/assignments/new`,
     },
     {
@@ -159,8 +167,8 @@ export default async function OrganizationHomePage({
       subject: 'Privacy-safe summaries',
       detail: 'Review proof before identity reveal or direct outreach',
       priority: 'Guarded',
-      progress: 72,
-      tone: 'active',
+      value: assignmentReady ? 'Open after publish' : 'Locked',
+      tone: assignmentReady ? 'active' : 'pending',
       href: `/app/o/${slug}/matching`,
     },
   ] as const;
@@ -184,12 +192,24 @@ export default async function OrganizationHomePage({
   ];
 
   const teamRows = [
-    ['Owner', roleLabel === 'Owner' ? 'You' : 'Configured', 100],
-    ['Manager', 'Optional', 66],
-    ['Reviewer', 'Least privilege', 66],
-  ] as const;
+    {
+      label: 'Owner',
+      detail: 'Owns trust profile, launch setup, and collaborator access.',
+      current: roleLabel === 'Owner',
+    },
+    {
+      label: 'Manager',
+      detail: 'Maintains the org profile and assignment corridor.',
+      current: roleLabel === 'Manager',
+    },
+    {
+      label: 'Reviewer',
+      detail: 'Reviews proof summaries without broadening access.',
+      current: roleLabel === 'Reviewer',
+    },
+  ];
 
-  const recentActivity = [
+  const stateNotes = [
     {
       title: domainReady ? 'Organization legitimacy signal active' : 'Domain verification is next',
       detail: domainReady
@@ -205,6 +225,29 @@ export default async function OrganizationHomePage({
       detail: 'Identity reveal waits for consent and corridor readiness.',
     },
   ];
+
+  const inviteAction = async (
+    _state: OrgInviteFormState,
+    formData: FormData
+  ): Promise<OrgInviteFormState> => {
+    'use server';
+
+    const result = await inviteMember(org.id, formData);
+
+    if (result.error) {
+      return {
+        status: 'error',
+        message: result.error,
+      };
+    }
+
+    return {
+      status: 'success',
+      message:
+        result.warning ??
+        'Invitation sent. The collaborator must accept their tokenized email invite before access is granted.',
+    };
+  };
 
   return (
     <AppSurface density="comfortable" className="bg-[#f7f2ea]">
@@ -302,15 +345,11 @@ export default async function OrganizationHomePage({
                     </Link>
                   </Button>
                 </div>
-                <div className="flex gap-2 border-b border-proofound-stone/70 px-4 py-3 text-sm">
-                  {['All', 'Trust', 'Assignment', 'Review'].map((filter) => (
-                    <span
-                      key={filter}
-                      className="rounded-md border border-proofound-stone/60 bg-[#fbf8f1] px-3 py-1 text-proofound-charcoal"
-                    >
-                      {filter}
-                    </span>
-                  ))}
+                <div className="border-b border-proofound-stone/70 px-4 py-3">
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    Each row is a real MVP surface: trust profile, assignment builder, or
+                    privacy-safe match review.
+                  </p>
                 </div>
                 <div className="divide-y divide-proofound-stone/70">
                   {queueItems.map((item) => (
@@ -338,11 +377,13 @@ export default async function OrganizationHomePage({
                           {item.label} · {item.detail}
                         </p>
                       </div>
-                      <div className="hidden w-24 shrink-0 sm:block">
-                        <TrustMeter value={item.progress} label={`${item.label} readiness`} />
-                      </div>
-                      <span className="w-10 shrink-0 text-right text-sm font-semibold text-proofound-charcoal">
-                        {item.progress}%
+                      {'meter' in item ? (
+                        <div className="hidden w-24 shrink-0 sm:block">
+                          <TrustMeter value={item.meter} label={`${item.label} readiness`} />
+                        </div>
+                      ) : null}
+                      <span className="w-24 shrink-0 text-right text-sm font-semibold text-proofound-charcoal">
+                        {item.value}
                       </span>
                       <ArrowRight className="h-4 w-4 text-muted-foreground" />
                     </Link>
@@ -491,15 +532,34 @@ export default async function OrganizationHomePage({
                 You are currently signed in as {roleLabel}.
               </p>
               <div className="mt-5 space-y-4">
-                {teamRows.map(([label, value, load]) => (
-                  <div key={label}>
-                    <div className="mb-2 flex items-center justify-between text-sm">
-                      <span className="font-medium text-proofound-charcoal">{label}</span>
-                      <span className="text-muted-foreground">{value}</span>
+                {teamRows.map((row) => (
+                  <div
+                    key={row.label}
+                    className="rounded-md border border-proofound-stone/60 bg-[#fbf8f1] p-3"
+                  >
+                    <div className="flex items-center justify-between gap-3 text-sm">
+                      <span className="font-medium text-proofound-charcoal">{row.label}</span>
+                      {row.current ? (
+                        <span className="rounded-full bg-[#dff0d9] px-2 py-0.5 text-xs font-medium text-proofound-forest">
+                          Current
+                        </span>
+                      ) : null}
                     </div>
-                    <TrustMeter value={load} label={`${label} access readiness`} />
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">{row.detail}</p>
                   </div>
                 ))}
+              </div>
+              <div className="mt-5 border-t border-proofound-stone/70 pt-5">
+                {canInviteCollaborators ? (
+                  <OrgCollaboratorInviteCard action={inviteAction} />
+                ) : (
+                  <Button asChild variant="outline" className="w-full justify-between">
+                    <Link href={`/app/o/${slug}/matching`}>
+                      Open review queue
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                )}
               </div>
             </div>
           </aside>
@@ -570,17 +630,17 @@ export default async function OrganizationHomePage({
           <div className="rounded-lg border border-proofound-stone/70 bg-white p-5">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="font-display text-xl font-medium text-proofound-charcoal">
-                Recent Activity
+                Current State
               </h2>
               <Link
                 href={`/app/o/${slug}/matching`}
                 className="text-sm font-medium text-proofound-forest"
               >
-                View all
+                Open queue
               </Link>
             </div>
             <div className="space-y-4">
-              {recentActivity.map((item) => (
+              {stateNotes.map((item) => (
                 <div key={item.title} className="flex gap-3">
                   <span className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#dff0d9] text-proofound-forest">
                     <FileCheck2 className="h-4 w-4" />
