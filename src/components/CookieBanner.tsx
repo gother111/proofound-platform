@@ -78,73 +78,58 @@ export function CookieBanner() {
   if (isSnippetEmbedRoute || !show) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 md:left-auto md:right-0 z-50 p-4 md:p-6 animate-in slide-in-from-bottom duration-300 pointer-events-none w-full md:w-[450px]">
-      <Card className="mx-auto w-full border-2 shadow-lg pointer-events-auto">
-        <CardContent className="p-4 sm:p-6">
-          <div className="flex items-start gap-4">
-            {/* Icon */}
-            <div className="hidden sm:flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 flex-shrink-0">
-              <Cookie className="h-6 w-6 text-primary" />
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 space-y-3">
-              <div>
-                <h3 className="font-semibold text-lg mb-1">🍪 We Value Your Privacy</h3>
-                <p className="text-sm text-muted-foreground">
-                  We use essential cookies to make Proofound work, and optional analytics cookies to
-                  understand how you use our platform and improve your experience. We never sell
-                  your data.
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 p-3 sm:p-4">
+      <Card className="pointer-events-auto mx-auto w-full max-w-4xl border border-proofound-stone/70 bg-white/95 shadow-[0_18px_54px_-38px_rgba(86,98,79,0.45)] backdrop-blur">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex min-w-0 items-start gap-3">
+              <span className="mt-0.5 hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#eef3e8] text-proofound-forest sm:flex">
+                <Cookie className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-proofound-charcoal">Privacy choices</h3>
+                <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
+                  Essential cookies keep Proofound working. Optional analytics help us improve the
+                  product. We never sell your data.
                 </p>
-              </div>
-
-              <div className="text-xs text-muted-foreground">
-                <p>
-                  <strong>Essential cookies:</strong> Required for authentication and core
-                  functionality (always active)
-                </p>
-                <p className="mt-1">
-                  <strong>Analytics cookies:</strong> Help us understand usage patterns (your
-                  choice)
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                <Button onClick={handleAccept} disabled={saving} size="touch">
-                  Accept All
-                </Button>
-                <Button onClick={handleDecline} variant="outline" disabled={saving} size="touch">
-                  Essential Only
-                </Button>
-                <Link
-                  href="/privacy"
-                  className="text-xs text-muted-foreground hover:text-foreground underline ml-auto inline-flex min-h-[44px] items-center px-2 -mx-2"
-                >
-                  Privacy Policy
-                </Link>
-                <Link
-                  href="/cookies"
-                  className="text-xs text-muted-foreground hover:text-foreground underline inline-flex min-h-[44px] items-center px-2 -mx-2"
-                >
-                  Cookie Policy
-                </Link>
-                <Link
-                  href={`/cookies/settings?returnTo=${encodeURIComponent(typeof window !== 'undefined' ? window.location.pathname : '/')}`}
-                  className="text-xs text-muted-foreground hover:text-foreground underline inline-flex min-h-[44px] items-center px-2 -mx-2"
-                >
-                  Cookie Settings
-                </Link>
+                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                  <Link
+                    href="/privacy"
+                    className="text-proofound-forest underline-offset-4 hover:underline"
+                  >
+                    Privacy Policy
+                  </Link>
+                  <Link
+                    href="/cookies"
+                    className="text-proofound-forest underline-offset-4 hover:underline"
+                  >
+                    Cookie Policy
+                  </Link>
+                  <Link
+                    href={`/cookies/settings?returnTo=${encodeURIComponent(typeof window !== 'undefined' ? window.location.pathname : '/')}`}
+                    className="text-proofound-forest underline-offset-4 hover:underline"
+                  >
+                    Cookie Settings
+                  </Link>
+                </div>
               </div>
             </div>
 
-            {/* Close button (mobile only) */}
-            <button
-              onClick={handleDecline}
-              className="sm:hidden text-muted-foreground hover:text-foreground flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
-              aria-label="Close"
-            >
-              <X className="h-5 w-5" />
-            </button>
+            <div className="flex shrink-0 items-center gap-2">
+              <Button onClick={handleAccept} disabled={saving} size="sm">
+                Accept All
+              </Button>
+              <Button onClick={handleDecline} variant="outline" disabled={saving} size="sm">
+                Essential Only
+              </Button>
+              <button
+                onClick={handleDecline}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-proofound-stone/30 hover:text-foreground md:hidden"
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </CardContent>
       </Card>

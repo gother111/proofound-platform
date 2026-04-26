@@ -44,15 +44,13 @@ describe('CookieBanner', () => {
         vi.advanceTimersByTime(1000);
       });
 
-      expect(screen.getByRole('heading', { name: /we value your privacy/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /privacy choices/i })).toBeInTheDocument();
 
       act(() => {
         fireEvent.click(screen.getByRole('button', { name: label }));
       });
 
-      expect(
-        screen.queryByRole('heading', { name: /we value your privacy/i })
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: /privacy choices/i })).not.toBeInTheDocument();
 
       const storedPreferences = JSON.parse(localStorage.getItem(PREFERENCES_KEY) ?? '{}');
       expect(storedPreferences).toMatchObject({
@@ -72,8 +70,6 @@ describe('CookieBanner', () => {
       vi.advanceTimersByTime(2000);
     });
 
-    expect(
-      screen.queryByRole('heading', { name: /we value your privacy/i })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /privacy choices/i })).not.toBeInTheDocument();
   });
 });
