@@ -242,7 +242,7 @@ export default async function IndividualHomePage() {
               </div>
             </div>
 
-            <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
+            <div className="grid items-start gap-5 lg:grid-cols-[1.15fr_0.85fr]">
               <div className="overflow-hidden rounded-lg border border-proofound-stone/70 bg-white">
                 <div className="flex items-center justify-between border-b border-proofound-stone/70 p-4">
                   <div className="flex items-center gap-3">

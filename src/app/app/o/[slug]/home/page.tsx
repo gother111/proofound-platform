@@ -185,7 +185,7 @@ export default async function OrganizationHomePage({
   return (
     <AppSurface density="comfortable" className="bg-[#f7f2ea]">
       <div className="flex flex-col gap-5">
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <section className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
           <div className="flex min-w-0 flex-col gap-5">
             <div className="rounded-lg border border-proofound-stone/70 bg-[#f3f6ef] p-5">
               <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
@@ -322,11 +322,11 @@ export default async function OrganizationHomePage({
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
                 You are currently signed in as {roleLabel}.
               </p>
-              <div className="mt-5 space-y-4">
+              <div className="mt-5 overflow-hidden rounded-lg border border-proofound-stone/70 bg-[#fbf8f1]">
                 {teamRows.map((row) => (
                   <div
                     key={row.label}
-                    className="rounded-md border border-proofound-stone/60 bg-[#fbf8f1] p-3"
+                    className="border-b border-proofound-stone/60 p-3 last:border-b-0"
                   >
                     <div className="flex items-center justify-between gap-3 text-sm">
                       <span className="font-medium text-proofound-charcoal">{row.label}</span>
