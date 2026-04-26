@@ -1,6 +1,6 @@
 'use client';
 
-import { Target } from 'lucide-react';
+import { ArrowRight, ShieldCheck, SlidersHorizontal, Target } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -36,71 +36,97 @@ export function IndividualMatchingEmpty({ onSetup }: IndividualMatchingEmptyProp
     },
   ] as const;
 
-  return (
-    <div className="flex items-center justify-center min-h-[60vh] px-4 md:px-0">
-      <Card
-        variant="glass"
-        className="relative max-w-2xl w-full p-8 md:p-12 text-center overflow-hidden"
-      >
-        {/* Decorative background glow */}
-        <div className="absolute inset-0 bg-gradient-to-br from-proofound-parchment/60 via-transparent to-transparent pointer-events-none" />
+  const readinessSteps = [
+    {
+      label: 'Preferences',
+      detail: 'Work mode, availability, and constraints',
+      icon: SlidersHorizontal,
+    },
+    {
+      label: 'Proof readiness',
+      detail: 'Signals stay private until you choose to share',
+      icon: ShieldCheck,
+    },
+    {
+      label: 'Introductions',
+      detail: 'Identity opens only after the corridor is ready',
+      icon: ArrowRight,
+    },
+  ] as const;
 
-        {/* Icon */}
-        <div className="relative z-10 flex justify-center mb-8">
-          <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-white/60 shadow-sm border border-white/80 backdrop-blur-md transform -rotate-3 hover:rotate-0 transition-transform duration-300">
-            <Target className="w-10 h-10 text-proofound-forest" strokeWidth={1.5} />
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center px-4 md:px-0">
+      <Card variant="bento" className="w-full max-w-3xl overflow-hidden p-6 md:p-8">
+        <div className="grid gap-8 lg:grid-cols-[1fr_0.95fr] lg:items-center">
+          <div className="space-y-6 text-left">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-proofound-stone/70 bg-white shadow-sm">
+              <Target className="w-10 h-10 text-proofound-forest" strokeWidth={1.5} />
+            </div>
+
+            <div className="space-y-3">
+              <h2 className="font-display text-3xl font-semibold tracking-tight text-proofound-charcoal">
+                Prepare matching at your pace
+              </h2>
+              <p className="max-w-xl text-base leading-relaxed text-muted-foreground">
+                Add the constraints that matter first. Proofound keeps identity and personal context
+                protected while you shape what kind of work should reach you.
+              </p>
+            </div>
+
+            <div className="flex max-w-sm flex-col items-start gap-2">
+              <Button
+                size="lg"
+                onClick={onSetup}
+                className="w-full bg-proofound-forest text-white shadow-sm hover:bg-proofound-forest/90 sm:w-auto"
+              >
+                Set up matching
+              </Button>
+              <p className="text-xs font-medium text-muted-foreground">
+                Takes about five minutes. Anonymous by default.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-proofound-stone/70 bg-white/65 p-4">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-proofound-charcoal/60">
+              Matching opens in order
+            </p>
+            <div className="space-y-3">
+              {readinessSteps.map((step) => {
+                const Icon = step.icon;
+                return (
+                  <div
+                    key={step.label}
+                    className="flex gap-3 rounded-xl bg-proofound-parchment/50 p-3"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-proofound-forest">
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-proofound-charcoal">{step.label}</p>
+                      <p className="text-xs leading-5 text-muted-foreground">{step.detail}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        {/* Heading */}
-        <div className="relative z-10 space-y-3 mb-8">
-          <h2 className="text-3xl font-semibold text-proofound-charcoal font-display tracking-tight">
-            Start Matching for Aligned Work
-          </h2>
-          {/* Description */}
-          <p className="text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
-            Set up your matching profile to review work aligned with your skills, values, and impact
-            goals. Our blind-first matching ensures bias-free connections. Organizations won&apos;t
-            see your name, photo, or background until there&apos;s mutual interest.
-          </p>
-        </div>
-
-        {/* CTA */}
-        <div className="relative z-10 flex flex-col items-center gap-3">
-          <Button
-            size="lg"
-            onClick={onSetup}
-            className="bg-proofound-forest text-white hover:bg-proofound-forest/90 shadow-md"
-          >
-            Set Up Matching Profile
-          </Button>
-          {/* Secondary info */}
-          <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
-            Takes ~5 minutes • 100% anonymous initially
-          </p>
-        </div>
-
-        <div className="relative z-10 mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
+        <div className="mt-7 grid grid-cols-1 gap-3 text-left sm:grid-cols-3">
           {remediationActions.map((action) => (
             <button
               key={action.id}
               type="button"
               onClick={action.onClick}
-              className="group flex flex-col p-5 rounded-xl border border-proofound-stone/40 bg-white/40 backdrop-blur-md hover:bg-white border-b-4 hover:border-b-proofound-forest/40 transition-all duration-300"
+              className="group flex min-h-32 flex-col rounded-xl border border-proofound-stone/70 bg-white/70 p-4 transition-colors hover:border-proofound-forest hover:bg-white"
             >
-              <h3 className="text-sm font-semibold text-proofound-charcoal mb-2 group-hover:text-proofound-forest transition-colors">
+              <h3 className="mb-2 text-sm font-semibold text-proofound-charcoal transition-colors group-hover:text-proofound-forest">
                 {action.title}
               </h3>
               <p className="text-xs text-muted-foreground leading-relaxed">{action.description}</p>
             </button>
           ))}
-        </div>
-
-        {/* Subtle background decoration */}
-        <div className="mt-10 flex justify-center gap-3 opacity-30 pointer-events-none">
-          <div className="w-2 h-2 rounded-full bg-proofound-sage" />
-          <div className="w-2 h-2 rounded-full bg-proofound-ochre" />
-          <div className="w-2 h-2 rounded-full bg-proofound-sage" />
         </div>
       </Card>
     </div>

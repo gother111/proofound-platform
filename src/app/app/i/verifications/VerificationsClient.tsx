@@ -505,14 +505,14 @@ export function VerificationsClient({
   };
 
   const renderIncomingRequestCard = (request: VerificationRequest) => (
-    <Card variant="bento" key={`${request.subjectType}-${request.id}`} className="p-6">
-      <div className="flex gap-4">
+    <Card variant="bento" key={`${request.subjectType}-${request.id}`} className="p-4 sm:p-6">
+      <div className="flex flex-col gap-4 sm:flex-row">
         <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-proofound-stone text-proofound-charcoal dark:bg-muted dark:text-foreground">
           <span className="text-sm font-medium">{getRequesterInitials(request)}</span>
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-4 mb-3">
+          <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-base mb-1 text-proofound-charcoal dark:text-foreground">
                 {getRequesterName(request)}
@@ -521,7 +521,7 @@ export function VerificationsClient({
                 Asked you to confirm a proof-backed claim
               </p>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex flex-wrap items-center gap-2 lg:flex-shrink-0">
               {renderStatusBadge(request)}
               {renderSourceBadge(request)}
             </div>
@@ -572,19 +572,19 @@ export function VerificationsClient({
             </div>
           )}
 
-          <div className="flex items-center justify-between gap-4 mt-4">
-            <p className="text-xs text-muted-foreground">
+          <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <p className="text-xs leading-5 text-muted-foreground">
               Requested {formatDate(request.createdAt)}
               {request.respondedAt && ` • Responded ${formatDate(request.respondedAt)}`}
             </p>
 
             {request.subjectType === 'skill' && request.status === 'pending' && (
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => handleRespond(request, 'decline')}
-                  className="border-destructive text-destructive hover:bg-destructive/10 dark:hover:bg-destructive/20"
+                  className="w-full border-destructive text-destructive hover:bg-destructive/10 dark:hover:bg-destructive/20 sm:w-auto"
                 >
                   <XCircle className="w-4 h-4 mr-1" />
                   Decline
@@ -592,7 +592,7 @@ export function VerificationsClient({
                 <Button
                   size="sm"
                   onClick={() => handleRespond(request, 'accept')}
-                  className="bg-proofound-forest text-white hover:bg-proofound-forest/90 dark:bg-primary dark:text-primary-foreground hover:opacity-90"
+                  className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90 dark:bg-primary dark:text-primary-foreground hover:opacity-90 sm:w-auto"
                 >
                   <CheckCircle2 className="w-4 h-4 mr-1" />
                   Confirm attestation
@@ -611,8 +611,8 @@ export function VerificationsClient({
   );
 
   const renderSentRequestCard = (request: VerificationRequest) => (
-    <Card variant="bento" key={`${request.subjectType}-${request.id}`} className="p-6">
-      <div className="flex items-start justify-between gap-4 mb-3">
+    <Card variant="bento" key={`${request.subjectType}-${request.id}`} className="p-4 sm:p-6">
+      <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-base mb-1 flex items-center gap-2 text-proofound-charcoal dark:text-foreground">
             <Mail className="w-4 h-4" />
@@ -624,7 +624,7 @@ export function VerificationsClient({
               : 'Proof confirmation request sent'}
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex flex-wrap items-center gap-2 lg:flex-shrink-0">
           {renderStatusBadge(request)}
           {renderSourceBadge(request)}
         </div>
@@ -678,12 +678,12 @@ export function VerificationsClient({
         </div>
       )}
 
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs text-muted-foreground">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <p className="text-xs leading-5 text-muted-foreground">
           Sent {formatDate(request.createdAt)}
           {request.respondedAt && ` • Responded ${formatDate(request.respondedAt)}`}
         </p>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           {canResendSentRequest(request) && (
             <Button
               type="button"
@@ -693,7 +693,7 @@ export function VerificationsClient({
                 void handleResendSentRequest(request);
               }}
               disabled={Boolean(resendingRequestIds[request.id])}
-              className="border-proofound-forest text-proofound-forest hover:bg-[#E8F5E9]"
+              className="w-full border-proofound-forest text-proofound-forest hover:bg-[#E8F5E9] sm:w-auto"
             >
               <Send className="h-4 w-4 mr-1" />
               {resendingRequestIds[request.id]
@@ -713,7 +713,7 @@ export function VerificationsClient({
                 void handleDeleteSentRequest(request);
               }}
               disabled={Boolean(deletingRequestIds[request.id])}
-              className="border-[#C76B4A] text-[#8B4A36] hover:bg-[#FFF0F0]"
+              className="w-full border-[#C76B4A] text-[#8B4A36] hover:bg-[#FFF0F0] sm:w-auto"
             >
               <Trash2 className="h-4 w-4 mr-1" />
               {deletingRequestIds[request.id]
@@ -733,17 +733,17 @@ export function VerificationsClient({
     const modeText = mode === 'incoming' ? 'incoming' : 'sent';
 
     return (
-      <div className="flex flex-col items-center justify-center py-16 px-4">
-        <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-proofound-stone dark:bg-muted">
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-proofound-stone/80 bg-white/55 px-4 py-14">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-proofound-stone dark:bg-muted">
           <ShieldCheck className="w-8 h-8 text-muted-foreground" />
         </div>
         <h3 className="text-lg font-semibold mb-2 text-proofound-charcoal dark:text-foreground">
           No {status} {modeText} proof requests
         </h3>
-        <p className="text-sm text-center max-w-sm text-muted-foreground">
+        <p className="max-w-sm text-center text-sm leading-6 text-muted-foreground">
           {mode === 'incoming'
-            ? 'No proof-scoped confirmations are waiting in this view yet.'
-            : 'No proof-scoped confirmations have been sent in this view yet.'}
+            ? 'Nothing is waiting here. New proof confirmations will arrive with the claim and expected outcome attached.'
+            : 'Nothing has been sent in this view yet. Requests you send will keep the proof, verifier, and outcome together.'}
         </p>
       </div>
     );
@@ -751,7 +751,7 @@ export function VerificationsClient({
 
   const renderStatusTabs = (requests: VerificationRequest[], mode: 'incoming' | 'sent') => (
     <Tabs defaultValue="pending" className="w-full">
-      <TabsList className="mb-6">
+      <TabsList className="mb-6 max-w-full overflow-x-auto">
         {STATUS_FILTERS.map((status) => {
           const filteredCount = filterByStatus(requests, status).length;
           const label = status.charAt(0).toUpperCase() + status.slice(1);
@@ -796,17 +796,17 @@ export function VerificationsClient({
       <div className="max-w-5xl mx-auto">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2 text-proofound-charcoal dark:text-foreground">
+            <h1 className="mb-2 font-display text-3xl font-semibold text-proofound-charcoal dark:text-foreground">
               Proof verification requests
             </h1>
-            <p className="text-base text-muted-foreground">
+            <p className="max-w-2xl text-base leading-7 text-muted-foreground">
               Follow which proof, claim, verifier, and bounded outcome each request is tied to.
             </p>
           </div>
         </div>
 
         <Tabs defaultValue="incoming" className="w-full">
-          <TabsList className="mb-6">
+          <TabsList className="mb-6 max-w-full overflow-x-auto">
             <TabsTrigger value="incoming" className="relative">
               Incoming
               {incomingRequests.length > 0 && (

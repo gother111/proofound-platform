@@ -215,26 +215,30 @@ export default function InterviewsPage() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl font-semibold mb-2" style={{ color: '#2D3330' }}>
+          <h1
+            className="mb-2 font-display text-3xl font-semibold tracking-tight"
+            style={{ color: '#2D3330' }}
+          >
             Interviews
           </h1>
-          <p className="text-sm" style={{ color: '#6B6760' }}>
-            Track the full hiring corridor, from shortlist through interview and decision
+          <p className="max-w-2xl text-sm leading-6" style={{ color: '#6B6760' }}>
+            Track the corridor from shortlist through interview, decision, and engagement
+            verification.
           </p>
         </div>
 
         {/* Interviews List */}
         {interviews.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 px-4 bg-white rounded-xl border border-dashed border-gray-300 text-center">
-            <div className="w-16 h-16 bg-japandi-bg rounded-full flex items-center justify-center mb-4">
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-proofound-stone/80 bg-white/60 px-4 py-16 text-center">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-japandi-bg">
               <Calendar className="w-8 h-8" style={{ color: '#1C4D3A' }} />
             </div>
-            <h2 className="text-xl font-medium mb-2" style={{ color: '#2D3330' }}>
-              No Active Hiring Corridor Yet
+            <h2 className="mb-2 font-display text-xl font-semibold" style={{ color: '#2D3330' }}>
+              No active hiring corridor yet
             </h2>
-            <p className="text-sm text-muted-foreground max-w-md mb-6">
-              Once an organization shortlists you, this page will show the full corridor, including
-              intro, reveal, interview, decision, and engagement verification.
+            <p className="mb-6 max-w-md text-sm leading-6 text-muted-foreground">
+              Nothing needs scheduling right now. When an organization shortlists you, this page
+              will show the next step and the full proof-safe timeline.
             </p>
           </div>
         ) : (
@@ -242,9 +246,9 @@ export default function InterviewsPage() {
             {interviews.map((interview) => (
               <div
                 key={interview.id}
-                className="bg-white rounded-lg border border-gray-200 p-6 hover:border-gray-300 transition-colors"
+                className="rounded-2xl border border-proofound-stone/80 bg-white/70 p-4 transition-colors hover:border-proofound-stone sm:p-6"
               >
-                <div className="flex items-start justify-between">
+                <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                   <div className="flex-1">
                     <div className="mb-3">
                       <p className="text-base font-semibold" style={{ color: '#2D3330' }}>
@@ -263,7 +267,7 @@ export default function InterviewsPage() {
                     </div>
 
                     {interview.interview?.scheduledAt && (
-                      <div className="flex items-center gap-4 mb-3">
+                      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4" style={{ color: '#1C4D3A' }} />
                           <span className="font-medium" style={{ color: '#2D3330' }}>
@@ -355,7 +359,7 @@ export default function InterviewsPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex flex-col gap-2">
+                  <div className="flex w-full flex-col gap-2 lg:w-auto lg:min-w-64">
                     {interview.corridor.nextAction.id === 'confirm_engagement' &&
                       interview.engagementVerification &&
                       !interview.engagementVerification.candidateConfirmedAt && (
@@ -369,7 +373,7 @@ export default function InterviewsPage() {
                                 [interview.engagementVerification!.id]: event.target.value,
                               }))
                             }
-                            className="h-9 rounded-md border border-gray-300 px-3 text-sm"
+                            className="h-10 rounded-md border border-proofound-stone bg-white px-3 text-sm"
                           >
                             <option value="">Select engagement type</option>
                             <option value="full_time">Full-time</option>
@@ -381,6 +385,7 @@ export default function InterviewsPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleConfirmEngagement(interview)}
+                            className="w-full lg:w-auto"
                             disabled={
                               isConfirmingEngagementId === interview.engagementVerification.id
                             }

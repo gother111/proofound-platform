@@ -8,7 +8,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { Search, User } from 'lucide-react';
+import { MessageSquare, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -31,6 +31,7 @@ interface ConversationListProps {
   selectedId?: string;
   onSelect: (id: string) => void;
   isLoading?: boolean;
+  mode?: 'individual' | 'organization';
 }
 
 export function ConversationList({
@@ -38,8 +39,21 @@ export function ConversationList({
   selectedId,
   onSelect,
   isLoading = false,
+  mode = 'individual',
 }: ConversationListProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const emptyCopy =
+    mode === 'organization'
+      ? {
+          title: 'No conversations yet',
+          detail: 'Create an assignment and approve an introduction before messages open here.',
+          helper: 'Identity stays protected until the corridor is ready.',
+        }
+      : {
+          title: 'No conversations yet',
+          detail: 'Send interest or accept an introduction before messages open here.',
+          helper: 'Your identity remains private until the reveal step.',
+        };
 
   // Filter conversations by search query
   const filteredConversations = useMemo(() => {
@@ -86,8 +100,8 @@ export function ConversationList({
 
   if (isLoading) {
     return (
-      <div className="border-r h-full overflow-y-auto">
-        <div className="p-4 border-b">
+      <div className="h-full overflow-y-auto border-r border-proofound-stone/70 bg-white/45">
+        <div className="border-b border-proofound-stone/70 p-4">
           <h2 className="font-semibold text-foreground">Messages</h2>
         </div>
         <div className="divide-y">
@@ -108,29 +122,41 @@ export function ConversationList({
   }
 
   return (
-    <div className="border-r h-full overflow-y-auto bg-background">
+    <div className="h-full overflow-y-auto border-r border-proofound-stone/70 bg-white/45">
       {/* Header with search */}
-      <div className="p-4 border-b bg-background sticky top-0 z-10">
-        <h2 className="font-semibold text-foreground mb-3">Messages</h2>
+      <div className="sticky top-0 z-10 border-b border-proofound-stone/70 bg-neutral-light-50/95 p-4 backdrop-blur">
+        <h2 className="mb-1 font-display text-lg font-semibold text-proofound-charcoal">
+          Messages
+        </h2>
+        <p className="mb-3 text-xs leading-5 text-muted-foreground">
+          Conversations appear after a proof-safe introduction.
+        </p>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search conversations..."
+            placeholder="Search conversations"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="h-11 rounded-xl border-proofound-stone/80 bg-white pl-10"
           />
         </div>
       </div>
 
       {/* Conversation list */}
-      <div className="divide-y">
+      <div className="divide-y divide-proofound-stone/60">
         {filteredConversations.length === 0 && !searchQuery && (
-          <div className="p-8 text-center space-y-2">
-            <User className="h-12 w-12 mx-auto text-muted-foreground opacity-50" />
-            <p className="text-sm text-muted-foreground">No conversations yet</p>
-            <p className="text-xs text-muted-foreground">Start matching to begin conversations</p>
+          <div className="mx-4 mt-4 rounded-2xl border border-dashed border-proofound-stone/80 bg-proofound-parchment/45 p-6 text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-proofound-forest">
+              <MessageSquare className="h-5 w-5" />
+            </div>
+            <p className="text-sm font-medium text-proofound-charcoal">{emptyCopy.title}</p>
+            <p className="mx-auto mt-2 max-w-64 text-xs leading-5 text-muted-foreground">
+              {emptyCopy.detail}
+            </p>
+            <p className="mx-auto mt-3 max-w-64 text-xs leading-5 text-proofound-charcoal/60">
+              {emptyCopy.helper}
+            </p>
           </div>
         )}
 
@@ -147,7 +173,7 @@ export function ConversationList({
             key={conversation.id}
             onClick={() => onSelect(conversation.id)}
             className={cn(
-              'w-full p-4 text-left hover:bg-japandi-bg transition-colors',
+              'w-full p-4 text-left transition-colors hover:bg-japandi-bg',
               selectedId === conversation.id && 'bg-proofound-forest/5 hover:bg-proofound-forest/5'
             )}
           >
@@ -201,7 +227,7 @@ export function ConversationList({
                 {conversation.stage === 'masked' && (
                   <Badge
                     variant="outline"
-                    className="mt-2 text-xs border-[#7A9278] text-proofound-forest"
+                    className="mt-2 border-[#7A9278] text-xs text-proofound-forest"
                   >
                     Identity revealed after introduction
                   </Badge>

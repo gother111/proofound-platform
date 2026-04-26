@@ -408,9 +408,20 @@ export default function MatchingPage() {
     <div className="max-w-5xl mx-auto px-4 py-6">
       {renderTestMatchesSection()}
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-2xl font-semibold text-foreground dark:text-[#E8DCC4]">Matching</h1>
-          <div className="flex items-center gap-2">
+        <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="font-display text-3xl font-semibold text-proofound-charcoal dark:text-[#E8DCC4]">
+              Matching
+            </h1>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground dark:text-[#8A8174]">
+              {blockedState
+                ? 'Browsing stays open. Add recent proof and one preference before introductions.'
+                : `${filteredMatches.length} opportunit${
+                    filteredMatches.length === 1 ? 'y' : 'ies'
+                  } aligned with your skills and values`}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
             {!blockedState ? (
               <EnhancedMatchFilters
                 activeFilters={activeFilters}
@@ -423,15 +434,10 @@ export default function MatchingPage() {
               }}
               className="text-sm underline text-proofound-forest"
             >
-              Edit Profile
+              Edit profile
             </button>
           </div>
         </div>
-        <p className="text-sm text-muted-foreground dark:text-[#8A8174]">
-          {blockedState
-            ? 'Browsing stays open. Add a few recent skills and one preference to personalize results.'
-            : `${filteredMatches.length} opportunit${filteredMatches.length === 1 ? 'y' : 'ies'} aligned with your skills and values`}
-        </p>
       </div>
 
       {blockedState ? (
@@ -474,20 +480,22 @@ export default function MatchingPage() {
           ) : null}
         </div>
       ) : filteredMatches.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-lg mb-2 text-proofound-charcoal">No matches yet</p>
-          <p className="text-sm text-muted-foreground">
+        <div className="rounded-2xl border border-dashed border-proofound-stone/80 bg-white/60 px-4 py-12 text-center">
+          <p className="mb-2 font-display text-xl font-semibold text-proofound-charcoal">
+            No matches yet
+          </p>
+          <p className="mx-auto max-w-lg text-sm leading-6 text-muted-foreground">
             {matches.length === 0
-              ? 'Check back soon for new opportunities'
-              : 'No matches found with current filters. Try adjusting your filters.'}
+              ? 'Nothing needs your attention right now. Keep your proof and preferences current so new opportunities can land cleanly.'
+              : 'No matches fit the current filters. Loosen one filter to widen the corridor.'}
           </p>
           {ensureThreeActions(readinessActions).length > 0 ? (
-            <div className="mt-4 mx-auto max-w-xl text-left space-y-2">
+            <div className="mx-auto mt-5 max-w-xl space-y-2 text-left">
               {ensureThreeActions(readinessActions).map((action) => (
                 <button
                   key={action.id}
                   onClick={() => router.push(action.actionUrl)}
-                  className="w-full rounded-lg border border-proofound-stone px-3 py-2 hover:border-proofound-forest hover:bg-japandi-bg"
+                  className="w-full rounded-lg border border-proofound-stone bg-white/70 px-3 py-2 transition-colors hover:border-proofound-forest hover:bg-japandi-bg"
                 >
                   <p className="text-sm font-medium text-foreground">{action.title}</p>
                   <p className="text-xs text-muted-foreground">{action.description}</p>

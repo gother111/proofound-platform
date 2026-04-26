@@ -14,7 +14,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ConversationList, type Conversation } from '@/components/messaging/ConversationList';
 import { RealtimeMessageThread } from '@/components/messaging/RealtimeMessageThread';
 import { type Message } from '@/components/messaging/MessageThread';
-import { MessageSquare } from 'lucide-react';
+import { Lock, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 export const dynamic = 'force-dynamic';
@@ -182,6 +182,7 @@ function MessagesPageContent() {
           selectedId={selectedConversationId}
           onSelect={setSelectedConversationId}
           isLoading={isLoadingConversations}
+          mode="individual"
         />
       </div>
 
@@ -203,12 +204,21 @@ function MessagesPageContent() {
             onBack={handleBackToConversationList}
           />
         ) : (
-          <div className="text-center space-y-4">
-            <MessageSquare className="h-16 w-16 mx-auto text-muted-foreground opacity-50" />
+          <div className="mx-6 max-w-md rounded-2xl border border-proofound-stone/70 bg-white/60 p-8 text-center shadow-sm">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-proofound-parchment text-proofound-forest">
+              <MessageSquare className="h-6 w-6" />
+            </div>
             <div className="space-y-2">
-              <p className="text-lg font-medium text-foreground">Select a conversation</p>
-              <p className="text-sm text-muted-foreground">
-                Choose a conversation from the list to start messaging
+              <p className="font-display text-xl font-semibold text-proofound-charcoal">
+                Select a conversation
+              </p>
+              <p className="text-sm leading-6 text-muted-foreground">
+                Messages stay quiet until a proof-safe introduction is open. Choose a thread when
+                one appears in the list.
+              </p>
+              <p className="inline-flex items-center gap-2 pt-2 text-xs font-medium text-proofound-charcoal/70">
+                <Lock className="h-3.5 w-3.5" />
+                Private by default before reveal
               </p>
             </div>
           </div>
