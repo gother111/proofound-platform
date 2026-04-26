@@ -74,7 +74,7 @@ export default async function IndividualHomePage() {
   const firstName = userName.split(' ')[0];
   const readinessPercent = Math.max(0, Math.min(100, metrics.portfolioReadinessPercent));
   const hasProof = metrics.proofStoriesCount > 0;
-  const primaryProofLabel = hasProof ? 'Review Proof Packs' : 'Add your first proof';
+  const primaryProofLabel = hasProof ? 'Review Proof Packs' : 'Start proof record';
   const readinessScore = readinessPercent;
   const readinessTone =
     readinessScore >= 80
@@ -89,7 +89,7 @@ export default async function IndividualHomePage() {
       title: 'Proof Packs',
       detail: hasProof
         ? `${metrics.proofStoriesCount} proof-backed signal${metrics.proofStoriesCount === 1 ? '' : 's'}`
-        : 'Add one work sample',
+        : 'No proof yet. Start with one private record.',
       status: hasProof ? 'Verified' : 'Pending',
       tone: hasProof ? 'success' : 'warning',
       href: '/app/i/profile?profileView=full&tab=proof_packs',
@@ -102,7 +102,7 @@ export default async function IndividualHomePage() {
           ? `${metrics.verifiedSkills} verified skill${metrics.verifiedSkills === 1 ? '' : 's'}`
           : metrics.pendingVerifications > 0
             ? `${metrics.pendingVerifications} verification request${metrics.pendingVerifications === 1 ? '' : 's'} pending`
-            : 'No verifier attached yet',
+            : 'No verifier yet. You can add this after the first proof.',
       status:
         metrics.verifiedSkills > 0
           ? 'Verified'
@@ -120,7 +120,9 @@ export default async function IndividualHomePage() {
     {
       icon: Eye,
       title: 'Portfolio visibility',
-      detail: 'Public-safe sharing controls',
+      detail: hasProof
+        ? 'Public-safe sharing controls'
+        : 'Private by default until you choose to share',
       status: readinessPercent >= 70 ? 'Shared' : 'Review',
       tone: readinessPercent >= 70 ? 'info' : 'neutral',
       href: '/app/i/profile?profileView=full&tab=visibility',
@@ -133,8 +135,8 @@ export default async function IndividualHomePage() {
       title: hasProof ? 'Proof Pack is present' : 'First proof artifact',
       detail: hasProof
         ? 'Check the context, evidence, and visibility before sharing.'
-        : 'Add one real work sample, credential, or case fragment.',
-      action: hasProof ? 'Review proof' : 'Add proof',
+        : 'Start with one useful artifact. It stays private while you shape it.',
+      action: hasProof ? 'Review proof' : 'Start proof',
       href: '/app/i/profile?profileView=full&tab=proof_packs',
       status: hasProof ? 'Ready' : 'Needed',
       state: hasProof ? 'ok' : 'warn',
@@ -152,8 +154,8 @@ export default async function IndividualHomePage() {
           ? `${metrics.pendingVerifications} verification request${metrics.pendingVerifications === 1 ? '' : 's'} pending`
           : metrics.verifiedSkills > 0
             ? `${metrics.verifiedSkills} verified skill${metrics.verifiedSkills === 1 ? '' : 's'} attached to your proof.`
-            : 'Ask one credible person or source to confirm the proof.',
-      action: metrics.pendingVerifications > 0 ? 'View request' : 'Request anchor',
+            : 'Nothing is exposed yet. Add one trusted source when you are ready.',
+      action: metrics.pendingVerifications > 0 ? 'View request' : 'Plan anchor',
       href: '/app/i/verifications',
       status:
         metrics.verifiedSkills > 0
@@ -169,8 +171,8 @@ export default async function IndividualHomePage() {
       detail:
         readinessPercent >= 80
           ? 'Your proof surface is ready for a final sharing pass.'
-          : 'Keep the profile private by default until proof and trust are clearer.',
-      action: 'Review visibility',
+          : 'Sharing stays off by default until your proof and trust signals are clearer.',
+      action: 'Set visibility',
       href: '/app/i/profile?profileView=full&tab=visibility',
       status: readinessPercent >= 80 ? 'Ready' : readinessPercent >= 55 ? 'Review' : 'Locked',
       state: readinessPercent >= 80 ? 'ok' : readinessPercent >= 55 ? 'wait' : 'warn',
@@ -259,29 +261,33 @@ export default async function IndividualHomePage() {
                     <Link
                       key={title}
                       href={href}
-                      className="flex items-center gap-4 p-4 transition-colors hover:bg-[#fbf8f1]"
+                      className="flex flex-col gap-3 p-4 transition-colors hover:bg-[#fbf8f1] sm:flex-row sm:items-center sm:gap-4"
                     >
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#eef3e8] text-proofound-forest">
-                        <Icon className="h-5 w-5" />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-proofound-charcoal">{title}</p>
-                        <p className="text-xs text-muted-foreground">{detail}</p>
+                      <div className="flex min-w-0 flex-1 items-center gap-3">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#eef3e8] text-proofound-forest">
+                          <Icon className="h-5 w-5" />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-proofound-charcoal">{title}</p>
+                          <p className="text-xs leading-5 text-muted-foreground">{detail}</p>
+                        </div>
                       </div>
-                      <span
-                        className={`rounded-md px-2.5 py-1 text-xs font-medium ${
-                          tone === 'success'
-                            ? 'bg-[#dff0d9] text-proofound-forest'
-                            : tone === 'warning'
-                              ? 'bg-[#fff1d6] text-[#8a5b00]'
-                              : tone === 'info'
-                                ? 'bg-[#dcecf8] text-[#28628a]'
-                                : 'bg-proofound-stone/35 text-muted-foreground'
-                        }`}
-                      >
-                        {status}
-                      </span>
-                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                      <div className="flex items-center justify-between gap-3 pl-[52px] sm:pl-0">
+                        <span
+                          className={`rounded-md px-2.5 py-1 text-xs font-medium ${
+                            tone === 'success'
+                              ? 'bg-[#dff0d9] text-proofound-forest'
+                              : tone === 'warning'
+                                ? 'bg-[#fff1d6] text-[#8a5b00]'
+                                : tone === 'info'
+                                  ? 'bg-[#dcecf8] text-[#28628a]'
+                                  : 'bg-proofound-stone/35 text-muted-foreground'
+                          }`}
+                        >
+                          {status}
+                        </span>
+                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                      </div>
                     </Link>
                   ))}
                 </div>
@@ -313,24 +319,31 @@ export default async function IndividualHomePage() {
                       const stateClasses = readinessStateClasses(state);
 
                       return (
-                        <div key={title} className="flex items-center gap-4">
-                          <span
-                            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${stateClasses.icon}`}
-                          >
-                            <Icon className="h-6 w-6" />
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="font-semibold text-proofound-charcoal">{title}</p>
-                              <span
-                                className={`rounded-md px-2 py-0.5 text-xs font-medium ${stateClasses.pill}`}
-                              >
-                                {status}
-                              </span>
+                        <div
+                          key={title}
+                          className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4"
+                        >
+                          <div className="flex min-w-0 flex-1 gap-3">
+                            <span
+                              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${stateClasses.icon}`}
+                            >
+                              <Icon className="h-6 w-6" />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="font-semibold text-proofound-charcoal">{title}</p>
+                                <span
+                                  className={`rounded-md px-2 py-0.5 text-xs font-medium ${stateClasses.pill}`}
+                                >
+                                  {status}
+                                </span>
+                              </div>
+                              <p className="mt-1 text-sm leading-5 text-muted-foreground">
+                                {detail}
+                              </p>
                             </div>
-                            <p className="mt-1 text-sm leading-5 text-muted-foreground">{detail}</p>
                           </div>
-                          <Button size="sm" variant="outline" asChild>
+                          <Button size="sm" variant="outline" className="w-full sm:w-auto" asChild>
                             <Link href={href}>{action}</Link>
                           </Button>
                         </div>
@@ -373,7 +386,7 @@ export default async function IndividualHomePage() {
                 href="/app/i/profile?profileView=full&tab=proof_packs"
                 className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-proofound-forest"
               >
-                Improve readiness
+                {hasProof ? 'Review proof readiness' : 'Start proof readiness'}
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>

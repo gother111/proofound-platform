@@ -89,6 +89,11 @@ export default async function OrganizationHomePage({
       ? 'Complete trust profile'
       : 'Review trust profile'
     : 'Create assignment';
+  const readinessActionLabel = needsTrustWork
+    ? canEditTrustProfile
+      ? 'Complete trust profile'
+      : 'Review trust profile'
+    : 'Create first assignment';
 
   const queueItems = [
     {
@@ -96,7 +101,7 @@ export default async function OrganizationHomePage({
       subject: org.displayName,
       detail: verifiedDomainPath
         ? `Verified path: ${verifiedDomainPath}`
-        : 'Confirm legitimacy before relying on review flows',
+        : 'Add the basics once. Review stays locked until trust is clear.',
       priority: domainReady ? 'Ready' : 'High',
       value: `${trustProgress}%`,
       meter: trustProgress,
@@ -106,7 +111,9 @@ export default async function OrganizationHomePage({
     {
       label: 'One assignment path',
       subject: 'Proof expectations',
-      detail: 'Purpose, real work, constraints, and evidence stay in one builder',
+      detail: assignmentReady
+        ? 'Purpose, real work, constraints, and evidence stay in one builder'
+        : 'This opens after the trust profile has enough context.',
       priority: assignmentReady ? 'Ready' : 'Next',
       value: assignmentReady ? 'Can start' : 'Needs trust',
       tone: assignmentReady ? 'active' : 'pending',
@@ -115,7 +122,9 @@ export default async function OrganizationHomePage({
     {
       label: 'Match review',
       subject: 'Privacy-safe summaries',
-      detail: 'Review proof before identity reveal or direct outreach',
+      detail: assignmentReady
+        ? 'Review proof before identity reveal or direct outreach'
+        : 'No candidate review starts until the corridor is ready.',
       priority: 'Guarded',
       value: assignmentReady ? 'Needs assignment' : 'Locked',
       tone: assignmentReady ? 'attention' : 'pending',
@@ -234,38 +243,42 @@ export default async function OrganizationHomePage({
                   <Link
                     key={item.label}
                     href={item.href}
-                    className="flex items-center gap-4 p-4 transition-colors hover:bg-[#fbf8f1]"
+                    className="flex flex-col gap-3 p-4 transition-colors hover:bg-[#fbf8f1] sm:flex-row sm:items-center sm:gap-4"
                   >
-                    <span
-                      className={`rounded-md px-2.5 py-1 text-xs font-medium ${
-                        item.tone === 'attention'
-                          ? 'bg-[#fff1df] text-[#8a4d1f]'
-                          : item.tone === 'complete'
-                            ? 'bg-[#dff0d9] text-proofound-forest'
-                            : item.tone === 'active'
-                              ? 'bg-[#eef3e8] text-proofound-forest'
-                              : 'bg-proofound-stone/35 text-muted-foreground'
-                      }`}
-                    >
-                      {item.priority}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-proofound-charcoal">
-                        {item.subject}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {item.label} · {item.detail}
-                      </p>
-                    </div>
-                    {'meter' in item ? (
-                      <div className="hidden w-24 shrink-0 sm:block">
-                        <TrustMeter value={item.meter} label={`${item.label} readiness`} />
+                    <div className="flex min-w-0 flex-1 items-start gap-3">
+                      <span
+                        className={`shrink-0 rounded-md px-2.5 py-1 text-xs font-medium ${
+                          item.tone === 'attention'
+                            ? 'bg-[#fff1df] text-[#8a4d1f]'
+                            : item.tone === 'complete'
+                              ? 'bg-[#dff0d9] text-proofound-forest'
+                              : item.tone === 'active'
+                                ? 'bg-[#eef3e8] text-proofound-forest'
+                                : 'bg-proofound-stone/35 text-muted-foreground'
+                        }`}
+                      >
+                        {item.priority}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-proofound-charcoal">
+                          {item.subject}
+                        </p>
+                        <p className="text-xs leading-5 text-muted-foreground">
+                          {item.label} · {item.detail}
+                        </p>
                       </div>
-                    ) : null}
-                    <span className="w-24 shrink-0 text-right text-sm font-semibold text-proofound-charcoal">
-                      {item.value}
-                    </span>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="flex items-center justify-between gap-3 sm:min-w-32 sm:justify-end">
+                      {'meter' in item ? (
+                        <div className="hidden w-24 shrink-0 sm:block">
+                          <TrustMeter value={item.meter} label={`${item.label} readiness`} />
+                        </div>
+                      ) : null}
+                      <span className="text-sm font-semibold text-proofound-charcoal">
+                        {item.value}
+                      </span>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
                   </Link>
                 ))}
               </div>
@@ -286,7 +299,7 @@ export default async function OrganizationHomePage({
               </div>
               <p className="mt-3 text-sm leading-6 text-muted-foreground">
                 {missingTrustEssentials.length > 0
-                  ? `Next: add ${missingTrustEssentials[0]} before opening the corridor.`
+                  ? `Next: add ${missingTrustEssentials[0]}. Nothing is shared or reviewed until these basics are ready.`
                   : 'Trust essentials are ready. The next useful move is assignment drafting.'}
               </p>
               <div className="mt-5 space-y-3">
@@ -305,7 +318,7 @@ export default async function OrganizationHomePage({
                 href={`/app/o/${slug}/profile`}
                 className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-proofound-forest"
               >
-                Improve readiness
+                {readinessActionLabel}
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
