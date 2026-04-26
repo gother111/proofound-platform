@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Globe2, ShieldCheck, Users } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Globe2, ShieldCheck, Users } from 'lucide-react';
 import { notFound } from 'next/navigation';
 
 import { OrgTrustProfileEditor } from '@/components/organization/OrgTrustProfileEditor';
@@ -32,17 +32,40 @@ export default async function OrganizationProfilePage({
     trustStatus: org.trustStatus ?? null,
     verified: org.verified,
   });
+  const trustItems = [
+    {
+      label: 'Organization name',
+      detail: org.displayName || 'Missing',
+      ready: Boolean(org.displayName),
+    },
+    {
+      label: 'Why work matters',
+      detail: org.tagline || 'Add a short reason this work matters.',
+      ready: Boolean(org.tagline),
+    },
+    {
+      label: 'Mission',
+      detail: org.mission || 'Add the mission this assignment path supports.',
+      ready: Boolean(org.mission),
+    },
+    {
+      label: 'Domain path',
+      detail: verifiedDomainPath ?? 'Needs verified domain signal.',
+      ready: Boolean(verifiedDomainPath),
+    },
+  ];
+  const readyTrustCount = trustItems.filter((item) => item.ready).length;
 
   return (
     <AppSurface>
       <div className="mx-auto flex max-w-5xl flex-col gap-6">
-        <section className="grid gap-4 md:grid-cols-[2fr_1fr]">
+        <section className="grid items-start gap-4 md:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
           <Card className="border-black/[0.04] dark:border-white/5">
             <CardHeader>
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <CardTitle className="text-2xl">Organization trust profile</CardTitle>
-                  <CardDescription>
+                  <CardDescription className="max-w-2xl leading-6">
                     This is the launch-facing org profile used to support one assignment path and a
                     clean review queue.
                   </CardDescription>
@@ -52,27 +75,39 @@ export default async function OrganizationProfilePage({
                 </Badge>
               </div>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
-              <p>
+            <CardContent className="space-y-5 text-sm text-muted-foreground">
+              <p className="max-w-3xl leading-6">
                 Keep this page limited to the calm trust story that supports one clear assignment
                 corridor. Culture hubs, governance showcases, and other org-suite surfaces stay
                 outside the MVP.
               </p>
-              <p>
-                Verified domain path:{' '}
-                <span className="font-medium text-foreground">
-                  {verifiedDomainPath ?? 'Needs verified domain signal'}
-                </span>
-              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {trustItems.map((item) => (
+                  <div
+                    key={item.label}
+                    className="rounded-xl border border-proofound-stone/70 bg-white/55 p-3"
+                  >
+                    <div className="flex items-center gap-2">
+                      {item.ready ? (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+                      ) : (
+                        <AlertCircle className="h-4 w-4 text-amber-600" aria-hidden="true" />
+                      )}
+                      <p className="text-sm font-medium text-foreground">{item.label}</p>
+                    </div>
+                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">
+                      {item.detail}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
 
           <Card className="border-black/[0.04] dark:border-white/5">
             <CardHeader>
               <CardTitle className="text-lg">Launch corridor</CardTitle>
-              <CardDescription>
-                These are the only org surfaces that stay launch-binding.
-              </CardDescription>
+              <CardDescription>Trust basics ready: {readyTrustCount}/4</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 text-sm text-muted-foreground">
               <div className="flex items-start gap-3">

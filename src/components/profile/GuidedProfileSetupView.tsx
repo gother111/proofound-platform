@@ -68,6 +68,16 @@ function StepIcon({ state }: { state: StepState }) {
   return <Circle className="h-5 w-5 text-proofound-forest" aria-hidden="true" />;
 }
 
+function getStepCardClass(state: StepState) {
+  if (state === 'active') {
+    return 'border-proofound-forest/40 bg-proofound-forest/5 shadow-[0_10px_32px_-24px_rgba(28,77,58,0.65)]';
+  }
+  if (state === 'completed') {
+    return 'border-emerald-200 bg-white';
+  }
+  return 'border-proofound-stone/50 bg-white/70';
+}
+
 function buildGuidedSteps(
   checks: IndividualProfileCompletionChecks,
   handlers: Omit<GuidedProfileSetupViewProps, 'completionState'>
@@ -270,23 +280,23 @@ export function GuidedProfileSetupView({
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8" data-testid="guided-profile-setup">
-      <Card className="border-proofound-stone/60 p-6 sm:p-8">
-        <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+      <Card className="border-proofound-stone/60 p-5 sm:p-8">
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-2">
             <h1 className="text-2xl font-display text-proofound-charcoal">
               Start with proof, not profile polish
             </h1>
-            <p className="max-w-2xl text-sm text-muted-foreground">
-              The locked MVP corridor is simple: build a safe shell, anchor one real context, add
-              one real proof, structure it, verify it, then publish.
+            <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+              Build only the parts that make a public proof link credible: safe shell, one real
+              context, one structured proof, one verification, then publish.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row lg:justify-end">
             <Button
               size="sm"
               onClick={dominantAction.onClick}
               data-testid={dominantAction.testId}
-              className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
+              className="w-full bg-proofound-forest text-white hover:bg-proofound-forest/90 sm:w-auto"
             >
               {dominantAction.label}
             </Button>
@@ -295,6 +305,7 @@ export function GuidedProfileSetupView({
               variant="secondary"
               onClick={onOpenFullProfile}
               data-testid="guided-open-full-profile"
+              className="w-full sm:w-auto"
             >
               Open full profile
             </Button>
@@ -308,20 +319,30 @@ export function GuidedProfileSetupView({
             return (
               <div
                 key={step.id}
-                className="rounded-xl border border-proofound-stone/50 bg-white p-4"
+                className={`rounded-xl border p-4 transition-colors ${getStepCardClass(step.state)}`}
                 data-testid={`guided-step-${step.id}`}
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex items-start gap-3">
                     <StepIcon state={step.state} />
                     <div className="space-y-1">
-                      <p className="text-sm font-medium text-proofound-charcoal">{step.label}</p>
-                      <p className="text-xs text-muted-foreground">{step.detail}</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-medium text-proofound-charcoal">{step.label}</p>
+                        {step.state === 'active' ? (
+                          <span className="rounded-full bg-proofound-forest px-2 py-0.5 text-[11px] font-medium text-white">
+                            Next action
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="text-xs leading-5 text-muted-foreground">{step.detail}</p>
                     </div>
                   </div>
-                  <Icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  <Icon
+                    className="hidden h-4 w-4 text-muted-foreground sm:block"
+                    aria-hidden="true"
+                  />
                 </div>
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                   {step.actions.map((action) => (
                     <Button
                       key={action.id}
@@ -330,6 +351,7 @@ export function GuidedProfileSetupView({
                       onClick={action.onClick}
                       disabled={action.disabled}
                       data-testid={action.testId}
+                      className="w-full sm:w-auto"
                     >
                       {action.label}
                     </Button>

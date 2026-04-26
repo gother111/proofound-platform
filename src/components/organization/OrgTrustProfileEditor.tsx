@@ -2,6 +2,7 @@
 
 import { FormEvent, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { CheckCircle2, Circle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -53,6 +54,14 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
     website,
     whyWorkMatters,
   ]);
+  const fieldReadiness = [
+    { label: 'Name', ready: Boolean(displayName.trim()) },
+    { label: 'Why it matters', ready: Boolean(whyWorkMatters.trim()) },
+    { label: 'Mission', ready: Boolean(mission.trim()) },
+    { label: 'Operating context', ready: Boolean(operatingContext.trim()) },
+    { label: 'Domain path', ready: Boolean(website.trim()) },
+  ];
+  const readyFieldCount = fieldReadiness.filter((item) => item.ready).length;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -111,78 +120,109 @@ export function OrgTrustProfileEditor({ org, canEdit }: OrgTrustProfileEditorPro
   return (
     <Card className="border-black/[0.04] dark:border-white/5">
       <CardHeader>
-        <CardTitle>Trust profile</CardTitle>
-        <CardDescription>
-          Keep the launch story narrow and credible: org name, verified domain path, mission, why
-          the work matters, and the essential operating context.
-        </CardDescription>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <CardTitle>Trust profile</CardTitle>
+            <CardDescription className="max-w-2xl leading-6">
+              Keep the launch story narrow and credible: org name, verified domain path, mission,
+              why the work matters, and the essential operating context.
+            </CardDescription>
+          </div>
+          <div className="rounded-full bg-proofound-forest px-3 py-1 text-xs font-medium text-white">
+            {readyFieldCount}/{fieldReadiness.length} ready
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
-        <form className="space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-2">
-            <Label htmlFor="org-display-name">Organization name</Label>
-            <Input
-              id="org-display-name"
-              value={displayName}
-              onChange={(event) => setDisplayName(event.target.value)}
-              disabled={!canEdit || isPending}
-            />
+        <form className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]" onSubmit={handleSubmit}>
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="org-display-name">Organization name</Label>
+              <Input
+                id="org-display-name"
+                value={displayName}
+                onChange={(event) => setDisplayName(event.target.value)}
+                disabled={!canEdit || isPending}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="org-why-work-matters">Why this work matters</Label>
+              <Textarea
+                id="org-why-work-matters"
+                value={whyWorkMatters}
+                onChange={(event) => setWhyWorkMatters(event.target.value)}
+                disabled={!canEdit || isPending}
+                rows={3}
+                placeholder="Explain why the work matters in practical terms."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="org-mission">Mission</Label>
+              <Textarea
+                id="org-mission"
+                value={mission}
+                onChange={(event) => setMission(event.target.value)}
+                disabled={!canEdit || isPending}
+                rows={4}
+                placeholder="Explain the mission this assignment path supports."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="org-operating-context">Essential operating context</Label>
+              <Textarea
+                id="org-operating-context"
+                value={operatingContext}
+                onChange={(event) => setOperatingContext(event.target.value)}
+                disabled={!canEdit || isPending}
+                rows={4}
+                placeholder="Describe the real operating environment candidates should understand."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="org-website">Verified website or domain path</Label>
+              <Input
+                id="org-website"
+                value={website}
+                onChange={(event) => setWebsite(event.target.value)}
+                disabled={!canEdit || isPending}
+                placeholder="https://example.org/team"
+              />
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="org-why-work-matters">Why this work matters</Label>
-            <Textarea
-              id="org-why-work-matters"
-              value={whyWorkMatters}
-              onChange={(event) => setWhyWorkMatters(event.target.value)}
-              disabled={!canEdit || isPending}
-              rows={3}
-              placeholder="Explain why the work matters in practical terms."
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="org-mission">Mission</Label>
-            <Textarea
-              id="org-mission"
-              value={mission}
-              onChange={(event) => setMission(event.target.value)}
-              disabled={!canEdit || isPending}
-              rows={4}
-              placeholder="Explain the mission this assignment path supports."
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="org-operating-context">Essential operating context</Label>
-            <Textarea
-              id="org-operating-context"
-              value={operatingContext}
-              onChange={(event) => setOperatingContext(event.target.value)}
-              disabled={!canEdit || isPending}
-              rows={4}
-              placeholder="Describe the real operating environment candidates should understand."
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="org-website">Verified website or domain path</Label>
-            <Input
-              id="org-website"
-              value={website}
-              onChange={(event) => setWebsite(event.target.value)}
-              disabled={!canEdit || isPending}
-              placeholder="https://example.org/team"
-            />
-          </div>
-
-          {canEdit ? (
-            <div className="flex justify-end">
-              <Button type="submit" disabled={isPending || !hasUnsavedChanges}>
+          <div className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+            <div className="rounded-2xl border border-proofound-stone/70 bg-proofound-parchment/45 p-4">
+              <p className="text-sm font-medium text-proofound-charcoal">Launch essentials</p>
+              <div className="mt-3 space-y-2">
+                {fieldReadiness.map((item) => (
+                  <div key={item.label} className="flex items-center gap-2 text-sm">
+                    {item.ready ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+                    ) : (
+                      <Circle className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                    )}
+                    <span
+                      className={item.ready ? 'text-proofound-charcoal' : 'text-muted-foreground'}
+                    >
+                      {item.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-xs leading-5 text-muted-foreground">
+                Review starts cleaner when these basics are present before the first assignment.
+              </p>
+            </div>
+            {canEdit ? (
+              <Button type="submit" className="w-full" disabled={isPending || !hasUnsavedChanges}>
                 {isPending ? 'Saving...' : 'Save trust profile'}
               </Button>
-            </div>
-          ) : null}
+            ) : null}
+          </div>
         </form>
       </CardContent>
     </Card>
