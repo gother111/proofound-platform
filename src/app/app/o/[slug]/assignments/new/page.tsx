@@ -124,9 +124,13 @@ export default function AssignmentBuilderPage() {
   const [loadedAssignmentStatus, setLoadedAssignmentStatus] = useState<
     'draft' | 'active' | 'hold' | 'closed' | null
   >(null);
+  const [loadedAssignmentCreationStatus, setLoadedAssignmentCreationStatus] = useState<
+    'draft' | 'assignment_ready' | 'review_ready' | null
+  >(null);
   const [hasHydratedDraft, setHasHydratedDraft] = useState(false);
   const assignmentIdRef = useRef<string | null>(null);
   const loadedAssignmentStatusRef = useRef<typeof loadedAssignmentStatus>(null);
+  const loadedAssignmentCreationStatusRef = useRef<typeof loadedAssignmentCreationStatus>(null);
   const transitionLockRef = useRef(false);
   const previousDraftIdRef = useRef<string | null>(draftId);
 
@@ -137,6 +141,10 @@ export default function AssignmentBuilderPage() {
   useEffect(() => {
     loadedAssignmentStatusRef.current = loadedAssignmentStatus;
   }, [loadedAssignmentStatus]);
+
+  useEffect(() => {
+    loadedAssignmentCreationStatusRef.current = loadedAssignmentCreationStatus;
+  }, [loadedAssignmentCreationStatus]);
 
   const form = useForm<AssignmentFormData>({
     defaultValues: DEFAULT_ASSIGNMENT_FORM_VALUES,
@@ -149,6 +157,7 @@ export default function AssignmentBuilderPage() {
       setAssignmentId(null);
       setOrgId(null);
       setLoadedAssignmentStatus(null);
+      setLoadedAssignmentCreationStatus(null);
       setLastSaved(null);
       setHasHydratedDraft(false);
     }
@@ -208,6 +217,11 @@ export default function AssignmentBuilderPage() {
         setLoadedAssignmentStatus(
           ['draft', 'active', 'hold', 'closed'].includes(assignment.status)
             ? assignment.status
+            : 'draft'
+        );
+        setLoadedAssignmentCreationStatus(
+          ['draft', 'assignment_ready', 'review_ready'].includes(assignment.creationStatus)
+            ? assignment.creationStatus
             : 'draft'
         );
         setLastSaved(new Date());
@@ -341,14 +355,22 @@ export default function AssignmentBuilderPage() {
     }) => {
       const currentAssignmentId = assignmentIdRef.current;
       const currentLoadedStatus = loadedAssignmentStatusRef.current;
+      const currentLoadedCreationStatus = loadedAssignmentCreationStatusRef.current;
       const shouldPreservePublishedStatus = currentAssignmentId && currentLoadedStatus === 'active';
       const resolvedStatus =
         shouldPreservePublishedStatus && (!options?.status || options.status === 'draft')
           ? 'active'
           : (options?.status ?? 'draft');
+      const resolvedCreationStatus =
+        shouldPreservePublishedStatus &&
+        (!options?.creationStatus || options.creationStatus === 'draft')
+          ? currentLoadedCreationStatus === 'review_ready'
+            ? currentLoadedCreationStatus
+            : 'review_ready'
+          : (options?.creationStatus ?? 'draft');
       const payload = buildAssignmentPayload(form.getValues(), {
         status: resolvedStatus,
-        creationStatus: options?.creationStatus ?? 'draft',
+        creationStatus: resolvedCreationStatus,
       });
 
       const response = currentAssignmentId
@@ -389,6 +411,11 @@ export default function AssignmentBuilderPage() {
         ['draft', 'active', 'hold', 'closed'].includes(persistedAssignment.status)
           ? persistedAssignment.status
           : resolvedStatus
+      );
+      setLoadedAssignmentCreationStatus(
+        ['draft', 'assignment_ready', 'review_ready'].includes(persistedAssignment.creationStatus)
+          ? persistedAssignment.creationStatus
+          : resolvedCreationStatus
       );
 
       setLastSaved(new Date());
