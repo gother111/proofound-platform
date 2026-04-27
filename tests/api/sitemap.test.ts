@@ -12,7 +12,7 @@ vi.mock('@/db', () => ({
 }));
 
 vi.mock('@/lib/db/rows', () => ({
-  getRows: <T,>(result: { rows?: T[] }) => result.rows ?? [],
+  getRows: <T>(result: { rows?: T[] }) => result.rows ?? [],
 }));
 
 vi.mock('@/lib/db/schemaCompatibility', () => ({
@@ -26,6 +26,14 @@ vi.mock('@/lib/log', () => ({
 }));
 
 import sitemap from '@/app/sitemap';
+
+function expectedSiteUrl() {
+  return (
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.SITE_URL ||
+    'https://proofound.io'
+  ).replace(/\/$/, '');
+}
 
 describe('sitemap launch surfaces', () => {
   beforeEach(() => {
@@ -42,23 +50,24 @@ describe('sitemap launch surfaces', () => {
   it('excludes archived marketing pages and keeps the launch-safe allowlist', async () => {
     const entries = await sitemap();
     const urls = entries.map((entry) => entry.url);
+    const siteUrl = expectedSiteUrl();
 
-    expect(urls).toContain('https://proofound.io/');
-    expect(urls).toContain('https://proofound.io/login');
-    expect(urls).toContain('https://proofound.io/auth/login');
-    expect(urls).toContain('https://proofound.io/signup');
-    expect(urls).toContain('https://proofound.io/onboarding');
-    expect(urls).toContain('https://proofound.io/privacy');
-    expect(urls).toContain('https://proofound.io/terms');
-    expect(urls).toContain('https://proofound.io/cookies');
-    expect(urls).toContain('https://proofound.io/cookies/settings');
-    expect(urls).toContain('https://proofound.io/portfolio/alex');
-    expect(urls).toContain('https://proofound.io/portfolio/org/acme');
+    expect(urls).toContain(`${siteUrl}/`);
+    expect(urls).toContain(`${siteUrl}/login`);
+    expect(urls).toContain(`${siteUrl}/auth/login`);
+    expect(urls).toContain(`${siteUrl}/signup`);
+    expect(urls).toContain(`${siteUrl}/onboarding`);
+    expect(urls).toContain(`${siteUrl}/privacy`);
+    expect(urls).toContain(`${siteUrl}/terms`);
+    expect(urls).toContain(`${siteUrl}/cookies`);
+    expect(urls).toContain(`${siteUrl}/cookies/settings`);
+    expect(urls).toContain(`${siteUrl}/portfolio/alex`);
+    expect(urls).toContain(`${siteUrl}/portfolio/org/acme`);
 
-    expect(urls).not.toContain('https://proofound.io/about');
-    expect(urls).not.toContain('https://proofound.io/manifesto');
-    expect(urls).not.toContain('https://proofound.io/careers');
-    expect(urls).not.toContain('https://proofound.io/contact');
-    expect(urls).not.toContain('https://proofound.io/support');
+    expect(urls).not.toContain(`${siteUrl}/about`);
+    expect(urls).not.toContain(`${siteUrl}/manifesto`);
+    expect(urls).not.toContain(`${siteUrl}/careers`);
+    expect(urls).not.toContain(`${siteUrl}/contact`);
+    expect(urls).not.toContain(`${siteUrl}/support`);
   });
 });
