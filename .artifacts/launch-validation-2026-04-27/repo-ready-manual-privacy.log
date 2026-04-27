@@ -1,0 +1,38 @@
+> test
+> vitest run tests/api/org-match-review-route.test.ts tests/lib/uploads-privacy.test.ts src/lib/__tests__/middleware-launch-archive.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+ ✓ tests/lib/uploads-privacy.test.ts  (7 tests) 3ms
+ ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 25ms
+ ✓ tests/api/org-match-review-route.test.ts  (12 tests) 25ms
+
+ Test Files  3 passed (3)
+      Tests  25 passed (25)
+   Start at  19:46:58
+   Duration  1.09s (transform 229ms, setup 315ms, collect 392ms, tests 53ms, environment 637ms, prepare 155ms)
+
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+(node:49843) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:49843) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:49843) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | tests/api/org-match-review-route.test.ts > POST /api/org/[id]/matches/[matchId]/review > keeps shortlist updates live when fairness persistence fails
+org review fairness persistence failed {
+  matchId: 'match-1',
+  assignmentId: 'assignment-1',
+  error: 'fairness insert failed'
+}

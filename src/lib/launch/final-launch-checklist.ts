@@ -149,6 +149,10 @@ export type FinalLaunchChecklistContext = {
   launchOperationsMvp: string | null;
   monitoringAlerting: string | null;
   launchRestoreDrill: string | null;
+  launchOwnerRoster: string | null;
+  productionLaunchEvidence: string | null;
+  gtmPlan: string | null;
+  launchSignoffMemo: string | null;
   internalOpsIndex: string | null;
   verificationReviewSop: string | null;
   riskyUploadSop: string | null;
@@ -987,6 +991,10 @@ async function buildContext(
     launchOperationsMvpFile,
     monitoringAlertingFile,
     launchRestoreDrillFile,
+    launchOwnerRosterFile,
+    productionLaunchEvidenceFile,
+    gtmPlanFile,
+    launchSignoffMemoFile,
     internalOpsIndexFile,
     verificationReviewSopFile,
     riskyUploadSopFile,
@@ -1024,6 +1032,16 @@ async function buildContext(
     readOptionalFile(path.join(workspaceRoot, 'docs/launch-operations-mvp.md')),
     readOptionalFile(path.join(workspaceRoot, 'docs/monitoring-alerting.md')),
     readOptionalFile(path.join(workspaceRoot, 'docs/launch-restore-drill.md')),
+    readOptionalFile(
+      path.join(workspaceRoot, 'docs/internal-ops/launch-owner-roster-2026-04-27.md')
+    ),
+    readOptionalFile(
+      path.join(workspaceRoot, 'docs/internal-ops/production-launch-evidence-2026-04-27.md')
+    ),
+    readOptionalFile(
+      path.join(workspaceRoot, 'Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md')
+    ),
+    readOptionalFile(path.join(workspaceRoot, 'docs/launch-signoff-2026-04-27.md')),
     readOptionalFile(path.join(workspaceRoot, 'docs/internal-ops/index.md')),
     readOptionalFile(path.join(workspaceRoot, 'docs/internal-ops/verification-review-sop.md')),
     readOptionalFile(path.join(workspaceRoot, 'docs/internal-ops/redaction-risky-upload-sop.md')),
@@ -1203,6 +1221,10 @@ async function buildContext(
     launchOperationsMvp: launchOperationsMvpFile?.content ?? null,
     monitoringAlerting: monitoringAlertingFile?.content ?? null,
     launchRestoreDrill: launchRestoreDrillFile?.content ?? null,
+    launchOwnerRoster: launchOwnerRosterFile?.content ?? null,
+    productionLaunchEvidence: productionLaunchEvidenceFile?.content ?? null,
+    gtmPlan: gtmPlanFile?.content ?? null,
+    launchSignoffMemo: launchSignoffMemoFile?.content ?? null,
     internalOpsIndex: internalOpsIndexFile?.content ?? null,
     verificationReviewSop: verificationReviewSopFile?.content ?? null,
     riskyUploadSop: riskyUploadSopFile?.content ?? null,

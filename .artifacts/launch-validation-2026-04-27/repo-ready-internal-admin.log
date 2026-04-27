@@ -1,0 +1,32 @@
+> test
+> vitest run tests/api/admin-internal-ops-queue-route.test.ts tests/ui/admin-dashboard-launch-links.test.tsx src/lib/__tests__/middleware-launch-archive.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+ ✓ tests/api/admin-internal-ops-queue-route.test.ts  (5 tests) 46ms
+ ✓ src/lib/__tests__/middleware-launch-archive.test.ts  (6 tests) 128ms
+ ✓ tests/ui/admin-dashboard-launch-links.test.tsx  (2 tests) 222ms
+
+ Test Files  3 passed (3)
+      Tests  13 passed (13)
+   Start at  19:47:00
+   Duration  1.91s (transform 290ms, setup 1.05s, collect 635ms, tests 396ms, environment 1.74s, prepare 210ms)
+
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+(node:49899) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:49899) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:49899) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)

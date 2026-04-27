@@ -1,0 +1,75 @@
+{
+  "generatedAt": "2026-04-27T19:45:27.735Z",
+  "results": [
+    {
+      "name": "review_has_edit_control_before_regression_check",
+      "status": "PASS",
+      "evidence": {
+        "editButtonCount": 1,
+        "titleVisible": true,
+        "publishedVisible": true,
+        "ttfqiCount": 1
+      },
+      "url": "https://proofound.io/app/o/greengrid-energy/assignments/aaaa1111-2222-4333-8444-aaaaaaaaaa01/review",
+      "at": "2026-04-27T19:44:34.681Z"
+    },
+    {
+      "name": "edit_button_opens_builder_for_published_assignment",
+      "status": "FAIL",
+      "evidence": {
+        "url": "https://proofound.io/app/o/greengrid-energy/assignments/new?draftId=aaaa1111-2222-4333-8444-aaaaaaaaaa01",
+        "titleVisible": false,
+        "assignmentLanguage": true
+      },
+      "url": "https://proofound.io/app/o/greengrid-energy/assignments/new?draftId=aaaa1111-2222-4333-8444-aaaaaaaaaa01",
+      "at": "2026-04-27T19:44:39.659Z"
+    },
+    {
+      "name": "autosave_window_elapsed_without_field_changes",
+      "status": "PASS",
+      "evidence": {
+        "waitedMs": 33000,
+        "changedFields": false
+      },
+      "url": "https://proofound.io/app/o/greengrid-energy/assignments/new?draftId=aaaa1111-2222-4333-8444-aaaaaaaaaa01",
+      "at": "2026-04-27T19:45:12.665Z"
+    },
+    {
+      "name": "post_edit_matching_remains_active",
+      "status": "PASS",
+      "evidence": {
+        "titleVisible": true,
+        "activeVisible": true,
+        "candidateMatchVisible": true,
+        "notPublishedCount": 0
+      },
+      "url": "https://proofound.io/app/o/greengrid-energy/matching?postEditQa=1777319112665",
+      "at": "2026-04-27T19:45:19.285Z"
+    },
+    {
+      "name": "post_edit_public_trust_card_remains_published",
+      "status": "FAIL",
+      "evidence": {
+        "titleVisible": false,
+        "proofExpectationsVisible": false,
+        "ttfqiCount": 0,
+        "notPublishedCount": 1
+      },
+      "url": "https://proofound.io/portfolio/org/greengrid-energy?postEditQa=1777319119285",
+      "at": "2026-04-27T19:45:23.944Z"
+    },
+    {
+      "name": "post_edit_review_remains_published_and_deduped",
+      "status": "PASS",
+      "evidence": {
+        "titleVisible": true,
+        "publishedVisible": true,
+        "ttfqiCount": 1,
+        "duplicateSymptomCount": 0,
+        "editButtonCount": 1
+      },
+      "url": "https://proofound.io/app/o/greengrid-energy/assignments/aaaa1111-2222-4333-8444-aaaaaaaaaa01/review?postEditQa=1777319123944",
+      "at": "2026-04-27T19:45:27.734Z"
+    }
+  ]
+}

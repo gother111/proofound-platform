@@ -1,0 +1,163 @@
+{
+  "generatedAt": "2026-04-27T19:42:42.820Z",
+  "productionVersion": "488088db3b3de8fa0d927a94ea9ef99853af38b3",
+  "launchStatus": {
+    "ok": true,
+    "readinessState": "ready"
+  },
+  "browserUseSession": "🔎 Proofound production MVP corridor QA",
+  "results": [
+    {
+      "name": "production_health_fixed_version",
+      "status": "FAIL",
+      "evidence": {
+        "status": "healthy",
+        "version": "488088db3b3de8fa0d927a94ea9ef99853af38b3",
+        "databaseConnected": true,
+        "warnings": []
+      },
+      "url": "https://proofound.io/api/health",
+      "at": "2026-04-27T19:42:23.028Z"
+    },
+    {
+      "name": "launch_status_ready",
+      "status": "FAIL",
+      "evidence": {
+        "ok": true,
+        "readinessState": "ready",
+        "version": null
+      },
+      "url": "https://proofound.io/api/monitoring/launch-status",
+      "at": "2026-04-27T19:42:26.651Z"
+    },
+    {
+      "name": "signed_in_org_home",
+      "status": "PASS",
+      "evidence": {
+        "greenGrid": true,
+        "overviewText": true,
+        "notLogin": true
+      },
+      "url": "https://proofound.io/app/o/greengrid-energy/home",
+      "at": "2026-04-27T19:42:30.025Z"
+    },
+    {
+      "name": "signed_in_matching_active_assignment",
+      "status": "FAIL",
+      "evidence": {
+        "assignmentTitle": false,
+        "activeLabel": false,
+        "candidateMatch": false,
+        "shortlistControlsVisible": false,
+        "passControlsVisible": false
+      },
+      "url": "https://proofound.io/app/o/greengrid-energy/matching",
+      "at": "2026-04-27T19:42:31.222Z"
+    },
+    {
+      "name": "non_decision_match_explanation",
+      "status": "SKIP",
+      "evidence": {
+        "reason": "Expected one button, found 0"
+      },
+      "url": "https://proofound.io/app/o/greengrid-energy/matching",
+      "at": "2026-04-27T19:42:31.229Z"
+    },
+    {
+      "name": "published_assignment_review_clean_before_edit",
+      "status": "FAIL",
+      "evidence": {
+        "titleVisible": true,
+        "editPublishedCount": 0,
+        "ttfqiCount": 1,
+        "duplicateSymptomCount": 0
+      },
+      "url": "https://proofound.io/app/o/greengrid-energy/assignments/aaaa1111-2222-4333-8444-aaaaaaaaaa01/review",
+      "at": "2026-04-27T19:42:34.240Z"
+    },
+    {
+      "name": "edit_published_builder_loads",
+      "status": "SKIP",
+      "evidence": {
+        "reason": "Expected one Edit Published link, found 0"
+      },
+      "url": "https://proofound.io/app/o/greengrid-energy/assignments/aaaa1111-2222-4333-8444-aaaaaaaaaa01/review",
+      "at": "2026-04-27T19:42:34.240Z"
+    },
+    {
+      "name": "post_edit_matching_still_active",
+      "status": "FAIL",
+      "evidence": {
+        "titleVisible": false,
+        "activeVisible": false,
+        "candidateMatchVisible": false,
+        "noNotPublished": true
+      },
+      "url": "https://proofound.io/app/o/greengrid-energy/matching",
+      "at": "2026-04-27T19:42:35.211Z"
+    },
+    {
+      "name": "public_trust_card_after_edit",
+      "status": "PASS",
+      "evidence": {
+        "orgVisible": true,
+        "assignmentVisible": true,
+        "expectationVisible": true,
+        "outcomeCount": 1,
+        "noNotPublished": true
+      },
+      "url": "https://proofound.io/portfolio/org/greengrid-energy",
+      "at": "2026-04-27T19:42:37.570Z"
+    },
+    {
+      "name": "published_assignment_review_clean_after_edit",
+      "status": "FAIL",
+      "evidence": {
+        "titleVisible": true,
+        "editPublishedCount": 0,
+        "ttfqiCount": 1,
+        "duplicateSymptomCount": 0
+      },
+      "url": "https://proofound.io/app/o/greengrid-energy/assignments/aaaa1111-2222-4333-8444-aaaaaaaaaa01/review",
+      "at": "2026-04-27T19:42:38.919Z"
+    },
+    {
+      "name": "new_assignment_builder_opens",
+      "status": "PASS",
+      "evidence": {
+        "builderUrl": "https://proofound.io/app/o/greengrid-energy/assignments/new",
+        "hasAssignmentLanguage": true,
+        "hasCreateOrDraftLanguage": true
+      },
+      "url": "https://proofound.io/app/o/greengrid-energy/assignments/new",
+      "at": "2026-04-27T19:42:40.021Z"
+    },
+    {
+      "name": "org_profile_corridor",
+      "status": "PASS",
+      "evidence": {
+        "orgVisible": true,
+        "profileText": true,
+        "publicCardLinkOrText": true
+      },
+      "url": "https://proofound.io/app/o/greengrid-energy/profile",
+      "at": "2026-04-27T19:42:41.460Z"
+    },
+    {
+      "name": "admin_denial_non_admin_session",
+      "status": "PASS",
+      "evidence": {
+        "url": "https://proofound.io/403",
+        "deniedVisible": true,
+        "notAdminDashboard": true
+      },
+      "url": "https://proofound.io/403",
+      "at": "2026-04-27T19:42:42.820Z"
+    }
+  ],
+  "intentionallyNotExecuted": [
+    "Shortlist/Pass candidate decisions because those would record employment-related decisions.",
+    "Sending invites/emails or submitting outbound forms because that would transmit data.",
+    "Creating accounts or changing auth/password/security settings."
+  ]
+}

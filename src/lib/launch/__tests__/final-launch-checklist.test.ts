@@ -18,7 +18,9 @@ async function writeFile(root: string, relativePath: string, content: string) {
   await fs.writeFile(absolutePath, content, 'utf8');
 }
 
-async function createWorkspaceFixture(options: { includeRepoReadyBundle?: boolean } = {}) {
+async function createWorkspaceFixture(
+  options: { includeRepoReadyBundle?: boolean; includeLaunchEvidence?: boolean } = {}
+) {
   const workspace = await fs.mkdtemp(path.join(os.tmpdir(), 'proofound-launch-checklist-'));
   createdDirs.push(workspace);
 
@@ -191,6 +193,78 @@ Configure critical alerts:
 - Queue API: \`GET /api/admin/internal-ops/queues\`
 `
   );
+
+  if (options.includeLaunchEvidence) {
+    await writeFile(
+      workspace,
+      'Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md',
+      `# Proofound GTM and Initial Marketing Plan
+
+## ICP and Design-Partner Target List
+
+Status: \`PASS\`
+
+first-wave design partners are locked.
+
+## Pilot Package
+
+Status: \`PASS\`
+
+scope, timeline, and case-study terms are documented.
+
+## Outbound and Homepage Wedge
+
+Status: \`PASS\`
+
+Hire through proof, not profile theater.
+See the work behind the claim.
+
+## Candidate Supply-Seeding Plan
+
+Status: \`PASS\`
+
+source channels, volume assumptions, and readiness criteria are documented.
+
+## Org Onboarding Playbook
+
+Status: \`PASS\`
+
+assignment, proof expectations, and verification queue handoffs are documented.
+`
+    );
+
+    await writeFile(
+      workspace,
+      'docs/internal-ops/launch-owner-roster-2026-04-27.md',
+      `# Launch Owner Roster
+
+Status: \`PASS\`
+
+| Role | Named human |
+| --- | --- |
+| Founder / launch owner | Yurii Bakurov |
+| Incident owner | Yurii Bakurov |
+| Technical owner | Yurii Bakurov |
+| Product / ops owner | Yurii Bakurov |
+| Support / verification owner | Yurii Bakurov |
+`
+    );
+
+    await writeFile(
+      workspace,
+      'docs/internal-ops/production-launch-evidence-2026-04-27.md',
+      `# Production Launch Evidence
+
+Critical alert drill status: \`PASS\`
+
+Live \`/api/monitoring/launch-status\`: \`PASS\`
+
+auth email upload workflow privacy
+
+Restore drill status: \`UNVERIFIED\`
+`
+    );
+  }
 
   await writeFile(
     workspace,
@@ -506,5 +580,29 @@ describe('final launch checklist pipeline', () => {
     expect(
       fullReport.trueBlockers.some((item) => item.id === 'founder_icp_design_partner_locked')
     ).toBe(true);
+  });
+
+  it('accepts dated launch evidence for owner, alerts, and GTM rows while keeping restore unverified', async () => {
+    const workspace = await createWorkspaceFixture({
+      includeRepoReadyBundle: true,
+      includeLaunchEvidence: true,
+    });
+
+    const report = await generateFinalLaunchChecklistReport({
+      workspaceRoot: workspace,
+      scope: 'full',
+      now: new Date('2026-04-14T21:10:00.000Z'),
+      fetchImpl: globalThis.fetch,
+    });
+
+    const itemStatus = (id: string) => report.items.find((item) => item.id === id)?.status;
+
+    expect(itemStatus('ops_incident_roles_assigned')).toBe('PASS');
+    expect(itemStatus('ops_critical_alerts_configured')).toBe('PASS');
+    expect(itemStatus('founder_icp_design_partner_locked')).toBe('PASS');
+    expect(itemStatus('founder_pilot_package_documented')).toBe('PASS');
+    expect(itemStatus('founder_candidate_supply_plan')).toBe('PASS');
+    expect(itemStatus('founder_org_onboarding_playbook')).toBe('PASS');
+    expect(itemStatus('ops_backup_restore_verified')).toBe('UNVERIFIED');
   });
 });

@@ -1,0 +1,289 @@
+{
+  "generatedAt": "2026-04-27T19:14:02.846Z",
+  "tool": "browser-use in-app browser via node_repl iab backend",
+  "target": "https://proofound.io",
+  "verdict": "NOT_100_PERCENT_READY_UNTIL_RESTORED_AND_DEPLOYED",
+  "summary": {
+    "totalChecks": 25,
+    "pass": 17,
+    "review": 6,
+    "blocked": 2
+  },
+  "criticalFindings": [
+    {
+      "id": "published-assignment-edit-demotes-to-draft",
+      "severity": "launch-blocking-until-fix-deployed-and-production-state-restored",
+      "evidence": "Opening Security Advisor Sprint in the assignment editor and allowing the builder save path caused the assignment to appear as draft in Matching and removed assignment details from the public trust card.",
+      "localFix": "Patched assignment builder to preserve active status when saving an existing active assignment from the editor."
+    },
+    {
+      "id": "active-assignment-review-repeated-outcomes",
+      "severity": "mvp-quality-defect",
+      "evidence": "The active assignment review page rendered repeated TTFQI / Target: 72h outcome rows many times before the assignment became draft.",
+      "localFix": "Not fixed in this pass; likely needs data cleanup or outcome rendering guard."
+    }
+  ],
+  "productionRestoreNeeded": {
+    "assignment": "Security Advisor Sprint",
+    "observedBefore": "active",
+    "observedAfter": "draft",
+    "restoreActionNeedsConfirmation": "Click Publish Assignment for Security Advisor Sprint or run an explicit approved production restore/update."
+  },
+  "changesMadeLocally": [
+    "/Users/yuriibakurov/proofound/src/app/app/o/[slug]/assignments/new/page.tsx",
+    "/Users/yuriibakurov/proofound/tests/ui/assignment-builder-mode-entry.test.tsx"
+  ],
+  "verificationRun": [
+    "npm run test -- tests/ui/assignment-builder-mode-entry.test.tsx: passed",
+    "npm run lint: passed",
+    "npm run typecheck: passed"
+  ],
+  "results": [
+    {
+      "checkedAt": "2026-04-27T19:05:37.604Z",
+      "name": "Authenticated session check",
+      "status": "PASS",
+      "url": "https://proofound.io/app/o/greengrid-energy/home",
+      "title": "Proofound - Focus on what matters",
+      "excerpt": "Skip to main content Overview Assignments & Matches Trust Profile Public Trust Profile Proofound Overview GE Organization review cockpit GreenGrid Energy A focused launch desk for one clean hiring corridor: compose the trust profile, define one proof-led assignment, and review candidates through privacy-safe summaries. Complete trust profile Corridor Queue High GreenGrid Energy Trust profile · Add the basics once. Review stays locked until trust is clear. 33% Next Proof expectations One assignment path · This opens after the trust profile has enough context. Needs trust Guarded Privacy-safe summaries Match review · No candidate review starts until the corridor is ready. Locked Launch Summary"
+    },
+    {
+      "checkedAt": "2026-04-27T19:06:05.622Z",
+      "name": "Org overview initial",
+      "status": "PASS",
+      "url": "https://proofound.io/app/o/greengrid-energy/home",
+      "title": "Proofound - Focus on what matters",
+      "missing": [],
+      "forbiddenPresent": [],
+      "consoleErrors": [],
+      "excerpt": "Skip to main content Overview Assignments & Matches Trust Profile Public Trust Profile Proofound Overview GE Organization review cockpit GreenGrid Energy A focused launch desk for one clean hiring corridor: compose the trust profile, define one proof-led assignment, and review candidates through privacy-safe summaries. Complete trust profile Corridor Queue High GreenGrid Energy Trust profile · Add the basics once. Review stays locked until trust is clear. 33% Next Proof expectations One assignment path · This opens after the trust profile has enough context. Needs trust Guarded Privacy-safe summaries Match review · No candidate review starts until the corridor is ready. Locked Launch Summary 1 / 3 trust essentials ready Next: add verified domain path. Nothing is shared or reviewed until these basics are ready. Mission and operating contex"
+    },
+    {
+      "checkedAt": "2026-04-27T19:06:08.905Z",
+      "name": "Org assignments and matches via nav",
+      "status": "PASS",
+      "url": "https://proofound.io/app/o/greengrid-energy/matching",
+      "title": "Proofound - Focus on what matters",
+      "missing": [],
+      "forbiddenPresent": [],
+      "consoleErrors": [],
+      "excerpt": "Skip to main content Overview Assignments & Matches Trust Profile Public Trust Profile Proofound Matching GE Matching Find proof-backed candidates aligned with your assignment needs New Assignment Security Advisor Sprint Created: 12/4/2025 active View / Edit Production Browser QA Climate Ops Lead Created: 4/24/2026 draft View / Edit Matches Security Advisor Sprint — active Preparing proof-backed matches for this assignment..."
+    },
+    {
+      "checkedAt": "2026-04-27T19:06:12.132Z",
+      "name": "Org trust profile via nav",
+      "status": "PASS",
+      "url": "https://proofound.io/app/o/greengrid-energy/profile",
+      "title": "Proofound - Focus on what matters",
+      "missing": [],
+      "forbiddenPresent": [],
+      "consoleErrors": [],
+      "excerpt": "Skip to main content Overview Assignments & Matches Trust Profile Public Trust Profile Proofound Profile GE Organization trust profile This is the launch-facing org profile used to support one assignment path and a clean review queue. Editable Keep this page limited to the calm trust story that supports one clear assignment corridor. Culture hubs, governance showcases, and other org-suite surfaces stay outside the MVP. Organization name GreenGrid Energy Why work matters Add a short reason this work matters. Mission Scale low-carbon grid infra with secure systems Domain path Needs verified domain signal. Launch corridor Trust basics ready: 2/4 Trust profile Mission, why the work matters, verified domain path, and operating context. Assignments & matches One assignment path and one review queue for published work and candidates. Public trus"
+    },
+    {
+      "checkedAt": "2026-04-27T19:06:15.358Z",
+      "name": "Org public trust profile via nav",
+      "status": "PASS",
+      "url": "https://proofound.io/portfolio/org/greengrid-energy?returnTo=%2Fapp%2Fo%2Fgreengrid-energy%2Fhome",
+      "title": "Proofound organization portfolio",
+      "missing": [],
+      "forbiddenPresent": [],
+      "consoleErrors": [],
+      "excerpt": "Skip to main content GreenGrid Energy Shareable by direct link Public organization trust card Scale low-carbon grid infra with secure systems Return to menu Copy share link Download profile PDF MISSION / PURPOSE Scale low-carbon grid infra with secure systems WHAT WORK IS OFFERED WORK OFFERED Security Advisor Sprint ENGAGEMENT Not published Reduce SOC2 gaps for critical systems ASSIGNMENT CLARITY Reduce SOC2 gaps for critical systems PROOF EXPECTATIONS Audit-ready in 4 weeks EXPECTED OUTCOMES • Launch milestone • Launch milestone • Launch milestone SERIOUSNESS OF REVIEW Public trust card only Organization trust is still in direct-link mode. A review-ready assignment is active, so proof review standards are already defined. Blind-by-default review stays separate from this public page until candidate consented reveal. TRUST BASICS ORGANIZAT"
+    },
+    {
+      "checkedAt": "2026-04-27T19:07:00.712Z",
+      "name": "New assignment builder opens",
+      "status": "PASS",
+      "url": "https://proofound.io/app/o/greengrid-energy/assignments/new",
+      "title": "Proofound - Focus on what matters",
+      "missing": [],
+      "forbiddenPresent": [],
+      "consoleErrors": [],
+      "excerpt": "Skip to main content Overview Assignments & Matches Trust Profile Public Trust Profile Proofound Assignments GE Lean assignment corridor This builder stays narrow on purpose: one structured assignment, then internal review before publish. 1 Why this role exists Purpose and value 2 What work will actually be done Responsibilities and outcomes 3 What proof would count Evidence and skills 4 What practical constraints are real Logistics and timing 5 Internal review and publish Review before publish Step 1: Why this role exists Step 1 of 5 Explain why the organization is opening this role now and what real value it needs to create. Title * Engagement type * Full time Role purpose * Keep this specific. Publishing will block vague or generic assignment language. 0/600 Next: What work will actually be done Drafts auto-save every 30 seconds."
+    },
+    {
+      "checkedAt": "2026-04-27T19:07:00.983Z",
+      "name": "Assignment builder empty-step validation",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/app/o/greengrid-energy/assignments/new",
+      "excerpt": "Skip to main content Overview Assignments & Matches Trust Profile Public Trust Profile Proofound Assignments GE Lean assignment corridor This builder stays narrow on purpose: one structured assignment, then internal review before publish. 1 Why this role exists Purpose and value 2 What work will actually be done Responsibilities and outcomes 3 What proof would count Evidence and skills 4 What practical constraints are real Logistics and timing 5 Internal review and publish Review before publish Step 1: Why this role exists Step 1 of 5 Explain why the organization is opening this role now and what real value it needs to create. Title * Engagement type * Full time Role purpose * Keep this spec",
+      "note": "Clicked Next on empty step; expected to remain on step 1 or show validation without crashing."
+    },
+    {
+      "checkedAt": "2026-04-27T19:07:29.215Z",
+      "name": "Existing active assignment review opens",
+      "status": "PASS",
+      "url": "https://proofound.io/app/o/greengrid-energy/assignments/aaaa1111-2222-4333-8444-aaaaaaaaaa01/review",
+      "title": "Proofound - Focus on what matters",
+      "missing": [],
+      "forbiddenPresent": [],
+      "consoleErrors": [],
+      "excerpt": "Skip to main content Overview Assignments & Matches Trust Profile Public Trust Profile Proofound Assignments GE Internal review before publish Confirm the assignment is specific, credible, and ready for a narrow publish path. Edit Published 1 Why this role exists Role Security Advisor Sprint Engagement type Not specified Role purpose Reduce SOC2 gaps for critical systems 2 What work will actually be done Work summary Reduce SOC2 gaps for critical systems TTFQI Target: 72h • Timeframe: TTFQI Target: 72h • Timeframe: TTFQI Target: 72h • Timeframe: TTFQI Target: 72h • Timeframe: TTFQI Target: 72h • Timeframe: TTFQI Target: 72h • Timeframe: TTFQI Target: 72h • Timeframe: TTFQI Target: 72h • Timeframe: TTFQI Target: 72h • Timeframe: TTFQI Target: 72h • Timeframe: TTFQI Target: 72h • Timeframe: 3 What proof would count Proof expectations Audit-"
+    },
+    {
+      "checkedAt": "2026-04-27T19:07:35.513Z",
+      "name": "Existing draft assignment review opens",
+      "status": "REVIEW",
+      "url": "https://proofound.io/app/o/greengrid-energy/assignments/0c194c15-2f18-434f-ad13-107c2cd74385/review",
+      "title": "Proofound - Focus on what matters",
+      "missing": [
+        "draft"
+      ],
+      "forbiddenPresent": [],
+      "consoleErrors": [],
+      "excerpt": "Skip to main content Overview Assignments & Matches Trust Profile Public Trust Profile Proofound Assignments GE Internal review before publish Confirm the assignment is specific, credible, and ready for a narrow publish path. Edit Publish Assignment 1 Why this role exists Role Production Browser QA Climate Ops Lead Engagement type full time Role purpose GreenGrid needs a launch-ready operator to coordinate partner onboarding, reduce handoff delay, and prove delivery quality across the first month of renewable infrastructure rollout. 2 What work will actually be done Work summary Coordinate partner launch operations, prepare weekly risk reviews, unblock implementation owners, and turn proof from delivery work into a clear review trail for GreenGrid leadership. Partner launch control room operating weekly Target: Launch risks are reviewed w"
+    },
+    {
+      "checkedAt": "2026-04-27T19:07:58.291Z",
+      "name": "Active assignment edit opens from review",
+      "status": "BLOCKED",
+      "editCount": 0
+    },
+    {
+      "checkedAt": "2026-04-27T19:07:59.494Z",
+      "name": "Draft assignment publish control present but not clicked",
+      "status": "PASS",
+      "url": "https://proofound.io/app/o/greengrid-energy/assignments/0c194c15-2f18-434f-ad13-107c2cd74385/review",
+      "publishCount": 1,
+      "publishEnabled": true,
+      "note": "Did not click because this would change production publication state."
+    },
+    {
+      "checkedAt": "2026-04-27T19:08:15.547Z",
+      "name": "Active assignment edit opens from review retry",
+      "status": "REVIEW",
+      "url": "https://proofound.io/app/o/greengrid-energy/assignments/new?draftId=aaaa1111-2222-4333-8444-aaaaaaaaaa01",
+      "title": "Proofound - Focus on what matters",
+      "missing": [
+        "Step 1 of 5",
+        "Security Advisor Sprint"
+      ],
+      "forbiddenPresent": [],
+      "consoleErrors": [],
+      "excerpt": "Skip to main content Overview Assignments & Matches Trust Profile Public Trust Profile Proofound Assignments GE Lean assignment corridor This builder stays narrow on purpose: one structured assignment, then internal review before publish. 1 Why this role exists Purpose and value 2 What work will actually be done Responsibilities and outcomes 3 What proof would count Evidence and skills 4 What practical constraints are real Logistics and timing 5 Internal review and publish Review before publish Step 3: What proof would convince the org Step 3 of 5 Define what evidence, skills, or signals would make the candidate credible for this assignment. What proof would count * Spell out what would count as credible proof. Generic traits are not enough. 22/1200 Search skills Must-Have Skills * threat-modeling threat-modeling Proficiency Level 5/5 Lin"
+    },
+    {
+      "checkedAt": "2026-04-27T19:08:32.186Z",
+      "name": "Active assignment edit resumes builder at saved step",
+      "status": "PASS",
+      "url": "https://proofound.io/app/o/greengrid-energy/assignments/new?draftId=aaaa1111-2222-4333-8444-aaaaaaaaaa01",
+      "note": "Edit opens the lean assignment builder at Step 3 with saved proof fields rather than crashing or losing context."
+    },
+    {
+      "checkedAt": "2026-04-27T19:08:32.467Z",
+      "name": "Assignment edit next step navigation",
+      "status": "REVIEW",
+      "url": "https://proofound.io/app/o/greengrid-energy/assignments/new?draftId=aaaa1111-2222-4333-8444-aaaaaaaaaa01",
+      "title": "Proofound - Focus on what matters",
+      "missing": [
+        "Step 4 of 5",
+        "Compensation",
+        "Location"
+      ],
+      "forbiddenPresent": [],
+      "consoleErrors": [],
+      "excerpt": "Skip to main content Overview Assignments & Matches Trust Profile Public Trust Profile Proofound Assignments GE Lean assignment corridor This builder stays narrow on purpose: one structured assignment, then internal review before publish. 1 Why this role exists Purpose and value 2 What work will actually be done Responsibilities and outcomes 3 What proof would count Evidence and skills 4 What practical constraints are real Logistics and timing 5 Internal review and publish Review before publish Step 3: What proof would convince the org Step 3 of 5 Define what evidence, skills, or signals would make the candidate credible for this assignment. What proof would count * Spell out what would count as credible proof. Generic traits are not enough. 22/1200 Search skills Must-Have Skills * Threat modeling & risk auditing Data Science > Cybersecur"
+    },
+    {
+      "checkedAt": "2026-04-27T19:08:32.472Z",
+      "name": "Assignment edit back step navigation",
+      "status": "BLOCKED",
+      "backStepCount": 0
+    },
+    {
+      "checkedAt": "2026-04-27T19:09:01.975Z",
+      "name": "Trust profile editable page loads",
+      "status": "PASS",
+      "url": "https://proofound.io/app/o/greengrid-energy/profile",
+      "title": "Proofound - Focus on what matters",
+      "missing": [],
+      "forbiddenPresent": [],
+      "consoleErrors": [],
+      "excerpt": "Skip to main content Overview Assignments & Matches Trust Profile Public Trust Profile Proofound Profile GE Organization trust profile This is the launch-facing org profile used to support one assignment path and a clean review queue. Editable Keep this page limited to the calm trust story that supports one clear assignment corridor. Culture hubs, governance showcases, and other org-suite surfaces stay outside the MVP. Organization name GreenGrid Energy Why work matters Add a short reason this work matters. Mission Scale low-carbon grid infra with secure systems Domain path Needs verified domain signal. Launch corridor Trust basics ready: 2/4 Trust profile Mission, why the work matters, verified domain path, and operating context. Assignments & matches One assignment path and one review queue for published work and candidates. Public trus"
+    },
+    {
+      "checkedAt": "2026-04-27T19:09:01.981Z",
+      "name": "Trust profile save control inspected but not clicked",
+      "status": "PASS",
+      "url": "https://proofound.io/app/o/greengrid-energy/profile",
+      "saveCount": 1,
+      "note": "Did not click Save because it could update production organization profile."
+    },
+    {
+      "checkedAt": "2026-04-27T19:09:03.050Z",
+      "name": "Collaborator invite empty validation",
+      "status": "PASS",
+      "url": "https://proofound.io/app/o/greengrid-energy/home",
+      "excerpt": "Skip to main content Overview Assignments & Matches Trust Profile Public Trust Profile Proofound Overview GE Organization review cockpit GreenGrid Energy A focused launch desk for one clean hiring corridor: compose the trust profile, define one proof-led assignment, and review candidates through privacy-safe summaries. Complete trust profile Corridor Queue High GreenGrid Energy Trust profile · Add the basics once. Review stays locked until trust is clear. 33% Next Proof expectations One assignment path · This opens after the trust profile has enough context. Needs trust Guarded Privacy-safe summaries Match review · No candidate review starts until the corridor is ready. Locked Launch Summary",
+      "note": "Clicked invite with empty email only; no invite data was submitted."
+    },
+    {
+      "checkedAt": "2026-04-27T19:09:14.496Z",
+      "name": "Profile menu opens",
+      "status": "PASS",
+      "url": "https://proofound.io/app/o/greengrid-energy/home",
+      "excerpt": "Skip to main content Overview Assignments & Matches Trust Profile Public Trust Profile Proofound Overview GE Organization review cockpit GreenGrid Energy A focused launch desk for one clean hiring corridor: compose the trust profile, define one proof-led assignment, and review candidates through privacy-safe summaries. Complete trust profile Corridor Queue High GreenGrid Energy Trust profile · Add the basics once. Review stays locked until trust is clear. 33% Next Proof expectations One assignment path · This opens after the trust profile has enough context. Needs trust Guarded Privacy-safe summaries Match review · No candidate review starts until the corridor is ready. Locked Launch Summary 1 / 3 trust essentials ready Next: add verified domain path. Nothing is shared or reviewed until th",
+      "note": "Did not click Sign out because it would end the authenticated QA session."
+    },
+    {
+      "checkedAt": "2026-04-27T19:09:42.622Z",
+      "name": "Public trust card direct-link output",
+      "status": "PASS",
+      "url": "https://proofound.io/portfolio/org/greengrid-energy?returnTo=%2Fapp%2Fo%2Fgreengrid-energy%2Fhome",
+      "title": "Proofound organization portfolio",
+      "missing": [],
+      "forbiddenPresent": [],
+      "consoleErrors": [],
+      "excerpt": "Skip to main content GreenGrid Energy Shareable by direct link Public organization trust card Scale low-carbon grid infra with secure systems Return to menu Copy share link Download profile PDF MISSION / PURPOSE Scale low-carbon grid infra with secure systems WHAT WORK IS OFFERED WORK OFFERED A concise statement of the work offered has not been published yet. ENGAGEMENT Not published Why this work exists has not been published yet. ASSIGNMENT CLARITY Assignment detail will appear here once the organization publishes it. PROOF EXPECTATIONS Proof expectations not published EXPECTED OUTCOMES Outcome detail is not published yet. SERIOUSNESS OF REVIEW Public trust card only Organization trust is still in direct-link mode. Assignment standards are published before broader review starts. Blind-by-default review stays separate from this public pa"
+    },
+    {
+      "checkedAt": "2026-04-27T19:09:42.906Z",
+      "name": "Public trust card return-to-app link",
+      "status": "REVIEW",
+      "url": "https://proofound.io/portfolio/org/greengrid-energy?returnTo=%2Fapp%2Fo%2Fgreengrid-energy%2Fhome",
+      "title": "Proofound organization portfolio",
+      "missing": [
+        "Organization review cockpit"
+      ],
+      "forbiddenPresent": [],
+      "consoleErrors": [],
+      "excerpt": "Skip to main content GreenGrid Energy Shareable by direct link Public organization trust card Scale low-carbon grid infra with secure systems Return to menu Copy share link Download profile PDF MISSION / PURPOSE Scale low-carbon grid infra with secure systems WHAT WORK IS OFFERED WORK OFFERED A concise statement of the work offered has not been published yet. ENGAGEMENT Not published Why this work exists has not been published yet. ASSIGNMENT CLARITY Assignment detail will appear here once the organization publishes it. PROOF EXPECTATIONS Proof expectations not published EXPECTED OUTCOMES Outcome detail is not published yet. SERIOUSNESS OF REVIEW Public trust card only Organization trust is still in direct-link mode. Assignment standards are published before broader review starts. Blind-by-default review stays separate from this public pa"
+    },
+    {
+      "checkedAt": "2026-04-27T19:09:56.192Z",
+      "name": "Public trust card return-to-app link adjusted",
+      "status": "PASS",
+      "url": "https://proofound.io/app/o/greengrid-energy/home",
+      "evidence": "After the return action, current DOM is the organization overview cockpit."
+    },
+    {
+      "checkedAt": "2026-04-27T19:10:24.119Z",
+      "name": "Recheck matching after editor visit",
+      "status": "REVIEW",
+      "url": "https://proofound.io/app/o/greengrid-energy/matching",
+      "title": "Proofound - Focus on what matters",
+      "missing": [
+        "active"
+      ],
+      "forbiddenPresent": [],
+      "consoleErrors": [],
+      "excerpt": "Skip to main content Overview Assignments & Matches Trust Profile Public Trust Profile Proofound Matching GE Matching Find proof-backed candidates aligned with your assignment needs New Assignment Security Advisor Sprint Created: 12/4/2025 draft View / Edit Production Browser QA Climate Ops Lead Created: 4/24/2026 draft View / Edit Matches Security Advisor Sprint — draft Preparing proof-backed matches for this assignment..."
+    },
+    {
+      "checkedAt": "2026-04-27T19:10:27.768Z",
+      "name": "Recheck public trust card assignment consistency",
+      "status": "REVIEW",
+      "url": "https://proofound.io/portfolio/org/greengrid-energy?returnTo=%2Fapp%2Fo%2Fgreengrid-energy%2Fhome",
+      "excerpt": "Skip to main content GreenGrid Energy Shareable by direct link Public organization trust card Scale low-carbon grid infra with secure systems Return to menu Copy share link Download profile PDF MISSION / PURPOSE Scale low-carbon grid infra with secure systems WHAT WORK IS OFFERED WORK OFFERED A concise statement of the work offered has not been published yet. ENGAGEMENT Not published Why this work exists has not been published yet. ASSIGNMENT CLARITY Assignment detail will appear here once the organization publishes it. PROOF EXPECTATIONS Proof expectations not published EXPECTED OUTCOMES Outcome detail is not published yet. SERIOUSNESS OF REVIEW Public trust card only Organization trust is still in direct-link mode. Assignment standards are published before broader review starts. Blind-by-default review stays separate from this public page until candidate consented reveal. TRUST BASICS ORGANIZATION GreenGrid Energy VERIFIED DOMAIN PATH Not verified yet WEBSITE Not published TRUST MODE",
+      "note": "Expected active assignment details to appear on public trust card if the active assignment is still published."
+    },
+    {
+      "checkedAt": "2026-04-27T19:14:02.846Z",
+      "name": "Launch monitor after authenticated flow testing",
+      "status": "PASS",
+      "url": "https://proofound.io/api/monitoring/launch-status",
+      "excerpt": "{\"ok\":true,\"readinessState\":\"ready\",\"generatedAt\":\"2026-04-27T19:14:02.690Z\",\"source\":\"live\",\"evidence\":{\"source\":\"live\",\"artifactPath\":\".artifacts/launch-smoke-report.json\",\"smokeArtifactSchemaVersion\":null,\"smokeArtifactGeneratedAt\":null,\"smokeArtifactAgeMinutes\":null,\"smokeFreshnessThresholdMinutes\":60,\"smokeFreshnessState\":\"fresh\",\"smokeEvidenceSource\":\"db\",\"persisted\":false},\"freshness\":{\"evaluatedAt\":\"2026-04-27T19:14:02.690Z\",\"smokeArtifactGeneratedAt\":null,\"smokeArtifactAgeMinutes\":null,\"smokeFreshnessThresholdMinutes\":60,\"smokeFreshnessState\":\"fresh\"},\"liveRefresh\":{\"attempted\":true,\"refreshedMonitorKeys\":[\"api_health\"],\"recoveredMonitorKeys\":[\"api_health\"],\"failedMonitorKeys\":[],\"finalHttpEvidenceSource\":\"mixed\",\"error\":null},\"summary\":{\"expectedMonitors\":9,\"reportedMonitors\":9,\""
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+> test
+> vitest run src/app/api/monitoring/__tests__/launch-status-route.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+ ✓ src/app/api/monitoring/__tests__/launch-status-route.test.ts  (8 tests) 9ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  19:46:53
+   Duration  502ms (transform 60ms, setup 20ms, collect 76ms, tests 9ms, environment 0ms, prepare 41ms)
+
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+stderr | src/app/api/monitoring/__tests__/launch-status-route.test.ts > /api/monitoring/launch-status > returns blocked stale persisted monitor evidence when live refresh fails entirely
+Live launch-status refresh failed; returning persisted status Error: network exploded
+    at /Users/yuriibakurov/proofound/src/app/api/monitoring/__tests__/launch-status-route.test.ts:446:7
+    at file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:135:14
+    at file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:60:26
+    at runTest (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:781:17)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runSuite (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:909:15)
+    at runFiles (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:958:5)
+    at startTests (file:///Users/yuriibakurov/proofound/node_modules/@vitest/runner/dist/index.js:967:3)
+    at file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+    at withEnv (file:///Users/yuriibakurov/proofound/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5)

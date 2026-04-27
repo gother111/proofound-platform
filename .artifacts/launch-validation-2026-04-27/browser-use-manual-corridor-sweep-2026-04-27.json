@@ -1,0 +1,383 @@
+{
+  "generatedAt": "2026-04-27T19:01:38.437Z",
+  "tool": "browser-use in-app browser via node_repl iab backend",
+  "target": "https://proofound.io",
+  "verdict": "PASS",
+  "confirmedPassCount": 34,
+  "confirmedReviewCount": 0,
+  "confirmedResults": [
+    {
+      "name": "Launch status API",
+      "url": "https://proofound.io/api/monitoring/launch-status",
+      "startedAt": "2026-04-27T18:52:18.226Z",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/api/monitoring/launch-status",
+      "title": "proofound.io/api/monitoring/launch-status",
+      "excerpt": "{\"ok\":true,\"readinessState\":\"ready\",\"generatedAt\":\"2026-04-27T18:52:19.332Z\",\"source\":\"persisted\",\"evidence\":{\"source\":\"persisted\",\"artifactPath\":\".artifacts/launch-smoke-report.json\",\"smokeArtifactSchemaVersion\":null,\"smokeArtifactGeneratedAt\":null,\"smokeArtifactAgeMinutes\":null,\"smokeFreshnessThresholdMinutes\":60,\"smokeFreshnessState\":\"fresh\",\"smokeEvidenceSource\":\"db\",\"persisted\":true},\"freshness\":{\"evaluatedAt\":\"2026-04-27T18:52:19.332Z\",\"smokeArtifactGeneratedAt\":null,\"smokeArtifactAgeMinutes\":null,\"smokeFreshnessThresholdMinutes\":60,\"smokeFreshnessState\":\"fresh\"},\"liveRefresh\":{\"attempted\":false,\"refreshedMonitorKeys\":[],\"recoveredMonitorKeys\":[],\"failedMonitorKeys\":[],\"finalHttpEviden",
+      "missing": [],
+      "forbiddenPresent": [],
+      "error": null
+    },
+    {
+      "name": "Performance status API",
+      "url": "https://proofound.io/api/monitoring/perf-status",
+      "startedAt": "2026-04-27T18:52:20.815Z",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/api/monitoring/perf-status",
+      "title": "proofound.io/api/monitoring/perf-status",
+      "excerpt": "{\"status\":\"excellent\",\"sampleCount\":10,\"windowHours\":24,\"p95\":420.2158462000014,\"budgetMs\":1500,\"ok\":true,\"message\":\"No api_latency events in the last 24h. Probe /api/health P95=420ms (budget 1500ms)\",\"source\":\"probe\"}",
+      "missing": [],
+      "forbiddenPresent": [],
+      "error": null
+    },
+    {
+      "name": "Health API corrected",
+      "url": "https://proofound.io/api/health",
+      "startedAt": "2026-04-27T18:52:35.130Z",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/api/health",
+      "title": "proofound.io/api/health",
+      "excerpt": "{\"status\":\"healthy\",\"database\":{\"connected\":true,\"usingMockDb\":false},\"environment\":{\"hasSupabaseUrl\":true,\"hasSupabaseAnonKey\":true,\"hasDatabaseUrl\":true,\"hasSiteUrl\":true,\"hasServiceRoleKey\":true},\"warnings\":[],\"timestamp\":\"2026-04-27T18:52:36.337Z\",\"version\":\"488088db3b3de8fa0d927a94ea9ef99853af38b3\"}",
+      "missing": [],
+      "forbiddenPresent": [],
+      "error": null
+    },
+    {
+      "name": "Homepage",
+      "url": "https://proofound.io/",
+      "startedAt": "2026-04-27T18:53:00.723Z",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/",
+      "title": "Proofound | Hire through proof, not profile theater",
+      "excerpt": "Skip to main content PROOFOUND How it works For individuals For organizations Sign in Request a pilot PROOFOUND A calmer standard for seeing work clearly. STRONGER SIGNAL THAN CVS See the work behind the claim. Proof-backed, privacy-safe review that helps teams compare real work instead of polished claims. Request a pilot Create your proof portfolio For lean teams hiring through work, not noise, and for under-credited talent with real work to show. RESUME SHORTHAND Maya Chen ex-Stripe Berkeley Strategic leader PROOF PACK Onboarding redesign REVIEW-SAFE OUTCOME Reduced onboarding time by 31% One documented path replaced fragmented handoffs across product, success, and ops. REVIEW RAIL Operati",
+      "missing": [],
+      "forbiddenPresent": [],
+      "error": null
+    },
+    {
+      "name": "Login page",
+      "url": "https://proofound.io/login",
+      "startedAt": "2026-04-27T18:53:01.212Z",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/login",
+      "title": "Sign In | Proofound",
+      "excerpt": "Skip to main content Welcome back Sign in to continue to Proofound EMAIL ADDRESS * PASSWORD * Remember me Forgot password? Sign in OR CONTINUE WITH Google LinkedIn Don't have an account? Create account By signing in, you agree to our Terms of Service and Privacy Policy",
+      "missing": [],
+      "forbiddenPresent": [],
+      "error": null
+    },
+    {
+      "name": "Organization signup page",
+      "url": "https://proofound.io/signup/organization",
+      "startedAt": "2026-04-27T18:53:05.113Z",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/signup/organization",
+      "title": "Organization Sign Up | Proofound",
+      "excerpt": "Skip to main content Create your organization account Join Proofound and start building credibility. EMAIL ADDRESS PASSWORD CONFIRM PASSWORD I agree to the Privacy Policy and Terms of Service* Send me updates about new features and matching opportunities Create organization account OR CONTINUE WITH Google LinkedIn Already have an account? Sign in By creating an account, you agree to our Terms of Service and Privacy Policy",
+      "missing": [],
+      "forbiddenPresent": [],
+      "error": null
+    },
+    {
+      "name": "Terms page",
+      "url": "https://proofound.io/terms",
+      "startedAt": "2026-04-27T18:53:05.720Z",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/terms",
+      "title": "Terms of Service | Proofound legal responsibilities",
+      "excerpt": "Skip to main content Back to Home Terms of Service Effective date: 2026-02-12 · Version: v1.1.2026-02-12 1. Acceptance and Eligibility By using Proofound, you agree to these Terms. You must provide accurate account information and keep your login credentials secure. 2. Service Scope Proofound is a proof-first hiring corridor centered on Proof Packs, public proof portfolios, organization trust pages, and privacy-safe review inside structured assignment flows. 3. Acceptable Use No fraud, impersonation, or misleading submissions. No harassment, abusive content, or unlawful activity. No automated abuse, scraping, or interference with platform security. Respect confidentiality and rights of other",
+      "missing": [],
+      "forbiddenPresent": [],
+      "error": null
+    },
+    {
+      "name": "Reset password page retry",
+      "url": "https://proofound.io/reset-password",
+      "startedAt": "2026-04-27T18:53:20.716Z",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/reset-password",
+      "title": "Reset Password | Proofound",
+      "excerpt": "Skip to main content Reset your password Enter your email address and we'll send you a reset link Email Send reset link ← Back to login",
+      "missing": [],
+      "forbiddenPresent": [],
+      "error": null
+    },
+    {
+      "name": "Signup choice page corrected",
+      "url": "https://proofound.io/signup",
+      "startedAt": "2026-04-27T18:53:21.914Z",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/signup",
+      "title": "Sign Up | Proofound",
+      "excerpt": "Skip to main content Back Join Proofound Choose the account type that fits how you'll use Proofound. Individual For professionals who want a clean proof-based portfolio link they can share today, plus matching as they grow. Continue as Individual → Organization For organizations that need a credible trust page on day 1, then one assignment and a privacy-safe shortlist. Continue as Organization → Already have an account? Sign in By creating an account, you agree to our Terms of Service and Privacy Policy",
+      "missing": [],
+      "forbiddenPresent": [],
+      "error": null
+    },
+    {
+      "name": "Individual signup page retry",
+      "url": "https://proofound.io/signup/individual",
+      "startedAt": "2026-04-27T18:53:23.066Z",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/signup/individual",
+      "title": "Individual Sign Up | Proofound",
+      "excerpt": "Skip to main content Create your individual account Join Proofound and start building credibility. EMAIL ADDRESS PASSWORD CONFIRM PASSWORD I agree to the Privacy Policy and Terms of Service* Send me updates about new features and matching opportunities Create account OR CONTINUE WITH Google LinkedIn Already have an account? Sign in By creating an account, you agree to our Terms of Service and Privacy Policy",
+      "missing": [],
+      "forbiddenPresent": [],
+      "error": null
+    },
+    {
+      "name": "Privacy page retry",
+      "url": "https://proofound.io/privacy",
+      "startedAt": "2026-04-27T18:53:24.375Z",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/privacy",
+      "title": "Privacy Policy | Proofound privacy and consent controls",
+      "excerpt": "Skip to main content Back to Home Privacy Policy Effective date: 2026-02-12 · Version: v1.3.2026-02-12 1. Scope This policy explains how Proofound collects, uses, stores, and protects personal information across account creation, Proof Pack creation, portfolio publication, assignment review, verification, and user rights handling. Processing is performed under applicable privacy laws, including GDPR and ePrivacy rules. 2. Data We Process Account records: email, display name, authentication identifiers. Profile information: expertise, projects, preferences, and verification status. Operational records: moderation reports, consent records, security and audit logs. Optional analytics events: te",
+      "missing": [],
+      "forbiddenPresent": [],
+      "error": null
+    },
+    {
+      "name": "Cookie settings page retry",
+      "url": "https://proofound.io/cookies/settings",
+      "startedAt": "2026-04-27T18:53:25.634Z",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/cookies/settings",
+      "title": "Cookie Settings | Manage Proofound consent preferences",
+      "excerpt": "Skip to main content Return to previous page Proofound Cookie Settings Manage your cookie preferences to control how we collect and use your data. Your choices help us respect your privacy while improving your experience. Your Privacy Matters: We are committed to protecting your data under GDPR regulations. You can change these settings at any time. Essential cookies are required for the site to function and cannot be disabled. Loading preferences... Learn More Essential cookies keep authentication, security protections, and core routing stable. Optional categories are off by default and only enabled after explicit consent. Changes are saved immediately, and you can revisit this page any tim",
+      "missing": [],
+      "forbiddenPresent": [],
+      "error": null
+    },
+    {
+      "name": "Homepage Sign in click confirmed",
+      "startUrl": "https://proofound.io/",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/login",
+      "title": "Sign In | Proofound",
+      "excerpt": "Skip to main content Welcome back Sign in to continue to Proofound EMAIL ADDRESS * PASSWORD * Remember me Forgot password? Sign in OR CONTINUE WITH Google LinkedIn Don't have an account? Create account By signing in, you agree to our Terms of Service and Privacy Policy",
+      "count": 2,
+      "missing": [],
+      "error": null
+    },
+    {
+      "name": "Homepage Request pilot click confirmed",
+      "startUrl": "https://proofound.io/",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/signup/organization",
+      "title": "Organization Sign Up | Proofound",
+      "excerpt": "Skip to main content Create your organization account Join Proofound and start building credibility. EMAIL ADDRESS PASSWORD CONFIRM PASSWORD I agree to the Privacy Policy and Terms of Service* Send me updates about new features and matching opportunities Create organization account OR CONTINUE WITH Google LinkedIn Already have an account? Sign in By creating an account, you agree to our Terms of Service and Privacy Policy",
+      "count": 3,
+      "missing": [],
+      "error": null
+    },
+    {
+      "name": "Homepage Create proof portfolio click confirmed",
+      "startUrl": "https://proofound.io/",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/signup/individual",
+      "title": "Individual Sign Up | Proofound",
+      "excerpt": "Skip to main content Create your individual account Join Proofound and start building credibility. EMAIL ADDRESS PASSWORD CONFIRM PASSWORD I agree to the Privacy Policy and Terms of Service* Send me updates about new features and matching opportunities Create account OR CONTINUE WITH Google LinkedIn Already have an account? Sign in By creating an account, you agree to our Terms of Service and Privacy Policy",
+      "count": 2,
+      "missing": [],
+      "error": null
+    },
+    {
+      "name": "Login Forgot password click confirmed",
+      "startUrl": "https://proofound.io/login",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/reset-password",
+      "title": "Reset Password | Proofound",
+      "excerpt": "Skip to main content Reset your password Enter your email address and we'll send you a reset link Email Send reset link ← Back to login",
+      "count": 1,
+      "missing": [],
+      "error": null
+    },
+    {
+      "name": "Login Create account click confirmed",
+      "startUrl": "https://proofound.io/login",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/signup",
+      "title": "Sign Up | Proofound",
+      "excerpt": "Skip to main content Back Join Proofound Choose the account type that fits how you'll use Proofound. Individual For professionals who want a clean proof-based portfolio link they can share today, plus matching as they grow. Continue as Individual → Organization For organizations that need a credible trust page on day 1, then one assignment and a privacy-safe shortlist. Continue as Organization → Already have an account? Sign in By creating an acc",
+      "count": 1,
+      "missing": [],
+      "error": null
+    },
+    {
+      "name": "Signup Individual branch content rendered",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/signup",
+      "note": "Branch click renders the individual account form in place on /signup.",
+      "evidence": "Create your individual account"
+    },
+    {
+      "name": "Signup Organization branch content rendered",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/signup",
+      "note": "Branch click renders the organization account form in place on /signup.",
+      "evidence": "Create your organization account"
+    },
+    {
+      "name": "Public org trust portfolio",
+      "url": "https://proofound.io/portfolio/org/proofound-labs",
+      "startedAt": "2026-04-27T18:58:04.225Z",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/portfolio/org/proofound-labs",
+      "title": "Proofound organization portfolio",
+      "excerpt": "Skip to main content Proofound Labs Shareable by direct link Public organization trust card Build proof-first hiring infrastructure that helps organizations review real work without widening privacy or identity risk. Return home Copy share link Website MISSION / PURPOSE Build proof-first hiring infrastructure that helps organizations review real work without widening privacy or identity risk. WHAT WORK IS OFFERED WORK OFFERED Founding product engineer ENGAGEMENT Not published Turn trustworthy review rules into shipped product behavior without weakening blind review or proof-first evaluation. ASSIGNMENT CLARITY Turn trustworthy review rules into shipped product behavior without weakening blin",
+      "missing": [],
+      "forbiddenPresent": [],
+      "error": null
+    },
+    {
+      "name": "Unauthenticated org JSON export is protected",
+      "url": "https://proofound.io/api/portfolio/org/proofound-labs/export?format=json",
+      "startedAt": "2026-04-27T18:58:15.598Z",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/api/portfolio/org/proofound-labs/export?format=json",
+      "title": "proofound.io/api/portfolio/org/proofound-labs/export?format=json",
+      "excerpt": "{\"error\":\"Forbidden\"}",
+      "missing": [],
+      "forbiddenPresent": [],
+      "error": null
+    },
+    {
+      "name": "Authenticated org overview",
+      "url": "https://proofound.io/app/o/greengrid-energy/home",
+      "startedAt": "2026-04-27T18:59:00.881Z",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/app/o/greengrid-energy/home",
+      "title": "Proofound - Focus on what matters",
+      "excerpt": "Skip to main content Overview Assignments & Matches Trust Profile Public Trust Profile Proofound Overview GE Organization review cockpit GreenGrid Energy A focused launch desk for one clean hiring corridor: compose the trust profile, define one proof-led assignment, and review candidates through privacy-safe summaries. Complete trust profile Corridor Queue High GreenGrid Energy Trust profile · Add the basics once. Review stays locked until trust is clear. 33% Next Proof expectations One assignment path · This opens after the trust profile has enough context. Needs trust Guarded Privacy-safe summaries Match review · No candidate review starts until the corridor is ready. Locked Launch Summary",
+      "missing": [],
+      "forbiddenPresent": [],
+      "error": null
+    },
+    {
+      "name": "Authenticated org trust profile",
+      "url": "https://proofound.io/app/o/greengrid-energy/profile",
+      "startedAt": "2026-04-27T18:59:02.152Z",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/app/o/greengrid-energy/profile",
+      "title": "Proofound - Focus on what matters",
+      "excerpt": "Skip to main content Overview Assignments & Matches Trust Profile Public Trust Profile Proofound Profile GE Organization trust profile This is the launch-facing org profile used to support one assignment path and a clean review queue. Editable Keep this page limited to the calm trust story that supports one clear assignment corridor. Culture hubs, governance showcases, and other org-suite surfaces stay outside the MVP. Organization name GreenGrid Energy Why work matters Add a short reason this work matters. Mission Scale low-carbon grid infra with secure systems Domain path Needs verified domain signal. Launch corridor Trust basics ready: 2/4 Trust profile Mission, why the work matters, veri",
+      "missing": [],
+      "forbiddenPresent": [],
+      "error": null
+    },
+    {
+      "name": "Authenticated new assignment guard",
+      "url": "https://proofound.io/app/o/greengrid-energy/assignments/new",
+      "startedAt": "2026-04-27T18:59:03.270Z",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/app/o/greengrid-energy/assignments/new",
+      "title": "Proofound - Focus on what matters",
+      "excerpt": "Skip to main content Overview Assignments & Matches Trust Profile Public Trust Profile Proofound Assignments GE Lean assignment corridor This builder stays narrow on purpose: one structured assignment, then internal review before publish. 1 Why this role exists Purpose and value 2 What work will actually be done Responsibilities and outcomes 3 What proof would count Evidence and skills 4 What practical constraints are real Logistics and timing 5 Internal review and publish Review before publish Step 1: Why this role exists Step 1 of 5 Explain why the organization is opening this role now and what real value it needs to create. Title * Engagement type * Role purpose * Keep this specific. Publ",
+      "missing": [],
+      "forbiddenPresent": [],
+      "error": null
+    },
+    {
+      "name": "Authenticated org matching corridor final wait",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/app/o/greengrid-energy/matching",
+      "title": "Proofound - Focus on what matters",
+      "excerpt": "Skip to main content Overview Assignments & Matches Trust Profile Public Trust Profile Proofound Matching GE Matching Find proof-backed candidates aligned with your assignment needs New Assignment Security Advisor Sprint Created: 12/4/2025 active View / Edit Production Browser QA Climate Ops Lead Created: 4/24/2026 draft View / Edit Matches Security Advisor Sprint — active Preparing proof-backed matches for this assignment..."
+    },
+    {
+      "name": "Authenticated public trust profile navigation renders public card",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/portfolio/org/greengrid-energy?returnTo=%2Fapp%2Fo%2Fgreengrid-energy%2Fhome",
+      "evidence": "GreenGrid Energy public organization trust card rendered with direct-link sharing and no app error."
+    },
+    {
+      "name": "Accept invite missing token safe state",
+      "url": "https://proofound.io/accept-invite",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/accept-invite",
+      "title": "Proofound - Focus on what matters",
+      "excerpt": "Skip to main content Invite link is invalid This invite link is missing a token. Ask the organization to resend it.",
+      "missing": [],
+      "forbiddenPresent": [],
+      "error": null
+    },
+    {
+      "name": "Feedback invalid token safe state",
+      "url": "https://proofound.io/feedback/not-a-real-token",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/feedback/not-a-real-token",
+      "title": "Proofound - Focus on what matters",
+      "excerpt": "Skip to main content Page not found The page you're looking for doesn't exist or has been moved. Return home",
+      "missing": [],
+      "forbiddenPresent": [],
+      "error": null
+    },
+    {
+      "name": "Candidate invite invalid token final state",
+      "url": "https://proofound.io/candidate-invite/not-a-real-token",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/candidate-invite/not-a-real-token",
+      "title": "Proofound - Focus on what matters",
+      "excerpt": "Skip to main content Invitation unavailable This invitation could not be found. Ask the company to send a new invite if needed."
+    },
+    {
+      "name": "Custom verification invalid token final state",
+      "url": "https://proofound.io/verify/custom/not-a-real-token",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/verify/custom/not-a-real-token",
+      "title": "Proofound - Focus on what matters",
+      "excerpt": "Skip to main content Unable to Load Request Invalid verification token Go to Homepage"
+    },
+    {
+      "name": "Admin home denies non-admin safely",
+      "url": "https://proofound.io/admin",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/403",
+      "title": "Proofound - Focus on what matters",
+      "excerpt": "Skip to main content 403 Access Forbidden You don't have permission to access this page. This area is restricted to authorized personnel only. Go to OverviewGo to Home If you believe you should have access to this page, please contact your administrator.",
+      "missing": [],
+      "forbiddenPresent": [],
+      "error": null
+    },
+    {
+      "name": "Admin verification denies non-admin safely",
+      "url": "https://proofound.io/admin/verification",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/403",
+      "title": "Proofound - Focus on what matters",
+      "excerpt": "Skip to main content 403 Access Forbidden You don't have permission to access this page. This area is restricted to authorized personnel only. Go to OverviewGo to Home If you believe you should have access to this page, please contact your administrator.",
+      "missing": [],
+      "forbiddenPresent": [],
+      "error": null
+    },
+    {
+      "name": "Admin audit denies non-admin safely",
+      "url": "https://proofound.io/admin/audit",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/403",
+      "title": "Proofound - Focus on what matters",
+      "excerpt": "Skip to main content 403 Access Forbidden You don't have permission to access this page. This area is restricted to authorized personnel only. Go to OverviewGo to Home If you believe you should have access to this page, please contact your administrator.",
+      "missing": [],
+      "forbiddenPresent": [],
+      "error": null
+    },
+    {
+      "name": "Final launch status refresh after manual sweep",
+      "url": "https://proofound.io/api/monitoring/launch-status",
+      "status": "PASS",
+      "finalUrl": "https://proofound.io/api/monitoring/launch-status",
+      "title": "proofound.io/api/monitoring/launch-status",
+      "excerpt": "{\"ok\":true,\"readinessState\":\"ready\",\"generatedAt\":\"2026-04-27T19:01:38.231Z\",\"source\":\"live\",\"evidence\":{\"source\":\"live\",\"artifactPath\":\".artifacts/launch-smoke-report.json\",\"smokeArtifactSchemaVersion\":null,\"smokeArtifactGeneratedAt\":null,\"smokeArtifactAgeMinutes\":null,\"smokeFreshnessThresholdMinutes\":60,\"smokeFreshnessState\":\"fresh\",\"smokeEvidenceSource\":\"db\",\"persisted\":false},\"freshness\":{\"evaluatedAt\":\"2026-04-27T19:01:38.231Z\",\"smokeArtifactGeneratedAt\":null,\"smokeArtifactAgeMinutes\":null,\"smokeFreshnessThresholdMinutes\":60,\"smokeFreshnessState\":\"fresh\"},\"liveRefresh\":{\"attempted\":true,\"refreshedMonitorKeys\":[\"api_health\"],\"recoveredMon",
+      "missing": [],
+      "forbiddenPresent": [],
+      "error": null
+    }
+  ],
+  "notes": [
+    "Authenticated organization checks used the existing signed-in in-app browser session for GreenGrid Energy and were read-only.",
+    "No forms were submitted, no collaborator invites were sent, no credentials were entered, and no destructive/admin actions were attempted.",
+    "Full credentialed account creation, payment/billing if any, and email-link acceptance with real tokens were not manually executed because they would create or transmit data; production smoke/e2e evidence covers the strict authenticated corridor."
+  ]
+}

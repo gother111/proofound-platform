@@ -1,0 +1,44 @@
+{
+  "generatedAt": "2026-04-27T18:38:09.502Z",
+  "status": "PASS",
+  "sourceCheckpoint": {
+    "createdAt": "2026-04-27T18:29:31.405Z",
+    "tablesAudited": 11,
+    "rawDumpLocation": "temporary /tmp path removed after verification"
+  },
+  "restoreTarget": {
+    "kind": "isolated local PostgreSQL 17 recovery target",
+    "databaseName": "proofound_restore_drill_20260427",
+    "networkExposure": "local socket only"
+  },
+  "verification": {
+    "command": "DB_RESTORE_VERIFY_SSL=disable npm run db:restore:verify -- --checkpoint <temporary-checkpoint-dir> --out /tmp/proofound-restore-report-20260427.raw.json",
+    "allComparisonsOk": true,
+    "rowCountsMatched": true,
+    "maxTimestampsMatched": true,
+    "criticalTablesAudited": [
+      "profiles",
+      "organizations",
+      "assignments",
+      "interviews",
+      "conversations",
+      "messages",
+      "analytics_events",
+      "fairness_notes",
+      "verification_requests",
+      "user_video_integrations",
+      "decision_reminders"
+    ]
+  },
+  "localCompatibilityNotes": [
+    "Production PostgreSQL is version 17; PostgreSQL 17 client tooling was installed locally for compatible dumps.",
+    "The isolated local restore target used a local-compatible schema where vector columns were represented as text because pgvector is not installed locally.",
+    "The launch restore gate verifies critical table existence, row counts, and latest timestamp fingerprints; raw table dumps were not saved in the repository."
+  ],
+  "redaction": {
+    "rawRowsSavedInRepository": false,
+    "connectionStringsSavedInRepository": false,
+    "rowCountsSavedInRepository": false,
+    "timestampsSavedInRepository": false
+  }
+}

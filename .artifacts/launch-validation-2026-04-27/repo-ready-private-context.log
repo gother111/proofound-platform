@@ -1,0 +1,32 @@
+> test
+> vitest run tests/ui/profile-dialogs-edit-routing.test.tsx tests/ui/education-form-skill-picker.test.tsx tests/actions/onboarding-private-context-scaffolding.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+ ✓ tests/ui/profile-dialogs-edit-routing.test.tsx  (1 test) 49ms
+ ✓ tests/ui/education-form-skill-picker.test.tsx  (2 tests) 98ms
+ ✓ tests/actions/onboarding-private-context-scaffolding.test.ts  (3 tests) 5ms
+
+ Test Files  3 passed (3)
+      Tests  6 passed (6)
+   Start at  19:46:54
+   Duration  1.19s (transform 232ms, setup 311ms, collect 441ms, tests 152ms, environment 698ms, prepare 196ms)
+
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+(node:49739) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:49739) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:49739) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)

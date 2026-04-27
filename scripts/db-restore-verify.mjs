@@ -17,6 +17,14 @@ function readArg(flag) {
   return args[idx + 1] ?? null;
 }
 
+function normalizeTimestamp(value) {
+  if (value == null) return null;
+  if (value instanceof Date) return value.toISOString();
+  const parsed = new Date(value);
+  if (!Number.isNaN(parsed.getTime())) return parsed.toISOString();
+  return String(value);
+}
+
 async function main() {
   const checkpointDir = readArg('--checkpoint');
   const outPath = readArg('--out') ?? null;
@@ -38,7 +46,10 @@ async function main() {
 
   const client = new Client({
     connectionString: databaseUrl,
-    ssl: { rejectUnauthorized: false },
+    ssl:
+      process.env.DB_RESTORE_VERIFY_SSL === 'disable'
+        ? false
+        : { rejectUnauthorized: false },
   });
   await client.connect();
   const actual = await collectCheckpointFingerprint(client);
@@ -47,15 +58,17 @@ async function main() {
   const comparisons = expectedFingerprint.map((expectedRow) => {
     const actualRow = actual.fingerprint.find((row) => row.table === expectedRow.table) ?? null;
     const rowCountMatches = actualRow?.rowCount === expectedRow.rowCount;
-    const timestampMatches = actualRow?.maxTimestamp === expectedRow.maxTimestamp;
+    const expectedTimestamp = normalizeTimestamp(expectedRow.maxTimestamp);
+    const actualTimestamp = normalizeTimestamp(actualRow?.maxTimestamp);
+    const timestampMatches = actualTimestamp === expectedTimestamp;
     return {
       table: expectedRow.table,
       existsExpected: expectedRow.exists,
       existsActual: actualRow?.exists ?? false,
       rowCountExpected: expectedRow.rowCount ?? null,
       rowCountActual: actualRow?.rowCount ?? null,
-      maxTimestampExpected: expectedRow.maxTimestamp ?? null,
-      maxTimestampActual: actualRow?.maxTimestamp ?? null,
+      maxTimestampExpected: expectedTimestamp,
+      maxTimestampActual: actualTimestamp,
       rowCountMatches,
       timestampMatches,
       ok:

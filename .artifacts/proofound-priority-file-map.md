@@ -87,12 +87,10 @@ This map narrows the repo to the files most worth loading first for the current 
   - Admin queue surface that still depends on runtime queue persistence.
 
 <!-- final-launch-checklist:start -->
-
 - `.artifacts/launch-validation-YYYY-MM-DD/final-launch-checklist-status.md`
   - Operational Section 12 checklist with evidence-backed PASS / FAIL / BLOCKED / UNVERIFIED rows.
 - `.artifacts/launch-validation-YYYY-MM-DD/final-launch-checklist-status.json`
   - Machine-readable bundle for the same checklist run.
 
-Current generated paths: `.artifacts/launch-validation-2026-04-24/final-launch-checklist-status.md`, `.artifacts/launch-validation-2026-04-24/final-launch-checklist-status.json`
-
+Current generated paths: `.artifacts/launch-validation-2026-04-27/final-launch-checklist-status.md`, `.artifacts/launch-validation-2026-04-27/final-launch-checklist-status.json`
 <!-- final-launch-checklist:end -->

@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 2,
+  "scope": "repo",
+  "generatedAt": "2026-04-27T17:47:20.544Z",
+  "targetBaseUrl": "http://127.0.0.1:50422",
+  "executionMode": "local",
+  "freshnessThresholdMinutes": 60,
+  "expiresAt": "2026-04-27T18:47:20.544Z",
+  "overallStatus": "pass",
+  "corridors": [
+    {
+      "id": "individual",
+      "label": "Individual corridor",
+      "status": "pass",
+      "checkIds": [
+        "public_individual_portfolio_visible",
+        "proof_creation_case"
+      ],
+      "generatedAt": "2026-04-27T17:47:20.544Z"
+    },
+    {
+      "id": "organization",
+      "label": "Organization corridor",
+      "status": "pass",
+      "checkIds": [
+        "public_org_trust_fixture_live"
+      ],
+      "generatedAt": "2026-04-27T17:47:20.544Z"
+    },
+    {
+      "id": "trust_privacy",
+      "label": "Trust / privacy corridor",
+      "status": "pass",
+      "checkIds": [
+        "hidden_portfolio_protected",
+        "privacy_no_leak_case"
+      ],
+      "generatedAt": "2026-04-27T17:47:20.544Z"
+    }
+  ],
+  "checks": [
+    {
+      "id": "public_individual_portfolio_visible",
+      "corridor": "individual",
+      "label": "Public individual portfolio visible case",
+      "runner": {
+        "kind": "vitest",
+        "label": "vitest",
+        "testFiles": [
+          "tests/ui/public-portfolio-access-consistency.test.tsx"
+        ]
+      },
+      "status": "pass",
+      "expectedState": "public_individual_portfolio_visible",
+      "durationMs": 1948,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops\n\n ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 75ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  19:47:03\n   Duration  1.06s (transform 115ms, setup 102ms, collect 178ms, tests 75ms, environment 199ms, prepare 60ms)\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`\n(node:51973) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
+      "generatedAt": "2026-04-27T17:47:04.720Z"
+    },
+    {
+      "id": "proof_creation_case",
+      "corridor": "individual",
+      "label": "Proof creation case",
+      "runner": {
+        "kind": "vitest",
+        "label": "vitest",
+        "testFiles": [
+          "tests/api/expertise-user-skill-proofs-route.test.ts"
+        ]
+      },
+      "status": "pass",
+      "expectedState": "proof_creation_case_live",
+      "durationMs": 1693,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  override existing env vars with { override: true }\n\n ✓ tests/api/expertise-user-skill-proofs-route.test.ts  (4 tests) 14ms\n\n Test Files  1 passed (1)\n      Tests  4 passed (4)\n   Start at  19:47:05\n   Duration  880ms (transform 67ms, setup 110ms, collect 57ms, tests 14ms, environment 199ms, prepare 43ms)\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`\n(node:52032) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
+      "generatedAt": "2026-04-27T17:47:06.414Z"
+    },
+    {
+      "id": "public_org_trust_fixture_live",
+      "corridor": "organization",
+      "label": "Seeded public org trust fixture live",
+      "runner": {
+        "kind": "command",
+        "label": "seeded_public_org_trust_smoke",
+        "preCommands": [
+          {
+            "label": "seed_public_org_trust_fixture",
+            "command": [
+              "npm",
+              "run",
+              "seed:public-org-trust-fixture"
+            ]
+          }
+        ],
+        "command": [
+          "npm",
+          "run",
+          "test:e2e:org-trust:smoke"
+        ]
+      },
+      "status": "pass",
+      "expectedState": "public_org_trust_fixture_live",
+      "durationMs": 9942,
+      "outputSnippet": "[seed_public_org_trust_fixture]\n> seed:public-org-trust-fixture\n> tsx scripts/seed-public-org-trust-fixture.ts\n\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }\n{\n  \"ok\": true,\n  \"mode\": \"seeded\",\n  \"slug\": \"proofound-labs\",\n  \"path\": \"/portfolio/org/proofound-labs\",\n  \"publicationState\": \"public_noindex\",\n  \"seededAt\": \"2026-04-27T17:47:07.086Z\",\n  \"verificationUrl\": null,\n  \"verifiedAt\": null,\n  \"httpStatus\": null\n}\n\n(node:52089) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n\n[seeded_public_org_trust_smoke]\n> test:e2e:org-trust:smoke\n> node ./scripts/playwright-node20.mjs test e2e/public-org-trust.smoke.spec.ts --project=chromium --reporter=line --workers=1\n\n\nRunning 1 test using 1 worker\n\n\u001b[1A\u001b[2K[1/1] [chromium] › e2e/public-org-trust.smoke.spec.ts:44:3 › Seeded public org trust smoke › seeded org trust page returns 200 and stays MVP-safe\n\u001b[1A\u001b[2K  1 passed (5.8s)",
+      "generatedAt": "2026-04-27T17:47:16.356Z",
+      "evidence": {
+        "fixtureSlug": "proofound-labs",
+        "fixturePath": "/portfolio/org/proofound-labs"
+      }
+    },
+    {
+      "id": "hidden_portfolio_protected",
+      "corridor": "trust_privacy",
+      "label": "Hidden portfolio protected case",
+      "runner": {
+        "kind": "vitest",
+        "label": "vitest",
+        "testFiles": [
+          "tests/ui/public-portfolio-access-consistency.test.tsx"
+        ]
+      },
+      "status": "pass",
+      "expectedState": "hidden_portfolio_protected",
+      "durationMs": 1887,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops\n\n ✓ tests/ui/public-portfolio-access-consistency.test.tsx  (2 tests) 78ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  19:47:17\n   Duration  955ms (transform 117ms, setup 103ms, collect 180ms, tests 78ms, environment 201ms, prepare 42ms)\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`\n(node:52470) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)",
+      "generatedAt": "2026-04-27T17:47:18.243Z"
+    },
+    {
+      "id": "privacy_no_leak_case",
+      "corridor": "trust_privacy",
+      "label": "Privacy no-leak case",
+      "runner": {
+        "kind": "vitest",
+        "label": "vitest",
+        "testFiles": [
+          "tests/api/org-match-review-route.test.ts",
+          "tests/lib/effective-visibility.test.ts",
+          "tests/api/conversation-reveal-route.test.ts"
+        ]
+      },
+      "status": "pass",
+      "expectedState": "privacy_no_leak_enforced",
+      "durationMs": 2301,
+      "outputSnippet": "RUN  v1.6.1 /Users/yuriibakurov/proofound\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild\n\nstdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)\n[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`\n\n ✓ tests/lib/effective-visibility.test.ts  (5 tests) 2ms\n ✓ tests/api/org-match-review-route.test.ts  (12 tests) 26ms\n ✓ tests/api/conversation-reveal-route.test.ts  (4 tests) 11ms\n\n Test Files  3 passed (3)\n      Tests  21 passed (21)\n   Start at  19:47:19\n   Duration  1.34s (transform 224ms, setup 361ms, collect 824ms, tests 39ms, environment 622ms, prepare 161ms)\n\n\n[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`\n(node:52960) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)\n(node:52960) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)\n(node:52960) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)\nstderr | tests/api/org-match-review-route.test.ts > POST /api/org/[id]/matches/[matchId]/review > keeps shortlist updates live when fairness persistence fails\norg review fairness persistence failed {\n  matchId: 'match-1',\n  assignmentId: 'assignment-1',\n  error: 'fairness insert failed'\n}",
+      "generatedAt": "2026-04-27T17:47:20.544Z"
+    }
+  ]
+}

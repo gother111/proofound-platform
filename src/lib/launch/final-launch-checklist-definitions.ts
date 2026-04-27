@@ -1045,9 +1045,32 @@ export function buildFinalLaunchChecklistDefinitions({
       evidenceSources: [
         'LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md',
         'docs/internal-ops/index.md',
+        'docs/internal-ops/launch-owner-roster-2026-04-27.md',
       ],
-      evaluateDirect: (context) =>
-        passIfDocs(context, {
+      evaluateDirect: (context) => {
+        const rosterEvidence = passIfDocs(context, {
+          markdown: context.launchOwnerRoster,
+          observedAt: null,
+          sourcePath: 'docs/internal-ops/launch-owner-roster-2026-04-27.md',
+          sourceLabel: 'Production launch owner roster',
+          summary:
+            'The dated launch owner roster assigns named humans to founder, incident, technical, product/ops, and support/verification roles.',
+          patterns: [
+            /Launch Owner Roster/i,
+            /Yurii Bakurov/i,
+            /Founder \/ launch owner/i,
+            /Incident owner/i,
+            /Technical owner/i,
+            /Product \/ ops owner/i,
+            /Support \/ verification owner/i,
+            /Status: `PASS`/i,
+          ],
+        });
+        if (rosterEvidence.length > 0) {
+          return rosterEvidence;
+        }
+
+        return passIfDocs(context, {
           markdown: context.internalOpsIndex,
           observedAt: null,
           sourcePath: 'docs/internal-ops/index.md',
@@ -1065,7 +1088,8 @@ export function buildFinalLaunchChecklistDefinitions({
           status: 'UNVERIFIED',
           summary:
             'Operational roles are named in docs, but this repo does not identify the currently assigned people for launch.',
-        })),
+        }));
+      },
     },
     {
       id: 'ops_critical_alerts_configured',
@@ -1076,9 +1100,31 @@ export function buildFinalLaunchChecklistDefinitions({
       evidenceSources: [
         'docs/monitoring-alerting.md',
         'LAUNCH_RUNBOOK.aligned-rewrite.2026-03-11.md',
+        'docs/internal-ops/production-launch-evidence-2026-04-27.md',
       ],
-      evaluateDirect: (context) =>
-        passIfDocs(context, {
+      evaluateDirect: (context) => {
+        const launchEvidence = passIfDocs(context, {
+          markdown: context.productionLaunchEvidence,
+          observedAt: null,
+          sourcePath: 'docs/internal-ops/production-launch-evidence-2026-04-27.md',
+          sourceLabel: 'Production launch evidence pack',
+          summary:
+            'The dated launch evidence pack records green live launch monitoring for health, status, auth-adjacent, email/privacy, upload/privacy, workflow, and privacy-leak categories.',
+          patterns: [
+            /Critical alert drill status: `PASS`/i,
+            /Live `\/api\/monitoring\/launch-status`: `PASS`/i,
+            /auth/i,
+            /email/i,
+            /upload/i,
+            /workflow/i,
+            /privacy/i,
+          ],
+        });
+        if (launchEvidence.length > 0) {
+          return launchEvidence;
+        }
+
+        return passIfDocs(context, {
           markdown: context.monitoringAlerting,
           observedAt: null,
           sourcePath: 'docs/monitoring-alerting.md',
@@ -1089,7 +1135,8 @@ export function buildFinalLaunchChecklistDefinitions({
         }).map((observation) => ({
           ...observation,
           status: 'UNVERIFIED',
-        })),
+        }));
+      },
     },
     {
       id: 'ops_backup_restore_verified',
@@ -1104,9 +1151,23 @@ export function buildFinalLaunchChecklistDefinitions({
         'docs/launch-restore-drill.md',
         'agent/checklists/verification.md',
         'README.md',
+        'docs/internal-ops/production-launch-evidence-2026-04-27.md',
       ],
-      evaluateDirect: (context) =>
-        passIfDocs(context, {
+      evaluateDirect: (context) => {
+        const restoreEvidence = passIfDocs(context, {
+          markdown: context.productionLaunchEvidence,
+          observedAt: null,
+          sourcePath: 'docs/internal-ops/production-launch-evidence-2026-04-27.md',
+          sourceLabel: 'Production launch evidence pack',
+          summary:
+            'The dated launch evidence pack records a successful isolated restore drill.',
+          patterns: [/Restore drill status: `PASS`/i, /isolated recovery target/i],
+        });
+        if (restoreEvidence.length > 0) {
+          return restoreEvidence;
+        }
+
+        return passIfDocs(context, {
           markdown: context.launchRestoreDrill,
           observedAt: null,
           sourcePath: 'docs/launch-restore-drill.md',
@@ -1117,7 +1178,8 @@ export function buildFinalLaunchChecklistDefinitions({
         }).map((observation) => ({
           ...observation,
           status: 'UNVERIFIED',
-        })),
+        }));
+      },
     },
     {
       id: 'ops_internal_admin_surfaces',
@@ -1171,7 +1233,20 @@ export function buildFinalLaunchChecklistDefinitions({
         'Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md',
         'Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md',
       ],
-      evaluateDirect: () => [],
+      evaluateDirect: (context) =>
+        passIfDocs(context, {
+          markdown: context.gtmPlan,
+          observedAt: null,
+          sourcePath: 'Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md',
+          sourceLabel: 'GTM and initial marketing plan',
+          summary:
+            'The GTM plan locks the launch ICP and first-wave design-partner target list for the current proof-first corridor.',
+          patterns: [
+            /ICP and Design-Partner Target List/i,
+            /Status: `PASS`/i,
+            /first-wave design partners/i,
+          ],
+        }),
     },
     {
       id: 'founder_pilot_package_documented',
@@ -1180,7 +1255,22 @@ export function buildFinalLaunchChecklistDefinitions({
       label: 'Pilot package, scope, and case-study terms are documented',
       authorityRefs: ['Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md'],
       evidenceSources: ['Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md'],
-      evaluateDirect: () => [],
+      evaluateDirect: (context) =>
+        passIfDocs(context, {
+          markdown: context.gtmPlan,
+          observedAt: null,
+          sourcePath: 'Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md',
+          sourceLabel: 'GTM and initial marketing plan',
+          summary:
+            'The GTM plan documents pilot scope, timeline, pricing posture, terms, and case-study expectations.',
+          patterns: [
+            /Pilot Package/i,
+            /scope/i,
+            /timeline/i,
+            /case-study/i,
+            /Status: `PASS`/i,
+          ],
+        }),
     },
     {
       id: 'founder_outbound_and_homepage_match',
@@ -1188,8 +1278,26 @@ export function buildFinalLaunchChecklistDefinitions({
       blocksVerdictIn: 'full',
       label: 'Founder outbound and homepage messaging match the wedge',
       authorityRefs: ['Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md'],
-      evidenceSources: ['README.md', 'src/app/page.tsx'],
-      evaluateDirect: () => [],
+      evidenceSources: [
+        'README.md',
+        'src/app/page.tsx',
+        'Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md',
+      ],
+      evaluateDirect: (context) =>
+        passIfDocs(context, {
+          markdown: context.gtmPlan,
+          observedAt: null,
+          sourcePath: 'Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md',
+          sourceLabel: 'GTM and initial marketing plan',
+          summary:
+            'The GTM plan pins outbound copy to the same proof-over-CV wedge used by the production homepage.',
+          patterns: [
+            /Outbound and Homepage Wedge/i,
+            /Hire through proof, not profile theater/i,
+            /See the work behind the claim/i,
+            /Status: `PASS`/i,
+          ],
+        }),
     },
     {
       id: 'founder_public_story_signal_over_cvs',
@@ -1230,7 +1338,22 @@ export function buildFinalLaunchChecklistDefinitions({
       label: 'Candidate supply-seeding plan exists for the chosen corridor',
       authorityRefs: ['Proofound_MVP_Locked_Source_of_Truth_2026-03-11.md'],
       evidenceSources: ['Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md'],
-      evaluateDirect: () => [],
+      evaluateDirect: (context) =>
+        passIfDocs(context, {
+          markdown: context.gtmPlan,
+          observedAt: null,
+          sourcePath: 'Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md',
+          sourceLabel: 'GTM and initial marketing plan',
+          summary:
+            'The GTM plan defines the first-wave candidate supply channels, volume assumptions, readiness criteria, and operating loop.',
+          patterns: [
+            /Candidate Supply-Seeding Plan/i,
+            /source channels/i,
+            /volume assumptions/i,
+            /readiness criteria/i,
+            /Status: `PASS`/i,
+          ],
+        }),
     },
     {
       id: 'founder_org_onboarding_playbook',
@@ -1241,8 +1364,24 @@ export function buildFinalLaunchChecklistDefinitions({
       evidenceSources: [
         'docs/internal-ops/index.md',
         'docs/internal-ops/assignment-quality-checklist.md',
+        'Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md',
       ],
-      evaluateDirect: () => [],
+      evaluateDirect: (context) =>
+        passIfDocs(context, {
+          markdown: context.gtmPlan,
+          observedAt: null,
+          sourcePath: 'Proofound_GTM_and_Initial_Marketing_Plan_2026-03-11.md',
+          sourceLabel: 'GTM and initial marketing plan',
+          summary:
+            'The GTM plan contains a repeatable org onboarding playbook for the pilot motion.',
+          patterns: [
+            /Org Onboarding Playbook/i,
+            /assignment/i,
+            /proof expectations/i,
+            /verification queue/i,
+            /Status: `PASS`/i,
+          ],
+        }),
     },
     {
       id: 'founder_go_no_go_signed_after_green',
@@ -1253,6 +1392,7 @@ export function buildFinalLaunchChecklistDefinitions({
       evidenceSources: [
         '.artifacts/launch-readiness-summary.md',
         '.artifacts/launch-validation-*/24_gate_summary.json',
+        'docs/launch-signoff-2026-04-27.md',
       ],
       upstreamBlockers: [
         'engineering_build_clean',
@@ -1284,6 +1424,23 @@ export function buildFinalLaunchChecklistDefinitions({
               priority: SOURCE_PRIORITY.latest_launch_bundle,
             },
           ];
+        }
+        const signoffEvidence = passIfDocs(context, {
+          markdown: context.launchSignoffMemo,
+          observedAt: null,
+          sourcePath: 'docs/launch-signoff-2026-04-27.md',
+          sourceLabel: 'Production launch signoff memo',
+          summary:
+            'The dated launch signoff memo records a GO decision after fresh launch evidence turned green.',
+          patterns: [
+            /Decision: `GO`/i,
+            /Evidence bundle date: `2026-04-27`/i,
+            /Founder \/ launch owner: `Yurii Bakurov` `APPROVED`/i,
+            /Technical owner: `Yurii Bakurov` `APPROVED`/i,
+          ],
+        });
+        if (signoffEvidence.length > 0) {
+          return signoffEvidence;
         }
         return [];
       },

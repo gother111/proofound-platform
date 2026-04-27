@@ -1,0 +1,26 @@
+> test
+> vitest run tests/api/launch-surface-inventory.test.ts tests/api/launch-page-inventory.test.ts
+
+
+ RUN  v1.6.1 /Users/yuriibakurov/proofound
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+stdout | _log (/Users/yuriibakurov/proofound/node_modules/dotenv/lib/main.js:142:11)
+[dotenv@17.2.3] injecting env (40) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+ ✓ tests/api/launch-surface-inventory.test.ts  (4 tests) 54ms
+ ✓ tests/api/launch-page-inventory.test.ts  (5 tests) 102ms
+
+ Test Files  2 passed (2)
+      Tests  9 passed (9)
+   Start at  19:46:51
+   Duration  1.42s (transform 60ms, setup 438ms, collect 52ms, tests 156ms, environment 842ms, prepare 138ms)
+
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+(node:49459) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:49459) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)

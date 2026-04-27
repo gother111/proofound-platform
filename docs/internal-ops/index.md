@@ -1,5 +1,5 @@
 > Doc Class: `active`
-> Last Verified: `2026-03-25`
+> Last Verified: `2026-04-27`
 
 # Internal Ops SOP Index
 
@@ -16,6 +16,14 @@ Scope guard:
 - `Support / verification lead`
 - `Product / ops lead`
 - `Engineering on-call`
+
+Named launch owner roster:
+
+- [launch-owner-roster-2026-04-27.md](./launch-owner-roster-2026-04-27.md)
+
+Current production launch evidence:
+
+- [production-launch-evidence-2026-04-27.md](./production-launch-evidence-2026-04-27.md)
 
 ## Doc list
 
