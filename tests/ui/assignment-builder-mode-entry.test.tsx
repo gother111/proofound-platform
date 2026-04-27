@@ -101,6 +101,7 @@ function setupFetch({ draftAssignment = null }: FetchFixture = {}) {
             id: mockDraftId || 'draft-1',
             orgId: 'org-1',
             status: requestBody.status,
+            creationStatus: requestBody.creationStatus,
           },
         }),
       };
@@ -273,6 +274,7 @@ describe('Assignment builder lean corridor', () => {
         id: 'active-1',
         orgId: 'org-1',
         status: 'active',
+        creationStatus: 'review_ready',
         role: 'Published operator',
         businessValue: 'Keep the live assignment available while editing.',
         description: 'Coordinate a published assignment.',
@@ -292,7 +294,10 @@ describe('Assignment builder lean corridor', () => {
         ([url, init]) => url === '/api/assignments/active-1' && init?.method === 'PUT'
       );
       expect(updateCall).toBeTruthy();
-      expect(JSON.parse(String(updateCall?.[1]?.body))).toMatchObject({ status: 'active' });
+      expect(JSON.parse(String(updateCall?.[1]?.body))).toMatchObject({
+        status: 'active',
+        creationStatus: 'review_ready',
+      });
     });
   });
 
