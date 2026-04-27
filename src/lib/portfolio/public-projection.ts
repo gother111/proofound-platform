@@ -1069,12 +1069,22 @@ async function loadPublicOrganizationAssignmentSnapshot(
     FROM assignment_outcomes
     WHERE assignment_id = ${assignment.id}::uuid
     ORDER BY created_at ASC
-    LIMIT 3
+    LIMIT 12
   `);
 
+  const seenOutcomes = new Set<string>();
   const outcomes = getRows<OrganizationAssignmentOutcomeRow>(outcomeResult as any)
     .map((row) => row.title?.trim() || row.description?.trim() || '')
-    .filter((value) => value.length > 0);
+    .filter((value) => {
+      const key = value.toLowerCase();
+      if (!value || seenOutcomes.has(key)) {
+        return false;
+      }
+
+      seenOutcomes.add(key);
+      return true;
+    })
+    .slice(0, 3);
 
   return {
     role: assignment.role.trim(),
