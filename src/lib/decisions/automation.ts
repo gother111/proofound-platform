@@ -40,7 +40,13 @@ export interface DecisionWindow {
   remindersSent: number;
 }
 
-function resolveCompletedAt(interview: typeof interviews.$inferSelect | null) {
+type DecisionWindowInterview = {
+  completedAt: Date | null;
+  updatedAt: Date | null;
+  scheduledAt: Date | null;
+};
+
+function resolveCompletedAt(interview: DecisionWindowInterview | null) {
   if (!interview) {
     return null;
   }
@@ -49,9 +55,17 @@ function resolveCompletedAt(interview: typeof interviews.$inferSelect | null) {
 }
 
 async function getInterview(interviewId: string) {
-  return db.query.interviews.findFirst({
-    where: eq(interviews.id, interviewId),
-  });
+  const [interview] = await db
+    .select({
+      completedAt: interviews.completedAt,
+      updatedAt: interviews.updatedAt,
+      scheduledAt: interviews.scheduledAt,
+    })
+    .from(interviews)
+    .where(eq(interviews.id, interviewId))
+    .limit(1);
+
+  return interview ?? null;
 }
 
 async function getDecisionByInterview(interviewId: string) {
@@ -104,15 +118,23 @@ export async function getDecisionWindow(interviewId: string): Promise<DecisionWi
   const deadline = new Date(completedAt.getTime() + 48 * 60 * 60 * 1000);
   const now = new Date();
   const hoursRemaining = (deadline.getTime() - now.getTime()) / (1000 * 60 * 60);
-  const remindersResult = await db.execute(sql`
-    SELECT COUNT(*)::int AS sent_count
-    FROM public.workflow_async_jobs
-    WHERE interview_id = ${interviewId}
-      AND job_type = 'decision_reminder'
-      AND status = 'completed'
-  `);
-  const remindersSent =
-    (getRows(remindersResult)[0] as { sent_count?: number } | undefined)?.sent_count ?? 0;
+  const decision = await getDecisionByInterview(interviewId);
+
+  let remindersSent = 0;
+  if (decision) {
+    const reminderRows = await db
+      .select({ id: workflowAsyncJobs.id })
+      .from(workflowAsyncJobs)
+      .where(
+        and(
+          eq(workflowAsyncJobs.decisionId, decision.id),
+          eq(workflowAsyncJobs.jobType, 'decision_reminder'),
+          eq(workflowAsyncJobs.status, 'completed')
+        )
+      );
+
+    remindersSent = reminderRows.length;
+  }
 
   return {
     interviewId,

@@ -125,8 +125,13 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     await expect(
       page.getByText('A focused launch desk for one clean hiring corridor')
     ).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Trust Profile' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'One Assignment Path' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Corridor Queue' })).toBeVisible();
+    await expect(page.getByText('Trust profile · Verified path:')).toBeVisible();
+    await expect(page.getByText('One assignment path · Purpose, real work')).toBeVisible();
+    await expect(page.getByRole('link', { name: /Create first assignment/i })).toHaveAttribute(
+      'href',
+      `/app/o/${organization.slug}/assignments/new`
+    );
     await expect(page.getByRole('heading', { name: 'Minimal Access' })).toBeVisible();
     await expect(
       page.getByText('Launch roles are limited to owner, manager, and reviewer.')
@@ -469,11 +474,13 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
       page,
       `/app/o/${organization.slug}/assignments/new?draftId=${draftId}`,
       async () => {
-        await expect(page.getByLabel(/^Title \*$/i)).toHaveValue(uniqueRole);
+        await expect(
+          page.getByRole('heading', { name: 'Step 2: What work will actually be done' })
+        ).toBeVisible();
       }
     );
-    await expect(page.getByLabel(/^Role purpose \*$/i)).toHaveValue(
-      'Update the role purpose with concrete reviewer guidance so the assignment can move cleanly through internal review before publish.'
+    await expect(page.getByLabel(/^What work will actually be done \*$/i)).toHaveValue(
+      strictDraftDescription
     );
 
     const outcomesResponse = await apiPostJson(
@@ -550,9 +557,13 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     expect(teamResponse.ok()).toBeTruthy();
 
     await page.goto(`/app/o/${organization.slug}/settings`);
+    await expect(page.getByRole('heading', { name: 'Not found' })).toBeVisible();
+    await expect(
+      page.getByText('This page is outside the locked launch MVP corridor.')
+    ).toBeVisible();
     await expect(
       page.getByText(
-        'Not found Organization Pages: The org settings hub stays hard-gated for launch so the active corridor remains centered on trust, assignments, and review.'
+        /The org settings hub stays hard-gated for launch so the active corridor remains centered on trust, assignments, and review\./
       )
     ).toBeVisible();
 

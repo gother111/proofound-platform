@@ -39,6 +39,26 @@ const argv = process.argv.slice(2);
 
 const scriptPath = fileURLToPath(import.meta.url);
 
+function resolveDevDistDir() {
+  if (process.env.NEXT_DIST_DIR) {
+    return process.env.NEXT_DIST_DIR;
+  }
+
+  const portFlagIndex = argv.findIndex((arg) => arg === '-p' || arg === '--port');
+  const portFlagValue = portFlagIndex >= 0 ? argv[portFlagIndex + 1] : null;
+  const inlinePortArg = argv.find((arg) => arg.startsWith('--port='));
+  const inlineShortPortArg = argv.find((arg) => arg.startsWith('-p='));
+  const port =
+    portFlagValue ||
+    inlinePortArg?.slice('--port='.length) ||
+    inlineShortPortArg?.slice('-p='.length) ||
+    process.env.PORT ||
+    '3000';
+
+  const safePort = String(port).replace(/[^0-9A-Za-z_-]/g, '_');
+  return `.next-dev-${safePort}`;
+}
+
 function run(cmd, args, env) {
   const child = spawn(cmd, args, { stdio: 'inherit', env });
   child.on('exit', (code, signal) => {
@@ -57,5 +77,8 @@ if (!isSupportedNode(process.versions.node) && process.env.PROOFOUND_NODE20_REEX
   run(node20Path, [scriptPath, ...argv], env);
 } else {
   const nextBin = path.join(process.cwd(), 'node_modules', 'next', 'dist', 'bin', 'next');
-  run(process.execPath, [nextBin, 'dev', ...argv], process.env);
+  run(process.execPath, [nextBin, 'dev', ...argv], {
+    ...process.env,
+    NEXT_DIST_DIR: resolveDevDistDir(),
+  });
 }

@@ -111,9 +111,9 @@ function getErrorMessage(error: unknown): string {
   return 'Something went wrong. Please try again.';
 }
 
-export function useProfileData() {
-  const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export function useProfileData(initialProfile: ProfileData | null = null) {
+  const [profile, setProfile] = useState<ProfileData | null>(initialProfile);
+  const [isLoading, setIsLoading] = useState(!initialProfile);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [profileCompletion, setProfileCompletion] = useState(5);
@@ -127,6 +127,14 @@ export function useProfileData() {
   }, []);
 
   useEffect(() => {
+    if (initialProfile && loadAttempt === 0) {
+      setProfile(initialProfile);
+      setProfileCompletion(calculateProfileCompletion(initialProfile));
+      setIsLoading(false);
+      setLoadError(null);
+      return;
+    }
+
     let active = true;
     let skipLoadingReset = false;
 
@@ -192,7 +200,7 @@ export function useProfileData() {
     return () => {
       active = false;
     };
-  }, [loadAttempt]);
+  }, [initialProfile, loadAttempt]);
 
   useEffect(() => {
     if (profile) {

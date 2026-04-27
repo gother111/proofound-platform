@@ -806,23 +806,21 @@ async function main() {
       'org_id',
       orgs.map((o) => o.id)
     );
-  await supabase
-    .from('organization_field_visibility')
-    .insert(
-      orgs.map((org) => ({
-        org_id: org.id,
-        display_name: 'public',
-        mission: 'public',
-        vision: 'public',
-        causes: 'public',
-      }))
-    );
+  await supabase.from('organization_field_visibility').insert(
+    orgs.map((org) => ({
+      org_id: org.id,
+      display_name: 'public',
+      mission: 'public',
+      vision: 'public',
+      causes: 'public',
+    }))
+  );
 
   const orgMembers = orgs.map((org) => ({
     org_id: org.id,
     user_id: org.adminUser,
-    role: 'admin',
-    status: 'active',
+    role: 'org_owner',
+    state: 'active',
   }));
   await upsert('organization_members', orgMembers, { onConflict: 'org_id,user_id' });
 

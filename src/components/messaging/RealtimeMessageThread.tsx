@@ -3,9 +3,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { MessageThread, type Message as ThreadMessage } from './MessageThread';
 import { useRealtimeMessages, type Message as RealtimeMessage } from '@/hooks/useRealtimeMessages';
+import { RevealIdentityCard } from './RevealIdentityCard';
 import { toast } from 'sonner';
 import { Wifi, WifiOff } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface RealtimeMessageThreadProps {
   conversationId: string;
@@ -40,6 +42,54 @@ export function RealtimeMessageThread({
   const [messages, setMessages] = useState<ThreadMessage[]>(initialMessages);
   const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
   const [typingUserId, setTypingUserId] = useState<string | null>(null);
+  const [conversationState, setConversationState] = useState<{
+    stage: 'masked' | 'revealed';
+    currentUserWantsReveal: boolean;
+    otherUserWantsReveal: boolean;
+    canReveal: boolean;
+    otherPartyName: string;
+    otherPartyAvatar?: string;
+  }>({
+    stage,
+    currentUserWantsReveal: false,
+    otherUserWantsReveal: false,
+    canReveal: stage === 'masked',
+    otherPartyName,
+    otherPartyAvatar,
+  });
+
+  const refreshConversationState = useCallback(async () => {
+    try {
+      const response = await apiFetch(`/api/conversations/${conversationId}`);
+      if (!response.ok) return;
+
+      const data = await response.json();
+      setConversationState({
+        stage: data.conversation?.stage === 'revealed' ? 'revealed' : 'masked',
+        currentUserWantsReveal: Boolean(data.conversation?.currentUserWantsReveal),
+        otherUserWantsReveal: Boolean(data.conversation?.otherUserWantsReveal),
+        canReveal: Boolean(data.conversation?.canReveal),
+        otherPartyName: data.otherParticipant?.displayName || otherPartyName,
+        otherPartyAvatar: data.otherParticipant?.avatarUrl || otherPartyAvatar,
+      });
+    } catch (error) {
+      console.error('Failed to refresh conversation state:', error);
+    }
+  }, [conversationId, otherPartyAvatar, otherPartyName]);
+
+  const handleRevealIdentities = useCallback(async () => {
+    const response = await apiFetch(`/api/conversations/${conversationId}/reveal`, {
+      method: 'POST',
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to request reveal');
+    }
+
+    await refreshConversationState();
+    return data;
+  }, [conversationId, refreshConversationState]);
 
   // Real-time messaging hook
   const { isConnected, startTyping, stopTyping, markAsRead, markAllAsRead } = useRealtimeMessages({
@@ -85,6 +135,20 @@ export function RealtimeMessageThread({
   useEffect(() => {
     setMessages(initialMessages);
   }, [initialMessages]);
+
+  useEffect(() => {
+    setConversationState((prev) => ({
+      ...prev,
+      stage,
+      canReveal: stage === 'masked',
+      otherPartyName,
+      otherPartyAvatar,
+    }));
+  }, [otherPartyAvatar, otherPartyName, stage]);
+
+  useEffect(() => {
+    refreshConversationState();
+  }, [refreshConversationState]);
 
   // Auto-mark new messages as read when visible
   useEffect(() => {
@@ -166,14 +230,24 @@ export function RealtimeMessageThread({
         </Badge>
       </div>
 
+      {conversationState.canReveal && (
+        <div className="border-b bg-background p-4">
+          <RevealIdentityCard
+            currentUserWantsReveal={conversationState.currentUserWantsReveal}
+            otherUserWantsReveal={conversationState.otherUserWantsReveal}
+            onReveal={handleRevealIdentities}
+          />
+        </div>
+      )}
+
       {/* Message thread */}
       <MessageThread
         conversationId={conversationId}
         messages={messages}
         currentUserId={currentUserId}
-        otherPartyName={otherPartyName}
-        otherPartyAvatar={otherPartyAvatar}
-        stage={stage}
+        otherPartyName={conversationState.otherPartyName}
+        otherPartyAvatar={conversationState.otherPartyAvatar}
+        stage={conversationState.stage}
         isTyping={isOtherUserTyping}
         onSendMessage={handleSend}
         onBack={onBack}

@@ -81,15 +81,13 @@ export function ConversationList({
 
   // Get display name based on stage
   const getDisplayName = (conv: Conversation) => {
-    if (conv.stage === 'masked') {
-      return 'Candidate'; // Masked identity
-    }
     return conv.otherPartyName;
   };
 
   // Get avatar initials
   const getInitials = (name: string) => {
     if (name === 'Candidate') return 'C';
+    if (name === 'Organization') return 'O';
     return name
       .split(' ')
       .map((n) => n[0])
@@ -229,7 +227,7 @@ export function ConversationList({
                     variant="outline"
                     className="mt-2 border-[#7A9278] text-xs text-proofound-forest"
                   >
-                    Identity revealed after introduction
+                    Identity protected until reveal approval
                   </Badge>
                 )}
               </div>

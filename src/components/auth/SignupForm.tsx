@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useFormState, useFormStatus } from 'react-dom';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -154,7 +155,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
               Click the link in the email to verify your account and complete your registration.
             </p>
             <Button
-              onClick={() => router.push('/login')}
+              asChild
               variant="outline"
               className={`mt-6 border-proofound-stone ${
                 accountType === 'organization'
@@ -162,7 +163,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                   : 'text-proofound-forest hover:border-proofound-forest hover:bg-proofound-forest/5'
               }`}
             >
-              Return to login
+              <Link href="/login">Return to login</Link>
             </Button>
           </Card>
         </motion.div>

@@ -16,6 +16,7 @@ import {
 } from '@/components/skeletons/CoreLoadingPrimitives';
 
 export const dynamic = 'force-dynamic';
+const MATCHING_DATA_TIMEOUT_MS = 30000;
 
 type MatchabilityCriterion = {
   id: string;
@@ -125,7 +126,7 @@ export default function MatchingPage() {
   const fetchMatches = async () => {
     // Create abort controller for timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), MATCHING_DATA_TIMEOUT_MS);
     setIsTestMatchesLoading(true);
 
     try {

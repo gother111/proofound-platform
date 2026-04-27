@@ -8,6 +8,8 @@ const isVercelProductionBuild = isVercelBuild && process.env.VERCEL_ENV === 'pro
 const skipBuildValidation = process.env.NEXT_SKIP_BUILD_VALIDATION === '1' || isVercelBuild;
 const disableVercelWebpackFileSystemCache =
   isVercelBuild && process.env.NEXT_DISABLE_VERCEL_WEBPACK_CACHE !== '0';
+const disableWebpackFileSystemCache =
+  disableVercelWebpackFileSystemCache || process.env.NEXT_DISABLE_WEBPACK_CACHE === '1';
 const widenSentryClientUpload = process.env.SENTRY_WIDEN_CLIENT_FILE_UPLOAD === '1';
 const disableSentryProductionBuildArtifacts =
   isVercelProductionBuild && process.env.SENTRY_ENABLE_BUILD_SOURCEMAPS !== '1';
@@ -30,6 +32,7 @@ const sentryIgnoredArtifacts = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  distDir: process.env.NEXT_DIST_DIR || '.next',
   eslint: {
     // Keep lint as part of build by default. Explicitly opt out only when needed.
     ignoreDuringBuilds: skipBuildValidation,
@@ -46,6 +49,26 @@ const nextConfig = {
     webpackBuildWorker: isVercelBuild,
     webpackMemoryOptimizations: isVercelBuild,
   },
+  serverExternalPackages: [
+    '@apm-js-collab/code-transformer',
+    '@apm-js-collab/tracing-hooks',
+    '@opentelemetry/api',
+    '@opentelemetry/core',
+    '@opentelemetry/instrumentation',
+    '@opentelemetry/resources',
+    '@opentelemetry/sdk-trace-base',
+    '@opentelemetry/semantic-conventions',
+    '@popperjs/core',
+    '@sentry/nextjs',
+    '@sentry/node',
+    '@sentry/node-core',
+    '@supabase/ssr',
+    '@supabase/supabase-js',
+    'deepmerge',
+    'drizzle-orm',
+    'postgres',
+    'zod',
+  ],
   // Silence multiple-lockfile root inference; set explicit tracing root to this app.
   // Use process.cwd() so it works both locally and on Vercel (no absolute machine path).
   outputFileTracingRoot: process.cwd(),
@@ -58,7 +81,7 @@ const nextConfig = {
     ],
   },
   webpack: (config, { isServer }) => {
-    if (disableVercelWebpackFileSystemCache) {
+    if (disableWebpackFileSystemCache) {
       // Vercel was restoring multi-GB pack files and OOMing before webpack finished.
       config.cache = false;
     }

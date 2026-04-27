@@ -229,9 +229,25 @@ async function recordUploadEvent(
   eventType: string,
   metadata?: Record<string, unknown>
 ) {
+  const allowedEventType =
+    eventType === 'scan_passed'
+      ? 'scan_clean'
+      : eventType === 'metadata_extracted' ||
+          eventType === 'sensitivity_classified' ||
+          eventType === 'attachable' ||
+          eventType === 'attached'
+        ? 'validated'
+        : eventType === 'privacy_review_required'
+          ? 'attach_blocked'
+          : eventType;
+  const normalizedMetadata =
+    allowedEventType === eventType
+      ? (metadata ?? {})
+      : { ...(metadata ?? {}), originalEventType: eventType };
+
   await db.execute(sql`
     INSERT INTO uploaded_file_events (uploaded_file_id, event_type, metadata)
-    VALUES (${uploadedFileId}, ${eventType}, ${JSON.stringify(metadata ?? {})}::jsonb)
+    VALUES (${uploadedFileId}, ${allowedEventType}, ${JSON.stringify(normalizedMetadata)}::jsonb)
   `);
 }
 
@@ -273,8 +289,12 @@ export async function getAttachableUploadedFile(uploadedFileId: string, ownerId:
     return null;
   }
 
+  const hasAttachableLifecycle = ['validated', 'ready_private', 'ready_public'].includes(
+    row.lifecycle_state
+  );
+
   if (
-    row.lifecycle_state !== 'attachable' ||
+    !hasAttachableLifecycle ||
     row.safety_status !== 'clean' ||
     row.metadata_status !== 'extracted' ||
     row.attach_status !== 'attachable'
@@ -330,7 +350,10 @@ export async function attachUploadedFile(
         WHEN ${attachedSubjectType} = 'proof_pack' THEN ${attachedSubjectId}::uuid
         ELSE proof_pack_id
       END,
-      lifecycle_state = 'attached',
+      lifecycle_state = CASE
+        WHEN public_path IS NOT NULL THEN 'ready_public'
+        ELSE 'ready_private'
+      END,
       attach_status = 'attached',
       attached_at = NOW(),
       updated_at = NOW()
@@ -457,7 +480,7 @@ export async function ingestUploadedFile(
     await db.execute(sql`
       UPDATE uploaded_files
       SET
-        lifecycle_state = 'scan_failed',
+        lifecycle_state = 'rejected',
         safety_status = 'rejected',
         safety_reason = ${validation.safetyReason},
         metadata_status = 'failed',
@@ -486,7 +509,7 @@ export async function ingestUploadedFile(
   await db.execute(sql`
     UPDATE uploaded_files
     SET
-      lifecycle_state = 'scan_passed',
+      lifecycle_state = 'validated',
       safety_status = 'clean',
       scan_engine = 'signature_v1',
       scan_completed_at = NOW(),
@@ -508,7 +531,7 @@ export async function ingestUploadedFile(
   await db.execute(sql`
     UPDATE uploaded_files
     SET
-      lifecycle_state = 'quarantined',
+      lifecycle_state = 'validated',
       metadata_status = 'extracted',
       safe_for_public = ${validation.promotePublic && metadataFlags.publicSafeEligible},
       metadata_extracted_at = NOW(),
@@ -589,7 +612,8 @@ export async function ingestUploadedFile(
       queueType: 'correction_revocation',
       linkedEntityType: 'uploaded_file',
       linkedEntityId: inserted.id,
-      summary: 'Risky evidence upload held for privacy-safe review before it can enter the Proof Pack corridor.',
+      summary:
+        'Risky evidence upload held for privacy-safe review before it can enter the Proof Pack corridor.',
       priority: 'high',
       actorType: queueActor.actorType,
       actorId: queueActor.actorId,
@@ -619,9 +643,9 @@ export async function ingestUploadedFile(
 
   if (isEvidenceUpload) {
     await db.execute(sql`
-      UPDATE uploaded_files
-      SET
-        lifecycle_state = 'attachable',
+    UPDATE uploaded_files
+    SET
+        lifecycle_state = 'ready_private',
         attach_status = 'attachable',
         updated_at = NOW()
       WHERE id = ${inserted.id}

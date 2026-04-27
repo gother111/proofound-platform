@@ -19,6 +19,7 @@ import {
   downloadInterviewIcs,
   type InterviewCalendarPayload,
 } from '@/lib/interviews/calendar';
+import { apiFetch } from '@/lib/api/fetch';
 import type { HiringCorridorSnapshot } from '@/lib/hiring-corridor/snapshot';
 import { toast } from 'sonner';
 
@@ -137,7 +138,7 @@ export default function InterviewsPage() {
 
     setIsConfirmingEngagementId(verification.id);
     try {
-      const response = await fetch(`/api/engagement-verifications/${verification.id}`, {
+      const response = await apiFetch(`/api/engagement-verifications/${verification.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

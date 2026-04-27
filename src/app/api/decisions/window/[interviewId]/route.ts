@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getDecisionWindow } from '@/lib/decisions/automation';
 import { log } from '@/lib/log';
 import { isActiveOrgMember } from '@/lib/api/auth';
+import { getInterviewAccessContext } from '@/lib/interviews/messaging';
 
 export async function GET(
   _req: NextRequest,
@@ -30,40 +31,13 @@ export async function GET(
       return NextResponse.json({ error: 'interviewId is required' }, { status: 400 });
     }
 
-    const { data: interview, error: interviewError } = await supabase
-      .from('interviews')
-      .select(
-        `
-          id,
-          match_id,
-          matches!inner(
-            assignment_id,
-            assignments!inner(
-              org_id
-            )
-          )
-        `
-      )
-      .eq('id', interviewId)
-      .single();
+    const interview = await getInterviewAccessContext(interviewId);
 
-    if (interviewError || !interview) {
+    if (!interview) {
       return NextResponse.json({ error: 'Interview not found' }, { status: 404 });
     }
 
-    const interviewMatch = Array.isArray((interview as any).matches)
-      ? (interview as any).matches[0]
-      : (interview as any).matches;
-    const interviewAssignment = Array.isArray(interviewMatch?.assignments)
-      ? interviewMatch.assignments[0]
-      : interviewMatch?.assignments;
-    const orgId = interviewAssignment?.org_id as string | undefined;
-
-    if (!orgId) {
-      return NextResponse.json({ error: 'Interview assignment not found' }, { status: 404 });
-    }
-
-    const canViewWindow = await isActiveOrgMember(supabase, user.id, orgId, [
+    const canViewWindow = await isActiveOrgMember(supabase, user.id, interview.orgId, [
       'org_owner',
       'org_manager',
     ]);

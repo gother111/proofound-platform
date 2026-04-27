@@ -77,15 +77,18 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Fetch sender profiles
     const senderIds = [...new Set(messageList.map((m) => m.senderId))];
-    const senderProfiles = await db
-      .select({
-        id: profiles.id,
-        handle: profiles.handle,
-        displayName: profiles.displayName,
-        avatarUrl: profiles.avatarUrl,
-      })
-      .from(profiles)
-      .where(inArray(profiles.id, senderIds));
+    const senderProfiles =
+      senderIds.length > 0
+        ? await db
+            .select({
+              id: profiles.id,
+              handle: profiles.handle,
+              displayName: profiles.displayName,
+              avatarUrl: profiles.avatarUrl,
+            })
+            .from(profiles)
+            .where(inArray(profiles.id, senderIds))
+        : [];
 
     const senderMap = new Map(senderProfiles.map((p) => [p.id, p]));
 

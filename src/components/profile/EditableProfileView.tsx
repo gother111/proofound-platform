@@ -22,7 +22,13 @@ import {
   type FirstProofSkillOption,
 } from '@/components/proofs/FirstProofDialog';
 import { evaluateIndividualProfileCompletion } from '@/lib/profile/completion-flow';
-import type { Education, Experience, ImpactStory, Volunteering } from '@/types/profile';
+import type {
+  Education,
+  Experience,
+  ImpactStory,
+  ProfileData,
+  Volunteering,
+} from '@/types/profile';
 
 function resolvePortfolioGateMessage(lockReason: string | null): string {
   switch (lockReason) {
@@ -41,7 +47,11 @@ function resolvePortfolioGateMessage(lockReason: string | null): string {
   }
 }
 
-export function EditableProfileView() {
+type EditableProfileViewProps = {
+  initialProfile?: ProfileData | null;
+};
+
+export function EditableProfileView({ initialProfile = null }: EditableProfileViewProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -72,7 +82,7 @@ export function EditableProfileView() {
     deleteVolunteering,
     updateVolunteering,
     toggleRedactMode,
-  } = useProfileData();
+  } = useProfileData(initialProfile);
 
   const {
     isEditProfileOpen,

@@ -11,6 +11,8 @@
 
 # next.js
 /.next/
+/.next-dev*/
+/.next.codex-stale-*/
 **/.next/
 /out/
 
@@ -26,6 +28,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 debug_log.txt
+/.artifacts/stale-build-state/
 
 # local env files
 .env*.local

@@ -46,6 +46,12 @@ const SkillInputSchema = z.object({
 
 const CompensationPeriodSchema = z.enum(['annual', 'monthly', 'hourly']);
 
+const OptionalDateStringSchema = z.preprocess((value) => {
+  if (typeof value !== 'string') return value;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}, z.string().optional());
+
 const MatchingProfileSchema = z.object({
   valuesTags: z.array(z.string()).optional(),
   causeTags: z.array(z.string()).optional(),
@@ -55,8 +61,8 @@ const MatchingProfileSchema = z.object({
   rightToWork: z.enum(['yes', 'no', 'conditional']).optional(),
   country: z.string().optional(),
   city: z.string().optional(),
-  availabilityEarliest: z.string().optional(), // ISO date string
-  availabilityLatest: z.string().optional(),
+  availabilityEarliest: OptionalDateStringSchema,
+  availabilityLatest: OptionalDateStringSchema,
   workMode: z.enum(['remote', 'onsite', 'hybrid']).optional(),
   engagementType: z
     .string()

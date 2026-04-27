@@ -41,6 +41,7 @@ import {
   downloadInterviewIcs,
   type InterviewCalendarPayload,
 } from '@/lib/interviews/calendar';
+import { apiFetch } from '@/lib/api/fetch';
 import type { HiringCorridorSnapshot } from '@/lib/hiring-corridor/snapshot';
 
 export const dynamic = 'force-dynamic';
@@ -91,6 +92,8 @@ export default function OrganizationInterviewsPage() {
   const [editReason, setEditReason] = useState('');
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [isCancellingInterviewId, setIsCancellingInterviewId] = useState<string | null>(null);
+  const [isCompletingInterviewId, setIsCompletingInterviewId] = useState<string | null>(null);
+  const [isMarkingNoShowInterviewId, setIsMarkingNoShowInterviewId] = useState<string | null>(null);
   const [isConfirmingEngagementId, setIsConfirmingEngagementId] = useState<string | null>(null);
   const [engagementTypeSelections, setEngagementTypeSelections] = useState<Record<string, string>>(
     {}
@@ -202,7 +205,7 @@ export default function OrganizationInterviewsPage() {
 
     setIsSavingEdit(true);
     try {
-      const response = await fetch('/api/interviews/edit', {
+      const response = await apiFetch('/api/interviews/edit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -241,7 +244,7 @@ export default function OrganizationInterviewsPage() {
 
     setIsCancellingInterviewId(interview.interview.id);
     try {
-      const response = await fetch('/api/interviews/cancel', {
+      const response = await apiFetch('/api/interviews/cancel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -261,6 +264,80 @@ export default function OrganizationInterviewsPage() {
       toast.error(error instanceof Error ? error.message : 'Failed to cancel interview');
     } finally {
       setIsCancellingInterviewId(null);
+    }
+  };
+
+  const handleCompleteInterview = async (interview: Interview) => {
+    if (!interview.interview) {
+      return;
+    }
+
+    if (!confirm('Mark this interview as completed? This will unlock the decision step.')) {
+      return;
+    }
+
+    setIsCompletingInterviewId(interview.interview.id);
+    try {
+      const response = await apiFetch('/api/interviews/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          interviewId: interview.interview.id,
+        }),
+      });
+
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload.error || 'Failed to mark interview complete');
+      }
+
+      toast.success('Interview marked complete');
+      await loadInterviews();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to mark interview complete');
+    } finally {
+      setIsCompletingInterviewId(null);
+    }
+  };
+
+  const handleMarkNoShow = async (interview: Interview) => {
+    if (!interview.interview) {
+      return;
+    }
+
+    if (
+      !confirm(
+        'Mark this interview as a no-show? The corridor will require a replacement interview.'
+      )
+    ) {
+      return;
+    }
+
+    const reasonInput = window.prompt('Optional no-show reason:');
+    const reason = typeof reasonInput === 'string' ? reasonInput.trim() : '';
+
+    setIsMarkingNoShowInterviewId(interview.interview.id);
+    try {
+      const response = await apiFetch('/api/interviews/no-show', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          interviewId: interview.interview.id,
+          ...(reason ? { reason } : {}),
+        }),
+      });
+
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload.error || 'Failed to mark no-show');
+      }
+
+      toast.success('Interview marked no-show');
+      await loadInterviews();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to mark no-show');
+    } finally {
+      setIsMarkingNoShowInterviewId(null);
     }
   };
 
@@ -289,7 +366,7 @@ export default function OrganizationInterviewsPage() {
 
     setIsConfirmingEngagementId(verification.id);
     try {
-      const response = await fetch(`/api/engagement-verifications/${verification.id}`, {
+      const response = await apiFetch(`/api/engagement-verifications/${verification.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -599,6 +676,36 @@ export default function OrganizationInterviewsPage() {
                             {isCancellingInterviewId === interview.interview?.id
                               ? 'Cancelling...'
                               : 'Cancel Interview'}
+                          </Button>
+                        </>
+                      ) : null}
+
+                      {interview.interview?.status === 'scheduled' ? (
+                        <>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => handleCompleteInterview(interview)}
+                            disabled={isCompletingInterviewId === interview.interview?.id}
+                            className="flex items-center gap-2"
+                            style={{ backgroundColor: '#1C4D3A' }}
+                          >
+                            <FileCheck className="h-4 w-4" />
+                            {isCompletingInterviewId === interview.interview?.id
+                              ? 'Marking complete...'
+                              : 'Mark Complete'}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleMarkNoShow(interview)}
+                            disabled={isMarkingNoShowInterviewId === interview.interview?.id}
+                            className="flex items-center gap-2"
+                          >
+                            <XCircle className="h-4 w-4" />
+                            {isMarkingNoShowInterviewId === interview.interview?.id
+                              ? 'Marking no-show...'
+                              : 'Mark No-show'}
                           </Button>
                         </>
                       ) : null}

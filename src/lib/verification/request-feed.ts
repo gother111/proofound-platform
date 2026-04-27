@@ -505,7 +505,6 @@ export async function loadVerificationRequestFeed(params: {
               id,
               competency_level:level,
               skill_id,
-              custom_skill_name,
               skills_taxonomy:skills_taxonomy!skills_skill_code_fkey (
                 name_i18n,
                 skills_l3:skills_l3!skills_taxonomy_cat_id_subcat_id_l3_id_fkey (

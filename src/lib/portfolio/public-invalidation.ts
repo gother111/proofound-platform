@@ -8,19 +8,30 @@ function encodeSegment(value: string) {
   return encodeURIComponent(value);
 }
 
+function safeRevalidatePath(path: string) {
+  try {
+    revalidatePath(path);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (!message.includes('static generation store missing')) {
+      throw error;
+    }
+  }
+}
+
 export function revalidatePublicPortfolioHandle(handle: string) {
   const encoded = encodeSegment(handle);
-  revalidatePath(`/portfolio/${encoded}`);
-  revalidatePath(`/api/portfolio/public/${encoded}/summary`);
-  revalidatePath(`/api/portfolio/public/${encoded}/export`);
-  revalidatePath('/sitemap.xml');
+  safeRevalidatePath(`/portfolio/${encoded}`);
+  safeRevalidatePath(`/api/portfolio/public/${encoded}/summary`);
+  safeRevalidatePath(`/api/portfolio/public/${encoded}/export`);
+  safeRevalidatePath('/sitemap.xml');
 }
 
 export function revalidatePublicOrganizationPortfolioSlug(slug: string) {
   const encoded = encodeSegment(slug);
-  revalidatePath(`/portfolio/org/${encoded}`);
-  revalidatePath(`/api/portfolio/org/${encoded}/export`);
-  revalidatePath('/sitemap.xml');
+  safeRevalidatePath(`/portfolio/org/${encoded}`);
+  safeRevalidatePath(`/api/portfolio/org/${encoded}/export`);
+  safeRevalidatePath('/sitemap.xml');
 }
 
 export async function revalidatePublicPortfolioByProfileId(profileId: string) {
@@ -33,7 +44,7 @@ export async function revalidatePublicPortfolioByProfileId(profileId: string) {
   if (profile?.handle) {
     revalidatePublicPortfolioHandle(profile.handle);
   } else {
-    revalidatePath('/sitemap.xml');
+    safeRevalidatePath('/sitemap.xml');
   }
 }
 
@@ -47,6 +58,6 @@ export async function revalidatePublicOrganizationPortfolioById(orgId: string) {
   if (organization?.slug) {
     revalidatePublicOrganizationPortfolioSlug(organization.slug);
   } else {
-    revalidatePath('/sitemap.xml');
+    safeRevalidatePath('/sitemap.xml');
   }
 }

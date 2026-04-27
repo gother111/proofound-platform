@@ -101,19 +101,22 @@ export function MatchingOrganizationView({
     matchId: string | null | undefined,
     action: 'shortlist' | 'pass' | 'request_intro'
   ) => {
-    if (!matchId || !slug) {
+    if (!matchId || !currentAssignment?.orgId) {
       toast.error('Match context not found');
       return;
     }
 
     try {
-      const response = await apiFetch(`/api/org/${slug}/matches/${matchId}/review`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action,
-        }),
-      });
+      const response = await apiFetch(
+        `/api/org/${currentAssignment.orgId}/matches/${matchId}/review`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorPayload = await response.json().catch(() => null);

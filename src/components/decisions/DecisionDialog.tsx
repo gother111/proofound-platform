@@ -21,6 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { CheckCircle2, ArrowRight, Clock, XCircle, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface DecisionDialogProps {
   isOpen: boolean;
@@ -105,7 +106,7 @@ export function DecisionDialog({
     try {
       setIsSubmitting(true);
 
-      const response = await fetch('/api/decisions', {
+      const response = await apiFetch('/api/decisions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

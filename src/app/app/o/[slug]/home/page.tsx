@@ -315,7 +315,7 @@ export default async function OrganizationHomePage({
                 ))}
               </div>
               <Link
-                href={`/app/o/${slug}/profile`}
+                href={primaryActionHref}
                 className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-proofound-forest"
               >
                 {readinessActionLabel}

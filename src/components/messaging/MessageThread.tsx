@@ -128,9 +128,10 @@ export function MessageThread({
   };
 
   // Get display name
-  const displayName = stage === 'masked' ? 'Candidate' : otherPartyName;
+  const displayName = otherPartyName;
   const getInitials = (name: string) => {
     if (name === 'Candidate') return 'C';
+    if (name === 'Organization') return 'O';
     return name
       .split(' ')
       .map((n) => n[0])
@@ -175,7 +176,7 @@ export function MessageThread({
               <div className="font-semibold text-foreground">{displayName}</div>
               {stage === 'masked' && (
                 <Badge variant="outline" className="text-xs border-[#7A9278] text-proofound-forest">
-                  Identity revealed after introduction
+                  Identity protected until reveal approval
                 </Badge>
               )}
             </div>

@@ -3,13 +3,11 @@ import { NextResponse } from 'next/server';
 import { getOrSet, CACHE_KEYS, CACHE_TTL } from '@/lib/cache';
 import { createHash } from 'node:crypto';
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
-import { sql } from 'drizzle-orm';
-import { db } from '@/db';
-import { getRows } from '@/lib/db/rows';
 import { isManualReviewOnlyShortToken } from '@/lib/expertise/skill-confidence';
 import { searchAtlasSkillMatches } from '@/lib/expertise/atlas-skill-verifier';
 
 const SEARCH_RESULT_LIMIT = 50;
+const SEARCH_ATLAS_TIMEOUT_MS = 4_000;
 
 type SearchTelemetryEventType = 'taxonomy_search_zero_results' | 'taxonomy_search_error';
 
@@ -103,6 +101,80 @@ function hashQuery(value: string): string {
   const normalized = normalizeForComparison(value);
   if (!normalized) return 'empty';
   return createHash('sha256').update(normalized).digest('hex').slice(0, 16);
+}
+
+function sortSimpleSearchResults(searchTerm: string, rows: any[]): any[] {
+  const normalized = normalizeForComparison(searchTerm);
+
+  return [...rows].sort((left, right) => {
+    const leftName = normalizeForComparison(left.name_i18n?.en || '');
+    const rightName = normalizeForComparison(right.name_i18n?.en || '');
+    const leftCode = normalizeForComparison(left.code || '');
+    const rightCode = normalizeForComparison(right.code || '');
+
+    const score = (name: string, code: string) => {
+      if (name === normalized || code === normalized) return 0;
+      if (name.startsWith(normalized) || code.startsWith(normalized)) return 1;
+      if (name.includes(normalized) || code.includes(normalized)) return 2;
+      return 3;
+    };
+
+    const scoreDiff = score(leftName, leftCode) - score(rightName, rightCode);
+    if (scoreDiff !== 0) return scoreDiff;
+
+    const lengthDiff = leftName.length - rightName.length;
+    if (lengthDiff !== 0) return lengthDiff;
+
+    return (left.name_i18n?.en || left.code || '').localeCompare(
+      right.name_i18n?.en || right.code || ''
+    );
+  });
+}
+
+async function searchTaxonomySkillsWithSupabase(
+  supabase: any,
+  searchTerm: string,
+  limit: number
+): Promise<any[]> {
+  const normalized = normalizeForComparison(searchTerm);
+  if (!normalized) return [];
+
+  const likePattern = `%${normalized}%`;
+  const { data, error } = await supabase
+    .from('skills_taxonomy')
+    .select('*')
+    .eq('status', 'active')
+    .or(
+      [
+        `code.ilike.${likePattern}`,
+        `slug.ilike.${likePattern}`,
+        `name_i18n->>en.ilike.${likePattern}`,
+        `description_i18n->>en.ilike.${likePattern}`,
+      ].join(',')
+    )
+    .limit(limit);
+
+  if (error) {
+    throw error;
+  }
+
+  return sortSimpleSearchResults(searchTerm, data || []);
+}
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_resolve, reject) => {
+        timeout = setTimeout(() => reject(new Error(message)), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+  }
 }
 
 async function emitSearchTelemetry(input: {
@@ -217,58 +289,6 @@ async function enrichSkillsWithParentContext(supabase: any, skills: any[]): Prom
     l2: l2Map.get(`${skill.cat_id}-${skill.subcat_id}`) || null,
     l3: l3Map.get(`${skill.cat_id}-${skill.subcat_id}-${skill.l3_id}`) || null,
   }));
-}
-
-async function fallbackSearchTaxonomySkills(searchTerm: string, limit: number): Promise<any[]> {
-  const normalized = normalizeForComparison(searchTerm);
-  if (!normalized) return [];
-
-  const terms = normalized.split(' ').filter(Boolean).slice(0, 4);
-  const pattern = `%${normalized}%`;
-  const prefixPattern = `${normalized}%`;
-
-  const rows = await db.execute(sql`
-    SELECT *
-    FROM public.skills_taxonomy
-    WHERE status = 'active'
-      AND (
-        lower(coalesce(name_i18n->>'en', '')) LIKE ${pattern}
-        OR lower(code) LIKE ${pattern}
-        OR EXISTS (
-          SELECT 1
-          FROM unnest(coalesce(tags, ARRAY[]::text[])) AS tag
-          WHERE lower(tag) LIKE ${pattern}
-        )
-        OR EXISTS (
-          SELECT 1
-          FROM jsonb_array_elements(coalesce(aliases_i18n, '[]'::jsonb)) AS alias_item
-          WHERE lower(alias_item::text) LIKE ${pattern}
-        )
-      )
-    ORDER BY
-      CASE
-        WHEN lower(coalesce(name_i18n->>'en', '')) = ${normalized} THEN 0
-        WHEN lower(coalesce(name_i18n->>'en', '')) LIKE ${prefixPattern} THEN 1
-        ${
-          terms.length > 0
-            ? sql`WHEN ${sql.join(
-                terms.map(
-                  (term) =>
-                    sql`lower(coalesce(name_i18n->>'en', '')) ~ ${`(^|[^a-z0-9])${term}([^a-z0-9]|$)`}`
-                ),
-                sql` AND `
-              )} THEN 2`
-            : sql``
-        }
-        ELSE 3
-      END,
-      length(coalesce(name_i18n->>'en', '')),
-      coalesce(name_i18n->>'en', ''),
-      code
-    LIMIT ${limit}
-  `);
-
-  return getRows(rows);
 }
 
 /**
@@ -433,30 +453,18 @@ export async function GET(request: Request) {
           return NextResponse.json({ l4_skills: [] });
         }
 
-        const rankedMatches = await searchAtlasSkillMatches({
-          query: normalizedSearch,
-          evidenceSnippets,
-          category: (() => {
-            if (
-              searchCategory === 'technical' ||
-              searchCategory === 'soft_skills' ||
-              searchCategory === 'tools_technologies' ||
-              searchCategory === 'languages' ||
-              searchCategory === 'certifications' ||
-              searchCategory === 'other'
-            ) {
-              return searchCategory;
-            }
-            return undefined;
-          })(),
-          limit: resultLimit,
-        });
+        const shouldUseSimpleSearchFirst =
+          searchContext !== 'cv_import' && !searchCategory && evidenceSnippets.length === 0;
 
-        const rankedCodes = rankedMatches.map((match) => match.skill_id);
-        if (rankedCodes.length === 0) {
-          const fallbackSkills = await fallbackSearchTaxonomySkills(normalizedSearch, resultLimit);
-          skills = await enrichSkillsWithParentContext(supabase, fallbackSkills);
+        if (shouldUseSimpleSearchFirst) {
+          const simpleSkills = await searchTaxonomySkillsWithSupabase(
+            supabase,
+            normalizedSearch,
+            resultLimit
+          );
+          skills = await enrichSkillsWithParentContext(supabase, simpleSkills);
           error = null;
+
           if (skills.length === 0) {
             void emitSearchTelemetry({
               eventType: 'taxonomy_search_zero_results',
@@ -469,48 +477,105 @@ export async function GET(request: Request) {
             });
           }
         } else {
-          const { data: searchSkills, error: searchError } = await supabase
-            .from('skills_taxonomy')
-            .select('*')
-            .eq('status', 'active')
-            .in('code', rankedCodes);
+          let rankedMatches: Awaited<ReturnType<typeof searchAtlasSkillMatches>> = [];
+          let atlasTimedOut = false;
 
-          if (searchError) {
-            console.error('[Taxonomy API] Failed to load ranked atlas rows', {
+          try {
+            rankedMatches = await withTimeout(
+              searchAtlasSkillMatches({
+                query: normalizedSearch,
+                evidenceSnippets,
+                category: (() => {
+                  if (
+                    searchCategory === 'technical' ||
+                    searchCategory === 'soft_skills' ||
+                    searchCategory === 'tools_technologies' ||
+                    searchCategory === 'languages' ||
+                    searchCategory === 'certifications' ||
+                    searchCategory === 'other'
+                  ) {
+                    return searchCategory;
+                  }
+                  return undefined;
+                })(),
+                limit: resultLimit,
+              }),
+              SEARCH_ATLAS_TIMEOUT_MS,
+              'Atlas taxonomy search timed out'
+            );
+          } catch (atlasError) {
+            atlasTimedOut = true;
+            console.warn('[Taxonomy API] Atlas search unavailable; using simple taxonomy search', {
               searchHash,
               searchClass: queryClass,
-              error: searchError.message,
+              error: atlasError instanceof Error ? atlasError.message : String(atlasError),
             });
-            void emitSearchTelemetry({
-              eventType: 'taxonomy_search_error',
-              searchTerm: normalizedSearch,
-              queryClass,
-              resultCount: 0,
-              usedFallback: false,
-              rpcFailed: false,
-              detail: searchError.message,
-              userId: user?.id,
-            });
-            return NextResponse.json({ error: 'Failed to fetch skills' }, { status: 500 });
           }
 
-          const byCode = new Map((searchSkills || []).map((skill: any) => [skill.code, skill]));
-          const orderedSkills = rankedCodes.map((code) => byCode.get(code)).filter(Boolean);
-          const enrichedSkills = await enrichSkillsWithParentContext(supabase, orderedSkills);
-          const matchByCode = new Map(rankedMatches.map((match) => [match.skill_id, match]));
+          const rankedCodes = rankedMatches.map((match) => match.skill_id);
+          if (rankedCodes.length === 0) {
+            const fallbackSkills = await searchTaxonomySkillsWithSupabase(
+              supabase,
+              normalizedSearch,
+              resultLimit
+            );
+            skills = await enrichSkillsWithParentContext(supabase, fallbackSkills);
+            error = null;
+            if (skills.length === 0) {
+              void emitSearchTelemetry({
+                eventType: 'taxonomy_search_zero_results',
+                searchTerm: normalizedSearch,
+                queryClass,
+                resultCount: 0,
+                usedFallback: true,
+                rpcFailed: atlasTimedOut,
+                userId: user?.id,
+              });
+            }
+          } else {
+            const { data: searchSkills, error: searchError } = await supabase
+              .from('skills_taxonomy')
+              .select('*')
+              .eq('status', 'active')
+              .in('code', rankedCodes);
 
-          skills = enrichedSkills.map((skill) => {
-            const match = matchByCode.get(skill.code);
-            return {
-              ...skill,
-              matchMethod: match?.match_method || null,
-              matchScore: match?.score ?? null,
-              matchSource: match?.match_source || null,
-              matchedQuery: match?.matched_query || null,
-              matchedLabel: match?.matched_label || null,
-            };
-          });
-          error = null;
+            if (searchError) {
+              console.error('[Taxonomy API] Failed to load ranked atlas rows', {
+                searchHash,
+                searchClass: queryClass,
+                error: searchError.message,
+              });
+              void emitSearchTelemetry({
+                eventType: 'taxonomy_search_error',
+                searchTerm: normalizedSearch,
+                queryClass,
+                resultCount: 0,
+                usedFallback: false,
+                rpcFailed: false,
+                detail: searchError.message,
+                userId: user?.id,
+              });
+              return NextResponse.json({ error: 'Failed to fetch skills' }, { status: 500 });
+            }
+
+            const byCode = new Map((searchSkills || []).map((skill: any) => [skill.code, skill]));
+            const orderedSkills = rankedCodes.map((code) => byCode.get(code)).filter(Boolean);
+            const enrichedSkills = await enrichSkillsWithParentContext(supabase, orderedSkills);
+            const matchByCode = new Map(rankedMatches.map((match) => [match.skill_id, match]));
+
+            skills = enrichedSkills.map((skill) => {
+              const match = matchByCode.get(skill.code);
+              return {
+                ...skill,
+                matchMethod: match?.match_method || null,
+                matchScore: match?.score ?? null,
+                matchSource: match?.match_source || null,
+                matchedQuery: match?.matched_query || null,
+                matchedLabel: match?.matched_label || null,
+              };
+            });
+            error = null;
+          }
         }
       } else if (l3Id) {
         // Regular L3 filtering
