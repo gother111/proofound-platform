@@ -116,9 +116,22 @@ type CreateCanonicalBundleParams = {
 };
 
 function toMetadata(record: Pick<VerificationRecordRow, 'metadata'>): CanonicalBundleMetadata {
-  return record.metadata && typeof record.metadata === 'object' && !Array.isArray(record.metadata)
-    ? (record.metadata as CanonicalBundleMetadata)
-    : {};
+  if (record.metadata && typeof record.metadata === 'object' && !Array.isArray(record.metadata)) {
+    return record.metadata as CanonicalBundleMetadata;
+  }
+
+  if (typeof record.metadata === 'string') {
+    try {
+      const parsed = JSON.parse(record.metadata);
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+        ? (parsed as CanonicalBundleMetadata)
+        : {};
+    } catch {
+      return {};
+    }
+  }
+
+  return {};
 }
 
 function isUuid(value: string | null | undefined): value is string {
@@ -126,6 +139,68 @@ function isUuid(value: string | null | undefined): value is string {
     value &&
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
   );
+}
+
+function toDate(value: unknown): Date | null {
+  if (value instanceof Date) {
+    return value;
+  }
+
+  if (typeof value === 'string' || typeof value === 'number') {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  return null;
+}
+
+function normalizeVerificationRecordRow(row: Record<string, unknown>): VerificationRecordRow {
+  return {
+    ...row,
+    ownerType: row.ownerType ?? row.owner_type,
+    ownerId: row.ownerId ?? row.owner_id,
+    subjectType: row.subjectType ?? row.subject_type,
+    subjectId: row.subjectId ?? row.subject_id,
+    proofArtifactId: row.proofArtifactId ?? row.proof_artifact_id,
+    verificationSlot: row.verificationSlot ?? row.verification_slot,
+    verificationKind: row.verificationKind ?? row.verification_kind,
+    verifierPrincipalType: row.verifierPrincipalType ?? row.verifier_principal_type,
+    verifierClass: row.verifierClass ?? row.verifier_class,
+    verifierProfileId: row.verifierProfileId ?? row.verifier_profile_id,
+    verifierOrgId: row.verifierOrgId ?? row.verifier_org_id,
+    verifierEmailHash: row.verifierEmailHash ?? row.verifier_email_hash,
+    verifierDomainSnapshot: row.verifierDomainSnapshot ?? row.verifier_domain_snapshot,
+    integrityStatus: row.integrityStatus ?? row.integrity_status,
+    integrityReason: row.integrityReason ?? row.integrity_reason,
+    disputeState: row.disputeState ?? row.dispute_state,
+    badgeSemanticsVersion: row.badgeSemanticsVersion ?? row.badge_semantics_version,
+    riskSignals: row.riskSignals ?? row.risk_signals,
+    claimSnapshot: row.claimSnapshot ?? row.claim_snapshot,
+    sourceRequestTable: row.sourceRequestTable ?? row.source_request_table,
+    sourceRequestId: row.sourceRequestId ?? row.source_request_id,
+    sourceResponseTable: row.sourceResponseTable ?? row.source_response_table,
+    sourceResponseId: row.sourceResponseId ?? row.source_response_id,
+    completedAt: toDate(row.completedAt ?? row.completed_at),
+    createdAt: toDate(row.createdAt ?? row.created_at) ?? new Date(0),
+    updatedAt: toDate(row.updatedAt ?? row.updated_at) ?? new Date(0),
+    expiresAt: toDate(row.expiresAt ?? row.expires_at),
+    requestedAt: toDate(row.requestedAt ?? row.requested_at),
+    requestExpiresAt: toDate(row.requestExpiresAt ?? row.request_expires_at),
+    followUpDueAt: toDate(row.followUpDueAt ?? row.follow_up_due_at),
+    lastFollowUpAt: toDate(row.lastFollowUpAt ?? row.last_follow_up_at),
+    expiredAt: toDate(row.expiredAt ?? row.expired_at),
+    verifiedAt: toDate(row.verifiedAt ?? row.verified_at),
+    supersededAt: toDate(row.supersededAt ?? row.superseded_at),
+    supersededByVerificationId: row.supersededByVerificationId ?? row.superseded_by_verification_id,
+    downgradedAt: toDate(row.downgradedAt ?? row.downgraded_at),
+    contradictedAt: toDate(row.contradictedAt ?? row.contradicted_at),
+    contradictedByVerificationId:
+      row.contradictedByVerificationId ?? row.contradicted_by_verification_id,
+    disputedAt: toDate(row.disputedAt ?? row.disputed_at),
+    revokedAt: toDate(row.revokedAt ?? row.revoked_at),
+    cancelledAt: toDate(row.cancelledAt ?? row.cancelled_at),
+    failureCode: row.failureCode ?? row.failure_code,
+  } as VerificationRecordRow;
 }
 
 function isCanonicalBundleRecord(record: VerificationRecordRow): boolean {
@@ -471,7 +546,7 @@ export async function createCanonicalVerificationBundle(params: CreateCanonicalB
     subjectId: bundleId,
     actorBinding: params.verifierProfileId
       ? CAPABILITY_BINDINGS.EMAIL_THEN_PROFILE_LOCK
-      : CAPABILITY_BINDINGS.EMAIL_HASH,
+      : CAPABILITY_BINDINGS.NONE,
     actorEmail: normalizedVerifierEmail,
     actorProfileId: params.verifierProfileId || null,
     expiresAt,
@@ -502,13 +577,20 @@ export async function listCanonicalBundleRecords(bundleId: string) {
   const result = await db.execute(sql`
     SELECT *
     FROM verification_records
-    WHERE metadata->>'customRequestId' = ${bundleId}
+    WHERE COALESCE(
+      metadata->>'customRequestId',
+      CASE
+        WHEN jsonb_typeof(metadata) = 'string'
+        THEN (metadata #>> '{}')::jsonb->>'customRequestId'
+        ELSE NULL
+      END
+    ) = ${bundleId}
     ORDER BY created_at ASC
   `);
 
-  return getRows(result).filter((row) =>
-    isCanonicalBundleRecord(row as VerificationRecordRow)
-  ) as VerificationRecordRow[];
+  return getRows(result)
+    .map((row) => normalizeVerificationRecordRow(row as Record<string, unknown>))
+    .filter((row) => isCanonicalBundleRecord(row));
 }
 
 export async function getCanonicalBundleById(bundleId: string) {
@@ -526,13 +608,21 @@ export async function listCanonicalBundlesForOwner(ownerId: string) {
     FROM verification_records
     WHERE owner_type = 'individual_profile'
       AND owner_id = ${ownerId}::uuid
-      AND coalesce(metadata->>'customRequestId', '') <> ''
+      AND coalesce(
+        metadata->>'customRequestId',
+        CASE
+          WHEN jsonb_typeof(metadata) = 'string'
+          THEN (metadata #>> '{}')::jsonb->>'customRequestId'
+          ELSE NULL
+        END,
+        ''
+      ) <> ''
     ORDER BY created_at DESC
   `);
 
-  const rows = getRows(result).filter((row) =>
-    isCanonicalBundleRecord(row as VerificationRecordRow)
-  ) as VerificationRecordRow[];
+  const rows = getRows(result)
+    .map((row) => normalizeVerificationRecordRow(row as Record<string, unknown>))
+    .filter((row) => isCanonicalBundleRecord(row));
 
   const groupedRows = new Map<string, VerificationRecordRow[]>();
   for (const row of rows) {

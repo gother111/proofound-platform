@@ -204,6 +204,9 @@ export default function InterviewsPage() {
     return (
       <AppSurface>
         <div className="max-w-4xl mx-auto space-y-6">
+          <p className="text-sm text-muted-foreground" role="status" aria-live="polite">
+            Loading interview corridor...
+          </p>
           <PageIntroSkeleton showAction={false} />
           <CardListSkeleton count={3} />
         </div>

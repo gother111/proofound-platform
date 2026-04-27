@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import { apiFetch } from '@/lib/api/fetch';
 import {
   HumanObservedAttestationFields,
   buildHumanObservedAttestationPayload,
@@ -160,7 +161,7 @@ export default function VerifyCustomRequestPage() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/verify/custom/${token}`, {
+      const response = await apiFetch(`/api/verify/custom/${token}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

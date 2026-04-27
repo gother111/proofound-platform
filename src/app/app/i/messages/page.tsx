@@ -16,6 +16,7 @@ import { RealtimeMessageThread } from '@/components/messaging/RealtimeMessageThr
 import { type Message } from '@/components/messaging/MessageThread';
 import { Lock, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import LoadingIndividualMessages from './loading';
 
 export const dynamic = 'force-dynamic';
 
@@ -159,11 +160,7 @@ function MessagesPageContent() {
 
   // Show loading state if auth is not ready
   if (isAuthLoading || !currentUserId) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
+    return <LoadingIndividualMessages />;
   }
 
   const isV2 = process.env.NEXT_PUBLIC_UI_REFACTOR_V2 === 'true';
@@ -231,13 +228,7 @@ function MessagesPageContent() {
 // Wrap in Suspense for useSearchParams
 export default function MessagesPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="h-full flex items-center justify-center">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      }
-    >
+    <Suspense fallback={<LoadingIndividualMessages />}>
       <MessagesPageContent />
     </Suspense>
   );

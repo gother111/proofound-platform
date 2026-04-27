@@ -22,6 +22,10 @@ import { computeProofTrustSnapshot } from '@/lib/proof-trust/snapshots';
 import { buildOwnerAnchor, validateProofPackAnchor } from '@/lib/proofs/pack-anchor';
 import { and, eq, sql } from 'drizzle-orm';
 
+function toJsonb(value: Record<string, unknown> | unknown[] | null | undefined) {
+  return sql`${JSON.stringify(value ?? {})}::jsonb`;
+}
+
 type SkillProofInput = {
   id: string;
   skillId: string;
@@ -1249,8 +1253,8 @@ export async function upsertCanonicalVerificationRecord(input: VerificationRecor
       integrityReason: input.integrityReason || null,
       disputeState: input.disputeState || 'none',
       badgeSemanticsVersion: input.badgeSemanticsVersion ?? 2,
-      riskSignals: input.riskSignals || {},
-      claimSnapshot: input.claimSnapshot || {},
+      riskSignals: toJsonb(input.riskSignals),
+      claimSnapshot: toJsonb(input.claimSnapshot),
       sourceRequestTable: input.sourceRequestTable || null,
       sourceRequestId: input.sourceRequestId || null,
       sourceResponseTable: input.sourceResponseTable || null,
@@ -1273,7 +1277,7 @@ export async function upsertCanonicalVerificationRecord(input: VerificationRecor
       cancelledAt: input.cancelledAt ? new Date(input.cancelledAt) : null,
       failureCode: input.failureCode || null,
       verifiedAt: input.verifiedAt ? new Date(input.verifiedAt) : null,
-      metadata: input.metadata || {},
+      metadata: toJsonb(input.metadata),
       updatedAt: new Date(),
     })
     .onConflictDoUpdate({

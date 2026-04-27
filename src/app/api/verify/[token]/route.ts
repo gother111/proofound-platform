@@ -155,7 +155,6 @@ async function getCanonicalSkillVerificationWithSkillDetails(
       `
       skill_id,
       skill_code,
-      custom_skill_name,
       taxonomy:skills_taxonomy!skills_skill_code_fkey (
         name_i18n
       )
@@ -176,7 +175,7 @@ async function getCanonicalSkillVerificationWithSkillDetails(
 
   const fallbackLookup = await client
     .from('skills')
-    .select('skill_id, skill_code, custom_skill_name')
+    .select('skill_id, skill_code')
     .eq('id', String(canonicalData.skill_id))
     .single();
 
@@ -1547,6 +1546,21 @@ export async function POST(
         );
       }
     }
+    const isAuthenticatedVerifier =
+      authIdentity.isAuthenticated &&
+      Boolean(authIdentity.email) &&
+      Boolean(normalizedSkillVerifierEmail) &&
+      authIdentity.email === normalizedSkillVerifierEmail;
+    const responseAuthMethod = isAuthenticatedVerifier
+      ? getResponseAuthMethod(authIdentity)
+      : 'token';
+    const responseActorEmail = isAuthenticatedVerifier
+      ? authIdentity.email
+      : normalizedSkillVerifierEmail || null;
+    const responseProfileId = isAuthenticatedVerifier
+      ? authIdentity.profileId || normalizedVerification.verifier_profile_id || null
+      : normalizedVerification.verifier_profile_id || null;
+    const responsePrincipalType = isAuthenticatedVerifier ? 'user_account' : 'external_email';
 
     if (normalizedVerification.status !== 'pending') {
       return NextResponse.json(
@@ -1629,22 +1643,26 @@ export async function POST(
       );
     }
 
+    const skillRedeemActor = {
+      email: authIdentity.email,
+      profileId: authIdentity.profileId,
+      principalType: authIdentity.isAuthenticated
+        ? ('user_account' as const)
+        : ('external_email' as const),
+      ip: request.headers.get('x-forwarded-for'),
+      userAgent: request.headers.get('user-agent'),
+    };
+    const skillRedeemMetadata = {
+      requestId: normalizedVerification.id,
+      action: resolvedAction,
+    };
     const redeemedSkillToken = await redeemCapabilityToken(token, {
       tokenClass: CAPABILITY_TOKEN_CLASSES.SKILL_VERIFICATION_RESPONSE,
-      actor: {
-        email: authIdentity.email,
-        profileId: authIdentity.profileId,
-        principalType: authIdentity.isAuthenticated ? 'user_account' : 'external_email',
-        ip: request.headers.get('x-forwarded-for'),
-        userAgent: request.headers.get('user-agent'),
-      },
-      consume: true,
+      actor: skillRedeemActor,
+      consume: false,
       requireRedeemSessionNonce: true,
       redeemSessionNonce: skillRedeemSessionNonce,
-      metadata: {
-        requestId: normalizedVerification.id,
-        action: resolvedAction,
-      },
+      metadata: skillRedeemMetadata,
     });
 
     if (!redeemedSkillToken.ok) {
@@ -1676,8 +1694,8 @@ export async function POST(
       ...existingSkillIntegrityMeta,
       response: {
         same_device_signal: sameDeviceSignal,
-        response_auth_method: getResponseAuthMethod(authIdentity),
-        response_actor_email: authIdentity.email,
+        response_auth_method: responseAuthMethod,
+        response_actor_email: responseActorEmail,
         responded_at: respondedAt,
       },
     };
@@ -1688,10 +1706,9 @@ export async function POST(
       respondedAt,
       responseMessage: validated.message || null,
       attestationResponse,
-      verifierProfileId:
-        authIdentity.profileId || normalizedVerification.verifier_profile_id || null,
-      verifierPrincipalType: authIdentity.isAuthenticated ? 'user_account' : 'external_email',
-      verifierEmail: authIdentity.email || normalizedSkillVerifierEmail || null,
+      verifierProfileId: responseProfileId,
+      verifierPrincipalType: responsePrincipalType,
+      verifierEmail: responseActorEmail,
       integrityStatus: mergedIntegrity.integrityStatus === 'clear' ? 'clear' : 'warning',
       integrityReason: mergedIntegrity.integrityReason,
       riskSignals: mergedIntegrity.riskSignals,
@@ -1700,8 +1717,8 @@ export async function POST(
         mergedIntegrity.integrityStatus === 'flagged'
           ? normalizedVerification.integrity_flagged_at || mergedIntegrity.integrityFlaggedAt
           : null,
-      responseAuthMethod: getResponseAuthMethod(authIdentity),
-      responseActorEmail: authIdentity.email,
+      responseAuthMethod,
+      responseActorEmail,
     }).catch((error) => {
       console.error('Error updating canonical skill verification:', error);
       return null;
@@ -1709,6 +1726,24 @@ export async function POST(
 
     if (!updatedCanonicalRecord) {
       return NextResponse.json({ error: 'Failed to update verification status' }, { status: 500 });
+    }
+
+    const consumedSkillToken = await redeemCapabilityToken(token, {
+      tokenClass: CAPABILITY_TOKEN_CLASSES.SKILL_VERIFICATION_RESPONSE,
+      actor: skillRedeemActor,
+      consume: true,
+      requireRedeemSessionNonce: true,
+      redeemSessionNonce: skillRedeemSessionNonce,
+      metadata: {
+        ...skillRedeemMetadata,
+        phase: 'post_update_consume',
+      },
+    });
+    if (!consumedSkillToken.ok) {
+      console.error('Failed to consume skill verification token after response update:', {
+        reason: consumedSkillToken.reason,
+        requestId: normalizedVerification.id,
+      });
     }
 
     if (resolvedAction === 'accept' && mergedIntegrity.integrityStatus === 'clear') {
@@ -1748,12 +1783,12 @@ export async function POST(
           summary:
             'A verifier responded partly. Manual trust review is needed before this attestation can count.',
           priority: 'normal',
-          actorType: authIdentity.isAuthenticated ? 'candidate' : 'service_account',
-          actorId: authIdentity.profileId,
+          actorType: isAuthenticatedVerifier ? 'candidate' : 'service_account',
+          actorId: responseProfileId,
           metadata: {
             verdict: attestationVerdict,
             requestKind,
-            verifierEmail: authIdentity.email || normalizedSkillVerifierEmail || null,
+            verifierEmail: responseActorEmail,
           },
         });
       } else if (attestationVerdict === 'no') {
@@ -1764,12 +1799,12 @@ export async function POST(
           summary:
             'A verifier responded no. Review whether trust needs correction, contradiction handling, or revocation.',
           priority: 'high',
-          actorType: authIdentity.isAuthenticated ? 'candidate' : 'service_account',
-          actorId: authIdentity.profileId,
+          actorType: isAuthenticatedVerifier ? 'candidate' : 'service_account',
+          actorId: responseProfileId,
           metadata: {
             verdict: attestationVerdict,
             requestKind,
-            verifierEmail: authIdentity.email || normalizedSkillVerifierEmail || null,
+            verifierEmail: responseActorEmail,
           },
         });
       }

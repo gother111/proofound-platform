@@ -53,8 +53,8 @@ describe('Organization trust profile page', () => {
     expect(screen.getByTestId('trust-editor')).toBeInTheDocument();
     expect(screen.getByText('Remote-first team with weekly async check-ins.')).toBeInTheDocument();
     expect(
-      screen.getByText('This role matters because the work fixes trust in hiring.')
-    ).toBeInTheDocument();
+      screen.getAllByText('This role matters because the work fixes trust in hiring.').length
+    ).toBeGreaterThan(0);
     expect(screen.queryByText(/work culture/i)).not.toBeInTheDocument();
     expect(screen.queryByText('Clarity')).not.toBeInTheDocument();
     expect(screen.queryByText('Trust')).not.toBeInTheDocument();

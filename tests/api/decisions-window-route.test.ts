@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   getDecisionWindow: vi.fn(),
   logInfo: vi.fn(),
   logError: vi.fn(),
+  getInterviewAccessContext: vi.fn(),
 }));
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -26,6 +27,10 @@ vi.mock('@/lib/log', () => ({
     info: mocks.logInfo,
     error: mocks.logError,
   },
+}));
+
+vi.mock('@/lib/interviews/messaging', () => ({
+  getInterviewAccessContext: mocks.getInterviewAccessContext,
 }));
 
 import { GET } from '@/app/api/decisions/window/[interviewId]/route';
@@ -68,6 +73,12 @@ describe('GET /api/decisions/window/[interviewId]', () => {
       hoursRemaining: 18,
       isOverdue: false,
       remindersSent: 1,
+    });
+    mocks.getInterviewAccessContext.mockResolvedValue({
+      interviewId: 'interview-1',
+      orgId: 'org-1',
+      candidateUserId: 'candidate-1',
+      orgUserId: 'org-user-1',
     });
   });
 

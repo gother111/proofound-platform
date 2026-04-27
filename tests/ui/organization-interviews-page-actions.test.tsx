@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import OrganizationInterviewsPage from '@/app/app/o/[slug]/interviews/page';
+import { __resetCsrfCacheForTests } from '@/lib/api/fetch';
 
 const getInterviewCorridorItemsMock = vi.fn();
 
@@ -81,6 +82,7 @@ describe('organization interviews page actions', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    __resetCsrfCacheForTests();
     getInterviewCorridorItemsMock.mockReset();
   });
 
@@ -122,6 +124,13 @@ describe('organization interviews page actions', () => {
       vi.fn(async (input: string | URL, init?: RequestInit) => {
         const url = typeof input === 'string' ? input : input.toString();
         fetchCalls.push({ url, init });
+
+        if (url.startsWith('/api/csrf-token')) {
+          return {
+            ok: true,
+            json: async () => ({ token: 'csrf-token' }),
+          };
+        }
 
         if (url === '/api/interviews/edit') {
           return {
@@ -258,6 +267,13 @@ describe('organization interviews page actions', () => {
       vi.fn(async (input: string | URL, init?: RequestInit) => {
         const url = typeof input === 'string' ? input : input.toString();
         fetchCalls.push({ url, init });
+
+        if (url.startsWith('/api/csrf-token')) {
+          return {
+            ok: true,
+            json: async () => ({ token: 'csrf-token' }),
+          };
+        }
 
         if (url === '/api/engagement-verifications/engagement-1') {
           return {

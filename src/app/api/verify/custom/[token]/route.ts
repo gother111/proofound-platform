@@ -314,17 +314,22 @@ export async function POST(
         getCapabilityRedeemSessionCookieName(CAPABILITY_TOKEN_CLASSES.CUSTOM_VERIFICATION_RESPONSE)
       )?.value ?? null;
 
+    const customRedeemActor = {
+      ip: request.headers.get('x-forwarded-for'),
+      userAgent: request.headers.get('user-agent'),
+      principalType: 'external_email' as const,
+    };
+    const customRedeemMetadata = {
+      surface: 'custom_verification.respond',
+      action: parsed.data.action,
+    };
     const redeemed = await redeemCapabilityToken(token, {
       tokenClass: CAPABILITY_TOKEN_CLASSES.CUSTOM_VERIFICATION_RESPONSE,
-      actor: {
-        ip: request.headers.get('x-forwarded-for'),
-        userAgent: request.headers.get('user-agent'),
-        principalType: 'external_email',
-      },
-      consume: true,
+      actor: customRedeemActor,
+      consume: false,
       requireRedeemSessionNonce: true,
       redeemSessionNonce,
-      metadata: { surface: 'custom_verification.respond', action: parsed.data.action },
+      metadata: customRedeemMetadata,
     });
 
     if (!redeemed.ok) {
@@ -426,6 +431,24 @@ export async function POST(
       responseAuthMethod: 'token',
       responseActorEmail: bundle.verifier_email,
     });
+
+    const consumed = await redeemCapabilityToken(token, {
+      tokenClass: CAPABILITY_TOKEN_CLASSES.CUSTOM_VERIFICATION_RESPONSE,
+      actor: customRedeemActor,
+      consume: true,
+      requireRedeemSessionNonce: true,
+      redeemSessionNonce,
+      metadata: {
+        ...customRedeemMetadata,
+        phase: 'post_update_consume',
+      },
+    });
+    if (!consumed.ok) {
+      console.error('Failed to consume custom verification token after response update:', {
+        reason: consumed.reason,
+        bundleId: bundle.id,
+      });
+    }
 
     if (resolvedAction === 'accept') {
       await applyAcceptedArtifactEffects({

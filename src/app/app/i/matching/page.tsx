@@ -366,6 +366,9 @@ export default function MatchingPage() {
   if (isLoading) {
     return (
       <div className="max-w-5xl mx-auto px-4 py-6">
+        <p className="mb-3 text-sm text-muted-foreground" role="status" aria-live="polite">
+          Preparing matches...
+        </p>
         <div className="mb-6">
           <PageIntroSkeleton showAction={false} />
         </div>

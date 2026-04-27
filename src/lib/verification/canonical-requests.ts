@@ -292,7 +292,9 @@ export async function createCanonicalSkillVerificationRequest(params: {
     subjectId: requestId,
     actorBinding: params.verifierProfileId
       ? CAPABILITY_BINDINGS.EMAIL_THEN_PROFILE_LOCK
-      : CAPABILITY_BINDINGS.EMAIL_HASH,
+      : params.requiresAuthenticatedVerifier
+        ? CAPABILITY_BINDINGS.EMAIL_HASH
+        : CAPABILITY_BINDINGS.NONE,
     actorEmail: normalizedVerifierEmail,
     actorProfileId: params.verifierProfileId || null,
     expiresAt,
