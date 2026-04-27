@@ -126,23 +126,24 @@ function OrganizationMessagesPageContent() {
         body: JSON.stringify({ content }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.message) {
-          const normalizedMessage = {
-            id: data.message.id,
-            senderId: currentUserId || 'unknown',
-            content: data.message.content,
-            sentAt: new Date(
-              data.message.sentAt || data.message.sent_at || new Date().toISOString()
-            ),
-            readAt:
-              data.message.readAt || data.message.read_at
-                ? new Date(data.message.readAt || data.message.read_at)
-                : undefined,
-          };
-          setMessages((prev) => [...prev, normalizedMessage]);
-        }
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.error || 'Failed to send message');
+      }
+
+      const data = await response.json();
+      if (data.message) {
+        const normalizedMessage = {
+          id: data.message.id,
+          senderId: currentUserId || 'unknown',
+          content: data.message.content,
+          sentAt: new Date(data.message.sentAt || data.message.sent_at || new Date().toISOString()),
+          readAt:
+            data.message.readAt || data.message.read_at
+              ? new Date(data.message.readAt || data.message.read_at)
+              : undefined,
+        };
+        setMessages((prev) => [...prev, normalizedMessage]);
       }
     } catch (error) {
       console.error('Failed to send message:', error);
