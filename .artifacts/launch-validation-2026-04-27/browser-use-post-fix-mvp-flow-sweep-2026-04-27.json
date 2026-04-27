@@ -1,0 +1,161 @@
+{
+  "generated_at": "2026-04-27T20:36:30Z",
+  "environment": "production",
+  "site": "https://proofound.io",
+  "browser_tool": "browser-use in-app browser",
+  "production_version": "c3c77bcf40bb3107bf9aa198e7c081860280ea48",
+  "vercel_production_deployment": {
+    "id": "dpl_2kn1w2myCTkJXh5UEvRip5BQqJmB",
+    "state": "READY",
+    "target": "production",
+    "commit": "c3c77bcf40bb3107bf9aa198e7c081860280ea48",
+    "message": "Honor configured site URL in sitemap test (#328)"
+  },
+  "fixes_included_in_live_lineage": [
+    {
+      "pr": 326,
+      "commit": "6c3757c7faf6347dd7058b63cacd9aa145d2e9bc",
+      "message": "Fix published assignment edit preservation",
+      "deployment": "dpl_6PUomB8eGKPbap4jYLHbE8L3Zuiq",
+      "state": "READY"
+    },
+    {
+      "pr": 327,
+      "commit": "ee3d66373ee9c33012dd3e83770642c076770f08",
+      "message": "Preserve review-ready status when editing published assignments",
+      "deployment": "dpl_57fTeHSWa3Z1hMF7cWq26KrHPP4f",
+      "state": "READY"
+    }
+  ],
+  "manual_flows": [
+    {
+      "name": "published assignment review",
+      "url": "/app/o/greengrid-energy/assignments/aaaa1111-2222-4333-8444-aaaaaaaaaa01/review",
+      "result": "pass",
+      "evidence": "Review page showed Published, Security Advisor Sprint, and exactly one TTFQI outcome."
+    },
+    {
+      "name": "published assignment edit autosave regression",
+      "url": "/app/o/greengrid-energy/assignments/new?draftId=aaaa1111-2222-4333-8444-aaaaaaaaaa01",
+      "result": "pass",
+      "evidence": "Opened Edit from published review, waited through the 30 second autosave interval, observed Last saved, then verified the review page still showed Published and one TTFQI."
+    },
+    {
+      "name": "assignments and matching",
+      "url": "/app/o/greengrid-energy/matching",
+      "result": "pass",
+      "evidence": "Security Advisor Sprint remained active and showed 1 candidate match with privacy-safe blind review controls."
+    },
+    {
+      "name": "match explanation without decision",
+      "url": "/app/o/greengrid-energy/matching",
+      "result": "pass",
+      "evidence": "Clicked Why This Proof Match, compatibility signal updated, candidate card stayed stable, and Shortlist/Pass remained available without recording a decision."
+    },
+    {
+      "name": "candidate decision controls boundary",
+      "url": "/app/o/greengrid-energy/matching",
+      "result": "pass",
+      "evidence": "Browser-use verified Candidate 2855 renders with one Shortlist button and one Pass button for the active Security Advisor Sprint match. Buttons were not clicked because they record an employment-related decision."
+    },
+    {
+      "name": "continued matching readiness recheck",
+      "url": "/app/o/greengrid-energy/matching",
+      "result": "pass",
+      "evidence": "Browser-use rechecked the matching page after continuation request. Security Advisor Sprint remained active, Candidate 2855 remained visible, and one Shortlist plus one Pass control were present. Decision controls were not clicked."
+    },
+    {
+      "name": "public organization trust card",
+      "url": "/portfolio/org/greengrid-energy",
+      "result": "pass",
+      "evidence": "Public card showed Security Advisor Sprint, purpose, proof expectations, and one TTFQI outcome."
+    },
+    {
+      "name": "public individual portfolio fixture",
+      "url": "/portfolio/proofound-public-individual-fixture",
+      "result": "pass",
+      "evidence": "After user approval, created a synthetic public_noindex individual launch fixture. Browser-use rendered the public portfolio with Proofound Public Individual Fixture, Synthetic public proof pack, Synthetic launch QA proof note, Contact hidden, and no email/phone/SSN-style leakage."
+    },
+    {
+      "name": "public individual summary API fixture",
+      "url": "/api/portfolio/public/proofound-public-individual-fixture/summary",
+      "result": "pass",
+      "evidence": "Vercel production fetch returned 200 text/plain for the synthetic fixture summary, included the proof pack and evidence summary, and ended with Email: hidden."
+    },
+    {
+      "name": "public individual share and export actions",
+      "url": "/portfolio/proofound-public-individual-fixture",
+      "result": "pass",
+      "evidence": "Browser-use clicked Copy share link, Copy recruiter summary, and Download trust PDF on the synthetic fixture without app errors. Vercel production fetch for /api/portfolio/public/proofound-public-individual-fixture/export returned 200 application/pdf with proofound-proofound-public-individual-fixture-trust.pdf."
+    },
+    {
+      "name": "public individual request link boundaries",
+      "url": "/portfolio/proofound-public-individual-fixture",
+      "result": "pass",
+      "evidence": "Browser-use verified Request introduction and Request contact are mailto links to hello@proofound.io with the synthetic fixture portfolio URL. No mail client was opened and no message was sent."
+    },
+    {
+      "name": "collaborator invite action boundary",
+      "url": "/app/o/greengrid-energy/home",
+      "result": "pass",
+      "evidence": "Browser-use verified the collaborator invite form is present with Collaborator email, Reviewer, Manager, and Send collaborator invite controls. No invite was sent because no recipient email/role was supplied for data transmission."
+    },
+    {
+      "name": "org session individual-app auth boundary",
+      "url": "/app/i/home, /app/i/profile, /app/i/matching, /app/i/messages, /onboarding",
+      "result": "pass",
+      "evidence": "Browser-use attempted individual-side app routes from the current authenticated org-owner session. Each route safely resolved back to /app/o/greengrid-energy/home without app errors, so the org session did not expose individual app surfaces. This is an auth-boundary check, not a signed-in individual-user flow."
+    },
+    {
+      "name": "signed-in organization overview",
+      "url": "/app/o/greengrid-energy/home",
+      "result": "pass",
+      "evidence": "Overview rendered GreenGrid workspace, navigation, launch summary, minimal access roles, and invite panel without app errors."
+    },
+    {
+      "name": "collaborator invite empty validation",
+      "url": "/app/o/greengrid-energy/home",
+      "result": "pass",
+      "evidence": "Clicked Send collaborator invite with an empty field; page stayed stable and no invite data was transmitted."
+    },
+    {
+      "name": "trust profile",
+      "url": "/app/o/greengrid-energy/profile",
+      "result": "pass",
+      "evidence": "Trust profile rendered organization fields, launch essentials, and save affordance without app errors."
+    },
+    {
+      "name": "new assignment builder entry",
+      "url": "/app/o/greengrid-energy/assignments/new",
+      "result": "pass",
+      "evidence": "Builder loaded Step 1 with Title, Engagement type, Role purpose, and autosave messaging."
+    },
+    {
+      "name": "admin access denial",
+      "url": "/admin",
+      "result": "pass",
+      "evidence": "Non-admin org user was redirected to /403 with Access Forbidden messaging."
+    },
+    {
+      "name": "launch status monitor",
+      "url": "/api/monitoring/launch-status",
+      "result": "pass",
+      "evidence": "After the previous smoke artifact became stale, refreshed full live launch smoke and persisted monitor evidence. /api/monitoring/launch-status returned 200 with ok=true, readinessState=ready, 9 reported monitors, 0 P1 failures, 0 P2 failures, 0 stale monitors."
+    }
+  ],
+  "intentionally_not_executed": [
+    "Shortlist and Pass candidate decisions, because those record employment-related decisions.",
+    "Sending collaborator invites with a real email address, because that transmits contact data and sends an invitation.",
+    "Copy share link and Download profile PDF, because they are not blocking MVP readiness and alter clipboard/local download state."
+  ],
+  "readiness_verdict": "ready_for_mvp_launch_with_guardrails",
+  "notes": [
+    "Production database assignment state was restored earlier to active/review_ready for Security Advisor Sprint.",
+    "Duplicate TTFQI assignment outcomes were cleaned earlier; manual browser verification now shows a single TTFQI outcome on review and public surfaces.",
+    "User approved creating the synthetic public individual fixture. Production readback confirmed proofound-public-individual-fixture has public_noindex profile state, public individual visibility, 1 proof pack, 1 proof artifact, and 1 verification record.",
+    "Fresh full live launch smoke passed all six synthetic scenarios at 2026-04-27T21:20:57.012Z and monitor ingestion passed 10/10 monitors at 2026-04-27T21:21:28.679Z.",
+    "Browser-use final launch-status check at 2026-04-27T21:29:35.964Z reported ready with 9 monitors, 0 P1 failures, 0 P2 failures, and 0 stale monitors.",
+    "Browser-use continuation check at 2026-04-27T22:06:58.352Z reported ready with 9 monitors, 0 P1 failures, 0 P2 failures, and 0 stale monitors.",
+    "GitHub CLI checks were intermittently unreachable from the local shell during this final sweep, but Vercel and live production endpoints verified successfully."
+  ]
+}
