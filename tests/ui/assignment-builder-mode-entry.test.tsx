@@ -92,12 +92,15 @@ function setupFetch({ draftAssignment = null }: FetchFixture = {}) {
     }
 
     if (url === '/api/assignments' || (isAssignmentDetailRequest && init?.method === 'PUT')) {
+      const requestBody =
+        typeof init?.body === 'string' ? JSON.parse(init.body) : (init?.body ?? {});
       return {
         ok: true,
         json: async () => ({
           assignment: {
             id: mockDraftId || 'draft-1',
             orgId: 'org-1',
+            status: requestBody.status,
           },
         }),
       };
@@ -261,6 +264,69 @@ describe('Assignment builder lean corridor', () => {
     render(<AssignmentBuilderPage />);
 
     expect(await screen.findByText('Step 3 content')).toBeInTheDocument();
+  });
+
+  it('preserves active status when saving an existing published assignment from the editor', async () => {
+    mockDraftId = 'active-1';
+    const fetchMock = setupFetch({
+      draftAssignment: {
+        id: 'active-1',
+        orgId: 'org-1',
+        status: 'active',
+        role: 'Published operator',
+        businessValue: 'Keep the live assignment available while editing.',
+        description: 'Coordinate a published assignment.',
+        expectedImpact: '',
+        outcomes: [],
+        requiredSkills: [],
+      },
+    });
+
+    render(<AssignmentBuilderPage />);
+
+    expect(await screen.findByText('Step 2 content')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'next-step-2' }));
+
+    await waitFor(() => {
+      const updateCall = fetchMock.mock.calls.find(
+        ([url, init]) => url === '/api/assignments/active-1' && init?.method === 'PUT'
+      );
+      expect(updateCall).toBeTruthy();
+      expect(JSON.parse(String(updateCall?.[1]?.body))).toMatchObject({ status: 'active' });
+    });
+  });
+
+  it('deduplicates hydrated outcomes before saving an existing assignment', async () => {
+    mockDraftId = 'active-1';
+    const fetchMock = setupFetch({
+      draftAssignment: {
+        id: 'active-1',
+        orgId: 'org-1',
+        status: 'active',
+        role: 'Published operator',
+        businessValue: 'Keep the live assignment available while editing.',
+        description: 'Coordinate a published assignment.',
+        expectedImpact: 'Strong proof from prior assignment delivery.',
+        outcomes: [
+          { metric: 'TTFQI', target: '72h', timeframe: '1 week' },
+          { metric: 'TTFQI', target: '72h', timeframe: '1 week' },
+        ],
+        requiredSkills: [],
+      },
+    });
+
+    render(<AssignmentBuilderPage />);
+
+    expect(await screen.findByText('Step 3 content')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'next-step-3' }));
+
+    await waitFor(() => {
+      const outcomesCall = fetchMock.mock.calls.find(
+        ([url, init]) => url === '/api/assignments/active-1/outcomes' && init?.method === 'POST'
+      );
+      expect(outcomesCall).toBeTruthy();
+      expect(JSON.parse(String(outcomesCall?.[1]?.body)).outcomes).toHaveLength(1);
+    });
   });
 
   it('resumes a hydrated draft with fewer than three required skills at proof mapping', async () => {

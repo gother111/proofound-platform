@@ -72,6 +72,25 @@ const DEFAULT_ASSIGNMENT_FORM_VALUES: AssignmentFormData = {
   mustHaveSkills: [],
 };
 
+function dedupeAssignmentOutcomes(outcomes: AssignmentFormData['outcomes'] = []) {
+  const seen = new Set<string>();
+
+  return outcomes.filter((outcome) => {
+    const key = [
+      outcome.metric?.trim().toLowerCase() || '',
+      outcome.target?.trim().toLowerCase() || '',
+      outcome.timeframe?.trim().toLowerCase() || '',
+    ].join('|');
+
+    if (!key.replaceAll('|', '') || seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+    return true;
+  });
+}
+
 function resolveDraftResumeStep(assignment: any) {
   if (!assignment?.role || !assignment?.businessValue) return 1;
 
@@ -102,14 +121,22 @@ export default function AssignmentBuilderPage() {
   const [assignmentId, setAssignmentId] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [orgId, setOrgId] = useState<string | null>(null);
+  const [loadedAssignmentStatus, setLoadedAssignmentStatus] = useState<
+    'draft' | 'active' | 'hold' | 'closed' | null
+  >(null);
   const [hasHydratedDraft, setHasHydratedDraft] = useState(false);
   const assignmentIdRef = useRef<string | null>(null);
+  const loadedAssignmentStatusRef = useRef<typeof loadedAssignmentStatus>(null);
   const transitionLockRef = useRef(false);
   const previousDraftIdRef = useRef<string | null>(draftId);
 
   useEffect(() => {
     assignmentIdRef.current = assignmentId;
   }, [assignmentId]);
+
+  useEffect(() => {
+    loadedAssignmentStatusRef.current = loadedAssignmentStatus;
+  }, [loadedAssignmentStatus]);
 
   const form = useForm<AssignmentFormData>({
     defaultValues: DEFAULT_ASSIGNMENT_FORM_VALUES,
@@ -121,6 +148,7 @@ export default function AssignmentBuilderPage() {
       setCurrentStep(1);
       setAssignmentId(null);
       setOrgId(null);
+      setLoadedAssignmentStatus(null);
       setLastSaved(null);
       setHasHydratedDraft(false);
     }
@@ -158,7 +186,9 @@ export default function AssignmentBuilderPage() {
           businessValue: assignment.businessValue || '',
           description: assignment.description || '',
           expectedImpact: assignment.expectedImpact || '',
-          outcomes: Array.isArray(assignment.outcomes) ? assignment.outcomes : [],
+          outcomes: dedupeAssignmentOutcomes(
+            Array.isArray(assignment.outcomes) ? assignment.outcomes : []
+          ),
           locationMode: assignment.locationMode || 'hybrid',
           city: assignment.city || '',
           country: assignment.country || '',
@@ -175,6 +205,11 @@ export default function AssignmentBuilderPage() {
 
         setAssignmentId(assignment.id);
         setOrgId(assignment.orgId || null);
+        setLoadedAssignmentStatus(
+          ['draft', 'active', 'hold', 'closed'].includes(assignment.status)
+            ? assignment.status
+            : 'draft'
+        );
         setLastSaved(new Date());
         setCurrentStep(resolveDraftResumeStep(assignment));
       } catch (error) {
@@ -236,7 +271,7 @@ export default function AssignmentBuilderPage() {
   const saveOutcomes = useCallback(
     async (targetAssignmentId: string) => {
       const outcomes = form.getValues('outcomes') || [];
-      const transformedOutcomes = outcomes.map((outcome) => ({
+      const transformedOutcomes = dedupeAssignmentOutcomes(outcomes).map((outcome) => ({
         outcomeType: 'continuous' as const,
         title: outcome.metric,
         description: `Target: ${outcome.target} in ${outcome.timeframe}`,
@@ -305,8 +340,14 @@ export default function AssignmentBuilderPage() {
       creationStatus?: 'draft' | 'assignment_ready' | 'review_ready';
     }) => {
       const currentAssignmentId = assignmentIdRef.current;
+      const currentLoadedStatus = loadedAssignmentStatusRef.current;
+      const shouldPreservePublishedStatus = currentAssignmentId && currentLoadedStatus === 'active';
+      const resolvedStatus =
+        shouldPreservePublishedStatus && (!options?.status || options.status === 'draft')
+          ? 'active'
+          : (options?.status ?? 'draft');
       const payload = buildAssignmentPayload(form.getValues(), {
-        status: options?.status ?? 'draft',
+        status: resolvedStatus,
         creationStatus: options?.creationStatus ?? 'draft',
       });
 
@@ -343,6 +384,12 @@ export default function AssignmentBuilderPage() {
           window.history.replaceState(null, '', nextDraftUrl);
         }
       }
+
+      setLoadedAssignmentStatus(
+        ['draft', 'active', 'hold', 'closed'].includes(persistedAssignment.status)
+          ? persistedAssignment.status
+          : resolvedStatus
+      );
 
       setLastSaved(new Date());
 
