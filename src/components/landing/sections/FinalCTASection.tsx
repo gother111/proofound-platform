@@ -18,7 +18,7 @@ export function FinalCTASection({
   shouldReduceMotion,
 }: FinalCTASectionProps) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, amount: 0.3 });
+  const isInView = useInView(ref, { once: true, amount: 0.08 });
   const reduceMotion = !!shouldReduceMotion;
   const effectiveInView = reduceMotion ? true : isInView;
 
@@ -114,9 +114,10 @@ export function FinalCTASection({
               className="mt-12 grid gap-5 lg:grid-cols-2"
             >
               <button
+                id="start-individuals"
                 type="button"
                 onClick={onIndividualSignup ?? onGetStarted}
-                className="group rounded-[2rem] border border-proofound-forest/12 bg-proofound-forest px-6 py-6 text-left text-white transition-transform duration-300 hover:-translate-y-0.5"
+                className="group scroll-mt-32 rounded-[2rem] border border-proofound-forest/12 bg-proofound-forest px-6 py-6 text-left text-white transition-transform duration-300 hover:-translate-y-0.5"
               >
                 <p className="text-sm uppercase tracking-[0.24em] text-white/70">For individuals</p>
                 <p className="mt-4 text-3xl font-display leading-tight">
@@ -136,9 +137,10 @@ export function FinalCTASection({
               </button>
 
               <button
+                id="start-organizations"
                 type="button"
                 onClick={onOrganizationSignup ?? onGetStarted}
-                className="group rounded-[2rem] border border-border/80 bg-white/78 px-6 py-6 text-left text-foreground transition-transform duration-300 hover:-translate-y-0.5"
+                className="group scroll-mt-32 rounded-[2rem] border border-border/80 bg-white/78 px-6 py-6 text-left text-foreground transition-transform duration-300 hover:-translate-y-0.5"
               >
                 <p className="text-sm uppercase tracking-[0.24em] text-foreground/54">
                   For organizations

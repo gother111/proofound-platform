@@ -47,7 +47,7 @@ export const GlassCard = React.forwardRef<HTMLDivElement, GlassCardProps>(
         {/* Noise Texture Overlay for material realism */}
         <div
           className="absolute inset-0 opacity-[0.015] pointer-events-none mix-blend-overlay"
-          style={{ backgroundImage: 'url("/noise.svg")' }}
+          style={{ backgroundImage: 'url("/noise.png")' }}
           aria-hidden="true"
         />
 

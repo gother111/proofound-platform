@@ -19,7 +19,7 @@ test.describe('Landing Page', () => {
 
     await expect(page.getByRole('button', { name: /Request a pilot/i }).first()).toBeVisible();
     await expect(
-      page.getByRole('button', { name: /Create your portfolio/i }).first()
+      page.getByRole('button', { name: /Create your proof portfolio/i }).first()
     ).toBeVisible();
   });
 
@@ -91,7 +91,7 @@ test.describe('Landing Page', () => {
 
     await page.goto('/');
     await page
-      .getByRole('button', { name: /Create your portfolio/i })
+      .getByRole('button', { name: /Create your proof portfolio/i })
       .first()
       .click();
     await expect(page).toHaveURL(/\/signup\/individual$/);

@@ -177,10 +177,10 @@ export function ProofoundLanding({
             <a href="#story" className="transition-colors hover:text-foreground">
               How it works
             </a>
-            <a href="#start" className="transition-colors hover:text-foreground">
+            <a href="#start-individuals" className="transition-colors hover:text-foreground">
               For individuals
             </a>
-            <a href="#start" className="transition-colors hover:text-foreground">
+            <a href="#start-organizations" className="transition-colors hover:text-foreground">
               For organizations
             </a>
           </nav>

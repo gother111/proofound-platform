@@ -381,6 +381,7 @@ function HeroResumePaperPile({ compact = false }: { compact?: boolean }) {
         alt=""
         fill
         sizes={compact ? '14rem' : '31rem'}
+        fetchPriority={compact ? undefined : 'high'}
         priority={!compact}
         className="pointer-events-none select-none object-contain drop-shadow-[0_32px_72px_rgba(55,45,30,0.18)]"
       />
@@ -1844,7 +1845,7 @@ function HeroDesktopCopy({
           transition={reduceMotion ? { duration: 0 } : STORY_TRANSITION}
           className="space-y-8"
         >
-          <h1 className="max-w-none text-[8.8rem] font-semibold leading-[0.74] tracking-[-0.07em] text-foreground xl:text-[11rem]">
+          <h1 className="max-w-none text-[8.1rem] font-semibold leading-[0.78] tracking-[-0.055em] text-foreground xl:text-[10.2rem]">
             <span className="block">Proof behind</span>
             <span className="block">the claim</span>
           </h1>
@@ -1872,7 +1873,7 @@ function HeroDesktopCopy({
               onClick={onIndividualSignup}
               className="inline-flex items-center justify-center rounded-full border border-border/80 bg-white/72 px-7 py-4 text-base font-medium text-foreground transition-colors hover:bg-white"
             >
-              Create Your Portfolio
+              Create your proof portfolio
             </button>
           </div>
         </motion.div>
@@ -2603,7 +2604,7 @@ function HeroToBlindDesktopScene({
         <div className="relative h-[42rem] overflow-hidden pr-10">
           <div className="absolute inset-x-0 top-1/2 -translate-y-1/2">
             <motion.div className="space-y-8 will-change-transform" style={{ y: heroOffsetY }}>
-              <h1 className="max-w-none text-[8.8rem] font-semibold leading-[0.74] tracking-[-0.07em] text-foreground xl:text-[11rem]">
+              <h1 className="max-w-none text-[8.1rem] font-semibold leading-[0.78] tracking-[-0.055em] text-foreground xl:text-[10.2rem]">
                 <span className="block">Proof behind</span>
                 <span className="block">the claim</span>
               </h1>
@@ -2631,7 +2632,7 @@ function HeroToBlindDesktopScene({
                   onClick={onIndividualSignup}
                   className="inline-flex items-center justify-center rounded-full border border-border/80 bg-white/72 px-7 py-4 text-base font-medium text-foreground transition-colors hover:bg-white"
                 >
-                  Create Your Portfolio
+                  Create your proof portfolio
                 </button>
               </div>
             </motion.div>
@@ -3315,7 +3316,7 @@ function MobileStoryCard({
             onClick={onIndividualSignup}
             className="inline-flex items-center justify-center rounded-full border border-border/80 bg-white/75 px-5 py-3.5 text-sm font-medium text-foreground"
           >
-            Create Your Portfolio
+            Create your proof portfolio
           </button>
         </div>
       ) : null}
