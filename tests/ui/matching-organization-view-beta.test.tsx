@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MatchingOrganizationView } from '@/components/matching/MatchingOrganizationView';
@@ -87,6 +87,56 @@ describe('MatchingOrganizationView launch corridor', () => {
 
     expect(apiFetchMock.mock.calls.some(([url]) => String(url).includes('/test-matches'))).toBe(
       false
+    );
+  });
+
+  it('selects another assignment in place instead of navigating away from matching', async () => {
+    apiFetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ items: [] }),
+    });
+
+    render(
+      <MatchingOrganizationView
+        assignments={
+          [
+            ...assignments,
+            {
+              id: 'assignment-2',
+              orgId: 'org-1',
+              role: 'Research Lead',
+              status: 'active',
+              createdAt: new Date().toISOString(),
+            },
+          ] as any
+        }
+        onCreateNew={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/api/match/assignment',
+        expect.objectContaining({
+          body: expect.stringContaining('"assignmentId":"assignment-1"'),
+        })
+      );
+    });
+
+    fireEvent.click(screen.getByTestId('assignment-selector-assignment-2'));
+
+    await waitFor(() => {
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/api/match/assignment',
+        expect.objectContaining({
+          body: expect.stringContaining('"assignmentId":"assignment-2"'),
+        })
+      );
+    });
+    expect(pushMock).not.toHaveBeenCalled();
+    expect(screen.getAllByRole('link', { name: 'View / Edit' })[1]).toHaveAttribute(
+      'href',
+      '/app/o/acme/assignments/assignment-2/review'
     );
   });
 });

@@ -28,6 +28,20 @@ interface MatchingOrganizationViewProps {
   onOpenWeights?: () => void;
 }
 
+const ASSIGNMENT_STATUS_LABELS: Record<string, string> = {
+  active: 'Open',
+  assignment_ready: 'Assignment ready',
+  closed: 'Closed',
+  draft: 'Draft',
+  hold: 'On hold',
+  pending_review: 'Ready for review',
+  review_ready: 'Ready for review',
+};
+
+function assignmentStatusLabel(status: string) {
+  return ASSIGNMENT_STATUS_LABELS[status] ?? status;
+}
+
 /**
  * Filled matching view for organizations showing matches per assignment.
  */
@@ -188,28 +202,37 @@ export function MatchingOrganizationView({
         {/* Assignment list with quick actions */}
         <div className="grid gap-3 sm:grid-cols-2">
           {assignments.map((assignment) => (
-            <Link
+            <Card
               key={assignment.id}
-              href={slug ? `/app/o/${slug}/assignments/${assignment.id}/review` : '#'}
-              onClick={() => setSelectedAssignment(assignment.id)}
+              className={`p-4 transition ${
+                selectedAssignment === assignment.id
+                  ? 'border-proofound-forest bg-proofound-parchment/50'
+                  : 'hover:border-primary/60'
+              }`}
             >
-              <Card className="p-4 hover:border-primary/60 transition">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-semibold text-base">{assignment.role}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Created: {new Date(assignment.createdAt).toLocaleDateString()}
-                    </p>
-                    <Badge variant="secondary" className="mt-2">
-                      {assignment.status}
-                    </Badge>
-                  </div>
-                  <Button variant="outline" size="sm">
+              <div className="flex items-start justify-between gap-3">
+                <button
+                  type="button"
+                  data-testid={`assignment-selector-${assignment.id}`}
+                  className="flex-1 rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+                  aria-pressed={selectedAssignment === assignment.id}
+                  onClick={() => setSelectedAssignment(assignment.id)}
+                >
+                  <h3 className="text-base font-semibold">{assignment.role}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Created: {new Date(assignment.createdAt).toLocaleDateString()}
+                  </p>
+                  <Badge variant="secondary" className="mt-2">
+                    {assignmentStatusLabel(assignment.status)}
+                  </Badge>
+                </button>
+                <Button asChild variant="outline" size="sm">
+                  <Link href={slug ? `/app/o/${slug}/assignments/${assignment.id}/review` : '#'}>
                     View / Edit
-                  </Button>
-                </div>
-              </Card>
-            </Link>
+                  </Link>
+                </Button>
+              </div>
+            </Card>
           ))}
         </div>
 
@@ -221,7 +244,7 @@ export function MatchingOrganizationView({
                 <h2 className="text-xl font-semibold">Matches</h2>
                 {currentAssignment && (
                   <p className="text-sm text-muted-foreground">
-                    {currentAssignment.role} — {currentAssignment.status}
+                    {currentAssignment.role} — {assignmentStatusLabel(currentAssignment.status)}
                   </p>
                 )}
               </div>

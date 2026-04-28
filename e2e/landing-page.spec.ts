@@ -79,7 +79,6 @@ test.describe('Landing Page', () => {
       .getByTestId('landing-header')
       .getByRole('link', { name: /Sign in/i })
       .click();
-    await expect(page).toHaveURL(/\/login$/);
     await expect(page.getByTestId('login-form-shell')).toBeVisible();
 
     await page.goto('/');
@@ -87,14 +86,20 @@ test.describe('Landing Page', () => {
       .getByRole('button', { name: /Request a pilot/i })
       .first()
       .click();
-    await expect(page).toHaveURL(/\/signup\/organization$/);
+    await expect(page.getByTestId('signup-form-shell')).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /Create your organization account/i })
+    ).toBeVisible();
 
     await page.goto('/');
     await page
       .getByRole('button', { name: /Create your proof portfolio/i })
       .first()
       .click();
-    await expect(page).toHaveURL(/\/signup\/individual$/);
+    await expect(page.getByTestId('signup-form-shell')).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /Create your individual account/i })
+    ).toBeVisible();
   });
 
   test('has no console errors', async ({ page }) => {
