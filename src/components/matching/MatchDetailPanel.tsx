@@ -21,6 +21,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Heart, TrendingUp, AlertCircle } from 'lucide-react';
+import { skillDisplayLabel } from '@/lib/copy/labels';
 
 interface MatchDetailPanelProps {
   match: {
@@ -177,7 +178,12 @@ export function MatchDetailPanel({ match, assignment, profile }: MatchDetailPane
 }
 
 function getSkillDisplayLabel(skill: any): string {
-  return skill?.label || skill?.name || skill?.skillName || skill?.id || 'Unknown skill';
+  return skillDisplayLabel({
+    label: skill?.label,
+    name: skill?.name,
+    skillName: skill?.skillName,
+    id: skill?.id,
+  });
 }
 
 function normalizeSkillKey(value: string): string {

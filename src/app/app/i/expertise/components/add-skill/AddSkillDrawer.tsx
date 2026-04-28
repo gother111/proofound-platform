@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ToastAction } from '@/components/ui/toast';
 import { apiFetch } from '@/lib/api/fetch';
 import { uploadFile, validateFile } from '@/lib/upload';
+import { skillDisplayLabel } from '@/lib/copy/labels';
 import { normalizeSkillForClient } from '../../utils/normalizeSkill';
 import {
   fetchL1Domains,
@@ -37,7 +38,7 @@ export function AddSkillDrawer({
 }: AddSkillDrawerProps) {
   const { toast } = useToast();
   const taxonomyUnavailableMessage =
-    'Skill taxonomy is currently unavailable. Please retry after taxonomy recovery completes.';
+    'The skill library is currently unavailable. Please retry after recovery completes.';
 
   // Mode: 'search' (default) or 'browse' (L1→L2→L3→L4)
   const [mode, setMode] = useState<'search' | 'browse'>('search');
@@ -433,9 +434,10 @@ export function AddSkillDrawer({
   // Quick add straight from search card with defaults
   const handleQuickAdd = async (skill: L4Skill) => {
     if (!skill?.code) return;
+    const skillName = skillDisplayLabel({ taxonomyName: skill.nameI18n?.en, code: skill.code });
     if (!taxonomyReady) {
       toast({
-        title: 'Taxonomy unavailable',
+        title: 'Skill library unavailable',
         description: taxonomyUnavailableMessage,
         variant: 'destructive',
       });
@@ -463,12 +465,9 @@ export function AddSkillDrawer({
         });
         toast({
           title: '✅ Skill Added',
-          description: `"${skill.nameI18n?.en || 'Skill'}" was added to your atlas.`,
+          description: `"${skillName}" was added to your atlas.`,
           action: data?.skill?.id && (
-            <ToastAction
-              altText="Undo add"
-              onClick={() => handleUndoAdd(data.skill.id, skill.nameI18n?.en || 'Skill')}
-            >
+            <ToastAction altText="Undo add" onClick={() => handleUndoAdd(data.skill.id, skillName)}>
               Undo
             </ToastAction>
           ),
@@ -515,7 +514,7 @@ export function AddSkillDrawer({
     if (bulkSelection.size === 0) return;
     if (!taxonomyReady) {
       toast({
-        title: 'Taxonomy unavailable',
+        title: 'Skill library unavailable',
         description: taxonomyUnavailableMessage,
         variant: 'destructive',
       });
@@ -542,15 +541,15 @@ export function AddSkillDrawer({
             data?.skill || skill,
             skill as unknown as L4Skill
           );
-          successes.push(skill.nameI18n?.en || skill.code);
+          successes.push(skillDisplayLabel({ taxonomyName: skill.nameI18n?.en, code: skill.code }));
           onSkillAdded(normalized || data?.skill || skill);
           emitClientMetric('expertise_bulk_add_item', { skill_code: skill.code });
         } else {
-          failures.push(skill.nameI18n?.en || skill.code);
+          failures.push(skillDisplayLabel({ taxonomyName: skill.nameI18n?.en, code: skill.code }));
         }
       } catch (error) {
         console.error('Bulk add failed for', skill.code, error);
-        failures.push(skill.nameI18n?.en || skill.code);
+        failures.push(skillDisplayLabel({ taxonomyName: skill.nameI18n?.en, code: skill.code }));
       }
     }
 
@@ -624,7 +623,7 @@ export function AddSkillDrawer({
   const handleSave = async (saveAndAddAnother: boolean = false) => {
     if (!taxonomyReady) {
       toast({
-        title: 'Taxonomy unavailable',
+        title: 'Skill library unavailable',
         description: taxonomyUnavailableMessage,
         variant: 'destructive',
       });

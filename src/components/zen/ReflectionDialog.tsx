@@ -235,7 +235,7 @@ export function ReflectionDialog({
           <div className="text-xs text-muted-foreground bg-muted/20 p-3 rounded-lg">
             <p>
               <strong>Privacy:</strong> Reflection text is stored privately, excluded from matching
-              and org analytics, and never sent in analytics payloads.
+              and organization reporting, and never sent in analytics reports.
             </p>
           </div>
         </div>

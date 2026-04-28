@@ -24,6 +24,10 @@ import {
   createDefaultHumanObservedAttestationForm,
   type HumanObservedAttestationFormValue,
 } from '@/components/verification/HumanObservedAttestationFields';
+import {
+  relationshipDisplayLabel,
+  type CustomVerificationRelationship,
+} from '@/lib/verification/custom-verification';
 
 type VerificationStatus = 'pending' | 'accepted' | 'declined' | 'expired' | 'failed';
 
@@ -158,6 +162,23 @@ function isImageProof(url: string | null | undefined): boolean {
   );
 }
 
+function getSourceLabel(source: string) {
+  switch (source) {
+    case 'manager':
+      return 'Manager / Supervisor';
+    case 'external':
+      return 'Client / External';
+    default:
+      return 'Peer / Colleague';
+  }
+}
+
+function getRelationshipLabel(relationship?: string | null, source = 'peer') {
+  return relationship
+    ? relationshipDisplayLabel(relationship as CustomVerificationRelationship)
+    : getSourceLabel(source);
+}
+
 export default function VerifySkillPage() {
   const params = useParams();
   const router = useRouter();
@@ -208,7 +229,7 @@ export default function VerifySkillPage() {
         ) {
           setAttestationForm(
             createDefaultHumanObservedAttestationForm(
-              verification.verifier_relationship || getSourceLabel(verification.verifier_source)
+              getRelationshipLabel(verification.verifier_relationship, verification.verifier_source)
             )
           );
         }
@@ -303,17 +324,6 @@ export default function VerifySkillPage() {
       setError('Failed to submit response');
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const getSourceLabel = (source: string) => {
-    switch (source) {
-      case 'manager':
-        return 'Manager / Supervisor';
-      case 'external':
-        return 'Client / External';
-      default:
-        return 'Peer / Colleague';
     }
   };
 
@@ -557,7 +567,7 @@ export default function VerifySkillPage() {
               <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">Your Relationship</p>
                 <Badge variant="outline" className="text-proofound-forest border-proofound-forest">
-                  {data.verifier_relationship || getSourceLabel(data.verifier_source || 'peer')}
+                  {getRelationshipLabel(data.verifier_relationship, data.verifier_source || 'peer')}
                 </Badge>
               </div>
 

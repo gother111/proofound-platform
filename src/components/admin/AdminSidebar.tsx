@@ -28,19 +28,19 @@ const navItems = [
     title: 'Dashboard',
     href: '/admin',
     icon: LayoutDashboard,
-    description: 'Internal launch operations overview',
+    description: 'Launch operations overview',
   },
   {
     title: 'Verification',
     href: '/admin/verification',
     icon: BadgeCheck,
-    description: 'Internal ops queues',
+    description: 'Operations queues',
   },
   {
-    title: 'Audit Log',
+    title: 'Account history',
     href: '/admin/audit',
     icon: FileText,
-    description: 'Admin actions log',
+    description: 'Admin activity history',
   },
 ];
 
@@ -73,7 +73,7 @@ export function AdminSidebar({
         {(!collapsed || mobile) && (
           <div className="flex items-center gap-2">
             <Shield className="h-6 w-6 text-proofound-forest fill-current text-green-400" />
-            <span className="font-semibold text-lg tracking-tight">Internal Ops</span>
+            <span className="font-semibold text-lg tracking-tight">Launch Ops</span>
           </div>
         )}
         {!mobile && setCollapsed && (
@@ -128,7 +128,7 @@ export function AdminSidebar({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="truncate text-sm font-medium text-white/90">
-                {adminEmail || 'Internal Ops'}
+                {adminEmail || 'Launch Ops'}
               </div>
               <Badge
                 variant="outline"

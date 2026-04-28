@@ -61,18 +61,18 @@ export function FairnessTable({ comparisons, loading, onExport, className }: Fai
   const formatRate = (rate: number) => `${rate.toFixed(1)}%`;
   const formatGap = (gap: number) => {
     const sign = gap > 0 ? '+' : '';
-    return `${sign}${gap.toFixed(1)}pp`;
+    return `${sign}${gap.toFixed(1)} percentage points`;
   };
   const formatPValue = (p: number) => p.toFixed(3);
 
   return (
     <div className={cn('space-y-4', className)}>
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Fairness Gap Analysis</h3>
+        <h3 className="text-lg font-semibold">Fairness review</h3>
         {onExport && (
           <Button variant="outline" size="sm" onClick={onExport}>
             <DownloadIcon className="mr-2 h-4 w-4" />
-            Export CSV
+            Download report
           </Button>
         )}
       </div>
@@ -82,14 +82,14 @@ export function FairnessTable({ comparisons, loading, onExport, className }: Fai
           <TableHeader>
             <TableRow>
               <TableHead>Comparison</TableHead>
-              <TableHead className="text-right">Intro Rate A</TableHead>
-              <TableHead className="text-right">Intro Rate B</TableHead>
-              <TableHead className="text-right">Intro Gap</TableHead>
-              <TableHead className="text-right">p-value</TableHead>
-              <TableHead className="text-right">Contract Rate A</TableHead>
-              <TableHead className="text-right">Contract Rate B</TableHead>
-              <TableHead className="text-right">Contract Gap</TableHead>
-              <TableHead className="text-right">p-value</TableHead>
+              <TableHead className="text-right">Intro rate A</TableHead>
+              <TableHead className="text-right">Intro rate B</TableHead>
+              <TableHead className="text-right">Intro difference</TableHead>
+              <TableHead className="text-right">Statistical check</TableHead>
+              <TableHead className="text-right">Contract rate A</TableHead>
+              <TableHead className="text-right">Contract rate B</TableHead>
+              <TableHead className="text-right">Contract difference</TableHead>
+              <TableHead className="text-right">Statistical check</TableHead>
               <TableHead className="text-center">Status</TableHead>
             </TableRow>
           </TableHeader>
@@ -105,11 +105,16 @@ export function FairnessTable({ comparisons, loading, onExport, className }: Fai
                   <TableCell className="font-medium">
                     {comparison.cohortA.name} vs {comparison.cohortB.name}
                     <div className="text-xs text-muted-foreground">
-                      n={comparison.cohortA.sampleSize} / n={comparison.cohortB.sampleSize}
+                      {comparison.cohortA.sampleSize} people / {comparison.cohortB.sampleSize}{' '}
+                      people
                     </div>
                   </TableCell>
-                  <TableCell className="text-right">{formatRate(comparison.cohortA.introductionRate)}</TableCell>
-                  <TableCell className="text-right">{formatRate(comparison.cohortB.introductionRate)}</TableCell>
+                  <TableCell className="text-right">
+                    {formatRate(comparison.cohortA.introductionRate)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {formatRate(comparison.cohortB.introductionRate)}
+                  </TableCell>
                   <TableCell
                     className={cn(
                       'text-right font-medium',
@@ -128,8 +133,12 @@ export function FairnessTable({ comparisons, loading, onExport, className }: Fai
                     {formatPValue(comparison.pValueIntroduction)}
                     {isIntroSignificant && ' *'}
                   </TableCell>
-                  <TableCell className="text-right">{formatRate(comparison.cohortA.contractRate)}</TableCell>
-                  <TableCell className="text-right">{formatRate(comparison.cohortB.contractRate)}</TableCell>
+                  <TableCell className="text-right">
+                    {formatRate(comparison.cohortA.contractRate)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {formatRate(comparison.cohortB.contractRate)}
+                  </TableCell>
                   <TableCell
                     className={cn(
                       'text-right font-medium',
@@ -155,7 +164,7 @@ export function FairnessTable({ comparisons, loading, onExport, className }: Fai
                       </span>
                     ) : comparison.isSignificant ? (
                       <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700">
-                        Significant
+                        Needs review
                       </span>
                     ) : (
                       <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
@@ -171,13 +180,13 @@ export function FairnessTable({ comparisons, loading, onExport, className }: Fai
       </div>
 
       <div className="text-xs text-muted-foreground space-y-1">
-        <p>* p-value &lt; 0.05 indicates statistical significance</p>
-        <p>Gap = (Cohort A rate - Cohort B rate) in percentage points (pp)</p>
+        <p>* Marked results need a closer review.</p>
+        <p>Difference compares the two group rates in percentage points.</p>
         <p>
-          ⚠️ Concern = Statistically significant negative gap (&lt;-5pp) for underrepresented cohort
+          ⚠️ Concern = a negative difference greater than 5 percentage points for an
+          underrepresented group
         </p>
       </div>
     </div>
   );
 }
-

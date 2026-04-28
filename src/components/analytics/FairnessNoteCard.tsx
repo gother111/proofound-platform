@@ -104,12 +104,12 @@ export function FairnessNoteCard({
               <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
               <div className="text-sm">
                 <p className="font-medium text-red-900 dark:text-red-100 mb-1">
-                  Representation Gaps Detected
+                  Representation differences found
                 </p>
                 <p className="text-xs text-red-800 dark:text-red-200">
-                  {significantGaps.filter((m) => m.representationGap < -10).length} cohort(s) are
-                  underrepresented compared to their application rate. Review your selection
-                  criteria for potential bias.
+                  {significantGaps.filter((m) => m.representationGap < -10).length} group(s) are
+                  selected less often than their application rate would suggest. Review your
+                  selection criteria for potential bias.
                 </p>
               </div>
             </div>
@@ -118,7 +118,7 @@ export function FairnessNoteCard({
 
         {/* Metrics Table */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-foreground">Cohort Representation</h4>
+          <h4 className="text-sm font-medium text-foreground">Group representation</h4>
 
           {metrics.map((metric) => {
             const isUnderrepresented = metric.representationGap < -10;
@@ -152,18 +152,18 @@ export function FairnessNoteCard({
                       </Badge>
                     )}
                   </div>
-                  <span className="text-xs text-muted-foreground">n={metric.sampleSize}</span>
+                  <span className="text-xs text-muted-foreground">{metric.sampleSize} people</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 text-xs">
                   <div>
-                    <p className="mb-1 text-muted-foreground">Application Rate</p>
+                    <p className="mb-1 text-muted-foreground">Application rate</p>
                     <p className="font-medium text-foreground">
                       {metric.applicationRate.toFixed(1)}%
                     </p>
                   </div>
                   <div>
-                    <p className="mb-1 text-muted-foreground">Selection Rate</p>
+                    <p className="mb-1 text-muted-foreground">Selection rate</p>
                     <p className="font-medium text-foreground">
                       {metric.selectionRate.toFixed(1)}%
                     </p>
@@ -174,7 +174,7 @@ export function FairnessNoteCard({
                 {Math.abs(metric.representationGap) > 1 && (
                   <div>
                     <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="text-muted-foreground">Representation Gap</span>
+                      <span className="text-muted-foreground">Representation difference</span>
                       <span
                         className={cn(
                           'font-medium',
@@ -211,7 +211,7 @@ export function FairnessNoteCard({
         <div className="border-t border-proofound-stone/90 pt-3 text-xs text-muted-foreground">
           <p>
             <strong>Note:</strong> Metrics based on anonymized opt-in demographic data. Small sample
-            sizes (n{'<'}30) may show statistical noise. Use as one input among many in your
+            sizes with fewer than 30 people may vary more. Use as one input among many in your
             decision-making process.
           </p>
         </div>

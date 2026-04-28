@@ -20,6 +20,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { FileText, Calendar, Clock } from 'lucide-react';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
+import { internalValueLabel } from '@/lib/copy/labels';
 
 interface AuditLogEntry {
   id: string;
@@ -51,7 +52,7 @@ export default function AuditLogPage() {
         setHistory(data.history);
       }
     } catch (error) {
-      console.error('Error fetching audit log:', error);
+      console.error('Error fetching account history:', error);
     } finally {
       setLoading(false);
     }
@@ -89,7 +90,7 @@ export default function AuditLogPage() {
       <AppSurface>
         <div className="container mx-auto py-8">
           <div className="flex items-center justify-center min-h-[400px]">
-            <p className="text-muted-foreground">Loading audit log...</p>
+            <p className="text-muted-foreground">Loading account history...</p>
           </div>
         </div>
       </AppSurface>
@@ -101,17 +102,17 @@ export default function AuditLogPage() {
       <div className="container mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Purpose Edit History</h1>
+            <h1 className="text-3xl font-bold">Purpose edit history</h1>
             <p className="text-muted-foreground">
               Track all changes to your mission, vision, values, and causes
             </p>
           </div>
           <Select value={filter} onValueChange={setFilter}>
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by field" />
+              <SelectValue placeholder="Filter by section" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Fields</SelectItem>
+              <SelectItem value="all">All sections</SelectItem>
               <SelectItem value="mission">Mission</SelectItem>
               <SelectItem value="vision">Vision</SelectItem>
               <SelectItem value="values">Values</SelectItem>
@@ -141,9 +142,9 @@ export default function AuditLogPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Badge className={getFieldBadgeColor(entry.fieldName)}>
-                          {entry.fieldName.toUpperCase()}
+                          {internalValueLabel(entry.fieldName)}
                         </Badge>
-                        <CardTitle className="text-base">Field Updated</CardTitle>
+                        <CardTitle className="text-base">Section updated</CardTitle>
                       </div>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
@@ -156,25 +157,29 @@ export default function AuditLogPage() {
                         </span>
                       </div>
                     </div>
-                    <CardDescription>Change #{entry.id.slice(0, 8)}</CardDescription>
+                    <CardDescription>
+                      {internalValueLabel(entry.fieldName)} was updated.
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <p className="text-sm font-medium text-muted-foreground">Previous Value</p>
+                        <p className="text-sm font-medium text-muted-foreground">Previous value</p>
                         <div className="p-3 bg-muted rounded-md">
                           <p className="text-sm">{formatValue(entry.oldValue)}</p>
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <p className="text-sm font-medium text-muted-foreground">New Value</p>
+                        <p className="text-sm font-medium text-muted-foreground">New value</p>
                         <div className="p-3 bg-muted rounded-md border-l-4 border-green-500">
                           <p className="text-sm">{formatValue(entry.newValue)}</p>
                         </div>
                       </div>
                     </div>
                     {entry.ipAddress && (
-                      <p className="text-xs text-muted-foreground">IP: {entry.ipAddress}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Security details were recorded for this change.
+                      </p>
                     )}
                   </CardContent>
                 </Card>
@@ -184,10 +189,7 @@ export default function AuditLogPage() {
         )}
 
         <div className="text-sm text-muted-foreground">
-          <p>
-            This audit log is append-only and immutable for accountability. All changes are
-            permanently recorded.
-          </p>
+          <p>This history is kept for accountability. All changes are permanently recorded.</p>
           <p className="mt-2">Total entries: {history.length}</p>
         </div>
       </div>

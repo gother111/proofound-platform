@@ -121,10 +121,10 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
       link.click();
       window.URL.revokeObjectURL(url);
 
-      toast.success(`Exported ${filteredCheckIns.length} check-ins to CSV`);
+      toast.success(`Downloaded ${filteredCheckIns.length} check-ins`);
     } catch (error) {
       console.error('Failed to export CSV:', error);
-      toast.error('Failed to export CSV');
+      toast.error('Could not download check-ins');
     } finally {
       setIsExporting(false);
     }
@@ -224,7 +224,7 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
             className="border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5"
           >
             <Download className="w-4 h-4 mr-2" />
-            {isExporting ? 'Exporting...' : 'Export CSV'}
+            {isExporting ? 'Preparing...' : 'Download records'}
           </Button>
         </div>
       </CardHeader>

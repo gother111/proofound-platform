@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { skillDisplayLabel } from '@/lib/copy/labels';
 
 import { DOMAIN_COLORS } from './constants';
 import type { L4Skill } from './types';
@@ -64,15 +65,15 @@ export function SearchModePanel({
         </div>
         <p className="text-xs text-muted-foreground mt-1">
           {taxonomyReady
-            ? 'Start typing to see suggestions from our skills taxonomy'
-            : 'Taxonomy data is currently unavailable, so search suggestions are disabled.'}
+            ? 'Start typing to see skill suggestions'
+            : 'The skill library is currently unavailable, so search suggestions are disabled.'}
         </p>
       </div>
 
       {!taxonomyReady && (
         <div className="rounded-lg border border-[#C76B4A] bg-[#FFF0F0] p-4 text-sm text-[#8B4A36]">
-          The skill taxonomy is unavailable right now. Add-skill search and browse results will stay
-          empty until taxonomy data is restored.
+          The skill library is unavailable right now. Add-skill search and browse results will stay
+          empty until it is restored.
         </div>
       )}
 
@@ -127,6 +128,10 @@ export function SearchModePanel({
               : DOMAIN_COLORS[1];
             const isQuickAdding = quickAddingCodes.has(skill.code);
             const isSelected = bulkSelection.has(skill.code);
+            const skillName = skillDisplayLabel({
+              taxonomyName: skill.nameI18n?.en,
+              code: skill.code,
+            });
 
             return (
               <Card key={skill.code} className="p-4 border border-proofound-stone">
@@ -138,9 +143,7 @@ export function SearchModePanel({
                     onClick={() => handleSearchResultSelect(skill)}
                     onKeyDown={(e) => handleKeyActivate(e, () => handleSearchResultSelect(skill))}
                   >
-                    <h4 className="font-medium text-foreground mb-1">
-                      {skill.nameI18n?.en || 'Unknown'}
-                    </h4>
+                    <h4 className="font-medium text-foreground mb-1">{skillName}</h4>
                     {skill.descriptionI18n?.en && (
                       <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
                         {skill.descriptionI18n?.en}

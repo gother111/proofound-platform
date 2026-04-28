@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Edit2, FileText, CheckCircle2, Clock, TrendingUp, Lock, ShieldCheck } from 'lucide-react';
+import { skillDisplayLabel } from '@/lib/copy/labels';
 
 interface L4Skill {
   id: string;
@@ -51,6 +52,13 @@ export function L4Card({ skill, onEdit }: L4CardProps) {
   const levelInfo = LEVEL_LABELS[skill.level as keyof typeof LEVEL_LABELS] || LEVEL_LABELS[1];
   const proofCount = skill.proof_count ?? 0;
   const verificationCount = skill.verification_count ?? 0;
+  const skillName = skillDisplayLabel({
+    skillName: skill.skill_name,
+    taxonomyName: skill.taxonomy?.nameI18n?.en,
+    customSkillName: skill.custom_skill_name,
+    id: skill.id,
+    code: skill.skillCode,
+  });
 
   const recencyText = skill.lastUsedAt ? getRecencyText(new Date(skill.lastUsedAt)) : 'Never used';
 
@@ -60,14 +68,8 @@ export function L4Card({ skill, onEdit }: L4CardProps) {
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <h4 className="text-xl font-semibold text-proofound-charcoal mb-1 font-display">
-            {skill.skill_name ||
-              skill.taxonomy?.nameI18n?.en ||
-              skill.custom_skill_name ||
-              'Unknown Skill'}
+            {skillName}
           </h4>
-          <p className="text-xs text-muted-foreground font-mono bg-proofound-parchment inline-block px-2 py-0.5 rounded-md border border-proofound-stone/50">
-            {skill.skillCode}
-          </p>
         </div>
         <div className="flex flex-col items-end gap-2">
           <Badge variant="outline" className="gap-1 text-xs">

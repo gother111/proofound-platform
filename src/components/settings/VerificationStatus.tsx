@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Mail, Loader2, AlertCircle, Linkedin } from 'lucide-react';
 import { WorkEmailVerificationForm } from './WorkEmailVerificationForm';
+import { internalValueLabel } from '@/lib/copy/labels';
 
 interface VerificationStatusData {
   summary: {
@@ -141,7 +142,7 @@ function getLinkedInStatusText(status: VerificationStatusData) {
   return {
     label: 'Archived for launch',
     helper:
-      'LinkedIn compatibility checks are outside the locked MVP corridor. Any earlier LinkedIn signal remains read-only and never creates proof trust.',
+      'LinkedIn compatibility checks are outside the launch corridor. Any earlier LinkedIn signal remains read-only and never creates proof trust.',
     tone: 'neutral' as SignalTone,
   };
 }
@@ -426,7 +427,7 @@ function VerificationOverview({
                     </Badge>
                   </div>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Scope: {signal.subjectType.replace(/_/g, ' ')}
+                    Scope: {internalValueLabel(signal.subjectType)}
                     {' • '}
                     Basis: {signal.supportLabel}
                   </p>

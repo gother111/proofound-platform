@@ -15,6 +15,7 @@ import { Search, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { adminAuditLog } from '@/db/schema';
 import { apiFetch } from '@/lib/api/fetch';
+import { internalValueLabel } from '@/lib/copy/labels';
 
 type AdminAuditLogEntry = typeof adminAuditLog.$inferSelect & {
   admin: {
@@ -78,7 +79,7 @@ export function AuditLogTable() {
         <div className="relative w-72">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search logs..."
+            placeholder="Search history..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-8"
@@ -93,7 +94,7 @@ export function AuditLogTable() {
               <TableHead>Date</TableHead>
               <TableHead>Admin</TableHead>
               <TableHead>Action</TableHead>
-              <TableHead>Target Type</TableHead>
+              <TableHead>Target</TableHead>
               <TableHead>Details</TableHead>
             </TableRow>
           </TableHeader>
@@ -117,13 +118,14 @@ export function AuditLogTable() {
                   <TableCell className="whitespace-nowrap">
                     {format(new Date(log.createdAt), 'MMM d, HH:mm')}
                   </TableCell>
-                  <TableCell>
-                    {log.admin?.displayName || log.admin?.handle || 'Unknown'}
-                  </TableCell>
-                  <TableCell className="font-medium">{log.action}</TableCell>
-                  <TableCell>{log.targetType || '-'}</TableCell>
-                  <TableCell className="max-w-md truncate text-muted-foreground" title={JSON.stringify(log.changes || log.metadata)}>
-                     {log.reason || (log.changes ? 'View details' : '-')}
+                  <TableCell>{log.admin?.displayName || log.admin?.handle || 'Unknown'}</TableCell>
+                  <TableCell className="font-medium">{internalValueLabel(log.action)}</TableCell>
+                  <TableCell>{internalValueLabel(log.targetType)}</TableCell>
+                  <TableCell
+                    className="max-w-md truncate text-muted-foreground"
+                    title={log.changes || log.metadata ? 'Additional protected details' : undefined}
+                  >
+                    {log.reason || (log.changes ? 'More information' : '-')}
                   </TableCell>
                 </TableRow>
               ))
@@ -135,7 +137,7 @@ export function AuditLogTable() {
       {data && (
         <div className="flex items-center justify-between px-2">
           <div className="text-sm text-muted-foreground">
-            Showing {((data.pagination.page - 1) * data.pagination.limit) + 1} to{' '}
+            Showing {(data.pagination.page - 1) * data.pagination.limit + 1} to{' '}
             {Math.min(data.pagination.page * data.pagination.limit, data.pagination.total)} of{' '}
             {data.pagination.total} logs
           </div>
@@ -164,4 +166,3 @@ export function AuditLogTable() {
     </div>
   );
 }
-

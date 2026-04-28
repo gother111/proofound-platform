@@ -21,7 +21,10 @@ export function ModeSelector({ onSelect }: ModeSelectorProps) {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => onSelect('guided')}>
+        <Card
+          className="cursor-pointer hover:border-primary transition-colors"
+          onClick={() => onSelect('guided')}
+        >
           <CardHeader>
             <div className="flex items-center gap-2 mb-2">
               <div className="p-2 bg-blue-100 rounded-lg">
@@ -54,7 +57,10 @@ export function ModeSelector({ onSelect }: ModeSelectorProps) {
           </CardContent>
         </Card>
 
-        <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => onSelect('explore')}>
+        <Card
+          className="cursor-pointer hover:border-primary transition-colors"
+          onClick={() => onSelect('explore')}
+        >
           <CardHeader>
             <div className="p-2 bg-amber-100 rounded-lg w-fit mb-2">
               <Compass className="h-5 w-5 text-amber-600" />
@@ -69,12 +75,12 @@ export function ModeSelector({ onSelect }: ModeSelectorProps) {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              Browse the full taxonomy and add skills at your own pace. Great if you already know the
-              exact terms.
+              Browse the full skill library and add skills at your own pace. Great if you already
+              know the exact terms.
             </p>
             <ul className="text-sm space-y-2 mb-4">
               <li className="flex items-start gap-2">
-                <span aria-hidden>•</span> Full taxonomy access (18,708 skills)
+                <span aria-hidden>•</span> Full skill library access (18,708 skills)
               </li>
               <li className="flex items-start gap-2">
                 <span aria-hidden>•</span> Advanced search and filters
@@ -83,7 +89,9 @@ export function ModeSelector({ onSelect }: ModeSelectorProps) {
                 <span aria-hidden>•</span> Best for power users who know their keywords
               </li>
             </ul>
-            <Button variant="outline" className="w-full">Explore Taxonomy</Button>
+            <Button variant="outline" className="w-full">
+              Explore skills
+            </Button>
           </CardContent>
         </Card>
       </div>

@@ -1,4 +1,5 @@
 import type { L4Skill } from '../components/AddSkillDrawer';
+import { skillDisplayLabel } from '@/lib/copy/labels';
 
 /**
  * Normalize a newly created or fetched skill so the client can render it immediately.
@@ -23,12 +24,16 @@ export function normalizeSkillForClient(skill: any, fallback?: L4Skill) {
   }
 
   base.skillCode = base.skillCode || base.skill_code || base.skill_id || fallback?.code || '';
-  base.skill_name =
-    base.skill_name ||
-    base.custom_skill_name ||
-    base.taxonomy?.name_i18n?.en ||
-    fallback?.nameI18n?.en ||
-    'New Skill';
+  base.skill_name = skillDisplayLabel(
+    {
+      skillName: base.skill_name,
+      customSkillName: base.custom_skill_name,
+      taxonomyName: base.taxonomy?.name_i18n?.en || fallback?.nameI18n?.en,
+      id: base.skill_id || base.id,
+      code: base.skillCode,
+    },
+    'New skill'
+  );
 
   // Default counts so dashboards don’t filter it out
   base.proof_count = base.proof_count ?? 0;

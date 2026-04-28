@@ -20,7 +20,7 @@ export function InterviewPrepTab() {
             Interview prep is coming soon
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            We’re finalizing guided practice, scripts, and mock interview drills.
+            We’re finalizing guided practice, scripts, and interview rehearsal drills.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3 text-sm text-foreground">
@@ -61,7 +61,7 @@ export function InterviewPrepTab() {
           </ul>
           <div className="flex items-center gap-2 pt-2">
             <Video className="h-4 w-4 text-proofound-forest" />
-            <span>Mock interview videos will appear here soon.</span>
+            <span>Interview rehearsal videos will appear here soon.</span>
           </div>
         </CardContent>
       </Card>

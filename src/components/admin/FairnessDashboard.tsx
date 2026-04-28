@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { internalValueLabel } from '@/lib/copy/labels';
 import {
   Select,
   SelectContent,
@@ -295,7 +296,7 @@ export function FairnessDashboard() {
                           </p>
                         </div>
                         <Badge variant="outline" className={getStatusColor(metric.status)}>
-                          {metric.status.toUpperCase()}
+                          {internalValueLabel(metric.status)}
                         </Badge>
                       </div>
                       <Progress value={(metric.value / metric.benchmark) * 100} className="h-2" />
@@ -358,9 +359,9 @@ export function FairnessDashboard() {
       {gapAnalyses.length > 0 && (
         <Card className="border-proofound-stone dark:border-border rounded-2xl">
           <CardHeader>
-            <CardTitle className="font-['Crimson_Pro']">Detected Gaps & Recommendations</CardTitle>
+            <CardTitle className="font-['Crimson_Pro']">Differences to review</CardTitle>
             <CardDescription>
-              Automated analysis of fairness gaps with actionable recommendations
+              Review fairness differences with recommended next steps
             </CardDescription>
           </CardHeader>
           <CardContent>

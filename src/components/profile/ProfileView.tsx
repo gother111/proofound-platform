@@ -23,6 +23,7 @@ import { ValuesCard } from './ValuesCard';
 import { CausesCard } from './CausesCard';
 import { SkillsCard } from './SkillsCard';
 import { getTaxonomyLabel, CAUSES_TAXONOMY } from '@/lib/taxonomy/data';
+import { verificationStatusLabel } from '@/lib/copy/labels';
 import type { ImpactStory, ImpactStoryVerificationRequestStatus } from '@/types/profile';
 
 interface ProfileViewProps {
@@ -151,7 +152,7 @@ export function ProfileView({ data }: ProfileViewProps) {
       return <Badge variant="destructive">Request Email Failed</Badge>;
     }
 
-    return <Badge variant="outline">Request {status}</Badge>;
+    return <Badge variant="outline">Request {verificationStatusLabel(status)}</Badge>;
   };
 
   return (

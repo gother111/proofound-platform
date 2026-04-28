@@ -16,22 +16,23 @@ const VISIBILITY_CONFIG = {
     description: 'Visible to anyone',
   },
   post_match: {
-    label: 'Post-Match',
+    label: 'After match',
     icon: Users,
     color: 'bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/20 dark:text-blue-400',
     description: 'Visible after matching',
   },
   post_conversation_start: {
-    label: 'Post-Conversation',
+    label: 'After conversation',
     icon: MessageCircle,
-    color: 'bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900/20 dark:text-purple-400',
+    color:
+      'bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900/20 dark:text-purple-400',
     description: 'Visible after conversation starts',
   },
   internal_only: {
-    label: 'Internal Only',
+    label: 'Team only',
     icon: Lock,
     color: 'bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-900/20 dark:text-gray-400',
-    description: 'Visible to org members only',
+    description: 'Visible to team members only',
   },
 };
 
@@ -48,6 +49,5 @@ export function VisibilityLevelBadge({ level, showLabel = true }: VisibilityLeve
 }
 
 export function getVisibilityDescription(level: string): string {
-  return VISIBILITY_CONFIG[level as keyof typeof VISIBILITY_CONFIG]?.description || 'Unknown';
+  return VISIBILITY_CONFIG[level as keyof typeof VISIBILITY_CONFIG]?.description || 'Not set';
 }
-

@@ -12,6 +12,7 @@ import {
   PROOF_ALLOWED_EXTENSIONS_LABEL,
   PROOF_FILE_ACCEPT_ATTRIBUTE,
 } from '@/lib/proofs/constants';
+import { proofTypeLabel } from '@/lib/copy/labels';
 import { Textarea } from '@/components/ui/textarea';
 import { getIndividualRecoveryActions } from '@/lib/ui/recovery-actions';
 
@@ -284,7 +285,7 @@ export function ProofsSection({
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge variant="outline" className="text-xs capitalize">
-                          {proof.proof_type}
+                          {proofTypeLabel(proof.proof_type)}
                         </Badge>
                         <h4 className="font-medium text-foreground">{proof.title}</h4>
                         {isExpired && (

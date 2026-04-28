@@ -84,7 +84,7 @@ export function VisionEditor({
     }
 
     if (value.length > 300) {
-      setError('Vision statement should be 300 characters or less (PRD requirement)');
+      setError('Vision statement should be 300 characters or less.');
       return;
     }
 

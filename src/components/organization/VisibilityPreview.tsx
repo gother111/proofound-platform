@@ -23,28 +23,47 @@ interface VisibilityPreviewProps {
 }
 
 const FIELD_LABELS = {
-  displayName: 'Organization Name',
-  mission: 'Mission Statement',
-  vision: 'Vision Statement',
+  displayName: 'Organization name',
+  mission: 'Mission statement',
+  vision: 'Vision statement',
   causes: 'Causes',
-  workCulture: 'Work Culture',
-  structure: 'Organizational Structure',
+  workCulture: 'Work culture',
+  structure: 'Team structure',
   projects: 'Projects',
   partnerships: 'Partnerships',
   goals: 'Goals',
-  impact: 'Impact Dashboard',
+  impact: 'Impact overview',
 };
 
 const VIEWER_TYPES = [
-  { key: 'public', label: 'Public View', icon: Globe, description: 'Anyone browsing' },
-  { key: 'post_match', label: 'Post-Match', icon: Users, description: 'After matching' },
+  {
+    key: 'public',
+    label: 'Public',
+    shortLabel: 'Public',
+    icon: Globe,
+    description: 'Anyone browsing',
+  },
+  {
+    key: 'post_match',
+    label: 'After match',
+    shortLabel: 'Match',
+    icon: Users,
+    description: 'People after a match is made',
+  },
   {
     key: 'post_conversation_start',
-    label: 'Post-Conversation',
+    label: 'After conversation',
+    shortLabel: 'Chat',
     icon: MessageCircle,
-    description: 'After conversation starts',
+    description: 'People after a conversation starts',
   },
-  { key: 'internal_only', label: 'Internal', icon: Lock, description: 'Org members only' },
+  {
+    key: 'internal_only',
+    label: 'Team only',
+    shortLabel: 'Team',
+    icon: Lock,
+    description: 'People on your organization team',
+  },
 ];
 
 function getVisibleFields(settings: VisibilitySettings, viewerLevel: string): string[] {
@@ -65,7 +84,7 @@ export function VisibilityPreview({ settings }: VisibilityPreviewProps) {
       <CardHeader>
         <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground flex items-center gap-2">
           <Eye className="h-5 w-5" />
-          Visibility Preview
+          Visibility preview
         </CardTitle>
         <CardDescription>See what different viewers can access</CardDescription>
       </CardHeader>
@@ -79,7 +98,7 @@ export function VisibilityPreview({ settings }: VisibilityPreviewProps) {
                 <TabsTrigger key={type.key} value={type.key}>
                   <Icon className="h-4 w-4 mr-2" />
                   <span className="hidden sm:inline">{type.label}</span>
-                  <span className="sm:hidden">{type.label.split('-')[0]}</span>
+                  <span className="sm:hidden">{type.shortLabel}</span>
                 </TabsTrigger>
               );
             })}
@@ -95,7 +114,7 @@ export function VisibilityPreview({ settings }: VisibilityPreviewProps) {
                     <strong>{type.label}:</strong> {type.description}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Can see {visibleFields.length} of {Object.keys(settings).length} fields
+                    Can see {visibleFields.length} of {Object.keys(settings).length} sections
                   </p>
                 </div>
 

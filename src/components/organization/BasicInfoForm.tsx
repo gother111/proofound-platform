@@ -9,6 +9,7 @@ import { OrganizationCausesEditor } from './CausesEditor';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
+import { organizationTypeLabel } from '@/lib/copy/labels';
 
 interface Organization {
   id: string;
@@ -145,7 +146,7 @@ export function BasicInfoForm({ org, canEdit }: BasicInfoFormProps) {
                 disabled={!canEdit}
               />
               <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground/60 mt-1">
-                Max 300 characters recommended (PRD requirement)
+                Aim for 300 characters or less.
               </p>
             </div>
 
@@ -197,17 +198,17 @@ export function BasicInfoForm({ org, canEdit }: BasicInfoFormProps) {
         <CardContent className="space-y-4">
           <div>
             <p className="text-sm font-medium text-proofound-charcoal dark:text-foreground">
-              URL Slug
+              Public link name
             </p>
             <p className="text-proofound-charcoal/70 dark:text-muted-foreground">{org.slug}</p>
             <p className="text-xs text-proofound-charcoal/70 dark:text-muted-foreground mt-1">
-              Your organization URL: /app/o/{org.slug}
+              Your organization link: /app/o/{org.slug}
             </p>
           </div>
           <div>
             <p className="text-sm font-medium text-proofound-charcoal dark:text-foreground">Type</p>
-            <p className="text-proofound-charcoal/70 dark:text-muted-foreground capitalize">
-              {org.type}
+            <p className="text-proofound-charcoal/70 dark:text-muted-foreground">
+              {organizationTypeLabel(org.type)}
             </p>
           </div>
         </CardContent>

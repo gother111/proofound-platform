@@ -116,7 +116,7 @@
       "organization": {
         "title": "Skapa din organisation",
         "name": "Organisationsnamn",
-        "slug": "URL-slug",
+        "slug": "Offentligt länknamn",
         "type": "Organisationstyp",
         "types": {
           "company": "Företag",

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Edit2, Calendar, TrendingUp, Award, Lock, X } from 'lucide-react';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { skillDisplayLabel } from '@/lib/copy/labels';
 
 interface Skill {
   id: string;
@@ -73,11 +74,12 @@ export function SkillsSideSheet({
         </div>
       ) : (
         skills.map((skill) => {
-          const skillName =
-            skill.skill_name ||
-            skill.taxonomy?.name_i18n?.en ||
-            skill.custom_skill_name ||
-            'Unknown Skill';
+          const skillName = skillDisplayLabel({
+            skillName: skill.skill_name,
+            taxonomyName: skill.taxonomy?.name_i18n?.en,
+            customSkillName: skill.custom_skill_name,
+            id: skill.id,
+          });
           const level = skill.level || 1;
           const recency = formatRecency(skill.lastUsedAt);
           const relevance = skill.relevance || 'current';

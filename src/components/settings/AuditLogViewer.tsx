@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api/fetch';
+import { internalValueLabel, isMachineIdentifier } from '@/lib/copy/labels';
 
 interface AuditEvent {
   id: string;
@@ -43,6 +44,18 @@ interface AuditLogResponse {
   limit: number;
   offset: number;
   hasMore: boolean;
+}
+
+function readableMetadataValue(value: unknown): string {
+  if (value === null || value === undefined || value === '') return 'Not set';
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+  if (typeof value === 'number') return String(value);
+  if (typeof value === 'string') {
+    if (isMachineIdentifier(value)) return 'Protected reference';
+    return /[_-]/.test(value) ? internalValueLabel(value) : value;
+  }
+  if (Array.isArray(value)) return `${value.length} item${value.length === 1 ? '' : 's'}`;
+  return 'Additional details';
 }
 
 export function AuditLogViewer() {
@@ -84,7 +97,7 @@ export function AuditLogViewer() {
       const response = await apiFetch(`/api/user/audit-log?limit=${LIMIT}&offset=${offset}`);
 
       if (!response.ok) {
-        throw new Error('Failed to load audit log');
+        throw new Error('Failed to load account history');
       }
 
       const data: AuditLogResponse = await response.json();
@@ -97,7 +110,7 @@ export function AuditLogViewer() {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
       toast({
-        title: 'Failed to load audit log',
+        title: 'Failed to load account history',
         description: 'Could not fetch your activity history',
         variant: 'destructive',
       });
@@ -112,7 +125,7 @@ export function AuditLogViewer() {
       const response = await apiFetch(`/api/user/audit-log?limit=1000&offset=0`);
 
       if (!response.ok) {
-        throw new Error('Failed to export audit log');
+        throw new Error('Failed to download account history');
       }
 
       const data = await response.json();
@@ -124,14 +137,14 @@ export function AuditLogViewer() {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `audit-log-${new Date().toISOString().split('T')[0]}.json`;
+      link.download = `account-history-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
       toast({
-        title: 'Audit log exported',
+        title: 'Account history downloaded',
         description: 'Your activity history has been downloaded',
       });
     } catch (error) {
@@ -139,8 +152,8 @@ export function AuditLogViewer() {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
       toast({
-        title: 'Failed to export audit log',
-        description: 'Please try again',
+        title: 'Download failed',
+        description: 'Could not download your account history',
         variant: 'destructive',
       });
     }
@@ -207,13 +220,13 @@ export function AuditLogViewer() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              Activity Log
+              Account history
             </CardTitle>
             <CardDescription>Complete history of your account activity</CardDescription>
           </div>
           <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
-            Export
+            Download
           </Button>
         </div>
       </CardHeader>
@@ -254,7 +267,7 @@ export function AuditLogViewer() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <Badge className={`text-xs ${getActionColor(event.action)}`}>
-                        {event.action}
+                        {internalValueLabel(event.action)}
                       </Badge>
                       <span className="text-xs text-gray-500">
                         {new Date(event.timestamp).toLocaleString()}
@@ -268,18 +281,27 @@ export function AuditLogViewer() {
                       </div>
                       <div className="flex items-center gap-1">
                         <Shield className="h-3 w-3" />
-                        IP: {event.ipHash}
+                        Access detail: {event.ipHash ? 'Protected' : 'Not recorded'}
                       </div>
                     </div>
 
                     {event.metadata && Object.keys(event.metadata).length > 0 && (
                       <details className="mt-2">
                         <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
-                          View details
+                          More information
                         </summary>
-                        <pre className="mt-2 text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded overflow-auto max-h-32">
-                          {JSON.stringify(event.metadata, null, 2)}
-                        </pre>
+                        <dl className="mt-2 grid gap-1 rounded bg-gray-100 p-2 text-xs dark:bg-gray-800">
+                          {Object.entries(event.metadata)
+                            .slice(0, 6)
+                            .map(([key, value]) => (
+                              <div key={key} className="flex justify-between gap-3">
+                                <dt className="text-gray-500 dark:text-gray-400">
+                                  {internalValueLabel(key)}
+                                </dt>
+                                <dd className="text-right">{readableMetadataValue(value)}</dd>
+                              </div>
+                            ))}
+                        </dl>
                       </details>
                     )}
                   </div>
@@ -317,12 +339,11 @@ export function AuditLogViewer() {
             <Shield className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <div className="text-sm space-y-1">
               <p className="font-medium text-blue-900 dark:text-blue-100">
-                Your Privacy & Transparency
+                Your privacy and transparency
               </p>
               <p className="text-blue-800 dark:text-blue-200">
-                This audit log shows all actions performed on your account. IP addresses are hashed
-                for privacy. You can export this data at any time as part of your right to access
-                under GDPR Article 15.
+                This account history shows activity on your account. Access details are protected
+                before storage, and you can download this information at any time.
               </p>
             </div>
           </div>

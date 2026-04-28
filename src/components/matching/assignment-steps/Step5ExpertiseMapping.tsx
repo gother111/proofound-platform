@@ -15,9 +15,9 @@ import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { X, AlertTriangle, Search, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { skillDisplayLabel } from '@/lib/copy/labels';
 
 interface Step5Props {
   form: UseFormReturn<any>;
@@ -74,7 +74,12 @@ const MIN_SEARCH_LENGTH = 2;
 const MAX_RESULTS = 20;
 
 function getSkillLabel(skill: Partial<AssignmentSkill>) {
-  return skill.label || skill.name || skill.skillName || skill.id || 'Unknown skill';
+  return skillDisplayLabel({
+    label: skill.label,
+    name: skill.name,
+    skillName: skill.skillName,
+    id: skill.id,
+  });
 }
 
 function normalizeText(value: string | undefined) {
@@ -101,7 +106,10 @@ function mapTaxonomySkillToAssignmentSkill(
 ): AssignmentSkill {
   return {
     id: taxonomySkill.code,
-    label: taxonomySkill.nameI18n?.en || taxonomySkill.code,
+    label: skillDisplayLabel({
+      taxonomyName: taxonomySkill.nameI18n?.en,
+      code: taxonomySkill.code,
+    }),
     level,
     linkedToBV,
     linkedToTO,
@@ -120,7 +128,7 @@ async function searchTaxonomySkills(query: string, signal?: AbortSignal): Promis
   });
 
   if (!response.ok) {
-    throw new Error('Failed to fetch taxonomy skills');
+    throw new Error('Failed to fetch skills');
   }
 
   const payload = await response.json();
@@ -395,15 +403,11 @@ export function Step5ExpertiseMapping({
             <AlertTriangle className="w-4 h-4 mt-0.5" />
             <div className="space-y-2">
               <p className="font-medium">
-                Some prefilled skills could not be auto-mapped to taxonomy codes.
+                Some prefilled skills need a fresh selection from the skill library.
               </p>
-              <div className="flex flex-wrap gap-2">
-                {unresolvedLegacyIds.map((id) => (
-                  <Badge key={id} variant="outline" className="border-yellow-500 text-yellow-900">
-                    {id}
-                  </Badge>
-                ))}
-              </div>
+              <p className="text-sm">
+                Search by skill name and add the matching skills again before publishing.
+              </p>
             </div>
           </div>
         </div>
@@ -429,7 +433,7 @@ export function Step5ExpertiseMapping({
 
         {debouncedQuery.length > 0 && debouncedQuery.length < MIN_SEARCH_LENGTH && (
           <p className="text-sm text-muted-foreground">
-            Type at least {MIN_SEARCH_LENGTH} characters to search taxonomy skills.
+            Type at least {MIN_SEARCH_LENGTH} characters to search skills.
           </p>
         )}
 
@@ -445,17 +449,18 @@ export function Step5ExpertiseMapping({
             {searchResults.map((skill) => {
               const path = taxonomyPathText(skill);
               const selected = allSelectedSkillIds.has(skill.code);
+              const skillLabel = skillDisplayLabel({
+                taxonomyName: skill.nameI18n?.en,
+                code: skill.code,
+              });
               return (
                 <div
                   key={skill.code}
                   className="border rounded-md p-3 bg-background flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0">
-                    <p className="font-medium truncate">{skill.nameI18n?.en || skill.code}</p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {path || 'No taxonomy path'}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">{skill.code}</p>
+                    <p className="font-medium truncate">{skillLabel}</p>
+                    {path ? <p className="text-xs text-muted-foreground truncate">{path}</p> : null}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <Button
@@ -505,7 +510,6 @@ export function Step5ExpertiseMapping({
                   {skillPathText(skill) && (
                     <p className="text-xs text-muted-foreground">{skillPathText(skill)}</p>
                   )}
-                  <p className="text-xs text-muted-foreground">{skill.id}</p>
                 </div>
                 <Button
                   variant="ghost"
@@ -577,7 +581,6 @@ export function Step5ExpertiseMapping({
                       {skillPathText(skill) && (
                         <p className="text-xs text-muted-foreground">{skillPathText(skill)}</p>
                       )}
-                      <p className="text-xs text-muted-foreground">{skill.id}</p>
                     </div>
                     <Button
                       variant="ghost"

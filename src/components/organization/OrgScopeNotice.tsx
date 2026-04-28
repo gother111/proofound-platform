@@ -29,7 +29,7 @@ export function OrgScopeNotice({
         <Card className="border-proofound-stone/70">
           <CardHeader>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-proofound-forest/80">
-              Lean Org MVP
+              Organization workspace
             </p>
             <CardTitle className="font-['Crimson_Pro'] text-3xl text-proofound-charcoal">
               {title}

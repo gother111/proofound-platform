@@ -21,10 +21,10 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching internal ops queues:', error);
+    console.error('Error fetching operations queues:', error);
     return NextResponse.json(
       {
-        error: 'Failed to fetch internal ops queues',
+        error: 'Failed to fetch operations queues',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }

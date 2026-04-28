@@ -20,6 +20,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import { uploadFile, validateFile } from '@/lib/upload';
+import { skillDisplayLabel } from '@/lib/copy/labels';
 
 import { DeleteSkillDialog } from './edit-skill/DeleteSkillDialog';
 import { ProofsSection } from './edit-skill/ProofsSection';
@@ -95,6 +96,8 @@ type SkillRecord = {
   lastUsedAt?: string;
   relevance?: 'current' | 'emerging' | 'obsolete';
   skill_name?: string;
+  skill_code?: string | null;
+  skillCode?: string | null;
   custom_skill_name?: string;
   taxonomy?: {
     name_i18n?: {
@@ -230,8 +233,13 @@ export function EditSkillWindow({
     return null;
   }
 
-  const skillName =
-    skill.skill_name || skill.taxonomy?.name_i18n?.en || skill.custom_skill_name || 'Unknown Skill';
+  const skillName = skillDisplayLabel({
+    skillName: skill.skill_name,
+    taxonomyName: skill.taxonomy?.name_i18n?.en,
+    customSkillName: skill.custom_skill_name,
+    id: skill.id,
+    code: skill.skillCode || skill.skill_code,
+  });
 
   const handleSave = async () => {
     setSaving(true);

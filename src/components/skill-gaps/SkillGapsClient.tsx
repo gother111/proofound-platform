@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import type { SkillGap, GapMatrixRow } from '@/lib/skills/gap-service';
 import type { LearningRecommendations } from '@/lib/learning/types';
 import { LearningRecommendationsList } from './LearningRecommendations';
+import { internalValueLabel } from '@/lib/copy/labels';
 
 type Goal = {
   id: string;
@@ -489,7 +490,7 @@ export function SkillGapsClient({
                       </CardDescription>
                     </div>
                     <Badge variant={goal.status === 'completed' ? 'default' : 'secondary'}>
-                      {goal.status ?? 'planned'}
+                      {internalValueLabel(goal.status, 'Planned')}
                     </Badge>
                   </div>
                 </CardHeader>

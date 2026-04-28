@@ -55,8 +55,7 @@ export function AboutSection() {
             <p className="text-foreground mb-3">
               The <strong>Expertise Atlas</strong> is your comprehensive skills management system
               that goes beyond traditional skills lists. It helps you map, evidence, and maintain
-              your capabilities using a structured, extensible taxonomy and proof-based credibility
-              system.
+              your capabilities using a structured skill library and proof-based credibility system.
             </p>
             <div className="flex flex-wrap items-center gap-2 mb-3">
               <Badge
@@ -174,7 +173,7 @@ export function AboutSection() {
           <div className="bg-japandi-bg rounded-lg p-4">
             <h4 className="font-semibold text-foreground mb-2 text-sm">Scientific Foundation</h4>
             <p className="text-xs text-muted-foreground">
-              Our taxonomy is informed by established frameworks including{' '}
+              Our skill library is informed by established frameworks including{' '}
               <strong>ESCO (European Skills)</strong>,{' '}
               <strong>O*NET (Occupational Information Network)</strong>,{' '}
               <strong>OECD transferable skills</strong>, and proficiency models like{' '}

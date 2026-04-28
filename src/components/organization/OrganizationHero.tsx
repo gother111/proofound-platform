@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Link as LinkIcon, Calendar, Edit3, CheckCircle2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { organizationTypeLabel } from '@/lib/copy/labels';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
 
 interface OrganizationHeroProps {
@@ -117,7 +118,7 @@ export function OrganizationHero({ org, canEdit, onEditProfile }: OrganizationHe
                   variant="secondary"
                   className="bg-proofound-parchment text-proofound-charcoal border-proofound-stone"
                 >
-                  {org.type || 'Organization'}
+                  {organizationTypeLabel(org.type)}
                 </Badge>
               </div>
             </div>

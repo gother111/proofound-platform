@@ -49,14 +49,14 @@ const visibilityOptions = [
   },
   {
     value: 'network_only' as const,
-    label: 'Network-only',
+    label: 'Connections',
     icon: Eye,
-    description: 'Visible to trusted network views and matched organizations',
+    description: 'Visible to your trusted network and matched organizations',
     color: 'text-amber-600',
   },
   {
     value: 'match_only' as const,
-    label: 'Match-only',
+    label: 'After match',
     icon: Eye,
     description: 'Only visible after mutual interest is confirmed',
     color: 'text-emerald-600',

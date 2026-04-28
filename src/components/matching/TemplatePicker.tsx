@@ -14,6 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import { skillDisplayLabel } from '@/lib/copy/labels';
 
 export type AssignmentTemplate = {
   id: string;
@@ -88,7 +89,7 @@ function TemplatePreview({ payload }: { payload?: AssignmentTemplatePayload }) {
           <div className="flex flex-wrap gap-2">
             {mustHave.slice(0, 5).map((skill) => (
               <Badge key={skill.id} variant="secondary">
-                {skill.label || skill.id}
+                {skillDisplayLabel({ label: skill.label, id: skill.id })}
               </Badge>
             ))}
           </div>

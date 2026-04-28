@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { apiFetch } from '@/lib/api/fetch';
+import { candidateInviteStatusLabel } from '@/lib/copy/labels';
 
 interface CandidateInviteRow {
   id: string;
@@ -258,7 +259,7 @@ export function OrgCandidateInvitesPanel({ orgId }: OrgCandidateInvitesPanelProp
                       Invited {new Date(invite.createdAt).toLocaleString()}
                     </p>
                   </div>
-                  <Badge variant="outline">{invite.status}</Badge>
+                  <Badge variant="outline">{candidateInviteStatusLabel(invite.status)}</Badge>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs text-neutral-dark-600">

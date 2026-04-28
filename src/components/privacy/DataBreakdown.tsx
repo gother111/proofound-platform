@@ -48,7 +48,7 @@ export function DataBreakdown() {
       const mockCategories: DataCategory[] = [
         {
           id: 'profile',
-          name: 'Profile Information',
+          name: 'Profile information',
           description: 'Your personal profile data and settings',
           icon: <User className="h-5 w-5" />,
           count: 1,
@@ -57,14 +57,14 @@ export function DataBreakdown() {
             'Display name',
             'Email address',
             'Avatar image',
-            'Handle/username',
+            'Profile link name',
             'Location (if provided)',
             'Bio/description',
           ],
         },
         {
           id: 'professional',
-          name: 'Professional Data',
+          name: 'Professional information',
           description: 'Skills, experience, projects, and education',
           icon: <Briefcase className="h-5 w-5" />,
           count: 0, // Will be fetched from API
@@ -89,7 +89,7 @@ export function DataBreakdown() {
         },
         {
           id: 'analytics',
-          name: 'Analytics & Activity',
+          name: 'Product usage',
           description: 'Your activity logs and usage patterns',
           icon: <BarChart3 className="h-5 w-5" />,
           count: 0,
@@ -103,7 +103,7 @@ export function DataBreakdown() {
         },
         {
           id: 'verification',
-          name: 'Verification & Trust',
+          name: 'Verification and trust',
           description: 'Verification requests and badges',
           icon: <Shield className="h-5 w-5" />,
           count: 0,
@@ -159,11 +159,24 @@ export function DataBreakdown() {
     }
   };
 
+  const getTierLabel = (tier: DataCategory['tier']) => {
+    switch (tier) {
+      case 'PII':
+        return 'Personal';
+      case 'Sensitive':
+        return 'Private';
+      case 'Semi-Public':
+        return 'Shared in some places';
+      case 'Public':
+        return 'Public';
+    }
+  };
+
   if (loading) {
     return (
       <Card>
         <CardContent className="pt-6">
-          <p className="text-center text-muted-foreground">Loading data breakdown...</p>
+          <p className="text-center text-muted-foreground">Loading your data...</p>
         </CardContent>
       </Card>
     );
@@ -174,12 +187,14 @@ export function DataBreakdown() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Your Data Breakdown</CardTitle>
-            <CardDescription>Detailed view of all data we store about you</CardDescription>
+            <CardTitle>Your data</CardTitle>
+            <CardDescription>
+              A detailed view of what Proofound stores for your account
+            </CardDescription>
           </div>
           <Button onClick={handleExportData} disabled={exporting}>
             <Download className="mr-2 h-4 w-4" />
-            {exporting ? 'Exporting...' : 'Export All Data'}
+            {exporting ? 'Preparing...' : 'Download my data'}
           </Button>
         </div>
       </CardHeader>
@@ -196,7 +211,7 @@ export function DataBreakdown() {
                     <div className="flex items-center gap-2">
                       <span className="font-semibold">{category.name}</span>
                       <Badge className={getTierColor(category.tier)} variant="secondary">
-                        {category.tier}
+                        {getTierLabel(category.tier)}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">{category.description}</p>
@@ -206,7 +221,7 @@ export function DataBreakdown() {
               <AccordionContent>
                 <div className="ml-13 space-y-2 pt-2">
                   <p className="text-sm font-semibold text-muted-foreground">
-                    Data stored in this category:
+                    Included in this category:
                   </p>
                   <ul className="space-y-1 text-sm">
                     {category.items.map((item, index) => (
@@ -219,9 +234,7 @@ export function DataBreakdown() {
 
                   {category.tier === 'PII' && (
                     <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm dark:border-red-900 dark:bg-red-950/20">
-                      <p className="font-semibold text-red-900 dark:text-red-100">
-                        Personally Identifiable Information (PII)
-                      </p>
+                      <p className="font-semibold text-red-900 dark:text-red-100">Personal data</p>
                       <p className="text-red-800 dark:text-red-200">
                         This data can directly identify you. We protect it with the highest security
                         measures.
@@ -235,7 +248,7 @@ export function DataBreakdown() {
         </Accordion>
 
         <div className="mt-6 rounded-lg border bg-muted/50 p-4 text-sm">
-          <p className="font-semibold mb-2">Data Retention Policy</p>
+          <p className="font-semibold mb-2">How long we keep data</p>
           <ul className="space-y-1 text-muted-foreground">
             <li>• Profile data: Retained while account is active</li>
             <li>• Messages: Retained for 3 years, then archived</li>

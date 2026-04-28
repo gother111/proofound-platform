@@ -44,32 +44,32 @@ const VISIBILITY_OPTIONS = [
   },
   {
     value: 'post_match' as VisibilityLevel,
-    label: 'Post-Match',
-    description: 'Visible after matching is confirmed',
+    label: 'After match',
+    description: 'Visible after a match is confirmed',
     icon: Handshake,
   },
   {
     value: 'post_conversation_start' as VisibilityLevel,
-    label: 'Post-Conversation',
+    label: 'After conversation',
     description: 'Visible after conversation starts',
     icon: MessageCircle,
   },
   {
     value: 'internal_only' as VisibilityLevel,
-    label: 'Internal Only',
-    description: 'Only visible to organization members',
+    label: 'Team only',
+    description: 'Only visible to your organization team',
     icon: Lock,
   },
 ];
 
 const FIELDS = [
-  { key: 'mission', label: 'Mission Statement', recommended: 'public' },
-  { key: 'vision', label: 'Vision Statement', recommended: 'public' },
-  { key: 'values', label: 'Core Values', recommended: 'public' },
+  { key: 'mission', label: 'Mission statement', recommended: 'public' },
+  { key: 'vision', label: 'Vision statement', recommended: 'public' },
+  { key: 'values', label: 'Core values', recommended: 'public' },
   { key: 'causes', label: 'Causes', recommended: 'public' },
-  { key: 'workCulture', label: 'Work Culture', recommended: 'post_match' },
-  { key: 'structure', label: 'Organization Structure', recommended: 'post_conversation_start' },
-  { key: 'impactEntries', label: 'Impact Entries', recommended: 'public' },
+  { key: 'workCulture', label: 'Work culture', recommended: 'post_match' },
+  { key: 'structure', label: 'Team structure', recommended: 'post_conversation_start' },
+  { key: 'impactEntries', label: 'Impact updates', recommended: 'public' },
   { key: 'projects', label: 'Projects', recommended: 'post_match' },
   { key: 'website', label: 'Website', recommended: 'public' },
 ];
@@ -122,7 +122,7 @@ export function FieldVisibilityControls({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-['Crimson_Pro'] font-semibold text-proofound-forest dark:text-primary">
-            Field Visibility Controls
+            Profile visibility
           </h2>
           <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mt-1">
             Control who can see each part of your organization profile
@@ -134,7 +134,7 @@ export function FieldVisibilityControls({
             disabled={saving}
             className="bg-proofound-forest hover:bg-proofound-forest/90"
           >
-            {saving ? 'Saving...' : 'Save Changes'}
+            {saving ? 'Saving...' : 'Save changes'}
           </Button>
         )}
       </div>
@@ -142,7 +142,7 @@ export function FieldVisibilityControls({
       {/* Visibility Legend */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Visibility Levels</CardTitle>
+          <CardTitle className="text-base">Visibility levels</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -165,7 +165,7 @@ export function FieldVisibilityControls({
       {/* Field Controls */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Profile Fields</CardTitle>
+          <CardTitle className="text-base">Profile sections</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -231,11 +231,10 @@ export function FieldVisibilityControls({
           <p className="text-sm text-blue-900 dark:text-blue-100">
             💡 <strong>Tip:</strong> Public fields help candidates discover your organization during
             search and matching. Consider keeping mission, vision, values, and causes public to
-            maximize PAC Score accuracy.
+            improve match quality.
           </p>
         </CardContent>
       </Card>
     </div>
   );
 }
-

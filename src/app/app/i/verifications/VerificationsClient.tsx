@@ -24,6 +24,11 @@ import { apiFetch } from '@/lib/api/fetch';
 import type { VerificationRequestView } from '@/lib/verification/request-feed';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { verificationStatusLabel } from '@/lib/copy/labels';
+import {
+  relationshipDisplayLabel,
+  type CustomVerificationRelationship,
+} from '@/lib/verification/custom-verification';
 import { RespondDialog } from './components/RespondDialog';
 import { BundleCancelDialog } from './components/BundleCancelDialog';
 
@@ -365,7 +370,7 @@ export function VerificationsClient({
       <div className="mt-3 ml-6 rounded-md border border-proofound-stone/70 bg-white/70 p-3 dark:border-border dark:bg-background/50">
         {request.canonicalVerificationStatus && (
           <p className="text-xs font-medium text-proofound-forest dark:text-primary">
-            Proof Pack status: {request.canonicalVerificationStatus.replace(/_/g, ' ')}
+            Proof Pack status: {verificationStatusLabel(request.canonicalVerificationStatus)}
           </p>
         )}
         {request.canonicalPackSummary && (
@@ -484,7 +489,7 @@ export function VerificationsClient({
       {request.status === 'declined' && <XCircle className="w-3 h-3 mr-1" />}
       {request.status === 'failed' && <AlertCircle className="w-3 h-3 mr-1" />}
       {request.status === 'expired' && <Clock className="w-3 h-3 mr-1" />}
-      {request.status}
+      {verificationStatusLabel(request.status)}
     </Badge>
   );
 
@@ -499,7 +504,7 @@ export function VerificationsClient({
         {request.verifierSource === 'peer' && <User className="w-3 h-3 mr-1" />}
         {request.verifierSource === 'manager' && <Briefcase className="w-3 h-3 mr-1" />}
         {request.verifierSource === 'external' && <ExternalLink className="w-3 h-3 mr-1" />}
-        {request.verifierSource}
+        {relationshipDisplayLabel(request.verifierSource as CustomVerificationRelationship)}
       </Badge>
     );
   };
@@ -731,6 +736,7 @@ export function VerificationsClient({
 
   const renderEmptyState = (status: RequestStatusFilter, mode: 'incoming' | 'sent') => {
     const modeText = mode === 'incoming' ? 'incoming' : 'sent';
+    const statusText = status === 'all' ? '' : `${verificationStatusLabel(status).toLowerCase()} `;
 
     return (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-proofound-stone/80 bg-white/55 px-4 py-14">
@@ -738,7 +744,8 @@ export function VerificationsClient({
           <ShieldCheck className="w-8 h-8 text-muted-foreground" />
         </div>
         <h3 className="text-lg font-semibold mb-2 text-proofound-charcoal dark:text-foreground">
-          No {status} {modeText} proof requests
+          No {statusText}
+          {modeText} proof requests
         </h3>
         <p className="max-w-sm text-center text-sm leading-6 text-muted-foreground">
           {mode === 'incoming'

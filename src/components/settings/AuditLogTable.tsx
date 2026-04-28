@@ -45,7 +45,7 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
 
       const response = await apiFetch(`/api/user/audit-log?limit=${limit}&offset=${newOffset}`);
       if (!response.ok) {
-        throw new Error('Failed to fetch audit log');
+        throw new Error('Failed to fetch account history');
       }
 
       const auditData: AuditLogResponse = await response.json();
@@ -64,7 +64,7 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
 
       setOffset(newOffset);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load audit log');
+      setError(err instanceof Error ? err.message : 'Failed to load account history');
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -84,11 +84,11 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
     if (!data) return;
 
     // Convert to CSV
-    const headers = ['Date & Time', 'Action', 'IP Hash', 'Device'];
+    const headers = ['Date and time', 'Action', 'Access detail', 'Device'];
     const rows = data.events.map((event) => [
       new Date(event.timestamp).toLocaleString(),
       event.action,
-      event.ipHash,
+      event.ipHash ? 'Protected' : 'Not recorded',
       event.device,
     ]);
 
@@ -128,7 +128,7 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-proofound-forest" />
             <span className="ml-3 text-proofound-charcoal/70 dark:text-muted-foreground">
-              Loading audit log...
+              Loading account history...
             </span>
           </div>
         </CardContent>
@@ -141,7 +141,7 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
       <Card variant="bento" className="border-red-200 dark:border-red-900 rounded-2xl">
         <CardContent className="pt-6">
           <p className="text-red-600 dark:text-red-400">
-            {error || 'Failed to load audit log. Please try again.'}
+            {error || 'Failed to load account history. Please try again.'}
           </p>
         </CardContent>
       </Card>
@@ -154,7 +154,7 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-2xl font-['Crimson_Pro']">Audit Log</CardTitle>
+              <CardTitle className="text-2xl font-['Crimson_Pro']">Account history</CardTitle>
               <CardDescription>
                 Last {data.events.length} of {data.total} recent activities
               </CardDescription>
@@ -166,7 +166,7 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
               disabled={data.events.length === 0}
             >
               <Download className="h-4 w-4 mr-2" />
-              Export CSV
+              Download activity
             </Button>
           </div>
         </CardHeader>
@@ -181,9 +181,9 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
             <div className="space-y-2">
               {/* Table Header */}
               <div className="grid grid-cols-12 gap-4 px-4 py-2 bg-proofound-parchment dark:bg-muted rounded-lg text-sm font-medium text-proofound-charcoal/70 dark:text-muted-foreground">
-                <div className="col-span-3">Date & Time</div>
+                <div className="col-span-3">Date and time</div>
                 <div className="col-span-4">Action</div>
-                <div className="col-span-3">IP Hash</div>
+                <div className="col-span-3">Access detail</div>
                 <div className="col-span-2">Device</div>
               </div>
 
@@ -199,8 +199,8 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
                   <div className="col-span-4 text-sm font-medium text-proofound-charcoal dark:text-foreground">
                     {event.action}
                   </div>
-                  <div className="col-span-3 text-xs font-mono text-proofound-charcoal/60 dark:text-muted-foreground">
-                    {event.ipHash}
+                  <div className="col-span-3 text-xs text-proofound-charcoal/60 dark:text-muted-foreground">
+                    {event.ipHash ? 'Protected' : 'Not recorded'}
                   </div>
                   <div className="col-span-2 text-xs text-proofound-charcoal/60 dark:text-muted-foreground truncate">
                     {event.device}
@@ -229,8 +229,7 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
           {/* Privacy Note */}
           <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <p className="text-xs text-blue-800 dark:text-blue-300">
-              ℹ️ All IP addresses shown are hashed (SHA-256) and abbreviated for privacy. Full IP
-              addresses are never stored.
+              Access details are protected before storage. The original address is never shown here.
             </p>
           </div>
         </CardContent>

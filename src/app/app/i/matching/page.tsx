@@ -319,7 +319,7 @@ export default function MatchingPage() {
 
     return (
       <div className="mb-6 space-y-3">
-        <h2 className="text-lg font-semibold text-foreground dark:text-[#E8DCC4]">Test matches</h2>
+        <h2 className="text-lg font-semibold text-foreground dark:text-[#E8DCC4]">Trial matches</h2>
         {isTestMatchesLoading ? (
           <div className="rounded-lg border border-proofound-stone bg-white px-4 py-3">
             <CenteredStatusSkeleton containerClassName="min-h-[64px]" />

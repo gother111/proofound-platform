@@ -5,6 +5,7 @@ import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsi
 import type { SnippetFields } from '@/lib/profile/snippet-generator';
 import { sql } from 'drizzle-orm';
 import { CAPABILITY_TOKEN_CLASSES, redeemCapabilityToken } from '@/lib/security/capability-tokens';
+import { internalValueLabel } from '@/lib/copy/labels';
 
 export type SnippetProfileType = 'individual' | 'organization';
 export type SnippetTheme = 'light' | 'dark' | 'auto';
@@ -218,7 +219,7 @@ function buildWorkCultureHighlights(workCulture: unknown): string[] {
   return Object.entries(culture)
     .filter(([, value]) => typeof value === 'string' || typeof value === 'number')
     .slice(0, 6)
-    .map(([key, value]) => `${key.replace(/_/g, ' ')}: ${value}`);
+    .map(([key, value]) => `${internalValueLabel(key)}: ${value}`);
 }
 
 function buildImpactEntries(value: unknown): PublicSnippetViewModel['impactEntries'] {

@@ -19,6 +19,7 @@ import { Edit3, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { PurposeLinks } from '@/types/profile';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
+import { organizationTypeLabel } from '@/lib/copy/labels';
 
 type OrganizationProfile = {
   id: string;
@@ -197,7 +198,7 @@ export function OrganizationProfileView({
                   <CardContent className="space-y-4">
                     <div>
                       <p className="text-sm font-medium text-proofound-charcoal dark:text-foreground">
-                        URL Slug
+                        Public link name
                       </p>
                       <p className="text-proofound-charcoal/70 dark:text-muted-foreground">
                         {org.slug}
@@ -207,8 +208,8 @@ export function OrganizationProfileView({
                       <p className="text-sm font-medium text-proofound-charcoal dark:text-foreground">
                         Type
                       </p>
-                      <p className="text-proofound-charcoal/70 dark:text-muted-foreground capitalize">
-                        {org.type}
+                      <p className="text-proofound-charcoal/70 dark:text-muted-foreground">
+                        {organizationTypeLabel(org.type)}
                       </p>
                     </div>
                   </CardContent>

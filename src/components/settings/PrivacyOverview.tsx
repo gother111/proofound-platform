@@ -163,19 +163,19 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
                   className="bg-proofound-forest hover:bg-proofound-forest/90"
                 >
                   <Settings className="h-4 w-4 mr-2" />
-                  Privacy Settings
+                  Privacy settings
                 </Button>
                 <Button variant="outline" onClick={handleExportData} disabled={isExporting}>
                   <Download className="h-4 w-4 mr-2" />
-                  {isExporting ? 'Exporting...' : 'Download My Data'}
+                  {isExporting ? 'Preparing...' : 'Download my data'}
                 </Button>
                 <Button variant="outline" onClick={() => setShowImportDialog(true)}>
                   <Upload className="h-4 w-4 mr-2" />
-                  Import Data
+                  Import data
                 </Button>
                 <Button variant="outline" onClick={() => setShowAuditLog(true)}>
                   <Eye className="h-4 w-4 mr-2" />
-                  View Audit Log
+                  View account history
                 </Button>
               </div>
             </div>
@@ -189,31 +189,31 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
           <CardHeader>
             <CardTitle className="text-xl font-['Crimson_Pro']">What others can see</CardTitle>
             <CardDescription>
-              Visibility summary across Public, Network-only, Match-only, and Private fields
+              Visibility summary across Public, Connections, After match, and Private sections
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
               <div className="rounded-lg border p-3">
                 <p className="font-medium">Public</p>
-                <p className="text-muted-foreground">{visibilityCounts.public} fields</p>
+                <p className="text-muted-foreground">{visibilityCounts.public} sections</p>
               </div>
               <div className="rounded-lg border p-3">
-                <p className="font-medium">Network-only</p>
-                <p className="text-muted-foreground">{visibilityCounts.network_only} fields</p>
+                <p className="font-medium">Connections</p>
+                <p className="text-muted-foreground">{visibilityCounts.network_only} sections</p>
               </div>
               <div className="rounded-lg border p-3">
-                <p className="font-medium">Match-only</p>
-                <p className="text-muted-foreground">{visibilityCounts.match_only} fields</p>
+                <p className="font-medium">After match</p>
+                <p className="text-muted-foreground">{visibilityCounts.match_only} sections</p>
               </div>
               <div className="rounded-lg border p-3">
                 <p className="font-medium">Private</p>
-                <p className="text-muted-foreground">{visibilityCounts.private} fields</p>
+                <p className="text-muted-foreground">{visibilityCounts.private} sections</p>
               </div>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setShowVisibilitySettings(true)}>
-                Preview as public/org
+                Preview visibility
               </Button>
             </div>
           </CardContent>
@@ -268,7 +268,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
                   <Database className="h-5 w-5 text-purple-600 dark:text-purple-300" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg font-['Crimson_Pro']">Profile Data</CardTitle>
+                  <CardTitle className="text-lg font-['Crimson_Pro']">Profile data</CardTitle>
                   <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground mt-0.5">
                     Personal
                   </p>
@@ -278,7 +278,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
-              <strong>Fields:</strong> Name, email, location, bio, avatar
+              <strong>Includes:</strong> Name, email, location, bio, avatar
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
               <strong>Purpose:</strong> Create your profile and match you with opportunities
@@ -301,7 +301,9 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
                   <Target className="h-5 w-5 text-green-600 dark:text-green-300" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg font-['Crimson_Pro']">Skills & Expertise</CardTitle>
+                  <CardTitle className="text-lg font-['Crimson_Pro']">
+                    Skills and expertise
+                  </CardTitle>
                   <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground mt-0.5">
                     Sensitive
                   </p>
@@ -311,10 +313,10 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
-              <strong>Fields:</strong> Skills, experience, education, verifications
+              <strong>Includes:</strong> Skills, experience, education, verifications
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
-              <strong>Purpose:</strong> Power the matching algorithm
+              <strong>Purpose:</strong> Help match you with relevant opportunities
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
               <strong>Visibility:</strong> Visible to matched organizations
@@ -335,7 +337,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
                 </div>
                 <div>
                   <CardTitle className="text-lg font-['Crimson_Pro']">
-                    Projects & Work History
+                    Projects & work history
                   </CardTitle>
                   <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground mt-0.5">
                     Sensitive
@@ -346,7 +348,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
-              <strong>Fields:</strong> Projects, experiences, impact stories
+              <strong>Includes:</strong> Projects, experiences, impact stories
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
               <strong>Purpose:</strong> Showcase your work and impact
@@ -369,7 +371,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
                   <MessagesSquare className="h-5 w-5 text-blue-600 dark:text-blue-300" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg font-['Crimson_Pro']">Match History</CardTitle>
+                  <CardTitle className="text-lg font-['Crimson_Pro']">Match history</CardTitle>
                   <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground mt-0.5">
                     Operational
                   </p>
@@ -379,7 +381,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
-              <strong>Fields:</strong> Matches, applications, conversations
+              <strong>Includes:</strong> Matches, applications, conversations
             </p>
             <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
               <strong>Purpose:</strong> Connect you with opportunities
@@ -401,13 +403,13 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
             </div>
             <div>
               <CardTitle className="text-lg font-['Crimson_Pro']">Analytics</CardTitle>
-              <CardDescription>Operational (Pseudonymized)</CardDescription>
+              <CardDescription>Privacy-protected product usage</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
-            <strong>Fields:</strong> Page views, clicks, session data (all with hashed IPs only)
+            <strong>Includes:</strong> Page views, clicks, and privacy-protected usage details
           </p>
           <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
             <strong>Purpose:</strong> Improve product quality and user experience
@@ -417,8 +419,8 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
           </p>
           <div className="bg-blue-50 dark:bg-slate-800 border border-blue-200 dark:border-blue-900 rounded-lg p-3 mt-4">
             <p className="text-xs text-blue-800 dark:text-blue-300">
-              ℹ️ All IP addresses and user agents are hashed (SHA-256) before storage, making them
-              irreversible and GDPR-compliant under Article 4(5) - Pseudonymization.
+              Network details are protected before storage and cannot be read back as your original
+              device or address information.
             </p>
           </div>
         </CardContent>
@@ -427,7 +429,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
       {/* Your Rights */}
       <Card variant="bento" className="border-proofound-stone dark:border-border rounded-xl">
         <CardHeader>
-          <CardTitle className="text-xl font-['Crimson_Pro']">Your Rights</CardTitle>
+          <CardTitle className="text-xl font-['Crimson_Pro']">Your rights</CardTitle>
           <CardDescription>
             Under GDPR and CCPA, you have the following rights over your data
           </CardDescription>
@@ -435,25 +437,25 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <p className="text-sm font-medium">✅ Right to Access</p>
+              <p className="text-sm font-medium">Right to access</p>
               <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground">
-                Download all your data in JSON format
+                Download your data
               </p>
             </div>
             <div className="space-y-2">
-              <p className="text-sm font-medium">✅ Right to Erasure</p>
+              <p className="text-sm font-medium">Right to deletion</p>
               <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground">
                 Delete your account immediately and irreversibly
               </p>
             </div>
             <div className="space-y-2">
-              <p className="text-sm font-medium">✅ Right to Portability</p>
+              <p className="text-sm font-medium">Right to portability</p>
               <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground">
-                Export data in machine-readable JSON format
+                Move your data in a reusable format
               </p>
             </div>
             <div className="space-y-2">
-              <p className="text-sm font-medium">✅ Right to Object</p>
+              <p className="text-sm font-medium">Right to object</p>
               <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground">
                 Opt out of marketing communications anytime
               </p>
@@ -470,7 +472,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
           onClick={() => setShowDataBreakdown(true)}
         >
           <Database className="h-5 w-5 mb-2" />
-          <span className="font-medium">View Data Breakdown</span>
+          <span className="font-medium">View your data</span>
           <span className="text-xs text-muted-foreground mt-1">
             See exactly what we have on you
           </span>
@@ -482,7 +484,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
           onClick={() => setShowAuditLog(true)}
         >
           <Eye className="h-5 w-5 mb-2" />
-          <span className="font-medium">View Audit Log</span>
+          <span className="font-medium">View account history</span>
           <span className="text-xs text-muted-foreground mt-1">
             Last 50 actions with timestamps
           </span>

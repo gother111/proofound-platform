@@ -196,7 +196,7 @@ export function AddSkillDrawerView({
           </SheetTitle>
           <SheetDescription className="text-muted-foreground">
             {mode === 'search'
-              ? 'Search for a skill by name or browse the taxonomy'
+              ? 'Search for a skill by name or browse by category'
               : 'Follow the 4 steps to add a new skill to your expertise atlas'}
           </SheetDescription>
         </SheetHeader>

@@ -20,6 +20,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { SUS_QUESTIONS, type SUSResponse } from '@/lib/feedback/sus-scoring';
+import { internalValueLabel } from '@/lib/copy/labels';
 import { X } from 'lucide-react';
 
 interface SUSSurveyProps {
@@ -111,7 +112,9 @@ export function SUSSurvey({ open, onClose, task, onComplete, onDismiss }: SUSSur
           </div>
           <DialogDescription>
             Help us improve by sharing your experience. This takes about 2 minutes.
-            {task && <span className="block mt-1 text-xs">Context: {task.replace(/_/g, ' ')}</span>}
+            {task && (
+              <span className="block mt-1 text-xs">Context: {internalValueLabel(task)}</span>
+            )}
           </DialogDescription>
         </DialogHeader>
 

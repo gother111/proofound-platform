@@ -4,6 +4,7 @@ import { Check, RefreshCw, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { internalValueLabel, skillDisplayLabel } from '@/lib/copy/labels';
 
 export type SkillMatchMethod = 'exact' | 'synonym' | 'fuzzy' | 'semantic';
 
@@ -68,16 +69,19 @@ export function SkillMatchPicker({
       <div className="space-y-2">
         {options.map((option) => {
           const isSelected = selectedSkillIds.includes(option.skill_id);
+          const skillName = skillDisplayLabel({
+            skillName: option.skill_name,
+            id: option.skill_id,
+          });
           return (
             <div key={option.skill_id} className="rounded border p-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <p className="text-sm font-medium text-foreground">{option.skill_name}</p>
-                  <p className="text-xs text-muted-foreground">{option.skill_id}</p>
+                  <p className="text-sm font-medium text-foreground">{skillName}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary">{scorePercent(option.score)}%</Badge>
-                  <Badge variant="outline">{option.match_method}</Badge>
+                  <Badge variant="outline">{internalValueLabel(option.match_method)}</Badge>
                 </div>
               </div>
 

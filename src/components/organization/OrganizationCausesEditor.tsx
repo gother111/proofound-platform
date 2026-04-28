@@ -59,7 +59,7 @@ export function OrganizationCausesEditor({
     }
 
     if (causes.length >= 5) {
-      setError('Maximum of 5 causes recommended (PRD requirement)');
+      setError('Choose up to 5 causes.');
       return;
     }
 
@@ -245,7 +245,7 @@ export function OrganizationCausesEditor({
             <p className="font-medium mb-1">Used in PAC Scoring</p>
             <p className="text-blue-700 dark:text-blue-400">
               Your causes are compared with candidate values during the matching process to assess
-              alignment. Up to 5 causes recommended per PRD requirements.
+              alignment. Choose up to 5 causes so the profile stays focused.
             </p>
           </div>
         </div>

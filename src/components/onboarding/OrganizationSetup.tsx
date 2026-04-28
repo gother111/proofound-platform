@@ -196,7 +196,7 @@ export function OrganizationSetup() {
 
           <div>
             <Label htmlFor="slug" className="text-proofound-charcoal dark:text-foreground">
-              URL Slug *
+              Public link name *
             </Label>
             <div className="flex items-center gap-2">
               <span className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">

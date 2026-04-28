@@ -1,5 +1,6 @@
 import PDFDocument from 'pdfkit/js/pdfkit.standalone.js';
 import type { TrustSignals } from './trust-signals';
+import { internalValueLabel } from '@/lib/copy/labels';
 
 const COLORS = {
   forest: '#1C4D3A',
@@ -256,7 +257,7 @@ export async function generateTrustPdf(input: TrustPdfInput): Promise<Buffer> {
           .font('Helvetica')
           .text(
             `${formatPackStatus(pack.verificationStatus)} • ${truncate(
-              pack.outcomesSummary || pack.freshnessState.replace(/_/g, ' '),
+              pack.outcomesSummary || internalValueLabel(pack.freshnessState),
               34
             )}`,
             leftX + 10,

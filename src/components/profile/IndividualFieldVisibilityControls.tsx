@@ -57,15 +57,15 @@ const VISIBILITY_OPTIONS = [
   },
   {
     value: 'network_only' as IndividualVisibilityLevel,
-    label: 'Network Only',
+    label: 'Connections',
     description: 'Visible to your connections',
     icon: Users,
     color: 'text-blue-600',
   },
   {
     value: 'match_only' as IndividualVisibilityLevel,
-    label: 'Match Only',
-    description: 'Visible after mutual match',
+    label: 'After match',
+    description: 'Visible after a mutual match',
     icon: Handshake,
     color: 'text-amber-600',
   },
@@ -81,13 +81,13 @@ const VISIBILITY_OPTIONS = [
 const FIELDS = [
   {
     key: 'displayName',
-    label: 'Display Name',
+    label: 'Display name',
     recommended: 'public',
     description: 'Your name as it appears to others',
   },
   {
     key: 'avatar',
-    label: 'Profile Photo',
+    label: 'Profile photo',
     recommended: 'public',
     description: 'Your profile picture',
   },
@@ -105,19 +105,19 @@ const FIELDS = [
   },
   {
     key: 'mission',
-    label: 'Mission Statement',
+    label: 'Mission statement',
     recommended: 'public',
     description: 'Your personal mission',
   },
   {
     key: 'vision',
-    label: 'Vision Statement',
+    label: 'Vision statement',
     recommended: 'public',
     description: 'Your future vision',
   },
   {
     key: 'values',
-    label: 'Core Values',
+    label: 'Core values',
     recommended: 'public',
     description: 'What you stand for',
   },
@@ -135,7 +135,7 @@ const FIELDS = [
   },
   {
     key: 'experiences',
-    label: 'Work Experience',
+    label: 'Work experience',
     recommended: 'private',
     description: 'Employment history',
   },
@@ -153,7 +153,7 @@ const FIELDS = [
   },
   {
     key: 'impactStories',
-    label: 'Impact Stories',
+    label: 'Impact stories',
     recommended: 'match_only',
     description: 'Detailed case studies and achievements',
   },
@@ -216,10 +216,13 @@ export function IndividualFieldVisibilityControls({
     return <Icon className={`h-4 w-4 ${option.color}`} />;
   };
 
+  const getVisibilityLabel = (level: string) =>
+    VISIBILITY_OPTIONS.find((option) => option.value === level)?.label ?? 'Not set';
+
   return (
     <Card className="border-proofound-stone">
       <CardHeader>
-        <CardTitle className="text-xl">Field Visibility</CardTitle>
+        <CardTitle className="text-xl">Profile visibility</CardTitle>
         <CardDescription>
           Control who can see each part of your profile. Changes apply to all future views.
         </CardDescription>
@@ -308,7 +311,7 @@ export function IndividualFieldVisibilityControls({
                       </TooltipTrigger>
                       <TooltipContent side="left" className="max-w-xs">
                         <p className="text-xs">
-                          <strong>Recommended:</strong> {field.recommended}
+                          <strong>Recommended:</strong> {getVisibilityLabel(field.recommended)}
                           <br />
                           {
                             VISIBILITY_OPTIONS.find((opt) => opt.value === field.recommended)
@@ -334,7 +337,7 @@ export function IndividualFieldVisibilityControls({
             disabled={!hasChanges || saving}
             className="bg-proofound-forest text-white hover:bg-proofound-forest/90"
           >
-            {saving ? 'Saving...' : 'Save Privacy Settings'}
+            {saving ? 'Saving...' : 'Save privacy settings'}
           </Button>
         </div>
 
@@ -343,11 +346,11 @@ export function IndividualFieldVisibilityControls({
           <div className="flex items-start gap-3">
             <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-blue-900 dark:text-blue-100">
-              <p className="font-medium mb-1">Privacy First</p>
+              <p className="font-medium mb-1">Privacy first</p>
               <p className="text-xs">
-                Your privacy settings are enforced at the API level. Organizations and other users
-                will only see fields based on your visibility rules. You can change these settings
-                anytime.
+                Your privacy settings are applied everywhere your profile appears. Organizations and
+                other users will only see sections based on your visibility choices. You can change
+                these settings anytime.
               </p>
             </div>
           </div>

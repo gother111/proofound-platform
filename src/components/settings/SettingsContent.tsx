@@ -223,7 +223,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
                 </CardTitle>
                 <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
                   Launch scheduling stays manual-first. Proofound uses secure meeting links without
-                  requiring a connected calendar provider in the MVP corridor.
+                  requiring a connected calendar provider at launch.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -231,7 +231,9 @@ export function SettingsContent({ userId }: SettingsContentProps) {
                   <div className="flex items-start gap-3">
                     <Calendar className="mt-0.5 h-5 w-5 text-proofound-forest" />
                     <div className="space-y-2">
-                      <p className="font-medium text-foreground">Manual meeting links are the MVP default</p>
+                      <p className="font-medium text-foreground">
+                        Manual meeting links are the launch default
+                      </p>
                       <p className="text-sm text-muted-foreground">
                         When an interview is scheduled, the host can add a secure meeting URL
                         directly. No Google Meet or third-party calendar connection is required for
@@ -246,9 +248,9 @@ export function SettingsContent({ userId }: SettingsContentProps) {
                     <div className="space-y-2">
                       <p className="font-medium text-foreground">Why this changed</p>
                       <p className="text-sm text-muted-foreground">
-                        The locked MVP keeps interview coordination inside one narrow trust corridor
-                        and avoids launch-time integration sprawl. Manual ops stay acceptable when
-                        they preserve privacy and keep the corridor reliable.
+                        The launch experience keeps interview coordination inside one narrow trust
+                        corridor and avoids launch-time integration sprawl. Manual operations stay
+                        acceptable when they preserve privacy and keep the corridor reliable.
                       </p>
                     </div>
                   </div>

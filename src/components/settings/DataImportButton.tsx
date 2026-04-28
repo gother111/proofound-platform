@@ -100,7 +100,7 @@ export function DataImportButton() {
       let errorMessage = 'An unexpected error occurred';
 
       if (error instanceof SyntaxError) {
-        errorMessage = 'Invalid JSON format. Please ensure the file is not corrupted.';
+        errorMessage = 'This file could not be read. Please choose a Proofound export file.';
       } else if (error instanceof Error) {
         errorMessage = error.message;
       }

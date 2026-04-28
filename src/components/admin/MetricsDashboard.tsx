@@ -237,7 +237,7 @@ export function MetricsDashboard() {
                   {metrics.pacLift.withPAC.toFixed(1)}%
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  n={metrics.pacLift.sampleSize.withPAC}
+                  Sample: {metrics.pacLift.sampleSize.withPAC}
                 </p>
               </div>
               <div>
@@ -246,7 +246,7 @@ export function MetricsDashboard() {
                   {metrics.pacLift.withoutPAC.toFixed(1)}%
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  n={metrics.pacLift.sampleSize.withoutPAC}
+                  Sample: {metrics.pacLift.sampleSize.withoutPAC}
                 </p>
               </div>
               <div>
@@ -310,7 +310,7 @@ export function MetricsDashboard() {
                 {metrics.wellBeingDelta.averageDelta.toFixed(2)}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                n={metrics.wellBeingDelta.sampleSize}
+                Sample: {metrics.wellBeingDelta.sampleSize}
               </p>
             </div>
             <div>
@@ -425,7 +425,7 @@ function MetricCard({
               <span className="text-muted-foreground">
                 Target: ≤{target} {unit}
               </span>
-              <span className="text-muted-foreground">n={sampleSize}</span>
+              <span className="text-muted-foreground">Sample: {sampleSize}</span>
             </div>
 
             {percentiles && (

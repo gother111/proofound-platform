@@ -6,6 +6,7 @@ import { ChevronRight, ChevronDown, TrendingUp, Clock, CheckCircle2, Search } fr
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { L4Card } from './L4Card';
+import { skillDisplayLabel } from '@/lib/copy/labels';
 
 interface L2Category {
   catId: number;
@@ -73,8 +74,16 @@ export function L2Modal({
     if (!searchQuery) return skills;
 
     return skills.filter((skill: any) => {
-      const skillName =
-        skill.skill_name || skill.taxonomy?.name_i18n?.en || skill.custom_skill_name || '';
+      const skillName = skillDisplayLabel(
+        {
+          skillName: skill.skill_name,
+          taxonomyName: skill.taxonomy?.name_i18n?.en,
+          customSkillName: skill.custom_skill_name,
+          id: skill.id,
+          code: skill.skillCode || skill.skill_code,
+        },
+        ''
+      );
       return skillName.toLowerCase().includes(searchQuery.toLowerCase());
     });
   };
@@ -185,11 +194,13 @@ export function L2Modal({
                             <div className="space-y-3">
                               {l3L4Skills.map((skill: any) => {
                                 const isL4Expanded = expandedL4 === skill.id;
-                                const skillName =
-                                  skill.skill_name ||
-                                  skill.taxonomy?.name_i18n?.en ||
-                                  skill.custom_skill_name ||
-                                  'Unknown';
+                                const skillName = skillDisplayLabel({
+                                  skillName: skill.skill_name,
+                                  taxonomyName: skill.taxonomy?.name_i18n?.en,
+                                  customSkillName: skill.custom_skill_name,
+                                  id: skill.id,
+                                  code: skill.skillCode || skill.skill_code,
+                                });
 
                                 const LEVEL_COLORS: Record<number, string> = {
                                   1: 'bg-proofound-stone/30 text-proofound-charcoal border-proofound-stone',

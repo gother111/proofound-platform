@@ -6,6 +6,7 @@ import { AlertCircle, Check, Edit, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { engagementTypeLabel } from '@/lib/copy/labels';
 
 interface Assignment {
   id: string;
@@ -233,9 +234,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Engagement type</p>
-              <p className="text-foreground">
-                {assignment.engagementType?.replaceAll('_', ' ') || 'Not specified'}
-              </p>
+              <p className="text-foreground">{engagementTypeLabel(assignment.engagementType)}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Role purpose</p>

@@ -15,6 +15,7 @@ import {
   evaluateSuggestionSelectionRisk,
   type SelectionRiskReason,
 } from '@/lib/expertise/skill-confidence';
+import { internalValueLabel } from '@/lib/copy/labels';
 
 export type CandidateCategory =
   | 'technical'
@@ -104,7 +105,7 @@ function resolveCandidateStatus(candidate: SkillReviewCandidate): ReviewStatus {
       label: 'Kept unmapped',
       variant: 'outline',
       rank: 4,
-      reason: 'Left out of import until you choose a taxonomy match',
+      reason: 'Left out of import until you choose a matching skill',
     };
   }
 
@@ -691,7 +692,7 @@ export function SkillReviewPanel({
                       'other',
                     ].map((option) => (
                       <option key={option} value={option}>
-                        {option.replace(/_/g, ' ')}
+                        {internalValueLabel(option)}
                       </option>
                     ))}
                   </select>
@@ -803,7 +804,8 @@ export function SkillReviewPanel({
                                 {option.skill_name}
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                {option.match_method} · {Math.round(option.score * 100)}%
+                                {internalValueLabel(option.match_method)} ·{' '}
+                                {Math.round(option.score * 100)}%
                               </p>
                             </div>
                             <div className="flex items-center gap-2">

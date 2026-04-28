@@ -143,12 +143,7 @@ export function FairnessNoteDashboard() {
                   180d
                 </Button>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={loadFairnessNote}
-                disabled={loading}
-              >
+              <Button variant="outline" size="sm" onClick={loadFairnessNote} disabled={loading}>
                 <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               </Button>
             </div>
@@ -157,13 +152,9 @@ export function FairnessNoteDashboard() {
 
         <CardContent className="space-y-6">
           {loading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Loading fairness report...
-            </div>
+            <div className="text-center py-8 text-muted-foreground">Loading fairness report...</div>
           ) : !fairnessNote ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No fairness data available
-            </div>
+            <div className="text-center py-8 text-muted-foreground">No fairness data available</div>
           ) : (
             <>
               {/* Status Summary */}
@@ -183,31 +174,24 @@ export function FairnessNoteDashboard() {
               {/* Cohort Metrics */}
               {fairnessNote.cohorts.length > 0 && (
                 <div>
-                  <h3 className="font-medium mb-3">Cohort Metrics</h3>
+                  <h3 className="font-medium mb-3">Group results</h3>
                   <div className="space-y-2">
                     {fairnessNote.cohorts.map((cohort) => (
-                      <div
-                        key={cohort.cohortId}
-                        className="p-3 border rounded-lg"
-                      >
+                      <div key={cohort.cohortId} className="p-3 border rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="font-medium text-sm">{cohort.cohortName}</h4>
                           <Badge variant="outline" className="text-xs">
-                            n={cohort.sampleSize}
+                            {cohort.sampleSize} people
                           </Badge>
                         </div>
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
-                            <span className="text-muted-foreground">Intro Acceptance</span>
-                            <p className="font-medium">
-                              {cohort.introAcceptanceRate.toFixed(1)}%
-                            </p>
+                            <span className="text-muted-foreground">Intro acceptance</span>
+                            <p className="font-medium">{cohort.introAcceptanceRate.toFixed(1)}%</p>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">Contract Signing</span>
-                            <p className="font-medium">
-                              {cohort.contractSigningRate.toFixed(1)}%
-                            </p>
+                            <span className="text-muted-foreground">Contract signing</span>
+                            <p className="font-medium">{cohort.contractSigningRate.toFixed(1)}%</p>
                           </div>
                         </div>
                       </div>
@@ -219,7 +203,7 @@ export function FairnessNoteDashboard() {
               {/* Detected Gaps */}
               {fairnessNote.gaps.length > 0 && (
                 <div>
-                  <h3 className="font-medium mb-3">Detected Gaps</h3>
+                  <h3 className="font-medium mb-3">Differences to review</h3>
                   <div className="space-y-2">
                     {fairnessNote.gaps.map((gap, idx) => (
                       <div
@@ -232,8 +216,8 @@ export function FairnessNoteDashboard() {
                           <div className="flex-1">
                             <p className="text-sm font-medium">
                               {gap.metric === 'intro_acceptance'
-                                ? 'Introduction Acceptance'
-                                : 'Contract Signing'}
+                                ? 'Introduction acceptance'
+                                : 'Contract signing'}
                             </p>
                             <p className="text-xs text-muted-foreground">
                               {gap.cohort1} vs {gap.cohort2}
@@ -241,24 +225,24 @@ export function FairnessNoteDashboard() {
                           </div>
                           {gap.isSignificant && (
                             <Badge variant="destructive" className="text-xs">
-                              Significant
+                              Needs review
                             </Badge>
                           )}
                         </div>
                         <div className="flex items-center gap-4 text-sm">
                           <div>
-                            <span className="text-muted-foreground">Gap: </span>
+                            <span className="text-muted-foreground">Difference: </span>
                             <span
                               className={`font-medium ${
                                 gap.gap < 0 ? 'text-red-600' : 'text-green-600'
                               }`}
                             >
                               {gap.gap > 0 ? '+' : ''}
-                              {gap.gap.toFixed(1)}pp
+                              {gap.gap.toFixed(1)} percentage points
                             </span>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">p-value: </span>
+                            <span className="text-muted-foreground">Statistical check: </span>
                             <span className="font-mono text-xs">{gap.pValue.toFixed(4)}</span>
                           </div>
                         </div>
@@ -285,12 +269,12 @@ export function FairnessNoteDashboard() {
 
               {/* Disclaimer */}
               <div className="text-xs text-muted-foreground p-3 bg-muted/30 rounded border">
-                <p className="font-medium mb-1">Privacy Note:</p>
+                <p className="font-medium mb-1">Privacy note:</p>
                 <p>
                   Fairness metrics are calculated only for users who have opted-in to share
-                  demographic information. All data is aggregated at the cohort level to
-                  protect individual privacy. Demographics are never required and never used
-                  in matching or ranking.
+                  demographic information. All data is aggregated at the cohort level to protect
+                  individual privacy. Demographics are never required and never used in matching or
+                  ranking.
                 </p>
               </div>
             </>

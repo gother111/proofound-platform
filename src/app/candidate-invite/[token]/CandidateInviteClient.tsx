@@ -13,6 +13,7 @@ import {
   CANDIDATE_INVITE_STATUS,
   CANDIDATE_PROOF_CARD_DEFAULT_FIELDS,
 } from '@/lib/candidate-invites-shared';
+import { assignmentStatusLabel, candidateInviteStatusLabel } from '@/lib/copy/labels';
 
 type InviteState = {
   id: string;
@@ -284,9 +285,9 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
       invite.claimedByProfileId === currentUser.id
   );
 
-  const headline = isTestFlow ? 'Test invite' : 'Candidate invite';
+  const headline = isTestFlow ? 'Trial match invite' : 'Candidate invite';
   const inviteDescription = isTestFlow
-    ? `${organization.displayName} invited ${invite.maskedEmail} to start a beta test match${
+    ? `${organization.displayName} invited ${invite.maskedEmail} to start a trial match${
         assignment?.role ? ` for ${assignment.role}` : ''
       }.`
     : `${organization.displayName} invited ${invite.maskedEmail} to submit a Proof Card.`;
@@ -297,12 +298,13 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
         <CardHeader className="space-y-2">
           <div className="flex items-center gap-2">
             <CardTitle>{headline}</CardTitle>
-            <Badge variant="outline">{invite.status}</Badge>
+            <Badge variant="outline">{candidateInviteStatusLabel(invite.status)}</Badge>
           </div>
           <p className="text-sm text-slate-600">{inviteDescription}</p>
           {assignment ? (
             <p className="text-xs text-slate-500">
-              Assignment: {assignment.role || 'Untitled'} ({assignment.status})
+              Assignment: {assignment.role || 'Untitled'} (
+              {assignmentStatusLabel(assignment.status)})
             </p>
           ) : null}
           <p className="text-xs text-slate-500">
@@ -335,7 +337,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
                 Signed in as <strong>{currentUser.email}</strong>.
               </p>
               <Button onClick={claimInvite} disabled={submitting}>
-                {isTestFlow ? 'Accept test invite' : 'Claim invite'}
+                {isTestFlow ? 'Accept trial invite' : 'Claim invite'}
               </Button>
             </div>
           ) : null}
@@ -370,7 +372,7 @@ export function CandidateInviteClient({ token }: CandidateInviteClientProps) {
           {isTestFlow && isClaimedByCurrentUser ? (
             <div className="space-y-3">
               <p className="text-sm text-emerald-700">
-                Test match accepted. You can now use messages and matching.
+                Trial match accepted. You can now use messages and matching.
               </p>
               <div className="flex flex-wrap gap-2">
                 {invite.conversationId ? (

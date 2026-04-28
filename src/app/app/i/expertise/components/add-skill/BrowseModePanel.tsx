@@ -14,6 +14,7 @@ import {
 } from '@/lib/proofs/constants';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
+import { skillDisplayLabel } from '@/lib/copy/labels';
 
 import { DOMAIN_COLORS, LEVEL_LABELS } from './constants';
 import type {
@@ -478,7 +479,12 @@ export function BrowseModePanel({
                               setShowL4Dropdown(false);
                             }}
                           >
-                            <div className="font-medium text-foreground">{skill.nameI18n?.en}</div>
+                            <div className="font-medium text-foreground">
+                              {skillDisplayLabel({
+                                taxonomyName: skill.nameI18n?.en,
+                                code: skill.code,
+                              })}
+                            </div>
                             {skill.descriptionI18n?.en && (
                               <div className="text-xs text-muted-foreground mt-1">
                                 {skill.descriptionI18n?.en}
@@ -505,7 +511,12 @@ export function BrowseModePanel({
                 <Badge variant="secondary" className="bg-[#7A9278] text-white">
                   From Atlas
                 </Badge>
-                <span className="text-sm text-muted-foreground">{selectedL4.nameI18n?.en}</span>
+                <span className="text-sm text-muted-foreground">
+                  {skillDisplayLabel({
+                    taxonomyName: selectedL4.nameI18n?.en,
+                    code: selectedL4.code,
+                  })}
+                </span>
               </div>
             )}
 

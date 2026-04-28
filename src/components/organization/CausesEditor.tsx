@@ -54,7 +54,7 @@ export function OrganizationCausesEditor({
     }
 
     if (causes.length >= 5) {
-      setError('Maximum of 5 causes allowed (PRD requirement)');
+      setError('Choose up to 5 causes.');
       return;
     }
 
@@ -183,13 +183,11 @@ export function OrganizationCausesEditor({
       {causes.length === 0 && !disabled && (
         <Card className="p-4 bg-muted/30">
           <p className="text-sm text-muted-foreground">
-            💡 Tip: Select causes that align with your organization&apos;s mission and values.
-            These help candidates understand your impact focus and will be used in PAC Score
-            matching.
+            💡 Tip: Select causes that align with your organization&apos;s mission and values. These
+            help candidates understand your impact focus and will be used in PAC Score matching.
           </p>
         </Card>
       )}
     </div>
   );
 }
-

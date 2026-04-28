@@ -23,6 +23,7 @@ import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { AlertTriangle, CheckCircle2, FileJson, ArrowRight } from 'lucide-react';
+import { internalValueLabel } from '@/lib/copy/labels';
 
 interface DataConflict {
   field: string;
@@ -78,7 +79,7 @@ export function ConflictResolutionDialog({
   const formatValue = (value: any): string => {
     if (value === null || value === undefined) return '(empty)';
     if (Array.isArray(value)) return `[${value.length} items]`;
-    if (typeof value === 'object') return JSON.stringify(value, null, 2);
+    if (typeof value === 'object') return 'Multiple details';
     return String(value);
   };
 
@@ -101,28 +102,30 @@ export function ConflictResolutionDialog({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>Resolve Import Conflicts</DialogTitle>
+          <DialogTitle>Review import differences</DialogTitle>
           <DialogDescription>
-            We found {analysis.totalConflicts} conflict
-            {analysis.totalConflicts !== 1 ? 's' : ''} between your existing data and the import.
-            Choose how to resolve each conflict.
+            We found {analysis.totalConflicts} difference
+            {analysis.totalConflicts !== 1 ? 's' : ''} between your current data and the import.
+            Choose what should happen for each one.
           </DialogDescription>
         </DialogHeader>
 
         {/* Summary */}
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-lg border p-3">
-            <p className="text-sm text-gray-600 dark:text-gray-400">Total Conflicts</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Total differences</p>
             <p className="text-2xl font-bold">{analysis.totalConflicts}</p>
           </div>
           <div className="rounded-lg border p-3 bg-green-50 dark:bg-green-900/10">
-            <p className="text-sm text-green-700 dark:text-green-400">Auto-Resolvable</p>
+            <p className="text-sm text-green-700 dark:text-green-400">
+              Can be handled automatically
+            </p>
             <p className="text-2xl font-bold text-green-700 dark:text-green-400">
               {analysis.autoResolvable}
             </p>
           </div>
           <div className="rounded-lg border p-3 bg-orange-50 dark:bg-orange-900/10">
-            <p className="text-sm text-orange-700 dark:text-orange-400">Needs Review</p>
+            <p className="text-sm text-orange-700 dark:text-orange-400">Needs review</p>
             <p className="text-2xl font-bold text-orange-700 dark:text-orange-400">
               {analysis.requiresManual}
             </p>
@@ -137,15 +140,17 @@ export function ConflictResolutionDialog({
                 <div className="flex items-start gap-3">
                   {getConflictIcon(conflict.conflictType)}
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-sm">{conflict.field}</h4>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">{conflict.path}</p>
+                    <h4 className="font-semibold text-sm">{internalValueLabel(conflict.field)}</h4>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      {internalValueLabel(conflict.path.split('.').pop())}
+                    </p>
                     <p className="text-xs text-gray-500 mt-1">{conflict.description}</p>
                   </div>
                   <Badge
                     variant={conflict.suggestedStrategy === 'manual' ? 'destructive' : 'secondary'}
                     className="text-xs"
                   >
-                    {conflict.conflictType.replace('_', ' ')}
+                    {internalValueLabel(conflict.conflictType)}
                   </Badge>
                 </div>
 
@@ -153,26 +158,26 @@ export function ConflictResolutionDialog({
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div className="rounded bg-gray-50 dark:bg-gray-800 p-3">
                     <p className="font-medium mb-1 text-gray-700 dark:text-gray-300">
-                      Existing Value
+                      Current value
                     </p>
-                    <pre className="text-xs overflow-auto max-h-20 text-gray-600 dark:text-gray-400">
+                    <div className="text-xs overflow-auto max-h-20 text-gray-600 dark:text-gray-400">
                       {formatValue(conflict.existingValue)}
-                    </pre>
+                    </div>
                   </div>
                   <div className="rounded bg-blue-50 dark:bg-blue-900/10 p-3">
                     <p className="font-medium mb-1 text-blue-700 dark:text-blue-300">
-                      Import Value
+                      Imported value
                     </p>
-                    <pre className="text-xs overflow-auto max-h-20 text-blue-600 dark:text-blue-400">
+                    <div className="text-xs overflow-auto max-h-20 text-blue-600 dark:text-blue-400">
                       {formatValue(conflict.importValue)}
-                    </pre>
+                    </div>
                   </div>
                 </div>
 
                 {/* Resolution Strategy */}
                 <Separator />
                 <div>
-                  <Label className="text-sm font-medium mb-2">Resolution Strategy</Label>
+                  <Label className="text-sm font-medium mb-2">What should happen?</Label>
                   <RadioGroup
                     value={resolutions.get(conflict.path) || 'merge'}
                     onValueChange={(value) => handleStrategyChange(conflict.path, value)}
@@ -181,7 +186,7 @@ export function ConflictResolutionDialog({
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="keep_existing" id={`keep-${index}`} />
                         <Label htmlFor={`keep-${index}`} className="font-normal cursor-pointer">
-                          Keep existing (discard import)
+                          Keep current value
                         </Label>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -190,14 +195,14 @@ export function ConflictResolutionDialog({
                           htmlFor={`overwrite-${index}`}
                           className="font-normal cursor-pointer"
                         >
-                          Overwrite with import
+                          Use imported value
                         </Label>
                       </div>
                       {conflict.conflictType === 'array_overlap' && (
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="merge" id={`merge-${index}`} />
                           <Label htmlFor={`merge-${index}`} className="font-normal cursor-pointer">
-                            Merge both (combine arrays, merge objects)
+                            Combine both where possible
                           </Label>
                         </div>
                       )}

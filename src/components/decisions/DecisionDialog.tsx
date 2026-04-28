@@ -313,14 +313,14 @@ export function DecisionDialog({
           </Label>
           <Textarea
             id="feedback"
-            placeholder="Add any notes about your decision (internal only, not shared with candidate)"
+            placeholder="Add private team notes about your decision"
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
             rows={4}
             className="resize-none"
           />
           <p className="text-xs text-gray-500">
-            This feedback is for internal tracking and will not be shared with the candidate
+            These notes stay with your team and will not be shared with the candidate.
           </p>
         </div>
 

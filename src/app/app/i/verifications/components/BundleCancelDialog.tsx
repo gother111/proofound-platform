@@ -8,6 +8,7 @@ import { apiFetch } from '@/lib/api/fetch';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { verificationStatusLabel } from '@/lib/copy/labels';
 import {
   Dialog,
   DialogContent,
@@ -222,7 +223,7 @@ export function BundleCancelDialog({
               </p>
               <p>
                 <span className="font-medium">Status:</span>{' '}
-                <span className="capitalize">{bundleRequest.status}</span>
+                <span>{verificationStatusLabel(bundleRequest.status)}</span>
               </p>
             </div>
 
@@ -248,7 +249,7 @@ export function BundleCancelDialog({
                           variant={isPending ? 'outline' : 'secondary'}
                           className="text-[10px] capitalize"
                         >
-                          {item.status}
+                          {verificationStatusLabel(item.status)}
                         </Badge>
                       </div>
                     </div>

@@ -106,8 +106,8 @@ export function PrivacyBanner({ onOptIn, onDismiss }: PrivacyBannerProps) {
                 What are private check-ins?
               </h4>
               <p className="text-proofound-charcoal/80 dark:text-muted-foreground">
-                This is a minimal private support surface for volatile work-search moments. In MVP
-                it includes only opt-in check-ins, milestone reflections, export, and deletion.
+                This is a small private support space for stressful work-search moments. For now, it
+                includes only opt-in check-ins, milestone reflections, downloads, and deletion.
               </p>
             </div>
 
@@ -126,8 +126,8 @@ export function PrivacyBanner({ onOptIn, onDismiss }: PrivacyBannerProps) {
                 </li>
                 <li>
                   <strong>Isolated from analytics:</strong> Reflection text is never sent in
-                  analytics payloads, and Zen data is excluded from fairness review and org
-                  analytics
+                  analytics reports, and private check-in data is excluded from matching reviews and
+                  organization reporting
                 </li>
                 <li>
                   <strong>You control your data:</strong> You can export or delete all private
@@ -145,10 +145,9 @@ export function PrivacyBanner({ onOptIn, onDismiss }: PrivacyBannerProps) {
                 <li>
                   Write optional reflections linked to milestone tags such as rejection or offer
                 </li>
-                <li>Export your own records as JSON or check-in CSV</li>
+                <li>Download your own records</li>
                 <li>
-                  Delete all private check-in data without affecting your portfolio or matching
-                  state
+                  Delete all private check-in data without affecting your portfolio or matches
                 </li>
               </ul>
             </div>
@@ -159,7 +158,7 @@ export function PrivacyBanner({ onOptIn, onDismiss }: PrivacyBannerProps) {
               </h4>
               <p className="text-proofound-charcoal/80 dark:text-muted-foreground">
                 This is <strong>not</strong> a wellness feed, self-assessment center, burnout
-                tracker, local resource directory, or diagnostic tool. It is intentionally narrow so
+                tracker, local resource directory, or medical service. It is intentionally narrow so
                 it remains calm, private, and optional.
               </p>
             </div>

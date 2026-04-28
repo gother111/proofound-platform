@@ -21,6 +21,7 @@ import {
   type SkillReviewSelectionMeta,
 } from '@/components/expertise/cv-import/SkillReviewPanel';
 import { getAmbiguousTokenHints } from '@/lib/expertise/skill-confidence';
+import { internalValueLabel, skillDisplayLabel } from '@/lib/copy/labels';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -765,8 +766,13 @@ function LegacyCvTextSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
                 className="flex items-center justify-between rounded border p-2"
               >
                 <div>
-                  <p className="text-sm font-medium">{suggestion.name}</p>
-                  <p className="text-xs text-muted-foreground">{suggestion.code}</p>
+                  <p className="text-sm font-medium">
+                    {skillDisplayLabel({
+                      name: suggestion.name,
+                      id: suggestion.id,
+                      code: suggestion.code,
+                    })}
+                  </p>
                 </div>
                 <input
                   type="checkbox"
@@ -1026,7 +1032,7 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
         throw new Error('Invalid response format from CV analysis service');
       }
 
-      setRunningProgress('analyzing', 85, 'Matching to taxonomy...');
+      setRunningProgress('analyzing', 85, 'Matching to the skill library...');
       setApiMetadata(payload.metadata);
 
       const requestStateById = new Map(
@@ -1099,7 +1105,7 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
         })
       );
       if (!response.ok) {
-        throw new Error(await readErrorMessage(response, 'Failed to search taxonomy'));
+        throw new Error(await readErrorMessage(response, 'Failed to search skills'));
       }
 
       const payload = await readJsonSafely(response);
@@ -1131,8 +1137,8 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
         const hints = getAmbiguousTokenHints(query);
         toast.info(
           hints.length > 0
-            ? `No taxonomy matches found. Try a more specific query such as ${hints.slice(0, 3).join(', ')}.`
-            : 'No taxonomy matches found for manual mapping.'
+            ? `No skill matches found. Try a more specific query such as ${hints.slice(0, 3).join(', ')}.`
+            : 'No skill matches found for manual mapping.'
         );
       } else if (!options?.silent) {
         toast.success(
@@ -1145,7 +1151,7 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
         manual_loading: false,
       }));
       if (!options?.silent) {
-        toast.error(error instanceof Error ? error.message : 'Failed to search taxonomy');
+        toast.error(error instanceof Error ? error.message : 'Failed to search skills');
       }
     }
   };
@@ -1364,7 +1370,7 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
               disabled={isAnalyzing}
             />
             <p className="text-xs text-muted-foreground">
-              Text is processed in-memory and sent to the local suggestion engine only.
+              Text is processed securely and only used to suggest skills for your review.
             </p>
           </div>
 
@@ -1391,18 +1397,19 @@ function CvPdfImportSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
                 className="text-left text-sm font-medium text-proofound-forest hover:underline"
                 onClick={() => setShowAdvancedDiagnostics((previous) => !previous)}
               >
-                {showAdvancedDiagnostics ? 'Hide advanced diagnostics' : 'Advanced diagnostics'}
+                {showAdvancedDiagnostics ? 'Hide matching details' : 'Matching details'}
               </button>
               {showAdvancedDiagnostics && (
                 <div className="mt-2 space-y-1 text-muted-foreground">
-                  <p>Semantic matching used: {apiMetadata.semantic_used ? 'yes' : 'no'}</p>
+                  <p>Smart matching used: {apiMetadata.semantic_used ? 'yes' : 'no'}</p>
                   <p>
-                    Semantic fallback triggered:{' '}
-                    {apiMetadata.semantic_fallback_triggered ? 'yes' : 'no'}
+                    Used backup matcher: {apiMetadata.semantic_fallback_triggered ? 'yes' : 'no'}
                   </p>
                   <p>Needs mapping: {apiMetadata.unmapped_candidates_count}</p>
-                  {apiMetadata.engine_used && <p>Engine used: {apiMetadata.engine_used}</p>}
-                  {apiMetadata.ai_model && <p>Model: {apiMetadata.ai_model}</p>}
+                  {apiMetadata.engine_used && (
+                    <p>Matcher: {internalValueLabel(apiMetadata.engine_used)}</p>
+                  )}
+                  {apiMetadata.ai_model && <p>AI model: {apiMetadata.ai_model}</p>}
                   {typeof apiMetadata.cost_ore === 'number' && (
                     <p>Cost: {(apiMetadata.cost_ore / 100).toFixed(2)} SEK</p>
                   )}

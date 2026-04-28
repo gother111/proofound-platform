@@ -23,6 +23,12 @@ import { SkillGapsClient } from '@/components/skill-gaps/SkillGapsClient';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, BookOpen, TrendingUp, FileText, Grid3x3 } from 'lucide-react';
+
+const CREDIBILITY_STATUS_LABELS = {
+  verified: 'Verified skills',
+  proofOnly: 'Proof-backed skills',
+  claimOnly: 'Claim-only skills',
+} as const;
 import { AboutSection } from './components/AboutSection';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -303,7 +309,7 @@ export function ExpertiseAtlasClient({
 
   // Widget click handlers
   const handleCredibilityClick = (status: 'verified' | 'proofOnly' | 'claimOnly') => {
-    setSideSheetFilter(`${status} Skills`);
+    setSideSheetFilter(CREDIBILITY_STATUS_LABELS[status]);
     setFilters({ ...filters, status });
     setIsSideSheetOpen(true);
   };
@@ -315,10 +321,10 @@ export function ExpertiseAtlasClient({
 
   const handleCoverageClick = (l1: number, l2: number) => {
     const domainName =
-      domains.find((domain) => domain.catId === l1)?.nameI18n?.en || `Domain ${l1}`;
+      domains.find((domain) => domain.catId === l1)?.nameI18n?.en || 'Selected domain';
     const categoryName =
       l2CategoriesPerL1[l1]?.find((category) => category.subcatId === l2)?.nameI18n?.en ||
-      `Category ${l2}`;
+      'selected category';
 
     setSideSheetFilter(`Skills in ${domainName} / ${categoryName}`);
     setFilters({ ...filters, l1Domains: [l1] });
@@ -427,8 +433,8 @@ export function ExpertiseAtlasClient({
 
         {!taxonomyReady && (
           <div className="mb-6 rounded-lg border border-[#C76B4A] bg-[#FFF0F0] px-4 py-3 text-sm text-[#8B4A36]">
-            Expertise taxonomy data is currently unavailable. Readiness coverage and add-skill
-            search will be limited until recovery completes.
+            The skill library is currently unavailable. Readiness coverage and add-skill search will
+            be limited until recovery completes.
           </div>
         )}
 

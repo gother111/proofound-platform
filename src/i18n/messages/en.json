@@ -58,7 +58,7 @@
       "q1": "What makes Proofound different?",
       "a1": "Proofound centers on Proof Packs, privacy-safe review, and stronger signal than CVs.",
       "q2": "Is Proofound free?",
-      "a2": "Launch access is focused on the locked MVP corridor for invited users and pilot teams.",
+      "a2": "Launch access is focused on invited users and pilot teams.",
       "q3": "How does verification work?",
       "a3": "Verification supports trust anchors around real work while keeping early review blind by default."
     },
@@ -116,7 +116,7 @@
       "organization": {
         "title": "Create your organization",
         "name": "Organization name",
-        "slug": "URL slug",
+        "slug": "Public link name",
         "type": "Organization type",
         "types": {
           "company": "Company",

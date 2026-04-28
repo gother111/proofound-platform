@@ -5,6 +5,7 @@ import { AlertCircle, Clock3, Loader2, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { apiFetch } from '@/lib/api/fetch';
+import { internalValueLabel } from '@/lib/copy/labels';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -63,14 +64,14 @@ async function fetchQueueData() {
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error || 'Failed to load internal ops queues');
+    throw new Error(error.error || 'Failed to load operations queues');
   }
 
   return (await response.json()) as QueueResponse;
 }
 
 function formatQueueStatus(status: QueueItem['status']) {
-  return status.replace(/_/g, ' ');
+  return internalValueLabel(status);
 }
 
 function formatMetadataValue(value: unknown) {
@@ -132,11 +133,9 @@ export function AdminVerificationDashboard() {
           setData(nextData);
         }
       } catch (error) {
-        console.error('Failed to load internal ops queues:', error);
+        console.error('Failed to load operations queues:', error);
         if (mounted) {
-          toast.error(
-            error instanceof Error ? error.message : 'Failed to load internal ops queues'
-          );
+          toast.error(error instanceof Error ? error.message : 'Failed to load operations queues');
         }
       } finally {
         if (mounted) {
@@ -203,7 +202,7 @@ export function AdminVerificationDashboard() {
       }));
       toast.success(`Queue item moved to ${formatQueueStatus(nextStatus)}.`);
     } catch (error) {
-      console.error('Failed to update internal ops queue item:', error);
+      console.error('Failed to update operations queue item:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to update queue item');
     } finally {
       setPendingAction(null);
@@ -215,7 +214,7 @@ export function AdminVerificationDashboard() {
       <Card>
         <CardContent className="flex items-center justify-center gap-3 py-14">
           <Loader2 className="h-5 w-5 animate-spin text-proofound-forest" />
-          <p className="text-muted-foreground">Loading internal ops queues...</p>
+          <p className="text-muted-foreground">Loading operations queues...</p>
         </CardContent>
       </Card>
     );
@@ -226,7 +225,7 @@ export function AdminVerificationDashboard() {
       <Card>
         <CardContent className="flex items-center justify-center gap-3 py-14 text-amber-900">
           <AlertCircle className="h-5 w-5" />
-          <p>Internal ops queue data could not be loaded.</p>
+          <p>Operations queue data could not be loaded.</p>
         </CardContent>
       </Card>
     );
@@ -241,7 +240,7 @@ export function AdminVerificationDashboard() {
             <CardTitle className="text-2xl">{data.stats.total}</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
-            Total internal ops items across verification, privacy, risky-upload, and pilot review.
+            Total operations items across verification, privacy, risky-upload, and pilot review.
           </CardContent>
         </Card>
         <Card>
@@ -306,13 +305,13 @@ export function AdminVerificationDashboard() {
                                 <Badge className={STATUS_BADGE_CLASS[item.status]}>
                                   {formatQueueStatus(item.status)}
                                 </Badge>
-                                <Badge variant="outline" className="capitalize">
-                                  {item.linkedEntityType.replace(/_/g, ' ')}
+                                <Badge variant="outline">
+                                  {internalValueLabel(item.linkedEntityType)}
                                 </Badge>
                               </div>
                               <p className="text-sm font-medium text-foreground">{item.summary}</p>
                               <p className="text-xs text-muted-foreground">
-                                Linked entity: {item.linkedEntityId}
+                                Related record: {item.linkedEntityId}
                               </p>
                               {item.resolvedAt && (
                                 <p className="text-xs text-muted-foreground">
@@ -377,7 +376,7 @@ export function AdminVerificationDashboard() {
                                 {Object.entries(item.metadata).map(([key, value]) => (
                                   <div key={key} className="text-sm">
                                     <span className="font-medium text-foreground">
-                                      {key.replace(/_/g, ' ')}:
+                                      {internalValueLabel(key)}:
                                     </span>{' '}
                                     <span className="text-muted-foreground">
                                       {formatMetadataValue(value)}

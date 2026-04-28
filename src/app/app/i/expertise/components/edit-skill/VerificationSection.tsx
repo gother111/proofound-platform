@@ -8,8 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
   CUSTOM_VERIFICATION_SELECTABLE_RELATIONSHIPS,
+  type CustomVerificationRelationship,
   relationshipDisplayLabel,
 } from '@/lib/verification/custom-verification';
+import { verificationStatusLabel } from '@/lib/copy/labels';
 
 import type { VerificationDraft, VerificationRequest } from './types';
 
@@ -179,10 +181,13 @@ export function VerificationSection({
                       }
                       className="text-xs capitalize"
                     >
-                      {request.status}
+                      {verificationStatusLabel(request.status)}
                     </Badge>
                     <Badge variant="outline" className="text-xs capitalize">
-                      {request.verifier_relationship || request.verifier_source}
+                      {relationshipDisplayLabel(
+                        (request.verifier_relationship ||
+                          request.verifier_source) as CustomVerificationRelationship
+                      )}
                     </Badge>
                   </div>
                   <p className="text-sm text-foreground font-medium">{request.verifier_email}</p>

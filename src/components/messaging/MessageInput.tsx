@@ -2,12 +2,12 @@
 
 /**
  * MessageInput Component
- * 
+ *
  * Text input for sending messages with:
  * - 2000 character limit
  * - Real-time PII detection
  * - Warning UI before sending PII in masked conversations
- * 
+ *
  * Reference: DATA_SECURITY_PRIVACY_ARCHITECTURE.md Section 10.6
  */
 
@@ -130,34 +130,42 @@ export function MessageInput({ onSend, disabled, conversationStage }: MessageInp
           <Alert variant="default" className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
             <AlertTriangle className="h-4 w-4 text-amber-600" />
             <AlertTitle className="text-amber-900 dark:text-amber-100">
-              Personal Information Detected
+              Personal information detected
             </AlertTitle>
             <AlertDescription className="text-amber-800 dark:text-amber-200">
-              <p className="mb-2 text-sm">
-                Your message contains:
-              </p>
+              <p className="mb-2 text-sm">Your message contains:</p>
               <div className="flex flex-wrap gap-1">
                 {piiDetection.containsEmail && (
-                  <Badge variant="outline" className="border-amber-600 text-amber-900 dark:text-amber-100">
+                  <Badge
+                    variant="outline"
+                    className="border-amber-600 text-amber-900 dark:text-amber-100"
+                  >
                     <Mail className="mr-1 h-3 w-3" />
                     Email address
                   </Badge>
                 )}
                 {piiDetection.containsPhone && (
-                  <Badge variant="outline" className="border-amber-600 text-amber-900 dark:text-amber-100">
+                  <Badge
+                    variant="outline"
+                    className="border-amber-600 text-amber-900 dark:text-amber-100"
+                  >
                     <Phone className="mr-1 h-3 w-3" />
                     Phone number
                   </Badge>
                 )}
                 {piiDetection.containsUrl && (
-                  <Badge variant="outline" className="border-amber-600 text-amber-900 dark:text-amber-100">
+                  <Badge
+                    variant="outline"
+                    className="border-amber-600 text-amber-900 dark:text-amber-100"
+                  >
                     <Link2 className="mr-1 h-3 w-3" />
-                    Link/URL
+                    Link
                   </Badge>
                 )}
               </div>
               <p className="mt-2 text-xs">
-                💡 Consider waiting until identities are revealed before sharing contact information.
+                💡 Consider waiting until identities are revealed before sharing contact
+                information.
               </p>
             </AlertDescription>
           </Alert>
@@ -209,25 +217,24 @@ export function MessageInput({ onSend, disabled, conversationStage }: MessageInp
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-amber-600" />
-              Personal Information Detected
+              Personal information detected
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-3">
               <p>{piiWarningMessage}</p>
               <p className="text-sm">
-                Sharing personal contact information before revealing identities may compromise
-                your privacy. The other person can see your information without reciprocating.
+                Sharing personal contact information before revealing identities may compromise your
+                privacy. The other person can see your information without reciprocating.
               </p>
-              <p className="text-sm font-semibold">
-                Are you sure you want to send this message?
-              </p>
+              <p className="text-sm font-semibold">Are you sure you want to send this message?</p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setSending(false)}>
-              Edit Message
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={handleSendWithPII} className="bg-amber-600 hover:bg-amber-700">
-              Send Anyway
+            <AlertDialogCancel onClick={() => setSending(false)}>Edit message</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleSendWithPII}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              Send anyway
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -235,4 +242,3 @@ export function MessageInput({ onSend, disabled, conversationStage }: MessageInp
     </>
   );
 }
-

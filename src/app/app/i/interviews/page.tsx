@@ -20,6 +20,7 @@ import {
   type InterviewCalendarPayload,
 } from '@/lib/interviews/calendar';
 import { apiFetch } from '@/lib/api/fetch';
+import { internalValueLabel } from '@/lib/copy/labels';
 import type { HiringCorridorSnapshot } from '@/lib/hiring-corridor/snapshot';
 import { toast } from 'sonner';
 
@@ -174,7 +175,7 @@ export default function InterviewsPage() {
           color: decisionState === 'hire' ? '#2E7D32' : '#334155',
         }}
       >
-        Decision: {decisionState.replace(/_/g, ' ')}
+        Decision: {internalValueLabel(decisionState)}
       </span>
     );
   };
@@ -354,7 +355,7 @@ export default function InterviewsPage() {
                                   : '#E65100',
                           }}
                         >
-                          {interview.interview.status}
+                          {internalValueLabel(interview.interview.status)}
                         </span>
                       )}
                       {getDecisionBadge(interview.decisionState)}

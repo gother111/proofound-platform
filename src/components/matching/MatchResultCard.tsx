@@ -17,6 +17,7 @@ import {
   MATCH_EXPLAINER_TEST_IDS,
   MATCH_EXPLAINER_TRIGGER_LABEL,
 } from '@/lib/matching/explainer-contract';
+import { skillDisplayLabel } from '@/lib/copy/labels';
 import { motion } from 'framer-motion';
 
 interface MatchResultCardProps {
@@ -497,7 +498,7 @@ export function MatchResultCard({
                   className="text-xs px-2 py-0.5"
                   style={{ backgroundColor: '#E8E6DD' }}
                 >
-                  {skill.label} L{skill.level}
+                  {skillDisplayLabel({ label: skill.label, id: skill.id })} L{skill.level}
                 </Badge>
               ))}
             </div>

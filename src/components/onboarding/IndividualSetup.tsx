@@ -303,7 +303,7 @@ export function IndividualSetup() {
               Create a safe shell
             </CardTitle>
             <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-              Only the locked MVP basics. No résumé wizard.
+              Only the essentials. No résumé wizard.
             </CardDescription>
           </CardHeader>
           <CardContent>

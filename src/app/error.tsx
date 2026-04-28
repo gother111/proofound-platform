@@ -30,10 +30,12 @@ export default function Error({
         <CardContent className="space-y-4">
           {process.env.NODE_ENV === 'development' && (
             <details className="p-4 bg-neutral-light-100 rounded-lg text-sm">
-              <summary className="cursor-pointer font-medium mb-2">Error details</summary>
+              <summary className="cursor-pointer font-medium mb-2">Technical details</summary>
               <pre className="text-xs overflow-auto">{error.message}</pre>
               {error.digest && (
-                <p className="mt-2 text-xs text-neutral-dark-500">Error ID: {error.digest}</p>
+                <p className="mt-2 text-xs text-neutral-dark-500">
+                  Support reference: {error.digest}
+                </p>
               )}
             </details>
           )}

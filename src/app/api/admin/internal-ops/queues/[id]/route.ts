@@ -17,10 +17,7 @@ const patchBodySchema = z.object({
   note: z.string().trim().max(2000).optional(),
 });
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const adminUser = await requirePlatformAdminJson();
     if (adminUser instanceof NextResponse) {
@@ -80,9 +77,9 @@ export async function PATCH(
       return jsonError(error.message, status);
     }
 
-    console.error('Error updating internal ops queue item:', error);
+    console.error('Error updating operations queue item:', error);
     return jsonError(
-      'Failed to update internal ops queue item',
+      'Failed to update operations queue item',
       500,
       error instanceof Error ? error.message : 'Unknown error'
     );

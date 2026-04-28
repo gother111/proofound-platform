@@ -41,7 +41,7 @@ export default function GlobalError({
                 <div className="rounded-lg bg-red-50 border border-red-200 p-3">
                   <p className="text-sm font-mono text-red-800">{error.message}</p>
                   {error.digest && (
-                    <p className="mt-2 text-xs text-red-600">Error ID: {error.digest}</p>
+                    <p className="mt-2 text-xs text-red-600">Support reference: {error.digest}</p>
                   )}
                 </div>
               )}

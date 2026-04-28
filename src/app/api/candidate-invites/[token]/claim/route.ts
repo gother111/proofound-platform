@@ -246,7 +246,7 @@ export async function POST(
 
     if (!invite.assignmentId) {
       return NextResponse.json(
-        { error: 'Test invite is missing assignment context.' },
+        { error: 'This invite is missing assignment context.' },
         { status: 409 }
       );
     }

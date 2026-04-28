@@ -66,7 +66,7 @@ export async function GET(_request: NextRequest) {
       items: rows,
     });
   } catch (error) {
-    console.error('Failed to load individual test matches:', error);
-    return NextResponse.json({ error: 'Failed to load test matches' }, { status: 500 });
+    console.error('Failed to load individual trial matches:', error);
+    return NextResponse.json({ error: 'Failed to load trial matches' }, { status: 500 });
   }
 }

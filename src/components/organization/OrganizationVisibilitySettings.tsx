@@ -92,23 +92,23 @@ interface OrganizationVisibilitySettingsProps {
 }
 
 const FIELD_LABELS = {
-  displayName: 'Organization Name',
-  mission: 'Mission Statement',
-  vision: 'Vision Statement',
+  displayName: 'Organization name',
+  mission: 'Mission statement',
+  vision: 'Vision statement',
   causes: 'Causes',
-  workCulture: 'Work Culture',
-  structure: 'Organizational Structure',
+  workCulture: 'Work culture',
+  structure: 'Team structure',
   projects: 'Projects',
   partnerships: 'Partnerships',
   goals: 'Goals',
-  impact: 'Impact Dashboard',
+  impact: 'Impact overview',
 };
 
 const VISIBILITY_OPTIONS = [
   { value: 'public', label: 'Public' },
-  { value: 'post_match', label: 'Post-Match' },
-  { value: 'post_conversation_start', label: 'Post-Conversation' },
-  { value: 'internal_only', label: 'Internal Only' },
+  { value: 'post_match', label: 'After match' },
+  { value: 'post_conversation_start', label: 'After conversation' },
+  { value: 'internal_only', label: 'Team only' },
 ];
 
 export function OrganizationVisibilitySettings({
@@ -193,7 +193,7 @@ export function OrganizationVisibilitySettings({
           <div>
             <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground flex items-center gap-2">
               <Eye className="h-5 w-5" />
-              Visibility Settings
+              Visibility settings
             </CardTitle>
             <CardDescription className="mt-1">
               Control who can see each part of your organization profile
@@ -207,7 +207,7 @@ export function OrganizationVisibilitySettings({
               className="bg-proofound-forest hover:bg-proofound-forest/90 text-white"
             >
               <Save className="h-4 w-4 mr-2" />
-              {isSaving ? 'Saving...' : 'Save Changes'}
+              {isSaving ? 'Saving...' : 'Save changes'}
             </Button>
           )}
         </div>
@@ -218,19 +218,19 @@ export function OrganizationVisibilitySettings({
         <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-lg flex gap-3">
           <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
           <div className="text-sm text-blue-900 dark:text-blue-300">
-            <p className="font-medium mb-1">Visibility Levels Explained</p>
+            <p className="font-medium mb-1">Visibility levels</p>
             <ul className="text-blue-700 dark:text-blue-400 space-y-1 text-xs">
               <li>
                 • <strong>Public:</strong> Visible to anyone browsing the platform
               </li>
               <li>
-                • <strong>Post-Match:</strong> Visible after successful matching with candidates
+                • <strong>After match:</strong> Visible after a match is confirmed
               </li>
               <li>
-                • <strong>Post-Conversation:</strong> Visible after conversation has started
+                • <strong>After conversation:</strong> Visible after a conversation starts
               </li>
               <li>
-                • <strong>Internal Only:</strong> Visible to organization members only
+                • <strong>Team only:</strong> Visible to your organization team only
               </li>
             </ul>
           </div>

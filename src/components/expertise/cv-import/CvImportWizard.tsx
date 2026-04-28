@@ -28,6 +28,7 @@ import {
 import { EventType } from '@/lib/analytics/constants';
 import { buildCvImportReviewTelemetry } from '@/lib/expertise/cv-review-telemetry';
 import { getAmbiguousTokenHints } from '@/lib/expertise/skill-confidence';
+import { internalValueLabel } from '@/lib/copy/labels';
 import { LANGUAGE_OPTIONS, CEFR_LEVELS } from '@/lib/taxonomy/data';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -1424,7 +1425,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       };
     }
 
-    setRunningProgress('analyzing', 78, 'Matching to taxonomy...');
+    setRunningProgress('analyzing', 78, 'Matching to the skill library...');
     setApiMetadata(payload.metadata);
 
     const analyzedById = new Map<string, ParsedDocumentState>();
@@ -1513,7 +1514,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         'Skill suggestions are temporarily unavailable, but core CV entities were extracted.'
       );
     } else if (payload.metadata.candidate_only_fallback_triggered && totalSkillCandidates > 0) {
-      toast.info('Showing candidate-only skills while taxonomy matching recovers.');
+      toast.info('Showing extracted skills while skill matching recovers.');
     }
 
     if (warningMessage) {
@@ -1990,7 +1991,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         })
       );
       if (!response.ok) {
-        throw new Error(await readErrorMessage(response, 'Failed to search taxonomy'));
+        throw new Error(await readErrorMessage(response, 'Failed to search skills'));
       }
 
       const payload = await readJsonSafely(response);
@@ -2029,8 +2030,8 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
         const hints = getAmbiguousTokenHints(query);
         toast.info(
           hints.length > 0
-            ? `No taxonomy matches found. Try a more specific query such as ${hints.slice(0, 3).join(', ')}.`
-            : 'No taxonomy matches found for manual mapping.'
+            ? `No skill matches found. Try a more specific query such as ${hints.slice(0, 3).join(', ')}.`
+            : 'No skill matches found for manual mapping.'
         );
       } else if (!options?.silent) {
         toast.success(
@@ -2057,7 +2058,7 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
       }));
 
       if (!options?.silent) {
-        toast.error(error instanceof Error ? error.message : 'Failed to search taxonomy');
+        toast.error(error instanceof Error ? error.message : 'Failed to search skills');
       }
     }
   };
@@ -2494,12 +2495,9 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
 
           {apiMetadata && !reviewV3Enabled && (
             <div className="rounded-lg border p-3 text-sm">
-              <p>Semantic used: {apiMetadata.semantic_used ? 'yes' : 'no'}</p>
-              <p>
-                Semantic fallback triggered:{' '}
-                {apiMetadata.semantic_fallback_triggered ? 'yes' : 'no'}
-              </p>
-              <p>Unmapped candidates: {apiMetadata.unmapped_candidates_count}</p>
+              <p>Smart matching used: {apiMetadata.semantic_used ? 'yes' : 'no'}</p>
+              <p>Used backup matcher: {apiMetadata.semantic_fallback_triggered ? 'yes' : 'no'}</p>
+              <p>Skills needing review: {apiMetadata.unmapped_candidates_count}</p>
             </div>
           )}
 
@@ -2510,21 +2508,22 @@ export function CvImportWizard({ onApplyComplete }: CvImportWizardProps) {
                 className="text-left text-sm font-medium text-proofound-forest hover:underline"
                 onClick={() => setShowAdvancedDiagnostics((previous) => !previous)}
               >
-                {showAdvancedDiagnostics ? 'Hide advanced diagnostics' : 'Advanced diagnostics'}
+                {showAdvancedDiagnostics ? 'Hide matching details' : 'Matching details'}
               </button>
               {showAdvancedDiagnostics && (
                 <div className="mt-2 space-y-1 text-muted-foreground">
-                  <p>Semantic matching used: {apiMetadata.semantic_used ? 'yes' : 'no'}</p>
+                  <p>Smart matching used: {apiMetadata.semantic_used ? 'yes' : 'no'}</p>
                   <p>
-                    Semantic fallback triggered:{' '}
-                    {apiMetadata.semantic_fallback_triggered ? 'yes' : 'no'}
+                    Used backup matcher: {apiMetadata.semantic_fallback_triggered ? 'yes' : 'no'}
                   </p>
-                  <p>Needs mapping: {apiMetadata.unmapped_candidates_count}</p>
+                  <p>Skills needing review: {apiMetadata.unmapped_candidates_count}</p>
                   {apiMetadata.fallback_stage && (
-                    <p>Fallback stage: {apiMetadata.fallback_stage}</p>
+                    <p>Recovery step: {internalValueLabel(apiMetadata.fallback_stage)}</p>
                   )}
-                  {apiMetadata.engine_used && <p>Engine used: {apiMetadata.engine_used}</p>}
-                  {apiMetadata.ai_model && <p>Model: {apiMetadata.ai_model}</p>}
+                  {apiMetadata.engine_used && (
+                    <p>Matcher: {internalValueLabel(apiMetadata.engine_used)}</p>
+                  )}
+                  {apiMetadata.ai_model && <p>AI model: {apiMetadata.ai_model}</p>}
                   {typeof apiMetadata.cost_ore === 'number' && (
                     <p>Cost: {(apiMetadata.cost_ore / 100).toFixed(2)} SEK</p>
                   )}

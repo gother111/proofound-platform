@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import { organizationTypeLabel } from '@/lib/copy/labels';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -269,7 +270,9 @@ export function OrgDetailModal({ org, open, onClose, onOrgUpdated }: OrgDetailMo
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Type: {org.type ?? 'N/A'}</span>
+                  <span className="text-sm text-muted-foreground">
+                    Type: {organizationTypeLabel(org.type)}
+                  </span>
                 </div>
 
                 <div className="flex items-center gap-2">

@@ -12,9 +12,9 @@ export default async function AdminPage() {
   return (
     <div className="max-w-[1600px] mx-auto px-6 py-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground">Internal Ops</h1>
+        <h1 className="text-3xl font-bold text-foreground">Launch Operations</h1>
         <p className="text-muted-foreground mt-1">
-          Internal-only launch operations for verification review and dispute-support audit trails.
+          Restricted launch tools for verification review and dispute-support audit trails.
         </p>
       </div>
 
@@ -23,17 +23,17 @@ export default async function AdminPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <BadgeCheck className="h-5 w-5 text-proofound-forest" />
-              Internal ops queues
+              Operations queues
             </CardTitle>
             <CardDescription>
-              Review the four narrow internal ops queues that support verification, privacy,
-              corrections, and pilot follow-through inside the locked MVP corridor.
+              Review the four narrow operations queues that support verification, privacy,
+              corrections, and pilot follow-through inside the launch corridor.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild variant="outline" className="w-full justify-between">
               <Link href="/admin/verification">
-                Open internal ops queues
+                Open operations queues
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
@@ -47,7 +47,7 @@ export default async function AdminPage() {
               Audit support
             </CardTitle>
             <CardDescription>
-              Review internal admin actions when disputes or trust incidents require traceability.
+              Review restricted admin actions when disputes or trust incidents require traceability.
             </CardDescription>
           </CardHeader>
           <CardContent>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
+import { personaLabel } from '@/lib/copy/labels';
 
 interface DataBreakdownProps {
   userId: string;
@@ -143,7 +144,7 @@ export function DataBreakdown({ userId }: DataBreakdownProps) {
               <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground">
                 Persona
               </p>
-              <p className="text-sm font-medium">{profileData.basic?.persona || 'unknown'}</p>
+              <p className="text-sm font-medium">{personaLabel(profileData.basic?.persona)}</p>
             </div>
           </div>
           {profileData.individual && (
@@ -275,21 +276,21 @@ export function DataBreakdown({ userId }: DataBreakdownProps) {
     },
     {
       id: 'analytics',
-      title: 'Analytics Data',
-      description: `${data.analytics.totalEvents} events (anonymized with hashed IPs)`,
+      title: 'Product usage',
+      description: `${data.analytics.totalEvents} privacy-protected events`,
       data: data.analytics,
       render: (analyticsData: any) => (
         <div className="space-y-4">
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <p className="text-xs text-blue-800 dark:text-blue-300">
-              ℹ️ All analytics data is pseudonymized. IP addresses and user agents are hashed
-              (SHA-256) before storage, making them irreversible and GDPR-compliant.
+              Product usage details are protected before storage and cannot be read back as your
+              original device or address information.
             </p>
           </div>
           <div className="text-center p-4 bg-proofound-parchment dark:bg-muted rounded-lg">
             <p className="text-3xl font-bold text-proofound-forest">{analyticsData.totalEvents}</p>
             <p className="text-sm text-proofound-charcoal/60 dark:text-muted-foreground mt-1">
-              Total Events Tracked
+              Total activity events
             </p>
             <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground mt-2">
               Auto-deleted after 90 days
@@ -304,8 +305,8 @@ export function DataBreakdown({ userId }: DataBreakdownProps) {
     <div className="space-y-4">
       <Card variant="bento" className="border-proofound-stone dark:border-border rounded-2xl">
         <CardHeader>
-          <CardTitle className="text-2xl font-['Crimson_Pro']">Data Breakdown</CardTitle>
-          <CardDescription>Detailed view of all data we have collected about you</CardDescription>
+          <CardTitle className="text-2xl font-['Crimson_Pro']">Your data</CardTitle>
+          <CardDescription>Detailed view of what Proofound stores for your account</CardDescription>
         </CardHeader>
       </Card>
 
