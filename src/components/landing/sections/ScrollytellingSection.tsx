@@ -63,6 +63,9 @@ const STORY_TRANSITION = {
 };
 const HERO_TO_BLIND_TRANSITION_SECONDS = 2.1;
 const DESKTOP_FRAME_HEIGHT_VH = 88;
+const DESKTOP_GESTURE_TRANSITION_MS = 1850;
+const DESKTOP_GESTURE_MIN_DELTA = 16;
+const DESKTOP_TOUCH_GESTURE_MIN_DELTA = 34;
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 const easeIn = (value: number) => {
@@ -78,6 +81,14 @@ const easeInOut = (value: number) => {
   return clamped * clamped * (3 - 2 * clamped);
 };
 const mix = (from: number, to: number, progress: number) => from + (to - from) * progress;
+const getFrameScrollProgress = (frameIndex: number) => {
+  const frameCount = HOMEPAGE_STORY_FRAMES.length;
+  if (frameIndex <= 0) {
+    return 0;
+  }
+
+  return Math.min(0.995, frameIndex / frameCount + 0.025);
+};
 
 const DESKTOP_CARD_FRAME = 'w-[31rem] max-w-[31rem] aspect-[31/42]';
 const MOBILE_CARD_FRAME = 'w-full max-w-[14rem] aspect-[31/42]';
@@ -2273,19 +2284,21 @@ function Candidate24Sheet({
   y = 0,
   opacity = 1,
   clipBottom = 0,
+  initial = false,
   animate,
   transition,
 }: {
   y?: number;
   opacity?: number;
   clipBottom?: number;
+  initial?: React.ComponentProps<typeof motion.div>['initial'];
   animate?: React.ComponentProps<typeof motion.div>['animate'];
   transition?: React.ComponentProps<typeof motion.div>['transition'];
 }) {
   return (
     <motion.div
       className="absolute inset-x-[14%] inset-y-[8%] z-10"
-      initial={false}
+      initial={initial}
       animate={animate}
       transition={transition}
       style={{
@@ -2510,6 +2523,9 @@ function FinalOrganizerVisual({
         ) : (
           <Candidate24Sheet
             key="candidate-blind-sheet-exit"
+            initial={
+              reduceMotion ? false : { y: 0, opacity: 1, clipPath: 'inset(0px 0px 0px 0px)' }
+            }
             animate={{
               y: reduceMotion ? candidateExitY : candidateExitY,
               opacity: reduceMotion ? 0 : 0,
@@ -2889,6 +2905,7 @@ function CompatibilitySideStacks({
   const leftX = mix(-1000, -170, stackProgress);
   const rightX = mix(1000, 120, stackProgress);
   const stackOpacity = mix(0.92, 0.78, clamp01(exitProgress * 1.5));
+  const frontCardLift = -116;
 
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-10 overflow-visible">
@@ -2898,7 +2915,9 @@ function CompatibilitySideStacks({
       >
         {compatibilityRoleStack.map((card, idx) => {
           const isFront = idx === 2;
-          const cardExitY = isFront ? mix(0, -60, exitProgress) : mix(0, -1000, exitProgress);
+          const cardExitY = isFront
+            ? mix(0, frontCardLift, exitProgress)
+            : mix(0, -1000, exitProgress);
           const cardOpacity = isFront ? 1 : mix(1, 0, clamp01(exitProgress * 2.5));
           const cardScale = isFront ? mix(1, 1.15, exitProgress) : 1;
 
@@ -2935,7 +2954,9 @@ function CompatibilitySideStacks({
       >
         {compatibilityProfileStack.map((card, idx) => {
           const isFront = idx === 2;
-          const cardExitY = isFront ? mix(0, -60, exitProgress) : mix(0, -1000, exitProgress);
+          const cardExitY = isFront
+            ? mix(0, frontCardLift, exitProgress)
+            : mix(0, -1000, exitProgress);
           const cardOpacity = isFront ? 1 : mix(1, 0, clamp01(exitProgress * 2.5));
           const cardScale = isFront ? mix(1, 1.15, exitProgress) : 1;
 
@@ -2974,11 +2995,13 @@ function EarlyOrganizerStoryScene({
   reduceMotion,
   privacyToCompatProgress = 0,
   compatToPrecisionProgress = 0,
+  precisionToChallengesProgress = 0,
 }: {
   frame: HomepageStoryFrame;
   reduceMotion: boolean;
   privacyToCompatProgress?: number;
   compatToPrecisionProgress?: number;
+  precisionToChallengesProgress?: number;
 }) {
   const state = deriveStoryState(frame.id);
   const isTransitioning = privacyToCompatProgress > 0;
@@ -2989,6 +3012,10 @@ function EarlyOrganizerStoryScene({
     []
   );
   const precisionFrame = useMemo(() => HOMEPAGE_STORY_FRAMES.find((f) => f.id === 'precision'), []);
+  const challengesFrame = useMemo(
+    () => HOMEPAGE_STORY_FRAMES.find((f) => f.id === 'challenges'),
+    []
+  );
 
   const slideLeftX = mix(0, -600, clamp01(privacyToCompatProgress / 0.8));
   const slideRightX = mix(0, 1000, clamp01(privacyToCompatProgress / 0.8));
@@ -2997,13 +3024,17 @@ function EarlyOrganizerStoryScene({
   const compatOpacity = easeIn(clamp01((privacyToCompatProgress - 0.6) / 0.4));
   const compatScale = mix(0.8, 1, easeOut(clamp01((privacyToCompatProgress - 0.6) / 0.4)));
 
+  const precisionToChallenges = clamp01(precisionToChallengesProgress);
   const compatExitY = mix(0, -800, compatToPrecisionProgress);
   const compatExitOpacity = mix(1, 0, clamp01(compatToPrecisionProgress * 2));
 
   const precisionProgress = clamp01((compatToPrecisionProgress - 0.4) / 0.6);
   const precisionOpacity = easeIn(precisionProgress);
   const precisionScale = mix(0.9, 1, easeOut(precisionProgress));
-  const precisionY = mix(100, 0, easeOut(precisionProgress));
+  const precisionBaseY = mix(74, -34, easeOut(precisionProgress));
+  const precisionExitY = mix(0, -960, easeInOut(precisionToChallenges));
+  const challengesEntryY = mix(940, 0, easeInOut(precisionToChallenges));
+  const showChallenges = precisionToChallenges > 0 || frame.id === 'challenges';
 
   return (
     <div className="relative min-h-[45rem]">
@@ -3084,21 +3115,54 @@ function EarlyOrganizerStoryScene({
           </motion.div>
         )}
 
-      {(compatToPrecisionProgress > 0 || frame.id === 'precision') && precisionFrame && (
+      {(compatToPrecisionProgress > 0 || frame.id === 'precision' || showChallenges) &&
+        precisionFrame && (
+          <motion.div
+            className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none"
+            style={{
+              opacity: precisionToChallenges >= 0.995 ? 0 : precisionOpacity,
+              scale: precisionScale,
+              y: precisionBaseY + precisionExitY,
+            }}
+          >
+            <div className="pointer-events-auto">
+              <SystemCenterCopy
+                frame={precisionFrame}
+                state={deriveStoryState('precision')}
+                reduceMotion={reduceMotion}
+              />
+            </div>
+          </motion.div>
+        )}
+
+      {showChallenges && challengesFrame && (
         <motion.div
-          className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none"
-          style={{
-            opacity: precisionOpacity,
-            scale: precisionScale,
-            y: mix(-120, 0, easeOut(precisionProgress)),
-          }}
+          className="absolute inset-0 z-40 flex items-center justify-center overflow-hidden pointer-events-none"
+          style={{ y: challengesEntryY, opacity: 1 }}
         >
-          <div className="pointer-events-auto">
-            <SystemCenterCopy
-              frame={precisionFrame}
-              state={deriveStoryState('precision')}
-              reduceMotion={reduceMotion}
-            />
+          <div className="relative mx-auto flex min-h-[45rem] w-full items-center justify-center overflow-visible">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute left-1/2 top-1/2 z-0 w-[min(96vw,105rem)]"
+              style={{ transform: 'translate(-50%, -50%)' }}
+            >
+              <Image
+                src="/challenges/modern-challenges-side-panels.png"
+                alt=""
+                width={1881}
+                height={1059}
+                sizes="96vw"
+                className="pointer-events-none h-auto w-full max-w-none select-none object-contain"
+              />
+            </div>
+
+            <div className="relative z-10">
+              <SystemCenterCopy
+                frame={challengesFrame}
+                state={deriveStoryState('challenges')}
+                reduceMotion={reduceMotion}
+              />
+            </div>
           </div>
         </motion.div>
       )}
@@ -3111,6 +3175,7 @@ function DesktopScene({
   heroToBlindProgress,
   privacyToCompatProgress,
   compatToPrecisionProgress,
+  precisionToChallengesProgress,
   onIndividualSignup,
   onOrganizationSignup,
   reduceMotion,
@@ -3119,6 +3184,7 @@ function DesktopScene({
   heroToBlindProgress: number;
   privacyToCompatProgress: number;
   compatToPrecisionProgress: number;
+  precisionToChallengesProgress: number;
   onIndividualSignup?: () => void;
   onOrganizationSignup?: () => void;
   reduceMotion: boolean;
@@ -3145,7 +3211,8 @@ function DesktopScene({
     frame.id === 'verification' ||
     frame.id === 'privacy' ||
     frame.id === 'compatibility' ||
-    frame.id === 'precision'
+    frame.id === 'precision' ||
+    frame.id === 'challenges'
   ) {
     return (
       <EarlyOrganizerStoryScene
@@ -3153,6 +3220,7 @@ function DesktopScene({
         reduceMotion={reduceMotion}
         privacyToCompatProgress={privacyToCompatProgress}
         compatToPrecisionProgress={compatToPrecisionProgress}
+        precisionToChallengesProgress={precisionToChallengesProgress}
       />
     );
   }
@@ -3699,6 +3767,17 @@ export function ScrollytellingSection({
   const compatToPrecisionAnimationRef = useRef<number | null>(null);
   const compatToPrecisionProgressRef = useRef(0);
 
+  const [precisionToChallengesProgress, setPrecisionToChallengesProgress] = useState(0);
+  const precisionToChallengesTargetRef = useRef(0);
+  const precisionToChallengesAnimationRef = useRef<number | null>(null);
+  const precisionToChallengesProgressRef = useRef(0);
+
+  const activeIndexRef = useRef(0);
+  const gestureAnimationRef = useRef<number | null>(null);
+  const gestureLockedRef = useRef(false);
+  const touchStartYRef = useRef<number | null>(null);
+  const touchGestureConsumedRef = useRef(false);
+
   useEffect(() => {
     return () => {
       if (heroToBlindAnimationRef.current != null) {
@@ -3709,6 +3788,12 @@ export function ScrollytellingSection({
       }
       if (compatToPrecisionAnimationRef.current != null) {
         window.cancelAnimationFrame(compatToPrecisionAnimationRef.current);
+      }
+      if (precisionToChallengesAnimationRef.current != null) {
+        window.cancelAnimationFrame(precisionToChallengesAnimationRef.current);
+      }
+      if (gestureAnimationRef.current != null) {
+        window.cancelAnimationFrame(gestureAnimationRef.current);
       }
     };
   }, []);
@@ -3732,10 +3817,13 @@ export function ScrollytellingSection({
         heroToBlindTargetRef.current = 0;
         privacyToCompatTargetRef.current = 0;
         compatToPrecisionTargetRef.current = 0;
+        precisionToChallengesTargetRef.current = 0;
         heroToBlindProgressRef.current = 0;
         privacyToCompatProgressRef.current = 0;
         compatToPrecisionProgressRef.current = 0;
+        precisionToChallengesProgressRef.current = 0;
         heroToBlindScrollPositionRef.current = 0;
+        activeIndexRef.current = 0;
         setActiveIndex(0);
         setHeroToBlindTarget(0);
         setPrivacyToCompatTarget(0);
@@ -3743,12 +3831,14 @@ export function ScrollytellingSection({
         setHeroToBlindProgress(0);
         setPrivacyToCompatProgress(0);
         setCompatToPrecisionProgress(0);
+        setPrecisionToChallengesProgress(0);
         return;
       }
 
       const frameCount = HOMEPAGE_STORY_FRAMES.length;
       const nextPosition = latest * frameCount;
       const nextIndex = Math.min(frameCount - 1, Math.max(0, Math.floor(nextPosition)));
+      activeIndexRef.current = nextIndex;
       setActiveIndex((current) => (current === nextIndex ? current : nextIndex));
 
       const previousPosition = heroToBlindScrollPositionRef.current;
@@ -3896,6 +3986,52 @@ export function ScrollytellingSection({
             window.requestAnimationFrame(stepCompatToPrecision);
         }
       }
+
+      const nextPrecisionToChallengesTarget =
+        isScrollingDown && nextPosition >= 7.08
+          ? 1
+          : isScrollingUp && nextPosition <= 7.98
+            ? 0
+            : precisionToChallengesTargetRef.current;
+
+      if (nextPrecisionToChallengesTarget !== precisionToChallengesTargetRef.current) {
+        precisionToChallengesTargetRef.current = nextPrecisionToChallengesTarget;
+        if (precisionToChallengesAnimationRef.current != null) {
+          window.cancelAnimationFrame(precisionToChallengesAnimationRef.current);
+        }
+
+        if (reduceMotion || jumpedAcrossFrames) {
+          precisionToChallengesProgressRef.current = nextPrecisionToChallengesTarget;
+          setPrecisionToChallengesProgress(nextPrecisionToChallengesTarget);
+        } else {
+          const startProgress = precisionToChallengesProgressRef.current;
+          const startedAt = performance.now();
+          const durationMs = 1.72 * 1000;
+
+          const stepPrecisionToChallenges = (timestamp: number) => {
+            const elapsed = clamp01((timestamp - startedAt) / durationMs);
+            const eased = easeInOut(elapsed);
+            const nextProgress =
+              startProgress + (nextPrecisionToChallengesTarget - startProgress) * eased;
+
+            precisionToChallengesProgressRef.current = nextProgress;
+            setPrecisionToChallengesProgress(nextProgress);
+
+            if (elapsed < 1) {
+              precisionToChallengesAnimationRef.current =
+                window.requestAnimationFrame(stepPrecisionToChallenges);
+              return;
+            }
+
+            precisionToChallengesProgressRef.current = nextPrecisionToChallengesTarget;
+            setPrecisionToChallengesProgress(nextPrecisionToChallengesTarget);
+            precisionToChallengesAnimationRef.current = null;
+          };
+
+          precisionToChallengesAnimationRef.current =
+            window.requestAnimationFrame(stepPrecisionToChallenges);
+        }
+      }
     };
 
     const scheduleUpdate = () => {
@@ -3915,6 +4051,158 @@ export function ScrollytellingSection({
       }
       window.removeEventListener('scroll', scheduleUpdate);
       window.removeEventListener('resize', scheduleUpdate);
+    };
+  }, [reduceMotion]);
+
+  useEffect(() => {
+    if (reduceMotion) {
+      return;
+    }
+
+    const getDesktopStoryRange = () => {
+      const section = storyRef.current;
+      const desktopTrack = desktopRef.current;
+      if (!section || !desktopTrack || window.innerWidth < 1024) {
+        return null;
+      }
+
+      const scrollTop = window.scrollY || window.pageYOffset;
+      const sectionTop = section.getBoundingClientRect().top + scrollTop;
+      const sectionBottom = sectionTop + desktopTrack.offsetHeight;
+      const maxScrollTop = sectionBottom - window.innerHeight;
+
+      return {
+        sectionTop,
+        maxScrollTop,
+        range: Math.max(1, maxScrollTop - sectionTop),
+        scrollTop,
+      };
+    };
+
+    const isInsideDesktopStory = () => {
+      const range = getDesktopStoryRange();
+      if (!range) {
+        return null;
+      }
+
+      if (range.scrollTop < range.sectionTop - 2 || range.scrollTop > range.maxScrollTop + 2) {
+        return null;
+      }
+
+      return range;
+    };
+
+    const animateToFrame = (targetIndex: number) => {
+      const range = getDesktopStoryRange();
+      if (!range) {
+        return;
+      }
+
+      const targetProgress = getFrameScrollProgress(targetIndex);
+      const targetTop = range.sectionTop + range.range * targetProgress;
+      const startTop = range.scrollTop;
+      const distance = targetTop - startTop;
+
+      if (Math.abs(distance) < 2) {
+        activeIndexRef.current = targetIndex;
+        setActiveIndex(targetIndex);
+        return;
+      }
+
+      gestureLockedRef.current = true;
+      if (gestureAnimationRef.current != null) {
+        window.cancelAnimationFrame(gestureAnimationRef.current);
+      }
+
+      const startedAt = performance.now();
+
+      const stepGesture = (timestamp: number) => {
+        const elapsed = clamp01((timestamp - startedAt) / DESKTOP_GESTURE_TRANSITION_MS);
+        const eased = easeInOut(elapsed);
+        window.scrollTo(0, startTop + distance * eased);
+
+        if (elapsed < 1) {
+          gestureAnimationRef.current = window.requestAnimationFrame(stepGesture);
+          return;
+        }
+
+        window.scrollTo(0, targetTop);
+        activeIndexRef.current = targetIndex;
+        setActiveIndex(targetIndex);
+        gestureLockedRef.current = false;
+        gestureAnimationRef.current = null;
+      };
+
+      gestureAnimationRef.current = window.requestAnimationFrame(stepGesture);
+    };
+
+    const requestStep = (direction: 1 | -1) => {
+      const range = isInsideDesktopStory();
+      if (!range) {
+        return false;
+      }
+
+      if (gestureLockedRef.current) {
+        return true;
+      }
+
+      const currentIndex = activeIndexRef.current;
+      const targetIndex = Math.min(
+        HOMEPAGE_STORY_FRAMES.length - 1,
+        Math.max(0, currentIndex + direction)
+      );
+
+      if (targetIndex === currentIndex) {
+        return false;
+      }
+
+      animateToFrame(targetIndex);
+      return true;
+    };
+
+    const handleWheel = (event: WheelEvent) => {
+      if (Math.abs(event.deltaY) < DESKTOP_GESTURE_MIN_DELTA) {
+        return;
+      }
+
+      const consumed = requestStep(event.deltaY > 0 ? 1 : -1);
+      if (consumed) {
+        event.preventDefault();
+      }
+    };
+
+    const handleTouchStart = (event: TouchEvent) => {
+      touchStartYRef.current = event.touches[0]?.clientY ?? null;
+      touchGestureConsumedRef.current = false;
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      const startY = touchStartYRef.current;
+      const currentY = event.touches[0]?.clientY;
+      if (startY == null || currentY == null) {
+        return;
+      }
+
+      const deltaY = startY - currentY;
+      if (Math.abs(deltaY) < DESKTOP_TOUCH_GESTURE_MIN_DELTA) {
+        return;
+      }
+
+      const consumed = touchGestureConsumedRef.current || requestStep(deltaY > 0 ? 1 : -1);
+      if (consumed) {
+        touchGestureConsumedRef.current = true;
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
     };
   }, [reduceMotion]);
 
@@ -3973,6 +4261,7 @@ export function ScrollytellingSection({
               heroToBlindProgress={heroToBlindProgress}
               privacyToCompatProgress={privacyToCompatProgress}
               compatToPrecisionProgress={compatToPrecisionProgress}
+              precisionToChallengesProgress={precisionToChallengesProgress}
               onIndividualSignup={onIndividualSignup}
               onOrganizationSignup={onOrganizationSignup}
               reduceMotion={reduceMotion}
